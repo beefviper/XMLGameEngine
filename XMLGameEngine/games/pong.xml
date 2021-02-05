@@ -5,16 +5,16 @@
 
 <game>
   <!-- window -->
-	<window name="Pong" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
+  <window name="Pong" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
   <!-- variables -->
   <variables>
-		<variable name="margin" value="30" />
+    <variable name="margin" value="30" />
     <variable name="text.size" value="256" />
     <variable name="logo.radius" value="100" />
     <variable name="ball.radius" value="10" />
     <variable name="width" value="30" />
-		<variable name="height" value="150" />
-		<variable name="step" value="2" />
+    <variable name="height" value="150" />
+    <variable name="step" value="2" />
   </variables>
   <!-- objects -->
   <objects>
@@ -34,35 +34,35 @@
     </object>
     <!-- ball -->
     <object name="ball">
-			<sprite src="shape.circle(ball.radius)" />
-			<position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
+      <sprite src="shape.circle(ball.radius)" />
+      <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
       <collision enabled="true" data="top: bounce; bottom: bounce; left: inc(score2); right: inc(score1); default: bounce" />
     </object>
     <!-- paddle1 -->
     <object name="paddle1">
-			<sprite src="shape.rectangle(width,height)" />
-			<position x="window.left + margin" y="window.height.center - height / 2" />
-			<velocity x="0" y="0" />
-			<collision enabled="true" data="top: static; bottom: static" />
-			<actions>
-				<action name="up" value="move.up(step)" />
-				<action name="down" value="move.down(step)" />
-			</actions>				
-		</object>
+      <sprite src="shape.rectangle(width,height)" />
+      <position x="window.left + margin" y="window.height.center - height / 2" />
+      <velocity x="0" y="0" />
+      <collision enabled="true" data="top: static; bottom: static" />
+      <actions>
+        <action name="up" value="move.up(step)" />
+        <action name="down" value="move.down(step)" />
+      </actions>				
+    </object>
     <!-- paddle2 -->
     <object name="paddle2">
-			<sprite src="shape.rectangle(width,height)" />
-			<position x="window.right - margin - width" y="window.height.center - height / 2" />
-			<velocity x="0" y="0" />
-			<collision enabled="true" data="top: static; bottom: static" />
-			<actions>
+      <sprite src="shape.rectangle(width,height)" />
+      <position x="window.right - margin - width" y="window.height.center - height / 2" />
+      <velocity x="0" y="0" />
+      <collision enabled="true" data="top: static; bottom: static" />
+      <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
         <action name="left" value="move.left(step)" />
         <action name="right" value="move.right(step)" />
       </actions>				
-		</object>
+    </object>
     <!-- score1 -->
     <object name="score1">
       <sprite src="text('0',128)" />
@@ -85,38 +85,38 @@
       <show object="title" />
       <show object="logo" />
       <inputs>
-				<input action="state.playing" button="space" />
+        <input action="state.playing" button="space" />
         <input action="state.settings" button="s" />
       </inputs>
-		</state>
+    </state>
     <!-- settings -->
     <state name="settings">
-			<show object="logo" />
-			<inputs>
-				<input action="state.mainmenu" button="escape" />
-			</inputs>
-		</state>
+      <show object="logo" />
+      <inputs>
+        <input action="state.mainmenu" button="escape" />
+      </inputs>
+    </state>
     <!-- playing -->
     <state name="playing">
-			<show object="ball" />
-			<show object="paddle1" />
-			<show object="paddle2" />
+      <show object="ball" />
+      <show object="paddle1" />
+      <show object="paddle2" />
       <show object="score1" />
       <show object="score2" />
-			<inputs>
+      <inputs>
         <input action="state.paused" button="space" />
-				<input action="paddle1.action.up" button="q" />
-				<input action="paddle1.action.down" button="z" />
+        <input action="paddle1.action.up" button="q" />
+        <input action="paddle1.action.down" button="z" />
         <input action="paddle2.action.up" button="up" />
         <input action="paddle2.action.down" button="down" />
       </inputs>
-		</state>
+    </state>
     <!-- paused -->
     <state name="paused">
-			<show object="logo" />
-			<inputs>
-				<input action="state.playing" button="space" />
-			</inputs>
-		</state>
-	</states>
+      <show object="logo" />
+      <inputs>
+        <input action="state.playing" button="space" />
+      </inputs>
+    </state>
+  </states>
 </game>
