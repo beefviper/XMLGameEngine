@@ -1,0 +1,49 @@
+﻿# CMakeLists.txt 
+# XML Game Engine
+# author: beefviper
+# date: Sept 18, 2020
+
+# CMakeList.txt : CMake project for XMLGameEngine, include source and define
+# project specific logic here.
+#
+cmake_minimum_required (VERSION 3.8)
+
+if (MSVC)
+    add_compile_options(/bigobj)
+endif()
+
+find_package(SFML REQUIRED system window graphics network audio)
+find_package(tinyxml2 CONFIG REQUIRED)
+
+# Add source to this project's executable.
+add_executable (XMLGameEngine "main.cpp" "include/utils.h" "utils.cpp" "include/game.h" "game.cpp"
+    "include/engine.h" "engine.cpp" "include/object.h" "object.cpp" "include/states.h" "states.cpp"
+    "include/game_xml.h"  "include/game_expr.h"  "game_xml.cpp" "game_expr.cpp" "game_sfml.cpp")
+
+target_include_directories(XMLGameEngine PUBLIC include)
+
+target_link_libraries(XMLGameEngine PUBLIC sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
+target_link_libraries(XMLGameEngine PRIVATE tinyxml2::tinyxml2)
+
+add_dependencies(XMLGameEngine data-target)
+
+# TODO: Add tests and install targets if needed.
+
+# we don't want to copy if we're building in the source dir
+if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+
+    # list of files for which we add a copy rule
+    set(data_SHADOW games/pong.xml games/breakout.xml assets/arial.ttf)
+
+    foreach(item IN LISTS data_SHADOW)
+        message(STATUS ${item})
+        add_custom_command(
+            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${item}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${item}" "${CMAKE_CURRENT_BINARY_DIR}/${item}"
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${item}"
+        )
+    endforeach()
+endif()
+
+# files are only copied if a target depends on them
+add_custom_target(data-target ALL DEPENDS ${data_SHADOW})

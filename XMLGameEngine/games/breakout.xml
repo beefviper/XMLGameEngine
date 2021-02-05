@@ -1,0 +1,72 @@
+<!-- breakout.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Sept 18, 2020 -->
+
+<game>
+	<window name="Breakout" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
+	<variables>
+		<variable name="margin" value="30" />
+    <variable name="width" value="150" />
+		<variable name="height" value="30" />
+		<variable name="step" value="2" />
+  </variables>
+	<objects>
+		<object name="paddle1">
+			<sprite src="shape.rectangle(width,height)" />
+			<position x="window.width.center - width / 2" y="window.height- margin - height" />
+			<velocity x="0" y="0" />
+			<collision enabled="true" />
+			<actions>
+				<action name="left" value="move.left(step)" />
+				<action name="right" value="move.right(step)" />
+			</actions>				
+		</object>
+		<object name="paddle2">
+			<sprite src="shape.rectangle(width * 2,height * 3)" />
+			<position x="window.width.center - width / 2" y="margin * 2" />
+			<velocity x="0" y="0" />
+			<collision enabled="true" />
+			<actions>
+        <action name="up" value="move.up(step)" />
+        <action name="down" value="move.down(step)" />
+        <action name="left" value="move.left(step)" />
+        <action name="right" value="move.right(step)" />
+      </actions>				
+		</object>
+	</objects>	
+	<states>
+		<state name="mainmenu">
+			<show object="paddle1" />
+			<inputs>
+				<input action="state.playing" button="space" />
+        <input action="state.settings" button="s" />
+      </inputs>
+		</state>
+		<state name="settings">
+			<show object="paddle1" />
+			<inputs>
+				<input action="state.mainmenu" button="escape" />
+			</inputs>
+		</state>
+		<state name="playing">
+			<show object="paddle1" />
+			<show object="paddle2" />
+			<inputs>
+        <input action="state.paused" button="space" />
+				<input action="paddle1.action.left" button="q" />
+				<input action="paddle1.action.right" button="z" />
+        <input action="paddle2.action.up" button="up" />
+        <input action="paddle2.action.down" button="down" />
+        <input action="paddle2.action.left" button="left" />
+        <input action="paddle2.action.right" button="right" />
+      </inputs>
+		</state>
+		<state name="paused">
+			<show object="paddle2" />
+			<inputs>
+				<input action="state.playing" button="space" />
+			</inputs>
+		</state>
+	</states>
+</game>
