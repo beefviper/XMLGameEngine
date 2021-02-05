@@ -54,7 +54,7 @@ void xge::Game::initSFML(void)
 		{
 			text.setFont(font);
 			text.setString(object.sparams.at(0));
-			text.setCharacterSize(object.params.at(0));
+			text.setCharacterSize(static_cast<int>(object.params.at(0)));
 			text.setFillColor(sf::Color::Green);
 			text.setPosition(-text.getGlobalBounds().left, -text.getGlobalBounds().top );
 
