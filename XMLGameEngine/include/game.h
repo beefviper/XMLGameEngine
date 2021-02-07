@@ -33,7 +33,7 @@ namespace xge
 		xge::WindowDesc& getWindowDesc(void);
 		std::vector<xge::Object>& getObjects(void);
 		xge::Object& getObject(std::string name);
-		xge::SObject& xge::Game::getSObject(std::string name);
+		xge::SObject& getSObject(std::string name);
 		float& getVariable(std::string name);
 		xge::State getCurrentState(void);
 
