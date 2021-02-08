@@ -83,4 +83,18 @@ namespace xge {
 			return cwidth;
 		}
 	};
+
+	template <typename T>
+	struct inc : public exprtk::ifunction<T>
+	{
+		inc() : exprtk::ifunction<T>(1)
+		{
+
+		}
+
+		T operator()(T& cinc)
+		{
+			return ++cinc;
+		}
+	};
 }

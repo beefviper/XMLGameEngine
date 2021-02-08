@@ -15,6 +15,7 @@ void xge::Game::initEXPR(void)
 	randomRange<float> randomRangeFloat;
 	shapeCircle<float> shapeCircleFloat;
 	shapeRectangle<float> shapeRectangleFloat;
+	inc<float> incFloat;
 
 	float recWidth{};
 	float recHeight{};
@@ -27,6 +28,7 @@ void xge::Game::initEXPR(void)
 	symbolTable.add_function("random.range", randomRangeFloat);
 	symbolTable.add_function("shape.circle", shapeCircleFloat);
 	symbolTable.add_function("shape.rectangle", shapeRectangleFloat);
+	symbolTable.add_function("inc", incFloat);
 
 	symbolTable.add_constant("window.top", 0);
 	symbolTable.add_constant("window.bottom", windowDesc.height);
@@ -51,6 +53,15 @@ void xge::Game::initEXPR(void)
 	std::string expression_str;
 
 	auto evaluate_string = [&](std::string input_string) { parser.compile(input_string, expression); return expression.value(); };
+	auto getParam = [&](xge::Object& object, std::string firstDelimiter, std::string secondDelimiter)
+	{
+		auto e_start = object.src.find(firstDelimiter) + 1;
+		auto e_end = object.src.find(secondDelimiter);
+		auto e_length = e_end - e_start;
+		return object.src.substr(e_start, e_length);
+	};
+	auto getFirstParam = [&](xge::Object& object) { return getParam(object, "(", ","); };
+	auto getSecondParam = [&](xge::Object& object) { return getParam(object, ",", ")"); };
 
 	for (auto& object : objects)
 	{
@@ -72,35 +83,19 @@ void xge::Game::initEXPR(void)
 
 		else if (object.src.compare(0, 15, "shape.rectangle") == 0)
 		{
-			auto e_start = object.src.find("(") + 1;
-			auto e_end = object.src.find(",");
-			auto e_length = e_end - e_start;
-
-			evaluate_string("recWidth := " + object.src.substr(e_start, e_length));
+			evaluate_string("recWidth := " + getFirstParam(object));
 			object.params.push_back(recWidth);
 
-			e_start = object.src.find(",") + 1;
-			e_end = object.src.find(")");
-			e_length = e_end - e_start;
-
-			evaluate_string("recHeight := " + object.src.substr(e_start, e_length));
+			evaluate_string("recHeight := " + getSecondParam(object));
 			object.params.push_back(recHeight);
 		}
 
 		else if (object.src.compare(0, 4, "text") == 0)
 		{
-			auto e_start = object.src.find("(") + 1;
-			auto e_end = object.src.find(",");
-			auto e_length = e_end - e_start;
-
-			evaluate_string("textString := " + object.src.substr(e_start, e_length));
+			evaluate_string("textString := " + getFirstParam(object));
 			object.sparams.push_back(textString);
 
-			e_start = object.src.find(",") + 1;
-			e_end = object.src.find(")");
-			e_length = e_end - e_start;
-
-			evaluate_string("textSize := " + object.src.substr(e_start, e_length));
+			evaluate_string("textSize := " + getSecondParam(object));
 			object.params.push_back(textSize);
 		}
 
