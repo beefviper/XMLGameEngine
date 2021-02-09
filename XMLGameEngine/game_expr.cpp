@@ -15,7 +15,6 @@ void xge::Game::initEXPR(void)
 	randomRange<float> randomRangeFloat;
 	shapeCircle<float> shapeCircleFloat;
 	shapeRectangle<float> shapeRectangleFloat;
-	inc<float> incFloat;
 
 	float recWidth{};
 	float recHeight{};
@@ -28,7 +27,6 @@ void xge::Game::initEXPR(void)
 	symbolTable.add_function("random.range", randomRangeFloat);
 	symbolTable.add_function("shape.circle", shapeCircleFloat);
 	symbolTable.add_function("shape.rectangle", shapeRectangleFloat);
-	symbolTable.add_function("inc", incFloat);
 
 	symbolTable.add_constant("window.top", 0);
 	symbolTable.add_constant("window.bottom", windowDesc.height);
@@ -50,7 +48,6 @@ void xge::Game::initEXPR(void)
 	exprtk::expression<float> expression;
 	expression.register_symbol_table(symbolTable);
 	exprtk::parser<float> parser;
-	std::string expression_str;
 
 	auto evaluate_string = [&](std::string input_string) { parser.compile(input_string, expression); return expression.value(); };
 	auto getParam = [&](xge::Object& object, std::string firstDelimiter, std::string secondDelimiter)
@@ -98,6 +95,5 @@ void xge::Game::initEXPR(void)
 			evaluate_string("textSize := " + getSecondParam(object));
 			object.params.push_back(textSize);
 		}
-
 	}
 }
