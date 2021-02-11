@@ -69,7 +69,7 @@ void xge::Game::initXML(void)
 		xCollisionData.bottom = getXMLAttributeOptional(xCollision, "bottom");
 		xCollisionData.left = getXMLAttributeOptional(xCollision, "left");
 		xCollisionData.right = getXMLAttributeOptional(xCollision, "right");
-		xCollisionData.default = getXMLAttributeOptional(xCollision, "default");
+		xCollisionData.basic = getXMLAttributeOptional(xCollision, "basic");
 		bool bCollision = (oCollision == "true") ? true : false;
 
 		xge::SObject sObject;
