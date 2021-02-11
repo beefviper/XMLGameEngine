@@ -64,12 +64,12 @@ void xge::Game::initXML(void)
 		tx::XMLElement* xCollision = getXMLElement(xObject, "collision");
 		std::string oCollision = getXMLAttribute(xCollision, "enabled");
 
-		xge::CollisionData sCollisionData;
-		sCollisionData.top = getXMLAttributeOptional(xCollision, "top");
-		sCollisionData.bottom = getXMLAttributeOptional(xCollision, "bottom");
-		sCollisionData.left = getXMLAttributeOptional(xCollision, "left");
-		sCollisionData.right = getXMLAttributeOptional(xCollision, "right");
-		sCollisionData.default = getXMLAttributeOptional(xCollision, "default");
+		xge::CollisionData xCollisionData;
+		xCollisionData.top = getXMLAttributeOptional(xCollision, "top");
+		xCollisionData.bottom = getXMLAttributeOptional(xCollision, "bottom");
+		xCollisionData.left = getXMLAttributeOptional(xCollision, "left");
+		xCollisionData.right = getXMLAttributeOptional(xCollision, "right");
+		xCollisionData.default = getXMLAttributeOptional(xCollision, "default");
 		bool bCollision = (oCollision == "true") ? true : false;
 
 		xge::SObject sObject;
@@ -94,7 +94,7 @@ void xge::Game::initXML(void)
 
 		Object object;
 		object.init(xName, xSrc, oActions);
-		object.collisionData = sCollisionData;
+		object.collisionData = xCollisionData;
 		object.collision = bCollision;
 		objects.push_back(object);
 		xObject = xObject->NextSiblingElement("object");
