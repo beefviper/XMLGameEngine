@@ -43,7 +43,7 @@ void xge::Game::updateObjects(void)
 				for (auto& otherObjectName : getCurrentState().show)
 				{
 					auto& otherObject = getObject(otherObjectName);
-					auto isCircular = object.src.find("shape.circle") != std::string::npos; //getSObject(object.name).ssrc.find("shape.circle") != std::string::npos;
+					auto isCircular = object.src.find("shape.circle") != std::string::npos;
 
 					if (object.name != otherObject.name && otherObject.collision && isCircular )
 					{
