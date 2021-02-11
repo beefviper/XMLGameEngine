@@ -36,7 +36,6 @@ namespace xge
 		sf::Vector2f position;
 		sf::Vector2f velocity;
 		bool collision{ false };
-		std::string scollisionData;
 		CollisionData collisionData;
 		std::vector<float> params;
 		std::vector<std::string> sparams;
@@ -48,8 +47,7 @@ namespace xge
 			o << "object: " << "name=" << f.name << ", src=" << f.src << '\n'
 				<< "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n'
 				<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
-				<< "\tcollision=" << f.collision << '\n'
-				<< "\tscollisionData=" << f.scollisionData << '\n';
+				<< "\tcollision=" << f.collision << '\n';
 
 			for (auto& action : f.action)
 			{
@@ -67,6 +65,5 @@ namespace xge
 		xge::Vector2str sposition;
 		xge::Vector2str svelocity;
 		std::string scollision;
-		std::string scollisiondata;
 	};
 }

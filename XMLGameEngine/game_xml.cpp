@@ -63,7 +63,6 @@ void xge::Game::initXML(void)
 
 		tx::XMLElement* xCollision = getXMLElement(xObject, "collision");
 		std::string oCollision = getXMLAttribute(xCollision, "enabled");
-		std::string oCollisionData = getXMLAttribute(xCollision, "data");
 
 		xge::CollisionData sCollisionData;
 		sCollisionData.top = getXMLAttributeOptional(xCollision, "top");
@@ -78,7 +77,6 @@ void xge::Game::initXML(void)
 		sObject.sposition = position;
 		sObject.svelocity = velocity;
 		sObject.scollision = oCollision;
-		sObject.scollisiondata = oCollisionData;
 		sObjects.push_back(sObject);
 
 		tx::XMLElement* xActions = getXMLElementOptional(xObject, "actions");
