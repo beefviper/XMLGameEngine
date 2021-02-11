@@ -64,6 +64,5 @@ namespace xge
 		std::string ssrc;
 		xge::Vector2str sposition;
 		xge::Vector2str svelocity;
-		std::string scollision;
 	};
 }

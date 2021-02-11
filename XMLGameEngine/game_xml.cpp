@@ -70,13 +70,13 @@ void xge::Game::initXML(void)
 		sCollisionData.left = getXMLAttributeOptional(xCollision, "left");
 		sCollisionData.right = getXMLAttributeOptional(xCollision, "right");
 		sCollisionData.default = getXMLAttributeOptional(xCollision, "default");
+		bool bCollision = (oCollision == "true") ? true : false;
 
 		xge::SObject sObject;
 		sObject.name = xName;
 		sObject.ssrc = xSrc;
 		sObject.sposition = position;
 		sObject.svelocity = velocity;
-		sObject.scollision = oCollision;
 		sObjects.push_back(sObject);
 
 		tx::XMLElement* xActions = getXMLElementOptional(xObject, "actions");
@@ -96,6 +96,7 @@ void xge::Game::initXML(void)
 		Object object;
 		object.init(xName, xSrc, oActions);
 		object.collisionData = sCollisionData;
+		object.collision = bCollision;
 		objects.push_back(object);
 		xObject = xObject->NextSiblingElement("object");
 	}
