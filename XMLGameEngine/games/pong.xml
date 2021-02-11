@@ -37,7 +37,7 @@
       <sprite src="shape.circle(ball.radius)" />
       <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
-      <collision enabled="true" top="bounce" bottom="bounce" left="inc('score2')" right="inc('score1')" default="bounce" />
+      <collision enabled="true" top="bounce" bottom="bounce" left="bounce" right="bounce" basic="bounce" />
     </object>
     <!-- paddle1 -->
     <object name="paddle1">
@@ -55,10 +55,12 @@
       <sprite src="shape.rectangle(width,height)" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" top="static" bottom="static" />
+      <collision enabled="true" top="static" bottom="static" left="static" right="static" />
       <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
+        <action name="left" value="move.left(step)" />
+        <action name="right" value="move.right(step)" />
       </actions>				
     </object>
     <!-- score1 -->
@@ -107,6 +109,8 @@
         <input action="paddle1.action.down" button="z" />
         <input action="paddle2.action.up" button="up" />
         <input action="paddle2.action.down" button="down" />
+        <input action="paddle2.action.left" button="left" />
+        <input action="paddle2.action.right" button="right" />
       </inputs>
     </state>
     <!-- paused -->

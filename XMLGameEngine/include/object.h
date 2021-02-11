@@ -22,7 +22,7 @@ namespace xge
 		std::string bottom;
 		std::string left;
 		std::string right;
-		std::string default;
+		std::string basic;
 	};
 
 	struct Object

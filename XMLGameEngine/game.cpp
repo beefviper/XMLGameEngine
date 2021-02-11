@@ -53,7 +53,7 @@ void xge::Game::updateObjects(void)
 			}
 
 			// check collision with other objects
-			if (object.collisionData.default != "")
+			if (object.collisionData.basic != "")
 			{
 				for (auto& otherObjectName : getCurrentState().show)
 				{
