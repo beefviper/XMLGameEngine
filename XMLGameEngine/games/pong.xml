@@ -23,14 +23,14 @@
       <sprite src="text('PONG', text.size)" />
       <position x="window.width.center - 350" y="margin" />
       <velocity x="0" y="0" />
-      <collision enabled="false" data="" />
+      <collision enabled="false" />
     </object>
     <!-- logo -->
     <object name="logo">
       <sprite src="shape.circle(logo.radius)" />
       <position x="window.width.center - logo.radius" y="window.height.center - logo.radius" />
       <velocity x="0" y="0" />
-      <collision enabled="false" data="" />
+      <collision enabled="false" />
     </object>
     <!-- ball -->
     <object name="ball">
@@ -66,14 +66,14 @@
       <sprite src="text('0',128)" />
       <position x="window.width.center - 80" y="margin" />
       <velocity x="0" y="0" />
-      <collision enabled="false" data="" />
+      <collision enabled="false" />
     </object>
     <!-- score2 -->
     <object name="score2">
       <sprite src="text('0',128)" />
       <position x="window.width.center + 50" y="margin" />
       <velocity x="0" y="0" />
-      <collision enabled="false" data="" />
+      <collision enabled="false" />
     </object>
   </objects>
   <!-- states -->
