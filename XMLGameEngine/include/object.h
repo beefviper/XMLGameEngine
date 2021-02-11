@@ -61,7 +61,6 @@ namespace xge
 	struct SObject
 	{
 		std::string name;
-		std::string ssrc;
 		xge::Vector2str sposition;
 		xge::Vector2str svelocity;
 	};

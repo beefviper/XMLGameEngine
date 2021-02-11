@@ -74,7 +74,6 @@ void xge::Game::initXML(void)
 
 		xge::SObject sObject;
 		sObject.name = xName;
-		sObject.ssrc = xSrc;
 		sObject.sposition = position;
 		sObject.svelocity = velocity;
 		sObjects.push_back(sObject);
