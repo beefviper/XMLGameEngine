@@ -63,19 +63,23 @@ void xge::Game::initXML(void)
 
 		tx::XMLElement* xCollision = getXMLElement(xObject, "collision");
 		std::string oCollision = getXMLAttribute(xCollision, "enabled");
-		std::string oCollisionData = getXMLAttribute(xCollision, "data");
+
+		xge::CollisionData xCollisionData;
+		xCollisionData.top = getXMLAttributeOptional(xCollision, "top");
+		xCollisionData.bottom = getXMLAttributeOptional(xCollision, "bottom");
+		xCollisionData.left = getXMLAttributeOptional(xCollision, "left");
+		xCollisionData.right = getXMLAttributeOptional(xCollision, "right");
+		xCollisionData.default = getXMLAttributeOptional(xCollision, "default");
+		bool bCollision = (oCollision == "true") ? true : false;
 
 		xge::SObject sObject;
 		sObject.name = xName;
-		sObject.ssrc = xSrc;
 		sObject.sposition = position;
 		sObject.svelocity = velocity;
-		sObject.scollision = oCollision;
-		sObject.scollisiondata = oCollisionData;
 		sObjects.push_back(sObject);
 
-		tx::XMLElement* xActions = getXMLOptionalElement(xObject, "actions");
-		tx::XMLElement* xAction = getXMLOptionalElement(xActions, "action");
+		tx::XMLElement* xActions = getXMLElementOptional(xObject, "actions");
+		tx::XMLElement* xAction = getXMLElementOptional(xActions, "action");
 
 		std::map<std::string, std::string> oActions;
 
@@ -90,6 +94,8 @@ void xge::Game::initXML(void)
 
 		Object object;
 		object.init(xName, xSrc, oActions);
+		object.collisionData = xCollisionData;
+		object.collision = bCollision;
 		objects.push_back(object);
 		xObject = xObject->NextSiblingElement("object");
 	}
@@ -97,18 +103,17 @@ void xge::Game::initXML(void)
 	// load states
 	while (xState != nullptr)
 	{
-
 		std::string sName = getXMLAttribute(xState, "name");
 
-		tx::XMLElement* sObject = getXMLElement(xState, "show");
+		tx::XMLElement* stObject = getXMLElement(xState, "show");
 
 		std::vector<std::string> sShows;
 
-		while (sObject != nullptr)
+		while (stObject != nullptr)
 		{
-			std::string shName = getXMLAttribute(sObject, "object");
+			std::string shName = getXMLAttribute(stObject, "object");
 			sShows.push_back(shName);
-			sObject = sObject->NextSiblingElement("show");
+			stObject = stObject->NextSiblingElement("show");
 		}
 
 		tx::XMLElement* xInputs = getXMLElement(xState, "inputs");
@@ -166,7 +171,7 @@ tx::XMLElement* xge::getXMLElement(tx::XMLElement* element, std::string tag)
 	return newElement;
 }
 
-tx::XMLElement* xge::getXMLOptionalElement(tx::XMLElement* element, std::string tag)
+tx::XMLElement* xge::getXMLElementOptional(tx::XMLElement* element, std::string tag)
 {
 	tx::XMLElement* newElement = nullptr;
 	if (element != nullptr)
@@ -203,6 +208,20 @@ std::string xge::getXMLAttribute(tx::XMLElement* element, std::string attribute)
 	}
 
 	std::string attributeString = attributeText;
+
+	return attributeString;
+}
+
+std::string xge::getXMLAttributeOptional(tx::XMLElement* element, std::string attribute)
+{
+	const char* attributeText = nullptr;
+	std::string attributeString;
+
+	attributeText = element->Attribute(attribute.c_str());
+	if (attributeText != nullptr)
+	{
+		attributeString = attributeText;
+	}
 
 	return attributeString;
 }

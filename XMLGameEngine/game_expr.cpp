@@ -69,9 +69,6 @@ void xge::Game::initEXPR(void)
 		object.velocity.x = evaluate_string(objectName.svelocity.x);
 		object.velocity.y = evaluate_string(objectName.svelocity.y);
 
-		object.collision = objectName.scollision == "true" ? true : false;
-		object.collisionData = objectName.scollisiondata;
-
 		// TODO: finish coming up with way to parse different types of assets: shape, file, data
 		if (object.src.compare(0, 12, "shape.circle") == 0)
 		{

@@ -23,28 +23,28 @@
       <sprite src="text('PONG', text.size)" />
       <position x="window.width.center - 350" y="margin" />
       <velocity x="0" y="0" />
-      <collision enabled="false" data="" />
+      <collision enabled="false" />
     </object>
     <!-- logo -->
     <object name="logo">
       <sprite src="shape.circle(logo.radius)" />
       <position x="window.width.center - logo.radius" y="window.height.center - logo.radius" />
       <velocity x="0" y="0" />
-      <collision enabled="false" data="" />
+      <collision enabled="false" />
     </object>
     <!-- ball -->
     <object name="ball">
       <sprite src="shape.circle(ball.radius)" />
       <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
-      <collision enabled="true" data="top: bounce; bottom: bounce; left: inc('score2'); right: inc('score1'); default: bounce" />
+      <collision enabled="true" top="bounce" bottom="bounce" left="inc('score2')" right="inc('score1')" default="bounce" />
     </object>
     <!-- paddle1 -->
     <object name="paddle1">
       <sprite src="shape.rectangle(width,height)" />
       <position x="window.left + margin" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" data="top: static; bottom: static" />
+      <collision enabled="true" top="static" bottom="static" />
       <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
@@ -55,7 +55,7 @@
       <sprite src="shape.rectangle(width,height)" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" data="top: static; bottom: static" />
+      <collision enabled="true" top="static" bottom="static" />
       <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
@@ -66,14 +66,14 @@
       <sprite src="text('0',128)" />
       <position x="window.width.center - 80" y="margin" />
       <velocity x="0" y="0" />
-      <collision enabled="false" data="" />
+      <collision enabled="false" />
     </object>
     <!-- score2 -->
     <object name="score2">
       <sprite src="text('0',128)" />
       <position x="window.width.center + 50" y="margin" />
       <velocity x="0" y="0" />
-      <collision enabled="false" data="" />
+      <collision enabled="false" />
     </object>
   </objects>
   <!-- states -->

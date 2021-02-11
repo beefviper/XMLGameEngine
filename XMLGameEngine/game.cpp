@@ -22,17 +22,15 @@ void xge::Game::updateObjects(void)
 		auto objectWidth = object.sprite->getLocalBounds().width;
 		auto objectHeight = object.sprite->getLocalBounds().height;
 
-		auto checkCollision = [&object](std::string type) { return object.collisionData.find(type) != std::string::npos; };
-
 		if (object.collision) {
 			// check collision with edges of screen
-			if ( (object.position.y < 0 && checkCollision("top: bounce") )
-				|| (object.position.y > windowDesc.height - objectHeight && checkCollision("bottom: bounce") ) )
+			if ( (object.position.y < 0 && object.collisionData.top == "bounce")
+				|| (object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "bounce") )
 			{
 				object.velocity.y *= -1;
 			}
-			if ( (object.position.y < 0 && checkCollision("top: static"))
-				|| (object.position.y > windowDesc.height - objectHeight && checkCollision("bottom: static") ) )
+			if ( (object.position.y < 0 && object.collisionData.top == "static")
+				|| (object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "static" ) )
 			{
 				if (object.position.y < 0) object.position.y = 0;
 				if (object.position.y > windowDesc.height - objectHeight) object.position.y = windowDesc.height - objectHeight;
@@ -40,12 +38,12 @@ void xge::Game::updateObjects(void)
 			}
 
 			// check collision with other objects
-			if (checkCollision("default"))
+			if (object.collisionData.default != "")
 			{
 				for (auto& otherObjectName : getCurrentState().show)
 				{
 					auto& otherObject = getObject(otherObjectName);
-					auto isCircular = getSObject(object.name).ssrc.find("shape.circle") != std::string::npos;
+					auto isCircular = object.src.find("shape.circle") != std::string::npos;
 
 					if (object.name != otherObject.name && otherObject.collision && isCircular )
 					{
