@@ -29,12 +29,27 @@ void xge::Game::updateObjects(void)
 			{
 				object.velocity.y *= -1;
 			}
+
+			if ((object.position.x < 0 && object.collisionData.left == "bounce")
+				|| (object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "bounce"))
+			{
+				object.velocity.x *= -1;
+			}
+
 			if ( (object.position.y < 0 && object.collisionData.top == "static")
 				|| (object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "static" ) )
 			{
 				if (object.position.y < 0) object.position.y = 0;
 				if (object.position.y > windowDesc.height - objectHeight) object.position.y = windowDesc.height - objectHeight;
 				object.velocity.y = 0;
+			}
+
+			if ((object.position.x < 0 && object.collisionData.left == "static")
+				|| (object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "static"))
+			{
+				if (object.position.x < 0) object.position.x = 0;
+				if (object.position.x > windowDesc.width - objectWidth) object.position.x = windowDesc.width - objectWidth;
+				object.velocity.x = 0;
 			}
 
 			// check collision with other objects
