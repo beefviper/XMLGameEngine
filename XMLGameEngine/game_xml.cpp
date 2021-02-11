@@ -103,7 +103,6 @@ void xge::Game::initXML(void)
 	// load states
 	while (xState != nullptr)
 	{
-
 		std::string sName = getXMLAttribute(xState, "name");
 
 		tx::XMLElement* stObject = getXMLElement(xState, "show");
