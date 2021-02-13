@@ -12,6 +12,7 @@
 #include <stack>
 #include <algorithm>
 #include <cmath>
+#include <assert.h>
 
 #include "utils.h"
 #include "object.h"
@@ -51,5 +52,21 @@ namespace xge
 		std::vector<xge::Object> objects;
 		std::stack<xge::State> currentState;
 
+		bool bouncedOffTop(xge::Object& object);
+		bool bouncedOffBottom(xge::Object& object);
+		bool bouncedOffLeft(xge::Object& object);
+		bool bouncedOffRight(xge::Object& object);
+
+		bool stuckToTop(xge::Object& object);
+		bool stuckToBottom(xge::Object& object);
+		bool stuckToLeft(xge::Object& object);
+		bool stuckToRight(xge::Object& object);
 	};
+
+	template<class T>
+	constexpr const T& clamp(const T& v, const T& lo, const T& hi)
+	{
+		assert(!(hi < lo));
+		return (v < lo) ? lo : (hi < v) ? hi : v;
+	}
 }

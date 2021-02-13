@@ -24,31 +24,17 @@ void xge::Game::updateObjects(void)
 
 		if (object.collision) {
 			// check collision with edges of screen
-			if ( (object.position.y < 0 && object.collisionData.top == "bounce")
-				|| (object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "bounce") )
+			if (bouncedOffTop(object) || bouncedOffBottom(object)) { object.velocity.y *= -1; }
+			if (bouncedOffLeft(object) || bouncedOffRight(object)) { object.velocity.x *= -1; }
+			if ( stuckToTop(object) || stuckToBottom(object) )
 			{
-				object.velocity.y *= -1;
-			}
-
-			if ((object.position.x < 0 && object.collisionData.left == "bounce")
-				|| (object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "bounce"))
-			{
-				object.velocity.x *= -1;
-			}
-
-			if ( (object.position.y < 0 && object.collisionData.top == "static")
-				|| (object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "static" ) )
-			{
-				if (object.position.y < 0) object.position.y = 0;
-				if (object.position.y > windowDesc.height - objectHeight) object.position.y = windowDesc.height - objectHeight;
+				object.position.y = xge::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
 				object.velocity.y = 0;
 			}
 
-			if ((object.position.x < 0 && object.collisionData.left == "static")
-				|| (object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "static"))
+			if (stuckToLeft(object) || stuckToRight(object))
 			{
-				if (object.position.x < 0) object.position.x = 0;
-				if (object.position.x > windowDesc.width - objectWidth) object.position.x = windowDesc.width - objectWidth;
+				object.position.x = xge::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
 				object.velocity.x = 0;
 			}
 
@@ -186,3 +172,44 @@ void xge::Game::setObjectParam(std::string name, std::string param, float value)
 		result->velocity.y = value;
 	}
 }
+
+bool xge::Game::bouncedOffTop(xge::Object& object)
+{
+	return object.position.y < 0 && object.collisionData.top == "bounce";
+}
+
+bool xge::Game::bouncedOffBottom(xge::Object& object)
+{
+	auto objectHeight = object.sprite->getLocalBounds().height;
+	return object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "bounce";
+}
+
+bool xge::Game::bouncedOffLeft(xge::Object& object)
+{
+	return object.position.x < 0 && object.collisionData.left == "bounce";
+};
+
+bool xge::Game::bouncedOffRight(xge::Object& object)
+{
+	auto objectWidth = object.sprite->getLocalBounds().width;
+	return object.position.x > windowDesc.height - objectWidth && object.collisionData.right == "bounce";
+}
+bool xge::Game::stuckToTop(xge::Object& object)
+{
+	return object.position.y < 0 && object.collisionData.top == "static";
+}
+bool xge::Game::stuckToBottom(xge::Object& object)
+{
+	auto objectHeight = object.sprite->getLocalBounds().height;
+	return object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "static";
+}
+bool xge::Game::stuckToLeft(xge::Object& object)
+{
+	return object.position.x < 0 && object.collisionData.left == "static";
+}
+bool xge::Game::stuckToRight(xge::Object& object)
+{
+	auto objectWidth = object.sprite->getLocalBounds().width;
+	return object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "static";
+}
+;
