@@ -24,9 +24,17 @@ void xge::Game::updateObjects(void)
 
 		if (object.collision) {
 			// check collision with edges of screen
-			if (bouncedOffTop(object) || bouncedOffBottom(object)) { object.velocity.y *= -1; }
-			if (bouncedOffLeft(object) || bouncedOffRight(object)) { object.velocity.x *= -1; }
-			if ( stuckToTop(object) || stuckToBottom(object) )
+			if (bouncedOffTop(object) || bouncedOffBottom(object))
+			{
+				object.velocity.y *= -1;
+			}
+			
+			if (bouncedOffLeft(object) || bouncedOffRight(object))
+			{
+				object.velocity.x *= -1;
+			}
+			
+			if ( stuckToTop(object) || stuckToBottom(object))
 			{
 				object.position.y = xge::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
 				object.velocity.y = 0;
