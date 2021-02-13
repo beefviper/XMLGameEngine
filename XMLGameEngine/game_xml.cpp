@@ -164,7 +164,8 @@ tx::XMLElement* xge::getXMLElement(tx::XMLElement* element, std::string tag)
 	tx::XMLElement* newElement = element->FirstChildElement(tag.c_str());
 	if (newElement == nullptr)
 	{
-		std::cout << "Error: could not parse <" << tag << "> tag" << std::endl;
+		std::cout << "Error: could not parse <" << tag << "> tag"
+			<< " on line " << element->GetLineNum() << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -187,7 +188,8 @@ std::string xge::getXMLText(tx::XMLElement* element)
 	std::string text;
 	if (!element->GetText())
 	{
-		std::cout << "Error: could not find <" << element->Name() << "> text" << std::endl;
+		std::cout << "Error: could not find <" << element->Name() << "> text"
+			<< " on line " << element->GetLineNum() << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -203,7 +205,8 @@ std::string xge::getXMLAttribute(tx::XMLElement* element, std::string attribute)
 	attributeText = element->Attribute(attribute.c_str());
 	if (attributeText == nullptr)
 	{
-		std::cout << "Error: can not find <" << element->Name() << "> attribute \"" << attribute << "\"" << std::endl;
+		std::cout << "Error: can not find <" << element->Name() << "> attribute \"" << attribute << "\""
+			<< " on line " << element->GetLineNum() << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -233,7 +236,8 @@ int xge::getXMLAttributeInt(tx::XMLElement* element, std::string attribute)
 	tx::XMLError xError = element->QueryIntAttribute(attribute.c_str(), &attributeInt);
 	if (xError != tx::XML_SUCCESS)
 	{
-		std::cout << "Error: parsing <" << element->Name() << "> int attribute \"" << attribute << "\"" << std::endl;
+		std::cout << "Error: parsing <" << element->Name() << "> int attribute \"" << attribute << "\""
+			<< " on line " << element->GetLineNum() << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -247,7 +251,8 @@ float xge::getXMLAttributeFloat(tx::XMLElement* element, std::string attribute)
 	tx::XMLError xError = element->QueryFloatAttribute(attribute.c_str(), &attributeFloat);
 	if (xError != tx::XML_SUCCESS)
 	{
-		std::cout << "Error: parsing <" << element->Name() << "> int attribute \"" << attribute << "\"" << std::endl;
+		std::cout << "Error: parsing <" << element->Name() << "> float attribute \"" << attribute << "\""
+			<< " on line " << element->GetLineNum() << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
