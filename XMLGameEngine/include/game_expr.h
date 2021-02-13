@@ -20,6 +20,17 @@
 
 
 namespace xge {
+	std::random_device seed;
+	std::mt19937 generator(seed());
+
+	template <typename T>
+	T randomNumberRange(T min, T max)
+	{
+		std::uniform_real_distribution<T> distribution(min, max);
+		T randNum = distribution(generator);
+		return randNum;
+	}
+
 	template <typename T>
 	struct randomNumber : public exprtk::ifunction<T>
 	{
@@ -30,11 +41,7 @@ namespace xge {
 
 		T operator()(const T& randMax)
 		{
-			std::random_device seed;
-			std::mt19937 generator(seed());
-			std::uniform_real_distribution<T> distribution(0, randMax);
-			T randNum = distribution(generator);
-			return randNum;
+			return randomNumberRange(0.0f, randMax);
 		}
 	};
 
@@ -48,11 +55,7 @@ namespace xge {
 
 		T operator()(const T& randMin, const T& randMax)
 		{
-			std::random_device seed;
-			std::mt19937 generator(seed());
-			std::uniform_real_distribution<T> distribution(randMin, randMax);
-			T randNum = distribution(generator);
-			return randNum;
+			return randomNumberRange(randMin, randMax);
 		}
 	};
 
