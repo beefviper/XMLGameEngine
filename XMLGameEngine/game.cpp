@@ -187,29 +187,32 @@ bool xge::Game::bouncedOffBottom(xge::Object& object)
 bool xge::Game::bouncedOffLeft(xge::Object& object)
 {
 	return object.position.x < 0 && object.collisionData.left == "bounce";
-};
+}
 
 bool xge::Game::bouncedOffRight(xge::Object& object)
 {
 	auto objectWidth = object.sprite->getLocalBounds().width;
 	return object.position.x > windowDesc.height - objectWidth && object.collisionData.right == "bounce";
 }
+
 bool xge::Game::stuckToTop(xge::Object& object)
 {
 	return object.position.y < 0 && object.collisionData.top == "static";
 }
+
 bool xge::Game::stuckToBottom(xge::Object& object)
 {
 	auto objectHeight = object.sprite->getLocalBounds().height;
 	return object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "static";
 }
+
 bool xge::Game::stuckToLeft(xge::Object& object)
 {
 	return object.position.x < 0 && object.collisionData.left == "static";
 }
+
 bool xge::Game::stuckToRight(xge::Object& object)
 {
 	auto objectWidth = object.sprite->getLocalBounds().width;
 	return object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "static";
 }
-;
