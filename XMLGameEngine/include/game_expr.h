@@ -20,8 +20,17 @@
 
 
 namespace xge {
+	std::vector<float> tempParams;
+	std::vector<std::string> tempSParams;
+
 	std::random_device seed;
 	std::mt19937 generator(seed());
+
+	void clearAllTempParams(void)
+	{
+		tempParams.clear();
+		tempSParams.clear();
+	}
 
 	template <typename T>
 	T randomNumberRange(T min, T max)
@@ -69,7 +78,9 @@ namespace xge {
 
 		T operator()(const T& cradius)
 		{
-			return cradius;
+			clearAllTempParams();
+			tempParams.push_back(cradius);
+			return 0;
 		}
 	};
 
@@ -83,7 +94,33 @@ namespace xge {
 
 		T operator()(const T& cwidth, const T& cheight)
 		{
-			return cwidth;
+			clearAllTempParams();
+			tempParams.push_back(cwidth);
+			tempParams.push_back(cheight);
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct text : public exprtk::igeneric_function<T>
+	{
+		typedef exprtk::igeneric_function<T> igenfunct_t;
+		typedef typename igenfunct_t::generic_type generic_t;
+		typedef typename igenfunct_t::parameter_list_t parameter_list_t;
+		typedef typename generic_t::string_view string_t;
+		typedef typename generic_type::scalar_view scalar_t;
+
+		text() : exprtk::igeneric_function<T>("ST")
+		{
+
+		}
+
+		inline T operator()(parameter_list_t parameters)
+		{
+			clearAllTempParams();
+			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+			tempParams.push_back(scalar_t(parameters[1])());
+			return 0;
 		}
 	};
 }
