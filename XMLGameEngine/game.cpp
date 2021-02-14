@@ -52,31 +52,9 @@ void xge::Game::updateObjects(void)
 				for (auto& otherObjectName : getCurrentState().show)
 				{
 					auto& otherObject = getObject(otherObjectName);
-					auto isCircular = object.src.find("shape.circle") != std::string::npos;
-
-					if (object.name != otherObject.name && otherObject.collision && isCircular )
+					if (circleRectangleCollision(object, otherObject))
 					{
-						auto midpoint = object.sprite->getPosition() +
-							sf::Vector2f(object.sprite->getLocalBounds().width / 2, object.sprite->getLocalBounds().height / 2);
-
-						auto otherObjectLeft = otherObject.sprite->getPosition().x;
-						auto otherObjectRight = otherObjectLeft + otherObject.sprite->getLocalBounds().width;
-						auto otherObjectTop = otherObject.sprite->getPosition().y;
-						auto otherObjectBottom = otherObjectTop + otherObject.sprite->getLocalBounds().height;
-
-						sf::Vector2f nearestPoint;
-						nearestPoint.x = std::max(otherObjectLeft, std::min(midpoint.x, otherObjectRight));
-						nearestPoint.y = std::max(otherObjectTop, std::min(midpoint.y, otherObjectBottom));
-
-						auto rayToNearest = nearestPoint - midpoint;
-						auto magOfray = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
-						auto overlap = object.sprite->getLocalBounds().width / 2 - magOfray;
-						if (std::isnan(overlap)) overlap = 0;
-
-						if (overlap > 0)
-						{
-							object.velocity.x *= -1;
-						}
+						object.velocity.x *= -1;
 					}
 				}
 			}
@@ -223,4 +201,31 @@ bool xge::Game::stuckToRight(xge::Object& object)
 {
 	auto objectWidth = object.sprite->getLocalBounds().width;
 	return object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "static";
+}
+
+bool xge::Game::circleRectangleCollision(xge::Object& object, xge::Object& otherObject)
+{
+	auto overlap{ 0.0f };
+	auto isCircular = object.src.find("shape.circle") != std::string::npos;
+
+	if (object.name != otherObject.name && otherObject.collision && isCircular)
+	{
+		auto midpoint = object.sprite->getPosition() +
+			sf::Vector2f(object.sprite->getLocalBounds().width / 2, object.sprite->getLocalBounds().height / 2);
+
+		auto otherObjectLeft = otherObject.sprite->getPosition().x;
+		auto otherObjectRight = otherObjectLeft + otherObject.sprite->getLocalBounds().width;
+		auto otherObjectTop = otherObject.sprite->getPosition().y;
+		auto otherObjectBottom = otherObjectTop + otherObject.sprite->getLocalBounds().height;
+
+		sf::Vector2f nearestPoint;
+		nearestPoint.x = std::max(otherObjectLeft, std::min(midpoint.x, otherObjectRight));
+		nearestPoint.y = std::max(otherObjectTop, std::min(midpoint.y, otherObjectBottom));
+
+		auto rayToNearest = nearestPoint - midpoint;
+		auto magOfray = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
+		overlap = object.sprite->getLocalBounds().width / 2 - magOfray;
+		if (std::isnan(overlap)) overlap = 0;
+	}
+	return (overlap > 0);
 }
