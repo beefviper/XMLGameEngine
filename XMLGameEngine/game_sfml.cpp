@@ -56,10 +56,10 @@ void xge::Game::initSFML(void)
 			text.setString(object.sparams.at(0));
 			text.setCharacterSize(static_cast<int>(object.params.at(0)));
 			text.setFillColor(sf::Color::Green);
-			text.setPosition(-text.getGlobalBounds().left, -text.getGlobalBounds().top );
+			text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top );
 
-			int width = static_cast<int>(std::ceil(text.getGlobalBounds().width));
-			int height = static_cast<int>(std::ceil(text.getGlobalBounds().height));
+			int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
+			int height = static_cast<int>(std::ceil(text.getLocalBounds().height));
 
 			object.renderTexture->create(width, height);
 			object.renderTexture->draw(text);
@@ -71,4 +71,40 @@ void xge::Game::initSFML(void)
 		object.sprite->setTexture(object.renderTexture->getTexture());
 		object.sprite->setPosition(object.position);
 	}
+}
+
+void xge::Game::updateSFMLTexture(xge::Object& object)
+{
+	sf::Font font;
+	sf::Text text;
+
+	std::string fontFile{ "assets/arial.ttf" };
+	if (!font.loadFromFile(fontFile))
+	{
+		std::cout << "error: failed to load font: " << fontFile << std::endl;
+	}
+
+	auto number = std::stoi(object.sparams.at(0));
+	number++;
+	object.sparams[0] = std::to_string(number);
+
+	text.setFont(font);
+	text.setString(object.sparams.at(0));
+	text.setCharacterSize(static_cast<int>(object.params.at(0)));
+	text.setFillColor(sf::Color::Green);
+
+	int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
+	int height = static_cast<int>(std::ceil(text.getLocalBounds().height));
+
+	text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top);
+
+	object.renderTexture = std::make_shared<sf::RenderTexture>();
+
+	object.renderTexture->create(width, height);
+	object.renderTexture->draw(text);
+	object.renderTexture->display();
+
+	object.sprite = std::make_shared<sf::Sprite>();
+	object.sprite->setTexture(object.renderTexture->getTexture());
+	object.sprite->setPosition(object.position);
 }
