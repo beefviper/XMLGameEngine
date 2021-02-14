@@ -108,7 +108,7 @@ namespace xge {
 		typedef typename igenfunct_t::generic_type generic_t;
 		typedef typename igenfunct_t::parameter_list_t parameter_list_t;
 		typedef typename generic_t::string_view string_t;
-		typedef typename generic_type::scalar_view scalar_t;
+		typedef typename generic_t::scalar_view scalar_t;
 
 		text() : exprtk::igeneric_function<T>("ST")
 		{
