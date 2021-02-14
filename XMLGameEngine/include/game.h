@@ -61,6 +61,8 @@ namespace xge
 		bool stuckToBottom(xge::Object& object);
 		bool stuckToLeft(xge::Object& object);
 		bool stuckToRight(xge::Object& object);
+
+		bool circleRectangleCollision(xge::Object& object, xge::Object& otherObject);
 	};
 
 	template<class T>

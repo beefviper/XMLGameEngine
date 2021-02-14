@@ -15,7 +15,7 @@ The resulting values and objects are used to render the game with *SFML*.
 XMLGameEngine is currently an alpha, and not complete.
 
 Things that work:
-* Loading and prasing XML
+* Loading and parsing XML
 * Expression and function evaluation
 * Creation of variables, objects, and states
 * Key handling for objects and states
@@ -26,4 +26,4 @@ Things that work:
 Things still missing:
 * Collisions of all types
 * Scoring system
-* Win Conidition
+* Win Condition
