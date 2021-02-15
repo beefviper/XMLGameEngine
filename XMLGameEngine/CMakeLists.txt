@@ -20,6 +20,8 @@ add_executable (XMLGameEngine "main.cpp" "include/utils.h" "utils.cpp" "include/
     "include/engine.h" "engine.cpp" "include/object.h" "object.cpp" "include/states.h" "states.cpp"
     "include/game_xml.h"  "include/game_expr.h"  "game_xml.cpp" "game_expr.cpp" "game_sfml.cpp")
 
+target_compile_features(XMLGameEngine PRIVATE cxx_std_17)
+
 target_include_directories(XMLGameEngine PUBLIC include)
 
 target_link_libraries(XMLGameEngine PUBLIC sfml-system sfml-window sfml-graphics sfml-network sfml-audio)

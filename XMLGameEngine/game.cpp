@@ -36,13 +36,13 @@ void xge::Game::updateObjects(void)
 			
 			if ( stuckToTop(object) || stuckToBottom(object))
 			{
-				object.position.y = xge::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
+				object.position.y = std::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
 				object.velocity.y = 0;
 			}
 
 			if (stuckToLeft(object) || stuckToRight(object))
 			{
-				object.position.x = xge::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
+				object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
 				object.velocity.x = 0;
 			}
 
@@ -231,8 +231,8 @@ bool xge::Game::circleRectangleCollision(xge::Object& object, xge::Object& other
 		auto otherObjectBottom = otherObjectTop + otherObject.sprite->getLocalBounds().height;
 
 		sf::Vector2f nearestPoint;
-		nearestPoint.x = std::max(otherObjectLeft, std::min(midpoint.x, otherObjectRight));
-		nearestPoint.y = std::max(otherObjectTop, std::min(midpoint.y, otherObjectBottom));
+		nearestPoint.x = std::clamp(midpoint.x, otherObjectLeft, otherObjectRight);
+		nearestPoint.y = std::clamp(midpoint.y, otherObjectTop, otherObjectBottom);
 
 		auto rayToNearest = nearestPoint - midpoint;
 		auto magOfray = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
