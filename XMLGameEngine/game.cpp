@@ -190,7 +190,7 @@ bool xge::Game::bouncedOffLeft(xge::Object& object)
 bool xge::Game::bouncedOffRight(xge::Object& object)
 {
 	auto objectWidth = object.sprite->getLocalBounds().width;
-	return object.position.x > windowDesc.height - objectWidth && object.collisionData.right == "bounce";
+	return object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "bounce";
 }
 
 bool xge::Game::stuckToTop(xge::Object& object)
