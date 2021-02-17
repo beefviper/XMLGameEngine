@@ -7,12 +7,19 @@
   <window name="Breakout" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
   <variables>
     <variable name="margin" value="30" />
-    <variable name="width" value="150" />
-    <variable name="height" value="30" />
+    <variable name="ball.radius" value="10" />
+    <variable name="width" value="30" />
+    <variable name="height" value="150" />
     <variable name="step" value="2" />
   </variables>
   <objects>
-    <object name="paddle1">
+    <object name="ball">
+      <sprite src="shape.circle(ball.radius)" />
+      <position x="window.width.center - ball.radius" y="window.height - margin * 2" />
+      <velocity x="random.range(-3,3)" y="random.range(-7,7)" />
+      <collision enabled="true" top="bounce" bottom="dec(player)" left="bounce" right="bounce" basic="bounce" />
+    </object>
+    <object name="player">
       <sprite src="shape.rectangle(width,height)" />
       <position x="window.width.center - width / 2" y="window.height- margin - height" />
       <velocity x="0" y="0" />
@@ -22,48 +29,43 @@
         <action name="right" value="move.right(step)" />
       </actions>				
     </object>
-    <object name="paddle2">
-      <sprite src="shape.rectangle(width * 2,height * 3)" />
-      <position x="window.width.center - width / 2" y="margin * 2" />
+    <object name="bricks">
+      <sprite src="shape.rectangle(width,height)" />
+      <position x="margin" y="margin" />
       <velocity x="0" y="0" />
-      <collision enabled="true" />
+      <collision enabled="true" basic="destruct" />
       <actions>
         <action name="up" value="move.up(step)" />
-        <action name="down" value="move.down(step)" />
-        <action name="left" value="move.left(step)" />
-        <action name="right" value="move.right(step)" />
       </actions>				
     </object>
   </objects>	
   <states>
     <state name="mainmenu">
-      <show object="paddle1" />
+      <show object="player" />
       <inputs>
         <input action="state.playing" button="space" />
         <input action="state.settings" button="s" />
       </inputs>
     </state>
     <state name="settings">
-    <show object="paddle1" />
+    <show object="player" />
       <inputs>
         <input action="state.mainmenu" button="escape" />
       </inputs>
     </state>
     <state name="playing">
-      <show object="paddle1" />
-      <show object="paddle2" />
+      <show object="ball" />
+      <show object="player" />
+      <show object="bricks" />
       <inputs>
         <input action="state.paused" button="space" />
-        <input action="paddle1.action.left" button="q" />
-        <input action="paddle1.action.right" button="z" />
-        <input action="paddle2.action.up" button="up" />
-        <input action="paddle2.action.down" button="down" />
-        <input action="paddle2.action.left" button="left" />
-        <input action="paddle2.action.right" button="right" />
+        <input action="player.action.left" button="q" />
+        <input action="player.action.right" button="z" />
+        <input action="bricks.action.up" button="up" />
       </inputs>
     </state>
     <state name="paused">
-      <show object="paddle2" />
+      <show object="player" />
       <inputs>
         <input action="state.playing" button="space" />
       </inputs>
