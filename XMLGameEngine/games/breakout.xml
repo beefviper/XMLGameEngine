@@ -8,20 +8,20 @@
   <variables>
     <variable name="margin" value="30" />
     <variable name="ball.radius" value="10" />
-    <variable name="width" value="30" />
-    <variable name="height" value="150" />
+    <variable name="width" value="150" />
+    <variable name="height" value="30" />
     <variable name="step" value="2" />
   </variables>
   <objects>
     <object name="ball">
       <sprite src="shape.circle(ball.radius)" />
       <position x="window.width.center - ball.radius" y="window.height - margin * 2" />
-      <velocity x="random.range(-3,3)" y="random.range(-7,7)" />
-      <collision enabled="true" top="bounce" bottom="dec(player)" left="bounce" right="bounce" basic="bounce" />
+      <velocity x="random.range(-3,3)" y="random.range(-7,-5)" />
+      <collision enabled="true" top="bounce" bottom="bounce" left="bounce" right="bounce" basic="bounce" />
     </object>
     <object name="player">
       <sprite src="shape.rectangle(width,height)" />
-      <position x="window.width.center - width / 2" y="window.height- margin - height" />
+      <position x="window.width.center" y="window.bottom - height * 2" />
       <velocity x="0" y="0" />
       <collision enabled="true" />
       <actions>
@@ -35,7 +35,6 @@
       <velocity x="0" y="0" />
       <collision enabled="true" basic="destruct" />
       <actions>
-        <action name="up" value="move.up(step)" />
       </actions>				
     </object>
   </objects>	
@@ -59,9 +58,8 @@
       <show object="bricks" />
       <inputs>
         <input action="state.paused" button="space" />
-        <input action="player.action.left" button="q" />
-        <input action="player.action.right" button="z" />
-        <input action="bricks.action.up" button="up" />
+        <input action="player.action.left" button="left" />
+        <input action="player.action.right" button="right" />
       </inputs>
     </state>
     <state name="paused">
