@@ -10,21 +10,12 @@ void xge::Game::initSFML(void)
 {
 	for (auto& object : objects)
 	{
-		sf::CircleShape circle;
-		sf::RectangleShape rectangle;
-		sf::Font font;
-		sf::Text text;
-
-		std::string fontFile{ "assets/arial.ttf" };
-		if (!font.loadFromFile(fontFile))
-		{
-			std::cout << "error: failed to load font: " << fontFile << std::endl;
-		}
-
 		object.renderTexture = std::make_shared<sf::RenderTexture>();
 
 		if (object.src.compare(0, 12, "shape.circle") == 0)
 		{
+			sf::CircleShape circle;
+
 			float radius = object.params.at(0);
 
 			circle.setRadius(radius);
@@ -38,6 +29,8 @@ void xge::Game::initSFML(void)
 		}
 		else if (object.src.compare(0, 15, "shape.rectangle") == 0)
 		{
+			sf::RectangleShape rectangle;
+
 			float recWidth = object.params.at(0);
 			float recHeight = object.params.at(1);
 
@@ -52,6 +45,15 @@ void xge::Game::initSFML(void)
 		}
 		else if (object.src.compare(0, 4, "text") == 0)
 		{
+			sf::Font font;
+			sf::Text text;
+
+			std::string fontFile{ "assets/arial.ttf" };
+			if (!font.loadFromFile(fontFile))
+			{
+				std::cout << "error: failed to load font: " << fontFile << std::endl;
+			}
+
 			text.setFont(font);
 			text.setString(object.sparams.at(0));
 			text.setCharacterSize(static_cast<int>(object.params.at(0)));
