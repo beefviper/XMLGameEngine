@@ -20,16 +20,20 @@
 
 
 namespace xge {
-	std::vector<float> tempParams;
-	std::vector<std::string> tempSParams;
 
-	std::random_device seed;
-	std::mt19937 generator(seed());
-
-	void clearAllTempParams(void)
+	namespace
 	{
-		tempParams.clear();
-		tempSParams.clear();
+		std::vector<float> tempParams;
+		std::vector<std::string> tempSParams;
+
+		std::random_device seed;
+		std::mt19937 generator(seed());
+
+		void clearAllTempParams(void)
+		{
+			tempParams.clear();
+			tempSParams.clear();
+		}
 	}
 
 	template <typename T>
