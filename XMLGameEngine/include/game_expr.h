@@ -13,6 +13,7 @@
 #pragma warning(disable : 26451)
 #pragma warning(disable : 26495)
 #pragma warning(disable : 26498)
+#pragma warning(disable : 26819)
 
 #include <exprtk.hpp>
 
