@@ -3,11 +3,11 @@
 // author: beefviper
 // date: Sept 18, 2020
 
-#include <iostream>
-#include <string>
-
 #include "game.h"
 #include "engine.h"
+
+#include <iostream>
+#include <string>
 
 int main(void)
 {

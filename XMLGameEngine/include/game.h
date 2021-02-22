@@ -5,6 +5,10 @@
 
 #pragma once
 
+#include "utils.h"
+#include "object.h"
+#include "states.h"
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -13,10 +17,6 @@
 #include <algorithm>
 #include <cmath>
 #include <assert.h>
-
-#include "utils.h"
-#include "object.h"
-#include "states.h"
 
 namespace xge
 {

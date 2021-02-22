@@ -5,10 +5,10 @@
 
 #pragma once
 
+#include <tinyxml2.h>
+
 #include <iostream>
 #include <string>
-
-#include <tinyxml2.h>
 
 namespace tx = tinyxml2;
 

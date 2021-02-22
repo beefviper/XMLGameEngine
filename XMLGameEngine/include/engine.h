@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include <memory>
-
-#include <SFML/Window.hpp>
-
 #include "utils.h"
 #include "game.h"
 #include "object.h"
+
+#include <SFML/Window.hpp>
+
+#include <memory>
 
 using PairStringString = std::pair<const std::string, std::string>;
 

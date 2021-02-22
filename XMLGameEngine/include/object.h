@@ -5,14 +5,14 @@
 
 #pragma once
 
+#include "utils.h"
+
+#include <SFML/Graphics.hpp>
+
 #include <string>
 #include <vector>
 #include <map>
 #include <memory>
-
-#include <SFML/Graphics.hpp>
-
-#include "utils.h"
 
 namespace xge
 {
