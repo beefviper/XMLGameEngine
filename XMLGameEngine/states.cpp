@@ -5,7 +5,7 @@
 
 #include "states.h"
 
-void xge::State::init(std::string name, std::vector<std::string> show, std::map<std::string, std::string> input)
+void xge::State::init(const std::string& name, const std::vector<std::string>& show, const std::map<std::string, std::string> &input)
 {
 	this->name = name;
 	this->show = show;
