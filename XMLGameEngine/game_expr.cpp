@@ -41,7 +41,7 @@ void xge::Game::initEXPR(void)
 
 	for (auto& object : objects)
 	{
-		auto evaluate_string = [&](std::string input_string)
+		auto evaluate_string = [&](const std::string& input_string)
 		{
 			parser.compile(input_string, expression);
 
