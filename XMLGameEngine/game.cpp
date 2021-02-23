@@ -7,7 +7,7 @@
 
 namespace xge
 {
-	Game::Game(std::string game) :
+	Game::Game(const std::string& game) :
 		filename(game)
 	{
 		initXML();

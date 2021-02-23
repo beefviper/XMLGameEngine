@@ -23,7 +23,7 @@ namespace xge
 	class Game
 	{
 	public:
-		Game(std::string game);
+		Game(const std::string& game);
 		void initXML(void) ;
 		void initEXPR(void);
 		void initSFML(void);
