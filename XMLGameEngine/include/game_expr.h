@@ -15,7 +15,7 @@
 
 #include <exprtk.hpp>
 
-#pragma warning( pop )
+#pragma warning(pop)
 
 #include <random>
 

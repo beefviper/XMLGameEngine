@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "utils.h"
 #include "object.h"
 #include "states.h"
 
@@ -20,6 +19,16 @@
 
 namespace xge
 {
+	struct WindowDesc
+	{
+		std::string name;
+		float width{};
+		float height{};
+		std::string background;
+		std::string fullscreen;
+		int framerate{};
+	};
+
 	class Game
 	{
 	public:

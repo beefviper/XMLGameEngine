@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include "utils.h"
-
 #include <SFML/Graphics.hpp>
 
 #include <string>
@@ -43,7 +41,7 @@ namespace xge
 		std::shared_ptr<sf::Sprite> sprite;
 
 
-		friend std::ostream& operator<<(std::ostream& o, xge::Object const& f) {
+		friend std::ostream& operator<<(std::ostream& o, Object const& f) {
 			o << "object: " << "name=" << f.name << ", src=" << f.src << '\n'
 				<< "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n'
 				<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
@@ -63,10 +61,16 @@ namespace xge
 		}
 	};
 
+	struct Vector2str
+	{
+		std::string x;
+		std::string y;
+	};
+
 	struct SObject
 	{
 		std::string name;
-		xge::Vector2str sposition;
-		xge::Vector2str svelocity;
+		Vector2str sposition;
+		Vector2str svelocity;
 	};
 }
