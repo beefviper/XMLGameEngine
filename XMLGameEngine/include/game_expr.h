@@ -108,11 +108,11 @@ namespace xge {
 	template <typename T>
 	struct text : public exprtk::igeneric_function<T>
 	{
-		typedef exprtk::igeneric_function<T> igenfunct_t;
-		typedef typename igenfunct_t::generic_type generic_t;
-		typedef typename igenfunct_t::parameter_list_t parameter_list_t;
-		typedef typename generic_t::string_view string_t;
-		typedef typename generic_t::scalar_view scalar_t;
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
 
 		text() : exprtk::igeneric_function<T>("ST")
 		{
