@@ -35,14 +35,14 @@ namespace xge
 
 		xge::WindowDesc& getWindowDesc(void);
 		std::vector<xge::Object>& getObjects(void);
-		xge::Object& getObject(std::string name);
-		xge::SObject& getSObject(std::string name);
-		float& getVariable(std::string name);
+		xge::Object& getObject(const std::string& name);
+		xge::SObject& getSObject(const std::string& name);
+		float& getVariable(const std::string& name);
 		xge::State getCurrentState(void);
 
-		void setCurrentState(int index);
-		void setCurrentState(std::string name);
-		void setObjectParam(std::string name, std::string param, float value);
+		void setCurrentState(const int& index);
+		void setCurrentState(const std::string& name);
+		void setObjectParam(const std::string& name, const std::string& param, const float& value);
 
 	private:
 		std::string filename;

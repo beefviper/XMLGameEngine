@@ -130,19 +130,19 @@ namespace xge
 		return objects;
 	}
 
-	Object& Game::getObject(std::string name)
+	Object& Game::getObject(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
 		return *result;
 	}
 
-	SObject& Game::getSObject(std::string name)
+	SObject& Game::getSObject(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(sObjects), std::end(sObjects), [&](SObject& obj) { return obj.name == name; });
 		return *result;
 	}
 
-	float& Game::getVariable(std::string name)
+	float& Game::getVariable(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(variables), std::end(variables), [&](std::pair<const std::string, float>& var) { return var.first == name; });
 		return result->second;
@@ -153,18 +153,18 @@ namespace xge
 		return currentState.top();
 	}
 
-	void Game::setCurrentState(int index)
+	void Game::setCurrentState(const int& index)
 	{
 		currentState.push(states.at(index));
 	}
 
-	void Game::setCurrentState(std::string name)
+	void Game::setCurrentState(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
 		currentState.push(*result);
 	}
 
-	void Game::setObjectParam(std::string name, std::string param, float value)
+	void Game::setObjectParam(const std::string& name, const std::string& param, const float& value)
 	{
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
 		if (param == "velocity")
