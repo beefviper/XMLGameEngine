@@ -20,22 +20,22 @@ namespace xge
 	class Engine
 	{
 	public:
-		Engine(xge::Game& game);
+		Engine(Game& game);
 
 		void loop(void);
 
-		void handleKeyPressed(xge::Game& game, sf::Event& event);
-		void handleKeyReleased(xge::Game& game, sf::Event& event);
+		void handleKeyPressed(Game& game, sf::Event& event);
+		void handleKeyReleased(Game& game, sf::Event& event);
 
 	private:
-		xge::Game& game;
+		Game& game;
 		sf::RenderWindow window;
 		enum class Direction { None, Up, Down, Left, Right };
 
 		std::map<sf::Keyboard::Key, bool> isKeyPressed;
-		void execute_action(xge::Game& game, sf::Event& event, PairStringString& input, bool keyPressed = true);
-		void move(xge::Object& object, Engine::Direction direction, float step);
-		void move(xge::Object& object, std::string direction, float step);
+		void execute_action(Game& game, sf::Event& event, PairStringString& input, bool keyPressed = true);
+		void move(Object& object, Engine::Direction direction, float step);
+		void move(Object& object, std::string direction, float step);
 
 		std::string getObjectFromInput(PairStringString input);
 		std::string getCommandFromInput(PairStringString input);
