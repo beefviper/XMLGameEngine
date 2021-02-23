@@ -27,7 +27,7 @@ namespace xge
 
 	struct Object
 	{
-		void init(std::string name, std::string src, std::map<std::string, std::string> action);
+		void init(const std::string& name, const std::string& src, const std::map<std::string, std::string>& action);
 
 		std::string name;
 		std::string src;

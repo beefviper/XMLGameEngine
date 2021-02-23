@@ -7,7 +7,7 @@
 
 namespace xge
 {
-	void xge::Object::init(std::string name, std::string src, std::map<std::string, std::string> action)
+	void xge::Object::init(const std::string& name, const std::string& src, const std::map<std::string, std::string>& action)
 	{
 		this->name = name;
 		this->src = src;
