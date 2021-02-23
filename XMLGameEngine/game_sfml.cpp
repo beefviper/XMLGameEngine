@@ -4,7 +4,6 @@
 // date: Sept 21, 2020
 
 #include "game.h"
-#include <SFML/System.hpp>
 
 namespace xge
 {
@@ -12,7 +11,7 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			object.renderTexture = std::make_shared<sf::RenderTexture>();
+			object.renderTexture = std::make_unique<sf::RenderTexture>();
 
 			if (object.src.compare(0, 12, "shape.circle") == 0)
 			{
@@ -71,7 +70,7 @@ namespace xge
 
 			object.renderTexture->display();
 
-			object.sprite = std::make_shared<sf::Sprite>();
+			object.sprite = std::make_unique<sf::Sprite>();
 			object.sprite->setTexture(object.renderTexture->getTexture());
 			object.sprite->setPosition(object.position);
 		}
@@ -102,13 +101,13 @@ namespace xge
 
 		text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top);
 
-		object.renderTexture = std::make_shared<sf::RenderTexture>();
+		object.renderTexture = std::make_unique<sf::RenderTexture>();
 
 		object.renderTexture->create(width, height);
 		object.renderTexture->draw(text);
 		object.renderTexture->display();
 
-		object.sprite = std::make_shared<sf::Sprite>();
+		object.sprite = std::make_unique<sf::Sprite>();
 		object.sprite->setTexture(object.renderTexture->getTexture());
 		object.sprite->setPosition(object.position);
 	}

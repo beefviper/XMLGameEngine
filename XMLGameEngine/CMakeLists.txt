@@ -18,7 +18,7 @@ find_package(tinyxml2 CONFIG REQUIRED)
 # Add source to this project's executable.
 add_executable (XMLGameEngine "main.cpp" "include/utils.h" "utils.cpp" "include/game.h" "game.cpp"
     "include/engine.h" "engine.cpp" "include/object.h" "object.cpp" "include/states.h" "states.cpp"
-    "include/game_xml.h"  "include/game_expr.h"  "game_xml.cpp" "game_expr.cpp" "game_sfml.cpp")
+    "include/game_xml.h"  "include/game_expr.h"  "game_xml.cpp" "game_expr.cpp" "game_sfml.cpp" "include/game_sfml.h")
 
 target_compile_features(XMLGameEngine PRIVATE cxx_std_17)
 
