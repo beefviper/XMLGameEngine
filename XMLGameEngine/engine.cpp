@@ -5,7 +5,8 @@
 
 #include "engine.h"
 
-namespace xge {
+namespace xge
+{
 	Engine::Engine(Game& game) :
 		game(game)
 	{
