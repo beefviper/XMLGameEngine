@@ -11,11 +11,11 @@ void xge::Game::initEXPR(void)
 	// TODO: Write code to parse the rest of the text fields
 	//		-- exprtk lib will parse text variables and expressions
 
-	randomNumber<float> randomNumberFloat;
-	randomRange<float> randomRangeFloat;
-	shapeCircle<float> shapeCircleFloat;
-	shapeRectangle<float> shapeRectangleFloat;
-	text<float> textFloat;
+	randomNumber<float> randomNumberFloat{};
+	randomRange<float> randomRangeFloat{};
+	shapeCircle<float> shapeCircleFloat{};
+	shapeRectangle<float> shapeRectangleFloat{};
+	text<float> textFloat{};
 
 	exprtk::symbol_table<float> symbolTable;
 	symbolTable.add_function("random.number", randomNumberFloat);
@@ -39,10 +39,22 @@ void xge::Game::initEXPR(void)
 	expression.register_symbol_table(symbolTable);
 	exprtk::parser<float> parser;
 
-	auto evaluate_string = [&](std::string input_string) { parser.compile(input_string, expression); return expression.value(); };
-
 	for (auto& object : objects)
 	{
+		auto evaluate_string = [&](std::string input_string)
+		{
+			parser.compile(input_string, expression);
+
+			if (!parser.compile(input_string, expression))
+			{
+				std::cout << "Error: " << parser.error().c_str()
+					<< " in object named '" << object.name << "'" << '\n';
+				exit(EXIT_FAILURE); 
+			}
+
+			return expression.value();
+		};
+		
 		auto& objectName = getSObject(object.name);
 
 		object.position.x = evaluate_string(objectName.sposition.x);
