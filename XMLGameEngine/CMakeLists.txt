@@ -12,8 +12,11 @@ if (MSVC)
     add_compile_options(/bigobj)
 endif()
 
-find_package(SFML REQUIRED system window graphics network audio)
+find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
 find_package(tinyxml2 CONFIG REQUIRED)
+find_package(XercesC CONFIG REQUIRED)
+
+find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 
 # Add source to this project's executable.
 add_executable (XMLGameEngine "main.cpp" "include/game.h" "game.cpp"
@@ -24,8 +27,11 @@ target_compile_features(XMLGameEngine PRIVATE cxx_std_17)
 
 target_include_directories(XMLGameEngine PUBLIC include)
 
-target_link_libraries(XMLGameEngine PUBLIC sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
+target_link_libraries(XMLGameEngine PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
 target_link_libraries(XMLGameEngine PRIVATE tinyxml2::tinyxml2)
+target_link_libraries(XMLGameEngine PRIVATE xerces_xerces-c XercesC::XercesC)
+
+target_include_directories(XMLGameEngine PRIVATE ${EXPRTK_INCLUDE_DIRS})
 
 add_dependencies(XMLGameEngine data-target)
 
