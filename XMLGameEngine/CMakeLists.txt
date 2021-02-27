@@ -14,7 +14,6 @@ endif()
 
 find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
 find_package(tinyxml2 CONFIG REQUIRED)
-find_package(XercesC CONFIG REQUIRED)
 
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 
@@ -31,7 +30,6 @@ target_include_directories(XMLGameEngine PUBLIC include)
 
 target_link_libraries(XMLGameEngine PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
 target_link_libraries(XMLGameEngine PRIVATE tinyxml2::tinyxml2)
-target_link_libraries(XMLGameEngine PRIVATE xerces_xerces-c XercesC::XercesC)
 
 target_include_directories(XMLGameEngine PRIVATE ${EXPRTK_INCLUDE_DIRS})
 
