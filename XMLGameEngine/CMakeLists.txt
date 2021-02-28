@@ -13,7 +13,6 @@ if (MSVC)
 endif()
 
 find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
-find_package(tinyxml2 CONFIG REQUIRED)
 find_package(XercesC CONFIG REQUIRED)
 
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
@@ -30,7 +29,6 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
-target_link_libraries(${PROJECT_NAME} PRIVATE tinyxml2::tinyxml2)
 target_link_libraries(XMLGameEngine PRIVATE xerces_xerces-c XercesC::XercesC)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${EXPRTK_INCLUDE_DIRS})
