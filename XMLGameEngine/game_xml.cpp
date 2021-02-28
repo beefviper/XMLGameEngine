@@ -55,8 +55,19 @@ namespace xge
 		auto xc_window = xc_root->getFirstElementChild();
 		auto xc_variables = xc_window->getNextElementSibling()->getFirstElementChild();
 
-
-		//std::cout << "variables =  " << x2s(xc_variables->getAttribute(s2x("name"))) << '\n';
+		auto s2x = [](std::string input)
+		{
+			std::unique_ptr<const XMLCh*> output = std::make_unique<const XMLCh*>(xc::XMLString::transcode(input.c_str()));
+			return *std::move(output);
+		};
+		auto x2s = [](const XMLCh* input)
+		{
+			return xc::XMLString::transcode(input);
+		};
+		auto getAttributeByName = [s2x, x2s](xc::DOMElement* element, std::string name)
+		{
+			return x2s(element->getAttribute(s2x(name)));
+		};
 
 		// load window description
 		windowDesc.name = getAttributeByName(xc_window,"name");
