@@ -1,6 +1,6 @@
 # XMLGameEngine
 
-An engine for describing games built around tinyxml2, exprtk, and SFML.
+An engine for describing games built around Xerces, exprtk, and SFML.
 
 XMLGameEngine dependencies:
 * Xerces   https://github.com/apache/xerces-c
