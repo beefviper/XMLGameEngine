@@ -10,6 +10,41 @@ namespace xge
 {
 	void Game::initXML(void)
 	{
+		xc::XMLPlatformUtils::Initialize();
+
+		xc::XercesDOMParser domParser;
+		if (domParser.loadGrammar("assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
+		{
+			fprintf(stderr, "couldn't load schema\n");
+			return;
+		}
+
+		ParserErrorHandler parserErrorHandler;
+
+		domParser.setErrorHandler(&parserErrorHandler);
+		domParser.setValidationScheme(xc::XercesDOMParser::Val_Auto);
+		domParser.setDoNamespaces(true);
+		domParser.setDoSchema(true);
+		domParser.setValidationConstraintFatal(true);
+
+		domParser.parse(filename.c_str());
+
+		if (domParser.getErrorCount() == 0)
+			printf("XML file validated against the schema successfully\n");
+		else
+			printf("XML file doesn't conform to the schema\n");
+
+		auto doc = domParser.getDocument();
+		auto root = doc->getDocumentElement();
+
+		auto window = root->getFirstElementChild();
+
+		std::unique_ptr<const XMLCh*> name = std::make_unique<const XMLCh*>(xc::XMLString::transcode("name"));
+
+		auto window_name = window->getAttribute(*name);
+		
+		std::cout << "window: name = " << xc::XMLString::transcode(window_name) << std::endl;
+
 		tx::XMLDocument xml;
 		tx::XMLError xmlErrorCode = xml.LoadFile(filename.c_str());
 		checkXMLResult(xml, xmlErrorCode);
@@ -139,6 +174,34 @@ namespace xge
 
 			xState = xState->NextSiblingElement("state");
 		}
+	}
+
+	void ParserErrorHandler::reportParseException(const xc::SAXParseException& ex)
+	{
+		char* msg = xc::XMLString::transcode(ex.getMessage());
+		fprintf(stderr, "at line %llu column %llu, %s\n",
+			ex.getLineNumber(), ex.getColumnNumber(), msg);
+		xc::XMLString::release(&msg);
+	}
+
+	void ParserErrorHandler::warning(const xc::SAXParseException& ex)
+	{
+		reportParseException(ex);
+	}
+
+	void ParserErrorHandler::error(const xc::SAXParseException& ex)
+	{
+		reportParseException(ex);
+	}
+
+	void ParserErrorHandler::fatalError(const xc::SAXParseException& ex)
+	{
+		reportParseException(ex);
+	}
+
+	void ParserErrorHandler::resetErrors()
+	{
+
 	}
 
 	void checkXMLResult(tx::XMLDocument& xml, tx::XMLError result)
