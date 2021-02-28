@@ -33,6 +33,20 @@ namespace xc = xercesc;
 
 namespace xge
 {
+	auto s2x = [](std::string input)
+	{
+		std::unique_ptr<const XMLCh*> output = std::make_unique<const XMLCh*>(xc::XMLString::transcode(input.c_str()));
+		return *std::move(output);
+	};
+	auto x2s = [](const XMLCh* input)
+	{
+		return xc::XMLString::transcode(input);
+	};
+	auto getAttributeByName = [s2x, x2s](xc::DOMElement* element, std::string name)
+	{
+		return x2s(element->getAttribute(s2x(name)));
+	};
+
 	class ParserErrorHandler : public xc::ErrorHandler
 	{
 	private:

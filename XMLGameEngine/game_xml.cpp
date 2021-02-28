@@ -34,16 +34,6 @@ namespace xge
 		else
 			std::cout << "XML file doesn't conform to the schema\n";
 
-		auto doc = domParser.getDocument();
-		auto root = doc->getDocumentElement();
-		auto window = root->getFirstElementChild();
-
-		std::unique_ptr<const XMLCh*> name = std::make_unique<const XMLCh*>(xc::XMLString::transcode("name"));
-
-		auto window_name = window->getAttribute(*name);
-		
-		std::cout << "window: name = " << xc::XMLString::transcode(window_name) << '\n';
-
 		tx::XMLDocument xml;
 		tx::XMLError xmlErrorCode = xml.LoadFile(filename.c_str());
 		checkXMLResult(xml, xmlErrorCode);
@@ -60,13 +50,21 @@ namespace xge
 		tx::XMLElement* xObject = getXMLElement(xObjects, "object");
 		tx::XMLElement* xState = getXMLElement(xStates, "state");
 
+		auto xc_doc = domParser.getDocument();
+		auto xc_root = xc_doc->getDocumentElement();
+		auto xc_window = xc_root->getFirstElementChild();
+		auto xc_variables = xc_window->getNextElementSibling()->getFirstElementChild();
+
+
+		//std::cout << "variables =  " << x2s(xc_variables->getAttribute(s2x("name"))) << '\n';
+
 		// load window description
-		windowDesc.name = getXMLAttribute(xWindow, "name");
-		windowDesc.width = getXMLAttributeFloat(xWindow, "width");
-		windowDesc.height = getXMLAttributeFloat(xWindow, "height");
-		windowDesc.background = getXMLAttribute(xWindow, "background");
-		windowDesc.fullscreen = getXMLAttribute(xWindow, "fullscreen");
-		windowDesc.framerate = getXMLAttributeInt(xWindow, "framerate");
+		windowDesc.name = getAttributeByName(xc_window,"name");
+		windowDesc.width = std::stof(getAttributeByName(xc_window, "width"));
+		windowDesc.height = std::stof(getAttributeByName(xc_window, "height"));
+		windowDesc.background = getAttributeByName(xc_window, "background");
+		windowDesc.fullscreen = getAttributeByName(xc_window, "fullscreen");
+		windowDesc.framerate = std::stoi(getAttributeByName(xc_window, "framerate"));
 
 		// load variables
 		while (xVariable != nullptr)
