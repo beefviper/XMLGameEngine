@@ -10,254 +10,196 @@ namespace xge
 {
 	void Game::initXML(void)
 	{
-		tx::XMLDocument xml;
-		tx::XMLError xmlErrorCode = xml.LoadFile(filename.c_str());
-		checkXMLResult(xml, xmlErrorCode);
+		xc::XMLPlatformUtils::Initialize();
 
-		tx::XMLElement* xGame = getXMLRoot(xml.FirstChildElement("game"));
+		xc::XercesDOMParser domParser;
+		if (domParser.loadGrammar("assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
+		{
+			std::cout << "couldn't load schema\n\n";
+			return;
+		}
 
-		tx::XMLElement* xWindow = getXMLElement(xGame, "window");
+		ParserErrorHandler parserErrorHandler;
 
-		tx::XMLElement* xVariables = getXMLElement(xGame, "variables");
-		tx::XMLElement* xObjects = getXMLElement(xGame, "objects");
-		tx::XMLElement* xStates = getXMLElement(xGame, "states");
+		domParser.setErrorHandler(&parserErrorHandler);
+		domParser.setValidationScheme(xc::XercesDOMParser::Val_Auto);
+		domParser.setDoNamespaces(true);
+		domParser.setDoSchema(true);
+		domParser.setValidationConstraintFatal(true);
 
-		tx::XMLElement* xVariable = getXMLElement(xVariables, "variable");
-		tx::XMLElement* xObject = getXMLElement(xObjects, "object");
-		tx::XMLElement* xState = getXMLElement(xStates, "state");
+		domParser.parse(filename.c_str());
+
+		if (domParser.getErrorCount() == 0)
+			std::cout << "XML file validated against the schema successfully\n\n";
+		else
+			std::cout << "XML file doesn't conform to the schema\n\n";
+
+		auto s2x = [](std::string input)
+		{
+			std::unique_ptr<const XMLCh*> output = std::make_unique<const XMLCh*>(xc::XMLString::transcode(input.c_str()));
+			return *std::move(output);
+		};
+		auto x2s = [](const XMLCh* input)
+		{
+			return xc::XMLString::transcode(input);
+		};
+		auto getAttributeByName = [s2x, x2s](xc::DOMElement* element, std::string name)
+		{
+			return x2s(element->getAttribute(s2x(name)));
+		};
+
+		auto xc_doc = domParser.getDocument();
+		auto xc_root = xc_doc->getDocumentElement();
+		auto xc_window = xc_root->getFirstElementChild();
+		auto xc_variables = xc_window->getNextElementSibling();
+		auto xc_variable = xc_variables->getFirstElementChild();
+		auto xc_objects = xc_variables->getNextElementSibling();
+		auto xc_object = xc_objects->getFirstElementChild();
+		auto xc_states = xc_objects->getNextElementSibling();
+		auto xc_state = xc_states->getFirstElementChild();
 
 		// load window description
-		windowDesc.name = getXMLAttribute(xWindow, "name");
-		windowDesc.width = getXMLAttributeFloat(xWindow, "width");
-		windowDesc.height = getXMLAttributeFloat(xWindow, "height");
-		windowDesc.background = getXMLAttribute(xWindow, "background");
-		windowDesc.fullscreen = getXMLAttribute(xWindow, "fullscreen");
-		windowDesc.framerate = getXMLAttributeInt(xWindow, "framerate");
+		windowDesc.name = getAttributeByName(xc_window, "name");
+		windowDesc.width = std::stof(getAttributeByName(xc_window, "width"));
+		windowDesc.height = std::stof(getAttributeByName(xc_window, "height"));
+		windowDesc.background = getAttributeByName(xc_window, "background");
+		windowDesc.fullscreen = getAttributeByName(xc_window, "fullscreen");
+		windowDesc.framerate = std::stoi(getAttributeByName(xc_window, "framerate"));
 
 		// load variables
-		while (xVariable != nullptr)
+		while (xc_variable != nullptr)
 		{
-			std::string vName = getXMLAttribute(xVariable, "name");
-			float vValue = getXMLAttributeFloat(xVariable, "value");
-			variables[vName] = vValue;
-			xVariable = xVariable->NextSiblingElement("variable");
+			std::string xc_var_name = getAttributeByName(xc_variable, "name");
+			float xc_var_value = std::stof(getAttributeByName(xc_variable, "value"));
+			variables[xc_var_name] = xc_var_value;
+			xc_variable = xc_variable->getNextElementSibling();
 		}
 
 		// load objects
-		while (xObject != nullptr)
+		while (xc_object != nullptr)
 		{
-			std::string xName = getXMLAttribute(xObject, "name");
+			std::string xc_obj_name = getAttributeByName(xc_object, "name");
 
-			tx::XMLElement* xSprite = getXMLElement(xObject, "sprite");
-			std::string xSrc = getXMLAttribute(xSprite, "src");
+			auto xc_sprite = xc_object->getFirstElementChild();
+			std::string xc_sprite_src = getAttributeByName(xc_sprite, "src");
 
-			tx::XMLElement* xPosition = getXMLElement(xObject, "position");
-			std::string xPosX = getXMLAttribute(xPosition, "x");
-			std::string xPosY = getXMLAttribute(xPosition, "y");
+			auto xc_pos = xc_sprite->getNextElementSibling();
+			std::string xc_pos_x = getAttributeByName(xc_pos, "x");
+			std::string xc_pos_y = getAttributeByName(xc_pos, "y");
 
-			tx::XMLElement* xVelocity = getXMLElement(xObject, "velocity");
-			std::string xVelX = getXMLAttribute(xVelocity, "x");
-			std::string xVelY = getXMLAttribute(xVelocity, "y");
+			auto xc_vel = xc_pos->getNextElementSibling();
+			std::string xc_vel_x = getAttributeByName(xc_vel, "x");
+			std::string xc_vel_y = getAttributeByName(xc_vel, "y");
 
+			Vector2str position{ xc_pos_x, xc_pos_y };
+			Vector2str velocity{ xc_vel_x, xc_vel_y };
 
-			Vector2str position{ xPosX, xPosY };
-			Vector2str velocity{ xVelX, xVelY };
+			auto xc_collision = xc_vel->getNextElementSibling();
+			std::string xc_collision_enabled = getAttributeByName(xc_collision, "enabled");
 
-			tx::XMLElement* xCollision = getXMLElement(xObject, "collision");
-			std::string oCollision = getXMLAttribute(xCollision, "enabled");
-
-			CollisionData xCollisionData;
-			xCollisionData.top = getXMLAttributeOptional(xCollision, "top");
-			xCollisionData.bottom = getXMLAttributeOptional(xCollision, "bottom");
-			xCollisionData.left = getXMLAttributeOptional(xCollision, "left");
-			xCollisionData.right = getXMLAttributeOptional(xCollision, "right");
-			xCollisionData.basic = getXMLAttributeOptional(xCollision, "basic");
-			bool bCollision = (oCollision == "true") ? true : false;
+			CollisionData xc_collision_data;
+			xc_collision_data.top = getAttributeByName(xc_collision, "top");
+			xc_collision_data.bottom = getAttributeByName(xc_collision, "bottom");
+			xc_collision_data.left = getAttributeByName(xc_collision, "left");
+			xc_collision_data.right = getAttributeByName(xc_collision, "right");
+			xc_collision_data.basic = getAttributeByName(xc_collision, "basic");
+			bool xc_collision_state = (xc_collision_enabled == "true") ? true : false;
 
 			SObject sObject;
-			sObject.name = xName;
+			sObject.name = xc_obj_name;
 			sObject.sposition = position;
 			sObject.svelocity = velocity;
 			sObjects.push_back(sObject);
 
-			tx::XMLElement* xActions = getXMLElementOptional(xObject, "actions");
-			tx::XMLElement* xAction = getXMLElementOptional(xActions, "action");
+			std::map<std::string, std::string> xc_action_map;
 
-			std::map<std::string, std::string> oActions;
-
-			while (xAction != nullptr)
+			auto xc_actions = xc_collision->getNextElementSibling();
+			if (xc_actions)
 			{
-				std::string aName = getXMLAttribute(xAction, "name");
-				std::string aValue = getXMLAttribute(xAction, "value");
-				oActions[aName] = aValue;
+				auto xc_action = xc_actions->getFirstElementChild();
 
-				xAction = xAction->NextSiblingElement("action");
+				while (xc_action != nullptr)
+				{
+					std::string xc_act_name = getAttributeByName(xc_action, "name");
+					std::string xc_act_value = getAttributeByName(xc_action, "value");
+					xc_action_map[xc_act_name] = xc_act_value;
+
+					xc_action = xc_action->getNextElementSibling();
+				}
 			}
 
 			Object object;
-			object.init(xName, xSrc, oActions);
-			object.collisionData = xCollisionData;
-			object.collision = bCollision;
+			object.init(xc_obj_name, xc_sprite_src, xc_action_map);
+			object.collisionData = xc_collision_data;
+			object.collision = xc_collision_state;
 			objects.push_back(object);
-			xObject = xObject->NextSiblingElement("object");
+			xc_object = xc_object->getNextElementSibling();
 		}
 
 		// load states
-		while (xState != nullptr)
+		while (xc_state != nullptr)
 		{
-			std::string sName = getXMLAttribute(xState, "name");
+			std::string xc_state_name = getAttributeByName(xc_state, "name");
 
-			tx::XMLElement* stObject = getXMLElement(xState, "show");
+			auto xc_shows = xc_state->getFirstElementChild();
+			auto xc_show = xc_shows->getFirstElementChild();
 
-			std::vector<std::string> sShows;
+			std::vector<std::string> xc_show_vec;
 
-			while (stObject != nullptr)
+			while (xc_show != nullptr)
 			{
-				std::string shName = getXMLAttribute(stObject, "object");
-				sShows.push_back(shName);
-				stObject = stObject->NextSiblingElement("show");
+				std::string xc_show_object = getAttributeByName(xc_show, "object");
+				xc_show_vec.push_back(xc_show_object);
+				xc_show = xc_show->getNextElementSibling();
 			}
 
-			tx::XMLElement* xInputs = getXMLElement(xState, "inputs");
-			tx::XMLElement* xInput = getXMLElement(xInputs, "input");
+			auto xc_inputs = xc_shows->getNextElementSibling();
+			auto xc_input = xc_inputs->getFirstElementChild();
 
-			std::map<std::string, std::string> sInputs;
+			std::map<std::string, std::string> xc_inputs_map;
 
-			while (xInput != nullptr)
+			while (xc_input != nullptr)
 			{
-				std::string iAction = getXMLAttribute(xInput, "action");
-				std::string iButton = getXMLAttribute(xInput, "button");
+				std::string xc_input_action = getAttributeByName(xc_input, "action");
+				std::string xc_input_button = getAttributeByName(xc_input, "button");
 
-				sInputs[iAction] = iButton;
+				xc_inputs_map[xc_input_action] = xc_input_button;
 
-				xInput = xInput->NextSiblingElement("input");
+				xc_input = xc_input->getNextElementSibling();
 			}
 
 			State state;
-			state.init(sName, sShows, sInputs);
+			state.init(xc_state_name, xc_show_vec, xc_inputs_map);
 			states.push_back(state);
 
-			xState = xState->NextSiblingElement("state");
+			xc_state = xc_state->getNextElementSibling();
 		}
 	}
 
-	void checkXMLResult(tx::XMLDocument& xml, tx::XMLError result)
+	void ParserErrorHandler::reportParseException(const xc::SAXParseException& ex)
 	{
-		if (result != tx::XML_SUCCESS)
-		{
-			std::cout << xml.ErrorStr() << std::endl;
-			exit(EXIT_FAILURE);
-		}
+		char* msg = xc::XMLString::transcode(ex.getMessage());
+		std::cout << "at line " << ex.getLineNumber() << " column " << ex.getColumnNumber() << msg << '\n';
+		xc::XMLString::release(&msg);
 	}
 
-	tx::XMLElement* getXMLRoot(tx::XMLElement* element)
+	void ParserErrorHandler::warning(const xc::SAXParseException& ex)
 	{
-		if (element == nullptr)
-		{
-			std::cout << "Error: could not parse <game> tag" << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		return element;
+		reportParseException(ex);
 	}
 
-	tx::XMLElement* getXMLElement(tx::XMLElement* element, std::string tag)
+	void ParserErrorHandler::error(const xc::SAXParseException& ex)
 	{
-		tx::XMLElement* newElement = element->FirstChildElement(tag.c_str());
-		if (newElement == nullptr)
-		{
-			std::cout << "Error: could not parse <" << tag << "> tag"
-				<< " on line " << element->GetLineNum() << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		return newElement;
+		reportParseException(ex);
 	}
 
-	tx::XMLElement* getXMLElementOptional(tx::XMLElement* element, std::string tag)
+	void ParserErrorHandler::fatalError(const xc::SAXParseException& ex)
 	{
-		tx::XMLElement* newElement = nullptr;
-		if (element != nullptr)
-		{
-			newElement = element->FirstChildElement(tag.c_str());
-		}
-
-		return newElement;
+		reportParseException(ex);
 	}
 
-	std::string getXMLText(tx::XMLElement* element)
+	void ParserErrorHandler::resetErrors()
 	{
-		std::string text;
-		if (!element->GetText())
-		{
-			std::cout << "Error: could not find <" << element->Name() << "> text"
-				<< " on line " << element->GetLineNum() << std::endl;
-			exit(EXIT_FAILURE);
-		}
 
-		text = element->GetText();
-
-		return text;
-	}
-
-	std::string getXMLAttribute(tx::XMLElement* element, std::string attribute)
-	{
-		const char* attributeText = nullptr;
-
-		attributeText = element->Attribute(attribute.c_str());
-		if (attributeText == nullptr)
-		{
-			std::cout << "Error: can not find <" << element->Name() << "> attribute \"" << attribute << "\""
-				<< " on line " << element->GetLineNum() << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		std::string attributeString = attributeText;
-
-		return attributeString;
-	}
-
-	std::string getXMLAttributeOptional(tx::XMLElement* element, std::string attribute)
-	{
-		const char* attributeText = nullptr;
-		std::string attributeString;
-
-		attributeText = element->Attribute(attribute.c_str());
-		if (attributeText != nullptr)
-		{
-			attributeString = attributeText;
-		}
-
-		return attributeString;
-	}
-
-	int getXMLAttributeInt(tx::XMLElement* element, std::string attribute)
-	{
-		int attributeInt{};
-
-		tx::XMLError xError = element->QueryIntAttribute(attribute.c_str(), &attributeInt);
-		if (xError != tx::XML_SUCCESS)
-		{
-			std::cout << "Error: parsing <" << element->Name() << "> int attribute \"" << attribute << "\""
-				<< " on line " << element->GetLineNum() << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		return	attributeInt;
-	}
-
-	float getXMLAttributeFloat(tx::XMLElement* element, std::string attribute)
-	{
-		float attributeFloat{};
-
-		tx::XMLError xError = element->QueryFloatAttribute(attribute.c_str(), &attributeFloat);
-		if (xError != tx::XML_SUCCESS)
-		{
-			std::cout << "Error: parsing <" << element->Name() << "> float attribute \"" << attribute << "\""
-				<< " on line " << element->GetLineNum() << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		return	attributeFloat;
 	}
 }

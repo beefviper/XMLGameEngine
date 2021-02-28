@@ -3,7 +3,7 @@
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
-<game>
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <!-- window -->
   <window name="Pong" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
   <!-- variables -->
@@ -82,8 +82,10 @@
   <states>
     <!-- mainmenu -->
     <state name="mainmenu">
-      <show object="title" />
-      <show object="logo" />
+      <shows>
+        <show object="title" />
+        <show object="logo" />
+      </shows>
       <inputs>
         <input action="state.playing" button="space" />
         <input action="state.settings" button="s" />
@@ -91,18 +93,22 @@
     </state>
     <!-- settings -->
     <state name="settings">
-      <show object="logo" />
+      <shows>
+        <show object="logo" />
+      </shows>
       <inputs>
         <input action="state.mainmenu" button="escape" />
       </inputs>
     </state>
     <!-- playing -->
     <state name="playing">
-      <show object="ball" />
-      <show object="paddle1" />
-      <show object="paddle2" />
-      <show object="score1" />
-      <show object="score2" />
+      <shows>
+        <show object="ball" />
+        <show object="paddle1" />
+        <show object="paddle2" />
+        <show object="score1" />
+        <show object="score2" />
+      </shows>
       <inputs>
         <input action="state.paused" button="space" />
         <input action="paddle1.action.up" button="q" />
@@ -115,7 +121,9 @@
     </state>
     <!-- paused -->
     <state name="paused">
-      <show object="logo" />
+      <shows>
+        <show object="logo" />
+      </shows>
       <inputs>
         <input action="state.playing" button="space" />
       </inputs>
