@@ -15,7 +15,7 @@ namespace xge
 		xc::XercesDOMParser domParser;
 		if (domParser.loadGrammar("assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
 		{
-			fprintf(stderr, "couldn't load schema\n");
+			std::cout << "couldn't load schema\n";
 			return;
 		}
 
@@ -30,20 +30,19 @@ namespace xge
 		domParser.parse(filename.c_str());
 
 		if (domParser.getErrorCount() == 0)
-			printf("XML file validated against the schema successfully\n");
+			std::cout << "XML file validated against the schema successfully\n";
 		else
-			printf("XML file doesn't conform to the schema\n");
+			std::cout << "XML file doesn't conform to the schema\n";
 
 		auto doc = domParser.getDocument();
 		auto root = doc->getDocumentElement();
-
 		auto window = root->getFirstElementChild();
 
 		std::unique_ptr<const XMLCh*> name = std::make_unique<const XMLCh*>(xc::XMLString::transcode("name"));
 
 		auto window_name = window->getAttribute(*name);
 		
-		std::cout << "window: name = " << xc::XMLString::transcode(window_name) << std::endl;
+		std::cout << "window: name = " << xc::XMLString::transcode(window_name) << '\n';
 
 		tx::XMLDocument xml;
 		tx::XMLError xmlErrorCode = xml.LoadFile(filename.c_str());
@@ -179,8 +178,7 @@ namespace xge
 	void ParserErrorHandler::reportParseException(const xc::SAXParseException& ex)
 	{
 		char* msg = xc::XMLString::transcode(ex.getMessage());
-		fprintf(stderr, "at line %llu column %llu, %s\n",
-			ex.getLineNumber(), ex.getColumnNumber(), msg);
+		std::cout << "at line " << ex.getLineNumber() << " column " << ex.getColumnNumber() << msg << '\n';
 		xc::XMLString::release(&msg);
 	}
 
