@@ -37,7 +37,7 @@ namespace xge
 			auto stringToXMLCh = [](std::string input)
 			{
 				std::unique_ptr<const XMLCh*> output = std::make_unique<const XMLCh*>(xc::XMLString::transcode(input.c_str()));
-				return std::move(output);
+				return output;
 			};
 			auto XMLChToString = [](const XMLCh* input)
 			{
