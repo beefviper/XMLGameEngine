@@ -34,7 +34,7 @@ namespace xge
 			else
 				std::cout << "XML file doesn't conform to the schema\n\n";
 
-			auto stringToXMLCh = [](std::string input)
+			auto stringToXMLCh = [](std::string& input)
 			{
 				return xc::XMLString::transcode(input.c_str());
 			};
