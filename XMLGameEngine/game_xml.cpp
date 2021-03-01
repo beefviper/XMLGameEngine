@@ -37,7 +37,7 @@ namespace xge
 			auto stringToXMLCh = [](std::string input)
 			{
 				std::unique_ptr<const XMLCh*> output = std::make_unique<const XMLCh*>(xc::XMLString::transcode(input.c_str()));
-				return *std::move(output);
+				return std::move(output);
 			};
 			auto XMLChToString = [](const XMLCh* input)
 			{
@@ -45,7 +45,7 @@ namespace xge
 			};
 			auto getAttributeByName = [stringToXMLCh, XMLChToString](xc::DOMElement* element, std::string name)
 			{
-				return XMLChToString(element->getAttribute(stringToXMLCh(name)));
+				return XMLChToString(element->getAttribute(*stringToXMLCh(name)));
 			};
 
 			auto xc_doc = domParser.getDocument();
