@@ -30,23 +30,17 @@ namespace xge
 			domParser.parse(filename.c_str());
 
 			if (domParser.getErrorCount() == 0)
+			{
 				std::cout << "XML file validated against the schema successfully\n\n";
+			}
 			else
+			{
 				std::cout << "XML file doesn't conform to the schema\n\n";
+				xc::XMLPlatformUtils::Terminate();
+				exit(EXIT_FAILURE);
+			}
 
-			auto stringToXMLCh = [](std::string& input)
-			{
-				return xc::XMLString::transcode(input.c_str());
-			};
-			auto XMLChToString = [](const XMLCh* input)
-			{
-				return xc::XMLString::transcode(input);
-			};
-			auto getAttributeByName = [stringToXMLCh, XMLChToString](xc::DOMElement* element, std::string name)
-			{
-				return XMLChToString(element->getAttribute(stringToXMLCh(name)));
-			};
-
+			// find key points in document
 			auto xc_doc = domParser.getDocument();
 			auto xc_root = xc_doc->getDocumentElement();
 			auto xc_window = xc_root->getFirstElementChild();
@@ -180,7 +174,7 @@ namespace xge
 	void ParserErrorHandler::reportParseException(const xc::SAXParseException& ex)
 	{
 		char* msg = xc::XMLString::transcode(ex.getMessage());
-		std::cout << "at line " << ex.getLineNumber() << " column " << ex.getColumnNumber() << msg << '\n';
+		std::cout << "at line " << ex.getLineNumber() << " column " << ex.getColumnNumber() << " " << msg << '\n';
 		xc::XMLString::release(&msg);
 	}
 
@@ -202,5 +196,16 @@ namespace xge
 	void ParserErrorHandler::resetErrors()
 	{
 
+	}
+
+	std::string getAttributeByName(const xc::DOMElement* element, const std::string& attribute)
+	{
+		XMLCh* attr = xc::XMLString::transcode(attribute.c_str());
+		const XMLCh* value = element->getAttribute(attr);
+		char* val = xc::XMLString::transcode(value);
+		std::string v = val;
+		xc::XMLString::release(&val);
+		xc::XMLString::release(&attr);
+		return v;
 	}
 }

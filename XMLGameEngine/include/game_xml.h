@@ -42,4 +42,6 @@ namespace xge
 		void fatalError(const xc::SAXParseException& ex);
 		void resetErrors();
 	};
+
+	std::string getAttributeByName(const xc::DOMElement* element, const std::string& attribute);
 }
