@@ -1,4 +1,4 @@
-// xml.h
+// game_xml.h
 // XML Game Engine
 // author: beefviper
 // date: Sept 18, 2020

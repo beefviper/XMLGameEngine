@@ -1,4 +1,4 @@
-// game.h
+// game_sfml.h
 // XML Game Engine
 // author: beefviper
 // date: Feb 23, 2021

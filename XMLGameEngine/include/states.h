@@ -1,4 +1,4 @@
-// game.h
+// states.h
 // XML Game Engine
 // author: beefviper
 // date: Sept 18, 2020
