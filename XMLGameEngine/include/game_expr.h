@@ -19,8 +19,8 @@
 
 #include <random>
 
-namespace xge {
-
+namespace xge
+{
 	namespace
 	{
 		std::vector<float> tempParams;

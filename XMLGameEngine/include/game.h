@@ -27,16 +27,16 @@ namespace xge
 		void initEXPR(void);
 		void initSFML(void);
 
-		void updateSFMLTexture(xge::Object& object);
+		void updateSFMLTexture(Object& object);
 
 		void updateObjects(void);
 		void printGame(void);
 
-		xge::WindowDesc& getWindowDesc(void);
-		std::vector<xge::Object>& getObjects(void);
-		xge::Object& getObject(const std::string& name);
+		WindowDesc& getWindowDesc(void);
+		std::vector<Object>& getObjects(void);
+		Object& getObject(const std::string& name);
 		float& getVariable(const std::string& name);
-		xge::State getCurrentState(void);
+		State getCurrentState(void);
 
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
@@ -44,23 +44,23 @@ namespace xge
 
 	private:
 		std::string filename;
-		xge::WindowDesc windowDesc;
+		WindowDesc windowDesc;
 
 		std::map<std::string, float> variables;
-		std::vector<xge::State> states;
-		std::vector<xge::Object> objects;
-		std::stack<xge::State> currentState;
+		std::vector<State> states;
+		std::vector<Object> objects;
+		std::stack<State> currentState;
 
-		bool bouncedOffTop(xge::Object& object);
-		bool bouncedOffBottom(xge::Object& object);
-		bool bouncedOffLeft(xge::Object& object);
-		bool bouncedOffRight(xge::Object& object);
+		bool bouncedOffTop(Object& object);
+		bool bouncedOffBottom(Object& object);
+		bool bouncedOffLeft(Object& object);
+		bool bouncedOffRight(Object& object);
 
-		bool stuckToTop(xge::Object& object);
-		bool stuckToBottom(xge::Object& object);
-		bool stuckToLeft(xge::Object& object);
-		bool stuckToRight(xge::Object& object);
+		bool stuckToTop(Object& object);
+		bool stuckToBottom(Object& object);
+		bool stuckToLeft(Object& object);
+		bool stuckToRight(Object& object);
 
-		bool circleRectangleCollision(xge::Object& object, xge::Object& otherObject);
+		bool circleRectangleCollision(Object& object, Object& otherObject);
 	};
 }

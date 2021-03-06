@@ -125,7 +125,7 @@ namespace xge
 		return windowDesc;
 	}
 
-	std::vector<xge::Object>& Game::getObjects(void)
+	std::vector<Object>& Game::getObjects(void)
 	{
 		return objects;
 	}
