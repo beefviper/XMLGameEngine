@@ -115,13 +115,15 @@ namespace xge
 					}
 				}
 
-				Object object;
-				object.init(xc_obj_name, xc_sprite_src, xc_action_map);
-				object.collisionData = xc_collision_data;
+				Object object{};
+				object.name = xc_obj_name;
+				object.src = xc_sprite_src;
+				object.action = xc_action_map;
 				object.collision = xc_collision_state;
+				object.collisionData = xc_collision_data;
 				object.sposition = position;
 				object.svelocity = velocity;
-				objects.push_back(object);
+				objects.push_back(std::move(object));
 				xc_object = xc_object->getNextElementSibling();
 			}
 

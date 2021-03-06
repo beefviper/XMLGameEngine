@@ -41,8 +41,6 @@ namespace xge
 
 	struct Object
 	{
-		void init(const std::string& name, const std::string& src, const std::map<std::string, std::string>& action);
-
 		std::string name;
 		std::string src;
 		std::map<std::string, std::string> action;
@@ -55,26 +53,9 @@ namespace xge
 		CollisionData collisionData;
 		std::vector<float> params;
 		std::vector<std::string> sparams;
-		std::shared_ptr<sf::RenderTexture> renderTexture;
-		std::shared_ptr<sf::Sprite> sprite;
+		std::unique_ptr<sf::RenderTexture> renderTexture;
+		std::unique_ptr<sf::Sprite> sprite;
 
-		friend std::ostream& operator<<(std::ostream& o, Object const& f) {
-			o << "object: " << "name=" << f.name << ", src=" << f.src << '\n'
-				<< "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n'
-				<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
-				<< "\tcollision=" << (f.collision ? "true" : "false")
-				<< (f.collisionData.top.length() ? ", top=" + f.collisionData.top : "")
-				<< (f.collisionData.bottom.length() ? ", bottom=" + f.collisionData.bottom : "")
-				<< (f.collisionData.left.length() ? ", left=" + f.collisionData.left : "")
-				<< (f.collisionData.right.length() ? ", right=" + f.collisionData.right : "")
-				<< (f.collisionData.basic.length() ? ", basic=" + f.collisionData.basic : "") << '\n';
-
-			for (auto& action : f.action)
-			{
-				o << "\taction=" << action.first << ", value=" << action.second << '\n';
-			}
-
-			return o;
-		}
+		friend std::ostream& operator<<(std::ostream& o, Object const& f);
 	};
 }
