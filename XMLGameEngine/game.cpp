@@ -136,12 +136,6 @@ namespace xge
 		return *result;
 	}
 
-	SObject& Game::getSObject(const std::string& name)
-	{
-		auto result = std::find_if(std::begin(sObjects), std::end(sObjects), [&](SObject& obj) { return obj.name == name; });
-		return *result;
-	}
-
 	float& Game::getVariable(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(variables), std::end(variables), [&](std::pair<const std::string, float>& var) { return var.first == name; });

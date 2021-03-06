@@ -98,12 +98,6 @@ namespace xge
 				xc_collision_data.basic = getAttributeByName(xc_collision, "basic");
 				bool xc_collision_state = (xc_collision_enabled == "true") ? true : false;
 
-				SObject sObject;
-				sObject.name = xc_obj_name;
-				sObject.sposition = position;
-				sObject.svelocity = velocity;
-				sObjects.push_back(sObject);
-
 				std::map<std::string, std::string> xc_action_map;
 
 				auto xc_actions = xc_collision->getNextElementSibling();
@@ -125,6 +119,8 @@ namespace xge
 				object.init(xc_obj_name, xc_sprite_src, xc_action_map);
 				object.collisionData = xc_collision_data;
 				object.collision = xc_collision_state;
+				object.sposition = position;
+				object.svelocity = velocity;
 				objects.push_back(object);
 				xc_object = xc_object->getNextElementSibling();
 			}

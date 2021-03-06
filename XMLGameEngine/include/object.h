@@ -14,6 +14,16 @@
 
 namespace xge
 {
+	struct WindowDesc
+	{
+		std::string name;
+		float width{};
+		float height{};
+		std::string background;
+		std::string fullscreen;
+		int framerate{};
+	};
+
 	struct CollisionData
 	{
 		std::string top;
@@ -21,6 +31,12 @@ namespace xge
 		std::string left;
 		std::string right;
 		std::string basic;
+	};
+
+	struct Vector2str
+	{
+		std::string x;
+		std::string y;
 	};
 
 	struct Object
@@ -31,6 +47,8 @@ namespace xge
 		std::string src;
 		std::map<std::string, std::string> action;
 
+		Vector2str sposition;
+		Vector2str svelocity;
 		sf::Vector2f position;
 		sf::Vector2f velocity;
 		bool collision{ false };
@@ -39,7 +57,6 @@ namespace xge
 		std::vector<std::string> sparams;
 		std::shared_ptr<sf::RenderTexture> renderTexture;
 		std::shared_ptr<sf::Sprite> sprite;
-
 
 		friend std::ostream& operator<<(std::ostream& o, Object const& f) {
 			o << "object: " << "name=" << f.name << ", src=" << f.src << '\n'
@@ -59,18 +76,5 @@ namespace xge
 
 			return o;
 		}
-	};
-
-	struct Vector2str
-	{
-		std::string x;
-		std::string y;
-	};
-
-	struct SObject
-	{
-		std::string name;
-		Vector2str sposition;
-		Vector2str svelocity;
 	};
 }
