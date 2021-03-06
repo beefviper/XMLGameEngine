@@ -19,16 +19,6 @@
 
 namespace xge
 {
-	struct WindowDesc
-	{
-		std::string name;
-		float width{};
-		float height{};
-		std::string background;
-		std::string fullscreen;
-		int framerate{};
-	};
-
 	class Game
 	{
 	public:
@@ -45,7 +35,6 @@ namespace xge
 		xge::WindowDesc& getWindowDesc(void);
 		std::vector<xge::Object>& getObjects(void);
 		xge::Object& getObject(const std::string& name);
-		xge::SObject& getSObject(const std::string& name);
 		float& getVariable(const std::string& name);
 		xge::State getCurrentState(void);
 
@@ -59,7 +48,6 @@ namespace xge
 
 		std::map<std::string, float> variables;
 		std::vector<xge::State> states;
-		std::vector<xge::SObject> sObjects;
 		std::vector<xge::Object> objects;
 		std::stack<xge::State> currentState;
 

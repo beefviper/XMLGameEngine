@@ -125,7 +125,7 @@ namespace xge
 		return windowDesc;
 	}
 
-	std::vector<Object>& Game::getObjects(void)
+	std::vector<xge::Object>& Game::getObjects(void)
 	{
 		return objects;
 	}
@@ -133,12 +133,6 @@ namespace xge
 	Object& Game::getObject(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
-		return *result;
-	}
-
-	SObject& Game::getSObject(const std::string& name)
-	{
-		auto result = std::find_if(std::begin(sObjects), std::end(sObjects), [&](SObject& obj) { return obj.name == name; });
 		return *result;
 	}
 
@@ -169,6 +163,7 @@ namespace xge
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
 		if (param == "velocity")
 		{
+			//result->velocity.y = value;
 			result->velocity.y = value;
 		}
 	}

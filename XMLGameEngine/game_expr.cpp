@@ -55,12 +55,10 @@ void xge::Game::initEXPR(void)
 			return expression.value();
 		};
 		
-		auto& objectName = getSObject(object.name);
-
-		object.position.x = evaluate_string(objectName.sposition.x);
-		object.position.y = evaluate_string(objectName.sposition.y);
-		object.velocity.x = evaluate_string(objectName.svelocity.x);
-		object.velocity.y = evaluate_string(objectName.svelocity.y);
+		object.position.x = evaluate_string(object.sposition.x);
+		object.position.y = evaluate_string(object.sposition.y);
+		object.velocity.x = evaluate_string(object.svelocity.x);
+		object.velocity.y = evaluate_string(object.svelocity.y);
 
 		evaluate_string(object.src);
 		object.sparams = tempSParams;
