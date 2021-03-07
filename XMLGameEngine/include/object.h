@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <ostream>
 
 namespace xge
 {
@@ -22,6 +23,8 @@ namespace xge
 		std::string background;
 		std::string fullscreen;
 		int framerate{};
+
+		friend std::ostream& operator<<(std::ostream& o, WindowDesc const& f);
 	};
 
 	struct CollisionData

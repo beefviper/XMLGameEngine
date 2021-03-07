@@ -13,4 +13,20 @@ namespace xge
 		this->show = show;
 		this->input = input;
 	}
+
+	std::ostream& operator<<(std::ostream& o, const State& f)
+	{
+		o << "state: ";
+		o << "name=" << f.name << ", show=";
+		for (auto& show : f.show)
+		{
+			o << show << (show != f.show.back() ? ", " : "\n");
+		}
+		for (auto& input : f.input)
+		{
+			o << "       action=" << input.first << ", button=" << input.second << '\n';
+		}
+
+		return o;
+	}
 }

@@ -83,40 +83,22 @@ namespace xge
 
 	void Game::printGame(void)
 	{
-		// debug -- print out window description
-		std::cout << "window: ";
-		std::cout << "title=" << windowDesc.name;
-		std::cout << ", width=" << windowDesc.width;
-		std::cout << ", height=" << windowDesc.height << std::endl;
-		std::cout << std::endl;
+		std::cout << windowDesc << '\n';
 
-		// debug -- print out variables 
 		for (auto& variable : variables)
 		{
-			std::cout << "variable: name=" << variable.first << ", value=" << variable.second << std::endl;
+			std::cout << "variable: name=" << variable.first << ", value=" << variable.second << '\n';
 		}
-		std::cout << std::endl;
+		std::cout << '\n';
 
-		// debug -- print out objects
 		for (auto& object : objects)
 		{
-			std::cout << object << std::endl;
+			std::cout << object << '\n';
 		}
 
-		// debug -- print out states
 		for (auto& state : states)
 		{
-			std::cout << "state: ";
-			std::cout << "name=" << state.name << ", show=";
-			for (auto& show : state.show)
-			{
-				std::cout << show << (show != state.show.back() ? ", " : "\n");
-			}
-			for (auto& input : state.input)
-			{
-				std::cout << "       action=" << input.first << ", button=" << input.second << std::endl;
-			}
-			std::cout << std::endl;
+			std::cout << state << '\n';
 		}
 	}
 

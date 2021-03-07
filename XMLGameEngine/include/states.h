@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <ostream>
 
 namespace xge
 {
@@ -19,6 +20,8 @@ namespace xge
 		std::string name;
 		std::vector<std::string> show;
 		std::map<std::string, std::string> input;
+
+		friend std::ostream& operator<<(std::ostream& o, State const& f);
 
 	private:
 
