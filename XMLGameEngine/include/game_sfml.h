@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "utils.h"
+
 #include <SFML/System.hpp>
 
 #include <memory>

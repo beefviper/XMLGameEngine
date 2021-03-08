@@ -4,6 +4,7 @@
 // date: Sept 21, 2020
 
 #include "game.h"
+#include "game_sfml.h"
 
 namespace xge
 {
@@ -58,7 +59,7 @@ namespace xge
 				text.setFont(font);
 				text.setString(object.sparams.at(0));
 				text.setCharacterSize(static_cast<int>(object.params.at(0)));
-				text.setFillColor(sf::Color::Green);
+				text.setFillColor(sfmlColor(object.sparams.at(1)));
 				text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top);
 
 				int width = static_cast<int>(std::ceil(text.getLocalBounds().width));

@@ -20,7 +20,7 @@
   <objects>
     <!-- title -->
     <object name="title">
-      <sprite src="text('PONG', text.size)" />
+      <sprite src="text('PONG', text.size, 'color.red')" />
       <position x="window.width.center - 350" y="margin" />
       <velocity x="0" y="0" />
       <collision enabled="false" />

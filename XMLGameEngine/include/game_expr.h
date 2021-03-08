@@ -49,7 +49,7 @@ namespace xge
 	{
 		randomNumber() : exprtk::ifunction<T>(1)
 		{
-		
+
 		}
 
 		T operator()(const T& randMax)
@@ -63,7 +63,7 @@ namespace xge
 	{
 		randomRange() : exprtk::ifunction<T>(2)
 		{
-				
+
 		}
 
 		T operator()(const T& randMin, const T& randMax)
@@ -114,16 +114,26 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		text() : exprtk::igeneric_function<T>("ST")
+		text() : exprtk::igeneric_function<T>("ST|STS")
 		{
 
 		}
 
-		inline T operator()(parameter_list_t parameters)
+		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
 			clearAllTempParams();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 			tempParams.push_back(scalar_t(parameters[1])());
+
+			if (parameters.size() == 3)
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[2])));
+			}
+			else
+			{
+				tempSParams.push_back("color.white");
+			}
+
 			return 0;
 		}
 	};
