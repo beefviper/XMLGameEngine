@@ -26,11 +26,10 @@ add_executable (${PROJECT_NAME} "main.cpp"
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${EXPRTK_INCLUDE_DIRS} ${XercesC_DIR} ${SFML_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
-target_link_libraries(XMLGameEngine PRIVATE xerces_xerces-c XercesC::XercesC)
+target_link_libraries(${PROJECT_NAME} PRIVATE xerces_xerces-c XercesC::XercesC)
 
 add_dependencies(${PROJECT_NAME} data-target)
 
