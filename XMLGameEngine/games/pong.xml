@@ -27,21 +27,21 @@
     </object>
     <!-- logo -->
     <object name="logo">
-      <sprite src="shape.circle(logo.radius)" />
+      <sprite src="shape.circle(logo.radius,'color.cyan')" />
       <position x="window.width.center - logo.radius" y="window.height.center - logo.radius" />
       <velocity x="0" y="0" />
       <collision enabled="false" />
     </object>
     <!-- ball -->
     <object name="ball">
-      <sprite src="shape.circle(ball.radius)" />
+      <sprite src="shape.circle(ball.radius,'color.yellow')" />
       <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
       <collision enabled="true" top="bounce" bottom="bounce" left="inc('score2')" right="inc('score1')" basic="bounce" />
     </object>
     <!-- paddle1 -->
     <object name="paddle1">
-      <sprite src="shape.rectangle(width,height)" />
+      <sprite src="shape.rectangle(width,height,'color.blue')" />
       <position x="window.left + margin" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
       <collision enabled="true" top="static" bottom="static" />
@@ -52,7 +52,7 @@
     </object>
     <!-- paddle2 -->
     <object name="paddle2">
-      <sprite src="shape.rectangle(width,height)" />
+      <sprite src="shape.rectangle(width,height,'color.red')" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
       <collision enabled="true" top="static" bottom="static" left="static" right="static" />

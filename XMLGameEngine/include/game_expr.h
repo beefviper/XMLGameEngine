@@ -73,34 +73,66 @@ namespace xge
 	};
 
 	template <typename T>
-	struct shapeCircle : public exprtk::ifunction<T>
+	struct shapeCircle : public exprtk::igeneric_function<T>
 	{
-		shapeCircle() : exprtk::ifunction<T>(1)
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		shapeCircle() : exprtk::igeneric_function<T>("T|TS")
 		{
 
 		}
 
-		T operator()(const T& cradius)
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
 			clearAllTempParams();
-			tempParams.push_back(cradius);
+			tempParams.push_back(scalar_t(parameters[0])());
+
+			if (parameters.size() == 2)
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[1])));
+			}
+			else
+			{
+				tempSParams.push_back("color.white");
+			}
+
 			return 0;
 		}
 	};
 
 	template <typename T>
-	struct shapeRectangle : public exprtk::ifunction<T>
+	struct shapeRectangle : public exprtk::igeneric_function<T>
 	{
-		shapeRectangle() : exprtk::ifunction<T>(2)
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		shapeRectangle() : exprtk::igeneric_function<T>("TT|TTS")
 		{
 
 		}
 
-		T operator()(const T& cwidth, const T& cheight)
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
 			clearAllTempParams();
-			tempParams.push_back(cwidth);
-			tempParams.push_back(cheight);
+			tempParams.push_back(scalar_t(parameters[0])());
+			tempParams.push_back(scalar_t(parameters[1])());
+
+			if (parameters.size() == 3)
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[2])));
+			}
+			else
+			{
+				tempSParams.push_back("color.white");
+			}
+
 			return 0;
 		}
 	};
@@ -124,7 +156,7 @@ namespace xge
 			clearAllTempParams();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 			tempParams.push_back(scalar_t(parameters[1])());
-
+			
 			if (parameters.size() == 3)
 			{
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[2])));

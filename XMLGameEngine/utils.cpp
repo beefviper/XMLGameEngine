@@ -3,6 +3,8 @@
 // author: beefviper
 // date: Mar 7, 2021
 
+#pragma warning(disable : 26812)
+
 #include "utils.h"
 
 namespace xge

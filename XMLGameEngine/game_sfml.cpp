@@ -21,7 +21,7 @@ namespace xge
 				float radius = object.params.at(0);
 
 				circle.setRadius(radius);
-				circle.setFillColor(sf::Color::Green);
+				circle.setFillColor(sfmlColor(object.sparams.at(0)));
 
 				int width = static_cast<int>(std::ceil(circle.getLocalBounds().width));
 				int height = static_cast<int>(std::ceil(circle.getLocalBounds().height));
@@ -37,7 +37,7 @@ namespace xge
 				float recHeight = object.params.at(1);
 
 				rectangle.setSize(sf::Vector2f(recWidth, recHeight));
-				rectangle.setFillColor(sf::Color::Magenta);
+				rectangle.setFillColor(sfmlColor(object.sparams.at(0)));
 
 				int width = static_cast<int>(std::ceil(rectangle.getLocalBounds().width));
 				int height = static_cast<int>(std::ceil(rectangle.getLocalBounds().height));
@@ -95,7 +95,7 @@ namespace xge
 		text.setFont(font);
 		text.setString(object.sparams.at(0));
 		text.setCharacterSize(static_cast<int>(object.params.at(0)));
-		text.setFillColor(sf::Color::Green);
+		text.setFillColor(sfmlColor(object.sparams.at(1)));
 
 		int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
 		int height = static_cast<int>(std::ceil(text.getLocalBounds().height));
