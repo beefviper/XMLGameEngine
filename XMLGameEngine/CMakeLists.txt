@@ -21,8 +21,8 @@ find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 add_executable (${PROJECT_NAME} "main.cpp"
 	"include/game.h" "game.cpp" "include/engine.h" "engine.cpp"
 	"include/object.h" "object.cpp" "include/states.h" "states.cpp"
-    "include/game_xml.h" "game_xml.cpp" "include/game_expr.h" "game_expr.cpp"
-	"include/game_sfml.h" "game_sfml.cpp")
+    "include/utils.h" "utils.cpp" "include/game_xml.h" "game_xml.cpp"
+    "include/game_expr.h" "game_expr.cpp" "include/game_sfml.h" "game_sfml.cpp")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 

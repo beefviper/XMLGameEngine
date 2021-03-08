@@ -49,7 +49,7 @@ namespace xge
 	{
 		randomNumber() : exprtk::ifunction<T>(1)
 		{
-		
+
 		}
 
 		T operator()(const T& randMax)
@@ -63,7 +63,7 @@ namespace xge
 	{
 		randomRange() : exprtk::ifunction<T>(2)
 		{
-				
+
 		}
 
 		T operator()(const T& randMin, const T& randMax)
@@ -73,40 +73,7 @@ namespace xge
 	};
 
 	template <typename T>
-	struct shapeCircle : public exprtk::ifunction<T>
-	{
-		shapeCircle() : exprtk::ifunction<T>(1)
-		{
-
-		}
-
-		T operator()(const T& cradius)
-		{
-			clearAllTempParams();
-			tempParams.push_back(cradius);
-			return 0;
-		}
-	};
-
-	template <typename T>
-	struct shapeRectangle : public exprtk::ifunction<T>
-	{
-		shapeRectangle() : exprtk::ifunction<T>(2)
-		{
-
-		}
-
-		T operator()(const T& cwidth, const T& cheight)
-		{
-			clearAllTempParams();
-			tempParams.push_back(cwidth);
-			tempParams.push_back(cheight);
-			return 0;
-		}
-	};
-
-	template <typename T>
-	struct text : public exprtk::igeneric_function<T>
+	struct exprGenericFunction : public exprtk::igeneric_function<T>
 	{
 		using igenfunct_t = exprtk::igeneric_function<T>;
 		using generic_t = typename igenfunct_t::generic_type;
@@ -114,16 +81,89 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		text() : exprtk::igeneric_function<T>("ST")
+		exprGenericFunction(const std::string& funcSig)
+			: igenfunct_t(funcSig)
+		{
+
+		}
+	};
+
+	template <typename T>
+	struct shapeCircle : public exprGenericFunction<T>
+	{
+		shapeCircle() : exprGenericFunction<T>("T|TS")
 		{
 
 		}
 
-		inline T operator()(parameter_list_t parameters)
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
+		{
+			clearAllTempParams();
+			tempParams.push_back(scalar_t(parameters[0])());
+
+			if (parameters.size() == 2)
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[1])));
+			}
+			else
+			{
+				tempSParams.push_back("color.white");
+			}
+
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct shapeRectangle : public exprGenericFunction<T>
+	{
+		shapeRectangle() : exprGenericFunction<T>("TT|TTS")
+		{
+
+		}
+
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
+		{
+			clearAllTempParams();
+			tempParams.push_back(scalar_t(parameters[0])());
+			tempParams.push_back(scalar_t(parameters[1])());
+
+			if (parameters.size() == 3)
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[2])));
+			}
+			else
+			{
+				tempSParams.push_back("color.white");
+			}
+
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct text : public exprGenericFunction<T>
+	{
+		text() : exprGenericFunction("ST|STS")
+		{
+
+		}
+
+		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
 			clearAllTempParams();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 			tempParams.push_back(scalar_t(parameters[1])());
+
+			if (parameters.size() == 3)
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[2])));
+			}
+			else
+			{
+				tempSParams.push_back("color.white");
+			}
+
 			return 0;
 		}
 	};
