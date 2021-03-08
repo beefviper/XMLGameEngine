@@ -73,7 +73,7 @@ namespace xge
 	};
 
 	template <typename T>
-	struct shapeCircle : public exprtk::igeneric_function<T>
+	struct exprGenericFunction : public exprtk::igeneric_function<T>
 	{
 		using igenfunct_t = exprtk::igeneric_function<T>;
 		using generic_t = typename igenfunct_t::generic_type;
@@ -81,7 +81,17 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		shapeCircle() : exprtk::igeneric_function<T>("T|TS")
+		exprGenericFunction(const std::string& funcSig)
+			: igenfunct_t(funcSig)
+		{
+
+		}
+	};
+
+	template <typename T>
+	struct shapeCircle : public exprGenericFunction<T>
+	{
+		shapeCircle() : exprGenericFunction<T>("T|TS")
 		{
 
 		}
@@ -105,15 +115,9 @@ namespace xge
 	};
 
 	template <typename T>
-	struct shapeRectangle : public exprtk::igeneric_function<T>
+	struct shapeRectangle : public exprGenericFunction<T>
 	{
-		using igenfunct_t = exprtk::igeneric_function<T>;
-		using generic_t = typename igenfunct_t::generic_type;
-		using parameter_list_t = typename igenfunct_t::parameter_list_t;
-		using string_t = typename generic_t::string_view;
-		using scalar_t = typename generic_t::scalar_view;
-
-		shapeRectangle() : exprtk::igeneric_function<T>("TT|TTS")
+		shapeRectangle() : exprGenericFunction<T>("TT|TTS")
 		{
 
 		}
@@ -138,15 +142,9 @@ namespace xge
 	};
 
 	template <typename T>
-	struct text : public exprtk::igeneric_function<T>
+	struct text : public exprGenericFunction<T>
 	{
-		using igenfunct_t = exprtk::igeneric_function<T>;
-		using generic_t = typename igenfunct_t::generic_type;
-		using parameter_list_t = typename igenfunct_t::parameter_list_t;
-		using string_t = typename generic_t::string_view;
-		using scalar_t = typename generic_t::scalar_view;
-
-		text() : exprtk::igeneric_function<T>("ST|STS")
+		text() : exprGenericFunction("ST|STS")
 		{
 
 		}
@@ -156,7 +154,7 @@ namespace xge
 			clearAllTempParams();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 			tempParams.push_back(scalar_t(parameters[1])());
-			
+
 			if (parameters.size() == 3)
 			{
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[2])));
