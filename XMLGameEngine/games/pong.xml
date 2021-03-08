@@ -27,14 +27,14 @@
     </object>
     <!-- logo -->
     <object name="logo">
-      <sprite src="shape.circle(logo.radius,'color.cyan')" />
+      <sprite src="shape.circle(logo.radius,'color.green')" />
       <position x="window.width.center - logo.radius" y="window.height.center - logo.radius" />
       <velocity x="0" y="0" />
       <collision enabled="false" />
     </object>
     <!-- ball -->
     <object name="ball">
-      <sprite src="shape.circle(ball.radius,'color.yellow')" />
+      <sprite src="shape.circle(ball.radius,'color.green')" />
       <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
       <collision enabled="true" top="bounce" bottom="bounce" left="inc('score2')" right="inc('score1')" basic="bounce" />
@@ -65,14 +65,14 @@
     </object>
     <!-- score1 -->
     <object name="score1">
-      <sprite src="text('0',128)" />
+      <sprite src="text('0',128,'color.blue')" />
       <position x="window.width.center - 80" y="margin" />
       <velocity x="0" y="0" />
       <collision enabled="false" />
     </object>
     <!-- score2 -->
     <object name="score2">
-      <sprite src="text('0',128)" />
+      <sprite src="text('0',128,'color.red')" />
       <position x="window.width.center + 50" y="margin" />
       <velocity x="0" y="0" />
       <collision enabled="false" />
