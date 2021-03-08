@@ -27,7 +27,7 @@ namespace xge
 		void initEXPR(void);
 		void initSFML(void);
 
-		void updateSFMLTexture(Object& object);
+		void updateSFMLTextIncrementValue(Object& object);
 
 		void updateObjects(void);
 		void printGame(void);

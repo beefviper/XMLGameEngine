@@ -76,7 +76,7 @@ namespace xge
 		}
 	}
 
-	void Game::updateSFMLTexture(Object& object)
+	void Game::updateSFMLTextIncrementValue(Object& object)
 	{
 		sf::Font font;
 		sf::Text text;
