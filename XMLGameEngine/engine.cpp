@@ -3,7 +3,6 @@
 // author: beefviper
 // date: Sept 18, 2020
 
-#pragma warning(disable : 26812)
 #include "engine.h"
 
 namespace xge
