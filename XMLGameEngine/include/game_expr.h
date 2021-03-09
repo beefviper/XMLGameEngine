@@ -167,4 +167,22 @@ namespace xge
 			return 0;
 		}
 	};
+
+	template <typename T>
+	struct image : public exprGenericFunction<T>
+	{
+		image() : exprGenericFunction<T>("S|S")
+		{
+
+		}
+
+		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters)
+		{
+			clearAllTempParams();
+
+			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+
+			return 0;
+		}
+	};
 }

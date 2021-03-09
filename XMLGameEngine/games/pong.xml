@@ -41,7 +41,7 @@
     </object>
     <!-- paddle1 -->
     <object name="paddle1">
-      <sprite src="shape.rectangle(width,height,'color.blue')" />
+      <sprite src="image('assets/paddle.jpg')" />
       <position x="window.left + margin" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
       <collision enabled="true" top="static" bottom="static" />

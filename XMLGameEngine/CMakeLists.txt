@@ -40,7 +40,7 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 
     # list of files for which we add a copy rule
     set(data_SHADOW "games/pong.xml" "games/breakout.xml" "assets/arial.ttf"
-        "assets/xmlgameengine.xsd")
+        "assets/xmlgameengine.xsd" "assets/paddle.jpg")
 
     foreach(item IN LISTS data_SHADOW)
         message(STATUS ${item})

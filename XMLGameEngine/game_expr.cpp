@@ -16,6 +16,7 @@ namespace xge
 		shapeCircle<float> shapeCircleFloat{};
 		shapeRectangle<float> shapeRectangleFloat{};
 		text<float> textFloat{};
+		image<float> imageFloat{};
 
 		exprtk::symbol_table<float> symbolTable;
 
@@ -25,6 +26,7 @@ namespace xge
 		symbolTable.add_function("shape.circle", shapeCircleFloat);
 		symbolTable.add_function("shape.rectangle", shapeRectangleFloat);
 		symbolTable.add_function("text", textFloat);
+		symbolTable.add_function("image", imageFloat);
 
 		// add constants to symbol table
 		symbolTable.add_constant("window.top", 0);

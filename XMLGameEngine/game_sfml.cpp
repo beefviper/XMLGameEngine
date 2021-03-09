@@ -68,6 +68,27 @@ namespace xge
 				object.renderTexture->create(width, height);
 				object.renderTexture->draw(text);
 			}
+			else if (object.src.compare(0, 5, "image") == 0)
+			{
+				sf::Texture texture;
+				sf::Sprite sprite;
+
+				auto& imageFile = object.sparams.at(0);
+
+				if (!texture.loadFromFile(imageFile))
+				{
+					std::cout << "error: SFML Image: failed to load " << imageFile << '\n';
+					exit(EXIT_FAILURE);
+				}
+
+				sprite.setTexture(texture);
+
+				int width = static_cast<int>(std::ceil(sprite.getLocalBounds().width));
+				int height = static_cast<int>(std::ceil(sprite.getLocalBounds().height));
+
+				object.renderTexture->create(width, height);
+				object.renderTexture->draw(sprite);
+			}
 
 			object.renderTexture->display();
 
