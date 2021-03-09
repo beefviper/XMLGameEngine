@@ -75,7 +75,7 @@ namespace xge
 	template <typename T>
 	struct exprGenericFunction : public exprtk::igeneric_function<T>
 	{
-		using igenfunct_t = exprGenericFunction<T>;
+		using igenfunct_t = exprtk::igeneric_function<T>;
 		using generic_t = typename igenfunct_t::generic_type;
 		using parameter_list_t = typename igenfunct_t::parameter_list_t;
 		using string_t = typename generic_t::string_view;
