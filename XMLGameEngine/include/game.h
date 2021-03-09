@@ -33,7 +33,6 @@ namespace xge
 		void printGame(void);
 
 		WindowDesc& getWindowDesc(void);
-		std::vector<Object>& getObjects(void);
 		Object& getObject(const std::string& name);
 		float& getVariable(const std::string& name);
 		State getCurrentState(void);

@@ -107,11 +107,6 @@ namespace xge
 		return windowDesc;
 	}
 
-	std::vector<Object>& Game::getObjects(void)
-	{
-		return objects;
-	}
-
 	Object& Game::getObject(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
