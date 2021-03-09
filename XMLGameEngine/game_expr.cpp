@@ -45,7 +45,6 @@ namespace xge
 		{
 			auto evaluate_string = [&parser, &expression, &object](const std::string& input_string)
 			{
-				parser.compile(input_string, expression);
 				if (!parser.compile(input_string, expression))
 				{
 					std::cout << "Error: " << parser.error().c_str()
