@@ -144,7 +144,7 @@ namespace xge
 	template <typename T>
 	struct text : public exprGenericFunction<T>
 	{
-		text() : exprGenericFunction("ST|STS")
+		text() : exprGenericFunction<T>("ST|STS")
 		{
 
 		}
