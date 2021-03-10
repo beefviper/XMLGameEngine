@@ -80,7 +80,6 @@ namespace xge
 
 	void Engine::handleKeyReleased(Game& game, sf::Event& event)
 	{
-
 		isKeyPressed[event.key.code] = false;
 
 		for (auto& input : game.getCurrentState().input)
