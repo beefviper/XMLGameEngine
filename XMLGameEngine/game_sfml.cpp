@@ -14,7 +14,7 @@ namespace xge
 		{
 			object.renderTexture = std::make_unique<sf::RenderTexture>();
 
-			if (object.src.compare(0, 12, "shape.circle") == 0)
+			if (object.src.starts_with("shape.circle"))
 			{
 				sf::CircleShape circle;
 
@@ -29,7 +29,7 @@ namespace xge
 				object.renderTexture->create(width, height);
 				object.renderTexture->draw(circle);
 			}
-			else if (object.src.compare(0, 15, "shape.rectangle") == 0)
+			else if (object.src.starts_with("shape.rectangle"))
 			{
 				sf::RectangleShape rectangle;
 
@@ -45,7 +45,7 @@ namespace xge
 				object.renderTexture->create(width, height);
 				object.renderTexture->draw(rectangle);
 			}
-			else if (object.src.compare(0, 4, "text") == 0)
+			else if (object.src.starts_with("text"))
 			{
 				sf::Font font;
 				sf::Text text;
@@ -68,7 +68,7 @@ namespace xge
 				object.renderTexture->create(width, height);
 				object.renderTexture->draw(text);
 			}
-			else if (object.src.compare(0, 5, "image") == 0)
+			else if (object.src.starts_with("image"))
 			{
 				sf::Texture texture;
 				sf::Sprite sprite;
