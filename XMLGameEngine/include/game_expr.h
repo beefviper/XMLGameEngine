@@ -179,7 +179,7 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		image() : exprtk::igeneric_function<T>("S|S")
+		image() : exprtk::igeneric_function<T>("S|SS")
 		{
 
 		}
@@ -189,6 +189,15 @@ namespace xge
 			clearAllTempParams();
 
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+
+			if (parameters.size() == 2)
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[1])));
+			}
+			else
+			{
+				tempSParams.push_back("color.white");
+			}
 
 			return 0;
 		}

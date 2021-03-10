@@ -86,6 +86,15 @@ namespace xge
 				int width = static_cast<int>(std::ceil(sprite.getLocalBounds().width));
 				int height = static_cast<int>(std::ceil(sprite.getLocalBounds().height));
 
+				if (object.sparams.at(1) == "flip.horizontal")
+				{
+					sprite.setTextureRect(sf::IntRect(width, 0, -width, height));
+				}
+				else if (object.sparams.at(1) == "flip.vertical")
+				{
+					sprite.setTextureRect(sf::IntRect(0, height, width, -height));
+				}
+
 				object.renderTexture->create(width, height);
 				object.renderTexture->draw(sprite);
 			}

@@ -52,7 +52,7 @@
     </object>
     <!-- paddle2 -->
     <object name="paddle2">
-      <sprite src="shape.rectangle(width,height,'color.red')" />
+      <sprite src="image('assets/paddle.jpg', 'flip.horizontal')" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
       <collision enabled="true" top="static" bottom="static" left="static" right="static" />
