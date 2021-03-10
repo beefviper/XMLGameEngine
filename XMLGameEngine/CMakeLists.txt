@@ -24,7 +24,7 @@ add_executable (${PROJECT_NAME} "main.cpp"
     "include/utils.h" "utils.cpp" "include/game_xml.h" "game_xml.cpp"
     "include/game_expr.h" "game_expr.cpp" "include/game_sfml.h" "game_sfml.cpp")
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
