@@ -82,7 +82,7 @@ namespace xge
 		using scalar_t = typename generic_t::scalar_view;
 
 		exprGenericFunction(const std::string& funcSig)
-			: exprtk::igeneric_function<T>(funcSig)
+			: igeneric_function(funcSig)
 		{
 
 		}
