@@ -73,7 +73,7 @@ namespace xge
 	};
 
 	template <typename T>
-	struct exprGenericFunction : public exprtk::igeneric_function<T>
+	struct shapeCircle : public exprtk::igeneric_function<T>
 	{
 		using igenfunct_t = exprtk::igeneric_function<T>;
 		using generic_t = typename igenfunct_t::generic_type;
@@ -81,17 +81,7 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		exprGenericFunction(const std::string& funcSig)
-			: igeneric_function(funcSig)
-		{
-
-		}
-	};
-
-	template <typename T>
-	struct shapeCircle : public exprGenericFunction<T>
-	{
-		shapeCircle() : exprGenericFunction<T>("T|TS")
+		shapeCircle() : exprtk::igeneric_function<T>("T|TS")
 		{
 
 		}
@@ -115,9 +105,15 @@ namespace xge
 	};
 
 	template <typename T>
-	struct shapeRectangle : public exprGenericFunction<T>
+	struct shapeRectangle : public exprtk::igeneric_function<T>
 	{
-		shapeRectangle() : exprGenericFunction<T>("TT|TTS")
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		shapeRectangle() : exprtk::igeneric_function<T>("TT|TTS")
 		{
 
 		}
@@ -142,9 +138,15 @@ namespace xge
 	};
 
 	template <typename T>
-	struct text : public exprGenericFunction<T>
+	struct text : public exprtk::igeneric_function<T>
 	{
-		text() : exprGenericFunction<T>("ST|STS")
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		text() : exprtk::igeneric_function<T>("ST|STS")
 		{
 
 		}
@@ -169,9 +171,15 @@ namespace xge
 	};
 
 	template <typename T>
-	struct image : public exprGenericFunction<T>
+	struct image : public exprtk::igeneric_function<T>
 	{
-		image() : exprGenericFunction<T>("S|S")
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		image() : exprtk::igeneric_function<T>("S|S")
 		{
 
 		}
