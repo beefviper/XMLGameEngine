@@ -16,7 +16,7 @@ namespace xge
 			if (domParser.loadGrammar("assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
 			{
 				std::cout << "couldn't load schema\n\n";
-				return;
+				exit(EXIT_FAILURE);
 			}
 
 			ParserErrorHandler parserErrorHandler;
@@ -36,7 +36,6 @@ namespace xge
 			else
 			{
 				std::cout << "XML file doesn't conform to the schema\n\n";
-				xc::XMLPlatformUtils::Terminate();
 				exit(EXIT_FAILURE);
 			}
 
