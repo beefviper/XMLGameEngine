@@ -23,7 +23,6 @@ namespace xge
 {
 	namespace
 	{
-		std::vector<float> tempParams;
 		std::vector<std::string> tempSParams;
 
 		std::random_device seed;
@@ -31,7 +30,6 @@ namespace xge
 
 		void clearAllTempParams(void)
 		{
-			tempParams.clear();
 			tempSParams.clear();
 		}
 	}
@@ -89,7 +87,8 @@ namespace xge
 		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
 			clearAllTempParams();
-			tempParams.push_back(scalar_t(parameters[0])());
+			float radius = scalar_t(parameters[0])();
+			tempSParams.push_back(std::to_string(radius));
 
 			if (parameters.size() == 2)
 			{
@@ -121,8 +120,10 @@ namespace xge
 		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
 			clearAllTempParams();
-			tempParams.push_back(scalar_t(parameters[0])());
-			tempParams.push_back(scalar_t(parameters[1])());
+			float width = scalar_t(parameters[0])();
+			float height = scalar_t(parameters[1])();
+			tempSParams.push_back(std::to_string(width));
+			tempSParams.push_back(std::to_string(height));
 
 			if (parameters.size() == 3)
 			{
@@ -155,7 +156,8 @@ namespace xge
 		{
 			clearAllTempParams();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
-			tempParams.push_back(scalar_t(parameters[1])());
+			float size = scalar_t(parameters[1])();
+			tempSParams.push_back(std::to_string(size));
 
 			if (parameters.size() == 3)
 			{

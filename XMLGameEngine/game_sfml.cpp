@@ -18,10 +18,10 @@ namespace xge
 			{
 				sf::CircleShape circle;
 
-				float radius = object.params.at(0);
+				float radius = std::stof(object.spriteParams.at(0));
 
 				circle.setRadius(radius);
-				circle.setFillColor(sfmlColor(object.sparams.at(0)));
+				circle.setFillColor(sfmlColor(object.spriteParams.at(1)));
 
 				int width = static_cast<int>(std::ceil(circle.getLocalBounds().width));
 				int height = static_cast<int>(std::ceil(circle.getLocalBounds().height));
@@ -33,11 +33,11 @@ namespace xge
 			{
 				sf::RectangleShape rectangle;
 
-				float recWidth = object.params.at(0);
-				float recHeight = object.params.at(1);
+				float recWidth = std::stof(object.spriteParams.at(0));
+				float recHeight = std::stof(object.spriteParams.at(1));
 
 				rectangle.setSize(sf::Vector2f(recWidth, recHeight));
-				rectangle.setFillColor(sfmlColor(object.sparams.at(0)));
+				rectangle.setFillColor(sfmlColor(object.spriteParams.at(2)));
 
 				int width = static_cast<int>(std::ceil(rectangle.getLocalBounds().width));
 				int height = static_cast<int>(std::ceil(rectangle.getLocalBounds().height));
@@ -57,9 +57,9 @@ namespace xge
 				}
 
 				text.setFont(font);
-				text.setString(object.sparams.at(0));
-				text.setCharacterSize(static_cast<int>(object.params.at(0)));
-				text.setFillColor(sfmlColor(object.sparams.at(1)));
+				text.setString(object.spriteParams.at(0));
+				text.setCharacterSize(std::stoi((object.spriteParams.at(1))));
+				text.setFillColor(sfmlColor(object.spriteParams.at(2)));
 				text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top);
 
 				int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
@@ -73,7 +73,7 @@ namespace xge
 				sf::Texture texture;
 				sf::Sprite sprite;
 
-				auto& imageFile = object.sparams.at(0);
+				auto& imageFile = object.spriteParams.at(0);
 
 				if (!texture.loadFromFile(imageFile))
 				{
@@ -86,11 +86,11 @@ namespace xge
 				int width = static_cast<int>(std::ceil(sprite.getLocalBounds().width));
 				int height = static_cast<int>(std::ceil(sprite.getLocalBounds().height));
 
-				if (object.sparams.at(1) == "flip.horizontal")
+				if (object.spriteParams.at(1) == "flip.horizontal")
 				{
 					sprite.setTextureRect(sf::IntRect(width, 0, -width, height));
 				}
-				else if (object.sparams.at(1) == "flip.vertical")
+				else if (object.spriteParams.at(1) == "flip.vertical")
 				{
 					sprite.setTextureRect(sf::IntRect(0, height, width, -height));
 				}
@@ -118,14 +118,14 @@ namespace xge
 			std::cout << "error: failed to load font: " << fontFile << std::endl;
 		}
 
-		auto number = std::stoi(object.sparams.at(0));
+		auto number = std::stoi(object.spriteParams.at(0));
 		number++;
-		object.sparams[0] = std::to_string(number);
+		object.spriteParams[0] = std::to_string(number);
 
 		text.setFont(font);
-		text.setString(object.sparams.at(0));
-		text.setCharacterSize(static_cast<int>(object.params.at(0)));
-		text.setFillColor(sfmlColor(object.sparams.at(1)));
+		text.setString(object.spriteParams.at(0));
+		text.setCharacterSize(std::stoi(object.spriteParams.at(1)));
+		text.setFillColor(sfmlColor(object.spriteParams.at(2)));
 
 		int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
 		int height = static_cast<int>(std::ceil(text.getLocalBounds().height));
