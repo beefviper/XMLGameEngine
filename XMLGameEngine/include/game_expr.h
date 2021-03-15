@@ -27,11 +27,6 @@ namespace xge
 
 		std::random_device seed;
 		std::mt19937 generator(seed());
-
-		void clearAllTempParams(void)
-		{
-			tempSParams.clear();
-		}
 	}
 
 	template <typename T>
@@ -86,7 +81,7 @@ namespace xge
 
 		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
-			clearAllTempParams();
+			tempSParams.clear();
 			float radius = scalar_t(parameters[0])();
 			tempSParams.push_back(std::to_string(radius));
 
@@ -119,7 +114,7 @@ namespace xge
 
 		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
-			clearAllTempParams();
+			tempSParams.clear();
 			float width = scalar_t(parameters[0])();
 			float height = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(width));
@@ -154,7 +149,7 @@ namespace xge
 
 		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
-			clearAllTempParams();
+			tempSParams.clear();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 			float size = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(size));
@@ -188,8 +183,7 @@ namespace xge
 
 		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
-			clearAllTempParams();
-
+			tempSParams.clear();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 
 			if (parameters.size() == 2)
