@@ -66,8 +66,7 @@ namespace xge
 			object.velocity.y = evaluate_string(object.svelocity.y);
 
 			evaluate_string(object.src);
-			object.sparams = tempSParams;
-			object.params = tempParams;
+			object.spriteParams = tempSParams;
 		}
 	}
 }

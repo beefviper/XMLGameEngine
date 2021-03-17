@@ -54,8 +54,7 @@ namespace xge
 		sf::Vector2f velocity;
 		bool collision{ false };
 		CollisionData collisionData;
-		std::vector<float> params;
-		std::vector<std::string> sparams;
+		std::vector<std::string> spriteParams;
 		std::unique_ptr<sf::RenderTexture> renderTexture;
 		std::unique_ptr<sf::Sprite> sprite;
 
