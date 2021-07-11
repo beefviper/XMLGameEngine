@@ -3,7 +3,7 @@
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
-<game>
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <window name="Breakout" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
   <variables>
     <variable name="margin" value="30" />
@@ -15,7 +15,7 @@
   <objects>
     <object name="ball">
       <sprite src="shape.circle(ball.radius)" />
-      <position x="window.width.center - ball.radius" y="window.height - margin * 2" />
+      <position x="window.width.center - ball.radius" y="window.bottom - margin * 2" />
       <velocity x="random.range(-3,3)" y="random.range(-7,-5)" />
       <collision enabled="true" top="bounce" bottom="bounce" left="bounce" right="bounce" basic="bounce" />
     </object>
@@ -34,28 +34,32 @@
       <position x="margin" y="margin" />
       <velocity x="0" y="0" />
       <collision enabled="true" basic="destruct" />
-      <actions>
-      </actions>				
     </object>
   </objects>	
   <states>
     <state name="mainmenu">
-      <show object="player" />
+      <shows>
+        <show object="player" />
+      </shows>
       <inputs>
         <input action="state.playing" button="space" />
         <input action="state.settings" button="s" />
       </inputs>
     </state>
     <state name="settings">
-    <show object="player" />
+      <shows>
+        <show object="player" />
+      </shows>
       <inputs>
         <input action="state.mainmenu" button="escape" />
       </inputs>
     </state>
     <state name="playing">
-      <show object="ball" />
-      <show object="player" />
-      <show object="bricks" />
+      <shows>
+        <show object="ball" />
+        <show object="player" />
+        <show object="bricks" />
+      </shows>
       <inputs>
         <input action="state.paused" button="space" />
         <input action="player.action.left" button="left" />
@@ -63,7 +67,9 @@
       </inputs>
     </state>
     <state name="paused">
-      <show object="player" />
+      <shows>
+        <show object="player" />
+      </shows>
       <inputs>
         <input action="state.playing" button="space" />
       </inputs>
