@@ -50,7 +50,7 @@ namespace xge
 				sf::Font font;
 				sf::Text text;
 
-				std::string fontFile{ "assets/arial.ttf" };
+				std::string fontFile{ "assets/tuffy.ttf" };
 				if (!font.loadFromFile(fontFile))
 				{
 					std::cout << "error: failed to load font: " << fontFile << std::endl;
@@ -112,7 +112,7 @@ namespace xge
 		sf::Font font;
 		sf::Text text;
 
-		std::string fontFile{ "assets/arial.ttf" };
+		std::string fontFile{ "assets/tuffy.ttf" };
 		if (!font.loadFromFile(fontFile))
 		{
 			std::cout << "error: failed to load font: " << fontFile << std::endl;
