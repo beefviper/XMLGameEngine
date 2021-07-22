@@ -13,7 +13,7 @@ namespace xge
 		xc::XMLPlatformUtils::Initialize();
 		{
 			xc::XercesDOMParser domParser;
-			if (domParser.loadGrammar("assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
+			if (domParser.loadGrammar("games/assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
 			{
 				std::cout << "couldn't load schema\n\n";
 				exit(EXIT_FAILURE);
