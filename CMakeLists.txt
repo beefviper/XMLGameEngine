@@ -45,7 +45,7 @@ add_dependencies(${PROJECT_NAME} data-target)
 if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 
     # list of files for which we add a copy rule
-    set(data_SHADOW "games/pong.xml" "games/breakout.xml" "games/assets/tuffy.ttf"
+    set(data_SHADOW "games/pong.xml" "games/pong_full.xml" "games/breakout.xml" "games/assets/tuffy.ttf"
         "games/assets/xmlgameengine.xsd" "games/assets/paddle.jpg")
 
     foreach(item IN LISTS data_SHADOW)

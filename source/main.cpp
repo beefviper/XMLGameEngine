@@ -11,7 +11,7 @@
 
 int main(void)
 {
-	std::string filename{ "games/pong.xml" };
+	std::string filename{ "games/pong_full.xml" };
 	xge::Game game{ filename };
 
 	game.printGame();
