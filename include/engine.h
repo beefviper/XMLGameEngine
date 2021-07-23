@@ -37,7 +37,7 @@ namespace xge
 
 		std::map<sf::Keyboard::Key, bool> isKeyPressed;
 		void execute_action(Game& game, sf::Event& event, PairStringString& input, bool keyPressed = true);
-		void move(Object& object, Engine::Direction direction, float step);
+		void move(Object& object, Engine::Direction direction, float step) noexcept;
 		void move(Object& object, std::string direction, float step);
 
 		std::string getObjectFromInput(PairStringString input);

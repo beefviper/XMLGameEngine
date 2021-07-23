@@ -30,7 +30,7 @@ namespace xge
 	template <typename T>
 	struct randomNumber : public exprtk::ifunction<T>
 	{
-		randomNumber() : exprtk::ifunction<T>(1)
+		randomNumber() noexcept : exprtk::ifunction<T>(1)
 		{
 
 		}
@@ -72,7 +72,7 @@ namespace xge
 		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
 			tempSParams.clear();
-			float radius = scalar_t(parameters[0])();
+			float const radius = scalar_t(parameters[0])();
 			tempSParams.push_back(std::to_string(radius));
 
 			if (parameters.size() == 2)

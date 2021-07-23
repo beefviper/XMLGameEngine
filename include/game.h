@@ -32,7 +32,7 @@ namespace xge
 		void updateObjects(void);
 		void printGame(void);
 
-		WindowDesc& getWindowDesc(void);
+		WindowDesc& getWindowDesc(void) noexcept;
 		Object& getObject(const std::string& name);
 		float& getVariable(const std::string& name);
 		State getCurrentState(void);
