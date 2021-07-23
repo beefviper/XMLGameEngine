@@ -1,5 +1,11 @@
+.sarif/
 .vs/
+x64/
 out/
 build/
 CMakeSettings.json
 *.hint
+XMLGameEngine.sln
+XMLGameEngine.vcxproj
+XMLGameEngine.vcxproj.filters
+XMLGameEngine.vcxproj.user
