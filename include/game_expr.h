@@ -30,7 +30,7 @@ namespace xge
 	template <typename T>
 	struct randomNumber : public exprtk::ifunction<T>
 	{
-		randomNumber() noexcept : exprtk::ifunction<T>(1)
+		randomNumber() : exprtk::ifunction<T>(1)
 		{
 
 		}

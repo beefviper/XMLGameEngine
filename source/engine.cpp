@@ -141,7 +141,7 @@ namespace xge
 
 	std::string Engine::getObjectFromInput(PairStringString input)
 	{
-		auto const sStart = 0;
+		constexpr auto sStart = 0;
 		auto const sEnd = input.first.find(".");
 
 		return input.first.substr(sStart, sEnd);
