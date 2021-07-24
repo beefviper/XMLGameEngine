@@ -22,7 +22,7 @@ namespace xge
 	template <typename T>
 	T randomNumberRange(T min, T max)
 	{
-		const std::uniform_real_distribution<T> distribution(min, max);
+		std::uniform_real_distribution<T> distribution(min, max);
 		T randNum = distribution(generator);
 		return randNum;
 	}
