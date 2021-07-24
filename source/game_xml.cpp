@@ -10,7 +10,7 @@ namespace xge
 {
 	void Game::initXML(void)
 	{ 
-		xc::XMLPlatformUtils::Initialize();
+		xc::XMLPlatformUtils::Initialize("en_US");
 		{
 			xc::XercesDOMParser domParser;
 			if (domParser.loadGrammar("games/assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
