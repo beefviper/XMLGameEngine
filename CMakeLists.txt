@@ -14,11 +14,6 @@ if (MSVC)
     add_compile_options(/bigobj)
 endif()
 
-find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
-find_package(XercesC CONFIG REQUIRED)
-
-find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
-
 # Add source to this project's executable.
 add_executable (${PROJECT_NAME} "source/main.cpp"
 	"include/game.h" "source/game.cpp"
@@ -32,7 +27,13 @@ add_executable (${PROJECT_NAME} "source/main.cpp"
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
+find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
+
+find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
+find_package(XercesC CONFIG REQUIRED)
+
 target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${EXPRTK_INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
 target_link_libraries(${PROJECT_NAME} PRIVATE xerces_xerces-c XercesC::XercesC)
