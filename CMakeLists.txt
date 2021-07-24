@@ -33,7 +33,7 @@ add_executable (${PROJECT_NAME} "source/main.cpp"
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${EXPRTK_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${EXPRTK_INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
 target_link_libraries(${PROJECT_NAME} PRIVATE xerces_xerces-c XercesC::XercesC)
