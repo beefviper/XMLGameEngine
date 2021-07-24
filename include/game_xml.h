@@ -30,10 +30,10 @@ namespace xge
 		void reportParseException(const xc::SAXParseException& ex);
 
 	public:
-		void warning(const xc::SAXParseException& ex);
-		void error(const xc::SAXParseException& ex);
-		void fatalError(const xc::SAXParseException& ex);
-		void resetErrors();
+		void warning(const xc::SAXParseException& ex) override;
+		void error(const xc::SAXParseException& ex) override;
+		void fatalError(const xc::SAXParseException& ex) override;
+		void resetErrors() noexcept override;
 	};
 
 	std::string getAttributeByName(const xc::DOMElement* element, const std::string& attribute);

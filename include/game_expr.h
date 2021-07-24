@@ -22,7 +22,7 @@ namespace xge
 	template <typename T>
 	T randomNumberRange(T min, T max)
 	{
-		std::uniform_real_distribution<T> distribution(min, max);
+		const std::uniform_real_distribution<T> distribution(min, max);
 		T randNum = distribution(generator);
 		return randNum;
 	}
@@ -35,7 +35,7 @@ namespace xge
 
 		}
 
-		T operator()(const T& randMax)
+		T operator()(const T& randMax) override
 		{
 			return randomNumberRange(0.0f, randMax);
 		}
@@ -49,7 +49,7 @@ namespace xge
 
 		}
 
-		T operator()(const T& randMin, const T& randMax)
+		T operator()(const T& randMin, const T& randMax) override
 		{
 			return randomNumberRange(randMin, randMax);
 		}
@@ -64,15 +64,15 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		shapeCircle() : exprtk::igeneric_function<T>("T|TS")
+		shapeCircle() noexcept : exprtk::igeneric_function<T>("T|TS")
 		{
 
 		}
 
-		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 		{
 			tempSParams.clear();
-			float radius = scalar_t(parameters[0])();
+			float const radius = scalar_t(parameters[0])();
 			tempSParams.push_back(std::to_string(radius));
 
 			if (parameters.size() == 2)
@@ -97,16 +97,16 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		shapeRectangle() : exprtk::igeneric_function<T>("TT|TTS")
+		shapeRectangle() noexcept : exprtk::igeneric_function<T>("TT|TTS")
 		{
 
 		}
 
-		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 		{
 			tempSParams.clear();
-			float width = scalar_t(parameters[0])();
-			float height = scalar_t(parameters[1])();
+			const float width = scalar_t(parameters[0])();
+			const float height = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(width));
 			tempSParams.push_back(std::to_string(height));
 
@@ -132,16 +132,16 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		text() : exprtk::igeneric_function<T>("ST|STS")
+		text() noexcept : exprtk::igeneric_function<T>("ST|STS")
 		{
 
 		}
 
-		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters)
+		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 		{
 			tempSParams.clear();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
-			float size = scalar_t(parameters[1])();
+			const float size = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(size));
 
 			if (parameters.size() == 3)
@@ -166,12 +166,12 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		image() : exprtk::igeneric_function<T>("S|SS")
+		image() noexcept : exprtk::igeneric_function<T>("S|SS")
 		{
 
 		}
 
-		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters)
+		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 		{
 			tempSParams.clear();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
