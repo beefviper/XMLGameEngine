@@ -49,7 +49,7 @@ namespace xge
 		// evaluate strings in objects
 		for (auto& object : objects)
 		{
-			auto const evaluate_string = [&parser, &expression, &object](const std::string& input_string)
+			const auto evaluate_string = [&parser, &expression, &object](const std::string& input_string)
 			{
 				if (!parser.compile(input_string, expression))
 				{

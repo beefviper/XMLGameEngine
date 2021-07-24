@@ -192,11 +192,11 @@ namespace xge
 	bool Game::circleRectangleCollision(Object& object, Object& otherObject)
 	{
 		auto overlap{ 0.0f };
-		auto const isCircular = object.src.find("shape.circle") != std::string::npos;
+		const auto isCircular = object.src.find("shape.circle") != std::string::npos;
 
 		if (object.name != otherObject.name && otherObject.collision && isCircular)
 		{
-			auto const midpoint = object.sprite->getPosition() +
+			const auto midpoint = object.sprite->getPosition() +
 				sf::Vector2f(object.sprite->getLocalBounds().width / 2, object.sprite->getLocalBounds().height / 2);
 
 			auto otherObjectLeft = otherObject.sprite->getPosition().x;
@@ -208,8 +208,8 @@ namespace xge
 			nearestPoint.x = std::clamp(midpoint.x, otherObjectLeft, otherObjectRight);
 			nearestPoint.y = std::clamp(midpoint.y, otherObjectTop, otherObjectBottom);
 
-			auto const rayToNearest = nearestPoint - midpoint;
-			auto const magOfray = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
+			const auto rayToNearest = nearestPoint - midpoint;
+			const auto magOfray = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
 			overlap = object.sprite->getLocalBounds().width / 2 - magOfray;
 			if (std::isnan(overlap)) overlap = 0;
 		}

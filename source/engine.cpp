@@ -14,11 +14,11 @@ namespace xge
 
 		std::string name = windowDesc.name;
 
-		int const width = static_cast<int>(windowDesc.width);
-		int const height = static_cast<int>(windowDesc.height);
-		sf::VideoMode const videoMode(width, height);
+		const int width = static_cast<int>(windowDesc.width);
+		const int height = static_cast<int>(windowDesc.height);
+		const sf::VideoMode videoMode(width, height);
 
-		auto const windowMode = (windowDesc.fullscreen == "true") ? sf::Style::Fullscreen : sf::Style::Default;
+		const auto windowMode = (windowDesc.fullscreen == "true") ? sf::Style::Fullscreen : sf::Style::Default;
 
 		window.create(videoMode, name, windowMode);
 		window.setFramerateLimit(windowDesc.framerate);
@@ -142,25 +142,25 @@ namespace xge
 	std::string Engine::getObjectFromInput(PairStringString input)
 	{
 		constexpr auto sStart = 0;
-		auto const sEnd = input.first.find(".");
+		const auto sEnd = input.first.find(".");
 
 		return input.first.substr(sStart, sEnd);
 	}
 
 	std::string Engine::getCommandFromInput(PairStringString input)
 	{
-		auto const sStart = input.first.rfind('.') + 1;
-		auto const sEnd = input.first.length();
-		auto const sLength = sEnd - sStart;
+		const auto sStart = input.first.rfind('.') + 1;
+		const auto sEnd = input.first.length();
+		const auto sLength = sEnd - sStart;
 
 		return input.first.substr(sStart, sLength);
 	}
 
 	float Engine::getValueFromAction(std::string action)
 	{
-		auto const sStart = action.find("(") + 1;
-		auto const sEnd = action.find(")");
-		auto const sLength = sEnd - sStart;
+		const auto sStart = action.find("(") + 1;
+		const auto sEnd = action.find(")");
+		const auto sLength = sEnd - sStart;
 		auto sVar = action.substr(sStart, sLength);
 
 		return game.getVariable(sVar);

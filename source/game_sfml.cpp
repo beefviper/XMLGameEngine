@@ -18,13 +18,13 @@ namespace xge
 			{
 				sf::CircleShape circle;
 
-				float const radius = std::stof(object.spriteParams.at(0));
+				const float radius = std::stof(object.spriteParams.at(0));
 
 				circle.setRadius(radius);
 				circle.setFillColor(sfmlColor(object.spriteParams.at(1)));
 
-				int const width = static_cast<int>(std::ceil(circle.getLocalBounds().width));
-				int const height = static_cast<int>(std::ceil(circle.getLocalBounds().height));
+				const int width = static_cast<int>(std::ceil(circle.getLocalBounds().width));
+				const int height = static_cast<int>(std::ceil(circle.getLocalBounds().height));
 
 				object.renderTexture->create(width, height);
 				object.renderTexture->draw(circle);
@@ -33,14 +33,14 @@ namespace xge
 			{
 				sf::RectangleShape rectangle;
 
-				float const recWidth = std::stof(object.spriteParams.at(0));
-				float const recHeight = std::stof(object.spriteParams.at(1));
+				const float recWidth = std::stof(object.spriteParams.at(0));
+				const float recHeight = std::stof(object.spriteParams.at(1));
 
 				rectangle.setSize(sf::Vector2f(recWidth, recHeight));
 				rectangle.setFillColor(sfmlColor(object.spriteParams.at(2)));
 
-				int const width = static_cast<int>(std::ceil(rectangle.getLocalBounds().width));
-				int const height = static_cast<int>(std::ceil(rectangle.getLocalBounds().height));
+				const int width = static_cast<int>(std::ceil(rectangle.getLocalBounds().width));
+				const int height = static_cast<int>(std::ceil(rectangle.getLocalBounds().height));
 
 				object.renderTexture->create(width, height);
 				object.renderTexture->draw(rectangle);
@@ -62,8 +62,8 @@ namespace xge
 				text.setFillColor(sfmlColor(object.spriteParams.at(2)));
 				text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top);
 
-				int const width = static_cast<int>(std::ceil(text.getLocalBounds().width));
-				int const height = static_cast<int>(std::ceil(text.getLocalBounds().height));
+				const int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
+				const int height = static_cast<int>(std::ceil(text.getLocalBounds().height));
 
 				object.renderTexture->create(width, height);
 				object.renderTexture->draw(text);
@@ -83,8 +83,8 @@ namespace xge
 
 				sprite.setTexture(texture);
 
-				int const width = static_cast<int>(std::ceil(sprite.getLocalBounds().width));
-				int const height = static_cast<int>(std::ceil(sprite.getLocalBounds().height));
+				const int width = static_cast<int>(std::ceil(sprite.getLocalBounds().width));
+				const int height = static_cast<int>(std::ceil(sprite.getLocalBounds().height));
 
 				if (object.spriteParams.at(1) == "flip.horizontal")
 				{
@@ -127,8 +127,8 @@ namespace xge
 		text.setCharacterSize(std::stoi(object.spriteParams.at(1)));
 		text.setFillColor(sfmlColor(object.spriteParams.at(2)));
 
-		int const width = static_cast<int>(std::ceil(text.getLocalBounds().width));
-		int const height = static_cast<int>(std::ceil(text.getLocalBounds().height));
+		const int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
+		const int height = static_cast<int>(std::ceil(text.getLocalBounds().height));
 
 		text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top);
 

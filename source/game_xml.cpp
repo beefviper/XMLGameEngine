@@ -95,7 +95,7 @@ namespace xge
 				xc_collision_data.left = getAttributeByName(xc_collision, "left");
 				xc_collision_data.right = getAttributeByName(xc_collision, "right");
 				xc_collision_data.basic = getAttributeByName(xc_collision, "basic");
-				bool const xc_collision_state = (xc_collision_enabled == "true") ? true : false;
+				const bool xc_collision_state = (xc_collision_enabled == "true") ? true : false;
 
 				std::map<std::string, std::string> xc_action_map;
 

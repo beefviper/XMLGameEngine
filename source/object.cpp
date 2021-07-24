@@ -7,7 +7,7 @@
 
 namespace xge
 {
-	std::ostream& operator<<(std::ostream& o, WindowDesc const& f)
+	std::ostream& operator<<(std::ostream& o, const WindowDesc& f)
 	{
 		o << "window: ";
 		o << "title=" << f.name;
@@ -17,7 +17,7 @@ namespace xge
 		return o;
 	}
 
-	std::ostream& operator<<(std::ostream& o, Object const& f) {
+	std::ostream& operator<<(std::ostream& o, const Object& f) {
 		o << "object: " << "name=" << f.name << ", src=" << f.src << '\n'
 			<< "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n'
 			<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
