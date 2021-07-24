@@ -5,12 +5,26 @@
 
 #pragma once
 
+#include "object.h"
+#include "states.h"
+
 #include <exprtk.hpp>
 
+#include <iostream>
 #include <random>
 
 namespace xge
 {
+	class game_expr
+	{
+	public:
+		void init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& objects);
+
+		exprtk::symbol_table<float> symbolTable;
+		exprtk::expression<float> expression;
+		exprtk::parser<float> parser;
+	};
+
 	namespace
 	{
 		std::vector<std::string> tempSParams;
@@ -188,4 +202,5 @@ namespace xge
 			return 0;
 		}
 	};
+
 }

@@ -3,12 +3,11 @@
 // author: beefviper
 // date: Sept 21, 2020
 
-#include "game.h"
 #include "game_expr.h"
 
 namespace xge
 {
-	void Game::initEXPR(void)
+	void game_expr::init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& objects)
 	{
 		// custom funtions added to exprtk
 		randomNumber<float> randomNumberFloat{};
@@ -18,7 +17,7 @@ namespace xge
 		text<float> textFloat{};
 		image<float> imageFloat{};
 
-		exprtk::symbol_table<float> symbolTable;
+		//exprtk::symbol_table<float> symbolTable;
 
 		// add functions to symbol table
 		symbolTable.add_function("random.number", randomNumberFloat);
@@ -42,14 +41,14 @@ namespace xge
 			symbolTable.add_constant(variable.first, variable.second);
 		}
 
-		exprtk::expression<float> expression;
+		//exprtk::expression<float> expression;
 		expression.register_symbol_table(symbolTable);
-		exprtk::parser<float> parser;
+		//exprtk::parser<float> parser;
 
 		// evaluate strings in objects
 		for (auto& object : objects)
 		{
-			const auto evaluate_string = [&parser, &expression, &object](const std::string& input_string)
+			const auto evaluate_string = [&](const std::string& input_string)
 			{
 				if (!parser.compile(input_string, expression))
 				{
