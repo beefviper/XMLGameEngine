@@ -51,13 +51,13 @@ namespace xge
 				if (object.position.x < 0 && object.collisionData.left == "inc('score2')")
 				{
 					object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
-					sfml.updateSFMLTextIncrementValue(getObject("score2"));
+					sfml.updateTextIncrementValue(getObject("score2"));
 				}
 
 				if (object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "inc('score1')")
 				{
 					object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
-					sfml.updateSFMLTextIncrementValue(getObject("score1"));
+					sfml.updateTextIncrementValue(getObject("score1"));
 				}
 
 				// check collision with other objects
