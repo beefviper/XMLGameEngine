@@ -35,7 +35,7 @@ namespace xge
 
 		}
 
-		T operator()(const T& randMax) override
+		T operator()(const T& randMax)
 		{
 			return randomNumberRange(0.0f, randMax);
 		}
@@ -49,7 +49,7 @@ namespace xge
 
 		}
 
-		T operator()(const T& randMin, const T& randMax) override
+		T operator()(const T& randMin, const T& randMax)
 		{
 			return randomNumberRange(randMin, randMax);
 		}
