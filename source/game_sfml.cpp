@@ -3,12 +3,11 @@
 // author: beefviper
 // date: Sept 21, 2020
 
-#include "game.h"
 #include "game_sfml.h"
 
 namespace xge
 {
-	void Game::initSFML(void)
+	void game_sfml::init(std::vector<Object>& objects)
 	{
 		for (auto& object : objects)
 		{
@@ -107,7 +106,7 @@ namespace xge
 		}
 	}
 
-	void Game::updateSFMLTextIncrementValue(Object& object)
+	void game_sfml::updateSFMLTextIncrementValue(Object& object)
 	{
 		sf::Font font;
 		sf::Text text;

@@ -10,9 +10,9 @@ namespace xge
 	Game::Game(const std::string& game) :
 		filename(game)
 	{
-		initXML();
-		initEXPR();
-		initSFML();
+		xml.init(filename, windowDesc, variables, states, objects);
+		expr.init(windowDesc, variables, states, objects);
+		sfml.init(objects);
 	}
 
 	void Game::updateObjects(void)
@@ -51,13 +51,13 @@ namespace xge
 				if (object.position.x < 0 && object.collisionData.left == "inc('score2')")
 				{
 					object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
-					updateSFMLTextIncrementValue(getObject("score2"));
+					sfml.updateSFMLTextIncrementValue(getObject("score2"));
 				}
 
 				if (object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "inc('score1')")
 				{
 					object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
-					updateSFMLTextIncrementValue(getObject("score1"));
+					sfml.updateSFMLTextIncrementValue(getObject("score1"));
 				}
 
 				// check collision with other objects
