@@ -10,11 +10,17 @@ namespace xge
 	Game::Game(const std::string& game) :
 		filename(game)
 	{
-		initXML();
+		xml.init(filename, windowDesc, variables, states, objects);
 		initEXPR();
 		initSFML();
 	}
 
+	void Game::init()
+	{
+		xml.init(filename, windowDesc, variables, states, objects);
+		initEXPR();
+		initSFML();
+	}
 	void Game::updateObjects(void)
 	{
 		for (auto& objectName : getCurrentState().show)

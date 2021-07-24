@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include "object.h"
+#include "states.h"
+
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/framework/LocalFileInputSource.hpp>
@@ -24,17 +27,30 @@ namespace xc = xercesc;
 
 namespace xge
 {
-	class ParserErrorHandler : public xc::ErrorHandler
+	class game_xml
 	{
-	private:
-		void reportParseException(const xc::SAXParseException& ex);
-
 	public:
-		void warning(const xc::SAXParseException& ex) override;
-		void error(const xc::SAXParseException& ex) override;
-		void fatalError(const xc::SAXParseException& ex) override;
-		void resetErrors() noexcept override;
-	};
+		game_xml();
+		~game_xml();
 
-	std::string getAttributeByName(const xc::DOMElement* element, const std::string& attribute);
+		void init(std::string& filename, WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& objects);
+
+		xc::XercesDOMParser* domParser = nullptr;
+
+		class ParserErrorHandler : public xc::ErrorHandler
+		{
+		private:
+			void reportParseException(const xc::SAXParseException& ex);
+
+		public:
+			void warning(const xc::SAXParseException& ex) override;
+			void error(const xc::SAXParseException& ex) override;
+			void fatalError(const xc::SAXParseException& ex) override;
+			void resetErrors() noexcept override;
+		};
+
+		ParserErrorHandler parserErrorHandler;
+
+		std::string getAttributeByName(const xc::DOMElement* element, const std::string& attribute);
+	};
 }

@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "game_xml.h"
 #include "object.h"
 #include "states.h"
 
@@ -23,7 +24,7 @@ namespace xge
 	{
 	public:
 		Game(const std::string& game);
-		void initXML(void) ;
+		void init();
 		void initEXPR(void);
 		void initSFML(void);
 
@@ -44,6 +45,8 @@ namespace xge
 	private:
 		std::string filename;
 		WindowDesc windowDesc;
+
+		game_xml xml;
 
 		std::map<std::string, float> variables;
 		std::vector<State> states;

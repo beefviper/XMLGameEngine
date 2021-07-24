@@ -13,7 +13,7 @@ int main(void)
 {
 	std::string filename{ "games/pong.xml" };
 	xge::Game game{ filename };
-
+	
 	game.printGame();
 	game.setCurrentState(0);
 
