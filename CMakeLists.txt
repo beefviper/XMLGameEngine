@@ -10,17 +10,9 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("XMLGameEngine")
 
-set( RULESET_PATH ${CMAKE_CURRENT_BINARY_DIR}/XMLGameEngine.user.props )
-configure_file(${CMAKE_SOURCE_DIR}/XMLGameEngine.user.props ${RULESET_PATH} @ONLY)
-
 if (MSVC)
     add_compile_options(/bigobj)
 endif()
-
-find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
-find_package(XercesC CONFIG REQUIRED)
-
-find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 
 # Add source to this project's executable.
 add_executable (${PROJECT_NAME} "source/main.cpp"
@@ -33,9 +25,12 @@ add_executable (${PROJECT_NAME} "source/main.cpp"
     "include/game_expr.h" "source/game_expr.cpp"
 	"include/game_sfml.h" "source/game_sfml.cpp")
 
-set_property( TARGET ${PROJECT_NAME} PROPERTY VS_USER_PROPS "${RULESET_PATH}" )
-
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+
+find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
+
+find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
+find_package(XercesC CONFIG REQUIRED)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${EXPRTK_INCLUDE_DIRS}")
