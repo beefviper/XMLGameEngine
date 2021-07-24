@@ -10,6 +10,9 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("XMLGameEngine")
 
+set( RULESET_PATH ${CMAKE_CURRENT_BINARY_DIR}/XMLGameEngine.user.props )
+configure_file(${CMAKE_SOURCE_DIR}/XMLGameEngine.user.props ${RULESET_PATH} @ONLY)
+
 if (MSVC)
     add_compile_options(/bigobj)
 endif()
@@ -29,6 +32,8 @@ add_executable (${PROJECT_NAME} "source/main.cpp"
 	"include/game_xml.h" "source/game_xml.cpp"
     "include/game_expr.h" "source/game_expr.cpp"
 	"include/game_sfml.h" "source/game_sfml.cpp")
+
+set_property( TARGET ${PROJECT_NAME} PROPERTY VS_USER_PROPS "${RULESET_PATH}" )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
