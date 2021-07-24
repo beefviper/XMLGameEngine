@@ -27,8 +27,6 @@ namespace xge
 	public:
 		Game(const std::string& game);
 
-		//void updateSFMLTextIncrementValue(Object& object);
-
 		void updateObjects(void);
 		void printGame(void);
 

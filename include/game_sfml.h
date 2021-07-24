@@ -20,6 +20,6 @@ namespace xge
 	{
 	public:
 		void init(std::vector<Object>& objects);
-		void updateSFMLTextIncrementValue(Object& object);
+		void updateTextIncrementValue(Object& object);
 	};
 }

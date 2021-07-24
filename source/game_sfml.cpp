@@ -106,7 +106,7 @@ namespace xge
 		}
 	}
 
-	void game_sfml::updateSFMLTextIncrementValue(Object& object)
+	void game_sfml::updateTextIncrementValue(Object& object)
 	{
 		sf::Font font;
 		sf::Text text;
