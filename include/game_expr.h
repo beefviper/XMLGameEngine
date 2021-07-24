@@ -105,8 +105,8 @@ namespace xge
 		T operator()(const std::size_t& ps_index, parameter_list_t parameters)
 		{
 			tempSParams.clear();
-			float width = scalar_t(parameters[0])();
-			float height = scalar_t(parameters[1])();
+			const float width = scalar_t(parameters[0])();
+			const float height = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(width));
 			tempSParams.push_back(std::to_string(height));
 
@@ -141,7 +141,7 @@ namespace xge
 		{
 			tempSParams.clear();
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
-			float size = scalar_t(parameters[1])();
+			const float size = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(size));
 
 			if (parameters.size() == 3)

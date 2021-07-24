@@ -40,14 +40,14 @@ namespace xge
 			}
 
 			// find key points in document
-			auto const xc_doc = domParser.getDocument();
-			auto const xc_root = xc_doc->getDocumentElement();
-			auto const xc_window = xc_root->getFirstElementChild();
-			auto const xc_variables = xc_window->getNextElementSibling();
+			const auto* xc_doc = domParser.getDocument();
+			const auto* xc_root = xc_doc->getDocumentElement();
+			const auto* xc_window = xc_root->getFirstElementChild();
+			const auto* xc_variables = xc_window->getNextElementSibling();
 			auto xc_variable = xc_variables->getFirstElementChild();
-			auto const xc_objects = xc_variables->getNextElementSibling();
+			const auto* xc_objects = xc_variables->getNextElementSibling();
 			auto xc_object = xc_objects->getFirstElementChild();
-			auto const xc_states = xc_objects->getNextElementSibling();
+			const auto* xc_states = xc_objects->getNextElementSibling();
 			auto xc_state = xc_states->getFirstElementChild();
 
 			// load window description
@@ -72,21 +72,21 @@ namespace xge
 			{
 				std::string xc_obj_name = getAttributeByName(xc_object, "name");
 
-				auto const xc_sprite = xc_object->getFirstElementChild();
+				const auto* xc_sprite = xc_object->getFirstElementChild();
 				std::string xc_sprite_src = getAttributeByName(xc_sprite, "src");
 
-				auto const xc_pos = xc_sprite->getNextElementSibling();
+				const auto* xc_pos = xc_sprite->getNextElementSibling();
 				std::string xc_pos_x = getAttributeByName(xc_pos, "x");
 				std::string xc_pos_y = getAttributeByName(xc_pos, "y");
 
-				auto const xc_vel = xc_pos->getNextElementSibling();
+				const auto* xc_vel = xc_pos->getNextElementSibling();
 				std::string xc_vel_x = getAttributeByName(xc_vel, "x");
 				std::string xc_vel_y = getAttributeByName(xc_vel, "y");
 
 				Vector2str position{ xc_pos_x, xc_pos_y };
 				Vector2str velocity{ xc_vel_x, xc_vel_y };
 
-				auto const xc_collision = xc_vel->getNextElementSibling();
+				const auto* xc_collision = xc_vel->getNextElementSibling();
 				std::string xc_collision_enabled = getAttributeByName(xc_collision, "enabled");
 
 				CollisionData xc_collision_data;
@@ -99,7 +99,7 @@ namespace xge
 
 				std::map<std::string, std::string> xc_action_map;
 
-				auto const xc_actions = xc_collision->getNextElementSibling();
+				const auto* xc_actions = xc_collision->getNextElementSibling();
 				if (xc_actions)
 				{
 					auto xc_action = xc_actions->getFirstElementChild();
@@ -131,7 +131,7 @@ namespace xge
 			{
 				std::string xc_state_name = getAttributeByName(xc_state, "name");
 
-				auto const xc_shows = xc_state->getFirstElementChild();
+				const auto* xc_shows = xc_state->getFirstElementChild();
 				auto xc_show = xc_shows->getFirstElementChild();
 
 				std::vector<std::string> xc_show_vec;
@@ -143,7 +143,7 @@ namespace xge
 					xc_show = xc_show->getNextElementSibling();
 				}
 
-				auto const xc_inputs = xc_shows->getNextElementSibling();
+				const auto* xc_inputs = xc_shows->getNextElementSibling();
 				auto xc_input = xc_inputs->getFirstElementChild();
 
 				std::map<std::string, std::string> xc_inputs_map;
@@ -190,7 +190,7 @@ namespace xge
 		reportParseException(ex);
 	}
 
-	void ParserErrorHandler::resetErrors()
+	void ParserErrorHandler::resetErrors() noexcept
 	{
 
 	}
