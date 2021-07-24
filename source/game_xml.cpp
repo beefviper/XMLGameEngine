@@ -21,23 +21,21 @@ namespace xge
 
 	void game_xml::init(std::string& filename, WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& objects)
 	{
-		//xc::XercesDOMParser domParser;
-
-		if ((*domParser).loadGrammar("games/assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
+		if (domParser->loadGrammar("games/assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
 		{
 			std::cout << "couldn't load schema\n\n";
 			exit(EXIT_FAILURE);
 		}
 
-		(*domParser).setErrorHandler(&parserErrorHandler);
-		(*domParser).setValidationScheme(xc::XercesDOMParser::Val_Auto);
-		(*domParser).setDoNamespaces(true);
-		(*domParser).setDoSchema(true);
-		(*domParser).setValidationConstraintFatal(true);
+		domParser->setErrorHandler(&parserErrorHandler);
+		domParser->setValidationScheme(xc::XercesDOMParser::Val_Auto);
+		domParser->setDoNamespaces(true);
+		domParser->setDoSchema(true);
+		domParser->setValidationConstraintFatal(true);
 
-		(*domParser).parse(filename.c_str());
+		domParser->parse(filename.c_str());
 
-		if ((*domParser).getErrorCount() == 0)
+		if (domParser->getErrorCount() == 0)
 		{
 			std::cout << "XML file validated against the schema successfully\n\n";
 		}
@@ -48,7 +46,7 @@ namespace xge
 		}
 
 		// find key points in document
-		const auto* xc_doc = (*domParser).getDocument();
+		const auto* xc_doc = domParser->getDocument();
 		const auto* xc_root = xc_doc->getDocumentElement();
 		const auto* xc_window = xc_root->getFirstElementChild();
 		const auto* xc_variables = xc_window->getNextElementSibling();
