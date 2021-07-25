@@ -66,7 +66,7 @@ namespace xge
 								colIter++;
 								if (*colIter == "reset")
 								{
-									object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
+									object.position = object.position_original;
 								}
 								colIter++;
 							}
@@ -92,7 +92,7 @@ namespace xge
 								colIter++;
 								if (*colIter == "reset")
 								{
-									object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
+									object.position = object.position_original;
 								}
 								colIter++;
 							}
