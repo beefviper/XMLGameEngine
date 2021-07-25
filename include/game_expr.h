@@ -203,4 +203,49 @@ namespace xge
 		}
 	};
 
+	template <typename T>
+	struct collide : public exprtk::igeneric_function<T>
+	{
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		collide() noexcept : exprtk::igeneric_function<T>("S|S")
+		{
+
+		}
+
+		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+		{
+			tempSParams.push_back("collide");
+			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct inc : public exprtk::igeneric_function<T>
+	{
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		inc() noexcept : exprtk::igeneric_function<T>("S|S")
+		{
+
+		}
+
+		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+		{
+			tempSParams.push_back("inc");
+			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+
+			return 0;
+		}
+	};
 }
