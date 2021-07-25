@@ -16,8 +16,8 @@ namespace xge
 		shapeRectangle<float> shapeRectangleFloat{};
 		text<float> textFloat{};
 		image<float> imageFloat{};
-
-		//exprtk::symbol_table<float> symbolTable;
+		collide<float> collideFloat{};
+		inc<float> incFloat{};
 
 		// add functions to symbol table
 		symbolTable.add_function("random.number", randomNumberFloat);
@@ -26,6 +26,8 @@ namespace xge
 		symbolTable.add_function("shape.rectangle", shapeRectangleFloat);
 		symbolTable.add_function("text", textFloat);
 		symbolTable.add_function("image", imageFloat);
+		symbolTable.add_function("collide", collideFloat);
+		symbolTable.add_function("inc", incFloat);
 
 		// add constants to symbol table
 		symbolTable.add_constant("window.top", 0);
@@ -41,9 +43,8 @@ namespace xge
 			symbolTable.add_constant(variable.first, variable.second);
 		}
 
-		//exprtk::expression<float> expression;
+		// register symbol table with expression
 		expression.register_symbol_table(symbolTable);
-		//exprtk::parser<float> parser;
 
 		// evaluate strings in objects
 		for (auto& object : objects)
@@ -66,6 +67,41 @@ namespace xge
 
 			evaluate_string(object.src);
 			object.spriteParams = tempSParams;
+
+			if (object.collisionData.top != "")
+			{
+				tempSParams.clear();
+				evaluate_string(object.collisionData.top);
+				object.collisionDataEx.top = tempSParams;
+			}
+
+			if (object.collisionData.bottom != "")
+			{
+				tempSParams.clear();
+				evaluate_string(object.collisionData.bottom);
+				object.collisionDataEx.bottom = tempSParams;
+			}
+
+			if (object.collisionData.left != "")
+			{
+				tempSParams.clear();
+				evaluate_string(object.collisionData.left);
+				object.collisionDataEx.left = tempSParams;
+			}
+
+			if (object.collisionData.right != "")
+			{
+				tempSParams.clear();
+				evaluate_string(object.collisionData.right);
+				object.collisionDataEx.right = tempSParams;
+			}
+
+			if (object.collisionData.basic != "")
+			{
+				tempSParams.clear();
+				evaluate_string(object.collisionData.basic);
+				object.collisionDataEx.basic = tempSParams;
+			}
 		}
 	}
 }

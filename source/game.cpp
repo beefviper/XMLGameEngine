@@ -48,16 +48,16 @@ namespace xge
 					object.velocity.x = 0;
 				}
 
-				if (object.position.x < 0 && object.collisionData.left == "inc('score2')")
+				if (object.position.x < 0 && object.collisionDataEx.left.at(0) == "inc")
 				{
 					object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
-					sfml.updateTextIncrementValue(getObject("score2"));
+					sfml.updateTextIncrementValue(getObject(object.collisionDataEx.left.at(1)));
 				}
 
-				if (object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "inc('score1')")
+				if (object.position.x > windowDesc.width - objectWidth && object.collisionDataEx.right.at(0) == "inc")
 				{
 					object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
-					sfml.updateTextIncrementValue(getObject("score1"));
+					sfml.updateTextIncrementValue(getObject(object.collisionDataEx.right.at(1)));
 				}
 
 				// check collision with other objects
@@ -147,46 +147,46 @@ namespace xge
 
 	bool Game::bouncedOffTop(Object& object)
 	{
-		return object.position.y < 0 && object.collisionData.top == "bounce";
+		return object.position.y < 0 && object.collisionDataEx.top.at(1) == "bounce";
 	}
 
 	bool Game::bouncedOffBottom(Object& object)
 	{
 		auto objectHeight = object.sprite->getLocalBounds().height;
-		return object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "bounce";
+		return object.position.y > windowDesc.height - objectHeight && object.collisionDataEx.bottom.at(1) == "bounce";
 	}
 
 	bool Game::bouncedOffLeft(Object& object)
 	{
-		return object.position.x < 0 && object.collisionData.left == "bounce";
+		return object.position.x < 0 && object.collisionDataEx.left.at(1) == "bounce";
 	}
 
 	bool Game::bouncedOffRight(Object& object)
 	{
 		auto objectWidth = object.sprite->getLocalBounds().width;
-		return object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "bounce";
+		return object.position.x > windowDesc.width - objectWidth && object.collisionDataEx.right.at(1) == "bounce";
 	}
 
 	bool Game::stuckToTop(Object& object)
 	{
-		return object.position.y < 0 && object.collisionData.top == "static";
+		return object.position.y < 0 && object.collisionDataEx.top.at(1) == "static";
 	}
 
 	bool Game::stuckToBottom(Object& object)
 	{
 		auto objectHeight = object.sprite->getLocalBounds().height;
-		return object.position.y > windowDesc.height - objectHeight && object.collisionData.bottom == "static";
+		return object.position.y > windowDesc.height - objectHeight && object.collisionDataEx.bottom.at(1) == "static";
 	}
 
 	bool Game::stuckToLeft(Object& object)
 	{
-		return object.position.x < 0 && object.collisionData.left == "static";
+		return object.position.x < 0 && object.collisionDataEx.left.at(1) == "static";
 	}
 
 	bool Game::stuckToRight(Object& object)
 	{
 		auto objectWidth = object.sprite->getLocalBounds().width;
-		return object.position.x > windowDesc.width - objectWidth && object.collisionData.right == "static";
+		return object.position.x > windowDesc.width - objectWidth && object.collisionDataEx.right.at(1) == "static";
 	}
 
 	bool Game::circleRectangleCollision(Object& object, Object& otherObject)
