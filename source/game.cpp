@@ -48,16 +48,56 @@ namespace xge
 					object.velocity.x = 0;
 				}
 
-				if (object.position.x < 0 && object.collisionDataEx.left.at(0) == "inc")
+				if (object.position.x < 0)
 				{
-					object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
-					sfml.updateTextIncrementValue(getObject(object.collisionDataEx.left.at(1)));
+					if (object.collisionDataEx.left.size() > 0)
+					{
+						auto colIter = object.collisionDataEx.left.begin();
+						do
+						{
+							if (*colIter == "inc")
+							{
+								colIter++;
+								sfml.updateTextIncrementValue(getObject(*colIter));
+								colIter++;
+							}
+							if (*colIter == "collide")
+							{
+								colIter++;
+								if (*colIter == "reset")
+								{
+									object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
+								}
+								colIter++;
+							}
+						} while (colIter != object.collisionDataEx.left.end());
+					}
 				}
 
-				if (object.position.x > windowDesc.width - objectWidth && object.collisionDataEx.right.at(0) == "inc")
+				if (object.position.x > windowDesc.width - objectWidth)
 				{
-					object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
-					sfml.updateTextIncrementValue(getObject(object.collisionDataEx.right.at(1)));
+					if (object.collisionDataEx.right.size() > 0)
+					{
+						auto colIter = object.collisionDataEx.right.begin();
+						do
+						{
+							if (*colIter == "inc")
+							{
+								colIter++;
+								sfml.updateTextIncrementValue(getObject(*colIter));
+								colIter++;
+							}
+							if (*colIter == "collide")
+							{
+								colIter++;
+								if (*colIter == "reset")
+								{
+									object.position.x = windowDesc.width / 2 + object.sprite->getLocalBounds().width / 2;
+								}
+								colIter++;
+							}
+						} while (colIter != object.collisionDataEx.right.end());
+					}
 				}
 
 				// check collision with other objects
