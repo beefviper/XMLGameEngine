@@ -31,74 +31,15 @@ namespace xge
 					object.velocity.y *= -1;
 				}
 
-				if (bouncedOffLeft(object) || bouncedOffRight(object))
-				{
-					object.velocity.x *= -1;
-				}
-
 				if (stuckToTop(object) || stuckToBottom(object))
 				{
 					object.position.y = std::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
 					object.velocity.y = 0;
 				}
 
-				if (stuckToLeft(object) || stuckToRight(object))
-				{
-					object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
-					object.velocity.x = 0;
-				}
+				checkLeftOrRightEdge(object, "left");
+				checkLeftOrRightEdge(object, "right");
 
-				if (object.position.x < 0)
-				{
-					if (object.collisionDataEx.left.size() > 0)
-					{
-						auto colIter = object.collisionDataEx.left.begin();
-						do
-						{
-							if (*colIter == "inc")
-							{
-								colIter++;
-								sfml.updateTextIncrementValue(getObject(*colIter));
-								colIter++;
-							}
-							if (*colIter == "collide")
-							{
-								colIter++;
-								if (*colIter == "reset")
-								{
-									object.position = object.position_original;
-								}
-								colIter++;
-							}
-						} while (colIter != object.collisionDataEx.left.end());
-					}
-				}
-
-				if (object.position.x > windowDesc.width - objectWidth)
-				{
-					if (object.collisionDataEx.right.size() > 0)
-					{
-						auto colIter = object.collisionDataEx.right.begin();
-						do
-						{
-							if (*colIter == "inc")
-							{
-								colIter++;
-								sfml.updateTextIncrementValue(getObject(*colIter));
-								colIter++;
-							}
-							if (*colIter == "collide")
-							{
-								colIter++;
-								if (*colIter == "reset")
-								{
-									object.position = object.position_original;
-								}
-								colIter++;
-							}
-						} while (colIter != object.collisionDataEx.right.end());
-					}
-				}
 
 				// check collision with other objects
 				if (object.collisionData.basic != "")
@@ -196,17 +137,6 @@ namespace xge
 		return object.position.y > windowDesc.height - objectHeight && object.collisionDataEx.bottom.at(1) == "bounce";
 	}
 
-	bool Game::bouncedOffLeft(Object& object)
-	{
-		return object.position.x < 0 && object.collisionDataEx.left.at(1) == "bounce";
-	}
-
-	bool Game::bouncedOffRight(Object& object)
-	{
-		auto objectWidth = object.sprite->getLocalBounds().width;
-		return object.position.x > windowDesc.width - objectWidth && object.collisionDataEx.right.at(1) == "bounce";
-	}
-
 	bool Game::stuckToTop(Object& object)
 	{
 		return object.position.y < 0 && object.collisionDataEx.top.at(1) == "static";
@@ -218,15 +148,51 @@ namespace xge
 		return object.position.y > windowDesc.height - objectHeight && object.collisionDataEx.bottom.at(1) == "static";
 	}
 
-	bool Game::stuckToLeft(Object& object)
-	{
-		return object.position.x < 0 && object.collisionDataEx.left.at(1) == "static";
-	}
-
-	bool Game::stuckToRight(Object& object)
+	void Game::checkLeftOrRightEdge(Object& object, std::string side)
 	{
 		auto objectWidth = object.sprite->getLocalBounds().width;
-		return object.position.x > windowDesc.width - objectWidth && object.collisionDataEx.right.at(1) == "static";
+
+		std::vector<std::string> curSide{};
+		float leftBound = 0;
+		float rightBound = windowDesc.width - objectWidth;
+
+		if (side == "left") { curSide = object.collisionDataEx.left; }
+		else if (side == "right") { curSide = object.collisionDataEx.right; }
+
+		if (object.position.x < leftBound && side == "left" || object.position.x > rightBound && side == "right")
+		{
+			if (curSide.size() > 0)
+			{
+				auto colIter = curSide.begin();
+				do
+				{
+					if (*colIter == "inc")
+					{
+						colIter++;
+						sfml.updateTextIncrementValue(getObject(*colIter));
+						colIter++;
+					}
+					if (*colIter == "collide")
+					{
+						colIter++;
+						if (*colIter == "reset")
+						{
+							object.position = object.position_original;
+						}
+						if (*colIter == "bounce")
+						{
+							object.velocity.x *= -1;
+						}
+						if (*colIter == "static")
+						{
+							object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
+							object.velocity.x = 0;
+						}
+						colIter++;
+					}
+				} while (colIter != curSide.end());
+			}
+		}
 	}
 
 	bool Game::circleRectangleCollision(Object& object, Object& otherObject)
