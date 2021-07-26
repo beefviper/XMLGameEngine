@@ -71,40 +71,21 @@ namespace xge
 			evaluate_string(object.src);
 			object.spriteParams = tempSParams;
 
-			if (object.collisionData.top != "")
+			auto process_collisionData = [&](const std::string& colData)
 			{
 				tempSParams.clear();
-				evaluate_string(object.collisionData.top);
-				object.collisionDataEx.top = tempSParams;
-			}
-
-			if (object.collisionData.bottom != "")
-			{
-				tempSParams.clear();
-				evaluate_string(object.collisionData.bottom);
-				object.collisionDataEx.bottom = tempSParams;
-			}
-
-			if (object.collisionData.left != "")
-			{
-				tempSParams.clear();
-				evaluate_string(object.collisionData.left);
-				object.collisionDataEx.left = tempSParams;
-			}
-
-			if (object.collisionData.right != "")
-			{
-				tempSParams.clear();
-				evaluate_string(object.collisionData.right);
-				object.collisionDataEx.right = tempSParams;
-			}
-
-			if (object.collisionData.basic != "")
-			{
-				tempSParams.clear();
-				evaluate_string(object.collisionData.basic);
-				object.collisionDataEx.basic = tempSParams;
-			}
+				if (colData != "")
+				{
+					evaluate_string(colData);
+				}
+				return tempSParams;
+			};
+			
+			object.collisionDataEx.top = process_collisionData(object.collisionData.top);
+			object.collisionDataEx.bottom = process_collisionData(object.collisionData.bottom);
+			object.collisionDataEx.left = process_collisionData(object.collisionData.left);
+			object.collisionDataEx.right = process_collisionData(object.collisionData.right);
+			object.collisionDataEx.basic = process_collisionData(object.collisionData.basic);
 		}
 	}
 }

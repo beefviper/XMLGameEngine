@@ -129,49 +129,47 @@ namespace xge
 		else if (side == "top") { curSide = object.collisionDataEx.top; }
 		else if (side == "bottom") { curSide = object.collisionDataEx.bottom; }
 
-		if ( (object.position.x < leftBound && side == "left")
+		if ((object.position.x < leftBound && side == "left")
 			|| (object.position.x > rightBound && side == "right")
 			|| (object.position.y < topBound && side == "top")
-			|| (object.position.y > bottomBound && side == "bottom") )
+			|| (object.position.y > bottomBound && side == "bottom"))
 		{
-			if (curSide.size() > 0)
+
+			auto colIter = curSide.begin();
+			while (colIter != curSide.end())
 			{
-				auto colIter = curSide.begin();
-				do
+				if (*colIter == "inc")
 				{
-					if (*colIter == "inc")
+					colIter++;
+					sfml.updateTextIncrementValue(getObject(*colIter));
+					colIter++;
+				}
+				else if (*colIter == "collide")
+				{
+					colIter++;
+					if (*colIter == "reset")
 					{
-						colIter++;
-						sfml.updateTextIncrementValue(getObject(*colIter));
-						colIter++;
+						object.position = object.position_original;
 					}
-					else if (*colIter == "collide")
+					else if (*colIter == "bounce")
 					{
-						colIter++;
-						if (*colIter == "reset")
-						{
-							object.position = object.position_original;
-						}
-						else if (*colIter == "bounce")
-						{
-							if (side == "left" || side == "right") { object.velocity.x *= -1; }
-							else if (side == "top" || side == "bottom") { object.velocity.y *= -1; }
-						}
-						else if (*colIter == "static")
-						{
-							if (side == "left" || side == "right")
-							{
-								object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
-							}
-							else if (side == "top" || side == "bottom")
-							{
-								object.position.y = std::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
-							}
-							object.velocity.x = 0;
-						}
-						colIter++;
+						if (side == "left" || side == "right") { object.velocity.x *= -1; }
+						else if (side == "top" || side == "bottom") { object.velocity.y *= -1; }
 					}
-				} while (colIter != curSide.end());
+					else if (*colIter == "static")
+					{
+						if (side == "left" || side == "right")
+						{
+							object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
+						}
+						else if (side == "top" || side == "bottom")
+						{
+							object.position.y = std::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
+						}
+						object.velocity.x = 0;
+					}
+					colIter++;
+				}
 			}
 		}
 	}
