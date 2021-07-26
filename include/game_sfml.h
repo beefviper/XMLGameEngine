@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <memory>
+#include <cmath>
 
 namespace xge
 {

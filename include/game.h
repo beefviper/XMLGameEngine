@@ -54,13 +54,10 @@ namespace xge
 
 		bool bouncedOffTop(Object& object);
 		bool bouncedOffBottom(Object& object);
-		bool bouncedOffLeft(Object& object);
-		bool bouncedOffRight(Object& object);
-
 		bool stuckToTop(Object& object);
 		bool stuckToBottom(Object& object);
-		bool stuckToLeft(Object& object);
-		bool stuckToRight(Object& object);
+
+		void checkEdge(Object& object, std::string side);
 
 		bool circleRectangleCollision(Object& object, Object& otherObject);
 	};

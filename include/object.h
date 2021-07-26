@@ -60,7 +60,9 @@ namespace xge
 		Vector2str sposition;
 		Vector2str svelocity;
 		sf::Vector2f position;
+		sf::Vector2f position_original;
 		sf::Vector2f velocity;
+		sf::Vector2f velocity_original;
 		bool collision{ false };
 		CollisionData collisionData;
 		CollisionDataEx collisionDataEx;
