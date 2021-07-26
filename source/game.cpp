@@ -21,7 +21,8 @@ namespace xge
 		{
 			auto& object = getObject(objectName);
 
-			if (object.collision) {
+			if (object.collision)
+			{
 				// check collisions with edges of screen
 				checkEdge(object, "top");
 				checkEdge(object, "bottom");
