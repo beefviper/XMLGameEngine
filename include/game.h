@@ -57,7 +57,7 @@ namespace xge
 		bool stuckToTop(Object& object);
 		bool stuckToBottom(Object& object);
 
-		void checkLeftOrRightEdge(Object& object, std::string side);
+		void checkEdge(Object& object, std::string side);
 
 		bool circleRectangleCollision(Object& object, Object& otherObject);
 	};

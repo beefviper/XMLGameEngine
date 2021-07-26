@@ -25,21 +25,11 @@ namespace xge
 			auto objectHeight = object.sprite->getLocalBounds().height;
 
 			if (object.collision) {
-				// check collision with edges of screen
-				if (bouncedOffTop(object) || bouncedOffBottom(object))
-				{
-					object.velocity.y *= -1;
-				}
-
-				if (stuckToTop(object) || stuckToBottom(object))
-				{
-					object.position.y = std::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
-					object.velocity.y = 0;
-				}
-
-				checkLeftOrRightEdge(object, "left");
-				checkLeftOrRightEdge(object, "right");
-
+				// check collisions with edges of screen
+				checkEdge(object, "top");
+				checkEdge(object, "bottom");
+				checkEdge(object, "left");
+				checkEdge(object, "right");
 
 				// check collision with other objects
 				if (object.collisionData.basic != "")
@@ -126,40 +116,26 @@ namespace xge
 		}
 	}
 
-	bool Game::bouncedOffTop(Object& object)
-	{
-		return object.position.y < 0 && object.collisionDataEx.top.at(1) == "bounce";
-	}
-
-	bool Game::bouncedOffBottom(Object& object)
-	{
-		auto objectHeight = object.sprite->getLocalBounds().height;
-		return object.position.y > windowDesc.height - objectHeight && object.collisionDataEx.bottom.at(1) == "bounce";
-	}
-
-	bool Game::stuckToTop(Object& object)
-	{
-		return object.position.y < 0 && object.collisionDataEx.top.at(1) == "static";
-	}
-
-	bool Game::stuckToBottom(Object& object)
-	{
-		auto objectHeight = object.sprite->getLocalBounds().height;
-		return object.position.y > windowDesc.height - objectHeight && object.collisionDataEx.bottom.at(1) == "static";
-	}
-
-	void Game::checkLeftOrRightEdge(Object& object, std::string side)
+	void Game::checkEdge(Object& object, std::string side)
 	{
 		auto objectWidth = object.sprite->getLocalBounds().width;
+		auto objectHeight = object.sprite->getLocalBounds().height;
 
 		std::vector<std::string> curSide{};
 		float leftBound = 0;
 		float rightBound = windowDesc.width - objectWidth;
+		float topBound = 0;
+		float bottomBound = windowDesc.height - objectHeight;
 
 		if (side == "left") { curSide = object.collisionDataEx.left; }
 		else if (side == "right") { curSide = object.collisionDataEx.right; }
+		else if (side == "top") { curSide = object.collisionDataEx.top; }
+		else if (side == "bottom") { curSide = object.collisionDataEx.bottom; }
 
-		if (object.position.x < leftBound && side == "left" || object.position.x > rightBound && side == "right")
+		if ( (object.position.x < leftBound && side == "left")
+			|| (object.position.x > rightBound && side == "right")
+			|| (object.position.y < topBound && side == "top")
+			|| (object.position.y > bottomBound && side == "bottom") )
 		{
 			if (curSide.size() > 0)
 			{
@@ -172,20 +148,28 @@ namespace xge
 						sfml.updateTextIncrementValue(getObject(*colIter));
 						colIter++;
 					}
-					if (*colIter == "collide")
+					else if (*colIter == "collide")
 					{
 						colIter++;
 						if (*colIter == "reset")
 						{
 							object.position = object.position_original;
 						}
-						if (*colIter == "bounce")
+						else if (*colIter == "bounce")
 						{
-							object.velocity.x *= -1;
+							if (side == "left" || side == "right") { object.velocity.x *= -1; }
+							else if (side == "top" || side == "bottom") { object.velocity.y *= -1; }
 						}
-						if (*colIter == "static")
+						else if (*colIter == "static")
 						{
-							object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
+							if (side == "left" || side == "right")
+							{
+								object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
+							}
+							else if (side == "top" || side == "bottom")
+							{
+								object.position.y = std::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
+							}
 							object.velocity.x = 0;
 						}
 						colIter++;
