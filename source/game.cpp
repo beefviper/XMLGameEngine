@@ -21,9 +21,6 @@ namespace xge
 		{
 			auto& object = getObject(objectName);
 
-			auto objectWidth = object.sprite->getLocalBounds().width;
-			auto objectHeight = object.sprite->getLocalBounds().height;
-
 			if (object.collision) {
 				// check collisions with edges of screen
 				checkEdge(object, "top");
