@@ -52,13 +52,8 @@ namespace xge
 		std::vector<Object> objects;
 		std::stack<State> currentState;
 
-		bool bouncedOffTop(Object& object);
-		bool bouncedOffBottom(Object& object);
-		bool stuckToTop(Object& object);
-		bool stuckToBottom(Object& object);
-
 		void checkEdge(Object& object, std::string side);
 
-		bool circleRectangleCollision(Object& object, Object& otherObject);
+		std::string circleRectangleCollision(Object& object, Object& otherObject);
 	};
 }

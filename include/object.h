@@ -57,6 +57,7 @@ namespace xge
 		std::string src;
 		std::map<std::string, std::string> action;
 
+		bool isVisible{ true };
 		Vector2str sposition;
 		Vector2str svelocity;
 		sf::Vector2f position;
