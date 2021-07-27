@@ -35,9 +35,13 @@ namespace xge
 					for (auto& otherObjectName : getCurrentState().show)
 					{
 						auto& otherObject = getObject(otherObjectName);
-						if (circleRectangleCollision(object, otherObject))
+						auto edgeTouched = circleRectangleCollision(object, otherObject);
+						if (edgeTouched != "none")
 						{
-							object.velocity.x *= -1;
+							if (edgeTouched == "left") { object.velocity.x = std::abs(object.velocity.x) * -1; }
+							else if (edgeTouched == "right") { object.velocity.x = std::abs(object.velocity.x); }
+							else if (edgeTouched == "top") { object.velocity.y = std::abs(object.velocity.y) * -1; }
+							else if (edgeTouched == "bottom") { object.velocity.y = std::abs(object.velocity.y); }
 						}
 					}
 				}
@@ -175,10 +179,11 @@ namespace xge
 		}
 	}
 
-	bool Game::circleRectangleCollision(Object& object, Object& otherObject)
+	std::string Game::circleRectangleCollision(Object& object, Object& otherObject)
 	{
 		auto overlap{ 0.0f };
 		const auto isCircular = object.src.find("shape.circle") != std::string::npos;
+		auto edgeTouched = "none";
 
 		if (object.name != otherObject.name && otherObject.collision && isCircular)
 		{
@@ -198,7 +203,40 @@ namespace xge
 			const auto magOfray = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
 			overlap = object.sprite->getLocalBounds().width / 2 - magOfray;
 			if (std::isnan(overlap)) overlap = 0;
+
+			if (overlap > 0)
+			{
+				if (midpoint.y > otherObjectTop - midpoint.y
+					&& midpoint.y < otherObjectBottom + midpoint.y
+					&& nearestPoint.x == otherObjectLeft)
+				{
+					edgeTouched = "left";
+				}
+				else if (midpoint.y > otherObjectTop - midpoint.y
+					&& midpoint.y < otherObjectBottom + midpoint.y
+					&& nearestPoint.x == otherObjectRight)
+				{
+					edgeTouched = "right";
+				}
+				else if (midpoint.x > otherObjectLeft - midpoint.x
+					&& midpoint.x < otherObjectRight + midpoint.x
+					&& nearestPoint.y == otherObjectTop)
+				{
+					edgeTouched = "top";
+				}
+				else if (midpoint.x > otherObjectLeft - midpoint.x
+					&& midpoint.x < otherObjectRight + midpoint.x
+					&& nearestPoint.y == otherObjectBottom)
+				{
+					edgeTouched = "bottom";
+				}
+			}
+			else
+			{
+				edgeTouched = "none";
+			}
 		}
-		return (overlap > 0);
+
+		return edgeTouched;
 	}
 }
