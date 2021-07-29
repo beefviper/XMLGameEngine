@@ -17,7 +17,7 @@ namespace xge
 
 	void Game::updateObjects(void)
 	{
-		for (auto& object : objects)
+		for (auto& object : getCurrentObjects())
 		{
 			//auto& object = getObject(objectName);
 			if (isShown(object))
@@ -35,7 +35,12 @@ namespace xge
 					{
 						for (auto& otherObject : getCurrentObjects())
 						{
-							circleRectangleCollision(object, otherObject);
+							bool tookHit = false;
+							const auto isCircular = object.src.find("shape.circle") != std::string::npos;
+							if (isCircular && !tookHit)
+							{
+								tookHit = circleRectangleCollision(object, otherObject);
+							}
 						}
 					}
 				}
@@ -197,7 +202,7 @@ namespace xge
 		}
 	}
 
-	void Game::circleRectangleCollision(Object& object, Object& otherObject)
+	bool Game::circleRectangleCollision(Object& object, Object& otherObject)
 	{
 		auto overlap{ 0.0f };
 		const auto isCircular = object.src.find("shape.circle") != std::string::npos;
@@ -274,5 +279,6 @@ namespace xge
 				}
 			}
 		}
+		return edgeTouched != "none";
 	}
 }

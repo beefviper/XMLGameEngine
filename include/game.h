@@ -57,6 +57,6 @@ namespace xge
 
 		void checkEdge(Object& object, std::string side);
 
-		void circleRectangleCollision(Object& object, Object& otherObject);
+		bool circleRectangleCollision(Object& object, Object& otherObject);
 	};
 }
