@@ -85,7 +85,7 @@ namespace xge
 
 		T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 		{
-			tempSParams.clear();
+			tempSParams.push_back("circle");
 			float const radius = scalar_t(parameters[0])();
 			tempSParams.push_back(std::to_string(radius));
 
@@ -118,7 +118,7 @@ namespace xge
 
 		T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 		{
-			tempSParams.clear();
+			tempSParams.push_back("rectangle");
 			const float width = scalar_t(parameters[0])();
 			const float height = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(width));
@@ -153,7 +153,7 @@ namespace xge
 
 		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 		{
-			tempSParams.clear();
+			tempSParams.push_back("text");
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 			const float size = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(size));
@@ -187,7 +187,7 @@ namespace xge
 
 		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 		{
-			tempSParams.clear();
+			tempSParams.push_back("image");
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 
 			if (parameters.size() == 2)
@@ -244,6 +244,32 @@ namespace xge
 		{
 			tempSParams.push_back("inc");
 			tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct grid : public exprtk::igeneric_function<T>
+	{
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		grid() noexcept : exprtk::igeneric_function<T>("TTT")
+		{
+
+		}
+
+		inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+		{
+			tempSParams.push_back("grid");
+			const float width = scalar_t(parameters[0])();
+			const float height = scalar_t(parameters[1])();
+			tempSParams.push_back(std::to_string(width));
+			tempSParams.push_back(std::to_string(height));
 
 			return 0;
 		}

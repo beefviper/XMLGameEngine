@@ -18,6 +18,7 @@ namespace xge
 		image<float> imageFloat{};
 		collide<float> collideFloat{};
 		inc<float> incFloat{};
+		grid<float> gridFloat{};
 
 		// add functions to symbol table
 		symbolTable.add_function("random.number", randomNumberFloat);
@@ -28,6 +29,7 @@ namespace xge
 		symbolTable.add_function("image", imageFloat);
 		symbolTable.add_function("collide", collideFloat);
 		symbolTable.add_function("inc", incFloat);
+		symbolTable.add_function("grid", gridFloat);
 
 		// add constants to symbol table
 		symbolTable.add_constant("window.top", 0);
@@ -68,6 +70,7 @@ namespace xge
 			object.position_original = object.position;
 			object.velocity_original = object.position;
 
+			tempSParams.clear();
 			evaluate_string(object.src);
 			object.spriteParams = tempSParams;
 
