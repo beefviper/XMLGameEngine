@@ -22,5 +22,11 @@ namespace xge
 	public:
 		void init(std::vector<Object>& objects);
 		void updateTextIncrementValue(Object& object);
+
+	private:
+		void createCircle(Object& object);
+		void createRectangle(Object& object);
+		void createText(Object& object);
+		void createImage(Object& object);
 	};
 }
