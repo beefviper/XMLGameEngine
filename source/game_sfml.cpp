@@ -7,8 +7,68 @@
 
 namespace xge
 {
-	void game_sfml::init(std::vector<Object>& objects)
+	void game_sfml::init(std::vector<Object>& preObjects, std::vector<Object>& objects)
 	{
+		for (auto& object : preObjects)
+		{
+			auto gridXmax = 1;
+			auto gridYmax = 1;
+
+			auto objWidth = 0;
+			auto objHeight = 0;
+
+			if (object.spriteParams.size() > 5)
+			{
+				if (object.spriteParams.at(3) == "grid" && object.spriteParams.at(0) == "circle")
+				{
+					gridXmax = std::stoi(object.spriteParams.at(4));
+					gridYmax = std::stoi(object.spriteParams.at(5));
+
+					objWidth = std::stoi(object.spriteParams.at(1));
+					objHeight = std::stoi(object.spriteParams.at(1));
+				}
+				else if (object.spriteParams.at(4) == "grid" && object.spriteParams.at(0) == "rectangle")
+				{
+					gridXmax = std::stoi(object.spriteParams.at(5));
+					gridYmax = std::stoi(object.spriteParams.at(6));
+
+					objWidth = std::stoi(object.spriteParams.at(1));
+					objHeight = std::stoi(object.spriteParams.at(2));
+				}
+			}
+
+			auto totalObjects = gridXmax * gridYmax;
+			for (auto gridX = 0; gridX < gridXmax; gridX++)
+			{
+				for (auto gridY = 0; gridY < gridYmax; gridY++)
+				{
+					Object newObject{};
+					newObject.action = object.action;
+					newObject.collision = object.collision;
+					newObject.collisionData = object.collisionData;
+					newObject.collisionDataEx = object.collisionDataEx;
+					newObject.isVisible = object.isVisible;
+					newObject.name = object.name;
+					newObject.position = object.position;
+					newObject.position_original = object.position_original;
+					newObject.sposition = object.sposition;
+					newObject.spriteParams = object.spriteParams;
+					newObject.src = object.src;
+					newObject.svelocity = object.svelocity;
+					newObject.velocity = object.velocity;
+					newObject.velocity_original = object.velocity_original;
+					newObject.renderTexture = std::make_unique<sf::RenderTexture>();
+					newObject.sprite = std::make_unique<sf::Sprite>();
+
+					newObject.position.x = object.position.x + objWidth * gridX;
+					newObject.position.y = object.position.y + objHeight * gridY;
+					newObject.position_original = newObject.position;
+
+					objects.push_back(std::move(newObject));
+				}
+			}
+		}
+
 		for (auto& object : objects)
 		{
 			object.renderTexture = std::make_unique<sf::RenderTexture>();
@@ -17,9 +77,9 @@ namespace xge
 			{
 				createCircle(object);
 			}
-			else if (object.spriteParams.at(0) ==  "rectangle")
+			else if (object.spriteParams.at(0) == "rectangle")
 			{
-				
+
 				createRectangle(object);
 			}
 			else if (object.spriteParams.at(0) == "text")

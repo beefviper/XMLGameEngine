@@ -19,7 +19,9 @@ namespace xge
 		xc::XMLPlatformUtils::Terminate();
 	}
 
-	void game_xml::init(std::string& filename, WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& objects)
+	void game_xml::init(std::string& filename, WindowDesc& windowDesc,
+		std::map<std::string, float>& variables, std::vector<State>& states,
+		std::vector<Object>& preObjects)
 	{
 		if (domParser->loadGrammar("games/assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
 		{
@@ -120,15 +122,28 @@ namespace xge
 				}
 			}
 
-			Object object{};
-			object.name = xc_obj_name;
-			object.src = xc_sprite_src;
-			object.action = xc_action_map;
-			object.collision = xc_collision_state;
-			object.collisionData = xc_collision_data;
-			object.sposition = position;
-			object.svelocity = velocity;
-			objects.push_back(std::move(object));
+			//Object object{};
+			//object.name = xc_obj_name;
+			//object.src = xc_sprite_src;
+			//object.action = xc_action_map;
+			//object.collision = xc_collision_state;
+			//object.collisionData = xc_collision_data;
+			//object.sposition = position;
+			//object.svelocity = velocity;
+
+			//objects.push_back(std::move(object));
+
+			Object preObject{};
+			preObject.name = xc_obj_name;
+			preObject.src = xc_sprite_src;
+			preObject.action = xc_action_map;
+			preObject.collision = xc_collision_state;
+			preObject.collisionData = xc_collision_data;
+			preObject.sposition = position;
+			preObject.svelocity = velocity;
+
+			preObjects.push_back(std::move(preObject));
+
 			xc_object = xc_object->getNextElementSibling();
 		}
 

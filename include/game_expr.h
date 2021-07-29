@@ -18,7 +18,7 @@ namespace xge
 	class game_expr
 	{
 	public:
-		void init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& objects);
+		void init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& preObjects);
 
 		exprtk::symbol_table<float> symbolTable;
 		exprtk::expression<float> expression;
@@ -258,7 +258,7 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		grid() noexcept : exprtk::igeneric_function<T>("TTT")
+		grid() noexcept : exprtk::igeneric_function<T>("TTT|TTT")
 		{
 
 		}

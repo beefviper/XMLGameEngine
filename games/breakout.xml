@@ -3,7 +3,7 @@
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="assets/xmlgameengine.xsd">
   <window name="Breakout" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
   <variables>
     <variable name="margin" value="30" />
@@ -15,7 +15,7 @@
   <objects>
     <object name="ball">
       <sprite src="shape.circle(ball.radius)" />
-      <position x="window.width.center - ball.radius" y="window.bottom - margin * 2" />
+      <position x="window.width.center - ball.radius" y="window.bottom - margin * 3" />
       <velocity x="random.range(-3,3)" y="random.range(-7,-5)" />
       <collision enabled="true" top="collide('bounce')" bottom="collide('bounce')" left="collide('bounce')" right="collide('bounce')" basic="collide('bounce')" />
     </object>
@@ -23,17 +23,17 @@
       <sprite src="shape.rectangle(width,height)" />
       <position x="window.width.center" y="window.bottom - height * 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" />
+      <collision enabled="true" left="collide('static')" right="collide('static')" basic="collide('static')"/>
       <actions>
         <action name="left" value="move.left(step)" />
         <action name="right" value="move.right(step)" />
       </actions>				
     </object>
     <object name="bricks">
-      <sprite src="shape.rectangle(width,height)" />
+      <sprite src="grid(7,5,shape.rectangle(width,height))" />
       <position x="margin" y="margin" />
       <velocity x="0" y="0" />
-      <collision enabled="true" basic="collide('bounce')" />
+      <collision enabled="true" basic="collide('die')" />
     </object>
   </objects>	
   <states>

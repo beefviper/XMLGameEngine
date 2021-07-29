@@ -54,9 +54,12 @@ namespace xge
 
 			window.clear(sfmlColor(game.getWindowDesc().background));
 
-			for (auto& name : game.getCurrentState().show)
+			for (auto& object : game.getCurrentObjects())
 			{
-				window.draw(*game.getObject(name).sprite);
+				if (game.isShown(object))
+				{
+					window.draw(*object.sprite);
+				}
 			}
 
 			window.display();
