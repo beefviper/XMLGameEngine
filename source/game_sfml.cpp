@@ -14,6 +14,9 @@ namespace xge
 			auto gridXmax = 1;
 			auto gridYmax = 1;
 
+			auto gridXpadding = 0;
+			auto gridYpadding = 0;
+
 			auto objWidth = 0;
 			auto objHeight = 0;
 
@@ -24,6 +27,9 @@ namespace xge
 					gridXmax = std::stoi(object.spriteParams.at(4));
 					gridYmax = std::stoi(object.spriteParams.at(5));
 
+					gridXpadding = std::stoi(object.spriteParams.at(6));
+					gridYpadding = std::stoi(object.spriteParams.at(7));
+
 					objWidth = std::stoi(object.spriteParams.at(1));
 					objHeight = std::stoi(object.spriteParams.at(1));
 				}
@@ -31,6 +37,9 @@ namespace xge
 				{
 					gridXmax = std::stoi(object.spriteParams.at(5));
 					gridYmax = std::stoi(object.spriteParams.at(6));
+
+					gridXpadding = std::stoi(object.spriteParams.at(7));
+					gridYpadding = std::stoi(object.spriteParams.at(8));
 
 					objWidth = std::stoi(object.spriteParams.at(1));
 					objHeight = std::stoi(object.spriteParams.at(2));
@@ -60,8 +69,8 @@ namespace xge
 					newObject.renderTexture = std::make_unique<sf::RenderTexture>();
 					newObject.sprite = std::make_unique<sf::Sprite>();
 
-					newObject.position.x = object.position.x + objWidth * gridX;
-					newObject.position.y = object.position.y + objHeight * gridY;
+					newObject.position.x = object.position.x + ((objWidth + gridXpadding) * gridX);
+					newObject.position.y = object.position.y + ((objHeight + gridYpadding) * gridY);
 					newObject.position_original = newObject.position;
 
 					objects.push_back(std::move(newObject));
