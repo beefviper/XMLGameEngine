@@ -258,7 +258,7 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		grid() noexcept : exprtk::igeneric_function<T>("TTT|TTT")
+		grid() noexcept : exprtk::igeneric_function<T>("TTT|TTTTT")
 		{
 
 		}
@@ -270,6 +270,20 @@ namespace xge
 			const float height = scalar_t(parameters[1])();
 			tempSParams.push_back(std::to_string(width));
 			tempSParams.push_back(std::to_string(height));
+
+			if (parameters.size() == 5)
+			{
+				const float width_padding = scalar_t(parameters[2])();
+				const float height_padding = scalar_t(parameters[3])();
+
+				tempSParams.push_back(std::to_string(width_padding));
+				tempSParams.push_back(std::to_string(height_padding));
+			}
+			else
+			{
+				tempSParams.push_back(std::to_string(0));
+				tempSParams.push_back(std::to_string(0));
+			}
 
 			return 0;
 		}

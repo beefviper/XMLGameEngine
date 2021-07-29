@@ -6,16 +6,16 @@
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="assets/xmlgameengine.xsd">
   <window name="Breakout" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
   <variables>
-    <variable name="margin" value="30" />
+    <variable name="margin" value="80" />
     <variable name="ball.radius" value="10" />
-    <variable name="width" value="150" />
+    <variable name="width" value="120" />
     <variable name="height" value="30" />
     <variable name="step" value="2" />
   </variables>
   <objects>
     <object name="ball">
       <sprite src="shape.circle(ball.radius)" />
-      <position x="window.width.center - ball.radius" y="window.bottom - margin * 3" />
+      <position x="window.width.center - ball.radius" y="window.bottom - height * 3" />
       <velocity x="random.range(-3,3)" y="random.range(-7,-5)" />
       <collision enabled="true" top="collide('bounce')" bottom="collide('bounce')" left="collide('bounce')" right="collide('bounce')" basic="collide('bounce')" />
     </object>
@@ -30,8 +30,8 @@
       </actions>				
     </object>
     <object name="bricks">
-      <sprite src="grid(7,5,shape.rectangle(width,height))" />
-      <position x="margin" y="margin" />
+      <sprite src="grid(9,6,5,5,shape.rectangle(width,height))" />
+      <position x="margin" y="margin/2" />
       <velocity x="0" y="0" />
       <collision enabled="true" basic="collide('die')" />
     </object>

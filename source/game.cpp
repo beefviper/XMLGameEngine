@@ -22,7 +22,7 @@ namespace xge
 			//auto& object = getObject(objectName);
 			if (isShown(object))
 			{
-				if (object.collision)
+				if (object.collision && object.velocity.x != 0 && object.velocity.y != 0)
 				{
 					// check collisions with edges of screen
 					checkEdge(object, "top");
