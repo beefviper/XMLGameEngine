@@ -68,8 +68,8 @@ namespace xge
 		CollisionData collisionData;
 		CollisionDataEx collisionDataEx;
 		std::vector<std::string> spriteParams;
-		std::unique_ptr<sf::RenderTexture> renderTexture;
-		std::unique_ptr<sf::Sprite> sprite;
+		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
+		std::unique_ptr<sf::Sprite> sprite = nullptr;
 
 		friend std::ostream& operator<<(std::ostream& o, Object const& f);
 	};

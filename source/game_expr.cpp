@@ -7,7 +7,7 @@
 
 namespace xge
 {
-	void game_expr::init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& objects)
+	void game_expr::init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& preObjects)
 	{
 		// custom funtions added to exprtk
 		randomNumber<float> randomNumberFloat{};
@@ -49,7 +49,7 @@ namespace xge
 		expression.register_symbol_table(symbolTable);
 
 		// evaluate strings in objects
-		for (auto& object : objects)
+		for (auto& object : preObjects)
 		{
 			const auto evaluate_string = [&](const std::string& input_string)
 			{
@@ -68,7 +68,7 @@ namespace xge
 			object.velocity.y = evaluate_string(object.svelocity.y);
 
 			object.position_original = object.position;
-			object.velocity_original = object.position;
+			object.velocity_original = object.velocity;
 
 			tempSParams.clear();
 			evaluate_string(object.src);

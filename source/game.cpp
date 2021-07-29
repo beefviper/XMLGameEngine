@@ -10,47 +10,41 @@ namespace xge
 	Game::Game(const std::string& game) :
 		filename(game)
 	{
-		xml.init(filename, windowDesc, variables, states, objects);
-		expr.init(windowDesc, variables, states, objects);
-		sfml.init(objects);
+		xml.init(filename, windowDesc, variables, states, preObjects);
+		expr.init(windowDesc, variables, states, preObjects);
+		sfml.init(preObjects, objects);
 	}
 
 	void Game::updateObjects(void)
 	{
-		for (auto& objectName : getCurrentState().show)
+		for (auto& object : objects)
 		{
-			auto& object = getObject(objectName);
-
-			if (object.collision)
+			//auto& object = getObject(objectName);
+			if (isShown(object))
 			{
-				// check collisions with edges of screen
-				checkEdge(object, "top");
-				checkEdge(object, "bottom");
-				checkEdge(object, "left");
-				checkEdge(object, "right");
-
-				// check collision with other objects
-				if (object.collisionData.basic != "")
+				if (object.collision)
 				{
-					for (auto& otherObjectName : getCurrentState().show)
+					// check collisions with edges of screen
+					checkEdge(object, "top");
+					checkEdge(object, "bottom");
+					checkEdge(object, "left");
+					checkEdge(object, "right");
+
+					// check collision with other objects
+					if (object.collisionData.basic != "")
 					{
-						auto& otherObject = getObject(otherObjectName);
-						auto edgeTouched = circleRectangleCollision(object, otherObject);
-						if (edgeTouched != "none")
+						for (auto& otherObject : getCurrentObjects())
 						{
-							if (edgeTouched == "left") { object.velocity.x = std::abs(object.velocity.x) * -1; }
-							else if (edgeTouched == "right") { object.velocity.x = std::abs(object.velocity.x); }
-							else if (edgeTouched == "top") { object.velocity.y = std::abs(object.velocity.y) * -1; }
-							else if (edgeTouched == "bottom") { object.velocity.y = std::abs(object.velocity.y); }
+							circleRectangleCollision(object, otherObject);
 						}
 					}
 				}
+
+				object.position.x += object.velocity.x;
+				object.position.y += object.velocity.y;
+
+				object.sprite->setPosition(object.position.x, object.position.y);
 			}
-
-			object.position.x += object.velocity.x;
-			object.position.y += object.velocity.y;
-
-			object.sprite->setPosition(object.position.x, object.position.y);
 		}
 	}
 
@@ -80,6 +74,20 @@ namespace xge
 		return windowDesc;
 	}
 
+	bool Game::isShown(Object& object)
+	{
+		bool result = false;
+
+		for (auto shown : currentState.top().show)
+		{
+			if (shown == object.name)
+			{
+				result = true;
+			}
+		}
+		return result && object.isVisible;
+	}
+
 	Object& Game::getObject(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
@@ -95,6 +103,11 @@ namespace xge
 	State Game::getCurrentState(void)
 	{
 		return currentState.top();
+	}
+
+	std::vector<Object>& Game::getCurrentObjects(void)
+	{
+		return objects;
 	}
 
 	void Game::setCurrentState(const int& index)
@@ -173,17 +186,22 @@ namespace xge
 						}
 						object.velocity.x = 0;
 					}
+					else if (*colIter == "die")
+					{
+						object.collision = false;
+						object.isVisible = false;
+					}
 					colIter++;
 				}
 			}
 		}
 	}
 
-	std::string Game::circleRectangleCollision(Object& object, Object& otherObject)
+	void Game::circleRectangleCollision(Object& object, Object& otherObject)
 	{
 		auto overlap{ 0.0f };
 		const auto isCircular = object.src.find("shape.circle") != std::string::npos;
-		auto edgeTouched = "none";
+		std::string edgeTouched = "none";
 
 		if (object.name != otherObject.name && otherObject.collision && isCircular)
 		{
@@ -237,6 +255,24 @@ namespace xge
 			}
 		}
 
-		return edgeTouched;
+		if (edgeTouched != "none")
+		{
+			if (edgeTouched == "left") { object.velocity.x = std::abs(object.velocity.x) * -1; }
+			else if (edgeTouched == "right") { object.velocity.x = std::abs(object.velocity.x); }
+			else if (edgeTouched == "top") { object.velocity.y = std::abs(object.velocity.y) * -1; }
+			else if (edgeTouched == "bottom") { object.velocity.y = std::abs(object.velocity.y); }
+		}
+
+		if (edgeTouched != "none")
+		{
+			if (otherObject.collisionDataEx.basic.at(0) == "collide")
+			{
+				if (otherObject.collisionDataEx.basic.at(1) == "die")
+				{
+					otherObject.isVisible = false;
+					otherObject.collision = false;
+				}
+			}
+		}
 	}
 }

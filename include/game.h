@@ -31,9 +31,11 @@ namespace xge
 		void printGame(void);
 
 		WindowDesc& getWindowDesc(void) noexcept;
+		bool isShown(Object& object);
 		Object& getObject(const std::string& name);
 		float& getVariable(const std::string& name);
 		State getCurrentState(void);
+		std::vector<Object>& getCurrentObjects(void);
 
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
@@ -49,11 +51,12 @@ namespace xge
 
 		std::map<std::string, float> variables;
 		std::vector<State> states;
+		std::vector<Object> preObjects;
 		std::vector<Object> objects;
 		std::stack<State> currentState;
 
 		void checkEdge(Object& object, std::string side);
 
-		std::string circleRectangleCollision(Object& object, Object& otherObject);
+		void circleRectangleCollision(Object& object, Object& otherObject);
 	};
 }
