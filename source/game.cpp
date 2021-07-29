@@ -270,12 +270,15 @@ namespace xge
 
 		if (edgeTouched != "none")
 		{
-			if (otherObject.collisionDataEx.basic.at(0) == "collide")
+			if (otherObject.collisionDataEx.basic.size() != 0)
 			{
-				if (otherObject.collisionDataEx.basic.at(1) == "die")
+				if (otherObject.collisionDataEx.basic.at(0) == "collide")
 				{
-					otherObject.isVisible = false;
-					otherObject.collision = false;
+					if (otherObject.collisionDataEx.basic.at(1) == "die")
+					{
+						otherObject.isVisible = false;
+						otherObject.collision = false;
+					}
 				}
 			}
 		}
