@@ -199,6 +199,7 @@ namespace xge
 		object.renderTexture->create(width, height);
 		object.renderTexture->draw(text);
 	}
+
 	void game_sfml::createImage(Object& object)
 	{
 		sf::Texture texture;
