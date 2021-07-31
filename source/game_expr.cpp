@@ -112,7 +112,6 @@ namespace xge
 				}
 			}
 
-			auto totalObjects = gridXmax * gridYmax;
 			for (auto gridX = 0; gridX < gridXmax; gridX++)
 			{
 				for (auto gridY = 0; gridY < gridYmax; gridY++)
