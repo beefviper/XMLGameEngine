@@ -19,7 +19,6 @@ namespace xge
 	{
 		for (auto& object : getCurrentObjects())
 		{
-			//auto& object = getObject(objectName);
 			if (isShown(object))
 			{
 				if (object.collisionData.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
