@@ -22,7 +22,7 @@ namespace xge
 	class game_sfml
 	{
 	public:
-		void init(std::vector<Object>& preObjects, std::vector<Object>& objects);
+		void init(std::vector<Object>& objects);
 		void updateTextIncrementValue(Object& object);
 
 	private:

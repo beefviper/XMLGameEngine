@@ -35,7 +35,7 @@ namespace xge
 
 		void init(std::string& filename, WindowDesc& windowDesc,
 			std::map<std::string, float>& variables, std::vector<State>& states,
-			std::vector<Object>& preObjects);
+			std::vector<RawObject>& rawObjects);
 
 		xc::XercesDOMParser* domParser = nullptr;
 

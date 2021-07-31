@@ -21,7 +21,7 @@ namespace xge
 
 	void game_xml::init(std::string& filename, WindowDesc& windowDesc,
 		std::map<std::string, float>& variables, std::vector<State>& states,
-		std::vector<Object>& preObjects)
+		std::vector<RawObject>& rawObjects)
 	{
 		if (domParser->loadGrammar("games/assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
 		{
@@ -97,13 +97,13 @@ namespace xge
 			const auto* xc_collision = xc_vel->getNextElementSibling();
 			std::string xc_collision_enabled = getAttributeByName(xc_collision, "enabled");
 
-			CollisionData xc_collision_data;
+			RawCollisionData xc_collision_data;
+			xc_collision_data.enabled = (xc_collision_enabled == "true") ? true : false;
 			xc_collision_data.top = getAttributeByName(xc_collision, "top");
 			xc_collision_data.bottom = getAttributeByName(xc_collision, "bottom");
 			xc_collision_data.left = getAttributeByName(xc_collision, "left");
 			xc_collision_data.right = getAttributeByName(xc_collision, "right");
 			xc_collision_data.basic = getAttributeByName(xc_collision, "basic");
-			const bool xc_collision_state = (xc_collision_enabled == "true") ? true : false;
 
 			std::map<std::string, std::string> xc_action_map;
 
@@ -122,16 +122,15 @@ namespace xge
 				}
 			}
 
-			Object preObject{};
-			preObject.name = xc_obj_name;
-			preObject.src = xc_sprite_src;
-			preObject.action = xc_action_map;
-			preObject.collision = xc_collision_state;
-			preObject.collisionData = xc_collision_data;
-			preObject.sposition = position;
-			preObject.svelocity = velocity;
+			RawObject rawObject{};
+			rawObject.name = xc_obj_name;
+			rawObject.src = xc_sprite_src;
+			rawObject.action = xc_action_map;
+			rawObject.rawCollisionData = xc_collision_data;
+			rawObject.sposition = position;
+			rawObject.svelocity = velocity;
 
-			preObjects.push_back(std::move(preObject));
+			rawObjects.push_back(std::move(rawObject));
 
 			xc_object = xc_object->getNextElementSibling();
 		}

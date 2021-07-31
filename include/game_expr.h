@@ -18,7 +18,8 @@ namespace xge
 	class game_expr
 	{
 	public:
-		void init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states, std::vector<Object>& preObjects);
+		void init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states,
+			std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
 
 		exprtk::symbol_table<float> symbolTable;
 		exprtk::expression<float> expression;
