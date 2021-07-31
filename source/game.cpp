@@ -63,9 +63,9 @@ namespace xge
 		}
 		std::cout << '\n';
 
-		for (auto& object : objects)
+		for (auto& rawObject : rawObjects)
 		{
-			std::cout << object << '\n';
+			std::cout << rawObject << '\n';
 		}
 
 		for (auto& state : states)

@@ -39,7 +39,7 @@ namespace xge
 		symbolTable.add_constant("window.right", windowDesc.width);
 		symbolTable.add_constant("window.width.center", windowDesc.width / 2);
 		symbolTable.add_constant("window.height.center", windowDesc.height / 2);
-		
+
 		// add variables from XML file to symbol table
 		for (auto& variable : variables)
 		{
@@ -50,30 +50,30 @@ namespace xge
 		expression.register_symbol_table(symbolTable);
 
 		// evaluate strings in objects
-		for (auto& object : rawObjects)
+		for (auto& rawObject : rawObjects)
 		{
 			const auto evaluate_string = [&](const std::string& input_string)
 			{
 				if (!parser.compile(input_string, expression))
 				{
 					std::cout << "Error: " << parser.error().c_str()
-						<< " in object named '" << object.name << "'" << '\n';
+						<< " in object named '" << rawObject.name << "'" << '\n';
 					exit(EXIT_FAILURE);
 				}
 				return expression.value();
 			};
 
-			object.position.x = evaluate_string(object.sposition.x);
-			object.position.y = evaluate_string(object.sposition.y);
-			object.velocity.x = evaluate_string(object.svelocity.x);
-			object.velocity.y = evaluate_string(object.svelocity.y);
+			rawObject.position.x = evaluate_string(rawObject.sposition.x);
+			rawObject.position.y = evaluate_string(rawObject.sposition.y);
+			rawObject.velocity.x = evaluate_string(rawObject.svelocity.x);
+			rawObject.velocity.y = evaluate_string(rawObject.svelocity.y);
 
-			object.position_original = object.position;
-			object.velocity_original = object.velocity;
+			rawObject.position_original = rawObject.position;
+			rawObject.velocity_original = rawObject.velocity;
 
 			tempSParams.clear();
-			evaluate_string(object.src);
-			object.spriteParams = tempSParams;
+			evaluate_string(rawObject.src);
+			rawObject.spriteParams = tempSParams;
 
 			auto process_collisionData = [&](const std::string& colData)
 			{
@@ -84,17 +84,14 @@ namespace xge
 				}
 				return tempSParams;
 			};
-			
-			object.collisionData.enabled = object.rawCollisionData.enabled;
-			object.collisionData.top = process_collisionData(object.rawCollisionData.top);
-			object.collisionData.bottom = process_collisionData(object.rawCollisionData.bottom);
-			object.collisionData.left = process_collisionData(object.rawCollisionData.left);
-			object.collisionData.right = process_collisionData(object.rawCollisionData.right);
-			object.collisionData.basic = process_collisionData(object.rawCollisionData.basic);
-		}
 
-		for (auto& object : rawObjects)
-		{
+			rawObject.collisionData.enabled = rawObject.rawCollisionData.enabled;
+			rawObject.collisionData.top = process_collisionData(rawObject.rawCollisionData.top);
+			rawObject.collisionData.bottom = process_collisionData(rawObject.rawCollisionData.bottom);
+			rawObject.collisionData.left = process_collisionData(rawObject.rawCollisionData.left);
+			rawObject.collisionData.right = process_collisionData(rawObject.rawCollisionData.right);
+			rawObject.collisionData.basic = process_collisionData(rawObject.rawCollisionData.basic);
+
 			auto gridXmax = 1;
 			auto gridYmax = 1;
 
@@ -104,29 +101,29 @@ namespace xge
 			auto objWidth = 0;
 			auto objHeight = 0;
 
-			if (object.spriteParams.size() > 5)
+			if (rawObject.spriteParams.size() > 5)
 			{
-				if (object.spriteParams.at(3) == "grid" && object.spriteParams.at(0) == "circle")
+				if (rawObject.spriteParams.at(3) == "grid" && rawObject.spriteParams.at(0) == "circle")
 				{
-					gridXmax = std::stoi(object.spriteParams.at(4));
-					gridYmax = std::stoi(object.spriteParams.at(5));
+					gridXmax = std::stoi(rawObject.spriteParams.at(4));
+					gridYmax = std::stoi(rawObject.spriteParams.at(5));
 
-					gridXpadding = std::stoi(object.spriteParams.at(6));
-					gridYpadding = std::stoi(object.spriteParams.at(7));
+					gridXpadding = std::stoi(rawObject.spriteParams.at(6));
+					gridYpadding = std::stoi(rawObject.spriteParams.at(7));
 
-					objWidth = std::stoi(object.spriteParams.at(1));
-					objHeight = std::stoi(object.spriteParams.at(1));
+					objWidth = std::stoi(rawObject.spriteParams.at(1));
+					objHeight = std::stoi(rawObject.spriteParams.at(1));
 				}
-				else if (object.spriteParams.at(4) == "grid" && object.spriteParams.at(0) == "rectangle")
+				else if (rawObject.spriteParams.at(4) == "grid" && rawObject.spriteParams.at(0) == "rectangle")
 				{
-					gridXmax = std::stoi(object.spriteParams.at(5));
-					gridYmax = std::stoi(object.spriteParams.at(6));
+					gridXmax = std::stoi(rawObject.spriteParams.at(5));
+					gridYmax = std::stoi(rawObject.spriteParams.at(6));
 
-					gridXpadding = std::stoi(object.spriteParams.at(7));
-					gridYpadding = std::stoi(object.spriteParams.at(8));
+					gridXpadding = std::stoi(rawObject.spriteParams.at(7));
+					gridYpadding = std::stoi(rawObject.spriteParams.at(8));
 
-					objWidth = std::stoi(object.spriteParams.at(1));
-					objHeight = std::stoi(object.spriteParams.at(2));
+					objWidth = std::stoi(rawObject.spriteParams.at(1));
+					objHeight = std::stoi(rawObject.spriteParams.at(2));
 				}
 			}
 
@@ -136,24 +133,24 @@ namespace xge
 				for (auto gridY = 0; gridY < gridYmax; gridY++)
 				{
 					Object newObject{};
-					newObject.action = object.action;
-					newObject.rawCollisionData = object.rawCollisionData;
-					newObject.collisionData = object.collisionData;
-					newObject.isVisible = object.isVisible;
-					newObject.name = object.name;
-					newObject.position = object.position;
-					newObject.position_original = object.position_original;
-					newObject.sposition = object.sposition;
-					newObject.spriteParams = object.spriteParams;
-					newObject.src = object.src;
-					newObject.svelocity = object.svelocity;
-					newObject.velocity = object.velocity;
-					newObject.velocity_original = object.velocity_original;
+					newObject.action = rawObject.action;
+					newObject.rawCollisionData = rawObject.rawCollisionData;
+					newObject.collisionData = rawObject.collisionData;
+					newObject.isVisible = rawObject.isVisible;
+					newObject.name = rawObject.name;
+					newObject.position = rawObject.position;
+					newObject.position_original = rawObject.position_original;
+					newObject.sposition = rawObject.sposition;
+					newObject.spriteParams = rawObject.spriteParams;
+					newObject.src = rawObject.src;
+					newObject.svelocity = rawObject.svelocity;
+					newObject.velocity = rawObject.velocity;
+					newObject.velocity_original = rawObject.velocity_original;
 					newObject.renderTexture = std::make_unique<sf::RenderTexture>();
 					newObject.sprite = std::make_unique<sf::Sprite>();
 
-					newObject.position.x = object.position.x + ((objWidth + gridXpadding) * gridX);
-					newObject.position.y = object.position.y + ((objHeight + gridYpadding) * gridY);
+					newObject.position.x = rawObject.position.x + ((objWidth + gridXpadding) * gridX);
+					newObject.position.y = rawObject.position.y + ((objHeight + gridYpadding) * gridY);
 					newObject.position_original = newObject.position;
 
 					objects.push_back(std::move(newObject));

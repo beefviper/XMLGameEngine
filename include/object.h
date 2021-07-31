@@ -69,6 +69,8 @@ namespace xge
 		RawCollisionData rawCollisionData;
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
+
+		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
 	};
 
 	struct Object
