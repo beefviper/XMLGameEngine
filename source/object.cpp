@@ -17,10 +17,10 @@ namespace xge
 		return o;
 	}
 
-	std::ostream& operator<<(std::ostream& o, const Object& f) {
-		o << "object: " << "name=" << f.name << ", src=" << f.src << '\n'
-			<< "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n'
-			<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
+	std::ostream& operator<<(std::ostream& o, const RawObject& f) {
+		o << "rawObject: " << "name=" << f.name << ", src=" << f.src << '\n'
+			<< "\tpos.x=" << f.sposition.x << ", pos.y=" << f.sposition.y << '\n'
+			<< "\tvel.x=" << f.svelocity.x << ", vel.y=" << f.svelocity.y << '\n'
 			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false")
 			<< (f.rawCollisionData.top.length() ? ", top=" + f.rawCollisionData.top : "")
 			<< (f.rawCollisionData.bottom.length() ? ", bottom=" + f.rawCollisionData.bottom : "")
@@ -33,6 +33,11 @@ namespace xge
 			o << "\taction=" << action.first << ", value=" << action.second << '\n';
 		}
 
+		return o;
+	}
+
+	std::ostream& operator<<(std::ostream& o, const Object& f) {
+		o << "please write code here";
 		return o;
 	}
 }

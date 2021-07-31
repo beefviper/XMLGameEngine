@@ -37,7 +37,7 @@ namespace xge
 		std::string basic;
 	};
 
-	struct CollisionDataEx
+	struct CollisionData
 	{
 		bool enabled{ false };
 		std::vector<std::string> top;
@@ -62,14 +62,10 @@ namespace xge
 		bool isVisible{ true };
 		Vector2str sposition;
 		Vector2str svelocity;
-		sf::Vector2f position;
-		sf::Vector2f position_original;
-		sf::Vector2f velocity;
-		sf::Vector2f velocity_original;
-		bool collision{ false };
 		RawCollisionData rawCollisionData;
-		CollisionDataEx collisionDataEx;
 		std::vector<std::string> spriteParams;
+
+		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
 	};
 
 	struct Object
@@ -79,14 +75,11 @@ namespace xge
 		std::map<std::string, std::string> action;
 
 		bool isVisible{ true };
-		Vector2str sposition;
-		Vector2str svelocity;
 		sf::Vector2f position;
 		sf::Vector2f position_original;
 		sf::Vector2f velocity;
 		sf::Vector2f velocity_original;
-		RawCollisionData rawCollisionData;
-		CollisionDataEx collisionDataEx;
+		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
 		std::unique_ptr<sf::Sprite> sprite = nullptr;
