@@ -85,12 +85,12 @@ namespace xge
 				return tempSParams;
 			};
 			
-			object.collisionDataEx.enabled = object.rawCollisionData.enabled;
-			object.collisionDataEx.top = process_collisionData(object.rawCollisionData.top);
-			object.collisionDataEx.bottom = process_collisionData(object.rawCollisionData.bottom);
-			object.collisionDataEx.left = process_collisionData(object.rawCollisionData.left);
-			object.collisionDataEx.right = process_collisionData(object.rawCollisionData.right);
-			object.collisionDataEx.basic = process_collisionData(object.rawCollisionData.basic);
+			object.collisionData.enabled = object.rawCollisionData.enabled;
+			object.collisionData.top = process_collisionData(object.rawCollisionData.top);
+			object.collisionData.bottom = process_collisionData(object.rawCollisionData.bottom);
+			object.collisionData.left = process_collisionData(object.rawCollisionData.left);
+			object.collisionData.right = process_collisionData(object.rawCollisionData.right);
+			object.collisionData.basic = process_collisionData(object.rawCollisionData.basic);
 		}
 
 		for (auto& object : rawObjects)
@@ -138,7 +138,7 @@ namespace xge
 					Object newObject{};
 					newObject.action = object.action;
 					newObject.rawCollisionData = object.rawCollisionData;
-					newObject.collisionDataEx = object.collisionDataEx;
+					newObject.collisionData = object.collisionData;
 					newObject.isVisible = object.isVisible;
 					newObject.name = object.name;
 					newObject.position = object.position;

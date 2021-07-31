@@ -37,7 +37,7 @@ namespace xge
 		std::string basic;
 	};
 
-	struct CollisionDataEx
+	struct CollisionData
 	{
 		bool enabled{ false };
 		std::vector<std::string> top;
@@ -66,9 +66,8 @@ namespace xge
 		sf::Vector2f position_original;
 		sf::Vector2f velocity;
 		sf::Vector2f velocity_original;
-		bool collision{ false };
 		RawCollisionData rawCollisionData;
-		CollisionDataEx collisionDataEx;
+		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 	};
 
@@ -86,7 +85,7 @@ namespace xge
 		sf::Vector2f velocity;
 		sf::Vector2f velocity_original;
 		RawCollisionData rawCollisionData;
-		CollisionDataEx collisionDataEx;
+		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
 		std::unique_ptr<sf::Sprite> sprite = nullptr;

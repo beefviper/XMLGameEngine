@@ -22,7 +22,7 @@ namespace xge
 			//auto& object = getObject(objectName);
 			if (isShown(object))
 			{
-				if (object.collisionDataEx.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
+				if (object.collisionData.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
 				{
 					// check collisions with edges of screen
 					checkEdge(object, "top");
@@ -31,7 +31,7 @@ namespace xge
 					checkEdge(object, "right");
 
 					// check collision with other objects
-					if (object.collisionDataEx.basic.size() != 0)
+					if (object.collisionData.basic.size() != 0)
 					{
 						for (auto& otherObject : getCurrentObjects())
 						{
@@ -147,10 +147,10 @@ namespace xge
 		float topBound = 0;
 		float bottomBound = windowDesc.height - objectHeight;
 
-		if (side == "left") { curSide = object.collisionDataEx.left; }
-		else if (side == "right") { curSide = object.collisionDataEx.right; }
-		else if (side == "top") { curSide = object.collisionDataEx.top; }
-		else if (side == "bottom") { curSide = object.collisionDataEx.bottom; }
+		if (side == "left") { curSide = object.collisionData.left; }
+		else if (side == "right") { curSide = object.collisionData.right; }
+		else if (side == "top") { curSide = object.collisionData.top; }
+		else if (side == "bottom") { curSide = object.collisionData.bottom; }
 
 		if ((object.position.x < leftBound && side == "left")
 			|| (object.position.x > rightBound && side == "right")
@@ -193,7 +193,7 @@ namespace xge
 					}
 					else if (*colIter == "die")
 					{
-						object.collisionDataEx.enabled = false;
+						object.collisionData.enabled = false;
 						object.isVisible = false;
 					}
 					colIter++;
@@ -208,7 +208,7 @@ namespace xge
 		const auto isCircular = object.src.find("shape.circle") != std::string::npos;
 		std::string edgeTouched = "none";
 
-		if (object.name != otherObject.name && otherObject.collisionDataEx.enabled && isCircular)
+		if (object.name != otherObject.name && otherObject.collisionData.enabled && isCircular)
 		{
 			const auto midpoint = object.sprite->getPosition() +
 				sf::Vector2f(object.sprite->getLocalBounds().width / 2, object.sprite->getLocalBounds().height / 2);
@@ -270,14 +270,14 @@ namespace xge
 
 		if (edgeTouched != "none")
 		{
-			if (otherObject.collisionDataEx.basic.size() != 0)
+			if (otherObject.collisionData.basic.size() != 0)
 			{
-				if (otherObject.collisionDataEx.basic.at(0) == "collide")
+				if (otherObject.collisionData.basic.at(0) == "collide")
 				{
-					if (otherObject.collisionDataEx.basic.at(1) == "die")
+					if (otherObject.collisionData.basic.at(1) == "die")
 					{
 						otherObject.isVisible = false;
-						otherObject.collisionDataEx.enabled = false;
+						otherObject.collisionData.enabled = false;
 					}
 				}
 			}
