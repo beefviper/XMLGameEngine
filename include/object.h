@@ -62,12 +62,7 @@ namespace xge
 		bool isVisible{ true };
 		Vector2str sposition;
 		Vector2str svelocity;
-		sf::Vector2f position;
-		sf::Vector2f position_original;
-		sf::Vector2f velocity;
-		sf::Vector2f velocity_original;
 		RawCollisionData rawCollisionData;
-		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 
 		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
@@ -80,13 +75,10 @@ namespace xge
 		std::map<std::string, std::string> action;
 
 		bool isVisible{ true };
-		Vector2str sposition;
-		Vector2str svelocity;
 		sf::Vector2f position;
 		sf::Vector2f position_original;
 		sf::Vector2f velocity;
 		sf::Vector2f velocity_original;
-		RawCollisionData rawCollisionData;
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;

@@ -63,18 +63,6 @@ namespace xge
 				return expression.value();
 			};
 
-			rawObject.position.x = evaluate_string(rawObject.sposition.x);
-			rawObject.position.y = evaluate_string(rawObject.sposition.y);
-			rawObject.velocity.x = evaluate_string(rawObject.svelocity.x);
-			rawObject.velocity.y = evaluate_string(rawObject.svelocity.y);
-
-			rawObject.position_original = rawObject.position;
-			rawObject.velocity_original = rawObject.velocity;
-
-			tempSParams.clear();
-			evaluate_string(rawObject.src);
-			rawObject.spriteParams = tempSParams;
-
 			auto process_collisionData = [&](const std::string& colData)
 			{
 				tempSParams.clear();
@@ -85,13 +73,6 @@ namespace xge
 				return tempSParams;
 			};
 
-			rawObject.collisionData.enabled = rawObject.rawCollisionData.enabled;
-			rawObject.collisionData.top = process_collisionData(rawObject.rawCollisionData.top);
-			rawObject.collisionData.bottom = process_collisionData(rawObject.rawCollisionData.bottom);
-			rawObject.collisionData.left = process_collisionData(rawObject.rawCollisionData.left);
-			rawObject.collisionData.right = process_collisionData(rawObject.rawCollisionData.right);
-			rawObject.collisionData.basic = process_collisionData(rawObject.rawCollisionData.basic);
-
 			auto gridXmax = 1;
 			auto gridYmax = 1;
 
@@ -100,6 +81,10 @@ namespace xge
 
 			auto objWidth = 0;
 			auto objHeight = 0;
+
+			tempSParams.clear();
+			evaluate_string(rawObject.src);
+			rawObject.spriteParams = tempSParams;
 
 			if (rawObject.spriteParams.size() > 5)
 			{
@@ -132,28 +117,33 @@ namespace xge
 			{
 				for (auto gridY = 0; gridY < gridYmax; gridY++)
 				{
-					Object newObject{};
-					newObject.action = rawObject.action;
-					newObject.rawCollisionData = rawObject.rawCollisionData;
-					newObject.collisionData = rawObject.collisionData;
-					newObject.isVisible = rawObject.isVisible;
-					newObject.name = rawObject.name;
-					newObject.position = rawObject.position;
-					newObject.position_original = rawObject.position_original;
-					newObject.sposition = rawObject.sposition;
-					newObject.spriteParams = rawObject.spriteParams;
-					newObject.src = rawObject.src;
-					newObject.svelocity = rawObject.svelocity;
-					newObject.velocity = rawObject.velocity;
-					newObject.velocity_original = rawObject.velocity_original;
-					newObject.renderTexture = std::make_unique<sf::RenderTexture>();
-					newObject.sprite = std::make_unique<sf::Sprite>();
+					Object object{};
 
-					newObject.position.x = rawObject.position.x + ((objWidth + gridXpadding) * gridX);
-					newObject.position.y = rawObject.position.y + ((objHeight + gridYpadding) * gridY);
-					newObject.position_original = newObject.position;
+					object.position.x = evaluate_string(rawObject.sposition.x) + ((objWidth + gridXpadding) * gridX);
+					object.position.y = evaluate_string(rawObject.sposition.y) + ((objHeight + gridYpadding) * gridY);
 
-					objects.push_back(std::move(newObject));
+					object.velocity.x = evaluate_string(rawObject.svelocity.x);
+					object.velocity.y = evaluate_string(rawObject.svelocity.y);
+
+					object.position_original = object.position;
+					object.velocity_original = object.velocity;
+
+					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
+					object.collisionData.top = process_collisionData(rawObject.rawCollisionData.top);
+					object.collisionData.bottom = process_collisionData(rawObject.rawCollisionData.bottom);
+					object.collisionData.left = process_collisionData(rawObject.rawCollisionData.left);
+					object.collisionData.right = process_collisionData(rawObject.rawCollisionData.right);
+					object.collisionData.basic = process_collisionData(rawObject.rawCollisionData.basic);
+
+					object.action = rawObject.action;
+					object.isVisible = rawObject.isVisible;
+					object.name = rawObject.name;
+					object.spriteParams = rawObject.spriteParams;
+					object.src = rawObject.src;
+					object.renderTexture = std::make_unique<sf::RenderTexture>();
+					object.sprite = std::make_unique<sf::Sprite>();
+
+					objects.push_back(std::move(object));
 				}
 			}
 		}
