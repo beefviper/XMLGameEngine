@@ -10,9 +10,9 @@ namespace xge
 	Game::Game(const std::string& game) :
 		filename(game)
 	{
-		xml.init(filename, windowDesc, variables, states, preObjects);
-		expr.init(windowDesc, variables, states, preObjects);
-		sfml.init(preObjects, objects);
+		xml.init(filename, windowDesc, variables, states, rawObjects);
+		expr.init(windowDesc, variables, states, rawObjects, objects);
+		sfml.init(objects);
 	}
 
 	void Game::updateObjects(void)
@@ -22,7 +22,7 @@ namespace xge
 			//auto& object = getObject(objectName);
 			if (isShown(object))
 			{
-				if (object.collision && (object.velocity.x != 0 || object.velocity.y != 0))
+				if (object.collisionDataEx.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
 				{
 					// check collisions with edges of screen
 					checkEdge(object, "top");
@@ -31,7 +31,7 @@ namespace xge
 					checkEdge(object, "right");
 
 					// check collision with other objects
-					if (object.collisionData.basic != "")
+					if (object.collisionDataEx.basic.size() != 0)
 					{
 						for (auto& otherObject : getCurrentObjects())
 						{
@@ -193,7 +193,7 @@ namespace xge
 					}
 					else if (*colIter == "die")
 					{
-						object.collision = false;
+						object.collisionDataEx.enabled = false;
 						object.isVisible = false;
 					}
 					colIter++;
@@ -208,7 +208,7 @@ namespace xge
 		const auto isCircular = object.src.find("shape.circle") != std::string::npos;
 		std::string edgeTouched = "none";
 
-		if (object.name != otherObject.name && otherObject.collision && isCircular)
+		if (object.name != otherObject.name && otherObject.collisionDataEx.enabled && isCircular)
 		{
 			const auto midpoint = object.sprite->getPosition() +
 				sf::Vector2f(object.sprite->getLocalBounds().width / 2, object.sprite->getLocalBounds().height / 2);
@@ -277,7 +277,7 @@ namespace xge
 					if (otherObject.collisionDataEx.basic.at(1) == "die")
 					{
 						otherObject.isVisible = false;
-						otherObject.collision = false;
+						otherObject.collisionDataEx.enabled = false;
 					}
 				}
 			}

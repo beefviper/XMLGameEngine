@@ -27,8 +27,9 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, WindowDesc const& f);
 	};
 
-	struct CollisionData
+	struct RawCollisionData
 	{
+		bool enabled{ false };
 		std::string top;
 		std::string bottom;
 		std::string left;
@@ -38,6 +39,7 @@ namespace xge
 
 	struct CollisionDataEx
 	{
+		bool enabled{ false };
 		std::vector<std::string> top;
 		std::vector<std::string> bottom;
 		std::vector<std::string> left;
@@ -49,6 +51,25 @@ namespace xge
 	{
 		std::string x;
 		std::string y;
+	};
+
+	struct RawObject
+	{
+		std::string name;
+		std::string src;
+		std::map<std::string, std::string> action;
+
+		bool isVisible{ true };
+		Vector2str sposition;
+		Vector2str svelocity;
+		sf::Vector2f position;
+		sf::Vector2f position_original;
+		sf::Vector2f velocity;
+		sf::Vector2f velocity_original;
+		bool collision{ false };
+		RawCollisionData rawCollisionData;
+		CollisionDataEx collisionDataEx;
+		std::vector<std::string> spriteParams;
 	};
 
 	struct Object
@@ -64,8 +85,7 @@ namespace xge
 		sf::Vector2f position_original;
 		sf::Vector2f velocity;
 		sf::Vector2f velocity_original;
-		bool collision{ false };
-		CollisionData collisionData;
+		RawCollisionData rawCollisionData;
 		CollisionDataEx collisionDataEx;
 		std::vector<std::string> spriteParams;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;

@@ -51,7 +51,7 @@ namespace xge
 
 		std::map<std::string, float> variables;
 		std::vector<State> states;
-		std::vector<Object> preObjects;
+		std::vector<RawObject> rawObjects;
 		std::vector<Object> objects;
 		std::stack<State> currentState;
 
