@@ -10,7 +10,7 @@ namespace xge
 	void game_expr::init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states,
 		std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
 	{
-		// custom funtions added to exprtk
+		// custom functions added to exprtk
 		randomNumber<float> randomNumberFloat{};
 		randomRange<float> randomRangeFloat{};
 		shapeCircle<float> shapeCircleFloat{};
