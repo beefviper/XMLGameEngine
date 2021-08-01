@@ -81,7 +81,7 @@ namespace xge
 		const float radius = std::stof(object.spriteParams.at(1));
 
 		circle.setRadius(radius);
-		circle.setFillColor(sfmlColor(object.spriteParams.at(2)));
+		circle.setFillColor(sfmlColor(object.spriteParams.at(3)));
 
 		const int width = static_cast<int>(std::ceil(circle.getLocalBounds().width));
 		const int height = static_cast<int>(std::ceil(circle.getLocalBounds().height));
