@@ -89,6 +89,7 @@ namespace xge
 			tempSParams.push_back("circle");
 			float const radius = scalar_t(parameters[0])();
 			tempSParams.push_back(std::to_string(radius));
+			tempSParams.push_back(std::to_string(radius * 2));
 
 			if (parameters.size() == 2)
 			{
