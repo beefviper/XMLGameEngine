@@ -130,7 +130,6 @@ namespace xge
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
 		if (param == "velocity")
 		{
-			//result->velocity.y = value;
 			result->velocity.y = value;
 		}
 	}

@@ -10,7 +10,7 @@ namespace xge
 	void game_expr::init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states,
 		std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
 	{
-		// custom funtions added to exprtk
+		// custom functions added to exprtk
 		randomNumber<float> randomNumberFloat{};
 		randomRange<float> randomRangeFloat{};
 		shapeCircle<float> shapeCircleFloat{};
@@ -88,31 +88,24 @@ namespace xge
 
 			if (rawObject.spriteParams.size() > 5)
 			{
-				if (rawObject.spriteParams.at(3) == "grid" && rawObject.spriteParams.at(0) == "circle")
+				gridXmax = std::stoi(rawObject.spriteParams.at(5));
+				gridYmax = std::stoi(rawObject.spriteParams.at(6));
+
+				gridXpadding = std::stoi(rawObject.spriteParams.at(7));
+				gridYpadding = std::stoi(rawObject.spriteParams.at(8));
+
+				if (rawObject.spriteParams.at(4) == "grid" && rawObject.spriteParams.at(0) == "circle")
 				{
-					gridXmax = std::stoi(rawObject.spriteParams.at(4));
-					gridYmax = std::stoi(rawObject.spriteParams.at(5));
-
-					gridXpadding = std::stoi(rawObject.spriteParams.at(6));
-					gridYpadding = std::stoi(rawObject.spriteParams.at(7));
-
-					objWidth = std::stoi(rawObject.spriteParams.at(1));
-					objHeight = std::stoi(rawObject.spriteParams.at(1));
+					objWidth = std::stoi(rawObject.spriteParams.at(2));
+					objHeight = std::stoi(rawObject.spriteParams.at(2));
 				}
 				else if (rawObject.spriteParams.at(4) == "grid" && rawObject.spriteParams.at(0) == "rectangle")
 				{
-					gridXmax = std::stoi(rawObject.spriteParams.at(5));
-					gridYmax = std::stoi(rawObject.spriteParams.at(6));
-
-					gridXpadding = std::stoi(rawObject.spriteParams.at(7));
-					gridYpadding = std::stoi(rawObject.spriteParams.at(8));
-
 					objWidth = std::stoi(rawObject.spriteParams.at(1));
 					objHeight = std::stoi(rawObject.spriteParams.at(2));
 				}
 			}
 
-			auto totalObjects = gridXmax * gridYmax;
 			for (auto gridX = 0; gridX < gridXmax; gridX++)
 			{
 				for (auto gridY = 0; gridY < gridYmax; gridY++)
