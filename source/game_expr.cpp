@@ -96,8 +96,8 @@ namespace xge
 					gridXpadding = std::stoi(rawObject.spriteParams.at(6));
 					gridYpadding = std::stoi(rawObject.spriteParams.at(7));
 
-					objWidth = std::stoi(rawObject.spriteParams.at(1))*2;
-					objHeight = std::stoi(rawObject.spriteParams.at(1))*2;
+					objWidth = std::stoi(rawObject.spriteParams.at(1)) * 2;
+					objHeight = std::stoi(rawObject.spriteParams.at(1)) * 2;
 				}
 				else if (rawObject.spriteParams.at(4) == "grid" && rawObject.spriteParams.at(0) == "rectangle")
 				{
