@@ -112,14 +112,14 @@ namespace xge
 				{
 					Object object{};
 
-					object.position.x = evaluate_string(rawObject.sposition.x) + ((objWidth + gridXpadding) * gridX);
-					object.position.y = evaluate_string(rawObject.sposition.y) + ((objHeight + gridYpadding) * gridY);
+					object.position.x = evaluate_string(rawObject.rawPosition.x) + ((objWidth + gridXpadding) * gridX);
+					object.position.y = evaluate_string(rawObject.rawPosition.y) + ((objHeight + gridYpadding) * gridY);
 
-					object.velocity.x = evaluate_string(rawObject.svelocity.x);
-					object.velocity.y = evaluate_string(rawObject.svelocity.y);
+					object.velocity.x = evaluate_string(rawObject.rawVelocity.x);
+					object.velocity.y = evaluate_string(rawObject.rawVelocity.y);
 
-					object.position_original = object.position;
-					object.velocity_original = object.velocity;
+					object.positionOriginal = object.position;
+					object.velocityOriginal = object.velocity;
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
 					object.collisionData.top = process_collisionData(rawObject.rawCollisionData.top);
