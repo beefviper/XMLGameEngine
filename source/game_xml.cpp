@@ -127,8 +127,8 @@ namespace xge
 			rawObject.src = xc_sprite_src;
 			rawObject.action = xc_action_map;
 			rawObject.rawCollisionData = xc_collision_data;
-			rawObject.sposition = position;
-			rawObject.svelocity = velocity;
+			rawObject.rawPosition = position;
+			rawObject.rawVelocity = velocity;
 
 			rawObjects.push_back(std::move(rawObject));
 

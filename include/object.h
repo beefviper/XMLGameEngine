@@ -60,8 +60,8 @@ namespace xge
 		std::map<std::string, std::string> action;
 
 		bool isVisible{ true };
-		Vector2str sposition;
-		Vector2str svelocity;
+		Vector2str rawPosition;
+		Vector2str rawVelocity;
 		RawCollisionData rawCollisionData;
 		std::vector<std::string> spriteParams;
 
@@ -76,9 +76,9 @@ namespace xge
 
 		bool isVisible{ true };
 		sf::Vector2f position;
-		sf::Vector2f position_original;
+		sf::Vector2f positionOriginal;
 		sf::Vector2f velocity;
-		sf::Vector2f velocity_original;
+		sf::Vector2f velocityOriginal;
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;

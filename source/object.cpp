@@ -19,8 +19,8 @@ namespace xge
 
 	std::ostream& operator<<(std::ostream& o, const RawObject& f) {
 		o << "rawObject: " << "name=" << f.name << ", src=" << f.src << '\n'
-			<< "\tpos.x=" << f.sposition.x << ", pos.y=" << f.sposition.y << '\n'
-			<< "\tvel.x=" << f.svelocity.x << ", vel.y=" << f.svelocity.y << '\n'
+			<< "\tpos.x=" << f.rawPosition.x << ", pos.y=" << f.rawPosition.y << '\n'
+			<< "\tvel.x=" << f.rawVelocity.x << ", vel.y=" << f.rawVelocity.y << '\n'
 			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false")
 			<< (f.rawCollisionData.top.length() ? ", top=" + f.rawCollisionData.top : "")
 			<< (f.rawCollisionData.bottom.length() ? ", bottom=" + f.rawCollisionData.bottom : "")

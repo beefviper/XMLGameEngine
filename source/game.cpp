@@ -170,7 +170,7 @@ namespace xge
 					colIter++;
 					if (*colIter == "reset")
 					{
-						object.position = object.position_original;
+						object.position = object.positionOriginal;
 					}
 					else if (*colIter == "bounce")
 					{

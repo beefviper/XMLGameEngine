@@ -19,7 +19,6 @@ namespace xge
 			}
 			else if (object.spriteParams.at(0) == "rectangle")
 			{
-
 				createRectangle(object);
 			}
 			else if (object.spriteParams.at(0) == "text")
