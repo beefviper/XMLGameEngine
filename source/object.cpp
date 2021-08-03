@@ -42,50 +42,24 @@ namespace xge
 			<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
 			<< "\tcollision=" << (f.collisionData.enabled ? "true" : "false");
 
-		if (f.collisionData.top.size() > 0)
-		{
-			o << ", top=";
-			for (auto param : f.collisionData.top)
-			{
-				o << param << (&param != &f.collisionData.top.back() ? ";" : "");
-			}
-		}
 
-		if (f.collisionData.bottom.size() > 0)
+		auto printCollisionData = [&](const std::vector<std::string>& params, std::string edge)
 		{
-			o << ", top=";
-			for (auto param : f.collisionData.bottom)
+			if (params.size() > 0)
 			{
-				o << param << (&param != &f.collisionData.bottom.back() ? ";" : "");
+				o << ", " << edge << "=";
+				for (auto param : params)
+				{
+					o << param << (&param != &params.back() ? ";" : "");
+				}
 			}
-		}
+		};
 
-		if (f.collisionData.left.size() > 0)
-		{
-			o << ", top=";
-			for (auto param : f.collisionData.left)
-			{
-				o << param << (&param != &f.collisionData.left.back() ? ";" : "");
-			}
-		}
-
-		if (f.collisionData.right.size() > 0)
-		{
-			o << ", top=";
-			for (auto param : f.collisionData.right)
-			{
-				o << param << (&param != &f.collisionData.right.back() ? ";" : "");
-			}
-		}
-
-		if (f.collisionData.basic.size() > 0)
-		{
-			o << ", top=";
-			for (auto param : f.collisionData.basic)
-			{
-				o << param << (&param != &f.collisionData.basic.back() ? ";" : "");
-			}
-		}
+		printCollisionData(f.collisionData.top, "top");
+		printCollisionData(f.collisionData.bottom, "bottom");
+		printCollisionData(f.collisionData.left, "left");
+		printCollisionData(f.collisionData.right, "right");
+		printCollisionData(f.collisionData.basic, "basic");
 
 		o << '\n';
 
