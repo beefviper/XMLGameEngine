@@ -37,7 +37,63 @@ namespace xge
 	}
 
 	std::ostream& operator<<(std::ostream& o, const Object& f) {
-		o << "please write code here";
+		o << "Object: " << "name=" << f.name << ", src=" << f.src << '\n'
+			<< "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n'
+			<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
+			<< "\tcollision=" << (f.collisionData.enabled ? "true" : "false");
+
+		if (f.collisionData.top.size() > 0)
+		{
+			o << ", top=";
+			for (auto param : f.collisionData.top)
+			{
+				o << param << (&param != &f.collisionData.top.back() ? ";" : "");
+			}
+		}
+
+		if (f.collisionData.bottom.size() > 0)
+		{
+			o << ", top=";
+			for (auto param : f.collisionData.bottom)
+			{
+				o << param << (&param != &f.collisionData.bottom.back() ? ";" : "");
+			}
+		}
+
+		if (f.collisionData.left.size() > 0)
+		{
+			o << ", top=";
+			for (auto param : f.collisionData.left)
+			{
+				o << param << (&param != &f.collisionData.left.back() ? ";" : "");
+			}
+		}
+
+		if (f.collisionData.right.size() > 0)
+		{
+			o << ", top=";
+			for (auto param : f.collisionData.right)
+			{
+				o << param << (&param != &f.collisionData.right.back() ? ";" : "");
+			}
+		}
+
+		if (f.collisionData.basic.size() > 0)
+		{
+			o << ", top=";
+			for (auto param : f.collisionData.basic)
+			{
+				o << param << (&param != &f.collisionData.basic.back() ? ";" : "");
+			}
+		}
+
+		o << '\n';
+
+		for (auto& action : f.action)
+		{
+			o << "\taction=" << action.first << ", value=" << action.second << '\n';
+		}
+
 		return o;
 	}
 }
