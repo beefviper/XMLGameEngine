@@ -24,6 +24,9 @@ namespace xge
 		exprtk::symbol_table<float> symbolTable;
 		exprtk::expression<float> expression;
 		exprtk::parser<float> parser;
+
+		float evaluateString(const RawObject& rawObject, const std::string& input_string);
+		std::vector<std::string> processCollisionData(const RawObject& rawObject, const std::string& input_string);
 	};
 
 	namespace

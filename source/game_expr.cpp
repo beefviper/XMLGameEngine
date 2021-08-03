@@ -52,27 +52,6 @@ namespace xge
 		// evaluate strings in objects
 		for (auto& rawObject : rawObjects)
 		{
-			const auto evaluate_string = [&](const std::string& input_string)
-			{
-				if (!parser.compile(input_string, expression))
-				{
-					std::cout << "Error: " << parser.error().c_str()
-						<< " in object named '" << rawObject.name << "'" << '\n';
-					exit(EXIT_FAILURE);
-				}
-				return expression.value();
-			};
-
-			auto process_collisionData = [&](const std::string& colData)
-			{
-				tempSParams.clear();
-				if (colData != "")
-				{
-					evaluate_string(colData);
-				}
-				return tempSParams;
-			};
-
 			auto gridXmax = 1;
 			auto gridYmax = 1;
 
@@ -83,7 +62,7 @@ namespace xge
 			auto objHeight = 0;
 
 			tempSParams.clear();
-			evaluate_string(rawObject.src);
+			evaluateString(rawObject, rawObject.src);
 			rawObject.spriteParams = tempSParams;
 
 			if (rawObject.spriteParams.size() > 5)
@@ -112,21 +91,21 @@ namespace xge
 				{
 					Object object{};
 
-					object.position.x = evaluate_string(rawObject.rawPosition.x) + ((objWidth + gridXpadding) * gridX);
-					object.position.y = evaluate_string(rawObject.rawPosition.y) + ((objHeight + gridYpadding) * gridY);
+					object.position.x = evaluateString(rawObject, rawObject.rawPosition.x) + ((objWidth + gridXpadding) * gridX);
+					object.position.y = evaluateString(rawObject, rawObject.rawPosition.y) + ((objHeight + gridYpadding) * gridY);
 
-					object.velocity.x = evaluate_string(rawObject.rawVelocity.x);
-					object.velocity.y = evaluate_string(rawObject.rawVelocity.y);
+					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
+					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
 
 					object.positionOriginal = object.position;
 					object.velocityOriginal = object.velocity;
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
-					object.collisionData.top = process_collisionData(rawObject.rawCollisionData.top);
-					object.collisionData.bottom = process_collisionData(rawObject.rawCollisionData.bottom);
-					object.collisionData.left = process_collisionData(rawObject.rawCollisionData.left);
-					object.collisionData.right = process_collisionData(rawObject.rawCollisionData.right);
-					object.collisionData.basic = process_collisionData(rawObject.rawCollisionData.basic);
+					object.collisionData.top = processCollisionData(rawObject, rawObject.rawCollisionData.top);
+					object.collisionData.bottom = processCollisionData(rawObject, rawObject.rawCollisionData.bottom);
+					object.collisionData.left = processCollisionData(rawObject, rawObject.rawCollisionData.left);
+					object.collisionData.right = processCollisionData(rawObject, rawObject.rawCollisionData.right);
+					object.collisionData.basic = processCollisionData(rawObject, rawObject.rawCollisionData.basic);
 
 					object.action = rawObject.action;
 					object.isVisible = rawObject.isVisible;
@@ -140,5 +119,26 @@ namespace xge
 				}
 			}
 		}
+	}
+
+	float game_expr::evaluateString(const RawObject& rawObject, const std::string& input_string)
+	{
+		if (!parser.compile(input_string, expression))
+		{
+			std::cout << "Error: " << parser.error().c_str()
+				<< " in object named '" << rawObject.name << "'" << '\n';
+			exit(EXIT_FAILURE);
+		}
+		return expression.value();
+	}
+
+	std::vector<std::string> game_expr::processCollisionData(const RawObject& rawObject, const std::string& input_string)
+	{
+		tempSParams.clear();
+		if (input_string != "")
+		{
+			evaluateString(rawObject, input_string);
+		}
+		return tempSParams;
 	}
 }
