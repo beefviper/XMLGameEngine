@@ -37,7 +37,37 @@ namespace xge
 	}
 
 	std::ostream& operator<<(std::ostream& o, const Object& f) {
-		o << "please write code here";
+		o << "Object: " << "name=" << f.name << ", src=" << f.src << '\n'
+			<< "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n'
+			<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
+			<< "\tcollision=" << (f.collisionData.enabled ? "true" : "false");
+
+
+		auto printCollisionData = [&](const std::vector<std::string>& params, std::string edge)
+		{
+			if (params.size() > 0)
+			{
+				o << ", " << edge << "=";
+				for (auto param : params)
+				{
+					o << param << (&param != &params.back() ? ";" : "");
+				}
+			}
+		};
+
+		printCollisionData(f.collisionData.top, "top");
+		printCollisionData(f.collisionData.bottom, "bottom");
+		printCollisionData(f.collisionData.left, "left");
+		printCollisionData(f.collisionData.right, "right");
+		printCollisionData(f.collisionData.basic, "basic");
+
+		o << '\n';
+
+		for (auto& action : f.action)
+		{
+			o << "\taction=" << action.first << ", value=" << action.second << '\n';
+		}
+
 		return o;
 	}
 }
