@@ -9,9 +9,15 @@
 #include <iostream>
 #include <string>
 
-int main(void)
+int main(int argc, char* argv[])
 {
 	std::string filename{ "games/breakout.xml" };
+
+	if (argc == 2)
+	{
+		filename = argv[1];
+	}
+
 	xge::Game game{ filename };
 	
 	game.printGame();
