@@ -27,6 +27,7 @@ namespace xge
 
 		float evaluateString(const RawObject& rawObject, const std::string& input_string);
 		std::vector<std::string> processData(const RawObject& rawObject, const std::string& input_string);
+		xge::GridData setGridData(std::vector<std::string>& tempSpriteParams);
 	};
 
 	namespace
