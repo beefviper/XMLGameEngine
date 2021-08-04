@@ -23,12 +23,6 @@ namespace xge
 		std::map<std::string, float>& variables, std::vector<State>& states,
 		std::vector<RawObject>& rawObjects)
 	{
-		if (domParser->loadGrammar("games/assets/xmlgameengine.xsd", xc::Grammar::SchemaGrammarType) == NULL)
-		{
-			std::cout << "couldn't load schema\n\n";
-			exit(EXIT_FAILURE);
-		}
-
 		domParser->setErrorHandler(&parserErrorHandler);
 		domParser->setValidationScheme(xc::XercesDOMParser::Val_Auto);
 		domParser->setDoNamespaces(true);
