@@ -52,40 +52,12 @@ namespace xge
 		// evaluate strings in objects
 		for (auto& rawObject : rawObjects)
 		{
-			auto gridXmax = 1;
-			auto gridYmax = 1;
-
-			auto gridXpadding = 0;
-			auto gridYpadding = 0;
-
-			auto objWidth = 0;
-			auto objHeight = 0;
-
 			std::vector<std::string> tempSpriteParams = processData(rawObject, rawObject.src);
-			
-			if (tempSpriteParams.size() > 5)
+			GridData gridData = setGridData(tempSpriteParams);
+
+			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
 			{
-				gridXmax = std::stoi(tempSpriteParams.at(5));
-				gridYmax = std::stoi(tempSpriteParams.at(6));
-
-				gridXpadding = std::stoi(tempSpriteParams.at(7));
-				gridYpadding = std::stoi(tempSpriteParams.at(8));
-
-				if (tempSpriteParams.at(4) == "grid" && tempSpriteParams.at(0) == "circle")
-				{
-					objWidth = std::stoi(tempSpriteParams.at(1)) * 2;
-					objHeight = std::stoi(tempSpriteParams.at(1)) * 2;
-				}
-				else if (tempSpriteParams.at(4) == "grid" && tempSpriteParams.at(0) == "rectangle")
-				{
-					objWidth = std::stoi(tempSpriteParams.at(1));
-					objHeight = std::stoi(tempSpriteParams.at(2));
-				}
-			}
-
-			for (auto gridX = 0; gridX < gridXmax; gridX++)
-			{
-				for (auto gridY = 0; gridY < gridYmax; gridY++)
+				for (auto gridY = 0; gridY < gridData.max.y; gridY++)
 				{
 					Object object{};
 
@@ -95,8 +67,8 @@ namespace xge
 					object.src = rawObject.src;
 					object.isVisible = rawObject.isVisible;
 
-					object.position.x = evaluateString(rawObject, rawObject.rawPosition.x) + ((objWidth + gridXpadding) * gridX);
-					object.position.y = evaluateString(rawObject, rawObject.rawPosition.y) + ((objHeight + gridYpadding) * gridY);
+					object.position.x = evaluateString(rawObject, rawObject.rawPosition.x) + ((gridData.obj.x + gridData.padding.x) * gridX);
+					object.position.y = evaluateString(rawObject, rawObject.rawPosition.y) + ((gridData.obj.y + gridData.padding.y) * gridY);
 
 					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
 					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
@@ -141,5 +113,32 @@ namespace xge
 			evaluateString(rawObject, input_string);
 		}
 		return tempSParams;
+	}
+
+	xge::GridData game_expr::setGridData(std::vector<std::string>& tempSpriteParams)
+	{
+		GridData gridData;
+
+		if (tempSpriteParams.size() > 5)
+		{
+			gridData.max.x = std::stoi(tempSpriteParams.at(5));
+			gridData.max.y = std::stoi(tempSpriteParams.at(6));
+
+			gridData.padding.x = std::stoi(tempSpriteParams.at(7));
+			gridData.padding.y = std::stoi(tempSpriteParams.at(8));
+
+			if (tempSpriteParams.at(4) == "grid" && tempSpriteParams.at(0) == "circle")
+			{
+				gridData.obj.x = std::stoi(tempSpriteParams.at(1)) * 2;
+				gridData.obj.y = std::stoi(tempSpriteParams.at(1)) * 2;
+			}
+			else if (tempSpriteParams.at(4) == "grid" && tempSpriteParams.at(0) == "rectangle")
+			{
+				gridData.obj.x = std::stoi(tempSpriteParams.at(1));
+				gridData.obj.y = std::stoi(tempSpriteParams.at(2));
+			}
+		}
+
+		return gridData;
 	}
 }

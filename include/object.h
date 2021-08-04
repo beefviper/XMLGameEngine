@@ -53,6 +53,19 @@ namespace xge
 		std::string y;
 	};
 
+	struct Vector2i
+	{
+		int x = 0;
+		int y = 0;
+	};
+
+	struct GridData
+	{
+		Vector2i max{ 1,1 };
+		Vector2i padding;
+		Vector2i obj;
+	};
+
 	struct RawObject
 	{
 		std::string name;
