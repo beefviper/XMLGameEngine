@@ -61,27 +61,25 @@ namespace xge
 			auto objWidth = 0;
 			auto objHeight = 0;
 
-			tempSParams.clear();
-			evaluateString(rawObject, rawObject.src);
-			rawObject.spriteParams = tempSParams;
-
-			if (rawObject.spriteParams.size() > 5)
+			std::vector<std::string> tempSpriteParams = processData(rawObject, rawObject.src);
+			
+			if (tempSpriteParams.size() > 5)
 			{
-				gridXmax = std::stoi(rawObject.spriteParams.at(5));
-				gridYmax = std::stoi(rawObject.spriteParams.at(6));
+				gridXmax = std::stoi(tempSpriteParams.at(5));
+				gridYmax = std::stoi(tempSpriteParams.at(6));
 
-				gridXpadding = std::stoi(rawObject.spriteParams.at(7));
-				gridYpadding = std::stoi(rawObject.spriteParams.at(8));
+				gridXpadding = std::stoi(tempSpriteParams.at(7));
+				gridYpadding = std::stoi(tempSpriteParams.at(8));
 
-				if (rawObject.spriteParams.at(4) == "grid" && rawObject.spriteParams.at(0) == "circle")
+				if (tempSpriteParams.at(4) == "grid" && tempSpriteParams.at(0) == "circle")
 				{
-					objWidth = std::stoi(rawObject.spriteParams.at(2));
-					objHeight = std::stoi(rawObject.spriteParams.at(2));
+					objWidth = std::stoi(tempSpriteParams.at(1)) * 2;
+					objHeight = std::stoi(tempSpriteParams.at(1)) * 2;
 				}
-				else if (rawObject.spriteParams.at(4) == "grid" && rawObject.spriteParams.at(0) == "rectangle")
+				else if (tempSpriteParams.at(4) == "grid" && tempSpriteParams.at(0) == "rectangle")
 				{
-					objWidth = std::stoi(rawObject.spriteParams.at(1));
-					objHeight = std::stoi(rawObject.spriteParams.at(2));
+					objWidth = std::stoi(tempSpriteParams.at(1));
+					objHeight = std::stoi(tempSpriteParams.at(2));
 				}
 			}
 
@@ -90,6 +88,12 @@ namespace xge
 				for (auto gridY = 0; gridY < gridYmax; gridY++)
 				{
 					Object object{};
+
+					object.spriteParams = tempSpriteParams;
+
+					object.name = rawObject.name;
+					object.src = rawObject.src;
+					object.isVisible = rawObject.isVisible;
 
 					object.position.x = evaluateString(rawObject, rawObject.rawPosition.x) + ((objWidth + gridXpadding) * gridX);
 					object.position.y = evaluateString(rawObject, rawObject.rawPosition.y) + ((objHeight + gridYpadding) * gridY);
@@ -101,17 +105,14 @@ namespace xge
 					object.velocityOriginal = object.velocity;
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
-					object.collisionData.top = processCollisionData(rawObject, rawObject.rawCollisionData.top);
-					object.collisionData.bottom = processCollisionData(rawObject, rawObject.rawCollisionData.bottom);
-					object.collisionData.left = processCollisionData(rawObject, rawObject.rawCollisionData.left);
-					object.collisionData.right = processCollisionData(rawObject, rawObject.rawCollisionData.right);
-					object.collisionData.basic = processCollisionData(rawObject, rawObject.rawCollisionData.basic);
+					object.collisionData.top = processData(rawObject, rawObject.rawCollisionData.top);
+					object.collisionData.bottom = processData(rawObject, rawObject.rawCollisionData.bottom);
+					object.collisionData.left = processData(rawObject, rawObject.rawCollisionData.left);
+					object.collisionData.right = processData(rawObject, rawObject.rawCollisionData.right);
+					object.collisionData.basic = processData(rawObject, rawObject.rawCollisionData.basic);
 
 					object.action = rawObject.action;
-					object.isVisible = rawObject.isVisible;
-					object.name = rawObject.name;
-					object.spriteParams = rawObject.spriteParams;
-					object.src = rawObject.src;
+
 					object.renderTexture = std::make_unique<sf::RenderTexture>();
 					object.sprite = std::make_unique<sf::Sprite>();
 
@@ -132,7 +133,7 @@ namespace xge
 		return expression.value();
 	}
 
-	std::vector<std::string> game_expr::processCollisionData(const RawObject& rawObject, const std::string& input_string)
+	std::vector<std::string> game_expr::processData(const RawObject& rawObject, const std::string& input_string)
 	{
 		tempSParams.clear();
 		if (input_string != "")
