@@ -26,7 +26,7 @@ namespace xge
 		exprtk::parser<float> parser;
 
 		float evaluateString(const RawObject& rawObject, const std::string& input_string);
-		std::vector<std::string> processCollisionData(const RawObject& rawObject, const std::string& input_string);
+		std::vector<std::string> processData(const RawObject& rawObject, const std::string& input_string);
 	};
 
 	namespace
@@ -92,7 +92,7 @@ namespace xge
 			tempSParams.push_back("circle");
 			float const radius = scalar_t(parameters[0])();
 			tempSParams.push_back(std::to_string(radius));
-			tempSParams.push_back(std::to_string(radius * 2));
+			tempSParams.push_back(std::to_string(0));
 
 			if (parameters.size() == 2)
 			{

@@ -57,13 +57,11 @@ namespace xge
 	{
 		std::string name;
 		std::string src;
-		std::map<std::string, std::string> action;
-
 		bool isVisible{ true };
 		Vector2str rawPosition;
 		Vector2str rawVelocity;
 		RawCollisionData rawCollisionData;
-		std::vector<std::string> spriteParams;
+		std::map<std::string, std::string> action;
 
 		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
 	};
@@ -72,8 +70,6 @@ namespace xge
 	{
 		std::string name;
 		std::string src;
-		std::map<std::string, std::string> action;
-
 		bool isVisible{ true };
 		sf::Vector2f position;
 		sf::Vector2f positionOriginal;
@@ -81,6 +77,7 @@ namespace xge
 		sf::Vector2f velocityOriginal;
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
+		std::map<std::string, std::string> action;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
 		std::unique_ptr<sf::Sprite> sprite = nullptr;
 
