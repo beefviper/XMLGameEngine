@@ -15,15 +15,16 @@ if (MSVC)
 endif()
 
 # Add source to this project's executable.
-add_executable (${PROJECT_NAME} "source/main.cpp"
-	"include/game.h" "source/game.cpp"
-	"include/engine.h" "source/engine.cpp"
-	"include/object.h" "source/object.cpp"
-	"include/states.h" "source/states.cpp"
-    "include/utils.h" "source/utils.cpp"
-	"include/game_xml.h" "source/game_xml.cpp"
-    "include/game_expr.h" "source/game_expr.cpp"
-	"include/game_sfml.h" "source/game_sfml.cpp")
+add_executable (${PROJECT_NAME}
+	"source/main.cpp"
+	"source/game.cpp"
+	"source/engine.cpp"
+	"source/object.cpp"
+	"source/states.cpp"
+    "source/utils.cpp"
+	"source/game_xml.cpp"
+    "source/game_expr.cpp"
+	"source/game_sfml.cpp")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
@@ -32,7 +33,7 @@ find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
 find_package(XercesC CONFIG REQUIRED)
 
-target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_include_directories(${PROJECT_NAME} PUBLIC source/include)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${EXPRTK_INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
@@ -46,8 +47,13 @@ add_dependencies(${PROJECT_NAME} data-target)
 if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 
     # list of files for which we add a copy rule
-    set(data_SHADOW "games/pong.xml" "games/pong_full.xml" "games/breakout.xml" "games/assets/tuffy.ttf"
-        "games/assets/xmlgameengine.xsd" "games/assets/paddle.jpg")
+    set(data_SHADOW
+		"games/pong.xml"
+		"games/pong_full.xml"
+		"games/breakout.xml"
+		"games/assets/tuffy.ttf"
+		"games/assets/xmlgameengine.xsd"
+		"games/assets/paddle.jpg")
 
     foreach(item IN LISTS data_SHADOW)
         message(STATUS ${item})
