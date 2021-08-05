@@ -53,7 +53,7 @@ namespace xge
 		for (auto& rawObject : rawObjects)
 		{
 			std::vector<std::string> tempSpriteParams = processData(rawObject, rawObject.src);
-			GridData gridData = setGridData(tempSpriteParams);
+			GridData gridData = setGridXY(tempSpriteParams);
 
 			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
 			{
@@ -67,13 +67,15 @@ namespace xge
 					object.src = rawObject.src;
 					object.isVisible = rawObject.isVisible;
 
-					object.position.x = evaluateString(rawObject, rawObject.rawPosition.x) + ((gridData.obj.x + gridData.padding.x) * gridX);
-					object.position.y = evaluateString(rawObject, rawObject.rawPosition.y) + ((gridData.obj.y + gridData.padding.y) * gridY);
+					object.position.x = static_cast<float>(gridX);
+					object.position.y = static_cast<float>(gridY);
 
 					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
 					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
 
-					object.positionOriginal = object.position;
+					object.positionOriginal.x = evaluateString(rawObject, rawObject.rawPosition.x);
+					object.positionOriginal.y = evaluateString(rawObject, rawObject.rawPosition.y);
+
 					object.velocityOriginal = object.velocity;
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
@@ -115,28 +117,14 @@ namespace xge
 		return tempSParams;
 	}
 
-	xge::GridData game_expr::setGridData(std::vector<std::string>& tempSpriteParams)
+	xge::GridData game_expr::setGridXY(std::vector<std::string>& spriteParams)
 	{
 		GridData gridData;
 
-		if (tempSpriteParams.size() > 5)
+		if (spriteParams.size() > 5)
 		{
-			gridData.max.x = std::stoi(tempSpriteParams.at(5));
-			gridData.max.y = std::stoi(tempSpriteParams.at(6));
-
-			gridData.padding.x = std::stoi(tempSpriteParams.at(7));
-			gridData.padding.y = std::stoi(tempSpriteParams.at(8));
-
-			if (tempSpriteParams.at(4) == "grid" && tempSpriteParams.at(0) == "circle")
-			{
-				gridData.obj.x = std::stoi(tempSpriteParams.at(1)) * 2;
-				gridData.obj.y = std::stoi(tempSpriteParams.at(1)) * 2;
-			}
-			else if (tempSpriteParams.at(4) == "grid" && tempSpriteParams.at(0) == "rectangle")
-			{
-				gridData.obj.x = std::stoi(tempSpriteParams.at(1));
-				gridData.obj.y = std::stoi(tempSpriteParams.at(2));
-			}
+			gridData.max.x = std::stoi(spriteParams.at(5));
+			gridData.max.y = std::stoi(spriteParams.at(6));
 		}
 
 		return gridData;

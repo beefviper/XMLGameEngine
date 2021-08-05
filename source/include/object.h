@@ -62,8 +62,8 @@ namespace xge
 	struct GridData
 	{
 		Vector2i max{ 1,1 };
-		Vector2i padding;
-		Vector2i obj;
+		Vector2i padding{ 0,0 };
+		Vector2i obj{ 0,0 };
 	};
 
 	struct RawObject

@@ -30,6 +30,10 @@ namespace xge
 				createImage(object);
 			}
 
+			GridData gridData = setGridData(object);
+			object.position.x = object.positionOriginal.x + ((gridData.obj.x + gridData.padding.x) * object.position.x);
+			object.position.y = object.positionOriginal.y + ((gridData.obj.y + gridData.padding.y) * object.position.y);
+
 			object.renderTexture->display();
 
 			object.sprite = std::make_unique<sf::Sprite>();
@@ -159,5 +163,25 @@ namespace xge
 
 		object.renderTexture->create(width, height);
 		object.renderTexture->draw(sprite);
+	}
+
+	xge::GridData game_sfml::setGridData(Object& object)
+	{
+		GridData gridData;
+		auto spriteParams = object.spriteParams;
+
+		if (spriteParams.size() > 5)
+		{
+			gridData.max.x = std::stoi(spriteParams.at(5));
+			gridData.max.y = std::stoi(spriteParams.at(6));
+
+			gridData.padding.x = std::stoi(spriteParams.at(7));
+			gridData.padding.y = std::stoi(spriteParams.at(8));
+
+			gridData.obj.x = object.renderTexture->getSize().x;
+			gridData.obj.y = object.renderTexture->getSize().y;
+		}
+
+		return gridData;
 	}
 }
