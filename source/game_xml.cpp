@@ -31,13 +31,25 @@ namespace xge
 
 		domParser->parse(filename.c_str());
 
-		if (domParser->getErrorCount() == 0)
+		auto schemaLocation = getAttributeByName(domParser->getDocument()->getDocumentElement(), "xsi:noNamespaceSchemaLocation");
+		auto errorCount = domParser->getErrorCount();
+
+		if (errorCount == 0 && schemaLocation != "")
 		{
 			std::cout << "XML file validated against the schema successfully\n\n";
 		}
-		else
+		else if (errorCount == 0)
 		{
-			std::cout << "XML file doesn't conform to the schema\n\n";
+			std::cout << "XML file was parsed successfully\n\n";
+		}
+		else if (errorCount > 0 && schemaLocation != "")
+		{
+			std::cout << "XML file failed to validate against the schema\n\n";
+			exit(EXIT_FAILURE);
+		}
+		else if (errorCount > 0)
+		{
+			std::cout << "XML file failed to parse\n\n";
 			exit(EXIT_FAILURE);
 		}
 
