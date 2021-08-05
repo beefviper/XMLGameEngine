@@ -30,7 +30,7 @@
       <sprite src="shape.rectangle(width,height,'color.white')" />
       <position x="window.left + margin" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" top="static" bottom="static" />
+      <collision enabled="true" top="stick" bottom="stick" />
       <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
@@ -41,7 +41,7 @@
       <sprite src="shape.rectangle(width,height,'color.white')" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" top="static" bottom="static" />
+      <collision enabled="true" top="stick" bottom="stick" />
       <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />

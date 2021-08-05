@@ -142,7 +142,7 @@ namespace xge
 	{
 		if (str != "")
 		{
-			replaceStringInPlace(str, "static", "collide('static')");
+			replaceStringInPlace(str, "stick", "collide('stick')");
 			replaceStringInPlace(str, "bounce", "collide('bounce')");
 			replaceStringInPlace(str, "reset", "collide('reset')");
 			replaceStringInPlace(str, "die", "collide('die')");
