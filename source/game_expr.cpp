@@ -70,11 +70,11 @@ namespace xge
 					object.position.x = static_cast<float>(gridX);
 					object.position.y = static_cast<float>(gridY);
 
-					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
-					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
-
 					object.positionOriginal.x = evaluateString(rawObject, rawObject.rawPosition.x);
 					object.positionOriginal.y = evaluateString(rawObject, rawObject.rawPosition.y);
+
+					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
+					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
 
 					object.velocityOriginal = object.velocity;
 

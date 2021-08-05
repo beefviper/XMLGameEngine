@@ -165,7 +165,7 @@ namespace xge
 		object.renderTexture->draw(sprite);
 	}
 
-	xge::GridData game_sfml::setGridData(Object& object)
+	GridData game_sfml::setGridData(Object& object)
 	{
 		GridData gridData;
 		auto spriteParams = object.spriteParams;
