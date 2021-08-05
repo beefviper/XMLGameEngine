@@ -55,6 +55,12 @@ namespace xge
 			std::vector<std::string> tempSpriteParams = processData(rawObject, rawObject.src);
 			GridData gridData = setGridXY(tempSpriteParams);
 
+			preprocessCollisionData(rawObject.rawCollisionData.top);
+			preprocessCollisionData(rawObject.rawCollisionData.bottom);
+			preprocessCollisionData(rawObject.rawCollisionData.left);
+			preprocessCollisionData(rawObject.rawCollisionData.right);
+			preprocessCollisionData(rawObject.rawCollisionData.basic);
+
 			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
 			{
 				for (auto gridY = 0; gridY < gridData.max.y; gridY++)
@@ -70,15 +76,16 @@ namespace xge
 					object.position.x = static_cast<float>(gridX);
 					object.position.y = static_cast<float>(gridY);
 
-					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
-					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
-
 					object.positionOriginal.x = evaluateString(rawObject, rawObject.rawPosition.x);
 					object.positionOriginal.y = evaluateString(rawObject, rawObject.rawPosition.y);
+
+					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
+					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
 
 					object.velocityOriginal = object.velocity;
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
+
 					object.collisionData.top = processData(rawObject, rawObject.rawCollisionData.top);
 					object.collisionData.bottom = processData(rawObject, rawObject.rawCollisionData.bottom);
 					object.collisionData.left = processData(rawObject, rawObject.rawCollisionData.left);
@@ -121,12 +128,32 @@ namespace xge
 	{
 		GridData gridData;
 
-		if (spriteParams.size() > 5)
+		if (spriteParams.size() > 5 && spriteParams.at(4) == "grid")
 		{
 			gridData.max.x = std::stoi(spriteParams.at(5));
 			gridData.max.y = std::stoi(spriteParams.at(6));
 		}
 
 		return gridData;
+	}
+
+	void game_expr::preprocessCollisionData(std::string& str)
+	{
+		if (str != "")
+		{
+			replaceStringInPlace(str, "static", "collide('static')");
+			replaceStringInPlace(str, "bounce", "collide('bounce')");
+			replaceStringInPlace(str, "reset", "collide('reset')");
+			replaceStringInPlace(str, "die", "collide('die')");
+		}
+	}
+
+	void game_expr::replaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace)
+	{
+		size_t pos = 0;
+		while ((pos = subject.find(search, pos)) != std::string::npos) {
+			subject.replace(pos, search.length(), replace);
+			pos += replace.length();
+		}
 	}
 }

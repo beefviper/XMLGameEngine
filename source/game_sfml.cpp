@@ -165,12 +165,12 @@ namespace xge
 		object.renderTexture->draw(sprite);
 	}
 
-	xge::GridData game_sfml::setGridData(Object& object)
+	GridData game_sfml::setGridData(Object& object)
 	{
 		GridData gridData;
 		auto spriteParams = object.spriteParams;
 
-		if (spriteParams.size() > 5)
+		if (spriteParams.size() > 5 && spriteParams.at(4) == "grid")
 		{
 			gridData.max.x = std::stoi(spriteParams.at(5));
 			gridData.max.y = std::stoi(spriteParams.at(6));
