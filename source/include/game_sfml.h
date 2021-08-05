@@ -30,5 +30,7 @@ namespace xge
 		void createRectangle(Object& object);
 		void createText(Object& object);
 		void createImage(Object& object);
+
+		GridData setGridData(Object& object);
 	};
 }
