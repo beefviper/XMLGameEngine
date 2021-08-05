@@ -28,6 +28,8 @@ namespace xge
 		float evaluateString(const RawObject& rawObject, const std::string& input_string);
 		std::vector<std::string> processData(const RawObject& rawObject, const std::string& input_string);
 		xge::GridData setGridXY(std::vector<std::string>& tempSpriteParams);
+		void preprocessCollisionData(std::string& str);
+		void replaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace);
 	};
 
 	namespace

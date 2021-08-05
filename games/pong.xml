@@ -23,15 +23,14 @@
       <sprite src="shape.circle(ball.radius,'color.white')" />
       <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
-      <collision enabled="true" top="collide('bounce')" bottom="collide('bounce')"
-                 left="inc('score2');collide('reset')" right="inc('score1');collide('reset')" basic="collide('bounce')" />
+      <collision enabled="true" top="bounce" bottom="bounce" left="inc('score2');reset" right="inc('score1');reset" basic="bounce" />
     </object>
     <!-- paddle1 -->
     <object name="paddle1">
       <sprite src="shape.rectangle(width,height,'color.white')" />
       <position x="window.left + margin" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" top="collide('static')" bottom="collide('static')" />
+      <collision enabled="true" top="static" bottom="static" />
       <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
@@ -42,7 +41,7 @@
       <sprite src="shape.rectangle(width,height,'color.white')" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" top="collide('static')" bottom="collide('static')" />
+      <collision enabled="true" top="static" bottom="static" />
       <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
