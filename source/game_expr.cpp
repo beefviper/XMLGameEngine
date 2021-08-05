@@ -109,6 +109,7 @@ namespace xge
 		{
 			std::cout << "Error: " << parser.error().c_str()
 				<< " in object named '" << rawObject.name << "'" << '\n';
+			std::cout << "Failed to parse: \"" << input_string << "\"\n";
 			exit(EXIT_FAILURE);
 		}
 		return expression.value();
