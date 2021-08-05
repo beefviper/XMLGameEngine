@@ -34,6 +34,8 @@ namespace xge
 			object.position.x = object.positionOriginal.x + ((gridData.obj.x + gridData.padding.x) * object.position.x);
 			object.position.y = object.positionOriginal.y + ((gridData.obj.y + gridData.padding.y) * object.position.y);
 
+			object.positionOriginal = object.position;
+
 			object.renderTexture->display();
 
 			object.sprite = std::make_unique<sf::Sprite>();
