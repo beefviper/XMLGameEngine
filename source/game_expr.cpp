@@ -121,7 +121,7 @@ namespace xge
 	{
 		GridData gridData;
 
-		if (spriteParams.size() > 5)
+		if (spriteParams.size() > 5 && spriteParams.at(4) == "grid")
 		{
 			gridData.max.x = std::stoi(spriteParams.at(5));
 			gridData.max.y = std::stoi(spriteParams.at(6));
