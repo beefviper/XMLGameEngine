@@ -21,9 +21,9 @@ add_executable (${PROJECT_NAME}
 	"source/engine.cpp"
 	"source/object.cpp"
 	"source/states.cpp"
-    "source/utils.cpp"
+	"source/utils.cpp"
 	"source/game_xml.cpp"
-    "source/game_expr.cpp"
+	"source/game_expr.cpp"
 	"source/game_sfml.cpp")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
