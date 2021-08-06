@@ -17,7 +17,6 @@ namespace xge
 		shapeRectangle<float> shapeRectangleFloat{};
 		text<float> textFloat{};
 		image<float> imageFloat{};
-		collide<float> collideFloat{};
 		inc<float> incFloat{};
 		grid<float> gridFloat{};
 		bounce<float> bounceFloat{};
@@ -32,7 +31,6 @@ namespace xge
 		symbolTable.add_function("shape.rectangle", shapeRectangleFloat);
 		symbolTable.add_function("text", textFloat);
 		symbolTable.add_function("image", imageFloat);
-		symbolTable.add_function("collide", collideFloat);
 		symbolTable.add_function("inc", incFloat);
 		symbolTable.add_function("grid", gridFloat);
 		symbolTable.add_function("bounce", bounceFloat);
