@@ -20,6 +20,10 @@ namespace xge
 		collide<float> collideFloat{};
 		inc<float> incFloat{};
 		grid<float> gridFloat{};
+		bounce<float> bounceFloat{};
+		stick<float> stickFloat{};
+		reset<float> resetFloat{};
+		die<float> dieFloat{};
 
 		// add functions to symbol table
 		symbolTable.add_function("random.number", randomNumberFloat);
@@ -31,6 +35,10 @@ namespace xge
 		symbolTable.add_function("collide", collideFloat);
 		symbolTable.add_function("inc", incFloat);
 		symbolTable.add_function("grid", gridFloat);
+		symbolTable.add_function("bounce", bounceFloat);
+		symbolTable.add_function("stick", stickFloat);
+		symbolTable.add_function("reset", resetFloat);
+		symbolTable.add_function("die", dieFloat);
 
 		// add constants to symbol table
 		symbolTable.add_constant("window.top", 0);
@@ -54,12 +62,6 @@ namespace xge
 		{
 			std::vector<std::string> tempSpriteParams = processData(rawObject, rawObject.src);
 			GridData gridData = setGridXY(tempSpriteParams);
-
-			preprocessCollisionData(rawObject.rawCollisionData.top);
-			preprocessCollisionData(rawObject.rawCollisionData.bottom);
-			preprocessCollisionData(rawObject.rawCollisionData.left);
-			preprocessCollisionData(rawObject.rawCollisionData.right);
-			preprocessCollisionData(rawObject.rawCollisionData.basic);
 
 			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
 			{
@@ -136,25 +138,5 @@ namespace xge
 		}
 
 		return gridData;
-	}
-
-	void game_expr::preprocessCollisionData(std::string& str)
-	{
-		if (str != "")
-		{
-			replaceStringInPlace(str, "stick", "collide('stick')");
-			replaceStringInPlace(str, "bounce", "collide('bounce')");
-			replaceStringInPlace(str, "reset", "collide('reset')");
-			replaceStringInPlace(str, "die", "collide('die')");
-		}
-	}
-
-	void game_expr::replaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace)
-	{
-		size_t pos = 0;
-		while ((pos = subject.find(search, pos)) != std::string::npos) {
-			subject.replace(pos, search.length(), replace);
-			pos += replace.length();
-		}
 	}
 }

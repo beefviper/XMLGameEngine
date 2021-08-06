@@ -17,13 +17,13 @@
       <sprite src="shape.circle(ball.radius)" />
       <position x="window.width.center - ball.radius" y="window.bottom - height * 3" />
       <velocity x="random.range(-3,3)" y="random.range(-7,-5)" />
-      <collision enabled="true" top="bounce" bottom="bounce" left="bounce" right="bounce" basic="bounce" />
+      <collision enabled="true" top="bounce()" bottom="bounce()" left="bounce()" right="bounce()" basic="bounce()" />
     </object>
     <object name="player">
       <sprite src="shape.rectangle(width,height)" />
       <position x="window.width.center" y="window.bottom - height * 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" left="stick" right="stick" />
+      <collision enabled="true" left="stick()" right="stick()" />
       <actions>
         <action name="left" value="move.left(step)" />
         <action name="right" value="move.right(step)" />
@@ -33,7 +33,7 @@
       <sprite src="grid(9,6,5,5,shape.rectangle(width,height))" />
       <position x="margin" y="margin/2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" basic="die" />
+      <collision enabled="true" basic="die()" />
     </object>
   </objects>	
   <states>
