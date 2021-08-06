@@ -28,8 +28,6 @@ namespace xge
 		float evaluateString(const RawObject& rawObject, const std::string& input_string);
 		std::vector<std::string> processData(const RawObject& rawObject, const std::string& input_string);
 		xge::GridData setGridXY(std::vector<std::string>& tempSpriteParams);
-		void preprocessCollisionData(std::string& str);
-		void replaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace);
 	};
 
 	namespace
@@ -293,6 +291,94 @@ namespace xge
 				tempSParams.push_back(std::to_string(0));
 			}
 
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct bounce : public exprtk::igeneric_function<T>
+	{
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		bounce() noexcept : exprtk::igeneric_function<T>("Z|Z")
+		{
+
+		}
+
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+		{
+			tempSParams.push_back("collide");
+			tempSParams.push_back("bounce");
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct stick : public exprtk::igeneric_function<T>
+	{
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		stick() noexcept : exprtk::igeneric_function<T>("Z|Z")
+		{
+
+		}
+
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+		{
+			tempSParams.push_back("collide");
+			tempSParams.push_back("stick");
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct reset : public exprtk::igeneric_function<T>
+	{
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		reset() noexcept : exprtk::igeneric_function<T>("Z|Z")
+		{
+
+		}
+
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+		{
+			tempSParams.push_back("collide");
+			tempSParams.push_back("reset");
+			return 0;
+		}
+	};
+
+	template <typename T>
+	struct die : public exprtk::igeneric_function<T>
+	{
+		using igenfunct_t = exprtk::igeneric_function<T>;
+		using generic_t = typename igenfunct_t::generic_type;
+		using parameter_list_t = typename igenfunct_t::parameter_list_t;
+		using string_t = typename generic_t::string_view;
+		using scalar_t = typename generic_t::scalar_view;
+
+		die() noexcept : exprtk::igeneric_function<T>("Z|Z")
+		{
+
+		}
+
+		T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+		{
+			tempSParams.push_back("collide");
+			tempSParams.push_back("die");
 			return 0;
 		}
 	};
