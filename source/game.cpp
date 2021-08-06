@@ -182,7 +182,7 @@ namespace xge
 						if (side == "left" || side == "right") { object.velocity.x *= -1; }
 						else if (side == "top" || side == "bottom") { object.velocity.y *= -1; }
 					}
-					else if (*colIter == "static")
+					else if (*colIter == "stick")
 					{
 						if (side == "left" || side == "right")
 						{

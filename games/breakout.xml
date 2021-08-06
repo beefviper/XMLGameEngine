@@ -23,7 +23,7 @@
       <sprite src="shape.rectangle(width,height)" />
       <position x="window.width.center" y="window.bottom - height * 2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" left="static" right="static" />
+      <collision enabled="true" left="stick" right="stick" />
       <actions>
         <action name="left" value="move.left(step)" />
         <action name="right" value="move.right(step)" />
