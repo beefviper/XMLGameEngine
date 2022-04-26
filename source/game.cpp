@@ -87,7 +87,7 @@ namespace xge
 	{
 		bool result = false;
 
-		for (auto shown : currentState.top().show)
+		for (auto &shown : currentState.top().show)
 		{
 			if (shown == object.name)
 			{

@@ -170,7 +170,7 @@ namespace xge
 	GridData game_sfml::setGridData(Object& object)
 	{
 		GridData gridData;
-		auto spriteParams = object.spriteParams;
+		auto &spriteParams = object.spriteParams;
 
 		if (spriteParams.size() > 5 && spriteParams.at(4) == "grid")
 		{

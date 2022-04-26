@@ -48,7 +48,7 @@ namespace xge
 			if (params.size() > 0)
 			{
 				o << ", " << edge << "=";
-				for (auto param : params)
+				for (auto &param : params)
 				{
 					o << param << (&param != &params.back() ? ";" : "");
 				}
