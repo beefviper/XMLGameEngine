@@ -51,10 +51,7 @@ namespace xge
 		template <typename T>
 		struct randomNumber : public exprtk::ifunction<T>
 		{
-			randomNumber() : exprtk::ifunction<T>(1)
-			{
-
-			}
+			randomNumber() : exprtk::ifunction<T>(1){}
 
 			T operator()(const T& randMax)
 			{
@@ -65,10 +62,7 @@ namespace xge
 		template <typename T>
 		struct randomRange : public exprtk::ifunction<T>
 		{
-			randomRange() : exprtk::ifunction<T>(2)
-			{
-
-			}
+			randomRange() : exprtk::ifunction<T>(2){}
 
 			T operator()(const T& randMin, const T& randMax)
 			{
@@ -79,10 +73,7 @@ namespace xge
 		template <typename T>
 		struct shapeCircle : public exprtk::igeneric_function<T>
 		{
-			shapeCircle() noexcept : exprtk::igeneric_function<T>("T|TS")
-			{
-
-			}
+			shapeCircle() noexcept : exprtk::igeneric_function<T>("T|TS"){}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -107,10 +98,7 @@ namespace xge
 		template <typename T>
 		struct shapeRectangle : public exprtk::igeneric_function<T>
 		{
-			shapeRectangle() noexcept : exprtk::igeneric_function<T>("TT|TTS")
-			{
-
-			}
+			shapeRectangle() noexcept : exprtk::igeneric_function<T>("TT|TTS"){}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -136,10 +124,7 @@ namespace xge
 		template <typename T>
 		struct text : public exprtk::igeneric_function<T>
 		{
-			text() noexcept : exprtk::igeneric_function<T>("ST|STS")
-			{
-
-			}
+			text() noexcept : exprtk::igeneric_function<T>("ST|STS"){}
 
 			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -164,10 +149,7 @@ namespace xge
 		template <typename T>
 		struct image : public exprtk::igeneric_function<T>
 		{
-			image() noexcept : exprtk::igeneric_function<T>("S|SS")
-			{
-
-			}
+			image() noexcept : exprtk::igeneric_function<T>("S|SS"){}
 
 			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -190,10 +172,7 @@ namespace xge
 		template <typename T>
 		struct inc : public exprtk::igeneric_function<T>
 		{
-			inc() noexcept : exprtk::igeneric_function<T>("S|S")
-			{
-
-			}
+			inc() noexcept : exprtk::igeneric_function<T>("S|S"){}
 
 			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -207,10 +186,7 @@ namespace xge
 		template <typename T>
 		struct grid : public exprtk::igeneric_function<T>
 		{
-			grid() noexcept : exprtk::igeneric_function<T>("TTT|TTTTT")
-			{
-
-			}
+			grid() noexcept : exprtk::igeneric_function<T>("TTT|TTTTT"){}
 
 			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -241,10 +217,7 @@ namespace xge
 		template <typename T>
 		struct bounce : public exprtk::igeneric_function<T>
 		{
-			bounce() noexcept : exprtk::igeneric_function<T>("Z|Z")
-			{
-
-			}
+			bounce() noexcept : exprtk::igeneric_function<T>("Z|Z"){}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -257,10 +230,7 @@ namespace xge
 		template <typename T>
 		struct stick : public exprtk::igeneric_function<T>
 		{
-			stick() noexcept : exprtk::igeneric_function<T>("Z|Z")
-			{
-
-			}
+			stick() noexcept : exprtk::igeneric_function<T>("Z|Z"){}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -273,10 +243,7 @@ namespace xge
 		template <typename T>
 		struct reset : public exprtk::igeneric_function<T>
 		{
-			reset() noexcept : exprtk::igeneric_function<T>("Z|Z")
-			{
-
-			}
+			reset() noexcept : exprtk::igeneric_function<T>("Z|Z"){}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -289,10 +256,7 @@ namespace xge
 		template <typename T>
 		struct die : public exprtk::igeneric_function<T>
 		{
-			die() noexcept : exprtk::igeneric_function<T>("Z|Z")
-			{
-
-			}
+			die() noexcept : exprtk::igeneric_function<T>("Z|Z"){}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
