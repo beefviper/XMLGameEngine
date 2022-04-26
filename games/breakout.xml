@@ -33,7 +33,7 @@
       <sprite src="grid(9,6,5,5,shape.rectangle(width,height))" />
       <position x="margin" y="margin/2" />
       <velocity x="0" y="0" />
-      <collision enabled="true" basic="die()" />
+      <collision enabled="true" group="true" left="bounce()" right="bounce()" basic="die()" />
     </object>
   </objects>	
   <states>

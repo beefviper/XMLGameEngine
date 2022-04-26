@@ -51,6 +51,7 @@
                     <xs:element name="collision">
                       <xs:complexType>
                         <xs:attribute name="enabled" type="xs:boolean" use="required" />
+                        <xs:attribute name="group" type="xs:boolean" use="optional" />
                         <xs:attribute name="top" type="xs:string" use="optional" />
                         <xs:attribute name="bottom" type="xs:string" use="optional" />
                         <xs:attribute name="left" type="xs:string" use="optional" />
