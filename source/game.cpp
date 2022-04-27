@@ -139,6 +139,37 @@ namespace xge
 		}
 	}
 
+	void Game::updateGroupOfObjects(Object& object, std::string side)
+	{
+		int groupNum = object.collisionData.group;
+
+		bool foundObject = false;
+
+		for (auto& obj : objects)
+		{
+			if (obj.collisionData.group == groupNum)
+			{
+				if (obj.position.x == object.position.x && obj.position.y == object.position.y)
+				{
+					foundObject = true;
+				}
+
+				if (foundObject == false)
+				{
+					obj.velocity.x *= -1;
+					if (side == "right") { obj.position.x += obj.velocity.x * 3; }
+					if (side == "left") { obj.position.x += obj.velocity.x; }
+				}
+				else
+				{
+					obj.velocity.x *= -1;
+					if (side == "right") { obj.position.x += obj.velocity.x; }
+					if (side == "left") { obj.position.x += obj.velocity.x; }
+				}
+			}
+		}
+	}
+
 	void Game::checkEdge(Object& object, std::string side)
 	{
 		auto objectWidth = object.sprite->getLocalBounds().width;
@@ -156,7 +187,7 @@ namespace xge
 		else if (side == "bottom") { curSide = object.collisionData.bottom; }
 
 		if ((object.position.x < leftBound && side == "left")
-			|| (object.position.x > rightBound && side == "right")
+			|| (object.position.x > rightBound - 1 && side == "right")
 			|| (object.position.y < topBound && side == "top")
 			|| (object.position.y > bottomBound && side == "bottom"))
 		{
@@ -179,7 +210,17 @@ namespace xge
 					}
 					else if (*colIter == "bounce")
 					{
-						if (side == "left" || side == "right") { object.velocity.x *= -1; }
+						if (side == "left" || side == "right")
+						{
+							if ( object.collisionData.group )
+							{
+								updateGroupOfObjects(object, side);
+							}
+							else
+							{
+								object.velocity.x *= -1;
+							}
+						}
 						else if (side == "top" || side == "bottom") { object.velocity.y *= -1; }
 					}
 					else if (*colIter == "stick")
@@ -198,6 +239,26 @@ namespace xge
 					{
 						object.collisionData.enabled = false;
 						object.isVisible = false;
+					}
+					colIter++;
+				}
+				else if (*colIter == "movedown")
+				{
+					colIter++;
+
+					if (object.collisionData.group > 0)
+					{
+						for (auto& obj : objects)
+						{
+							if (obj.collisionData.group == object.collisionData.group)
+							{
+								obj.position.y += std::stoi(*colIter);
+							}
+						}
+					}
+					else
+					{
+						object.position.y += std::stoi(*colIter);
 					}
 					colIter++;
 				}

@@ -41,6 +41,8 @@ namespace xge
 		void setCurrentState(const std::string& name);
 		void setObjectParam(const std::string& name, const std::string& param, const float& value);
 
+		void updateGroupOfObjects(Object& object, std::string side);
+
 	private:
 		std::string filename;
 		WindowDesc windowDesc;

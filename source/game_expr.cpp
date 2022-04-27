@@ -23,6 +23,10 @@ namespace xge
 		stick<float> stickFloat{};
 		reset<float> resetFloat{};
 		die<float> dieFloat{};
+		moveUp<float> moveUpFloat{};
+		moveDown<float> moveDownFloat{};
+		moveLeft<float> moveLeftFloat{};
+		moveRight<float> moveRightFloat{};
 
 		// add functions to symbol table
 		symbolTable.add_function("random.number", randomNumberFloat);
@@ -37,6 +41,10 @@ namespace xge
 		symbolTable.add_function("stick", stickFloat);
 		symbolTable.add_function("reset", resetFloat);
 		symbolTable.add_function("die", dieFloat);
+		symbolTable.add_function("move.up", moveUpFloat);
+		symbolTable.add_function("move.down", moveDownFloat);
+		symbolTable.add_function("move.left", moveLeftFloat);
+		symbolTable.add_function("move.right", moveRightFloat);
 
 		// add constants to symbol table
 		symbolTable.add_constant("window.top", 0);
@@ -54,6 +62,8 @@ namespace xge
 
 		// register symbol table with expression
 		expression.register_symbol_table(symbolTable);
+
+		int groupNum = 1;
 
 		// evaluate strings in objects
 		for (auto& rawObject : rawObjects)
@@ -85,6 +95,7 @@ namespace xge
 					object.velocityOriginal = object.velocity;
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
+					object.collisionData.group = rawObject.rawCollisionData.group ? groupNum : 0;
 
 					object.collisionData.top = processData(rawObject, rawObject.rawCollisionData.top);
 					object.collisionData.bottom = processData(rawObject, rawObject.rawCollisionData.bottom);
@@ -99,6 +110,10 @@ namespace xge
 
 					objects.push_back(std::move(object));
 				}
+			}
+
+			if (rawObject.rawCollisionData.group) {
+				groupNum++;
 			}
 		}
 	}

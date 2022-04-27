@@ -265,5 +265,61 @@ namespace xge
 				return 0;
 			}
 		};
+
+		template <typename T>
+		struct moveUp : public exprtk::igeneric_function<T>
+		{
+			moveUp() noexcept : exprtk::igeneric_function<T>("T|T") {}
+
+			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			{
+				tempSParams.push_back("moveup");
+				const float step = scalar_t(parameters[0])();
+				tempSParams.push_back(std::to_string(step));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct moveDown : public exprtk::igeneric_function<T>
+		{
+			moveDown() noexcept : exprtk::igeneric_function<T>("T|T") {}
+
+			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			{
+				tempSParams.push_back("movedown");
+				const float step = scalar_t(parameters[0])();
+				tempSParams.push_back(std::to_string(step));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct moveLeft : public exprtk::igeneric_function<T>
+		{
+			moveLeft() noexcept : exprtk::igeneric_function<T>("T|T") {}
+
+			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			{
+				tempSParams.push_back("moveleft");
+				const float step = scalar_t(parameters[0])();
+				tempSParams.push_back(std::to_string(step));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct moveRight : public exprtk::igeneric_function<T>
+		{
+			moveRight() noexcept : exprtk::igeneric_function<T>("T|T") {}
+
+			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			{
+				tempSParams.push_back("moveright");
+				const float step = scalar_t(parameters[0])();
+				tempSParams.push_back(std::to_string(step));
+				return 0;
+			}
+		};
 	};
 }

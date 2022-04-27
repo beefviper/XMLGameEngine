@@ -55,6 +55,11 @@ namespace xge
 			}
 		};
 
+		if (f.collisionData.group > 0)
+		{
+			o << ", group=" << f.collisionData.group;
+		}
+
 		printCollisionData(f.collisionData.top, "top");
 		printCollisionData(f.collisionData.bottom, "bottom");
 		printCollisionData(f.collisionData.left, "left");

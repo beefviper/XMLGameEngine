@@ -30,6 +30,7 @@ namespace xge
 	struct RawCollisionData
 	{
 		bool enabled{ false };
+		bool group{ false };
 		std::string top;
 		std::string bottom;
 		std::string left;
@@ -40,6 +41,7 @@ namespace xge
 	struct CollisionData
 	{
 		bool enabled{ false };
+		int group{ 0 };
 		std::vector<std::string> top;
 		std::vector<std::string> bottom;
 		std::vector<std::string> left;

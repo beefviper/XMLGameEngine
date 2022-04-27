@@ -102,9 +102,11 @@ namespace xge
 
 			const auto* xc_collision = xc_vel->getNextElementSibling();
 			std::string xc_collision_enabled = getAttributeByName(xc_collision, "enabled");
+			std::string xc_collision_group = getAttributeByName(xc_collision, "group");
 
 			RawCollisionData xc_collision_data;
 			xc_collision_data.enabled = (xc_collision_enabled == "true") ? true : false;
+			xc_collision_data.group = (xc_collision_group == "true") ? true : false;
 			xc_collision_data.top = getAttributeByName(xc_collision, "top");
 			xc_collision_data.bottom = getAttributeByName(xc_collision, "bottom");
 			xc_collision_data.left = getAttributeByName(xc_collision, "left");

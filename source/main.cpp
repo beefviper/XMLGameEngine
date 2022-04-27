@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 	xge::Game game{ filename };
 	
 	game.printGame();
-	game.setCurrentState(0);
+	game.setCurrentState(2);
 
 	xge::Engine engine(game);
 	engine.loop();
