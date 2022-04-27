@@ -51,6 +51,7 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 		"games/pong.xml"
 		"games/pong_full.xml"
 		"games/breakout.xml"
+		"games/spaceinvaders.xml"
 		"games/assets/tuffy.ttf"
 		"games/assets/xmlgameengine.xsd"
 		"games/assets/paddle.jpg")

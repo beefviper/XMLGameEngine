@@ -11,7 +11,7 @@
 
 int main(int argc, char* argv[])
 {
-	std::string filename{ "games/breakout.xml" };
+	std::string filename{ "games/spaceinvaders.xml" };
 
 	if (argc == 2)
 	{

@@ -242,6 +242,26 @@ namespace xge
 					}
 					colIter++;
 				}
+				else if (*colIter == "moveup")
+				{
+					colIter++;
+
+					if (object.collisionData.group > 0)
+					{
+						for (auto& obj : objects)
+						{
+							if (obj.collisionData.group == object.collisionData.group)
+							{
+								obj.position.y -= std::stoi(*colIter);
+							}
+						}
+					}
+					else
+					{
+						object.position.y -= std::stoi(*colIter);
+					}
+					colIter++;
+				}
 				else if (*colIter == "movedown")
 				{
 					colIter++;
@@ -261,6 +281,46 @@ namespace xge
 						object.position.y += std::stoi(*colIter);
 					}
 					colIter++;
+				}
+				else if (*colIter == "moveleft")
+				{
+					colIter++;
+
+					if (object.collisionData.group > 0)
+					{
+						for (auto& obj : objects)
+						{
+							if (obj.collisionData.group == object.collisionData.group)
+							{
+								obj.position.x -= std::stoi(*colIter);
+							}
+						}
+					}
+					else
+					{
+						object.position.x -= std::stoi(*colIter);
+					}
+					colIter++;
+				}
+				else if (*colIter == "moveright")
+				{
+				colIter++;
+
+				if (object.collisionData.group > 0)
+				{
+					for (auto& obj : objects)
+					{
+						if (obj.collisionData.group == object.collisionData.group)
+						{
+							obj.position.x += std::stoi(*colIter);
+						}
+					}
+				}
+				else
+				{
+					object.position.x += std::stoi(*colIter);
+				}
+				colIter++;
 				}
 			}
 		}
