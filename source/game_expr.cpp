@@ -80,7 +80,14 @@ namespace xge
 					object.spriteParams = tempSpriteParams;
 
 					object.name = rawObject.name;
+					object.objClass = rawObject.objClass;
 					object.src = rawObject.src;
+
+					if (rawObject.objClass == "projectile")
+					{
+						rawObject.isVisible = false;
+					}
+					
 					object.isVisible = rawObject.isVisible;
 
 					object.position.x = static_cast<float>(gridX);

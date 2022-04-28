@@ -73,6 +73,7 @@
                     </xs:element>
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="class" type="xs:string" use="optional" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
@@ -90,7 +91,7 @@
                           <xs:element maxOccurs="unbounded" name="show">
                             <xs:complexType>
                               <xs:attribute name="object" type="xs:string" use="required" />
-                            </xs:complexType>
+						  </xs:complexType>
                           </xs:element>
                         </xs:sequence>
                       </xs:complexType>

@@ -85,6 +85,7 @@ namespace xge
 		while (xc_object != nullptr)
 		{
 			std::string xc_obj_name = getAttributeByName(xc_object, "name");
+			std::string xc_obj_class = getAttributeByName(xc_object, "class");
 
 			const auto* xc_sprite = xc_object->getFirstElementChild();
 			std::string xc_sprite_src = getAttributeByName(xc_sprite, "src");
@@ -132,6 +133,7 @@ namespace xge
 
 			RawObject rawObject{};
 			rawObject.name = xc_obj_name;
+			rawObject.objClass = xc_obj_class;
 			rawObject.src = xc_sprite_src;
 			rawObject.action = xc_action_map;
 			rawObject.rawCollisionData = xc_collision_data;

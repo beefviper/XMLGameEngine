@@ -71,6 +71,7 @@ namespace xge
 	struct RawObject
 	{
 		std::string name;
+		std::string objClass;
 		std::string src;
 		bool isVisible{ true };
 		Vector2str rawPosition;
@@ -84,6 +85,7 @@ namespace xge
 	struct Object
 	{
 		std::string name;
+		std::string objClass;
 		std::string src;
 		bool isVisible{ true };
 		sf::Vector2f position;
