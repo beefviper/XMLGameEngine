@@ -103,10 +103,18 @@ namespace xge
 		return *result;
 	}
 
-	float& Game::getVariable(const std::string& name)
+	float Game::getVariable(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(variables), std::end(variables), [&](std::pair<const std::string, float>& var) { return var.first == name; });
-		return result->second;
+		
+		if (result == variables.end())
+		{
+			return 0;
+		}
+		else
+		{
+			return result->second;
+		}
 	}
 
 	State Game::getCurrentState(void)

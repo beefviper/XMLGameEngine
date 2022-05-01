@@ -33,7 +33,7 @@ namespace xge
 		WindowDesc& getWindowDesc(void) noexcept;
 		bool isShown(Object& object);
 		Object& getObject(const std::string& name);
-		float& getVariable(const std::string& name);
+		float getVariable(const std::string& name);
 		State getCurrentState(void);
 		std::vector<Object>& getCurrentObjects(void);
 
