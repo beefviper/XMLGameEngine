@@ -62,8 +62,8 @@
       </shows>
       <inputs>
         <input button="space" action="state.paused" />
-        <input button="left" action="player.action.left" />
-        <input button="right" action="player.action.right" />
+        <input button="left" action="action.player.left" />
+        <input button="right" action="action.player.right" />
       </inputs>
     </state>
     <state name="paused">
