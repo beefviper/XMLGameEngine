@@ -75,10 +75,10 @@
         <show object="score2" />
       </shows>
       <inputs>
-        <input button="q" action="action.paddle1.up" />
-        <input button="z" action="action.paddle1.down" />
-        <input button="up" action="action.paddle2.up" />
-        <input button="down" action="action.paddle2.down" />
+        <input button="q" action="action('paddle1', 'up')" />
+        <input button="z" action="action('paddle1', 'down')" />
+        <input button="up" action="action('paddle2', 'up')" />
+        <input button="down" action="action('paddle', 'down')" />
       </inputs>
     </state>
   </states>

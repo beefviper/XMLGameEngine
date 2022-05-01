@@ -42,8 +42,8 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="space" action="state.playing" />
-        <input button="s" action="state.settings" />
+        <input button="space" action="state('playing')" />
+        <input button="s" action="state('settings')" />
       </inputs>
     </state>
     <state name="settings">
@@ -51,7 +51,7 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="escape" action="state.mainmenu" />
+        <input button="escape" action="state('mainmenu')" />
       </inputs>
     </state>
     <state name="playing">
@@ -61,9 +61,9 @@
         <show object="bricks" />
       </shows>
       <inputs>
-        <input button="space" action="state.paused" />
-        <input button="left" action="action.player.left" />
-        <input button="right" action="action.player.right" />
+        <input button="space" action="state('paused')" />
+        <input button="left" action="action('player', 'left')" />
+        <input button="right" action="action('player', 'right')" />
       </inputs>
     </state>
     <state name="paused">
@@ -71,7 +71,7 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="space" action="state.playing" />
+        <input button="space" action="state('playing')" />
       </inputs>
     </state>
   </states>
