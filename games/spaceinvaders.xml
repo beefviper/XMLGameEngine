@@ -27,7 +27,7 @@
       <actions>
         <action name="left" value="move.left(step)" />
         <action name="right" value="move.right(step)" />
-        <action name ="gun" value="fire('bullet')"/>
+        <action name ="gun" value="move.fire('bullet')"/>
       </actions>				
     </object>
     <object name="bricks">
@@ -43,8 +43,8 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input action="state.playing" button="enter" />
-        <input action="state.settings" button="s" />
+        <input button="enter" action="state.playing" />
+        <input button="s" action="state.settings" />
       </inputs>
     </state>
     <state name="settings">
@@ -52,7 +52,7 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input action="state.mainmenu" button="escape" />
+        <input button="escape" action="state.mainmenu" />
       </inputs>
     </state>
     <state name="playing">
@@ -62,10 +62,10 @@
         <show object="bricks" />
       </shows>
       <inputs>
-        <input action="state.paused" button="p" />
-        <input action="player.action.left" button="left" />
-        <input action="player.action.right" button="right" />
-        <input action="player.action.gun" button="space" />
+        <input button="p" action="state.paused" />
+        <input button="left" action="player.action.left" />
+        <input button="right" action="player.action.right" />
+        <input button="space" action="player.action.gun" />
       </inputs>
     </state>
     <state name="paused">
@@ -73,7 +73,7 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input action="state.playing" button="p" />
+        <input button="p" action="state.playing" />
       </inputs>
     </state>
   </states>

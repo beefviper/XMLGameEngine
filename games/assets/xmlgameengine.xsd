@@ -101,8 +101,8 @@
                         <xs:sequence>
                           <xs:element maxOccurs="unbounded" name="input">
                             <xs:complexType>
-                              <xs:attribute name="action" type="xs:string" use="required" />
                               <xs:attribute name="button" type="xs:string" use="required" />
+                              <xs:attribute name="action" type="xs:string" use="required" />
                             </xs:complexType>
                           </xs:element>
                         </xs:sequence>
