@@ -89,12 +89,12 @@ namespace xge
 		}
 	}
 
-	void Engine::execute_action(Game& game, sf::Event& event, PairStringString& input, bool keyPressed)
+	void Engine::execute_action(Game& game, sf::Event& event, PairStringVectorString& input, bool keyPressed)
 	{
-		if (input.second == sfmlKeyToString(event.key.code))
+		if (input.first == sfmlKeyToString(event.key.code))
 		{
-			std::string aObject = getObjectFromInput(input);
-			std::string aCommand = getCommandFromInput(input);
+			std::string aObject = input.second.at(0);
+			std::string aCommand = input.second.at(1);
 
 			if (aObject == "state")
 			{
@@ -105,15 +105,19 @@ namespace xge
 			}
 			else if (&game.getObject(aObject) != nullptr)
 			{
-				std::string aAction = game.getObject(aObject).action[aCommand];
-				auto aStep = getValueFromAction(aAction);
-
-				if (!keyPressed)
+				std::string aAction = game.getObject(aObject).action[aCommand].at(0);
+				
+				if (aAction == "moveleft" || aAction == "moveright" || aAction == "moveup" || aAction == "movedown")
 				{
-					aStep = 0;
-				}
+					auto aStep = std::stof(game.getObject(aObject).action[aCommand].at(1));
 
-				move(game.getObject(aObject), aCommand, aStep);
+					if (!keyPressed)
+					{
+						aStep = 0;
+					}
+
+					move(game.getObject(aObject), aCommand, aStep);
+				}
 			}
 		}
 	}
@@ -140,32 +144,5 @@ namespace xge
 	void Engine::move(Object& object, std::string direction, float step)
 	{
 		move(object, mapDirection[direction], step);
-	}
-
-	std::string Engine::getObjectFromInput(PairStringString input)
-	{
-		constexpr auto sStart = 0;
-		const auto sEnd = input.first.find(".");
-
-		return input.first.substr(sStart, sEnd);
-	}
-
-	std::string Engine::getCommandFromInput(PairStringString input)
-	{
-		const auto sStart = input.first.rfind('.') + 1;
-		const auto sEnd = input.first.length();
-		const auto sLength = sEnd - sStart;
-
-		return input.first.substr(sStart, sLength);
-	}
-
-	float Engine::getValueFromAction(std::string action)
-	{
-		const auto sStart = action.find("(") + 1;
-		const auto sEnd = action.find(")");
-		const auto sLength = sEnd - sStart;
-		auto sVar = action.substr(sStart, sLength);
-
-		return game.getVariable(sVar);
 	}
 }

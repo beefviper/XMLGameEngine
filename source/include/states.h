@@ -12,14 +12,25 @@
 
 namespace xge
 {
-	class State
+	class RawState
 	{
 	public:
-		void init(const std::string& name, const std::vector<std::string>& show, const std::map<std::string, std::string> &input);
-
 		std::string name;
 		std::vector<std::string> show;
 		std::map<std::string, std::string> input;
+
+		friend std::ostream& operator<<(std::ostream& o, RawState const& f);
+
+	private:
+
+	};
+
+	class State
+	{
+	public:
+		std::string name;
+		std::vector<std::string> show;
+		std::map<std::string, std::vector<std::string>> input;
 
 		friend std::ostream& operator<<(std::ostream& o, State const& f);
 

@@ -34,7 +34,8 @@ namespace xge
 		~game_xml();
 
 		void init(std::string& filename, WindowDesc& windowDesc,
-			std::map<std::string, float>& variables, std::vector<State>& states,
+			std::map<std::string, float>& variables,
+			std::vector<RawState>& rawStates,
 			std::vector<RawObject>& rawObjects);
 
 		xc::XercesDOMParser* domParser = nullptr;

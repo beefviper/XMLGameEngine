@@ -70,7 +70,7 @@ namespace xge
 
 		for (auto& action : f.action)
 		{
-			o << "\taction=" << action.first << ", value=" << action.second << '\n';
+			o << "\taction=" << action.first << ", value=" << action.second.at(0) << ( action.second.size() > 1 ? action.second.at(1) : "") << '\n';
 		}
 
 		return o;

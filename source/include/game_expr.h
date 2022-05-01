@@ -24,7 +24,8 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		void init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states,
+		void init(WindowDesc& windowDesc, std::map<std::string, float>& variables,
+			std::vector<RawState>& rawStates, std::vector<State>& states,
 			std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
 
 		exprtk::symbol_table<float> symbolTable;
@@ -34,6 +35,9 @@ namespace xge
 		float evaluateString(const RawObject& rawObject, const std::string& input_string);
 		std::vector<std::string> processData(const RawObject& rawObject, const std::string& input_string);
 		xge::GridData setGridXY(std::vector<std::string>& tempSpriteParams);
+
+		float evaluateString(const RawState& rawState, const std::string& input_string);
+		std::vector<std::string> processData(const RawState& rawState, const std::string& input_string);
 
 		static inline std::vector<std::string> tempSParams;
 
@@ -318,6 +322,44 @@ namespace xge
 				tempSParams.push_back("moveright");
 				const float step = scalar_t(parameters[0])();
 				tempSParams.push_back(std::to_string(step));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct state : public exprtk::igeneric_function<T>
+		{
+			state() noexcept : exprtk::igeneric_function<T>("S|S") {}
+
+			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			{
+				tempSParams.push_back("state");
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct action : public exprtk::igeneric_function<T>
+		{
+			action() noexcept : exprtk::igeneric_function<T>("SS|SS") {}
+
+			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[1])));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct fire : public exprtk::igeneric_function<T>
+		{
+			fire() noexcept : exprtk::igeneric_function<T>("S|S") {}
+
+			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			{
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 				return 0;
 			}
 		};
