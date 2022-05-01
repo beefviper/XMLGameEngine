@@ -20,7 +20,7 @@ namespace xge
 	}
 
 	void game_xml::init(std::string& filename, WindowDesc& windowDesc,
-		std::map<std::string, float>& variables, std::vector<State>& states,
+		std::map<std::string, float>& variables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects)
 	{
 		domParser->setErrorHandler(&parserErrorHandler);
@@ -169,17 +169,19 @@ namespace xge
 
 			while (xc_input != nullptr)
 			{
-				std::string xc_input_action = getAttributeByName(xc_input, "action");
 				std::string xc_input_button = getAttributeByName(xc_input, "button");
+				std::string xc_input_action = getAttributeByName(xc_input, "action");
 
-				xc_inputs_map[xc_input_action] = xc_input_button;
+				xc_inputs_map[xc_input_button] = xc_input_action;
 
 				xc_input = xc_input->getNextElementSibling();
 			}
 
-			State state;
-			state.init(xc_state_name, xc_show_vec, xc_inputs_map);
-			states.push_back(state);
+			RawState rawState{};
+			rawState.name = xc_state_name;
+			rawState.show = xc_show_vec;
+			rawState.input = xc_inputs_map;
+			rawStates.push_back(rawState);
 
 			xc_state = xc_state->getNextElementSibling();
 		}

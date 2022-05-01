@@ -52,6 +52,7 @@ namespace xge
 		game_sfml sfml;
 
 		std::map<std::string, float> variables;
+		std::vector<RawState> rawStates;
 		std::vector<State> states;
 		std::vector<RawObject> rawObjects;
 		std::vector<Object> objects;

@@ -7,7 +7,8 @@
 
 namespace xge
 {
-	void game_expr::init(WindowDesc& windowDesc, std::map<std::string, float>& variables, std::vector<State>& states,
+	void game_expr::init(WindowDesc& windowDesc, std::map<std::string, float>& variables,
+		std::vector<RawState>& rawStates, std::vector<State>& states,
 		std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
 	{
 		// custom functions added to exprtk
@@ -27,6 +28,9 @@ namespace xge
 		moveDown<float> moveDownFloat{};
 		moveLeft<float> moveLeftFloat{};
 		moveRight<float> moveRightFloat{};
+		state<float> stateFloat{};
+		action<float> actionFloat{};
+		fire<float> fireFloat{};
 
 		// add functions to symbol table
 		symbolTable.add_function("random.number", randomNumberFloat);
@@ -45,6 +49,9 @@ namespace xge
 		symbolTable.add_function("move.down", moveDownFloat);
 		symbolTable.add_function("move.left", moveLeftFloat);
 		symbolTable.add_function("move.right", moveRightFloat);
+		symbolTable.add_function("state", stateFloat);
+		symbolTable.add_function("action", actionFloat);
+		symbolTable.add_function("fire", fireFloat);
 
 		// add constants to symbol table
 		symbolTable.add_constant("window.top", 0);
@@ -110,7 +117,11 @@ namespace xge
 					object.collisionData.right = processData(rawObject, rawObject.rawCollisionData.right);
 					object.collisionData.basic = processData(rawObject, rawObject.rawCollisionData.basic);
 
-					object.action = rawObject.action;
+					//object.action = rawObject.action;
+					for (auto& rawAction : rawObject.action)
+					{
+						object.action[rawAction.first] = processData(rawObject, rawAction.second);
+					}
 
 					object.renderTexture = std::make_unique<sf::RenderTexture>();
 					object.sprite = std::make_unique<sf::Sprite>();
@@ -122,6 +133,21 @@ namespace xge
 			if (rawObject.rawCollisionData.group) {
 				groupNum++;
 			}
+		}
+
+		for (auto& rawState : rawStates)
+		{
+			State state{};
+
+			state.name = rawState.name;
+			state.show = rawState.show;
+
+			for (auto& rawAction : rawState.input)
+			{
+				state.input[rawAction.first] = processData(rawState, rawAction.second);
+			}
+
+			states.push_back(state);
 		}
 	}
 
@@ -143,6 +169,28 @@ namespace xge
 		if (input_string != "")
 		{
 			evaluateString(rawObject, input_string);
+		}
+		return tempSParams;
+	}
+
+	float game_expr::evaluateString(const RawState& rawState, const std::string& input_string)
+	{
+		if (!parser.compile(input_string, expression))
+		{
+			std::cout << "Error: " << parser.error().c_str()
+				<< " in object named '" << rawState.name << "'" << '\n';
+			std::cout << "Failed to parse: \"" << input_string << "\"\n";
+			exit(EXIT_FAILURE);
+		}
+		return expression.value();
+	}
+
+	std::vector<std::string> game_expr::processData(const RawState& rawState, const std::string& input_string)
+	{
+		tempSParams.clear();
+		if (input_string != "")
+		{
+			evaluateString(rawState, input_string);
 		}
 		return tempSParams;
 	}

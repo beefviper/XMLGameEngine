@@ -94,7 +94,7 @@ namespace xge
 		sf::Vector2f velocityOriginal;
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
-		std::map<std::string, std::string> action;
+		std::map<std::string, std::vector<std::string>> action;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
 		std::unique_ptr<sf::Sprite> sprite = nullptr;
 

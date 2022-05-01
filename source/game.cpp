@@ -10,8 +10,8 @@ namespace xge
 	Game::Game(const std::string& game) :
 		filename(game)
 	{
-		xml.init(filename, windowDesc, variables, states, rawObjects);
-		expr.init(windowDesc, variables, states, rawObjects, objects);
+		xml.init(filename, windowDesc, variables, rawStates, rawObjects);
+		expr.init(windowDesc, variables, rawStates, states, rawObjects, objects);
 		sfml.init(objects);
 	}
 

@@ -7,11 +7,20 @@
 
 namespace xge
 {
-	void State::init(const std::string& name, const std::vector<std::string>& show, const std::map<std::string, std::string>& input)
+	std::ostream& operator<<(std::ostream& o, const RawState& f)
 	{
-		this->name = name;
-		this->show = show;
-		this->input = input;
+		o << "state: ";
+		o << "name=" << f.name << ", show=";
+		for (auto& show : f.show)
+		{
+			o << show << (show != f.show.back() ? ", " : "\n");
+		}
+		for (auto& input : f.input)
+		{
+			o << "       button=" << input.first << ", action=" << input.second << '\n';
+		}
+
+		return o;
 	}
 
 	std::ostream& operator<<(std::ostream& o, const State& f)
@@ -24,7 +33,7 @@ namespace xge
 		}
 		for (auto& input : f.input)
 		{
-			o << "       action=" << input.first << ", button=" << input.second << '\n';
+			o << "       button=" << input.first << ", action=" << input.second.at(0) << '\n';
 		}
 
 		return o;
