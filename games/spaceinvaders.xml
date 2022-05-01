@@ -17,7 +17,7 @@
       <sprite src="shape.circle(ball.radius)" />
       <position x="0" y="0" />
       <velocity x="0" y="0" />
-      <collision enabled="true" top="bounce()" bottom="bounce()" left="bounce()" right="bounce()" basic="bounce()" />
+      <collision enabled="true" top="die()" bottom="die()" left="die()" right="die()" basic="die()" />
     </object>
     <object name="player">
       <sprite src="shape.rectangle(width,height)" />
@@ -57,7 +57,7 @@
     </state>
     <state name="playing">
       <shows>
-        <show object="ball" />
+        <show object="bullet" />
         <show object="player" />
         <show object="bricks" />
       </shows>

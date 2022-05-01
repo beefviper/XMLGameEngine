@@ -359,6 +359,7 @@ namespace xge
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
+				tempSParams.push_back("fire");
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 				return 0;
 			}
