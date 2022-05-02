@@ -128,8 +128,6 @@ namespace xge
 					currentObj.position.y = game.getObject(aObject).sprite.get()->getGlobalBounds().top;
 					currentObj.velocity.y = -2;
 					currentObj.isVisible = true;
-
-					int x = 0;
 				}
 			}
 		}
