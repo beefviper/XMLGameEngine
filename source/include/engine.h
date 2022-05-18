@@ -40,10 +40,6 @@ namespace xge
 		void move(Object& object, Engine::Direction direction, float step) noexcept;
 		void move(Object& object, std::string direction, float step);
 
-		//std::string getObjectFromInput(PairStringString input);
-		//std::string getCommandFromInput(PairStringString input);
-		//float getValueFromAction(std::string action);
-
 		std::map<std::string, Direction> mapDirection
 		{
 			{"up", Direction::Up},
