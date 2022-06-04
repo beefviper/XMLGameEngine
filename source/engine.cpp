@@ -28,9 +28,12 @@ namespace xge
 
 	void Engine::loop(void)
 	{
+		std::cout << "Current frame time: " << std::setprecision(4) << std::setfill(' ') << "    ";
+
 		while (window.isOpen())
 		{
-			//std::cout << clock.restart().asMilliseconds() << " ";
+			std::cout << "\b\b\b\b";
+			std::cout << std::setw(4) << clock.restart().asMilliseconds();
 
 			sf::Event event;
 			while (window.pollEvent(event))
