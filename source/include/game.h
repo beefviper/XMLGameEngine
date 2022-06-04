@@ -39,6 +39,9 @@ namespace xge
 
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
+		void pushState(std::string name);
+		void popState(void);
+
 		void setObjectParam(const std::string& name, const std::string& param, const float& value);
 
 		void updateGroupOfObjects(Object& object, std::string side);

@@ -12,6 +12,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Window/Keyboard.hpp>
+#include <SFML/System/Clock.hpp>
 
 #include <string>
 #include <memory>
@@ -34,6 +35,7 @@ namespace xge
 		Game& game;
 		sf::RenderWindow window;
 		enum class Direction { None, Up, Down, Left, Right };
+		sf::Clock clock;
 
 		std::map<sf::Keyboard::Key, bool> isKeyPressed;
 		void execute_action(Game& game, sf::Event& event, PairStringVectorString& input, bool keyPressed = true);

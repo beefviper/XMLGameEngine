@@ -87,8 +87,8 @@
         <show object="logo" />
       </shows>
       <inputs>
-        <input button="space" action="state.playing" />
-		<input button="s" action="state.settings" />
+        <input button="space" action="state('playing')" />
+		<input button="s" action="state('settings')" />
       </inputs>
     </state>
     <!-- settings -->
@@ -97,7 +97,7 @@
         <show object="logo" />
       </shows>
       <inputs>
-        <input button="escape" action="state.mainmenu" />
+        <input button="escape" action="state()" />
       </inputs>
     </state>
     <!-- playing -->
@@ -125,7 +125,7 @@
         <show object="logo" />
       </shows>
       <inputs>
-        <input button="space" action="state('playing')"  />
+        <input button="space" action="state()"  />
       </inputs>
     </state>
   </states>

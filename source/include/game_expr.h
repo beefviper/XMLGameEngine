@@ -329,12 +329,20 @@ namespace xge
 		template <typename T>
 		struct state : public exprtk::igeneric_function<T>
 		{
-			state() noexcept : exprtk::igeneric_function<T>("S|S") {}
+			state() noexcept : exprtk::igeneric_function<T>("S|S|Z") {}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
-				tempSParams.push_back("state");
-				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+				if (parameters.size() > 0)
+				{
+					tempSParams.push_back("state");
+					tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+				}
+				else
+				{
+					tempSParams.push_back("state");
+					tempSParams.push_back("pop");
+				}
 				return 0;
 			}
 		};

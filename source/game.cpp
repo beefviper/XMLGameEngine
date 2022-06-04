@@ -138,6 +138,16 @@ namespace xge
 		currentState.push(*result);
 	}
 
+	void Game::pushState(std::string name) {
+		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
+		currentState.push(*result);
+	}
+
+	void Game::popState(void)
+	{
+		currentState.pop();
+	}
+
 	void Game::setObjectParam(const std::string& name, const std::string& param, const float& value)
 	{
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });

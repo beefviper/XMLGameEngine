@@ -36,6 +36,18 @@
       <velocity x="3" y="0" />
       <collision enabled="true" group="true" left="bounce();move.down(10)" right="bounce();move.down(10)" basic="die()" />
     </object>
+    <object name="settings">
+      <sprite src="text('settings',128,'color.white')" />
+      <position x="window.width.center" y="window.height.center" />
+      <velocity x="0" y="0" />
+      <collision enabled="false" />
+    </object>
+    <object name="paused">
+      <sprite src="text('paused',128,'color.white')" />
+      <position x="window.width.center" y="window.height.center" />
+      <velocity x="0" y="0" />
+      <collision enabled="false" />
+    </object>
   </objects>	
   <states>
     <state name="mainmenu">
@@ -49,10 +61,11 @@
     </state>
     <state name="settings">
       <shows>
+        <show object="settings" />
         <show object="player" />
       </shows>
       <inputs>
-        <input button="escape" action="state('mainmenu')" />
+        <input button="escape" action="state()" />
       </inputs>
     </state>
     <state name="playing">
@@ -66,14 +79,16 @@
         <input button="left" action="action('player', 'left')" />
         <input button="right" action="action('player', 'right')" />
         <input button="space" action="action('player', 'gun')" />
+        <input button="escape" action="state('paused')" />
       </inputs>
     </state>
     <state name="paused">
       <shows>
+        <show object="paused" />
         <show object="player" />
       </shows>
       <inputs>
-        <input button="p" action="state('playing')" />
+        <input button="p" action="state()" />
       </inputs>
     </state>
   </states>

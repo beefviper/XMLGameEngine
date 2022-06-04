@@ -22,12 +22,16 @@ namespace xge
 
 		window.create(videoMode, name, windowMode);
 		window.setFramerateLimit(windowDesc.framerate);
+
+		game.setCurrentState(0);
 	}
 
 	void Engine::loop(void)
 	{
 		while (window.isOpen())
 		{
+			//std::cout << clock.restart().asMilliseconds() << " ";
+
 			sf::Event event;
 			while (window.pollEvent(event))
 			{
@@ -100,7 +104,14 @@ namespace xge
 			{
 				if (keyPressed)
 				{
-					game.setCurrentState(aCommand);
+					if (aCommand == "pop")
+					{
+						game.popState();
+					}
+					else
+					{
+						game.pushState(aCommand);
+					}
 				}
 			}
 			else if (&game.getObject(aObject) != nullptr)
