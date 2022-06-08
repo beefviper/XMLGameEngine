@@ -58,7 +58,7 @@
 				<action name="down" value="move.down(step)" />
 			</actions>
 			<variables>
-				<variable score="0" />
+				<variable name="score" value="0" />
 			</variables>
 		</object>
 		<!-- score1 -->
