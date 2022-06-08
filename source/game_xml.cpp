@@ -93,7 +93,7 @@ namespace xge
 			const auto* xc_vel = xc_pos->getNextElementSibling();
 			const auto* xc_collisions = xc_vel->getNextElementSibling();
 			const auto* xc_actions = xc_collisions->getNextElementSibling();
-			
+
 			// load sprite
 			std::string xc_sprite_src = getAttributeByName(xc_sprite, "src");
 
@@ -114,6 +114,9 @@ namespace xge
 
 			RawCollisionData xc_collision_data;
 
+			xc_collision_data.enabled = (xc_collision_enabled == "true") ? true : false;
+			xc_collision_data.group = (xc_collision_group == "true") ? true : false;
+
 			if (xc_collisions)
 			{
 				auto xc_collision = xc_collisions->getFirstElementChild();
@@ -122,8 +125,6 @@ namespace xge
 				{
 					if (auto col_edge = getAttributeByName(xc_collision, "edge"); col_edge != "")
 					{
-						xc_collision_data.enabled = (xc_collision_enabled == "true") ? true : false;
-						xc_collision_data.group = (xc_collision_group == "true") ? true : false;
 
 						auto col_action = getAttributeByName(xc_collision, "action");
 
@@ -161,7 +162,7 @@ namespace xge
 							xc_collision_data.right = col_action;
 						}
 					}
-					
+
 					// TODO: add code to handle class and object attributes in collision tag
 
 					if (auto col_basic = getAttributeByName(xc_collision, "basic"); col_basic != "")
