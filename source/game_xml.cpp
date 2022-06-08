@@ -101,7 +101,7 @@ namespace xge
 			Vector2str position{ xc_pos_x, xc_pos_y };
 			Vector2str velocity{ xc_vel_x, xc_vel_y };
 
-			// TODO: fix loading of collision data to match new format
+			// load collisions
 			const auto* xc_collisions = xc_vel->getNextElementSibling();
 			std::string xc_collision_enabled = getAttributeByName(xc_collisions, "enabled");
 			std::string xc_collision_group = getAttributeByName(xc_collisions, "group");
@@ -156,6 +156,8 @@ namespace xge
 						}
 					}
 					
+					// TODO: add code to handle class and object attributes in collision tag
+
 					if (auto col_basic = getAttributeByName(xc_collision, "basic"); col_basic != "")
 					{
 						xc_collision_data.basic = getAttributeByName(xc_collision, "action");
