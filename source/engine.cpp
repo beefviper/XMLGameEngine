@@ -32,8 +32,8 @@ namespace xge
 
 		while (window.isOpen())
 		{
-			std::cout << "\b\b\b\b";
-			std::cout << std::setw(4) << clock.restart().asMilliseconds();
+			std::cout << "\b\b\b\b\b\b";
+			std::cout << std::setw(4) << clock.restart().asMilliseconds() << "ms";
 
 			sf::Event event;
 			while (window.pollEvent(event))
