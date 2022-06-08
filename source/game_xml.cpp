@@ -87,14 +87,21 @@ namespace xge
 			std::string xc_obj_name = getAttributeByName(xc_object, "name");
 			std::string xc_obj_class = getAttributeByName(xc_object, "class");
 
+			// find key points in object
 			const auto* xc_sprite = xc_object->getFirstElementChild();
+			const auto* xc_pos = xc_sprite->getNextElementSibling();
+			const auto* xc_vel = xc_pos->getNextElementSibling();
+			const auto* xc_collisions = xc_vel->getNextElementSibling();
+			const auto* xc_actions = xc_collisions->getNextElementSibling();
+			
+			// load sprite
 			std::string xc_sprite_src = getAttributeByName(xc_sprite, "src");
 
-			const auto* xc_pos = xc_sprite->getNextElementSibling();
+			// load position
 			std::string xc_pos_x = getAttributeByName(xc_pos, "x");
 			std::string xc_pos_y = getAttributeByName(xc_pos, "y");
 
-			const auto* xc_vel = xc_pos->getNextElementSibling();
+			// load velocity
 			std::string xc_vel_x = getAttributeByName(xc_vel, "x");
 			std::string xc_vel_y = getAttributeByName(xc_vel, "y");
 
@@ -102,7 +109,6 @@ namespace xge
 			Vector2str velocity{ xc_vel_x, xc_vel_y };
 
 			// load collisions
-			const auto* xc_collisions = xc_vel->getNextElementSibling();
 			std::string xc_collision_enabled = getAttributeByName(xc_collisions, "enabled");
 			std::string xc_collision_group = getAttributeByName(xc_collisions, "group");
 
@@ -170,7 +176,6 @@ namespace xge
 			// load actions
 			std::map<std::string, std::string> xc_action_map;
 
-			const auto* xc_actions = xc_collisions->getNextElementSibling();
 			if (xc_actions)
 			{
 				auto xc_action = xc_actions->getFirstElementChild();
