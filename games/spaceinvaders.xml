@@ -4,92 +4,100 @@
 <!-- date: Sept 18, 2020 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="assets/xmlgameengine.xsd">
-  <window name="Space Invaders" width="1024" height="768" background="color.black" fullscreen="false" framerate="60" />
-  <variables>
-    <variable name="margin" value="80" />
-    <variable name="ball.radius" value="10" />
-    <variable name="width" value="50" />
-    <variable name="height" value="50" />
-    <variable name="step" value="2" />
-  </variables>
-  <objects>
-    <object name="bullet" class="projectile">
-      <sprite src="shape.circle(ball.radius)" />
-      <position x="0" y="0" />
-      <velocity x="0" y="0" />
-      <collision enabled="true" top="die()" bottom="die()" left="die()" right="die()" basic="die()" />
-    </object>
-    <object name="player">
-      <sprite src="shape.rectangle(width,height)" />
-      <position x="window.width.center" y="window.bottom - height * 2" />
-      <velocity x="0" y="0" />
-      <collision enabled="true" left="stick()" right="stick()" />
-      <actions>
-        <action name="left" value="move.left(step)" />
-        <action name="right" value="move.right(step)" />
-        <action name ="gun" value="fire('bullet')"/>
-      </actions>				
-    </object>
-    <object name="bricks">
-      <sprite src="grid(11,5,15,15,shape.rectangle(width,height))" />
-      <position x="margin" y="margin/2" />
-      <velocity x="3" y="0" />
-      <collision enabled="true" group="true" left="bounce();move.down(10)" right="bounce();move.down(10)" basic="die()" />
-    </object>
-    <object name="settings">
-      <sprite src="text('settings',128,'color.white')" />
-      <position x="window.width.center" y="window.height.center" />
-      <velocity x="0" y="0" />
-      <collision enabled="false" />
-    </object>
-    <object name="paused">
-      <sprite src="text('paused',128,'color.white')" />
-      <position x="window.width.center" y="window.height.center" />
-      <velocity x="0" y="0" />
-      <collision enabled="false" />
-    </object>
-  </objects>	
-  <states>
-    <state name="mainmenu">
-      <shows>
-        <show object="player" />
-      </shows>
-      <inputs>
-        <input button="enter" action="state('playing')" />
-        <input button="s" action="state('settings')" />
-      </inputs>
-    </state>
-    <state name="settings">
-      <shows>
-        <show object="settings" />
-        <show object="player" />
-      </shows>
-      <inputs>
-        <input button="escape" action="state()" />
-      </inputs>
-    </state>
-    <state name="playing">
-      <shows>
-        <show object="bullet" />
-        <show object="player" />
-        <show object="bricks" />
-      </shows>
-      <inputs>
-        <input button="p" action="state('paused')" />
-        <input button="left" action="action('player', 'left')" />
-        <input button="right" action="action('player', 'right')" />
-        <input button="space" action="action('player', 'gun')" />
-        <input button="escape" action="state('paused')" />
-      </inputs>
-    </state>
-    <state name="paused">
-      <shows>
-        <show object="paused" />
-        <show object="player" />
-      </shows>
-      <inputs>
-        <input button="p" action="state()" />
-      </inputs>
-    </state>
-  </states>
+	<window name="Space Invaders" width="1024" height="768" background="color.black" fullscreen="false" framerate="60" />
+	<variables>
+		<variable name="margin" value="80" />
+		<variable name="ball.radius" value="10" />
+		<variable name="width" value="50" />
+		<variable name="height" value="50" />
+		<variable name="step" value="2" />
+	</variables>
+	<objects>
+		<object name="bullet" class="projectile">
+			<sprite src="shape.circle(ball.radius)" />
+			<position x="0" y="0" />
+			<velocity x="0" y="0" />
+			<collisions enabled="true">
+				<collision edge="all" action="die()"/>
+				<collision basic="basic" action="kill();die()"/>
+			</collisions>
+		</object>
+		<object name="player">
+			<sprite src="shape.rectangle(width,height)" />
+			<position x="window.width.center" y="window.bottom - height * 2" />
+			<velocity x="0" y="0" />
+			<collisions enabled="true">
+				<collision edge="vertical" action="stick()" />
+			</collisions>
+			<actions>
+				<action name="left" value="move.left(step)" />
+				<action name="right" value="move.right(step)" />
+				<action name ="gun" value="fire('bullet')"/>
+			</actions>
+		</object>
+		<object name="bricks">
+			<sprite src="grid(11,5,15,15,shape.rectangle(width,height))" />
+			<position x="margin" y="margin/2" />
+			<velocity x="3" y="0" />
+			<collisions enabled="true" group="true">
+				<collision edge="vertical" action="bounce();move.down(10)" />
+				<collision basic="basic" action="die()" />
+			</collisions>
+		</object>
+		<object name="settings">
+			<sprite src="text('settings',128,'color.white')" />
+			<position x="window.width.center" y="window.height.center" />
+			<velocity x="0" y="0" />
+			<collisions enabled="false" />
+		</object>
+		<object name="paused">
+			<sprite src="text('paused',128,'color.white')" />
+			<position x="window.width.center" y="window.height.center" />
+			<velocity x="0" y="0" />
+			<collisions enabled="false" />
+		</object>
+	</objects>
+	<states>
+		<state name="mainmenu">
+			<shows>
+				<show object="player" />
+			</shows>
+			<inputs>
+				<input button="enter" action="state('playing')" />
+				<input button="s" action="state('settings')" />
+			</inputs>
+		</state>
+		<state name="settings">
+			<shows>
+				<show object="settings" />
+				<show object="player" />
+			</shows>
+			<inputs>
+				<input button="escape" action="state()" />
+			</inputs>
+		</state>
+		<state name="playing">
+			<shows>
+				<show object="bullet" />
+				<show object="player" />
+				<show object="bricks" />
+			</shows>
+			<inputs>
+				<input button="p" action="state('paused')" />
+				<input button="left" action="action('player', 'left')" />
+				<input button="right" action="action('player', 'right')" />
+				<input button="space" action="action('player', 'gun')" />
+				<input button="escape" action="state('paused')" />
+			</inputs>
+		</state>
+		<state name="paused">
+			<shows>
+				<show object="paused" />
+				<show object="player" />
+			</shows>
+			<inputs>
+				<input button="p" action="state()" />
+			</inputs>
+		</state>
+	</states>
 </game>

@@ -53,12 +53,14 @@
 												<xs:sequence minOccurs="0">
 													<xs:element maxOccurs="unbounded" name="collision">
 														<xs:complexType>
-															<xs:attribute name="edge" type="xs:string" use="required" />
+															<xs:attribute name="edge" type="xs:string" use="optional" />
+															<xs:attribute name="basic" type="xs:string" use="optional" />
 															<xs:attribute name="action" type="xs:string" use="required" />
 														</xs:complexType>
 													</xs:element>
 												</xs:sequence>
 												<xs:attribute name="enabled" type="xs:boolean" use="required" />
+												<xs:attribute name="group" type="xs:boolean" use="optional" />
 											</xs:complexType>
 										</xs:element>
 										<xs:element minOccurs="0" name="actions">

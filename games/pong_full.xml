@@ -4,129 +4,140 @@
 <!-- date: Sept 18, 2020 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="assets/xmlgameengine.xsd">
-  <!-- window -->
-  <window name="Pong" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
-  <!-- variables -->
-  <variables>
-    <variable name="margin" value="30" />
-    <variable name="text.size" value="256" />
-    <variable name="logo.radius" value="100" />
-    <variable name="ball.radius" value="10" />
-    <variable name="width" value="30" />
-    <variable name="height" value="150" />
-    <variable name="step" value="2" />
-  </variables>
-  <!-- objects -->
-  <objects>
-    <!-- title -->
-    <object name="title">
-      <sprite src="text('PONG', text.size, 'color.red')" />
-      <position x="window.width.center - 350" y="margin" />
-      <velocity x="0" y="0" />
-      <collision enabled="false" />
-    </object>
-    <!-- logo -->
-    <object name="logo">
-      <sprite src="shape.circle(logo.radius,'color.green')" />
-      <position x="window.width.center - logo.radius" y="window.height.center - logo.radius" />
-      <velocity x="0" y="0" />
-      <collision enabled="false" />
-    </object>
-    <!-- ball -->
-    <object name="ball">
-      <sprite src="shape.circle(ball.radius,'color.green')" />
-      <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
-      <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
-      <collision enabled="true" top="bounce()" bottom="bounce()" left="inc('score2');reset" right="inc('score1');reset()" basic="bounce()" />
-    </object>
-    <!-- paddle1 -->
-    <object name="paddle1">
-      <sprite src="image('games/assets/paddle.jpg')" />
-      <position x="window.left + margin" y="window.height.center - height / 2" />
-      <velocity x="0" y="0" />
-      <collision enabled="true" top="stick()" bottom="stick()" />
-      <actions>
-        <action name="up" value="move.up(step)" />
-        <action name="down" value="move.down(step)" />
-      </actions>				
-    </object>
-    <!-- paddle2 -->
-    <object name="paddle2">
-      <sprite src="image('games/assets/paddle.jpg', 'flip.horizontal')" />
-      <position x="window.right - margin - width" y="window.height.center - height / 2" />
-      <velocity x="0" y="0" />
-      <collision enabled="true" top="stick()" bottom="stick()" left="stick()" right="stick()" />
-      <actions>
-        <action name="up" value="move.up(step)" />
-        <action name="down" value="move.down(step)" />
-        <action name="left" value="move.left(step)" />
-        <action name="right" value="move.right(step)" />
-      </actions>				
-    </object>
-    <!-- score1 -->
-    <object name="score1">
-      <sprite src="text('0',128,'color.blue')" />
-      <position x="window.width.center - 80" y="margin" />
-      <velocity x="0" y="0" />
-      <collision enabled="false" />
-    </object>
-    <!-- score2 -->
-    <object name="score2">
-      <sprite src="text('0',128,'color.red')" />
-      <position x="window.width.center + 50" y="margin" />
-      <velocity x="0" y="0" />
-      <collision enabled="false" />
-    </object>
-  </objects>
-  <!-- states -->
-  <states>
-    <!-- mainmenu -->
-    <state name="mainmenu">
-      <shows>
-        <show object="title" />
-        <show object="logo" />
-      </shows>
-      <inputs>
-        <input button="space" action="state('playing')" />
-		<input button="s" action="state('settings')" />
-      </inputs>
-    </state>
-    <!-- settings -->
-    <state name="settings">
-      <shows>
-        <show object="logo" />
-      </shows>
-      <inputs>
-        <input button="escape" action="state()" />
-      </inputs>
-    </state>
-    <!-- playing -->
-    <state name="playing">
-      <shows>
-        <show object="ball" />
-        <show object="paddle1" />
-        <show object="paddle2" />
-        <show object="score1" />
-        <show object="score2" />
-      </shows>
-      <inputs>
-        <input button="space" action="state('paused')" />
-		<input button="q" action="action('paddle1', 'up')" />
-		<input button="z" action="action('paddle1', 'down')" />
-		<input button="up" action="action('paddle2', 'up')" />
-		<input button="down" action="action('paddle2', 'down')" />
-		<input button="left" action="action('paddle2', 'left')" />
-		<input button="right" action="action('paddle2', 'right')" />
-      </inputs>
-    </state>
-    <!-- paused -->
-    <state name="paused">
-      <shows>
-        <show object="logo" />
-      </shows>
-      <inputs>
-        <input button="space" action="state()"  />
-      </inputs>
-    </state>
-  </states>
+	<!-- window -->
+	<window name="Pong" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
+	<!-- variables -->
+	<variables>
+		<variable name="margin" value="30" />
+		<variable name="text.size" value="256" />
+		<variable name="logo.radius" value="100" />
+		<variable name="ball.radius" value="10" />
+		<variable name="width" value="30" />
+		<variable name="height" value="150" />
+		<variable name="step" value="2" />
+	</variables>
+	<!-- objects -->
+	<objects>
+		<!-- title -->
+		<object name="title">
+			<sprite src="text('PONG', text.size, 'color.red')" />
+			<position x="window.width.center - 350" y="margin" />
+			<velocity x="0" y="0" />
+			<collisions enabled="false" />
+		</object>
+		<!-- logo -->
+		<object name="logo">
+			<sprite src="shape.circle(logo.radius,'color.green')" />
+			<position x="window.width.center - logo.radius" y="window.height.center - logo.radius" />
+			<velocity x="0" y="0" />
+			<collisions enabled="false" />
+		</object>
+		<!-- ball -->
+		<object name="ball">
+			<sprite src="shape.circle(ball.radius,'color.green')" />
+			<position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
+			<velocity x="random.range(-7,7)" y="random.range(-3,3)" />
+			<collisions enabled="true">
+				<collision edge="horizontal" action="bounce()" />
+				<collision edge="left" action="inc('score2');reset" />
+				<collision edge="right" action="inc('score1');reset()" />
+			</collisions>
+		</object>
+		<!-- paddle1 -->
+		<object name="paddle1">
+			<sprite src="image('games/assets/paddle.jpg')" />
+			<position x="window.left + margin" y="window.height.center - height / 2" />
+			<velocity x="0" y="0" />
+			<collisions enabled="true">
+				<collision edge="vertical" action="stick()" />
+			</collisions>
+			<actions>
+				<action name="up" value="move.up(step)" />
+				<action name="down" value="move.down(step)" />
+			</actions>
+		</object>
+		<!-- paddle2 -->
+		<object name="paddle2">
+			<sprite src="image('games/assets/paddle.jpg', 'flip.horizontal')" />
+			<position x="window.right - margin - width" y="window.height.center - height / 2" />
+			<velocity x="0" y="0" />
+			<collisions enabled="true">
+				<collision edge="vertical" action="stick()" />
+			</collisions>
+			<actions>
+				<action name="up" value="move.up(step)" />
+				<action name="down" value="move.down(step)" />
+				<action name="left" value="move.left(step)" />
+				<action name="right" value="move.right(step)" />
+			</actions>
+		</object>
+		<!-- score1 -->
+		<object name="score1">
+			<sprite src="text('0',128,'color.blue')" />
+			<position x="window.width.center - 80" y="margin" />
+			<velocity x="0" y="0" />
+			<collisions enabled="false" />
+		</object>
+		<!-- score2 -->
+		<object name="score2">
+			<sprite src="text('0',128,'color.red')" />
+			<position x="window.width.center + 50" y="margin" />
+			<velocity x="0" y="0" />
+			<collisions enabled="false" />
+		</object>
+	</objects>
+	<!-- states -->
+	<states>
+		<!-- mainmenu -->
+		<state name="mainmenu">
+			<shows>
+				<show object="title" />
+				<show object="logo" />
+			</shows>
+			<inputs>
+				<input button="space" action="state('playing')" />
+				<input button="s" action="state('settings')" />
+			</inputs>
+		</state>
+		<!-- settings -->
+		<state name="settings">
+			<shows>
+				<show object="logo" />
+			</shows>
+			<inputs>
+				<input button="escape" action="state()" />
+			</inputs>
+		</state>
+		<!-- playing -->
+		<state name="playing">
+			<shows>
+				<show object="ball" />
+				<show object="paddle1" />
+				<show object="paddle2" />
+				<show object="score1" />
+				<show object="score2" />
+			</shows>
+			<inputs>
+				<input button="space" action="state('paused')" />
+				<input button="q" action="action('paddle1', 'up')" />
+				<input button="z" action="action('paddle1', 'down')" />
+				<input button="up" action="action('paddle2', 'up')" />
+				<input button="down" action="action('paddle2', 'down')" />
+				<input button="left" action="action('paddle2', 'left')" />
+				<input button="right" action="action('paddle2', 'right')" />
+			</inputs>
+		</state>
+		<!-- paused -->
+		<state name="paused">
+			<shows>
+				<show object="logo" />
+			</shows>
+			<inputs>
+				<input button="space" action="state()"  />
+			</inputs>
+			<conditions>
+				<condition class="paddle" variable="score" value="15" action="state('mainmenu')" />
+			</conditions>
+		</state>
+	</states>
 </game>
