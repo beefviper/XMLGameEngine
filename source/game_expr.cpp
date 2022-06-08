@@ -67,6 +67,8 @@ namespace xge
 			symbolTable.add_constant(variable.first, variable.second);
 		}
 
+		// TODO: loop through objects add their variables to the symbolTable
+
 		// register symbol table with expression
 		expression.register_symbol_table(symbolTable);
 

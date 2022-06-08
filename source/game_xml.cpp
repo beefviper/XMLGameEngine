@@ -101,6 +101,7 @@ namespace xge
 			Vector2str position{ xc_pos_x, xc_pos_y };
 			Vector2str velocity{ xc_vel_x, xc_vel_y };
 
+			// TODO: fix loading of collision data to match new format
 			const auto* xc_collision = xc_vel->getNextElementSibling();
 			std::string xc_collision_enabled = getAttributeByName(xc_collision, "enabled");
 			std::string xc_collision_group = getAttributeByName(xc_collision, "group");
@@ -131,6 +132,8 @@ namespace xge
 				}
 			}
 
+			// TODO: add code to load variables from objects
+
 			RawObject rawObject{};
 			rawObject.name = xc_obj_name;
 			rawObject.objClass = xc_obj_class;
@@ -150,11 +153,12 @@ namespace xge
 		{
 			std::string xc_state_name = getAttributeByName(xc_state, "name");
 
+			// load shows
 			const auto* xc_shows = xc_state->getFirstElementChild();
 			auto xc_show = xc_shows->getFirstElementChild();
 
 			std::vector<std::string> xc_show_vec;
-
+						
 			while (xc_show != nullptr)
 			{
 				std::string xc_show_object = getAttributeByName(xc_show, "object");
@@ -162,6 +166,7 @@ namespace xge
 				xc_show = xc_show->getNextElementSibling();
 			}
 
+			// load inputs
 			const auto* xc_inputs = xc_shows->getNextElementSibling();
 			auto xc_input = xc_inputs->getFirstElementChild();
 
@@ -176,6 +181,8 @@ namespace xge
 
 				xc_input = xc_input->getNextElementSibling();
 			}
+
+			// TODO: add code to load conditions
 
 			RawState rawState{};
 			rawState.name = xc_state_name;
