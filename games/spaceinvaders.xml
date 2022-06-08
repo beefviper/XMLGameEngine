@@ -19,7 +19,7 @@
 			<velocity x="0" y="0" />
 			<collisions enabled="true">
 				<collision edge="all" action="die()"/>
-				<collision basic="basic" action="kill();die()"/>
+				<collision basic="basic" action="die()"/>
 			</collisions>
 		</object>
 		<object name="player">

@@ -102,22 +102,73 @@ namespace xge
 			Vector2str velocity{ xc_vel_x, xc_vel_y };
 
 			// TODO: fix loading of collision data to match new format
-			const auto* xc_collision = xc_vel->getNextElementSibling();
-			std::string xc_collision_enabled = getAttributeByName(xc_collision, "enabled");
-			std::string xc_collision_group = getAttributeByName(xc_collision, "group");
+			const auto* xc_collisions = xc_vel->getNextElementSibling();
+			std::string xc_collision_enabled = getAttributeByName(xc_collisions, "enabled");
+			std::string xc_collision_group = getAttributeByName(xc_collisions, "group");
 
 			RawCollisionData xc_collision_data;
-			xc_collision_data.enabled = (xc_collision_enabled == "true") ? true : false;
-			xc_collision_data.group = (xc_collision_group == "true") ? true : false;
-			xc_collision_data.top = getAttributeByName(xc_collision, "top");
-			xc_collision_data.bottom = getAttributeByName(xc_collision, "bottom");
-			xc_collision_data.left = getAttributeByName(xc_collision, "left");
-			xc_collision_data.right = getAttributeByName(xc_collision, "right");
-			xc_collision_data.basic = getAttributeByName(xc_collision, "basic");
 
+			if (xc_collisions)
+			{
+				auto xc_collision = xc_collisions->getFirstElementChild();
+
+				while (xc_collision != nullptr)
+				{
+					if (auto col_edge = getAttributeByName(xc_collision, "edge"); col_edge != "")
+					{
+						xc_collision_data.enabled = (xc_collision_enabled == "true") ? true : false;
+						xc_collision_data.group = (xc_collision_group == "true") ? true : false;
+
+						auto col_action = getAttributeByName(xc_collision, "action");
+
+						if (col_edge == "all")
+						{
+							xc_collision_data.top = col_action;
+							xc_collision_data.bottom = col_action;
+							xc_collision_data.left = col_action;
+							xc_collision_data.right = col_action;
+						}
+						else if (col_edge == "horizontal")
+						{
+							xc_collision_data.top = col_action;
+							xc_collision_data.bottom = col_action;
+						}
+						else if (col_edge == "vertical")
+						{
+							xc_collision_data.left = col_action;
+							xc_collision_data.right = col_action;
+						}
+						else if (col_edge == "top")
+						{
+							xc_collision_data.top = col_action;
+						}
+						else if (col_edge == "bottom")
+						{
+							xc_collision_data.bottom = col_action;
+						}
+						else if (col_edge == "left")
+						{
+							xc_collision_data.left = col_action;
+						}
+						else if (col_edge == "right")
+						{
+							xc_collision_data.right = col_action;
+						}
+					}
+					
+					if (auto col_basic = getAttributeByName(xc_collision, "basic"); col_basic != "")
+					{
+						xc_collision_data.basic = getAttributeByName(xc_collision, "action");
+					}
+
+					xc_collision = xc_collision->getNextElementSibling();
+				}
+			}
+
+			// load actions
 			std::map<std::string, std::string> xc_action_map;
 
-			const auto* xc_actions = xc_collision->getNextElementSibling();
+			const auto* xc_actions = xc_collisions->getNextElementSibling();
 			if (xc_actions)
 			{
 				auto xc_action = xc_actions->getFirstElementChild();
@@ -158,7 +209,7 @@ namespace xge
 			auto xc_show = xc_shows->getFirstElementChild();
 
 			std::vector<std::string> xc_show_vec;
-						
+
 			while (xc_show != nullptr)
 			{
 				std::string xc_show_object = getAttributeByName(xc_show, "object");
