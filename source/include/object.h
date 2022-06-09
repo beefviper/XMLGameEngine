@@ -78,6 +78,7 @@ namespace xge
 		Vector2str rawVelocity;
 		RawCollisionData rawCollisionData;
 		std::map<std::string, std::string> action;
+		std::map<std::string, std::string> variable;
 
 		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
 	};
@@ -95,6 +96,7 @@ namespace xge
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		std::map<std::string, std::vector<std::string>> action;
+		std::map<std::string, float> variable;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
 		std::unique_ptr<sf::Sprite> sprite = nullptr;
 

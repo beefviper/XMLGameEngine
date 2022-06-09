@@ -92,7 +92,18 @@ namespace xge
 			const auto* xc_pos = xc_sprite->getNextElementSibling();
 			const auto* xc_vel = xc_pos->getNextElementSibling();
 			const auto* xc_collisions = xc_vel->getNextElementSibling();
-			const auto* xc_actions = xc_collisions->getNextElementSibling();
+			
+			const xc::DOMElement* xc_actions = nullptr;
+			if (xc_collisions)
+			{
+				xc_actions = xc_collisions->getNextElementSibling();
+			}
+
+			const xc::DOMElement* xc_objvars = nullptr;
+			if (xc_actions)
+			{
+				xc_objvars = xc_actions->getNextElementSibling();
+			}
 
 			// load sprite
 			std::string xc_sprite_src = getAttributeByName(xc_sprite, "src");
@@ -192,12 +203,28 @@ namespace xge
 			}
 
 			// TODO: add code to load variables from objects
+			std::map<std::string, std::string> xc_objvar_map;
+
+			if (xc_objvars)
+			{
+				auto xc_objvar = xc_objvars->getFirstElementChild();
+
+				while (xc_objvar != nullptr)
+				{
+					std::string xc_objvar_name = getAttributeByName(xc_objvar, "name");
+					std::string xc_objvar_value = getAttributeByName(xc_objvar, "value");
+					xc_objvar_map[xc_objvar_name] = xc_objvar_value;
+
+					xc_objvar = xc_objvar->getNextElementSibling();
+				}
+			}
 
 			RawObject rawObject{};
 			rawObject.name = xc_obj_name;
 			rawObject.objClass = xc_obj_class;
 			rawObject.src = xc_sprite_src;
 			rawObject.action = xc_action_map;
+			rawObject.variable = xc_objvar_map;
 			rawObject.rawCollisionData = xc_collision_data;
 			rawObject.rawPosition = position;
 			rawObject.rawVelocity = velocity;

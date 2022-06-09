@@ -33,6 +33,11 @@ namespace xge
 			o << "\taction=" << action.first << ", value=" << action.second << '\n';
 		}
 
+		for (auto& varible : f.variable)
+		{
+			o << "\taction=" << varible.first << ", value=" << varible.second << '\n';
+		}
+
 		return o;
 	}
 
