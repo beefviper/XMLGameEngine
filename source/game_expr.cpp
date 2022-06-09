@@ -68,6 +68,7 @@ namespace xge
 		}
 
 		// TODO: loop through objects add their variables to the symbolTable
+		// ^ might not be needed
 
 		// register symbol table with expression
 		expression.register_symbol_table(symbolTable);
