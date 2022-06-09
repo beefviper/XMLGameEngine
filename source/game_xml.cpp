@@ -202,7 +202,7 @@ namespace xge
 				}
 			}
 
-			// TODO: add code to load variables from objects
+			// load object variables
 			std::map<std::string, std::string> xc_objvar_map;
 
 			if (xc_objvars)
