@@ -402,6 +402,7 @@ namespace xge
 			}
 		}
 
+		// TODO: Instead of hardcoded actions, use the objects list of actions (better yet, move this out of here)
 		if (edgeTouched != "none")
 		{
 			if (edgeTouched == "left") { object.velocity.x = std::abs(object.velocity.x) * -1; }
