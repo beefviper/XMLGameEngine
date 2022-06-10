@@ -19,7 +19,7 @@ namespace xge
 	{
 		for (auto& object : getCurrentObjects())
 		{
-			if (isShown(object))
+			if (isShown(object)) // at some point you might wanna collide with invisible objects
 			{
 				if (object.collisionData.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
 				{
@@ -34,7 +34,7 @@ namespace xge
 					{
 						for (auto& otherObject : getCurrentObjects())
 						{
-							bool tookHit = false;
+							bool tookHit = false; // <-- pretty sure this isn't doing anything
 							const auto isCircular = object.src.find("shape.circle") != std::string::npos;
 							if (isCircular && !tookHit)
 							{
@@ -43,7 +43,10 @@ namespace xge
 						}
 					}
 				}
+				// ^ currently only checks objects with edges, and circular objects with walls and other objects
+				//   will also need to check objects with other objects, and some method for detecting possible collisions
 
+				// currently only have position and velocity, will probably need acceleration too
 				object.position.x += object.velocity.x;
 				object.position.y += object.velocity.y;
 
