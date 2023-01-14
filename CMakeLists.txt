@@ -24,7 +24,19 @@ add_executable (${PROJECT_NAME}
 	"source/utils.cpp"
 	"source/game_xml.cpp"
 	"source/game_expr.cpp"
-	"source/game_sfml.cpp")
+	"source/game_sfml.cpp"
+	
+	"source/include/game.h"
+	"source/include/engine.h"
+	"source/include/object.h"
+	"source/include/states.h"
+	"source/include/utils.h"
+	"source/include/game_xml.h"
+	"source/include/game_expr.h"
+	"source/include/game_sfml.h")
+
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	PROPERTY VS_STARTUP_PROJECT XMLGameEngine)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
