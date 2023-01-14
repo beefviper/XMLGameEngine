@@ -59,16 +59,20 @@ add_dependencies(${PROJECT_NAME} data-target)
 if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 
     # list of files for which we add a copy rule
-    set(data_SHADOW
+    set(data_xsd
+		"games/assets/xmlgameengine.xsd")
+
+    set(data_xml
 		"games/pong.xml"
 		"games/pong_full.xml"
 		"games/breakout.xml"
-		"games/spaceinvaders.xml"
+		"games/spaceinvaders.xml")
+
+    set(data_assets
 		"games/assets/tuffy.ttf"
-		"games/assets/xmlgameengine.xsd"
 		"games/assets/paddle.jpg")
 
-    foreach(item IN LISTS data_SHADOW)
+    foreach(item IN LISTS data_xsd data_xml data_assets)
         message(STATUS ${item})
         add_custom_command(
             OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${item}"
@@ -79,4 +83,10 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 endif()
 
 # files are only copied if a target depends on them
-add_custom_target(data-target ALL DEPENDS ${data_SHADOW})
+add_custom_target(data-target ALL
+	DEPENDS ${data_xsd} ${data_xml} ${data_assets}
+	SOURCES	${data_xsd} ${data_xml})
+	
+source_group("XSD Files" FILES ${data_xsd})
+
+source_group("XML Files" FILES ${data_xml})
