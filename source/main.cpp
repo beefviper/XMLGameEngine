@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 	}
 
 	xge::Game game{ filename };
-	
+
 	game.printGame();
 
 	xge::Engine engine(game);

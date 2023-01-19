@@ -90,7 +90,7 @@ namespace xge
 	{
 		bool result = false;
 
-		for (auto &shown : currentState.top().show)
+		for (auto& shown : currentState.top().show)
 		{
 			if (shown == object.name)
 			{
@@ -109,7 +109,7 @@ namespace xge
 	float Game::getVariable(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(variables), std::end(variables), [&](std::pair<const std::string, float>& var) { return var.first == name; });
-		
+
 		if (result == variables.end())
 		{
 			return 0;
@@ -233,7 +233,7 @@ namespace xge
 					{
 						if (side == "left" || side == "right")
 						{
-							if ( object.collisionData.group )
+							if (object.collisionData.group)
 							{
 								updateGroupOfObjects(object, side);
 							}
@@ -325,23 +325,23 @@ namespace xge
 				}
 				else if (*colIter == "moveright")
 				{
-				colIter++;
+					colIter++;
 
-				if (object.collisionData.group > 0)
-				{
-					for (auto& obj : objects)
+					if (object.collisionData.group > 0)
 					{
-						if (obj.collisionData.group == object.collisionData.group)
+						for (auto& obj : objects)
 						{
-							obj.position.x += std::stoi(*colIter);
+							if (obj.collisionData.group == object.collisionData.group)
+							{
+								obj.position.x += std::stoi(*colIter);
+							}
 						}
 					}
-				}
-				else
-				{
-					object.position.x += std::stoi(*colIter);
-				}
-				colIter++;
+					else
+					{
+						object.position.x += std::stoi(*colIter);
+					}
+					colIter++;
 				}
 			}
 		}

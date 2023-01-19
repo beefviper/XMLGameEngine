@@ -120,7 +120,7 @@ namespace xge
 			else if (&game.getObject(aObject) != nullptr)
 			{
 				std::string aAction = game.getObject(aObject).action[aCommand].at(0);
-				
+
 				if (aAction == "moveleft" || aAction == "moveright" || aAction == "moveup" || aAction == "movedown")
 				{
 					auto aStep = std::stof(game.getObject(aObject).action[aCommand].at(1));
@@ -132,7 +132,7 @@ namespace xge
 
 					move(game.getObject(aObject), aCommand, aStep);
 				}
-				else if ( aAction == "fire")
+				else if (aAction == "fire")
 				{
 					auto currentX = game.getObject(aObject).position.x;
 					auto& currentObjName = game.getObject(aObject).action[aCommand].at(1);

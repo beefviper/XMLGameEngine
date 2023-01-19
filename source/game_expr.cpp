@@ -97,7 +97,7 @@ namespace xge
 					{
 						rawObject.isVisible = false;
 					}
-					
+
 					object.isVisible = rawObject.isVisible;
 
 					object.position.x = static_cast<float>(gridX);

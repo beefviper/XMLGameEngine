@@ -53,7 +53,7 @@ namespace xge
 			if (params.size() > 0)
 			{
 				o << ", " << edge << "=";
-				for (auto &param : params)
+				for (auto& param : params)
 				{
 					o << param << (&param != &params.back() ? ";" : "");
 				}
@@ -75,7 +75,7 @@ namespace xge
 
 		for (auto& action : f.action)
 		{
-			o << "\taction=" << action.first << ", value=" << action.second.at(0) << ( action.second.size() > 1 ? action.second.at(1) : "") << '\n';
+			o << "\taction=" << action.first << ", value=" << action.second.at(0) << (action.second.size() > 1 ? action.second.at(1) : "") << '\n';
 		}
 
 		return o;

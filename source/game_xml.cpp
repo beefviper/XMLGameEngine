@@ -92,7 +92,7 @@ namespace xge
 			const auto* xc_pos = xc_sprite->getNextElementSibling();
 			const auto* xc_vel = xc_pos->getNextElementSibling();
 			const auto* xc_collisions = xc_vel->getNextElementSibling();
-			
+
 			const xc::DOMElement* xc_actions = nullptr;
 			if (xc_collisions)
 			{
