@@ -129,14 +129,21 @@ namespace xge
 				}
 				else if (aAction == "fire")
 				{
-					auto currentX = game.getObject(aObject).position.x;
-					auto& currentObjName = game.getObject(aObject).action[aCommand].at(1);
-					auto& currentObj = game.getObject(currentObjName);
+					if (keyPressed)
+					{
+						auto currentX = game.getObject(aObject).position.x;
+						auto& currentObjName = game.getObject(aObject).action[aCommand].at(1);
+						auto& currentObj = game.getObject(currentObjName);
 
-					currentObj.position.x = currentX + game.getObject(aObject).sprite.get()->getLocalBounds().width / 2;
-					currentObj.position.y = game.getObject(aObject).sprite.get()->getGlobalBounds().top;
-					currentObj.velocity.y = -2;
-					currentObj.isVisible = true;
+						if (currentObj.collisionData.enabled == false)
+						{
+							currentObj.position.x = currentX + game.getObject(aObject).sprite.get()->getLocalBounds().width / 2;
+							currentObj.position.y = game.getObject(aObject).sprite.get()->getGlobalBounds().top;
+							currentObj.velocity.y = -4;
+							currentObj.isVisible = true;
+							currentObj.collisionData.enabled = true;
+						}
+					}
 				}
 			}
 		}

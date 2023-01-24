@@ -425,6 +425,13 @@ namespace xge
 						otherObject.isVisible = false;
 						otherObject.collisionData.enabled = false;
 					}
+					if (object.collisionData.basic.at(1) == "die")
+					{
+						object.isVisible = false;
+						object.collisionData.enabled = false;
+						object.velocity.x = 0;
+						object.velocity.y = 0;
+					}
 				}
 			}
 		}

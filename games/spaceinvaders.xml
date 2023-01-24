@@ -17,7 +17,7 @@
       <sprite src="shape.circle(ball.radius)" />
       <position x="0" y="0" />
       <velocity x="0" y="0" />
-      <collisions enabled="true">
+      <collisions enabled="false">
         <collision edge="all" action="die()"/>
         <collision basic="basic" action="die()"/>
       </collisions>
