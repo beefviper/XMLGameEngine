@@ -20,6 +20,7 @@
       <collisions enabled="true">
         <collision edge="all" action="bounce()" />
         <collision edge="bottom" action="die()" />
+        <collision basic="basic" action="bounce()" />
       </collisions>
     </object>
     <object name="player">
