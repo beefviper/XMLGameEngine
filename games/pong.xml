@@ -27,6 +27,7 @@
         <collision edge="horizontal" action="bounce()" />
         <collision edge="left" action="inc('paddle2.score');reset()" />
         <collision edge="right" action="inc('paddle1.score');reset()" />
+        <collision basic="basic" action="bounce()" />
       </collisions>
     </object>
     <!-- paddle1 -->
