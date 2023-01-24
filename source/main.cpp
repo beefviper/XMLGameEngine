@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <string>
+#include <filesystem>
 
 int main(int argc, char* argv[])
 {
@@ -16,6 +17,19 @@ int main(int argc, char* argv[])
 	if (argc == 2)
 	{
 		filename = argv[1];
+	}
+
+	if (!std::filesystem::exists(filename))
+	{
+		if (std::filesystem::exists("games/" + filename))
+		{
+			filename = "games/" + filename;
+		}
+		else
+		{
+			std::cout << "File not found: " << filename << '\n';
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	xge::Game game{ filename };
