@@ -431,6 +431,8 @@ namespace xge
 						object.collisionData.enabled = false;
 						object.velocity.x = 0;
 						object.velocity.y = 0;
+						object.position.x = -100;
+						object.position.y = -100;
 					}
 				}
 			}
