@@ -38,7 +38,7 @@
     <object name="bricks">
       <sprite src="grid(11,5,15,15,shape.rectangle(width,height))" />
       <position x="margin" y="margin/2" />
-      <velocity x="3" y="0" />
+      <velocity x="2" y="0" />
       <collisions enabled="true" group="true">
         <collision edge="vertical" action="bounce();move.down(10)" />
         <collision basic="basic" action="die()" />
@@ -52,7 +52,7 @@
     </object>
     <object name="paused">
       <sprite src="text('paused',128,'color.white')" />
-      <position x="window.width.center" y="window.height.center" />
+      <position x="window.width.center - 180" y="window.height.center - 200" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
