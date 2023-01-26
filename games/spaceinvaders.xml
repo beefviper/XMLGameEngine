@@ -21,6 +21,9 @@
         <collision edge="all" action="die()"/>
         <collision basic="basic" action="die()"/>
       </collisions>
+      <variables>
+        <variable name="speed" value="-6" />
+      </variables>
     </object>
     <object name="player">
       <sprite src="shape.rectangle(width,height)" />

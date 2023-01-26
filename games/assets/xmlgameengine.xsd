@@ -19,7 +19,7 @@
               <xs:element maxOccurs="unbounded" name="variable">
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="value" type="xs:unsignedShort" use="required" />
+                  <xs:attribute name="value" type="xs:integer" use="required" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
@@ -81,7 +81,7 @@
                           <xs:element maxOccurs="unbounded" name="variable">
                             <xs:complexType>
                               <xs:attribute name="name" type="xs:string" use="required" />
-                              <xs:attribute name="value" type="xs:unsignedByte" use="required" />
+                              <xs:attribute name="value" type="xs:integer" use="required" />
                             </xs:complexType>
                           </xs:element>
                         </xs:sequence>

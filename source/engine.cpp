@@ -139,7 +139,7 @@ namespace xge
 						{
 							currentObj.position.x = currentX + game.getObject(aObject).sprite.get()->getLocalBounds().width / 2;
 							currentObj.position.y = game.getObject(aObject).sprite.get()->getGlobalBounds().top;
-							currentObj.velocity.y = 6; // currentObj.variable["speed"];
+							currentObj.velocity.y = currentObj.variable["speed"];
 							currentObj.isVisible = true;
 							currentObj.collisionData.enabled = true;
 						}

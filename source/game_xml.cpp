@@ -94,12 +94,29 @@ namespace xge
 			const auto* xc_collisions = xc_vel->getNextElementSibling();
 
 			const xc::DOMElement* xc_actions = nullptr;
-			if (xc_collisions)
+			const xc::DOMElement* xc_objvars = nullptr;
+
+			if (xc_collisions) // hacky code, in case no actions are defined, by object variables are
 			{
-				xc_actions = xc_collisions->getNextElementSibling();
+				const xc::DOMElement* xc_temp_element = xc_collisions->getNextElementSibling();
+				if (xc_temp_element != nullptr)
+				{
+					const XMLCh* xc_temp_tag = xc_temp_element->getTagName();
+					char* xc_temp_tag_char = xc::XMLString::transcode(xc_temp_tag);
+					std::string xc_temp_tag_str(xc_temp_tag_char);
+
+					if (xc_temp_tag_str == "actions")
+					{
+						xc_actions = xc_temp_element;
+					}
+					else if (xc_temp_tag_str == "variables")
+					{
+						xc_objvars = xc_temp_element;
+					}
+					xc::XMLString::release(&xc_temp_tag_char);
+				}
 			}
 
-			const xc::DOMElement* xc_objvars = nullptr;
 			if (xc_actions)
 			{
 				xc_objvars = xc_actions->getNextElementSibling();

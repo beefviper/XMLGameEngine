@@ -126,6 +126,11 @@ namespace xge
 						object.action[rawAction.first] = processData(rawObject, rawAction.second);
 					}
 
+					for (auto& rawVariable : rawObject.variable)
+					{
+						object.variable[rawVariable.first] = evaluateString(rawObject, rawVariable.second);
+					}
+
 					object.renderTexture = std::make_unique<sf::RenderTexture>();
 					object.sprite = std::make_unique<sf::Sprite>();
 
