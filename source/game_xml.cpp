@@ -96,7 +96,7 @@ namespace xge
 			const xc::DOMElement* xc_actions = nullptr;
 			const xc::DOMElement* xc_objvars = nullptr;
 
-			if (xc_collisions) // hacky code, in case no actions are defined, by object variables are
+			if (xc_collisions) // hacky code, in case no actions are defined, but object variables are
 			{
 				const xc::DOMElement* xc_temp_element = xc_collisions->getNextElementSibling();
 				if (xc_temp_element != nullptr)
