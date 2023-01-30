@@ -335,4 +335,20 @@ namespace xge
 		xc::XMLString::release(&transcodeChar);
 		return transcodeStr;
 	}
+
+	StrToXMLCh::StrToXMLCh(const std::string toTranscode)
+	{
+		data = xc::XMLString::transcode(toTranscode.c_str());
+	}
+
+	StrToXMLCh::~StrToXMLCh()
+	{
+		xc::XMLString::release(&data);
+	}
+
+	XMLCh* StrToXMLCh::value()
+	{
+		return data;
+	}
+
 }
