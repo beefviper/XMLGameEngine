@@ -326,11 +326,8 @@ namespace xge
 
 	std::string game_xml::getAttributeByName(const xc::DOMElement* element, const std::string& attribute)
 	{
-		//XMLCh* attr = xc::XMLString::transcode(attribute.c_str());
 		StrToXMLCh attr(attribute);
 		const XMLCh* value = element->getAttribute(attr.value());
-		//xc::XMLString::release(&attr);
-
 		std::string v = XMLChToStr(value);
 		return v;
 	}
