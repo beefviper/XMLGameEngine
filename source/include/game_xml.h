@@ -56,4 +56,6 @@ namespace xge
 
 		std::string getAttributeByName(const xc::DOMElement* element, const std::string& attribute);
 	};
+
+	std::string XMLChToStr(const XMLCh* toTranscode);
 }

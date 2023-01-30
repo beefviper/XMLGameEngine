@@ -328,10 +328,17 @@ namespace xge
 	{
 		XMLCh* attr = xc::XMLString::transcode(attribute.c_str());
 		const XMLCh* value = element->getAttribute(attr);
-		char* val = xc::XMLString::transcode(value);
-		std::string v = val;
-		xc::XMLString::release(&val);
 		xc::XMLString::release(&attr);
+
+		std::string v = XMLChToStr(value);
 		return v;
+	}
+
+	std::string XMLChToStr(const XMLCh* toTranscode)
+	{
+		char* transcodeChar = xc::XMLString::transcode(toTranscode);
+		std::string transcodeStr = transcodeChar;
+		xc::XMLString::release(&transcodeChar);
+		return transcodeStr;
 	}
 }
