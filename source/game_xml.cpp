@@ -101,10 +101,7 @@ namespace xge
 				const xc::DOMElement* xc_temp_element = xc_collisions->getNextElementSibling();
 				if (xc_temp_element != nullptr)
 				{
-					const XMLCh* xc_temp_tag = xc_temp_element->getTagName();
-					char* xc_temp_tag_char = xc::XMLString::transcode(xc_temp_tag);
-					std::string xc_temp_tag_str(xc_temp_tag_char);
-
+					std::string xc_temp_tag_str{ XMLChToStr(xc_temp_element->getTagName()) };
 					if (xc_temp_tag_str == "actions")
 					{
 						xc_actions = xc_temp_element;
@@ -113,7 +110,6 @@ namespace xge
 					{
 						xc_objvars = xc_temp_element;
 					}
-					xc::XMLString::release(&xc_temp_tag_char);
 				}
 			}
 
