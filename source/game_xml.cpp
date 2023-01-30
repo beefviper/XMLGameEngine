@@ -350,5 +350,4 @@ namespace xge
 	{
 		return data;
 	}
-
 }
