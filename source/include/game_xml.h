@@ -58,4 +58,27 @@ namespace xge
 	};
 
 	std::string XMLChToStr(const XMLCh* toTranscode);
+
+	class StrToXMLCh
+	{
+	public:
+		StrToXMLCh(const std::string toTranscode)
+		{
+			data = xc::XMLString::transcode(toTranscode.c_str());
+		}
+
+		~StrToXMLCh()
+		{
+			xc::XMLString::release(&data);
+		}
+
+		XMLCh* value()
+		{
+			return data;
+		}
+
+	private:
+		XMLCh* data;
+	};
+
 }
