@@ -12,6 +12,8 @@
 
 int main(int argc, char* argv[])
 {
+	
+	// TODO: make function to validate filename
 	std::string filename{ "games/pong_full.xml" };
 
 	if (argc == 2)

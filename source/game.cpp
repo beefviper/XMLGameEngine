@@ -19,7 +19,7 @@ namespace xge
 	{
 		for (auto& object : getCurrentObjects())
 		{
-			if (isShown(object)) // at some point you might wanna collide with invisible objects
+			if (isShown(object)) // TODO: at some point you might wanna collide with invisible objects
 			{
 				if (object.collisionData.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
 				{
@@ -34,7 +34,7 @@ namespace xge
 					{
 						for (auto& otherObject : getCurrentObjects())
 						{
-							bool tookHit = false; // <-- pretty sure this isn't doing anything
+							bool tookHit = false; // TODO: pretty sure this isn't doing anything
 							const auto isCircular = object.src.find("shape.circle") != std::string::npos;
 							if (isCircular && !tookHit)
 							{
@@ -43,10 +43,10 @@ namespace xge
 						}
 					}
 				}
-				// ^ currently only checks objects with edges, and circular objects with walls and other objects
+				// TODO: currently only checks objects with edges, and circular objects with walls and other objects
 				//   will also need to check objects with other objects, and some method for detecting possible collisions
 
-				// currently only have position and velocity, will probably need acceleration too
+				// TODO: currently only have position and velocity, will probably need acceleration too
 				object.position.x += object.velocity.x;
 				object.position.y += object.velocity.y;
 
@@ -170,6 +170,8 @@ namespace xge
 		{
 			if (obj.collisionData.group == groupNum)
 			{
+				// TODO: fix logic, no need to set a variable, and then test it in the next block
+				// get rid of varialbe foundObject, combine if, if, and else
 				if (obj.position.x == object.position.x && obj.position.y == object.position.y)
 				{
 					foundObject = true;
@@ -212,6 +214,8 @@ namespace xge
 			|| (object.position.y < topBound && side == "top")
 			|| (object.position.y > bottomBound && side == "bottom"))
 		{
+
+			// TODO: object handling code needs to be in its own function
 
 			auto colIter = curSide.begin();
 			while (colIter != curSide.end())

@@ -20,6 +20,7 @@
 
 namespace xge
 {
+	// TODO: rename PairStringVectorString to ListOfCommands ?
 	using PairStringVectorString = std::pair<const std::string, std::vector<std::string>>;
 
 	class Engine

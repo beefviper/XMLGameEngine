@@ -30,11 +30,13 @@ namespace xge
 				createImage(object);
 			}
 
+			// TODO: should be able to combine with setGridXY() in game_expr, caculate final x and y pos there
 			GridData gridData = setGridData(object);
 			object.position.x = object.positionOriginal.x + ((gridData.obj.x + gridData.padding.x) * object.position.x);
 			object.position.y = object.positionOriginal.y + ((gridData.obj.y + gridData.padding.y) * object.position.y);
 
 			object.positionOriginal = object.position;
+			// won't need above lines, once fixed
 
 			object.renderTexture->display();
 
@@ -49,6 +51,7 @@ namespace xge
 		sf::Font font;
 		sf::Text text;
 
+		// TODO: fix font handling, make variable to cache font
 		std::string fontFile{ "games/assets/tuffy.ttf" };
 		if (!font.loadFromFile(fontFile))
 		{
@@ -117,6 +120,7 @@ namespace xge
 		sf::Font font;
 		sf::Text text;
 
+		// TODO: fix font handling, make variable to cache font
 		std::string fontFile{ "games/assets/tuffy.ttf" };
 		if (!font.loadFromFile(fontFile))
 		{
@@ -167,6 +171,7 @@ namespace xge
 		object.renderTexture->draw(sprite);
 	}
 
+	// TODO: remove once combined with setGridXY() in game_expr
 	GridData game_sfml::setGridData(Object& object)
 	{
 		GridData gridData;
