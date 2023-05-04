@@ -30,6 +30,9 @@ namespace xge
 	{
 		while (window.isOpen())
 		{
+			// TODO: make polling events its own function, return vector<pair<string,bool>> of keypresses
+			// pressed = true, released = false, don't need isKeyPressed map anymore?
+
 			sf::Event event;
 			while (window.pollEvent(event))
 			{
@@ -70,6 +73,7 @@ namespace xge
 
 	void Engine::handleKeyPressed(Game& game, sf::Event& event)
 	{
+		// TODO: fix logic? remove if? just set value in map true?
 		if (!isKeyPressed[event.key.code])
 		{
 			isKeyPressed[event.key.code] = true;
@@ -115,6 +119,9 @@ namespace xge
 			else if (&game.getObject(aObject) != nullptr)
 			{
 				std::string aAction = game.getObject(aObject).action[aCommand].at(0);
+
+				// TODO: move move() code out of Engine, put in Game
+				// Engine can pass along a vector<string> of commands
 
 				if (aAction == "moveleft" || aAction == "moveright" || aAction == "moveup" || aAction == "movedown")
 				{

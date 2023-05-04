@@ -68,7 +68,7 @@ namespace xge
 		}
 
 		// TODO: loop through objects add their variables to the symbolTable
-		// ^ might not be needed
+		// ^ might not be needed, update: might be needed?
 
 		// register symbol table with expression
 		expression.register_symbol_table(symbolTable);
@@ -159,6 +159,9 @@ namespace xge
 		}
 	}
 
+	// TODO: instead of passing an object or state, just pass the .name (std::string)
+	// remove copies of evaluateString() and ProcessData()
+
 	float game_expr::evaluateString(const RawObject& rawObject, const std::string& input_string)
 	{
 		if (!parser.compile(input_string, expression))
@@ -207,6 +210,7 @@ namespace xge
 	{
 		GridData gridData;
 
+		// TODO: calulate final position in here
 		if (spriteParams.size() > 5 && spriteParams.at(4) == "grid")
 		{
 			gridData.max.x = std::stoi(spriteParams.at(5));

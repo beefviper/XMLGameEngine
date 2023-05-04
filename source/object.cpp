@@ -21,6 +21,8 @@ namespace xge
 		o << "rawObject: " << "name=" << f.name << ", src=" << f.src << '\n'
 			<< "\tpos.x=" << f.rawPosition.x << ", pos.y=" << f.rawPosition.y << '\n'
 			<< "\tvel.x=" << f.rawVelocity.x << ", vel.y=" << f.rawVelocity.y << '\n'
+
+			// TODO: replace with operator<< for rawCollisionData
 			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false")
 			<< (f.rawCollisionData.top.length() ? ", top=" + f.rawCollisionData.top : "")
 			<< (f.rawCollisionData.bottom.length() ? ", bottom=" + f.rawCollisionData.bottom : "")
@@ -48,6 +50,7 @@ namespace xge
 			<< "\tcollision=" << (f.collisionData.enabled ? "true" : "false");
 
 
+		// TODO: replace with operator<< for CollisionData
 		auto printCollisionData = [&](const std::vector<std::string>& params, std::string edge)
 		{
 			if (params.size() > 0)

@@ -36,6 +36,9 @@ namespace xge
 		std::string left;
 		std::string right;
 		std::string basic;
+
+		// TODO: add operator<< to RawCollisionData
+
 	};
 
 	struct CollisionData
@@ -47,6 +50,9 @@ namespace xge
 		std::vector<std::string> left;
 		std::vector<std::string> right;
 		std::vector<std::string> basic;
+
+		// TODO: add operator<< to CollisionData
+
 	};
 
 	struct Vector2str
