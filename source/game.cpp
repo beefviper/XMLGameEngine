@@ -193,6 +193,9 @@ namespace xge
 		}
 	}
 
+	// TODO: checkEdge should probably just return a vector(?) of edges touched ?
+	// possibilities: top, bottom, left, right, top & left, top & right, bottom & left, bottom & right 
+
 	void Game::checkEdge(Object& object, std::string side)
 	{
 		auto objectWidth = object.sprite->getLocalBounds().width;

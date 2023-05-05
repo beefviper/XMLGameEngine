@@ -30,6 +30,7 @@ namespace xge
 
 		void loop(void);
 
+		// TODO: make handleKeyPressed and handleKeyRelease private
 		void handleKeyPressed(Game& game, sf::Event& event);
 		void handleKeyReleased(Game& game, sf::Event& event);
 
@@ -41,6 +42,8 @@ namespace xge
 
 		std::map<sf::Keyboard::Key, bool> isKeyPressed;
 		void execute_action(Game& game, sf::Event& event, PairStringVectorString& input, bool keyPressed = true);
+		
+		// TODO: get rid move functions, return list of key presses to game
 		void move(Object& object, Engine::Direction direction, float step) noexcept;
 		void move(Object& object, std::string direction, float step);
 

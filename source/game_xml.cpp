@@ -33,7 +33,9 @@ namespace xge
 
 		auto schemaLocation = getAttributeByName(domParser->getDocument()->getDocumentElement(), "xsi:noNamespaceSchemaLocation");
 		auto errorCount = domParser->getErrorCount();
-
+		
+		// TODO : need to check if schemaLoction actually points to a valid file/schema
+		
 		if (errorCount == 0 && schemaLocation != "")
 		{
 			std::cout << "XML file validated against the schema successfully\n\n";
