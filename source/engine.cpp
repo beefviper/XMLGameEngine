@@ -71,6 +71,7 @@ namespace xge
 		}
 	}
 
+	// TODO: does game reference need to be passed in? engine has game reference as member
 	void Engine::handleKeyPressed(Game& game, sf::Event& event)
 	{
 		// TODO: fix logic? remove if? just set value in map true?
@@ -85,6 +86,7 @@ namespace xge
 		}
 	}
 
+	// TODO: does game reference need to be passed in? engine has game reference as member
 	void Engine::handleKeyReleased(Game& game, sf::Event& event)
 	{
 		isKeyPressed[event.key.code] = false;
@@ -95,6 +97,7 @@ namespace xge
 		}
 	}
 
+	// TODO: does game reference need to be passed in? engine has game reference as member
 	void Engine::execute_action(Game& game, sf::Event& event, PairStringVectorString& input, bool keyPressed)
 	{
 		if (input.first == sfmlKeyToString(event.key.code))

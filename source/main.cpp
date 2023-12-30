@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
 		filename = argv[1];
 	}
 
+	// TODO: why nested if-else? just use if, else if, else
 	if (!std::filesystem::exists(filename))
 	{
 		if (std::filesystem::exists("games/" + filename))
