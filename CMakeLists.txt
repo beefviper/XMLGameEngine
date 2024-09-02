@@ -43,13 +43,13 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 
 find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
-find_package(XercesC CONFIG REQUIRED)
+find_package(XercesC REQUIRED)
 
 target_include_directories(${PROJECT_NAME} PUBLIC source/include)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${EXPRTK_INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
-target_link_libraries(${PROJECT_NAME} PRIVATE xerces_xerces-c XercesC::XercesC)
+target_link_libraries(${PROJECT_NAME} PRIVATE XercesC::XercesC)
 
 add_dependencies(${PROJECT_NAME} data-target)
 
