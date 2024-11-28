@@ -67,6 +67,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE xerces-c)
 
 set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set_target_properties(sfml-system PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties(sfml-window PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties(sfml-graphics PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties(sfml-network PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties(sfml-audio PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 add_dependencies(${PROJECT_NAME} data-target)
 
