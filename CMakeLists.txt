@@ -43,13 +43,26 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 
 find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
-find_package(XercesC REQUIRED)
+#find_package(XercesC REQUIRED)
 
 target_include_directories(${PROJECT_NAME} PUBLIC source/include)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${EXPRTK_INCLUDE_DIRS}")
 
+include(FetchContent)
+
+FetchContent_Declare(XercesC
+	GIT_REPOSITORY https://github.com/apache/xerces-c.git
+	GIT_TAG v3.3.0
+)
+
+FetchContent_MakeAvailable(XercesC)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
-target_link_libraries(${PROJECT_NAME} PRIVATE XercesC::XercesC)
+#target_link_libraries(${PROJECT_NAME} PRIVATE XercesC::XercesC)
+target_link_libraries(${PROJECT_NAME} PUBLIC xerces-c)
+
+#set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR} )
+set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR} )
 
 add_dependencies(${PROJECT_NAME} data-target)
 
