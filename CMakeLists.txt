@@ -42,7 +42,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 
-find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
+#find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
 #find_package(XercesC REQUIRED)
 
 target_include_directories(${PROJECT_NAME} PUBLIC source/include)
@@ -55,7 +55,12 @@ FetchContent_Declare(XercesC
 	GIT_TAG v3.3.0
 )
 
-FetchContent_MakeAvailable(XercesC)
+FetchContent_Declare(SFML
+	GIT_REPOSITORY https://github.com/SFML/SFML.git
+	GIT_TAG 2.5.0
+)
+
+FetchContent_MakeAvailable(XercesC SFML)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
 #target_link_libraries(${PROJECT_NAME} PRIVATE XercesC::XercesC)
