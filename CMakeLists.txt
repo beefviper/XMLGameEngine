@@ -3,9 +3,6 @@
 # author: beefviper
 # date: Sept 18, 2020
 
-# CMakeList.txt : CMake project for XMLGameEngine, include source and define
-# project specific logic here.
-#
 cmake_minimum_required (VERSION 3.8)
 
 project ("XMLGameEngine")
@@ -14,7 +11,6 @@ if (MSVC)
     add_compile_options(/bigobj)
 endif()
 
-# Add source to this project's executable.
 add_executable (${PROJECT_NAME}
 	"source/main.cpp"
 	"source/game.cpp"
@@ -38,15 +34,9 @@ add_executable (${PROJECT_NAME}
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	PROPERTY VS_STARTUP_PROJECT XMLGameEngine)
 
+set(_VCPKG_INSTALLED_DIR "")
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-
-find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
-
-#find_package(SFML COMPONENTS system window graphics network audio CONFIG REQUIRED)
-#find_package(XercesC REQUIRED)
-
-target_include_directories(${PROJECT_NAME} PUBLIC source/include)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${EXPRTK_INCLUDE_DIRS}")
 
 include(FetchContent)
 
@@ -57,26 +47,30 @@ FetchContent_Declare(XercesC
 
 FetchContent_Declare(SFML
 	GIT_REPOSITORY https://github.com/SFML/SFML.git
-	GIT_TAG 2.5.0
+	GIT_TAG 2.6.2
 )
 
-FetchContent_MakeAvailable(XercesC SFML)
+FetchContent_Declare(exprtk
+	GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
+	GIT_TAG 0.0.3-cmake
+)
+
+FetchContent_MakeAvailable(XercesC SFML exprtk)
+
+find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINT ${PROJECT_BINARY_DIR})
+
+target_include_directories(${PROJECT_NAME} PUBLIC source/include)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${EXPRTK_INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
-#target_link_libraries(${PROJECT_NAME} PRIVATE XercesC::XercesC)
-target_link_libraries(${PROJECT_NAME} PUBLIC xerces-c)
+target_link_libraries(${PROJECT_NAME} PRIVATE xerces-c)
 
-#set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR} )
 set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR} )
+set_target_properties(sfml-system PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR} )
 
 add_dependencies(${PROJECT_NAME} data-target)
 
-# TODO: Add tests and install targets if needed.
-
-# we don't want to copy if we're building in the source dir
 if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
-
-    # list of files for which we add a copy rule
     set(data_xsd
 		"games/assets/xmlgameengine.xsd")
 
@@ -100,7 +94,6 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
     endforeach()
 endif()
 
-# files are only copied if a target depends on them
 add_custom_target(data-target ALL
 	DEPENDS ${data_xsd} ${data_xml} ${data_assets}
 	SOURCES	${data_xsd} ${data_xml})
