@@ -40,9 +40,6 @@ endif()
 
 set(_VCPKG_INSTALLED_DIR "") # delete me
 
-set(XERCES_BUILD_TESTS OFF CACHE BOOL "Disable Xerces tests")
-set(XERCES_BUILD_SAMPLES OFF CACHE BOOL "Disable Xerces samples")
-
 include(FetchContent)
 
 FetchContent_Declare(XercesC
@@ -62,6 +59,23 @@ FetchContent_Declare(exprtk
 	GIT_TAG 0.0.3-cmake
 	EXCLUDE_FROM_ALL
 )
+
+# Path to the Xerces-C CMakeLists.txt file
+set(XERCES_CMAKELISTS ${PROJECT_BINARY_DIR}/_deps/xercesc-src/CMakeLists.txt)
+
+# Check if the file exists
+if(EXISTS ${XERCES_CMAKELISTS})
+    # Read the file content
+    file(READ ${XERCES_CMAKELISTS} CMAKELISTS_CONTENT)
+
+    # Remove the specific line "add_subdirectory(samples)"
+    string(REPLACE "add_subdirectory(doc)" "" MODIFIED_CONTENT ${CMAKELISTS_CONTENT})
+    string(REPLACE "add_subdirectory(tests)" "" MODIFIED_CONTENT ${CMAKELISTS_CONTENT})
+    string(REPLACE "add_subdirectory(samples)" "" MODIFIED_CONTENT ${CMAKELISTS_CONTENT})
+
+    # Write the modified content back to the file
+    file(WRITE ${XERCES_CMAKELISTS} "${MODIFIED_CONTENT}")
+endif()
 
 FetchContent_MakeAvailable(XercesC SFML exprtk)
 
