@@ -79,6 +79,10 @@ if(EXISTS ${XERCES_CMAKELISTS})
     file(WRITE ${XERCES_CMAKELISTS} "${MODIFIED_CONTENT}")
 endif()
 
+# Path to the Xerces-C CMakeLists.txt file
+set(XERCES_CMAKETESTS ${PROJECT_BINARY_DIR}/_deps/xercesc-build/CTestTestfile.cmake)
+
+# Check if the file exists
 if(EXISTS ${XERCES_CMAKETESTS})
     # Read the file content
     file(READ ${XERCES_CMAKETESTS} CMAKETESTS_CONTENT)
