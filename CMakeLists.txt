@@ -89,10 +89,10 @@ if(EXISTS ${XERCES_CMAKETESTS})
 
     # Remove the specific line "add_subdirectory(samples)"
     string(REPLACE "subdirs(\"tests\")" "" MODIFIED_CONTENT ${CMAKETESTS_CONTENT})
-    string(REPLACE "subdirs(\"tests\")" "" MODIFIED_CONTENT ${MODIFIED_CONTENT})
+    string(REPLACE "subdirs(\"samples\")" "" MODIFIED_CONTENT ${MODIFIED_CONTENT})
 
     # Write the modified content back to the file
-    file(WRITE ${XERCES_CMAKELISTS} "${MODIFIED_CONTENT}")
+    file(WRITE ${XERCES_CMAKETESTS} "${MODIFIED_CONTENT}")
 endif()
 
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINTS ${PROJECT_BINARY_DIR}/_deps/exprtk-src/include)
