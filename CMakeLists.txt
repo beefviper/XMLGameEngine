@@ -40,27 +40,27 @@ endif()
 
 set(_VCPKG_INSTALLED_DIR "") # delete me
 
+set(XERCES_BUILD_TESTS OFF CACHE BOOL "Disable Xerces tests")
+set(XERCES_BUILD_SAMPLES OFF CACHE BOOL "Disable Xerces samples")
+
 include(FetchContent)
 
 FetchContent_Declare(XercesC
 	GIT_REPOSITORY https://github.com/apache/xerces-c.git
 	GIT_TAG v3.3.0
 	EXCLUDE_FROM_ALL
-	SYSTEM
 )
 
 FetchContent_Declare(SFML
 	GIT_REPOSITORY https://github.com/SFML/SFML.git
 	GIT_TAG 2.6.2
 	EXCLUDE_FROM_ALL
-	SYSTEM
 )
 
 FetchContent_Declare(exprtk
 	GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
 	GIT_TAG 0.0.3-cmake
 	EXCLUDE_FROM_ALL
-	SYSTEM
 )
 
 FetchContent_MakeAvailable(XercesC SFML exprtk)
