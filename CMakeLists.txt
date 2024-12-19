@@ -3,15 +3,13 @@
 # author: beefviper
 # date: Sept 18, 2020
 
-cmake_minimum_required (VERSION 3.19)
+cmake_minimum_required(VERSION 3.19)
 
-project ("XMLGameEngine")
+project("XMLGameEngine")
 
-if (MSVC)
-    add_compile_options(/bigobj)
-endif()
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-add_executable (${PROJECT_NAME}
+add_executable(${PROJECT_NAME}
 	"source/main.cpp"
 	"source/game.cpp"
 	"source/engine.cpp"
@@ -29,30 +27,40 @@ add_executable (${PROJECT_NAME}
 	"source/include/utils.h"
 	"source/include/game_xml.h"
 	"source/include/game_expr.h"
-	"source/include/game_sfml.h")
+	"source/include/game_sfml.h"
+)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	PROPERTY VS_STARTUP_PROJECT XMLGameEngine)
+	PROPERTY VS_STARTUP_PROJECT XMLGameEngine
+)
 
-set(_VCPKG_INSTALLED_DIR "")
+if (MSVC)
+    add_compile_options(/bigobj)
+endif()
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+set(_VCPKG_INSTALLED_DIR "") # delete me
 
 include(FetchContent)
 
 FetchContent_Declare(XercesC
 	GIT_REPOSITORY https://github.com/apache/xerces-c.git
 	GIT_TAG v3.3.0
+	EXCLUDE_FROM_ALL
+	SYSTEM
 )
 
 FetchContent_Declare(SFML
 	GIT_REPOSITORY https://github.com/SFML/SFML.git
 	GIT_TAG 2.6.2
+	EXCLUDE_FROM_ALL
+	SYSTEM
 )
 
 FetchContent_Declare(exprtk
 	GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
 	GIT_TAG 0.0.3-cmake
+	EXCLUDE_FROM_ALL
+	SYSTEM
 )
 
 FetchContent_MakeAvailable(XercesC SFML exprtk)
@@ -62,10 +70,18 @@ find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINTS ${PROJECT_BINARY_DIR}/_deps/exp
 target_include_directories(${PROJECT_NAME} PUBLIC source/include)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${EXPRTK_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
 target_link_libraries(${PROJECT_NAME} PRIVATE xerces-c)
+target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system
+	sfml-window sfml-graphics sfml-network sfml-audio
+)
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external->)
 
 set_target_properties(xerces-c PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+target_compile_options(xerces-c PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>
+)
 
 set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set_target_properties(sfml-system PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -102,8 +118,8 @@ endif()
 
 add_custom_target(data-target ALL
 	DEPENDS ${data_xsd} ${data_xml} ${data_assets}
-	SOURCES	${data_xsd} ${data_xml})
+	SOURCES	${data_xsd} ${data_xml} ${data_assets})
 	
 source_group("XSD Files" FILES ${data_xsd})
-
 source_group("XML Files" FILES ${data_xml})
+source_group("Asset Files" FILES ${data_assets})
