@@ -60,42 +60,7 @@ FetchContent_Declare(exprtk
 	EXCLUDE_FROM_ALL
 )
 
-# Path to the folder to delete
-set(SAMPLES_FOLDER ${PROJECT_BINARY_DIR}/_deps/xercesc-src/samples)
-
-# Check if the folder exists before attempting to delete it
-if(EXISTS ${SAMPLES_FOLDER})
-    file(REMOVE_RECURSE ${SAMPLES_FOLDER})
-    message(STATUS "Deleted folder: ${SAMPLES_FOLDER}")
-endif()
-
-# Path to the folder to delete
-set(TESTS_FOLDER ${PROJECT_BINARY_DIR}/_deps/xercesc-src/tests)
-
-# Check if the folder exists before attempting to delete it
-if(EXISTS ${TESTS_FOLDER})
-    file(REMOVE_RECURSE ${TESTS_FOLDER})
-    message(STATUS "Deleted folder: ${TESTS_FOLDER}")
-endif()
-
 FetchContent_MakeAvailable(XercesC SFML exprtk)
-
-# Path to the Xerces-C CMakeLists.txt file
-set(XERCES_CMAKELISTS ${PROJECT_BINARY_DIR}/_deps/xercesc-src/CMakeLists.txt)
-
-# Check if the file exists
-if(EXISTS ${XERCES_CMAKELISTS})
-    # Read the file content
-    file(READ ${XERCES_CMAKELISTS} CMAKELISTS_CONTENT)
-
-    # Remove the specific line "add_subdirectory(samples)"
-    string(REPLACE "add_subdirectory(doc)" "" MODIFIED_CONTENT ${CMAKELISTS_CONTENT})
-    string(REPLACE "add_subdirectory(tests)" "" MODIFIED_CONTENT ${MODIFIED_CONTENT})
-    string(REPLACE "add_subdirectory(samples)" "" MODIFIED_CONTENT ${MODIFIED_CONTENT})
-
-    # Write the modified content back to the file
-    file(WRITE ${XERCES_CMAKELISTS} "${MODIFIED_CONTENT}")
-endif()
 
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINTS ${PROJECT_BINARY_DIR}/_deps/exprtk-src/include)
 
