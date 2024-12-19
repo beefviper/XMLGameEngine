@@ -72,8 +72,8 @@ if(EXISTS ${XERCES_CMAKELISTS})
 
     # Remove the specific line "add_subdirectory(samples)"
     string(REPLACE "add_subdirectory(doc)" "" MODIFIED_CONTENT ${CMAKELISTS_CONTENT})
-    string(REPLACE "add_subdirectory(tests)" "" MODIFIED_CONTENT ${CMAKELISTS_CONTENT})
-    string(REPLACE "add_subdirectory(samples)" "" MODIFIED_CONTENT ${CMAKELISTS_CONTENT})
+    string(REPLACE "add_subdirectory(tests)" "" MODIFIED_CONTENT ${MODIFIED_CONTENT})
+    string(REPLACE "add_subdirectory(samples)" "" MODIFIED_CONTENT ${MODIFIED_CONTENT})
 
     # Write the modified content back to the file
     file(WRITE ${XERCES_CMAKELISTS} "${MODIFIED_CONTENT}")
