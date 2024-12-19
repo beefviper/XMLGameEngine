@@ -79,6 +79,24 @@ if(EXISTS ${XERCES_CMAKELISTS})
     file(WRITE ${XERCES_CMAKELISTS} "${MODIFIED_CONTENT}")
 endif()
 
+# Path to the folder to delete
+set(SAMPLES_FOLDER ${PROJECT_BINARY_DIR}/_deps/xercesc-src/samples)
+
+# Check if the folder exists before attempting to delete it
+if(EXISTS ${SAMPLES_FOLDER})
+    file(REMOVE_RECURSE ${SAMPLES_FOLDER})
+    message(STATUS "Deleted folder: ${SAMPLES_FOLDER}")
+endif()
+
+# Path to the folder to delete
+set(TESTS_FOLDER ${PROJECT_BINARY_DIR}/_deps/xercesc-src/tests)
+
+# Check if the folder exists before attempting to delete it
+if(EXISTS ${TESTS_FOLDER})
+    file(REMOVE_RECURSE ${TESTS_FOLDER})
+    message(STATUS "Deleted folder: ${TESTS_FOLDER}")
+endif()
+
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINTS ${PROJECT_BINARY_DIR}/_deps/exprtk-src/include)
 
 target_include_directories(${PROJECT_NAME} PUBLIC source/include)
@@ -103,21 +121,6 @@ set_target_properties(sfml-window PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_
 set_target_properties(sfml-graphics PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set_target_properties(sfml-network PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set_target_properties(sfml-audio PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-
-# Path to the Xerces-C CMakeLists.txt file
-set(XERCES_CMAKETESTS ${PROJECT_BINARY_DIR}/_deps/xercesc-build/CTestTestfile.cmake)
-
-# Check if the file exists
-if(EXISTS ${XERCES_CMAKETESTS})
-    # Read the file content
-    file(READ ${XERCES_CMAKETESTS} CMAKETESTS_CONTENT)
-
-    # Remove the specific line "add_subdirectory(samples)"
-    string(REPLACE "subdirs" "" MODIFIED_CONTENT ${CMAKETESTS_CONTENT})
-
-    # Write the modified content back to the file
-    file(WRITE ${XERCES_CMAKETESTS} "${MODIFIED_CONTENT}")
-endif()
 
 add_dependencies(${PROJECT_NAME} data-target)
 
