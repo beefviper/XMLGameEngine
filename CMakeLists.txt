@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.19)
 
 project("XMLGameEngine")
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-
 add_executable(${PROJECT_NAME}
 	"source/main.cpp"
 	"source/game.cpp"
@@ -29,6 +27,8 @@ add_executable(${PROJECT_NAME}
 	"source/include/game_expr.h"
 	"source/include/game_sfml.h"
 )
+
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	PROPERTY VS_STARTUP_PROJECT XMLGameEngine
