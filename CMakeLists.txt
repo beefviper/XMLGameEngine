@@ -34,10 +34,6 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	PROPERTY VS_STARTUP_PROJECT XMLGameEngine
 )
 
-if (MSVC)
-    add_compile_options(/bigobj)
-endif()
-
 set(_VCPKG_INSTALLED_DIR "") # delete me
 
 include(FetchContent)
@@ -73,7 +69,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
-	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external->)
+	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
 set_target_properties(xerces-c PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 target_compile_options(xerces-c PRIVATE
