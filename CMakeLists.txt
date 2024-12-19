@@ -60,8 +60,6 @@ FetchContent_Declare(exprtk
 	EXCLUDE_FROM_ALL
 )
 
-FetchContent_MakeAvailable(XercesC SFML exprtk)
-
 # Path to the Xerces-C CMakeLists.txt file
 set(XERCES_CMAKELISTS ${PROJECT_BINARY_DIR}/_deps/xercesc-src/CMakeLists.txt)
 
@@ -78,6 +76,8 @@ if(EXISTS ${XERCES_CMAKELISTS})
     # Write the modified content back to the file
     file(WRITE ${XERCES_CMAKELISTS} "${MODIFIED_CONTENT}")
 endif()
+
+FetchContent_MakeAvailable(XercesC SFML exprtk)
 
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINTS ${PROJECT_BINARY_DIR}/_deps/exprtk-src/include)
 
