@@ -79,22 +79,6 @@ if(EXISTS ${XERCES_CMAKELISTS})
     file(WRITE ${XERCES_CMAKELISTS} "${MODIFIED_CONTENT}")
 endif()
 
-# Path to the Xerces-C CMakeLists.txt file
-set(XERCES_CMAKETESTS ${PROJECT_BINARY_DIR}/_deps/xercesc-build/CTestTestfile.cmake)
-
-# Check if the file exists
-if(EXISTS ${XERCES_CMAKETESTS})
-    # Read the file content
-    file(READ ${XERCES_CMAKETESTS} CMAKETESTS_CONTENT)
-
-    # Remove the specific line "add_subdirectory(samples)"
-    string(REPLACE "subdirs(\"tests\")" "" MODIFIED_CONTENT ${CMAKETESTS_CONTENT})
-    string(REPLACE "subdirs(\"samples\")" "" MODIFIED_CONTENT ${MODIFIED_CONTENT})
-
-    # Write the modified content back to the file
-    file(WRITE ${XERCES_CMAKETESTS} "${MODIFIED_CONTENT}")
-endif()
-
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINTS ${PROJECT_BINARY_DIR}/_deps/exprtk-src/include)
 
 target_include_directories(${PROJECT_NAME} PUBLIC source/include)
@@ -119,6 +103,21 @@ set_target_properties(sfml-window PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_
 set_target_properties(sfml-graphics PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set_target_properties(sfml-network PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set_target_properties(sfml-audio PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+
+# Path to the Xerces-C CMakeLists.txt file
+set(XERCES_CMAKETESTS ${PROJECT_BINARY_DIR}/_deps/xercesc-build/CTestTestfile.cmake)
+
+# Check if the file exists
+if(EXISTS ${XERCES_CMAKETESTS})
+    # Read the file content
+    file(READ ${XERCES_CMAKETESTS} CMAKETESTS_CONTENT)
+
+    # Remove the specific line "add_subdirectory(samples)"
+    string(REPLACE "subdirs" "" MODIFIED_CONTENT ${CMAKETESTS_CONTENT})
+
+    # Write the modified content back to the file
+    file(WRITE ${XERCES_CMAKETESTS} "${MODIFIED_CONTENT}")
+endif()
 
 add_dependencies(${PROJECT_NAME} data-target)
 
