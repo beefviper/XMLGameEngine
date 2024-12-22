@@ -176,9 +176,9 @@ namespace xge
 		template <typename T>
 		struct inc : public exprtk::igeneric_function<T>
 		{
-			inc() noexcept : exprtk::igeneric_function<T>("S|S") {}
+			inc() noexcept : exprtk::igeneric_function<T>("S") {}
 
-			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			inline T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("inc");
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
@@ -221,9 +221,9 @@ namespace xge
 		template <typename T>
 		struct bounce : public exprtk::igeneric_function<T>
 		{
-			bounce() noexcept : exprtk::igeneric_function<T>("Z|Z") {}
+			bounce() noexcept : exprtk::igeneric_function<T>("Z") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("bounce");
@@ -234,9 +234,9 @@ namespace xge
 		template <typename T>
 		struct stick : public exprtk::igeneric_function<T>
 		{
-			stick() noexcept : exprtk::igeneric_function<T>("Z|Z") {}
+			stick() noexcept : exprtk::igeneric_function<T>("Z") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("stick");
@@ -247,9 +247,9 @@ namespace xge
 		template <typename T>
 		struct reset : public exprtk::igeneric_function<T>
 		{
-			reset() noexcept : exprtk::igeneric_function<T>("Z|Z") {}
+			reset() noexcept : exprtk::igeneric_function<T>("Z") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("reset");
@@ -260,9 +260,9 @@ namespace xge
 		template <typename T>
 		struct die : public exprtk::igeneric_function<T>
 		{
-			die() noexcept : exprtk::igeneric_function<T>("Z|Z") {}
+			die() noexcept : exprtk::igeneric_function<T>("Z") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("die");
@@ -273,9 +273,9 @@ namespace xge
 		template <typename T>
 		struct moveUp : public exprtk::igeneric_function<T>
 		{
-			moveUp() noexcept : exprtk::igeneric_function<T>("T|T") {}
+			moveUp() noexcept : exprtk::igeneric_function<T>("T") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("moveup");
 				const float step = scalar_t(parameters[0])();
@@ -287,9 +287,9 @@ namespace xge
 		template <typename T>
 		struct moveDown : public exprtk::igeneric_function<T>
 		{
-			moveDown() noexcept : exprtk::igeneric_function<T>("T|T") {}
+			moveDown() noexcept : exprtk::igeneric_function<T>("T") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("movedown");
 				const float step = scalar_t(parameters[0])();
@@ -301,9 +301,9 @@ namespace xge
 		template <typename T>
 		struct moveLeft : public exprtk::igeneric_function<T>
 		{
-			moveLeft() noexcept : exprtk::igeneric_function<T>("T|T") {}
+			moveLeft() noexcept : exprtk::igeneric_function<T>("T") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("moveleft");
 				const float step = scalar_t(parameters[0])();
@@ -315,9 +315,9 @@ namespace xge
 		template <typename T>
 		struct moveRight : public exprtk::igeneric_function<T>
 		{
-			moveRight() noexcept : exprtk::igeneric_function<T>("T|T") {}
+			moveRight() noexcept : exprtk::igeneric_function<T>("T") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("moveright");
 				const float step = scalar_t(parameters[0])();
@@ -329,7 +329,7 @@ namespace xge
 		template <typename T>
 		struct state : public exprtk::igeneric_function<T>
 		{
-			state() noexcept : exprtk::igeneric_function<T>("S|S|Z") {}
+			state() noexcept : exprtk::igeneric_function<T>("S|Z") {}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
@@ -350,9 +350,9 @@ namespace xge
 		template <typename T>
 		struct action : public exprtk::igeneric_function<T>
 		{
-			action() noexcept : exprtk::igeneric_function<T>("SS|SS") {}
+			action() noexcept : exprtk::igeneric_function<T>("SS") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[1])));
@@ -363,9 +363,9 @@ namespace xge
 		template <typename T>
 		struct fire : public exprtk::igeneric_function<T>
 		{
-			fire() noexcept : exprtk::igeneric_function<T>("S|S") {}
+			fire() noexcept : exprtk::igeneric_function<T>("S") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()(parameter_list_t parameters) override
 			{
 				tempSParams.push_back("fire");
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
