@@ -38,7 +38,7 @@
       <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
       <collisions enabled="true">
-        <collision edge="horizontal" action="bounce()" />
+        <collision edge="vertical" action="bounce()" />
         <collision edge="left" action="inc('score2');reset" />
         <collision edge="right" action="inc('score1');reset()" />
         <collision basic="basic" action="bounce()" />
