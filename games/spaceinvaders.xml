@@ -30,7 +30,7 @@
       <position x="window.width.center" y="window.bottom - height * 2" />
       <velocity x="0" y="0" />
       <collisions enabled="true">
-        <collision edge="vertical" action="stick()" />
+        <collision edge="horizontal" action="stick()" />
       </collisions>
       <actions>
         <action name="left" value="move.left(step)" />
@@ -43,7 +43,7 @@
       <position x="margin" y="margin/2" />
       <velocity x="2" y="0" />
       <collisions enabled="true" group="true">
-        <collision edge="vertical" action="bounce();move.down(10)" />
+        <collision edge="horizontal" action="bounce();move.down(10)" />
         <collision basic="basic" action="die()" />
       </collisions>
     </object>
