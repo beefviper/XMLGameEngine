@@ -163,13 +163,13 @@ namespace xge
 						}
 						else if (col_edge == "horizontal")
 						{
-							xc_collision_data.top = col_action;
-							xc_collision_data.bottom = col_action;
+							xc_collision_data.left = col_action;
+							xc_collision_data.right = col_action;
 						}
 						else if (col_edge == "vertical")
 						{
-							xc_collision_data.left = col_action;
-							xc_collision_data.right = col_action;
+							xc_collision_data.top = col_action;
+							xc_collision_data.bottom = col_action;
 						}
 						else if (col_edge == "top")
 						{
