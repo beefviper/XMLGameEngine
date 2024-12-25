@@ -22,7 +22,6 @@ namespace xge
 		}
 		catch (...)
 		{
-			std::cout << "In game_xml::~game_xml the function xc::XMLPlatformUtils::Terminate() threw an exception" << std::endl;
 			return;
 		}
 	}
@@ -359,7 +358,6 @@ namespace xge
 		}
 		catch (...)
 		{
-			std::cout << "In StrToXMLCh::~StrToXMLCh the function xc::XMLString::release() threw an exception" << std::endl;
 			return;
 		}
 	}
