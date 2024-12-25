@@ -31,7 +31,7 @@ namespace xge
 			}
 
 			// TODO: should be able to combine with setGridXY() in game_expr, caculate final x and y pos there
-			GridData gridData = setGridData(object);
+			const GridData gridData = setGridData(object);
 			object.position.x = object.positionOriginal.x + ((gridData.obj.x + gridData.padding.x) * object.position.x);
 			object.position.y = object.positionOriginal.y + ((gridData.obj.y + gridData.padding.y) * object.position.y);
 

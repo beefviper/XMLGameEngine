@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
+#include <span>
 
 int main(int argc, char* argv[])
 {
@@ -16,10 +17,15 @@ int main(int argc, char* argv[])
 	// TODO: make function to validate filename
 	std::string filename{ "games/pong_full.xml" };
 
-	if (argc == 2)
+	const std::span<char*> args(argv, argc);
+	
+	if (args.size() > 1)
 	{
-		filename = argv[1];
+		filename = args[1];
 	}
+
+	constexpr float test123 = 1234.324f;
+	constexpr int test234 = test123;
 
 	// TODO: why nested if-else? just use if, else if, else
 	if (!std::filesystem::exists(filename))

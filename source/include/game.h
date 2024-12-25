@@ -31,20 +31,20 @@ namespace xge
 		void printGame(void);
 
 		WindowDesc& getWindowDesc(void) noexcept;
-		bool isShown(Object& object);
+		bool isShown(const Object& object) noexcept;
 		Object& getObject(const std::string& name);
 		float getVariable(const std::string& name);
 		State getCurrentState(void);
-		std::vector<Object>& getCurrentObjects(void);
+		std::vector<Object>& getCurrentObjects(void) noexcept;
 
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
 		void pushState(std::string name);
-		void popState(void);
+		void popState(void) noexcept;
 
 		void setObjectParam(const std::string& name, const std::string& param, const float& value);
 
-		void updateGroupOfObjects(Object& object, std::string side);
+		void updateGroupOfObjects(const Object& object, std::string side) noexcept;
 
 	private:
 		std::string filename;

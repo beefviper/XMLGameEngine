@@ -86,7 +86,7 @@ namespace xge
 		return windowDesc;
 	}
 
-	bool Game::isShown(Object& object)
+	bool Game::isShown(const Object& object) noexcept
 	{
 		bool result = false;
 
@@ -125,7 +125,7 @@ namespace xge
 		return currentState.top();
 	}
 
-	std::vector<Object>& Game::getCurrentObjects(void)
+	std::vector<Object>& Game::getCurrentObjects(void) noexcept
 	{
 		return objects;
 	}
@@ -146,7 +146,7 @@ namespace xge
 		currentState.push(*result);
 	}
 
-	void Game::popState(void)
+	void Game::popState(void) noexcept
 	{
 		currentState.pop();
 	}
@@ -160,9 +160,9 @@ namespace xge
 		}
 	}
 
-	void Game::updateGroupOfObjects(Object& object, std::string side)
+	void Game::updateGroupOfObjects(const Object& object, std::string side) noexcept
 	{
-		int groupNum = object.collisionData.group;
+		const int groupNum = object.collisionData.group;
 
 		bool foundObject = false;
 
@@ -202,10 +202,10 @@ namespace xge
 		auto objectHeight = object.sprite->getLocalBounds().height;
 
 		std::vector<std::string> curSide{};
-		float leftBound = 0;
-		float rightBound = windowDesc.width - objectWidth;
-		float topBound = 0;
-		float bottomBound = windowDesc.height - objectHeight;
+		constexpr float leftBound = 0;
+		const float rightBound = windowDesc.width - objectWidth;
+		constexpr float topBound = 0;
+		const float bottomBound = windowDesc.height - objectHeight;
 
 		if (side == "left") { curSide = object.collisionData.left; }
 		else if (side == "right") { curSide = object.collisionData.right; }

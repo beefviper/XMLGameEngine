@@ -7,10 +7,12 @@
 
 namespace xge
 {
-	void game_expr::init(WindowDesc& windowDesc, std::map<std::string, float>& variables,
+	void game_expr::init(const WindowDesc& windowDesc, std::map<std::string, float>& variables,
 		std::vector<RawState>& rawStates, std::vector<State>& states,
 		std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
 	{
+		generator.seed(seed());
+
 		// custom functions added to exprtk
 		randomNumber<float> randomNumberFloat{};
 		randomRange<float> randomRangeFloat{};
@@ -79,7 +81,7 @@ namespace xge
 		for (auto& rawObject : rawObjects)
 		{
 			std::vector<std::string> tempSpriteParams = processData(rawObject, rawObject.src);
-			GridData gridData = setGridXY(tempSpriteParams);
+			const GridData gridData = setGridXY(tempSpriteParams);
 
 			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
 			{

@@ -7,7 +7,7 @@
 
 namespace xge
 {
-	sf::Color sfmlColor(std::string color)
+	sf::Color sfmlColor(std::string color) noexcept
 	{
 		auto result = sf::Color::Transparent;
 

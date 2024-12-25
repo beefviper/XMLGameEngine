@@ -7,10 +7,17 @@
 
 namespace xge
 {
-	game_xml::game_xml()
+	game_xml::game_xml() noexcept
 	{
+		try
+		{
 		xc::XMLPlatformUtils::Initialize("en_US");
 		domParser = std::make_unique<xc::XercesDOMParser>();
+		}
+		catch (...)
+		{
+			return;
+		}
 	}
 
 	game_xml::~game_xml()
@@ -26,7 +33,7 @@ namespace xge
 		}
 	}
 
-	void game_xml::init(std::string& filename, WindowDesc& windowDesc,
+	void game_xml::init(const std::string& filename, WindowDesc& windowDesc,
 		std::map<std::string, float>& variables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects)
 	{
@@ -39,7 +46,7 @@ namespace xge
 		domParser->parse(filename.c_str());
 
 		auto schemaLocation = getAttributeByName(domParser->getDocument()->getDocumentElement(), "xsi:noNamespaceSchemaLocation");
-		auto errorCount = domParser->getErrorCount();
+		const auto errorCount = domParser->getErrorCount();
 		
 		// TODO : need to check if schemaLoction actually points to a valid file/schema
 		
@@ -331,9 +338,15 @@ namespace xge
 
 	std::string game_xml::getAttributeByName(const xc::DOMElement* element, const std::string& attribute)
 	{
-		StrToXMLCh attr(attribute);
-		const XMLCh* value = element->getAttribute(attr.value());
-		std::string v = XMLChToStr(value);
+		std::string v{};
+
+		if (element != nullptr)
+		{
+			StrToXMLCh attr(attribute);
+			const XMLCh* value = element->getAttribute(attr.value());
+			v = XMLChToStr(value);
+		}
+
 		return v;
 	}
 
@@ -362,7 +375,7 @@ namespace xge
 		}
 	}
 
-	XMLCh* StrToXMLCh::value()
+	XMLCh* StrToXMLCh::value() noexcept
 	{
 		return data;
 	}

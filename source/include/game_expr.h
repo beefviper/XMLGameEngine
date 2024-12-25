@@ -24,7 +24,7 @@ namespace xge
 		using string_t = typename generic_t::string_view;
 		using scalar_t = typename generic_t::scalar_view;
 
-		void init(WindowDesc& windowDesc, std::map<std::string, float>& variables,
+		void init(const WindowDesc& windowDesc, std::map<std::string, float>& variables,
 			std::vector<RawState>& rawStates, std::vector<State>& states,
 			std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
 
@@ -42,7 +42,7 @@ namespace xge
 		static inline std::vector<std::string> tempSParams;
 
 		static inline std::random_device seed;
-		static inline std::mt19937 generator{ seed() };
+		static inline std::mt19937 generator;
 
 		template <typename T>
 		static T randomNumberRange(T min, T max)
@@ -53,22 +53,24 @@ namespace xge
 		}
 
 		template <typename T>
-		struct randomNumber : public exprtk::ifunction<T>
+		struct randomNumber final : public exprtk::ifunction<T>
 		{
-			randomNumber() : exprtk::ifunction<T>(1) {}
+			randomNumber() noexcept(std::is_nothrow_constructible_v<exprtk::ifunction<T>, int>)
+				: exprtk::ifunction<T>(1) {}
 
-			T operator()(const T& randMax)
+			T operator()(const T& randMax) override
 			{
 				return randomNumberRange(0.0f, randMax);
 			}
 		};
 
 		template <typename T>
-		struct randomRange : public exprtk::ifunction<T>
+		struct randomRange final : public exprtk::ifunction<T>
 		{
-			randomRange() : exprtk::ifunction<T>(2) {}
+			randomRange() noexcept(std::is_nothrow_constructible_v<exprtk::ifunction<T>, int>)
+				: exprtk::ifunction<T>(2) {}
 
-			T operator()(const T& randMin, const T& randMax)
+			T operator()(const T& randMin, const T& randMax) override
 			{
 				return randomNumberRange(randMin, randMax);
 			}

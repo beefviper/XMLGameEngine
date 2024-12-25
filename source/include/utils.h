@@ -14,7 +14,7 @@ namespace xge
 {
 	// TODO: delete utils, move functions to places they're needed
 	// move sfmlColor to game_sfml
-	sf::Color sfmlColor(std::string color);
+	sf::Color sfmlColor(std::string color) noexcept;
 	// move sfmlKeytoString to engine
 	std::string sfmlKeyToString(sf::Keyboard::Key key);
 }

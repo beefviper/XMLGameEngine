@@ -30,10 +30,15 @@ namespace xge
 	class game_xml
 	{
 	public:
-		game_xml();
+		game_xml() noexcept;
 		~game_xml();
 
-		void init(std::string& filename, WindowDesc& windowDesc,
+		game_xml(const game_xml&) = delete;
+		game_xml& operator=(const game_xml&) = delete;
+		game_xml(game_xml&& other) = delete;
+		game_xml& operator=(game_xml&& other) = delete;
+
+		void init(const std::string& filename, WindowDesc& windowDesc,
 			std::map<std::string, float>& variables,
 			std::vector<RawState>& rawStates,
 			std::vector<RawObject>& rawObjects);
@@ -65,7 +70,12 @@ namespace xge
 		StrToXMLCh(const std::string toTranscode);
 		~StrToXMLCh();
 
-		XMLCh* value();
+		StrToXMLCh(const StrToXMLCh&) = delete;
+		StrToXMLCh& operator=(const StrToXMLCh&) = delete;
+		StrToXMLCh(StrToXMLCh&& other) = delete;
+		StrToXMLCh& operator=(StrToXMLCh&& other) = delete;
+
+		XMLCh* value() noexcept;
 
 	private:
 		XMLCh* data;
