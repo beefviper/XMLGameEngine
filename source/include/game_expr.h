@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <random>
+#include <cassert>
 
 namespace xge
 {
@@ -81,7 +82,7 @@ namespace xge
 		{
 			shapeCircle() noexcept : exprtk::igeneric_function<T>("T|TS") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()([[maybe_unused]] const std::size_t& ps_index, parameter_list_t parameters) override
 			{
 				tempSParams.push_back("circle");
 				float const radius = scalar_t(parameters[0])();
@@ -106,7 +107,7 @@ namespace xge
 		{
 			shapeRectangle() noexcept : exprtk::igeneric_function<T>("TT|TTS") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()([[maybe_unused]] const std::size_t& ps_index, parameter_list_t parameters) override
 			{
 				tempSParams.push_back("rectangle");
 				const float width = scalar_t(parameters[0])();
@@ -132,7 +133,7 @@ namespace xge
 		{
 			text() noexcept : exprtk::igeneric_function<T>("ST|STS") {}
 
-			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			inline T operator()([[maybe_unused]] const std::size_t& ps_index, parameter_list_t parameters) override
 			{
 				tempSParams.push_back("text");
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
@@ -157,7 +158,7 @@ namespace xge
 		{
 			image() noexcept : exprtk::igeneric_function<T>("S|SS") {}
 
-			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			inline T operator()([[maybe_unused]] const std::size_t& ps_index, parameter_list_t parameters) override
 			{
 				tempSParams.push_back("image");
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
@@ -194,7 +195,7 @@ namespace xge
 		{
 			grid() noexcept : exprtk::igeneric_function<T>("TTT|TTTTT") {}
 
-			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			inline T operator()([[maybe_unused]] const std::size_t& ps_index, parameter_list_t parameters) override
 			{
 				tempSParams.push_back("grid");
 				const float width = scalar_t(parameters[0])();
@@ -225,7 +226,7 @@ namespace xge
 		{
 			bounce() noexcept : exprtk::igeneric_function<T>("Z") {}
 
-			T operator()(parameter_list_t parameters) override
+			T operator()([[maybe_unused]] parameter_list_t parameters) override
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("bounce");
@@ -238,7 +239,7 @@ namespace xge
 		{
 			stick() noexcept : exprtk::igeneric_function<T>("Z") {}
 
-			T operator()(parameter_list_t parameters) override
+			T operator()([[maybe_unused]] parameter_list_t parameters) override
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("stick");
@@ -251,7 +252,7 @@ namespace xge
 		{
 			reset() noexcept : exprtk::igeneric_function<T>("Z") {}
 
-			T operator()(parameter_list_t parameters) override
+			T operator()([[maybe_unused]] parameter_list_t parameters) override
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("reset");
@@ -264,7 +265,7 @@ namespace xge
 		{
 			die() noexcept : exprtk::igeneric_function<T>("Z") {}
 
-			T operator()(parameter_list_t parameters) override
+			T operator()([[maybe_unused]] parameter_list_t parameters) override
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("die");
@@ -333,7 +334,7 @@ namespace xge
 		{
 			state() noexcept : exprtk::igeneric_function<T>("S|Z") {}
 
-			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
+			T operator()([[maybe_unused]] const std::size_t& ps_index, parameter_list_t parameters) override
 			{
 				if (parameters.size() > 0)
 				{

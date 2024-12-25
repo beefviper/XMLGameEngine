@@ -43,11 +43,11 @@ namespace xge
 					break;
 
 				case sf::Event::KeyPressed:
-					handleKeyPressed(game, event);
+					handleKeyPressed(event);
 					break;
 
 				case sf::Event::KeyReleased:
-					handleKeyReleased(game, event);
+					handleKeyReleased(event);
 					break;
 
 				default:
@@ -72,7 +72,7 @@ namespace xge
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::handleKeyPressed(Game& game, const sf::Event& event)
+	void Engine::handleKeyPressed(const sf::Event& event)
 	{
 		// TODO: fix logic? remove if? just set value in map true?
 		if (!isKeyPressed[event.key.code])
@@ -81,24 +81,24 @@ namespace xge
 
 			for (auto& input : game.getCurrentState().input)
 			{
-				execute_action(game, event, input, true);
+				execute_action(event, input, true);
 			}
 		}
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::handleKeyReleased(Game& game, const sf::Event& event)
+	void Engine::handleKeyReleased(const sf::Event& event)
 	{
 		isKeyPressed[event.key.code] = false;
 
 		for (auto& input : game.getCurrentState().input)
 		{
-			execute_action(game, event, input, false);
+			execute_action(event, input, false);
 		}
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::execute_action(Game& game, const sf::Event& event, PairStringVectorString& input, bool keyPressed)
+	void Engine::execute_action(const sf::Event& event, PairStringVectorString& input, bool keyPressed)
 	{
 		if (input.first == sfmlKeyToString(event.key.code))
 		{
