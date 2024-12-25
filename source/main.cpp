@@ -24,9 +24,6 @@ int main(int argc, char* argv[])
 		filename = args[1];
 	}
 
-	constexpr float test123 = 1234.324f;
-	constexpr int test234 = test123;
-
 	// TODO: why nested if-else? just use if, else if, else
 	if (!std::filesystem::exists(filename))
 	{
