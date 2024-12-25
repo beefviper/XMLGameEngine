@@ -16,7 +16,15 @@ namespace xge
 	game_xml::~game_xml()
 	{
 		domParser.reset();
-		xc::XMLPlatformUtils::Terminate();
+		try
+		{
+			xc::XMLPlatformUtils::Terminate();
+		}
+		catch (...)
+		{
+			std::cout << "In game_xml::~game_xml the function xc::XMLPlatformUtils::Terminate() threw an exception" << std::endl;
+			return;
+		}
 	}
 
 	void game_xml::init(std::string& filename, WindowDesc& windowDesc,
@@ -345,7 +353,15 @@ namespace xge
 
 	StrToXMLCh::~StrToXMLCh()
 	{
-		xc::XMLString::release(&data);
+		try
+		{
+			xc::XMLString::release(&data);
+		}
+		catch (...)
+		{
+			std::cout << "In StrToXMLCh::~StrToXMLCh the function xc::XMLString::release() threw an exception" << std::endl;
+			return;
+		}
 	}
 
 	XMLCh* StrToXMLCh::value()
