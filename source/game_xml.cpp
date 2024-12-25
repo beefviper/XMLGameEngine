@@ -10,12 +10,12 @@ namespace xge
 	game_xml::game_xml()
 	{
 		xc::XMLPlatformUtils::Initialize("en_US");
-		domParser = new xc::XercesDOMParser();
+		domParser = std::make_unique<xc::XercesDOMParser>();
 	}
 
 	game_xml::~game_xml()
 	{
-		delete domParser;
+		domParser.reset();
 		xc::XMLPlatformUtils::Terminate();
 	}
 

@@ -38,7 +38,7 @@ namespace xge
 			std::vector<RawState>& rawStates,
 			std::vector<RawObject>& rawObjects);
 
-		xc::XercesDOMParser* domParser = nullptr;
+		std::unique_ptr<xc::XercesDOMParser> domParser{};
 
 		class ParserErrorHandler : public xc::ErrorHandler
 		{
