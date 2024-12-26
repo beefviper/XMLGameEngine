@@ -175,6 +175,8 @@ namespace xge
 		case Direction::Right:
 			object.velocity.x = step;
 			break;
+		default:
+			break;
 		}
 	}
 
