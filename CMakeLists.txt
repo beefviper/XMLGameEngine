@@ -18,14 +18,14 @@ add_executable(${PROJECT_NAME}
 	"source/game_expr.cpp"
 	"source/game_sfml.cpp"
 	
-	"source/include/game.h"
-	"source/include/engine.h"
-	"source/include/object.h"
-	"source/include/states.h"
-	"source/include/utils.h"
-	"source/include/game_xml.h"
-	"source/include/game_expr.h"
-	"source/include/game_sfml.h"
+	"include/game.h"
+	"include/engine.h"
+	"include/object.h"
+	"include/states.h"
+	"include/utils.h"
+	"include/game_xml.h"
+	"include/game_expr.h"
+	"include/game_sfml.h"
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
@@ -60,7 +60,7 @@ FetchContent_MakeAvailable(XercesC SFML exprtk)
 
 find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINTS ${PROJECT_BINARY_DIR}/_deps/exprtk-src/include)
 
-target_include_directories(${PROJECT_NAME} PUBLIC source/include)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${EXPRTK_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE xerces-c)
@@ -87,7 +87,7 @@ add_dependencies(${PROJECT_NAME} data-target)
 
 if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
     set(data_xsd
-		"games/assets/xmlgameengine.xsd")
+		"assets/xmlgameengine.xsd")
 
     set(data_xml
 		"games/pong.xml"
@@ -96,8 +96,8 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 		"games/spaceinvaders.xml")
 
     set(data_assets
-		"games/assets/tuffy.ttf"
-		"games/assets/paddle.jpg")
+		"assets/tuffy.ttf"
+		"assets/paddle.jpg")
 
     foreach(item IN LISTS data_xsd data_xml data_assets)
         message(STATUS ${item})

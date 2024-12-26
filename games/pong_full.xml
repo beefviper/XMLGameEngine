@@ -3,7 +3,7 @@
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="assets/xmlgameengine.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <!-- window -->
   <window name="Pong" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
   <!-- variables -->
@@ -46,7 +46,7 @@
     </object>
     <!-- paddle1 -->
     <object name="paddle1">
-      <sprite src="image('games/assets/paddle.jpg')" />
+      <sprite src="image('assets/paddle.jpg')" />
       <position x="window.left + margin" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
       <collisions enabled="true">
@@ -59,7 +59,7 @@
     </object>
     <!-- paddle2 -->
     <object name="paddle2">
-      <sprite src="image('games/assets/paddle.jpg', 'flip.horizontal')" />
+      <sprite src="image('assets/paddle.jpg', 'flip.horizontal')" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
       <collisions enabled="true">

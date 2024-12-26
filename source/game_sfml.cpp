@@ -121,7 +121,7 @@ namespace xge
 		sf::Text text;
 
 		// TODO: fix font handling, make variable to cache font
-		std::string fontFile{ "games/assets/tuffy.ttf" };
+		std::string fontFile{ "assets/tuffy.ttf" };
 		if (!font.loadFromFile(fontFile))
 		{
 			std::cout << "error: failed to load font: " << fontFile << std::endl;

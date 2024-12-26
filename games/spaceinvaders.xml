@@ -3,7 +3,7 @@
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="assets/xmlgameengine.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <window name="Space Invaders" width="1024" height="768" background="color.black" fullscreen="false" framerate="60" />
   <variables>
     <variable name="margin" value="80" />

@@ -3,7 +3,7 @@
 <!-- author: beefviper -->
 <!-- date: July 13, 2021 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="assets/xmlgameengine.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <!-- window -->
   <window name="Pong" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
   <!-- variables -->
