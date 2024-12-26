@@ -58,21 +58,22 @@ FetchContent_Declare(exprtk
 
 FetchContent_MakeAvailable(XercesC SFML exprtk)
 
-find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp" HINTS ${PROJECT_BINARY_DIR}/_deps/exprtk-src/include)
-
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${EXPRTK_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE xerces-c)
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system
 	sfml-window sfml-graphics sfml-network sfml-audio
 )
+target_link_libraries(${PROJECT_NAME} PRIVATE exprtk)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
 set_target_properties(xerces-c PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 target_compile_options(xerces-c PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>
+)
+target_compile_options(exprtk INTERFACE
 	$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>
 )
 
