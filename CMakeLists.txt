@@ -44,7 +44,7 @@ if (NOT FORCE_LOCAL_XERCESC)
 endif()
 
 if (NOT FORCE_LOCAL_EXPRTK)
-    find_package(exprtk QUIET)
+	find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
 endif()
 
 if (NOT FORCE_LOCAL_SFML)
@@ -64,8 +64,9 @@ else()
 	list(APPEND FETCHED_LIBRARIES XercesC)
 endif()
 
-if (exprtk_FOUND)
-    message(STATUS "exprtk found: ${exprtk_LIBRARIES}")
+if (EXPRTK_INCLUDE_DIRS)
+    message(STATUS "exprtk found: ${EXPRTK_INCLUDE_DIRS}")
+	set(EXPRTK_PACKAGE_FOUND TRUE)
 else()
     message(STATUS "exprtk not found, using FetchContent to download and build it locally.")
 
@@ -73,7 +74,7 @@ else()
 		GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
 		GIT_TAG 0.0.3-cmake
 		EXCLUDE_FROM_ALL)
-
+		
 	list(APPEND FETCHED_LIBRARIES exprtk)
 endif()
 
@@ -105,7 +106,13 @@ if(NOT TARGET XercesC::XercesC)
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE XercesC::XercesC)
-target_link_libraries(${PROJECT_NAME} PRIVATE exprtk)
+
+if (EXPRTK_PACKAGE_FOUND)
+	target_include_directories(${PROJECT_NAME} PRIVATE ${EXPRTK_INCLUDE_DIRS})
+else()
+	target_link_libraries(${PROJECT_NAME} PRIVATE exprtk)
+endif()
+
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system
 	sfml-window sfml-graphics sfml-network sfml-audio)
 
@@ -119,7 +126,7 @@ if (NOT XercesC_FOUND)
 	set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endif()
 
-if (NOT exprtk_FOUND)
+if (NOT EXPRTK_PACKAGE_FOUND)
 	target_compile_options(exprtk INTERFACE
 		$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
 endif()
