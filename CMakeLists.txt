@@ -100,7 +100,11 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE xerces-c)
+if(NOT TARGET XercesC::XercesC)
+    add_library(XercesC::XercesC ALIAS xerces-c)
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE XercesC::XercesC)
 target_link_libraries(${PROJECT_NAME} PRIVATE exprtk)
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system
 	sfml-window sfml-graphics sfml-network sfml-audio)
