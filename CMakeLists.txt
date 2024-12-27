@@ -116,8 +116,8 @@ if (NOT XercesC_FOUND)
 endif()
 
 if (NOT exprtk_FOUND)
-target_compile_options(exprtk INTERFACE
-	$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
+	target_compile_options(exprtk INTERFACE
+		$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
 endif()
 
 if (NOT SFML_FOUND)
