@@ -33,26 +33,70 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	PROPERTY VS_STARTUP_PROJECT XMLGameEngine)
 
-set(_VCPKG_INSTALLED_DIR "") # delete me
-
 include(FetchContent)
 
-FetchContent_Declare(XercesC
-	GIT_REPOSITORY https://github.com/apache/xerces-c.git
-	GIT_TAG v3.3.0
-	EXCLUDE_FROM_ALL)
+option(FORCE_LOCAL_XERCESC "Force using a locally fetched XercesC instance" OFF)
+option(FORCE_LOCAL_EXPRTK "Force using a locally fetched exprtk instance" OFF)
+option(FORCE_LOCAL_SFML "Force using a locally fetched SFML instance" OFF)
 
-FetchContent_Declare(exprtk
-	GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
-	GIT_TAG 0.0.3-cmake
-	EXCLUDE_FROM_ALL)
+if (NOT FORCE_LOCAL_XERCESC)
+    find_package(XercesC QUIET)
+endif()
 
-FetchContent_Declare(SFML
-	GIT_REPOSITORY https://github.com/SFML/SFML.git
-	GIT_TAG 2.6.2
-	EXCLUDE_FROM_ALL)
+if (NOT FORCE_LOCAL_EXPRTK)
+    find_package(exprtk QUIET)
+endif()
 
-FetchContent_MakeAvailable(XercesC exprtk SFML)
+if (NOT FORCE_LOCAL_SFML)
+    find_package(SFML 2.5...<3.0 COMPONENTS system window graphics network audio QUIET)
+endif()
+
+if (XercesC_FOUND)
+    message(STATUS "XERCESC found: ${XercesC_LIBRARIES}")
+else()
+    message(STATUS "XercesC not found, using FetchContent to download and build it locally.")
+
+	FetchContent_Declare(XercesC
+		GIT_REPOSITORY https://github.com/apache/xerces-c.git
+		GIT_TAG v3.3.0
+		EXCLUDE_FROM_ALL)
+
+	list(APPEND FETCHED_LIBRARIES XercesC)
+endif()
+
+if (exprtk_FOUND)
+    message(STATUS "exprtk found: ${exprtk_LIBRARIES}")
+else()
+    message(STATUS "exprtk not found, using FetchContent to download and build it locally.")
+
+	FetchContent_Declare(exprtk
+		GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
+		GIT_TAG 0.0.3-cmake
+		EXCLUDE_FROM_ALL)
+
+	list(APPEND FETCHED_LIBRARIES exprtk)
+endif()
+
+if (SFML_FOUND)
+    message(STATUS "SFML found: ${SFML_LIBRARIES}")
+else()
+    message(STATUS "SFML not found, using FetchContent to download and build it locally.")
+
+    FetchContent_Declare(SFML
+        GIT_REPOSITORY https://github.com/SFML/SFML.git
+        GIT_TAG 2.6.2
+		EXCLUDE_FROM_ALL
+    )
+
+	list(APPEND FETCHED_LIBRARIES SFML)
+
+    set(SFML_BUILD_FROM_SOURCE ON CACHE BOOL "Force SFML to build from source" FORCE)
+    set(SFML_USE_SYSTEM_DEPS OFF CACHE BOOL "Use SFML's bundled dependencies" FORCE)
+endif()
+
+if (FETCHED_LIBRARIES)
+	FetchContent_MakeAvailable(${FETCHED_LIBRARIES})
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
