@@ -1,6 +1,6 @@
 # XMLGameEngine
 
-An engine for describing games built around Xerces, exprtk, and SFML.
+XMLGameEngine is a VGDL (Video Game Description Language) and engine for describing and running games built around Xerces, exprtk, and SFML.
 
 XMLGameEngine dependencies:
 * Xerces   https://github.com/apache/xerces-c
