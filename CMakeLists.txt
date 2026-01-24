@@ -98,6 +98,24 @@ if (FETCHED_LIBRARIES)
 	FetchContent_MakeAvailable(${FETCHED_LIBRARIES})
 endif()
 
+if (WIN32 AND TARGET Freetype)
+	message(STATUS "*** sanitizing Freetype INTERFACE_LINK_LIBRARIES on Windows")
+
+	get_target_property(ft_libs Freetype INTERFACE_LINK_LIBRARIES)
+	set(clean_libs "")
+
+	foreach(item IN LISTS ft_libs)
+		# Skip the legacy MSVC keywords inside generator expressions
+		if (NOT item MATCHES "\\$<BUILD_INTERFACE:(optimized|debug)>")
+			list(APPEND clean_libs "${item}")
+		endif()
+	endforeach()
+
+	set_target_properties(Freetype PROPERTIES
+		INTERFACE_LINK_LIBRARIES "${clean_libs}"
+	)
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 if(NOT TARGET XercesC::XercesC)
