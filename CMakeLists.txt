@@ -11,7 +11,7 @@ add_executable(${PROJECT_NAME})
 
 include(scripts/cmake/options.cmake)
 include(scripts/cmake/dependencies.cmake)
-include(scripts/cmake/engine.cmake)
+include(scripts/cmake/targets.cmake)
 include(scripts/cmake/platform.cmake)
 include(scripts/cmake/assets.cmake)
 
