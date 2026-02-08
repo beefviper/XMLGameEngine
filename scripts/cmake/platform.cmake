@@ -49,15 +49,3 @@ if (NOT SFML_FOUND)
 	set_target_properties(sfml-network PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 	set_target_properties(sfml-audio PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endif()
-
-set(CMAKE_FILES
-	"CMakeLists.txt"
-	"scripts/cmake/options.cmake"
-	"scripts/cmake/dependencies.cmake"
-	"scripts/cmake/targets.cmake"
-	"scripts/cmake/platform.cmake"
-	"scripts/cmake/assets.cmake")
-	
-source_group("CMake Files" FILES ${CMAKE_FILES})
-
-
