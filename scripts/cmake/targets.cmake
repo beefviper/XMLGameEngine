@@ -1,4 +1,4 @@
-# engine.cmake
+# targets.cmake
 # XML Game Engine
 # author: beefviper
 # date: Feb 6, 2026
