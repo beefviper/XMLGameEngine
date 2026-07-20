@@ -1,3 +1,8 @@
+// main.cpp
+// XML Game Engine
+// author: beefviper
+// date: July 20, 2026
+
 #include <SFML/Graphics.hpp>
 
 int main()
