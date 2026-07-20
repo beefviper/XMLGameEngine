@@ -3,22 +3,19 @@
 // author: beefviper
 // date: July 20, 2026
 
-#include <SFML/Graphics.hpp>
+#include "core/game.h"
+#include "core/engine.h"
+
+#include <iostream>
+#include <string>
+#include <filesystem>
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "SFML3 Test");
+	std::string xmlFile = "games/pong.xml";
 
-    while (window.isOpen())
-    {
-        while (const std::optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-        }
+	xge::Game game(xmlFile);
 
-        window.clear(sf::Color::Black);
-        window.draw(sf::CircleShape(50.f));
-        window.display();
-    }
+	xge::Engine engine(game);
+	engine.run();
 }
