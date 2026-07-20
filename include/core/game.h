@@ -3,7 +3,10 @@
 // author: beefviper
 // date: 20-Jul-26
 
+#pragma once
+
 #include "core/game/runtime_object.h"
+#include "core/game/runtime_states.h"
 
 #include <string>
 #include <map>

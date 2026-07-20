@@ -3,6 +3,8 @@
 // author: beefviper
 // date: 20-Jul-26
 
+#pragma once
+
 #include <string>
 #include <vector>
 #include <map>
