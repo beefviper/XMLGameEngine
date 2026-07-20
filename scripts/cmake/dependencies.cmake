@@ -14,7 +14,7 @@ if (NOT FORCE_LOCAL_EXPRTK)
 endif()
 
 if (NOT FORCE_LOCAL_SFML)
-	find_package(SFML 2.5...<3.0 COMPONENTS system window graphics network audio QUIET)
+	find_package(SFML 3 COMPONENTS System Window Graphics Network Audio QUIET)
 endif()
 
 if (XercesC_FOUND)

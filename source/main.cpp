@@ -1,49 +1,19 @@
-// main.cpp
-// XML Game Engine
-// author: beefviper
-// date: Sept 18, 2020
+#include <SFML/Graphics.hpp>
 
-#include "game.h"
-#include "engine.h"
-
-#include <iostream>
-#include <string>
-#include <filesystem>
-#include <span>
-
-int main(int argc, char* argv[])
+int main()
 {
-	
-	// TODO: make function to validate filename
-	std::string filename{ "games/pong_full.xml" };
+    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "SFML3 Test");
 
-	const std::span<char*> args(argv, argc);
-	
-	if (args.size() > 1)
-	{
-		filename = args[1];
-	}
+    while (window.isOpen())
+    {
+        while (const std::optional event = window.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+                window.close();
+        }
 
-	// TODO: why nested if-else? just use if, else if, else
-	if (!std::filesystem::exists(filename))
-	{
-		if (std::filesystem::exists("games/" + filename))
-		{
-			filename = "games/" + filename;
-		}
-		else
-		{
-			std::cout << "File not found: " << filename << '\n';
-			exit(EXIT_FAILURE);
-		}
-	}
-
-	xge::Game game{ filename };
-
-	game.printGame();
-
-	xge::Engine engine(game);
-	engine.loop();
-
-	return EXIT_SUCCESS;
+        window.clear(sf::Color::Black);
+        window.draw(sf::CircleShape(50.f));
+        window.display();
+    }
 }
