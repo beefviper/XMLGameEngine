@@ -10,18 +10,14 @@
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <memory>
 
-XERCES_CPP_NAMESPACE_BEGIN
-class DOMElement;
-XERCES_CPP_NAMESPACE_END
-
-using namespace xercesc;
+namespace xc = xercesc;
 
 namespace xge
 {
 class XercesNode : public XMLNode
 {
 public:
-    explicit XercesNode(DOMElement* element);
+    explicit XercesNode(xc::DOMElement* element);
 
     std::string getName() const override;
     std::string getText() const override;
@@ -34,7 +30,7 @@ public:
     std::vector<XMLNode*> getChildren(const std::string& name) const override;
 
 private:
-    DOMElement* m_element;
+    xc::DOMElement* m_element;
     mutable std::vector<std::unique_ptr<XMLNode>> m_childCache;
 };
 
@@ -54,8 +50,8 @@ private:
     void initXerces();
     void terminateXerces();
 
-    XercesDOMParser* m_parser;
-    DOMDocument* m_document;
+    xc::XercesDOMParser* m_parser;
+    xc::DOMDocument* m_document;
     std::unique_ptr<XMLNode> m_rootNode;
     bool m_isValid;
     bool m_xercesInitialized;

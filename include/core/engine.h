@@ -9,14 +9,21 @@
 
 namespace xge
 {
-	class Engine
-	{
-	public:
-		Engine(xge::Game& game);
 
-		void run();
+class Engine
+{
+public:
+	Engine(xge::Game& game);
 
-	private:
-		Game& game;
-	};
-}
+	void run();
+
+private:
+	Game& game;
+	bool isRunning = false;
+
+	void input();
+	void update();
+	void render();
+};
+
+} // namespace xge

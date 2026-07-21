@@ -8,6 +8,7 @@
 
 namespace xge
 {
+
 Engine::Engine(Game& game) :
 	game(game)
 {
@@ -16,6 +17,12 @@ Engine::Engine(Game& game) :
 
 void Engine::run()
 {
+	while (isRunning)
+	{
+		input();
+		update();
+		render();
+	}
+}
 
-}
-}
+} // namespace xge

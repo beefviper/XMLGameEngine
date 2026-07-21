@@ -12,22 +12,20 @@
 
 #include <iostream>
 
-using namespace xercesc;
-
 namespace xge
 {
-std::string xmlChToString(const XMLCh* ch)
+static std::string xmlChToString(const XMLCh* ch)
 {
     if (!ch)
         return "";
 
-    char* cstr = XMLString::transcode(ch);
+    char* cstr = xc::XMLString::transcode(ch);
     std::string result(cstr);
-    XMLString::release(&cstr);
+    xc::XMLString::release(&cstr);
     return result;
 }
 
-XercesNode::XercesNode(DOMElement* element)
+XercesNode::XercesNode(xc::DOMElement* element)
     : m_element(element)
 {
 }
@@ -44,10 +42,10 @@ std::string XercesNode::getText() const
     if (!m_element)
         return "";
 
-    DOMNode* node = m_element->getFirstChild();
+    xc::DOMNode* node = m_element->getFirstChild();
     while (node)
     {
-        if (node->getNodeType() == DOMNode::TEXT_NODE)
+        if (node->getNodeType() == xc::DOMNode::TEXT_NODE)
         {
             return xmlChToString(node->getNodeValue());
         }
@@ -62,10 +60,10 @@ std::string XercesNode::getAttribute(const std::string& name) const
     if (!m_element)
         return "";
 
-    XMLCh* xmlName = XMLString::transcode(name.c_str());
+    XMLCh* xmlName = xc::XMLString::transcode(name.c_str());
     const XMLCh* value = m_element->getAttribute(xmlName);
     std::string result = xmlChToString(value);
-    XMLString::release(&xmlName);
+    xc::XMLString::release(&xmlName);
 
     return result;
 }
@@ -75,9 +73,9 @@ bool XercesNode::hasAttribute(const std::string& name) const
     if (!m_element)
         return false;
 
-    XMLCh* xmlName = XMLString::transcode(name.c_str());
+    XMLCh* xmlName = xc::XMLString::transcode(name.c_str());
     bool result = m_element->hasAttribute(xmlName);
-    XMLString::release(&xmlName);
+    xc::XMLString::release(&xmlName);
 
     return result;
 }
@@ -87,13 +85,13 @@ XMLNode* XercesNode::getFirstChild(const std::string& name) const
     if (!m_element)
         return nullptr;
 
-    XMLCh* xmlName = XMLString::transcode(name.c_str());
-    DOMNodeList* nodeList = m_element->getElementsByTagName(xmlName);
-    XMLString::release(&xmlName);
+    XMLCh* xmlName = xc::XMLString::transcode(name.c_str());
+    xc::DOMNodeList* nodeList = m_element->getElementsByTagName(xmlName);
+    xc::XMLString::release(&xmlName);
 
     if (nodeList && nodeList->getLength() > 0)
     {
-        DOMElement* child = dynamic_cast<DOMElement*>(nodeList->item(0));
+        xc::DOMElement * child = dynamic_cast<xc::DOMElement*>(nodeList->item(0));
         if (child && child->getParentNode() == m_element)
         {
             auto nodePtr = std::make_unique<XercesNode>(child);
@@ -111,23 +109,23 @@ XMLNode* XercesNode::getNextSibling(const std::string& name) const
     if (!m_element)
         return nullptr;
 
-    XMLCh* xmlName = XMLString::transcode(name.c_str());
-    DOMElement* sibling = dynamic_cast<DOMElement*>(m_element->getNextSibling());
+    XMLCh* xmlName = xc::XMLString::transcode(name.c_str());
+    xc::DOMElement* sibling = dynamic_cast<xc::DOMElement*>(m_element->getNextSibling());
 
     while (sibling)
     {
-        if (XMLString::equals(sibling->getTagName(), xmlName))
+        if (xc::XMLString::equals(sibling->getTagName(), xmlName))
         {
-            XMLString::release(&xmlName);
+            xc::XMLString::release(&xmlName);
             auto nodePtr = std::make_unique<XercesNode>(sibling);
             XMLNode* result = nodePtr.get();
             m_childCache.push_back(std::move(nodePtr));
             return result;
         }
-        sibling = dynamic_cast<DOMElement*>(sibling->getNextSibling());
+        sibling = dynamic_cast<xc::DOMElement*>(sibling->getNextSibling());
     }
 
-    XMLString::release(&xmlName);
+    xc::XMLString::release(&xmlName);
     return nullptr;
 }
 
@@ -138,16 +136,16 @@ std::vector<XMLNode*> XercesNode::getChildren(const std::string& name) const
     if (!m_element)
         return result;
 
-    XMLCh* xmlName = XMLString::transcode(name.c_str());
-    DOMNodeList* nodeList = m_element->getElementsByTagName(xmlName);
-    XMLString::release(&xmlName);
+    XMLCh* xmlName = xc::XMLString::transcode(name.c_str());
+    xc::DOMNodeList* nodeList = m_element->getElementsByTagName(xmlName);
+    xc::XMLString::release(&xmlName);
 
     if (!nodeList)
         return result;
 
     for (XMLSize_t i = 0; i < nodeList->getLength(); ++i)
     {
-        DOMElement* child = dynamic_cast<DOMElement*>(nodeList->item(i));
+        xc::DOMElement* child = dynamic_cast<xc::DOMElement*>(nodeList->item(i));
         if (child && child->getParentNode() == m_element)
         {
             auto nodePtr = std::make_unique<XercesNode>(child);
@@ -185,11 +183,11 @@ void XercesDocument::initXerces()
 {
     try
     {
-        XMLPlatformUtils::Initialize();
+        xc::XMLPlatformUtils::Initialize();
         m_xercesInitialized = true;
         std::cout << "[Xerces] Xerces initialized successfully" << std::endl;
     }
-    catch (const XMLException& e)
+    catch (const xc::XMLException& e)
     {
         m_errorMessage = std::string("Failed to initialize Xerces: ") + xmlChToString(e.getMessage());
         std::cerr << "[Xerces] ERROR: " << m_errorMessage << std::endl;
@@ -209,11 +207,11 @@ void XercesDocument::terminateXerces()
     {
         if (m_xercesInitialized)
         {
-            XMLPlatformUtils::Terminate();
+            xc::XMLPlatformUtils::Terminate();
             m_xercesInitialized = false;
         }
     }
-    catch (const XMLException& e)
+    catch (const xc::XMLException& e)
     {
         std::cerr << "[Xerces] ERROR during termination: " << xmlChToString(e.getMessage()) << std::endl;
     }
@@ -232,8 +230,8 @@ bool XercesDocument::load(const std::string& filePath)
 
     try
     {
-        m_parser = new XercesDOMParser();
-        m_parser->setValidationScheme(XercesDOMParser::Val_Never);
+        m_parser = new xc::XercesDOMParser();
+        m_parser->setValidationScheme(xc::XercesDOMParser::Val_Never);
         m_parser->setDoNamespaces(false);
         m_parser->setDoSchema(false);
 
@@ -250,7 +248,7 @@ bool XercesDocument::load(const std::string& filePath)
             return false;
         }
 
-        DOMElement* rootElement = m_document->getDocumentElement();
+        xc::DOMElement* rootElement = m_document->getDocumentElement();
         if (!rootElement)
         {
             m_errorMessage = "Failed to get root element";
@@ -267,7 +265,7 @@ bool XercesDocument::load(const std::string& filePath)
         std::cout << "[Xerces] File loaded successfully, root element: " << xmlChToString(rootElement->getTagName()) << std::endl;
         return true;
     }
-    catch (const XMLException& e)
+    catch (const xc::XMLException& e)
     {
         m_errorMessage = std::string("XML Exception: ") + xmlChToString(e.getMessage());
         std::cerr << "[Xerces] ERROR: " << m_errorMessage << std::endl;
@@ -279,7 +277,7 @@ bool XercesDocument::load(const std::string& filePath)
         m_isValid = false;
         return false;
     }
-    catch (const DOMException& e)
+    catch (const xc::DOMException& e)
     {
         m_errorMessage = std::string("DOM Exception: ") + xmlChToString(e.getMessage());
         std::cerr << "[Xerces] ERROR: " << m_errorMessage << std::endl;

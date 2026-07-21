@@ -14,6 +14,7 @@
 
 namespace xge
 {
+
 class Game
 {
 public:
@@ -30,4 +31,5 @@ private:
 	std::map<std::string, float> variables;
 	std::vector<State> states;
 };
-}
+
+} // namespace xge

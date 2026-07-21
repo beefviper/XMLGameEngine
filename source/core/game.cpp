@@ -8,6 +8,7 @@
 
 namespace xge
 {
+
 Game::Game(const std::string& game)
 {
 	parse();
@@ -16,23 +17,24 @@ Game::Game(const std::string& game)
 	generate();
 }
 
-void xge::Game::parse()
+void Game::parse()
 {
 
 }
 
-void xge::Game::validate()
+void Game::validate()
 {
 
 }
 
-void xge::Game::evaluate()
+void Game::evaluate()
 {
 
 }
 
-void xge::Game::generate()
+void Game::generate()
 {
 
 }
-}
+
+} // namespace xge

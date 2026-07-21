@@ -12,10 +12,9 @@
 
 int main()
 {
-	std::string xmlFile = "games/pong.xml";
-
-	xge::Game game(xmlFile);
-
+	std::string file = "games/pong.xml";
+	xge::Game game(file);
 	xge::Engine engine(game);
+
 	engine.run();
 }

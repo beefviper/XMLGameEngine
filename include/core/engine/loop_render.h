@@ -5,3 +5,11 @@
 
 #pragma once
 
+#include "core/engine.h"
+
+namespace xge
+{
+
+
+
+} // namespace xge
