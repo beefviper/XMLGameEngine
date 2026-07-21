@@ -30,6 +30,9 @@ private:
 
 	std::map<std::string, float> variables;
 	std::vector<State> states;
+	std::vector<Object> objects;
+
+
 };
 
 } // namespace xge
