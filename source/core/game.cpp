@@ -4,6 +4,7 @@
 // date: 20-Jul-26
 
 #include "core/game.h"
+#include "xml/xml_interface.h"
 
 namespace xge
 {
