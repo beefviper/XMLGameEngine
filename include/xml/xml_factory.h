@@ -5,17 +5,24 @@
 
 #pragma once
 
+#include "xml/xml_interface.h"
+
 #include <memory>
 
-enum class XMLBackEnd
+namespace xge
 {
-	null,
-	xerces,
-	tinyxml2
-};
+enum class XMLBackEnd;
 
 class XMLFactory
 {
 public:
 	static std::unique_ptr<XMLDocument> createXMLDocument(XMLBackEnd backend);
 };
+
+enum class XMLBackEnd
+{
+    null,
+    xerces,
+    tinyxml2
+};
+}

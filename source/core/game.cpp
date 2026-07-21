@@ -10,7 +10,10 @@ namespace xge
 {
 Game::Game(const std::string& game)
 {
-
+	parse();
+	validate();
+	evaluate();
+	generate();
 }
 
 void xge::Game::parse()

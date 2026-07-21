@@ -17,6 +17,10 @@ if (NOT FORCE_LOCAL_SFML)
 	find_package(SFML 3 COMPONENTS System Window Graphics Network Audio QUIET)
 endif()
 
+if (NOT FORCE_LOCAL_TINYXML2)
+	find_package(tinyxml2 QUIET)
+endif()
+
 if (XercesC_FOUND)
 	message(STATUS "XERCESC found: ${XercesC_LIBRARIES}")
 else()
@@ -58,6 +62,19 @@ else()
 
 	set(SFML_BUILD_FROM_SOURCE ON CACHE BOOL "Force SFML to build from source" FORCE)
 	set(SFML_USE_SYSTEM_DEPS OFF CACHE BOOL "Use SFML's bundled dependencies" FORCE)
+endif()
+
+if (tinyxml2_FOUND)
+	message(STATUS "tinyxml2 found: ${tinyxml2_LIBRARIES}")
+else()
+	message(STATUS "tinyxml2 not found, using FetchContent to download and build it locally.")
+
+	FetchContent_Declare(tinyxml2
+		GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
+		GIT_TAG 10.0.0
+		EXCLUDE_FROM_ALL)
+
+	list(APPEND FETCHED_LIBRARIES tinyxml2)
 endif()
 
 if (FETCHED_LIBRARIES)

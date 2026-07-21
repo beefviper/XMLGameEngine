@@ -11,6 +11,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE XercesC::XercesC)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE SFML::System SFML::Window SFML::Graphics SFML::Network SFML::Audio)
 
+target_link_libraries(${PROJECT_NAME} PRIVATE tinyxml2::tinyxml2)
+
 if (EXPRTK_PACKAGE_FOUND)
 	target_include_directories(${PROJECT_NAME} PRIVATE ${EXPRTK_INCLUDE_DIRS})
 else()
