@@ -14,7 +14,7 @@ if (NOT FORCE_LOCAL_EXPRTK)
 endif()
 
 if (NOT FORCE_LOCAL_SFML)
-	find_package(SFML 2.5...<3.0 COMPONENTS system window graphics network audio QUIET)
+	find_package(SFML 3 COMPONENTS System Window Graphics Network Audio QUIET)
 endif()
 
 if (XercesC_FOUND)
@@ -51,7 +51,7 @@ else()
 
 	FetchContent_Declare(SFML
 		GIT_REPOSITORY https://github.com/SFML/SFML.git
-		GIT_TAG 2.6.2
+		GIT_TAG 3.1.0
 		EXCLUDE_FROM_ALL)
 
 	list(APPEND FETCHED_LIBRARIES SFML)
