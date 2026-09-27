@@ -40,8 +40,7 @@ namespace xge
 
 			object.renderTexture->display();
 
-			object.sprite = std::make_unique<sf::Sprite>();
-			object.sprite->setTexture(object.renderTexture->getTexture());
+			object.sprite = std::make_unique<sf::Sprite>(object.renderTexture->getTexture());
 			object.sprite->setPosition(object.position);
 		}
 	}
@@ -49,36 +48,35 @@ namespace xge
 	void game_sfml::updateTextIncrementValue(Object& object)
 	{
 		sf::Font font;
-		sf::Text text;
 
 		// TODO: fix font handling, make variable to cache font
 		std::string fontFile{ "assets/tuffy.ttf" };
-		if (!font.loadFromFile(fontFile))
+		if (!font.openFromFile(fontFile))
 		{
 			std::cout << "error: failed to load font: " << fontFile << std::endl;
 		}
+
+		sf::Text text(font);
 
 		auto number = std::stoi(object.spriteParams.at(1));
 		number++;
 		object.spriteParams.at(1) = std::to_string(number);
 
-		text.setFont(font);
 		text.setString(object.spriteParams.at(1));
 		text.setCharacterSize(std::stoi(object.spriteParams.at(2)));
 		text.setFillColor(sfmlColor(object.spriteParams.at(3)));
 
-		const int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
-		const int height = static_cast<int>(std::ceil(text.getLocalBounds().height));
+		const int width = static_cast<int>(std::ceil(text.getLocalBounds().size.x));
+		const int height = static_cast<int>(std::ceil(text.getLocalBounds().size.y));
 
-		text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top);
+		text.setPosition({ -text.getLocalBounds().position.x, -text.getLocalBounds().position.y });
 
 		object.renderTexture = std::make_unique<sf::RenderTexture>();
-		object.renderTexture->create(width, height);
+		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
 		object.renderTexture->draw(text);
 		object.renderTexture->display();
 
-		object.sprite = std::make_unique<sf::Sprite>();
-		object.sprite->setTexture(object.renderTexture->getTexture());
+		object.sprite = std::make_unique<sf::Sprite>(object.renderTexture->getTexture());
 		object.sprite->setPosition(object.position);
 	}
 
@@ -91,10 +89,10 @@ namespace xge
 		circle.setRadius(radius);
 		circle.setFillColor(sfmlColor(object.spriteParams.at(3)));
 
-		const int width = static_cast<int>(std::ceil(circle.getLocalBounds().width));
-		const int height = static_cast<int>(std::ceil(circle.getLocalBounds().height));
+		const int width = static_cast<int>(std::ceil(circle.getLocalBounds().size.x));
+		const int height = static_cast<int>(std::ceil(circle.getLocalBounds().size.y));
 
-		object.renderTexture->create(width, height);
+		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
 		object.renderTexture->draw(circle);
 	}
 
@@ -108,42 +106,40 @@ namespace xge
 		rectangle.setSize(sf::Vector2f(recWidth, recHeight));
 		rectangle.setFillColor(sfmlColor(object.spriteParams.at(3)));
 
-		const int width = static_cast<int>(std::ceil(rectangle.getLocalBounds().width));
-		const int height = static_cast<int>(std::ceil(rectangle.getLocalBounds().height));
+		const int width = static_cast<int>(std::ceil(rectangle.getLocalBounds().size.x));
+		const int height = static_cast<int>(std::ceil(rectangle.getLocalBounds().size.y));
 
-		object.renderTexture->create(width, height);
+		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
 		object.renderTexture->draw(rectangle);
 	}
 
 	void game_sfml::createText(Object& object)
 	{
 		sf::Font font;
-		sf::Text text;
 
 		// TODO: fix font handling, make variable to cache font
 		std::string fontFile{ "assets/tuffy.ttf" };
-		if (!font.loadFromFile(fontFile))
+		if (!font.openFromFile(fontFile))
 		{
 			std::cout << "error: failed to load font: " << fontFile << std::endl;
 		}
 
-		text.setFont(font);
+		sf::Text text(font);
 		text.setString(object.spriteParams.at(1));
 		text.setCharacterSize(std::stoi((object.spriteParams.at(2))));
 		text.setFillColor(sfmlColor(object.spriteParams.at(3)));
-		text.setPosition(-text.getLocalBounds().left, -text.getLocalBounds().top);
+		text.setPosition({ -text.getLocalBounds().position.x, -text.getLocalBounds().position.y });
 
-		const int width = static_cast<int>(std::ceil(text.getLocalBounds().width));
-		const int height = static_cast<int>(std::ceil(text.getLocalBounds().height));
+		const int width = static_cast<int>(std::ceil(text.getLocalBounds().size.x));
+		const int height = static_cast<int>(std::ceil(text.getLocalBounds().size.y));
 
-		object.renderTexture->create(width, height);
+		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
 		object.renderTexture->draw(text);
 	}
 
 	void game_sfml::createImage(Object& object)
 	{
 		sf::Texture texture;
-		sf::Sprite sprite;
 
 		auto& imageFile = object.spriteParams.at(1);
 
@@ -153,21 +149,21 @@ namespace xge
 			exit(EXIT_FAILURE);
 		}
 
-		sprite.setTexture(texture);
+		sf::Sprite sprite(texture);
 
-		const int width = static_cast<int>(std::ceil(sprite.getLocalBounds().width));
-		const int height = static_cast<int>(std::ceil(sprite.getLocalBounds().height));
+		const int width = static_cast<int>(std::ceil(sprite.getLocalBounds().size.x));
+		const int height = static_cast<int>(std::ceil(sprite.getLocalBounds().size.y));
 
 		if (object.spriteParams.at(2) == "flip.horizontal")
 		{
-			sprite.setTextureRect(sf::IntRect(width, 0, -width, height));
+			sprite.setTextureRect(sf::IntRect({ width, 0 }, { -width, height }));
 		}
 		else if (object.spriteParams.at(2) == "flip.vertical")
 		{
-			sprite.setTextureRect(sf::IntRect(0, height, width, -height));
+			sprite.setTextureRect(sf::IntRect({ 0, height }, { width, -height }));
 		}
 
-		object.renderTexture->create(width, height);
+		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
 		object.renderTexture->draw(sprite);
 	}
 

@@ -133,8 +133,8 @@ namespace xge
 						object.variable[rawVariable.first] = evaluateString(rawObject, rawVariable.second);
 					}
 
+					// sprite is constructed later in game_sfml::init(), once a texture exists to bind it to
 					object.renderTexture = std::make_unique<sf::RenderTexture>();
-					object.sprite = std::make_unique<sf::Sprite>();
 
 					objects.push_back(std::move(object));
 				}

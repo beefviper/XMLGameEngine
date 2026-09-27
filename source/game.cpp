@@ -50,7 +50,7 @@ namespace xge
 				object.position.x += object.velocity.x;
 				object.position.y += object.velocity.y;
 
-				object.sprite->setPosition(object.position.x, object.position.y);
+				object.sprite->setPosition(object.position);
 			}
 		}
 	}
@@ -198,8 +198,8 @@ namespace xge
 
 	void Game::checkEdge(Object& object, std::string side)
 	{
-		auto objectWidth = object.sprite->getLocalBounds().width;
-		auto objectHeight = object.sprite->getLocalBounds().height;
+		auto objectWidth = object.sprite->getLocalBounds().size.x;
+		auto objectHeight = object.sprite->getLocalBounds().size.y;
 
 		std::vector<std::string> curSide{};
 		constexpr float leftBound = 0;
@@ -363,12 +363,12 @@ namespace xge
 		if (object.name != otherObject.name && otherObject.collisionData.enabled && isCircular)
 		{
 			const auto midpoint = object.sprite->getPosition() +
-				sf::Vector2f(object.sprite->getLocalBounds().width / 2, object.sprite->getLocalBounds().height / 2);
+				sf::Vector2f(object.sprite->getLocalBounds().size.x / 2, object.sprite->getLocalBounds().size.y / 2);
 
 			auto otherObjectLeft = otherObject.sprite->getPosition().x;
-			auto otherObjectRight = otherObjectLeft + otherObject.sprite->getLocalBounds().width;
+			auto otherObjectRight = otherObjectLeft + otherObject.sprite->getLocalBounds().size.x;
 			auto otherObjectTop = otherObject.sprite->getPosition().y;
-			auto otherObjectBottom = otherObjectTop + otherObject.sprite->getLocalBounds().height;
+			auto otherObjectBottom = otherObjectTop + otherObject.sprite->getLocalBounds().size.y;
 
 			sf::Vector2f nearestPoint;
 			nearestPoint.x = std::clamp(midpoint.x, otherObjectLeft, otherObjectRight);
@@ -376,7 +376,7 @@ namespace xge
 
 			const auto rayToNearest = nearestPoint - midpoint;
 			const auto magOfray = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
-			overlap = object.sprite->getLocalBounds().width / 2 - magOfray;
+			overlap = object.sprite->getLocalBounds().size.x / 2 - magOfray;
 			if (std::isnan(overlap)) overlap = 0;
 
 			if (overlap > 0)

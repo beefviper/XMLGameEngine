@@ -28,310 +28,310 @@ namespace xge
 	{
 		switch (key)
 		{
-		case sf::Keyboard::Unknown:
+		case sf::Keyboard::Key::Unknown:
 			return "unknown";
 			break;
-		case sf::Keyboard::A:
+		case sf::Keyboard::Key::A:
 			return "a";
 			break;
-		case sf::Keyboard::B:
+		case sf::Keyboard::Key::B:
 			return "b";
 			break;
-		case sf::Keyboard::C:
+		case sf::Keyboard::Key::C:
 			return "c";
 			break;
-		case sf::Keyboard::D:
+		case sf::Keyboard::Key::D:
 			return "d";
 			break;
-		case sf::Keyboard::E:
+		case sf::Keyboard::Key::E:
 			return "e";
 			break;
-		case sf::Keyboard::F:
+		case sf::Keyboard::Key::F:
 			return "f";
 			break;
-		case sf::Keyboard::G:
+		case sf::Keyboard::Key::G:
 			return "g";
 			break;
-		case sf::Keyboard::H:
+		case sf::Keyboard::Key::H:
 			return "h";
 			break;
-		case sf::Keyboard::I:
+		case sf::Keyboard::Key::I:
 			return "i";
 			break;
-		case sf::Keyboard::J:
+		case sf::Keyboard::Key::J:
 			return "j";
 			break;
-		case sf::Keyboard::K:
+		case sf::Keyboard::Key::K:
 			return "k";
 			break;
-		case sf::Keyboard::L:
+		case sf::Keyboard::Key::L:
 			return "l";
 			break;
-		case sf::Keyboard::M:
+		case sf::Keyboard::Key::M:
 			return "m";
 			break;
-		case sf::Keyboard::N:
+		case sf::Keyboard::Key::N:
 			return "n";
 			break;
-		case sf::Keyboard::O:
+		case sf::Keyboard::Key::O:
 			return "o";
 			break;
-		case sf::Keyboard::P:
+		case sf::Keyboard::Key::P:
 			return "p";
 			break;
-		case sf::Keyboard::Q:
+		case sf::Keyboard::Key::Q:
 			return "q";
 			break;
-		case sf::Keyboard::R:
+		case sf::Keyboard::Key::R:
 			return "r";
 			break;
-		case sf::Keyboard::S:
+		case sf::Keyboard::Key::S:
 			return "s";
 			break;
-		case sf::Keyboard::T:
+		case sf::Keyboard::Key::T:
 			return "t";
 			break;
-		case sf::Keyboard::U:
+		case sf::Keyboard::Key::U:
 			return "u";
 			break;
-		case sf::Keyboard::V:
+		case sf::Keyboard::Key::V:
 			return "v";
 			break;
-		case sf::Keyboard::W:
+		case sf::Keyboard::Key::W:
 			return "w";
 			break;
-		case sf::Keyboard::X:
+		case sf::Keyboard::Key::X:
 			return "x";
 			break;
-		case sf::Keyboard::Y:
+		case sf::Keyboard::Key::Y:
 			return "y";
 			break;
-		case sf::Keyboard::Z:
+		case sf::Keyboard::Key::Z:
 			return "z";
 			break;
-		case sf::Keyboard::Num0:
+		case sf::Keyboard::Key::Num0:
 			return "num0";
 			break;
-		case sf::Keyboard::Num1:
+		case sf::Keyboard::Key::Num1:
 			return "num1";
 			break;
-		case sf::Keyboard::Num2:
+		case sf::Keyboard::Key::Num2:
 			return "num2";
 			break;
-		case sf::Keyboard::Num3:
+		case sf::Keyboard::Key::Num3:
 			return "num3";
 			break;
-		case sf::Keyboard::Num4:
+		case sf::Keyboard::Key::Num4:
 			return "num4";
 			break;
-		case sf::Keyboard::Num5:
+		case sf::Keyboard::Key::Num5:
 			return "num5";
 			break;
-		case sf::Keyboard::Num6:
+		case sf::Keyboard::Key::Num6:
 			return "num6";
 			break;
-		case sf::Keyboard::Num7:
+		case sf::Keyboard::Key::Num7:
 			return "num7";
 			break;
-		case sf::Keyboard::Num8:
+		case sf::Keyboard::Key::Num8:
 			return "num8";
 			break;
-		case sf::Keyboard::Num9:
+		case sf::Keyboard::Key::Num9:
 			return "num9";
 			break;
-		case sf::Keyboard::Escape:
+		case sf::Keyboard::Key::Escape:
 			return "escape";
 			break;
-		case sf::Keyboard::LControl:
+		case sf::Keyboard::Key::LControl:
 			return "lcontrol";
 			break;
-		case sf::Keyboard::LShift:
+		case sf::Keyboard::Key::LShift:
 			return "lshift";
 			break;
-		case sf::Keyboard::LAlt:
+		case sf::Keyboard::Key::LAlt:
 			return "lalt";
 			break;
-		case sf::Keyboard::LSystem:
+		case sf::Keyboard::Key::LSystem:
 			return "lsystem";
 			break;
-		case sf::Keyboard::RControl:
+		case sf::Keyboard::Key::RControl:
 			return "rcontrol";
 			break;
-		case sf::Keyboard::RShift:
+		case sf::Keyboard::Key::RShift:
 			return "rshift";
 			break;
-		case sf::Keyboard::RAlt:
+		case sf::Keyboard::Key::RAlt:
 			return "ralt";
 			break;
-		case sf::Keyboard::RSystem:
+		case sf::Keyboard::Key::RSystem:
 			return "rsystem";
 			break;
-		case sf::Keyboard::Menu:
+		case sf::Keyboard::Key::Menu:
 			return "menu";
 			break;
-		case sf::Keyboard::LBracket:
+		case sf::Keyboard::Key::LBracket:
 			return "[";
 			break;
-		case sf::Keyboard::RBracket:
+		case sf::Keyboard::Key::RBracket:
 			return "]";
 			break;
-		case sf::Keyboard::Semicolon:
+		case sf::Keyboard::Key::Semicolon:
 			return ";";
 			break;
-		case sf::Keyboard::Comma:
+		case sf::Keyboard::Key::Comma:
 			return ",";
 			break;
-		case sf::Keyboard::Period:
+		case sf::Keyboard::Key::Period:
 			return ".";
 			break;
-		case sf::Keyboard::Quote:
+		case sf::Keyboard::Key::Apostrophe:
 			return "'";
 			break;
-		case sf::Keyboard::Slash:
+		case sf::Keyboard::Key::Slash:
 			return "/";
 			break;
-		case sf::Keyboard::Backslash:
+		case sf::Keyboard::Key::Backslash:
 			return "\\";
 			break;
-		case sf::Keyboard::Tilde:
+		case sf::Keyboard::Key::Grave:
 			return "~";
 			break;
-		case sf::Keyboard::Equal:
+		case sf::Keyboard::Key::Equal:
 			return "=";
 			break;
-		case sf::Keyboard::Hyphen:
+		case sf::Keyboard::Key::Hyphen:
 			return "-";
 			break;
-		case sf::Keyboard::Space:
+		case sf::Keyboard::Key::Space:
 			return "space";
 			break;
-		case sf::Keyboard::Enter:
+		case sf::Keyboard::Key::Enter:
 			return "enter";
 			break;
-		case sf::Keyboard::Backspace:
+		case sf::Keyboard::Key::Backspace:
 			return "backspace";
 			break;
-		case sf::Keyboard::Tab:
+		case sf::Keyboard::Key::Tab:
 			return "tab";
 			break;
-		case sf::Keyboard::PageUp:
+		case sf::Keyboard::Key::PageUp:
 			return "pageup";
 			break;
-		case sf::Keyboard::PageDown:
+		case sf::Keyboard::Key::PageDown:
 			return "pagedown";
 			break;
-		case sf::Keyboard::End:
+		case sf::Keyboard::Key::End:
 			return "end";
 			break;
-		case sf::Keyboard::Home:
+		case sf::Keyboard::Key::Home:
 			return "home";
 			break;
-		case sf::Keyboard::Insert:
+		case sf::Keyboard::Key::Insert:
 			return "insert";
 			break;
-		case sf::Keyboard::Delete:
+		case sf::Keyboard::Key::Delete:
 			return "delete";
 			break;
-		case sf::Keyboard::Add:
+		case sf::Keyboard::Key::Add:
 			return "add";
 			break;
-		case sf::Keyboard::Subtract:
+		case sf::Keyboard::Key::Subtract:
 			return "subtract";
 			break;
-		case sf::Keyboard::Multiply:
+		case sf::Keyboard::Key::Multiply:
 			return "multiply";
 			break;
-		case sf::Keyboard::Divide:
+		case sf::Keyboard::Key::Divide:
 			return "divide";
 			break;
-		case sf::Keyboard::Left:
+		case sf::Keyboard::Key::Left:
 			return "left";
 			break;
-		case sf::Keyboard::Right:
+		case sf::Keyboard::Key::Right:
 			return "right";
 			break;
-		case sf::Keyboard::Up:
+		case sf::Keyboard::Key::Up:
 			return "up";
 			break;
-		case sf::Keyboard::Down:
+		case sf::Keyboard::Key::Down:
 			return "down";
 			break;
-		case sf::Keyboard::Numpad0:
+		case sf::Keyboard::Key::Numpad0:
 			return "numpad0";
 			break;
-		case sf::Keyboard::Numpad1:
+		case sf::Keyboard::Key::Numpad1:
 			return "numpad1";
 			break;
-		case sf::Keyboard::Numpad2:
+		case sf::Keyboard::Key::Numpad2:
 			return "numpad2";
 			break;
-		case sf::Keyboard::Numpad3:
+		case sf::Keyboard::Key::Numpad3:
 			return "numpad3";
 			break;
-		case sf::Keyboard::Numpad4:
+		case sf::Keyboard::Key::Numpad4:
 			return "numpad4";
 			break;
-		case sf::Keyboard::Numpad5:
+		case sf::Keyboard::Key::Numpad5:
 			return "numpad5";
 			break;
-		case sf::Keyboard::Numpad6:
+		case sf::Keyboard::Key::Numpad6:
 			return "numpad6";
 			break;
-		case sf::Keyboard::Numpad7:
+		case sf::Keyboard::Key::Numpad7:
 			return "numpad7";
 			break;
-		case sf::Keyboard::Numpad8:
+		case sf::Keyboard::Key::Numpad8:
 			return "numpad8";
 			break;
-		case sf::Keyboard::Numpad9:
+		case sf::Keyboard::Key::Numpad9:
 			return "numpad9";
 			break;
-		case sf::Keyboard::F1:
+		case sf::Keyboard::Key::F1:
 			return "f1";
 			break;
-		case sf::Keyboard::F2:
+		case sf::Keyboard::Key::F2:
 			return "f2";
 			break;
-		case sf::Keyboard::F3:
+		case sf::Keyboard::Key::F3:
 			return "f3";
 			break;
-		case sf::Keyboard::F4:
+		case sf::Keyboard::Key::F4:
 			return "f4";
 			break;
-		case sf::Keyboard::F5:
+		case sf::Keyboard::Key::F5:
 			return "f5";
 			break;
-		case sf::Keyboard::F6:
+		case sf::Keyboard::Key::F6:
 			return "f6";
 			break;
-		case sf::Keyboard::F7:
+		case sf::Keyboard::Key::F7:
 			return "f7";
 			break;
-		case sf::Keyboard::F8:
+		case sf::Keyboard::Key::F8:
 			return "f8";
 			break;
-		case sf::Keyboard::F9:
+		case sf::Keyboard::Key::F9:
 			return "f9";
 			break;
-		case sf::Keyboard::F10:
+		case sf::Keyboard::Key::F10:
 			return "f10";
 			break;
-		case sf::Keyboard::F11:
+		case sf::Keyboard::Key::F11:
 			return "f11";
 			break;
-		case sf::Keyboard::F12:
+		case sf::Keyboard::Key::F12:
 			return "f12";
 			break;
-		case sf::Keyboard::F13:
+		case sf::Keyboard::Key::F13:
 			return "f13";
 			break;
-		case sf::Keyboard::F14:
+		case sf::Keyboard::Key::F14:
 			return "f14";
 			break;
-		case sf::Keyboard::F15:
+		case sf::Keyboard::Key::F15:
 			return "f15";
 			break;
-		case sf::Keyboard::Pause:
+		case sf::Keyboard::Key::Pause:
 			return "pause";
 			break;
 		default:

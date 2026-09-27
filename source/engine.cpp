@@ -5,6 +5,8 @@
 
 #include "engine.h"
 
+#include <optional>
+
 namespace xge
 {
 	Engine::Engine(Game& game) :
@@ -14,13 +16,13 @@ namespace xge
 
 		std::string name = windowDesc.name;
 
-		const int width = static_cast<int>(windowDesc.width);
-		const int height = static_cast<int>(windowDesc.height);
-		const sf::VideoMode videoMode(width, height);
+		const auto width = static_cast<unsigned int>(windowDesc.width);
+		const auto height = static_cast<unsigned int>(windowDesc.height);
+		const sf::VideoMode videoMode({ width, height });
 
-		const auto windowMode = (windowDesc.fullscreen == "true") ? sf::Style::Fullscreen : sf::Style::Default;
+		const auto windowState = (windowDesc.fullscreen == "true") ? sf::State::Fullscreen : sf::State::Windowed;
 
-		window.create(videoMode, name, windowMode);
+		window.create(videoMode, name, sf::Style::Default, windowState);
 		window.setFramerateLimit(windowDesc.framerate);
 
 		game.setCurrentState(0);
@@ -33,25 +35,19 @@ namespace xge
 			// TODO: make polling events its own function, return vector<pair<string,bool>> of keypresses
 			// pressed = true, released = false, don't need isKeyPressed map anymore?
 
-			sf::Event event;
-			while (window.pollEvent(event))
+			while (const std::optional event = window.pollEvent())
 			{
-				switch (event.type)
+				if (event->is<sf::Event::Closed>())
 				{
-				case sf::Event::Closed:
 					window.close();
-					break;
-
-				case sf::Event::KeyPressed:
-					handleKeyPressed(event);
-					break;
-
-				case sf::Event::KeyReleased:
-					handleKeyReleased(event);
-					break;
-
-				default:
-					break;
+				}
+				else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+				{
+					handleKeyPressed(keyPressed->code);
+				}
+				else if (const auto* keyReleased = event->getIf<sf::Event::KeyReleased>())
+				{
+					handleKeyReleased(keyReleased->code);
 				}
 			}
 
@@ -72,35 +68,35 @@ namespace xge
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::handleKeyPressed(const sf::Event& event)
+	void Engine::handleKeyPressed(sf::Keyboard::Key code)
 	{
 		// TODO: fix logic? remove if? just set value in map true?
-		if (!isKeyPressed[event.key.code])
+		if (!isKeyPressed[code])
 		{
-			isKeyPressed[event.key.code] = true;
+			isKeyPressed[code] = true;
 
 			for (auto& input : game.getCurrentState().input)
 			{
-				execute_action(event, input, true);
+				execute_action(code, input, true);
 			}
 		}
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::handleKeyReleased(const sf::Event& event)
+	void Engine::handleKeyReleased(sf::Keyboard::Key code)
 	{
-		isKeyPressed[event.key.code] = false;
+		isKeyPressed[code] = false;
 
 		for (auto& input : game.getCurrentState().input)
 		{
-			execute_action(event, input, false);
+			execute_action(code, input, false);
 		}
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::execute_action(const sf::Event& event, PairStringVectorString& input, bool keyPressed)
+	void Engine::execute_action(sf::Keyboard::Key code, PairStringVectorString& input, bool keyPressed)
 	{
-		if (input.first == sfmlKeyToString(event.key.code))
+		if (input.first == sfmlKeyToString(code))
 		{
 			std::string aObject = input.second.at(0);
 			std::string aCommand = input.second.at(1);
@@ -147,8 +143,8 @@ namespace xge
 
 						if (currentObj.collisionData.enabled == false)
 						{
-							currentObj.position.x = currentX + game.getObject(aObject).sprite.get()->getLocalBounds().width / 2;
-							currentObj.position.y = game.getObject(aObject).sprite.get()->getGlobalBounds().top;
+							currentObj.position.x = currentX + game.getObject(aObject).sprite.get()->getLocalBounds().size.x / 2;
+							currentObj.position.y = game.getObject(aObject).sprite.get()->getGlobalBounds().position.y;
 							currentObj.velocity.y = currentObj.variable["speed"];
 							currentObj.isVisible = true;
 							currentObj.collisionData.enabled = true;
