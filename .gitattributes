@@ -1,0 +1,16 @@
+# Normalize line endings.
+# Repo blobs are stored as LF; the eol attribute controls what gets
+# checked out on disk. This project is developed on Windows/Visual Studio,
+# so text files check out as CRLF by default.
+* text=auto eol=crlf
+
+# Shell scripts are run through bash on Linux/macOS. A CRLF before a
+# line-continuation backslash breaks the continuation (bash sees a
+# literal \r), so these must stay LF regardless of platform.
+*.sh text eol=lf
+
+# Binary assets: never touch line endings.
+*.jpg -text
+*.ttf -text
+*.png -text
+*.ico -text
