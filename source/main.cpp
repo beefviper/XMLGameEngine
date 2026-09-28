@@ -1,42 +1,18 @@
 // main.cpp
 // XML Game Engine
 // author: beefviper
-// date: Sept 18, 2020
+// date: Sept 28, 2026
 
+#include "cli.h"
 #include "game.h"
 #include "engine.h"
 
-#include <iostream>
+#include <cstdlib>
 #include <string>
-#include <filesystem>
-#include <span>
 
 int main(int argc, char* argv[])
 {
-	
-	// TODO: make function to validate filename
-	std::string filename{ "games/pong.xml" };
-
-	const std::span<char*> args(argv, argc);
-	
-	if (args.size() > 1)
-	{
-		filename = args[1];
-	}
-
-	// TODO: why nested if-else? just use if, else if, else
-	if (!std::filesystem::exists(filename))
-	{
-		if (std::filesystem::exists("games/" + filename))
-		{
-			filename = "games/" + filename;
-		}
-		else
-		{
-			std::cout << "File not found: " << filename << '\n';
-			exit(EXIT_FAILURE);
-		}
-	}
+	const std::string filename = xge::resolveGameFilename(argc, argv);
 
 	xge::Game game{ filename };
 

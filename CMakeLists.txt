@@ -17,6 +17,7 @@ include(scripts/cmake/assets.cmake)
 
 target_sources(${PROJECT_NAME} PRIVATE
 	"source/main.cpp"
+	"source/cli.cpp"
 	"source/game.cpp"
 	"source/engine.cpp"
 	"source/object.cpp"
@@ -29,6 +30,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 	"source/collision_detector.cpp"
 	"source/command_executor.cpp"
 
+	"include/cli.h"
 	"include/game.h"
 	"include/engine.h"
 	"include/object.h"
