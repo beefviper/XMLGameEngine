@@ -44,6 +44,17 @@ add_executable(XMLGameEngineTests
 
 target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)
 
+# Same flags platform.cmake sets on ${PROJECT_NAME} - in particular /bigobj:
+# game.cpp/game_expr.cpp's exprtk usage generates enough object sections to
+# hit MSVC's C1128 without it, and this target compiles those same files
+# (see ENGINE_SOURCES above) independently of ${PROJECT_NAME}, so it needs
+# its own copy of these options rather than inheriting them.
+target_compile_options(XMLGameEngineTests PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
+
+target_compile_options(XMLGameEngineTests PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
+
 target_include_directories(XMLGameEngineTests PRIVATE include)
 
 target_link_libraries(XMLGameEngineTests PRIVATE Catch2::Catch2WithMain)
