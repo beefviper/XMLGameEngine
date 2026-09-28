@@ -56,9 +56,11 @@ namespace xge
 			[&](const CmdPushState& s) { if (keyPressed) { game.pushState(s.name); } },
 			[&](const CmdPopState&) { if (keyPressed) { game.popState(); } },
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed); },
-			[&](const auto&) { /* bounce/stick/reset/die/move/inc/fire never appear
-			                      directly on a state's <input>; only reachable via
-			                      CmdTriggerAction into an object's own action list. */ }
+			[&](const CmdResetObject& r) { if (keyPressed) { game.resetObject(r.target); } },
+			[&](const auto&) { /* bounce/stick/reset(bare)/die/move/inc/fire never
+			                      appear directly on a state's <input>; only
+			                      reachable via CmdTriggerAction into an object's
+			                      own action list. */ }
 		}, command);
 	}
 

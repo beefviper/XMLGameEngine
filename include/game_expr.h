@@ -279,12 +279,32 @@ namespace xge
 		template <typename T>
 		struct reset : public exprtk::igeneric_function<T>
 		{
-			reset() noexcept : exprtk::igeneric_function<T>("Z") {}
+			// "Z": reset() with no args - unchanged original meaning, only valid
+			// inside a collision action; resets the colliding object's own
+			// position to positionOriginal (see
+			// CommandExecutor::executeScreenEdgeCollision).
+			// "S": reset('objectName') - resets a specific named object's
+			// position, velocity, AND every <variable> back to their starting
+			// values. Meant for a state's <input> (e.g. the gameover screen's
+			// spacebar handler resetting the paddles before a new game), so a
+			// fresh round doesn't instantly re-trip a <condition> left over from
+			// the last one (see Game::resetObject). ps_index (not
+			// parameters.size(), which "Z" doesn't have anyway) tells the two
+			// apart, same technique as text<T>'s "ST|STS|TT|TTS".
+			reset() noexcept : exprtk::igeneric_function<T>("Z|S") {}
 
-			T operator()([[maybe_unused]] parameter_list_t parameters) override
+			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
-				tempSParams.push_back("collide");
-				tempSParams.push_back("reset");
+				if (ps_index == 0) // "Z"
+				{
+					tempSParams.push_back("collide");
+					tempSParams.push_back("reset");
+				}
+				else // "S"
+				{
+					tempSParams.push_back("resetobject");
+					tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+				}
 				return 0;
 			}
 		};

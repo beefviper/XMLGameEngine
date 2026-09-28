@@ -127,6 +127,13 @@ namespace xge
 		std::map<std::string, std::vector<Command>> action;
 		std::map<std::string, float> variable;
 
+		// Snapshot of each <variable>'s value at construction time (mirrors
+		// positionOriginal/velocityOriginal). Game::resetObject() restores
+		// `variable` from this map so a new game/round can start clean (e.g.
+		// resetting paddle1.score/paddle2.score back to 0), instead of a fresh
+		// game instantly re-tripping a <condition> left over from the last one.
+		std::map<std::string, float> variableOriginal;
+
 		// Set when this is a text object whose displayed number tracks another
 		// object's own <variable> (e.g. sprite src="text(paddle1.score,128,...)"
 		// -> boundVariableOwner="paddle1", boundVariableName="score"). Empty

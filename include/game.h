@@ -54,6 +54,14 @@ namespace xge
 		// being made public wholesale.
 		void incrementText(const std::string& objectName);
 
+		// reset('objectName') from a state's <input>/<condition> action (see
+		// CmdResetObject): restores that object's position, velocity, and every
+		// <variable> to their starting values, then refreshes any text display
+		// bound to one of those variables. Used e.g. to zero the paddles' scores
+		// before a new game starts, so a stale <condition> doesn't instantly
+		// re-fire.
+		void resetObject(const std::string& name);
+
 	private:
 		std::string filename;
 		WindowDesc windowDesc;

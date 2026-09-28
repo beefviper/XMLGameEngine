@@ -86,10 +86,20 @@ namespace xge
 		std::string action;
 	};
 
+	// reset('objectName') - only ever appears in a State's <input> or
+	// <condition> action (unlike the bare, untargeted CmdReset above, which is
+	// only ever produced by a collision's own reset()); resets that named
+	// object's position, velocity, and every <variable> back to their
+	// starting values (see Game::resetObject).
+	struct CmdResetObject
+	{
+		std::string target;
+	};
+
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie,
 		CmdMove, CmdIncrement, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction>;
+		CmdFire, CmdTriggerAction, CmdResetObject>;
 
 	// Turns the flat token stream produced by game_expr's exprtk functors (e.g.
 	// {"collide", "bounce"} or {"moveup", "2"}) into a sequence of typed Commands.

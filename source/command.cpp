@@ -62,6 +62,11 @@ namespace xge
 				commands.push_back(CmdTriggerAction{ tokens.at(i + 1), tokens.at(i + 2) });
 				i += 3;
 			}
+			else if (tag == "resetobject")
+			{
+				commands.push_back(CmdResetObject{ tokens.at(i + 1) });
+				i += 2;
+			}
 			else
 			{
 				// Unrecognized tag: warn and skip just this one token rather than
@@ -184,6 +189,7 @@ namespace xge
 			[&](const CmdPopState&) { o << "state()"; },
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
 			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << ")"; },
+			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 		}, command);
 
 		return o;

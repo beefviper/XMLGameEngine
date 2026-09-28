@@ -166,6 +166,7 @@ namespace xge
 					{
 						const float value = evaluateString(rawObject, rawVariable.second);
 						object.variable[rawVariable.first] = value;
+						object.variableOriginal[rawVariable.first] = value;
 
 						// Keep the cross-object symbol table entry (registered above,
 						// before any expression compiled) up to date with the real

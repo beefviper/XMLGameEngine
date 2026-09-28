@@ -238,6 +238,41 @@ namespace xge
 		}
 	}
 
+	void Game::resetObject(const std::string& name)
+	{
+		Object* object = tryGetObject(name);
+		if (!object)
+		{
+			std::cout << "warning: reset('" << name << "'): no such object\n";
+			return;
+		}
+
+		object->position = object->positionOriginal;
+		object->velocity = object->velocityOriginal;
+
+		for (auto& [variableName, originalValue] : object->variableOriginal)
+		{
+			object->variable[variableName] = originalValue;
+		}
+
+		// Refresh every text display bound to one of this object's variables
+		// (same notify pattern as incrementText above), so e.g. a HUD showing
+		// paddle1.score visibly drops back to 0 immediately, not just internally.
+		for (auto& other : objects)
+		{
+			if (other.boundVariableOwner != name)
+			{
+				continue;
+			}
+
+			const auto valueIt = object->variable.find(other.boundVariableName);
+			if (valueIt != object->variable.end())
+			{
+				sfml.setDisplayedNumber(other, valueIt->second);
+			}
+		}
+	}
+
 	void Game::updateGroupOfObjects(const Object& object, std::string side) noexcept
 	{
 		const int groupNum = object.collisionData.group;
