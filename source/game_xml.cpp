@@ -313,12 +313,32 @@ namespace xge
 				xc_input = xc_input->getNextElementSibling();
 			}
 
-			// TODO: add code to load conditions
+			// load conditions (optional - the schema allows a state with none)
+			std::vector<RawCondition> xc_conditions_vec;
+
+			if (const auto* xc_conditions = xc_inputs->getNextElementSibling(); xc_conditions != nullptr)
+			{
+				auto xc_condition = xc_conditions->getFirstElementChild();
+
+				while (xc_condition != nullptr)
+				{
+					RawCondition condition;
+					condition.filterClass = getAttributeByName(xc_condition, "class");
+					condition.filterObject = getAttributeByName(xc_condition, "object");
+					condition.variableName = getAttributeByName(xc_condition, "variable");
+					condition.value = std::stof(getAttributeByName(xc_condition, "value"));
+					condition.action = getAttributeByName(xc_condition, "action");
+					xc_conditions_vec.push_back(std::move(condition));
+
+					xc_condition = xc_condition->getNextElementSibling();
+				}
+			}
 
 			RawState rawState{};
 			rawState.name = xc_state_name;
 			rawState.show = xc_show_vec;
 			rawState.input = xc_inputs_map;
+			rawState.conditions = xc_conditions_vec;
 			rawStates.push_back(rawState);
 
 			xc_state = xc_state->getNextElementSibling();

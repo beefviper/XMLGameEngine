@@ -197,6 +197,17 @@ namespace xge
 				state.input[rawAction.first] = processCommands(rawState, rawAction.second);
 			}
 
+			for (auto& rawCondition : rawState.conditions)
+			{
+				Condition condition;
+				condition.filterClass = rawCondition.filterClass;
+				condition.filterObject = rawCondition.filterObject;
+				condition.variableName = rawCondition.variableName;
+				condition.value = rawCondition.value;
+				condition.commands = processCommands(rawState, rawCondition.action);
+				state.conditions.push_back(std::move(condition));
+			}
+
 			states.push_back(state);
 		}
 	}

@@ -39,13 +39,13 @@
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
       <collisions enabled="true">
         <collision edge="vertical" action="bounce()" />
-        <collision edge="left" action="inc('score2');reset" />
-        <collision edge="right" action="inc('score1');reset()" />
+        <collision edge="left" action="inc('paddle2.score');reset()" />
+        <collision edge="right" action="inc('paddle1.score');reset()" />
         <collision basic="basic" action="bounce()" />
       </collisions>
     </object>
     <!-- paddle1 -->
-    <object name="paddle1">
+    <object name="paddle1" class="paddle">
       <sprite src="image('assets/paddle.jpg')" />
       <position x="window.left + margin" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
@@ -56,9 +56,12 @@
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
       </actions>
+      <variables>
+        <variable name="score" value="0" />
+      </variables>
     </object>
     <!-- paddle2 -->
-    <object name="paddle2">
+    <object name="paddle2" class="paddle">
       <sprite src="image('assets/paddle.jpg', 'flip.horizontal')" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
@@ -71,17 +74,20 @@
         <action name="left" value="move.left(step)" />
         <action name="right" value="move.right(step)" />
       </actions>
+      <variables>
+        <variable name="score" value="0" />
+      </variables>
     </object>
     <!-- score1 -->
     <object name="score1">
-      <sprite src="text('0',128,'color.blue')" />
+      <sprite src="text(paddle1.score,128,'color.blue')" />
       <position x="window.width.center - 80" y="margin" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
     <!-- score2 -->
     <object name="score2">
-      <sprite src="text('0',128,'color.red')" />
+      <sprite src="text(paddle2.score,128,'color.red')" />
       <position x="window.width.center + 50" y="margin" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
@@ -90,6 +96,20 @@
     <object name="paused">
       <sprite src="text('PAUSED',128,'color.white')" />
       <position x="window.width.center - 220" y="window.height.center - 100" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <!-- gameover -->
+    <object name="gameover">
+      <sprite src="text('GAME OVER',128,'color.red')" />
+      <position x="window.width.center - 340" y="window.height.center - 150" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <!-- continue -->
+    <object name="continue">
+      <sprite src="text('spacebar to continue',48,'color.white')" />
+      <position x="window.width.center - 260" y="window.height.center + 60" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
@@ -134,6 +154,9 @@
         <input button="left" action="action('paddle2', 'left')" />
         <input button="right" action="action('paddle2', 'right')" />
       </inputs>
+      <conditions>
+        <condition class="paddle" variable="score" value="15" action="state('gameover')" />
+      </conditions>
     </state>
     <!-- paused -->
     <state name="paused">
@@ -143,9 +166,16 @@
       <inputs>
         <input button="space" action="state()"  />
       </inputs>
-      <conditions>
-        <condition class="paddle" variable="score" value="15" action="state('mainmenu')" />
-      </conditions>
+    </state>
+    <!-- gameover -->
+    <state name="gameover">
+      <shows>
+        <show object="gameover" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space" action="state('mainmenu')" />
+      </inputs>
     </state>
   </states>
 </game>

@@ -69,6 +69,8 @@ namespace xge
 				object.sprite->setPosition(object.position);
 			}
 		}
+
+		checkConditions();
 	}
 
 	void Game::printGame(void)
@@ -288,15 +290,19 @@ namespace xge
 			return object.collisionData.top;
 		}
 
-		// A "basic" (object-object) collision rule with no class/object filter
-		// matches anything, same as before this existed; one or both filters
-		// narrow it to only fire when `other` is of that class and/or is that
-		// specific named object.
+		// Shared by a collision rule's class/object filter and a state
+		// condition's: empty filterClass/filterObject match anything; either or
+		// both narrow it to a specific class and/or one specific named object.
+		bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Object& candidate)
+		{
+			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
+			if (!filterObject.empty() && filterObject != candidate.name) { return false; }
+			return true;
+		}
+
 		bool collisionRuleMatches(const CollisionRule& rule, const Object& other)
 		{
-			if (!rule.filterClass.empty() && rule.filterClass != other.objClass) { return false; }
-			if (!rule.filterObject.empty() && rule.filterObject != other.name) { return false; }
-			return true;
+			return matchesClassOrObjectFilter(rule.filterClass, rule.filterObject, other);
 		}
 	}
 
@@ -377,6 +383,39 @@ namespace xge
 			for (const auto& command : rule.commands)
 			{
 				executor.executeObjectCollision(command, b, *edgeOfB);
+			}
+		}
+	}
+
+	void Game::checkConditions()
+	{
+		// currentState.top() directly, rather than getCurrentState() (which
+		// returns a copy of the whole State) - this runs every frame, so
+		// copying every command list in it just to read .conditions would be
+		// wasteful.
+		const State& state = currentState.top();
+
+		for (auto& condition : state.conditions)
+		{
+			for (auto& object : objects)
+			{
+				if (!matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object))
+				{
+					continue;
+				}
+
+				auto variableIt = object.variable.find(condition.variableName);
+				if (variableIt == object.variable.end() || variableIt->second < condition.value)
+				{
+					continue;
+				}
+
+				CommandExecutor executor(*this);
+				for (const auto& command : condition.commands)
+				{
+					executor.executeCondition(command);
+				}
+				return; // the state may have just changed - stop for this frame
 			}
 		}
 	}

@@ -129,9 +129,10 @@
                     <xs:element minOccurs="0" name="conditions">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element name="condition">
+                          <xs:element maxOccurs="unbounded" name="condition">
                             <xs:complexType>
-                              <xs:attribute name="class" type="xs:string" use="required" />
+                              <xs:attribute name="class" type="xs:string" use="optional" />
+                              <xs:attribute name="object" type="xs:string" use="optional" />
                               <xs:attribute name="variable" type="xs:string" use="required" />
                               <xs:attribute name="value" type="xs:unsignedByte" use="required" />
                               <xs:attribute name="action" type="xs:string" use="required" />

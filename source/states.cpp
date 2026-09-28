@@ -20,6 +20,14 @@ namespace xge
 			o << "       button=" << input.first << ", action=" << input.second << '\n';
 		}
 
+		for (auto& condition : f.conditions)
+		{
+			o << "       condition: variable=" << condition.variableName << ", value=" << condition.value
+				<< (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
+				<< (condition.filterObject.empty() ? "" : ", object=" + condition.filterObject)
+				<< ", action=" << condition.action << '\n';
+		}
+
 		return o;
 	}
 
@@ -37,6 +45,19 @@ namespace xge
 			for (auto& command : input.second)
 			{
 				o << command << (&command != &input.second.back() ? ";" : "");
+			}
+			o << '\n';
+		}
+
+		for (auto& condition : f.conditions)
+		{
+			o << "       condition: variable=" << condition.variableName << ", value=" << condition.value
+				<< (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
+				<< (condition.filterObject.empty() ? "" : ", object=" + condition.filterObject)
+				<< ", action=";
+			for (auto& command : condition.commands)
+			{
+				o << command << (&command != &condition.commands.back() ? ";" : "");
 			}
 			o << '\n';
 		}

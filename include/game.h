@@ -72,5 +72,10 @@ namespace xge
 		void checkEdge(Object& object, Edge edge);
 
 		void checkObjectCollision(Object& a, Object& b);
+
+		// Checked once per frame against the current state's <conditions>; the
+		// first one whose target variable has reached its threshold fires its
+		// action and stops (the state may have just changed).
+		void checkConditions();
 	};
 }

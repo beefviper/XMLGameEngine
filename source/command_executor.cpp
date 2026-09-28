@@ -62,6 +62,11 @@ namespace xge
 		}, command);
 	}
 
+	void CommandExecutor::executeCondition(const Command& command)
+	{
+		executeInput(command, true);
+	}
+
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge)
 	{
 		// A grouped object (e.g. the invader block in spaceinvaders) bounces as a

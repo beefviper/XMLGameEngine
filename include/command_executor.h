@@ -41,6 +41,11 @@ namespace xge
 		// pop a state, or trigger a named action on another object.
 		void executeInput(const Command& command, bool keyPressed);
 
+		// A State's <condition> action, once Game::checkConditions decides it's
+		// met: same command set as an <input> (in practice just push/pop a
+		// state), so this is just executeInput as an always-"pressed" input.
+		void executeCondition(const Command& command);
+
 	private:
 		Game& game;
 
