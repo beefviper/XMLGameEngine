@@ -62,6 +62,17 @@ namespace xge
 		// re-fire.
 		void resetObject(const std::string& name);
 
+		// Bare reset() from a state's <input>/<condition> action (see CmdReset,
+		// handled this way only in CommandExecutor::executeInput - a collision's
+		// own bare reset() still just resets that one object's position).
+		// Resets every object back to how the game loaded (position, velocity,
+		// every <variable>), refreshes every bound text display, and collapses
+		// the whole state stack back down to the very first state - the same
+		// state Engine's constructor pushes via setCurrentState(0) - so
+		// mainmenu -> playing -> gameover -> mainmenu -> ... doesn't grow the
+		// stack forever.
+		void resetAll();
+
 	private:
 		std::string filename;
 		WindowDesc windowDesc;

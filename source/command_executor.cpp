@@ -57,10 +57,15 @@ namespace xge
 			[&](const CmdPopState&) { if (keyPressed) { game.popState(); } },
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed); },
 			[&](const CmdResetObject& r) { if (keyPressed) { game.resetObject(r.target); } },
-			[&](const auto&) { /* bounce/stick/reset(bare)/die/move/inc/fire never
-			                      appear directly on a state's <input>; only
-			                      reachable via CmdTriggerAction into an object's
-			                      own action list. */ }
+			// Bare reset() means something different here than it does inside a
+			// collision (executeScreenEdgeCollision resets just the colliding
+			// object's own position): with no "colliding object" to be implicit
+			// about, it's the full-game reset - see Game::resetAll.
+			[&](const CmdReset&) { if (keyPressed) { game.resetAll(); } },
+			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
+			                      directly on a state's <input>; only reachable
+			                      via CmdTriggerAction into an object's own
+			                      action list. */ }
 		}, command);
 	}
 

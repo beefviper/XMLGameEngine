@@ -174,7 +174,7 @@
         <show object="continue" />
       </shows>
       <inputs>
-        <input button="space" action="reset('paddle1');reset('paddle2');state('mainmenu')" />
+        <input button="space" action="reset()" />
       </inputs>
     </state>
   </states>

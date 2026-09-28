@@ -238,6 +238,25 @@ namespace xge
 		}
 	}
 
+	namespace
+	{
+		// Shared by Game::resetObject (one named object) and Game::resetAll
+		// (every object): puts position/velocity/every <variable> back to
+		// their construction-time snapshots (positionOriginal/velocityOriginal/
+		// variableOriginal). Doesn't touch bound text displays - callers do
+		// that afterward, once they know which objects actually changed.
+		void resetObjectState(Object& object) noexcept
+		{
+			object.position = object.positionOriginal;
+			object.velocity = object.velocityOriginal;
+
+			for (auto& [variableName, originalValue] : object.variableOriginal)
+			{
+				object.variable[variableName] = originalValue;
+			}
+		}
+	}
+
 	void Game::resetObject(const std::string& name)
 	{
 		Object* object = tryGetObject(name);
@@ -247,13 +266,7 @@ namespace xge
 			return;
 		}
 
-		object->position = object->positionOriginal;
-		object->velocity = object->velocityOriginal;
-
-		for (auto& [variableName, originalValue] : object->variableOriginal)
-		{
-			object->variable[variableName] = originalValue;
-		}
+		resetObjectState(*object);
 
 		// Refresh every text display bound to one of this object's variables
 		// (same notify pattern as incrementText above), so e.g. a HUD showing
@@ -271,6 +284,50 @@ namespace xge
 				sfml.setDisplayedNumber(other, valueIt->second);
 			}
 		}
+	}
+
+	void Game::resetAll()
+	{
+		for (auto& object : objects)
+		{
+			resetObjectState(object);
+		}
+
+		// Refresh every text display bound to another object's variable, now
+		// that all of them are back to their starting values (same notify
+		// pattern as resetObject/incrementText above, just over every bound
+		// display instead of one object's worth).
+		for (auto& object : objects)
+		{
+			if (object.boundVariableOwner.empty())
+			{
+				continue;
+			}
+
+			Object* owner = tryGetObject(object.boundVariableOwner);
+			if (!owner)
+			{
+				continue;
+			}
+
+			const auto valueIt = owner->variable.find(object.boundVariableName);
+			if (valueIt != owner->variable.end())
+			{
+				sfml.setDisplayedNumber(object, valueIt->second);
+			}
+		}
+
+		// Collapse the whole state stack. mainmenu -> playing -> gameover ->
+		// mainmenu -> ... is push-only (see pushState/setCurrentState) - only
+		// settings and paused ever pop back off - so left alone it grows for as
+		// long as the game keeps getting played. Clear it and start fresh from
+		// the very first state, exactly like Engine's constructor does once at
+		// startup.
+		while (!currentState.empty())
+		{
+			currentState.pop();
+		}
+		setCurrentState(0);
 	}
 
 	void Game::updateGroupOfObjects(const Object& object, std::string side) noexcept

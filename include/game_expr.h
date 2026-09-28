@@ -279,18 +279,22 @@ namespace xge
 		template <typename T>
 		struct reset : public exprtk::igeneric_function<T>
 		{
-			// "Z": reset() with no args - unchanged original meaning, only valid
-			// inside a collision action; resets the colliding object's own
-			// position to positionOriginal (see
-			// CommandExecutor::executeScreenEdgeCollision).
-			// "S": reset('objectName') - resets a specific named object's
-			// position, velocity, AND every <variable> back to their starting
-			// values. Meant for a state's <input> (e.g. the gameover screen's
-			// spacebar handler resetting the paddles before a new game), so a
-			// fresh round doesn't instantly re-trip a <condition> left over from
-			// the last one (see Game::resetObject). ps_index (not
-			// parameters.size(), which "Z" doesn't have anyway) tells the two
-			// apart, same technique as text<T>'s "ST|STS|TT|TTS".
+			// "Z": reset() with no args. Meaning depends on where it's used, same
+			// as CmdReset already does between executeScreenEdgeCollision (resets
+			// position) and executeObjectCollision (ignored): inside a collision
+			// action it resets just the colliding object's own position to
+			// positionOriginal (unchanged original meaning); inside a state's
+			// <input>/<condition> action - where there's no "colliding object" to
+			// be implicit about - it instead means a full game reset (see
+			// Game::resetAll): every object's position/velocity/variables back to
+			// how they loaded, and the state stack collapsed back down to the
+			// first state, so mainmenu -> playing -> gameover -> mainmenu -> ...
+			// doesn't grow the stack forever.
+			// "S": reset('objectName') - resets just that one named object's
+			// position, velocity, AND every <variable> back to its starting
+			// values (see Game::resetObject). ps_index (not parameters.size(),
+			// which "Z" doesn't have anyway) tells the two signatures apart,
+			// same technique as text<T>'s "ST|STS|TT|TTS".
 			reset() noexcept : exprtk::igeneric_function<T>("Z|S") {}
 
 			T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
