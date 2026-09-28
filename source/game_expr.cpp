@@ -100,6 +100,23 @@ namespace xge
 		{
 			std::vector<std::string> tempSpriteParams = processData(rawObject, rawObject.src);
 			const GridData gridData = setGridXY(tempSpriteParams);
+			const ShapeKind rawObjectShapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
+
+			// Every grid cell shares the same footprint (one shape.circle()/
+			// shape.rectangle() call covers the whole grid() - see games/
+			// breakout.xml, games/spaceinvaders.xml), so this is computed
+			// once per rawObject rather than per cell.
+			const Vector2f gridObjSize = measureShapeSize(tempSpriteParams, rawObjectShapeKind);
+
+			if ((gridData.max.x > 1 || gridData.max.y > 1)
+				&& (rawObjectShapeKind == ShapeKind::Text || rawObjectShapeKind == ShapeKind::Image))
+			{
+				std::cout << "warning: grid(): '" << rawObject.name << "' is a "
+					<< (rawObjectShapeKind == ShapeKind::Text ? "text" : "image")
+					<< " object - its real footprint can't be known without a Window "
+					<< "backend (see measureShapeSize, command.cpp), so grid spacing "
+					<< "here will collapse to just the padding\n";
+			}
 
 			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
 			{
@@ -108,7 +125,7 @@ namespace xge
 					Object object{};
 
 					object.spriteParams = tempSpriteParams;
-					object.shapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
+					object.shapeKind = rawObjectShapeKind;
 
 					if (object.shapeKind == ShapeKind::Text)
 					{
@@ -130,11 +147,24 @@ namespace xge
 
 					object.isVisible = rawObject.isVisible;
 
-					object.position.x = static_cast<float>(gridX);
-					object.position.y = static_cast<float>(gridY);
-
 					object.positionOriginal.x = evaluateString(rawObject, rawObject.rawPosition.x);
 					object.positionOriginal.y = evaluateString(rawObject, rawObject.rawPosition.y);
+
+					// Finalizes this grid cell's real screen position right
+					// here - Game is now done with position the moment its
+					// own constructor returns, with no Window/backend needed
+					// (see main.cpp). A non-grid object always has
+					// gridData.max == {1,1}, so gridX == gridY == 0 and this
+					// reduces to plain object.position = object.positionOriginal,
+					// same as it always has. positionOriginal is then bumped
+					// to match, exactly as before, so Game::resetObject/
+					// resetAll restores each grid cell (e.g. each brick) to
+					// its own slot, not the shared base corner.
+					object.position.x = object.positionOriginal.x
+						+ ((gridObjSize.x + static_cast<float>(gridData.padding.x)) * static_cast<float>(gridX));
+					object.position.y = object.positionOriginal.y
+						+ ((gridObjSize.y + static_cast<float>(gridData.padding.y)) * static_cast<float>(gridY));
+					object.positionOriginal = object.position;
 
 					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
 					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
@@ -277,11 +307,12 @@ namespace xge
 	{
 		GridData gridData;
 
-		// TODO: calulate final position in here
 		if (spriteParams.size() > 5 && spriteParams.at(4) == "grid")
 		{
 			gridData.max.x = std::stoi(spriteParams.at(5));
 			gridData.max.y = std::stoi(spriteParams.at(6));
+			gridData.padding.x = std::stoi(spriteParams.at(7));
+			gridData.padding.y = std::stoi(spriteParams.at(8));
 		}
 
 		return gridData;

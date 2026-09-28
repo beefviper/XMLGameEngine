@@ -53,8 +53,18 @@ namespace xge
 	std::ostream& operator<<(std::ostream& o, const Object& f) {
 		o << "Object: " << "name=" << f.name << ", src=" << f.src << '\n'
 			<< "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n'
-			<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n'
-			<< "\tcollision=" << (f.collisionData.enabled ? "true" : "false");
+			<< "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n';
+
+		if (f.sizeKnown)
+		{
+			o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';
+		}
+		else
+		{
+			o << "\tsize= ( Unknown, not yet initialized by Engine )\n";
+		}
+
+		o << "\tcollision=" << (f.collisionData.enabled ? "true" : "false");
 
 
 		// TODO: replace with operator<< for CollisionData

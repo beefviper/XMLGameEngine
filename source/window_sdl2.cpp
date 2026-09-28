@@ -156,31 +156,13 @@ namespace xge
 
 	void SDL2Window::init(std::vector<Object>& objects)
 	{
+		// Object::position is already final by now - see the identical
+		// comment in SFMLWindow::init() (window_sfml.cpp).
 		for (auto& object : objects)
 		{
 			CachedVisual& visual = visuals[object.name];
 
 			buildShapeOnly(object, visual);
-
-			// Grid layout math - see the identical comment in
-			// SFMLWindow::init() (window_sfml.cpp): only ever meaningful
-			// once, right here.
-			GridData gridData;
-			if (object.spriteParams.size() > 5 && object.spriteParams.at(4) == "grid")
-			{
-				int w = 0, h = 0;
-				if (visual.texture) { SDL_QueryTexture(visual.texture, nullptr, nullptr, &w, &h); }
-
-				gridData.padding.x = std::stoi(object.spriteParams.at(7));
-				gridData.padding.y = std::stoi(object.spriteParams.at(8));
-				gridData.obj.x = w;
-				gridData.obj.y = h;
-			}
-
-			object.position.x = object.positionOriginal.x + ((gridData.obj.x + gridData.padding.x) * object.position.x);
-			object.position.y = object.positionOriginal.y + ((gridData.obj.y + gridData.padding.y) * object.position.y);
-			object.positionOriginal = object.position;
-
 			finalizeVisual(object, visual);
 		}
 	}
@@ -417,6 +399,7 @@ namespace xge
 
 		object.size.x = static_cast<float>(w);
 		object.size.y = static_cast<float>(h);
+		object.sizeKnown = true;
 		object.visualDirty = false;
 	}
 }

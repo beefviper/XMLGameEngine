@@ -14,13 +14,18 @@ int main(int argc, char* argv[])
 {
 	const std::string filename = xge::resolveGameFilename(argc, argv);
 
+	// Game is fully evaluated the moment its constructor returns - every
+	// object's position (grid() spacing included), velocity, action, and
+	// variable is real - none of it needs a Window/backend to exist first
+	// (see game_expr.cpp, command.cpp's measureShapeSize). The one exception
+	// is Object::size (the real rendered footprint, used for drawing/
+	// collision), which stays {0,0} until Engine's constructor builds a real
+	// Window backend to measure it (see Window::init(), window.h) -
+	// printGame() knows the difference and prints size as "unknown" instead
+	// of a misleading {0,0} if called before Engine exists. For now,
+	// printGame() is called after Engine so its dump includes everything.
 	xge::Game game{ filename };
 
-	// Engine before printGame(): every object's own visual now gets built
-	// (and, for a "grid" sprite, its position finalized) by Engine's own
-	// constructor once a real Window backend exists - see Window::init() in
-	// window.h - so printGame()'s dump of `objects` only shows finalized
-	// values if it runs after Engine exists, not before.
 	xge::Engine engine(game);
 
 	game.printGame();

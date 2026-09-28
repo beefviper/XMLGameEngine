@@ -100,6 +100,31 @@ namespace xge
 		return ShapeKind::Unknown;
 	}
 
+	Vector2f measureShapeSize(const std::vector<std::string>& spriteParams, ShapeKind shapeKind) noexcept
+	{
+		// spriteParams is always well-formed here - it was built moments
+		// earlier by the matching shape.circle()/shape.rectangle() functor
+		// (see game_expr.h), never handed in from outside, so the indices
+		// below are guaranteed present whenever shapeKind says they should
+		// be - same assumption SFMLWindow::buildCircle/buildRectangle (and
+		// their Raylib/SDL2 equivalents) already make.
+		switch (shapeKind)
+		{
+		case ShapeKind::Circle:
+		{
+			const float radius = std::stof(spriteParams.at(1));
+			return { radius * 2.0f, radius * 2.0f };
+		}
+		case ShapeKind::Rectangle:
+			return { std::stof(spriteParams.at(1)), std::stof(spriteParams.at(2)) };
+		case ShapeKind::Text:
+		case ShapeKind::Image:
+		case ShapeKind::Unknown:
+		default:
+			return {};
+		}
+	}
+
 	std::optional<std::pair<std::string, std::string>> parseTextVariableBinding(const std::string& src)
 	{
 		const auto call = src.find("text(");

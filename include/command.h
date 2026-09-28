@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "types.h"
+
 #include <ostream>
 #include <optional>
 #include <string>
@@ -112,6 +114,20 @@ namespace xge
 	// ShapeKind. Returns ShapeKind::Unknown for anything else (including an
 	// empty tag).
 	ShapeKind shapeKindFromTag(const std::string& tag) noexcept;
+
+	// The object's own footprint, straight from its spriteParams - no Window
+	// backend required. Circle/rectangle sizes are fully implied by the
+	// numeric params already sitting in spriteParams (radius, or width and
+	// height), so this is exact for Rectangle and a very close approximation
+	// for Circle (matches a rendered circle's bounding box to within
+	// sub-pixel rounding). Text/image footprints genuinely depend on a real
+	// font/image load - there's no way to know them without a backend - so
+	// those (and ShapeKind::Unknown) come back {0,0}. Used by
+	// game_expr::init() to finalize grid() spacing entirely within Game's
+	// own construction, before any Window exists (see window.h's Window::
+	// init(), which now only measures the *real* rendered Object::size for
+	// drawing/collision, not position).
+	Vector2f measureShapeSize(const std::vector<std::string>& spriteParams, ShapeKind shapeKind) noexcept;
 
 	// If `src` contains a text(...) call whose first argument is an unquoted
 	// "owner.variable" reference (e.g. text(paddle1.score,128,'color.white')),

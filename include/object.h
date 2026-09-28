@@ -120,15 +120,24 @@ namespace xge
 		Vector2f velocity;
 		Vector2f velocityOriginal;
 
-		// The object's own measured bounding box (width/height) - unknown
-		// (zero) until whichever Window backend is running has actually built
-		// this object's visual and measured it (see Window::init() in
-		// window.h). Circle/rectangle sizes are implied by spriteParams alone;
-		// text/image need the backend's own font/image loading to know their
-		// real pixel size, so every backend writes this back the same way
+		// The object's own measured bounding box (width/height) - {0,0} until
+		// whichever Window backend is running has actually built this
+		// object's visual and measured it (see Window::init() in window.h).
+		// Circle/rectangle sizes are implied by spriteParams alone; text/
+		// image need the backend's own font/image loading to know their real
+		// pixel size, so every backend writes this back the same way
 		// regardless - collision/physics code (CollisionDetector,
 		// CommandExecutor) only ever reads this field, never a backend type.
 		Vector2f size{};
+
+		// True once a Window backend has measured `size` at least once (see
+		// finalizeVisual() in window_sfml.cpp/window_raylib.cpp/
+		// window_sdl2.cpp) - stays true from then on, even across a later
+		// visualDirty rebuild, since `size` always holds the last real
+		// measurement rather than reverting to unknown. Lets operator<<
+		// print "unknown" instead of a misleading {0,0} for a game printed
+		// before Engine exists.
+		bool sizeKnown{ false };
 
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;

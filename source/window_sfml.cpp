@@ -38,30 +38,16 @@ namespace xge
 
 	void SFMLWindow::init(std::vector<Object>& objects)
 	{
+		// Object::position is already final by now - including any grid()
+		// spacing - finalized entirely within Game's own construction (see
+		// game_expr.cpp, and main.cpp for why Engine/Window no longer needs
+		// to exist first). All that's left here is building each object's
+		// actual visual and measuring its real rendered Object::size.
 		for (auto& object : objects)
 		{
 			CachedVisual& visual = visuals[object.name];
 
 			buildShapeOnly(object, visual);
-
-			// Grid layout math - only ever meaningful once, right here: after
-			// this, object.position holds a real screen position rather than
-			// a grid index, so nothing later may run this again (see
-			// buildShapeOnly's on-demand rebuild path in draw(), which skips
-			// straight to finalizeVisual instead).
-			GridData gridData;
-			if (object.spriteParams.size() > 5 && object.spriteParams.at(4) == "grid")
-			{
-				gridData.padding.x = std::stoi(object.spriteParams.at(7));
-				gridData.padding.y = std::stoi(object.spriteParams.at(8));
-				gridData.obj.x = static_cast<int>(visual.renderTexture.getSize().x);
-				gridData.obj.y = static_cast<int>(visual.renderTexture.getSize().y);
-			}
-
-			object.position.x = object.positionOriginal.x + ((gridData.obj.x + gridData.padding.x) * object.position.x);
-			object.position.y = object.positionOriginal.y + ((gridData.obj.y + gridData.padding.y) * object.position.y);
-			object.positionOriginal = object.position;
-
 			finalizeVisual(object, visual);
 		}
 	}
@@ -108,6 +94,16 @@ namespace xge
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);
 		}
+
+		// The cached sprite's position has to be refreshed every frame, not
+		// just on rebuild: Object::position changes constantly from plain
+		// movement (velocity integration, paddle input) with visualDirty
+		// never set for that (visualDirty is only for text-content rebuilds -
+		// see Game::incrementText/resetObject/resetAll), so without this the
+		// sprite you actually see would stay frozen at wherever it was last
+		// rebuilt while the real Object::position (and therefore collisions/
+		// scoring) kept moving underneath it.
+		visual.sprite->setPosition({ object.position.x, object.position.y });
 
 		window.draw(*visual.sprite);
 	}
@@ -353,6 +349,7 @@ namespace xge
 	{
 		object.size.x = static_cast<float>(visual.renderTexture.getSize().x);
 		object.size.y = static_cast<float>(visual.renderTexture.getSize().y);
+		object.sizeKnown = true;
 
 		visual.renderTexture.display();
 		visual.sprite = std::make_unique<sf::Sprite>(visual.renderTexture.getTexture());

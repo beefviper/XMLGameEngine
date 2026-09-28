@@ -31,12 +31,13 @@ namespace xge
 
 		// Called once, right after the window is created (see Engine's
 		// constructor): builds and measures every object's initial visual
-		// from its spriteParams, and finalizes any grid-adjusted position
-		// (see GridData) now that each object's real rendered size is known -
-		// circle/rectangle sizes are implied by spriteParams alone, but
-		// text/image need the backend's own font/image loading to know their
-		// real pixel size. Populates Object::size and clears
-		// Object::visualDirty for every object it touches.
+		// from its spriteParams. Object::position (including any grid()
+		// spacing) is already final by this point - Game finalizes all of
+		// that itself, with no Window needed (see game_expr.cpp and
+		// measureShapeSize in command.cpp) - so this only ever populates
+		// Object::size with each object's real rendered footprint (exact,
+		// unlike measureShapeSize's spriteParams-only approximation) and
+		// clears Object::visualDirty, for every object it touches.
 		virtual void init(std::vector<Object>& objects) = 0;
 
 		// Pumps the backend's event queue once. Returns every key that
