@@ -10,7 +10,8 @@
 namespace xge
 {
 	Engine::Engine(Game& game) :
-		game(game)
+		game(game),
+		commandExecutor(game)
 	{
 		WindowDesc windowDesc = game.getWindowDesc();
 
@@ -94,90 +95,16 @@ namespace xge
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::execute_action(sf::Keyboard::Key code, PairStringVectorString& input, bool keyPressed)
+	void Engine::execute_action(sf::Keyboard::Key code, const KeyBinding& input, bool keyPressed)
 	{
-		if (input.first == sfmlKeyToString(code))
+		if (input.first != sfmlKeyToString(code))
 		{
-			std::string aObject = input.second.at(0);
-			std::string aCommand = input.second.at(1);
-
-			if (aObject == "state")
-			{
-				if (keyPressed)
-				{
-					if (aCommand == "pop")
-					{
-						game.popState();
-					}
-					else
-					{
-						game.pushState(aCommand);
-					}
-				}
-			}
-			else
-			{
-				std::string aAction = game.getObject(aObject).action[aCommand].at(0);
-
-				// TODO: move move() code out of Engine, put in Game
-				// Engine can pass along a vector<string> of commands
-
-				if (aAction == "moveleft" || aAction == "moveright" || aAction == "moveup" || aAction == "movedown")
-				{
-					auto aStep = std::stof(game.getObject(aObject).action[aCommand].at(1));
-
-					if (!keyPressed)
-					{
-						aStep = 0;
-					}
-
-					move(game.getObject(aObject), aCommand, aStep);
-				}
-				else if (aAction == "fire")
-				{
-					if (keyPressed)
-					{
-						auto currentX = game.getObject(aObject).position.x;
-						auto& currentObjName = game.getObject(aObject).action[aCommand].at(1);
-						auto& currentObj = game.getObject(currentObjName);
-
-						if (currentObj.collisionData.enabled == false)
-						{
-							currentObj.position.x = currentX + game.getObject(aObject).sprite.get()->getLocalBounds().size.x / 2;
-							currentObj.position.y = game.getObject(aObject).sprite.get()->getGlobalBounds().position.y;
-							currentObj.velocity.y = currentObj.variable["speed"];
-							currentObj.isVisible = true;
-							currentObj.collisionData.enabled = true;
-						}
-					}
-				}
-			}
+			return;
 		}
-	}
 
-	void Engine::move(Object& object, Engine::Direction direction, float step) noexcept
-	{
-		switch (direction)
+		for (const auto& command : input.second)
 		{
-		case Direction::Up:
-			object.velocity.y = -step;
-			break;
-		case Direction::Down:
-			object.velocity.y = step;
-			break;
-		case Direction::Left:
-			object.velocity.x = -step;
-			break;
-		case Direction::Right:
-			object.velocity.x = step;
-			break;
-		default:
-			break;
+			commandExecutor.executeInput(command, keyPressed);
 		}
-	}
-
-	void Engine::move(Object& object, std::string direction, float step)
-	{
-		move(object, mapDirection[direction], step);
 	}
 }

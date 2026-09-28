@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "command.h"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -30,7 +32,7 @@ namespace xge
 	public:
 		std::string name;
 		std::vector<std::string> show;
-		std::map<std::string, std::vector<std::string>> input;
+		std::map<std::string, std::vector<Command>> input;
 
 		friend std::ostream& operator<<(std::ostream& o, State const& f);
 

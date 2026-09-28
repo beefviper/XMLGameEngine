@@ -7,6 +7,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "command.h"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -45,11 +47,11 @@ namespace xge
 	{
 		bool enabled{ false };
 		int group{ 0 };
-		std::vector<std::string> top;
-		std::vector<std::string> bottom;
-		std::vector<std::string> left;
-		std::vector<std::string> right;
-		std::vector<std::string> basic;
+		std::vector<Command> top;
+		std::vector<Command> bottom;
+		std::vector<Command> left;
+		std::vector<Command> right;
+		std::vector<Command> basic;
 
 		// TODO: add operator<< to CollisionData
 
@@ -101,7 +103,8 @@ namespace xge
 		sf::Vector2f velocityOriginal;
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
-		std::map<std::string, std::vector<std::string>> action;
+		ShapeKind shapeKind{ ShapeKind::Unknown };
+		std::map<std::string, std::vector<Command>> action;
 		std::map<std::string, float> variable;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
 		std::unique_ptr<sf::Sprite> sprite = nullptr;

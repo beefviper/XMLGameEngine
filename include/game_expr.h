@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "command.h"
 #include "object.h"
 #include "states.h"
 
@@ -35,10 +36,12 @@ namespace xge
 
 		float evaluateString(const RawObject& rawObject, const std::string& input_string);
 		std::vector<std::string> processData(const RawObject& rawObject, const std::string& input_string);
+		std::vector<Command> processCommands(const RawObject& rawObject, const std::string& input_string);
 		xge::GridData setGridXY(std::vector<std::string>& tempSpriteParams);
 
 		float evaluateString(const RawState& rawState, const std::string& input_string);
 		std::vector<std::string> processData(const RawState& rawState, const std::string& input_string);
+		std::vector<Command> processCommands(const RawState& rawState, const std::string& input_string);
 
 		static inline std::vector<std::string> tempSParams;
 
@@ -357,6 +360,7 @@ namespace xge
 
 			T operator()(parameter_list_t parameters) override
 			{
+				tempSParams.push_back("action");
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
 				tempSParams.push_back(exprtk::to_str(string_t(parameters[1])));
 				return 0;

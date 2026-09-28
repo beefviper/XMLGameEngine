@@ -25,6 +25,9 @@ target_sources(${PROJECT_NAME} PRIVATE
 	"source/game_xml.cpp"
 	"source/game_expr.cpp"
 	"source/game_sfml.cpp"
+	"source/command.cpp"
+	"source/collision_detector.cpp"
+	"source/command_executor.cpp"
 
 	"include/game.h"
 	"include/engine.h"
@@ -34,4 +37,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 	"include/game_xml.h"
 	"include/game_expr.h"
 	"include/game_sfml.h"
+	"include/command.h"
+	"include/collision_detector.h"
+	"include/command_executor.h"
 )

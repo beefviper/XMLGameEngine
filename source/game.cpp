@@ -5,6 +5,8 @@
 
 #include "game.h"
 
+#include "command_executor.h"
+
 namespace xge
 {
 	Game::Game(const std::string& game) :
@@ -24,22 +26,18 @@ namespace xge
 				if (object.collisionData.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
 				{
 					// check collisions with edges of screen
-					checkEdge(object, "top");
-					checkEdge(object, "bottom");
-					checkEdge(object, "left");
-					checkEdge(object, "right");
+					checkEdge(object, Edge::Top);
+					checkEdge(object, Edge::Bottom);
+					checkEdge(object, Edge::Left);
+					checkEdge(object, Edge::Right);
 
-					// check collision with other objects
-					if (object.collisionData.basic.size() != 0)
+					// check collision with other objects (only circular movers can
+					// currently initiate an object-object check - see ShapeKind)
+					if (!object.collisionData.basic.empty() && object.shapeKind == ShapeKind::Circle)
 					{
 						for (auto& otherObject : getCurrentObjects())
 						{
-							bool tookHit = false; // TODO: pretty sure this isn't doing anything
-							const auto isCircular = object.src.find("shape.circle") != std::string::npos;
-							if (isCircular && !tookHit)
-							{
-								tookHit = circleRectangleCollision(object, otherObject);
-							}
+							circleRectangleCollision(object, otherObject);
 						}
 					}
 				}
@@ -160,6 +158,11 @@ namespace xge
 		}
 	}
 
+	void Game::incrementText(const std::string& objectName)
+	{
+		sfml.updateTextIncrementValue(getObject(objectName));
+	}
+
 	void Game::updateGroupOfObjects(const Object& object, std::string side) noexcept
 	{
 		const int groupNum = object.collisionData.group;
@@ -193,257 +196,59 @@ namespace xge
 		}
 	}
 
-	// TODO: checkEdge should probably just return a vector(?) of edges touched ?
-	// possibilities: top, bottom, left, right, top & left, top & right, bottom & left, bottom & right 
-
-	void Game::checkEdge(Object& object, std::string side)
+	void Game::checkEdge(Object& object, Edge edge)
 	{
-		auto objectWidth = object.sprite->getLocalBounds().size.x;
-		auto objectHeight = object.sprite->getLocalBounds().size.y;
-
-		std::vector<std::string> curSide{};
-		constexpr float leftBound = 0;
-		const float rightBound = windowDesc.width - objectWidth;
-		constexpr float topBound = 0;
-		const float bottomBound = windowDesc.height - objectHeight;
-
-		if (side == "left") { curSide = object.collisionData.left; }
-		else if (side == "right") { curSide = object.collisionData.right; }
-		else if (side == "top") { curSide = object.collisionData.top; }
-		else if (side == "bottom") { curSide = object.collisionData.bottom; }
-
-		if ((object.position.x < leftBound && side == "left")
-			|| (object.position.x > rightBound - 1 && side == "right")
-			|| (object.position.y < topBound && side == "top")
-			|| (object.position.y > bottomBound && side == "bottom"))
+		if (!CollisionDetector::touchesScreenEdge(object, windowDesc, edge))
 		{
+			return;
+		}
 
-			// TODO: object handling code needs to be in its own function
+		std::vector<Command>* commands = nullptr;
+		switch (edge)
+		{
+		case Edge::Left:   commands = &object.collisionData.left; break;
+		case Edge::Right:  commands = &object.collisionData.right; break;
+		case Edge::Top:    commands = &object.collisionData.top; break;
+		case Edge::Bottom: commands = &object.collisionData.bottom; break;
+		}
 
-			auto colIter = curSide.begin();
-			while (colIter != curSide.end())
-			{
-				if (*colIter == "inc")
-				{
-					colIter++;
-					sfml.updateTextIncrementValue(getObject(*colIter));
-					colIter++;
-				}
-				else if (*colIter == "collide")
-				{
-					colIter++;
-					if (*colIter == "reset")
-					{
-						object.position = object.positionOriginal;
-					}
-					else if (*colIter == "bounce")
-					{
-						if (side == "left" || side == "right")
-						{
-							if (object.collisionData.group)
-							{
-								updateGroupOfObjects(object, side);
-							}
-							else
-							{
-								object.velocity.x *= -1;
-							}
-						}
-						else if (side == "top" || side == "bottom") { object.velocity.y *= -1; }
-					}
-					else if (*colIter == "stick")
-					{
-						if (side == "left" || side == "right")
-						{
-							object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
-						}
-						else if (side == "top" || side == "bottom")
-						{
-							object.position.y = std::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
-						}
-						object.velocity.x = 0;
-					}
-					else if (*colIter == "die")
-					{
-						object.collisionData.enabled = false;
-						object.isVisible = false;
-					}
-					colIter++;
-				}
-				else if (*colIter == "moveup")
-				{
-					colIter++;
-
-					if (object.collisionData.group > 0)
-					{
-						for (auto& obj : objects)
-						{
-							if (obj.collisionData.group == object.collisionData.group)
-							{
-								obj.position.y -= std::stoi(*colIter);
-							}
-						}
-					}
-					else
-					{
-						object.position.y -= std::stoi(*colIter);
-					}
-					colIter++;
-				}
-				else if (*colIter == "movedown")
-				{
-					colIter++;
-
-					if (object.collisionData.group > 0)
-					{
-						for (auto& obj : objects)
-						{
-							if (obj.collisionData.group == object.collisionData.group)
-							{
-								obj.position.y += std::stoi(*colIter);
-							}
-						}
-					}
-					else
-					{
-						object.position.y += std::stoi(*colIter);
-					}
-					colIter++;
-				}
-				else if (*colIter == "moveleft")
-				{
-					colIter++;
-
-					if (object.collisionData.group > 0)
-					{
-						for (auto& obj : objects)
-						{
-							if (obj.collisionData.group == object.collisionData.group)
-							{
-								obj.position.x -= std::stoi(*colIter);
-							}
-						}
-					}
-					else
-					{
-						object.position.x -= std::stoi(*colIter);
-					}
-					colIter++;
-				}
-				else if (*colIter == "moveright")
-				{
-					colIter++;
-
-					if (object.collisionData.group > 0)
-					{
-						for (auto& obj : objects)
-						{
-							if (obj.collisionData.group == object.collisionData.group)
-							{
-								obj.position.x += std::stoi(*colIter);
-							}
-						}
-					}
-					else
-					{
-						object.position.x += std::stoi(*colIter);
-					}
-					colIter++;
-				}
-			}
+		CommandExecutor executor(*this);
+		for (const auto& command : *commands)
+		{
+			executor.executeScreenEdgeCollision(command, object, edge);
 		}
 	}
 
 	bool Game::circleRectangleCollision(Object& object, Object& otherObject)
 	{
-		auto overlap{ 0.0f };
-		const auto isCircular = object.src.find("shape.circle") != std::string::npos;
-		std::string edgeTouched = "none";
-
-		if (object.name != otherObject.name && otherObject.collisionData.enabled && isCircular)
+		if (object.name == otherObject.name
+			|| !otherObject.collisionData.enabled
+			|| object.shapeKind != ShapeKind::Circle)
 		{
-			const auto midpoint = object.sprite->getPosition() +
-				sf::Vector2f(object.sprite->getLocalBounds().size.x / 2, object.sprite->getLocalBounds().size.y / 2);
-
-			auto otherObjectLeft = otherObject.sprite->getPosition().x;
-			auto otherObjectRight = otherObjectLeft + otherObject.sprite->getLocalBounds().size.x;
-			auto otherObjectTop = otherObject.sprite->getPosition().y;
-			auto otherObjectBottom = otherObjectTop + otherObject.sprite->getLocalBounds().size.y;
-
-			sf::Vector2f nearestPoint;
-			nearestPoint.x = std::clamp(midpoint.x, otherObjectLeft, otherObjectRight);
-			nearestPoint.y = std::clamp(midpoint.y, otherObjectTop, otherObjectBottom);
-
-			const auto rayToNearest = nearestPoint - midpoint;
-			const auto magOfray = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
-			overlap = object.sprite->getLocalBounds().size.x / 2 - magOfray;
-			if (std::isnan(overlap)) overlap = 0;
-
-			if (overlap > 0)
-			{
-				if (midpoint.y > otherObjectTop - midpoint.y
-					&& midpoint.y < otherObjectBottom + midpoint.y
-					&& nearestPoint.x == otherObjectLeft)
-				{
-					edgeTouched = "left";
-				}
-				else if (midpoint.y > otherObjectTop - midpoint.y
-					&& midpoint.y < otherObjectBottom + midpoint.y
-					&& nearestPoint.x == otherObjectRight)
-				{
-					edgeTouched = "right";
-				}
-				else if (midpoint.x > otherObjectLeft - midpoint.x
-					&& midpoint.x < otherObjectRight + midpoint.x
-					&& nearestPoint.y == otherObjectTop)
-				{
-					edgeTouched = "top";
-				}
-				else if (midpoint.x > otherObjectLeft - midpoint.x
-					&& midpoint.x < otherObjectRight + midpoint.x
-					&& nearestPoint.y == otherObjectBottom)
-				{
-					edgeTouched = "bottom";
-				}
-			}
-			else
-			{
-				edgeTouched = "none";
-			}
+			return false;
 		}
 
-		// TODO: Instead of hardcoded actions, use the objects list of actions (better yet, move this out of here)
-		if (edgeTouched != "none")
+		const auto edge = CollisionDetector::circleRectangle(object, otherObject);
+		if (!edge)
 		{
-			if (edgeTouched == "left") { object.velocity.x = std::abs(object.velocity.x) * -1; }
-			else if (edgeTouched == "right") { object.velocity.x = std::abs(object.velocity.x); }
-			else if (edgeTouched == "top") { object.velocity.y = std::abs(object.velocity.y) * -1; }
-			else if (edgeTouched == "bottom") { object.velocity.y = std::abs(object.velocity.y); }
+			return false;
 		}
 
-		if (edgeTouched != "none")
+		// Both participants get a say: the circular mover runs its own 'basic'
+		// commands (e.g. the ball bouncing), and whatever it hit runs its own
+		// (e.g. a brick or bullet dying). This replaces the old hardcoded
+		// "always bounce the mover, then pattern-match for a 'die' command"
+		// logic with the same generic dispatch checkEdge uses.
+		CommandExecutor executor(*this);
+		for (const auto& command : object.collisionData.basic)
 		{
-			if (otherObject.collisionData.basic.size() != 0)
-			{
-				if (otherObject.collisionData.basic.at(0) == "collide")
-				{
-					if (otherObject.collisionData.basic.at(1) == "die")
-					{
-						otherObject.isVisible = false;
-						otherObject.collisionData.enabled = false;
-					}
-					if (object.collisionData.basic.at(1) == "die")
-					{
-						object.isVisible = false;
-						object.collisionData.enabled = false;
-						object.velocity.x = 0;
-						object.velocity.y = 0;
-						object.position.x = -100;
-						object.position.y = -100;
-					}
-				}
-			}
+			executor.executeObjectCollision(command, object, *edge, true);
 		}
-		return edgeTouched != "none";
+		for (const auto& command : otherObject.collisionData.basic)
+		{
+			executor.executeObjectCollision(command, otherObject, *edge, false);
+		}
+
+		return true;
 	}
 }

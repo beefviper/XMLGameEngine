@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "collision_detector.h"
+#include "command.h"
 #include "game_xml.h"
 #include "game_expr.h"
 #include "game_sfml.h"
@@ -46,6 +48,11 @@ namespace xge
 
 		void updateGroupOfObjects(const Object& object, std::string side) noexcept;
 
+		// Thin forwarders so CommandExecutor (which only sees Game through a few
+		// public entry points) can reach the sfml/xml subsystems without those
+		// being made public wholesale.
+		void incrementText(const std::string& objectName);
+
 	private:
 		std::string filename;
 		WindowDesc windowDesc;
@@ -61,7 +68,7 @@ namespace xge
 		std::vector<Object> objects;
 		std::stack<State> currentState;
 
-		void checkEdge(Object& object, std::string side);
+		void checkEdge(Object& object, Edge edge);
 
 		bool circleRectangleCollision(Object& object, Object& otherObject);
 	};

@@ -51,14 +51,14 @@ namespace xge
 
 
 		// TODO: replace with operator<< for CollisionData
-		auto printCollisionData = [&](const std::vector<std::string>& params, std::string edge)
+		auto printCollisionData = [&](const std::vector<Command>& commands, std::string edge)
 		{
-			if (params.size() > 0)
+			if (commands.size() > 0)
 			{
 				o << ", " << edge << "=";
-				for (auto& param : params)
+				for (auto& command : commands)
 				{
-					o << param << (&param != &params.back() ? ";" : "");
+					o << command << (&command != &commands.back() ? ";" : "");
 				}
 			}
 		};
@@ -78,7 +78,12 @@ namespace xge
 
 		for (auto& action : f.action)
 		{
-			o << "\taction=" << action.first << ", value=" << action.second.at(0) << (action.second.size() > 1 ? action.second.at(1) : "") << '\n';
+			o << "\taction=" << action.first << ", value=";
+			for (auto& command : action.second)
+			{
+				o << command << (&command != &action.second.back() ? ";" : "");
+			}
+			o << '\n';
 		}
 
 		return o;

@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "command.h"
+#include "command_executor.h"
 #include "game.h"
 #include "object.h"
 #include "utils.h"
@@ -20,8 +22,9 @@
 
 namespace xge
 {
-	// TODO: rename PairStringVectorString to ListOfCommands ?
-	using PairStringVectorString = std::pair<const std::string, std::vector<std::string>>;
+	// One entry from a State's <input> map: which key it's bound to, and the
+	// (typed) commands to run when that key is pressed/released.
+	using KeyBinding = std::pair<const std::string, std::vector<Command>>;
 
 	class Engine
 	{
@@ -36,23 +39,11 @@ namespace xge
 
 	private:
 		Game& game;
+		CommandExecutor commandExecutor;
 		sf::RenderWindow window;
-		enum class Direction { None, Up, Down, Left, Right };
 		sf::Clock clock;
 
 		std::map<sf::Keyboard::Key, bool> isKeyPressed;
-		void execute_action(sf::Keyboard::Key code, PairStringVectorString& input, bool keyPressed = true);
-		
-		// TODO: get rid move functions, return list of key presses to game
-		void move(Object& object, Engine::Direction direction, float step) noexcept;
-		void move(Object& object, std::string direction, float step);
-
-		std::map<std::string, Direction> mapDirection
-		{
-			{"up", Direction::Up},
-			{"down", Direction::Down},
-			{"left", Direction::Left},
-			{"right", Direction::Right	},
-		};
+		void execute_action(sf::Keyboard::Key code, const KeyBinding& input, bool keyPressed = true);
 	};
 }

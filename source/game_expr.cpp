@@ -90,6 +90,7 @@ namespace xge
 					Object object{};
 
 					object.spriteParams = tempSpriteParams;
+					object.shapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
 
 					object.name = rawObject.name;
 					object.objClass = rawObject.objClass;
@@ -116,16 +117,16 @@ namespace xge
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
 					object.collisionData.group = rawObject.rawCollisionData.group ? groupNum : 0;
 
-					object.collisionData.top = processData(rawObject, rawObject.rawCollisionData.top);
-					object.collisionData.bottom = processData(rawObject, rawObject.rawCollisionData.bottom);
-					object.collisionData.left = processData(rawObject, rawObject.rawCollisionData.left);
-					object.collisionData.right = processData(rawObject, rawObject.rawCollisionData.right);
-					object.collisionData.basic = processData(rawObject, rawObject.rawCollisionData.basic);
+					object.collisionData.top = processCommands(rawObject, rawObject.rawCollisionData.top);
+					object.collisionData.bottom = processCommands(rawObject, rawObject.rawCollisionData.bottom);
+					object.collisionData.left = processCommands(rawObject, rawObject.rawCollisionData.left);
+					object.collisionData.right = processCommands(rawObject, rawObject.rawCollisionData.right);
+					object.collisionData.basic = processCommands(rawObject, rawObject.rawCollisionData.basic);
 
 					//object.action = rawObject.action;
 					for (auto& rawAction : rawObject.action)
 					{
-						object.action[rawAction.first] = processData(rawObject, rawAction.second);
+						object.action[rawAction.first] = processCommands(rawObject, rawAction.second);
 					}
 
 					for (auto& rawVariable : rawObject.variable)
@@ -154,7 +155,7 @@ namespace xge
 
 			for (auto& rawAction : rawState.input)
 			{
-				state.input[rawAction.first] = processData(rawState, rawAction.second);
+				state.input[rawAction.first] = processCommands(rawState, rawAction.second);
 			}
 
 			states.push_back(state);
@@ -186,6 +187,11 @@ namespace xge
 		return tempSParams;
 	}
 
+	std::vector<Command> game_expr::processCommands(const RawObject& rawObject, const std::string& input_string)
+	{
+		return parseCommands(processData(rawObject, input_string));
+	}
+
 	float game_expr::evaluateString(const RawState& rawState, const std::string& input_string)
 	{
 		if (!parser.compile(input_string, expression))
@@ -206,6 +212,11 @@ namespace xge
 			evaluateString(rawState, input_string);
 		}
 		return tempSParams;
+	}
+
+	std::vector<Command> game_expr::processCommands(const RawState& rawState, const std::string& input_string)
+	{
+		return parseCommands(processData(rawState, input_string));
 	}
 
 	xge::GridData game_expr::setGridXY(std::vector<std::string>& spriteParams)
