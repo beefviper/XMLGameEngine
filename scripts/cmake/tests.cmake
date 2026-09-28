@@ -76,6 +76,11 @@ endif()
 
 target_link_libraries(XMLGameEngineTests PRIVATE SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 
+# Every XML backend (see xml_document.h) is part of ENGINE_SOURCES, so this
+# target needs the same TinyXML2/PugiXML/RapidXML link libraries as
+# ${PROJECT_NAME} - see targets.cmake.
+target_link_libraries(XMLGameEngineTests PRIVATE tinyxml2::tinyxml2 pugixml::pugixml rapidxml::rapidxml)
+
 if (EXPRTK_PACKAGE_FOUND)
 	target_include_directories(XMLGameEngineTests PRIVATE ${EXPRTK_INCLUDE_DIRS})
 else()

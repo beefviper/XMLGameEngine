@@ -55,7 +55,7 @@ endif()
 # found already installed (vcpkg's own copy-on-build step already handles
 # that case). Guarded per target since a fetched library may build as a
 # static lib (no runtime DLL to place) depending on its own defaults.
-foreach(fetched_target IN ITEMS raylib SDL2 SDL2main SDL2_image SDL2_ttf)
+foreach(fetched_target IN ITEMS raylib SDL2 SDL2main SDL2_image SDL2_ttf tinyxml2 pugixml rapidxml)
 	if (TARGET ${fetched_target})
 		get_target_property(fetched_target_type ${fetched_target} TYPE)
 		if (fetched_target_type STREQUAL "SHARED_LIBRARY")

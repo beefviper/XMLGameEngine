@@ -10,6 +10,9 @@ option(FORCE_LOCAL_RAYLIB "Force using a locally fetched raylib instance" OFF)
 option(FORCE_LOCAL_SDL2 "Force using a locally fetched SDL2 instance" OFF)
 option(FORCE_LOCAL_SDL2_IMAGE "Force using a locally fetched SDL2_image instance" OFF)
 option(FORCE_LOCAL_SDL2_TTF "Force using a locally fetched SDL2_ttf instance" OFF)
+option(FORCE_LOCAL_TINYXML2 "Force using a locally fetched TinyXML2 instance" OFF)
+option(FORCE_LOCAL_PUGIXML "Force using a locally fetched PugiXML instance" OFF)
+option(FORCE_LOCAL_RAPIDXML "Force using a locally fetched RapidXML instance" OFF)
 option(FORCE_LOCAL_CATCH2 "Force using a locally fetched Catch2 instance" OFF)
 
 # Declared here, before scripts/cmake/tests.cmake's own include(CTest), so

@@ -33,6 +33,22 @@ if (NOT FORCE_LOCAL_SDL2_TTF)
 	find_package(SDL2_ttf QUIET)
 endif()
 
+if (NOT FORCE_LOCAL_TINYXML2)
+	find_package(tinyxml2 QUIET)
+endif()
+
+if (NOT FORCE_LOCAL_PUGIXML)
+	find_package(pugixml QUIET)
+endif()
+
+# RapidXML has no official CMake package of its own to find_package() -
+# same situation exprtk is in below, so this probes for its header the same
+# way exprtk does (EXPRTK_INCLUDE_DIRS), rather than pretending a RapidXML
+# config package might exist.
+if (NOT FORCE_LOCAL_RAPIDXML)
+	find_path(RAPIDXML_INCLUDE_DIRS "rapidxml.hpp")
+endif()
+
 if (XercesC_FOUND)
 	message(STATUS "XERCESC found: ${XercesC_LIBRARIES}")
 else()
@@ -137,8 +153,73 @@ else()
 	list(APPEND FETCHED_LIBRARIES SDL2_ttf)
 endif()
 
+if (tinyxml2_FOUND)
+	message(STATUS "TinyXML2 found: ${tinyxml2_DIR}")
+else()
+	message(STATUS "TinyXML2 not found, using FetchContent to download and build it locally.")
+
+	FetchContent_Declare(tinyxml2
+		GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
+		GIT_TAG 11.0.0
+		EXCLUDE_FROM_ALL)
+
+	list(APPEND FETCHED_LIBRARIES tinyxml2)
+endif()
+
+if (pugixml_FOUND)
+	message(STATUS "PugiXML found: ${pugixml_DIR}")
+else()
+	message(STATUS "PugiXML not found, using FetchContent to download and build it locally.")
+
+	FetchContent_Declare(pugixml
+		GIT_REPOSITORY https://github.com/zeux/pugixml.git
+		GIT_TAG v1.16
+		EXCLUDE_FROM_ALL)
+
+	list(APPEND FETCHED_LIBRARIES pugixml)
+endif()
+
+if (RAPIDXML_INCLUDE_DIRS)
+	message(STATUS "RapidXML found: ${RAPIDXML_INCLUDE_DIRS}")
+	set(RAPIDXML_PACKAGE_FOUND TRUE)
+else()
+	message(STATUS "RapidXML not found, using FetchContent to download it locally.")
+
+	# Pinned by commit rather than a tag - upstream (the discord/rapidxml
+	# mirror of the last released 1.13, the version this project's own
+	# xml_rapidxml.cpp is written against) has never cut a tagged release.
+	# RapidXML is header-only with no CMakeLists.txt of its own (checked -
+	# it has none), so unlike this project's other fetched libraries it's
+	# not add_subdirectory()'d by FetchContent_MakeAvailable below - see the
+	# rapidxml::rapidxml target synthesized further down instead.
+	FetchContent_Declare(rapidxml
+		GIT_REPOSITORY https://github.com/discord/rapidxml.git
+		GIT_TAG 2ae4b2888165a393dfb6382168825fddf00c27b9
+		EXCLUDE_FROM_ALL)
+
+	list(APPEND FETCHED_LIBRARIES rapidxml)
+endif()
+
 if (FETCHED_LIBRARIES)
 	FetchContent_MakeAvailable(${FETCHED_LIBRARIES})
+endif()
+
+# RapidXML (see above) has no upstream CMakeLists.txt, so nothing above
+# already defined a rapidxml::rapidxml target the way FetchContent_MakeAvailable
+# did for every other fetched library - synthesize the same kind of plain
+# INTERFACE target exprtk's own upstream CMakeLists.txt defines for itself
+# (add_library(exprtk INTERFACE ...) + an ALIAS), pointed at whichever
+# include dir was found above - a system install (RAPIDXML_PACKAGE_FOUND)
+# or the FetchContent source dir (rapidxml_SOURCE_DIR).
+if (NOT TARGET rapidxml::rapidxml)
+	add_library(rapidxml INTERFACE)
+	add_library(rapidxml::rapidxml ALIAS rapidxml)
+
+	if (RAPIDXML_PACKAGE_FOUND)
+		target_include_directories(rapidxml INTERFACE ${RAPIDXML_INCLUDE_DIRS})
+	else()
+		target_include_directories(rapidxml INTERFACE ${rapidxml_SOURCE_DIR})
+	endif()
 endif()
 
 # raylib's own CMake exports a plain `raylib` target (not namespaced) either

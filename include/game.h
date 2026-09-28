@@ -11,6 +11,7 @@
 #include "game_expr.h"
 #include "object.h"
 #include "states.h"
+#include "xml_document.h"
 
 #include <iostream>
 #include <string>
@@ -26,7 +27,11 @@ namespace xge
 	class Game
 	{
 	public:
-		Game(const std::string& game);
+		// xmlBackend picks which XmlDocument implementation actually parses
+		// the file (Xerces, TinyXML2, or PugiXML - see xml_document.h);
+		// defaults to Xerces so existing callers (main.cpp) don't have to
+		// name one - same pattern as Engine's own WindowBackend parameter.
+		explicit Game(const std::string& game, XmlBackend xmlBackend = XmlBackend::Xerces);
 
 		void updateObjects(void);
 		void printGame(void);
