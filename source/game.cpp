@@ -190,9 +190,10 @@ namespace xge
 
 		if (dot == std::string::npos)
 		{
-			// Legacy pattern (e.g. inc('score1') in pong_full.xml): the named
-			// object displays and owns its own number - bump its displayed
-			// value directly.
+			// Legacy pattern (e.g. inc('score1') for a text object that just
+			// displays its own counter, with nothing else deriving its number):
+			// the named object displays and owns its own number - bump its
+			// displayed value directly.
 			Object* object = tryGetObject(target);
 			if (!object)
 			{

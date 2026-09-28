@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 {
 	
 	// TODO: make function to validate filename
-	std::string filename{ "games/pong_full.xml" };
+	std::string filename{ "games/pong.xml" };
 
 	const std::span<char*> args(argv, argc);
 	

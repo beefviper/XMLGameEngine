@@ -1,7 +1,7 @@
 <!-- pong.xml -->
 <!-- XML Game Engine -->
 <!-- author: beefviper -->
-<!-- date: July 13, 2021 -->
+<!-- date: Sept 18, 2020 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <!-- window -->
@@ -18,9 +18,23 @@
   </variables>
   <!-- objects -->
   <objects>
+    <!-- title -->
+    <object name="title">
+      <sprite src="text('PONG', text.size, 'color.red')" />
+      <position x="window.width.center - 350" y="margin" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <!-- logo -->
+    <object name="logo">
+      <sprite src="shape.circle(logo.radius,'color.green')" />
+      <position x="window.width.center - logo.radius" y="window.height.center - logo.radius" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
     <!-- ball -->
     <object name="ball">
-      <sprite src="shape.circle(ball.radius,'color.white')" />
+      <sprite src="shape.circle(ball.radius,'color.green')" />
       <position x="window.width.center - ball.radius" y="window.height.center - ball.radius" />
       <velocity x="random.range(-7,7)" y="random.range(-3,3)" />
       <collisions enabled="true">
@@ -32,7 +46,7 @@
     </object>
     <!-- paddle1 -->
     <object name="paddle1" class="paddle">
-      <sprite src="shape.rectangle(width,height,'color.white')" />
+      <sprite src="image('assets/paddle.jpg')" />
       <position x="window.left + margin" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
       <collisions enabled="true">
@@ -47,8 +61,8 @@
       </variables>
     </object>
     <!-- paddle2 -->
-    <object name="paddle2">
-      <sprite src="shape.rectangle(width,height,'color.white')" />
+    <object name="paddle2" class="paddle">
+      <sprite src="image('assets/paddle.jpg', 'flip.horizontal')" />
       <position x="window.right - margin - width" y="window.height.center - height / 2" />
       <velocity x="0" y="0" />
       <collisions enabled="true">
@@ -57,6 +71,8 @@
       <actions>
         <action name="up" value="move.up(step)" />
         <action name="down" value="move.down(step)" />
+        <action name="left" value="move.left(step)" />
+        <action name="right" value="move.right(step)" />
       </actions>
       <variables>
         <variable name="score" value="0" />
@@ -64,21 +80,62 @@
     </object>
     <!-- score1 -->
     <object name="score1">
-      <sprite src="text(paddle1.score,128,'color.white')" />
+      <sprite src="text(paddle1.score,128,'color.blue')" />
       <position x="window.width.center - 80" y="margin" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
     <!-- score2 -->
     <object name="score2">
-      <sprite src="text(paddle2.score,128,'color.white')" />
+      <sprite src="text(paddle2.score,128,'color.red')" />
       <position x="window.width.center + 50" y="margin" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <!-- paused -->
+    <object name="paused">
+      <sprite src="text('PAUSED',128,'color.white')" />
+      <position x="window.width.center - 220" y="window.height.center - 100" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <!-- gameover -->
+    <object name="gameover">
+      <sprite src="text('GAME OVER',128,'color.red')" />
+      <position x="window.width.center - 340" y="window.height.center - 150" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <!-- continue -->
+    <object name="continue">
+      <sprite src="text('spacebar to continue',48,'color.white')" />
+      <position x="window.width.center - 260" y="window.height.center + 60" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
   </objects>
   <!-- states -->
   <states>
+    <!-- mainmenu -->
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="logo" />
+      </shows>
+      <inputs>
+        <input button="space" action="state('playing')" />
+        <input button="s" action="state('settings')" />
+      </inputs>
+    </state>
+    <!-- settings -->
+    <state name="settings">
+      <shows>
+        <show object="logo" />
+      </shows>
+      <inputs>
+        <input button="escape" action="state()" />
+      </inputs>
+    </state>
     <!-- playing -->
     <state name="playing">
       <shows>
@@ -89,10 +146,35 @@
         <show object="score2" />
       </shows>
       <inputs>
+        <input button="space" action="state('paused')" />
         <input button="q" action="action('paddle1', 'up')" />
         <input button="z" action="action('paddle1', 'down')" />
         <input button="up" action="action('paddle2', 'up')" />
         <input button="down" action="action('paddle2', 'down')" />
+        <input button="left" action="action('paddle2', 'left')" />
+        <input button="right" action="action('paddle2', 'right')" />
+      </inputs>
+      <conditions>
+        <condition class="paddle" variable="score" value="15" action="state('gameover')" />
+      </conditions>
+    </state>
+    <!-- paused -->
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+      </shows>
+      <inputs>
+        <input button="space" action="state()"  />
+      </inputs>
+    </state>
+    <!-- gameover -->
+    <state name="gameover">
+      <shows>
+        <show object="gameover" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space" action="state('mainmenu')" />
       </inputs>
     </state>
   </states>

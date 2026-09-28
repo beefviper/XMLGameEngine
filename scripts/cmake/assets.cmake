@@ -11,7 +11,6 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 
 	set(data_xml
 		"games/pong.xml"
-		"games/pong_full.xml"
 		"games/breakout.xml"
 		"games/spaceinvaders.xml")
 

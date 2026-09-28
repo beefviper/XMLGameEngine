@@ -132,7 +132,10 @@ namespace xge
 		// -> boundVariableOwner="paddle1", boundVariableName="score"). Empty
 		// owner means this text object isn't bound to anything and only ever
 		// updates via inc() targeting its own name directly (the older,
-		// still-supported pattern used by pong_full.xml's score1/score2).
+		// still-supported pattern for a text object that just displays its own
+		// counter, with nothing else deriving its number - no shipped game
+		// currently needs it, now that pong.xml's score1/score2 are bound to
+		// paddle1.score/paddle2.score instead).
 		std::string boundVariableOwner;
 		std::string boundVariableName;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;

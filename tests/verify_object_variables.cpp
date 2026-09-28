@@ -46,7 +46,9 @@ int main()
 			"text(paddle2.score,...) binds to owner=paddle2, variable=score");
 	}
 
-	// pong_full.xml: score1/score2 and title - literal string labels, not bindings.
+	// pong.xml's title, and a plain hand-typed number like '0' - literal
+	// string labels, not bindings (score1/score2 themselves are bindings now -
+	// see the paddle1.score/paddle2.score cases above).
 	{
 		auto binding = parseTextVariableBinding("text('0',128,'color.blue')");
 		expect(!binding.has_value(), "text('0',...) is a literal label, not a binding");
@@ -56,7 +58,7 @@ int main()
 		expect(!binding.has_value(), "text('PONG', text.size, ...) is a literal label, not a binding");
 	}
 
-	// spaceinvaders.xml / the new pong_full.xml paused screen - also literal labels.
+	// spaceinvaders.xml / pong.xml's paused screen - also literal labels.
 	{
 		auto binding = parseTextVariableBinding("text('paused',128,'color.white')");
 		expect(!binding.has_value(), "text('paused',...) is a literal label, not a binding");

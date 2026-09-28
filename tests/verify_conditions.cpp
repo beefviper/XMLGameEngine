@@ -80,7 +80,7 @@ namespace
 
 int main()
 {
-	// pong_full.xml's actual shape: two paddles sharing class "paddle",
+	// pong.xml's actual shape: two paddles sharing class "paddle",
 	// each with its own "score" variable.
 	const std::vector<Candidate> paddles = {
 		{ "paddle", "paddle1", { { "score", 12.0f } } },
