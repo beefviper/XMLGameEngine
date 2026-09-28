@@ -86,6 +86,13 @@
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
+    <!-- paused -->
+    <object name="paused">
+      <sprite src="text('PAUSED',128,'color.white')" />
+      <position x="window.width.center - 220" y="window.height.center - 100" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
   </objects>
   <!-- states -->
   <states>
@@ -131,7 +138,7 @@
     <!-- paused -->
     <state name="paused">
       <shows>
-        <show object="logo" />
+        <show object="paused" />
       </shows>
       <inputs>
         <input button="space" action="state()"  />
