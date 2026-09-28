@@ -214,6 +214,27 @@ namespace xge
 		}
 	}
 
+	namespace
+	{
+		// A reference, unlike a pointer, can't be null - which is what keeps
+		// this out of the same "what if the switch fell through" trap as the
+		// raw-pointer version this replaced (VS flagged that one, C6011,
+		// even though Edge's four enumerators are all handled below).
+		std::vector<Command>& collisionCommandsFor(Object& object, Edge edge)
+		{
+			switch (edge)
+			{
+			case Edge::Left:   return object.collisionData.left;
+			case Edge::Right:  return object.collisionData.right;
+			case Edge::Top:    return object.collisionData.top;
+			case Edge::Bottom: return object.collisionData.bottom;
+			}
+
+			// Unreachable: Edge only ever has the four values above.
+			return object.collisionData.top;
+		}
+	}
+
 	void Game::checkEdge(Object& object, Edge edge)
 	{
 		if (!CollisionDetector::touchesScreenEdge(object, windowDesc, edge))
@@ -221,17 +242,8 @@ namespace xge
 			return;
 		}
 
-		std::vector<Command>* commands = nullptr;
-		switch (edge)
-		{
-		case Edge::Left:   commands = &object.collisionData.left; break;
-		case Edge::Right:  commands = &object.collisionData.right; break;
-		case Edge::Top:    commands = &object.collisionData.top; break;
-		case Edge::Bottom: commands = &object.collisionData.bottom; break;
-		}
-
 		CommandExecutor executor(*this);
-		for (const auto& command : *commands)
+		for (const auto& command : collisionCommandsFor(object, edge))
 		{
 			executor.executeScreenEdgeCollision(command, object, edge);
 		}

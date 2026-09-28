@@ -72,7 +72,10 @@ namespace xge
 		text.setPosition({ -text.getLocalBounds().position.x, -text.getLocalBounds().position.y });
 
 		object.renderTexture = std::make_unique<sf::RenderTexture>();
-		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
+		if (!object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
+		{
+			std::cout << "error: failed to resize render texture" << std::endl;
+		}
 		object.renderTexture->draw(text);
 		object.renderTexture->display();
 
@@ -92,7 +95,10 @@ namespace xge
 		const int width = static_cast<int>(std::ceil(circle.getLocalBounds().size.x));
 		const int height = static_cast<int>(std::ceil(circle.getLocalBounds().size.y));
 
-		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
+		if (!object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
+		{
+			std::cout << "error: failed to resize render texture" << std::endl;
+		}
 		object.renderTexture->draw(circle);
 	}
 
@@ -109,7 +115,10 @@ namespace xge
 		const int width = static_cast<int>(std::ceil(rectangle.getLocalBounds().size.x));
 		const int height = static_cast<int>(std::ceil(rectangle.getLocalBounds().size.y));
 
-		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
+		if (!object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
+		{
+			std::cout << "error: failed to resize render texture" << std::endl;
+		}
 		object.renderTexture->draw(rectangle);
 	}
 
@@ -133,7 +142,10 @@ namespace xge
 		const int width = static_cast<int>(std::ceil(text.getLocalBounds().size.x));
 		const int height = static_cast<int>(std::ceil(text.getLocalBounds().size.y));
 
-		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
+		if (!object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
+		{
+			std::cout << "error: failed to resize render texture" << std::endl;
+		}
 		object.renderTexture->draw(text);
 	}
 
@@ -163,7 +175,10 @@ namespace xge
 			sprite.setTextureRect(sf::IntRect({ 0, height }, { width, -height }));
 		}
 
-		object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) });
+		if (!object.renderTexture->resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
+		{
+			std::cout << "error: failed to resize render texture" << std::endl;
+		}
 		object.renderTexture->draw(sprite);
 	}
 
