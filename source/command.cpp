@@ -5,6 +5,9 @@
 
 #include "command.h"
 
+#include <algorithm>
+#include <cctype>
+#include <cmath>
 #include <iostream>
 
 namespace xge
@@ -90,6 +93,75 @@ namespace xge
 		if (tag == "text")      { return ShapeKind::Text; }
 		if (tag == "image")     { return ShapeKind::Image; }
 		return ShapeKind::Unknown;
+	}
+
+	std::optional<std::pair<std::string, std::string>> parseTextVariableBinding(const std::string& src)
+	{
+		const auto call = src.find("text(");
+		if (call == std::string::npos) { return std::nullopt; }
+
+		const auto argStart = call + 5; // length of "text("
+
+		std::size_t i = argStart;
+		int depth = 0;
+		bool inQuote = false;
+
+		while (i < src.size())
+		{
+			const char c = src[i];
+
+			if (inQuote)
+			{
+				if (c == '\'') { inQuote = false; }
+			}
+			else if (c == '\'') { inQuote = true; }
+			else if (c == '(') { ++depth; }
+			else if (c == ')' && depth > 0) { --depth; }
+			else if ((c == ',' || c == ')') && depth == 0) { break; }
+
+			++i;
+		}
+
+		std::string firstArg = src.substr(argStart, i - argStart);
+
+		const auto first = firstArg.find_first_not_of(" \t");
+		if (first == std::string::npos) { return std::nullopt; }
+		const auto last = firstArg.find_last_not_of(" \t");
+		firstArg = firstArg.substr(first, last - first + 1);
+
+		if (firstArg.empty() || firstArg.front() == '\'')
+		{
+			return std::nullopt; // a literal string label, e.g. text('0', ...)
+		}
+
+		const auto dot = firstArg.find('.');
+		if (dot == std::string::npos || dot == 0 || dot == firstArg.size() - 1)
+		{
+			return std::nullopt;
+		}
+
+		const auto isIdentChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_'; };
+
+		for (char c : firstArg)
+		{
+			if (c != '.' && !isIdentChar(c)) { return std::nullopt; }
+		}
+
+		if (std::count(firstArg.begin(), firstArg.end(), '.') != 1)
+		{
+			return std::nullopt; // only a single "owner.variable" level is supported
+		}
+
+		return std::make_pair(firstArg.substr(0, dot), firstArg.substr(dot + 1));
+	}
+
+	std::string formatDisplayNumber(float value)
+	{
+		if (value == std::floor(value))
+		{
+			return std::to_string(static_cast<long long>(value));
+		}
+		return std::to_string(value);
 	}
 
 	std::ostream& operator<<(std::ostream& o, const Command& command)

@@ -25,6 +25,12 @@ namespace xge
 		void init(std::vector<Object>& objects);
 		void updateTextIncrementValue(Object& object);
 
+		// Sets a text object's displayed number to an explicit value and
+		// re-renders it - the general form updateTextIncrementValue's "+1" is
+		// built on top of, and what refreshes a HUD text object bound to
+		// another object's <variable> (see Game::incrementText).
+		void setDisplayedNumber(Object& object, float value);
+
 	private:
 		void createCircle(Object& object);
 		void createRectangle(Object& object);

@@ -45,6 +45,16 @@ namespace xge
 
 		static inline std::vector<std::string> tempSParams;
 
+		// Every object-declared <variable>, keyed "ownerName.variableName", bound
+		// by reference into symbolTable (see init()) so any expression - not just
+		// the owning object's own commands - can read another object's variable
+		// (e.g. a HUD's sprite doing text(paddle1.score, ...)). A std::map's
+		// iterators/references to existing elements stay valid across further
+		// insertions, which is what makes binding into it safe here: init()
+		// pre-creates every key (so the symbol exists before anything compiles)
+		// and only ever assigns through an existing key afterwards.
+		std::map<std::string, float> objectVariables;
+
 		static inline std::random_device seed;
 		static inline std::mt19937 generator;
 
@@ -134,16 +144,32 @@ namespace xge
 		template <typename T>
 		struct text : public exprtk::igeneric_function<T>
 		{
-			text() noexcept : exprtk::igeneric_function<T>("ST|STS") {}
+			// "ST"/"STS": a literal string label, e.g. text('PAUSED', 128, ...).
+			// "TT"/"TTS": a live numeric value, e.g. text(paddle1.score, 128, ...)
+			// - displays that object's own <variable> and (via
+			// Object::boundVariableOwner/boundVariableName, set from the raw src
+			// text - see parseTextVariableBinding) stays in sync with it whenever
+			// the variable changes through inc(). ps_index (not parameters.size(),
+			// which "ST" and "TT" share) is what tells these two apart.
+			text() noexcept : exprtk::igeneric_function<T>("ST|STS|TT|TTS") {}
 
-			inline T operator()([[maybe_unused]] const std::size_t& ps_index, parameter_list_t parameters) override
+			inline T operator()(const std::size_t& ps_index, parameter_list_t parameters) override
 			{
 				tempSParams.push_back("text");
-				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+
+				if (ps_index == 0 || ps_index == 1) // "ST" / "STS"
+				{
+					tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+				}
+				else // "TT" / "TTS"
+				{
+					tempSParams.push_back(formatDisplayNumber(scalar_t(parameters[0])()));
+				}
+
 				const float size = scalar_t(parameters[1])();
 				tempSParams.push_back(std::to_string(size));
 
-				if (parameters.size() == 3)
+				if (ps_index == 1 || ps_index == 3) // "STS" / "TTS"
 				{
 					tempSParams.push_back(exprtk::to_str(string_t(parameters[2])));
 				}

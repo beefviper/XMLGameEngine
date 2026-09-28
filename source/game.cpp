@@ -122,6 +122,12 @@ namespace xge
 		return *result;
 	}
 
+	Object* Game::tryGetObject(const std::string& name) noexcept
+	{
+		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
+		return (result == std::end(objects)) ? nullptr : &(*result);
+	}
+
 	float Game::getVariable(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(variables), std::end(variables), [&](std::pair<const std::string, float>& var) { return var.first == name; });
@@ -176,9 +182,57 @@ namespace xge
 		}
 	}
 
-	void Game::incrementText(const std::string& objectName)
+	void Game::incrementText(const std::string& target)
 	{
-		sfml.updateTextIncrementValue(getObject(objectName));
+		const auto dot = target.find('.');
+
+		if (dot == std::string::npos)
+		{
+			// Legacy pattern (e.g. inc('score1') in pong_full.xml): the named
+			// object displays and owns its own number - bump its displayed
+			// value directly.
+			Object* object = tryGetObject(target);
+			if (!object)
+			{
+				std::cout << "warning: inc('" << target << "'): no such object\n";
+				return;
+			}
+			sfml.updateTextIncrementValue(*object);
+			return;
+		}
+
+		// New pattern (e.g. inc('paddle1.score')): increment another object's
+		// own named <variable>, then refresh every text object whose displayed
+		// number is bound to it (Object::boundVariableOwner/boundVariableName,
+		// set from a sprite like text(paddle1.score,128,...) - see
+		// parseTextVariableBinding).
+		const std::string ownerName = target.substr(0, dot);
+		const std::string variableName = target.substr(dot + 1);
+
+		Object* owner = tryGetObject(ownerName);
+		if (!owner)
+		{
+			std::cout << "warning: inc('" << target << "'): no object named '" << ownerName << "'\n";
+			return;
+		}
+
+		auto variableIt = owner->variable.find(variableName);
+		if (variableIt == owner->variable.end())
+		{
+			std::cout << "warning: inc('" << target << "'): '" << ownerName << "' has no variable named '" << variableName << "'\n";
+			return;
+		}
+
+		variableIt->second += 1;
+		const float newValue = variableIt->second;
+
+		for (auto& object : objects)
+		{
+			if (object.boundVariableOwner == ownerName && object.boundVariableName == variableName)
+			{
+				sfml.setDisplayedNumber(object, newValue);
+			}
+		}
 	}
 
 	void Game::updateGroupOfObjects(const Object& object, std::string side) noexcept
@@ -232,6 +286,17 @@ namespace xge
 
 			// Unreachable: Edge only ever has the four values above.
 			return object.collisionData.top;
+		}
+
+		// A "basic" (object-object) collision rule with no class/object filter
+		// matches anything, same as before this existed; one or both filters
+		// narrow it to only fire when `other` is of that class and/or is that
+		// specific named object.
+		bool collisionRuleMatches(const CollisionRule& rule, const Object& other)
+		{
+			if (!rule.filterClass.empty() && rule.filterClass != other.objClass) { return false; }
+			if (!rule.filterObject.empty() && rule.filterObject != other.name) { return false; }
+			return true;
 		}
 	}
 
@@ -298,13 +363,21 @@ namespace xge
 		// edgeOfB is self-relative for b already; a's own self-relative
 		// touched edge is the opposite side.
 		CommandExecutor executor(*this);
-		for (const auto& command : a.collisionData.basic)
+		for (const auto& rule : a.collisionData.basic)
 		{
-			executor.executeObjectCollision(command, a, opposite(*edgeOfB));
+			if (!collisionRuleMatches(rule, b)) { continue; }
+			for (const auto& command : rule.commands)
+			{
+				executor.executeObjectCollision(command, a, opposite(*edgeOfB));
+			}
 		}
-		for (const auto& command : b.collisionData.basic)
+		for (const auto& rule : b.collisionData.basic)
 		{
-			executor.executeObjectCollision(command, b, *edgeOfB);
+			if (!collisionRuleMatches(rule, a)) { continue; }
+			for (const auto& command : rule.commands)
+			{
+				executor.executeObjectCollision(command, b, *edgeOfB);
+			}
 		}
 	}
 }

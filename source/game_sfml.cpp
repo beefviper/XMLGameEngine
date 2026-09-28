@@ -47,6 +47,12 @@ namespace xge
 
 	void game_sfml::updateTextIncrementValue(Object& object)
 	{
+		const float newValue = std::stof(object.spriteParams.at(1)) + 1;
+		setDisplayedNumber(object, newValue);
+	}
+
+	void game_sfml::setDisplayedNumber(Object& object, float value)
+	{
 		sf::Font font;
 
 		// TODO: fix font handling, make variable to cache font
@@ -56,12 +62,9 @@ namespace xge
 			std::cout << "error: failed to load font: " << fontFile << std::endl;
 		}
 
+		object.spriteParams.at(1) = formatDisplayNumber(value);
+
 		sf::Text text(font);
-
-		auto number = std::stoi(object.spriteParams.at(1));
-		number++;
-		object.spriteParams.at(1) = std::to_string(number);
-
 		text.setString(object.spriteParams.at(1));
 		text.setCharacterSize(std::stoi(object.spriteParams.at(2)));
 		text.setFillColor(sfmlColor(object.spriteParams.at(3)));

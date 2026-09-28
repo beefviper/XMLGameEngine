@@ -161,6 +161,15 @@ namespace xge
 			{
 				auto xc_collision = xc_collisions->getFirstElementChild();
 
+				// Appends rather than overwrites, so more than one <collision edge="..."/>
+				// element touching the same edge (e.g. an "all" rule plus a specific
+				// "left" rule) both run instead of the later one silently winning.
+				auto appendAction = [](std::string& existing, const std::string& action)
+				{
+					if (!existing.empty()) { existing += ';'; }
+					existing += action;
+				};
+
 				while (xc_collision != nullptr)
 				{
 					if (auto col_edge = getAttributeByName(xc_collision, "edge"); col_edge != "")
@@ -170,44 +179,51 @@ namespace xge
 
 						if (col_edge == "all")
 						{
-							xc_collision_data.top = col_action;
-							xc_collision_data.bottom = col_action;
-							xc_collision_data.left = col_action;
-							xc_collision_data.right = col_action;
+							appendAction(xc_collision_data.top, col_action);
+							appendAction(xc_collision_data.bottom, col_action);
+							appendAction(xc_collision_data.left, col_action);
+							appendAction(xc_collision_data.right, col_action);
 						}
 						else if (col_edge == "horizontal")
 						{
-							xc_collision_data.left = col_action;
-							xc_collision_data.right = col_action;
+							appendAction(xc_collision_data.left, col_action);
+							appendAction(xc_collision_data.right, col_action);
 						}
 						else if (col_edge == "vertical")
 						{
-							xc_collision_data.top = col_action;
-							xc_collision_data.bottom = col_action;
+							appendAction(xc_collision_data.top, col_action);
+							appendAction(xc_collision_data.bottom, col_action);
 						}
 						else if (col_edge == "top")
 						{
-							xc_collision_data.top = col_action;
+							appendAction(xc_collision_data.top, col_action);
 						}
 						else if (col_edge == "bottom")
 						{
-							xc_collision_data.bottom = col_action;
+							appendAction(xc_collision_data.bottom, col_action);
 						}
 						else if (col_edge == "left")
 						{
-							xc_collision_data.left = col_action;
+							appendAction(xc_collision_data.left, col_action);
 						}
 						else if (col_edge == "right")
 						{
-							xc_collision_data.right = col_action;
+							appendAction(xc_collision_data.right, col_action);
 						}
 					}
 
-					// TODO: add code to handle class and object attributes in collision tag
-
+					// class/object optionally narrow a "basic" (object-object) rule to
+					// only respond to a specific class of object, or one specific named
+					// object; either or both may be left off to match anything (the old,
+					// unfiltered behaviour). Meaningless for edge rules (no "other object"
+					// exists at a screen edge), so only read here, alongside basic.
 					if (auto col_basic = getAttributeByName(xc_collision, "basic"); col_basic != "")
 					{
-						xc_collision_data.basic = getAttributeByName(xc_collision, "action");
+						RawCollisionRule rule;
+						rule.filterClass = getAttributeByName(xc_collision, "class");
+						rule.filterObject = getAttributeByName(xc_collision, "object");
+						rule.action = getAttributeByName(xc_collision, "action");
+						xc_collision_data.basic.push_back(std::move(rule));
 					}
 
 					xc_collision = xc_collision->getNextElementSibling();

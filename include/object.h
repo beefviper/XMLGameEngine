@@ -29,6 +29,18 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, WindowDesc const& f);
 	};
 
+	// One <collision basic="basic" .../> rule, still unparsed. class/object let
+	// a rule only respond to a specific kind (or specific instance) of the
+	// other object in the pair; empty means "matches anything" (unchanged
+	// behaviour). Only meaningful for object-object ("basic") collisions -
+	// a screen-edge collision has no "other object" to filter against.
+	struct RawCollisionRule
+	{
+		std::string filterClass;
+		std::string filterObject;
+		std::string action;
+	};
+
 	struct RawCollisionData
 	{
 		bool enabled{ false };
@@ -37,10 +49,18 @@ namespace xge
 		std::string bottom;
 		std::string left;
 		std::string right;
-		std::string basic;
+		std::vector<RawCollisionRule> basic;
 
 		// TODO: add operator<< to RawCollisionData
 
+	};
+
+	// A parsed, ready-to-run version of RawCollisionRule.
+	struct CollisionRule
+	{
+		std::string filterClass;
+		std::string filterObject;
+		std::vector<Command> commands;
 	};
 
 	struct CollisionData
@@ -51,7 +71,7 @@ namespace xge
 		std::vector<Command> bottom;
 		std::vector<Command> left;
 		std::vector<Command> right;
-		std::vector<Command> basic;
+		std::vector<CollisionRule> basic;
 
 		// TODO: add operator<< to CollisionData
 
@@ -106,6 +126,15 @@ namespace xge
 		ShapeKind shapeKind{ ShapeKind::Unknown };
 		std::map<std::string, std::vector<Command>> action;
 		std::map<std::string, float> variable;
+
+		// Set when this is a text object whose displayed number tracks another
+		// object's own <variable> (e.g. sprite src="text(paddle1.score,128,...)"
+		// -> boundVariableOwner="paddle1", boundVariableName="score"). Empty
+		// owner means this text object isn't bound to anything and only ever
+		// updates via inc() targeting its own name directly (the older,
+		// still-supported pattern used by pong_full.xml's score1/score2).
+		std::string boundVariableOwner;
+		std::string boundVariableName;
 		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
 		std::unique_ptr<sf::Sprite> sprite = nullptr;
 

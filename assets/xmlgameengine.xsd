@@ -55,6 +55,8 @@
                             <xs:complexType>
                               <xs:attribute name="edge" type="xs:string" use="optional" />
                               <xs:attribute name="basic" type="xs:string" use="optional" />
+                              <xs:attribute name="class" type="xs:string" use="optional" />
+                              <xs:attribute name="object" type="xs:string" use="optional" />
                               <xs:attribute name="action" type="xs:string" use="required" />
                             </xs:complexType>
                           </xs:element>

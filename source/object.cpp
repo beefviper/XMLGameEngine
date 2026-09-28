@@ -27,8 +27,15 @@ namespace xge
 			<< (f.rawCollisionData.top.length() ? ", top=" + f.rawCollisionData.top : "")
 			<< (f.rawCollisionData.bottom.length() ? ", bottom=" + f.rawCollisionData.bottom : "")
 			<< (f.rawCollisionData.left.length() ? ", left=" + f.rawCollisionData.left : "")
-			<< (f.rawCollisionData.right.length() ? ", right=" + f.rawCollisionData.right : "")
-			<< (f.rawCollisionData.basic.length() ? ", basic=" + f.rawCollisionData.basic : "") << '\n';
+			<< (f.rawCollisionData.right.length() ? ", right=" + f.rawCollisionData.right : "");
+
+		for (auto& rawRule : f.rawCollisionData.basic)
+		{
+			o << ", basic=" << rawRule.action;
+			if (!rawRule.filterClass.empty()) { o << " (class=" << rawRule.filterClass << ")"; }
+			if (!rawRule.filterObject.empty()) { o << " (object=" << rawRule.filterObject << ")"; }
+		}
+		o << '\n';
 
 		for (auto& action : f.action)
 		{
@@ -72,7 +79,17 @@ namespace xge
 		printCollisionData(f.collisionData.bottom, "bottom");
 		printCollisionData(f.collisionData.left, "left");
 		printCollisionData(f.collisionData.right, "right");
-		printCollisionData(f.collisionData.basic, "basic");
+
+		for (auto& rule : f.collisionData.basic)
+		{
+			o << ", basic=";
+			for (auto& command : rule.commands)
+			{
+				o << command << (&command != &rule.commands.back() ? ";" : "");
+			}
+			if (!rule.filterClass.empty()) { o << " (class=" << rule.filterClass << ")"; }
+			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
+		}
 
 		o << '\n';
 

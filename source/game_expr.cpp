@@ -69,8 +69,24 @@ namespace xge
 			symbolTable.add_constant(variable.first, variable.second);
 		}
 
-		// TODO: loop through objects add their variables to the symbolTable
-		// ^ might not be needed, update: might be needed?
+		// Pre-register every object's own <variable> entries, keyed
+		// "ownerName.variableName", so any expression evaluated below can refer
+		// to another object's variable regardless of which object appears first
+		// in the XML (e.g. score1's sprite reading paddle1.score, even though
+		// paddle1 is declared after score1). Values start at 0 here; the object
+		// loop further down fills in the real evaluated value once it reaches
+		// that object - see the objectVariables[...] assignment there.
+		for (auto& rawObject : rawObjects)
+		{
+			for (auto& rawVariable : rawObject.variable)
+			{
+				objectVariables[rawObject.name + "." + rawVariable.first] = 0.0f;
+			}
+		}
+		for (auto& objectVariable : objectVariables)
+		{
+			symbolTable.add_variable(objectVariable.first, objectVariable.second);
+		}
 
 		// register symbol table with expression
 		expression.register_symbol_table(symbolTable);
@@ -91,6 +107,15 @@ namespace xge
 
 					object.spriteParams = tempSpriteParams;
 					object.shapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
+
+					if (object.shapeKind == ShapeKind::Text)
+					{
+						if (auto binding = parseTextVariableBinding(rawObject.src))
+						{
+							object.boundVariableOwner = binding->first;
+							object.boundVariableName = binding->second;
+						}
+					}
 
 					object.name = rawObject.name;
 					object.objClass = rawObject.objClass;
@@ -121,7 +146,15 @@ namespace xge
 					object.collisionData.bottom = processCommands(rawObject, rawObject.rawCollisionData.bottom);
 					object.collisionData.left = processCommands(rawObject, rawObject.rawCollisionData.left);
 					object.collisionData.right = processCommands(rawObject, rawObject.rawCollisionData.right);
-					object.collisionData.basic = processCommands(rawObject, rawObject.rawCollisionData.basic);
+
+					for (auto& rawRule : rawObject.rawCollisionData.basic)
+					{
+						CollisionRule rule;
+						rule.filterClass = rawRule.filterClass;
+						rule.filterObject = rawRule.filterObject;
+						rule.commands = processCommands(rawObject, rawRule.action);
+						object.collisionData.basic.push_back(std::move(rule));
+					}
 
 					//object.action = rawObject.action;
 					for (auto& rawAction : rawObject.action)
@@ -131,7 +164,13 @@ namespace xge
 
 					for (auto& rawVariable : rawObject.variable)
 					{
-						object.variable[rawVariable.first] = evaluateString(rawObject, rawVariable.second);
+						const float value = evaluateString(rawObject, rawVariable.second);
+						object.variable[rawVariable.first] = value;
+
+						// Keep the cross-object symbol table entry (registered above,
+						// before any expression compiled) up to date with the real
+						// value now that it's known.
+						objectVariables[rawObject.name + "." + rawVariable.first] = value;
 					}
 
 					// sprite is constructed later in game_sfml::init(), once a texture exists to bind it to

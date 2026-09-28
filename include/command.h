@@ -6,7 +6,9 @@
 #pragma once
 
 #include <ostream>
+#include <optional>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -54,7 +56,10 @@ namespace xge
 		float step{};
 	};
 
-	// inc('objectName') - increment a text object's displayed number
+	// inc('objectName') - increment a text object's own displayed number, OR
+	// inc('ownerName.variableName') - increment that object's named <variable>
+	// and refresh every text object whose display is bound to it (see
+	// Game::incrementText and Object::boundVariableOwner/boundVariableName).
 	struct CmdIncrement
 	{
 		std::string target;
@@ -97,6 +102,20 @@ namespace xge
 	// ShapeKind. Returns ShapeKind::Unknown for anything else (including an
 	// empty tag).
 	ShapeKind shapeKindFromTag(const std::string& tag) noexcept;
+
+	// If `src` contains a text(...) call whose first argument is an unquoted
+	// "owner.variable" reference (e.g. text(paddle1.score,128,'color.white')),
+	// returns {owner, variable}. Returns nullopt for a literal string label
+	// (e.g. text('0',128,'color.blue')) or anything else - a plain string scan
+	// rather than an exprtk lookup, since by the time an exprtk function call
+	// evaluates, the original argument text (a symbol name vs. a literal) is
+	// already gone - only the resolved value is left.
+	std::optional<std::pair<std::string, std::string>> parseTextVariableBinding(const std::string& src);
+
+	// Formats a live numeric value for on-screen display: whole numbers print
+	// without a decimal point (scores, HP, ammo, ...), matching what someone
+	// hand-typing text('0', ...) would have written.
+	std::string formatDisplayNumber(float value);
 
 	std::ostream& operator<<(std::ostream& o, const Command& command);
 }
