@@ -31,6 +31,8 @@ set(ENGINE_SOURCES
 	"source/command.cpp"
 	"source/collision_detector.cpp"
 	"source/command_executor.cpp"
+	"source/window.cpp"
+	"source/window_sfml.cpp"
 )
 
 set(ENGINE_HEADERS
@@ -46,6 +48,8 @@ set(ENGINE_HEADERS
 	"include/command.h"
 	"include/collision_detector.h"
 	"include/command_executor.h"
+	"include/window.h"
+	"include/window_sfml.h"
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
