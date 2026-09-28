@@ -12,8 +12,8 @@ namespace xge
 {
 	bool CollisionDetector::touchesScreenEdge(const Object& object, const WindowDesc& windowDesc, Edge edge)
 	{
-		const auto objectWidth = object.sprite->getLocalBounds().size.x;
-		const auto objectHeight = object.sprite->getLocalBounds().size.y;
+		const auto objectWidth = object.size.x;
+		const auto objectHeight = object.size.y;
 
 		constexpr float leftBound = 0;
 		constexpr float topBound = 0;
@@ -33,16 +33,13 @@ namespace xge
 
 	std::optional<Edge> CollisionDetector::rectangleRectangle(const Object& a, const Object& b)
 	{
-		const auto boundsA = a.sprite->getGlobalBounds();
-		const auto boundsB = b.sprite->getGlobalBounds();
-
 		// How far each of a's edges has poked past the opposite edge of b.
 		// A small positive value on one side means that's the side that just
 		// barely made contact - i.e. the edge that was actually hit.
-		const float overlapLeft = (boundsA.position.x + boundsA.size.x) - boundsB.position.x;
-		const float overlapRight = (boundsB.position.x + boundsB.size.x) - boundsA.position.x;
-		const float overlapTop = (boundsA.position.y + boundsA.size.y) - boundsB.position.y;
-		const float overlapBottom = (boundsB.position.y + boundsB.size.y) - boundsA.position.y;
+		const float overlapLeft = (a.position.x + a.size.x) - b.position.x;
+		const float overlapRight = (b.position.x + b.size.x) - a.position.x;
+		const float overlapTop = (a.position.y + a.size.y) - b.position.y;
+		const float overlapBottom = (b.position.y + b.size.y) - a.position.y;
 
 		if (overlapLeft <= 0 || overlapRight <= 0 || overlapTop <= 0 || overlapBottom <= 0)
 		{
@@ -62,22 +59,21 @@ namespace xge
 
 	std::optional<Edge> CollisionDetector::circleRectangle(const Object& circle, const Object& rect)
 	{
-		const auto midpoint = circle.sprite->getPosition() +
-			sf::Vector2f(circle.sprite->getLocalBounds().size.x / 2, circle.sprite->getLocalBounds().size.y / 2);
+		const auto midpoint = circle.position + Vector2f(circle.size.x / 2, circle.size.y / 2);
 
-		const auto rectLeft = rect.sprite->getPosition().x;
-		const auto rectRight = rectLeft + rect.sprite->getLocalBounds().size.x;
-		const auto rectTop = rect.sprite->getPosition().y;
-		const auto rectBottom = rectTop + rect.sprite->getLocalBounds().size.y;
+		const auto rectLeft = rect.position.x;
+		const auto rectRight = rectLeft + rect.size.x;
+		const auto rectTop = rect.position.y;
+		const auto rectBottom = rectTop + rect.size.y;
 
-		sf::Vector2f nearestPoint;
+		Vector2f nearestPoint;
 		nearestPoint.x = std::clamp(midpoint.x, rectLeft, rectRight);
 		nearestPoint.y = std::clamp(midpoint.y, rectTop, rectBottom);
 
 		const auto rayToNearest = nearestPoint - midpoint;
 		const auto distance = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
 
-		auto overlap = circle.sprite->getLocalBounds().size.x / 2 - distance;
+		auto overlap = circle.size.x / 2 - distance;
 		if (std::isnan(overlap))
 		{
 			overlap = 0;

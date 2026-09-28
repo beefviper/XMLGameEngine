@@ -16,9 +16,15 @@ int main(int argc, char* argv[])
 
 	xge::Game game{ filename };
 
+	// Engine before printGame(): every object's own visual now gets built
+	// (and, for a "grid" sprite, its position finalized) by Engine's own
+	// constructor once a real Window backend exists - see Window::init() in
+	// window.h - so printGame()'s dump of `objects` only shows finalized
+	// values if it runs after Engine exists, not before.
+	xge::Engine engine(game);
+
 	game.printGame();
 
-	xge::Engine engine(game);
 	engine.loop();
 
 	return EXIT_SUCCESS;

@@ -6,6 +6,7 @@
 #pragma once
 
 #include "command.h"
+#include "keycode.h"
 
 #include <string>
 #include <vector>
@@ -56,7 +57,7 @@ namespace xge
 	public:
 		std::string name;
 		std::vector<std::string> show;
-		std::map<std::string, std::vector<Command>> input;
+		std::map<KeyCode, std::vector<Command>> input;
 		std::vector<Condition> conditions;
 
 		friend std::ostream& operator<<(std::ostream& o, State const& f);

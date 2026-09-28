@@ -9,7 +9,6 @@
 #include "command.h"
 #include "game_xml.h"
 #include "game_expr.h"
-#include "game_sfml.h"
 #include "object.h"
 #include "states.h"
 
@@ -50,8 +49,8 @@ namespace xge
 		void updateGroupOfObjects(const Object& object, std::string side) noexcept;
 
 		// Thin forwarders so CommandExecutor (which only sees Game through a few
-		// public entry points) can reach the sfml/xml subsystems without those
-		// being made public wholesale.
+		// public entry points) can reach the xml subsystem without it being
+		// made public wholesale.
 		void incrementText(const std::string& objectName);
 
 		// reset('objectName') from a state's <input>/<condition> action (see
@@ -79,7 +78,6 @@ namespace xge
 
 		game_xml xml;
 		game_expr expr;
-		game_sfml sfml;
 
 		std::map<std::string, float> variables;
 		std::vector<RawState> rawStates;

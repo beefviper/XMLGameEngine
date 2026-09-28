@@ -5,6 +5,8 @@
 
 #include "game_expr.h"
 
+#include "keycode.h"
+
 namespace xge
 {
 	void game_expr::init(const WindowDesc& windowDesc, std::map<std::string, float>& variables,
@@ -174,9 +176,10 @@ namespace xge
 						objectVariables[rawObject.name + "." + rawVariable.first] = value;
 					}
 
-					// sprite is constructed later in game_sfml::init(), once a texture exists to bind it to
-					object.renderTexture = std::make_unique<sf::RenderTexture>();
-
+					// object's visual is built later by whichever Window backend is
+					// running, once one exists (see Window::init() in window.h) -
+					// visualDirty starts true (Object's own default), so nothing
+					// needs to happen here.
 					objects.push_back(std::move(object));
 				}
 			}
@@ -195,7 +198,7 @@ namespace xge
 
 			for (auto& rawAction : rawState.input)
 			{
-				state.input[rawAction.first] = processCommands(rawState, rawAction.second);
+				state.input[keyCodeFromString(rawAction.first)] = processCommands(rawState, rawAction.second);
 			}
 
 			for (auto& rawCondition : rawState.conditions)

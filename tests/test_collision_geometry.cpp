@@ -3,17 +3,19 @@
 // author: beefviper
 // date: Sept 28, 2026
 //
-// CollisionDetector::rectangleRectangle/circleRectangle take a real
-// xge::Object (specifically object.sprite->getGlobalBounds()/getPosition()),
-// which needs a constructed sf::Sprite bound to a real sf::Texture - more
-// setup than these pure edge/sign checks need. This is a dependency-free
+// CollisionDetector::rectangleRectangle/circleRectangle now read a real
+// xge::Object's own position/size fields directly (plain xge::Vector2f -
+// see object.h/window.h), no sf::Sprite required, so building one for this
+// test isn't strictly necessary anymore. This stays a dependency-free
 // numeric check of the same edge/sign math - copied from
 // CollisionDetector::rectangleRectangle/circleRectangle and
 // CommandExecutor::bounceOffEdge in source/collision_detector.cpp and
 // source/command_executor.cpp - kept in sync with that code and re-verified
 // here rather than re-derived by hand each time it changes. It only touches
 // SFML's header-only Vector2/Rect types, so it builds without linking SFML's
-// compiled libraries at all.
+// compiled libraries at all; a follow-up could instead construct a real
+// xge::Object and call CollisionDetector directly now that it no longer
+// needs a backend-built sprite to do so.
 
 #include <catch2/catch_test_macros.hpp>
 

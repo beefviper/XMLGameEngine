@@ -5,14 +5,12 @@
 
 #pragma once
 
-#include <SFML/Graphics.hpp>
-
 #include "command.h"
+#include "types.h"
 
 #include <string>
 #include <vector>
 #include <map>
-#include <memory>
 #include <ostream>
 
 namespace xge
@@ -117,13 +115,34 @@ namespace xge
 		std::string objClass;
 		std::string src;
 		bool isVisible{ true };
-		sf::Vector2f position;
-		sf::Vector2f positionOriginal;
-		sf::Vector2f velocity;
-		sf::Vector2f velocityOriginal;
+		Vector2f position;
+		Vector2f positionOriginal;
+		Vector2f velocity;
+		Vector2f velocityOriginal;
+
+		// The object's own measured bounding box (width/height) - unknown
+		// (zero) until whichever Window backend is running has actually built
+		// this object's visual and measured it (see Window::init() in
+		// window.h). Circle/rectangle sizes are implied by spriteParams alone;
+		// text/image need the backend's own font/image loading to know their
+		// real pixel size, so every backend writes this back the same way
+		// regardless - collision/physics code (CollisionDetector,
+		// CommandExecutor) only ever reads this field, never a backend type.
+		Vector2f size{};
+
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		ShapeKind shapeKind{ ShapeKind::Unknown };
+
+		// True until the active Window backend has built (or rebuilt) this
+		// object's own visual - set again whenever something changes what
+		// should be on screen for it (e.g. a bound text display's number
+		// changing - see Game::incrementText/resetObject/resetAll) so the
+		// backend knows to rebuild from spriteParams before its next draw()
+		// instead of showing a stale image. Game/Engine never draw anything
+		// themselves; they only ever flip this flag.
+		bool visualDirty{ true };
+
 		std::map<std::string, std::vector<Command>> action;
 		std::map<std::string, float> variable;
 
@@ -145,8 +164,6 @@ namespace xge
 		// paddle1.score/paddle2.score instead).
 		std::string boundVariableOwner;
 		std::string boundVariableName;
-		std::unique_ptr<sf::RenderTexture> renderTexture = nullptr;
-		std::unique_ptr<sf::Sprite> sprite = nullptr;
 
 		friend std::ostream& operator<<(std::ostream& o, Object const& f);
 	};

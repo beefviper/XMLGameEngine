@@ -16,7 +16,9 @@ namespace xge
 	{
 		xml.init(filename, windowDesc, variables, rawStates, rawObjects);
 		expr.init(windowDesc, variables, rawStates, states, rawObjects, objects);
-		sfml.init(objects);
+		// Every object's own visual is built later, by Engine, once a real
+		// Window (and therefore a real backend to build against) exists -
+		// see Window::init() in window.h.
 	}
 
 	void Game::updateObjects(void)
@@ -65,8 +67,6 @@ namespace xge
 			{
 				object.position.x += object.velocity.x;
 				object.position.y += object.velocity.y;
-
-				object.sprite->setPosition(object.position);
 			}
 		}
 
@@ -200,7 +200,9 @@ namespace xge
 				std::cout << "warning: inc('" << target << "'): no such object\n";
 				return;
 			}
-			sfml.updateTextIncrementValue(*object);
+			const float newValue = std::stof(object->spriteParams.at(1)) + 1;
+			object->spriteParams.at(1) = formatDisplayNumber(newValue);
+			object->visualDirty = true;
 			return;
 		}
 
@@ -233,7 +235,8 @@ namespace xge
 		{
 			if (object.boundVariableOwner == ownerName && object.boundVariableName == variableName)
 			{
-				sfml.setDisplayedNumber(object, newValue);
+				object.spriteParams.at(1) = formatDisplayNumber(newValue);
+				object.visualDirty = true;
 			}
 		}
 	}
@@ -281,7 +284,8 @@ namespace xge
 			const auto valueIt = object->variable.find(other.boundVariableName);
 			if (valueIt != object->variable.end())
 			{
-				sfml.setDisplayedNumber(other, valueIt->second);
+				other.spriteParams.at(1) = formatDisplayNumber(valueIt->second);
+				other.visualDirty = true;
 			}
 		}
 	}
@@ -313,7 +317,8 @@ namespace xge
 			const auto valueIt = owner->variable.find(object.boundVariableName);
 			if (valueIt != owner->variable.end())
 			{
-				sfml.setDisplayedNumber(object, valueIt->second);
+				object.spriteParams.at(1) = formatDisplayNumber(valueIt->second);
+				object.visualDirty = true;
 			}
 		}
 

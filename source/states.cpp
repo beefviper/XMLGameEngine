@@ -41,7 +41,7 @@ namespace xge
 		}
 		for (auto& input : f.input)
 		{
-			o << "       button=" << input.first << ", action=";
+			o << "       button=" << keyCodeToString(input.first) << ", action=";
 			for (auto& command : input.second)
 			{
 				o << command << (&command != &input.second.back() ? ";" : "");

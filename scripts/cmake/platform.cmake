@@ -49,3 +49,17 @@ if (NOT SFML_FOUND)
 	set_target_properties(sfml-network PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 	set_target_properties(sfml-audio PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endif()
+
+# Same DLL-next-to-the-exe fix as SFML above, for whichever of raylib/SDL2/
+# SDL2_image/SDL2_ttf ended up fetched and built from source rather than
+# found already installed (vcpkg's own copy-on-build step already handles
+# that case). Guarded per target since a fetched library may build as a
+# static lib (no runtime DLL to place) depending on its own defaults.
+foreach(fetched_target IN ITEMS raylib SDL2 SDL2main SDL2_image SDL2_ttf)
+	if (TARGET ${fetched_target})
+		get_target_property(fetched_target_type ${fetched_target} TYPE)
+		if (fetched_target_type STREQUAL "SHARED_LIBRARY")
+			set_target_properties(${fetched_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+		endif()
+	endif()
+endforeach()

@@ -64,6 +64,18 @@ target_link_libraries(XMLGameEngineTests PRIVATE XercesC::XercesC)
 target_link_libraries(XMLGameEngineTests PRIVATE SFML::System
 	SFML::Window SFML::Graphics SFML::Network SFML::Audio)
 
+# Every Window backend (see window.h) is part of ENGINE_SOURCES, so this
+# target needs the same raylib/SDL2/SDL2_image/SDL2_ttf link libraries as
+# ${PROJECT_NAME} - see targets.cmake.
+target_link_libraries(XMLGameEngineTests PRIVATE raylib)
+
+target_link_libraries(XMLGameEngineTests PRIVATE SDL2::SDL2)
+if (TARGET SDL2::SDL2main)
+	target_link_libraries(XMLGameEngineTests PRIVATE SDL2::SDL2main)
+endif()
+
+target_link_libraries(XMLGameEngineTests PRIVATE SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+
 if (EXPRTK_PACKAGE_FOUND)
 	target_include_directories(XMLGameEngineTests PRIVATE ${EXPRTK_INCLUDE_DIRS})
 else()

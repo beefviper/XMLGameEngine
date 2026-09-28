@@ -21,6 +21,7 @@
 #include <xercesc/util/XMLChTranscoder.hpp>
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 namespace xc = xercesc;

@@ -102,8 +102,8 @@ namespace xge
 
 	void CommandExecutor::stick(Object& object, Edge edge)
 	{
-		const auto objectWidth = object.sprite->getLocalBounds().size.x;
-		const auto objectHeight = object.sprite->getLocalBounds().size.y;
+		const auto objectWidth = object.size.x;
+		const auto objectHeight = object.size.y;
 		const auto& windowDesc = game.getWindowDesc();
 
 		if (edge == Edge::Left || edge == Edge::Right)
@@ -183,8 +183,8 @@ namespace xge
 
 		if (!projectile.collisionData.enabled)
 		{
-			projectile.position.x = shooter.position.x + shooter.sprite->getLocalBounds().size.x / 2;
-			projectile.position.y = shooter.sprite->getGlobalBounds().position.y;
+			projectile.position.x = shooter.position.x + shooter.size.x / 2;
+			projectile.position.y = shooter.position.y;
 			projectile.velocity.y = projectile.variable["speed"];
 			projectile.isVisible = true;
 			projectile.collisionData.enabled = true;

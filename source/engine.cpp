@@ -7,11 +7,19 @@
 
 namespace xge
 {
-	Engine::Engine(Game& game) :
+	Engine::Engine(Game& game, WindowBackend backend) :
 		game(game),
 		commandExecutor(game),
-		window(WindowFactory::create(game.getWindowDesc()))
+		window(WindowFactory::create(game.getWindowDesc(), backend))
 	{
+		// Builds and measures every object's initial visual now that a
+		// window (and therefore a real backend to build against) exists -
+		// this used to happen inside Game's own constructor, via the
+		// standalone game_sfml class, before Engine or any Window existed
+		// at all; see Window::init() in window.h for why it has to happen
+		// here instead.
+		window->init(game.getCurrentObjects());
+
 		game.setCurrentState(0);
 	}
 
@@ -19,10 +27,10 @@ namespace xge
 	{
 		while (window->isOpen())
 		{
-			for (auto& [keyName, pressed] : window->pollEvents())
+			for (auto& [key, pressed] : window->pollEvents())
 			{
-				if (pressed) { handleKeyPressed(keyName); }
-				else { handleKeyReleased(keyName); }
+				if (pressed) { handleKeyPressed(key); }
+				else { handleKeyReleased(key); }
 			}
 
 			game.updateObjects();
@@ -42,35 +50,35 @@ namespace xge
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::handleKeyPressed(const std::string& keyName)
+	void Engine::handleKeyPressed(KeyCode key)
 	{
 		// TODO: fix logic? remove if? just set value in map true?
-		if (!isKeyPressed[keyName])
+		if (!isKeyPressed[static_cast<std::size_t>(key)])
 		{
-			isKeyPressed[keyName] = true;
+			isKeyPressed[static_cast<std::size_t>(key)] = true;
 
 			for (auto& input : game.getCurrentState().input)
 			{
-				execute_action(keyName, input, true);
+				execute_action(key, input, true);
 			}
 		}
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::handleKeyReleased(const std::string& keyName)
+	void Engine::handleKeyReleased(KeyCode key)
 	{
-		isKeyPressed[keyName] = false;
+		isKeyPressed[static_cast<std::size_t>(key)] = false;
 
 		for (auto& input : game.getCurrentState().input)
 		{
-			execute_action(keyName, input, false);
+			execute_action(key, input, false);
 		}
 	}
 
 	// TODO: does game reference need to be passed in? engine has game reference as member
-	void Engine::execute_action(const std::string& keyName, const KeyBinding& input, bool keyPressed)
+	void Engine::execute_action(KeyCode key, const KeyBinding& input, bool keyPressed)
 	{
-		if (input.first != keyName)
+		if (input.first != key)
 		{
 			return;
 		}
