@@ -70,6 +70,6 @@ namespace xge
 
 		void checkEdge(Object& object, Edge edge);
 
-		bool circleRectangleCollision(Object& object, Object& otherObject);
+		void checkObjectCollision(Object& a, Object& b);
 	};
 }

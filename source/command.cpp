@@ -71,6 +71,18 @@ namespace xge
 		return commands;
 	}
 
+	Edge opposite(Edge edge) noexcept
+	{
+		switch (edge)
+		{
+		case Edge::Left:   return Edge::Right;
+		case Edge::Right:  return Edge::Left;
+		case Edge::Top:    return Edge::Bottom;
+		case Edge::Bottom: return Edge::Top;
+		}
+		return edge;
+	}
+
 	ShapeKind shapeKindFromTag(const std::string& tag) noexcept
 	{
 		if (tag == "circle")    { return ShapeKind::Circle; }

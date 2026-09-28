@@ -31,6 +31,35 @@ namespace xge
 		return false;
 	}
 
+	std::optional<Edge> CollisionDetector::rectangleRectangle(const Object& a, const Object& b)
+	{
+		const auto boundsA = a.sprite->getGlobalBounds();
+		const auto boundsB = b.sprite->getGlobalBounds();
+
+		// How far each of a's edges has poked past the opposite edge of b.
+		// A small positive value on one side means that's the side that just
+		// barely made contact - i.e. the edge that was actually hit.
+		const float overlapLeft = (boundsA.position.x + boundsA.size.x) - boundsB.position.x;
+		const float overlapRight = (boundsB.position.x + boundsB.size.x) - boundsA.position.x;
+		const float overlapTop = (boundsA.position.y + boundsA.size.y) - boundsB.position.y;
+		const float overlapBottom = (boundsB.position.y + boundsB.size.y) - boundsA.position.y;
+
+		if (overlapLeft <= 0 || overlapRight <= 0 || overlapTop <= 0 || overlapBottom <= 0)
+		{
+			return std::nullopt;
+		}
+
+		const float overlapX = std::min(overlapLeft, overlapRight);
+		const float overlapY = std::min(overlapTop, overlapBottom);
+
+		if (overlapX < overlapY)
+		{
+			return (overlapLeft < overlapRight) ? Edge::Left : Edge::Right;
+		}
+
+		return (overlapTop < overlapBottom) ? Edge::Top : Edge::Bottom;
+	}
+
 	std::optional<Edge> CollisionDetector::circleRectangle(const Object& circle, const Object& rect)
 	{
 		const auto midpoint = circle.sprite->getPosition() +

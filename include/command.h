@@ -28,6 +28,10 @@ namespace xge
 	// Which side of a screen or of another object's bounding box was touched.
 	enum class Edge { Top, Bottom, Left, Right };
 
+	// The edge you'd see the same contact from, standing on the other object:
+	// if you hit something's Left edge, you were hit on your own Right.
+	Edge opposite(Edge edge) noexcept;
+
 	// What kind of sprite an Object was built from. Set once in game_expr::init()
 	// from the object's spriteParams tag, so collision code no longer has to
 	// re-derive it by searching the object's raw XML src string.

@@ -27,12 +27,15 @@ namespace xge
 		// CollisionDetector::touchesScreenEdge.
 		void executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
 
-		// object.collisionData.basic (circle-vs-rectangle), driven by
-		// CollisionDetector::circleRectangle. `isPrimaryMover` is true for the
-		// circular object that detected the hit, false for the object it hit -
-		// it only affects `die`, which additionally halts and parks the primary
-		// mover off-screen, matching the original circleRectangleCollision.
-		void executeObjectCollision(const Command& command, Object& object, Edge edge, bool isPrimaryMover);
+		// object.collisionData.basic, driven by Game::checkObjectCollision.
+		// `edge` must already be self-relative to `object` (the edge of
+		// *this* object that was touched) - see the comment on
+		// CollisionDetector for why that's not simply the detector's raw
+		// result. Only affects `die` differently depending on shape: a
+		// circular object (the ball, a bullet) additionally halts and parks
+		// off-screen, matching the original circleRectangleCollision;
+		// anything else just stops colliding.
+		void executeObjectCollision(const Command& command, Object& object, Edge edge);
 
 		// A command bound to a key in the current State's <input> list: push or
 		// pop a state, or trigger a named action on another object.

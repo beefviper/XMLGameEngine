@@ -27,7 +27,7 @@ namespace xge
 		}, command);
 	}
 
-	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, Edge edge, bool isPrimaryMover)
+	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, Edge edge)
 	{
 		std::visit(overload{
 			[&](const CmdBounce&) { bounceOffEdge(object, edge); },
@@ -36,10 +36,10 @@ namespace xge
 				object.collisionData.enabled = false;
 				object.isVisible = false;
 
-				// Matches the original circleRectangleCollision: only the circular
-				// object that initiated the hit gets stopped dead and parked
-				// off-screen on death; the object it hit just stops colliding.
-				if (isPrimaryMover)
+				// Matches the original circleRectangleCollision: a circular
+				// object (the ball, a bullet) also gets stopped dead and parked
+				// off-screen on death; anything else just stops colliding.
+				if (object.shapeKind == ShapeKind::Circle)
 				{
 					object.velocity = {};
 					object.position = { -100.0f, -100.0f };

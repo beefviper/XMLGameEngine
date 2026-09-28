@@ -7,6 +7,8 @@
 
 #include "command_executor.h"
 
+#include <cstddef>
+
 namespace xge
 {
 	Game::Game(const std::string& game) :
@@ -19,32 +21,48 @@ namespace xge
 
 	void Game::updateObjects(void)
 	{
-		for (auto& object : getCurrentObjects())
+		auto& currentObjects = getCurrentObjects();
+
+		// Screen-edge checks: independent per object, order doesn't matter.
+		for (auto& object : currentObjects)
+		{
+			if (isShown(object) && object.collisionData.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
+			{
+				checkEdge(object, Edge::Top);
+				checkEdge(object, Edge::Bottom);
+				checkEdge(object, Edge::Left);
+				checkEdge(object, Edge::Right);
+			}
+		}
+
+		// Object-object checks: every unordered pair is looked at once. A
+		// simple bounding-box test is enough for two rectangles; when either
+		// side is a circle (the ball, a bullet) checkObjectCollision looks
+		// closer to make sure it's actually touching, not just its bounding
+		// box overlapping.
+		for (std::size_t i = 0; i < currentObjects.size(); ++i)
+		{
+			if (!isShown(currentObjects[i]))
+			{
+				continue;
+			}
+
+			for (std::size_t j = i + 1; j < currentObjects.size(); ++j)
+			{
+				if (!isShown(currentObjects[j]))
+				{
+					continue;
+				}
+
+				checkObjectCollision(currentObjects[i], currentObjects[j]);
+			}
+		}
+
+		// TODO: currently only have position and velocity, will probably need acceleration too
+		for (auto& object : currentObjects)
 		{
 			if (isShown(object)) // TODO: at some point you might wanna collide with invisible objects
 			{
-				if (object.collisionData.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
-				{
-					// check collisions with edges of screen
-					checkEdge(object, Edge::Top);
-					checkEdge(object, Edge::Bottom);
-					checkEdge(object, Edge::Left);
-					checkEdge(object, Edge::Right);
-
-					// check collision with other objects (only circular movers can
-					// currently initiate an object-object check - see ShapeKind)
-					if (!object.collisionData.basic.empty() && object.shapeKind == ShapeKind::Circle)
-					{
-						for (auto& otherObject : getCurrentObjects())
-						{
-							circleRectangleCollision(object, otherObject);
-						}
-					}
-				}
-				// TODO: currently only checks objects with edges, and circular objects with walls and other objects
-				//   will also need to check objects with other objects, and some method for detecting possible collisions
-
-				// TODO: currently only have position and velocity, will probably need acceleration too
 				object.position.x += object.velocity.x;
 				object.position.y += object.velocity.y;
 
@@ -219,36 +237,62 @@ namespace xge
 		}
 	}
 
-	bool Game::circleRectangleCollision(Object& object, Object& otherObject)
+	void Game::checkObjectCollision(Object& a, Object& b)
 	{
-		if (object.name == otherObject.name
-			|| !otherObject.collisionData.enabled
-			|| object.shapeKind != ShapeKind::Circle)
+		if (!a.collisionData.enabled || !b.collisionData.enabled)
 		{
-			return false;
+			return;
 		}
 
-		const auto edge = CollisionDetector::circleRectangle(object, otherObject);
-		if (!edge)
+		// Objects rigidly moving together as a group (e.g. the invader block
+		// in spaceinvaders) never collide with each other.
+		if (a.collisionData.group != 0 && a.collisionData.group == b.collisionData.group)
 		{
-			return false;
+			return;
 		}
 
-		// Both participants get a say: the circular mover runs its own 'basic'
-		// commands (e.g. the ball bouncing), and whatever it hit runs its own
-		// (e.g. a brick or bullet dying). This replaces the old hardcoded
-		// "always bounce the mover, then pattern-match for a 'die' command"
-		// logic with the same generic dispatch checkEdge uses.
+		// At least one side has to have moved for there to be anything new to
+		// detect - two stationary objects can't have just started touching.
+		const bool aMoved = (a.velocity.x != 0 || a.velocity.y != 0);
+		const bool bMoved = (b.velocity.x != 0 || b.velocity.y != 0);
+		if (!aMoved && !bMoved)
+		{
+			return;
+		}
+
+		// A plain bounding-box test is exact for two rectangles; when either
+		// side is a circle, look closer. Either way this comes back as
+		// "the edge of b that was touched" (see the comment on CollisionDetector).
+		std::optional<Edge> edgeOfB;
+		if (a.shapeKind == ShapeKind::Circle)
+		{
+			edgeOfB = CollisionDetector::circleRectangle(a, b);
+		}
+		else if (b.shapeKind == ShapeKind::Circle)
+		{
+			const auto edgeOfA = CollisionDetector::circleRectangle(b, a);
+			edgeOfB = edgeOfA ? std::optional<Edge>(opposite(*edgeOfA)) : std::nullopt;
+		}
+		else
+		{
+			edgeOfB = CollisionDetector::rectangleRectangle(a, b);
+		}
+
+		if (!edgeOfB)
+		{
+			return;
+		}
+
+		// edgeOfB is self-relative for b already; a's own self-relative
+		// touched edge is the opposite side.
 		CommandExecutor executor(*this);
-		for (const auto& command : object.collisionData.basic)
+		for (const auto& command : a.collisionData.basic)
 		{
-			executor.executeObjectCollision(command, object, *edge, true);
+			executor.executeObjectCollision(command, a, opposite(*edgeOfB));
 		}
-		for (const auto& command : otherObject.collisionData.basic)
+		for (const auto& command : b.collisionData.basic)
 		{
-			executor.executeObjectCollision(command, otherObject, *edge, false);
+			executor.executeObjectCollision(command, b, *edgeOfB);
 		}
-
-		return true;
 	}
 }
