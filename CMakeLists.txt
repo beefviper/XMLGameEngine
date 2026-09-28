@@ -15,8 +15,10 @@ include(scripts/cmake/targets.cmake)
 include(scripts/cmake/platform.cmake)
 include(scripts/cmake/assets.cmake)
 
-target_sources(${PROJECT_NAME} PRIVATE
-	"source/main.cpp"
+# Everything but main.cpp: shared with the test suite's own executable
+# (scripts/cmake/tests.cmake) so the two never drift apart from having the
+# file list maintained by hand in two places.
+set(ENGINE_SOURCES
 	"source/cli.cpp"
 	"source/game.cpp"
 	"source/engine.cpp"
@@ -29,7 +31,9 @@ target_sources(${PROJECT_NAME} PRIVATE
 	"source/command.cpp"
 	"source/collision_detector.cpp"
 	"source/command_executor.cpp"
+)
 
+set(ENGINE_HEADERS
 	"include/cli.h"
 	"include/game.h"
 	"include/engine.h"
@@ -43,3 +47,13 @@ target_sources(${PROJECT_NAME} PRIVATE
 	"include/collision_detector.h"
 	"include/command_executor.h"
 )
+
+target_sources(${PROJECT_NAME} PRIVATE
+	"source/main.cpp"
+	${ENGINE_SOURCES}
+	${ENGINE_HEADERS}
+)
+
+if (BUILD_TESTING)
+	include(scripts/cmake/tests.cmake)
+endif()
