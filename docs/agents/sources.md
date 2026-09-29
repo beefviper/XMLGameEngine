@@ -32,7 +32,7 @@ Index numbers refer to position in `conversations.json` at the time of the scan 
 
 - Conversations that only matched the author's online handle or a keyword in a list of words (for example a word-list export, and aider/LM Studio tool setup). They contain nothing about the engine's design.
 - Personal material in the long conversation of 2026-05-23 (everything outside the project discussion), and other personal chats. None of it belongs in a public repository, so none of it was carried over.
-- The `memories` and `projects` folders of the export: the project files there are Claude's own starter documents, and the memory export only restates what is in the conversations.
+- The `memories` and `projects` folders of the export: the project files there are the assistant's own starter documents, and the memory export only restates what is in the conversations.
 
 ## Caveats about the record
 

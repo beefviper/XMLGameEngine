@@ -1,6 +1,6 @@
 # XMLGameEngine: current design
 
-This document describes what the engine does **today**, as read from the source on the `claude` branch on 2026-09-29. For the reasoning behind these choices, the alternatives that were considered, and ideas that are not built yet, see [design/00-designs.md](design/00-designs.md).
+This document describes what the engine does **today**, as read from the source on the `claude` branch on 2026-09-29. For the reasoning behind these choices, the alternatives that were considered, and ideas that are not built yet, see [designs/00-designs.md](designs/00-designs.md).
 
 XMLGameEngine is a video game description language (VGDL) written in XML, plus a C++ engine that loads a game description and runs it. A game is one `.xml` file. The description is declarative: there are no loops and no `if` statements in it. Behavior comes from a fixed vocabulary of verbs (`bounce()`, `stick()`, `die()`, ...) that the engine knows how to carry out.
 

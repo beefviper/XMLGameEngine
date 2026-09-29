@@ -33,4 +33,4 @@ New to the project: [readme](../readme.md), then 01, 02, 03, 09, 10, 11. Working
 
 ## Where this came from
 
-Compiled on 2026-09-29 from the author's exported conversation history (see [../claude/sources.md](../claude/sources.md)) and checked against the source on the `claude` branch.
+Compiled by Claude (Sonnet 5.5) on 2026-09-29 from the author's exported conversation history (see [../agents/sources.md](../agents/sources.md)) and checked against the source on the `claude` branch.
