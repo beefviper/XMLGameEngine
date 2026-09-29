@@ -28,9 +28,10 @@ namespace xge
 	{
 	public:
 		// xmlBackend picks which XmlDocument implementation actually parses
-		// the file (Xerces, TinyXML2, or PugiXML - see xml_document.h);
-		// defaults to Xerces so existing callers (main.cpp) don't have to
-		// name one - same pattern as Engine's own WindowBackend parameter.
+		// the file (Xerces, TinyXML2, PugiXML, or RapidXML - see
+		// xml_document.h); defaults to Xerces so existing callers (main.cpp)
+		// don't have to name one - same pattern as Engine's own
+		// WindowBackend parameter.
 		explicit Game(const std::string& game, XmlBackend xmlBackend = XmlBackend::Xerces);
 
 		void updateObjects(void);
@@ -83,6 +84,12 @@ namespace xge
 
 		game_xml xml;
 		game_expr expr;
+
+		// How xml above checked this game's file against
+		// assets/xmlgameengine.xsd - set once, by xml.init() inside the
+		// constructor, and only ever read back by printGame() (see
+		// xml_document.h for what each value means).
+		SchemaValidation xmlValidation = SchemaValidation::None;
 
 		std::map<std::string, float> variables;
 		std::vector<RawState> rawStates;

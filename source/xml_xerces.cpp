@@ -5,7 +5,10 @@
 
 #include "xml_xerces.h"
 
+#include <xercesc/dom/DOMException.hpp>
+#include <xercesc/sax/SAXException.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/util/XMLException.hpp>
 #include <xercesc/util/XMLString.hpp>
 
 #include <iostream>
@@ -126,13 +129,42 @@ namespace xge
 
 	bool XercesXmlDocument::load(const std::string& filename)
 	{
+		std::cout << "[Xerces] Loading file: " << filename << '\n';
+
 		domParser->setErrorHandler(&parserErrorHandler);
 		domParser->setValidationScheme(xc::XercesDOMParser::Val_Auto);
 		domParser->setDoNamespaces(true);
 		domParser->setDoSchema(true);
 		domParser->setValidationConstraintFatal(true);
 
-		domParser->parse(filename.c_str());
+		try
+		{
+			domParser->parse(filename.c_str());
+		}
+		// parse() throws for failures below the SAX/validation layer
+		// entirely - most commonly the file not existing or not being
+		// readable - which parserErrorHandler above never sees, so this
+		// has to be caught here instead (same reasoning, and the same
+		// three catches, as the official Xerces-C++ samples - e.g.
+		// DOMCount.cpp - wrap their own call to parse() with). Without
+		// this, a bad filename crashed the whole program instead of
+		// reporting "XML file failed to load" the same way a malformed
+		// file already does below.
+		catch (const xc::XMLException& ex)
+		{
+			errorMessage = "XML file failed to parse: " + xmlChToStr(ex.getMessage());
+			return false;
+		}
+		catch (const xc::DOMException& ex)
+		{
+			errorMessage = "XML file failed to parse (DOM error " + std::to_string(ex.code) + "): " + xmlChToStr(ex.getMessage());
+			return false;
+		}
+		catch (const xc::SAXException& ex)
+		{
+			errorMessage = "XML file failed to parse: " + xmlChToStr(ex.getMessage());
+			return false;
+		}
 
 		const auto* documentElement = domParser->getDocument() ? domParser->getDocument()->getDocumentElement() : nullptr;
 
@@ -146,12 +178,12 @@ namespace xge
 
 		if (errorCount == 0 && !schemaLocation.empty())
 		{
-			std::cout << "XML file validated against the schema successfully\n\n";
+			std::cout << "[Xerces] XML file validated against the schema successfully\n\n";
 			return true;
 		}
 		if (errorCount == 0)
 		{
-			std::cout << "XML file was parsed successfully\n\n";
+			std::cout << "[Xerces] XML file was parsed successfully\n\n";
 			return true;
 		}
 

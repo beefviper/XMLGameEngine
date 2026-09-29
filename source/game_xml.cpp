@@ -5,14 +5,17 @@
 
 #include "game_xml.h"
 
+#include "xsd_lite.h"
+
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 
 namespace xge
 {
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::map<std::string, float>& variables, std::vector<RawState>& rawStates,
-		std::vector<RawObject>& rawObjects)
+		std::vector<RawObject>& rawObjects, SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
 
@@ -24,6 +27,44 @@ namespace xge
 
 		// find key points in document
 		std::unique_ptr<XmlNode> root = document->getRootElement();
+
+		// A game file names its schema the same way regardless of backend
+		// (xsi:noNamespaceSchemaLocation - see games/*.xml), so this reads
+		// it directly off root rather than asking XmlDocument for it.
+		// Xerces already ran its own real validation as part of load()
+		// above whenever this is non-empty (see xml_xerces.cpp) - load()
+		// would have failed already otherwise, so reaching here means it
+		// passed. Every other backend can only check well-formedness on its
+		// own (see xml_document.h), so this falls back to XsdLiteValidator
+		// - this project's own interpreter for the small subset of XSD this
+		// schema actually uses (see xsd_lite.h) - against that same schema
+		// file, resolved relative to filename the same way Xerces resolves
+		// it relative to the document.
+		const std::string schemaLocation = getAttribute(root.get(), "xsi:noNamespaceSchemaLocation");
+
+		if (schemaLocation.empty())
+		{
+			validation = SchemaValidation::None;
+		}
+		else if (backend == XmlBackend::Xerces)
+		{
+			validation = SchemaValidation::Strong;
+		}
+		else
+		{
+			const std::string schemaPath = (std::filesystem::path(filename).parent_path() / schemaLocation).string();
+
+			XsdLiteValidator validator;
+
+			if (!validator.loadSchema(schemaPath, backend) || !validator.validate(*root))
+			{
+				std::cout << "XML file failed to validate against the schema: " << validator.getErrorMessage() << "\n\n";
+				exit(EXIT_FAILURE);
+			}
+
+			validation = SchemaValidation::Weak;
+		}
+
 		std::unique_ptr<XmlNode> window = findChild(root.get(), "window");
 		std::unique_ptr<XmlNode> variablesNode = findChild(root.get(), "variables");
 		std::unique_ptr<XmlNode> objectsNode = findChild(root.get(), "objects");

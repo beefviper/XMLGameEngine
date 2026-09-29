@@ -24,4 +24,16 @@ namespace xge
 
 		return std::make_unique<XercesXmlDocument>();
 	}
+
+	std::ostream& operator<<(std::ostream& o, SchemaValidation validation)
+	{
+		switch (validation)
+		{
+		case SchemaValidation::None:   o << "none (no schema referenced)"; break;
+		case SchemaValidation::Weak:   o << "weak (checked by this project's own lightweight XSD subset validator)"; break;
+		case SchemaValidation::Strong: o << "strong (checked by Xerces's real XSD engine)"; break;
+		}
+
+		return o;
+	}
 }

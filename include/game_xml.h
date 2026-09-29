@@ -26,10 +26,18 @@ namespace xge
 	class game_xml
 	{
 	public:
+		// validation is an out-param reporting how filename's contents were
+		// checked against assets/xmlgameengine.xsd - Strong if backend is
+		// Xerces and the file named a schema (Xerces already validated it
+		// for real as part of loading - see xml_xerces.cpp), Weak if some
+		// other backend loaded it and this project's own XsdLiteValidator
+		// (xsd_lite.h) checked it instead, or None if the file named no
+		// schema at all. See Game::printGame().
 		void init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 			std::map<std::string, float>& variables,
 			std::vector<RawState>& rawStates,
-			std::vector<RawObject>& rawObjects);
+			std::vector<RawObject>& rawObjects,
+			SchemaValidation& validation);
 
 	private:
 		// The first child of parent named `name`, or nullptr if parent is

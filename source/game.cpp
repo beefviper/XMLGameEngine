@@ -14,7 +14,7 @@ namespace xge
 	Game::Game(const std::string& game, XmlBackend xmlBackend) :
 		filename(game)
 	{
-		xml.init(filename, xmlBackend, windowDesc, variables, rawStates, rawObjects);
+		xml.init(filename, xmlBackend, windowDesc, variables, rawStates, rawObjects, xmlValidation);
 		expr.init(windowDesc, variables, rawStates, states, rawObjects, objects);
 		// Every object's own visual is built later, by Engine, once a real
 		// Window (and therefore a real backend to build against) exists -
@@ -75,6 +75,8 @@ namespace xge
 
 	void Game::printGame(void)
 	{
+		std::cout << "schema validation: " << xmlValidation << "\n\n";
+
 		std::cout << windowDesc << '\n';
 
 		for (auto& variable : variables)
