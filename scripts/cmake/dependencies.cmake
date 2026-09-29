@@ -5,6 +5,49 @@
 
 include(FetchContent)
 
+# Every third-party dependency below follows the same shape: try to find it
+# already installed (via find_package/find_path just below), and if that
+# fails, FetchContent_Declare it from its upstream git repo so
+# FetchContent_MakeAvailable() (further down) downloads and builds it as
+# part of this build.
+#   FOUND_VAR      the variable find_package/find_path already set, truthy
+#                  when found locally
+#   DISPLAY_NAME   name to use in the found/not-found status messages
+#   INFO_VAR       variable to print alongside "found" (a lib list or an
+#                  install dir - whichever that dependency's find module
+#                  happens to expose)
+#   NAME           name passed to FetchContent_Declare/MakeAvailable
+#   REPO / TAG     upstream git repo and tag/commit to fetch
+#   SET_FOUND_VAR  only needed for exprtk/RapidXML, which have no _FOUND
+#                  variable of their own for the rest of the project to
+#                  check - this defines one when found locally
+#   FETCH_VERB     defaults to "download and build it locally"; RapidXML
+#                  overrides it since it's header-only (nothing to build)
+macro(declare_fetched_dependency)
+	cmake_parse_arguments(DFD "" "FOUND_VAR;DISPLAY_NAME;INFO_VAR;NAME;REPO;TAG;SET_FOUND_VAR;FETCH_VERB" "" ${ARGN})
+
+	if (NOT DFD_FETCH_VERB)
+		set(DFD_FETCH_VERB "download and build it locally")
+	endif()
+
+	if (${DFD_FOUND_VAR})
+		message(STATUS "${DFD_DISPLAY_NAME} found: ${${DFD_INFO_VAR}}")
+
+		if (DEFINED DFD_SET_FOUND_VAR)
+			set(${DFD_SET_FOUND_VAR} TRUE)
+		endif()
+	else()
+		message(STATUS "${DFD_DISPLAY_NAME} not found, using FetchContent to ${DFD_FETCH_VERB}.")
+
+		FetchContent_Declare(${DFD_NAME}
+			GIT_REPOSITORY ${DFD_REPO}
+			GIT_TAG ${DFD_TAG}
+			EXCLUDE_FROM_ALL)
+
+		list(APPEND FETCHED_LIBRARIES ${DFD_NAME})
+	endif()
+endmacro()
+
 if (NOT FORCE_LOCAL_XERCESC)
 	find_package(XercesC QUIET)
 endif()
@@ -49,156 +92,113 @@ if (NOT FORCE_LOCAL_RAPIDXML)
 	find_path(RAPIDXML_INCLUDE_DIRS "rapidxml.hpp")
 endif()
 
-if (XercesC_FOUND)
-	message(STATUS "XERCESC found: ${XercesC_LIBRARIES}")
-else()
-	message(STATUS "XercesC not found, using FetchContent to download and build it locally.")
+declare_fetched_dependency(
+	FOUND_VAR XercesC_FOUND
+	DISPLAY_NAME "XercesC"
+	INFO_VAR XercesC_LIBRARIES
+	NAME XercesC
+	REPO https://github.com/apache/xerces-c.git
+	TAG v3.3.0)
 
-	FetchContent_Declare(XercesC
-		GIT_REPOSITORY https://github.com/apache/xerces-c.git
-		GIT_TAG v3.3.0
-		EXCLUDE_FROM_ALL)
+declare_fetched_dependency(
+	FOUND_VAR EXPRTK_INCLUDE_DIRS
+	DISPLAY_NAME "exprtk"
+	INFO_VAR EXPRTK_INCLUDE_DIRS
+	NAME exprtk
+	REPO https://github.com/ArashPartow/exprtk.git
+	TAG 0.0.3-cmake
+	SET_FOUND_VAR EXPRTK_PACKAGE_FOUND)
 
-	list(APPEND FETCHED_LIBRARIES XercesC)
-endif()
+declare_fetched_dependency(
+	FOUND_VAR SFML_FOUND
+	DISPLAY_NAME "SFML"
+	INFO_VAR SFML_LIBRARIES
+	NAME SFML
+	REPO https://github.com/SFML/SFML.git
+	TAG 3.1.0)
 
-if (EXPRTK_INCLUDE_DIRS)
-	message(STATUS "exprtk found: ${EXPRTK_INCLUDE_DIRS}")
-	set(EXPRTK_PACKAGE_FOUND TRUE)
-else()
-	message(STATUS "exprtk not found, using FetchContent to download and build it locally.")
-
-	FetchContent_Declare(exprtk
-		GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
-		GIT_TAG 0.0.3-cmake
-		EXCLUDE_FROM_ALL)
-
-	list(APPEND FETCHED_LIBRARIES exprtk)
-endif()
-
-if (SFML_FOUND)
-	message(STATUS "SFML found: ${SFML_LIBRARIES}")
-else()
-	message(STATUS "SFML not found, using FetchContent to download and build it locally.")
-
-	FetchContent_Declare(SFML
-		GIT_REPOSITORY https://github.com/SFML/SFML.git
-		GIT_TAG 3.1.0
-		EXCLUDE_FROM_ALL)
-
-	list(APPEND FETCHED_LIBRARIES SFML)
-
+if (NOT SFML_FOUND)
 	set(SFML_BUILD_FROM_SOURCE ON CACHE BOOL "Force SFML to build from source" FORCE)
 	set(SFML_USE_SYSTEM_DEPS OFF CACHE BOOL "Use SFML's bundled dependencies" FORCE)
 endif()
 
-if (raylib_FOUND)
-	message(STATUS "raylib found: ${raylib_LIBRARIES}")
-else()
-	message(STATUS "raylib not found, using FetchContent to download and build it locally.")
+declare_fetched_dependency(
+	FOUND_VAR raylib_FOUND
+	DISPLAY_NAME "raylib"
+	INFO_VAR raylib_LIBRARIES
+	NAME raylib
+	REPO https://github.com/raysan5/raylib.git
+	TAG 5.5)
 
-	FetchContent_Declare(raylib
-		GIT_REPOSITORY https://github.com/raysan5/raylib.git
-		GIT_TAG 5.5
-		EXCLUDE_FROM_ALL)
+declare_fetched_dependency(
+	FOUND_VAR SDL2_FOUND
+	DISPLAY_NAME "SDL2"
+	INFO_VAR SDL2_LIBRARIES
+	NAME SDL2
+	REPO https://github.com/libsdl-org/SDL.git
+	TAG release-2.30.9)
 
-	list(APPEND FETCHED_LIBRARIES raylib)
-endif()
+# Built against whichever SDL2 target ends up available above (found or
+# fetched) - SDL2_image's own CMakeLists picks it up the same way this
+# project's other fetched libraries do.
+declare_fetched_dependency(
+	FOUND_VAR SDL2_image_FOUND
+	DISPLAY_NAME "SDL2_image"
+	INFO_VAR SDL2_image_LIBRARIES
+	NAME SDL2_image
+	REPO https://github.com/libsdl-org/SDL_image.git
+	TAG release-2.8.2)
 
-if (SDL2_FOUND)
-	message(STATUS "SDL2 found: ${SDL2_LIBRARIES}")
-else()
-	message(STATUS "SDL2 not found, using FetchContent to download and build it locally.")
-
-	FetchContent_Declare(SDL2
-		GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-		GIT_TAG release-2.30.9
-		EXCLUDE_FROM_ALL)
-
-	list(APPEND FETCHED_LIBRARIES SDL2)
-endif()
-
-if (SDL2_image_FOUND)
-	message(STATUS "SDL2_image found: ${SDL2_image_LIBRARIES}")
-else()
-	message(STATUS "SDL2_image not found, using FetchContent to download and build it locally.")
-
-	# Built against whichever SDL2 target ends up available above (found or
-	# fetched) - SDL2_image's own CMakeLists picks it up the same way this
-	# project's other fetched libraries do.
-	FetchContent_Declare(SDL2_image
-		GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-		GIT_TAG release-2.8.2
-		EXCLUDE_FROM_ALL)
-
+if (NOT SDL2_image_FOUND)
 	set(SDL2IMAGE_INSTALL OFF CACHE BOOL "Disable SDL2_image's own install rules" FORCE)
 	set(SDL2IMAGE_VENDORED ON CACHE BOOL "Build SDL2_image's bundled image libraries from source" FORCE)
-
-	list(APPEND FETCHED_LIBRARIES SDL2_image)
 endif()
 
-if (SDL2_ttf_FOUND)
-	message(STATUS "SDL2_ttf found: ${SDL2_ttf_LIBRARIES}")
-else()
-	message(STATUS "SDL2_ttf not found, using FetchContent to download and build it locally.")
+declare_fetched_dependency(
+	FOUND_VAR SDL2_ttf_FOUND
+	DISPLAY_NAME "SDL2_ttf"
+	INFO_VAR SDL2_ttf_LIBRARIES
+	NAME SDL2_ttf
+	REPO https://github.com/libsdl-org/SDL_ttf.git
+	TAG release-2.22.0)
 
-	FetchContent_Declare(SDL2_ttf
-		GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
-		GIT_TAG release-2.22.0
-		EXCLUDE_FROM_ALL)
-
+if (NOT SDL2_ttf_FOUND)
 	set(SDL2TTF_INSTALL OFF CACHE BOOL "Disable SDL2_ttf's own install rules" FORCE)
 	set(SDL2TTF_VENDORED ON CACHE BOOL "Build SDL2_ttf's bundled FreeType from source" FORCE)
-
-	list(APPEND FETCHED_LIBRARIES SDL2_ttf)
 endif()
 
-if (tinyxml2_FOUND)
-	message(STATUS "TinyXML2 found: ${tinyxml2_DIR}")
-else()
-	message(STATUS "TinyXML2 not found, using FetchContent to download and build it locally.")
+declare_fetched_dependency(
+	FOUND_VAR tinyxml2_FOUND
+	DISPLAY_NAME "TinyXML2"
+	INFO_VAR tinyxml2_DIR
+	NAME tinyxml2
+	REPO https://github.com/leethomason/tinyxml2.git
+	TAG 11.0.0)
 
-	FetchContent_Declare(tinyxml2
-		GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
-		GIT_TAG 11.0.0
-		EXCLUDE_FROM_ALL)
+declare_fetched_dependency(
+	FOUND_VAR pugixml_FOUND
+	DISPLAY_NAME "PugiXML"
+	INFO_VAR pugixml_DIR
+	NAME pugixml
+	REPO https://github.com/zeux/pugixml.git
+	TAG v1.16)
 
-	list(APPEND FETCHED_LIBRARIES tinyxml2)
-endif()
-
-if (pugixml_FOUND)
-	message(STATUS "PugiXML found: ${pugixml_DIR}")
-else()
-	message(STATUS "PugiXML not found, using FetchContent to download and build it locally.")
-
-	FetchContent_Declare(pugixml
-		GIT_REPOSITORY https://github.com/zeux/pugixml.git
-		GIT_TAG v1.16
-		EXCLUDE_FROM_ALL)
-
-	list(APPEND FETCHED_LIBRARIES pugixml)
-endif()
-
-if (RAPIDXML_INCLUDE_DIRS)
-	message(STATUS "RapidXML found: ${RAPIDXML_INCLUDE_DIRS}")
-	set(RAPIDXML_PACKAGE_FOUND TRUE)
-else()
-	message(STATUS "RapidXML not found, using FetchContent to download it locally.")
-
-	# Pinned by commit rather than a tag - upstream (the discord/rapidxml
-	# mirror of the last released 1.13, the version this project's own
-	# xml_rapidxml.cpp is written against) has never cut a tagged release.
-	# RapidXML is header-only with no CMakeLists.txt of its own (checked -
-	# it has none), so unlike this project's other fetched libraries it's
-	# not add_subdirectory()'d by FetchContent_MakeAvailable below - see the
-	# rapidxml::rapidxml target synthesized further down instead.
-	FetchContent_Declare(rapidxml
-		GIT_REPOSITORY https://github.com/discord/rapidxml.git
-		GIT_TAG 2ae4b2888165a393dfb6382168825fddf00c27b9
-		EXCLUDE_FROM_ALL)
-
-	list(APPEND FETCHED_LIBRARIES rapidxml)
-endif()
+# Pinned by commit rather than a tag - upstream (the discord/rapidxml
+# mirror of the last released 1.13, the version this project's own
+# xml_rapidxml.cpp is written against) has never cut a tagged release.
+# RapidXML is header-only with no CMakeLists.txt of its own (checked -
+# it has none), so unlike this project's other fetched libraries it's
+# not add_subdirectory()'d by FetchContent_MakeAvailable below - see the
+# rapidxml::rapidxml target synthesized further down instead.
+declare_fetched_dependency(
+	FOUND_VAR RAPIDXML_INCLUDE_DIRS
+	DISPLAY_NAME "RapidXML"
+	INFO_VAR RAPIDXML_INCLUDE_DIRS
+	NAME rapidxml
+	REPO https://github.com/discord/rapidxml.git
+	TAG 2ae4b2888165a393dfb6382168825fddf00c27b9
+	SET_FOUND_VAR RAPIDXML_PACKAGE_FOUND
+	FETCH_VERB "download it locally")
 
 if (FETCHED_LIBRARIES)
 	FetchContent_MakeAvailable(${FETCHED_LIBRARIES})

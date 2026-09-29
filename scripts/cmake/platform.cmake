@@ -30,24 +30,29 @@ if (WIN32 AND TARGET Freetype)
 	)
 endif()
 
+# Vendored dependencies come in with their own warning levels, which have
+# nothing to do with this project's own code quality - MSVC's /W4 and
+# -Wall above are for ${PROJECT_NAME} only, so silence warnings on
+# third-party targets here instead of fixing warnings in code we don't own.
+function(silence_third_party_warnings target scope)
+	target_compile_options(${target} ${scope}
+		$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
+endfunction()
+
 if (NOT XercesC_FOUND)
 	set_target_properties(xerces-c PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
-	target_compile_options(xerces-c PRIVATE
-		$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
+	silence_third_party_warnings(xerces-c PRIVATE)
 	set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endif()
 
 if (NOT EXPRTK_PACKAGE_FOUND)
-	target_compile_options(exprtk INTERFACE
-		$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
+	silence_third_party_warnings(exprtk INTERFACE)
 endif()
 
 if (NOT SFML_FOUND)
-	set_target_properties(sfml-system PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-	set_target_properties(sfml-window PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-	set_target_properties(sfml-graphics PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-	set_target_properties(sfml-network PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-	set_target_properties(sfml-audio PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+	foreach(sfml_target IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
+		set_target_properties(${sfml_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+	endforeach()
 endif()
 
 # Same DLL-next-to-the-exe fix as SFML above, for whichever of raylib/SDL2/

@@ -3,17 +3,24 @@
 # author: beefviper
 # date: Feb 6, 2026
 
-option(FORCE_LOCAL_XERCESC "Force using a locally fetched XercesC instance" OFF)
-option(FORCE_LOCAL_EXPRTK "Force using a locally fetched exprtk instance" OFF)
-option(FORCE_LOCAL_SFML "Force using a locally fetched SFML instance" OFF)
-option(FORCE_LOCAL_RAYLIB "Force using a locally fetched raylib instance" OFF)
-option(FORCE_LOCAL_SDL2 "Force using a locally fetched SDL2 instance" OFF)
-option(FORCE_LOCAL_SDL2_IMAGE "Force using a locally fetched SDL2_image instance" OFF)
-option(FORCE_LOCAL_SDL2_TTF "Force using a locally fetched SDL2_ttf instance" OFF)
-option(FORCE_LOCAL_TINYXML2 "Force using a locally fetched TinyXML2 instance" OFF)
-option(FORCE_LOCAL_PUGIXML "Force using a locally fetched PugiXML instance" OFF)
-option(FORCE_LOCAL_RAPIDXML "Force using a locally fetched RapidXML instance" OFF)
-option(FORCE_LOCAL_CATCH2 "Force using a locally fetched Catch2 instance" OFF)
+# All FORCE_LOCAL_* options below share the same shape - see
+# declare_fetched_dependency() in dependencies.cmake for the matching
+# find-or-fetch logic each one controls.
+macro(force_local_option name display_name)
+	option(FORCE_LOCAL_${name} "Force using a locally fetched ${display_name} instance" OFF)
+endmacro()
+
+force_local_option(XERCESC "XercesC")
+force_local_option(EXPRTK "exprtk")
+force_local_option(SFML "SFML")
+force_local_option(RAYLIB "raylib")
+force_local_option(SDL2 "SDL2")
+force_local_option(SDL2_IMAGE "SDL2_image")
+force_local_option(SDL2_TTF "SDL2_ttf")
+force_local_option(TINYXML2 "TinyXML2")
+force_local_option(PUGIXML "PugiXML")
+force_local_option(RAPIDXML "RapidXML")
+force_local_option(CATCH2 "Catch2")
 
 # Declared here, before scripts/cmake/tests.cmake's own include(CTest), so
 # CTest's module (which declares this same cache variable, defaulting to ON)

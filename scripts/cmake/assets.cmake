@@ -31,6 +31,10 @@ add_custom_target(data-target ALL
 	DEPENDS ${data_xsd} ${data_xml} ${data_assets}
 	SOURCES	${data_xsd} ${data_xml} ${data_assets})
 
-source_group("XSD Files" FILES ${data_xsd})
-source_group("XML Files" FILES ${data_xml})
-source_group("Asset Files" FILES ${data_assets})
+function(add_data_source_group group_name)
+	source_group("${group_name}" FILES ${ARGN})
+endfunction()
+
+add_data_source_group("XSD Files" ${data_xsd})
+add_data_source_group("XML Files" ${data_xml})
+add_data_source_group("Asset Files" ${data_assets})
