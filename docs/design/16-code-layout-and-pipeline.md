@@ -1,0 +1,33 @@
+# 16. Code layout and the compile pipeline
+
+**Status:** concept adopted; the current tree is flat
+
+## The compiler-pipeline model
+
+A game description is treated like a program in a language with a front end and back end: **parse, validate, evaluate, generate**. Validation as its own explicit stage makes it much easier to catch a bug in one stage leaking into another (an earlier Pong condition bug was of that kind). The current code has this shape: `game_xml` parses and validates, `game_expr` evaluates, and the results are `Object`s and `State`s.
+
+## The July 2026 skeleton
+
+A restructure drafted this tree (empty files), reviewed in conversation:
+
+- `core/engine`: `loop_input`, `loop_update`, `loop_render` (three loop phases, so update can be driven without a window in tests) and a two-tier layer of `system_*` (thin OS pieces: clock, console, file, memory, thread) below `service_*` (logger, resource, timer), where services depend on systems and never the reverse.
+- `core/game`: `compile_parse/validate/evaluate/generate` plus data types (`model_object`, `model_states`).
+- `window`: interface, factory, SDL2 and SFML3 backends.
+- `xml`: interface, factory, TinyXML2 and Xerces backends.
+
+Feedback given: the layering and the three-phase loop are sound; things worth deciding were whether `types.h` becomes a dumping ground, where the collection of live objects and the currently active state live, whether the build wiring uses `#ifdef` or a run-time factory, and that audio and configuration were absent (the author confirmed both were intentionally missing for now).
+
+## What the tree looks like now
+
+The layered directories were later flattened into `include/` and `source/` files with the same responsibilities (`game_xml`, `game_expr`, `game`, `engine`, `command`, `command_executor`, `collision_detector`, `window_*`, `xml_*`, `xsd_lite`, `cli`). See the source map in [docs/readme.md](../readme.md).
+
+## Open
+
+- Audio service, configuration service.
+- A `generate` step: nothing emits code from the description yet ([04](04-arithmetic-and-xslt-codegen.md)).
+- Whether a "live snapshot" (current state plus current object instances) should be its own type instead of living inside `Game` ([09](09-states-and-screens.md)).
+
+## Sources
+
+- "XML game engine project structure review" (2026-07-20).
+- "Renaming game folder file prefixes" (2026-07-20).
