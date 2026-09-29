@@ -13,9 +13,11 @@ include(FetchContent)
 #   FOUND_VAR      the variable find_package/find_path already set, truthy
 #                  when found locally
 #   DISPLAY_NAME   name to use in the found/not-found status messages
-#   INFO_VAR       variable to print alongside "found" (a lib list or an
-#                  install dir - whichever that dependency's find module
-#                  happens to expose)
+#   INFO_VAR       variable to print alongside "found" - usually <Name>_DIR
+#                  (the install dir CMake sets for any config-mode find,
+#                  a real location on disk); XercesC/exprtk/RapidXML use
+#                  something else since they're found via find_path() or
+#                  an old-style Module rather than a config package
 #   NAME           name passed to FetchContent_Declare/MakeAvailable
 #   REPO / TAG     upstream git repo and tag/commit to fetch
 #   SET_FOUND_VAR  only needed for exprtk/RapidXML, which have no _FOUND
@@ -121,7 +123,7 @@ declare_fetched_dependency(
 declare_fetched_dependency(
 	FOUND_VAR SFML_FOUND
 	DISPLAY_NAME "SFML"
-	INFO_VAR SFML_LIBRARIES
+	INFO_VAR SFML_DIR
 	NAME SFML
 	REPO https://github.com/SFML/SFML.git
 	TAG 3.1.0)
@@ -134,7 +136,7 @@ endif()
 declare_fetched_dependency(
 	FOUND_VAR raylib_FOUND
 	DISPLAY_NAME "raylib"
-	INFO_VAR raylib_LIBRARIES
+	INFO_VAR raylib_DIR
 	NAME raylib
 	REPO https://github.com/raysan5/raylib.git
 	TAG 5.5)
@@ -142,7 +144,7 @@ declare_fetched_dependency(
 declare_fetched_dependency(
 	FOUND_VAR SDL2_FOUND
 	DISPLAY_NAME "SDL2"
-	INFO_VAR SDL2_LIBRARIES
+	INFO_VAR SDL2_DIR
 	NAME SDL2
 	REPO https://github.com/libsdl-org/SDL.git
 	TAG release-2.30.9)
@@ -153,7 +155,7 @@ declare_fetched_dependency(
 declare_fetched_dependency(
 	FOUND_VAR SDL2_image_FOUND
 	DISPLAY_NAME "SDL2_image"
-	INFO_VAR SDL2_image_LIBRARIES
+	INFO_VAR SDL2_image_DIR
 	NAME SDL2_image
 	REPO https://github.com/libsdl-org/SDL_image.git
 	TAG release-2.8.2)
@@ -166,7 +168,7 @@ endif()
 declare_fetched_dependency(
 	FOUND_VAR SDL2_ttf_FOUND
 	DISPLAY_NAME "SDL2_ttf"
-	INFO_VAR SDL2_ttf_LIBRARIES
+	INFO_VAR SDL2_ttf_DIR
 	NAME SDL2_ttf
 	REPO https://github.com/libsdl-org/SDL_ttf.git
 	TAG release-2.22.0)
