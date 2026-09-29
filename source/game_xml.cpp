@@ -24,12 +24,13 @@ namespace xge
 
 		// find key points in document
 		std::unique_ptr<XmlNode> root = document->getRootElement();
-		std::unique_ptr<XmlNode> window = root->getFirstChild();
-		std::unique_ptr<XmlNode> variablesNode = window->getNextSibling();
+		std::unique_ptr<XmlNode> window = findChild(root.get(), "window");
+		std::unique_ptr<XmlNode> variablesNode = findChild(root.get(), "variables");
+		std::unique_ptr<XmlNode> objectsNode = findChild(root.get(), "objects");
+		std::unique_ptr<XmlNode> states = findChild(root.get(), "states");
+
 		std::unique_ptr<XmlNode> variable = variablesNode->getFirstChild();
-		std::unique_ptr<XmlNode> objectsNode = variablesNode->getNextSibling();
 		std::unique_ptr<XmlNode> object = objectsNode->getFirstChild();
-		std::unique_ptr<XmlNode> states = objectsNode->getNextSibling();
 		std::unique_ptr<XmlNode> state = states->getFirstChild();
 
 		// load window description
@@ -56,35 +57,12 @@ namespace xge
 			std::string objClass = getAttribute(object.get(), "class");
 
 			// find key points in object
-			std::unique_ptr<XmlNode> sprite = object->getFirstChild();
-			std::unique_ptr<XmlNode> pos = sprite->getNextSibling();
-			std::unique_ptr<XmlNode> vel = pos->getNextSibling();
-			std::unique_ptr<XmlNode> collisions = vel->getNextSibling();
-
-			std::unique_ptr<XmlNode> actions;
-			std::unique_ptr<XmlNode> objvars;
-
-			if (collisions) // hacky code, in case no actions are defined, but object variables are
-			{
-				std::unique_ptr<XmlNode> tempElement = collisions->getNextSibling();
-				if (tempElement != nullptr)
-				{
-					std::string tempTagStr = tempElement->getName();
-					if (tempTagStr == "actions")
-					{
-						actions = std::move(tempElement);
-					}
-					else if (tempTagStr == "variables")
-					{
-						objvars = std::move(tempElement);
-					}
-				}
-			}
-
-			if (actions)
-			{
-				objvars = actions->getNextSibling();
-			}
+			std::unique_ptr<XmlNode> sprite = findChild(object.get(), "sprite");
+			std::unique_ptr<XmlNode> pos = findChild(object.get(), "position");
+			std::unique_ptr<XmlNode> vel = findChild(object.get(), "velocity");
+			std::unique_ptr<XmlNode> collisions = findChild(object.get(), "collisions");
+			std::unique_ptr<XmlNode> actions = findChild(object.get(), "actions");
+			std::unique_ptr<XmlNode> objvars = findChild(object.get(), "variables");
 
 			// load sprite
 			std::string spriteSrc = getAttribute(sprite.get(), "src");
@@ -236,7 +214,7 @@ namespace xge
 			std::string stateName = getAttribute(state.get(), "name");
 
 			// load shows
-			std::unique_ptr<XmlNode> shows = state->getFirstChild();
+			std::unique_ptr<XmlNode> shows = findChild(state.get(), "shows");
 			std::unique_ptr<XmlNode> show = shows->getFirstChild();
 
 			std::vector<std::string> showVec;
@@ -249,7 +227,7 @@ namespace xge
 			}
 
 			// load inputs
-			std::unique_ptr<XmlNode> inputs = shows->getNextSibling();
+			std::unique_ptr<XmlNode> inputs = findChild(state.get(), "inputs");
 			std::unique_ptr<XmlNode> input = inputs->getFirstChild();
 
 			std::map<std::string, std::string> inputsMap;
@@ -267,7 +245,7 @@ namespace xge
 			// load conditions (optional - the schema allows a state with none)
 			std::vector<RawCondition> conditionsVec;
 
-			if (std::unique_ptr<XmlNode> conditions = inputs->getNextSibling(); conditions != nullptr)
+			if (std::unique_ptr<XmlNode> conditions = findChild(state.get(), "conditions"); conditions != nullptr)
 			{
 				std::unique_ptr<XmlNode> condition = conditions->getFirstChild();
 
@@ -294,6 +272,18 @@ namespace xge
 
 			state = state->getNextSibling();
 		}
+	}
+
+	std::unique_ptr<XmlNode> game_xml::findChild(const XmlNode* parent, const std::string& name)
+	{
+		std::unique_ptr<XmlNode> child = parent ? parent->getFirstChild() : nullptr;
+
+		while (child != nullptr && child->getName() != name)
+		{
+			child = child->getNextSibling();
+		}
+
+		return child;
 	}
 
 	std::string game_xml::getAttribute(const XmlNode* node, const std::string& name)

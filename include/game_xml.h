@@ -32,6 +32,14 @@ namespace xge
 			std::vector<RawObject>& rawObjects);
 
 	private:
+		// The first child of parent named `name`, or nullptr if parent is
+		// null or none match. Schema elements have fixed names but aren't
+		// otherwise guaranteed to stay in a fixed order, so this looks a
+		// child up by name the same way getAttribute below looks up an
+		// attribute by name, instead of chaining getFirstChild()/
+		// getNextSibling() calls that assume a particular position.
+		static std::unique_ptr<XmlNode> findChild(const XmlNode* parent, const std::string& name);
+
 		// "" if node is null or the attribute isn't present. This schema
 		// allows some elements to be absent entirely (e.g. an object with no
 		// <collisions>), so the traversal below routinely ends up with a
