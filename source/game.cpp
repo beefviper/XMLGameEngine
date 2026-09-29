@@ -253,6 +253,13 @@ namespace xge
 			object.position = object.positionOriginal;
 			object.velocity = object.velocityOriginal;
 
+			// Also drop any directions CommandExecutor::applyActionVelocity
+			// currently has recorded as held: velocity above is reset to rest,
+			// so a stale held direction (a key never released across this
+			// reset) shouldn't be able to resurrect part of the old velocity
+			// the next time some other direction's key event recomputes it.
+			object.activeMoveStep = {};
+
 			for (auto& [variableName, originalValue] : object.variableOriginal)
 			{
 				object.variable[variableName] = originalValue;

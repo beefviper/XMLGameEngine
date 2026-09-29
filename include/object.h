@@ -1,13 +1,14 @@
 // object.h
 // XML Game Engine
 // author: beefviper
-// date: Sept 18, 2020
+// date: Sept 28, 2026
 
 #pragma once
 
 #include "command.h"
 #include "types.h"
 
+#include <array>
 #include <string>
 #include <vector>
 #include <map>
@@ -119,6 +120,19 @@ namespace xge
 		Vector2f positionOriginal;
 		Vector2f velocity;
 		Vector2f velocityOriginal;
+
+		// Per-direction move step currently being held for this object, keyed
+		// by static_cast<size_t>(Direction) - sized for Direction's 4 real
+		// values (Up/Down/Left/Right; it has no Count sentinel). 0 means that
+		// direction isn't currently held; a nonzero entry is the magnitude of
+		// the <action>'s own step. CommandExecutor::applyActionVelocity
+		// recombines all four into velocity.x/velocity.y on every key
+		// transition, so e.g. holding Down and tapping Up cancels out to a
+		// standstill instead of Up's single key event just overwriting the
+		// whole axis to 0 - and releasing Up afterward correctly resumes
+		// moving Down, rather than leaving the paddle stopped. Also what lets
+		// two axes combine into an 8-way diagonal from a 4-way D-pad.
+		std::array<float, 4> activeMoveStep{};
 
 		// The object's own measured bounding box (width/height) - {0,0} until
 		// whichever Window backend is running has actually built this

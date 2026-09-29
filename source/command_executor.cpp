@@ -1,7 +1,7 @@
 // command_executor.cpp
 // XML Game Engine
 // author: beefviper
-// date: Sept 27, 2026
+// date: Sept 28, 2026
 
 #include "command_executor.h"
 
@@ -166,15 +166,20 @@ namespace xge
 		}
 	}
 
+	// Records which way `direction` is now pushing (0 = just released) and
+	// recombines every direction currently held into velocity.x/velocity.y,
+	// instead of this one key event simply overwriting the whole axis - see
+	// Object::activeMoveStep for why that used to lose a still-held opposite
+	// key. Left/Right and Up/Down are independent axes, so both can be held
+	// at once for an 8-way diagonal off a 4-way D-pad.
 	void CommandExecutor::applyActionVelocity(Object& object, Direction direction, float step)
 	{
-		switch (direction)
-		{
-		case Direction::Up:    object.velocity.y = -step; break;
-		case Direction::Down:  object.velocity.y = step; break;
-		case Direction::Left:  object.velocity.x = -step; break;
-		case Direction::Right: object.velocity.x = step; break;
-		}
+		object.activeMoveStep[static_cast<std::size_t>(direction)] = step;
+
+		object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
+			- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+		object.velocity.y = object.activeMoveStep[static_cast<std::size_t>(Direction::Down)]
+			- object.activeMoveStep[static_cast<std::size_t>(Direction::Up)];
 	}
 
 	void CommandExecutor::spawnProjectile(Object& shooter, const std::string& projectileName)

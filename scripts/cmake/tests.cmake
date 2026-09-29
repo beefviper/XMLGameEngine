@@ -40,6 +40,7 @@ add_executable(XMLGameEngineTests
 	"tests/test_object_variables.cpp"
 	"tests/test_conditions.cpp"
 	"tests/test_collision_geometry.cpp"
+	"tests/test_input_resolution.cpp"
 )
 
 target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)
