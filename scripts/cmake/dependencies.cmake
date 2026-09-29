@@ -31,7 +31,16 @@ macro(declare_fetched_dependency)
 	endif()
 
 	if (${DFD_FOUND_VAR})
-		message(STATUS "${DFD_DISPLAY_NAME} found: ${${DFD_INFO_VAR}}")
+		# Not every find_package()/find_path() result populates the same
+		# kind of variable (a modern config-mode package may define only
+		# imported targets, no classic _LIBRARIES list) - so only show the
+		# ": <value>" detail when INFO_VAR actually resolved to something,
+		# rather than printing a bare trailing colon for those.
+		if (DFD_INFO_VAR AND ${DFD_INFO_VAR})
+			message(STATUS "${DFD_DISPLAY_NAME} found: ${${DFD_INFO_VAR}}")
+		else()
+			message(STATUS "${DFD_DISPLAY_NAME} found")
+		endif()
 
 		if (DEFINED DFD_SET_FOUND_VAR)
 			set(${DFD_SET_FOUND_VAR} TRUE)
