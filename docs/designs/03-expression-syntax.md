@@ -1,6 +1,6 @@
 # 03. Expression syntax: function calls in attributes vs XML structure
 
-**Status:** option D **built** on the `nofun` branch: function syntax is gone from every game file, the XSD and the loader; plain arithmetic stays as text
+**Status:** option D **built**: function syntax is gone from every game file, the XSD and the loader; plain arithmetic stays as text
 
 ## The problem
 
@@ -23,7 +23,7 @@ Consequences:
 
 ## Decision and status
 
-The author asked for the function-like syntax to be removed (conversation of 2026-09-25) and not left half-done. It was removed on the `nofun` branch (2026-09-30), all at once: the five sample games, the XSD, the loader and the tests.
+The author asked for the function-like syntax to be removed (conversation of 2026-09-25) and not left half-done. It was removed (2026-09-30), all at once: the five sample games, the XSD, the loader and the tests.
 
 **Rule of thumb.** An attribute names or picks something: `name`, `class`, `object`, `edge`, `button`, `state`, `variable`, `direction`, `unless`. Everything else is element content. A *value* is either expression text (`window.width.center - ball.radius`, plain arithmetic, still exprtk) or exactly one value tag. A command list is an ordered list of command tags.
 

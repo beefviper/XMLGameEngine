@@ -8,7 +8,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 |---|---|---|---|---|
 | 01 | Vision and scope | purely declarative / embedded scripting / declarative + triggers | Declarative + `condition` triggers. **Built** (basic) | [01](01-vision-and-scope.md) |
 | 02 | File format | XML+XSD / academic text VGDL / YAML / JSON; one file vs rules + level file | XML with XSD, one file. **Built** | [02](02-file-format.md) |
-| 03 | Expression syntax | function-call strings / one element per call / structure for real trees / functions to elements, arithmetic stays | Functions became elements and value tags (`<random>`); arithmetic stays text. **Built** on `nofun` | [03](03-expression-syntax.md) |
+| 03 | Expression syntax | function-call strings / one element per call / structure for real trees / functions to elements, arithmetic stays | Functions became elements and value tags (`<random>`); arithmetic stays text. **Built** | [03](03-expression-syntax.md) |
 | 04 | Arithmetic and XSLT code generation | paste strings / XSLT parses / parse to AST-as-XML then XSLT / remove arithmetic from XML | None yet; AST-as-XML suggested, author prefers no extra tooling. **Open** | [04](04-arithmetic-and-xslt-codegen.md) |
 | 05 | Variables and evaluation order | declaration order / two-pass symbol collection; topological sort vs lazy | Two-pass up-front registration. **Built** (chained references: lazy suggested) | [05](05-variables-and-evaluation-order.md) |
 | 06 | Names and classes | HTML-style `name` + `class`; compound selectors; class inheritance; unique instance names | `name` + `class` with filters. **Built**; the rest **Idea** | [06](06-names-and-classes.md) |

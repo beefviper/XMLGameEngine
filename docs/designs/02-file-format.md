@@ -40,4 +40,4 @@ Academic VGDL splits rules and level layout into two files. XMLGameEngine keeps 
 - "Video game collection value in CAD" (2026-05-23), the discussion of why XML.
 - "Video game description languages: overview and research" (2026-09-22).
 
-On `nofun` the schema also checks the shape of every game: attributes are names and picks, values and commands are elements, and `<condition>` must hold exactly one of `<atleast>`, `<atmost>`, `<remaining>`. Expression text inside a value is still a plain string to the schema.
+The schema also checks the shape of every game: attributes are names and picks, values and commands are elements, and `<condition>` must hold exactly one of `<atleast>`, `<atmost>`, `<remaining>`. Expression text inside a value is still a plain string to the schema.

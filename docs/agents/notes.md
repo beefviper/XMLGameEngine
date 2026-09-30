@@ -20,8 +20,8 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 ## Facts that are easy to get wrong
 
 - The root `readme.md` is out of date: it says collisions, scoring and win condition are missing, and lists only Xerces, exprtk and SFML.
-- The repo has the branches `master`, `rewrite`, `claude` and `nofun` (the tag format, branched from `claude`). These docs describe `nofun`.
-- On the `nofun` branch function-call syntax is gone: attributes only name or pick things, everything else is element content ([design 03](../designs/03-expression-syntax.md)). Arithmetic in values is still exprtk text.
+- The repo has three branches: `master`, `rewrite`, `claude`. The active engine described in these docs is on `claude`.
+- Function-call syntax is gone: attributes only name or pick things, everything else is element content ([design 03](../designs/03-expression-syntax.md)). Arithmetic in values is still exprtk text.
 - No handle system and no `Value` variant exist yet, despite being decided or discussed ([07](../designs/07-object-variables-and-references.md), [08](../designs/08-entity-storage-and-handles.md)). Swept collision is built ([11](../designs/11-collision-detection-and-response.md)).
 - `CollisionDetector::circleRectangle` has suspicious edge tests. Add a test in `tests/test_collision_geometry.cpp` before changing it.
 - The XSD checks structure, not expression text; `xsd_lite` (used by the three non-Xerces backends) covers only the XSD subset the schema uses, and `tests/test_xml_format.cpp` pins what both validators must reject.

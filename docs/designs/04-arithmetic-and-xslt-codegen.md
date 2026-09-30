@@ -1,6 +1,6 @@
 # 04. Arithmetic in XML and XSLT code generation
 
-**Status:** open. The function half of the problem is solved on `nofun` ([03](03-expression-syntax.md)); arithmetic is still text inside value elements (`<x>window.width.center - ball.radius</x>`), which is what remains hidden from XSD and XSLT.
+**Status:** open. The function half of the problem is solved ([03](03-expression-syntax.md)); arithmetic is still text inside value elements (`<x>window.width.center - ball.radius</x>`), which is what remains hidden from XSD and XSLT.
 
 ## The question
 
