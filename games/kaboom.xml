@@ -1,0 +1,800 @@
+<!-- kaboom.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Sept 30, 2026 -->
+
+<!--
+  Kaboom!, after the 1981 Atari 2600 game: bombs fall and you slide a bucket
+  along the bottom to catch them. Every bomb caught scores; a bomb that reaches
+  the floor sets off all the others that are falling and costs you a bucket
+  (you start with three); with no buckets left it is game over. The bombs come
+  in waves, each faster than the last and worth more: one point a bomb, then
+  two, then three. Reach `goal` points to win (the arcade game has no end).
+
+  It is written with verbs the language already had. Each wave is a <state>
+  that shows its own group of bombs, and a <condition> on the score pushes the
+  next wave. A bomb that hits the floor does <inc /> on `tally.missed`, <dec />
+  on the bucket count and <reset />; a condition on the tally then <reset />s
+  the whole wave's group (the explosion) and the tally itself. A bomb that is
+  caught does <inc /> once, twice or three times and <reset />.
+
+  What it cannot do is let the Mad Bomber drop the bombs: nothing in the
+  language creates an object where another one is. The bombs fall from fixed
+  columns, with fall speeds and starting heights drawn by <random> when the
+  game loads, and the bomber only paces along the top for company.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+  <window name="Kaboom!">
+    <width>800</width>
+    <height>600</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="bucketwidth">120</variable>
+    <variable name="bucketheight">18</variable>
+    <variable name="bomb">10</variable>
+    <variable name="step">8</variable>
+    <variable name="margin">20</variable>
+    <variable name="wave2at">10</variable>
+    <variable name="wave3at">30</variable>
+    <variable name="goal">60</variable>
+  </variables>
+  <objects>
+    <object name="bomber">
+      <sprite>
+        <rectangle>
+          <width>70</width>
+          <height>36</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>100</x>
+        <y>6</y>
+      </position>
+      <velocity>
+        <x>4</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <bounce />
+        </collision>
+      </collisions>
+    </object>
+    <group name="bombs1" class="bombs">
+      <sprite>
+        <circle>
+          <radius>bomb</radius>
+          <color>color.lightgrey</color>
+        </circle>
+      </sprite>
+      <position>
+        <y><random min="-600" max="-40" /></y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y><random min="2" max="3.5" /></y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom">
+          <inc variable="tally.missed" />
+          <dec variable="bucket.buckets" />
+          <reset />
+        </collision>
+        <collision object="bucket">
+          <inc variable="bucket.score" />
+          <reset />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>70</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>200</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>330</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>460</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>590</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>720</x>
+        </position>
+      </member>
+    </group>
+    <group name="bombs2" class="bombs">
+      <sprite>
+        <circle>
+          <radius>bomb</radius>
+          <color>color.orange</color>
+        </circle>
+      </sprite>
+      <position>
+        <y><random min="-600" max="-40" /></y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y><random min="3.5" max="5" /></y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom">
+          <inc variable="tally.missed" />
+          <dec variable="bucket.buckets" />
+          <reset />
+        </collision>
+        <collision object="bucket">
+          <inc variable="bucket.score" />
+          <inc variable="bucket.score" />
+          <reset />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>70</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>200</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>330</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>460</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>590</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>720</x>
+        </position>
+      </member>
+    </group>
+    <group name="bombs3" class="bombs">
+      <sprite>
+        <circle>
+          <radius>bomb</radius>
+          <color>color.red</color>
+        </circle>
+      </sprite>
+      <position>
+        <y><random min="-600" max="-40" /></y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y><random min="5" max="7" /></y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom">
+          <inc variable="tally.missed" />
+          <dec variable="bucket.buckets" />
+          <reset />
+        </collision>
+        <collision object="bucket">
+          <inc variable="bucket.score" />
+          <inc variable="bucket.score" />
+          <inc variable="bucket.score" />
+          <reset />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>70</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>200</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>330</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>460</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>590</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>720</x>
+        </position>
+      </member>
+    </group>
+    <object name="bucket">
+      <sprite>
+        <rectangle>
+          <width>bucketwidth</width>
+          <height>bucketheight</height>
+          <color>color.cyan</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>window.width.center - bucket.width / 2</x>
+        <y>window.bottom - bucket.height - margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <stick />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="left">
+          <move direction="left">step</move>
+        </action>
+        <action name="right">
+          <move direction="right">step</move>
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+        <variable name="buckets">3</variable>
+      </variables>
+    </object>
+    <object name="tally">
+      <sprite>
+        <rectangle>
+          <width>1</width>
+          <height>1</height>
+          <color>color.black</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+      <variables>
+        <variable name="missed">0</variable>
+      </variables>
+    </object>
+    <object name="scorelabel">
+      <sprite>
+        <text>
+          <content>SCORE</content>
+          <size>30</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>margin</x>
+        <y>60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="scorevalue">
+      <sprite>
+        <text>
+          <number>bucket.score</number>
+          <size>30</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position>
+        <x>margin + scorelabel.width + 12</x>
+        <y>60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="bucketsvalue">
+      <sprite>
+        <text>
+          <number>bucket.buckets</number>
+          <size>30</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - bucketsvalue.width - margin</x>
+        <y>60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="bucketslabel">
+      <sprite>
+        <text>
+          <content>BUCKETS</content>
+          <size>30</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - bucketsvalue.width - bucketslabel.width - margin - 12</x>
+        <y>60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="wave1label">
+      <sprite>
+        <text>
+          <content>WAVE 1</content>
+          <size>30</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - wave1label.width / 2</x>
+        <y>60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="wave2label">
+      <sprite>
+        <text>
+          <content>WAVE 2</content>
+          <size>30</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - wave2label.width / 2</x>
+        <y>60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="wave3label">
+      <sprite>
+        <text>
+          <content>WAVE 3</content>
+          <size>30</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - wave3label.width / 2</x>
+        <y>60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>KABOOM!</content>
+          <size>128</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - title.width / 2</x>
+        <y>window.height.center - title.height / 2 + (-110)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="help">
+      <sprite>
+        <text>
+          <content>catch every bomb; a miss costs a bucket</content>
+          <size>36</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - help.width / 2</x>
+        <y>window.height.center - help.height / 2 + (-10)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="keys">
+      <sprite>
+        <text>
+          <content>a and d, or the arrow keys, to move</content>
+          <size>32</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - keys.width / 2</x>
+        <y>window.height.center - keys.height / 2 + (40)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="start">
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - start.width / 2</x>
+        <y>window.height.center - start.height / 2 + (130)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - paused.width / 2</x>
+        <y>window.height.center - paused.height / 2 + (0)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="youwin">
+      <sprite>
+        <text>
+          <content>YOU WIN</content>
+          <size>128</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - youwin.width / 2</x>
+        <y>window.height.center - youwin.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="gameover">
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>128</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - gameover.width / 2</x>
+        <y>window.height.center - gameover.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="again">
+      <sprite>
+        <text>
+          <content>spacebar to play again</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - again.width / 2</x>
+        <y>window.height.center - again.height / 2 + (70)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="help" />
+        <show object="keys" />
+        <show object="start" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <shows>
+        <show object="bomber" />
+        <show object="bombs1" />
+        <show object="bucket" />
+        <show object="tally" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="bucketslabel" />
+        <show object="bucketsvalue" />
+        <show object="wave1label" />
+      </shows>
+      <inputs>
+        <input button="a">
+          <trigger object="bucket" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="bucket" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="bucket" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="bucket" action="right" />
+        </input>
+        <input button="space">
+          <push state="paused" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="bucket" variable="buckets">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition object="bucket" variable="score">
+          <atleast>wave2at</atleast>
+          <push state="wave2" />
+        </condition>
+        <condition object="tally" variable="missed">
+          <atleast>1</atleast>
+          <reset object="bombs1" />
+          <reset object="tally" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="wave2">
+      <shows>
+        <show object="bomber" />
+        <show object="bombs2" />
+        <show object="bucket" />
+        <show object="tally" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="bucketslabel" />
+        <show object="bucketsvalue" />
+        <show object="wave2label" />
+      </shows>
+      <inputs>
+        <input button="a">
+          <trigger object="bucket" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="bucket" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="bucket" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="bucket" action="right" />
+        </input>
+        <input button="space">
+          <push state="paused" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="bucket" variable="buckets">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition object="bucket" variable="score">
+          <atleast>wave3at</atleast>
+          <push state="wave3" />
+        </condition>
+        <condition object="tally" variable="missed">
+          <atleast>1</atleast>
+          <reset object="bombs2" />
+          <reset object="tally" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="wave3">
+      <shows>
+        <show object="bomber" />
+        <show object="bombs3" />
+        <show object="bucket" />
+        <show object="tally" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="bucketslabel" />
+        <show object="bucketsvalue" />
+        <show object="wave3label" />
+      </shows>
+      <inputs>
+        <input button="a">
+          <trigger object="bucket" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="bucket" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="bucket" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="bucket" action="right" />
+        </input>
+        <input button="space">
+          <push state="paused" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="bucket" variable="buckets">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition object="bucket" variable="score">
+          <atleast>goal</atleast>
+          <push state="youwin" />
+        </condition>
+        <condition object="tally" variable="missed">
+          <atleast>1</atleast>
+          <reset object="bombs3" />
+          <reset object="tally" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="youwin">
+      <shows>
+        <show object="youwin" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="gameover" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>

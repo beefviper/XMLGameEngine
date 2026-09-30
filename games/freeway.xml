@@ -1,0 +1,855 @@
+<!-- freeway.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Sept 30, 2026 -->
+
+<!--
+  Freeway, after the 1981 Atari 2600 game: two chickens, side by side at the
+  bottom, each trying to get across ten lanes of traffic to the strip along the
+  top. Each press of the up key is one hop, one lane; a chicken that is hit is
+  put back at the start (and keeps what it has scored). The first to
+  `crossings` trips across wins.
+
+  On a grid of 50 pixel cells, 12 rows down:
+
+    row  0        the far side, where a crossing scores (and the scores live)
+    rows 1-10     ten lanes of traffic, alternating cars and trucks, each lane
+                  with its own speed and direction
+    row  11       the near side, where both chickens start
+
+  It needs no verb the language did not have. It is Frogger's road without the
+  river: <hop> for the chicken, a <group> per lane with <wrap /> so traffic
+  loops, <reset /> for being hit, and <inc /> plus an <atleast> condition for
+  scoring. Player 1 is W and S, player 2 is the up and down arrows.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+  <window name="Freeway">
+    <width>800</width>
+    <height>600</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="cell">50</variable>
+    <variable name="inset">8</variable>
+    <variable name="body">34</variable>
+    <variable name="crossings">5</variable>
+    <variable name="margin">20</variable>
+  </variables>
+  <objects>
+    <object name="verge" class="farside">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>cell</height>
+          <color>color.darkgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+    <object name="road">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>10 * cell</height>
+          <color>color.darkgrey</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="pavement">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>cell</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>11 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <group name="lane1" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>96</width>
+          <height>body</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>-56</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>392</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane2" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>54</width>
+          <height>body</height>
+          <color>color.red</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>2 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>3</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>-54</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>230</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>514</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane3" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>54</width>
+          <height>body</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>3 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-4</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>76</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>360</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>644</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane4" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>96</width>
+          <height>body</height>
+          <color>color.orange</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>4 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>204</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>652</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane5" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>54</width>
+          <height>body</height>
+          <color>color.cyan</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>5 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-3</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>6</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>290</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>574</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane6" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>54</width>
+          <height>body</height>
+          <color>color.magenta</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>6 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>4</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>146</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>430</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>714</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane7" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>96</width>
+          <height>body</height>
+          <color>color.lightgrey</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>7 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>304</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>752</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane8" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>54</width>
+          <height>body</height>
+          <color>color.blue</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>8 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>3</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>36</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>320</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>604</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane9" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>54</width>
+          <height>body</height>
+          <color>color.red</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>9 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-4</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>196</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>480</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>764</x>
+        </position>
+      </member>
+    </group>
+    <group name="lane10" class="traffic">
+      <sprite>
+        <rectangle>
+          <width>96</width>
+          <height>body</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>10 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>-86</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>362</x>
+        </position>
+      </member>
+    </group>
+    <object name="chicken1" class="chicken">
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>window.width.center / 2 - body / 2</x>
+        <y>11 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="traffic">
+          <reset />
+        </collision>
+        <collision class="farside">
+          <inc variable="chicken1.score" />
+          <reset />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="up">
+          <hop direction="up">cell</hop>
+        </action>
+        <action name="down">
+          <hop direction="down">cell</hop>
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
+    <object name="chicken2" class="chicken">
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>window.width.center * 1.5 - body / 2</x>
+        <y>11 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="traffic">
+          <reset />
+        </collision>
+        <collision class="farside">
+          <inc variable="chicken2.score" />
+          <reset />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="up">
+          <hop direction="up">cell</hop>
+        </action>
+        <action name="down">
+          <hop direction="down">cell</hop>
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
+    <object name="score1">
+      <sprite>
+        <text>
+          <number>chicken1.score</number>
+          <size>36</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center / 2 - score1.width / 2</x>
+        <y>6</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="score2">
+      <sprite>
+        <text>
+          <number>chicken2.score</number>
+          <size>36</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center * 1.5 - score2.width / 2</x>
+        <y>6</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>FREEWAY</content>
+          <size>128</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - title.width / 2</x>
+        <y>window.height.center - title.height / 2 + (-130)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="help">
+      <sprite>
+        <text>
+          <content>get across ten lanes of traffic</content>
+          <size>40</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - help.width / 2</x>
+        <y>window.height.center - help.height / 2 + (-20)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="keys1">
+      <sprite>
+        <text>
+          <content>player 1: w and s</content>
+          <size>32</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - keys1.width / 2</x>
+        <y>window.height.center - keys1.height / 2 + (40)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="keys2">
+      <sprite>
+        <text>
+          <content>player 2: the up and down arrows</content>
+          <size>32</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - keys2.width / 2</x>
+        <y>window.height.center - keys2.height / 2 + (80)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="start">
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - start.width / 2</x>
+        <y>window.height.center - start.height / 2 + (160)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - paused.width / 2</x>
+        <y>window.height.center - paused.height / 2 + (0)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="p1wins">
+      <sprite>
+        <text>
+          <content>PLAYER 1 WINS</content>
+          <size>100</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - p1wins.width / 2</x>
+        <y>window.height.center - p1wins.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="p2wins">
+      <sprite>
+        <text>
+          <content>PLAYER 2 WINS</content>
+          <size>100</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - p2wins.width / 2</x>
+        <y>window.height.center - p2wins.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="again">
+      <sprite>
+        <text>
+          <content>spacebar to play again</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - again.width / 2</x>
+        <y>window.height.center - again.height / 2 + (60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="help" />
+        <show object="keys1" />
+        <show object="keys2" />
+        <show object="start" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <shows>
+        <show object="verge" />
+        <show object="road" />
+        <show object="pavement" />
+        <show object="lane1" />
+        <show object="lane2" />
+        <show object="lane3" />
+        <show object="lane4" />
+        <show object="lane5" />
+        <show object="lane6" />
+        <show object="lane7" />
+        <show object="lane8" />
+        <show object="lane9" />
+        <show object="lane10" />
+        <show object="chicken1" />
+        <show object="chicken2" />
+        <show object="score1" />
+        <show object="score2" />
+      </shows>
+      <inputs>
+        <input button="w">
+          <trigger object="chicken1" action="up" />
+        </input>
+        <input button="s">
+          <trigger object="chicken1" action="down" />
+        </input>
+        <input button="up">
+          <trigger object="chicken2" action="up" />
+        </input>
+        <input button="down">
+          <trigger object="chicken2" action="down" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="chicken1" variable="score">
+          <atleast>crossings</atleast>
+          <push state="p1wins" />
+        </condition>
+        <condition object="chicken2" variable="score">
+          <atleast>crossings</atleast>
+          <push state="p2wins" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+      </shows>
+      <inputs>
+        <input button="p">
+          <pop />
+        </input>
+        <input button="escape">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="p1wins">
+      <shows>
+        <show object="p1wins" />
+        <show object="score1" />
+        <show object="score2" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="p2wins">
+      <shows>
+        <show object="p2wins" />
+        <show object="score1" />
+        <show object="score2" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>

@@ -13,7 +13,10 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/spaceinvaders.xml` | Space Invaders (the aliens are a grid of individually named objects; the game is won when none are left) |
 | `games/frogger.xml` | Frogger: lives, one-step hops, looping lanes, riding logs, a river that kills unless you are on one |
 | `games/spacerace.xml` | Space Race, two players, first to two points |
-| `games/gemcatcher.xml` | Gem Catcher: slide a basket under falling gems, dodge the bombs; fall speeds and starting heights are `<random>` |
+| `games/kaboom.xml` | Kaboom!: catch the falling bombs in three waves, each faster and worth more; a miss sets off the wave and costs a bucket; fall speeds and starting heights are `<random>` |
+| `games/freeway.xml` | Freeway, two players: hop a chicken across ten lanes of traffic, first to five crossings wins |
+| `games/depthcharge.xml` | Depth Charge: drop one charge at a time on submarines in three lanes; only misses use up your charges |
+| `games/astrosmash.xml` | Astrosmash: shoot falling rocks before they land; fall speeds and starting heights are `<random>` |
 
 ## What a game file looks like
 

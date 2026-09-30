@@ -450,7 +450,7 @@ namespace
 
 TEST_CASE("both schema checkers accept the games written with groups", "[group][schema]")
 {
-	for (const char* file : { "games/frogger.xml", "games/spacerace.xml", "games/gemcatcher.xml" })
+	for (const char* file : { "games/frogger.xml", "games/spacerace.xml", "games/kaboom.xml", "games/freeway.xml", "games/depthcharge.xml", "games/astrosmash.xml" })
 	{
 		DYNAMIC_SECTION(file)
 		{

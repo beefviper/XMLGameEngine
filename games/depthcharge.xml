@@ -1,26 +1,26 @@
-<!-- gemcatcher.xml -->
+<!-- depthcharge.xml -->
 <!-- XML Game Engine -->
 <!-- author: beefviper -->
 <!-- date: Sept 30, 2026 -->
 
 <!--
-  Gem Catcher: slide a basket along the bottom and catch the falling gems; the
-  falling bombs cost a life. Catch enough gems to win, lose all your lives and
-  it is game over. Anything that reaches the floor uncaught just goes back up to
-  fall again, so nothing is punished for being missed.
+  Depth Charge, after the 1977 arcade game: a ship crosses the surface and drops
+  charges on the submarines cruising below. Sink every submarine to win. Only
+  one charge can be falling at a time, and a charge that reaches the sea floor
+  without hitting anything is a wasted one; waste `misses` of them and the
+  game is over, so aim, do not spray.
 
-  It is written with verbs the language already had, and it is the first game
-  whose speeds are left to <random>: each gem and bomb draws its own fall speed
-  and its own starting height once when the game loads, so no two runs have the
-  same rhythm. A <group> shares what all the gems have in common (the size, the
-  <random> ranges, the rules) and each <member> says only which column it falls
-  down. <reset /> puts a caught or missed piece back at the start of its fall,
-  <inc /> and <dec /> keep the score and the lives on the basket, and two
-  variable conditions end the game.
+  It is written with verbs the language already had. The ship is Space
+  Invaders' player turned upside down: <fire /> launches the charge from the
+  ship, moving with the charge's own velocity, and the charge <die />s when it
+  hits a submarine or the floor. The floor rule also has a <dec /> on the
+  ship's `charges`, which is what makes a miss cost something while a hit does
+  not. Each lane of submarines is a <group> with <wrap />, and the game is won
+  with a <remaining> condition on the class of all of them.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
-  <window name="Gem Catcher">
+  <window name="Depth Charge">
     <width>800</width>
     <height>600</height>
     <background>color.black</background>
@@ -28,122 +28,194 @@
     <framerate>60</framerate>
   </window>
   <variables>
-    <variable name="basketwidth">110</variable>
-    <variable name="basketheight">18</variable>
-    <variable name="gem">16</variable>
-    <variable name="bomb">12</variable>
-    <variable name="step">7</variable>
+    <variable name="shipwidth">90</variable>
+    <variable name="shipheight">16</variable>
+    <variable name="subwidth">70</variable>
+    <variable name="subheight">24</variable>
+    <variable name="step">6</variable>
+    <variable name="misses">8</variable>
     <variable name="margin">20</variable>
-    <variable name="goal">15</variable>
   </variables>
   <objects>
-    <group name="gems" class="gems">
+    <object name="sea">
       <sprite>
         <rectangle>
-          <width>gem</width>
-          <height>gem</height>
-          <color>color.cyan</color>
+          <width>window.right</width>
+          <height>window.bottom - 100</height>
+          <color>color.darkblue</color>
         </rectangle>
       </sprite>
       <position>
-        <y><random min="-500" max="-40" /></y>
+        <x>0</x>
+        <y>100</y>
       </position>
       <velocity>
         <x>0</x>
-        <y><random min="2" max="4" /></y>
+        <y>0</y>
       </velocity>
       <collisions>
-        <enabled>true</enabled>
-        <collision edge="bottom">
-          <reset />
-        </collision>
-        <collision object="basket">
-          <inc variable="basket.score" />
-          <reset />
-        </collision>
+        <enabled>false</enabled>
       </collisions>
-      <member>
-        <position>
-          <x>60</x>
-        </position>
-      </member>
-      <member>
-        <position>
-          <x>190</x>
-        </position>
-      </member>
-      <member>
-        <position>
-          <x>320</x>
-        </position>
-      </member>
-      <member>
-        <position>
-          <x>450</x>
-        </position>
-      </member>
-      <member>
-        <position>
-          <x>580</x>
-        </position>
-      </member>
-      <member>
-        <position>
-          <x>710</x>
-        </position>
-      </member>
-    </group>
-    <group name="bombs" class="bombs">
-      <sprite>
-        <circle>
-          <radius>bomb</radius>
-          <color>color.red</color>
-        </circle>
-      </sprite>
-      <position>
-        <y><random min="-400" max="-40" /></y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y><random min="3" max="5" /></y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="bottom">
-          <reset />
-        </collision>
-        <collision object="basket">
-          <dec variable="basket.lives" />
-          <reset />
-        </collision>
-      </collisions>
-      <member>
-        <position>
-          <x>125</x>
-        </position>
-      </member>
-      <member>
-        <position>
-          <x>385</x>
-        </position>
-      </member>
-      <member>
-        <position>
-          <x>645</x>
-        </position>
-      </member>
-    </group>
-    <object name="basket">
+    </object>
+    <object name="charge" class="projectile">
       <sprite>
         <rectangle>
-          <width>basketwidth</width>
-          <height>basketheight</height>
+          <width>6</width>
+          <height>14</height>
           <color>color.orange</color>
         </rectangle>
       </sprite>
       <position>
-        <x>window.width.center - basket.width / 2</x>
-        <y>window.bottom - basket.height - margin</y>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>5</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="bottom">
+          <dec variable="ship.charges" />
+          <die />
+        </collision>
+        <collision class="subs">
+          <inc variable="ship.sunk" />
+          <die />
+        </collision>
+      </collisions>
+    </object>
+    <group name="subs1" class="subs">
+      <sprite>
+        <rectangle>
+          <width>subwidth</width>
+          <height>subheight</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>190</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision object="charge">
+          <die />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>-50</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>240</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>530</x>
+        </position>
+      </member>
+    </group>
+    <group name="subs2" class="subs">
+      <sprite>
+        <rectangle>
+          <width>subwidth</width>
+          <height>subheight</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>300</y>
+      </position>
+      <velocity>
+        <x>-3</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision object="charge">
+          <die />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>80</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>370</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>660</x>
+        </position>
+      </member>
+    </group>
+    <group name="subs3" class="subs">
+      <sprite>
+        <rectangle>
+          <width>subwidth</width>
+          <height>subheight</height>
+          <color>color.grey</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y>410</y>
+      </position>
+      <velocity>
+        <x>4</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision object="charge">
+          <die />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>-10</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>280</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>570</x>
+        </position>
+      </member>
+    </group>
+    <object name="ship">
+      <sprite>
+        <rectangle>
+          <width>shipwidth</width>
+          <height>shipheight</height>
+          <color>color.lightgrey</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>window.width.center - ship.width / 2</x>
+        <y>76</y>
       </position>
       <velocity>
         <x>0</x>
@@ -162,18 +234,21 @@
         <action name="right">
           <move direction="right">step</move>
         </action>
+        <action name="drop">
+          <fire object="charge" />
+        </action>
       </actions>
       <variables>
-        <variable name="score">0</variable>
-        <variable name="lives">3</variable>
+        <variable name="charges">misses</variable>
+        <variable name="sunk">0</variable>
       </variables>
     </object>
-    <object name="score">
+    <object name="sunklabel">
       <sprite>
         <text>
-          <number>basket.score</number>
-          <size>48</size>
-          <color>color.cyan</color>
+          <content>SUNK</content>
+          <size>30</size>
+          <color>color.white</color>
         </text>
       </sprite>
       <position>
@@ -188,16 +263,56 @@
         <enabled>false</enabled>
       </collisions>
     </object>
-    <object name="lives">
+    <object name="sunkvalue">
       <sprite>
         <text>
-          <number>basket.lives</number>
-          <size>48</size>
-          <color>color.red</color>
+          <number>ship.sunk</number>
+          <size>30</size>
+          <color>color.green</color>
         </text>
       </sprite>
       <position>
-        <x>window.right - lives.width - margin</x>
+        <x>margin + sunklabel.width + 12</x>
+        <y>margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="chargesvalue">
+      <sprite>
+        <text>
+          <number>ship.charges</number>
+          <size>30</size>
+          <color>color.orange</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - chargesvalue.width - margin</x>
+        <y>margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="chargeslabel">
+      <sprite>
+        <text>
+          <content>MISSES LEFT</content>
+          <size>30</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - chargesvalue.width - chargeslabel.width - margin - 12</x>
         <y>margin</y>
       </position>
       <velocity>
@@ -211,14 +326,14 @@
     <object name="title">
       <sprite>
         <text>
-          <content>GEM CATCHER</content>
-          <size>112</size>
+          <content>DEPTH CHARGE</content>
+          <size>110</size>
           <color>color.cyan</color>
         </text>
       </sprite>
       <position>
         <x>window.width.center - title.width / 2</x>
-        <y>window.height.center - title.height / 2 + (-110)</y>
+        <y>window.height.center - title.height / 2 + (-130)</y>
       </position>
       <velocity>
         <x>0</x>
@@ -231,14 +346,14 @@
     <object name="help">
       <sprite>
         <text>
-          <content>catch the gems, dodge the bombs</content>
-          <size>40</size>
+          <content>sink every submarine before you run out</content>
+          <size>32</size>
           <color>color.white</color>
         </text>
       </sprite>
       <position>
         <x>window.width.center - help.width / 2</x>
-        <y>window.height.center - help.height / 2 + (0)</y>
+        <y>window.height.center - help.height / 2 + (-20)</y>
       </position>
       <velocity>
         <x>0</x>
@@ -251,14 +366,14 @@
     <object name="keys">
       <sprite>
         <text>
-          <content>a and d, or the arrow keys, to move</content>
-          <size>32</size>
+          <content>a and d, or the arrow keys, to move; space to drop</content>
+          <size>28</size>
           <color>color.lightgrey</color>
         </text>
       </sprite>
       <position>
         <x>window.width.center - keys.width / 2</x>
-        <y>window.height.center - keys.height / 2 + (50)</y>
+        <y>window.height.center - keys.height / 2 + (30)</y>
       </position>
       <velocity>
         <x>0</x>
@@ -271,7 +386,7 @@
     <object name="start">
       <sprite>
         <text>
-          <content>spacebar to start</content>
+          <content>press enter to start</content>
           <size>48</size>
           <color>color.white</color>
         </text>
@@ -311,7 +426,7 @@
     <object name="youwin">
       <sprite>
         <text>
-          <content>YOU WIN</content>
+          <content>FLEET SUNK</content>
           <size>128</size>
           <color>color.green</color>
         </text>
@@ -351,7 +466,7 @@
     <object name="again">
       <sprite>
         <text>
-          <content>spacebar to play again</content>
+          <content>press enter to play again</content>
           <size>48</size>
           <color>color.white</color>
         </text>
@@ -378,45 +493,53 @@
         <show object="start" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="enter">
           <push state="playing" />
         </input>
       </inputs>
     </state>
     <state name="playing">
       <shows>
-        <show object="gems" />
-        <show object="bombs" />
-        <show object="basket" />
-        <show object="score" />
-        <show object="lives" />
+        <show object="sea" />
+        <show object="subs1" />
+        <show object="subs2" />
+        <show object="subs3" />
+        <show object="charge" />
+        <show object="ship" />
+        <show object="sunklabel" />
+        <show object="sunkvalue" />
+        <show object="chargeslabel" />
+        <show object="chargesvalue" />
       </shows>
       <inputs>
         <input button="a">
-          <trigger object="basket" action="left" />
+          <trigger object="ship" action="left" />
         </input>
         <input button="left">
-          <trigger object="basket" action="left" />
+          <trigger object="ship" action="left" />
         </input>
         <input button="d">
-          <trigger object="basket" action="right" />
+          <trigger object="ship" action="right" />
         </input>
         <input button="right">
-          <trigger object="basket" action="right" />
+          <trigger object="ship" action="right" />
         </input>
         <input button="space">
-          <push state="paused" />
+          <trigger object="ship" action="drop" />
         </input>
         <input button="p">
           <push state="paused" />
         </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
       </inputs>
       <conditions>
-        <condition object="basket" variable="score">
-          <atleast>goal</atleast>
+        <condition class="subs">
+          <remaining>0</remaining>
           <push state="youwin" />
         </condition>
-        <condition object="basket" variable="lives">
+        <condition object="ship" variable="charges">
           <atmost>0</atmost>
           <push state="gameover" />
         </condition>
@@ -427,10 +550,10 @@
         <show object="paused" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="p">
           <pop />
         </input>
-        <input button="p">
+        <input button="escape">
           <pop />
         </input>
       </inputs>
@@ -438,11 +561,12 @@
     <state name="youwin">
       <shows>
         <show object="youwin" />
-        <show object="score" />
+        <show object="sunkvalue" />
+        <show object="sunklabel" />
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="enter">
           <reset />
         </input>
       </inputs>
@@ -450,11 +574,12 @@
     <state name="gameover">
       <shows>
         <show object="gameover" />
-        <show object="score" />
+        <show object="sunkvalue" />
+        <show object="sunklabel" />
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="enter">
           <reset />
         </input>
       </inputs>
