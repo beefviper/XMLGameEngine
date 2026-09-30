@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <stdexcept>
 
 namespace xge
 {
@@ -307,7 +308,21 @@ namespace xge
 					condRaw.filterClass = getAttribute(condition.get(), "class");
 					condRaw.filterObject = getAttribute(condition.get(), "object");
 					condRaw.variableName = getAttribute(condition.get(), "variable");
-					condRaw.value = std::stof(getAttribute(condition.get(), "value"));
+
+					// Either variable + value, or remaining (see RawCondition).
+					if (const std::string remaining = getAttribute(condition.get(), "remaining"); !remaining.empty())
+					{
+						condRaw.remaining = std::stof(remaining);
+					}
+					else
+					{
+						const std::string value = getAttribute(condition.get(), "value");
+						if (value.empty())
+						{
+							throw std::runtime_error("a <condition> needs either variable and value, or remaining");
+						}
+						condRaw.value = std::stof(value);
+					}
 					condRaw.action = getAttribute(condition.get(), "action");
 					conditionsVec.push_back(std::move(condRaw));
 

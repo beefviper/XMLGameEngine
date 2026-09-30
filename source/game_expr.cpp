@@ -284,6 +284,16 @@ namespace xge
 				condition.filterObject = rawCondition.filterObject;
 				condition.variableName = rawCondition.variableName;
 				condition.value = rawCondition.value;
+				condition.remaining = rawCondition.remaining;
+
+				if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)
+					{
+						return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
+							&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name || rawCondition.filterObject == object.baseName);
+					}))
+				{
+					std::cout << "warning: state '" << rawState.name << "': a condition with remaining= matches no object at all, so it would fire at once\n";
+				}
 				condition.commands = processCommands(rawState, rawCondition.action);
 				state.conditions.push_back(std::move(condition));
 			}

@@ -11,14 +11,18 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <optional>
 #include <ostream>
 
 namespace xge
 {
-	// A <condition> checked every frame its state is current: if any object
-	// matching filterClass/filterObject (same optional-either-or-both
-	// filtering as a collision's basic rule) has a variable named
-	// `variableName` that has reached `value`, `action` fires. Leaving both
+	// A <condition> checked every frame its state is current, in one of two
+	// forms. Either: if any object matching filterClass/filterObject (same
+	// optional-either-or-both filtering as a collision's basic rule) has a
+	// variable named `variableName` that has reached `value`, `action` fires.
+	// Or, when `remaining` is set instead: if no more than that many of the
+	// matching objects are still in play (visible - die() hides an object),
+	// `action` fires; remaining="0" is "they are all gone". Leaving both
 	// filters empty matches any object, same as an unfiltered collision rule.
 	struct RawCondition
 	{
@@ -26,6 +30,7 @@ namespace xge
 		std::string filterObject;
 		std::string variableName;
 		float value{};
+		std::optional<float> remaining;
 		std::string action;
 	};
 
@@ -35,6 +40,7 @@ namespace xge
 		std::string filterObject;
 		std::string variableName;
 		float value{};
+		std::optional<float> remaining;
 		std::vector<Command> commands;
 	};
 

@@ -39,6 +39,7 @@ add_executable(XMLGameEngineTests
 	"tests/test_command_parsing.cpp"
 	"tests/test_object_variables.cpp"
 	"tests/test_conditions.cpp"
+	"tests/test_win_condition.cpp"
 	"tests/test_collision_geometry.cpp"
 	"tests/test_swept_collision.cpp"
 	"tests/test_input_resolution.cpp"

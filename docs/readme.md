@@ -157,6 +157,14 @@ Rules that apply:
 
 Checked once per frame while the state is current. It fires when any object matching `class` and/or `object` (both optional, combined with AND) has a variable named `variable` that has reached `value` (greater than or equal). The first match runs its `action` and stops checking for that frame. The schema declares `value` as an unsigned byte, so thresholds are limited to 0-255.
 
+The other form counts objects instead of reading a variable:
+
+```xml
+<condition class="aliens" remaining="0" action="state('gameover')" />
+```
+
+It fires when no more than `remaining` of the matching objects are still in play, that is still visible (`die()` hides an object). `remaining="0"` means they are all gone, which is how Space Invaders is won: `class="aliens"` covers every cell of the grid, and `object="aliens.3.2"` would watch a single one. A condition uses either `variable` and `value`, or `remaining`, never both. If the filter matches no object at all, the game warns when it loads, since the condition would fire at once. Ending the game with `state('gameover')` and starting over with a bare `reset()` on that screen works as in Pong; `reset()` also brings the dead aliens back.
+
 ## What happens when a game runs
 
 1. **Parse and validate.** The XML backend loads the file. If the file names a schema, it is validated: Xerces does full XSD validation ("strong"); the other three backends use a small built-in validator for the subset of XSD this project uses ("weak", `xsd_lite`). `printGame()` reports which one ran.

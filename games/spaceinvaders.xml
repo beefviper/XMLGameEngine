@@ -50,6 +50,18 @@
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
+    <object name="youwin">
+      <sprite src="text('YOU WIN',128,'color.green')" />
+      <position x="window.width.center - youwin.width / 2" y="window.height.center - 150" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <object name="continue">
+      <sprite src="text('spacebar to continue',48,'color.white')" />
+      <position x="window.width.center - continue.width / 2" y="window.height.center + 60" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
     <object name="settings">
       <sprite src="text('settings',128,'color.white')" />
       <position x="window.width.center - settings.width / 2" y="window.height.center - settings.height / 2" />
@@ -96,6 +108,9 @@
         <input button="space" action="action('player', 'gun')" />
         <input button="escape" action="state('paused')" />
       </inputs>
+      <conditions>
+        <condition class="aliens" remaining="0" action="state('gameover')" />
+      </conditions>
     </state>
     <state name="paused">
       <shows>
@@ -104,6 +119,15 @@
       </shows>
       <inputs>
         <input button="p" action="state()" />
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="youwin" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space" action="reset()" />
       </inputs>
     </state>
   </states>

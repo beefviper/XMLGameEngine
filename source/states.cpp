@@ -22,8 +22,16 @@ namespace xge
 
 		for (auto& condition : f.conditions)
 		{
-			o << "       condition: variable=" << condition.variableName << ", value=" << condition.value
-				<< (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
+			o << "       condition: ";
+			if (condition.remaining)
+			{
+				o << "remaining=" << *condition.remaining;
+			}
+			else
+			{
+				o << "variable=" << condition.variableName << ", value=" << condition.value;
+			}
+			o << (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
 				<< (condition.filterObject.empty() ? "" : ", object=" + condition.filterObject)
 				<< ", action=" << condition.action << '\n';
 		}
@@ -51,8 +59,16 @@ namespace xge
 
 		for (auto& condition : f.conditions)
 		{
-			o << "       condition: variable=" << condition.variableName << ", value=" << condition.value
-				<< (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
+			o << "       condition: ";
+			if (condition.remaining)
+			{
+				o << "remaining=" << *condition.remaining;
+			}
+			else
+			{
+				o << "variable=" << condition.variableName << ", value=" << condition.value;
+			}
+			o << (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
 				<< (condition.filterObject.empty() ? "" : ", object=" + condition.filterObject)
 				<< ", action=";
 			for (auto& command : condition.commands)

@@ -133,8 +133,9 @@
                             <xs:complexType>
                               <xs:attribute name="class" type="xs:string" use="optional" />
                               <xs:attribute name="object" type="xs:string" use="optional" />
-                              <xs:attribute name="variable" type="xs:string" use="required" />
-                              <xs:attribute name="value" type="xs:unsignedByte" use="required" />
+                              <xs:attribute name="variable" type="xs:string" use="optional" />
+                              <xs:attribute name="value" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="remaining" type="xs:unsignedByte" use="optional" />
                               <xs:attribute name="action" type="xs:string" use="required" />
                             </xs:complexType>
                           </xs:element>

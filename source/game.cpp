@@ -661,6 +661,28 @@ namespace xge
 
 		for (auto& condition : state.conditions)
 		{
+			// "No more than N of them left": everything that matches, still
+			// in play. Nothing to look at per object, so this is its own case.
+			if (condition.remaining)
+			{
+				const auto stillIn = std::count_if(objects.begin(), objects.end(), [&](const Object& object)
+					{
+						return object.isVisible && matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object);
+					});
+
+				if (static_cast<float>(stillIn) <= *condition.remaining)
+				{
+					CommandExecutor executor(*this);
+					for (const auto& command : condition.commands)
+					{
+						executor.executeCondition(command);
+					}
+					return; // the state may have just changed - stop for this frame
+				}
+
+				continue;
+			}
+
 			for (auto& object : objects)
 			{
 				if (!matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object))

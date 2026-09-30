@@ -1,6 +1,6 @@
 # 14. Conditions and win conditions
 
-**Status:** implemented in a minimal form (state-level threshold triggers)
+**Status:** implemented in a minimal form (state-level threshold and "none left" triggers)
 
 ## The problem
 
@@ -25,11 +25,15 @@ A first version placed the condition in the `paused` state, which would only hav
 
 Once per frame, while the state is current, for each condition: find objects matching the `class` and/or `object` filter that have the named variable at or above `value`; the first match runs the action and stops checking for that frame. `reset()` on the game-over screen restores every variable so a leftover condition does not fire again immediately.
 
+A second form covers the win that is not a score: `<condition class="aliens" remaining="0" action="state('gameover')" />`. It counts the matching objects that are still visible (`die()` hides an object) and fires when that count is no more than `remaining`. Space Invaders uses it: the aliens are all cells of one `grid()`, `class="aliens"` matches every cell, and when the last one dies the game goes to `gameover`, where a bare `reset()` restores them.
+
+Choices made: a name that says what it counts (`remaining`) rather than an operator or an expression; it counts *visible* objects, not enabled ones, because an alien that has died is both hidden and out of collisions while a text object with collisions off is still very much there; and a filter that matches nothing warns at load, since "none left" would otherwise be true from the first frame. Alternatives not built: a general comparison (`remaining="<3"`), or counting any variable across a class (`sum`, `count`), which is where a real expression language for conditions would start.
+
 ## Limits and options
 
 | Limit | Options |
 |---|---|
-| Only a `>=` threshold on one variable | Comparison operators; conditions on two variables; conditions on expressions |
+| Only a `>=` threshold on one variable, or "no more than N left" | Comparison operators; conditions on two variables; conditions on expressions; counting by a variable's value |
 | Only state-level conditions | Object-level conditions (change color when speed exceeds X; play a death animation at health 0) |
 | Threshold limited to 0-255 by the XSD (`xs:unsignedByte`) | Widen to a float/integer type |
 | Target action is a state change | Fire any command; win/lose as first-class terms (compare VGDL's TerminationSet, which lists win and lose conditions) |
