@@ -43,6 +43,7 @@ add_executable(XMLGameEngineTests
 	"tests/test_input_resolution.cpp"
 	"tests/test_stick.cpp"
 	"tests/test_collision_rules.cpp"
+	"tests/test_group_bounce.cpp"
 	"tests/test_engine_input.cpp"
 )
 

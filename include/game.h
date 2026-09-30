@@ -57,7 +57,11 @@ namespace xge
 
 		void setObjectParam(const std::string& name, const std::string& param, const float& value);
 
-		void updateGroupOfObjects(const Object& object, std::string side) noexcept;
+		// A member of a group (see <collisions group="true">) hit the left or
+		// right screen edge: the whole group turns around and steps once in
+		// its new direction, every member the same amount, so the formation
+		// keeps its spacing.
+		void updateGroupOfObjects(const Object& object) noexcept;
 
 		// Thin forwarders so CommandExecutor (which only sees Game through a few
 		// public entry points) can reach the xml subsystem without it being

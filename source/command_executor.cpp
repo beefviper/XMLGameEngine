@@ -102,7 +102,7 @@ namespace xge
 		// (executeObjectCollision) always goes straight to bounceOffEdge.
 		if (object.collisionData.group && (edge == Edge::Left || edge == Edge::Right))
 		{
-			game.updateGroupOfObjects(object, edge == Edge::Left ? "left" : "right");
+			game.updateGroupOfObjects(object);
 			return;
 		}
 

@@ -364,35 +364,20 @@ namespace xge
 		setCurrentState(0);
 	}
 
-	void Game::updateGroupOfObjects(const Object& object, std::string side) noexcept
+	void Game::updateGroupOfObjects(const Object& object) noexcept
 	{
 		const int groupNum = object.collisionData.group;
 
-		bool foundObject = false;
-
+		// Every member gets exactly the same treatment. This used to shift the
+		// members stored before the touching one by three steps and the rest
+		// by one (and repeated that on every right-hand bounce), which pushed
+		// the last column of a grid() further from the others each time.
 		for (auto& obj : objects)
 		{
 			if (obj.collisionData.group == groupNum)
 			{
-				// TODO: fix logic, no need to set a variable, and then test it in the next block
-				// get rid of varialbe foundObject, combine if, if, and else
-				if (obj.position.x == object.position.x && obj.position.y == object.position.y)
-				{
-					foundObject = true;
-				}
-
-				if (foundObject == false)
-				{
-					obj.velocity.x *= -1;
-					if (side == "right") { obj.position.x += obj.velocity.x * 3; }
-					if (side == "left") { obj.position.x += obj.velocity.x; }
-				}
-				else
-				{
-					obj.velocity.x *= -1;
-					if (side == "right") { obj.position.x += obj.velocity.x; }
-					if (side == "left") { obj.position.x += obj.velocity.x; }
-				}
+				obj.velocity.x *= -1;
+				obj.position.x += obj.velocity.x;
 			}
 		}
 	}

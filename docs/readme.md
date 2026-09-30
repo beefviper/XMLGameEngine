@@ -185,7 +185,7 @@ Checked once per frame while the state is current. It fires when any object matc
 | `engine.cpp` | Frame loop and key handling |
 | `object.h`, `states.h` | Data model |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, collision rules, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
+| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, collision rules, group bounce, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
 
 ## Known limitations
 
