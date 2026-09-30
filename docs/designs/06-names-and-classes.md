@@ -16,7 +16,7 @@ A single condition on `class="paddle"` checks either paddle's score, instead of 
 ## Where it is used today
 
 - `<condition class=".." object="..">`: either filter or both (combined with AND); neither matches any object.
-- `<collision basic="basic" class=".." object="..">`: narrows an object-against-object rule to a kind of other object or to one instance.
+- `<collision class=".." object="..">`: an object-against-object rule that only responds to a kind of other object or to one instance. Without `edge`, naming a class or object is enough to make it an object rule; `basic="basic"` remains for the one unfiltered, match-anything rule.
 - `class="projectile"` has a built-in meaning: the object starts invisible.
 
 ## Ideas discussed, not built

@@ -7,19 +7,19 @@
   <window name="Space Invaders" width="1024" height="768" background="color.black" fullscreen="false" framerate="60" />
   <variables>
     <variable name="margin" value="80" />
-    <variable name="ball.radius" value="10" />
+    <variable name="bullet.radius" value="4" />
     <variable name="width" value="50" />
     <variable name="height" value="50" />
     <variable name="step" value="2" />
   </variables>
   <objects>
     <object name="bullet" class="projectile">
-      <sprite src="shape.circle(ball.radius)" />
+      <sprite src="shape.circle(bullet.radius)" />
       <position x="0" y="0" />
       <velocity x="0" y="0" />
       <collisions enabled="false">
         <collision edge="all" action="die()"/>
-        <collision basic="basic" action="die()"/>
+        <collision class="bricks" action="die()"/>
       </collisions>
       <variables>
         <variable name="speed" value="-6" />
@@ -38,7 +38,7 @@
         <action name ="gun" value="fire('bullet')"/>
       </actions>
     </object>
-    <object name="bricks">
+    <object name="bricks" class="bricks">
       <sprite src="grid(11,5,15,15,shape.rectangle(width,height))" />
       <position x="margin" y="margin/2" />
       <velocity x="2" y="0" />

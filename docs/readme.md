@@ -137,7 +137,7 @@ The current state decides what a held key means. When the state changes, keys th
 Each object has `<collision>` rules. A rule's `action` is a command chain. There are two kinds:
 
 - **Screen edge:** `edge="left"`, `"right"`, `"top"`, `"bottom"`, plus the groupings `"vertical"` (top and bottom), `"horizontal"` (left and right) and `"all"`. Several rules that touch the same edge all run.
-- **Object against object:** `basic="basic"`. Optional `class="..."` and `object="..."` narrow the rule to a kind of other object or one named object; with neither, it matches anything.
+- **Object against object:** name what the rule applies to with `class="..."` (a kind of other object, matched against that object's `class` attribute) and/or `object="..."` (one named object), for example `<collision class="bricks" action="die()"/>`. A rule that matches anything is written `basic="basic"`, on its own; that is a placeholder for the one general rule, not a filter (the loader currently also accepts it beside `class` or `object`, but that is not intended). A `<collision>` with `edge` is always a screen-edge rule.
 
 Detection (pure geometry, `CollisionDetector`) is kept apart from response (`CommandExecutor`). Two rectangles use an axis-aligned overlap test; if either is a circle, the circle's center is compared with the nearest point on the rectangle. Both return which edge was touched, and each side of the pair then sees the edge from its own point of view.
 
@@ -185,7 +185,7 @@ Checked once per frame while the state is current. It fires when any object matc
 | `engine.cpp` | Frame loop and key handling |
 | `object.h`, `states.h` | Data model |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
+| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, collision rules, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
 
 ## Known limitations
 

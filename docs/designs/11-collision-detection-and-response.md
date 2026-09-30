@@ -29,6 +29,7 @@ The declarative form of the idea: the XML does not spell out an if-the-ball-touc
 - No swept (continuous) collision: a fast object can pass through a thin one in a single frame. The C++ reference Pong ([17](17-reference-pong.md)) solved this with a swept test against a moving frame of reference; the engine has not adopted that.
 - No broad phase (every unordered pair is tested).
 - Only the four edges are reported; there is no contact normal, penetration depth, or corner handling.
+- `basic="basic"` is a stopgap spelling for "the one general object-against-object rule". The name says nothing, and it is meant to be used alone; the loader does not stop it being combined with `class` or `object`, and the schema still lists it as an ordinary optional attribute. A clearer spelling for the catch-all (or dropping it, since an unfiltered `<collision action="..."/>` could mean the same) is undecided.
 
 ## Design notes worth keeping
 

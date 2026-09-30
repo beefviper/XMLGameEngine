@@ -182,16 +182,27 @@ namespace xge
 						}
 					}
 
-					// class/object optionally narrow a "basic" (object-object) rule to
-					// only respond to a specific class of object, or one specific named
-					// object; either or both may be left off to match anything (the old,
-					// unfiltered behaviour). Meaningless for edge rules (no "other object"
-					// exists at a screen edge), so only read here, alongside basic.
-					if (auto colBasic = getAttribute(collision.get(), "basic"); colBasic != "")
+					// class/object optionally narrow an object-object rule to only
+					// respond to a specific class of object, or one specific named
+					// object; either or both may be left off to match anything (the
+					// old, unfiltered behaviour). Meaningless for edge rules (no "other
+					// object" exists at a screen edge), so only read here.
+					//
+					// An object-object rule is written either the long way,
+					// basic="basic" (optionally with a filter), or just by naming
+					// what it applies to: a <collision> with class and/or object and
+					// no edge is one too, so basic="basic" is only needed for a rule
+					// that matches anything.
+					const std::string colClass = getAttribute(collision.get(), "class");
+					const std::string colObject = getAttribute(collision.get(), "object");
+					const bool hasEdge = getAttribute(collision.get(), "edge") != "";
+
+					if (auto colBasic = getAttribute(collision.get(), "basic");
+						colBasic != "" || (!hasEdge && (colClass != "" || colObject != "")))
 					{
 						RawCollisionRule rule;
-						rule.filterClass = getAttribute(collision.get(), "class");
-						rule.filterObject = getAttribute(collision.get(), "object");
+						rule.filterClass = colClass;
+						rule.filterObject = colObject;
 						rule.action = getAttribute(collision.get(), "action");
 						collisionData.basic.push_back(std::move(rule));
 					}
