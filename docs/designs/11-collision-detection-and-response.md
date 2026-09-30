@@ -21,13 +21,13 @@ The declarative form of the idea: the XML does not spell out an if-the-ball-touc
 - **Circle and rectangle:** compare the circle's center with the nearest point on the rectangle and report an edge.
 - Each pair is tested once per frame, only if at least one moved. The detector reports which edge of B was hit by A; each side of the pair then converts that to its own point of view.
 - Movement is `position += velocity` once per frame, after collisions.
+- `stick()` is axis-aware: it corrects position and cancels velocity only on the touched edge's axis, so an object pushed into the bottom wall while holding left or right keeps sliding (the alternative, where any push into a wall freezes the object, feels bad to play). It is also re-applied after the move, because the pre-move edge checks only run for a moving object and would otherwise leave a stopped object overshooting the wall by up to one frame of velocity.
 
 ## Known weaknesses
 
 - The circle-rectangle edge choice uses tests like `midpoint.y > rectTop - midpoint.y`, which subtracts a coordinate from a bound that already includes it. This was flagged in the first prototype's review and is still there.
 - No swept (continuous) collision: a fast object can pass through a thin one in a single frame. The C++ reference Pong ([17](17-reference-pong.md)) solved this with a swept test against a moving frame of reference; the engine has not adopted that.
 - No broad phase (every unordered pair is tested).
-- `stick()` always zeroes horizontal velocity, even for a top or bottom contact.
 - Only the four edges are reported; there is no contact normal, penetration depth, or corner handling.
 
 ## Design notes worth keeping

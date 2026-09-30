@@ -102,24 +102,32 @@ namespace xge
 
 	void CommandExecutor::stick(Object& object, Edge edge)
 	{
-		const auto objectWidth = object.size.x;
-		const auto objectHeight = object.size.y;
 		const auto& windowDesc = game.getWindowDesc();
 
-		if (edge == Edge::Left || edge == Edge::Right)
+		// Only the touched edge's own axis is affected: the object is pushed
+		// back inside on that axis and loses only the velocity that was
+		// carrying it into the wall. The other axis is left alone, so an
+		// object pressed against the bottom wall still slides left or right
+		// (and one moving away from the wall is not held back either).
+		switch (edge)
 		{
-			object.position.x = std::clamp(object.position.x, 0.0f, windowDesc.width - objectWidth);
+		case Edge::Left:
+			object.position.x = std::max(object.position.x, 0.0f);
+			object.velocity.x = std::max(object.velocity.x, 0.0f);
+			break;
+		case Edge::Right:
+			object.position.x = std::min(object.position.x, windowDesc.width - object.size.x);
+			object.velocity.x = std::min(object.velocity.x, 0.0f);
+			break;
+		case Edge::Top:
+			object.position.y = std::max(object.position.y, 0.0f);
+			object.velocity.y = std::max(object.velocity.y, 0.0f);
+			break;
+		case Edge::Bottom:
+			object.position.y = std::min(object.position.y, windowDesc.height - object.size.y);
+			object.velocity.y = std::min(object.velocity.y, 0.0f);
+			break;
 		}
-		else if (edge == Edge::Top || edge == Edge::Bottom)
-		{
-			object.position.y = std::clamp(object.position.y, 0.0f, windowDesc.height - objectHeight);
-		}
-
-		// NOTE: preserved verbatim from the original checkEdge - this always
-		// zeroes velocity.x, even on a top/bottom stick (likely meant to be
-		// velocity.y there). No game currently relies on the top/bottom case,
-		// so this is left alone rather than silently changed.
-		object.velocity.x = 0;
 	}
 
 	void CommandExecutor::moveByStep(Object& object, Direction direction, float step)
@@ -196,4 +204,3 @@ namespace xge
 		}
 	}
 }
-

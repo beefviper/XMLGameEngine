@@ -100,6 +100,10 @@ namespace xge
 
 		void checkEdge(Object& object, Edge edge);
 
+		// After the frame's move: pushes an object back inside any screen edge
+		// it has a stick() rule for, even if it has stopped moving.
+		void keepStuckObjectInBounds(Object& object);
+
 		void checkObjectCollision(Object& a, Object& b);
 
 		// Checked once per frame against the current state's <conditions>; the

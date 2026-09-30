@@ -7,7 +7,9 @@
 
 #include "command_executor.h"
 
+#include <algorithm>
 #include <cstddef>
+#include <variant>
 
 namespace xge
 {
@@ -67,6 +69,15 @@ namespace xge
 			{
 				object.position.x += object.velocity.x;
 				object.position.y += object.velocity.y;
+
+				// The edge checks above run before this move, and only for
+				// an object that is moving, so on their own they let a
+				// stick()ed object end the frame poking out past the wall
+				// (and stay there once it stopped moving).
+				if (object.collisionData.enabled)
+				{
+					keepStuckObjectInBounds(object);
+				}
 			}
 		}
 
@@ -424,6 +435,26 @@ namespace xge
 		for (const auto& command : collisionCommandsFor(object, edge))
 		{
 			executor.executeScreenEdgeCollision(command, object, edge);
+		}
+	}
+
+	// Re-applies just the stick() rules, after the frame's move, whether or not
+	// the object is still moving - see the call in updateObjects. Other verbs
+	// (bounce, reset, inc, ...) stay where checkEdge runs them, before the
+	// move, so their timing is unchanged.
+	void Game::keepStuckObjectInBounds(Object& object)
+	{
+		CommandExecutor executor(*this);
+		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		{
+			const auto& commands = collisionCommandsFor(object, edge);
+			const bool sticks = std::any_of(commands.begin(), commands.end(),
+				[](const Command& command) { return std::holds_alternative<CmdStick>(command); });
+
+			if (sticks && CollisionDetector::touchesScreenEdge(object, windowDesc, edge))
+			{
+				executor.executeScreenEdgeCollision(Command{ CmdStick{} }, object, edge);
+			}
 		}
 	}
 

@@ -109,7 +109,7 @@ Attribute values that are expressions are evaluated by exprtk at load time. Ordi
 | Command | Where it is meaningful | Effect |
 |---|---|---|
 | `bounce()` | collision | Reverses velocity away from the touched edge |
-| `stick()` | collision | Clamps the object inside the screen and zeroes its horizontal velocity |
+| `stick()` | collision | Clamps the object inside the screen edge it touched and stops only the velocity heading into that edge; the other axis keeps going, so an object pressed against the bottom wall still slides left or right. Re-applied after the frame's move, so a stuck object never ends a frame outside the screen |
 | `die()` | collision | Disables the object's collisions and hides it (a circular object is also stopped and parked off-screen) |
 | `reset()` | collision | Puts the object back at its starting position |
 | `reset()` | state input or condition | Full game reset: every object's position, velocity and variables go back to their starting values, and the state stack collapses to the first state |
@@ -183,7 +183,7 @@ Checked once per frame while the state is current. It fires when any object matc
 | `engine.cpp` | Frame loop and key handling |
 | `object.h`, `states.h` | Data model |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, object variables (opt-in with `BUILD_TESTING`) |
+| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, object variables (opt-in with `BUILD_TESTING`) |
 
 ## Known limitations
 
@@ -191,7 +191,6 @@ Checked once per frame while the state is current. It fires when any object matc
 - Object names need not be unique: every cell of a `grid()` shares the grid object's name, so a single brick cannot be addressed.
 - Movement is in pixels per frame with no acceleration and no time step.
 - `CollisionDetector::circleRectangle` picks the touched edge with conditions that compare a coordinate against a rectangle edge minus that same coordinate (for example `midpoint.y > rectTop - midpoint.y`), which does not look geometrically meaningful; it happens to work for the shipped games but has not been proven correct.
-- `stick()` always zeroes horizontal velocity, even when the touched edge is top or bottom.
 - Function-call syntax inside attribute strings (`shape.circle(...)`, `bounce()`) hides structure from XSD and XSLT; the design notes discuss replacing it.
 - Expressions and verbs inside attribute strings are not checked by the schema; a typo in one is a runtime error (the engine reports it and exits), not a validation error.
 - The root `readme.md` still describes an earlier alpha (SFML/Xerces/exprtk only, collisions/scoring/win condition "missing"); this document is the current description.
