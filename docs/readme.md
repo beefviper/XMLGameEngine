@@ -130,6 +130,8 @@ Key names are lowercase: `a`-`z`, `num0`-`num9`, `numpad0`-`numpad9`, `f1`-`f15`
 
 While a key bound to `move.*` in an object action is held, that direction's step is recorded. Velocity is recomputed from all four directions on every key change, so holding Down and tapping Up cancels out and releasing Up resumes Down. Left/right and up/down are independent axes, so two keys can make a diagonal.
 
+A key's press runs the binding of the state that is active at that moment, and its release always reaches those same commands, even if the state changed while the key was down. Hold Left, pause, unpause, and the paddle keeps going until Left is released; hold Left, pause, let go of Left, unpause, and it is stopped. A key first pressed where it has no binding (for example while paused) does nothing when the state changes to one that binds it; it has to be pressed again. Other ways to treat a held key across a state change are described in [designs/10](designs/10-input-and-actions.md#held-keys-across-state-changes).
+
 ## Collisions
 
 Each object has `<collision>` rules. A rule's `action` is a command chain. There are two kinds:
@@ -183,7 +185,7 @@ Checked once per frame while the state is current. It fires when any object matc
 | `engine.cpp` | Frame loop and key handling |
 | `object.h`, `states.h` | Data model |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, object variables (opt-in with `BUILD_TESTING`) |
+| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
 
 ## Known limitations
 

@@ -42,6 +42,7 @@ add_executable(XMLGameEngineTests
 	"tests/test_collision_geometry.cpp"
 	"tests/test_input_resolution.cpp"
 	"tests/test_stick.cpp"
+	"tests/test_engine_input.cpp"
 )
 
 target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)

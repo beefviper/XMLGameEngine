@@ -15,13 +15,10 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace xge
 {
-	// One entry from a State's <input> map: which key it's bound to, and the
-	// (typed) commands to run when that key is pressed/released.
-	using KeyBinding = std::pair<const KeyCode, std::vector<Command>>;
-
 	class Engine
 	{
 	public:
@@ -29,6 +26,11 @@ namespace xge
 		// Raylib, or SDL2 - see window.h); defaults to SFML3 so existing
 		// callers (main.cpp) don't have to name one.
 		explicit Engine(Game& game, WindowBackend backend = WindowBackend::SFML3);
+
+		// Same, but with an already-built Window - what lets a test drive
+		// Engine's key handling with a fake window instead of opening a real
+		// one.
+		Engine(Game& game, std::unique_ptr<Window> window);
 
 		void loop(void);
 
@@ -48,6 +50,12 @@ namespace xge
 		// there's exactly one of it regardless of which backend is running.
 		std::array<bool, static_cast<std::size_t>(KeyCode::Count)> isKeyPressed{};
 
-		void execute_action(KeyCode key, const KeyBinding& input, bool keyPressed = true);
+		// The commands each held key ran when it was pressed, so releasing it
+		// sends the release to those same commands whatever state is active by
+		// then. Looking the key up in the *current* state's inputs instead
+		// lost the release whenever the state had changed while the key was
+		// down (hold Left, pause, let go of Left: the paused state has no
+		// Left binding, so the player never heard about it).
+		std::array<std::vector<Command>, static_cast<std::size_t>(KeyCode::Count)> heldCommands{};
 	};
 }
