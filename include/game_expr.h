@@ -9,7 +9,20 @@
 #include "object.h"
 #include "states.h"
 
+// exprtk is a third-party header. MSVC reports C4702 (unreachable code) from
+// inside it during code generation, which /external:W0 does not cover, so the
+// warning is turned off just around the include. Other compilers do not
+// understand this pragma, hence the _MSC_VER test.
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+
 #include <exprtk.hpp>
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #include <iostream>
 #include <map>

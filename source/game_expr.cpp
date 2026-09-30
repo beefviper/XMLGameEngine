@@ -416,9 +416,9 @@ namespace xge
 		// "window.width.center"; the ones that end in .width / .height and name
 		// an object whose size needs a backend are what this is looking for.
 		std::vector<const std::string*> positionExpressions = rawObject.rawPosition.x.expressions();
-		for (const std::string* expression : rawObject.rawPosition.y.expressions())
+		for (const std::string* yExpression : rawObject.rawPosition.y.expressions())
 		{
-			positionExpressions.push_back(expression);
+			positionExpressions.push_back(yExpression);
 		}
 
 		for (const std::string* positionExpression : positionExpressions)
