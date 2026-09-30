@@ -30,26 +30,27 @@ This replaced an earlier "last key wins" behavior in which a single key event ov
 
 ## Held keys across state changes
 
-A key can be held while the state changes underneath it (hold Left, pause, unpause). The engine tracks every key's press and release itself, so the open question is what a state change should mean for a key that is still down. Three ways to answer it:
+A key can be held while the state changes underneath it (hold Left, pause, unpause). The engine tracks every key's press and release itself, so the question is what a state change should mean for a key that is still down. Three ways to answer it:
 
-**A. Latched to the press (built).** A press runs the binding of the state that was active at that moment and remembers those commands. The matching release always goes to the same commands, whatever state is active by then. State changes neither cancel nor re-fire anything.
+**A. Latched to the press.** A press runs the binding of the state that was active at that moment and remembers those commands. The matching release always goes to the same commands, whatever state is active by then. State changes neither cancel nor re-fire anything.
 
-- Hold Left through pause and unpause: the paddle carries on afterward (it is not shown, so not moved, while paused) and stops when Left is released.
-- Release Left while paused: the paddle is stopped, so it is not moving after unpause.
-- Press Left while paused (no binding there) and hold it into `playing`: nothing happens until Left is pressed again, because its press ran nothing.
-- Cost: the one case above where a key that is physically down does nothing until re-pressed.
+- Hold Left through pause and unpause: the paddle carries on afterward, and stops when Left is released.
+- Cost: a state that shows the object but does not bind the key (Breakout's `paused` shows the player and binds only Space) does not stop it. The paddle keeps moving on the pause screen, and a key first pressed during the pause does nothing after unpausing until it is pressed again.
+- This was built first, and replaced by B.
 
-**B. Live held keys (not built).** The state only gates what a held key means. On every state change the engine releases the outgoing state's bindings for the keys still down and presses the incoming state's bindings for the same keys.
+**B. Live held keys (built).** The current state only gates what a held key means. On every state change the engine releases whatever the held keys were driving in the outgoing state, then resumes the incoming state's continuous bindings (an action's `move.*`) for the keys still down.
 
-- Pausing stops the paddle and unpausing starts it again with no re-press, and a key held into a state where it is bound acts at once.
-- Cost: bindings that change the state would fire again on entry. Holding Space across `mainmenu` to `playing` would press Space in `playing` and pause immediately. The re-press would have to be limited to held actions (`action(...)`) and skip state-changing commands, or those keys would need to be marked as requiring a fresh press.
+- Pausing stops the paddle (the pause screen binds only Space, so nothing else responds), and unpausing starts it again with no re-press. A key first pressed during the pause starts driving the paddle when `playing` returns.
+- Only continuous commands are resumed. State-changing commands and one-shot commands such as `fire` run only on a real press. Otherwise holding Space through `mainmenu` to `playing` would press Space again in `playing` and pause immediately, and a held fire key would shoot on every unpause.
+- A release always reaches the commands its key is currently driving, so a key let go during the pause leaves the paddle stopped afterward.
+- Implementation: `Game::stateChangeCount()` goes up on every push or pop, and `Engine::syncHeldKeysToState()` compares it after each key event and after each frame's update (a `<condition>` can change the state too). `CommandExecutor::executeHeldInput` is the resume path.
 
-**C. Cancel on state change (not built).** Leaving a state releases whatever the held keys had running there, and nothing is re-pressed on return.
+**C. Cancel on state change (not built).** Leaving a state releases whatever the held keys had running there, and nothing is resumed on return.
 
 - Pausing stops the paddle and unpausing starts from rest, so the key has to be pressed again. Simple, predictable, and how many games behave.
 - Cost: a player who never lets go of the key has to release and press it once after every pause or menu.
 
-A and C agree when a key is released during the pause and differ when it is held straight through; A and B agree when a key is held straight through and differ for a key first pressed during the pause. A was kept because it needed the least new machinery and makes the release reliable; B or C can be added in `Engine::handleKeyPressed` / `handleKeyReleased` (plus a hook where the state stack changes) without touching the XML.
+B and C differ only on return: B resumes a held key, C waits for a fresh press. Switching to C means dropping the resume half of `syncHeldKeysToState`.
 
 ## Sources
 

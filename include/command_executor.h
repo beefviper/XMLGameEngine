@@ -46,6 +46,12 @@ namespace xge
 		// state), so this is just executeInput as an always-"pressed" input.
 		void executeCondition(const Command& command);
 
+		// A key that was already down when a state began: applies only the
+		// continuous part of its binding (an action's move.*) and returns true
+		// if the command was one of those. One-shot commands (state changes,
+		// fire) are left alone, since the key was never pressed in this state.
+		bool executeHeldInput(const Command& command);
+
 	private:
 		Game& game;
 
@@ -59,4 +65,3 @@ namespace xge
 		void spawnProjectile(Object& shooter, const std::string& projectileName);
 	};
 }
-

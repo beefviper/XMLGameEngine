@@ -50,12 +50,23 @@ namespace xge
 		// there's exactly one of it regardless of which backend is running.
 		std::array<bool, static_cast<std::size_t>(KeyCode::Count)> isKeyPressed{};
 
-		// The commands each held key ran when it was pressed, so releasing it
-		// sends the release to those same commands whatever state is active by
-		// then. Looking the key up in the *current* state's inputs instead
-		// lost the release whenever the state had changed while the key was
-		// down (hold Left, pause, let go of Left: the paused state has no
-		// Left binding, so the player never heard about it).
+		// The commands each held key is currently driving: what its press ran,
+		// or, after a state change, what the new state's binding for it
+		// resumed. Releasing a key sends the release to exactly these, so it
+		// always reaches whatever it started, even across a state change.
 		std::array<std::vector<Command>, static_cast<std::size_t>(KeyCode::Count)> heldCommands{};
+
+		// Game::stateChangeCount() as of the last syncHeldKeysToState().
+		unsigned long syncedStateChanges = 0;
+
+		// The current state decides what a held key means: when the state has
+		// changed, releases what the held keys were driving in the old one and
+		// resumes the new state's continuous bindings (an action's move.*) for
+		// the keys still down - so a paddle stops while a state that does not
+		// bind its key is up and moves again on return, with no re-press. A
+		// key's state-changing or one-shot commands are never resumed, only
+		// run on a real press (otherwise holding Space through a menu would
+		// pause the game the moment it started).
+		void syncHeldKeysToState();
 	};
 }

@@ -28,6 +28,7 @@ namespace xge
 		this->window->init(game.getCurrentObjects());
 
 		game.setCurrentState(0);
+		syncedStateChanges = game.stateChangeCount();
 	}
 
 	void Engine::loop(void)
@@ -41,6 +42,9 @@ namespace xge
 			}
 
 			game.updateObjects();
+
+			// A <condition> can change the state during updateObjects.
+			syncHeldKeysToState();
 
 			window->clear(game.getWindowDesc().background);
 
@@ -83,6 +87,8 @@ namespace xge
 		{
 			commandExecutor.executeInput(command, true);
 		}
+
+		syncHeldKeysToState();
 	}
 
 	void Engine::handleKeyReleased(KeyCode key)
@@ -100,6 +106,50 @@ namespace xge
 		for (const auto& command : commands)
 		{
 			commandExecutor.executeInput(command, false);
+		}
+
+		syncHeldKeysToState();
+	}
+
+	void Engine::syncHeldKeysToState()
+	{
+		if (game.stateChangeCount() == syncedStateChanges)
+		{
+			return;
+		}
+
+		syncedStateChanges = game.stateChangeCount();
+
+		// Everything the old state had running stops first...
+		for (auto& held : heldCommands)
+		{
+			const std::vector<Command> commands = std::move(held);
+			held.clear();
+
+			for (const auto& command : commands)
+			{
+				commandExecutor.executeInput(command, false);
+			}
+		}
+
+		// ...then the new state's continuous bindings start for the keys that
+		// are still down.
+		const State state = game.getCurrentState();
+		for (const auto& [key, commands] : state.input)
+		{
+			const auto index = static_cast<std::size_t>(key);
+			if (!isKeyPressed[index])
+			{
+				continue;
+			}
+
+			for (const auto& command : commands)
+			{
+				if (commandExecutor.executeHeldInput(command))
+				{
+					heldCommands[index].push_back(command);
+				}
+			}
 		}
 	}
 }

@@ -4,13 +4,18 @@
 // date: Sept 29, 2026
 //
 // Catch2 tests for Engine's key handling (Engine::handleKeyPressed and
-// handleKeyReleased) against a real xge::Game built from games/breakout.xml,
-// driven through a fake Window so no real window is opened.
+// handleKeyReleased) against real xge::Games built from games/breakout.xml
+// and games/spaceinvaders.xml, driven through a fake Window so no real
+// window is opened.
 //
-// Regression covered: a key's release used to be looked up in whichever
-// state was active when it was let go, so holding Left, pausing, releasing
-// Left and unpausing left the paddle moving forever - the paused state has
-// no Left binding to hear the release.
+// The current state decides what a held key means. Breakout's "paused"
+// state shows the player but binds only Space, so while it is up the
+// player must not respond to a held Left, and must pick Left back up on
+// return to "playing" if it is still down - and the other way round for a
+// key first pressed during the pause. Regressions covered: a key's release
+// used to be looked up in whichever state was active when it was let go,
+// and a held key kept driving the player through a state that did not bind
+// it.
 
 #include "engine.h"
 #include "game.h"
@@ -47,7 +52,7 @@ namespace
 	}
 }
 
-TEST_CASE("releasing a key while paused still stops the paddle", "[engine_input]")
+TEST_CASE("a held key stops driving the player while a state without it is up, and resumes on return", "[engine_input]")
 {
 	Game game{ "games/breakout.xml" };
 	Engine engine(game, std::make_unique<FakeWindow>());
@@ -58,31 +63,19 @@ TEST_CASE("releasing a key while paused still stops the paddle", "[engine_input]
 	engine.handleKeyPressed(KeyCode::Left);
 	REQUIRE(player.velocity.x == -kStep);
 
-	tap(engine, KeyCode::Space); // pause
-	engine.handleKeyReleased(KeyCode::Left);
-	tap(engine, KeyCode::Space); // unpause
-
+	tap(engine, KeyCode::Space); // pause: "paused" binds only Space
+	CHECK(game.getCurrentState().name == "paused");
 	CHECK(player.velocity.x == 0.0f);
-}
 
-TEST_CASE("a key held straight through pause and unpause keeps moving until released", "[engine_input]")
-{
-	Game game{ "games/breakout.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
-	Object& player = game.getObject("player");
-
-	tap(engine, KeyCode::Space); // mainmenu -> playing
-
-	engine.handleKeyPressed(KeyCode::Left);
-	tap(engine, KeyCode::Space); // pause
-	tap(engine, KeyCode::Space); // unpause
+	tap(engine, KeyCode::Space); // unpause, Left still down
+	CHECK(game.getCurrentState().name == "playing");
 	CHECK(player.velocity.x == -kStep);
 
 	engine.handleKeyReleased(KeyCode::Left);
 	CHECK(player.velocity.x == 0.0f);
 }
 
-TEST_CASE("a key pressed while paused does nothing, and its release is harmless", "[engine_input]")
+TEST_CASE("a key pressed in a state that does not bind it starts driving the player once a state that does is entered", "[engine_input]")
 {
 	Game game{ "games/breakout.xml" };
 	Engine engine(game, std::make_unique<FakeWindow>());
@@ -92,10 +85,58 @@ TEST_CASE("a key pressed while paused does nothing, and its release is harmless"
 	tap(engine, KeyCode::Space); // pause
 
 	engine.handleKeyPressed(KeyCode::Left); // no Left binding in "paused"
+	CHECK(player.velocity.x == 0.0f);
+
+	tap(engine, KeyCode::Space); // unpause
+	CHECK(player.velocity.x == -kStep);
+
+	engine.handleKeyReleased(KeyCode::Left);
+	CHECK(player.velocity.x == 0.0f);
+}
+
+TEST_CASE("releasing a key while paused leaves the player stopped after unpausing", "[engine_input]")
+{
+	Game game{ "games/breakout.xml" };
+	Engine engine(game, std::make_unique<FakeWindow>());
+	Object& player = game.getObject("player");
+
+	tap(engine, KeyCode::Space); // mainmenu -> playing
+
+	engine.handleKeyPressed(KeyCode::Left);
+	tap(engine, KeyCode::Space); // pause
 	engine.handleKeyReleased(KeyCode::Left);
 	tap(engine, KeyCode::Space); // unpause
 
 	CHECK(player.velocity.x == 0.0f);
+}
+
+TEST_CASE("a key pressed and released while paused never moves the player", "[engine_input]")
+{
+	Game game{ "games/breakout.xml" };
+	Engine engine(game, std::make_unique<FakeWindow>());
+	Object& player = game.getObject("player");
+
+	tap(engine, KeyCode::Space); // mainmenu -> playing
+	tap(engine, KeyCode::Space); // pause
+
+	tap(engine, KeyCode::Left);
+	tap(engine, KeyCode::Space); // unpause
+
+	CHECK(player.velocity.x == 0.0f);
+}
+
+TEST_CASE("holding a state-changing key through the change does not trigger it again", "[engine_input]")
+{
+	Game game{ "games/breakout.xml" };
+	Engine engine(game, std::make_unique<FakeWindow>());
+
+	// Space is bound to a state change in mainmenu, playing and paused. Held
+	// down, it must take mainmenu to playing once, not straight on to paused.
+	engine.handleKeyPressed(KeyCode::Space);
+	CHECK(game.getCurrentState().name == "playing");
+
+	engine.handleKeyReleased(KeyCode::Space);
+	CHECK(game.getCurrentState().name == "playing");
 }
 
 TEST_CASE("an ordinary press and release in one state is unchanged", "[engine_input]")
@@ -110,4 +151,23 @@ TEST_CASE("an ordinary press and release in one state is unchanged", "[engine_in
 	CHECK(player.velocity.x == kStep);
 	engine.handleKeyReleased(KeyCode::Right);
 	CHECK(player.velocity.x == 0.0f);
+}
+
+TEST_CASE("a held fire key does not shoot again when its state returns", "[engine_input]")
+{
+	Game game{ "games/spaceinvaders.xml" };
+	Engine engine(game, std::make_unique<FakeWindow>());
+	Object& bullet = game.getObject("bullet");
+
+	tap(engine, KeyCode::Enter); // mainmenu -> playing
+
+	engine.handleKeyPressed(KeyCode::Space); // fire
+	REQUIRE(bullet.collisionData.enabled);
+
+	// Used up: the shot is gone and the key is still down.
+	bullet.collisionData.enabled = false;
+	tap(engine, KeyCode::P); // pause
+	tap(engine, KeyCode::P); // unpause
+
+	CHECK_FALSE(bullet.collisionData.enabled);
 }

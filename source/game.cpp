@@ -170,22 +170,31 @@ namespace xge
 	void Game::setCurrentState(const int& index)
 	{
 		currentState.push(states.at(index));
+		++stateChanges;
 	}
 
 	void Game::setCurrentState(const std::string& name)
 	{
 		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
 		currentState.push(*result);
+		++stateChanges;
 	}
 
 	void Game::pushState(std::string name) {
 		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
 		currentState.push(*result);
+		++stateChanges;
 	}
 
 	void Game::popState(void) noexcept
 	{
 		currentState.pop();
+		++stateChanges;
+	}
+
+	unsigned long Game::stateChangeCount(void) const noexcept
+	{
+		return stateChanges;
 	}
 
 	void Game::setObjectParam(const std::string& name, const std::string& param, const float& value)

@@ -74,6 +74,26 @@ namespace xge
 		executeInput(command, true);
 	}
 
+	bool CommandExecutor::executeHeldInput(const Command& command)
+	{
+		const auto* trigger = std::get_if<CmdTriggerAction>(&command);
+		if (!trigger)
+		{
+			return false;
+		}
+
+		Object& object = game.getObject(trigger->object);
+		for (const auto& actionCommand : object.action[trigger->action])
+		{
+			if (const auto* move = std::get_if<CmdMove>(&actionCommand))
+			{
+				applyActionVelocity(object, move->direction, move->step);
+			}
+		}
+
+		return true;
+	}
+
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge)
 	{
 		// A grouped object (e.g. the invader block in spaceinvaders) bounces as a

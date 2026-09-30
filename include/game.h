@@ -50,6 +50,11 @@ namespace xge
 		void pushState(std::string name);
 		void popState(void) noexcept;
 
+		// Goes up by one every time the state stack changes (any push or pop,
+		// including resets and condition-driven changes), so Engine can tell
+		// that held keys need re-evaluating without comparing state names.
+		unsigned long stateChangeCount(void) const noexcept;
+
 		void setObjectParam(const std::string& name, const std::string& param, const float& value);
 
 		void updateGroupOfObjects(const Object& object, std::string side) noexcept;
@@ -97,6 +102,7 @@ namespace xge
 		std::vector<RawObject> rawObjects;
 		std::vector<Object> objects;
 		std::stack<State> currentState;
+		unsigned long stateChanges = 0;
 
 		void checkEdge(Object& object, Edge edge);
 
