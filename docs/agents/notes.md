@@ -20,26 +20,27 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 
 ## Facts that are easy to get wrong
 
-- The root `readme.md` is out of date: it says collisions, scoring and win condition are missing, and lists only Xerces, exprtk and SFML.
+- The root `readme.md` is a short overview (games, format, build, status); the detailed description is `docs/readme.md`. Update both when a verb, a game or a dependency changes.
 - The repo has three branches: `master`, `rewrite`, `claude`. The active engine described in these docs is on `claude`.
 - Function-call syntax is gone: attributes only name or pick things, everything else is element content ([design 03](../designs/03-expression-syntax.md)). Arithmetic in values is still exprtk text.
 - No handle system and no `Value` variant exist yet, despite being decided or discussed ([07](../designs/07-object-variables-and-references.md), [08](../designs/08-entity-storage-and-handles.md)). Swept collision is built ([11](../designs/11-collision-detection-and-response.md)).
-- `CollisionDetector::circleRectangle` has suspicious edge tests. Add a test in `tests/test_collision_geometry.cpp` before changing it.
+- `CollisionDetector::circleRectangle` was rewritten (nearest point on the rectangle, and the closest side for a centre inside it); `tests/test_collision_geometry.cpp` pins it. Add a test there before changing it.
 - The XSD checks structure, not expression text; `xsd_lite` (used by the three non-Xerces backends) covers only the XSD subset the schema uses, and `tests/test_xml_format.cpp` pins what both validators must reject.
-- Files in the repo use CRLF line endings; keep them when editing.
+- Files in the repo use CRLF line endings on disk (`.gitattributes` stores LF and checks out CRLF); keep them when editing. A few newer files (design 22 to 28, `scan_chatgpt_export.py`, `sources.md`) are LF on disk; git normalizes them on commit.
+- Every cell of a `<grid>` has its own name (`aliens.3.2`, column then row from 1), so a single cell can be addressed; the grid's name still means the whole grid.
+- The engine's internal list of unfiltered and filtered object-against-object collision rules is still called `basic` (`collisionData.basic`), a leftover of the old `basic="basic"` spelling; the XML no longer has it.
 - Backends are only selectable in C++ (constructor arguments), not on the command line.
-- A new game file has to be added to `data_xml` in `scripts/cmake/assets.cmake`, or the build does not copy it next to the executable; a new test file has to be added to the list in `scripts/cmake/tests.cmake`.
+- A new game file has to be added to `data_xml` in `scripts/cmake/assets.cmake`, or the build does not copy it into the build directory; a new test file has to be added to the list in `scripts/cmake/tests.cmake`.
 - Frogger's board is built from many named rectangles, drawn in file order (so scenery first, the frog last). It is long because the language has no way yet to say a lane of differently spaced objects; see [21](../designs/21-frogger.md).
 - On Windows the repo's `.gitattributes` converts line endings on commit; git prints LF-to-CRLF warnings, which are harmless.
 
 ## Suggested next steps (not started)
 
-1. Refresh the root `readme.md` (or point it at `docs/readme.md`).
-2. Add tests that pin the current behavior of `circleRectangle` before touching it.
-3. Decide design 04 (arithmetic as text vs elements); design 03 is done.
-4. Give every `grid()` cell a unique name so single objects can be addressed.
-5. Add an arcing jump ([design 13](../designs/13-verb-vocabulary.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
-6. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, per-row velocity in `grid()`, show and hide verbs.
+1. Decide design 04 (arithmetic as text vs elements); design 03 is done.
+2. Add an arcing jump ([design 13](../designs/13-verb-vocabulary.md), and the air-control refinement in [design 23](../designs/23-jump-and-air-control.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
+3. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, per-row velocity in `<grid>`, show and hide verbs.
+4. Rename `collisionData.basic` (and the `basic=` label in `printGame()`) to something that says what it is.
+5. Designs 22 to 28 are ideas from a second batch of conversations, not plans; nothing in them is built.
 
 ## Privacy rule for these docs
 

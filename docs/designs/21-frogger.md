@@ -8,7 +8,7 @@ The first three games share one core: a ball or a bullet, a paddle or a shooter,
 
 ## The game as described
 
-A grid of 48-pixel cells, 13 across and 14 down: a row for the score and lives, a row of home pads between hedges, five lanes of river, a strip of grass, five lanes of road, and the pavement the frog starts on. Everything is a rectangle drawn 6 pixels in from its cell (so the frog fits a lane with room to spare), which keeps every position a small sum of `cell` and `inset`. A truck is two cells long, a log three to five. Cars, trucks and logs are each their own object, spaced by hand: a lane has a different spacing from every other, which a `grid()` (one spacing, one velocity) cannot say. The scenery (river, grass, road, lane markings, pavement) is more rectangles, drawn first because objects are drawn in file order.
+A grid of 48-pixel cells, 13 across and 14 down: a row for the score and lives, a row of home pads between hedges, five lanes of river, a strip of grass, five lanes of road, and the pavement the frog starts on. Everything is a rectangle drawn 6 pixels in from its cell (so the frog fits a lane with room to spare), which keeps every position a small sum of `cell` and `inset`. A truck is two cells long, a log three to five. Cars, trucks and logs are each their own object, spaced by hand: a lane has a different spacing from every other, which a `<grid>` (one spacing, one velocity) cannot say. The scenery (river, grass, road, lane markings, pavement) is more rectangles, drawn first because objects are drawn in file order.
 
 ## What it needed
 
@@ -21,7 +21,7 @@ A grid of 48-pixel cells, 13 across and 14 down: a row for the score and lives, 
 | The river kills the frog unless it is on a log | `unless="logs"` on the rule: passed over while the object is also touching something of that class | Rule order among the frog's rules (they are separate pairs, so order does not compose); a "safe" class that overrides a "hazard"; water only in the gaps between logs (moving and re-shaped every frame); an object-level condition counting overlaps |
 | What touching a hazard or a pad does | `reset()`, `inc()`, `dec()` and `move.*` in rules about another object (they were ignored there) | A second verb set for object rules |
 | A frog left sitting in a home | A bright green frog under every pad; when the pad `die()`s, the frog is seen | `show()`/`hide()` verbs; swapping the sprite (there is no way to change one) |
-| Scenery colors | More named colors: grey, darkgrey, lightgrey, brown, orange, purple, darkblue, darkgreen, forestgreen | `#rrggbb` literals in the color argument (probably where this ends up; the named set is what fits the current way of resolving a color) |
+| Scenery colors | More named colors: grey, darkgrey, lightgrey, brown, orange, purple, darkblue, darkgreen, forestgreen | `#rrggbb` literals as a color (probably where this ends up; the named set is what fits the current way of resolving a color) |
 
 A few reasons behind the choices worth keeping:
 
@@ -37,7 +37,7 @@ Frogger as described here is the game without its extras: no diving turtles, cro
 ## Ideas that came out of it
 
 - A way to name an amount for `inc`/`dec` (`inc('frog.score', 10)`), or a variable that changes by an expression.
-- A `grid()` with a velocity per row, or a list of positions, for lanes.
+- A `<grid>` with a velocity per row, or a list of positions, for lanes.
 - Show and hide as verbs, so a state or a rule can bring an object back without layering.
 - A rule that must be looked at every frame even when nothing moves (see the known weaknesses in [11](11-collision-detection-and-response.md)).
 - A general way to say where in a sequence of rules a touch falls, if `unless` turns out not to be enough (compare [12](12-collision-escalation.md)).

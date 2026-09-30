@@ -2,6 +2,8 @@
 
 Each row is one design topic: the options that were considered (a few words each), which one was chosen (if any), and a link to the full write-up. The current, working behavior of the engine is described in [../readme.md](../readme.md). These files record *why*, and what is still an idea.
 
+Verbs are sometimes written as `bounce()` or `hop.up(distance)` for short in these notes; in a game file they are always tags ([../readme.md](../readme.md)).
+
 Status key: **Built** = in the code today. **Decided** = chosen, not built. **Leaning** = a direction stated but not final. **Open** = undecided. **Idea** = floated, not adopted.
 
 | # | Topic | Options considered | Chosen / status | Write-up |
@@ -11,7 +13,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 03 | Expression syntax | function-call strings / one element per call / structure for real trees / functions to elements, arithmetic stays | Functions became elements and value tags (`<random>`); arithmetic stays text. **Built** | [03](03-expression-syntax.md) |
 | 04 | Arithmetic and XSLT code generation | paste strings / XSLT parses / parse to AST-as-XML then XSLT / remove arithmetic from XML | None yet; AST-as-XML suggested, author prefers no extra tooling. **Open** | [04](04-arithmetic-and-xslt-codegen.md) |
 | 05 | Variables and evaluation order | declaration order / two-pass symbol collection; topological sort vs lazy | Two-pass up-front registration. **Built** (chained references: lazy suggested) | [05](05-variables-and-evaluation-order.md) |
-| 06 | Names and classes | HTML-style `name` + `class`; compound selectors; class inheritance; unique instance names | `name` + `class` with filters. **Built**; the rest **Idea** | [06](06-names-and-classes.md) |
+| 06 | Names and classes | HTML-style `name` + `class`; compound selectors; class inheritance; unique instance names | `name` + `class` with filters, and unique names for grid cells (`aliens.3.2`). **Built**; the rest **Idea** | [06](06-names-and-classes.md) |
 | 07 | Object variables and references | polling / listeners / copies / raw pointers; `float` vs `Value` variant | Polling by named reference, float variables. **Built**; `Value` variant and handle references **Decided**. An object's own size in expressions (`title.width`, `title.height`, by object name, to center a text). **Built**; alignment attributes **Idea** | [07](07-object-variables-and-references.md) |
 | 08 | Entity storage, handles, type identity | vector by value / `unique_ptr` / indices / `{index, generation}` handle / deque; enum vs data types | Generational handles, data-driven types. **Decided**, not built (code uses a vector and name search) | [08](08-entity-storage-and-handles.md) |
 | 09 | States and screens | state = screen; flat list / stack; file-prefix naming | Stack of states with shows, inputs, conditions. **Built**; per-state object behavior (a static object on the menu, moving in play) **Open** | [09](09-states-and-screens.md) |
@@ -19,7 +21,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 11 | Collision detection and response | tangled / split detect, dispatch, execute; edge-only vs swept | Split into detector, typed commands, executor; swept object-against-object collision, per-cell grid objects; more verbs in object rules, riding (`carry`), rule exceptions (`unless`). **Built** (rough spots listed) | [11](11-collision-detection-and-response.md) |
 | 12 | Collision escalation | per-type-pair rules / class hierarchy / TCG-style verbs and phases | Verb protocol idea from Mario model. **Idea** | [12](12-collision-escalation.md) |
 | 13 | Verb vocabulary | small closed set now; static vs dynamic jump; AI targeting modes | Grow only when a game needs it: `dec`, `hop`, `wrap`, `carry` added for Frogger. Set **Built**; arcing jump and AI **Decided in outline**, not built | [13](13-verb-vocabulary.md) |
-| 14 | Conditions and win conditions | `if` / trigger; state-level vs object-level; `>=` only vs richer | State-level `condition`: variable threshold (`value`, or `atmost` from above), or `remaining` (none left). **Built**, minimal | [14](14-conditions-and-win-conditions.md) |
+| 14 | Conditions and win conditions | `if` / trigger; state-level vs object-level; `>=` only vs richer | State-level `condition`: variable threshold (`atleast`, or `atmost` from above), or `remaining` (none left). **Built**, minimal | [14](14-conditions-and-win-conditions.md) |
 | 15 | Backend abstraction | concrete node vs interface; pointers vs values; read-only vs mutable; strong vs weak XSD | Interfaces + factories: 4 XML and 3 window backends, Strong/Weak validation. **Built** | [15](15-backend-abstraction.md) |
 | 16 | Code layout and pipeline | layered directories / flat files; parse-validate-evaluate-generate | Pipeline concept kept, tree flattened; no `generate` step. **Built** (partial) | [16](16-code-layout-and-pipeline.md) |
 | 17 | Reference Pong in C++ | tunables, generic helpers, swept vs simple collision | Kept as the yardstick; its swept collision idea is now in the engine ([11](11-collision-detection-and-response.md)). **Prototype** | [17](17-reference-pong.md) |

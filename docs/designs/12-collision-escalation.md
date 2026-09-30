@@ -38,7 +38,7 @@ Points raised while stress-testing it:
 
 Entities declare classes or tags (the existing `class` attribute is the anchor). Interaction rules key on `(classA, classB, phase)` rather than `(spriteA, spriteB)`. A new entity tagged `Hazard` and `Pushable` inherits every rule already written for that pair of tags. Honest cost, as with MTG: the taxonomy of tags and phases becomes the hard design artifact and is painful to retrofit.
 
-The engine today is at the first rung only: `class` and `object` filters on a `basic` rule ([06](06-names-and-classes.md), [11](11-collision-detection-and-response.md)).
+The engine today is at the first rung only: `class` and `object` filters on a collision rule ([06](06-names-and-classes.md), [11](11-collision-detection-and-response.md)).
 
 ## Second batch: alternatives
 

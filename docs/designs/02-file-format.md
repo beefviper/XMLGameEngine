@@ -14,7 +14,7 @@ The author picked XML on purpose, for three reasons:
 2. **Validation.** XSD can check structure, required attributes and types before the game runs.
 3. **Transformation.** XSLT could turn a game file into documentation, another format, or even native source code for a platform ([04](04-arithmetic-and-xslt-codegen.md)).
 
-Reasons 2 and 3 are the ones that the expression syntax currently undermines ([03](03-expression-syntax.md)).
+Reasons 2 and 3 were undermined by the old function-call expression syntax, which is gone ([03](03-expression-syntax.md)); the arithmetic left in value text still hides a little from both ([04](04-arithmetic-and-xslt-codegen.md)).
 
 ## Options considered
 
@@ -27,12 +27,12 @@ Reasons 2 and 3 are the ones that the expression syntax currently undermines ([0
 
 ## One file or two
 
-Academic VGDL splits rules and level layout into two files. XMLGameEngine keeps everything in one XML file, and lays out grids of objects with the `grid()` sprite function instead of an ASCII map. Whether a separate level file will ever be needed for larger games is open.
+Academic VGDL splits rules and level layout into two files. XMLGameEngine keeps everything in one XML file, and lays out grids of objects with the `<grid>` sprite element instead of an ASCII map. Whether a separate level file will ever be needed for larger games is open.
 
 ## Current schema notes
 
 - The schema fixes the order of children (`window`, `variables`, `objects`, `states`; inside an object `sprite`, `position`, `velocity`, `collisions`, then optional `actions` and `variables`). The engine's own element lookup is by name, not position, so it does not depend on this order.
-- `variable` values are declared `xs:integer`, and a state `condition` `value` is `xs:unsignedByte` (0 to 255). Both are limits of the schema, not of the engine.
+- Every number in a game file (a variable, a position, a threshold, a size) is a `valueType`: expression text or one value tag, so it is not limited by the schema. The one exception is `<framerate>`, an `xs:unsignedByte` (0 to 255).
 - A game file with no `xsi:noNamespaceSchemaLocation` skips validation. See [15](15-backend-abstraction.md) for how strong (Xerces) and weak (built-in) validation differ.
 
 ## Second batch: alternatives

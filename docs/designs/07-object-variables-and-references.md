@@ -14,8 +14,8 @@ Some state belongs to the entity itself, and some state has to be read by anothe
 The author's design for the XML: describe the relationship, not the mechanism.
 
 ```xml
-<object name="paddle1"> ... <variable name="score" value="0" /> </object>
-<object name="score1">  ... <variable name="display" value="paddle1.score" /> </object>
+<object name="paddle1"> ... <variables><variable name="score">0</variable></variables> </object>
+<object name="score1">  ... <sprite><text><number>paddle1.score</number> ... </text></sprite> </object>
 ```
 
 The XML author says the paddle has a score and the scoreboard shows it. Underneath, the engine polls.
@@ -35,7 +35,7 @@ The XML author says the paddle has a score and the scoreboard shows it. Undernea
 
 - Each `Object` has `std::map<std::string, float> variable` plus `variableOriginal`, a snapshot used by `reset()` so a new game starts clean and a leftover condition does not fire at once.
 - Every object variable is also registered in exprtk as `owner.variable` ([05](05-variables-and-evaluation-order.md)).
-- `text(paddle1.score, ...)` is bound to that variable (`boundVariableOwner`, `boundVariableName`). `inc('paddle1.score')` increments it and marks the text object's visual dirty so the backend redraws it. This is the current polling path.
+- A text whose `<number>` is exactly one `owner.variable` (`<number>paddle1.score</number>`) is bound to that variable (`boundVariableOwner`, `boundVariableName`). `<inc variable="paddle1.score" />` increments it and marks the text object's visual dirty so the backend redraws it. This is the current polling path.
 
 ## An object's own size in expressions
 

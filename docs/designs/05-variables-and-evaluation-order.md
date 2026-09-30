@@ -4,7 +4,7 @@
 
 ## The problem
 
-In `<position x="screenWidth / 2 - ball.radius" .../>` nothing in XML says whether `screenWidth` has been defined yet. XML has no scope and no definition order; a parser hands back strings. Whether a name is defined is purely the engine's own state.
+In `<x>screenWidth / 2 - ball.radius</x>` nothing in XML says whether `screenWidth` has been defined yet. XML has no scope and no definition order; a parser hands back strings. Whether a name is defined is purely the engine's own state.
 
 ## Decision: separate collecting definitions from evaluating expressions
 

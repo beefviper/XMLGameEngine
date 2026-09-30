@@ -16,7 +16,7 @@ Consequences:
 
 | Option | Example | Notes |
 |---|---|---|
-| **A. Function-call strings** (current) | `<sprite src="shape.circle(ball.radius,'color.white')"/>` | Compact and readable; opaque to XSD and XSLT. |
+| **A. Function-call strings** (the form before the change) | `<sprite src="shape.circle(ball.radius,'color.white')"/>` | Compact and readable; opaque to XSD and XSLT. |
 | B. One element per call | `<sprite><shape.circle radius="ball.radius" color="color.white"/></sprite>` and `<collision edge="vertical"><action.bounce/></collision>` | XSD can validate arguments; XSLT can transform; more verbose. |
 | C. Structure for the parts that are really structure | `<velocity><random min="-7" max="7" axis="x"/><random min="-3" max="3" axis="y"/></velocity>`; several actions as ordered child elements | Same benefits as B, applied where a string was standing in for a tree. |
 | D. Functions become elements; plain arithmetic stays as text | Keep `window.width.center - ball.radius`, drop `shape.circle(...)` | Removes most hidden structure; arithmetic remains ([04](04-arithmetic-and-xslt-codegen.md)). |

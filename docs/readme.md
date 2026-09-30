@@ -244,7 +244,7 @@ The other forms:
 | `collision_detector.cpp` | Geometry only |
 | `command_executor.cpp` | What each command does |
 | `engine.cpp` | Frame loop and key handling |
-| `object.h`, `states.h` | Data model |
+| `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
 | `tests/` | Catch2 tests: collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, group bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format and its rejections (`test_xml_format`) and Frogger played frame by frame (opt-in with `BUILD_TESTING`) |
 
@@ -265,4 +265,3 @@ The other forms:
 - Expressions inside a value are not checked by the schema (they are text); a typo in one is a runtime error (the engine reports it and exits), not a validation error. Structure, tag names, attributes and command verbs are checked.
 - The weak validator (`xsd_lite`) covers only the XSD subset this project uses; Xerces is the full check.
 - Window sizes (`width`, `height`, `framerate`) are ordinary values in the file but are read once, before the window opens.
-- The root `readme.md` still describes an earlier alpha (SFML/Xerces/exprtk only, collisions/scoring/win condition "missing"); this document is the current description.

@@ -8,7 +8,7 @@ A verb is a named behavior with parameters. A good declarative verb captures the
 
 ## Implemented today
 
-`bounce`, `stick`, `die`, `reset`, `inc`, `dec`, `wrap`, `carry`, `move.up/down/left/right`, `hop.up/down/left/right`, `state`, `action`, `fire`; sprites `shape.circle`, `shape.rectangle`, `text`, `image`, `grid`; a collision rule filter, `unless`; and a condition form, `atmost`. See [docs/readme.md](../readme.md) for exact meanings.
+the command tags `<bounce />`, `<stick />`, `<die />`, `<reset />`, `<inc />`, `<dec />`, `<wrap />`, `<carry />`, `<move direction=...>`, `<hop direction=...>`, `<push />`, `<pop />`, `<trigger />`, `<fire />`; sprites `<circle>`, `<rectangle>`, `<text>`, `<image>`, `<grid>`; a collision rule filter, `unless`; the value tag `<random>`; and the condition forms `atleast`, `atmost` and `remaining`. See [docs/readme.md](../readme.md) for exact meanings.
 
 Rough coverage by game: Pong is essentially `bounce()` and `stick()`; Breakout adds `die()`; Space Invaders adds `fire()` and formation movement through group bounce; Frogger adds `hop`, `carry`, `wrap`, `dec`, `unless` and `atmost` (see [21](21-frogger.md) for why each is shaped the way it is). Space Race added no verbs: it is `move`, `stick`, `inc`, `reset`, `wrap` and a score condition.
 
@@ -55,7 +55,7 @@ Pathfinding is the engine's job, not the XML's. Other likely targeting modes: di
 
 ## Related smaller ideas
 
-- **Random speed with a dead zone.** `<random min="-7" max="7" />` can give a near-zero velocity; the workaround so far is to reload. A declarative fix: a random magnitude with a random sign (`random.range(3,7)` times a sign), for example a `<sign>` value tag, avoiding an `if`.
+- **Random speed with a dead zone.** `<random min="-7" max="7" />` can give a near-zero velocity; the workaround so far is to reload. A declarative fix: a random magnitude with a random sign (a random from 3 to 7 times a sign), for example a `<sign>` value tag, avoiding an `if`.
 - **Sound.** There is no audio vocabulary yet.
 - **Pong to Galaxian, written formally.** The chain of tweaks ([01](01-vision-and-scope.md)) could become a design document showing which verbs each step adds.
 

@@ -1,29 +1,87 @@
 # XMLGameEngine
 
-XMLGameEngine is a VGDL (Video Game Description Language) and engine for describing and running games built around Xerces, exprtk, and SFML.
+XMLGameEngine is a VGDL (video game description language) written in XML, plus a C++ engine that loads a game description and runs it. A whole game (window, variables, objects, screens) lives in one `.xml` file, checked against an XSD. The file is declarative: no loops, no `if`, no function calls. Behavior comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<stick />`, `<die />`, `<hop direction="up">`, ...) that the engine knows how to carry out.
 
-XMLGameEngine dependencies:
-* Xerces   https://github.com/apache/xerces-c
-* exprtk   https://github.com/ArashPartow/exprtk
-* SFML     https://github.com/SFML/SFML
+The target is to describe the 2D non-scrolling games of the late 1970s and early 1980s with a small, well-chosen vocabulary, and to grow that vocabulary only when a real game cannot be described without a new word.
 
-XMLGameEngine stores a complete description of a game in an XML.
-The XML file is loaded and parsed by *Xerces*.
-Any variables, expressions, or function calls in the XML data is evaluated by *exprtk*.
-The resulting values and objects are used to render the game with *SFML*.
+## Games that run today
 
-XMLGameEngine is currently an alpha, and not complete.
+| File | Game |
+|---|---|
+| `games/pong.xml` | Pong, with a menu, pause and game-over screens |
+| `games/breakout.xml` | Breakout |
+| `games/spaceinvaders.xml` | Space Invaders (the aliens are a grid of individually named objects; the game is won when none are left) |
+| `games/frogger.xml` | Frogger: lives, one-step hops, looping lanes, riding logs, a river that kills unless you are on one |
+| `games/spacerace.xml` | Space Race, two players, first to two points |
 
-Things that work:
-* Loading, validating, and parsing XML
-* Expression and function evaluation
-* Creation of variables, objects, and states
-* Key handling for objects and states
-* Some drawing functions: shape.circle(), shape.rectangle()
-* Basic text rendering: text()
-* Some collision: screen boundaries, circle-rectangle
+## What a game file looks like
 
-Things still missing:
-* Collisions of all types
-* Scoring system
-* Win Condition
+```xml
+<object name="ball">
+  <sprite>
+    <circle>
+      <radius>ball.radius</radius>
+      <color>color.green</color>
+    </circle>
+  </sprite>
+  <position>
+    <x>window.width.center - ball.radius</x>
+    <y>window.height.center - ball.radius</y>
+  </position>
+  <velocity>
+    <x><random min="-7" max="7" /></x>
+    <y><random min="-3" max="3" /></y>
+  </velocity>
+  <collisions>
+    <enabled>true</enabled>
+    <collision edge="vertical"><bounce /></collision>
+    <collision edge="left">
+      <inc variable="paddle2.score" />
+      <reset />
+    </collision>
+  </collisions>
+</object>
+```
+
+The one rule of the format: an attribute names or picks something (`name`, `class`, `edge`, `button`, `state`, ...); everything else is element content. Numbers may be plain arithmetic over named values such as `window.width.center` or `ball.radius`, evaluated by exprtk.
+
+## How it works
+
+1. An XML library parses and validates the file (Xerces by default, with full XSD validation; TinyXML2, PugiXML or RapidXML with a built-in validator for the subset of XSD used here).
+2. exprtk evaluates every value once. Objects, variables and states are built.
+3. A window library draws and reads the keyboard (SFML 3 by default; Raylib or SDL2).
+4. Each frame: keys run the current state's bindings, objects move, collisions are swept and their rules run, conditions are checked, and the frame is drawn.
+
+Collisions are swept, so fast small objects cannot skip over thin ones. States form a stack (menu, playing, paused, game over). Keys are bound to named actions on objects, not to movement, so remapping one key is one edit.
+
+## Dependencies
+
+* Xerces-C   https://github.com/apache/xerces-c
+* exprtk     https://github.com/ArashPartow/exprtk
+* SFML 3     https://github.com/SFML/SFML
+* Optional backends: Raylib, SDL2 (with SDL2_image and SDL2_ttf), TinyXML2, PugiXML, RapidXML
+* Catch2 for the tests
+
+Each dependency is found through vcpkg or the system, or fetched and built when it is missing. The `FORCE_LOCAL_<NAME>` options force a fetched copy.
+
+## Build and run
+
+```
+cmake -B build
+cmake --build build
+XMLGameEngine frogger
+```
+
+A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/`. The build copies the games and assets into the build directory, so run it from there. With no argument it runs Pong. The XML and window libraries are chosen in C++ (`main.cpp` uses Xerces and SFML 3); there is no command-line switch yet.
+
+Tests are opt-in: configure with `-DBUILD_TESTING=ON`.
+
+## Status
+
+The engine is still growing. It has no gravity or acceleration, no arcing jump (`hop` is a single step), no scrolling, and no sound; all movement is pixels per frame. The full list of known limits is in [docs/readme.md](docs/readme.md).
+
+## Documentation
+
+* [docs/readme.md](docs/readme.md): how the engine works today, verb by verb.
+* [docs/designs/00-designs.md](docs/designs/00-designs.md): the design decisions, the options considered, and ideas not built yet.
+* [AGENTS.md](AGENTS.md) and [docs/agents/notes.md](docs/agents/notes.md): notes for AI coding agents and new contributors.
