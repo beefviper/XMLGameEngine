@@ -25,7 +25,7 @@ A game file has one `<game>` root with exactly four children, in this order, as 
       xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <window name="..."> ... </window>
   <variables> <variable name="...">...</variable> ... </variables>
-  <objects>   <object name="..."> ... </object> ... </objects>
+  <objects>   <object name="..."> ... </object> <group name="..."> ... </group> ... </objects>
   <states>    <state name="..."> ... </state> ... </states>
 </game>
 ```
@@ -98,6 +98,44 @@ Children, in this order:
 | `<variables>` | no | Variables owned by this object, each `<variable name="score">0</variable>`. Other expressions refer to them as `objectName.variableName`, e.g. `paddle1.score` |
 
 An object with `class="projectile"` starts invisible (used for bullets).
+
+### `<group>`
+
+A `<group>` is several objects that share a description, written once: a lane of logs, a row of debris, the pads along the top of Frogger. It sits beside `<object>` under `<objects>`. It holds the parts its members have in common, in the same order as an object (`<sprite>`, `<position>`, `<velocity>`, `<collisions>`, `<actions>`, `<variables>`, each optional except `<collisions>`), then one or more `<member>`s. Attributes: `name` (required) and `class` (optional, and every member's class).
+
+A `<member>` says only what is its own: a `<sprite>`, a `<position>` and a `<velocity>`, and an optional `name`. **Whatever a member leaves out it takes from its group**, and after that it must be as complete as an `<object>` (a missing part is a load error that names the member). A `<position>` or `<velocity>` can give just an `<x>` or just a `<y>`, so a lane gives its row once and each member gives where along it it starts:
+
+```xml
+<group name="logrow3" class="logs">
+  <sprite>
+    <rectangle>
+      <width>3 * cell - 2 * inset</width>
+      <height>body</height>
+      <color>color.brown</color>
+    </rectangle>
+  </sprite>
+  <position>
+    <y>3 * cell + inset</y>
+  </position>
+  <velocity>
+    <x>-1</x>
+    <y>0</y>
+  </velocity>
+  <collisions>
+    <enabled>true</enabled>
+    <collision edge="horizontal">
+      <wrap />
+    </collision>
+  </collisions>
+  <member><position><x>20</x></position></member>
+  <member><position><x>272</x></position></member>
+  <member><position><x>524</x></position></member>
+</group>
+```
+
+A member is an ordinary object: it is loaded as one object of its own (`logrow3.1`, `logrow3.2`, `logrow3.3`: the group's name, a dot, and its number counting from 1 in the order written, unless the member says `name="..."`), it is drawn, moved and collided with on its own, and each `<wrap />` or `<die />` happens to that one member. A group only shares what is written. Members are drawn in the order written, at the place in the file where the group stands. The group's name means every member wherever the file names an object (`<show object="logrow3" />`, `object="pads"` in a rule or condition, `<reset object="pads" />`), and a member can be named on its own (`object="logrow3.2"`). A group with `<lockstep>true</lockstep>` in its `<collisions>` moves as one block, like the cells of a `<grid>`.
+
+A `<grid>` and a `<group>` differ in what they repeat: a `<grid>` makes identical cells on a regular pattern from one sprite, a `<group>` lists members that can each differ in place, shape or speed and share everything else.
 
 ### Sprites
 
@@ -191,8 +229,8 @@ Rules that apply:
 - **What a rule can do.** Against a screen edge: `<bounce />`, `<stick />`, `<reset />`, `<die />`, `<move>`, `<inc>`, `<dec>` and `<wrap />`. Against another object: `<bounce />`, `<die />`, `<reset />`, `<move>`, `<inc>`, `<dec>` and `<carry />`. `<stick />` and `<wrap />` are about a screen edge and do nothing in a rule about another object, and `<carry />` is about another object.
 - **`unless`.** An object-against-object rule can carry `unless="class"`: it is passed over while the object is, at that same moment, touching something in play of that class. Frogger's river is `<collision class="water" unless="logs"><dec variable="frog.lives" /><reset /></collision>`: water costs the frog a life, unless it is also on a log. It looks at where things are right now, so it does not matter which of the two touches was handled first.
 - A pair is skipped unless at least one of the two is moving, and unless one of them has a rule that answers to the other (its `class`/`object`, or a rule with no selector). An object counts as moving if its velocity is not zero, if it is being carried, or if it has just hopped, so an object that lands somewhere by hopping is judged there even though nothing else in the pair moves.
-- `<lockstep>true</lockstep>` puts all cells of a `<grid>` object in lockstep: they share a lockstep number. Cells in lockstep never collide with each other, `<move>` in a collision moves all of them, and one hitting the left or right screen edge with `<bounce />` moves the whole block (this is how the invaders march). Being in lockstep changes none of the geometry: every cell is swept on its own, so a bullet only ever meets the cells that are still alive, and there is no bounding box around the block.
-- Every cell of a `<grid>` is its own object, named after the grid with its column and row counted from 1: a grid called `aliens` has `aliens.1.1`, `aliens.2.1`, ... `aliens.11.5`. Names of the whole grid still work where a group is meant: `<show object="aliens"/>`, a rule or condition `object="aliens"`, `<reset object="aliens" />`; a cell can be named on its own (`object="aliens.3.2"`).
+- `<lockstep>true</lockstep>` puts all cells of a `<grid>` object, or all members of a `<group>`, in lockstep: they share a lockstep number. Cells in lockstep never collide with each other, `<move>` in a collision moves all of them, and one hitting the left or right screen edge with `<bounce />` moves the whole block (this is how the invaders march). Being in lockstep changes none of the geometry: every cell is swept on its own, so a bullet only ever meets the cells that are still alive, and there is no bounding box around the block.
+- Every cell of a `<grid>` is its own object, named after the grid with its column and row counted from 1: a grid called `aliens` has `aliens.1.1`, `aliens.2.1`, ... `aliens.11.5`. Names of the whole grid still work where the whole set is meant: `<show object="aliens"/>`, a rule or condition `object="aliens"`, `<reset object="aliens" />`; a cell can be named on its own (`object="aliens.3.2"`). A `<group>`'s members are named the same way (`logrow3.2`) and the group's name means all of them; see [`<group>`](#group).
 
 ## Conditions
 
@@ -237,7 +275,7 @@ The other forms:
 | File | Responsibility |
 |---|---|
 | `main.cpp`, `cli.cpp` | Resolve the game filename, build `Game` and `Engine` |
-| `game_xml.cpp` | Walk the parsed XML tags into raw window/variable/object/state data (`RawValue`, `RawCommand`, `RawSprite`) |
+| `game_xml.cpp` | Walk the parsed XML tags into raw window/variable/object/state data (`RawValue`, `RawCommand`, `RawSprite`); a `<group>` is read here as one raw object per member |
 | `game_expr.cpp` | exprtk symbol table and evaluation of raw values into `Object`s and `State`s |
 | `command.cpp` | Turn raw command tags into typed `Command`s |
 | `game.cpp` | Objects, state stack, per-frame update, collision pairs, conditions, resets |
@@ -246,7 +284,7 @@ The other forms:
 | `engine.cpp` | Frame loop and key handling |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests: collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format and its rejections (`test_xml_format`) and Frogger played frame by frame (opt-in with `BUILD_TESTING`) |
+| `tests/` | Catch2 tests: collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format and its rejections (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers) and Frogger played frame by frame (opt-in with `BUILD_TESTING`) |
 
 ## Known limitations
 
@@ -260,7 +298,7 @@ The other forms:
 - `carry()` lends velocity one frame at a time and only while touching. It is not attached: a carried object that meets a screen edge is handled by that edge's rule like any other (Frogger's frog loses a life), and nothing pushes it into a wall.
 - A pair in which nothing moves is not looked at (see the collision rules above), so a rule against something that stands still runs only when the object moves, is carried, or hops.
 - `unless` names a class, not a single object, and only exists on object-against-object rules.
-- `wrap()` assumes what it wraps is spaced with its own size in mind (a lane of things that are `size` wide repeats every window width plus `size`), and lanes of different sizes and spacings are laid out by hand: a `<grid>` gives one velocity and one spacing to all its cells.
+- `wrap()` assumes what it wraps is spaced with its own size in mind (a lane of things that are `size` wide repeats every window width plus `size`), and the members of a lane (a `<group>`) are placed by hand, one `<x>` each: there is no way yet to say "this many, evenly spaced". A `<grid>` gives one velocity and one spacing to all its cells.
 - Only the object-against-object test is swept. A screen edge is still checked by position before the move, so an object that moves more than a whole window's width in one frame is not caught by it; rotation and acceleration are not modeled. A shape that is not a rectangle or circle (text, image) is treated as its bounding box.
 - Expressions inside a value are not checked by the schema (they are text); a typo in one is a runtime error (the engine reports it and exits), not a validation error. Structure, tag names, attributes and command verbs are checked.
 - The weak validator (`xsd_lite`) covers only the XSD subset this project uses; Xerces is the full check.

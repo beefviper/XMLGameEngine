@@ -149,6 +149,12 @@ namespace xge
 		std::map<std::string, std::vector<RawCommand>> action;
 		std::map<std::string, RawValue> variable;
 
+		// The <group> this object is a member of, or empty for a plain
+		// <object>. A group is written once in the file and read as one
+		// RawObject per member (see game_xml.cpp), so from here on a member
+		// is an ordinary object that also remembers which group it came from.
+		std::string groupName;
+
 		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
 	};
 
@@ -166,6 +172,12 @@ namespace xge
 		// <reset object="..." /> refer to, so they can still mean the whole grid at once;
 		// a cell can also be named on its own (aliens.3.2).
 		std::string baseName;
+
+		// The <group> this object is a member of ("logrow3" for logrow3.1,
+		// logrow3.2, ...), or empty. Like baseName it can be used wherever the
+		// XML names an object (a state's <show>, object= in a rule or
+		// condition, <reset object="..." />) to mean every member at once.
+		std::string groupName;
 		std::string objClass;
 		bool isVisible{ true };
 

@@ -21,7 +21,7 @@ A single condition on `class="paddle"` checks either paddle's score, instead of 
 
 ## Unique names for grid cells (built)
 
-The author's view was that every object block needs a unique name anyway. Every cell of a `<grid>` is now its own object, named after the grid with its column and row counted from 1 (`aliens.3.2`). The grid's own name still works where the whole group is meant: `<show object="aliens"/>`, a rule or condition with `object="aliens"`, `<reset object="aliens" />`, while a single cell can be named on its own. This is what lets each cell be swept and killed on its own ([11](11-collision-detection-and-response.md)) and lets a condition watch one alien. Names for formations (`group1[x]`) were not built.
+The author's view was that every object block needs a unique name anyway. Every cell of a `<grid>` is now its own object, named after the grid with its column and row counted from 1 (`aliens.3.2`). The grid's own name still works where the whole group is meant: `<show object="aliens"/>`, a rule or condition with `object="aliens"`, `<reset object="aliens" />`, while a single cell can be named on its own. This is what lets each cell be swept and killed on its own ([11](11-collision-detection-and-response.md)) and lets a condition watch one alien. Names for formations (`group1[x]`) were not built. The members of a `<group>` are named the same way, the group's name and a number (`logrow3.2`), and the group's own name means all of them ([29](29-groups.md)).
 
 ## Ideas discussed, not built
 

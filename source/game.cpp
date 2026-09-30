@@ -155,7 +155,7 @@ namespace xge
 
 		for (auto& shown : currentState.top().show)
 		{
-			if (shown == object.name || shown == object.baseName)
+			if (shown == object.name || shown == object.baseName || (!object.groupName.empty() && shown == object.groupName))
 			{
 				result = true;
 			}
@@ -174,8 +174,8 @@ namespace xge
 	}
 
 	// An exact name (aliens.3.2) finds that one object; the name from the XML
-	// (aliens) finds the first object made from it, which for anything that is
-	// not a grid is the object itself.
+	// (aliens, or the name of a <group>) finds the first object made from it,
+	// which for anything that is not a grid or a group is the object itself.
 	Object* Game::tryGetObject(const std::string& name) noexcept
 	{
 		const auto exact = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.name == name; });
@@ -184,7 +184,7 @@ namespace xge
 			return &(*exact);
 		}
 
-		const auto first = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.baseName == name; });
+		const auto first = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.baseName == name || (!obj.groupName.empty() && obj.groupName == name); });
 		return (first == std::end(objects)) ? nullptr : &(*first);
 	}
 
@@ -364,10 +364,11 @@ namespace xge
 		}
 
 		// A name from the XML (aliens) means every object made from it - the
-		// whole grid - and an exact one (aliens.3.2) just that one.
+		// whole grid, or the whole group - and an exact one (aliens.3.2) just
+		// that one.
 		for (auto& candidate : objects)
 		{
-			if (candidate.name == name || candidate.baseName == name)
+			if (candidate.name == name || candidate.baseName == name || (!candidate.groupName.empty() && candidate.groupName == name))
 			{
 				resetObjectState(candidate);
 			}
@@ -481,7 +482,8 @@ namespace xge
 		bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Object& candidate)
 		{
 			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
-			if (!filterObject.empty() && filterObject != candidate.name && filterObject != candidate.baseName) { return false; }
+			if (!filterObject.empty() && filterObject != candidate.name && filterObject != candidate.baseName
+				&& (candidate.groupName.empty() || filterObject != candidate.groupName)) { return false; }
 			return true;
 		}
 

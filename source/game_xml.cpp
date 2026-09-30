@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <map>
+#include <optional>
 #include <stdexcept>
 
 namespace xge
@@ -291,31 +293,20 @@ namespace xge
 			}
 		}
 
-		RawObject readObject(const XmlNode& object)
+		// <collisions>: whether they are on, whether the objects move in lockstep
+		// with the others of their grid or group, then the rules.
+		RawCollisionData readCollisions(const XmlNode& collisions, const std::string& where)
 		{
-			RawObject rawObject;
-			rawObject.name = requireAttribute(object, "name", "<object>");
-			rawObject.objClass = getAttribute(&object, "class");
-
-			const std::string where = "object '" + rawObject.name + "'";
-
-			rawObject.sprite = readSprite(*requireChild(object, "sprite", where), where);
-			rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
-			rawObject.rawVelocity = readVector2(*requireChild(object, "velocity", where), where);
-
-			// <collisions>: whether they are on, whether the object moves in lockstep with
-			// the others in its grid, then the rules.
-			std::unique_ptr<XmlNode> collisions = requireChild(object, "collisions", where);
 			const std::string collisionsHere = where + " > <collisions>";
-			RawCollisionData& collisionData = rawObject.rawCollisionData;
+			RawCollisionData collisionData;
 
-			collisionData.enabled = readBool(*requireChild(*collisions, "enabled", collisionsHere), collisionsHere);
-			if (auto lockstep = findChild(collisions.get(), "lockstep"))
+			collisionData.enabled = readBool(*requireChild(collisions, "enabled", collisionsHere), collisionsHere);
+			if (auto lockstep = findChild(&collisions, "lockstep"))
 			{
 				collisionData.lockstep = readBool(*lockstep, collisionsHere);
 			}
 
-			for (std::unique_ptr<XmlNode> collision = findChild(collisions.get(), "collision"); collision != nullptr; collision = collision->getNextSibling())
+			for (std::unique_ptr<XmlNode> collision = findChild(&collisions, "collision"); collision != nullptr; collision = collision->getNextSibling())
 			{
 				if (collision->getName() != "collision") { continue; }
 
@@ -357,23 +348,160 @@ namespace xge
 				}
 			}
 
-			// <actions>: named things the object can do, run by a <trigger>.
+			return collisionData;
+		}
+
+		// <actions>: named things the object can do, run by a <trigger>. Nothing
+		// is added if `object` has none.
+		void readActions(const XmlNode& object, const std::string& where,
+			std::map<std::string, std::vector<RawCommand>>& out)
+		{
 			if (std::unique_ptr<XmlNode> actions = findChild(&object, "actions"))
 			{
 				for (std::unique_ptr<XmlNode> action = actions->getFirstChild(); action != nullptr; action = action->getNextSibling())
 				{
 					const std::string actionName = requireAttribute(*action, "name", where + " > <actions>");
-					rawObject.action[actionName] = readCommands(action->getFirstChild(), where + " > <action name=\"" + actionName + "\">");
+					out[actionName] = readCommands(action->getFirstChild(), where + " > <action name=\"" + actionName + "\">");
 				}
 			}
+		}
 
-			// <variables>: numbers the object owns, read elsewhere as name.variable.
+		// <variables>: numbers the object owns, read elsewhere as name.variable.
+		void readObjectVariables(const XmlNode& object, const std::string& where, std::map<std::string, RawValue>& out)
+		{
 			std::unique_ptr<XmlNode> variablesNode = findChild(&object, "variables");
 			std::vector<std::pair<std::string, RawValue>> variables;
 			readVariables(variablesNode.get(), where + " > <variables>", variables);
-			for (auto& [name, value] : variables) { rawObject.variable[name] = std::move(value); }
+			for (auto& [name, value] : variables) { out[name] = std::move(value); }
+		}
+
+		RawObject readObject(const XmlNode& object)
+		{
+			RawObject rawObject;
+			rawObject.name = requireAttribute(object, "name", "<object>");
+			rawObject.objClass = getAttribute(&object, "class");
+
+			const std::string where = "object '" + rawObject.name + "'";
+
+			rawObject.sprite = readSprite(*requireChild(object, "sprite", where), where);
+			rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
+			rawObject.rawVelocity = readVector2(*requireChild(object, "velocity", where), where);
+			rawObject.rawCollisionData = readCollisions(*requireChild(object, "collisions", where), where);
+			readActions(object, where, rawObject.action);
+			readObjectVariables(object, where, rawObject.variable);
 
 			return rawObject;
+		}
+
+		// Some of an <x>/<y> pair. A <group> gives what its members share and a
+		// <member> only what differs, so either half may be left out of either.
+		struct PartialVector2
+		{
+			std::optional<RawValue> x;
+			std::optional<RawValue> y;
+		};
+
+		PartialVector2 readPartialVector2(const XmlNode& node, const std::string& where)
+		{
+			const std::string here = where + " > <" + node.getName() + ">";
+			PartialVector2 vector;
+			if (auto x = findChild(&node, "x")) { vector.x = readValue(*x, here); }
+			if (auto y = findChild(&node, "y")) { vector.y = readValue(*y, here); }
+			return vector;
+		}
+
+		// What a member says for one thing, else what its group says, else an error.
+		RawValue pickValue(const std::optional<RawValue>& own, const std::optional<RawValue>& shared,
+			const std::string& where, const std::string& what)
+		{
+			if (own) { return *own; }
+			if (shared) { return *shared; }
+			fail(where, "has no " + what + ", and neither does its group");
+		}
+
+		// A <group> is read as one RawObject per <member>, in the order written.
+		// The group gives what its members share (sprite, position, velocity,
+		// collisions, actions, variables, all optional) and each member gives what
+		// is its own, taking the rest from the group: a member's <sprite>,
+		// <position> (or just its <x> or <y>) and <velocity> win over the group's.
+		// What a member has after that must be complete, as an <object> is. A member
+		// is called name="..." if it says so, otherwise the group's name, a dot and
+		// its number counting from 1 (logrow3.2); the group's name still means
+		// every member at once (see Object::groupName).
+		void readGroup(const XmlNode& group, std::vector<RawObject>& out)
+		{
+			const std::string name = requireAttribute(group, "name", "<group>");
+			const std::string where = "group '" + name + "'";
+
+			std::optional<RawSprite> sprite;
+			PartialVector2 position;
+			PartialVector2 velocity;
+			std::optional<RawCollisionData> collisions;
+
+			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+
+				if (tag == "sprite") { sprite = readSprite(*child, where); }
+				else if (tag == "position") { position = readPartialVector2(*child, where); }
+				else if (tag == "velocity") { velocity = readPartialVector2(*child, where); }
+				else if (tag == "collisions") { collisions = readCollisions(*child, where); }
+				else if (tag != "actions" && tag != "variables" && tag != "member")
+				{
+					fail(where, "unknown <" + tag + ">; expected <sprite>, <position>, <velocity>, <collisions>, <actions>, <variables> or <member>");
+				}
+			}
+
+			RawObject shared;
+			readActions(group, where, shared.action);
+			readObjectVariables(group, where, shared.variable);
+
+			int count = 0;
+
+			for (std::unique_ptr<XmlNode> member = findChild(&group, "member"); member != nullptr; member = member->getNextSibling())
+			{
+				if (member->getName() != "member") { continue; }
+
+				++count;
+				const std::string ownName = member->getAttribute("name");
+				const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
+				const std::string here = "object '" + memberName + "' (a member of " + where + ")";
+
+				std::optional<RawSprite> ownSprite;
+				PartialVector2 ownPosition;
+				PartialVector2 ownVelocity;
+
+				for (std::unique_ptr<XmlNode> child = member->getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					const std::string tag = child->getName();
+
+					if (tag == "sprite") { ownSprite = readSprite(*child, here); }
+					else if (tag == "position") { ownPosition = readPartialVector2(*child, here); }
+					else if (tag == "velocity") { ownVelocity = readPartialVector2(*child, here); }
+					else { fail(here, "unknown <" + tag + ">; a member can give a <sprite>, <position> or <velocity>"); }
+				}
+
+				RawObject rawObject = shared;
+				rawObject.name = memberName;
+				rawObject.objClass = getAttribute(&group, "class");
+				rawObject.groupName = name;
+
+				if (ownSprite) { rawObject.sprite = *ownSprite; }
+				else if (sprite) { rawObject.sprite = *sprite; }
+				else { fail(here, "has no <sprite>, and neither does its group"); }
+
+				rawObject.rawPosition.x = pickValue(ownPosition.x, position.x, here, "<position><x>");
+				rawObject.rawPosition.y = pickValue(ownPosition.y, position.y, here, "<position><y>");
+				rawObject.rawVelocity.x = pickValue(ownVelocity.x, velocity.x, here, "<velocity><x>");
+				rawObject.rawVelocity.y = pickValue(ownVelocity.y, velocity.y, here, "<velocity><y>");
+
+				if (!collisions) { fail(where, "missing <collisions>"); }
+				rawObject.rawCollisionData = *collisions;
+
+				out.push_back(std::move(rawObject));
+			}
+
+			if (count == 0) { fail(where, "has no <member>"); }
 		}
 
 		RawState readState(const XmlNode& state)
@@ -510,7 +638,8 @@ namespace xge
 		// load objects
 		for (std::unique_ptr<XmlNode> object = objectsNode->getFirstChild(); object != nullptr; object = object->getNextSibling())
 		{
-			rawObjects.push_back(readObject(*object));
+			if (object->getName() == "group") { readGroup(*object, rawObjects); }
+			else { rawObjects.push_back(readObject(*object)); }
 		}
 
 		// load states

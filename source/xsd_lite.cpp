@@ -149,12 +149,23 @@ namespace xge
 		// the children matched so far up to `position`, and, when it did not
 		// match, either a real error inside a child that was there
 		// (`hardError`), or just what it was still waiting for (`expected`).
+		// Optional parts are tried and put back, so `position` says little about
+		// where a mismatch really was; `failPosition` and `failExpected` keep the
+		// furthest child at which something the content model wanted was not
+		// there, which is what a message should point at.
 		struct MatchState
 		{
 			std::size_t position = 0;
 			bool hardError = false;
 			std::string error;
 			std::string expected;
+			std::size_t failPosition = 0;
+			std::string failExpected;
+
+			void noteFailure(std::size_t at, const std::string& wanted)
+			{
+				if (at >= failPosition) { failPosition = at; failExpected = wanted; }
+			}
 		};
 
 		bool matchParticle(const Particle& particle, const Children& children, MatchState& state, const std::string& path) const;
@@ -575,14 +586,20 @@ namespace xge
 
 		if (matched && state.position == children.size()) { return true; }
 
-		if (state.position < children.size())
+		// Where it went wrong: for a match that fell short, the furthest child
+		// something was still wanted at (see MatchState); for one that matched
+		// but left children over, the first one left over.
+		const std::size_t at = matched ? state.position : state.failPosition;
+		const std::string& expected = matched ? state.expected : state.failExpected;
+
+		if (at < children.size())
 		{
-			error = path + ": unexpected element <" + children[state.position]->getName() + ">";
-			if (!state.expected.empty()) { error += ", expected " + state.expected; }
+			error = path + ": unexpected element <" + children[at]->getName() + ">";
+			if (!expected.empty()) { error += ", expected " + expected; }
 		}
 		else
 		{
-			error = path + ": " + (state.expected.empty() ? std::string("incomplete") : "expected " + state.expected + " but the element ends");
+			error = path + ": " + (expected.empty() ? std::string("incomplete") : "expected " + expected + " but the element ends");
 		}
 
 		return false;
@@ -597,6 +614,7 @@ namespace xge
 			if (state.position >= children.size() || localName(children[state.position]->getName()) != particle.name)
 			{
 				state.expected = "<" + particle.name + ">";
+				state.noteFailure(state.position, state.expected);
 				return false;
 			}
 
@@ -654,6 +672,7 @@ namespace xge
 			state.expected = "one of";
 			for (std::size_t i = 0; i < names.size() && i < 6; ++i) { state.expected += (i ? ", " : " ") + names[i]; }
 			if (names.size() > 6) { state.expected += ", ..."; }
+			state.noteFailure(start, state.expected);
 		}
 
 		return matchedEmpty;

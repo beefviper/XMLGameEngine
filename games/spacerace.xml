@@ -9,10 +9,12 @@
   the top of the screen scores a point and sends it back for another go. The
   original played to a two minute clock; this plays to two points, to be quick.
 
-  It uses nothing that was not already in the language: held <move> for the
-  rockets, <wrap /> and hand-spaced objects for the debris (a lane of objects
-  `size` wide repeats every window width plus `size`), <reset /> when a rocket is
-  hit, <inc> and <reset /> on the top edge, and a variable condition to end it.
+  It uses held <move> for the rockets, and for the debris a <group> per lane
+  (the size, speed, row and <wrap /> written once, each <member> saying where it
+  starts; debris5.2 is the second piece in the fifth lane, and debris5 means the
+  whole lane) with the pieces spaced by hand (a lane of objects `size` wide
+  repeats every window width plus `size`), <reset /> when a rocket is hit, <inc>
+  and <reset /> on the top edge, and a variable condition to end it.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
@@ -30,7 +32,7 @@
     <variable name="margin">10</variable>
   </variables>
   <objects>
-    <object name="debris1a" class="debris">
+    <group name="debris1" class="debris">
       <sprite>
         <rectangle>
           <width>16</width>
@@ -38,7 +40,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>0</x>
         <y>75</y>
       </position>
       <velocity>
@@ -51,52 +52,23 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris1b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>16</width>
-          <height>16</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>272</x>
-        <y>75</y>
-      </position>
-      <velocity>
-        <x>2.0</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris1c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>16</width>
-          <height>16</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>544</x>
-        <y>75</y>
-      </position>
-      <velocity>
-        <x>2.0</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris2a" class="debris">
+      <member>
+        <position>
+          <x>0</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>272</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>544</x>
+        </position>
+      </member>
+    </group>
+    <group name="debris2" class="debris">
       <sprite>
         <rectangle>
           <width>14</width>
@@ -104,7 +76,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>97</x>
         <y>122</y>
       </position>
       <velocity>
@@ -117,52 +88,23 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris2b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>14</width>
-          <height>14</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>368</x>
-        <y>122</y>
-      </position>
-      <velocity>
-        <x>-3.0</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris2c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>14</width>
-          <height>14</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>639</x>
-        <y>122</y>
-      </position>
-      <velocity>
-        <x>-3.0</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris3a" class="debris">
+      <member>
+        <position>
+          <x>97</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>368</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>639</x>
+        </position>
+      </member>
+    </group>
+    <group name="debris3" class="debris">
       <sprite>
         <rectangle>
           <width>18</width>
@@ -170,7 +112,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>194</x>
         <y>166</y>
       </position>
       <velocity>
@@ -183,52 +124,23 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris3b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>18</width>
-          <height>18</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>466</x>
-        <y>166</y>
-      </position>
-      <velocity>
-        <x>1.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris3c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>18</width>
-          <height>18</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>739</x>
-        <y>166</y>
-      </position>
-      <velocity>
-        <x>1.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris4a" class="debris">
+      <member>
+        <position>
+          <x>194</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>466</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>739</x>
+        </position>
+      </member>
+    </group>
+    <group name="debris4" class="debris">
       <sprite>
         <rectangle>
           <width>12</width>
@@ -236,7 +148,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>21</x>
         <y>215</y>
       </position>
       <velocity>
@@ -249,52 +160,23 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris4b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>12</width>
-          <height>12</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>291</x>
-        <y>215</y>
-      </position>
-      <velocity>
-        <x>-2.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris4c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>12</width>
-          <height>12</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>562</x>
-        <y>215</y>
-      </position>
-      <velocity>
-        <x>-2.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris5a" class="debris">
+      <member>
+        <position>
+          <x>21</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>291</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>562</x>
+        </position>
+      </member>
+    </group>
+    <group name="debris5" class="debris">
       <sprite>
         <rectangle>
           <width>16</width>
@@ -302,7 +184,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>116</x>
         <y>259</y>
       </position>
       <velocity>
@@ -315,52 +196,23 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris5b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>16</width>
-          <height>16</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>388</x>
-        <y>259</y>
-      </position>
-      <velocity>
-        <x>3.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris5c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>16</width>
-          <height>16</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>660</x>
-        <y>259</y>
-      </position>
-      <velocity>
-        <x>3.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris6a" class="debris">
+      <member>
+        <position>
+          <x>116</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>388</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>660</x>
+        </position>
+      </member>
+    </group>
+    <group name="debris6" class="debris">
       <sprite>
         <rectangle>
           <width>14</width>
@@ -368,7 +220,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>214</x>
         <y>306</y>
       </position>
       <velocity>
@@ -381,52 +232,23 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris6b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>14</width>
-          <height>14</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>485</x>
-        <y>306</y>
-      </position>
-      <velocity>
-        <x>-1.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris6c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>14</width>
-          <height>14</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>756</x>
-        <y>306</y>
-      </position>
-      <velocity>
-        <x>-1.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris7a" class="debris">
+      <member>
+        <position>
+          <x>214</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>485</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>756</x>
+        </position>
+      </member>
+    </group>
+    <group name="debris7" class="debris">
       <sprite>
         <rectangle>
           <width>18</width>
@@ -434,7 +256,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>38</x>
         <y>350</y>
       </position>
       <velocity>
@@ -447,52 +268,23 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris7b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>18</width>
-          <height>18</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>310</x>
-        <y>350</y>
-      </position>
-      <velocity>
-        <x>2.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris7c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>18</width>
-          <height>18</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>583</x>
-        <y>350</y>
-      </position>
-      <velocity>
-        <x>2.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris8a" class="debris">
+      <member>
+        <position>
+          <x>38</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>310</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>583</x>
+        </position>
+      </member>
+    </group>
+    <group name="debris8" class="debris">
       <sprite>
         <rectangle>
           <width>12</width>
@@ -500,7 +292,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>139</x>
         <y>399</y>
       </position>
       <velocity>
@@ -513,52 +304,23 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris8b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>12</width>
-          <height>12</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>409</x>
-        <y>399</y>
-      </position>
-      <velocity>
-        <x>-3.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris8c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>12</width>
-          <height>12</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>680</x>
-        <y>399</y>
-      </position>
-      <velocity>
-        <x>-3.5</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris9a" class="debris">
+      <member>
+        <position>
+          <x>139</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>409</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>680</x>
+        </position>
+      </member>
+    </group>
+    <group name="debris9" class="debris">
       <sprite>
         <rectangle>
           <width>16</width>
@@ -566,7 +328,6 @@
         </rectangle>
       </sprite>
       <position>
-        <x>232</x>
         <y>443</y>
       </position>
       <velocity>
@@ -579,51 +340,22 @@
           <wrap />
         </collision>
       </collisions>
-    </object>
-    <object name="debris9b" class="debris">
-      <sprite>
-        <rectangle>
-          <width>16</width>
-          <height>16</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>504</x>
-        <y>443</y>
-      </position>
-      <velocity>
-        <x>1.0</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="debris9c" class="debris">
-      <sprite>
-        <rectangle>
-          <width>16</width>
-          <height>16</height>
-        </rectangle>
-      </sprite>
-      <position>
-        <x>776</x>
-        <y>443</y>
-      </position>
-      <velocity>
-        <x>1.0</x>
-        <y>0</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
+      <member>
+        <position>
+          <x>232</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>504</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>776</x>
+        </position>
+      </member>
+    </group>
     <object name="rocket1" class="rocket">
       <sprite>
         <rectangle>
@@ -881,33 +613,15 @@
     </state>
     <state name="playing">
       <shows>
-        <show object="debris1a" />
-        <show object="debris1b" />
-        <show object="debris1c" />
-        <show object="debris2a" />
-        <show object="debris2b" />
-        <show object="debris2c" />
-        <show object="debris3a" />
-        <show object="debris3b" />
-        <show object="debris3c" />
-        <show object="debris4a" />
-        <show object="debris4b" />
-        <show object="debris4c" />
-        <show object="debris5a" />
-        <show object="debris5b" />
-        <show object="debris5c" />
-        <show object="debris6a" />
-        <show object="debris6b" />
-        <show object="debris6c" />
-        <show object="debris7a" />
-        <show object="debris7b" />
-        <show object="debris7c" />
-        <show object="debris8a" />
-        <show object="debris8b" />
-        <show object="debris8c" />
-        <show object="debris9a" />
-        <show object="debris9b" />
-        <show object="debris9c" />
+        <show object="debris1" />
+        <show object="debris2" />
+        <show object="debris3" />
+        <show object="debris4" />
+        <show object="debris5" />
+        <show object="debris6" />
+        <show object="debris7" />
+        <show object="debris8" />
+        <show object="debris9" />
         <show object="rocket1" />
         <show object="rocket2" />
         <show object="score1" />

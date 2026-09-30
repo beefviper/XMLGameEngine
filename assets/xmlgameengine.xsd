@@ -249,6 +249,83 @@
     <xs:attribute name="variable" type="xs:string" use="optional" />
   </xs:complexType>
 
+  <!-- Some of two numbers: a group's or a member's <position> and <velocity>. -->
+  <xs:complexType name="partialVector2Type">
+    <xs:sequence>
+      <xs:element name="x" type="valueType" minOccurs="0" />
+      <xs:element name="y" type="valueType" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Whether collisions are on, whether the object moves in lockstep with the others of its grid or group, then the rules. -->
+  <xs:complexType name="collisionsType">
+    <xs:sequence>
+      <xs:element name="enabled" type="xs:boolean" />
+      <xs:element name="lockstep" type="xs:boolean" minOccurs="0" />
+      <xs:element name="collision" type="collisionType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="actionsType">
+    <xs:sequence>
+      <xs:element name="action" type="actionType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- The variables an object owns. -->
+  <xs:complexType name="variablesType">
+    <xs:sequence>
+      <xs:element name="variable" type="variableType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Anything that can be drawn, moved or collided with. -->
+  <xs:complexType name="objectType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteType" />
+      <xs:element name="position" type="vector2Type" />
+      <xs:element name="velocity" type="vector2Type" />
+      <xs:element name="collisions" type="collisionsType" />
+      <xs:element name="actions" type="actionsType" minOccurs="0" />
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="class" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!--
+    Objects that share a description: a lane of logs or cars, the pads at the
+    top of Frogger, a row of debris. The group says what its members have in
+    common (all of it optional) and each member says only what is its own; what
+    a member leaves out it takes from its group, and after that it must be as
+    complete as an object. A member's <position> and <velocity> can give just
+    an <x> or a <y>. The group's class is every member's. A member is called
+    name="..." if it says so, otherwise the group's name, a dot, and its number
+    counting from 1 (lane3.2), and the group's name means all of them.
+  -->
+  <xs:complexType name="memberType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteType" minOccurs="0" />
+      <xs:element name="position" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <xs:complexType name="groupType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteType" minOccurs="0" />
+      <xs:element name="position" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="collisions" type="collisionsType" />
+      <xs:element name="actions" type="actionsType" minOccurs="0" />
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+      <xs:element name="member" type="memberType" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="class" type="xs:string" use="optional" />
+  </xs:complexType>
+
   <xs:element name="game">
     <xs:complexType>
       <xs:sequence>
@@ -273,42 +350,10 @@
         </xs:element>
         <xs:element name="objects">
           <xs:complexType>
-            <xs:sequence>
-              <xs:element name="object" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="sprite" type="spriteType" />
-                    <xs:element name="position" type="vector2Type" />
-                    <xs:element name="velocity" type="vector2Type" />
-                    <xs:element name="collisions">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="enabled" type="xs:boolean" />
-                          <xs:element name="lockstep" type="xs:boolean" minOccurs="0" />
-                          <xs:element name="collision" type="collisionType" minOccurs="0" maxOccurs="unbounded" />
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element name="actions" minOccurs="0">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="action" type="actionType" maxOccurs="unbounded" />
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element name="variables" minOccurs="0">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="variable" type="variableType" maxOccurs="unbounded" />
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="class" type="xs:string" use="optional" />
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+              <xs:element name="object" type="objectType" />
+              <xs:element name="group" type="groupType" />
+            </xs:choice>
           </xs:complexType>
         </xs:element>
         <xs:element name="states">

@@ -50,6 +50,7 @@ add_executable(XMLGameEngineTests
 	"tests/test_engine_input.cpp"
 	"tests/test_new_verbs.cpp"
 	"tests/test_xml_format.cpp"
+	"tests/test_group.cpp"
 	"tests/test_frogger.cpp"
 	"tests/test_spacerace.cpp"
 )

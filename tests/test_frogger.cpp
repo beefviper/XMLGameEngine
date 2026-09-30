@@ -228,7 +228,7 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 TEST_CASE("a car takes a life and sends the frog back to the start", "[frogger][collision]")
 {
 	Table table;
-	Object& car = table.game.getObject("carrow12a");
+	Object& car = table.game.getObject("carrow12.1");
 
 	// The frog is put in the car's lane, right where the car is.
 	table.frog().position = { car.position.x, car.position.y };
@@ -267,7 +267,7 @@ TEST_CASE("hopping into the river with no log there costs a life", "[frogger][ri
 TEST_CASE("hopping onto a log is safe, and the log carries the frog", "[frogger][river][carry]")
 {
 	Table table;
-	const Object& log = table.game.getObject("logrow6a"); // 4 cells long, +1 a frame
+	const Object& log = table.game.getObject("logrow6.1"); // 4 cells long, +1 a frame
 
 	table.frog().position = { log.position.x + 60.0f, cellPosition(0, 7).y };
 	table.hop("up");
@@ -285,7 +285,7 @@ TEST_CASE("hopping onto a log is safe, and the log carries the frog", "[frogger]
 TEST_CASE("a log carrying the frog off the side of the screen costs a life", "[frogger][river][carry]")
 {
 	Table table;
-	const Object& log = table.game.getObject("logrow6c"); // from 576, heading right
+	const Object& log = table.game.getObject("logrow6.3"); // from 576, heading right
 
 	// Hop up onto its first cells, as far right as a hop can go.
 	table.frog().position = { 580.0f, cellPosition(0, 7).y };
@@ -316,7 +316,7 @@ TEST_CASE("a hedge costs a life", "[frogger][collision]")
 TEST_CASE("reaching a pad scores, puts the pad away and sends the frog back", "[frogger][pads]")
 {
 	Table table;
-	Object& pad = table.game.getObject("pad1");
+	Object& pad = table.game.getObject("pads.1");
 
 	table.place(2, 2);
 	table.hop("up");
@@ -329,7 +329,7 @@ TEST_CASE("reaching a pad scores, puts the pad away and sends the frog back", "[
 	CHECK_FALSE(pad.collisionData.enabled);
 
 	// The frog that was under it is still there, now to be seen.
-	CHECK(table.game.getObject("home1").isVisible);
+	CHECK(table.game.getObject("homes.1").isVisible);
 }
 
 TEST_CASE("all five pads is a win", "[frogger][pads]")
@@ -397,7 +397,7 @@ TEST_CASE("cars, trucks and logs loop round the screen without losing their spac
 		std::vector<Object*> members;
 		for (int i = 0; i < l.count; ++i)
 		{
-			members.push_back(&table.game.getObject(std::string(l.prefix) + "abc"[i]));
+			members.push_back(&table.game.getObject(std::string(l.prefix) + "." + std::to_string(i + 1)));
 		}
 		return members;
 	};
@@ -449,7 +449,7 @@ TEST_CASE("cars, trucks and logs loop round the screen without losing their spac
 TEST_CASE("an object only wraps once it has gone right off the screen", "[frogger][wrap]")
 {
 	Table table;
-	Object& car = table.game.getObject("carrow9a"); // 36 wide, +3 a frame
+	Object& car = table.game.getObject("carrow9.1"); // 36 wide, +3 a frame
 
 	car.position.x = kWindowWidth - 20.0f; // still partly in view
 	table.frames(1);
@@ -459,7 +459,7 @@ TEST_CASE("an object only wraps once it has gone right off the screen", "[frogge
 	table.frames(1);
 	CHECK(car.position.x == kWindowWidth + 1.0f - (kWindowWidth + 36.0f) + 3.0f);
 
-	Object& other = table.game.getObject("carrow10a"); // heading left, -1.5
+	Object& other = table.game.getObject("carrow10.1"); // heading left, -1.5
 	other.position.x = -36.0f - 2.0f; // gone off the left
 	table.frames(1);
 	CHECK(other.position.x == -38.0f + (kWindowWidth + 36.0f) - 1.5f);

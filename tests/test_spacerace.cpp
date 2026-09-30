@@ -102,7 +102,7 @@ TEST_CASE("a held key flies a rocket up and stops at the bottom of the screen", 
 TEST_CASE("a rocket hit by debris goes back to the start", "[spacerace]")
 {
 	Table table;
-	const Object& debris = table.game.getObject("debris5b");
+	const Object& debris = table.game.getObject("debris5.2");
 
 	table.rocket(2).position = { debris.position.x, debris.position.y };
 	table.frames(1);
@@ -186,10 +186,10 @@ TEST_CASE("the debris loops round without losing its spacing", "[spacerace][wrap
 
 	const auto spacing = [&](const std::string& lane)
 	{
-		const Object& first = table.game.getObject(lane + "a");
+		const Object& first = table.game.getObject(lane + ".1");
 		const float loop = kWindowWidth + first.size.x;
 		std::vector<float> gaps;
-		for (const char member : { 'b', 'c' })
+		for (const std::string member : { ".2", ".3" })
 		{
 			const Object& other = table.game.getObject(lane + member);
 			gaps.push_back(std::fmod(other.position.x - first.position.x + 2 * loop, loop));
@@ -205,7 +205,7 @@ TEST_CASE("the debris loops round without losing its spacing", "[spacerace][wrap
 		table.frames(1);
 		for (const auto& lane : lanes)
 		{
-			for (const char member : { 'a', 'b', 'c' })
+			for (const std::string member : { ".1", ".2", ".3" })
 			{
 				const Object& debris = table.game.getObject(lane + member);
 				REQUIRE(debris.position.x > -debris.size.x - 4.0f);

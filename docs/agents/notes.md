@@ -31,14 +31,14 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 - The engine's internal list of unfiltered and filtered object-against-object collision rules is still called `basic` (`collisionData.basic`), a leftover of the old `basic="basic"` spelling; the XML no longer has it.
 - Backends are only selectable in C++ (constructor arguments), not on the command line.
 - A new game file has to be added to `data_xml` in `scripts/cmake/assets.cmake`, or the build does not copy it into the build directory; a new test file has to be added to the list in `scripts/cmake/tests.cmake`.
-- Frogger's board is built from many named rectangles, drawn in file order (so scenery first, the frog last). It is long because the language has no way yet to say a lane of differently spaced objects; see [21](../designs/21-frogger.md).
+- Frogger's board is built from many named rectangles, drawn in file order (so scenery first, the frog last); its lanes, pads, homes and hedges are `<group>`s, read as one object per member (`logrow3.2`, `pads.1`), and Space Race's debris lanes the same way. The tests address members by those names. See [21](../designs/21-frogger.md) and [29](../designs/29-groups.md).
 - On Windows the repo's `.gitattributes` converts line endings on commit; git prints LF-to-CRLF warnings, which are harmless.
 
 ## Suggested next steps (not started)
 
 1. Decide design 04 (arithmetic as text vs elements); design 03 is done.
 2. Add an arcing jump ([design 13](../designs/13-verb-vocabulary.md), and the air-control refinement in [design 23](../designs/23-jump-and-air-control.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
-3. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, show and hide verbs, and per-row velocity in `<grid>` (the `<group>` tag in [design 29](../designs/29-groups.md), with prototype XML for Frogger and Space Race in `docs/designs/29-groups/`, covers lanes better).
+3. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, show and hide verbs, and per-row velocity in `<grid>` (the built `<group>` tag, [design 29](../designs/29-groups.md), covers lanes; its open points are nested groups, a bare `<x>` in a member and evenly spaced members).
 4. Rename `collisionData.basic` (and the `basic=` label in `printGame()`) to something that says what it is.
 5. Sort out the file structure: `source/` and `include/` are flat and growing (23 files each). Move them into folders by responsibility (parse and evaluate, engine loop, collision, window backends, XML backends); the Visual Studio filters are meant to be built from the directories, so this is only about the layout on disk. Not started; design 16 has the history of the earlier, over-layered attempt on the `rewrite` branch and why it was flattened.
 6. Designs 22 to 28 are ideas from a second batch of conversations, not plans; nothing in them is built.

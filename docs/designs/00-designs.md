@@ -36,7 +36,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 26 | Scrolling and screen regions | camera / world / region scroll; map layers; tile triggers; route branching | Undecided. **Idea** | [26](26-scrolling-and-screen-regions.md) |
 | 27 | Object composition and shape | opt-in parts; position and velocity vs at and moving; response block forms; shapes as reusable outlines | Opt-in parts favored. **Idea** | [27](27-object-composition-and-shape.md) |
 | 28 | Game ideas and test games | Pong variants, mocking difficulty, unwinnable starts, combat styles, packing, balance math | Candidates only. **Idea** | [28](28-game-ideas-and-test-games.md) |
-| 29 | Groups | one group per lane with members overriding what differs / group position as an origin / nested groups inheriting / `<grid>` with per-row velocity / reusable templates | One group per lane, a member takes what it leaves out from its group; prototype XML for Frogger and Space Race is about 30% smaller. **Idea**, not built | [29](29-groups.md) |
+| 29 | Groups | one group per lane with members overriding what differs / group position as an origin / nested groups inheriting / `<grid>` with per-row velocity / reusable templates | One group per lane, a member takes what it leaves out from its group; read as one object per member, and Frogger and Space Race are written with it (about 30% smaller). **Built** | [29](29-groups.md) |
 
 ## Reading order
 

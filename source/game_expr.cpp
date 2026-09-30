@@ -90,7 +90,11 @@ namespace xge
 			if (!objectVariables.count(name + ".height")) { symbolTable.add_variable(name + ".height", size.y); }
 		}
 
+		// Objects in lockstep share a number: every cell of a <grid>, and every
+		// member of a <group>, moves as one block with the others of its own
+		// grid or group. A plain object that asks for it is a block of one.
 		int lockstepNum = 1;
+		std::map<std::string, int> groupLockstep;
 
 		// evaluate strings in objects
 		for (auto& rawObject : rawObjects)
@@ -129,6 +133,21 @@ namespace xge
 
 			const bool isGrid = gridData.max.x > 1 || gridData.max.y > 1;
 
+			int thisLockstep = 0;
+			if (rawObject.rawCollisionData.lockstep)
+			{
+				if (rawObject.groupName.empty())
+				{
+					thisLockstep = lockstepNum;
+				}
+				else
+				{
+					const auto [entry, isFirstMember] = groupLockstep.try_emplace(rawObject.groupName, lockstepNum);
+					if (isFirstMember) { lockstepNum++; }
+					thisLockstep = entry->second;
+				}
+			}
+
 			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
 			{
 				for (auto gridY = 0; gridY < gridData.max.y; gridY++)
@@ -152,6 +171,7 @@ namespace xge
 					// from 1) so each cell can be found, hit and removed on
 					// its own; a plain object keeps the name it was given.
 					object.baseName = rawObject.name;
+					object.groupName = rawObject.groupName;
 					object.name = isGrid
 						? rawObject.name + "." + std::to_string(gridX + 1) + "." + std::to_string(gridY + 1)
 						: rawObject.name;
@@ -194,7 +214,7 @@ namespace xge
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
 					object.isVisibleOriginal = object.isVisible;
 					object.collisionEnabledOriginal = object.collisionData.enabled;
-					object.collisionData.lockstep = rawObject.rawCollisionData.lockstep ? lockstepNum : 0;
+					object.collisionData.lockstep = thisLockstep;
 
 					object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
 					object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
@@ -237,7 +257,7 @@ namespace xge
 				}
 			}
 
-			if (rawObject.rawCollisionData.lockstep) {
+			if (rawObject.rawCollisionData.lockstep && rawObject.groupName.empty()) {
 				lockstepNum++;
 			}
 		}
@@ -273,7 +293,8 @@ namespace xge
 				if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)
 					{
 						return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
-							&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name || rawCondition.filterObject == object.baseName);
+							&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name || rawCondition.filterObject == object.baseName
+								|| (!object.groupName.empty() && rawCondition.filterObject == object.groupName));
 					}))
 				{
 					std::cout << "warning: state '" << rawState.name << "': a condition with remaining= matches no object at all, so it would fire at once\n";
