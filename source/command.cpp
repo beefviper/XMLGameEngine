@@ -28,6 +28,8 @@ namespace xge
 				else if (verb == "stick") { commands.push_back(CmdStick{}); }
 				else if (verb == "reset") { commands.push_back(CmdReset{}); }
 				else if (verb == "die")   { commands.push_back(CmdDie{}); }
+				else if (verb == "wrap")  { commands.push_back(CmdWrap{}); }
+				else if (verb == "carry") { commands.push_back(CmdCarry{}); }
 				i += 2;
 			}
 			else if (tag == "moveup" || tag == "movedown" || tag == "moveleft" || tag == "moveright")
@@ -40,9 +42,24 @@ namespace xge
 				commands.push_back(CmdMove{ direction, step });
 				i += 2;
 			}
+			else if (tag == "hopup" || tag == "hopdown" || tag == "hopleft" || tag == "hopright")
+			{
+				const Direction direction = (tag == "hopup") ? Direction::Up
+					: (tag == "hopdown") ? Direction::Down
+					: (tag == "hopleft") ? Direction::Left
+					: Direction::Right;
+				const float distance = std::stof(tokens.at(i + 1));
+				commands.push_back(CmdHop{ direction, distance });
+				i += 2;
+			}
 			else if (tag == "inc")
 			{
 				commands.push_back(CmdIncrement{ tokens.at(i + 1) });
+				i += 2;
+			}
+			else if (tag == "dec")
+			{
+				commands.push_back(CmdDecrement{ tokens.at(i + 1) });
 				i += 2;
 			}
 			else if (tag == "state")
@@ -201,6 +218,8 @@ namespace xge
 			[&](const CmdStick&) { o << "stick"; },
 			[&](const CmdReset&) { o << "reset"; },
 			[&](const CmdDie&) { o << "die"; },
+			[&](const CmdWrap&) { o << "wrap"; },
+			[&](const CmdCarry&) { o << "carry"; },
 			[&](const CmdMove& m)
 			{
 				const char* direction = (m.direction == Direction::Up) ? "up"
@@ -209,7 +228,16 @@ namespace xge
 					: "right";
 				o << "move." << direction << "(" << m.step << ")";
 			},
+			[&](const CmdHop& h)
+			{
+				const char* direction = (h.direction == Direction::Up) ? "up"
+					: (h.direction == Direction::Down) ? "down"
+					: (h.direction == Direction::Left) ? "left"
+					: "right";
+				o << "hop." << direction << "(" << h.distance << ")";
+			},
 			[&](const CmdIncrement& c) { o << "inc(" << c.target << ")"; },
+			[&](const CmdDecrement& c) { o << "dec(" << c.target << ")"; },
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
 			[&](const CmdPopState&) { o << "state()"; },
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
@@ -220,4 +248,3 @@ namespace xge
 		return o;
 	}
 }
-

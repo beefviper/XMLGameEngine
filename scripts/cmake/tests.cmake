@@ -48,6 +48,8 @@ add_executable(XMLGameEngineTests
 	"tests/test_group_bounce.cpp"
 	"tests/test_size_expressions.cpp"
 	"tests/test_engine_input.cpp"
+	"tests/test_new_verbs.cpp"
+	"tests/test_frogger.cpp"
 )
 
 target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)

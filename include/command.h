@@ -52,6 +52,15 @@ namespace xge
 	struct CmdReset {};
 	struct CmdDie {};
 
+	// wrap() - once the object has gone right off the screen through an edge,
+	// it comes back in from the opposite one (see CommandExecutor::wrap).
+	struct CmdWrap {};
+
+	// carry() - in a collision rule about an object it is touching: the
+	// object rides along with that other one, at its velocity, for as long
+	// as they keep touching (see CommandExecutor::carry).
+	struct CmdCarry {};
+
 	struct CmdMove
 	{
 		Direction direction{};
@@ -65,6 +74,26 @@ namespace xge
 	struct CmdIncrement
 	{
 		std::string target;
+	};
+
+	// dec('ownerName.variableName') - the opposite of inc(): takes 1 off that
+	// object's named <variable> (or off a text object's own number) and
+	// refreshes every text bound to it.
+	struct CmdDecrement
+	{
+		std::string target;
+	};
+
+	// hop.up(distance), hop.down(distance), hop.left(distance),
+	// hop.right(distance) - only ever in an object's own <action>: a one-shot
+	// jump of `distance` pixels, made once for each press of the key (see
+	// CommandExecutor::triggerObjectAction and Game::moveObjects). Unlike
+	// move.*, holding the key does nothing more, and a state change never
+	// resumes it.
+	struct CmdHop
+	{
+		Direction direction{};
+		float distance{};
 	};
 
 	struct CmdPushState
@@ -99,8 +128,8 @@ namespace xge
 	};
 
 	using Command = std::variant<
-		CmdBounce, CmdStick, CmdReset, CmdDie,
-		CmdMove, CmdIncrement, CmdPushState, CmdPopState,
+		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry,
+		CmdMove, CmdHop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject>;
 
 	// Turns the flat token stream produced by game_expr's exprtk functors (e.g.
@@ -145,4 +174,3 @@ namespace xge
 
 	std::ostream& operator<<(std::ostream& o, const Command& command);
 }
-

@@ -27,6 +27,10 @@ namespace xge
 			{
 				o << "remaining=" << *condition.remaining;
 			}
+			else if (condition.atMost)
+			{
+				o << "variable=" << condition.variableName << ", atmost=" << *condition.atMost;
+			}
 			else
 			{
 				o << "variable=" << condition.variableName << ", value=" << condition.value;
@@ -63,6 +67,10 @@ namespace xge
 			if (condition.remaining)
 			{
 				o << "remaining=" << *condition.remaining;
+			}
+			else if (condition.atMost)
+			{
+				o << "variable=" << condition.variableName << ", atmost=" << *condition.atMost;
 			}
 			else
 			{

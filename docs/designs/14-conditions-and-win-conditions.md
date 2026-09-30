@@ -1,6 +1,6 @@
 # 14. Conditions and win conditions
 
-**Status:** implemented in a minimal form (state-level threshold and "none left" triggers)
+**Status:** implemented in a minimal form (state-level threshold, "has fallen to" and "none left" triggers)
 
 ## The problem
 
@@ -27,15 +27,17 @@ Once per frame, while the state is current, for each condition: find objects mat
 
 A second form covers the win that is not a score: `<condition class="aliens" remaining="0" action="state('gameover')" />`. It counts the matching objects that are still visible (`die()` hides an object) and fires when that count is no more than `remaining`. Space Invaders uses it: the aliens are all cells of one `grid()`, `class="aliens"` matches every cell, and when the last one dies the game goes to `gameover`, where a bare `reset()` restores them.
 
+A third form reads a variable from above: `<condition object="frog" variable="lives" atmost="0" action="state('gameover')" />` fires when the variable is at that value or below. Frogger counts its lives *down* with `dec()`, and "lives is 0" reads far better in the file than a condition that fires when a counter of deaths reaches 3, which would hide the starting number of lives in the condition instead of in the frog's own `<variable>`. It is `atmost` and not an operator for the same reason `remaining` is: a name that says what it means. It fires at or below, not only at equal, because a variable may go below zero (a life lost twice in one frame).
+
 Choices made: a name that says what it counts (`remaining`) rather than an operator or an expression; it counts *visible* objects, not enabled ones, because an alien that has died is both hidden and out of collisions while a text object with collisions off is still very much there; and a filter that matches nothing warns at load, since "none left" would otherwise be true from the first frame. Alternatives not built: a general comparison (`remaining="<3"`), or counting any variable across a class (`sum`, `count`), which is where a real expression language for conditions would start.
 
 ## Limits and options
 
 | Limit | Options |
 |---|---|
-| Only a `>=` threshold on one variable, or "no more than N left" | Comparison operators; conditions on two variables; conditions on expressions; counting by a variable's value |
+| Only a `>=` or `<=` threshold on one variable, or "no more than N left" | Comparison operators (`atmost` and the plain threshold are two of them, spelled as names); conditions on two variables; conditions on expressions; counting by a variable's value |
 | Only state-level conditions | Object-level conditions (change color when speed exceeds X; play a death animation at health 0) |
-| Threshold limited to 0-255 by the XSD (`xs:unsignedByte`) | Widen to a float/integer type |
+| Thresholds (`value`, `atmost`, `remaining`) limited to 0-255 by the XSD (`xs:unsignedByte`) | Widen to a float/integer type |
 | Target action is a state change | Fire any command; win/lose as first-class terms (compare VGDL's TerminationSet, which lists win and lose conditions) |
 
 Open: do conditions belong to states, objects, or both?

@@ -2,7 +2,7 @@
 
 Working notes for any AI coding agent (or new contributor) picking this project up. Everything the project itself relies on is in [../readme.md](../readme.md) and [../designs/00-designs.md](../designs/00-designs.md); this folder is for agent-facing bookkeeping.
 
-The first version of these docs (the design write-ups, `sources.md` and the scan script) was written by Claude (Sonnet 5.5) on 2026-09-29, from the author's exported chat history plus a read of the source on the `claude` branch.
+The first version of these docs (the design write-ups, `sources.md` and the scan script) was written by Claude (Sonnet 5.5) on 2026-09-29, from the author's exported chat history plus a read of the source on the `claude` branch. Frogger (`games/frogger.xml`), the verbs it needed and design write-up 21 were added by Claude (Sonnet 5.5) on 2026-09-30.
 
 ## What exists
 
@@ -22,10 +22,12 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 - The root `readme.md` is out of date: it says collisions, scoring and win condition are missing, and lists only Xerces, exprtk and SFML.
 - The repo has three branches: `master`, `rewrite`, `claude`. The active engine described in these docs is on `claude`.
 - The sample games still use function-call syntax in attributes ([design 03](../designs/03-expression-syntax.md)); the author has said that will go, so do not treat it as settled.
-- No handle system, no `Value` variant and no swept collision exist yet, despite being decided or discussed ([07](../designs/07-object-variables-and-references.md), [08](../designs/08-entity-storage-and-handles.md), [11](../designs/11-collision-detection-and-response.md)).
+- No handle system and no `Value` variant exist yet, despite being decided or discussed ([07](../designs/07-object-variables-and-references.md), [08](../designs/08-entity-storage-and-handles.md)). Swept collision is built ([11](../designs/11-collision-detection-and-response.md)).
 - `CollisionDetector::circleRectangle` has suspicious edge tests. Add a test in `tests/test_collision_geometry.cpp` before changing it.
 - The XSD limits `variable/@value` to an integer and `condition/@value` to 0-255.
 - Backends are only selectable in C++ (constructor arguments), not on the command line.
+- A new game file has to be added to `data_xml` in `scripts/cmake/assets.cmake`, or the build does not copy it next to the executable; a new test file has to be added to the list in `scripts/cmake/tests.cmake`.
+- Frogger's board is built from many named rectangles, drawn in file order (so scenery first, the frog last). It is long because the language has no way yet to say a lane of differently spaced objects; see [21](../designs/21-frogger.md).
 - On Windows the repo's `.gitattributes` converts line endings on commit; git prints LF-to-CRLF warnings, which are harmless.
 
 ## Suggested next steps (not started)
@@ -34,7 +36,8 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 2. Add tests that pin the current behavior of `circleRectangle` before touching it.
 3. Decide designs 03 and 04 (function syntax and arithmetic), since they change every game file.
 4. Give every `grid()` cell a unique name so single objects can be addressed.
-5. Add a jump verb ([design 13](../designs/13-verb-vocabulary.md)) as the first test of whether the vocabulary approach extends.
+5. Add an arcing jump ([design 13](../designs/13-verb-vocabulary.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
+6. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, per-row velocity in `grid()`, show and hide verbs.
 
 ## Privacy rule for these docs
 

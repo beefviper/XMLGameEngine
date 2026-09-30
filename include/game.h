@@ -75,6 +75,11 @@ namespace xge
 		// made public wholesale.
 		void incrementText(const std::string& objectName);
 
+		// dec('owner.variable'): takes 1 off, the same way, and refreshes the
+		// same bound texts. A variable may go below zero; a <condition> with
+		// atmost= is what notices it has run out.
+		void decrementText(const std::string& objectName);
+
 		// reset('objectName') from a state's <input>/<condition> action (see
 		// CmdResetObject): restores that object's position, velocity, and every
 		// <variable> to their starting values, then refreshes any text display
@@ -95,6 +100,10 @@ namespace xge
 		void resetAll();
 
 	private:
+		// The one implementation behind incrementText and decrementText;
+		// `verb` is only for the warning printed when the target is not found.
+		void changeVariable(const std::string& target, float delta, const char* verb);
+
 		std::string filename;
 		WindowDesc windowDesc;
 
@@ -123,6 +132,23 @@ namespace xge
 
 		// Whether a and b have anything to do about touching each other.
 		static bool canCollide(const Object& a, const Object& b) noexcept;
+
+		// How far an object moves in one frame: its own velocity, plus the
+		// velocity of whatever it is riding (see Object::carry).
+		static Vector2f motionOf(const Object& object) noexcept;
+
+		// Whether it is in motion at all this frame: moving, being carried, or
+		// having just made a hop.
+		static bool isMoving(const Object& object) noexcept;
+
+		// The start of a frame's move: makes every hop queued by a hop.*()
+		// action, unless it would leave the window, and forgets last frame's
+		// carrying (this frame's collisions work it out again).
+		void applyHops(void);
+
+		// Whether `object` is right now touching any other object in play of
+		// this class - what a collision rule's unless= asks.
+		bool isTouchingClass(const Object& object, const Object& excluding, const std::string& objClass);
 
 		// Moves everything shown by its velocity for one frame, stopping at each
 		// touch that has a rule on the way to run it - see the definition.

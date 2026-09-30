@@ -87,7 +87,7 @@ namespace xge
 		// Screen-edge checks: independent per object, order doesn't matter.
 		for (auto& object : currentObjects)
 		{
-			if (isShown(object) && object.collisionData.enabled && (object.velocity.x != 0 || object.velocity.y != 0))
+			if (isShown(object) && object.collisionData.enabled && isMoving(object))
 			{
 				checkEdge(object, Edge::Top);
 				checkEdge(object, Edge::Bottom);
@@ -252,27 +252,37 @@ namespace xge
 
 	void Game::incrementText(const std::string& target)
 	{
+		changeVariable(target, 1.0f, "inc");
+	}
+
+	void Game::decrementText(const std::string& target)
+	{
+		changeVariable(target, -1.0f, "dec");
+	}
+
+	void Game::changeVariable(const std::string& target, float delta, const char* verb)
+	{
 		const auto dot = target.find('.');
 
 		if (dot == std::string::npos)
 		{
 			// Legacy pattern (e.g. inc('score1') for a text object that just
 			// displays its own counter, with nothing else deriving its number):
-			// the named object displays and owns its own number - bump its
+			// the named object displays and owns its own number - change its
 			// displayed value directly.
 			Object* object = tryGetObject(target);
 			if (!object)
 			{
-				std::cout << "warning: inc('" << target << "'): no such object\n";
+				std::cout << "warning: " << verb << "('" << target << "'): no such object\n";
 				return;
 			}
-			const float newValue = std::stof(object->spriteParams.at(1)) + 1;
+			const float newValue = std::stof(object->spriteParams.at(1)) + delta;
 			object->spriteParams.at(1) = formatDisplayNumber(newValue);
 			object->visualDirty = true;
 			return;
 		}
 
-		// New pattern (e.g. inc('paddle1.score')): increment another object's
+		// New pattern (e.g. inc('paddle1.score')): change another object's
 		// own named <variable>, then refresh every text object whose displayed
 		// number is bound to it (Object::boundVariableOwner/boundVariableName,
 		// set from a sprite like text(paddle1.score,128,...) - see
@@ -283,18 +293,18 @@ namespace xge
 		Object* owner = tryGetObject(ownerName);
 		if (!owner)
 		{
-			std::cout << "warning: inc('" << target << "'): no object named '" << ownerName << "'\n";
+			std::cout << "warning: " << verb << "('" << target << "'): no object named '" << ownerName << "'\n";
 			return;
 		}
 
 		auto variableIt = owner->variable.find(variableName);
 		if (variableIt == owner->variable.end())
 		{
-			std::cout << "warning: inc('" << target << "'): '" << ownerName << "' has no variable named '" << variableName << "'\n";
+			std::cout << "warning: " << verb << "('" << target << "'): '" << ownerName << "' has no variable named '" << variableName << "'\n";
 			return;
 		}
 
-		variableIt->second += 1;
+		variableIt->second += delta;
 		const float newValue = variableIt->second;
 
 		for (auto& object : objects)
@@ -330,6 +340,11 @@ namespace xge
 			// reset) shouldn't be able to resurrect part of the old velocity
 			// the next time some other direction's key event recomputes it.
 			object.activeMoveStep = {};
+
+			// Nor should a reset object carry on being carried, or jump.
+			object.carry = {};
+			object.hopPending = {};
+			object.hopped = false;
 
 			for (auto& [variableName, originalValue] : object.variableOriginal)
 			{
@@ -533,12 +548,63 @@ namespace xge
 		return answers(a, b) || answers(b, a);
 	}
 
+	Vector2f Game::motionOf(const Object& object) noexcept
+	{
+		return object.velocity + object.carry;
+	}
+
+	bool Game::isMoving(const Object& object) noexcept
+	{
+		const Vector2f motion = motionOf(object);
+		return motion.x != 0 || motion.y != 0 || object.hopped;
+	}
+
+	// Makes the hops queued by hop.*() actions. A hop is a jump, not a slide:
+	// the object is simply somewhere else, one step away, before this frame's
+	// collisions are worked out, so it is judged by where it lands and not by
+	// what it would have brushed past on the way (a step is never more than
+	// the object's own lane). A hop that would take it out of the window is
+	// refused. Whether or not it went, an object that asked to hop counts as
+	// moving for the rest of the frame - it is what makes the collisions at
+	// its new spot run even when nothing else there is moving.
+	void Game::applyHops(void)
+	{
+		for (auto& object : objects)
+		{
+			object.hopped = false;
+
+			// Whatever last frame's collisions said, this frame's start over.
+			object.carry = {};
+
+			if (object.hopPending.x == 0 && object.hopPending.y == 0)
+			{
+				continue;
+			}
+
+			const Vector2f target = object.position + object.hopPending;
+			object.hopPending = {};
+
+			if (!isShown(object)) { continue; }
+
+			const bool inside = target.x >= 0 && target.y >= 0
+				&& target.x + object.size.x <= windowDesc.width
+				&& target.y + object.size.y <= windowDesc.height;
+
+			if (inside)
+			{
+				object.position = target;
+			}
+			object.hopped = true;
+		}
+	}
+
 	// Plays one frame of movement. Every object that is shown moves by its
-	// velocity, but not in one jump: each pair of objects that has a rule for
-	// touching is swept along its own path (CollisionDetector::sweep), the
-	// earliest touch anywhere is found, everything is moved up to that moment,
-	// that pair's rules run, and the rest of the frame carries on from there
-	// with whatever velocities the rules left behind - so a ball that hits a
+	// velocity (and by whatever it is carried at, see Object::carry), but not
+	// in one jump: each pair of objects that has a rule for touching is swept
+	// along its own path (CollisionDetector::sweep), the earliest touch
+	// anywhere is found, everything is moved up to that moment, that pair's
+	// rules run, and the rest of the frame carries on from there with
+	// whatever velocities the rules left behind - so a ball that hits a
 	// brick a third of the way through its move spends the other two thirds
 	// heading back the way it came. Each object is swept by itself; a group
 	// has no bounding box of its own, so when most of the invaders are gone
@@ -546,6 +612,8 @@ namespace xge
 	void Game::moveObjects(void)
 	{
 		auto& all = getCurrentObjects();
+
+		applyHops();
 
 		struct Pair
 		{
@@ -571,14 +639,13 @@ namespace xge
 			}
 		}
 
-		const auto isMoving = [](const Object& object) { return object.velocity.x != 0 || object.velocity.y != 0; };
 		const auto advance = [&](float fraction)
 		{
 			for (auto& object : all)
 			{
 				if (isShown(object)) // TODO: at some point you might wanna collide with invisible objects
 				{
-					object.position += object.velocity * fraction;
+					object.position += motionOf(object) * fraction;
 				}
 			}
 		};
@@ -605,7 +672,7 @@ namespace xge
 					continue;
 				}
 
-				const auto hit = CollisionDetector::sweep(a, a.velocity * left, b, b.velocity * left);
+				const auto hit = CollisionDetector::sweep(a, motionOf(a) * left, b, motionOf(b) * left);
 				if (hit && (!next || hit->time < nextHit.time))
 				{
 					next = &pair;
@@ -626,6 +693,25 @@ namespace xge
 		}
 
 		advance(1.0f - played);
+
+		for (auto& object : all)
+		{
+			object.hopped = false;
+		}
+	}
+
+	// Whether `object` is touching, right now, any other object in play that is
+	// of class `objClass` - `excluding` (the one it is in the middle of a
+	// collision with) is left out, and so is `object` itself.
+	bool Game::isTouchingClass(const Object& object, const Object& excluding, const std::string& objClass)
+	{
+		return std::any_of(objects.begin(), objects.end(), [&](const Object& other)
+			{
+				return &other != &object && &other != &excluding
+					&& other.objClass == objClass
+					&& isShown(other) && other.collisionData.enabled
+					&& CollisionDetector::overlap(object, other).has_value();
+			});
 	}
 
 	// edgeOfB is the edge of b that was touched, which is already b's own side
@@ -633,22 +719,25 @@ namespace xge
 	void Game::applyObjectCollision(Object& a, Object& b, Edge edgeOfB)
 	{
 		CommandExecutor executor(*this);
-		for (const auto& rule : a.collisionData.basic)
+
+		// One side's rules for touching the other. A rule with unless= is
+		// passed over while `self` is also touching something of that class.
+		const auto react = [&](Object& self, Object& other, Edge selfEdge)
 		{
-			if (!collisionRuleMatches(rule, b)) { continue; }
-			for (const auto& command : rule.commands)
+			for (const auto& rule : self.collisionData.basic)
 			{
-				executor.executeObjectCollision(command, a, opposite(edgeOfB));
+				if (!collisionRuleMatches(rule, other)) { continue; }
+				if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
+
+				for (const auto& command : rule.commands)
+				{
+					executor.executeObjectCollision(command, self, other, selfEdge);
+				}
 			}
-		}
-		for (const auto& rule : b.collisionData.basic)
-		{
-			if (!collisionRuleMatches(rule, a)) { continue; }
-			for (const auto& command : rule.commands)
-			{
-				executor.executeObjectCollision(command, b, edgeOfB);
-			}
-		}
+		};
+
+		react(a, b, opposite(edgeOfB));
+		react(b, a, edgeOfB);
 	}
 
 	void Game::checkConditions()
@@ -691,7 +780,17 @@ namespace xge
 				}
 
 				auto variableIt = object.variable.find(condition.variableName);
-				if (variableIt == object.variable.end() || variableIt->second < condition.value)
+				if (variableIt == object.variable.end())
+				{
+					continue;
+				}
+
+				// Reached the threshold going up (value), or fallen to it
+				// going down (atmost).
+				const bool met = condition.atMost
+					? variableIt->second <= *condition.atMost
+					: variableIt->second >= condition.value;
+				if (!met)
 				{
 					continue;
 				}

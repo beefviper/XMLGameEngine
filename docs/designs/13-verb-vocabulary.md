@@ -1,6 +1,6 @@
 # 13. Verb vocabulary
 
-**Status:** a small set implemented; the rest is a plan
+**Status:** a small set implemented (Frogger added five); the rest is a plan
 
 ## Principle
 
@@ -8,9 +8,11 @@ A verb is a named behavior with parameters. A good declarative verb captures the
 
 ## Implemented today
 
-`bounce`, `stick`, `die`, `reset`, `inc`, `move.up/down/left/right`, `state`, `action`, `fire`; sprites `shape.circle`, `shape.rectangle`, `text`, `image`, `grid`. See [docs/readme.md](../readme.md) for exact meanings.
+`bounce`, `stick`, `die`, `reset`, `inc`, `dec`, `wrap`, `carry`, `move.up/down/left/right`, `hop.up/down/left/right`, `state`, `action`, `fire`; sprites `shape.circle`, `shape.rectangle`, `text`, `image`, `grid`; a collision rule filter, `unless`; and a condition form, `atmost`. See [docs/readme.md](../readme.md) for exact meanings.
 
-Rough coverage by game: Pong is essentially `bounce()` and `stick()`; Breakout adds `die()`; Space Invaders adds `fire()` and formation movement through group bounce.
+Rough coverage by game: Pong is essentially `bounce()` and `stick()`; Breakout adds `die()`; Space Invaders adds `fire()` and formation movement through group bounce; Frogger adds `hop`, `carry`, `wrap`, `dec`, `unless` and `atmost` (see [21](21-frogger.md) for why each is shaped the way it is).
+
+The rule of thumb held: each of those was added because Frogger could not be described without it, and each names a behavior rather than an implementation (`carry` says an object rides another, not how its position is updated).
 
 ## Planned: jump
 
@@ -20,6 +22,8 @@ Two types.
 |---|---|---|---|
 | **Static** | Pressing jump stops walking; the character follows a predefined arc and fully lands before control returns | height, width (length), time | Castlevania |
 | **Dynamic** | Height depends on how long the button is held; run speed extends the jump; direction can be changed in the air | maximum hold time, maximum height, upward acceleration, whether the player can slow or stall in the air, whether the player can move backwards in the air | Super Mario Bros. |
+
+`hop` is the tile-step cousin of the static jump, not an arc: one instant step per key press, with no height, width or time. It is what a grid game needs (Frogger, and later Pac-Man-style turns), and an arcing jump would be a separate verb that shares the one-shot key handling.
 
 Notes: in Super Mario Bros. you can jump up and back onto a ledge directly above by moving backwards mid-jump; in Mega Man you can slow or stall but not reverse. Whether backwards movement is allowed is therefore a parameter.
 

@@ -241,6 +241,20 @@ namespace xge
 		};
 
 		template <typename T>
+		struct dec : public exprtk::igeneric_function<T>
+		{
+			dec() noexcept : exprtk::igeneric_function<T>("S") {}
+
+			inline T operator()(parameter_list_t parameters) override
+			{
+				tempSParams.push_back("dec");
+				tempSParams.push_back(exprtk::to_str(string_t(parameters[0])));
+
+				return 0;
+			}
+		};
+
+		template <typename T>
 		struct grid : public exprtk::igeneric_function<T>
 		{
 			grid() noexcept : exprtk::igeneric_function<T>("TTT|TTTTT") {}
@@ -343,6 +357,87 @@ namespace xge
 			{
 				tempSParams.push_back("collide");
 				tempSParams.push_back("die");
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct wrap : public exprtk::igeneric_function<T>
+		{
+			wrap() noexcept : exprtk::igeneric_function<T>("Z") {}
+
+			T operator()([[maybe_unused]] parameter_list_t parameters) override
+			{
+				tempSParams.push_back("collide");
+				tempSParams.push_back("wrap");
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct carry : public exprtk::igeneric_function<T>
+		{
+			carry() noexcept : exprtk::igeneric_function<T>("Z") {}
+
+			T operator()([[maybe_unused]] parameter_list_t parameters) override
+			{
+				tempSParams.push_back("collide");
+				tempSParams.push_back("carry");
+				return 0;
+			}
+		};
+
+		// hop.up/down/left/right(distance): one functor per direction, the
+		// same shape as move.*, but tagged "hop..." so parseCommands can tell
+		// a one-shot jump from a held move.
+		template <typename T>
+		struct hopUp : public exprtk::igeneric_function<T>
+		{
+			hopUp() noexcept : exprtk::igeneric_function<T>("T") {}
+
+			T operator()(parameter_list_t parameters) override
+			{
+				tempSParams.push_back("hopup");
+				tempSParams.push_back(std::to_string(static_cast<float>(scalar_t(parameters[0])())));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct hopDown : public exprtk::igeneric_function<T>
+		{
+			hopDown() noexcept : exprtk::igeneric_function<T>("T") {}
+
+			T operator()(parameter_list_t parameters) override
+			{
+				tempSParams.push_back("hopdown");
+				tempSParams.push_back(std::to_string(static_cast<float>(scalar_t(parameters[0])())));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct hopLeft : public exprtk::igeneric_function<T>
+		{
+			hopLeft() noexcept : exprtk::igeneric_function<T>("T") {}
+
+			T operator()(parameter_list_t parameters) override
+			{
+				tempSParams.push_back("hopleft");
+				tempSParams.push_back(std::to_string(static_cast<float>(scalar_t(parameters[0])())));
+				return 0;
+			}
+		};
+
+		template <typename T>
+		struct hopRight : public exprtk::igeneric_function<T>
+		{
+			hopRight() noexcept : exprtk::igeneric_function<T>("T") {}
+
+			T operator()(parameter_list_t parameters) override
+			{
+				tempSParams.push_back("hopright");
+				tempSParams.push_back(std::to_string(static_cast<float>(scalar_t(parameters[0])())));
 				return 0;
 			}
 		};

@@ -37,6 +37,11 @@ namespace xge
 	{
 		std::string filterClass;
 		std::string filterObject;
+
+		// unless="class": the rule does not run while the object is at the
+		// same moment touching something of that class - "water kills the
+		// frog, unless it is also on a log". Empty means no exception.
+		std::string unlessClass;
 		std::string action;
 	};
 
@@ -59,6 +64,7 @@ namespace xge
 	{
 		std::string filterClass;
 		std::string filterObject;
+		std::string unlessClass;
 		std::vector<Command> commands;
 	};
 
@@ -151,6 +157,19 @@ namespace xge
 		// moving Down, rather than leaving the paddle stopped. Also what lets
 		// two axes combine into an 8-way diagonal from a 4-way D-pad.
 		std::array<float, 4> activeMoveStep{};
+
+		// Motion this object is given for one frame besides its own velocity.
+		// `carry` is the velocity of whatever it is riding (a collision rule
+		// with carry(), e.g. a frog on a log): worked out again every frame,
+		// it counts for movement and for edge checks like velocity does, but
+		// is not the object's own, so an object that steps off is at rest.
+		// `hopPending` is a jump queued by a hop.*() action, made at the start
+		// of the next frame's move (Game::moveObjects); `hopped` is true for
+		// the rest of that frame, so an object that has just landed somewhere
+		// still counts as moving for the collisions it is now part of.
+		Vector2f carry{};
+		Vector2f hopPending{};
+		bool hopped{ false };
 
 		// The object's own measured bounding box (width/height) - {0,0} until
 		// whichever Window backend is running has actually built this

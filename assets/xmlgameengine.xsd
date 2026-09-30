@@ -57,6 +57,7 @@
                               <xs:attribute name="basic" type="xs:string" use="optional" />
                               <xs:attribute name="class" type="xs:string" use="optional" />
                               <xs:attribute name="object" type="xs:string" use="optional" />
+                              <xs:attribute name="unless" type="xs:string" use="optional" />
                               <xs:attribute name="action" type="xs:string" use="required" />
                             </xs:complexType>
                           </xs:element>
@@ -135,6 +136,7 @@
                               <xs:attribute name="object" type="xs:string" use="optional" />
                               <xs:attribute name="variable" type="xs:string" use="optional" />
                               <xs:attribute name="value" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="atmost" type="xs:unsignedByte" use="optional" />
                               <xs:attribute name="remaining" type="xs:unsignedByte" use="optional" />
                               <xs:attribute name="action" type="xs:string" use="required" />
                             </xs:complexType>

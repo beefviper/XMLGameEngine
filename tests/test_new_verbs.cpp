@@ -1,0 +1,150 @@
+// test_new_verbs.cpp
+// XML Game Engine
+// author: beefviper
+// date: Sept 30, 2026
+//
+// Catch2 tests for the verbs Frogger added, on their own: how dec, hop, wrap
+// and carry parse and print, what a collision rule about another object can do
+// now (reset, inc, dec, move, carry), and the new named colors. The verbs at
+// work in a whole game are in test_frogger.cpp.
+
+#include "color.h"
+#include "command.h"
+#include "command_executor.h"
+#include "game.h"
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <sstream>
+#include <variant>
+
+using namespace xge;
+
+TEST_CASE("dec('owner.variable') parses to a CmdDecrement", "[new_verbs][command_parsing]")
+{
+	const auto commands = parseCommands({ "dec", "frog.lives", "collide", "reset" });
+
+	REQUIRE(commands.size() == 2);
+	REQUIRE(std::holds_alternative<CmdDecrement>(commands[0]));
+	CHECK(std::get<CmdDecrement>(commands[0]).target == "frog.lives");
+	CHECK(std::holds_alternative<CmdReset>(commands[1]));
+}
+
+TEST_CASE("hop.*(distance) parses to a CmdHop in that direction", "[new_verbs][command_parsing]")
+{
+	const auto commands = parseCommands({ "hopup", "48", "hopdown", "48", "hopleft", "24", "hopright", "12" });
+
+	REQUIRE(commands.size() == 4);
+	const Direction expected[] = { Direction::Up, Direction::Down, Direction::Left, Direction::Right };
+	const float distance[] = { 48.0f, 48.0f, 24.0f, 12.0f };
+	for (std::size_t i = 0; i < 4; ++i)
+	{
+		REQUIRE(std::holds_alternative<CmdHop>(commands[i]));
+		CHECK(std::get<CmdHop>(commands[i]).direction == expected[i]);
+		CHECK(std::get<CmdHop>(commands[i]).distance == distance[i]);
+	}
+}
+
+TEST_CASE("wrap() and carry() parse as collision verbs", "[new_verbs][command_parsing]")
+{
+	const auto commands = parseCommands({ "collide", "wrap", "collide", "carry" });
+
+	REQUIRE(commands.size() == 2);
+	CHECK(std::holds_alternative<CmdWrap>(commands[0]));
+	CHECK(std::holds_alternative<CmdCarry>(commands[1]));
+}
+
+TEST_CASE("the new commands print the way they are written", "[new_verbs][command_parsing]")
+{
+	std::ostringstream out;
+	out << Command{ CmdDecrement{ "frog.lives" } } << ' '
+		<< Command{ CmdHop{ Direction::Left, 48.0f } } << ' '
+		<< Command{ CmdWrap{} } << ' '
+		<< Command{ CmdCarry{} };
+
+	CHECK(out.str() == "dec(frog.lives) hop.left(48) wrap carry");
+}
+
+TEST_CASE("the new colors are named, opaque, and different from each other", "[new_verbs][colors]")
+{
+	const char* names[] = {
+		"color.grey", "color.darkgrey", "color.lightgrey", "color.brown", "color.orange",
+		"color.purple", "color.darkblue", "color.darkgreen", "color.forestgreen",
+	};
+
+	for (const char* name : names)
+	{
+		INFO(name);
+		CHECK(colorFromName(name).a == 255);
+	}
+
+	const Color darkgreen = colorFromName("color.darkgreen");
+	const Color forestgreen = colorFromName("color.forestgreen");
+	const Color green = colorFromName("color.green");
+	CHECK((darkgreen.r != forestgreen.r || darkgreen.g != forestgreen.g || darkgreen.b != forestgreen.b));
+	CHECK(forestgreen.g < green.g); // the frog is the brightest green there is
+
+	// A name nobody knows is still see-through, as before.
+	CHECK(colorFromName("color.chartreuse").a == 0);
+}
+
+namespace
+{
+	// frogger.xml's frog and one of its hedges, sized as a backend would.
+	struct Pair
+	{
+		Game game{ "games/frogger.xml" };
+		CommandExecutor executor{ game };
+		Object& frog;
+		Object& hedge;
+
+		Pair() : frog(game.getObject("frog")), hedge(game.getObject("hedge2"))
+		{
+			frog.size = { 36.0f, 36.0f };
+			hedge.size = { 48.0f, 48.0f };
+			game.setCurrentState("playing");
+		}
+	};
+}
+
+TEST_CASE("a rule about another object can reset, move, count and carry", "[new_verbs][collision_rules]")
+{
+	Pair pair;
+
+	pair.frog.position = { 100.0f, 100.0f };
+	pair.executor.executeObjectCollision(Command{ CmdMove{ Direction::Up, 10.0f } }, pair.frog, pair.hedge, Edge::Top);
+	CHECK(pair.frog.position.x == 100.0f);
+	CHECK(pair.frog.position.y == 90.0f);
+
+	pair.executor.executeObjectCollision(Command{ CmdReset{} }, pair.frog, pair.hedge, Edge::Top);
+	CHECK(pair.frog.position.x == pair.frog.positionOriginal.x);
+	CHECK(pair.frog.position.y == pair.frog.positionOriginal.y);
+
+	pair.executor.executeObjectCollision(Command{ CmdIncrement{ "frog.score" } }, pair.frog, pair.hedge, Edge::Top);
+	pair.executor.executeObjectCollision(Command{ CmdDecrement{ "frog.lives" } }, pair.frog, pair.hedge, Edge::Top);
+	CHECK(pair.frog.variable["score"] == 1.0f);
+	CHECK(pair.frog.variable["lives"] == 2.0f);
+
+	pair.hedge.velocity = { 2.5f, 0.0f };
+	pair.executor.executeObjectCollision(Command{ CmdCarry{} }, pair.frog, pair.hedge, Edge::Top);
+	CHECK(pair.frog.carry.x == 2.5f);
+	CHECK(pair.frog.velocity.x == 0.0f); // its own velocity is not touched
+}
+
+TEST_CASE("a hop and a carry are only for the frame they were asked for", "[new_verbs][carry][hop]")
+{
+	Pair pair;
+
+	pair.frog.position = { 300.0f, 630.0f };
+	pair.executor.executeInput(Command{ CmdTriggerAction{ "frog", "up" } }, true);
+	CHECK(pair.frog.hopPending.y == -48.0f);
+
+	// Letting go of the key asks for nothing, and takes nothing back.
+	pair.executor.executeInput(Command{ CmdTriggerAction{ "frog", "up" } }, false);
+	CHECK(pair.frog.hopPending.y == -48.0f);
+
+	pair.game.updateObjects();
+	CHECK(pair.frog.position.y == 630.0f - 48.0f);
+	CHECK(pair.frog.hopPending.y == 0.0f);
+	CHECK_FALSE(pair.frog.hopped);
+}

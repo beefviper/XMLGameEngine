@@ -26,11 +26,18 @@ namespace xge
 		text<float> textFloat{};
 		image<float> imageFloat{};
 		inc<float> incFloat{};
+		dec<float> decFloat{};
 		grid<float> gridFloat{};
 		bounce<float> bounceFloat{};
 		stick<float> stickFloat{};
 		reset<float> resetFloat{};
 		die<float> dieFloat{};
+		wrap<float> wrapFloat{};
+		carry<float> carryFloat{};
+		hopUp<float> hopUpFloat{};
+		hopDown<float> hopDownFloat{};
+		hopLeft<float> hopLeftFloat{};
+		hopRight<float> hopRightFloat{};
 		moveUp<float> moveUpFloat{};
 		moveDown<float> moveDownFloat{};
 		moveLeft<float> moveLeftFloat{};
@@ -47,11 +54,18 @@ namespace xge
 		symbolTable.add_function("text", textFloat);
 		symbolTable.add_function("image", imageFloat);
 		symbolTable.add_function("inc", incFloat);
+		symbolTable.add_function("dec", decFloat);
 		symbolTable.add_function("grid", gridFloat);
 		symbolTable.add_function("bounce", bounceFloat);
 		symbolTable.add_function("stick", stickFloat);
 		symbolTable.add_function("reset", resetFloat);
 		symbolTable.add_function("die", dieFloat);
+		symbolTable.add_function("wrap", wrapFloat);
+		symbolTable.add_function("carry", carryFloat);
+		symbolTable.add_function("hop.up", hopUpFloat);
+		symbolTable.add_function("hop.down", hopDownFloat);
+		symbolTable.add_function("hop.left", hopLeftFloat);
+		symbolTable.add_function("hop.right", hopRightFloat);
 		symbolTable.add_function("move.up", moveUpFloat);
 		symbolTable.add_function("move.down", moveDownFloat);
 		symbolTable.add_function("move.left", moveLeftFloat);
@@ -230,6 +244,7 @@ namespace xge
 						CollisionRule rule;
 						rule.filterClass = rawRule.filterClass;
 						rule.filterObject = rawRule.filterObject;
+						rule.unlessClass = rawRule.unlessClass;
 						rule.commands = processCommands(rawObject, rawRule.action);
 						object.collisionData.basic.push_back(std::move(rule));
 					}
@@ -285,6 +300,7 @@ namespace xge
 				condition.variableName = rawCondition.variableName;
 				condition.value = rawCondition.value;
 				condition.remaining = rawCondition.remaining;
+				condition.atMost = rawCondition.atMost;
 
 				if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)
 					{

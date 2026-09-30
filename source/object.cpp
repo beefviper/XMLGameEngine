@@ -34,6 +34,7 @@ namespace xge
 			o << ", basic=" << rawRule.action;
 			if (!rawRule.filterClass.empty()) { o << " (class=" << rawRule.filterClass << ")"; }
 			if (!rawRule.filterObject.empty()) { o << " (object=" << rawRule.filterObject << ")"; }
+			if (!rawRule.unlessClass.empty()) { o << " (unless=" << rawRule.unlessClass << ")"; }
 		}
 		o << '\n';
 
@@ -108,6 +109,7 @@ namespace xge
 			}
 			if (!rule.filterClass.empty()) { o << " (class=" << rule.filterClass << ")"; }
 			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
+			if (!rule.unlessClass.empty()) { o << " (unless=" << rule.unlessClass << ")"; }
 		}
 
 		o << '\n';

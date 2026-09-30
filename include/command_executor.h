@@ -28,11 +28,11 @@ namespace xge
 		void executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
 
 		// object.collisionData.basic, driven by Game::applyObjectCollision.
-		// `edge` must already be self-relative to `object` (the edge of
-		// *this* object that was touched) - see the comment on
-		// CollisionDetector for why that's not simply the detector's raw
-		// result.
-		void executeObjectCollision(const Command& command, Object& object, Edge edge);
+		// `other` is the object being touched. `edge` must already be
+		// self-relative to `object` (the edge of *this* object that was
+		// touched) - see the comment on CollisionDetector for why that's not
+		// simply the detector's raw result.
+		void executeObjectCollision(const Command& command, Object& object, const Object& other, Edge edge);
 
 		// A command bound to a key in the current State's <input> list: push or
 		// pop a state, or trigger a named action on another object.
@@ -57,6 +57,9 @@ namespace xge
 		void bounceOffEdge(Object& object, Edge edge);
 		void stick(Object& object, Edge edge);
 		void moveByStep(Object& object, Direction direction, float step);
+		void wrap(Object& object, Edge edge);
+		void carry(Object& object, const Object& other);
+		void queueHop(Object& object, Direction direction, float distance);
 
 		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed);
 		void applyActionVelocity(Object& object, Direction direction, float step);

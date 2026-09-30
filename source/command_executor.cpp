@@ -16,20 +16,30 @@ namespace xge
 			[&](const CmdStick&) { stick(object, edge); },
 			[&](const CmdReset&) { object.position = object.positionOriginal; },
 			[&](const CmdDie&) { die(object); },
+			[&](const CmdWrap&) { wrap(object, edge); },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target); },
+			[&](const CmdDecrement& d) { game.decrementText(d.target); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
-			                      appear in a collisionData list; ignore defensively. */ }
+			                      appear in a collisionData list, and carry() is about
+			                      another object, which a screen edge is not; ignore
+			                      defensively. */ }
 		}, command);
 	}
 
-	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, Edge edge)
+	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, const Object& other, Edge edge)
 	{
 		std::visit(overload{
 			[&](const CmdBounce&) { bounceOffEdge(object, edge); },
 			[&](const CmdDie&) { die(object); },
-			[&](const auto&) { /* stick/reset/move/inc/etc. aren't used for
-			                      object-object 'basic' collisions today; ignore. */ }
+			[&](const CmdReset&) { object.position = object.positionOriginal; },
+			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
+			[&](const CmdIncrement& i) { game.incrementText(i.target); },
+			[&](const CmdDecrement& d) { game.decrementText(d.target); },
+			[&](const CmdCarry&) { carry(object, other); },
+			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
+			                      only make sense on a state's input or an object's
+			                      own action; ignore. */ }
 		}, command);
 	}
 
@@ -171,6 +181,70 @@ namespace xge
 		}
 	}
 
+	// A jump asked for by a hop.*() action. It is only queued here: Game::
+	// moveObjects makes it at the start of the frame's move, where it can be
+	// refused if it would leave the window. Asking twice in one frame keeps
+	// the later one, so a hop is always a single step in one direction.
+	void CommandExecutor::queueHop(Object& object, Direction direction, float distance)
+	{
+		switch (direction)
+		{
+		case Direction::Up:    object.hopPending = { 0.0f, -distance }; break;
+		case Direction::Down:  object.hopPending = { 0.0f, distance }; break;
+		case Direction::Left:  object.hopPending = { -distance, 0.0f }; break;
+		case Direction::Right: object.hopPending = { distance, 0.0f }; break;
+		}
+	}
+
+	// Once an object has gone right off the screen through `edge` - and is
+	// still heading that way - it comes back in from the opposite side, one
+	// screen and one object's width along, so anything spaced along a lane
+	// keeps its spacing. Until it has gone completely, nothing happens: the
+	// rule is asked every frame the object is touching the edge, and an
+	// object that is still partly in view slides out as normal.
+	void CommandExecutor::wrap(Object& object, Edge edge)
+	{
+		const auto& windowDesc = game.getWindowDesc();
+		const Vector2f heading = object.velocity + object.carry;
+
+		switch (edge)
+		{
+		case Edge::Right:
+			if (heading.x > 0.0f && object.position.x >= windowDesc.width)
+			{
+				object.position.x -= windowDesc.width + object.size.x;
+			}
+			break;
+		case Edge::Left:
+			if (heading.x < 0.0f && object.position.x + object.size.x <= 0.0f)
+			{
+				object.position.x += windowDesc.width + object.size.x;
+			}
+			break;
+		case Edge::Bottom:
+			if (heading.y > 0.0f && object.position.y >= windowDesc.height)
+			{
+				object.position.y -= windowDesc.height + object.size.y;
+			}
+			break;
+		case Edge::Top:
+			if (heading.y < 0.0f && object.position.y + object.size.y <= 0.0f)
+			{
+				object.position.y += windowDesc.height + object.size.y;
+			}
+			break;
+		}
+	}
+
+	// Rides along with what it is touching: for this frame the object moves
+	// with the other one's velocity as well as its own. Not kept - it is
+	// worked out again every frame from whatever is still being touched, so
+	// the moment the object is no longer on the other one, it is at rest.
+	void CommandExecutor::carry(Object& object, const Object& other)
+	{
+		object.carry = other.velocity;
+	}
+
 	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed)
 	{
 		Object& object = game.getObject(objectName);
@@ -179,9 +253,12 @@ namespace xge
 		{
 			std::visit(overload{
 				[&](const CmdMove& m) { applyActionVelocity(object, m.direction, keyPressed ? m.step : 0.0f); },
+				// A hop belongs to the press alone: letting go of the key does
+				// nothing, and it is not among what executeHeldInput resumes.
+				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); } },
 				[&](const CmdFire& f) { if (keyPressed) { spawnProjectile(object, f.projectileName); } },
 				[&](const auto&) { /* an object's own <action> list only ever produces
-				                      move/fire commands today; ignore anything else. */ }
+				                      move/hop/fire commands today; ignore anything else. */ }
 			}, command);
 		}
 	}

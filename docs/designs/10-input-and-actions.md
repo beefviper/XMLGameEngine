@@ -45,6 +45,8 @@ A key can be held while the state changes underneath it (hold Left, pause, unpau
 - A release always reaches the commands its key is currently driving, so a key let go during the pause leaves the paddle stopped afterward.
 - Implementation: `Game::stateChangeCount()` goes up on every push or pop, and `Engine::syncHeldKeysToState()` compares it after each key event and after each frame's update (a `<condition>` can change the state too). `CommandExecutor::executeHeldInput` is the resume path.
 
+**One-shot verbs are never resumed.** `fire` and, since Frogger, `hop.*` belong to the press. A `hop` in an action is queued when the key goes down and made once; releasing does nothing, holding does nothing more, and coming back from a pause with the key still down does not hop again. That is the same rule that keeps a held Space from pausing straight after the menu, applied to a verb: a game whose input is a discrete step wants a fresh press for every step, and the resume path (`executeHeldInput`) only ever picks up `move.*`. The alternative for a hop, repeating while the key is held, would be a separate verb (or a repeat interval), not a behavior of this one.
+
 **C. Cancel on state change (not built).** Leaving a state releases whatever the held keys had running there, and nothing is resumed on return.
 
 - Pausing stops the paddle and unpausing starts from rest, so the key has to be pressed again. Simple, predictable, and how many games behave.

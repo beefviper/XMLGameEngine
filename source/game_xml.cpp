@@ -204,6 +204,7 @@ namespace xge
 						RawCollisionRule rule;
 						rule.filterClass = colClass;
 						rule.filterObject = colObject;
+						rule.unlessClass = getAttribute(collision.get(), "unless");
 						rule.action = getAttribute(collision.get(), "action");
 						collisionData.basic.push_back(std::move(rule));
 					}
@@ -309,17 +310,22 @@ namespace xge
 					condRaw.filterObject = getAttribute(condition.get(), "object");
 					condRaw.variableName = getAttribute(condition.get(), "variable");
 
-					// Either variable + value, or remaining (see RawCondition).
+					// Either variable + value, variable + atmost, or remaining
+					// (see RawCondition).
 					if (const std::string remaining = getAttribute(condition.get(), "remaining"); !remaining.empty())
 					{
 						condRaw.remaining = std::stof(remaining);
+					}
+					else if (const std::string atMost = getAttribute(condition.get(), "atmost"); !atMost.empty())
+					{
+						condRaw.atMost = std::stof(atMost);
 					}
 					else
 					{
 						const std::string value = getAttribute(condition.get(), "value");
 						if (value.empty())
 						{
-							throw std::runtime_error("a <condition> needs either variable and value, or remaining");
+							throw std::runtime_error("a <condition> needs either variable and value, variable and atmost, or remaining");
 						}
 						condRaw.value = std::stof(value);
 					}
