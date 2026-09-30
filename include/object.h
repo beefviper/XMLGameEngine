@@ -127,6 +127,13 @@ namespace xge
 		std::string objClass;
 		std::string src;
 		bool isVisible{ true };
+
+		// How the object started (see Game::resetObject), so that a reset brings
+		// back what has since died or been fired: die() hides an object and
+		// stops its collisions, and neither would otherwise ever be undone.
+		bool isVisibleOriginal{ true };
+		bool collisionEnabledOriginal{ false };
+
 		Vector2f position;
 		Vector2f positionOriginal;
 		Vector2f velocity;

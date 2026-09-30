@@ -113,13 +113,13 @@ Attribute values that are expressions are evaluated by exprtk at load time. Ordi
 | `stick()` | collision | Clamps the object inside the screen edge it touched and stops only the velocity heading into that edge; the other axis keeps going, so an object pressed against the bottom wall still slides left or right. Re-applied after the frame's move, so a stuck object never ends a frame outside the screen |
 | `die()` | collision | Disables the object's collisions and hides it; it stops moving and being drawn until something brings it back (`fire()` re-launching a bullet, `reset()`) |
 | `reset()` | collision | Puts the object back at its starting position |
-| `reset()` | state input or condition | Full game reset: every object's position, velocity and variables go back to their starting values, and the state stack collapses to the first state |
-| `reset('name')` | state input or condition | Resets that one object's position, velocity and variables |
+| `reset()` | state input or condition | Full game reset: every object's position, velocity, variables, visibility and collisions go back to how they started (a bullet in flight is put away, a dead alien is back), and the state stack collapses to the first state |
+| `reset('name')` | state input or condition | Resets that one object (or every cell of a grid, for its grid name) the same way |
 | `inc('owner.variable')` | collision | Adds 1 to that variable and refreshes any text bound to it |
 | `move.up(step)`, `move.down(step)`, `move.left(step)`, `move.right(step)` | collision, or an object `<action>` | In a collision: shifts the object (or its whole group) once. In an object action: sets a held-key velocity (see [Input](#input)). |
 | `state('name')` / `state()` | state input or condition | Push a state / pop back |
 | `action('object','name')` | state input | Runs one of that object's named `<action>`s |
-| `fire('projectile')` | object action | Launches the named projectile object from the shooter's top-center, using the projectile's `speed` variable as vertical velocity |
+| `fire('projectile')` | object action | Launches the named projectile object from the shooter's top-center, moving with the projectile's own `<velocity>`. A projectile is not drawn, moved or collided with until it is fired, and is put away again by `die()` (hitting a target, or `edge="all"`); only one can be in flight at a time |
 
 **Colors:** `color.black`, `color.white`, `color.red`, `color.green`, `color.blue`, `color.yellow`, `color.magenta`, `color.cyan`. Any other name is fully transparent.
 
@@ -192,6 +192,7 @@ Checked once per frame while the state is current. It fires when any object matc
 ## Known limitations
 
 - Object-object collision knows only the four edges of the other object; there are no verbs beyond the table above (no jump, gravity, shooting patterns, AI, sound).
+- An object that is not visible is not moved and does not collide, whatever its velocity; that is how a bullet waits, unseen and still, to be fired. There are no hidden objects that still move and collide (an invisible trigger zone, an off-screen enemy on its way in); a game that wants one will need visibility and "in play" to be separate things.
 - An object's velocity and collisions belong to the object, not to a state: any state that shows it lets it move. There is no way to show the Space Invaders aliens standing still behind the menu and have them march only in `playing`; they start marching as soon as they are shown. See [designs/09](designs/09-states-and-screens.md).
 - An object's own `<variable>` named `width` or `height` shadows its measured size (`objectName.width` then reads the variable). A non-colliding spelling is under consideration; see design note 07.
 - A text or image placed with `objectName.width` / `objectName.height` is re-placed only when the size of an object it names changes, so it is not re-centered after it has moved on its own, and other expressions (velocity, variables) see those sizes as 0 for unmeasured text and images.

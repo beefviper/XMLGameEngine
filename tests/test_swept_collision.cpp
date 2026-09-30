@@ -8,6 +8,7 @@
 // was hit reacts (each cell of a grid() is its own object), and the rest of a
 // step is played out after a bounce.
 
+#include "command_executor.h"
 #include "game.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -185,4 +186,64 @@ TEST_CASE("a ball fast enough to pass the paddle in one step bounces off it inst
 
 	CHECK(ball.velocity.x > 0.0f);
 	CHECK(ball.position.x > 130.0f);
+}
+
+TEST_CASE("a bullet waits unseen and still, flies at its own velocity, and can be fired again", "[swept_collision]")
+{
+	Game game{ "games/spaceinvaders.xml" };
+	game.setCurrentState("playing");
+	measureInvaders(game);
+
+	Object& player = game.getObject("player");
+	Object& bullet = game.getObject("bullet");
+	CommandExecutor executor(game);
+
+	// Not fired: hidden, and not moving even though it has a velocity.
+	REQUIRE(bullet.velocity.y == -12.0f);
+	const Vector2f waiting = bullet.position;
+	game.updateObjects();
+	CHECK(bullet.position == waiting);
+	CHECK_FALSE(bullet.isVisible);
+
+	// Fired: placed at the ship, visible, moving at its own velocity.
+	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
+	CHECK(bullet.isVisible);
+	CHECK(bullet.collisionData.enabled);
+	CHECK(bullet.position.y == player.position.y);
+	const float launched = bullet.position.y;
+	game.updateObjects();
+	CHECK(bullet.position.y == launched - 12.0f);
+
+	// Off the top: put away, ready to fire again.
+	for (int frame = 0; frame < 200 && bullet.isVisible; ++frame)
+	{
+		game.updateObjects();
+	}
+	CHECK_FALSE(bullet.isVisible);
+	CHECK_FALSE(bullet.collisionData.enabled);
+
+	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
+	CHECK(bullet.isVisible);
+	CHECK(bullet.position.y == player.position.y);
+}
+
+TEST_CASE("a full reset puts away a bullet in flight and brings back a dead alien", "[swept_collision]")
+{
+	Game game{ "games/spaceinvaders.xml" };
+	game.setCurrentState("playing");
+
+	Object& bullet = game.getObject("bullet");
+	Object& alien = game.getObject("aliens.2.2");
+	CommandExecutor executor(game);
+
+	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
+	alien.isVisible = false;
+	alien.collisionData.enabled = false;
+
+	game.resetAll();
+
+	CHECK_FALSE(bullet.isVisible);
+	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK(alien.isVisible);
+	CHECK(alien.collisionData.enabled);
 }

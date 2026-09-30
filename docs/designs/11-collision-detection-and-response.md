@@ -35,7 +35,7 @@ The declarative form of the idea: the XML does not spell out an if-the-ball-touc
 
 ## Design notes worth keeping
 
-- The prototype's `TODO` about colliding with invisible objects: today only shown objects take part.
+- The prototype's `TODO` about colliding with invisible objects: today only shown objects take part, and a hidden object does not move at all. That is what lets a projectile wait unseen and still until `fire()` shows it; it also means there is no hidden-but-moving-and-colliding object (a trigger zone, an enemy still off-screen). If a game needs one, visibility and "in play" have to become separate flags; `fire()` and `die()` would then flip the second.
 - Acceleration is a stated future need (currently only position and velocity).
 - The C++ is scaffolding; the language design is the real project. Collision code should follow the vocabulary, not lead it. See [12](12-collision-escalation.md) for how the vocabulary might scale.
 

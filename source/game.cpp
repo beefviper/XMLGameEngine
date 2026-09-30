@@ -319,6 +319,11 @@ namespace xge
 			object.position = object.positionOriginal;
 			object.velocity = object.velocityOriginal;
 
+			// Whatever has died, or been fired, since the game began is back
+			// as it started (a bullet in flight is put away, an alien is back).
+			object.isVisible = object.isVisibleOriginal;
+			object.collisionData.enabled = object.collisionEnabledOriginal;
+
 			// Also drop any directions CommandExecutor::applyActionVelocity
 			// currently has recorded as held: velocity above is reset to rest,
 			// so a stale held direction (a key never released across this

@@ -216,6 +216,8 @@ namespace xge
 					object.velocityOriginal = object.velocity;
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
+					object.isVisibleOriginal = object.isVisible;
+					object.collisionEnabledOriginal = object.collisionData.enabled;
 					object.collisionData.group = rawObject.rawCollisionData.group ? groupNum : 0;
 
 					object.collisionData.top = processCommands(rawObject, rawObject.rawCollisionData.top);

@@ -210,7 +210,7 @@ namespace xge
 		{
 			projectile.position.x = shooter.position.x + shooter.size.x / 2;
 			projectile.position.y = shooter.position.y;
-			projectile.velocity.y = projectile.variable["speed"];
+			projectile.velocity = projectile.velocityOriginal;
 			projectile.isVisible = true;
 			projectile.collisionData.enabled = true;
 		}

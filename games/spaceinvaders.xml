@@ -16,14 +16,11 @@
     <object name="bullet" class="projectile">
       <sprite src="shape.circle(bullet.radius)" />
       <position x="0" y="0" />
-      <velocity x="0" y="0" />
+      <velocity x="0" y="-12" />
       <collisions enabled="false">
         <collision edge="all" action="die()"/>
         <collision class="aliens" action="die()"/>
       </collisions>
-      <variables>
-        <variable name="speed" value="-6" />
-      </variables>
     </object>
     <object name="player">
       <sprite src="shape.rectangle(width,height)" />
