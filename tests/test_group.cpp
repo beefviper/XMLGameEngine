@@ -335,6 +335,9 @@ TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
 // ------------------------------------------------------- the shipped games
 TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups", "[group][shipped]")
 {
+	// Counted from the games as they were written with one <object> for each:
+	// Frogger's 59 objects include the lane markings, a 13 by 4 <grid>, so 58
+	// objects and 52 cells; Space Race's 37 have no grid.
 	const auto census = [](const char* file)
 	{
 		Game game{ file };
@@ -345,7 +348,7 @@ TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups
 	};
 
 	const auto frogger = census("games/frogger.xml");
-	CHECK(frogger.at("all") == 59);
+	CHECK(frogger.at("all") == 110);
 	CHECK(frogger.at("logs") == 13);
 	CHECK(frogger.at("hazard") == 19);
 	CHECK(frogger.at("pads") == 5);
@@ -471,9 +474,9 @@ TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group
 	};
 
 	const Mistake mistakes[] = {
-		{ "a member that gives collisions", "games/spacerace.xml", "<member>", "<member><collisions><enabled>true</enabled></collisions>", "collisions" },
+		{ "a member that gives collisions", "games/spacerace.xml", "<member>\n", "<member><collisions><enabled>true</enabled></collisions>\n", "collisions" },
 		{ "a group with something it cannot hold", "games/spacerace.xml", "<velocity>", "<speed /><velocity>", "speed" },
-		{ "a member with something it cannot hold", "games/spacerace.xml", "<member>", "<member><speed />", "speed" },
+		{ "a member with something it cannot hold", "games/spacerace.xml", "<member>\n", "<member><speed />\n", "speed" },
 		{ "a position that is not an x and a y", "games/spacerace.xml", "<y>75</y>", "<z>75</z>", "z" },
 		{ "a group with no name", "games/spacerace.xml", "<group name=\"debris1\" ", "<group ", "missing required attribute 'name'" },
 		{ "a lockstep flag that is not true or false", "games/spacerace.xml", "<enabled>true</enabled>", "<enabled>true</enabled><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
