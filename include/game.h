@@ -64,11 +64,11 @@ namespace xge
 
 		void setObjectParam(const std::string& name, const std::string& param, const float& value);
 
-		// A member of a group (see <collisions group="true">) hit the left or
-		// right screen edge: the whole group turns around and steps once in
+		// A member of a lockstep block (see <lockstep> in <collisions>) hit the left or
+		// right screen edge: the whole block turns around and steps once in
 		// its new direction, every member the same amount, so the formation
 		// keeps its spacing.
-		void updateGroupOfObjects(const Object& object) noexcept;
+		void updateLockstepObjects(const Object& object) noexcept;
 
 		// Thin forwarders so CommandExecutor (which only sees Game through a few
 		// public entry points) can reach the xml subsystem without it being

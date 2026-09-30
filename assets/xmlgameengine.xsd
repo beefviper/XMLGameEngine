@@ -284,7 +284,7 @@
                       <xs:complexType>
                         <xs:sequence>
                           <xs:element name="enabled" type="xs:boolean" />
-                          <xs:element name="group" type="xs:boolean" minOccurs="0" />
+                          <xs:element name="lockstep" type="xs:boolean" minOccurs="0" />
                           <xs:element name="collision" type="collisionType" minOccurs="0" maxOccurs="unbounded" />
                         </xs:sequence>
                       </xs:complexType>

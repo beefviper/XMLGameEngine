@@ -90,7 +90,7 @@ namespace xge
 			if (!objectVariables.count(name + ".height")) { symbolTable.add_variable(name + ".height", size.y); }
 		}
 
-		int groupNum = 1;
+		int lockstepNum = 1;
 
 		// evaluate strings in objects
 		for (auto& rawObject : rawObjects)
@@ -194,7 +194,7 @@ namespace xge
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
 					object.isVisibleOriginal = object.isVisible;
 					object.collisionEnabledOriginal = object.collisionData.enabled;
-					object.collisionData.group = rawObject.rawCollisionData.group ? groupNum : 0;
+					object.collisionData.lockstep = rawObject.rawCollisionData.lockstep ? lockstepNum : 0;
 
 					object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
 					object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
@@ -237,8 +237,8 @@ namespace xge
 				}
 			}
 
-			if (rawObject.rawCollisionData.group) {
-				groupNum++;
+			if (rawObject.rawCollisionData.lockstep) {
+				lockstepNum++;
 			}
 		}
 

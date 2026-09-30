@@ -93,7 +93,7 @@ Children, in this order:
 | `<sprite>` | yes | What the object looks like: one shape (see [Sprites](#sprites)), or a `<grid>` of them |
 | `<position>` | yes | Starting position, in pixels from the top-left: `<x>` and `<y>`, each a value. May use an object's own size by its name, `title.width` and `title.height`, to place it by its size, for example a text called `title` centered: `<x>window.width.center - title.width / 2</x>` |
 | `<velocity>` | yes | Starting velocity, in pixels per frame: `<x>` and `<y>`, each a value |
-| `<collisions>` | yes | `<enabled>` (`true`/`false`), an optional `<group>` (`true`), then zero or more `<collision>` rules. See [Collisions](#collisions) |
+| `<collisions>` | yes | `<enabled>` (`true`/`false`), an optional `<lockstep>` (`true`), then zero or more `<collision>` rules. See [Collisions](#collisions) |
 | `<actions>` | no | Named actions the object can perform, each `<action name="up"><move direction="up">step</move></action>`: the commands are what it does. States bind keys to these names |
 | `<variables>` | no | Variables owned by this object, each `<variable name="score">0</variable>`. Other expressions refer to them as `objectName.variableName`, e.g. `paddle1.score` |
 
@@ -142,7 +142,7 @@ Commands are tags, and where they are meaningful is what the table says. Any lis
 | `<reset object="name" />` | state input or condition | Resets that one object (or every cell of a grid, for its grid name) the same way |
 | `<inc variable="owner.variable" />` | collision (screen edge or another object) | Adds 1 to that variable and refreshes any text bound to it |
 | `<dec variable="owner.variable" />` | collision (screen edge or another object) | Takes 1 off that variable and refreshes any text bound to it. The variable may go below zero; a condition with `<atmost>` is what notices it has run out |
-| `<move direction="up">step</move>` (also `down`, `left`, `right`) | collision, or an object `<action>` | In a collision: shifts the object (or its whole group) once. In an object action: sets a held-key velocity (see [Input](#input)). The content is a value |
+| `<move direction="up">step</move>` (also `down`, `left`, `right`) | collision, or an object `<action>` | In a collision: shifts the object (or everything in lockstep with it) once. In an object action: sets a held-key velocity (see [Input](#input)). The content is a value |
 | `<hop direction="up">distance</hop>` (also `down`, `left`, `right`) | object `<action>` | A one-shot jump of `distance` pixels for each press of the key (see [Input](#input)). The content is a value |
 | `<push state="name" />` / `<pop />` | state input or condition | Push a state / pop back |
 | `<trigger object="name" action="up" />` | state input | Runs one of that object's named `<action>`s |
@@ -191,7 +191,7 @@ Rules that apply:
 - **What a rule can do.** Against a screen edge: `<bounce />`, `<stick />`, `<reset />`, `<die />`, `<move>`, `<inc>`, `<dec>` and `<wrap />`. Against another object: `<bounce />`, `<die />`, `<reset />`, `<move>`, `<inc>`, `<dec>` and `<carry />`. `<stick />` and `<wrap />` are about a screen edge and do nothing in a rule about another object, and `<carry />` is about another object.
 - **`unless`.** An object-against-object rule can carry `unless="class"`: it is passed over while the object is, at that same moment, touching something in play of that class. Frogger's river is `<collision class="water" unless="logs"><dec variable="frog.lives" /><reset /></collision>`: water costs the frog a life, unless it is also on a log. It looks at where things are right now, so it does not matter which of the two touches was handled first.
 - A pair is skipped unless at least one of the two is moving, and unless one of them has a rule that answers to the other (its `class`/`object`, or a rule with no selector). An object counts as moving if its velocity is not zero, if it is being carried, or if it has just hopped, so an object that lands somewhere by hopping is judged there even though nothing else in the pair moves.
-- `group="true"` gives all cells of a `<grid>` object a shared group number. Group members never collide with each other, `<move>` in a collision moves the whole group, and a group hitting the left or right screen edge with `<bounce />` moves the whole block (this is how the invaders march). Being in a group changes none of the geometry: every cell is swept on its own, so a bullet only ever meets the cells that are still alive, and there is no bounding box around the block.
+- `<lockstep>true</lockstep>` puts all cells of a `<grid>` object in lockstep: they share a lockstep number. Cells in lockstep never collide with each other, `<move>` in a collision moves all of them, and one hitting the left or right screen edge with `<bounce />` moves the whole block (this is how the invaders march). Being in lockstep changes none of the geometry: every cell is swept on its own, so a bullet only ever meets the cells that are still alive, and there is no bounding box around the block.
 - Every cell of a `<grid>` is its own object, named after the grid with its column and row counted from 1: a grid called `aliens` has `aliens.1.1`, `aliens.2.1`, ... `aliens.11.5`. Names of the whole grid still work where a group is meant: `<show object="aliens"/>`, a rule or condition `object="aliens"`, `<reset object="aliens" />`; a cell can be named on its own (`object="aliens.3.2"`).
 
 ## Conditions
@@ -246,7 +246,7 @@ The other forms:
 | `engine.cpp` | Frame loop and key handling |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests: collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, group bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format and its rejections (`test_xml_format`) and Frogger played frame by frame (opt-in with `BUILD_TESTING`) |
+| `tests/` | Catch2 tests: collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format and its rejections (`test_xml_format`) and Frogger played frame by frame (opt-in with `BUILD_TESTING`) |
 
 ## Known limitations
 

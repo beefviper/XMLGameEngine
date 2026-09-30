@@ -60,7 +60,7 @@ namespace xge
 		// through a thin one between two frames. Two objects that already
 		// overlap are a hit at time 0; two that merely touch and are moving
 		// apart are not a hit. Each object is swept on its own - nothing here
-		// knows about groups.
+		// knows about lockstep.
 		static std::optional<SweepHit> sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB);
 	};
 }

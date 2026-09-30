@@ -1,10 +1,10 @@
-// test_group_bounce.cpp
+// test_lockstep_bounce.cpp
 // XML Game Engine
 // author: beefviper
 // date: Sept 29, 2026
 //
-// Catch2 test for a grouped <grid> bouncing off the screen edges
-// (Game::updateGroupOfObjects), using the invader block from
+// Catch2 test for a <grid> in lockstep bouncing off the screen edges
+// (Game::updateLockstepObjects), using the invader block from
 // games/spaceinvaders.xml in a real xge::Game.
 //
 // Regression covered: on every bounce off the right edge the members stored
@@ -51,7 +51,7 @@ namespace
 	}
 }
 
-TEST_CASE("the invader block keeps its column spacing through every bounce", "[group_bounce]")
+TEST_CASE("the invader block keeps its column spacing through every bounce", "[lockstep_bounce]")
 {
 	Game game{ "games/spaceinvaders.xml" };
 	game.setCurrentState("playing");

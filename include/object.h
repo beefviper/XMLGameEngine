@@ -48,7 +48,7 @@ namespace xge
 	struct RawCollisionData
 	{
 		bool enabled{ false };
-		bool group{ false };
+		bool lockstep{ false };
 		std::vector<RawCommand> top;
 		std::vector<RawCommand> bottom;
 		std::vector<RawCommand> left;
@@ -74,7 +74,7 @@ namespace xge
 	struct CollisionData
 	{
 		bool enabled{ false };
-		int group{ 0 };
+		int lockstep{ 0 };
 		std::vector<Command> top;
 		std::vector<Command> bottom;
 		std::vector<Command> left;

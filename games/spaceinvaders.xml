@@ -101,7 +101,7 @@
       </velocity>
       <collisions>
         <enabled>true</enabled>
-        <group>true</group>
+        <lockstep>true</lockstep>
         <collision edge="horizontal">
           <bounce />
           <move direction="down">10</move>

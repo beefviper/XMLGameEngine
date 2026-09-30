@@ -98,13 +98,13 @@ namespace xge
 
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge)
 	{
-		// A grouped object (e.g. the invader block in spaceinvaders) bounces as a
-		// whole group sideways instead of just moving this one object.
-		// circleRectangleCollision never had group behaviour, so that path
+		// An object in lockstep (e.g. the invader block in spaceinvaders) bounces as a
+		// whole block sideways instead of just moving this one object.
+		// circleRectangleCollision never had lockstep behaviour, so that path
 		// (executeObjectCollision) always goes straight to bounceOffEdge.
-		if (object.collisionData.group && (edge == Edge::Left || edge == Edge::Right))
+		if (object.collisionData.lockstep && (edge == Edge::Left || edge == Edge::Right))
 		{
-			game.updateGroupOfObjects(object);
+			game.updateLockstepObjects(object);
 			return;
 		}
 
@@ -165,11 +165,11 @@ namespace xge
 			}
 		};
 
-		if (object.collisionData.group > 0)
+		if (object.collisionData.lockstep > 0)
 		{
 			for (auto& obj : game.getCurrentObjects())
 			{
-				if (obj.collisionData.group == object.collisionData.group)
+				if (obj.collisionData.lockstep == object.collisionData.lockstep)
 				{
 					apply(obj);
 				}

@@ -97,9 +97,9 @@ namespace xge
 			}
 		};
 
-		if (f.collisionData.group > 0)
+		if (f.collisionData.lockstep > 0)
 		{
-			o << ", group=" << f.collisionData.group;
+			o << ", lockstep=" << f.collisionData.lockstep;
 		}
 
 		printCollisionData(f.collisionData.top, "top");

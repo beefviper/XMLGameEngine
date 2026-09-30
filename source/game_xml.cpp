@@ -303,16 +303,16 @@ namespace xge
 			rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
 			rawObject.rawVelocity = readVector2(*requireChild(object, "velocity", where), where);
 
-			// <collisions>: whether they are on, whether the object is one of a
-			// group, then the rules.
+			// <collisions>: whether they are on, whether the object moves in lockstep with
+			// the others in its grid, then the rules.
 			std::unique_ptr<XmlNode> collisions = requireChild(object, "collisions", where);
 			const std::string collisionsHere = where + " > <collisions>";
 			RawCollisionData& collisionData = rawObject.rawCollisionData;
 
 			collisionData.enabled = readBool(*requireChild(*collisions, "enabled", collisionsHere), collisionsHere);
-			if (auto group = findChild(collisions.get(), "group"))
+			if (auto lockstep = findChild(collisions.get(), "lockstep"))
 			{
-				collisionData.group = readBool(*group, collisionsHere);
+				collisionData.lockstep = readBool(*lockstep, collisionsHere);
 			}
 
 			for (std::unique_ptr<XmlNode> collision = findChild(collisions.get(), "collision"); collision != nullptr; collision = collision->getNextSibling())

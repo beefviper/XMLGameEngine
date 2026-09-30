@@ -437,9 +437,9 @@ namespace xge
 		setCurrentState(0);
 	}
 
-	void Game::updateGroupOfObjects(const Object& object) noexcept
+	void Game::updateLockstepObjects(const Object& object) noexcept
 	{
-		const int groupNum = object.collisionData.group;
+		const int lockstepNum = object.collisionData.lockstep;
 
 		// Every member gets exactly the same treatment. This used to shift the
 		// members stored before the touching one by three steps and the rest
@@ -447,7 +447,7 @@ namespace xge
 		// the last column of a <grid> further from the others each time.
 		for (auto& obj : objects)
 		{
-			if (obj.collisionData.group == groupNum)
+			if (obj.collisionData.lockstep == lockstepNum)
 			{
 				obj.velocity.x *= -1;
 				obj.position.x += obj.velocity.x;
@@ -526,7 +526,7 @@ namespace xge
 	}
 
 	// Whether a and b could do anything about touching: both are in play, they
-	// are not members of the same group (the invader block never collides with
+	// are not in lockstep with each other (the invader block never collides with
 	// itself), and at least one has a rule that answers to the other.
 	bool Game::canCollide(const Object& a, const Object& b) noexcept
 	{
@@ -535,7 +535,7 @@ namespace xge
 			return false;
 		}
 
-		if (a.collisionData.group != 0 && a.collisionData.group == b.collisionData.group)
+		if (a.collisionData.lockstep != 0 && a.collisionData.lockstep == b.collisionData.lockstep)
 		{
 			return false;
 		}
@@ -607,7 +607,7 @@ namespace xge
 	// rules run, and the rest of the frame carries on from there with
 	// whatever velocities the rules left behind - so a ball that hits a
 	// brick a third of the way through its move spends the other two thirds
-	// heading back the way it came. Each object is swept by itself; a group
+	// heading back the way it came. Each object is swept by itself; a lockstep set
 	// has no bounding box of its own, so when most of the invaders are gone
 	// only the ones left are tested.
 	void Game::moveObjects(void)
