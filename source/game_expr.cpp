@@ -354,21 +354,21 @@ namespace xge
 		// Every identifier in the position expressions, e.g. "title.width" or
 		// "window.width.center"; the ones that end in .width / .height and name
 		// an object whose size needs a backend are what this is looking for.
-		for (const std::string* expression : { &rawObject.rawPosition.x, &rawObject.rawPosition.y })
+		for (const std::string* positionExpression : { &rawObject.rawPosition.x, &rawObject.rawPosition.y })
 		{
 			std::size_t i = 0;
-			while (i < expression->size())
+			while (i < positionExpression->size())
 			{
 				const auto isIdentifierChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '.'; };
-				if (!isIdentifierChar((*expression)[i]))
+				if (!isIdentifierChar((*positionExpression)[i]))
 				{
 					++i;
 					continue;
 				}
 
 				std::size_t end = i;
-				while (end < expression->size() && isIdentifierChar((*expression)[end])) { ++end; }
-				const std::string token = expression->substr(i, end - i);
+				while (end < positionExpression->size() && isIdentifierChar((*positionExpression)[end])) { ++end; }
+				const std::string token = positionExpression->substr(i, end - i);
 				i = end;
 
 				for (const std::string suffix : { ".width", ".height" })
