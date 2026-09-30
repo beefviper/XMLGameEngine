@@ -153,6 +153,27 @@ namespace xge
 		// before Engine exists.
 		bool sizeKnown{ false };
 
+		// <position> may use any object's size by name - name.width and
+		// name.height, including this object's own - e.g. to centre a text:
+		// window.width.center - title.width / 2. A circle's or rectangle's
+		// size follows from its sprite alone, so a position using only those
+		// is exact the moment the game is loaded. A text's or image's size
+		// only exists once a Window backend has measured it, so a position
+		// that uses one sets positionUsesSize, lists those objects in
+		// sizeDependencies, and stays positionResolved == false (printGame
+		// shows it as unknown) until Game::resolveSizeDependentPositions()
+		// works it out from the real sizes - and again whenever any of them
+		// changes (a score gaining a digit). positionSizesUsed holds the sizes,
+		// in sizeDependencies order, it was last worked out from.
+		bool positionUsesSize{ false };
+		bool positionResolved{ true };
+		std::vector<std::string> sizeDependencies;
+		std::vector<Vector2f> positionSizesUsed;
+
+		// A grid() cell's offset from the grid's evaluated <position>, so that
+		// position can be worked out again later and the offset added back.
+		Vector2f gridOffset{};
+
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		ShapeKind shapeKind{ ShapeKind::Unknown };

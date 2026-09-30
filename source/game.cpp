@@ -23,6 +23,62 @@ namespace xge
 		// see Window::init() in window.h.
 	}
 
+	void Game::resolveSizeDependentPositions(void)
+	{
+		// What every backend-measured object now measures, in the expressions'
+		// own name.width / name.height variables.
+		for (const auto& object : objects)
+		{
+			if (object.sizeKnown && game_expr::sizeNeedsBackend(object.shapeKind))
+			{
+				expr.setObjectSize(object.name, object.size);
+			}
+		}
+
+		for (auto& object : objects)
+		{
+			if (!object.positionUsesSize)
+			{
+				continue;
+			}
+
+			// Every object this position uses needs a measured size before it
+			// can be worked out, and only needs doing again if one has changed.
+			std::vector<Vector2f> sizes;
+			bool allMeasured = true;
+			for (const auto& dependency : object.sizeDependencies)
+			{
+				const auto measured = std::find_if(objects.begin(), objects.end(),
+					[&](const Object& other) { return other.name == dependency && other.sizeKnown; });
+				if (measured == objects.end())
+				{
+					allMeasured = false;
+					break;
+				}
+				sizes.push_back(measured->size);
+			}
+
+			if (!allMeasured || (object.positionResolved && sizes == object.positionSizesUsed))
+			{
+				continue;
+			}
+
+			const auto rawObject = std::find_if(rawObjects.begin(), rawObjects.end(),
+				[&](const RawObject& raw) { return raw.name == object.name; });
+			if (rawObject == rawObjects.end())
+			{
+				continue;
+			}
+
+			object.positionOriginal.x = expr.evaluateString(*rawObject, rawObject->rawPosition.x);
+			object.positionOriginal.y = expr.evaluateString(*rawObject, rawObject->rawPosition.y);
+			object.positionOriginal = object.positionOriginal + object.gridOffset;
+			object.position = object.positionOriginal;
+			object.positionSizesUsed = sizes;
+			object.positionResolved = true;
+		}
+	}
+
 	void Game::updateObjects(void)
 	{
 		auto& currentObjects = getCurrentObjects();

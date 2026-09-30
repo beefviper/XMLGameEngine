@@ -53,7 +53,7 @@ Children, in this order:
 | Element | Required | What it does |
 |---|---|---|
 | `<sprite src="..."/>` | yes | What the object looks like. `src` is an expression that calls a sprite function (see [Expression functions](#expression-functions)). |
-| `<position x="..." y="..."/>` | yes | Starting position, in pixels from the top-left. `x` and `y` are expressions. |
+| `<position x="..." y="..."/>` | yes | Starting position, in pixels from the top-left. `x` and `y` are expressions, and may use an object's own size by its name, `title.width` and `title.height`, to place it by its size, for example a text called `title` centered: `window.width.center - title.width / 2`. |
 | `<velocity x="..." y="..."/>` | yes | Starting velocity, in pixels per frame. Expressions, so `random.range(-7,7)` works. |
 | `<collisions enabled="true\|false" [group="true"]>` | yes | Zero or more `<collision .../>` rules. See [Collisions](#collisions). |
 | `<actions>` | no | Named actions the object can perform, each `<action name="up" value="move.up(step)"/>`. States bind keys to these names. |
@@ -86,6 +86,7 @@ Attribute values that are expressions are evaluated by exprtk at load time. Ordi
 | `window.width.center`, `window.height.center` | half the width, half the height |
 | any global `<variable>` | its value |
 | any `objectName.variableName` | that object's variable (available regardless of the order objects appear in the file) |
+| `objectName.width`, `objectName.height` | the width and height of any object (its sprite's footprint); an object refers to itself by its own name, like any other field. Meant for `<position>`. An object's own `<variable>` named `width` or `height` wins over its size. A circle's or rectangle's size is known from its sprite, so the position is exact at load. A text's or image's size is only known once the window has measured it, so its position is finished then, and worked out again whenever the size changes (a score gaining a digit); until then `printGame` shows it as unknown. |
 
 **Sprite functions** (used in `<sprite src>`); a trailing color is optional and defaults to `color.white`.
 
@@ -159,7 +160,7 @@ Checked once per frame while the state is current. It fires when any object matc
 
 1. **Parse and validate.** The XML backend loads the file. If the file names a schema, it is validated: Xerces does full XSD validation ("strong"); the other three backends use a small built-in validator for the subset of XSD this project uses ("weak", `xsd_lite`). `printGame()` reports which one ran.
 2. **Evaluate.** exprtk evaluates every expression once. Objects, their variables, `grid()` cells and states are built. Nothing here needs a window.
-3. **Open the window.** `Engine` creates the window backend and measures each object's real size for drawing and collisions, then pushes the first state.
+3. **Open the window.** `Engine` creates the window backend and measures each object's real size for drawing and collisions, finishes the position of any text or image that uses `objectName.width` or `objectName.height`, then pushes the first state. The program prints the game twice, once before this step (sizes and size-dependent positions shown as unknown) and once after.
 4. **Loop.** Each frame: read key changes and run the current state's bindings for them; run collisions and conditions and then move every shown object by its velocity (per frame, not scaled by time); clear; draw shown objects; present.
 
 ## Backends
@@ -185,12 +186,14 @@ Checked once per frame while the state is current. It fires when any object matc
 | `engine.cpp` | Frame loop and key handling |
 | `object.h`, `states.h` | Data model |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, collision rules, group bounce, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
+| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, collision rules, group bounce, size expressions, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
 
 ## Known limitations
 
 - Object-object collision knows only the four edges of the other object; there are no verbs beyond the table above (no jump, gravity, shooting patterns, AI, sound).
 - An object's velocity and collisions belong to the object, not to a state: any state that shows it lets it move. There is no way to show the Space Invaders aliens standing still behind the menu and have them march only in `playing`; they start marching as soon as they are shown. See [designs/09](designs/09-states-and-screens.md).
+- An object's own `<variable>` named `width` or `height` shadows its measured size (`objectName.width` then reads the variable). A non-colliding spelling is under consideration; see design note 07.
+- A text or image placed with `objectName.width` / `objectName.height` is re-placed only when the size of an object it names changes, so it is not re-centered after it has moved on its own, and other expressions (velocity, variables) see those sizes as 0 for unmeasured text and images.
 - Object names need not be unique: every cell of a `grid()` shares the grid object's name, so a single brick cannot be addressed.
 - Movement is in pixels per frame with no acceleration and no time step.
 - `CollisionDetector::circleRectangle` picks the touched edge with conditions that compare a coordinate against a rectangle edge minus that same coordinate (for example `midpoint.y > rectTop - midpoint.y`), which does not look geometrically meaningful; it happens to work for the shipped games but has not been proven correct.

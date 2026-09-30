@@ -7,6 +7,9 @@
 
 #include "keycode.h"
 
+#include <algorithm>
+#include <cctype>
+
 namespace xge
 {
 	void game_expr::init(const WindowDesc& windowDesc, std::map<std::string, float>& variables,
@@ -93,6 +96,30 @@ namespace xge
 		// register symbol table with expression
 		expression.register_symbol_table(symbolTable);
 
+		// Every object's size as name.width / name.height, so an expression can
+		// place an object by its own size (or another's) the same way it reads
+		// paddle1.score. Worked out before anything is placed so the order
+		// objects appear in the file does not matter; a text's or image's is
+		// {0,0} for now (see objectSizes). An object's own <variable> named
+		// width or height takes the name instead.
+		for (auto& rawObject : rawObjects)
+		{
+			if (objectSizes.count(rawObject.name))
+			{
+				continue; // every cell of a grid() shares its object's name
+			}
+
+			const std::vector<std::string> params = processData(rawObject, rawObject.src);
+			const ShapeKind kind = shapeKindFromTag(params.empty() ? std::string{} : params.at(0));
+			objectShapeKinds[rawObject.name] = kind;
+			objectSizes[rawObject.name] = measureShapeSize(params, kind);
+		}
+		for (auto& [name, size] : objectSizes)
+		{
+			if (!objectVariables.count(name + ".width")) { symbolTable.add_variable(name + ".width", size.x); }
+			if (!objectVariables.count(name + ".height")) { symbolTable.add_variable(name + ".height", size.y); }
+		}
+
 		int groupNum = 1;
 
 		// evaluate strings in objects
@@ -107,6 +134,12 @@ namespace xge
 			// breakout.xml, games/spaceinvaders.xml), so this is computed
 			// once per rawObject rather than per cell.
 			const Vector2f gridObjSize = measureShapeSize(tempSpriteParams, rawObjectShapeKind);
+
+			// A position that uses the size of a text or image (its own, or
+			// another object's) can only be finished once a backend has measured
+			// it - see Object::positionUsesSize. Sizes of shapes are exact
+			// already (objectSizes above).
+			const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
 
 			if ((gridData.max.x > 1 || gridData.max.y > 1)
 				&& (rawObjectShapeKind == ShapeKind::Text || rawObjectShapeKind == ShapeKind::Image))
@@ -160,11 +193,14 @@ namespace xge
 					// to match, exactly as before, so Game::resetObject/
 					// resetAll restores each grid cell (e.g. each brick) to
 					// its own slot, not the shared base corner.
-					object.position.x = object.positionOriginal.x
-						+ ((gridObjSize.x + static_cast<float>(gridData.padding.x)) * static_cast<float>(gridX));
-					object.position.y = object.positionOriginal.y
-						+ ((gridObjSize.y + static_cast<float>(gridData.padding.y)) * static_cast<float>(gridY));
+					object.gridOffset.x = (gridObjSize.x + static_cast<float>(gridData.padding.x)) * static_cast<float>(gridX);
+					object.gridOffset.y = (gridObjSize.y + static_cast<float>(gridData.padding.y)) * static_cast<float>(gridY);
+					object.position = object.positionOriginal + object.gridOffset;
 					object.positionOriginal = object.position;
+
+					object.sizeDependencies = positionSizeDependencies;
+					object.positionUsesSize = !positionSizeDependencies.empty();
+					object.positionResolved = !object.positionUsesSize;
 
 					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
 					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
@@ -301,6 +337,60 @@ namespace xge
 	std::vector<Command> game_expr::processCommands(const RawState& rawState, const std::string& input_string)
 	{
 		return parseCommands(processData(rawState, input_string));
+	}
+
+	void game_expr::setObjectSize(const std::string& name, const Vector2f& size)
+	{
+		if (auto it = objectSizes.find(name); it != objectSizes.end())
+		{
+			it->second = size;
+		}
+	}
+
+	std::vector<std::string> game_expr::sizeDependenciesOf(const RawObject& rawObject) const
+	{
+		std::vector<std::string> dependencies;
+
+		// Every identifier in the position expressions, e.g. "title.width" or
+		// "window.width.center"; the ones that end in .width / .height and name
+		// an object whose size needs a backend are what this is looking for.
+		for (const std::string* expression : { &rawObject.rawPosition.x, &rawObject.rawPosition.y })
+		{
+			std::size_t i = 0;
+			while (i < expression->size())
+			{
+				const auto isIdentifierChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '.'; };
+				if (!isIdentifierChar((*expression)[i]))
+				{
+					++i;
+					continue;
+				}
+
+				std::size_t end = i;
+				while (end < expression->size() && isIdentifierChar((*expression)[end])) { ++end; }
+				const std::string token = expression->substr(i, end - i);
+				i = end;
+
+				for (const std::string suffix : { ".width", ".height" })
+				{
+					if (token.size() <= suffix.size() || token.compare(token.size() - suffix.size(), suffix.size(), suffix) != 0)
+					{
+						continue;
+					}
+
+					const std::string name = token.substr(0, token.size() - suffix.size());
+					const auto kind = objectShapeKinds.find(name);
+					if (kind != objectShapeKinds.end() && sizeNeedsBackend(kind->second)
+						&& !objectVariables.count(token)
+						&& std::find(dependencies.begin(), dependencies.end(), name) == dependencies.end())
+					{
+						dependencies.push_back(name);
+					}
+				}
+			}
+		}
+
+		return dependencies;
 	}
 
 	xge::GridData game_expr::setGridXY(std::vector<std::string>& spriteParams)

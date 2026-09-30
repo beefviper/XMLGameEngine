@@ -21,7 +21,7 @@
     <!-- title -->
     <object name="title">
       <sprite src="text('PONG', text.size, 'color.red')" />
-      <position x="window.width.center - 350" y="margin" />
+      <position x="window.width.center - title.width / 2" y="margin" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
@@ -81,7 +81,7 @@
     <!-- score1 -->
     <object name="score1">
       <sprite src="text(paddle1.score,128,'color.blue')" />
-      <position x="window.width.center - 80" y="margin" />
+      <position x="window.width.center - 50 - score1.width" y="margin" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
@@ -95,21 +95,21 @@
     <!-- paused -->
     <object name="paused">
       <sprite src="text('PAUSED',128,'color.white')" />
-      <position x="window.width.center - 220" y="window.height.center - 100" />
+      <position x="window.width.center - paused.width / 2" y="window.height.center - paused.height / 2" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
     <!-- gameover -->
     <object name="gameover">
       <sprite src="text('GAME OVER',128,'color.red')" />
-      <position x="window.width.center - 340" y="window.height.center - 150" />
+      <position x="window.width.center - gameover.width / 2" y="window.height.center - 150" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
     <!-- continue -->
     <object name="continue">
       <sprite src="text('spacebar to continue',48,'color.white')" />
-      <position x="window.width.center - 260" y="window.height.center + 60" />
+      <position x="window.width.center - continue.width / 2" y="window.height.center + 60" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>

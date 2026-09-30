@@ -47,15 +47,21 @@
         <collision basic="basic" action="die()" />
       </collisions>
     </object>
+    <object name="title">
+      <sprite src="text('SPACE INVADERS',110,'color.green')" />
+      <position x="window.width.center - title.width / 2" y="window.height.center - title.height / 2 - 100" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
     <object name="settings">
       <sprite src="text('settings',128,'color.white')" />
-      <position x="window.width.center" y="window.height.center" />
+      <position x="window.width.center - settings.width / 2" y="window.height.center - settings.height / 2" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
     <object name="paused">
       <sprite src="text('paused',128,'color.white')" />
-      <position x="window.width.center - 180" y="window.height.center - 200" />
+      <position x="window.width.center - paused.width / 2" y="window.height.center - paused.height / 2" />
       <velocity x="0" y="0" />
       <collisions enabled="false" />
     </object>
@@ -63,10 +69,11 @@
   <states>
     <state name="mainmenu">
       <shows>
+        <show object="title" />
         <show object="player" />
       </shows>
       <inputs>
-        <input button="enter" action="state('playing')" />
+        <input button="space" action="state('playing')" />
         <input button="s" action="state('settings')" />
       </inputs>
     </state>

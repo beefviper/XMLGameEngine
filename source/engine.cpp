@@ -27,6 +27,9 @@ namespace xge
 		// here instead.
 		this->window->init(game.getCurrentObjects());
 
+		// Sizes are real now: finish any position that depends on one.
+		game.resolveSizeDependentPositions();
+
 		game.setCurrentState(0);
 		syncedStateChanges = game.stateChangeCount();
 	}
@@ -45,6 +48,10 @@ namespace xge
 
 			// A <condition> can change the state during updateObjects.
 			syncHeldKeysToState();
+
+			// A text that grew or shrank when last drawn (a score) needs its
+			// position worked out again for the new size.
+			game.resolveSizeDependentPositions();
 
 			window->clear(game.getWindowDesc().background);
 

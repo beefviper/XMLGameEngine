@@ -159,7 +159,7 @@ TEST_CASE("a held fire key does not shoot again when its state returns", "[engin
 	Engine engine(game, std::make_unique<FakeWindow>());
 	Object& bullet = game.getObject("bullet");
 
-	tap(engine, KeyCode::Enter); // mainmenu -> playing
+	tap(engine, KeyCode::Space); // mainmenu -> playing
 
 	engine.handleKeyPressed(KeyCode::Space); // fire
 	REQUIRE(bullet.collisionData.enabled);
@@ -169,5 +169,21 @@ TEST_CASE("a held fire key does not shoot again when its state returns", "[engin
 	tap(engine, KeyCode::P); // pause
 	tap(engine, KeyCode::P); // unpause
 
+	CHECK_FALSE(bullet.collisionData.enabled);
+}
+
+TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engine_input]")
+{
+	Game game{ "games/spaceinvaders.xml" };
+	Engine engine(game, std::make_unique<FakeWindow>());
+	Object& bullet = game.getObject("bullet");
+
+	// Space starts the game from the menu and fires in play. Held down through
+	// the change, it must only start the game.
+	engine.handleKeyPressed(KeyCode::Space);
+	CHECK(game.getCurrentState().name == "playing");
+	CHECK_FALSE(bullet.collisionData.enabled);
+
+	engine.handleKeyReleased(KeyCode::Space);
 	CHECK_FALSE(bullet.collisionData.enabled);
 }

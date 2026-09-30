@@ -37,6 +37,16 @@ The XML author says the paddle has a score and the scoreboard shows it. Undernea
 - Every object variable is also registered in exprtk as `owner.variable` ([05](05-variables-and-evaluation-order.md)).
 - `text(paddle1.score, ...)` is bound to that variable (`boundVariableOwner`, `boundVariableName`). `inc('paddle1.score')` increments it and marks the text object's visual dirty so the backend redraws it. This is the current polling path.
 
+## An object's own size in expressions
+
+Centering a text needs its width, which only exists after a backend has measured the font. Before this, the games hand-tuned offsets for each text (`window.width.center - 350`), which broke whenever the wording, size or font changed.
+
+Built: `objectName.width` and `objectName.height` are available in expressions (meant for `<position>`), and an object refers to itself by its own name like any other field, so a text called `title` is centered with `window.width.center - title.width / 2`. (An earlier draft used `self.width`; dropped because ordinary users would just write the name.) An object's own `<variable>` named `width`/`height` wins over the size. A circle's or rectangle's size follows from its sprite, so its position is exact at load. A text's or image's position is marked unknown (`printGame` says so) until the window has measured it, then worked out, and worked out again whenever its size changes (`Game::resolveSizeDependentPositions`, run once after `Window::init()` and each frame). The program prints the game before and after `Engine` so both states are visible.
+
+**Known wart, shadowing:** `width` and `height` are ordinary variable names, so an object's own `<variable name="width">` shadows its measured size, and the size becomes unreachable from expressions. Precedence (variable wins) keeps existing games working, but it is a collision by design. Alternative spellings that could not collide, none built: a reserved suffix or prefix for built-ins (`title.size.width`, `title.@width`, `title.$width`); a separate namespace (`size(title).x`, `title.size.x`); rejecting a `<variable>` named `width`/`height` on objects whose size is measurable, so the clash is an error rather than silent shadowing; or a warning at load time when shadowing happens. Worth deciding before games in the wild depend on the current spelling.
+
+Placing one object by another's size works the same way (`title.width + 10`). Other ways it could be spelled, none built: an alignment attribute on the object instead of arithmetic (`align="center"`, an origin at the center); a per-axis anchor. Limits of what is built: a position is only recomputed when the size of an object it names changes, and `name.width`/`name.height` read 0 in an expression evaluated before a backend exists (velocity, variables) for text and images.
+
 ## Planned
 
 - **`xge::Value`** as a small variant (for example `std::variant<int, float, bool, std::string>`), so an object's variables are `map<string, Value>` filled from whatever the XML declares. "Score" and "doubled" are then data invented by the game author, not special cases in C++. The current code stores floats only.

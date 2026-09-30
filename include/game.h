@@ -35,6 +35,13 @@ namespace xge
 		explicit Game(const std::string& game, XmlBackend xmlBackend = XmlBackend::Xerces);
 
 		void updateObjects(void);
+
+		// Works out the <position> of every object that uses the size of a text
+		// or image (name.width / name.height, its own or another's) from the
+		// now-measured sizes, and again whenever one of them has changed since.
+		// Engine calls it once its Window has measured sizes, and each frame
+		// after that. See Object::positionUsesSize.
+		void resolveSizeDependentPositions(void);
 		void printGame(void);
 
 		WindowDesc& getWindowDesc(void) noexcept;

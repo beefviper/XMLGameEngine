@@ -30,6 +30,27 @@ namespace xge
 			std::vector<RawState>& rawStates, std::vector<State>& states,
 			std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
 
+		// Every object's size, keyed by object name and bound into symbolTable as
+		// "name.width" / "name.height" (unless the object declares a <variable>
+		// of that name, which wins). A circle's or rectangle's is exact from
+		// init(); a text's or image's stays {0,0} until setObjectSize() is
+		// given what a backend measured. See Object::positionUsesSize. A
+		// std::map's references stay valid across insertions, which is what
+		// makes binding into it safe.
+		std::map<std::string, Vector2f> objectSizes;
+		std::map<std::string, ShapeKind> objectShapeKinds;
+		void setObjectSize(const std::string& name, const Vector2f& size);
+
+		// The objects, other than shapes, whose size rawObject's <position> uses
+		// (by "name.width" / "name.height"): the ones only a backend can measure.
+		std::vector<std::string> sizeDependenciesOf(const RawObject& rawObject) const;
+
+		// Whether an object of this kind has a size only a backend can measure.
+		static bool sizeNeedsBackend(ShapeKind kind) noexcept
+		{
+			return kind == ShapeKind::Text || kind == ShapeKind::Image;
+		}
+
 		exprtk::symbol_table<float> symbolTable;
 		exprtk::expression<float> expression;
 		exprtk::parser<float> parser;
