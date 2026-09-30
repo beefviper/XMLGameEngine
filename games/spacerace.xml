@@ -1,0 +1,411 @@
+<!-- spacerace.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Sept 30, 2026 -->
+
+<!--
+  Space Race (1973): two rockets start at the bottom and fly up through lanes of
+  debris drifting sideways. A hit sends a rocket back to the bottom; getting off
+  the top of the screen scores a point and sends it back for another go. The
+  original played to a two minute clock; this plays to two points, to be quick.
+
+  It uses nothing that was not already in the language: held move.* for the
+  rockets, wrap() and hand-spaced objects for the debris (a lane of objects
+  `size` wide repeats every window width plus `size`), reset() when a rocket is
+  hit, inc() and reset() on the top edge, and a variable condition to end it.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+  <window name="Space Race" width="800" height="600" background="color.black" fullscreen="false" framerate="60" />
+  <variables>
+    <variable name="ship.width" value="20" />
+    <variable name="ship.height" value="44" />
+    <variable name="step" value="3" />
+    <variable name="margin" value="10" />
+  </variables>
+  <objects>
+    <object name="debris1a" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="0" y="75" />
+      <velocity x="2.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris1b" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="272" y="75" />
+      <velocity x="2.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris1c" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="544" y="75" />
+      <velocity x="2.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris2a" class="debris">
+      <sprite src="shape.rectangle(14,14)" />
+      <position x="97" y="122" />
+      <velocity x="-3.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris2b" class="debris">
+      <sprite src="shape.rectangle(14,14)" />
+      <position x="368" y="122" />
+      <velocity x="-3.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris2c" class="debris">
+      <sprite src="shape.rectangle(14,14)" />
+      <position x="639" y="122" />
+      <velocity x="-3.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris3a" class="debris">
+      <sprite src="shape.rectangle(18,18)" />
+      <position x="194" y="166" />
+      <velocity x="1.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris3b" class="debris">
+      <sprite src="shape.rectangle(18,18)" />
+      <position x="466" y="166" />
+      <velocity x="1.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris3c" class="debris">
+      <sprite src="shape.rectangle(18,18)" />
+      <position x="739" y="166" />
+      <velocity x="1.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris4a" class="debris">
+      <sprite src="shape.rectangle(12,12)" />
+      <position x="21" y="215" />
+      <velocity x="-2.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris4b" class="debris">
+      <sprite src="shape.rectangle(12,12)" />
+      <position x="291" y="215" />
+      <velocity x="-2.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris4c" class="debris">
+      <sprite src="shape.rectangle(12,12)" />
+      <position x="562" y="215" />
+      <velocity x="-2.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris5a" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="116" y="259" />
+      <velocity x="3.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris5b" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="388" y="259" />
+      <velocity x="3.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris5c" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="660" y="259" />
+      <velocity x="3.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris6a" class="debris">
+      <sprite src="shape.rectangle(14,14)" />
+      <position x="214" y="306" />
+      <velocity x="-1.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris6b" class="debris">
+      <sprite src="shape.rectangle(14,14)" />
+      <position x="485" y="306" />
+      <velocity x="-1.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris6c" class="debris">
+      <sprite src="shape.rectangle(14,14)" />
+      <position x="756" y="306" />
+      <velocity x="-1.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris7a" class="debris">
+      <sprite src="shape.rectangle(18,18)" />
+      <position x="38" y="350" />
+      <velocity x="2.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris7b" class="debris">
+      <sprite src="shape.rectangle(18,18)" />
+      <position x="310" y="350" />
+      <velocity x="2.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris7c" class="debris">
+      <sprite src="shape.rectangle(18,18)" />
+      <position x="583" y="350" />
+      <velocity x="2.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris8a" class="debris">
+      <sprite src="shape.rectangle(12,12)" />
+      <position x="139" y="399" />
+      <velocity x="-3.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris8b" class="debris">
+      <sprite src="shape.rectangle(12,12)" />
+      <position x="409" y="399" />
+      <velocity x="-3.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris8c" class="debris">
+      <sprite src="shape.rectangle(12,12)" />
+      <position x="680" y="399" />
+      <velocity x="-3.5" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris9a" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="232" y="443" />
+      <velocity x="1.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris9b" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="504" y="443" />
+      <velocity x="1.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="debris9c" class="debris">
+      <sprite src="shape.rectangle(16,16)" />
+      <position x="776" y="443" />
+      <velocity x="1.0" y="0" />
+      <collisions enabled="true">
+        <collision edge="horizontal" action="wrap()" />
+      </collisions>
+    </object>
+    <object name="rocket1" class="rocket">
+      <sprite src="shape.rectangle(ship.width,ship.height,'color.cyan')" />
+      <position x="window.width.center / 2 - rocket1.width / 2" y="window.bottom - rocket1.height - margin" />
+      <velocity x="0" y="0" />
+      <collisions enabled="true">
+        <collision edge="bottom" action="stick()" />
+        <collision edge="top" action="inc('rocket1.score');reset()" />
+        <collision class="debris" action="reset()" />
+      </collisions>
+      <actions>
+        <action name="up" value="move.up(step)" />
+        <action name="down" value="move.down(step)" />
+      </actions>
+      <variables>
+        <variable name="score" value="0" />
+      </variables>
+    </object>
+    <object name="rocket2" class="rocket">
+      <sprite src="shape.rectangle(ship.width,ship.height,'color.yellow')" />
+      <position x="window.width.center * 1.5 - rocket2.width / 2" y="window.bottom - rocket2.height - margin" />
+      <velocity x="0" y="0" />
+      <collisions enabled="true">
+        <collision edge="bottom" action="stick()" />
+        <collision edge="top" action="inc('rocket2.score');reset()" />
+        <collision class="debris" action="reset()" />
+      </collisions>
+      <actions>
+        <action name="up" value="move.up(step)" />
+        <action name="down" value="move.down(step)" />
+      </actions>
+      <variables>
+        <variable name="score" value="0" />
+      </variables>
+    </object>
+    <object name="score1">
+      <sprite src="text(rocket1.score,64,'color.cyan')" />
+      <position x="window.width.center - 60 - score1.width" y="window.bottom - score1.height - margin" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <object name="score2">
+      <sprite src="text(rocket2.score,64,'color.yellow')" />
+      <position x="window.width.center + 60" y="window.bottom - score2.height - margin" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <object name="title">
+      <sprite src="text('SPACE RACE',128,'color.white')" />
+      <position x="window.width.center - title.width / 2" y="window.height.center - title.height / 2 + (-60)" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <object name="start">
+      <sprite src="text('spacebar to start',48,'color.white')" />
+      <position x="window.width.center - start.width / 2" y="window.height.center - start.height / 2 + (70)" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <object name="paused">
+      <sprite src="text('PAUSED',128,'color.white')" />
+      <position x="window.width.center - paused.width / 2" y="window.height.center - paused.height / 2 + (0)" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <object name="player1wins">
+      <sprite src="text('PLAYER 1 WINS',96,'color.cyan')" />
+      <position x="window.width.center - player1wins.width / 2" y="window.height.center - player1wins.height / 2 + (-60)" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <object name="player2wins">
+      <sprite src="text('PLAYER 2 WINS',96,'color.yellow')" />
+      <position x="window.width.center - player2wins.width / 2" y="window.height.center - player2wins.height / 2 + (-60)" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+    <object name="continue">
+      <sprite src="text('spacebar to continue',48,'color.white')" />
+      <position x="window.width.center - continue.width / 2" y="window.height.center - continue.height / 2 + (70)" />
+      <velocity x="0" y="0" />
+      <collisions enabled="false" />
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="start" />
+      </shows>
+      <inputs>
+        <input button="space" action="state('playing')" />
+      </inputs>
+    </state>
+    <state name="playing">
+      <shows>
+        <show object="debris1a" />
+        <show object="debris1b" />
+        <show object="debris1c" />
+        <show object="debris2a" />
+        <show object="debris2b" />
+        <show object="debris2c" />
+        <show object="debris3a" />
+        <show object="debris3b" />
+        <show object="debris3c" />
+        <show object="debris4a" />
+        <show object="debris4b" />
+        <show object="debris4c" />
+        <show object="debris5a" />
+        <show object="debris5b" />
+        <show object="debris5c" />
+        <show object="debris6a" />
+        <show object="debris6b" />
+        <show object="debris6c" />
+        <show object="debris7a" />
+        <show object="debris7b" />
+        <show object="debris7c" />
+        <show object="debris8a" />
+        <show object="debris8b" />
+        <show object="debris8c" />
+        <show object="debris9a" />
+        <show object="debris9b" />
+        <show object="debris9c" />
+        <show object="rocket1" />
+        <show object="rocket2" />
+        <show object="score1" />
+        <show object="score2" />
+      </shows>
+      <inputs>
+        <input button="w" action="action('rocket1', 'up')" />
+        <input button="s" action="action('rocket1', 'down')" />
+        <input button="up" action="action('rocket2', 'up')" />
+        <input button="down" action="action('rocket2', 'down')" />
+        <input button="space" action="state('paused')" />
+        <input button="p" action="state('paused')" />
+      </inputs>
+      <conditions>
+        <condition object="rocket1" variable="score" value="2" action="state('player1wins')" />
+        <condition object="rocket2" variable="score" value="2" action="state('player2wins')" />
+      </conditions>
+    </state>
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+      </shows>
+      <inputs>
+        <input button="space" action="state()" />
+        <input button="p" action="state()" />
+      </inputs>
+    </state>
+    <state name="player1wins">
+      <shows>
+        <show object="player1wins" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space" action="reset()" />
+      </inputs>
+    </state>
+    <state name="player2wins">
+      <shows>
+        <show object="player2wins" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space" action="reset()" />
+      </inputs>
+    </state>
+  </states>
+</game>

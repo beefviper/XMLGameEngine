@@ -10,7 +10,7 @@ A verb is a named behavior with parameters. A good declarative verb captures the
 
 `bounce`, `stick`, `die`, `reset`, `inc`, `dec`, `wrap`, `carry`, `move.up/down/left/right`, `hop.up/down/left/right`, `state`, `action`, `fire`; sprites `shape.circle`, `shape.rectangle`, `text`, `image`, `grid`; a collision rule filter, `unless`; and a condition form, `atmost`. See [docs/readme.md](../readme.md) for exact meanings.
 
-Rough coverage by game: Pong is essentially `bounce()` and `stick()`; Breakout adds `die()`; Space Invaders adds `fire()` and formation movement through group bounce; Frogger adds `hop`, `carry`, `wrap`, `dec`, `unless` and `atmost` (see [21](21-frogger.md) for why each is shaped the way it is).
+Rough coverage by game: Pong is essentially `bounce()` and `stick()`; Breakout adds `die()`; Space Invaders adds `fire()` and formation movement through group bounce; Frogger adds `hop`, `carry`, `wrap`, `dec`, `unless` and `atmost` (see [21](21-frogger.md) for why each is shaped the way it is). Space Race added no verbs: it is `move`, `stick`, `inc`, `reset`, `wrap` and a score condition.
 
 The rule of thumb held: each of those was added because Frogger could not be described without it, and each names a behavior rather than an implementation (`carry` says an object rides another, not how its position is updated).
 

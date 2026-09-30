@@ -50,6 +50,7 @@ add_executable(XMLGameEngineTests
 	"tests/test_engine_input.cpp"
 	"tests/test_new_verbs.cpp"
 	"tests/test_frogger.cpp"
+	"tests/test_spacerace.cpp"
 )
 
 target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)

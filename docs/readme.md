@@ -12,7 +12,7 @@ XMLGameEngine breakout     # a bare name gets ".xml" appended
 XMLGameEngine pong.xml     # a name containing "." is used as given
 ```
 
-The file is looked for in the current directory first, then in `./games/`. If it is not found the program prints an error and exits. Shipped games: `games/pong.xml`, `games/breakout.xml`, `games/spaceinvaders.xml`, `games/frogger.xml`.
+The file is looked for in the current directory first, then in `./games/`. If it is not found the program prints an error and exits. Shipped games: `games/pong.xml`, `games/breakout.xml`, `games/spaceinvaders.xml`, `games/frogger.xml`, `games/spacerace.xml` (two players, W/S and Up/Down, first to two points).
 
 The XML and window libraries are chosen in C++ (`Game(file, XmlBackend)` and `Engine(game, WindowBackend)`); `main.cpp` uses the defaults, Xerces and SFML3. There is no command-line switch for either yet. See [Backends](#backends).
 
