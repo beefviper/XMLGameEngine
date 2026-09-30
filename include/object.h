@@ -28,11 +28,11 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, WindowDesc const& f);
 	};
 
-	// One <collision basic="basic" .../> rule, still unparsed. class/object let
-	// a rule only respond to a specific kind (or specific instance) of the
-	// other object in the pair; empty means "matches anything" (unchanged
-	// behaviour). Only meaningful for object-object ("basic") collisions -
-	// a screen-edge collision has no "other object" to filter against.
+	// One <collision> rule about another object, still unparsed. class/object
+	// let a rule only respond to a specific kind (or specific instance) of the
+	// other object in the pair; empty means "matches anything". Only meaningful
+	// for object-object collisions - a screen-edge collision (<collision
+	// edge="...">) has no "other object" to filter against.
 	struct RawCollisionRule
 	{
 		std::string filterClass;
@@ -42,17 +42,17 @@ namespace xge
 		// same moment touching something of that class - "water kills the
 		// frog, unless it is also on a log". Empty means no exception.
 		std::string unlessClass;
-		std::string action;
+		std::vector<RawCommand> commands;
 	};
 
 	struct RawCollisionData
 	{
 		bool enabled{ false };
 		bool group{ false };
-		std::string top;
-		std::string bottom;
-		std::string left;
-		std::string right;
+		std::vector<RawCommand> top;
+		std::vector<RawCommand> bottom;
+		std::vector<RawCommand> left;
+		std::vector<RawCommand> right;
 		std::vector<RawCollisionRule> basic;
 
 		// TODO: add operator<< to RawCollisionData
@@ -82,10 +82,11 @@ namespace xge
 
 	};
 
-	struct Vector2str
+	// An <x>/<y> pair, each still a RawValue.
+	struct RawVector2
 	{
-		std::string x;
-		std::string y;
+		RawValue x;
+		RawValue y;
 	};
 
 	struct Vector2i
@@ -101,17 +102,48 @@ namespace xge
 		Vector2i obj{ 0,0 };
 	};
 
+	// An object's <sprite>, as written: one shape, optionally repeated as a
+	// <grid>. Which of the fields are used depends on `kind` (circle,
+	// rectangle, text or image).
+	struct RawSprite
+	{
+		std::string kind;
+
+		RawValue radius;             // circle
+		RawValue width;              // rectangle
+		RawValue height;             // rectangle
+		RawValue size;               // text
+
+		// A text is either a fixed label (<content>) or a number (<number>);
+		// a number that is just an owner.variable stays live (see
+		// Object::boundVariableOwner).
+		std::string content;         // text label
+		bool textIsNumber{ false };
+		RawValue number;             // text, when textIsNumber
+
+		std::string path;            // image
+		std::string flip;            // image: "", "horizontal" or "vertical"
+		std::string color;           // "" means color.white
+
+		// <grid>: this shape repeated columns x rows times.
+		bool isGrid{ false };
+		RawValue columns;
+		RawValue rows;
+		RawVector2 padding;          // only when hasPadding
+		bool hasPadding{ false };
+	};
+
 	struct RawObject
 	{
 		std::string name;
 		std::string objClass;
-		std::string src;
+		RawSprite sprite;
 		bool isVisible{ true };
-		Vector2str rawPosition;
-		Vector2str rawVelocity;
+		RawVector2 rawPosition;
+		RawVector2 rawVelocity;
 		RawCollisionData rawCollisionData;
-		std::map<std::string, std::string> action;
-		std::map<std::string, std::string> variable;
+		std::map<std::string, std::vector<RawCommand>> action;
+		std::map<std::string, RawValue> variable;
 
 		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
 	};
@@ -131,7 +163,6 @@ namespace xge
 		// a cell can also be named on its own (aliens.3.2).
 		std::string baseName;
 		std::string objClass;
-		std::string src;
 		bool isVisible{ true };
 
 		// How the object started (see Game::resetObject), so that a reset brings

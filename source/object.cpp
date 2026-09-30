@@ -18,20 +18,22 @@ namespace xge
 	}
 
 	std::ostream& operator<<(std::ostream& o, const RawObject& f) {
-		o << "rawObject: " << "name=" << f.name << ", src=" << f.src << '\n'
+		o << "rawObject: " << "name=" << f.name << ", sprite=" << f.sprite.kind
+			<< (f.sprite.isGrid ? " (grid)" : "") << '\n'
 			<< "\tpos.x=" << f.rawPosition.x << ", pos.y=" << f.rawPosition.y << '\n'
 			<< "\tvel.x=" << f.rawVelocity.x << ", vel.y=" << f.rawVelocity.y << '\n'
 
 			// TODO: replace with operator<< for rawCollisionData
-			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false")
-			<< (f.rawCollisionData.top.length() ? ", top=" + f.rawCollisionData.top : "")
-			<< (f.rawCollisionData.bottom.length() ? ", bottom=" + f.rawCollisionData.bottom : "")
-			<< (f.rawCollisionData.left.length() ? ", left=" + f.rawCollisionData.left : "")
-			<< (f.rawCollisionData.right.length() ? ", right=" + f.rawCollisionData.right : "");
+			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false");
+
+		if (!f.rawCollisionData.top.empty()) { o << ", top=" << f.rawCollisionData.top; }
+		if (!f.rawCollisionData.bottom.empty()) { o << ", bottom=" << f.rawCollisionData.bottom; }
+		if (!f.rawCollisionData.left.empty()) { o << ", left=" << f.rawCollisionData.left; }
+		if (!f.rawCollisionData.right.empty()) { o << ", right=" << f.rawCollisionData.right; }
 
 		for (auto& rawRule : f.rawCollisionData.basic)
 		{
-			o << ", basic=" << rawRule.action;
+			o << ", basic=" << rawRule.commands;
 			if (!rawRule.filterClass.empty()) { o << " (class=" << rawRule.filterClass << ")"; }
 			if (!rawRule.filterObject.empty()) { o << " (object=" << rawRule.filterObject << ")"; }
 			if (!rawRule.unlessClass.empty()) { o << " (unless=" << rawRule.unlessClass << ")"; }
@@ -45,14 +47,19 @@ namespace xge
 
 		for (auto& varible : f.variable)
 		{
-			o << "\taction=" << varible.first << ", value=" << varible.second << '\n';
+			o << "\tvariable=" << varible.first << ", value=" << varible.second << '\n';
 		}
 
 		return o;
 	}
 
 	std::ostream& operator<<(std::ostream& o, const Object& f) {
-		o << "Object: " << "name=" << f.name << ", src=" << f.src << '\n';
+		o << "Object: " << "name=" << f.name << ", sprite=";
+		for (std::size_t i = 0; i < f.spriteParams.size(); ++i)
+		{
+			o << (i ? "," : "") << f.spriteParams[i];
+		}
+		o << '\n';
 
 		if (f.positionResolved)
 		{

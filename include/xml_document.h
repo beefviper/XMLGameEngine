@@ -12,7 +12,8 @@
 namespace xge
 {
 	// What game_xml needs from one parsed XML element - a tag name,
-	// attribute lookup, and unfiltered first-child/next-sibling traversal -
+	// attribute lookup, its own text, and unfiltered first-child/next-sibling
+	// traversal -
 	// expressed with no particular XML library's types, so game_xml.cpp
 	// never has to name Xerces/TinyXML2/PugiXML/RapidXML directly - same
 	// shape as Window/Object in window.h for the graphics backends.
@@ -43,11 +44,20 @@ namespace xge
 		// no distinction needed here between "empty value" and "missing").
 		virtual std::string getAttribute(const std::string& name) const = 0;
 
+		// The element's own text: every text and CDATA child joined together,
+		// exactly as written - not trimmed, so an element that only holds
+		// child elements and the whitespace between them gives back that
+		// whitespace. "" if it has none. (<x>100</x> gives "100"; the text
+		// of <x><random/></x> is just its whitespace.)
+		virtual std::string getText() const = 0;
+
 		// The first child element regardless of its tag name, or the next
 		// sibling element regardless of its tag name - nullptr if there is
-		// none. Deliberately unfiltered (unlike a typical library's own
-		// name-filtered traversal) - see the class comment above for why
+		// none. Deliberately unfiltered by name (unlike a typical library's
+		// own name-filtered traversal) - see the class comment above for why
 		// (game_xml.cpp's own findChild() does the name filtering instead).
+		// Only elements are visited: the text, comments and processing
+		// instructions between them are not, in any backend.
 		virtual std::unique_ptr<XmlNode> getFirstChild() const = 0;
 		virtual std::unique_ptr<XmlNode> getNextSibling() const = 0;
 	};

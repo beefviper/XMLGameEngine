@@ -12,7 +12,7 @@ A purely declarative file has no natural place for ending the game when someone 
 <state name="playing">
   ...
   <conditions>
-    <condition class="paddle" variable="score" value="15" action="state('gameover')" />
+    <condition class="paddle" variable="score"><atleast>15</atleast><push state="gameover" /></condition>
   </conditions>
 </state>
 ```
@@ -23,11 +23,11 @@ A first version placed the condition in the `paused` state, which would only hav
 
 ## How it works now
 
-Once per frame, while the state is current, for each condition: find objects matching the `class` and/or `object` filter that have the named variable at or above `value`; the first match runs the action and stops checking for that frame. `reset()` on the game-over screen restores every variable so a leftover condition does not fire again immediately.
+Once per frame, while the state is current, for each condition: find objects matching the `class` and/or `object` filter that have the named variable at or above `<atleast>`; the first match runs the action and stops checking for that frame. `reset()` on the game-over screen restores every variable so a leftover condition does not fire again immediately.
 
-A second form covers the win that is not a score: `<condition class="aliens" remaining="0" action="state('gameover')" />`. It counts the matching objects that are still visible (`die()` hides an object) and fires when that count is no more than `remaining`. Space Invaders uses it: the aliens are all cells of one `grid()`, `class="aliens"` matches every cell, and when the last one dies the game goes to `gameover`, where a bare `reset()` restores them.
+A second form covers the win that is not a score: `<condition class="aliens"><remaining>0</remaining><push state="gameover" /></condition>`. It counts the matching objects that are still visible (`die()` hides an object) and fires when that count is no more than `remaining`. Space Invaders uses it: the aliens are all cells of one `grid()`, `class="aliens"` matches every cell, and when the last one dies the game goes to `gameover`, where a bare `reset()` restores them.
 
-A third form reads a variable from above: `<condition object="frog" variable="lives" atmost="0" action="state('gameover')" />` fires when the variable is at that value or below. Frogger counts its lives *down* with `dec()`, and "lives is 0" reads far better in the file than a condition that fires when a counter of deaths reaches 3, which would hide the starting number of lives in the condition instead of in the frog's own `<variable>`. It is `atmost` and not an operator for the same reason `remaining` is: a name that says what it means. It fires at or below, not only at equal, because a variable may go below zero (a life lost twice in one frame).
+A third form reads a variable from above: `<condition object="frog" variable="lives"><atmost>0</atmost><push state="gameover" /></condition>` fires when the variable is at that value or below. Frogger counts its lives *down* with `dec()`, and "lives is 0" reads far better in the file than a condition that fires when a counter of deaths reaches 3, which would hide the starting number of lives in the condition instead of in the frog's own `<variable>`. It is `atmost` and not an operator for the same reason `remaining` is: a name that says what it means. It fires at or below, not only at equal, because a variable may go below zero (a life lost twice in one frame).
 
 Choices made: a name that says what it counts (`remaining`) rather than an operator or an expression; it counts *visible* objects, not enabled ones, because an alien that has died is both hidden and out of collisions while a text object with collisions off is still very much there; and a filter that matches nothing warns at load, since "none left" would otherwise be true from the first frame. Alternatives not built: a general comparison (`remaining="<3"`), or counting any variable across a class (`sum`, `count`), which is where a real expression language for conditions would start.
 

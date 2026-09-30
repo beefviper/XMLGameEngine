@@ -9,20 +9,25 @@
 #include "states.h"
 #include "xml_document.h"
 
-#include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace xge
 {
 	// Deserializes a game XML file into Game's raw (unevaluated) data -
-	// windowDesc, variables, rawStates, rawObjects. Only ever talks to the
-	// abstract XmlNode/XmlDocument interface (xml_document.h), never a
-	// particular XML library directly - same separation as Engine/Window on
-	// the graphics side. No longer owns any per-run state itself (the whole
-	// XmlDocument lives and dies inside a single init() call), so unlike the
-	// old Xerces-only version of this class, there's nothing here to
-	// construct, destroy, or forbid copying/moving of.
+	// windowDesc, rawVariables, rawStates, rawObjects - the values, sprites and
+	// commands exactly as the file says them, none of it worked out yet (that is
+	// game_expr's job). Only ever talks to the abstract XmlNode/XmlDocument
+	// interface (xml_document.h), never a particular XML library directly - same
+	// separation as Engine/Window on the graphics side. No longer owns any
+	// per-run state itself (the whole XmlDocument lives and dies inside a single
+	// init() call), so there's nothing here to construct, destroy, or forbid
+	// copying/moving of.
+	//
+	// A tag the file gets wrong (a missing <radius>, an unknown command, a
+	// value with both text and a <random>) throws std::runtime_error saying
+	// where, whether or not the file names a schema.
 	class game_xml
 	{
 	public:
@@ -33,27 +38,13 @@ namespace xge
 		// other backend loaded it and this project's own XsdLiteValidator
 		// (xsd_lite.h) checked it instead, or None if the file named no
 		// schema at all. See Game::printGame().
+		//
+		// rawVariables keeps the order the file declares them in, so that
+		// game_expr can let one variable's value use the ones before it.
 		void init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
-			std::map<std::string, float>& variables,
+			std::vector<std::pair<std::string, RawValue>>& rawVariables,
 			std::vector<RawState>& rawStates,
 			std::vector<RawObject>& rawObjects,
 			SchemaValidation& validation);
-
-	private:
-		// The first child of parent named `name`, or nullptr if parent is
-		// null or none match. Schema elements have fixed names but aren't
-		// otherwise guaranteed to stay in a fixed order, so this looks a
-		// child up by name the same way getAttribute below looks up an
-		// attribute by name, instead of chaining getFirstChild()/
-		// getNextSibling() calls that assume a particular position.
-		static std::unique_ptr<XmlNode> findChild(const XmlNode* parent, const std::string& name);
-
-		// "" if node is null or the attribute isn't present. This schema
-		// allows some elements to be absent entirely (e.g. an object with no
-		// <collisions>), so the traversal below routinely ends up with a
-		// null XmlNode it still wants to read a (missing) attribute from -
-		// every attribute read goes through here rather than assuming a
-		// non-null node.
-		static std::string getAttribute(const XmlNode* node, const std::string& name);
 	};
 }

@@ -21,6 +21,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -137,6 +138,9 @@ namespace
 		REQUIRE(in.good());
 		std::string xml((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 
+		// Whatever line endings the file has, the replacements below are one line each.
+		xml.erase(std::remove(xml.begin(), xml.end(), '\r'), xml.end());
+
 		for (const auto& [from, to] : replacements)
 		{
 			const auto at = xml.find(from);
@@ -150,18 +154,20 @@ namespace
 		return scratch;
 	}
 
-	// The logo is a 100-radius circle (200 x 200); the title is a text.
-	const std::string kLogoPosition = "<position x=\"window.width.center - logo.radius\" y=\"window.height.center - logo.radius\" />";
+	// The logo is a 100-radius circle (200 x 200); the title is a text. Its
+	// position is the only place these two expressions are written in pong.xml.
+	const std::string kLogoX = "window.width.center - logo.radius";
+	const std::string kLogoY = "window.height.center - logo.radius";
 
-	std::string logoAt(const std::string& x, const std::string& y)
+	std::vector<std::pair<std::string, std::string>> logoAt(const std::string& x, const std::string& y)
 	{
-		return "<position x=\"" + x + "\" y=\"" + y + "\" />";
+		return { { kLogoX, x }, { kLogoY, y } };
 	}
 }
 
 TEST_CASE("a shape's position that uses its own size is exact as soon as the game loads", "[size_expressions]")
 {
-	const ScratchFile scratch = writeGame({ { kLogoPosition, logoAt("logo.width", "logo.height * 2") } });
+	const ScratchFile scratch = writeGame(logoAt("logo.width", "logo.height * 2"));
 
 	Game game{ scratch.path.string() };
 	const Object& logo = game.getObject("logo");
@@ -174,7 +180,7 @@ TEST_CASE("a shape's position that uses its own size is exact as soon as the gam
 
 TEST_CASE("an object can be placed by another object's size", "[size_expressions]")
 {
-	const ScratchFile scratch = writeGame({ { kLogoPosition, logoAt("title.width + 10", "title.height") } });
+	const ScratchFile scratch = writeGame(logoAt("title.width + 10", "title.height"));
 
 	Game game{ scratch.path.string() };
 	Object& logo = game.getObject("logo");
@@ -203,9 +209,9 @@ TEST_CASE("an object's own <variable> named width is not replaced by its size", 
 	// paddle1 (an image, so its real size needs a backend) is given a width
 	// variable of its own. paddle1.width must read that variable, while
 	// paddle1.height, which it does not declare, is still the measured height.
-	const ScratchFile scratch = writeGame({
-		{ "<variable name=\"score\" value=\"0\" />", "<variable name=\"score\" value=\"0\" />\n        <variable name=\"width\" value=\"7\" />" },
-		{ kLogoPosition, logoAt("paddle1.width", "paddle1.height") } });
+	auto replacements = logoAt("paddle1.width", "paddle1.height");
+	replacements.push_back({ "<variable name=\"score\">0</variable>", "<variable name=\"score\">0</variable><variable name=\"width\">7</variable>" });
+	const ScratchFile scratch = writeGame(replacements);
 
 	Game game{ scratch.path.string() };
 	Object& logo = game.getObject("logo");

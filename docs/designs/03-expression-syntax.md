@@ -1,6 +1,6 @@
 # 03. Expression syntax: function calls in attributes vs XML structure
 
-**Status:** current form implemented (A); the author intends to move away from it (B, C or D), not done yet
+**Status:** option D **built** on the `nofun` branch: function syntax is gone from every game file, the XSD and the loader; plain arithmetic stays as text
 
 ## The problem
 
@@ -23,7 +23,21 @@ Consequences:
 
 ## Decision and status
 
-The author has said the function-like syntax will be removed (conversation of 2026-09-25) and that it is not a change he wants to keep half-done. As of 2026-09-29 the repository still uses option A throughout, including all three sample games and the current tests. The intended target is D, moving toward B/C for the calls themselves; the arithmetic question is separate.
+The author asked for the function-like syntax to be removed (conversation of 2026-09-25) and not left half-done. It was removed on the `nofun` branch (2026-09-30), all at once: the five sample games, the XSD, the loader and the tests.
+
+**Rule of thumb.** An attribute names or picks something: `name`, `class`, `object`, `edge`, `button`, `state`, `variable`, `direction`, `unless`. Everything else is element content. A *value* is either expression text (`window.width.center - ball.radius`, plain arithmetic, still exprtk) or exactly one value tag. A command list is an ordered list of command tags.
+
+| Was | Now |
+|---|---|
+| `x="random.range(-7,7)"` | `<x><random min="-7" max="7" /></x>` |
+| `src="shape.circle(r,'color.white')"` | `<sprite><circle><radius>r</radius><color>white</color></circle></sprite>` |
+| `action="inc('p.score');reset()"` | `<inc variable="p.score" /><reset />` |
+| `action="move.up(step)"` | `<move direction="up">step</move>` |
+| `action="state('x')"` / `state()` | `<push state="x" />` / `<pop />` |
+| `value="15"` on a condition | `<atleast>15</atleast>` (or `<atmost>`, `<remaining>`) |
+| `basic="basic"` | a `<collision>` with no selector |
+
+Anywhere a value is allowed, a value tag is allowed. Only `<random min max>` exists today (drawn once at load, as `random.range` was). Ideas for others: `<pick>` (one of a list), an integer `<random>`, `<clamp>`, `<count>` of objects in a class. Each is a new tag in the XSD and one case in the evaluator; none is built.
 
 ## Worked example from the conversations
 
@@ -31,12 +45,12 @@ The author has said the function-like syntax will be removed (conversation of 20
 
 - **Not a problem:** numeric literals, `edge="vertical"`, `enabled="true"`, `class="paddle"`, and color names such as `color.black`. Each is a flat string that maps to a constant by table lookup.
 - **A problem:** the arithmetic in positions, and the multi-step action strings (`inc(...);reset()`), which were the same kind of problem (structure flattened into text).
-- Proposed fix for the second:
+- Fix for the second (now built):
 
 ```xml
 <collision edge="left">
-  <action name="inc" target="paddle2.score" />
-  <action name="reset" />
+  <inc variable="paddle2.score" />
+  <reset />
 </collision>
 ```
 
@@ -44,7 +58,7 @@ The author has said the function-like syntax will be removed (conversation of 20
 
 ## Parts that were kept on purpose
 
-Objects have named actions (`<action name="up" value="move.up(step)"/>`) and states bind keys to those names. That indirection is good design regardless of how the call is written ([10](10-input-and-actions.md)).
+Objects have named actions (`<action name="up"><move direction="up">step</move></action>`) and states bind keys to those names. That indirection is good design regardless of how the call is written ([10](10-input-and-actions.md)).
 
 ## Sources
 

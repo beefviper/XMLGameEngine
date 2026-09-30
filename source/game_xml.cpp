@@ -7,6 +7,7 @@
 
 #include "xsd_lite.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -14,8 +15,428 @@
 
 namespace xge
 {
+	namespace
+	{
+		// What game_xml knows how to read is fixed by assets/xmlgameengine.xsd,
+		// but not every file names that schema (and only Xerces really checks
+		// against it), so every reader below also checks what it needs and
+		// says where it was when something is missing or wrong.
+
+		std::string getAttribute(const XmlNode* node, const std::string& name)
+		{
+			return node ? node->getAttribute(name) : std::string{};
+		}
+
+		std::string trim(const std::string& text)
+		{
+			const auto first = text.find_first_not_of(" \t\r\n");
+			if (first == std::string::npos) { return {}; }
+			const auto last = text.find_last_not_of(" \t\r\n");
+			return text.substr(first, last - first + 1);
+		}
+
+		// The first child of parent named `name`, or nullptr if parent is null
+		// or none match. Schema elements have fixed names but a sequence still
+		// lets some be left out (an object with no <actions>), so this looks a
+		// child up by name rather than chaining getFirstChild()/getNextSibling()
+		// calls that assume a particular position.
+		std::unique_ptr<XmlNode> findChild(const XmlNode* parent, const std::string& name)
+		{
+			std::unique_ptr<XmlNode> child = parent ? parent->getFirstChild() : nullptr;
+
+			while (child != nullptr && child->getName() != name)
+			{
+				child = child->getNextSibling();
+			}
+
+			return child;
+		}
+
+		[[noreturn]] void fail(const std::string& where, const std::string& message)
+		{
+			throw std::runtime_error(where + ": " + message);
+		}
+
+		std::unique_ptr<XmlNode> requireChild(const XmlNode& parent, const std::string& name, const std::string& where)
+		{
+			std::unique_ptr<XmlNode> child = findChild(&parent, name);
+			if (!child) { fail(where, "missing <" + name + ">"); }
+			return child;
+		}
+
+		std::string requireAttribute(const XmlNode& node, const std::string& name, const std::string& where)
+		{
+			const std::string value = node.getAttribute(name);
+			if (value.empty()) { fail(where, "<" + node.getName() + "> needs " + name + "=\"...\""); }
+			return value;
+		}
+
+		// The text of a simple element such as <color>color.red</color>.
+		std::string readText(const XmlNode& node)
+		{
+			return trim(node.getText());
+		}
+
+		bool readBool(const XmlNode& node, const std::string& where)
+		{
+			const std::string text = readText(node);
+			if (text == "true" || text == "1") { return true; }
+			if (text == "false" || text == "0") { return false; }
+			fail(where, "<" + node.getName() + "> is \"" + text + "\"; expected true or false");
+		}
+
+		// A number, written either as an expression (the text of the element) or
+		// as one value tag inside it - see RawValue.
+		RawValue readValue(const XmlNode& node, const std::string& where)
+		{
+			const std::string text = readText(node);
+			const std::string here = where + " > <" + node.getName() + ">";
+			std::unique_ptr<XmlNode> tag = node.getFirstChild();
+
+			if (!tag)
+			{
+				if (text.empty()) { fail(here, "has no value"); }
+				return RawValue::expression(text);
+			}
+
+			if (!text.empty()) { fail(here, "holds both the text \"" + text + "\" and a <" + tag->getName() + "> tag; use one or the other"); }
+			if (tag->getNextSibling()) { fail(here, "holds more than one value tag"); }
+
+			const std::string tagName = tag->getName();
+
+			if (tagName == "random")
+			{
+				RawValue value;
+				value.kind = RawValue::Kind::Random;
+				value.min = requireAttribute(*tag, "min", here);
+				value.max = requireAttribute(*tag, "max", here);
+				return value;
+			}
+
+			fail(here, "unknown value tag <" + tagName + ">");
+		}
+
+		RawValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where)
+		{
+			return readValue(*requireChild(parent, name, where), where);
+		}
+
+		RawVector2 readVector2(const XmlNode& node, const std::string& where)
+		{
+			const std::string here = where + " > <" + node.getName() + ">";
+			RawVector2 vector;
+			vector.x = readValueOf(node, "x", here);
+			vector.y = readValueOf(node, "y", here);
+			return vector;
+		}
+
+		bool isShapeTag(const std::string& name)
+		{
+			return name == "circle" || name == "rectangle" || name == "text" || name == "image";
+		}
+
+		// One <circle>, <rectangle>, <text> or <image>, written into `sprite`.
+		void readShape(const XmlNode& shape, RawSprite& sprite, const std::string& where)
+		{
+			const std::string kind = shape.getName();
+			const std::string here = where + " > <" + kind + ">";
+
+			sprite.kind = kind;
+
+			if (kind == "circle")
+			{
+				sprite.radius = readValueOf(shape, "radius", here);
+			}
+			else if (kind == "rectangle")
+			{
+				sprite.width = readValueOf(shape, "width", here);
+				sprite.height = readValueOf(shape, "height", here);
+			}
+			else if (kind == "text")
+			{
+				if (auto content = findChild(&shape, "content"))
+				{
+					sprite.content = readText(*content);
+				}
+				else if (auto number = findChild(&shape, "number"))
+				{
+					sprite.textIsNumber = true;
+					sprite.number = readValue(*number, here);
+				}
+				else
+				{
+					fail(here, "needs a <content> (a label) or a <number>");
+				}
+
+				sprite.size = readValueOf(shape, "size", here);
+			}
+			else
+			{
+				sprite.path = readText(*requireChild(shape, "path", here));
+				if (auto flip = findChild(&shape, "flip")) { sprite.flip = readText(*flip); }
+			}
+
+			if (kind != "image")
+			{
+				if (auto color = findChild(&shape, "color")) { sprite.color = readText(*color); }
+			}
+		}
+
+		RawSprite readSprite(const XmlNode& spriteNode, const std::string& where)
+		{
+			const std::string here = where + " > <sprite>";
+			RawSprite sprite;
+
+			std::unique_ptr<XmlNode> first = spriteNode.getFirstChild();
+			if (!first) { fail(here, "is empty; expected a shape or a <grid>"); }
+
+			if (first->getName() == "grid")
+			{
+				const std::string gridHere = here + " > <grid>";
+				sprite.isGrid = true;
+				sprite.columns = readValueOf(*first, "columns", gridHere);
+				sprite.rows = readValueOf(*first, "rows", gridHere);
+
+				if (auto padding = findChild(first.get(), "padding"))
+				{
+					sprite.hasPadding = true;
+					sprite.padding = readVector2(*padding, gridHere);
+				}
+
+				std::unique_ptr<XmlNode> shape = first->getFirstChild();
+				while (shape && !isShapeTag(shape->getName())) { shape = shape->getNextSibling(); }
+				if (!shape) { fail(gridHere, "needs a shape to repeat (<circle>, <rectangle>, <text> or <image>)"); }
+
+				readShape(*shape, sprite, gridHere);
+			}
+			else if (isShapeTag(first->getName()))
+			{
+				readShape(*first, sprite, here);
+			}
+			else
+			{
+				fail(here, "unknown shape <" + first->getName() + ">");
+			}
+
+			return sprite;
+		}
+
+		bool isCommandTag(const std::string& name)
+		{
+			return name == "bounce" || name == "stick" || name == "wrap" || name == "carry" || name == "die"
+				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
+				|| name == "push" || name == "pop" || name == "fire" || name == "trigger";
+		}
+
+		RawCommand readCommand(const XmlNode& node, const std::string& where)
+		{
+			RawCommand command;
+			command.verb = node.getName();
+
+			if (!isCommandTag(command.verb)) { fail(where, "unknown command <" + command.verb + ">"); }
+
+			command.object = node.getAttribute("object");
+			command.variable = node.getAttribute("variable");
+			command.state = node.getAttribute("state");
+			command.action = node.getAttribute("action");
+			command.direction = node.getAttribute("direction");
+
+			const std::string& verb = command.verb;
+			if (verb == "inc" || verb == "dec") { requireAttribute(node, "variable", where); }
+			if (verb == "push") { requireAttribute(node, "state", where); }
+			if (verb == "fire") { requireAttribute(node, "object", where); }
+			if (verb == "trigger") { requireAttribute(node, "object", where); requireAttribute(node, "action", where); }
+			if (verb == "move" || verb == "hop")
+			{
+				requireAttribute(node, "direction", where);
+				command.amount = readValue(node, where);
+			}
+
+			return command;
+		}
+
+		// Every command from `first` on, in the order written.
+		std::vector<RawCommand> readCommands(std::unique_ptr<XmlNode> first, const std::string& where)
+		{
+			std::vector<RawCommand> commands;
+
+			for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
+			{
+				commands.push_back(readCommand(*node, where));
+			}
+
+			return commands;
+		}
+
+		void appendCommands(std::vector<RawCommand>& existing, const std::vector<RawCommand>& more)
+		{
+			existing.insert(existing.end(), more.begin(), more.end());
+		}
+
+		// A value and its name, such as <variable name="score">0</variable>.
+		void readVariables(const XmlNode* variablesNode, const std::string& where,
+			std::vector<std::pair<std::string, RawValue>>& out)
+		{
+			if (!variablesNode) { return; }
+
+			for (std::unique_ptr<XmlNode> variable = variablesNode->getFirstChild(); variable != nullptr; variable = variable->getNextSibling())
+			{
+				const std::string name = requireAttribute(*variable, "name", where);
+				RawValue value = readValue(*variable, where + " > <variable name=\"" + name + "\">");
+
+				// Declaring a name twice keeps the later value, in the earlier place.
+				const auto existing = std::find_if(out.begin(), out.end(), [&](const auto& entry) { return entry.first == name; });
+				if (existing != out.end()) { existing->second = std::move(value); }
+				else { out.emplace_back(name, std::move(value)); }
+			}
+		}
+
+		RawObject readObject(const XmlNode& object)
+		{
+			RawObject rawObject;
+			rawObject.name = requireAttribute(object, "name", "<object>");
+			rawObject.objClass = getAttribute(&object, "class");
+
+			const std::string where = "object '" + rawObject.name + "'";
+
+			rawObject.sprite = readSprite(*requireChild(object, "sprite", where), where);
+			rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
+			rawObject.rawVelocity = readVector2(*requireChild(object, "velocity", where), where);
+
+			// <collisions>: whether they are on, whether the object is one of a
+			// group, then the rules.
+			std::unique_ptr<XmlNode> collisions = requireChild(object, "collisions", where);
+			const std::string collisionsHere = where + " > <collisions>";
+			RawCollisionData& collisionData = rawObject.rawCollisionData;
+
+			collisionData.enabled = readBool(*requireChild(*collisions, "enabled", collisionsHere), collisionsHere);
+			if (auto group = findChild(collisions.get(), "group"))
+			{
+				collisionData.group = readBool(*group, collisionsHere);
+			}
+
+			for (std::unique_ptr<XmlNode> collision = findChild(collisions.get(), "collision"); collision != nullptr; collision = collision->getNextSibling())
+			{
+				if (collision->getName() != "collision") { continue; }
+
+				const std::string ruleHere = collisionsHere + " > <collision>";
+				const std::string edge = collision->getAttribute("edge");
+				std::vector<RawCommand> commands = readCommands(collision->getFirstChild(), ruleHere);
+
+				// With an edge the rule is about the screen edge. Without one it
+				// is about another object: class and/or object narrow which, and
+				// neither means anything at all.
+				if (!edge.empty())
+				{
+					const bool all = edge == "all";
+					const bool horizontal = edge == "horizontal";
+					const bool vertical = edge == "vertical";
+
+					if (!all && !horizontal && !vertical && edge != "top" && edge != "bottom" && edge != "left" && edge != "right")
+					{
+						fail(ruleHere, "edge=\"" + edge + "\"; expected left, right, top, bottom, horizontal, vertical or all");
+					}
+
+					// Appends rather than overwrites, so more than one <collision
+					// edge="..."> touching the same edge (e.g. an "all" rule plus a
+					// specific "left" rule) both run instead of the later one
+					// silently winning.
+					if (all || vertical || edge == "top") { appendCommands(collisionData.top, commands); }
+					if (all || vertical || edge == "bottom") { appendCommands(collisionData.bottom, commands); }
+					if (all || horizontal || edge == "left") { appendCommands(collisionData.left, commands); }
+					if (all || horizontal || edge == "right") { appendCommands(collisionData.right, commands); }
+				}
+				else
+				{
+					RawCollisionRule rule;
+					rule.filterClass = collision->getAttribute("class");
+					rule.filterObject = collision->getAttribute("object");
+					rule.unlessClass = collision->getAttribute("unless");
+					rule.commands = std::move(commands);
+					collisionData.basic.push_back(std::move(rule));
+				}
+			}
+
+			// <actions>: named things the object can do, run by a <trigger>.
+			if (std::unique_ptr<XmlNode> actions = findChild(&object, "actions"))
+			{
+				for (std::unique_ptr<XmlNode> action = actions->getFirstChild(); action != nullptr; action = action->getNextSibling())
+				{
+					const std::string actionName = requireAttribute(*action, "name", where + " > <actions>");
+					rawObject.action[actionName] = readCommands(action->getFirstChild(), where + " > <action name=\"" + actionName + "\">");
+				}
+			}
+
+			// <variables>: numbers the object owns, read elsewhere as name.variable.
+			std::unique_ptr<XmlNode> variablesNode = findChild(&object, "variables");
+			std::vector<std::pair<std::string, RawValue>> variables;
+			readVariables(variablesNode.get(), where + " > <variables>", variables);
+			for (auto& [name, value] : variables) { rawObject.variable[name] = std::move(value); }
+
+			return rawObject;
+		}
+
+		RawState readState(const XmlNode& state)
+		{
+			RawState rawState{};
+			rawState.name = requireAttribute(state, "name", "<state>");
+
+			const std::string where = "state '" + rawState.name + "'";
+
+			// <shows>
+			std::unique_ptr<XmlNode> shows = requireChild(state, "shows", where);
+			for (std::unique_ptr<XmlNode> show = shows->getFirstChild(); show != nullptr; show = show->getNextSibling())
+			{
+				rawState.show.push_back(requireAttribute(*show, "object", where + " > <shows>"));
+			}
+
+			// <inputs>: a key and the commands it runs
+			std::unique_ptr<XmlNode> inputs = requireChild(state, "inputs", where);
+			for (std::unique_ptr<XmlNode> input = inputs->getFirstChild(); input != nullptr; input = input->getNextSibling())
+			{
+				const std::string button = requireAttribute(*input, "button", where + " > <inputs>");
+				rawState.input[button] = readCommands(input->getFirstChild(), where + " > <input button=\"" + button + "\">");
+			}
+
+			// <conditions> (optional - the schema allows a state with none): a
+			// test, then the commands to run when it holds.
+			if (std::unique_ptr<XmlNode> conditions = findChild(&state, "conditions"))
+			{
+				for (std::unique_ptr<XmlNode> condition = conditions->getFirstChild(); condition != nullptr; condition = condition->getNextSibling())
+				{
+					const std::string conditionHere = where + " > <condition>";
+
+					RawCondition raw;
+					raw.filterClass = condition->getAttribute("class");
+					raw.filterObject = condition->getAttribute("object");
+					raw.variableName = condition->getAttribute("variable");
+
+					std::unique_ptr<XmlNode> test = condition->getFirstChild();
+					if (!test) { fail(conditionHere, "needs an <atleast>, <atmost> or <remaining>"); }
+
+					const std::string testName = test->getName();
+					if (testName == "atleast") { raw.test = RawCondition::Test::AtLeast; }
+					else if (testName == "atmost") { raw.test = RawCondition::Test::AtMost; }
+					else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
+					else { fail(conditionHere, "starts with <" + testName + ">; expected <atleast>, <atmost> or <remaining>"); }
+
+					if (raw.test != RawCondition::Test::Remaining && raw.variableName.empty())
+					{
+						fail(conditionHere, "<" + testName + "> reads a variable, so the condition needs variable=\"...\"");
+					}
+
+					raw.threshold = readValue(*test, conditionHere);
+					raw.commands = readCommands(test->getNextSibling(), conditionHere);
+					rawState.conditions.push_back(std::move(raw));
+				}
+			}
+
+			return rawState;
+		}
+	}
+
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
-		std::map<std::string, float>& variables, std::vector<RawState>& rawStates,
+		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
@@ -37,7 +458,7 @@ namespace xge
 		// would have failed already otherwise, so reaching here means it
 		// passed. Every other backend can only check well-formedness on its
 		// own (see xml_document.h), so this falls back to XsdLiteValidator
-		// - this project's own interpreter for the small subset of XSD this
+		// - this project's own interpreter for the subset of XSD this
 		// schema actually uses (see xsd_lite.h) - against that same schema
 		// file, resolved relative to filename the same way Xerces resolves
 		// it relative to the document.
@@ -66,301 +487,36 @@ namespace xge
 			validation = SchemaValidation::Weak;
 		}
 
-		std::unique_ptr<XmlNode> window = findChild(root.get(), "window");
-		std::unique_ptr<XmlNode> variablesNode = findChild(root.get(), "variables");
-		std::unique_ptr<XmlNode> objectsNode = findChild(root.get(), "objects");
-		std::unique_ptr<XmlNode> states = findChild(root.get(), "states");
+		const std::string where = "game";
+		std::unique_ptr<XmlNode> window = requireChild(*root, "window", where);
+		std::unique_ptr<XmlNode> variablesNode = requireChild(*root, "variables", where);
+		std::unique_ptr<XmlNode> objectsNode = requireChild(*root, "objects", where);
+		std::unique_ptr<XmlNode> states = requireChild(*root, "states", where);
 
-		std::unique_ptr<XmlNode> variable = variablesNode->getFirstChild();
-		std::unique_ptr<XmlNode> object = objectsNode->getFirstChild();
-		std::unique_ptr<XmlNode> state = states->getFirstChild();
-
-		// load window description
-		windowDesc.name = getAttribute(window.get(), "name");
-		windowDesc.width = std::stof(getAttribute(window.get(), "width"));
-		windowDesc.height = std::stof(getAttribute(window.get(), "height"));
-		windowDesc.background = getAttribute(window.get(), "background");
-		windowDesc.fullscreen = getAttribute(window.get(), "fullscreen");
-		windowDesc.framerate = std::stoi(getAttribute(window.get(), "framerate"));
+		// load window description: <window name="..."> and its settings. These
+		// are plain numbers, not expressions - the expressions in the rest of
+		// the file are worked out against the window's size.
+		const std::string windowHere = "<window>";
+		windowDesc.name = requireAttribute(*window, "name", windowHere);
+		windowDesc.width = std::stof(readText(*requireChild(*window, "width", windowHere)));
+		windowDesc.height = std::stof(readText(*requireChild(*window, "height", windowHere)));
+		windowDesc.background = readText(*requireChild(*window, "background", windowHere));
+		windowDesc.fullscreen = readBool(*requireChild(*window, "fullscreen", windowHere), windowHere) ? "true" : "false";
+		windowDesc.framerate = std::stoi(readText(*requireChild(*window, "framerate", windowHere)));
 
 		// load variables
-		while (variable != nullptr)
-		{
-			std::string varName = getAttribute(variable.get(), "name");
-			float varValue = std::stof(getAttribute(variable.get(), "value"));
-			variables[varName] = varValue;
-			variable = variable->getNextSibling();
-		}
+		readVariables(variablesNode.get(), "<variables>", rawVariables);
 
 		// load objects
-		while (object != nullptr)
+		for (std::unique_ptr<XmlNode> object = objectsNode->getFirstChild(); object != nullptr; object = object->getNextSibling())
 		{
-			std::string objName = getAttribute(object.get(), "name");
-			std::string objClass = getAttribute(object.get(), "class");
-
-			// find key points in object
-			std::unique_ptr<XmlNode> sprite = findChild(object.get(), "sprite");
-			std::unique_ptr<XmlNode> pos = findChild(object.get(), "position");
-			std::unique_ptr<XmlNode> vel = findChild(object.get(), "velocity");
-			std::unique_ptr<XmlNode> collisions = findChild(object.get(), "collisions");
-			std::unique_ptr<XmlNode> actions = findChild(object.get(), "actions");
-			std::unique_ptr<XmlNode> objvars = findChild(object.get(), "variables");
-
-			// load sprite
-			std::string spriteSrc = getAttribute(sprite.get(), "src");
-
-			// load position
-			std::string posX = getAttribute(pos.get(), "x");
-			std::string posY = getAttribute(pos.get(), "y");
-
-			// load velocity
-			std::string velX = getAttribute(vel.get(), "x");
-			std::string velY = getAttribute(vel.get(), "y");
-
-			Vector2str position{ posX, posY };
-			Vector2str velocity{ velX, velY };
-
-			// load collisions
-			std::string collisionEnabled = getAttribute(collisions.get(), "enabled");
-			std::string collisionGroup = getAttribute(collisions.get(), "group");
-
-			RawCollisionData collisionData;
-
-			collisionData.enabled = (collisionEnabled == "true") ? true : false;
-			collisionData.group = (collisionGroup == "true") ? true : false;
-
-			if (collisions)
-			{
-				std::unique_ptr<XmlNode> collision = collisions->getFirstChild();
-
-				// Appends rather than overwrites, so more than one <collision edge="..."/>
-				// element touching the same edge (e.g. an "all" rule plus a specific
-				// "left" rule) both run instead of the later one silently winning.
-				auto appendAction = [](std::string& existing, const std::string& action)
-				{
-					if (!existing.empty()) { existing += ';'; }
-					existing += action;
-				};
-
-				while (collision != nullptr)
-				{
-					if (auto colEdge = getAttribute(collision.get(), "edge"); colEdge != "")
-					{
-						auto colAction = getAttribute(collision.get(), "action");
-
-						if (colEdge == "all")
-						{
-							appendAction(collisionData.top, colAction);
-							appendAction(collisionData.bottom, colAction);
-							appendAction(collisionData.left, colAction);
-							appendAction(collisionData.right, colAction);
-						}
-						else if (colEdge == "horizontal")
-						{
-							appendAction(collisionData.left, colAction);
-							appendAction(collisionData.right, colAction);
-						}
-						else if (colEdge == "vertical")
-						{
-							appendAction(collisionData.top, colAction);
-							appendAction(collisionData.bottom, colAction);
-						}
-						else if (colEdge == "top")
-						{
-							appendAction(collisionData.top, colAction);
-						}
-						else if (colEdge == "bottom")
-						{
-							appendAction(collisionData.bottom, colAction);
-						}
-						else if (colEdge == "left")
-						{
-							appendAction(collisionData.left, colAction);
-						}
-						else if (colEdge == "right")
-						{
-							appendAction(collisionData.right, colAction);
-						}
-					}
-
-					// class/object optionally narrow an object-object rule to only
-					// respond to a specific class of object, or one specific named
-					// object; either or both may be left off to match anything (the
-					// old, unfiltered behaviour). Meaningless for edge rules (no "other
-					// object" exists at a screen edge), so only read here.
-					//
-					// An object-object rule is written either the long way,
-					// basic="basic" (optionally with a filter), or just by naming
-					// what it applies to: a <collision> with class and/or object and
-					// no edge is one too, so basic="basic" is only needed for a rule
-					// that matches anything.
-					const std::string colClass = getAttribute(collision.get(), "class");
-					const std::string colObject = getAttribute(collision.get(), "object");
-					const bool hasEdge = getAttribute(collision.get(), "edge") != "";
-
-					if (auto colBasic = getAttribute(collision.get(), "basic");
-						colBasic != "" || (!hasEdge && (colClass != "" || colObject != "")))
-					{
-						RawCollisionRule rule;
-						rule.filterClass = colClass;
-						rule.filterObject = colObject;
-						rule.unlessClass = getAttribute(collision.get(), "unless");
-						rule.action = getAttribute(collision.get(), "action");
-						collisionData.basic.push_back(std::move(rule));
-					}
-
-					collision = collision->getNextSibling();
-				}
-			}
-
-			// load actions
-			std::map<std::string, std::string> actionMap;
-
-			if (actions)
-			{
-				std::unique_ptr<XmlNode> action = actions->getFirstChild();
-
-				while (action != nullptr)
-				{
-					std::string actName = getAttribute(action.get(), "name");
-					std::string actValue = getAttribute(action.get(), "value");
-					actionMap[actName] = actValue;
-
-					action = action->getNextSibling();
-				}
-			}
-
-			// load object variables
-			std::map<std::string, std::string> objvarMap;
-
-			if (objvars)
-			{
-				std::unique_ptr<XmlNode> objvar = objvars->getFirstChild();
-
-				while (objvar != nullptr)
-				{
-					std::string objvarName = getAttribute(objvar.get(), "name");
-					std::string objvarValue = getAttribute(objvar.get(), "value");
-					objvarMap[objvarName] = objvarValue;
-
-					objvar = objvar->getNextSibling();
-				}
-			}
-
-			RawObject rawObject{};
-			rawObject.name = objName;
-			rawObject.objClass = objClass;
-			rawObject.src = spriteSrc;
-			rawObject.action = actionMap;
-			rawObject.variable = objvarMap;
-			rawObject.rawCollisionData = collisionData;
-			rawObject.rawPosition = position;
-			rawObject.rawVelocity = velocity;
-
-			rawObjects.push_back(std::move(rawObject));
-
-			object = object->getNextSibling();
+			rawObjects.push_back(readObject(*object));
 		}
 
 		// load states
-		while (state != nullptr)
+		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
 		{
-			std::string stateName = getAttribute(state.get(), "name");
-
-			// load shows
-			std::unique_ptr<XmlNode> shows = findChild(state.get(), "shows");
-			std::unique_ptr<XmlNode> show = shows->getFirstChild();
-
-			std::vector<std::string> showVec;
-
-			while (show != nullptr)
-			{
-				std::string showObject = getAttribute(show.get(), "object");
-				showVec.push_back(showObject);
-				show = show->getNextSibling();
-			}
-
-			// load inputs
-			std::unique_ptr<XmlNode> inputs = findChild(state.get(), "inputs");
-			std::unique_ptr<XmlNode> input = inputs->getFirstChild();
-
-			std::map<std::string, std::string> inputsMap;
-
-			while (input != nullptr)
-			{
-				std::string inputButton = getAttribute(input.get(), "button");
-				std::string inputAction = getAttribute(input.get(), "action");
-
-				inputsMap[inputButton] = inputAction;
-
-				input = input->getNextSibling();
-			}
-
-			// load conditions (optional - the schema allows a state with none)
-			std::vector<RawCondition> conditionsVec;
-
-			if (std::unique_ptr<XmlNode> conditions = findChild(state.get(), "conditions"); conditions != nullptr)
-			{
-				std::unique_ptr<XmlNode> condition = conditions->getFirstChild();
-
-				while (condition != nullptr)
-				{
-					RawCondition condRaw;
-					condRaw.filterClass = getAttribute(condition.get(), "class");
-					condRaw.filterObject = getAttribute(condition.get(), "object");
-					condRaw.variableName = getAttribute(condition.get(), "variable");
-
-					// Either variable + value, variable + atmost, or remaining
-					// (see RawCondition).
-					if (const std::string remaining = getAttribute(condition.get(), "remaining"); !remaining.empty())
-					{
-						condRaw.remaining = std::stof(remaining);
-					}
-					else if (const std::string atMost = getAttribute(condition.get(), "atmost"); !atMost.empty())
-					{
-						condRaw.atMost = std::stof(atMost);
-					}
-					else
-					{
-						const std::string value = getAttribute(condition.get(), "value");
-						if (value.empty())
-						{
-							throw std::runtime_error("a <condition> needs either variable and value, variable and atmost, or remaining");
-						}
-						condRaw.value = std::stof(value);
-					}
-					condRaw.action = getAttribute(condition.get(), "action");
-					conditionsVec.push_back(std::move(condRaw));
-
-					condition = condition->getNextSibling();
-				}
-			}
-
-			RawState rawState{};
-			rawState.name = stateName;
-			rawState.show = showVec;
-			rawState.input = inputsMap;
-			rawState.conditions = conditionsVec;
-			rawStates.push_back(rawState);
-
-			state = state->getNextSibling();
+			rawStates.push_back(readState(*state));
 		}
-	}
-
-	std::unique_ptr<XmlNode> game_xml::findChild(const XmlNode* parent, const std::string& name)
-	{
-		std::unique_ptr<XmlNode> child = parent ? parent->getFirstChild() : nullptr;
-
-		while (child != nullptr && child->getName() != name)
-		{
-			child = child->getNextSibling();
-		}
-
-		return child;
-	}
-
-	std::string game_xml::getAttribute(const XmlNode* node, const std::string& name)
-	{
-		return node ? node->getAttribute(name) : std::string{};
 	}
 }

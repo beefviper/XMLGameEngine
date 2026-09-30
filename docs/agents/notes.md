@@ -20,11 +20,12 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 ## Facts that are easy to get wrong
 
 - The root `readme.md` is out of date: it says collisions, scoring and win condition are missing, and lists only Xerces, exprtk and SFML.
-- The repo has three branches: `master`, `rewrite`, `claude`. The active engine described in these docs is on `claude`.
-- The sample games still use function-call syntax in attributes ([design 03](../designs/03-expression-syntax.md)); the author has said that will go, so do not treat it as settled.
+- The repo has the branches `master`, `rewrite`, `claude` and `nofun` (the tag format, branched from `claude`). These docs describe `nofun`.
+- On the `nofun` branch function-call syntax is gone: attributes only name or pick things, everything else is element content ([design 03](../designs/03-expression-syntax.md)). Arithmetic in values is still exprtk text.
 - No handle system and no `Value` variant exist yet, despite being decided or discussed ([07](../designs/07-object-variables-and-references.md), [08](../designs/08-entity-storage-and-handles.md)). Swept collision is built ([11](../designs/11-collision-detection-and-response.md)).
 - `CollisionDetector::circleRectangle` has suspicious edge tests. Add a test in `tests/test_collision_geometry.cpp` before changing it.
-- The XSD limits `variable/@value` to an integer and `condition/@value` to 0-255.
+- The XSD checks structure, not expression text; `xsd_lite` (used by the three non-Xerces backends) covers only the XSD subset the schema uses, and `tests/test_xml_format.cpp` pins what both validators must reject.
+- Files in the repo use CRLF line endings; keep them when editing.
 - Backends are only selectable in C++ (constructor arguments), not on the command line.
 - A new game file has to be added to `data_xml` in `scripts/cmake/assets.cmake`, or the build does not copy it next to the executable; a new test file has to be added to the list in `scripts/cmake/tests.cmake`.
 - Frogger's board is built from many named rectangles, drawn in file order (so scenery first, the frog last). It is long because the language has no way yet to say a lane of differently spaced objects; see [21](../designs/21-frogger.md).
@@ -34,7 +35,7 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 
 1. Refresh the root `readme.md` (or point it at `docs/readme.md`).
 2. Add tests that pin the current behavior of `circleRectangle` before touching it.
-3. Decide designs 03 and 04 (function syntax and arithmetic), since they change every game file.
+3. Decide design 04 (arithmetic as text vs elements); design 03 is done.
 4. Give every `grid()` cell a unique name so single objects can be addressed.
 5. Add an arcing jump ([design 13](../designs/13-verb-vocabulary.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
 6. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, per-row velocity in `grid()`, show and hide verbs.

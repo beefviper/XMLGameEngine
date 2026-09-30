@@ -15,7 +15,7 @@
 
   Everything on the board is a square (or a few squares laid end to end) drawn
   6 pixels in from its cell, so the frog fits a lane with room to spare. Every
-  car, truck and log is its own object: a lane loops with wrap(), so the lanes
+  car, truck and log is its own object: a lane loops with <wrap />, so the lanes
   are spaced by hand, the same way their positions here are (a lane of objects
   that are `size` wide repeats every `window.width + size` pixels).
 
@@ -30,458 +30,1350 @@
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
-  <window name="Frogger" width="624" height="672" background="color.black" fullscreen="false" framerate="60" />
+  <window name="Frogger">
+    <width>624</width>
+    <height>672</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
   <variables>
-    <variable name="cell" value="48" />
-    <variable name="inset" value="6" />
-    <variable name="body" value="36" />
-    <variable name="step" value="48" />
+    <variable name="cell">48</variable>
+    <variable name="inset">6</variable>
+    <variable name="body">36</variable>
+    <variable name="step">48</variable>
   </variables>
   <objects>
     <!-- scenery: the river (home row and the five lanes), grass, road, road markings, pavement -->
     <object name="bayswater">
-      <sprite src="shape.rectangle(window.right,cell,'color.darkblue')" />
-      <position x="0" y="1 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>cell</height>
+          <color>color.darkblue</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>1 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="water" class="water">
-      <sprite src="shape.rectangle(window.right,5 * cell,'color.darkblue')" />
-      <position x="0" y="2 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true" />
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>5 * cell</height>
+          <color>color.darkblue</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>2 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
     </object>
     <object name="grass">
-      <sprite src="shape.rectangle(window.right,cell,'color.forestgreen')" />
-      <position x="0" y="7 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>cell</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>7 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="road">
-      <sprite src="shape.rectangle(window.right,5 * cell,'color.darkgrey')" />
-      <position x="0" y="8 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>5 * cell</height>
+          <color>color.darkgrey</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>8 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="lines">
-      <sprite src="grid(13,4,24,44,shape.rectangle(24,4,'color.yellow'))" />
-      <position x="12" y="9 * cell - 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <grid>
+          <columns>13</columns>
+          <rows>4</rows>
+          <padding>
+            <x>24</x>
+            <y>44</y>
+          </padding>
+          <rectangle>
+            <width>24</width>
+            <height>4</height>
+            <color>color.yellow</color>
+          </rectangle>
+        </grid>
+      </sprite>
+      <position>
+        <x>12</x>
+        <y>9 * cell - 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="pavement">
-      <sprite src="shape.rectangle(window.right,cell,'color.lightgrey')" />
-      <position x="0" y="13 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>cell</height>
+          <color>color.lightgrey</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>13 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
 
     <!-- home: a frog under each pad, then the pads, then the hedges between them -->
     <object name="home1">
-      <sprite src="shape.rectangle(body,body,'color.green')" />
-      <position x="2 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>2 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="home2">
-      <sprite src="shape.rectangle(body,body,'color.green')" />
-      <position x="4 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>4 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="home3">
-      <sprite src="shape.rectangle(body,body,'color.green')" />
-      <position x="6 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>6 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="home4">
-      <sprite src="shape.rectangle(body,body,'color.green')" />
-      <position x="8 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>8 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="home5">
-      <sprite src="shape.rectangle(body,body,'color.green')" />
-      <position x="10 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>10 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="pad1" class="pads">
-      <sprite src="shape.rectangle(body,body,'color.darkgreen')" />
-      <position x="2 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true">
-        <collision class="frog" action="die()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.darkgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>2 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="frog">
+          <die />
+        </collision>
       </collisions>
     </object>
     <object name="pad2" class="pads">
-      <sprite src="shape.rectangle(body,body,'color.darkgreen')" />
-      <position x="4 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true">
-        <collision class="frog" action="die()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.darkgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>4 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="frog">
+          <die />
+        </collision>
       </collisions>
     </object>
     <object name="pad3" class="pads">
-      <sprite src="shape.rectangle(body,body,'color.darkgreen')" />
-      <position x="6 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true">
-        <collision class="frog" action="die()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.darkgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>6 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="frog">
+          <die />
+        </collision>
       </collisions>
     </object>
     <object name="pad4" class="pads">
-      <sprite src="shape.rectangle(body,body,'color.darkgreen')" />
-      <position x="8 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true">
-        <collision class="frog" action="die()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.darkgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>8 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="frog">
+          <die />
+        </collision>
       </collisions>
     </object>
     <object name="pad5" class="pads">
-      <sprite src="shape.rectangle(body,body,'color.darkgreen')" />
-      <position x="10 * cell + inset" y="1 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true">
-        <collision class="frog" action="die()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.darkgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>10 * cell + inset</x>
+        <y>1 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="frog">
+          <die />
+        </collision>
       </collisions>
     </object>
     <object name="hedge1" class="hazard">
-      <sprite src="shape.rectangle(2 * cell,cell,'color.forestgreen')" />
-      <position x="0 * cell" y="1 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true" />
+      <sprite>
+        <rectangle>
+          <width>2 * cell</width>
+          <height>cell</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0 * cell</x>
+        <y>1 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
     </object>
     <object name="hedge2" class="hazard">
-      <sprite src="shape.rectangle(cell,cell,'color.forestgreen')" />
-      <position x="3 * cell" y="1 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true" />
+      <sprite>
+        <rectangle>
+          <width>cell</width>
+          <height>cell</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>3 * cell</x>
+        <y>1 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
     </object>
     <object name="hedge3" class="hazard">
-      <sprite src="shape.rectangle(cell,cell,'color.forestgreen')" />
-      <position x="5 * cell" y="1 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true" />
+      <sprite>
+        <rectangle>
+          <width>cell</width>
+          <height>cell</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>5 * cell</x>
+        <y>1 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
     </object>
     <object name="hedge4" class="hazard">
-      <sprite src="shape.rectangle(cell,cell,'color.forestgreen')" />
-      <position x="7 * cell" y="1 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true" />
+      <sprite>
+        <rectangle>
+          <width>cell</width>
+          <height>cell</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>7 * cell</x>
+        <y>1 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
     </object>
     <object name="hedge5" class="hazard">
-      <sprite src="shape.rectangle(cell,cell,'color.forestgreen')" />
-      <position x="9 * cell" y="1 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true" />
+      <sprite>
+        <rectangle>
+          <width>cell</width>
+          <height>cell</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>9 * cell</x>
+        <y>1 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
     </object>
     <object name="hedge6" class="hazard">
-      <sprite src="shape.rectangle(2 * cell,cell,'color.forestgreen')" />
-      <position x="11 * cell" y="1 * cell" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true" />
+      <sprite>
+        <rectangle>
+          <width>2 * cell</width>
+          <height>cell</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>11 * cell</x>
+        <y>1 * cell</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
     </object>
 
     <!-- the river: logs, one lane to a row, each lane its own speed and direction -->
     <object name="logrow2a" class="logs">
-      <sprite src="shape.rectangle(4 * cell - 2 * inset,body,'color.brown')" />
-      <position x="100" y="2 * cell + inset" />
-      <velocity x="1.5" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>4 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>100</x>
+        <y>2 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>1.5</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow2b" class="logs">
-      <sprite src="shape.rectangle(4 * cell - 2 * inset,body,'color.brown')" />
-      <position x="502" y="2 * cell + inset" />
-      <velocity x="1.5" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>4 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>502</x>
+        <y>2 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>1.5</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow3a" class="logs">
-      <sprite src="shape.rectangle(3 * cell - 2 * inset,body,'color.brown')" />
-      <position x="20" y="3 * cell + inset" />
-      <velocity x="-1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>3 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>20</x>
+        <y>3 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow3b" class="logs">
-      <sprite src="shape.rectangle(3 * cell - 2 * inset,body,'color.brown')" />
-      <position x="272" y="3 * cell + inset" />
-      <velocity x="-1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>3 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>272</x>
+        <y>3 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow3c" class="logs">
-      <sprite src="shape.rectangle(3 * cell - 2 * inset,body,'color.brown')" />
-      <position x="524" y="3 * cell + inset" />
-      <velocity x="-1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>3 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>524</x>
+        <y>3 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow4a" class="logs">
-      <sprite src="shape.rectangle(5 * cell - 2 * inset,body,'color.brown')" />
-      <position x="60" y="4 * cell + inset" />
-      <velocity x="2" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>5 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>60</x>
+        <y>4 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow4b" class="logs">
-      <sprite src="shape.rectangle(5 * cell - 2 * inset,body,'color.brown')" />
-      <position x="486" y="4 * cell + inset" />
-      <velocity x="2" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>5 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>486</x>
+        <y>4 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow5a" class="logs">
-      <sprite src="shape.rectangle(3 * cell - 2 * inset,body,'color.brown')" />
-      <position x="150" y="5 * cell + inset" />
-      <velocity x="-1.5" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>3 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>150</x>
+        <y>5 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1.5</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow5b" class="logs">
-      <sprite src="shape.rectangle(3 * cell - 2 * inset,body,'color.brown')" />
-      <position x="402" y="5 * cell + inset" />
-      <velocity x="-1.5" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>3 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>402</x>
+        <y>5 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1.5</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow5c" class="logs">
-      <sprite src="shape.rectangle(3 * cell - 2 * inset,body,'color.brown')" />
-      <position x="-102" y="5 * cell + inset" />
-      <velocity x="-1.5" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>3 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>-102</x>
+        <y>5 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1.5</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow6a" class="logs">
-      <sprite src="shape.rectangle(4 * cell - 2 * inset,body,'color.brown')" />
-      <position x="40" y="6 * cell + inset" />
-      <velocity x="1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>4 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>40</x>
+        <y>6 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow6b" class="logs">
-      <sprite src="shape.rectangle(4 * cell - 2 * inset,body,'color.brown')" />
-      <position x="308" y="6 * cell + inset" />
-      <velocity x="1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>4 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>308</x>
+        <y>6 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="logrow6c" class="logs">
-      <sprite src="shape.rectangle(4 * cell - 2 * inset,body,'color.brown')" />
-      <position x="576" y="6 * cell + inset" />
-      <velocity x="1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>4 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>576</x>
+        <y>6 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
 
     <!-- the road: trucks are two cells long, cars one -->
     <object name="truckrow8a" class="hazard">
-      <sprite src="shape.rectangle(2 * cell - 2 * inset,body,'color.white')" />
-      <position x="100" y="8 * cell + inset" />
-      <velocity x="-1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>2 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>100</x>
+        <y>8 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="truckrow8b" class="hazard">
-      <sprite src="shape.rectangle(2 * cell - 2 * inset,body,'color.white')" />
-      <position x="454" y="8 * cell + inset" />
-      <velocity x="-1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>2 * cell - 2 * inset</width>
+          <height>body</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>454</x>
+        <y>8 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow9a" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.red')" />
-      <position x="60" y="9 * cell + inset" />
-      <velocity x="3" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.red</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>60</x>
+        <y>9 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>3</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow9b" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.red')" />
-      <position x="390" y="9 * cell + inset" />
-      <velocity x="3" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.red</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>390</x>
+        <y>9 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>3</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow10a" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.yellow')" />
-      <position x="40" y="10 * cell + inset" />
-      <velocity x="-1.5" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>40</x>
+        <y>10 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1.5</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow10b" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.yellow')" />
-      <position x="240" y="10 * cell + inset" />
-      <velocity x="-1.5" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>240</x>
+        <y>10 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1.5</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow10c" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.yellow')" />
-      <position x="460" y="10 * cell + inset" />
-      <velocity x="-1.5" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>460</x>
+        <y>10 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1.5</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow11a" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.cyan')" />
-      <position x="100" y="11 * cell + inset" />
-      <velocity x="2" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.cyan</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>100</x>
+        <y>11 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow11b" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.cyan')" />
-      <position x="310" y="11 * cell + inset" />
-      <velocity x="2" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.cyan</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>310</x>
+        <y>11 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow11c" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.cyan')" />
-      <position x="520" y="11 * cell + inset" />
-      <velocity x="2" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.cyan</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>520</x>
+        <y>11 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow12a" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.orange')" />
-      <position x="30" y="12 * cell + inset" />
-      <velocity x="-1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.orange</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>30</x>
+        <y>12 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow12b" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.orange')" />
-      <position x="250" y="12 * cell + inset" />
-      <velocity x="-1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.orange</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>250</x>
+        <y>12 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
     <object name="carrow12c" class="hazard">
-      <sprite src="shape.rectangle(body,body,'color.orange')" />
-      <position x="470" y="12 * cell + inset" />
-      <velocity x="-1" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="wrap()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.orange</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>470</x>
+        <y>12 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>-1</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
       </collisions>
     </object>
 
     <!-- the frog. Lives count down from 3; score is how many are home. -->
     <object name="frog" class="frog">
-      <sprite src="shape.rectangle(body,body,'color.green')" />
-      <position x="6 * cell + inset" y="13 * cell + inset" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true">
-        <collision class="hazard" action="dec('frog.lives');reset()" />
-        <collision class="water" unless="logs" action="dec('frog.lives');reset()" />
-        <collision class="logs" action="carry()" />
-        <collision class="pads" action="inc('frog.score');reset()" />
-        <collision edge="horizontal" action="dec('frog.lives');reset()" />
+      <sprite>
+        <rectangle>
+          <width>body</width>
+          <height>body</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>6 * cell + inset</x>
+        <y>13 * cell + inset</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="hazard">
+          <dec variable="frog.lives" />
+          <reset />
+        </collision>
+        <collision class="water" unless="logs">
+          <dec variable="frog.lives" />
+          <reset />
+        </collision>
+        <collision class="logs">
+          <carry />
+        </collision>
+        <collision class="pads">
+          <inc variable="frog.score" />
+          <reset />
+        </collision>
+        <collision edge="horizontal">
+          <dec variable="frog.lives" />
+          <reset />
+        </collision>
       </collisions>
       <actions>
-        <action name="up" value="hop.up(step)" />
-        <action name="down" value="hop.down(step)" />
-        <action name="left" value="hop.left(step)" />
-        <action name="right" value="hop.right(step)" />
+        <action name="up">
+          <hop direction="up">step</hop>
+        </action>
+        <action name="down">
+          <hop direction="down">step</hop>
+        </action>
+        <action name="left">
+          <hop direction="left">step</hop>
+        </action>
+        <action name="right">
+          <hop direction="right">step</hop>
+        </action>
       </actions>
       <variables>
-        <variable name="lives" value="3" />
-        <variable name="score" value="0" />
+        <variable name="lives">3</variable>
+        <variable name="score">0</variable>
       </variables>
     </object>
 
     <!-- the score and lives along the top -->
     <object name="scorelabel">
-      <sprite src="text('SCORE',30,'color.white')" />
-      <position x="12" y="cell / 2 - scorelabel.height / 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>SCORE</content>
+          <size>30</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>12</x>
+        <y>cell / 2 - scorelabel.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="scorevalue">
-      <sprite src="text(frog.score,30,'color.green')" />
-      <position x="12 + scorelabel.width + 12" y="cell / 2 - scorevalue.height / 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <number>frog.score</number>
+          <size>30</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>12 + scorelabel.width + 12</x>
+        <y>cell / 2 - scorevalue.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="liveslabel">
-      <sprite src="text('LIVES',30,'color.white')" />
-      <position x="window.right - 12 - livesvalue.width - 12 - liveslabel.width" y="cell / 2 - liveslabel.height / 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>LIVES</content>
+          <size>30</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - 12 - livesvalue.width - 12 - liveslabel.width</x>
+        <y>cell / 2 - liveslabel.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="livesvalue">
-      <sprite src="text(frog.lives,30,'color.green')" />
-      <position x="window.right - 12 - livesvalue.width" y="cell / 2 - livesvalue.height / 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <number>frog.lives</number>
+          <size>30</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - 12 - livesvalue.width</x>
+        <y>cell / 2 - livesvalue.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
 
     <!-- the screens -->
     <object name="title">
-      <sprite src="text('FROGGER',96,'color.green')" />
-      <position x="window.width.center - title.width / 2" y="window.height.center - title.height / 2 + (-60)" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>FROGGER</content>
+          <size>96</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - title.width / 2</x>
+        <y>window.height.center - title.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="start">
-      <sprite src="text('spacebar to start',32,'color.white')" />
-      <position x="window.width.center - start.width / 2" y="window.height.center - start.height / 2 + (40)" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>32</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - start.width / 2</x>
+        <y>window.height.center - start.height / 2 + (40)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="gameovertext">
-      <sprite src="text('GAME OVER',80,'color.red')" />
-      <position x="window.width.center - gameovertext.width / 2" y="window.height.center - gameovertext.height / 2 + (-60)" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>80</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - gameovertext.width / 2</x>
+        <y>window.height.center - gameovertext.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="youwin">
-      <sprite src="text('YOU WIN',96,'color.green')" />
-      <position x="window.width.center - youwin.width / 2" y="window.height.center - youwin.height / 2 + (-60)" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>YOU WIN</content>
+          <size>96</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - youwin.width / 2</x>
+        <y>window.height.center - youwin.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="continue">
-      <sprite src="text('spacebar to continue',32,'color.white')" />
-      <position x="window.width.center - continue.width / 2" y="window.height.center - continue.height / 2 + (40)" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>spacebar to continue</content>
+          <size>32</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - continue.width / 2</x>
+        <y>window.height.center - continue.height / 2 + (40)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="paused">
-      <sprite src="text('paused',96,'color.white')" />
-      <position x="window.width.center - paused.width / 2" y="window.height.center - paused.height / 2 + (0)" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>paused</content>
+          <size>96</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - paused.width / 2</x>
+        <y>window.height.center - paused.height / 2 + (0)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
   </objects>
   <states>
@@ -491,7 +1383,9 @@
         <show object="start" />
       </shows>
       <inputs>
-        <input button="space" action="state('playing')" />
+        <input button="space">
+          <push state="playing" />
+        </input>
       </inputs>
     </state>
     <state name="playing">
@@ -551,20 +1445,46 @@
         <show object="livesvalue" />
       </shows>
       <inputs>
-        <input button="up" action="action('frog', 'up')" />
-        <input button="down" action="action('frog', 'down')" />
-        <input button="left" action="action('frog', 'left')" />
-        <input button="right" action="action('frog', 'right')" />
-        <input button="w" action="action('frog', 'up')" />
-        <input button="s" action="action('frog', 'down')" />
-        <input button="a" action="action('frog', 'left')" />
-        <input button="d" action="action('frog', 'right')" />
-        <input button="p" action="state('paused')" />
-        <input button="escape" action="state('paused')" />
+        <input button="up">
+          <trigger object="frog" action="up" />
+        </input>
+        <input button="down">
+          <trigger object="frog" action="down" />
+        </input>
+        <input button="left">
+          <trigger object="frog" action="left" />
+        </input>
+        <input button="right">
+          <trigger object="frog" action="right" />
+        </input>
+        <input button="w">
+          <trigger object="frog" action="up" />
+        </input>
+        <input button="s">
+          <trigger object="frog" action="down" />
+        </input>
+        <input button="a">
+          <trigger object="frog" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="frog" action="right" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
       </inputs>
       <conditions>
-        <condition object="frog" variable="lives" atmost="0" action="state('gameover')" />
-        <condition class="pads" remaining="0" action="state('youwin')" />
+        <condition object="frog" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition class="pads">
+          <remaining>0</remaining>
+          <push state="youwin" />
+        </condition>
       </conditions>
     </state>
     <state name="paused">
@@ -572,8 +1492,12 @@
         <show object="paused" />
       </shows>
       <inputs>
-        <input button="p" action="state()" />
-        <input button="escape" action="state()" />
+        <input button="p">
+          <pop />
+        </input>
+        <input button="escape">
+          <pop />
+        </input>
       </inputs>
     </state>
     <state name="gameover">
@@ -582,7 +1506,9 @@
         <show object="continue" />
       </shows>
       <inputs>
-        <input button="space" action="reset()" />
+        <input button="space">
+          <reset />
+        </input>
       </inputs>
     </state>
     <state name="youwin">
@@ -591,7 +1517,9 @@
         <show object="continue" />
       </shows>
       <inputs>
-        <input button="space" action="reset()" />
+        <input button="space">
+          <reset />
+        </input>
       </inputs>
     </state>
   </states>

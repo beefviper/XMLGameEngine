@@ -4,44 +4,110 @@
 <!-- date: Sept 18, 2020 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
-  <window name="Breakout" width="1280" height="720" background="color.black" fullscreen="false" framerate="60" />
+  <window name="Breakout">
+    <width>1280</width>
+    <height>720</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
   <variables>
-    <variable name="margin" value="80" />
-    <variable name="ball.radius" value="10" />
-    <variable name="width" value="120" />
-    <variable name="height" value="30" />
-    <variable name="step" value="2" />
+    <variable name="margin">80</variable>
+    <variable name="ball.radius">10</variable>
+    <variable name="width">120</variable>
+    <variable name="height">30</variable>
+    <variable name="step">2</variable>
   </variables>
   <objects>
     <object name="ball">
-      <sprite src="shape.circle(ball.radius)" />
-      <position x="window.width.center - ball.radius" y="window.bottom - height * 3" />
-      <velocity x="random.range(-3,3)" y="random.range(-7,-5)" />
-      <collisions enabled="true">
-        <collision edge="all" action="bounce()" />
-        <collision edge="bottom" action="die()" />
-        <collision basic="basic" action="bounce()" />
+      <sprite>
+        <circle>
+          <radius>ball.radius</radius>
+        </circle>
+      </sprite>
+      <position>
+        <x>window.width.center - ball.radius</x>
+        <y>window.bottom - height * 3</y>
+      </position>
+      <velocity>
+        <x><random min="-3" max="3" /></x>
+        <y><random min="-7" max="-5" /></y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all">
+          <bounce />
+        </collision>
+        <collision edge="bottom">
+          <die />
+        </collision>
+        <collision>
+          <bounce />
+        </collision>
       </collisions>
     </object>
     <object name="player">
-      <sprite src="shape.rectangle(width,height)" />
-      <position x="window.width.center" y="window.bottom - height * 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="stick()" />
+      <sprite>
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>window.width.center</x>
+        <y>window.bottom - height * 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <stick />
+        </collision>
       </collisions>
       <actions>
-        <action name="left" value="move.left(step)" />
-        <action name="right" value="move.right(step)" />
+        <action name="left">
+          <move direction="left">step</move>
+        </action>
+        <action name="right">
+          <move direction="right">step</move>
+        </action>
       </actions>
     </object>
     <object name="bricks">
-      <sprite src="grid(9,6,5,5,shape.rectangle(width,height))" />
-      <position x="margin" y="margin/2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true" group="true">
-        <collision edge="horizontal" action="bounce()" />
-        <collision basic="basic" action="die()" />
+      <sprite>
+        <grid>
+          <columns>9</columns>
+          <rows>6</rows>
+          <padding>
+            <x>5</x>
+            <y>5</y>
+          </padding>
+          <rectangle>
+            <width>width</width>
+            <height>height</height>
+          </rectangle>
+        </grid>
+      </sprite>
+      <position>
+        <x>margin</x>
+        <y>margin/2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <group>true</group>
+        <collision edge="horizontal">
+          <bounce />
+        </collision>
+        <collision>
+          <die />
+        </collision>
       </collisions>
     </object>
   </objects>
@@ -51,8 +117,12 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="space" action="state('playing')" />
-        <input button="s" action="state('settings')" />
+        <input button="space">
+          <push state="playing" />
+        </input>
+        <input button="s">
+          <push state="settings" />
+        </input>
       </inputs>
     </state>
     <state name="settings">
@@ -60,7 +130,9 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="escape" action="state()" />
+        <input button="escape">
+          <pop />
+        </input>
       </inputs>
     </state>
     <state name="playing">
@@ -70,9 +142,15 @@
         <show object="bricks" />
       </shows>
       <inputs>
-        <input button="space" action="state('paused')" />
-        <input button="left" action="action('player', 'left')" />
-        <input button="right" action="action('player', 'right')" />
+        <input button="space">
+          <push state="paused" />
+        </input>
+        <input button="left">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="right">
+          <trigger object="player" action="right" />
+        </input>
       </inputs>
     </state>
     <state name="paused">
@@ -80,7 +158,9 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="space" action="state()" />
+        <input button="space">
+          <pop />
+        </input>
       </inputs>
     </state>
   </states>

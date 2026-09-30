@@ -23,21 +23,21 @@ namespace xge
 		for (auto& condition : f.conditions)
 		{
 			o << "       condition: ";
-			if (condition.remaining)
+			if (condition.test == RawCondition::Test::Remaining)
 			{
-				o << "remaining=" << *condition.remaining;
+				o << "remaining=" << condition.threshold;
 			}
-			else if (condition.atMost)
+			else if (condition.test == RawCondition::Test::AtMost)
 			{
-				o << "variable=" << condition.variableName << ", atmost=" << *condition.atMost;
+				o << "variable=" << condition.variableName << ", atmost=" << condition.threshold;
 			}
 			else
 			{
-				o << "variable=" << condition.variableName << ", value=" << condition.value;
+				o << "variable=" << condition.variableName << ", atleast=" << condition.threshold;
 			}
 			o << (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
 				<< (condition.filterObject.empty() ? "" : ", object=" + condition.filterObject)
-				<< ", action=" << condition.action << '\n';
+				<< ", action=" << condition.commands << '\n';
 		}
 
 		return o;

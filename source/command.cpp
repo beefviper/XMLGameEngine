@@ -9,88 +9,64 @@
 #include <cctype>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 namespace xge
 {
-	std::vector<Command> parseCommands(const std::vector<std::string>& tokens)
+	namespace
+	{
+		Direction directionFromName(const std::string& name, const std::string& verb)
+		{
+			if (name == "up")    { return Direction::Up; }
+			if (name == "down")  { return Direction::Down; }
+			if (name == "left")  { return Direction::Left; }
+			if (name == "right") { return Direction::Right; }
+
+			throw std::runtime_error("<" + verb + "> has direction=\"" + name + "\"; expected up, down, left or right");
+		}
+	}
+
+	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate)
+	{
+		const std::string& verb = raw.verb;
+
+		if (verb == "bounce") { return CmdBounce{}; }
+		if (verb == "stick")  { return CmdStick{}; }
+		if (verb == "die")    { return CmdDie{}; }
+		if (verb == "wrap")   { return CmdWrap{}; }
+		if (verb == "carry")  { return CmdCarry{}; }
+
+		// <reset/> puts the object in the rule (or, in a state's input or
+		// condition, the whole game) back; <reset object="name"/> that one object.
+		if (verb == "reset")
+		{
+			if (raw.object.empty()) { return CmdReset{}; }
+			return CmdResetObject{ raw.object };
+		}
+
+		if (verb == "move") { return CmdMove{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
+		if (verb == "hop")  { return CmdHop{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
+
+		if (verb == "inc") { return CmdIncrement{ raw.variable }; }
+		if (verb == "dec") { return CmdDecrement{ raw.variable }; }
+
+		if (verb == "push") { return CmdPushState{ raw.state }; }
+		if (verb == "pop")  { return CmdPopState{}; }
+
+		if (verb == "fire")    { return CmdFire{ raw.object }; }
+		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action }; }
+
+		throw std::runtime_error("unknown command <" + verb + ">");
+	}
+
+	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate)
 	{
 		std::vector<Command> commands;
+		commands.reserve(raw.size());
 
-		std::size_t i = 0;
-		while (i < tokens.size())
+		for (const RawCommand& rawCommand : raw)
 		{
-			const std::string& tag = tokens.at(i);
-
-			if (tag == "collide")
-			{
-				const std::string& verb = tokens.at(i + 1);
-				if (verb == "bounce")    { commands.push_back(CmdBounce{}); }
-				else if (verb == "stick") { commands.push_back(CmdStick{}); }
-				else if (verb == "reset") { commands.push_back(CmdReset{}); }
-				else if (verb == "die")   { commands.push_back(CmdDie{}); }
-				else if (verb == "wrap")  { commands.push_back(CmdWrap{}); }
-				else if (verb == "carry") { commands.push_back(CmdCarry{}); }
-				i += 2;
-			}
-			else if (tag == "moveup" || tag == "movedown" || tag == "moveleft" || tag == "moveright")
-			{
-				const Direction direction = (tag == "moveup") ? Direction::Up
-					: (tag == "movedown") ? Direction::Down
-					: (tag == "moveleft") ? Direction::Left
-					: Direction::Right;
-				const float step = std::stof(tokens.at(i + 1));
-				commands.push_back(CmdMove{ direction, step });
-				i += 2;
-			}
-			else if (tag == "hopup" || tag == "hopdown" || tag == "hopleft" || tag == "hopright")
-			{
-				const Direction direction = (tag == "hopup") ? Direction::Up
-					: (tag == "hopdown") ? Direction::Down
-					: (tag == "hopleft") ? Direction::Left
-					: Direction::Right;
-				const float distance = std::stof(tokens.at(i + 1));
-				commands.push_back(CmdHop{ direction, distance });
-				i += 2;
-			}
-			else if (tag == "inc")
-			{
-				commands.push_back(CmdIncrement{ tokens.at(i + 1) });
-				i += 2;
-			}
-			else if (tag == "dec")
-			{
-				commands.push_back(CmdDecrement{ tokens.at(i + 1) });
-				i += 2;
-			}
-			else if (tag == "state")
-			{
-				const std::string& target = tokens.at(i + 1);
-				if (target == "pop") { commands.push_back(CmdPopState{}); }
-				else { commands.push_back(CmdPushState{ target }); }
-				i += 2;
-			}
-			else if (tag == "fire")
-			{
-				commands.push_back(CmdFire{ tokens.at(i + 1) });
-				i += 2;
-			}
-			else if (tag == "action")
-			{
-				commands.push_back(CmdTriggerAction{ tokens.at(i + 1), tokens.at(i + 2) });
-				i += 3;
-			}
-			else if (tag == "resetobject")
-			{
-				commands.push_back(CmdResetObject{ tokens.at(i + 1) });
-				i += 2;
-			}
-			else
-			{
-				// Unrecognized tag: warn and skip just this one token rather than
-				// throwing, so a typo in the XML doesn't take down the whole engine.
-				std::cout << "warning: unrecognized command token '" << tag << "'\n";
-				i += 1;
-			}
+			commands.push_back(makeCommand(rawCommand, evaluate));
 		}
 
 		return commands;
@@ -142,64 +118,32 @@ namespace xge
 		}
 	}
 
-	std::optional<std::pair<std::string, std::string>> parseTextVariableBinding(const std::string& src)
+	std::optional<std::pair<std::string, std::string>> parseVariableReference(const std::string& expression)
 	{
-		const auto call = src.find("text(");
-		if (call == std::string::npos) { return std::nullopt; }
-
-		const auto argStart = call + 5; // length of "text("
-
-		std::size_t i = argStart;
-		int depth = 0;
-		bool inQuote = false;
-
-		while (i < src.size())
-		{
-			const char c = src[i];
-
-			if (inQuote)
-			{
-				if (c == '\'') { inQuote = false; }
-			}
-			else if (c == '\'') { inQuote = true; }
-			else if (c == '(') { ++depth; }
-			else if (c == ')' && depth > 0) { --depth; }
-			else if ((c == ',' || c == ')') && depth == 0) { break; }
-
-			++i;
-		}
-
-		std::string firstArg = src.substr(argStart, i - argStart);
-
-		const auto first = firstArg.find_first_not_of(" \t");
+		const auto first = expression.find_first_not_of(" \t\r\n");
 		if (first == std::string::npos) { return std::nullopt; }
-		const auto last = firstArg.find_last_not_of(" \t");
-		firstArg = firstArg.substr(first, last - first + 1);
+		const auto last = expression.find_last_not_of(" \t\r\n");
+		const std::string reference = expression.substr(first, last - first + 1);
 
-		if (firstArg.empty() || firstArg.front() == '\'')
-		{
-			return std::nullopt; // a literal string label, e.g. text('0', ...)
-		}
-
-		const auto dot = firstArg.find('.');
-		if (dot == std::string::npos || dot == 0 || dot == firstArg.size() - 1)
+		const auto dot = reference.find('.');
+		if (dot == std::string::npos || dot == 0 || dot == reference.size() - 1)
 		{
 			return std::nullopt;
 		}
 
 		const auto isIdentChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_'; };
 
-		for (char c : firstArg)
+		for (char c : reference)
 		{
 			if (c != '.' && !isIdentChar(c)) { return std::nullopt; }
 		}
 
-		if (std::count(firstArg.begin(), firstArg.end(), '.') != 1)
+		if (std::count(reference.begin(), reference.end(), '.') != 1)
 		{
 			return std::nullopt; // only a single "owner.variable" level is supported
 		}
 
-		return std::make_pair(firstArg.substr(0, dot), firstArg.substr(dot + 1));
+		return std::make_pair(reference.substr(0, dot), reference.substr(dot + 1));
 	}
 
 	std::string formatDisplayNumber(float value)
@@ -244,6 +188,54 @@ namespace xge
 			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << ")"; },
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 		}, command);
+
+		return o;
+	}
+
+	std::ostream& operator<<(std::ostream& o, const RawValue& value)
+	{
+		if (value.kind == RawValue::Kind::Random)
+		{
+			return o << "random(" << value.min << ", " << value.max << ")";
+		}
+
+		return o << value.text;
+	}
+
+	std::ostream& operator<<(std::ostream& o, const RawCommand& command)
+	{
+		o << command.verb;
+
+		if (command.verb == "move" || command.verb == "hop")
+		{
+			o << "." << command.direction << "(" << command.amount << ")";
+		}
+		else if (command.verb == "inc" || command.verb == "dec")
+		{
+			o << "(" << command.variable << ")";
+		}
+		else if (command.verb == "push")
+		{
+			o << "(" << command.state << ")";
+		}
+		else if (command.verb == "fire" || (command.verb == "reset" && !command.object.empty()))
+		{
+			o << "(" << command.object << ")";
+		}
+		else if (command.verb == "trigger")
+		{
+			o << "(" << command.object << "," << command.action << ")";
+		}
+
+		return o;
+	}
+
+	std::ostream& operator<<(std::ostream& o, const std::vector<RawCommand>& commands)
+	{
+		for (std::size_t i = 0; i < commands.size(); ++i)
+		{
+			o << (i ? ";" : "") << commands[i];
+		}
 
 		return o;
 	}

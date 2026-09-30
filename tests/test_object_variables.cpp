@@ -3,9 +3,9 @@
 // author: beefviper
 // date: Sept 28, 2026
 //
-// Catch2 tests for parseTextVariableBinding()/formatDisplayNumber() against
-// the actual production command.cpp (not a reimplementation), using real
-// sprite src strings taken straight out of games/*.xml. Neither function
+// Catch2 tests for parseVariableReference()/formatDisplayNumber() against
+// the actual production command.cpp (not a reimplementation), using the
+// <number> expressions games/*.xml gives a text sprite. Neither function
 // touches SFML.
 
 #include "command.h"
@@ -14,12 +14,12 @@
 
 using namespace xge;
 
-TEST_CASE("parseTextVariableBinding recognizes an owner.variable reference", "[object_variables]")
+TEST_CASE("parseVariableReference recognizes an owner.variable reference", "[object_variables]")
 {
-	// pong.xml: score1/score2's sprites - an unquoted "owner.variable" reference.
+	// pong.xml: score1/score2's <number> - a single "owner.variable".
 	SECTION("paddle1.score")
 	{
-		auto binding = parseTextVariableBinding("text(paddle1.score,128,'color.white')");
+		auto binding = parseVariableReference("paddle1.score");
 		REQUIRE(binding.has_value());
 		CHECK(binding->first == "paddle1");
 		CHECK(binding->second == "score");
@@ -27,33 +27,36 @@ TEST_CASE("parseTextVariableBinding recognizes an owner.variable reference", "[o
 
 	SECTION("paddle2.score")
 	{
-		auto binding = parseTextVariableBinding("text(paddle2.score,128,'color.white')");
+		auto binding = parseVariableReference("paddle2.score");
 		REQUIRE(binding.has_value());
 		CHECK(binding->first == "paddle2");
 		CHECK(binding->second == "score");
 	}
+
+	SECTION("whitespace around the reference is ignored")
+	{
+		auto binding = parseVariableReference("\n   frog.lives  \n");
+		REQUIRE(binding.has_value());
+		CHECK(binding->first == "frog");
+		CHECK(binding->second == "lives");
+	}
 }
 
-TEST_CASE("parseTextVariableBinding treats a quoted first argument as a literal label", "[object_variables]")
+TEST_CASE("parseVariableReference finds nothing in a number or a sum", "[object_variables]")
 {
-	// A plain hand-typed number, pong.xml's title, and both games' paused
-	// screens - none of these are bindings.
-	CHECK_FALSE(parseTextVariableBinding("text('0',128,'color.blue')").has_value());
-	CHECK_FALSE(parseTextVariableBinding("text('PONG', text.size, 'color.red')").has_value());
-	CHECK_FALSE(parseTextVariableBinding("text('paused',128,'color.white')").has_value());
-	CHECK_FALSE(parseTextVariableBinding("text('PAUSED',128,'color.white')").has_value());
+	// A number typed by hand, and arithmetic - worked out once, not bound.
+	CHECK_FALSE(parseVariableReference("0").has_value());
+	CHECK_FALSE(parseVariableReference("paddle1.score + 1").has_value());
+	CHECK_FALSE(parseVariableReference("window.width.center / 2").has_value());
+	CHECK_FALSE(parseVariableReference("").has_value());
 }
 
-TEST_CASE("parseTextVariableBinding finds nothing outside a text() call", "[object_variables]")
+TEST_CASE("parseVariableReference rejects malformed owner.variable shapes rather than guessing", "[object_variables]")
 {
-	CHECK_FALSE(parseTextVariableBinding("shape.circle(ball.radius,'color.green')").has_value());
-	CHECK_FALSE(parseTextVariableBinding("image('assets/paddle.jpg', 'flip.horizontal')").has_value());
-}
-
-TEST_CASE("parseTextVariableBinding rejects malformed owner.variable shapes rather than guessing", "[object_variables]")
-{
-	CHECK_FALSE(parseTextVariableBinding("text(hp.max.current,128,'color.white')").has_value()); // more than one '.'
-	CHECK_FALSE(parseTextVariableBinding("text(.score,128,'color.white')").has_value());          // no owner before '.'
+	CHECK_FALSE(parseVariableReference("hp.max.current").has_value()); // more than one '.'
+	CHECK_FALSE(parseVariableReference(".score").has_value());          // no owner before '.'
+	CHECK_FALSE(parseVariableReference("score.").has_value());          // no variable after '.'
+	CHECK_FALSE(parseVariableReference("score").has_value());           // no owner at all
 }
 
 TEST_CASE("formatDisplayNumber matches what someone hand-typing text('0', ...) would write", "[object_variables]")

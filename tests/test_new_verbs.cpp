@@ -14,15 +14,42 @@
 #include "game.h"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <sstream>
 #include <variant>
 
 using namespace xge;
 
-TEST_CASE("dec('owner.variable') parses to a CmdDecrement", "[new_verbs][command_parsing]")
+namespace
 {
-	const auto commands = parseCommands({ "dec", "frog.lives", "collide", "reset" });
+	float evaluatePlainNumber(const RawValue& value)
+	{
+		return std::stof(value.text);
+	}
+
+	RawCommand tag(const std::string& verb)
+	{
+		RawCommand command;
+		command.verb = verb;
+		return command;
+	}
+
+	RawCommand step(const std::string& verb, const std::string& direction, const std::string& amount)
+	{
+		RawCommand command = tag(verb);
+		command.direction = direction;
+		command.amount = RawValue::expression(amount);
+		return command;
+	}
+}
+
+TEST_CASE("<dec variable=\"owner.variable\" /> makes a CmdDecrement", "[new_verbs][command_parsing]")
+{
+	RawCommand dec = tag("dec");
+	dec.variable = "frog.lives";
+
+	const auto commands = makeCommands({ dec, tag("reset") }, evaluatePlainNumber);
 
 	REQUIRE(commands.size() == 2);
 	REQUIRE(std::holds_alternative<CmdDecrement>(commands[0]));
@@ -30,9 +57,11 @@ TEST_CASE("dec('owner.variable') parses to a CmdDecrement", "[new_verbs][command
 	CHECK(std::holds_alternative<CmdReset>(commands[1]));
 }
 
-TEST_CASE("hop.*(distance) parses to a CmdHop in that direction", "[new_verbs][command_parsing]")
+TEST_CASE("<hop direction=\"...\">distance</hop> makes a CmdHop in that direction", "[new_verbs][command_parsing]")
 {
-	const auto commands = parseCommands({ "hopup", "48", "hopdown", "48", "hopleft", "24", "hopright", "12" });
+	const auto commands = makeCommands({
+		step("hop", "up", "48"), step("hop", "down", "48"), step("hop", "left", "24"), step("hop", "right", "12") },
+		evaluatePlainNumber);
 
 	REQUIRE(commands.size() == 4);
 	const Direction expected[] = { Direction::Up, Direction::Down, Direction::Left, Direction::Right };
@@ -45,9 +74,15 @@ TEST_CASE("hop.*(distance) parses to a CmdHop in that direction", "[new_verbs][c
 	}
 }
 
-TEST_CASE("wrap() and carry() parse as collision verbs", "[new_verbs][command_parsing]")
+TEST_CASE("<move> and <hop> need a direction they know", "[new_verbs][command_parsing]")
 {
-	const auto commands = parseCommands({ "collide", "wrap", "collide", "carry" });
+	REQUIRE_THROWS_WITH(makeCommands({ step("move", "sideways", "2") }, evaluatePlainNumber),
+		"<move> has direction=\"sideways\"; expected up, down, left or right");
+}
+
+TEST_CASE("<wrap /> and <carry /> are collision verbs", "[new_verbs][command_parsing]")
+{
+	const auto commands = makeCommands({ tag("wrap"), tag("carry") }, evaluatePlainNumber);
 
 	REQUIRE(commands.size() == 2);
 	CHECK(std::holds_alternative<CmdWrap>(commands[0]));

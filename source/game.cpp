@@ -17,8 +17,8 @@ namespace xge
 	Game::Game(const std::string& game, XmlBackend xmlBackend) :
 		filename(game)
 	{
-		xml.init(filename, xmlBackend, windowDesc, variables, rawStates, rawObjects, xmlValidation);
-		expr.init(windowDesc, variables, rawStates, states, rawObjects, objects);
+		xml.init(filename, xmlBackend, windowDesc, rawVariables, rawStates, rawObjects, xmlValidation);
+		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects);
 		// Every object's own visual is built later, by Engine, once a real
 		// Window (and therefore a real backend to build against) exists -
 		// see Window::init() in window.h.
@@ -71,8 +71,9 @@ namespace xge
 				continue;
 			}
 
-			object.positionOriginal.x = expr.evaluateString(*rawObject, rawObject->rawPosition.x);
-			object.positionOriginal.y = expr.evaluateString(*rawObject, rawObject->rawPosition.y);
+			const std::string where = "object '" + rawObject->name + "'";
+			object.positionOriginal.x = expr.evaluate(rawObject->rawPosition.x, where);
+			object.positionOriginal.y = expr.evaluate(rawObject->rawPosition.y, where);
 			object.positionOriginal = object.positionOriginal + object.gridOffset;
 			object.position = object.positionOriginal;
 			object.positionSizesUsed = sizes;

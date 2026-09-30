@@ -1,10 +1,10 @@
 # 04. Arithmetic in XML and XSLT code generation
 
-**Status:** open
+**Status:** open. The function half of the problem is solved on `nofun` ([03](03-expression-syntax.md)); arithmetic is still text inside value elements (`<x>window.width.center - ball.radius</x>`), which is what remains hidden from XSD and XSLT.
 
 ## The question
 
-If a complete XML toolchain is going to be used on game files, is arithmetic in attribute strings (`window.width.center - ball.radius`) the last place data is hidden from it? And if so, should it be removed?
+If a complete XML toolchain is going to be used on game files, is arithmetic in value text (`window.width.center - ball.radius`) the last place data is hidden from it? And if so, should it be removed?
 
 The motivating idea is to use XSLT to turn a game description directly into native source for any platform for which someone has written a transformation, with no extra tooling in the pipeline.
 

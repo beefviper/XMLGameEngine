@@ -116,6 +116,7 @@ namespace xge
 		// xml_document.h for what each value means).
 		SchemaValidation xmlValidation = SchemaValidation::None;
 
+		std::vector<std::pair<std::string, RawValue>> rawVariables;
 		std::map<std::string, float> variables;
 		std::vector<RawState> rawStates;
 		std::vector<State> states;

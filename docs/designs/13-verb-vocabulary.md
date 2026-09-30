@@ -55,7 +55,7 @@ Pathfinding is the engine's job, not the XML's. Other likely targeting modes: di
 
 ## Related smaller ideas
 
-- **Random speed with a dead zone.** `random.range(-7,7)` can give a near-zero velocity; the workaround so far is to reload. A declarative fix: a random magnitude with a random sign (`random.range(3,7)` times a sign), for example a `random.sign()` function, avoiding an `if`.
+- **Random speed with a dead zone.** `<random min="-7" max="7" />` can give a near-zero velocity; the workaround so far is to reload. A declarative fix: a random magnitude with a random sign (`random.range(3,7)` times a sign), for example a `<sign>` value tag, avoiding an `if`.
 - **Sound.** There is no audio vocabulary yet.
 - **Pong to Galaxian, written formally.** The chain of tweaks ([01](01-vision-and-scope.md)) could become a design document showing which verbs each step adds.
 

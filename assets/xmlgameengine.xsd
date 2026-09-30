@@ -1,92 +1,305 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<!--
+  xmlgameengine.xsd
+
+  What a game file is made of. The rule of thumb:
+
+    * An attribute NAMES or PICKS something: name, class, object, variable,
+      state, action, button, edge, direction, unless. These are labels, and
+      they cannot be computed.
+    * Everything else is the content of an element. Wherever the content is a
+      number (valueType below) it is either a math expression written out as
+      text - window.width.center - title.width / 2 - or a single value tag that
+      makes the number, such as <random min="-7" max="7" />. To add a new kind
+      of value, add it to the valueTag group and teach game_xml and game_expr
+      about it; every place that takes a value takes it.
+    * What an object DOES is a list of command tags (the command group below):
+      <bounce />, <inc variable="paddle1.score" />, <push state="playing" />.
+      They run in the order written.
+
+  Shapes, commands and random numbers are tags, never function calls; only
+  plain arithmetic is left to be written out as text.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
+
+  <!-- The words an attribute may hold. -->
+  <xs:simpleType name="edgeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="left" />
+      <xs:enumeration value="right" />
+      <xs:enumeration value="top" />
+      <xs:enumeration value="bottom" />
+      <xs:enumeration value="horizontal" />
+      <xs:enumeration value="vertical" />
+      <xs:enumeration value="all" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="directionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="up" />
+      <xs:enumeration value="down" />
+      <xs:enumeration value="left" />
+      <xs:enumeration value="right" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="flipType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="horizontal" />
+      <xs:enumeration value="vertical" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Value tags: the ways, besides writing an expression, to give a number. -->
+  <xs:group name="valueTag">
+    <xs:choice>
+      <xs:element name="random">
+        <xs:complexType>
+          <xs:attribute name="min" type="xs:string" use="required" />
+          <xs:attribute name="max" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+
+  <!-- A number: text (an expression) or one value tag, not both. -->
+  <xs:complexType name="valueType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- A number with a name, for <variable name="score">0</variable>. -->
+  <xs:complexType name="variableType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- Two numbers: <position>, <velocity> and a grid's <padding>. -->
+  <xs:complexType name="vector2Type">
+    <xs:sequence>
+      <xs:element name="x" type="valueType" />
+      <xs:element name="y" type="valueType" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="emptyType" />
+
+  <!-- Sprites: one shape, and optionally a grid of copies of it. -->
+  <xs:group name="shape">
+    <xs:choice>
+      <xs:element name="circle">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="radius" type="valueType" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="rectangle">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="width" type="valueType" />
+            <xs:element name="height" type="valueType" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="text">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:choice>
+              <!-- a fixed label -->
+              <xs:element name="content" type="xs:string" />
+              <!-- a live number: an owner.variable stays up to date as it changes -->
+              <xs:element name="number" type="valueType" />
+            </xs:choice>
+            <xs:element name="size" type="valueType" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="image">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="path" type="xs:string" />
+            <xs:element name="flip" type="flipType" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="spriteType">
+    <xs:choice>
+      <xs:group ref="shape" />
+      <xs:element name="grid">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="columns" type="valueType" />
+            <xs:element name="rows" type="valueType" />
+            <xs:element name="padding" type="vector2Type" minOccurs="0" />
+            <xs:group ref="shape" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+
+  <!-- Commands: what a collision rule, an object action, a key or a condition does. -->
+  <xs:complexType name="variableReferenceType">
+    <xs:attribute name="variable" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- move and hop: a direction, and how far. -->
+  <xs:complexType name="stepType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="direction" type="directionType" use="required" />
+  </xs:complexType>
+
+  <xs:group name="command">
+    <xs:choice>
+      <xs:element name="bounce" type="emptyType" />
+      <xs:element name="stick" type="emptyType" />
+      <xs:element name="wrap" type="emptyType" />
+      <xs:element name="carry" type="emptyType" />
+      <xs:element name="die" type="emptyType" />
+      <xs:element name="reset">
+        <xs:complexType>
+          <xs:attribute name="object" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="inc" type="variableReferenceType" />
+      <xs:element name="dec" type="variableReferenceType" />
+      <xs:element name="move" type="stepType" />
+      <xs:element name="hop" type="stepType" />
+      <xs:element name="push">
+        <xs:complexType>
+          <xs:attribute name="state" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="pop" type="emptyType" />
+      <xs:element name="fire">
+        <xs:complexType>
+          <xs:attribute name="object" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="trigger">
+        <xs:complexType>
+          <xs:attribute name="object" type="xs:string" use="required" />
+          <xs:attribute name="action" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+
+  <!--
+    A collision rule. With edge it is about a screen edge; without, it is about
+    another object, narrowed by class and/or object (neither: anything), and
+    passed over while the object is touching something of the unless class.
+  -->
+  <xs:complexType name="collisionType">
+    <xs:sequence>
+      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="edge" type="edgeType" use="optional" />
+    <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="object" type="xs:string" use="optional" />
+    <xs:attribute name="unless" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!-- A named thing an object can do, run by a <trigger>. -->
+  <xs:complexType name="actionType">
+    <xs:sequence>
+      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- What pressing a key does in a state. -->
+  <xs:complexType name="inputType">
+    <xs:sequence>
+      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="button" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!--
+    Checked every frame. One test, then the commands to run when it holds:
+    atleast / atmost read the variable named by the variable attribute off
+    every object that matches class and/or object; remaining counts the
+    matching objects still in play.
+  -->
+  <xs:complexType name="conditionType">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="atleast" type="valueType" />
+        <xs:element name="atmost" type="valueType" />
+        <xs:element name="remaining" type="valueType" />
+      </xs:choice>
+      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="object" type="xs:string" use="optional" />
+    <xs:attribute name="variable" type="xs:string" use="optional" />
+  </xs:complexType>
+
   <xs:element name="game">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="window">
           <xs:complexType>
+            <xs:sequence>
+              <xs:element name="width" type="xs:unsignedShort" />
+              <xs:element name="height" type="xs:unsignedShort" />
+              <xs:element name="background" type="xs:string" />
+              <xs:element name="fullscreen" type="xs:boolean" />
+              <xs:element name="framerate" type="xs:unsignedByte" />
+            </xs:sequence>
             <xs:attribute name="name" type="xs:string" use="required" />
-            <xs:attribute name="width" type="xs:unsignedShort" use="required" />
-            <xs:attribute name="height" type="xs:unsignedShort" use="required" />
-            <xs:attribute name="background" type="xs:string" use="required" />
-            <xs:attribute name="fullscreen" type="xs:boolean" use="required" />
-            <xs:attribute name="framerate" type="xs:unsignedByte" use="required" />
           </xs:complexType>
         </xs:element>
         <xs:element name="variables">
           <xs:complexType>
             <xs:sequence>
-              <xs:element maxOccurs="unbounded" name="variable">
-                <xs:complexType>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="value" type="xs:integer" use="required" />
-                </xs:complexType>
-              </xs:element>
+              <xs:element name="variable" type="variableType" maxOccurs="unbounded" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name="objects">
           <xs:complexType>
             <xs:sequence>
-              <xs:element maxOccurs="unbounded" name="object">
+              <xs:element name="object" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:sequence>
-                    <xs:element name="sprite">
-                      <xs:complexType>
-                        <xs:attribute name="src" type="xs:string" use="required" />
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element name="position">
-                      <xs:complexType>
-                        <xs:attribute name="x" type="xs:string" use="required" />
-                        <xs:attribute name="y" type="xs:string" use="required" />
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element name="velocity">
-                      <xs:complexType>
-                        <xs:attribute name="x" type="xs:string" use="required" />
-                        <xs:attribute name="y" type="xs:string" use="required" />
-                      </xs:complexType>
-                    </xs:element>
+                    <xs:element name="sprite" type="spriteType" />
+                    <xs:element name="position" type="vector2Type" />
+                    <xs:element name="velocity" type="vector2Type" />
                     <xs:element name="collisions">
                       <xs:complexType>
-                        <xs:sequence minOccurs="0">
-                          <xs:element maxOccurs="unbounded" name="collision">
-                            <xs:complexType>
-                              <xs:attribute name="edge" type="xs:string" use="optional" />
-                              <xs:attribute name="basic" type="xs:string" use="optional" />
-                              <xs:attribute name="class" type="xs:string" use="optional" />
-                              <xs:attribute name="object" type="xs:string" use="optional" />
-                              <xs:attribute name="unless" type="xs:string" use="optional" />
-                              <xs:attribute name="action" type="xs:string" use="required" />
-                            </xs:complexType>
-                          </xs:element>
-                        </xs:sequence>
-                        <xs:attribute name="enabled" type="xs:boolean" use="required" />
-                        <xs:attribute name="group" type="xs:boolean" use="optional" />
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element minOccurs="0" name="actions">
-                      <xs:complexType>
                         <xs:sequence>
-                          <xs:element maxOccurs="unbounded" name="action">
-                            <xs:complexType>
-                              <xs:attribute name="name" type="xs:string" use="required" />
-                              <xs:attribute name="value" type="xs:string" use="required" />
-                            </xs:complexType>
-                          </xs:element>
+                          <xs:element name="enabled" type="xs:boolean" />
+                          <xs:element name="group" type="xs:boolean" minOccurs="0" />
+                          <xs:element name="collision" type="collisionType" minOccurs="0" maxOccurs="unbounded" />
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
-                    <xs:element minOccurs="0" name="variables">
+                    <xs:element name="actions" minOccurs="0">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element maxOccurs="unbounded" name="variable">
-                            <xs:complexType>
-                              <xs:attribute name="name" type="xs:string" use="required" />
-                              <xs:attribute name="value" type="xs:integer" use="required" />
-                            </xs:complexType>
-                          </xs:element>
+                          <xs:element name="action" type="actionType" maxOccurs="unbounded" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="variables" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="variable" type="variableType" maxOccurs="unbounded" />
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
@@ -101,13 +314,13 @@
         <xs:element name="states">
           <xs:complexType>
             <xs:sequence>
-              <xs:element maxOccurs="unbounded" name="state">
+              <xs:element name="state" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:sequence>
                     <xs:element name="shows">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element maxOccurs="unbounded" name="show">
+                          <xs:element name="show" maxOccurs="unbounded">
                             <xs:complexType>
                               <xs:attribute name="object" type="xs:string" use="required" />
                             </xs:complexType>
@@ -118,29 +331,14 @@
                     <xs:element name="inputs">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element maxOccurs="unbounded" name="input">
-                            <xs:complexType>
-                              <xs:attribute name="button" type="xs:string" use="required" />
-                              <xs:attribute name="action" type="xs:string" use="required" />
-                            </xs:complexType>
-                          </xs:element>
+                          <xs:element name="input" type="inputType" maxOccurs="unbounded" />
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
-                    <xs:element minOccurs="0" name="conditions">
+                    <xs:element name="conditions" minOccurs="0">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element maxOccurs="unbounded" name="condition">
-                            <xs:complexType>
-                              <xs:attribute name="class" type="xs:string" use="optional" />
-                              <xs:attribute name="object" type="xs:string" use="optional" />
-                              <xs:attribute name="variable" type="xs:string" use="optional" />
-                              <xs:attribute name="value" type="xs:unsignedByte" use="optional" />
-                              <xs:attribute name="atmost" type="xs:unsignedByte" use="optional" />
-                              <xs:attribute name="remaining" type="xs:unsignedByte" use="optional" />
-                              <xs:attribute name="action" type="xs:string" use="required" />
-                            </xs:complexType>
-                          </xs:element>
+                          <xs:element name="condition" type="conditionType" maxOccurs="unbounded" />
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>

@@ -7,6 +7,7 @@
 
 #include "types.h"
 
+#include <functional>
 #include <ostream>
 #include <optional>
 #include <string>
@@ -41,11 +42,9 @@ namespace xge
 	// re-derive it by searching the object's raw XML src string.
 	enum class ShapeKind { Unknown, Circle, Rectangle, Text, Image };
 
-	// --- Command: a typed replacement for the flat vector<string> "token" format
-	// that used to be hand-decoded (inconsistently) in three separate places:
-	// Game::checkEdge, Game::circleRectangleCollision, and Engine::execute_action.
-	// parseCommands() (command.cpp) is now the one and only place that turns the
-	// raw exprtk output tokens into these.
+	// --- Command: what a command tag in the XML becomes once it is loaded.
+	// makeCommand() (command.cpp) is the one place that turns a RawCommand
+	// into one of these.
 
 	struct CmdBounce {};
 	struct CmdStick {};
@@ -132,12 +131,70 @@ namespace xge
 		CmdMove, CmdHop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject>;
 
-	// Turns the flat token stream produced by game_expr's exprtk functors (e.g.
-	// {"collide", "bounce"} or {"moveup", "2"}) into a sequence of typed Commands.
-	// This replaces the duplicated, subtly-inconsistent token walking that used to
-	// live in Game::checkEdge, Game::circleRectangleCollision, and
-	// Engine::execute_action.
-	std::vector<Command> parseCommands(const std::vector<std::string>& tokens);
+	// --- What the XML says, before any of it is evaluated.
+
+	// A value in the XML: an element's content wherever a number is wanted.
+	// It is either a math expression written out as text (`window.width.center
+	// - title.width / 2`), or one tag that makes the number, such as
+	// <random min="-7" max="7"/>. game_expr evaluates it (see
+	// game_expr::evaluate), so a new kind of value tag is one more Kind here,
+	// one more case in game_xml's readValue and one more in game_expr's
+	// evaluate.
+	struct RawValue
+	{
+		enum class Kind { Expression, Random };
+
+		Kind kind{ Kind::Expression };
+
+		// Expression: the expression. Random: unused.
+		std::string text;
+
+		// Random: the two ends, each itself an expression.
+		std::string min;
+		std::string max;
+
+		static RawValue expression(std::string text)
+		{
+			RawValue value;
+			value.text = std::move(text);
+			return value;
+		}
+
+		// Every expression written inside this value, for the ones that only
+		// need to look at what the expressions name (see
+		// game_expr::sizeDependenciesOf).
+		std::vector<const std::string*> expressions() const
+		{
+			if (kind == Kind::Random) { return { &min, &max }; }
+			return { &text };
+		}
+	};
+
+	// One command tag from the XML - <bounce/>, <inc variable="a.b"/>,
+	// <move direction="up">step</move>, ... - before its number is worked out.
+	// `verb` is the tag name; which of the other fields are used depends on it
+	// (see makeCommand).
+	struct RawCommand
+	{
+		std::string verb;
+		std::string object;    // reset, fire, trigger
+		std::string variable;  // inc, dec
+		std::string state;     // push
+		std::string action;    // trigger
+		std::string direction; // move, hop
+		RawValue amount;       // move, hop
+	};
+
+	// Works out a RawValue to a number; makeCommand is given one so that it can
+	// stay free of the expression library (and be tested without it).
+	using ValueEvaluator = std::function<float(const RawValue&)>;
+
+	// Turns what the XML says into the typed Commands the engine runs. This is
+	// the one place that knows what each command tag means; an unknown tag or
+	// direction throws std::runtime_error naming it, so a typo in a game file
+	// is reported when it loads.
+	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate);
+	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate);
 
 	// Maps a spriteParams tag ("circle", "rectangle", "text", "image") to a
 	// ShapeKind. Returns ShapeKind::Unknown for anything else (including an
@@ -158,14 +215,14 @@ namespace xge
 	// drawing/collision, not position).
 	Vector2f measureShapeSize(const std::vector<std::string>& spriteParams, ShapeKind shapeKind) noexcept;
 
-	// If `src` contains a text(...) call whose first argument is an unquoted
-	// "owner.variable" reference (e.g. text(paddle1.score,128,'color.white')),
-	// returns {owner, variable}. Returns nullopt for a literal string label
-	// (e.g. text('0',128,'color.blue')) or anything else - a plain string scan
-	// rather than an exprtk lookup, since by the time an exprtk function call
-	// evaluates, the original argument text (a symbol name vs. a literal) is
-	// already gone - only the resolved value is left.
-	std::optional<std::pair<std::string, std::string>> parseTextVariableBinding(const std::string& src);
+	// If `expression` is nothing but an "owner.variable" reference (for
+	// example paddle1.score), returns {owner, variable}. Returns nullopt for
+	// anything else - a number, a sum, a name with no owner or with more than
+	// one dot. Used to tell a <number> in a text sprite that should stay live
+	// (bound to that variable) from one that is just worked out once; it is a
+	// plain scan of the text rather than an exprtk lookup, since once
+	// exprtk has evaluated the expression only the resolved value is left.
+	std::optional<std::pair<std::string, std::string>> parseVariableReference(const std::string& expression);
 
 	// Formats a live numeric value for on-screen display: whole numbers print
 	// without a decimal point (scores, HP, ammo, ...), matching what someone
@@ -173,4 +230,9 @@ namespace xge
 	std::string formatDisplayNumber(float value);
 
 	std::ostream& operator<<(std::ostream& o, const Command& command);
+
+	// How a value and a command tag read in printGame()'s output.
+	std::ostream& operator<<(std::ostream& o, const RawValue& value);
+	std::ostream& operator<<(std::ostream& o, const RawCommand& command);
+	std::ostream& operator<<(std::ostream& o, const std::vector<RawCommand>& commands);
 }

@@ -77,6 +77,22 @@ namespace xge
 		return xmlChToStr(element->getAttribute(attr.value()));
 	}
 
+	std::string XercesXmlNode::getText() const
+	{
+		std::string text;
+		if (!element) { return text; }
+
+		for (const xc::DOMNode* child = element->getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			if (child->getNodeType() == xc::DOMNode::TEXT_NODE || child->getNodeType() == xc::DOMNode::CDATA_SECTION_NODE)
+			{
+				text += xmlChToStr(child->getNodeValue());
+			}
+		}
+
+		return text;
+	}
+
 	std::unique_ptr<XmlNode> XercesXmlNode::getFirstChild() const
 	{
 		if (!element) { return nullptr; }

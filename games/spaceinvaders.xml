@@ -4,75 +4,212 @@
 <!-- date: Sept 18, 2020 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
-  <window name="Space Invaders" width="1024" height="768" background="color.black" fullscreen="false" framerate="60" />
+  <window name="Space Invaders">
+    <width>1024</width>
+    <height>768</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
   <variables>
-    <variable name="margin" value="80" />
-    <variable name="bullet.radius" value="4" />
-    <variable name="width" value="50" />
-    <variable name="height" value="50" />
-    <variable name="step" value="2" />
+    <variable name="margin">80</variable>
+    <variable name="bullet.radius">4</variable>
+    <variable name="width">50</variable>
+    <variable name="height">50</variable>
+    <variable name="step">2</variable>
   </variables>
   <objects>
     <object name="bullet" class="projectile">
-      <sprite src="shape.circle(bullet.radius)" />
-      <position x="0" y="0" />
-      <velocity x="0" y="-12" />
-      <collisions enabled="false">
-        <collision edge="all" action="die()"/>
-        <collision class="aliens" action="die()"/>
+      <sprite>
+        <circle>
+          <radius>bullet.radius</radius>
+        </circle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>-12</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all">
+          <die />
+        </collision>
+        <collision class="aliens">
+          <die />
+        </collision>
       </collisions>
     </object>
     <object name="player">
-      <sprite src="shape.rectangle(width,height)" />
-      <position x="window.width.center" y="window.bottom - height * 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="true">
-        <collision edge="horizontal" action="stick()" />
+      <sprite>
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>window.width.center</x>
+        <y>window.bottom - height * 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <stick />
+        </collision>
       </collisions>
       <actions>
-        <action name="left" value="move.left(step)" />
-        <action name="right" value="move.right(step)" />
-        <action name ="gun" value="fire('bullet')"/>
+        <action name="left">
+          <move direction="left">step</move>
+        </action>
+        <action name="right">
+          <move direction="right">step</move>
+        </action>
+        <action name="gun">
+          <fire object="bullet" />
+        </action>
       </actions>
     </object>
     <object name="aliens" class="aliens">
-      <sprite src="grid(11,5,15,15,shape.rectangle(width,height))" />
-      <position x="margin" y="margin/2" />
-      <velocity x="2" y="0" />
-      <collisions enabled="true" group="true">
-        <collision edge="horizontal" action="bounce();move.down(10)" />
-        <collision basic="basic" action="die()" />
+      <sprite>
+        <grid>
+          <columns>11</columns>
+          <rows>5</rows>
+          <padding>
+            <x>15</x>
+            <y>15</y>
+          </padding>
+          <rectangle>
+            <width>width</width>
+            <height>height</height>
+          </rectangle>
+        </grid>
+      </sprite>
+      <position>
+        <x>margin</x>
+        <y>margin/2</y>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <group>true</group>
+        <collision edge="horizontal">
+          <bounce />
+          <move direction="down">10</move>
+        </collision>
+        <collision>
+          <die />
+        </collision>
       </collisions>
     </object>
     <object name="title">
-      <sprite src="text('SPACE INVADERS',110,'color.green')" />
-      <position x="window.width.center - title.width / 2" y="window.height.center - title.height / 2 - 100" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>SPACE INVADERS</content>
+          <size>110</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - title.width / 2</x>
+        <y>window.height.center - title.height / 2 - 100</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="youwin">
-      <sprite src="text('YOU WIN',128,'color.green')" />
-      <position x="window.width.center - youwin.width / 2" y="window.height.center - 150" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>YOU WIN</content>
+          <size>128</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - youwin.width / 2</x>
+        <y>window.height.center - 150</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="continue">
-      <sprite src="text('spacebar to continue',48,'color.white')" />
-      <position x="window.width.center - continue.width / 2" y="window.height.center + 60" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>spacebar to continue</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - continue.width / 2</x>
+        <y>window.height.center + 60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="settings">
-      <sprite src="text('settings',128,'color.white')" />
-      <position x="window.width.center - settings.width / 2" y="window.height.center - settings.height / 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>settings</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - settings.width / 2</x>
+        <y>window.height.center - settings.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
     <object name="paused">
-      <sprite src="text('paused',128,'color.white')" />
-      <position x="window.width.center - paused.width / 2" y="window.height.center - paused.height / 2" />
-      <velocity x="0" y="0" />
-      <collisions enabled="false" />
+      <sprite>
+        <text>
+          <content>paused</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - paused.width / 2</x>
+        <y>window.height.center - paused.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
   </objects>
   <states>
@@ -82,8 +219,12 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="space" action="state('playing')" />
-        <input button="s" action="state('settings')" />
+        <input button="space">
+          <push state="playing" />
+        </input>
+        <input button="s">
+          <push state="settings" />
+        </input>
       </inputs>
     </state>
     <state name="settings">
@@ -92,7 +233,9 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="escape" action="state()" />
+        <input button="escape">
+          <pop />
+        </input>
       </inputs>
     </state>
     <state name="playing">
@@ -102,14 +245,27 @@
         <show object="aliens" />
       </shows>
       <inputs>
-        <input button="p" action="state('paused')" />
-        <input button="left" action="action('player', 'left')" />
-        <input button="right" action="action('player', 'right')" />
-        <input button="space" action="action('player', 'gun')" />
-        <input button="escape" action="state('paused')" />
+        <input button="p">
+          <push state="paused" />
+        </input>
+        <input button="left">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="right">
+          <trigger object="player" action="right" />
+        </input>
+        <input button="space">
+          <trigger object="player" action="gun" />
+        </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
       </inputs>
       <conditions>
-        <condition class="aliens" remaining="0" action="state('gameover')" />
+        <condition class="aliens">
+          <remaining>0</remaining>
+          <push state="gameover" />
+        </condition>
       </conditions>
     </state>
     <state name="paused">
@@ -118,7 +274,9 @@
         <show object="player" />
       </shows>
       <inputs>
-        <input button="p" action="state()" />
+        <input button="p">
+          <pop />
+        </input>
       </inputs>
     </state>
     <state name="gameover">
@@ -127,7 +285,9 @@
         <show object="continue" />
       </shows>
       <inputs>
-        <input button="space" action="reset()" />
+        <input button="space">
+          <reset />
+        </input>
       </inputs>
     </state>
   </states>

@@ -8,7 +8,7 @@ Objects have a `name` (their unique identifier) and an optional `class` (a group
 
 ```xml
 <object name="paddle1" class="paddle"> ... </object>
-<condition class="paddle" variable="score" value="15" action="state('gameover')" />
+<condition class="paddle" variable="score"><atleast>15</atleast><push state="gameover" /></condition>
 ```
 
 A single condition on `class="paddle"` checks either paddle's score, instead of writing one condition per paddle.

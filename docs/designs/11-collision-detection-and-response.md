@@ -36,7 +36,7 @@ The declarative form of the idea: the XML does not spell out an if-the-ball-touc
 - Only the first hit of a pair each frame is handled. Two objects meeting again in the same frame after a bounce (a ball trapped between two close walls) will not react a second time until the next frame.
 - The engine used to park a dead circle at (-100, -100) and zero its velocity; that special case is gone (`die()` now means the same everywhere: not drawn, moved or collided with), because a dead object is no longer part of anything.
 - What it replaced: a per-frame overlap check after which the object moved anyway, which let a small or fast object tunnel through a thin one (the smaller ball and the Space Invaders bullet), and a `circleRectangle` edge choice that compared a coordinate against a bound minus the same coordinate. The C++ reference Pong ([17](17-reference-pong.md)) had the swept test against a moving frame of reference; this is that idea, kept behind the same detector interface.
-- `basic="basic"` is a stopgap spelling for "the one general object-against-object rule". The name says nothing, and it is meant to be used alone; the loader does not stop it being combined with `class` or `object`, and the schema still lists it as an ordinary optional attribute. A clearer spelling for the catch-all (or dropping it, since an unfiltered `<collision action="..."/>` could mean the same) is undecided.
+- `basic="basic"` was a stopgap spelling for "the one general object-against-object rule". On `nofun` it is gone: a `<collision>` with no `edge`, `class` or `object` means "anything".
 
 ## Design notes worth keeping
 

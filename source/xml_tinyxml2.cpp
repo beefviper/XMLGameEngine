@@ -27,6 +27,25 @@ namespace xge
 		return value ? value : std::string{};
 	}
 
+	std::string TinyXml2Node::getText() const
+	{
+		std::string text;
+		if (!element) { return text; }
+
+		// TinyXML2's own GetText() only reads the first child, and only if it
+		// is text, so walk them all to join the pieces on either side of a
+		// child element.
+		for (const tinyxml2::XMLNode* child = element->FirstChild(); child != nullptr; child = child->NextSibling())
+		{
+			if (const tinyxml2::XMLText* childText = child->ToText())
+			{
+				text += childText->Value();
+			}
+		}
+
+		return text;
+	}
+
 	std::unique_ptr<XmlNode> TinyXml2Node::getFirstChild() const
 	{
 		if (!element) { return nullptr; }

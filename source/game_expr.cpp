@@ -9,70 +9,16 @@
 
 #include <algorithm>
 #include <cctype>
+#include <stdexcept>
 
 namespace xge
 {
-	void game_expr::init(const WindowDesc& windowDesc, std::map<std::string, float>& variables,
+	void game_expr::init(const WindowDesc& windowDesc,
+		const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 		std::vector<RawState>& rawStates, std::vector<State>& states,
 		std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
 	{
 		generator.seed(seed());
-
-		// custom functions added to exprtk
-		randomNumber<float> randomNumberFloat{};
-		randomRange<float> randomRangeFloat{};
-		shapeCircle<float> shapeCircleFloat{};
-		shapeRectangle<float> shapeRectangleFloat{};
-		text<float> textFloat{};
-		image<float> imageFloat{};
-		inc<float> incFloat{};
-		dec<float> decFloat{};
-		grid<float> gridFloat{};
-		bounce<float> bounceFloat{};
-		stick<float> stickFloat{};
-		reset<float> resetFloat{};
-		die<float> dieFloat{};
-		wrap<float> wrapFloat{};
-		carry<float> carryFloat{};
-		hopUp<float> hopUpFloat{};
-		hopDown<float> hopDownFloat{};
-		hopLeft<float> hopLeftFloat{};
-		hopRight<float> hopRightFloat{};
-		moveUp<float> moveUpFloat{};
-		moveDown<float> moveDownFloat{};
-		moveLeft<float> moveLeftFloat{};
-		moveRight<float> moveRightFloat{};
-		state<float> stateFloat{};
-		action<float> actionFloat{};
-		fire<float> fireFloat{};
-
-		// add functions to symbol table
-		symbolTable.add_function("random.number", randomNumberFloat);
-		symbolTable.add_function("random.range", randomRangeFloat);
-		symbolTable.add_function("shape.circle", shapeCircleFloat);
-		symbolTable.add_function("shape.rectangle", shapeRectangleFloat);
-		symbolTable.add_function("text", textFloat);
-		symbolTable.add_function("image", imageFloat);
-		symbolTable.add_function("inc", incFloat);
-		symbolTable.add_function("dec", decFloat);
-		symbolTable.add_function("grid", gridFloat);
-		symbolTable.add_function("bounce", bounceFloat);
-		symbolTable.add_function("stick", stickFloat);
-		symbolTable.add_function("reset", resetFloat);
-		symbolTable.add_function("die", dieFloat);
-		symbolTable.add_function("wrap", wrapFloat);
-		symbolTable.add_function("carry", carryFloat);
-		symbolTable.add_function("hop.up", hopUpFloat);
-		symbolTable.add_function("hop.down", hopDownFloat);
-		symbolTable.add_function("hop.left", hopLeftFloat);
-		symbolTable.add_function("hop.right", hopRightFloat);
-		symbolTable.add_function("move.up", moveUpFloat);
-		symbolTable.add_function("move.down", moveDownFloat);
-		symbolTable.add_function("move.left", moveLeftFloat);
-		symbolTable.add_function("move.right", moveRightFloat);
-		symbolTable.add_function("state", stateFloat);
-		symbolTable.add_function("action", actionFloat);
-		symbolTable.add_function("fire", fireFloat);
 
 		// add constants to symbol table
 		symbolTable.add_constant("window.top", 0);
@@ -82,10 +28,16 @@ namespace xge
 		symbolTable.add_constant("window.width.center", windowDesc.width / 2);
 		symbolTable.add_constant("window.height.center", windowDesc.height / 2);
 
-		// add variables from XML file to symbol table
-		for (auto& variable : variables)
+		// register symbol table with expression
+		expression.register_symbol_table(symbolTable);
+
+		// add variables from XML file to symbol table, in the order the file
+		// declares them so that one can use the ones before it
+		for (const auto& [name, rawValue] : rawVariables)
 		{
-			symbolTable.add_constant(variable.first, variable.second);
+			const float value = evaluate(rawValue, "variable '" + name + "'");
+			variables[name] = value;
+			symbolTable.add_constant(name, value);
 		}
 
 		// Pre-register every object's own <variable> entries, keyed
@@ -107,15 +59,18 @@ namespace xge
 			symbolTable.add_variable(objectVariable.first, objectVariable.second);
 		}
 
-		// register symbol table with expression
-		expression.register_symbol_table(symbolTable);
-
 		// Every object's size as name.width / name.height, so an expression can
 		// place an object by its own size (or another's) the same way it reads
 		// paddle1.score. Worked out before anything is placed so the order
 		// objects appear in the file does not matter; a text's or image's is
 		// {0,0} for now (see objectSizes). An object's own <variable> named
 		// width or height takes the name instead.
+		//
+		// The sprite of each object is worked out here once, and a shape (unlike
+		// a text showing a variable, whose number may have changed by then) is
+		// kept as it came out, so that a <random> in it gives the size used here
+		// and the size drawn the same number.
+		std::map<std::string, std::vector<std::string>> firstPassSpriteParams;
 		for (auto& rawObject : rawObjects)
 		{
 			if (objectSizes.count(rawObject.name))
@@ -123,10 +78,11 @@ namespace xge
 				continue; // every cell of a grid() shares its object's name
 			}
 
-			const std::vector<std::string> params = processData(rawObject, rawObject.src);
+			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'");
 			const ShapeKind kind = shapeKindFromTag(params.empty() ? std::string{} : params.at(0));
 			objectShapeKinds[rawObject.name] = kind;
 			objectSizes[rawObject.name] = measureShapeSize(params, kind);
+			firstPassSpriteParams[rawObject.name] = params;
 		}
 		for (auto& [name, size] : objectSizes)
 		{
@@ -139,8 +95,14 @@ namespace xge
 		// evaluate strings in objects
 		for (auto& rawObject : rawObjects)
 		{
-			std::vector<std::string> tempSpriteParams = processData(rawObject, rawObject.src);
-			const GridData gridData = setGridXY(tempSpriteParams);
+			const std::string where = "object '" + rawObject.name + "'";
+
+			// Only a text showing a number needs working out again here, for the
+			// value it has by now (see above).
+			std::vector<std::string> tempSpriteParams = (rawObject.sprite.kind == "text" && rawObject.sprite.textIsNumber)
+				? buildSpriteParams(rawObject.sprite, where)
+				: firstPassSpriteParams.at(rawObject.name);
+			const GridData gridData = gridDataOf(rawObject.sprite, where);
 			const ShapeKind rawObjectShapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
 
 			// Every grid cell shares the same footprint (one shape.circle()/
@@ -176,9 +138,10 @@ namespace xge
 					object.spriteParams = tempSpriteParams;
 					object.shapeKind = rawObjectShapeKind;
 
-					if (object.shapeKind == ShapeKind::Text)
+					if (object.shapeKind == ShapeKind::Text && rawObject.sprite.textIsNumber
+						&& rawObject.sprite.number.kind == RawValue::Kind::Expression)
 					{
-						if (auto binding = parseTextVariableBinding(rawObject.src))
+						if (auto binding = parseVariableReference(rawObject.sprite.number.text))
 						{
 							object.boundVariableOwner = binding->first;
 							object.boundVariableName = binding->second;
@@ -193,7 +156,6 @@ namespace xge
 						? rawObject.name + "." + std::to_string(gridX + 1) + "." + std::to_string(gridY + 1)
 						: rawObject.name;
 					object.objClass = rawObject.objClass;
-					object.src = rawObject.src;
 
 					if (rawObject.objClass == "projectile")
 					{
@@ -202,8 +164,8 @@ namespace xge
 
 					object.isVisible = rawObject.isVisible;
 
-					object.positionOriginal.x = evaluateString(rawObject, rawObject.rawPosition.x);
-					object.positionOriginal.y = evaluateString(rawObject, rawObject.rawPosition.y);
+					object.positionOriginal.x = evaluate(rawObject.rawPosition.x, where);
+					object.positionOriginal.y = evaluate(rawObject.rawPosition.y, where);
 
 					// Finalizes this grid cell's real screen position right
 					// here - Game is now done with position the moment its
@@ -224,8 +186,8 @@ namespace xge
 					object.positionUsesSize = !positionSizeDependencies.empty();
 					object.positionResolved = !object.positionUsesSize;
 
-					object.velocity.x = evaluateString(rawObject, rawObject.rawVelocity.x);
-					object.velocity.y = evaluateString(rawObject, rawObject.rawVelocity.y);
+					object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
+					object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
 
 					object.velocityOriginal = object.velocity;
 
@@ -234,10 +196,10 @@ namespace xge
 					object.collisionEnabledOriginal = object.collisionData.enabled;
 					object.collisionData.group = rawObject.rawCollisionData.group ? groupNum : 0;
 
-					object.collisionData.top = processCommands(rawObject, rawObject.rawCollisionData.top);
-					object.collisionData.bottom = processCommands(rawObject, rawObject.rawCollisionData.bottom);
-					object.collisionData.left = processCommands(rawObject, rawObject.rawCollisionData.left);
-					object.collisionData.right = processCommands(rawObject, rawObject.rawCollisionData.right);
+					object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
+					object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
+					object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
+					object.collisionData.right = processCommands(rawObject.rawCollisionData.right, where);
 
 					for (auto& rawRule : rawObject.rawCollisionData.basic)
 					{
@@ -245,19 +207,19 @@ namespace xge
 						rule.filterClass = rawRule.filterClass;
 						rule.filterObject = rawRule.filterObject;
 						rule.unlessClass = rawRule.unlessClass;
-						rule.commands = processCommands(rawObject, rawRule.action);
+						rule.commands = processCommands(rawRule.commands, where);
 						object.collisionData.basic.push_back(std::move(rule));
 					}
 
 					//object.action = rawObject.action;
 					for (auto& rawAction : rawObject.action)
 					{
-						object.action[rawAction.first] = processCommands(rawObject, rawAction.second);
+						object.action[rawAction.first] = processCommands(rawAction.second, where);
 					}
 
 					for (auto& rawVariable : rawObject.variable)
 					{
-						const float value = evaluateString(rawObject, rawVariable.second);
+						const float value = evaluate(rawVariable.second, where);
 						object.variable[rawVariable.first] = value;
 						object.variableOriginal[rawVariable.first] = value;
 
@@ -283,13 +245,14 @@ namespace xge
 		for (auto& rawState : rawStates)
 		{
 			State state{};
+			const std::string where = "state '" + rawState.name + "'";
 
 			state.name = rawState.name;
 			state.show = rawState.show;
 
 			for (auto& rawAction : rawState.input)
 			{
-				state.input[keyCodeFromString(rawAction.first)] = processCommands(rawState, rawAction.second);
+				state.input[keyCodeFromString(rawAction.first)] = processCommands(rawAction.second, where);
 			}
 
 			for (auto& rawCondition : rawState.conditions)
@@ -298,9 +261,14 @@ namespace xge
 				condition.filterClass = rawCondition.filterClass;
 				condition.filterObject = rawCondition.filterObject;
 				condition.variableName = rawCondition.variableName;
-				condition.value = rawCondition.value;
-				condition.remaining = rawCondition.remaining;
-				condition.atMost = rawCondition.atMost;
+
+				const float threshold = evaluate(rawCondition.threshold, where);
+				switch (rawCondition.test)
+				{
+				case RawCondition::Test::AtLeast:   condition.value = threshold; break;
+				case RawCondition::Test::AtMost:    condition.atMost = threshold; break;
+				case RawCondition::Test::Remaining: condition.remaining = threshold; break;
+				}
 
 				if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)
 					{
@@ -310,7 +278,7 @@ namespace xge
 				{
 					std::cout << "warning: state '" << rawState.name << "': a condition with remaining= matches no object at all, so it would fire at once\n";
 				}
-				condition.commands = processCommands(rawState, rawCondition.action);
+				condition.commands = processCommands(rawCondition.commands, where);
 				state.conditions.push_back(std::move(condition));
 			}
 
@@ -318,61 +286,97 @@ namespace xge
 		}
 	}
 
-	// TODO: instead of passing an object or state, just pass the .name (std::string)
-	// remove copies of evaluateString() and ProcessData()
-
-	float game_expr::evaluateString(const RawObject& rawObject, const std::string& input_string)
+	float game_expr::evaluate(const RawValue& value, const std::string& where)
 	{
-		if (!parser.compile(input_string, expression))
+		if (value.kind == RawValue::Kind::Random)
 		{
-			std::cout << "Error: " << parser.error().c_str()
-				<< " in object named '" << rawObject.name << "'" << '\n';
-			std::cout << "Failed to parse: \"" << input_string << "\"\n";
-			exit(EXIT_FAILURE);
+			const float min = evaluateExpression(value.min, where);
+			const float max = evaluateExpression(value.max, where);
+			return randomNumberRange(min, max);
+		}
+
+		return evaluateExpression(value.text, where);
+	}
+
+	float game_expr::evaluateExpression(const std::string& text, const std::string& where)
+	{
+		if (!parser.compile(text, expression))
+		{
+			throw std::runtime_error(where + ": cannot read \"" + text + "\": " + parser.error().c_str());
 		}
 		return expression.value();
 	}
 
-	std::vector<std::string> game_expr::processData(const RawObject& rawObject, const std::string& input_string)
+	std::vector<Command> game_expr::processCommands(const std::vector<RawCommand>& raw, const std::string& where)
 	{
-		tempSParams.clear();
-		if (input_string != "")
+		try
 		{
-			evaluateString(rawObject, input_string);
+			return makeCommands(raw, [&](const RawValue& value) { return evaluate(value, where); });
 		}
-		return tempSParams;
-	}
-
-	std::vector<Command> game_expr::processCommands(const RawObject& rawObject, const std::string& input_string)
-	{
-		return parseCommands(processData(rawObject, input_string));
-	}
-
-	float game_expr::evaluateString(const RawState& rawState, const std::string& input_string)
-	{
-		if (!parser.compile(input_string, expression))
+		catch (const std::runtime_error& error)
 		{
-			std::cout << "Error: " << parser.error().c_str()
-				<< " in object named '" << rawState.name << "'" << '\n';
-			std::cout << "Failed to parse: \"" << input_string << "\"\n";
-			exit(EXIT_FAILURE);
+			throw std::runtime_error(where + ": " + error.what());
 		}
-		return expression.value();
 	}
 
-	std::vector<std::string> game_expr::processData(const RawState& rawState, const std::string& input_string)
+	std::vector<std::string> game_expr::buildSpriteParams(const RawSprite& sprite, const std::string& where)
 	{
-		tempSParams.clear();
-		if (input_string != "")
+		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
+		std::vector<std::string> params;
+
+		if (sprite.kind == "circle")
 		{
-			evaluateString(rawState, input_string);
+			params = { "circle", std::to_string(evaluate(sprite.radius, where)), std::to_string(0), color };
 		}
-		return tempSParams;
+		else if (sprite.kind == "rectangle")
+		{
+			params = { "rectangle", std::to_string(evaluate(sprite.width, where)), std::to_string(evaluate(sprite.height, where)), color };
+		}
+		else if (sprite.kind == "text")
+		{
+			// A fixed label, or a number - shown as the whole number it is, with
+			// no decimal point, the way someone typing the label would.
+			const std::string label = sprite.textIsNumber ? formatDisplayNumber(evaluate(sprite.number, where)) : sprite.content;
+			params = { "text", label, std::to_string(evaluate(sprite.size, where)), color };
+		}
+		else if (sprite.kind == "image")
+		{
+			params = { "image", sprite.path, sprite.flip.empty() ? "color.white" : "flip." + sprite.flip };
+		}
+		else
+		{
+			throw std::runtime_error(where + ": unknown shape '" + sprite.kind + "'");
+		}
+
+		if (sprite.isGrid)
+		{
+			params.push_back("grid");
+			params.push_back(std::to_string(evaluate(sprite.columns, where)));
+			params.push_back(std::to_string(evaluate(sprite.rows, where)));
+			params.push_back(sprite.hasPadding ? std::to_string(evaluate(sprite.padding.x, where)) : std::to_string(0));
+			params.push_back(sprite.hasPadding ? std::to_string(evaluate(sprite.padding.y, where)) : std::to_string(0));
+		}
+
+		return params;
 	}
 
-	std::vector<Command> game_expr::processCommands(const RawState& rawState, const std::string& input_string)
+	xge::GridData game_expr::gridDataOf(const RawSprite& sprite, const std::string& where)
 	{
-		return parseCommands(processData(rawState, input_string));
+		GridData gridData;
+
+		if (sprite.isGrid)
+		{
+			gridData.max.x = static_cast<int>(evaluate(sprite.columns, where));
+			gridData.max.y = static_cast<int>(evaluate(sprite.rows, where));
+
+			if (sprite.hasPadding)
+			{
+				gridData.padding.x = static_cast<int>(evaluate(sprite.padding.x, where));
+				gridData.padding.y = static_cast<int>(evaluate(sprite.padding.y, where));
+			}
+		}
+
+		return gridData;
 	}
 
 	void game_expr::setObjectSize(const std::string& name, const Vector2f& size)
@@ -390,7 +394,13 @@ namespace xge
 		// Every identifier in the position expressions, e.g. "title.width" or
 		// "window.width.center"; the ones that end in .width / .height and name
 		// an object whose size needs a backend are what this is looking for.
-		for (const std::string* positionExpression : { &rawObject.rawPosition.x, &rawObject.rawPosition.y })
+		std::vector<const std::string*> positionExpressions = rawObject.rawPosition.x.expressions();
+		for (const std::string* expression : rawObject.rawPosition.y.expressions())
+		{
+			positionExpressions.push_back(expression);
+		}
+
+		for (const std::string* positionExpression : positionExpressions)
 		{
 			std::size_t i = 0;
 			while (i < positionExpression->size())
@@ -427,20 +437,5 @@ namespace xge
 		}
 
 		return dependencies;
-	}
-
-	xge::GridData game_expr::setGridXY(std::vector<std::string>& spriteParams)
-	{
-		GridData gridData;
-
-		if (spriteParams.size() > 5 && spriteParams.at(4) == "grid")
-		{
-			gridData.max.x = std::stoi(spriteParams.at(5));
-			gridData.max.y = std::stoi(spriteParams.at(6));
-			gridData.padding.x = std::stoi(spriteParams.at(7));
-			gridData.padding.y = std::stoi(spriteParams.at(8));
-		}
-
-		return gridData;
 	}
 }

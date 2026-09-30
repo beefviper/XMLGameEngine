@@ -32,16 +32,32 @@ namespace xge
 		return attribute ? attribute->value() : std::string{};
 	}
 
+	std::string RapidXmlNode::getText() const
+	{
+		std::string text;
+		if (!node) { return text; }
+
+		for (const rapidxml::xml_node<>* child = node->first_node(); child != nullptr; child = child->next_sibling())
+		{
+			if (child->type() == rapidxml::node_data || child->type() == rapidxml::node_cdata)
+			{
+				text.append(child->value(), child->value_size());
+			}
+		}
+
+		return text;
+	}
+
 	std::unique_ptr<XmlNode> RapidXmlNode::getFirstChild() const
 	{
 		if (!node) { return nullptr; }
 
-		// No-argument call - "the first child element, whatever its tag name
-		// is" - see the matching comment on XmlNode::getFirstChild()
-		// (xml_document.h). RapidXML's own first_node()/next_sibling() only
-		// filter by name when one is passed in, so leaving every argument at
-		// its default already gives unfiltered traversal.
+		// The first child that is an element, whatever its tag name is - see
+		// the matching comment on XmlNode::getFirstChild() (xml_document.h).
+		// RapidXML's first_node()/next_sibling() only filter by name when one
+		// is passed in, and would otherwise stop on the text of <x>100</x>.
 		const rapidxml::xml_node<>* child = node->first_node();
+		while (child && child->type() != rapidxml::node_element) { child = child->next_sibling(); }
 		return child ? std::make_unique<RapidXmlNode>(child) : nullptr;
 	}
 
@@ -50,6 +66,7 @@ namespace xge
 		if (!node) { return nullptr; }
 
 		const rapidxml::xml_node<>* sibling = node->next_sibling();
+		while (sibling && sibling->type() != rapidxml::node_element) { sibling = sibling->next_sibling(); }
 		return sibling ? std::make_unique<RapidXmlNode>(sibling) : nullptr;
 	}
 

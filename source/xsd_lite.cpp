@@ -7,9 +7,13 @@
 
 #include "xml_document.h"
 
+#include <algorithm>
 #include <cctype>
 #include <charconv>
 #include <cstdint>
+#include <map>
+#include <set>
+#include <vector>
 
 namespace xge
 {
@@ -35,19 +39,434 @@ namespace xge
 			const auto result = std::from_chars(value.data(), value.data() + value.size(), parsed);
 			return result.ec == std::errc{} && parsed >= minValue && parsed <= maxValue;
 		}
+
+		// Strips any "prefix:" off a qualified name (e.g. "xs:element" ->
+		// "element") - every backend's getName()/getAttribute() hands back
+		// the raw qualified name as written (see xml_document.h), and this
+		// schema only ever uses one prefix ("xs"), but comparing against
+		// the local name rather than assuming that exact prefix string
+		// costs nothing and is one less thing to break if it ever changes.
+		std::string localName(const std::string& qualifiedName)
+		{
+			const std::size_t colon = qualifiedName.find(':');
+			return colon == std::string::npos ? qualifiedName : qualifiedName.substr(colon + 1);
+		}
+
+		std::string trim(const std::string& text)
+		{
+			const auto first = text.find_first_not_of(" \t\r\n");
+			if (first == std::string::npos) { return {}; }
+			const auto last = text.find_last_not_of(" \t\r\n");
+			return text.substr(first, last - first + 1);
+		}
+
+		// minOccurs/maxOccurs as written: absent is 1, "unbounded" is -1.
+		int occurs(const XmlNode& node, const char* attribute)
+		{
+			const std::string value = node.getAttribute(attribute);
+			if (value.empty()) { return 1; }
+			return value == "unbounded" ? -1 : std::stoi(value);
+		}
 	}
 
-	std::string XsdLiteValidator::localName(const std::string& qualifiedName)
+	// ------------------------------------------------------------ the model
+	struct XsdLiteValidator::Model
 	{
-		const std::size_t colon = qualifiedName.find(':');
-		return colon == std::string::npos ? qualifiedName : qualifiedName.substr(colon + 1);
+		struct Attribute
+		{
+			std::string name;
+			std::string type;
+			bool required = false;
+		};
+
+		struct SimpleType
+		{
+			std::vector<std::string> enumeration; // empty: any value the built-in base allows
+			std::string base;
+		};
+
+		struct ComplexType;
+
+		// One item of a content model: an element, or a sequence/choice of
+		// other particles, and how many times it may repeat.
+		struct Particle
+		{
+			enum class Kind { Element, Sequence, Choice };
+
+			Kind kind = Kind::Element;
+			int minOccurs = 1;
+			int maxOccurs = 1;
+
+			// Element:
+			std::string name;
+			std::shared_ptr<ComplexType> complexType; // null: a simple element (text only) ...
+			std::string simpleType;                   // ... of this type ("" : any text)
+
+			// Sequence / Choice:
+			std::vector<Particle> children;
+		};
+
+		struct ComplexType
+		{
+			bool mixed = false;
+			std::vector<Attribute> attributes;
+			std::unique_ptr<Particle> content; // null: no child elements allowed
+		};
+
+		Particle root;
+		std::map<std::string, SimpleType> simpleTypes;
+
+		// The top-level named pieces of the schema, kept as XML until something
+		// refers to them (so the order they are written in does not matter),
+		// and what has been built from them.
+		std::map<std::string, std::unique_ptr<XmlNode>> complexTypeNodes;
+		std::map<std::string, std::unique_ptr<XmlNode>> groupNodes;
+		std::map<std::string, std::shared_ptr<ComplexType>> complexTypes;
+		std::map<std::string, Particle> groups;
+		std::set<std::string> inProgress;
+
+		// -------------------------------------------------------- building
+		bool build(const XmlNode& schemaRoot, std::string& error);
+		bool buildSimpleType(const XmlNode& node, std::string& error);
+		bool buildElement(const XmlNode& node, Particle& out, std::string& error);
+		bool buildComplexType(const XmlNode& node, ComplexType& out, std::string& error);
+		bool buildContent(const XmlNode& node, Particle& out, std::string& error);
+		bool resolveComplexType(const std::string& name, std::shared_ptr<ComplexType>& out, std::string& error);
+		bool resolveGroup(const std::string& name, Particle& out, std::string& error);
+
+		// ------------------------------------------------------ validating
+		using Children = std::vector<std::unique_ptr<XmlNode>>;
+
+		// value against a declared type (e.g. "xs:boolean", or the name of one
+		// of the schema's own xs:simpleTypes) - see the class comment in
+		// xsd_lite.h for how unrecognized types are handled.
+		bool typeMatches(const std::string& type, const std::string& value) const;
+
+		bool validateElement(const Particle& declaration, const XmlNode& actual, const std::string& path, std::string& error) const;
+		bool validateAttributes(const ComplexType& type, const XmlNode& actual, const std::string& path, std::string& error) const;
+
+		// What matching a content model against an element's children found:
+		// the children matched so far up to `position`, and, when it did not
+		// match, either a real error inside a child that was there
+		// (`hardError`), or just what it was still waiting for (`expected`).
+		struct MatchState
+		{
+			std::size_t position = 0;
+			bool hardError = false;
+			std::string error;
+			std::string expected;
+		};
+
+		bool matchParticle(const Particle& particle, const Children& children, MatchState& state, const std::string& path) const;
+
+		// The names of the elements a particle could start with, for "expected
+		// one of ..." in a message.
+		static void startingNames(const Particle& particle, std::vector<std::string>& names);
+		bool matchOnce(const Particle& particle, const Children& children, MatchState& state, const std::string& path, int occurrence) const;
+	};
+
+	bool XsdLiteValidator::Model::buildSimpleType(const XmlNode& node, std::string& error)
+	{
+		const std::string name = node.getAttribute("name");
+		if (name.empty())
+		{
+			error = "xs:simpleType with no 'name' attribute";
+			return false;
+		}
+
+		SimpleType simpleType;
+
+		for (std::unique_ptr<XmlNode> restriction = node.getFirstChild(); restriction; restriction = restriction->getNextSibling())
+		{
+			if (localName(restriction->getName()) != "restriction") { continue; }
+
+			simpleType.base = localName(restriction->getAttribute("base"));
+
+			for (std::unique_ptr<XmlNode> facet = restriction->getFirstChild(); facet; facet = facet->getNextSibling())
+			{
+				if (localName(facet->getName()) == "enumeration")
+				{
+					simpleType.enumeration.push_back(facet->getAttribute("value"));
+				}
+			}
+		}
+
+		simpleTypes[name] = std::move(simpleType);
+		return true;
 	}
 
-	bool XsdLiteValidator::typeMatches(const std::string& type, const std::string& value)
+	// An xs:sequence or xs:choice, or an xs:group ref, as a Particle.
+	bool XsdLiteValidator::Model::buildContent(const XmlNode& node, Particle& out, std::string& error)
+	{
+		const std::string kind = localName(node.getName());
+
+		if (kind == "group")
+		{
+			const std::string ref = localName(node.getAttribute("ref"));
+			Particle group;
+			if (!resolveGroup(ref, group, error)) { return false; }
+
+			// A reference is a sequence of the one thing the group is, repeated
+			// as the reference says.
+			out.kind = Particle::Kind::Sequence;
+			out.minOccurs = occurs(node, "minOccurs");
+			out.maxOccurs = occurs(node, "maxOccurs");
+			out.children.push_back(std::move(group));
+			return true;
+		}
+
+		if (kind != "sequence" && kind != "choice")
+		{
+			error = "unsupported schema construct xs:" + kind;
+			return false;
+		}
+
+		out.kind = kind == "sequence" ? Particle::Kind::Sequence : Particle::Kind::Choice;
+		out.minOccurs = occurs(node, "minOccurs");
+		out.maxOccurs = occurs(node, "maxOccurs");
+
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
+		{
+			const std::string childKind = localName(child->getName());
+			Particle particle;
+
+			if (childKind == "element")
+			{
+				if (!buildElement(*child, particle, error)) { return false; }
+			}
+			else if (childKind == "sequence" || childKind == "choice" || childKind == "group")
+			{
+				if (!buildContent(*child, particle, error)) { return false; }
+			}
+			else
+			{
+				continue; // xs:annotation and the like
+			}
+
+			out.children.push_back(std::move(particle));
+		}
+
+		return true;
+	}
+
+	bool XsdLiteValidator::Model::buildComplexType(const XmlNode& node, ComplexType& out, std::string& error)
+	{
+		out.mixed = node.getAttribute("mixed") == "true";
+
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
+		{
+			const std::string kind = localName(child->getName());
+
+			if (kind == "sequence" || kind == "choice" || kind == "group")
+			{
+				auto content = std::make_unique<Particle>();
+				if (!buildContent(*child, *content, error)) { return false; }
+				out.content = std::move(content);
+			}
+			else if (kind == "attribute")
+			{
+				Attribute attribute;
+				attribute.name = child->getAttribute("name");
+				attribute.type = child->getAttribute("type");
+				attribute.required = (child->getAttribute("use") == "required");
+
+				if (attribute.name.empty())
+				{
+					error = "xs:attribute with no 'name' attribute";
+					return false;
+				}
+
+				out.attributes.push_back(std::move(attribute));
+			}
+		}
+
+		return true;
+	}
+
+	bool XsdLiteValidator::Model::buildElement(const XmlNode& node, Particle& out, std::string& error)
+	{
+		out.kind = Particle::Kind::Element;
+		out.name = node.getAttribute("name");
+
+		if (out.name.empty())
+		{
+			error = "xs:element with no 'name' attribute";
+			return false;
+		}
+
+		out.minOccurs = occurs(node, "minOccurs");
+		out.maxOccurs = occurs(node, "maxOccurs");
+
+		const std::string type = localName(node.getAttribute("type"));
+
+		if (!type.empty())
+		{
+			if (complexTypeNodes.count(type))
+			{
+				return resolveComplexType(type, out.complexType, error);
+			}
+
+			out.simpleType = type; // xs:string, xs:boolean, ... or one of simpleTypes
+			return true;
+		}
+
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
+		{
+			if (localName(child->getName()) == "complexType")
+			{
+				out.complexType = std::make_shared<ComplexType>();
+				return buildComplexType(*child, *out.complexType, error);
+			}
+		}
+
+		// No type at all: whatever text is there is fine.
+		return true;
+	}
+
+	bool XsdLiteValidator::Model::resolveComplexType(const std::string& name, std::shared_ptr<ComplexType>& out, std::string& error)
+	{
+		if (auto built = complexTypes.find(name); built != complexTypes.end())
+		{
+			out = built->second;
+			return true;
+		}
+
+		const auto node = complexTypeNodes.find(name);
+		if (node == complexTypeNodes.end())
+		{
+			error = "the schema refers to a type '" + name + "' it does not define";
+			return false;
+		}
+
+		if (!inProgress.insert("type:" + name).second)
+		{
+			error = "the schema type '" + name + "' contains itself, which this validator does not support";
+			return false;
+		}
+
+		auto type = std::make_shared<ComplexType>();
+		const bool ok = buildComplexType(*node->second, *type, error);
+		inProgress.erase("type:" + name);
+		if (!ok) { return false; }
+
+		complexTypes[name] = type;
+		out = type;
+		return true;
+	}
+
+	bool XsdLiteValidator::Model::resolveGroup(const std::string& name, Particle& out, std::string& error)
+	{
+		if (auto built = groups.find(name); built != groups.end())
+		{
+			out = built->second;
+			return true;
+		}
+
+		const auto node = groupNodes.find(name);
+		if (node == groupNodes.end())
+		{
+			error = "the schema refers to a group '" + name + "' it does not define";
+			return false;
+		}
+
+		if (!inProgress.insert("group:" + name).second)
+		{
+			error = "the schema group '" + name + "' contains itself, which this validator does not support";
+			return false;
+		}
+
+		bool ok = false;
+		for (std::unique_ptr<XmlNode> child = node->second->getFirstChild(); child; child = child->getNextSibling())
+		{
+			const std::string kind = localName(child->getName());
+			if (kind == "sequence" || kind == "choice")
+			{
+				Particle group;
+				ok = buildContent(*child, group, error);
+				if (ok) { groups[name] = group; out = std::move(group); }
+				break;
+			}
+		}
+
+		inProgress.erase("group:" + name);
+		if (!ok && error.empty()) { error = "the schema group '" + name + "' has no xs:sequence or xs:choice"; }
+		return ok;
+	}
+
+	bool XsdLiteValidator::Model::build(const XmlNode& schemaRoot, std::string& error)
+	{
+		std::unique_ptr<XmlNode> topElement;
+
+		// Collect the named pieces first; they can then refer to each other in
+		// any order.
+		for (std::unique_ptr<XmlNode> top = schemaRoot.getFirstChild(); top; )
+		{
+			const std::string kind = localName(top->getName());
+			std::unique_ptr<XmlNode> next = top->getNextSibling();
+
+			if (kind == "simpleType")
+			{
+				if (!buildSimpleType(*top, error)) { return false; }
+			}
+			else if (kind == "complexType")
+			{
+				complexTypeNodes[top->getAttribute("name")] = std::move(top);
+			}
+			else if (kind == "group")
+			{
+				groupNodes[top->getAttribute("name")] = std::move(top);
+			}
+			else if (kind == "element" && !topElement)
+			{
+				topElement = std::move(top);
+			}
+
+			top = std::move(next);
+		}
+
+		if (!topElement)
+		{
+			error = "the schema has no top-level xs:element";
+			return false;
+		}
+
+		return buildElement(*topElement, root, error);
+	}
+
+	// ----------------------------------------------------------- validating
+	void XsdLiteValidator::Model::startingNames(const Particle& particle, std::vector<std::string>& names)
+	{
+		if (particle.kind == Particle::Kind::Element)
+		{
+			names.push_back("<" + particle.name + ">");
+			return;
+		}
+
+		for (const Particle& part : particle.children)
+		{
+			startingNames(part, names);
+
+			// In a sequence, only the first part that has to be there can start it.
+			if (particle.kind == Particle::Kind::Sequence && part.minOccurs > 0) { break; }
+		}
+	}
+
+	bool XsdLiteValidator::Model::typeMatches(const std::string& type, const std::string& value) const
 	{
 		const std::string type_ = localName(type);
 
-		// xs:boolean's lexical space is true/false/1/0 - every attribute in
+		if (const auto simple = simpleTypes.find(type_); simple != simpleTypes.end())
+		{
+			const auto& enumeration = simple->second.enumeration;
+			if (!enumeration.empty() && std::find(enumeration.begin(), enumeration.end(), value) == enumeration.end())
+			{
+				return false;
+			}
+
+			return simple->second.base.empty() || typeMatches(simple->second.base, value);
+		}
+
+		// xs:boolean's lexical space is true/false/1/0 - every value in
 		// assets/xmlgameengine.xsd is written as true/false, but this
 		// checks the type's actual rules rather than just this schema's
 		// current usage of it.
@@ -62,96 +481,219 @@ namespace xge
 		return true;
 	}
 
-	bool XsdLiteValidator::parseComplexType(const XmlNode& complexType, Element& outElement, std::string& error)
+	bool XsdLiteValidator::Model::validateAttributes(const ComplexType& type, const XmlNode& actual, const std::string& path, std::string& error) const
 	{
-		std::unique_ptr<XmlNode> child = complexType.getFirstChild();
-
-		while (child)
+		for (const Attribute& attribute : type.attributes)
 		{
-			const std::string name = localName(child->getName());
+			const std::string value = actual.getAttribute(attribute.name);
 
-			if (name == "sequence")
+			// "" also means "missing" here (see XmlNode::getAttribute,
+			// xml_document.h) - every attribute this schema declares is a
+			// name, a keyword, a number, or true/false, none of which has a
+			// legitimate empty-string value, so this is an adequate required
+			// check.
+			if (value.empty())
 			{
-				// xs:sequence's own minOccurs (assets/xmlgameengine.xsd
-				// uses this exactly once, on <collisions>'s inner sequence,
-				// to say the whole group of <collision> children is
-				// optional) makes every element directly inside it at
-				// least that optional too - "0" here just floors each
-				// child's own minOccurs to 0, which is exactly equivalent
-				// to the real rule for a sequence (like this schema's)
-				// with only one element inside it; that's the only shape
-				// "the basic subset of functions we're using" (see
-				// xsd_lite.h) needs to get right.
-				const std::string sequenceMinOccurs = child->getAttribute("minOccurs");
-				const bool sequenceOptional = (sequenceMinOccurs == "0");
-
-				std::unique_ptr<XmlNode> sequenceChild = child->getFirstChild();
-
-				while (sequenceChild)
+				if (attribute.required)
 				{
-					if (localName(sequenceChild->getName()) == "element")
-					{
-						Element nested;
-						if (!parseElement(*sequenceChild, nested, error)) { return false; }
-						if (sequenceOptional) { nested.minOccurs = 0; }
-						outElement.children.push_back(std::move(nested));
-					}
-
-					sequenceChild = sequenceChild->getNextSibling();
-				}
-			}
-			else if (name == "attribute")
-			{
-				Attribute attribute;
-				attribute.name = child->getAttribute("name");
-				attribute.type = child->getAttribute("type");
-				attribute.required = (child->getAttribute("use") == "required");
-
-				if (attribute.name.empty())
-				{
-					error = "xs:attribute with no 'name' attribute";
+					error = path + ": missing required attribute '" + attribute.name + "'";
 					return false;
 				}
 
-				outElement.attributes.push_back(std::move(attribute));
+				continue;
 			}
 
-			child = child->getNextSibling();
+			if (!typeMatches(attribute.type, value))
+			{
+				error = path + ": attribute '" + attribute.name + "' = \"" + value + "\" is not a valid " + attribute.type;
+				return false;
+			}
 		}
 
 		return true;
 	}
 
-	bool XsdLiteValidator::parseElement(const XmlNode& xsdElement, Element& outElement, std::string& error)
+	bool XsdLiteValidator::Model::validateElement(const Particle& declaration, const XmlNode& actual, const std::string& path, std::string& error) const
 	{
-		outElement.name = xsdElement.getAttribute("name");
-
-		if (outElement.name.empty())
+		Children children;
+		for (std::unique_ptr<XmlNode> child = actual.getFirstChild(); child; )
 		{
-			error = "xs:element with no 'name' attribute";
+			std::unique_ptr<XmlNode> next = child->getNextSibling();
+			children.push_back(std::move(child));
+			child = std::move(next);
+		}
+
+		const std::string text = trim(actual.getText());
+
+		if (!declaration.complexType)
+		{
+			// A simple element: text only, of the declared type.
+			if (!children.empty())
+			{
+				error = path + ": unexpected element <" + children.front()->getName() + "> inside a text-only element";
+				return false;
+			}
+
+			if (!declaration.simpleType.empty() && !typeMatches(declaration.simpleType, text))
+			{
+				error = path + ": \"" + text + "\" is not a valid " + declaration.simpleType;
+				return false;
+			}
+
+			return true;
+		}
+
+		const ComplexType& type = *declaration.complexType;
+
+		if (!validateAttributes(type, actual, path, error)) { return false; }
+
+		if (!type.mixed && !text.empty())
+		{
+			error = path + ": unexpected text \"" + text + "\"";
 			return false;
 		}
 
-		const std::string minOccurs = xsdElement.getAttribute("minOccurs");
-		const std::string maxOccurs = xsdElement.getAttribute("maxOccurs");
-
-		outElement.minOccurs = minOccurs.empty() ? 1 : std::stoi(minOccurs);
-		outElement.maxOccurs = maxOccurs.empty() ? 1 : (maxOccurs == "unbounded" ? -1 : std::stoi(maxOccurs));
-
-		std::unique_ptr<XmlNode> complexType = xsdElement.getFirstChild();
-
-		while (complexType && localName(complexType->getName()) != "complexType")
+		if (!type.content)
 		{
-			complexType = complexType->getNextSibling();
+			if (!children.empty())
+			{
+				error = path + ": unexpected element <" + children.front()->getName() + ">";
+				return false;
+			}
+
+			return true;
 		}
 
-		// An xs:element with no xs:complexType is a simple-typed leaf (no
-		// attributes, no children expected) - none of this schema's own
-		// elements are that simple, but leaving it valid here rather than
-		// failing keeps this consistent with the permissive spirit
-		// described in xsd_lite.h.
-		return !complexType || parseComplexType(*complexType, outElement, error);
+		MatchState state;
+		const bool matched = matchParticle(*type.content, children, state, path);
+
+		if (state.hardError)
+		{
+			error = state.error;
+			return false;
+		}
+
+		if (matched && state.position == children.size()) { return true; }
+
+		if (state.position < children.size())
+		{
+			error = path + ": unexpected element <" + children[state.position]->getName() + ">";
+			if (!state.expected.empty()) { error += ", expected " + state.expected; }
+		}
+		else
+		{
+			error = path + ": " + (state.expected.empty() ? std::string("incomplete") : "expected " + state.expected + " but the element ends");
+		}
+
+		return false;
 	}
+
+	// One pass of `particle`: an element (must be the next child), a sequence
+	// (each part in turn), or a choice (the first alternative that matches).
+	bool XsdLiteValidator::Model::matchOnce(const Particle& particle, const Children& children, MatchState& state, const std::string& path, int occurrence) const
+	{
+		if (particle.kind == Particle::Kind::Element)
+		{
+			if (state.position >= children.size() || localName(children[state.position]->getName()) != particle.name)
+			{
+				state.expected = "<" + particle.name + ">";
+				return false;
+			}
+
+			std::string elementPath = path + "/" + particle.name;
+			if (particle.maxOccurs != 1) { elementPath += "[" + std::to_string(occurrence + 1) + "]"; }
+
+			std::string error;
+			if (!validateElement(particle, *children[state.position], elementPath, error))
+			{
+				state.hardError = true;
+				state.error = error;
+				return false;
+			}
+
+			++state.position;
+			return true;
+		}
+
+		if (particle.kind == Particle::Kind::Sequence)
+		{
+			for (const Particle& part : particle.children)
+			{
+				if (!matchParticle(part, children, state, path)) { return false; }
+			}
+
+			return true;
+		}
+
+		// Choice: the first alternative that matches, preferring one that
+		// takes something over one that matches by taking nothing.
+		const std::size_t start = state.position;
+		bool matchedEmpty = false;
+
+		for (const Particle& alternative : particle.children)
+		{
+			state.position = start;
+			if (matchParticle(alternative, children, state, path))
+			{
+				if (state.position > start) { return true; }
+				matchedEmpty = true;
+			}
+			else if (state.hardError)
+			{
+				return false;
+			}
+		}
+
+		state.position = start;
+
+		if (!matchedEmpty)
+		{
+			std::vector<std::string> names;
+			startingNames(particle, names);
+
+			state.expected = "one of";
+			for (std::size_t i = 0; i < names.size() && i < 6; ++i) { state.expected += (i ? ", " : " ") + names[i]; }
+			if (names.size() > 6) { state.expected += ", ..."; }
+		}
+
+		return matchedEmpty;
+	}
+
+	// `particle`, repeated as often as its minOccurs/maxOccurs allow.
+	bool XsdLiteValidator::Model::matchParticle(const Particle& particle, const Children& children, MatchState& state, const std::string& path) const
+	{
+		int count = 0;
+
+		while (particle.maxOccurs == -1 || count < particle.maxOccurs)
+		{
+			const std::size_t before = state.position;
+
+			if (!matchOnce(particle, children, state, path, count))
+			{
+				if (state.hardError) { return false; }
+
+				// Whatever was tried and did not fit is put back; if it was
+				// only an optional repeat, that is fine.
+				state.position = before;
+				break;
+			}
+
+			++count;
+			if (state.position == before) { break; } // matched, but took nothing
+		}
+
+		if (count < particle.minOccurs)
+		{
+			return false;
+		}
+
+		state.expected.clear();
+		return true;
+	}
+
+	// ------------------------------------------------------------ the class
+	XsdLiteValidator::XsdLiteValidator() = default;
+	XsdLiteValidator::~XsdLiteValidator() = default;
 
 	bool XsdLiteValidator::loadSchema(const std::string& schemaFilename, XmlBackend backend)
 	{
@@ -171,86 +713,12 @@ namespace xge
 			return false;
 		}
 
-		std::unique_ptr<XmlNode> topElement = schemaRoot->getFirstChild();
+		model = std::make_unique<Model>();
 
-		while (topElement && localName(topElement->getName()) != "element")
+		if (!model->build(*schemaRoot, errorMessage))
 		{
-			topElement = topElement->getNextSibling();
-		}
-
-		if (!topElement)
-		{
-			errorMessage = "'" + schemaFilename + "' has no top-level xs:element";
-			return false;
-		}
-
-		return parseElement(*topElement, rootElement, errorMessage);
-	}
-
-	bool XsdLiteValidator::validateAttributes(const Element& element, const XmlNode& actual, const std::string& path) const
-	{
-		for (const Attribute& attribute : element.attributes)
-		{
-			const std::string value = actual.getAttribute(attribute.name);
-
-			// "" also means "missing" here (see XmlNode::getAttribute,
-			// xml_document.h) - every attribute this schema declares is a
-			// name, a number, or true/false, none of which has a legitimate
-			// empty-string value, so this is an adequate required check.
-			if (value.empty())
-			{
-				if (attribute.required)
-				{
-					errorMessage = path + ": missing required attribute '" + attribute.name + "'";
-					return false;
-				}
-
-				continue;
-			}
-
-			if (!typeMatches(attribute.type, value))
-			{
-				errorMessage = path + ": attribute '" + attribute.name + "' = \"" + value + "\" is not a valid " + attribute.type;
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	bool XsdLiteValidator::validateSequence(const std::vector<Element>& expected, std::unique_ptr<XmlNode> cursor, const std::string& path) const
-	{
-		for (const Element& element : expected)
-		{
-			const std::string elementPath = path + "/" + element.name;
-			int count = 0;
-
-			while (cursor && localName(cursor->getName()) == element.name)
-			{
-				if (!validateAttributes(element, *cursor, elementPath)) { return false; }
-
-				if (!element.children.empty() && !validateSequence(element.children, cursor->getFirstChild(), elementPath))
-				{
-					return false;
-				}
-
-				++count;
-				cursor = cursor->getNextSibling();
-
-				if (element.maxOccurs != -1 && count >= element.maxOccurs) { break; }
-			}
-
-			if (count < element.minOccurs)
-			{
-				errorMessage = path + ": expected at least " + std::to_string(element.minOccurs) +
-					" <" + element.name + "> element(s), found " + std::to_string(count);
-				return false;
-			}
-		}
-
-		if (cursor)
-		{
-			errorMessage = path + ": unexpected element <" + cursor->getName() + ">";
+			errorMessage = "'" + schemaFilename + "': " + errorMessage;
+			model.reset();
 			return false;
 		}
 
@@ -261,14 +729,19 @@ namespace xge
 	{
 		errorMessage.clear();
 
-		if (localName(root.getName()) != rootElement.name)
+		if (!model)
 		{
-			errorMessage = "expected root element <" + rootElement.name + ">, found <" + root.getName() + ">";
+			errorMessage = "no schema loaded";
 			return false;
 		}
 
-		return validateAttributes(rootElement, root, rootElement.name)
-			&& validateSequence(rootElement.children, root.getFirstChild(), rootElement.name);
+		if (localName(root.getName()) != model->root.name)
+		{
+			errorMessage = "expected root element <" + model->root.name + ">, found <" + root.getName() + ">";
+			return false;
+		}
+
+		return model->validateElement(model->root, root, model->root.name, errorMessage);
 	}
 
 	std::string XsdLiteValidator::getErrorMessage() const

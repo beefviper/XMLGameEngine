@@ -16,25 +16,26 @@
 
 namespace xge
 {
-	// A <condition> checked every frame its state is current, in one of two
-	// forms. Either: if any object matching filterClass/filterObject (same
-	// optional-either-or-both filtering as a collision's basic rule) has a
-	// variable named `variableName` that has reached `value`, `action` fires.
-	// Or, when `remaining` is set instead: if no more than that many of the
-	// matching objects are still in play (visible - die() hides an object),
-	// `action` fires; remaining="0" is "they are all gone". Or, with `atMost`
-	// in place of `value`: fires when the variable has fallen to that or
-	// below - lives="0" is a game over ("atmost" in the XML). Leaving both
-	// filters empty matches any object, same as an unfiltered collision rule.
+	// A <condition> checked every frame its state is current, in one of three
+	// forms, told apart by which test tag it holds. <atleast>: if any object
+	// matching filterClass/filterObject (same optional-either-or-both
+	// filtering as a collision rule) has a variable named `variableName` that
+	// has reached that value, the commands fire. <atmost>: the same, when the
+	// variable has fallen to that or below - lives 0 is a game over.
+	// <remaining>: if no more than that many of the matching objects are still
+	// in play (visible - die() hides an object), the commands fire;
+	// remaining 0 is "they are all gone". Leaving both filters empty matches
+	// any object, same as an unfiltered collision rule.
 	struct RawCondition
 	{
+		enum class Test { AtLeast, AtMost, Remaining };
+
 		std::string filterClass;
 		std::string filterObject;
 		std::string variableName;
-		float value{};
-		std::optional<float> remaining;
-		std::optional<float> atMost;
-		std::string action;
+		Test test{ Test::AtLeast };
+		RawValue threshold;
+		std::vector<RawCommand> commands;
 	};
 
 	struct Condition
@@ -53,7 +54,7 @@ namespace xge
 	public:
 		std::string name;
 		std::vector<std::string> show;
-		std::map<std::string, std::string> input;
+		std::map<std::string, std::vector<RawCommand>> input;
 		std::vector<RawCondition> conditions;
 
 		friend std::ostream& operator<<(std::ostream& o, RawState const& f);
