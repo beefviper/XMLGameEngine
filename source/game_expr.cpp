@@ -151,6 +151,8 @@ namespace xge
 					<< "here will collapse to just the padding\n";
 			}
 
+			const bool isGrid = gridData.max.x > 1 || gridData.max.y > 1;
+
 			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
 			{
 				for (auto gridY = 0; gridY < gridData.max.y; gridY++)
@@ -169,7 +171,13 @@ namespace xge
 						}
 					}
 
-					object.name = rawObject.name;
+					// A grid gets one name per cell (aliens.3.2 - column, row,
+					// from 1) so each cell can be found, hit and removed on
+					// its own; a plain object keeps the name it was given.
+					object.baseName = rawObject.name;
+					object.name = isGrid
+						? rawObject.name + "." + std::to_string(gridX + 1) + "." + std::to_string(gridY + 1)
+						: rawObject.name;
 					object.objClass = rawObject.objClass;
 					object.src = rawObject.src;
 

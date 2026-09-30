@@ -121,7 +121,16 @@ namespace xge
 		// it has a stick() rule for, even if it has stopped moving.
 		void keepStuckObjectInBounds(Object& object);
 
-		void checkObjectCollision(Object& a, Object& b);
+		// Whether a and b have anything to do about touching each other.
+		static bool canCollide(const Object& a, const Object& b) noexcept;
+
+		// Moves everything shown by its velocity for one frame, stopping at each
+		// touch that has a rule on the way to run it - see the definition.
+		void moveObjects(void);
+
+		// Runs both objects' rules for touching each other; edgeOfB is the edge
+		// of b that was hit.
+		void applyObjectCollision(Object& a, Object& b, Edge edgeOfB);
 
 		// Checked once per frame against the current state's <conditions>; the
 		// first one whose target variable has reached its threshold fires its

@@ -15,11 +15,7 @@ namespace xge
 			[&](const CmdBounce&) { bounceScreenEdge(object, edge); },
 			[&](const CmdStick&) { stick(object, edge); },
 			[&](const CmdReset&) { object.position = object.positionOriginal; },
-			[&](const CmdDie&)
-			{
-				object.collisionData.enabled = false;
-				object.isVisible = false;
-			},
+			[&](const CmdDie&) { die(object); },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
@@ -31,20 +27,7 @@ namespace xge
 	{
 		std::visit(overload{
 			[&](const CmdBounce&) { bounceOffEdge(object, edge); },
-			[&](const CmdDie&)
-			{
-				object.collisionData.enabled = false;
-				object.isVisible = false;
-
-				// Matches the original circleRectangleCollision: a circular
-				// object (the ball, a bullet) also gets stopped dead and parked
-				// off-screen on death; anything else just stops colliding.
-				if (object.shapeKind == ShapeKind::Circle)
-				{
-					object.velocity = {};
-					object.position = { -100.0f, -100.0f };
-				}
-			},
+			[&](const CmdDie&) { die(object); },
 			[&](const auto&) { /* stick/reset/move/inc/etc. aren't used for
 			                      object-object 'basic' collisions today; ignore. */ }
 		}, command);
@@ -92,6 +75,15 @@ namespace xge
 		}
 
 		return true;
+	}
+
+	// Out of play: it stops being drawn, moved and collided with. Everything
+	// else about it is left as it was, so whatever brings it back (fire()
+	// re-launching a bullet, reset()) starts from a known place.
+	void CommandExecutor::die(Object& object)
+	{
+		object.collisionData.enabled = false;
+		object.isVisible = false;
 	}
 
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge)

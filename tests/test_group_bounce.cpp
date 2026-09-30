@@ -32,7 +32,7 @@ namespace
 		std::set<float> xs;
 		for (const auto& object : game.getCurrentObjects())
 		{
-			if (object.name == "aliens")
+			if (object.baseName == "aliens")
 			{
 				xs.insert(object.position.x);
 			}
@@ -59,7 +59,7 @@ TEST_CASE("the invader block keeps its column spacing through every bounce", "[g
 	// Window::init() normally measures these; a Game built on its own has {0, 0}.
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.name == "aliens") { object.size = { kAlienWidth, 50.0f }; }
+		if (object.baseName == "aliens") { object.size = { kAlienWidth, 50.0f }; }
 		else if (object.name == "player") { object.size = { 50.0f, 50.0f }; }
 	}
 

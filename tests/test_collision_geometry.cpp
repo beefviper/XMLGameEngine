@@ -1,205 +1,186 @@
 // test_collision_geometry.cpp
 // XML Game Engine
 // author: beefviper
-// date: Sept 28, 2026
+// date: Sept 30, 2026
 //
-// CollisionDetector::rectangleRectangle/circleRectangle now read a real
-// xge::Object's own position/size fields directly (plain xge::Vector2f -
-// see object.h/window.h), no sf::Sprite required, so building one for this
-// test isn't strictly necessary anymore. This stays a dependency-free
-// numeric check of the same edge/sign math - copied from
-// CollisionDetector::rectangleRectangle/circleRectangle and
-// CommandExecutor::bounceOffEdge in source/collision_detector.cpp and
-// source/command_executor.cpp - kept in sync with that code and re-verified
-// here rather than re-derived by hand each time it changes. It only touches
-// SFML's header-only Vector2/Rect types, so it builds without linking SFML's
-// compiled libraries at all; a follow-up could instead construct a real
-// xge::Object and call CollisionDetector directly now that it no longer
-// needs a backend-built sprite to do so.
+// Catch2 tests for CollisionDetector's geometry, called directly on real
+// xge::Objects (no window or game needed): which edge is touched when two
+// shapes overlap, and - the point of sweep() - when, partway through a step,
+// two moving shapes first touch, including when the step is much bigger than
+// the thing being hit. (This file used to test a hand-copied version of the
+// overlap code against SFML types; it now tests the real thing.)
+
+#include "collision_detector.h"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include <SFML/System/Vector2.hpp>
-#include <SFML/Graphics/Rect.hpp>
-
-#include <algorithm>
-#include <cmath>
-#include <optional>
+using namespace xge;
+using Catch::Matchers::WithinAbs;
 
 namespace
 {
-	enum class Edge { Top, Bottom, Left, Right };
-
-	Edge opposite(Edge edge)
+	Object shape(ShapeKind kind, float x, float y, float width, float height)
 	{
-		switch (edge)
-		{
-		case Edge::Left: return Edge::Right;
-		case Edge::Right: return Edge::Left;
-		case Edge::Top: return Edge::Bottom;
-		case Edge::Bottom: return Edge::Top;
-		}
-		return edge;
+		Object object;
+		object.shapeKind = kind;
+		object.position = { x, y };
+		object.size = { width, height };
+		return object;
 	}
 
-	// --- copy of CollisionDetector::rectangleRectangle, taking raw bounds ---
-	std::optional<Edge> rectangleRectangle(sf::FloatRect boundsA, sf::FloatRect boundsB)
-	{
-		const float overlapLeft = (boundsA.position.x + boundsA.size.x) - boundsB.position.x;
-		const float overlapRight = (boundsB.position.x + boundsB.size.x) - boundsA.position.x;
-		const float overlapTop = (boundsA.position.y + boundsA.size.y) - boundsB.position.y;
-		const float overlapBottom = (boundsB.position.y + boundsB.size.y) - boundsA.position.y;
+	Object rectangle(float x, float y, float width, float height) { return shape(ShapeKind::Rectangle, x, y, width, height); }
+	Object circle(float x, float y, float diameter) { return shape(ShapeKind::Circle, x, y, diameter, diameter); }
 
-		if (overlapLeft <= 0 || overlapRight <= 0 || overlapTop <= 0 || overlapBottom <= 0)
-		{
-			return std::nullopt;
-		}
-
-		const float overlapX = std::min(overlapLeft, overlapRight);
-		const float overlapY = std::min(overlapTop, overlapBottom);
-
-		if (overlapX < overlapY)
-		{
-			return (overlapLeft < overlapRight) ? Edge::Left : Edge::Right;
-		}
-
-		return (overlapTop < overlapBottom) ? Edge::Top : Edge::Bottom;
-	}
-
-	// --- copy of CollisionDetector::circleRectangle, taking raw center/radius/rect ---
-	std::optional<Edge> circleRectangle(sf::Vector2f circleCenter, float circleRadius, sf::FloatRect rectBounds)
-	{
-		const auto midpoint = circleCenter;
-		const auto rectLeft = rectBounds.position.x;
-		const auto rectRight = rectLeft + rectBounds.size.x;
-		const auto rectTop = rectBounds.position.y;
-		const auto rectBottom = rectTop + rectBounds.size.y;
-
-		sf::Vector2f nearestPoint;
-		nearestPoint.x = std::clamp(midpoint.x, rectLeft, rectRight);
-		nearestPoint.y = std::clamp(midpoint.y, rectTop, rectBottom);
-
-		const auto rayToNearest = nearestPoint - midpoint;
-		const auto distance = std::sqrt(rayToNearest.x * rayToNearest.x + rayToNearest.y * rayToNearest.y);
-
-		auto overlap = circleRadius - distance;
-		if (std::isnan(overlap)) overlap = 0;
-		if (overlap <= 0) return std::nullopt;
-
-		if (midpoint.y > rectTop - midpoint.y && midpoint.y < rectBottom + midpoint.y && nearestPoint.x == rectLeft) return Edge::Left;
-		if (midpoint.y > rectTop - midpoint.y && midpoint.y < rectBottom + midpoint.y && nearestPoint.x == rectRight) return Edge::Right;
-		if (midpoint.x > rectLeft - midpoint.x && midpoint.x < rectRight + midpoint.x && nearestPoint.y == rectTop) return Edge::Top;
-		if (midpoint.x > rectLeft - midpoint.x && midpoint.x < rectRight + midpoint.x && nearestPoint.y == rectBottom) return Edge::Bottom;
-		return std::nullopt;
-	}
-
-	// applies bounceOffEdge's sign rule to a velocity, given a *self-relative* edge
-	sf::Vector2f bounceOffEdge(sf::Vector2f v, Edge edge)
-	{
-		switch (edge)
-		{
-		case Edge::Left:   v.x = std::abs(v.x); break;
-		case Edge::Right:  v.x = -std::abs(v.x); break;
-		case Edge::Top:    v.y = std::abs(v.y); break;
-		case Edge::Bottom: v.y = -std::abs(v.y); break;
-		}
-		return v;
-	}
+	const Vector2f still{ 0.0f, 0.0f };
 }
 
-TEST_CASE("rectangle approaching from the left hits the target's Left edge and bounces away", "[collision_geometry]")
+TEST_CASE("overlapping rectangles report the edge of the second one that was hit", "[collision_geometry]")
 {
-	// Rectangle A (moving right, vx=+3) approaches rectangle B from the left.
-	sf::FloatRect a({ 90.f, 0.f }, { 20.f, 20.f });   // right edge at 110
-	sf::FloatRect b({ 100.f, 0.f }, { 20.f, 20.f });  // left edge at 100 -> overlap of 10 on X, full 20 on Y
+	const Object target = rectangle(100, 0, 20, 20);
 
-	auto edgeOfB = rectangleRectangle(a, b);
-	REQUIRE(edgeOfB.has_value());
-	CHECK(*edgeOfB == Edge::Left);
+	CHECK(CollisionDetector::overlap(rectangle(90, 0, 20, 20), target) == Edge::Left);
+	CHECK(CollisionDetector::overlap(rectangle(110, 0, 20, 20), target) == Edge::Right);
+	CHECK(CollisionDetector::overlap(rectangle(100, -10, 20, 20), target) == Edge::Top);
+	CHECK(CollisionDetector::overlap(rectangle(100, 10, 20, 20), target) == Edge::Bottom);
 
-	sf::Vector2f va{ 3.f, 0.f };
-	CHECK(bounceOffEdge(va, opposite(*edgeOfB)).x < 0); // mover A bounces back leftward, away from B
-
-	// If B is ALSO moving (e.g. two bouncy objects), its own bounce correctly
-	// reflects using its own current velocity...
-	sf::Vector2f vbMoving{ -1.f, 0.f };
-	CHECK(bounceOffEdge(vbMoving, *edgeOfB).x > 0); // a *moving* target B reflects rightward, away from A
-
-	// ...but bounceOffEdge reflects existing velocity, it doesn't impart a
-	// new one: a target sitting at rest gets no impulse from being hit. None
-	// of the 4 sample games rely on a stationary object bouncing (only the
-	// always-moving ball/bullet declare 'bounce'), so this is a known,
-	// documented limitation rather than a bug to fix here.
-	sf::Vector2f vbAtRest{ 0.f, 0.f };
-	CHECK(bounceOffEdge(vbAtRest, *edgeOfB).x == 0.f);
+	CHECK_FALSE(CollisionDetector::overlap(rectangle(0, 0, 10, 10), target).has_value());
+	CHECK_FALSE(CollisionDetector::overlap(rectangle(80, 0, 20, 20), target).has_value()); // only touching
 }
 
-TEST_CASE("rectangle approaching from the right hits the target's Right edge and bounces away", "[collision_geometry]")
+TEST_CASE("a circle reports the edge of the rectangle it is against", "[collision_geometry]")
 {
-	sf::FloatRect a({ 110.f, 0.f }, { 20.f, 20.f });  // left edge at 110
-	sf::FloatRect b({ 100.f, 0.f }, { 20.f, 20.f });  // right edge at 120 -> overlap of 10 on X
+	const Object paddle = rectangle(100, 30, 20, 40);
 
-	auto edgeOfB = rectangleRectangle(a, b);
-	REQUIRE(edgeOfB.has_value());
-	CHECK(*edgeOfB == Edge::Right);
+	CHECK(CollisionDetector::overlap(circle(85, 40, 20), paddle) == Edge::Left);     // centre (95, 50)
+	CHECK(CollisionDetector::overlap(circle(115, 40, 20), paddle) == Edge::Right);   // centre (125, 50)
+	CHECK(CollisionDetector::overlap(circle(100, 15, 20), paddle) == Edge::Top);     // centre (110, 25)
+	CHECK(CollisionDetector::overlap(circle(100, 60, 20), paddle) == Edge::Bottom);  // centre (110, 70)
 
-	sf::Vector2f va{ -3.f, 0.f };
-	CHECK(bounceOffEdge(va, opposite(*edgeOfB)).x > 0); // mover A bounces back rightward, away from B
+	// The same, with the circle as the second object: the answer is an edge of the circle.
+	CHECK(CollisionDetector::overlap(paddle, circle(85, 40, 20)) == Edge::Right);
+
+	CHECK_FALSE(CollisionDetector::overlap(circle(0, 0, 20), paddle).has_value());
 }
 
-TEST_CASE("rectangle approaching from above hits the target's Top edge and bounces away", "[collision_geometry]")
+TEST_CASE("a circle whose centre is inside the rectangle still reports an edge", "[collision_geometry]")
 {
-	sf::FloatRect a({ 0.f, 90.f }, { 20.f, 20.f });   // bottom edge at 110
-	sf::FloatRect b({ 0.f, 100.f }, { 20.f, 20.f });  // top edge at 100
+	const Object alien = rectangle(100, 100, 50, 50);
 
-	auto edgeOfB = rectangleRectangle(a, b);
-	REQUIRE(edgeOfB.has_value());
-	CHECK(*edgeOfB == Edge::Top);
-
-	sf::Vector2f va{ 0.f, 3.f };
-	CHECK(bounceOffEdge(va, opposite(*edgeOfB)).y < 0); // mover A bounces back upward, away from B
+	CHECK(CollisionDetector::overlap(circle(102, 115, 8), alien) == Edge::Left);
+	CHECK(CollisionDetector::overlap(circle(138, 115, 8), alien) == Edge::Right);
+	CHECK(CollisionDetector::overlap(circle(120, 102, 8), alien) == Edge::Top);
+	CHECK(CollisionDetector::overlap(circle(120, 138, 8), alien) == Edge::Bottom);
 }
 
-TEST_CASE("far-apart rectangles don't collide", "[collision_geometry]")
+TEST_CASE("a fast rectangle cannot pass through a thin one", "[sweep]")
 {
-	sf::FloatRect a({ 0.f, 0.f }, { 10.f, 10.f });
-	sf::FloatRect b({ 100.f, 100.f }, { 10.f, 10.f });
+	// 4 wide, 100 px a step, at a wall 2 wide that is 46 px away: the end of the
+	// step is well past the wall, so only the path in between shows the hit.
+	const Object mover = rectangle(0, 0, 4, 4);
+	const Object wall = rectangle(50, -10, 2, 30);
 
-	CHECK_FALSE(rectangleRectangle(a, b).has_value());
+	REQUIRE_FALSE(CollisionDetector::overlap(mover, wall).has_value());
+
+	const auto hit = CollisionDetector::sweep(mover, { 100, 0 }, wall, still);
+	REQUIRE(hit.has_value());
+	CHECK(hit->edgeOfSecond == Edge::Left);
+	CHECK_THAT(hit->time, WithinAbs(0.46f, 1e-5f));
 }
 
-TEST_CASE("a circle approaching from the left hits the target's Left edge and bounces away", "[collision_geometry]")
+TEST_CASE("sweep finds the edge that was actually crossed, from every direction", "[sweep]")
 {
-	// Ball radius 10, centered at (95, 50); paddle spans x[100,120] y[30,70].
-	sf::Vector2f ballCenter{ 95.f, 50.f };
-	float radius = 10.f;
-	sf::FloatRect paddle({ 100.f, 30.f }, { 20.f, 40.f });
+	const Object target = rectangle(100, 100, 20, 20);
 
-	auto edgeOfPaddle = circleRectangle(ballCenter, radius, paddle);
-	REQUIRE(edgeOfPaddle.has_value());
-	CHECK(*edgeOfPaddle == Edge::Left);
-
-	sf::Vector2f ballVel{ 5.f, 0.f };
-	CHECK(bounceOffEdge(ballVel, opposite(*edgeOfPaddle)).x < 0); // matches original pong behaviour
+	CHECK(CollisionDetector::sweep(rectangle(40, 100, 10, 20), { 100, 0 }, target, still)->edgeOfSecond == Edge::Left);
+	CHECK(CollisionDetector::sweep(rectangle(200, 100, 10, 20), { -200, 0 }, target, still)->edgeOfSecond == Edge::Right);
+	CHECK(CollisionDetector::sweep(rectangle(100, 40, 20, 10), { 0, 100 }, target, still)->edgeOfSecond == Edge::Top);
+	CHECK(CollisionDetector::sweep(rectangle(100, 200, 20, 10), { 0, -200 }, target, still)->edgeOfSecond == Edge::Bottom);
 }
 
-TEST_CASE("a circle approaching from the right hits the target's Right edge and bounces away", "[collision_geometry]")
+TEST_CASE("sweep does not report paths that miss or stop short", "[sweep]")
 {
-	// Mirrors the b-is-circle path in Game::checkObjectCollision, which
-	// computes circleRectangle(circle, rect) then inverts the edge for 'a'.
-	sf::Vector2f ballCenter{ 125.f, 50.f };
-	float radius = 10.f;
-	sf::FloatRect paddle({ 100.f, 30.f }, { 20.f, 40.f });
+	const Object target = rectangle(100, 100, 20, 20);
 
-	auto edgeOfPaddle = circleRectangle(ballCenter, radius, paddle);
-	REQUIRE(edgeOfPaddle.has_value());
-	CHECK(*edgeOfPaddle == Edge::Right);
+	CHECK_FALSE(CollisionDetector::sweep(rectangle(0, 0, 10, 10), { 200, 0 }, target, still).has_value());   // passes above it
+	CHECK_FALSE(CollisionDetector::sweep(rectangle(0, 100, 10, 20), { 50, 0 }, target, still).has_value());  // ends short of it
+	CHECK_FALSE(CollisionDetector::sweep(rectangle(0, 100, 10, 20), { 0, 0 }, target, still).has_value());   // not moving
+	CHECK_FALSE(CollisionDetector::sweep(rectangle(0, 100, 10, 20), { -50, 0 }, target, still).has_value()); // moving away
+}
 
-	// edgeOfA (from circleRectangle(ball, paddle)) is "edge of paddle" =
-	// Right; the ball's own self-relative edge is opposite(Right) = Left.
-	Edge edgeOfB = opposite(*edgeOfPaddle);
-	CHECK(edgeOfB == Edge::Left);
+TEST_CASE("touching and moving apart is not a hit; touching and moving in is", "[sweep]")
+{
+	const Object target = rectangle(100, 0, 20, 20);
+	const Object touching = rectangle(90, 0, 10, 20); // its right side is exactly on target's left side
 
-	sf::Vector2f ballVel{ -5.f, 0.f };
-	CHECK(bounceOffEdge(ballVel, edgeOfB).x > 0);
+	CHECK_FALSE(CollisionDetector::sweep(touching, { -5, 0 }, target, still).has_value());
+
+	const auto in = CollisionDetector::sweep(touching, { 5, 0 }, target, still);
+	REQUIRE(in.has_value());
+	CHECK(in->time == 0.0f);
+	CHECK(in->edgeOfSecond == Edge::Left);
+}
+
+TEST_CASE("objects that already overlap are a hit at time zero", "[sweep]")
+{
+	const auto hit = CollisionDetector::sweep(rectangle(90, 0, 20, 20), { 3, 0 }, rectangle(100, 0, 20, 20), still);
+	REQUIRE(hit.has_value());
+	CHECK(hit->time == 0.0f);
+	CHECK(hit->edgeOfSecond == Edge::Left);
+}
+
+TEST_CASE("sweep uses both objects' motion", "[sweep]")
+{
+	// Nothing moves fast enough alone, but they close on each other: 40 apart,
+	// 25 and 25 towards each other, meet after 40 / 50 of the step.
+	const auto hit = CollisionDetector::sweep(rectangle(0, 0, 10, 10), { 25, 0 }, rectangle(50, 0, 10, 10), { -25, 0 });
+	REQUIRE(hit.has_value());
+	CHECK_THAT(hit->time, WithinAbs(0.8f, 1e-5f));
+	CHECK(hit->edgeOfSecond == Edge::Left);
+}
+
+TEST_CASE("a fast small circle cannot pass through an alien", "[sweep]")
+{
+	// A bullet 8 px across at 60 px a step against a 50 px alien: its end
+	// position is above the alien, so an overlap check sees nothing.
+	const Object bullet = circle(120, 300, 8);
+	const Object alien = rectangle(100, 200, 50, 50);
+
+	REQUIRE_FALSE(CollisionDetector::overlap(bullet, alien).has_value());
+	REQUIRE_FALSE(CollisionDetector::overlap(circle(120, 300 - 120, 8), alien).has_value());
+
+	const auto hit = CollisionDetector::sweep(bullet, { 0, -120 }, alien, still);
+	REQUIRE(hit.has_value());
+	CHECK(hit->edgeOfSecond == Edge::Bottom);
+	CHECK_THAT(hit->time, WithinAbs((300.0f - 250.0f) / 120.0f, 1e-5f));
+}
+
+TEST_CASE("a circle is swept the same whichever side of the pair it is on", "[sweep]")
+{
+	const Object bullet = circle(120, 300, 8);
+	const Object alien = rectangle(100, 200, 50, 50);
+
+	// alien first, bullet second: the answer is an edge of the bullet.
+	const auto hit = CollisionDetector::sweep(alien, { 0, 120 }, bullet, still);
+	REQUIRE(hit.has_value());
+	CHECK(hit->edgeOfSecond == Edge::Top); // the alien came down onto the bullet's top
+	CHECK_THAT(hit->time, WithinAbs((300.0f - 250.0f) / 120.0f, 1e-5f));
+}
+
+TEST_CASE("a circle passing a corner only hits it if it comes close enough", "[sweep]")
+{
+	const Object block = rectangle(100, 100, 50, 50);
+
+	// Centre travelling along y = 96 (radius 5) is 4 from the top-left corner's
+	// height: it clips the block. Along y = 90 it is clear.
+	const auto clip = CollisionDetector::sweep(circle(45, 91, 10), { 200, 0 }, block, still);
+	REQUIRE(clip.has_value());
+	CHECK(clip->edgeOfSecond == Edge::Top); // it lands mostly on top of the corner
+	CHECK_FALSE(CollisionDetector::sweep(circle(45, 85, 10), { 200, 0 }, block, still).has_value());
+
+	// Diagonally past the corner, inside the box that is the block grown by the
+	// radius but more than a radius from the corner itself: a miss. Closer in,
+	// a hit.
+	CHECK_FALSE(CollisionDetector::sweep(circle(55, 126, 10), { 100, -100 }, block, still).has_value());
+	CHECK(CollisionDetector::sweep(circle(55, 130, 10), { 100, -100 }, block, still).has_value());
 }

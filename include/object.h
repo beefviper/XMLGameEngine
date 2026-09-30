@@ -112,7 +112,18 @@ namespace xge
 
 	struct Object
 	{
+		// What this object is called. Unique: a grid() gives each of its cells
+		// its own name, the object's name followed by the cell's column and row,
+		// counting from 1 - a grid() called aliens has aliens.1.1, aliens.2.1,
+		// ... aliens.11.5. Anything else is just the name from the XML.
 		std::string name;
+
+		// The name in the XML this object came from: "aliens" for every cell of
+		// the grid above, and the same as `name` for an object that is not a
+		// grid. What a state's <show>, a rule's or condition's object=, and
+		// reset('...') refer to, so they can still mean the whole grid at once;
+		// a cell can also be named on its own (aliens.3.2).
+		std::string baseName;
 		std::string objClass;
 		std::string src;
 		bool isVisible{ true };

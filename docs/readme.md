@@ -111,7 +111,7 @@ Attribute values that are expressions are evaluated by exprtk at load time. Ordi
 |---|---|---|
 | `bounce()` | collision | Reverses velocity away from the touched edge |
 | `stick()` | collision | Clamps the object inside the screen edge it touched and stops only the velocity heading into that edge; the other axis keeps going, so an object pressed against the bottom wall still slides left or right. Re-applied after the frame's move, so a stuck object never ends a frame outside the screen |
-| `die()` | collision | Disables the object's collisions and hides it (a circular object is also stopped and parked off-screen) |
+| `die()` | collision | Disables the object's collisions and hides it; it stops moving and being drawn until something brings it back (`fire()` re-launching a bullet, `reset()`) |
 | `reset()` | collision | Puts the object back at its starting position |
 | `reset()` | state input or condition | Full game reset: every object's position, velocity and variables go back to their starting values, and the state stack collapses to the first state |
 | `reset('name')` | state input or condition | Resets that one object's position, velocity and variables |
@@ -140,13 +140,14 @@ Each object has `<collision>` rules. A rule's `action` is a command chain. There
 - **Screen edge:** `edge="left"`, `"right"`, `"top"`, `"bottom"`, plus the groupings `"vertical"` (top and bottom), `"horizontal"` (left and right) and `"all"`. Several rules that touch the same edge all run.
 - **Object against object:** name what the rule applies to with `class="..."` (a kind of other object, matched against that object's `class` attribute) and/or `object="..."` (one named object), for example `<collision class="bricks" action="die()"/>`. A rule that matches anything is written `basic="basic"`, on its own; that is a placeholder for the one general rule, not a filter (the loader currently also accepts it beside `class` or `object`, but that is not intended). A `<collision>` with `edge` is always a screen-edge rule.
 
-Detection (pure geometry, `CollisionDetector`) is kept apart from response (`CommandExecutor`). Two rectangles use an axis-aligned overlap test; if either is a circle, the circle's center is compared with the nearest point on the rectangle. Both return which edge was touched, and each side of the pair then sees the edge from its own point of view.
+Detection (pure geometry, `CollisionDetector`) is kept apart from response (`CommandExecutor`). Object-against-object collisions are **swept**: each object moves along its own path for the frame, and the detector finds the moment two of them first touch (rectangles as boxes, a circle against the other object's box with rounded corners), so a small or fast object cannot jump over a thin one between frames. The earliest touch in the whole frame is handled first: everything moves up to that moment, the pair's rules run, and the rest of the frame is played with whatever velocities they left, so a bounce spends the remaining part of the frame heading away. Each pair reacts at most once per frame. The detector reports which edge of the other object was touched, and each side of the pair then sees the edge from its own point of view. Screen edges are still checked by position, before the move.
 
 Rules that apply:
 
 - Only objects that are **shown** in the current state and have `enabled="true"` take part.
-- A pair is skipped unless at least one of the two is moving.
-- `group="true"` gives all cells of a `grid()` object a shared group number. Group members never collide with each other, `move.*` in a collision moves the whole group, and a group hitting the left or right screen edge with `bounce()` moves the whole block (this is how the invaders march).
+- A pair is skipped unless at least one of the two is moving, and unless one of them has a rule that answers to the other (its `class`/`object`, or `basic="basic"`).
+- `group="true"` gives all cells of a `grid()` object a shared group number. Group members never collide with each other, `move.*` in a collision moves the whole group, and a group hitting the left or right screen edge with `bounce()` moves the whole block (this is how the invaders march). Being in a group changes none of the geometry: every cell is swept on its own, so a bullet only ever meets the cells that are still alive, and there is no bounding box around the block.
+- Every cell of a `grid()` is its own object, named after the grid with its column and row counted from 1: a grid called `aliens` has `aliens.1.1`, `aliens.2.1`, ... `aliens.11.5`. Names of the whole grid still work where a group is meant: `<show object="aliens"/>`, a rule or condition `object="aliens"`, `reset('aliens')`; a cell can be named on its own (`object="aliens.3.2"`).
 
 ## Conditions
 
@@ -186,7 +187,7 @@ Checked once per frame while the state is current. It fires when any object matc
 | `engine.cpp` | Frame loop and key handling |
 | `object.h`, `states.h` | Data model |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests: collision geometry, command parsing, conditions, input resolution, `stick()`, collision rules, group bounce, size expressions, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
+| `tests/` | Catch2 tests: collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, group bounce, size expressions, engine key handling, object variables (opt-in with `BUILD_TESTING`) |
 
 ## Known limitations
 
@@ -194,9 +195,8 @@ Checked once per frame while the state is current. It fires when any object matc
 - An object's velocity and collisions belong to the object, not to a state: any state that shows it lets it move. There is no way to show the Space Invaders aliens standing still behind the menu and have them march only in `playing`; they start marching as soon as they are shown. See [designs/09](designs/09-states-and-screens.md).
 - An object's own `<variable>` named `width` or `height` shadows its measured size (`objectName.width` then reads the variable). A non-colliding spelling is under consideration; see design note 07.
 - A text or image placed with `objectName.width` / `objectName.height` is re-placed only when the size of an object it names changes, so it is not re-centered after it has moved on its own, and other expressions (velocity, variables) see those sizes as 0 for unmeasured text and images.
-- Object names need not be unique: every cell of a `grid()` shares the grid object's name, so a single brick cannot be addressed.
 - Movement is in pixels per frame with no acceleration and no time step.
-- `CollisionDetector::circleRectangle` picks the touched edge with conditions that compare a coordinate against a rectangle edge minus that same coordinate (for example `midpoint.y > rectTop - midpoint.y`), which does not look geometrically meaningful; it happens to work for the shipped games but has not been proven correct.
+- Only the object-against-object test is swept. A screen edge is still checked by position before the move, so an object that moves more than a whole window's width in one frame is not caught by it; rotation and acceleration are not modeled. A shape that is not a rectangle or circle (text, image) is treated as its bounding box.
 - Function-call syntax inside attribute strings (`shape.circle(...)`, `bounce()`) hides structure from XSD and XSLT; the design notes discuss replacing it.
 - Expressions and verbs inside attribute strings are not checked by the schema; a typo in one is a runtime error (the engine reports it and exits), not a validation error.
 - The root `readme.md` still describes an earlier alpha (SFML/Xerces/exprtk only, collisions/scoring/win condition "missing"); this document is the current description.

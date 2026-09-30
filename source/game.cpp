@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <stdexcept>
 #include <variant>
 
 namespace xge
@@ -31,7 +32,7 @@ namespace xge
 		{
 			if (object.sizeKnown && game_expr::sizeNeedsBackend(object.shapeKind))
 			{
-				expr.setObjectSize(object.name, object.size);
+				expr.setObjectSize(object.baseName, object.size);
 			}
 		}
 
@@ -49,7 +50,7 @@ namespace xge
 			for (const auto& dependency : object.sizeDependencies)
 			{
 				const auto measured = std::find_if(objects.begin(), objects.end(),
-					[&](const Object& other) { return other.name == dependency && other.sizeKnown; });
+					[&](const Object& other) { return other.baseName == dependency && other.sizeKnown; });
 				if (measured == objects.end())
 				{
 					allMeasured = false;
@@ -64,7 +65,7 @@ namespace xge
 			}
 
 			const auto rawObject = std::find_if(rawObjects.begin(), rawObjects.end(),
-				[&](const RawObject& raw) { return raw.name == object.name; });
+				[&](const RawObject& raw) { return raw.name == object.baseName; });
 			if (rawObject == rawObjects.end())
 			{
 				continue;
@@ -95,45 +96,19 @@ namespace xge
 			}
 		}
 
-		// Object-object checks: every unordered pair is looked at once. A
-		// simple bounding-box test is enough for two rectangles; when either
-		// side is a circle (the ball, a bullet) checkObjectCollision looks
-		// closer to make sure it's actually touching, not just its bounding
-		// box overlapping.
-		for (std::size_t i = 0; i < currentObjects.size(); ++i)
-		{
-			if (!isShown(currentObjects[i]))
-			{
-				continue;
-			}
+		// Movement and object-against-object collisions are one job, so that
+		// a fast or small object cannot jump over a thin one between frames.
+		moveObjects();
 
-			for (std::size_t j = i + 1; j < currentObjects.size(); ++j)
-			{
-				if (!isShown(currentObjects[j]))
-				{
-					continue;
-				}
-
-				checkObjectCollision(currentObjects[i], currentObjects[j]);
-			}
-		}
-
-		// TODO: currently only have position and velocity, will probably need acceleration too
 		for (auto& object : currentObjects)
 		{
-			if (isShown(object)) // TODO: at some point you might wanna collide with invisible objects
+			// The edge checks above run before the move, and only for an object
+			// that is moving, so on their own they let a stick()ed object end the
+			// frame poking out past the wall (and stay there once it stopped
+			// moving).
+			if (isShown(object) && object.collisionData.enabled)
 			{
-				object.position.x += object.velocity.x;
-				object.position.y += object.velocity.y;
-
-				// The edge checks above run before this move, and only for
-				// an object that is moving, so on their own they let a
-				// stick()ed object end the frame poking out past the wall
-				// (and stay there once it stopped moving).
-				if (object.collisionData.enabled)
-				{
-					keepStuckObjectInBounds(object);
-				}
+				keepStuckObjectInBounds(object);
 			}
 		}
 
@@ -179,7 +154,7 @@ namespace xge
 
 		for (auto& shown : currentState.top().show)
 		{
-			if (shown == object.name)
+			if (shown == object.name || shown == object.baseName)
 			{
 				result = true;
 			}
@@ -189,14 +164,27 @@ namespace xge
 
 	Object& Game::getObject(const std::string& name)
 	{
-		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
-		return *result;
+		Object* object = tryGetObject(name);
+		if (!object)
+		{
+			throw std::out_of_range("no object named '" + name + "'");
+		}
+		return *object;
 	}
 
+	// An exact name (aliens.3.2) finds that one object; the name from the XML
+	// (aliens) finds the first object made from it, which for anything that is
+	// not a grid is the object itself.
 	Object* Game::tryGetObject(const std::string& name) noexcept
 	{
-		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
-		return (result == std::end(objects)) ? nullptr : &(*result);
+		const auto exact = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.name == name; });
+		if (exact != std::end(objects))
+		{
+			return &(*exact);
+		}
+
+		const auto first = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.baseName == name; });
+		return (first == std::end(objects)) ? nullptr : &(*first);
 	}
 
 	float Game::getVariable(const std::string& name)
@@ -354,7 +342,15 @@ namespace xge
 			return;
 		}
 
-		resetObjectState(*object);
+		// A name from the XML (aliens) means every object made from it - the
+		// whole grid - and an exact one (aliens.3.2) just that one.
+		for (auto& candidate : objects)
+		{
+			if (candidate.name == name || candidate.baseName == name)
+			{
+				resetObjectState(candidate);
+			}
+		}
 
 		// Refresh every text display bound to one of this object's variables
 		// (same notify pattern as incrementText above), so e.g. a HUD showing
@@ -464,7 +460,7 @@ namespace xge
 		bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Object& candidate)
 		{
 			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
-			if (!filterObject.empty() && filterObject != candidate.name) { return false; }
+			if (!filterObject.empty() && filterObject != candidate.name && filterObject != candidate.baseName) { return false; }
 			return true;
 		}
 
@@ -508,61 +504,136 @@ namespace xge
 		}
 	}
 
-	void Game::checkObjectCollision(Object& a, Object& b)
+	// Whether a and b could do anything about touching: both are in play, they
+	// are not members of the same group (the invader block never collides with
+	// itself), and at least one has a rule that answers to the other.
+	bool Game::canCollide(const Object& a, const Object& b) noexcept
 	{
 		if (!a.collisionData.enabled || !b.collisionData.enabled)
 		{
-			return;
+			return false;
 		}
 
-		// Objects rigidly moving together as a group (e.g. the invader block
-		// in spaceinvaders) never collide with each other.
 		if (a.collisionData.group != 0 && a.collisionData.group == b.collisionData.group)
 		{
-			return;
+			return false;
 		}
 
-		// At least one side has to have moved for there to be anything new to
-		// detect - two stationary objects can't have just started touching.
-		const bool aMoved = (a.velocity.x != 0 || a.velocity.y != 0);
-		const bool bMoved = (b.velocity.x != 0 || b.velocity.y != 0);
-		if (!aMoved && !bMoved)
+		const auto answers = [](const Object& self, const Object& other)
 		{
-			return;
+			return std::any_of(self.collisionData.basic.begin(), self.collisionData.basic.end(),
+				[&](const CollisionRule& rule) { return collisionRuleMatches(rule, other); });
+		};
+
+		return answers(a, b) || answers(b, a);
+	}
+
+	// Plays one frame of movement. Every object that is shown moves by its
+	// velocity, but not in one jump: each pair of objects that has a rule for
+	// touching is swept along its own path (CollisionDetector::sweep), the
+	// earliest touch anywhere is found, everything is moved up to that moment,
+	// that pair's rules run, and the rest of the frame carries on from there
+	// with whatever velocities the rules left behind - so a ball that hits a
+	// brick a third of the way through its move spends the other two thirds
+	// heading back the way it came. Each object is swept by itself; a group
+	// has no bounding box of its own, so when most of the invaders are gone
+	// only the ones left are tested.
+	void Game::moveObjects(void)
+	{
+		auto& all = getCurrentObjects();
+
+		struct Pair
+		{
+			Object* first;
+			Object* second;
+			bool handled;
+		};
+
+		std::vector<Pair> pairs;
+		for (std::size_t i = 0; i < all.size(); ++i)
+		{
+			if (!isShown(all[i]))
+			{
+				continue;
+			}
+
+			for (std::size_t j = i + 1; j < all.size(); ++j)
+			{
+				if (isShown(all[j]) && canCollide(all[i], all[j]))
+				{
+					pairs.push_back({ &all[i], &all[j], false });
+				}
+			}
 		}
 
-		// A plain bounding-box test is exact for two rectangles; when either
-		// side is a circle, look closer. Either way this comes back as
-		// "the edge of b that was touched" (see the comment on CollisionDetector).
-		std::optional<Edge> edgeOfB;
-		if (a.shapeKind == ShapeKind::Circle)
+		const auto isMoving = [](const Object& object) { return object.velocity.x != 0 || object.velocity.y != 0; };
+		const auto advance = [&](float fraction)
 		{
-			edgeOfB = CollisionDetector::circleRectangle(a, b);
-		}
-		else if (b.shapeKind == ShapeKind::Circle)
+			for (auto& object : all)
+			{
+				if (isShown(object)) // TODO: at some point you might wanna collide with invisible objects
+				{
+					object.position += object.velocity * fraction;
+				}
+			}
+		};
+
+		// Each pair reacts at most once a frame, which also bounds the loop;
+		// the count is a second guard.
+		float played = 0.0f;
+		for (std::size_t reactions = 0; reactions <= pairs.size() && played < 1.0f; ++reactions)
 		{
-			const auto edgeOfA = CollisionDetector::circleRectangle(b, a);
-			edgeOfB = edgeOfA ? std::optional<Edge>(opposite(*edgeOfA)) : std::nullopt;
-		}
-		else
-		{
-			edgeOfB = CollisionDetector::rectangleRectangle(a, b);
+			const float left = 1.0f - played;
+
+			Pair* next = nullptr;
+			CollisionDetector::SweepHit nextHit;
+
+			for (auto& pair : pairs)
+			{
+				Object& a = *pair.first;
+				Object& b = *pair.second;
+
+				// Anything already handled, or taken out of play by an earlier
+				// reaction this frame (a bullet that just died), sits out.
+				if (pair.handled || !isShown(a) || !isShown(b) || !canCollide(a, b) || (!isMoving(a) && !isMoving(b)))
+				{
+					continue;
+				}
+
+				const auto hit = CollisionDetector::sweep(a, a.velocity * left, b, b.velocity * left);
+				if (hit && (!next || hit->time < nextHit.time))
+				{
+					next = &pair;
+					nextHit = *hit;
+				}
+			}
+
+			if (!next)
+			{
+				break;
+			}
+
+			const float step = nextHit.time * left;
+			advance(step);
+			played += step;
+			next->handled = true;
+			applyObjectCollision(*next->first, *next->second, nextHit.edgeOfSecond);
 		}
 
-		if (!edgeOfB)
-		{
-			return;
-		}
+		advance(1.0f - played);
+	}
 
-		// edgeOfB is self-relative for b already; a's own self-relative
-		// touched edge is the opposite side.
+	// edgeOfB is the edge of b that was touched, which is already b's own side
+	// of it; a's own touched edge is the opposite one.
+	void Game::applyObjectCollision(Object& a, Object& b, Edge edgeOfB)
+	{
 		CommandExecutor executor(*this);
 		for (const auto& rule : a.collisionData.basic)
 		{
 			if (!collisionRuleMatches(rule, b)) { continue; }
 			for (const auto& command : rule.commands)
 			{
-				executor.executeObjectCollision(command, a, opposite(*edgeOfB));
+				executor.executeObjectCollision(command, a, opposite(edgeOfB));
 			}
 		}
 		for (const auto& rule : b.collisionData.basic)
@@ -570,7 +641,7 @@ namespace xge
 			if (!collisionRuleMatches(rule, a)) { continue; }
 			for (const auto& command : rule.commands)
 			{
-				executor.executeObjectCollision(command, b, *edgeOfB);
+				executor.executeObjectCollision(command, b, edgeOfB);
 			}
 		}
 	}

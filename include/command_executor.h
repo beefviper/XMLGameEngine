@@ -27,14 +27,11 @@ namespace xge
 		// CollisionDetector::touchesScreenEdge.
 		void executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
 
-		// object.collisionData.basic, driven by Game::checkObjectCollision.
+		// object.collisionData.basic, driven by Game::applyObjectCollision.
 		// `edge` must already be self-relative to `object` (the edge of
 		// *this* object that was touched) - see the comment on
 		// CollisionDetector for why that's not simply the detector's raw
-		// result. Only affects `die` differently depending on shape: a
-		// circular object (the ball, a bullet) additionally halts and parks
-		// off-screen, matching the original circleRectangleCollision;
-		// anything else just stops colliding.
+		// result.
 		void executeObjectCollision(const Command& command, Object& object, Edge edge);
 
 		// A command bound to a key in the current State's <input> list: push or
@@ -55,6 +52,7 @@ namespace xge
 	private:
 		Game& game;
 
+		void die(Object& object);
 		void bounceScreenEdge(Object& object, Edge edge);
 		void bounceOffEdge(Object& object, Edge edge);
 		void stick(Object& object, Edge edge);

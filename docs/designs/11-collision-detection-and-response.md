@@ -1,6 +1,6 @@
 # 11. Collision detection and response
 
-**Status:** implemented (edge-based, with known rough spots)
+**Status:** implemented (swept object-against-object collision, edge-based screen collision; rough spots listed)
 
 ## Decision
 
@@ -17,18 +17,20 @@ The declarative form of the idea: the XML does not spell out an if-the-ball-touc
 ## Current algorithm
 
 - **Screen edges:** an object touches an edge when its position crosses the window bound (accounting for its size).
-- **Two rectangles:** axis-aligned overlap; the edge reported is the one on the axis with the smaller overlap.
-- **Circle and rectangle:** compare the circle's center with the nearest point on the rectangle and report an edge.
-- Each pair is tested once per frame, only if at least one moved. The detector reports which edge of B was hit by A; each side of the pair then converts that to its own point of view.
-- Movement is `position += velocity` once per frame, after collisions.
+- **Static overlap** (`overlap`, `rectangleRectangle`, `circleRectangle`): two rectangles use axis-aligned overlap and report the edge on the axis with the smaller overlap; a circle uses the distance from its centre to the nearest point of the rectangle, reports the side it is furthest past, and for a centre inside the rectangle the nearest side. Used for objects that already overlap when a frame starts (a hit at time 0).
+- **Swept** (`CollisionDetector::sweep`): the two objects' motions over the frame are reduced to one by holding B still and moving A by the difference. Rectangle against rectangle: A's top-left corner against B grown by A's size, entering by the slab method. Circle against rectangle: the circle's centre against the rectangle grown by the radius, which is exact along the flat sides; if it enters beside a corner, the corner is solved as a ray against a circle of that radius, which gives the rounded corner and a time. It returns the time (0 to 1 of the frame) and the edge of B that was hit. Touching and moving apart is not a hit.
+- **Frame loop** (`Game::moveObjects`): the pairs worth testing are those where one object has a rule that answers to the other (class/object or `basic`), neither is a group-mate of the other, and one is moving. Each round, every pair is swept for the time left in the frame; the earliest hit anywhere wins, all shown objects advance to that moment, that pair's rules run, and the round repeats for the time that remains, with whatever velocities the rules left. A pair reacts at most once per frame, which bounds the loop and also stops a bounce from immediately re-triggering. With no hits, every object simply moves by its velocity once, as before.
+- **Each object is swept on its own.** Groups exist for behaviour (the block marches and turns together) and never for geometry; there is no bounding box around a group, so as aliens die the remaining ones are the only ones tested. Grid cells are individually named (`aliens.3.2`) to make that possible, and for games (Galaga, Galaxian) where members will leave a formation one by one.
 - `stick()` is axis-aware: it corrects position and cancels velocity only on the touched edge's axis, so an object pushed into the bottom wall while holding left or right keeps sliding (the alternative, where any push into a wall freezes the object, feels bad to play). It is also re-applied after the move, because the pre-move edge checks only run for a moving object and would otherwise leave a stopped object overshooting the wall by up to one frame of velocity.
 
 ## Known weaknesses
 
-- The circle-rectangle edge choice uses tests like `midpoint.y > rectTop - midpoint.y`, which subtracts a coordinate from a bound that already includes it. This was flagged in the first prototype's review and is still there.
-- No swept (continuous) collision: a fast object can pass through a thin one in a single frame. The C++ reference Pong ([17](17-reference-pong.md)) solved this with a swept test against a moving frame of reference; the engine has not adopted that.
-- No broad phase (every unordered pair is tested).
-- Only the four edges are reported; there is no contact normal, penetration depth, or corner handling.
+- Screen edges are still checked by position before the move, not swept. An object cannot get far past one (the check runs every frame and bounce/stick/die all act on it), but an object faster than a window is wide could skip the check.
+- Only the four edges of a rectangle are reported; a corner hit is reduced to the side the contact normal points towards most, and there is no penetration depth or true contact normal for the response to use (`bounce()` just flips one velocity component).
+- The candidate pairs are built with a plain double loop over the shown objects each frame (cheap next to the sweeps, but it is not a broad phase). A game with thousands of interacting objects would want a spatial grid.
+- Only the first hit of a pair each frame is handled. Two objects meeting again in the same frame after a bounce (a ball trapped between two close walls) will not react a second time until the next frame.
+- The engine used to park a dead circle at (-100, -100) and zero its velocity; that special case is gone (`die()` now means the same everywhere: not drawn, moved or collided with), because a dead object is no longer part of anything.
+- What it replaced: a per-frame overlap check after which the object moved anyway, which let a small or fast object tunnel through a thin one (the smaller ball and the Space Invaders bullet), and a `circleRectangle` edge choice that compared a coordinate against a bound minus the same coordinate. The C++ reference Pong ([17](17-reference-pong.md)) had the swept test against a moving frame of reference; this is that idea, kept behind the same detector interface.
 - `basic="basic"` is a stopgap spelling for "the one general object-against-object rule". The name says nothing, and it is meant to be used alone; the loader does not stop it being combined with `class` or `object`, and the schema still lists it as an ordinary optional attribute. A clearer spelling for the catch-all (or dropping it, since an unfiltered `<collision action="..."/>` could mean the same) is undecided.
 
 ## Design notes worth keeping
