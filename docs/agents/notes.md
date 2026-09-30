@@ -40,7 +40,8 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 2. Add an arcing jump ([design 13](../designs/13-verb-vocabulary.md), and the air-control refinement in [design 23](../designs/23-jump-and-air-control.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
 3. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, per-row velocity in `<grid>`, show and hide verbs.
 4. Rename `collisionData.basic` (and the `basic=` label in `printGame()`) to something that says what it is.
-5. Designs 22 to 28 are ideas from a second batch of conversations, not plans; nothing in them is built.
+5. Sort out the file structure: `source/` and `include/` are flat and growing (23 files each). Move them into folders by responsibility (parse and evaluate, engine loop, collision, window backends, XML backends); the Visual Studio filters are meant to be built from the directories, so this is only about the layout on disk. Not started; design 16 has the history of the earlier, over-layered attempt on the `rewrite` branch and why it was flattened.
+6. Designs 22 to 28 are ideas from a second batch of conversations, not plans; nothing in them is built.
 
 ## Privacy rule for these docs
 
