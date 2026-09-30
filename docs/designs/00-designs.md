@@ -37,6 +37,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 27 | Object composition and shape | opt-in parts; position and velocity vs at and moving; response block forms; shapes as reusable outlines | Opt-in parts favored. **Idea** | [27](27-object-composition-and-shape.md) |
 | 28 | Game ideas and test games | Pong variants, mocking difficulty, unwinnable starts, combat styles, packing, balance math | Candidates only. **Idea** | [28](28-game-ideas-and-test-games.md) |
 | 29 | Groups | one group per lane with members overriding what differs / group position as an origin / nested groups inheriting / `<grid>` with per-row velocity / reusable templates | One group per lane, a member takes what it leaves out from its group; read as one object per member, and Frogger and Space Race are written with it (about 30% smaller). **Built** | [29](29-groups.md) |
+| 30 | Gem Catcher | a fixed set of falling pieces that cycle / pieces spawned while the game runs / a dropper object that releases them; speeds drawn once at load / drawn again on every reset | A fixed set that cycles, speeds and heights drawn once with `<random>` inside a `<group>`. **Built** (no new verbs); spawning and re-drawing on reset **Idea** | [30](30-gem-catcher.md) |
 
 ## Reading order
 

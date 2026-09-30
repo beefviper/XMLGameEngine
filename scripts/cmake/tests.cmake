@@ -53,6 +53,7 @@ add_executable(XMLGameEngineTests
 	"tests/test_group.cpp"
 	"tests/test_frogger.cpp"
 	"tests/test_spacerace.cpp"
+	"tests/test_gemcatcher.cpp"
 )
 
 target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)

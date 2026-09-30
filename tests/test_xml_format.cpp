@@ -484,19 +484,32 @@ TEST_CASE("a condition with no test, a wrong first tag, or no variable to read i
 		ContainsSubstring("needs variable="));
 }
 
+namespace
+{
+	// What is compared for one object. Anything whose position or velocity is a
+	// <random> (the ball, Gem Catcher's gems and bombs) comes out different on
+	// every load, so only its name is compared.
+	std::string comparable(const Object& object)
+	{
+		const bool drawn = object.name == "ball" || object.objClass == "gems" || object.objClass == "bombs";
+		return drawn ? object.name : printed(object);
+	}
+}
+
 TEST_CASE("every shipped game loads the same through all four XML libraries", "[xml_format][backends]")
 {
 	// Same objects, sprites, positions, commands and rules whichever library read
 	// the file, so the text-and-element reading of each one agrees. (The ball's
-	// velocity is a <random>, so it is left out of the comparison.)
-	for (const char* file : { "games/pong.xml", "games/breakout.xml", "games/spaceinvaders.xml", "games/frogger.xml", "games/spacerace.xml" })
+	// velocity, and the fall speeds and heights of Gem Catcher's gems and bombs,
+	// are <random>s, so those objects are left out of the comparison.)
+	for (const char* file : { "games/pong.xml", "games/breakout.xml", "games/spaceinvaders.xml", "games/frogger.xml", "games/spacerace.xml", "games/gemcatcher.xml" })
 	{
 		DYNAMIC_SECTION(file)
 		{
 			std::vector<std::string> expected;
 			{
 				Game xerces{ file, XmlBackend::Xerces };
-				for (const auto& object : xerces.getCurrentObjects()) { expected.push_back(object.name == "ball" ? object.name : printed(object)); }
+				for (const auto& object : xerces.getCurrentObjects()) { expected.push_back(comparable(object)); }
 			}
 
 			for (const XmlBackend backend : { XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
@@ -507,7 +520,7 @@ TEST_CASE("every shipped game loads the same through all four XML libraries", "[
 				for (std::size_t i = 0; i < expected.size(); ++i)
 				{
 					const Object& object = game.getCurrentObjects()[i];
-					CHECK((object.name == "ball" ? object.name : printed(object)) == expected[i]);
+					CHECK(comparable(object) == expected[i]);
 				}
 			}
 		}

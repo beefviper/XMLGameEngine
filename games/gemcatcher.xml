@@ -1,0 +1,463 @@
+<!-- gemcatcher.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Sept 30, 2026 -->
+
+<!--
+  Gem Catcher: slide a basket along the bottom and catch the falling gems; the
+  falling bombs cost a life. Catch enough gems to win, lose all your lives and
+  it is game over. Anything that reaches the floor uncaught just goes back up to
+  fall again, so nothing is punished for being missed.
+
+  It is written with verbs the language already had, and it is the first game
+  whose speeds are left to <random>: each gem and bomb draws its own fall speed
+  and its own starting height once when the game loads, so no two runs have the
+  same rhythm. A <group> shares what all the gems have in common (the size, the
+  <random> ranges, the rules) and each <member> says only which column it falls
+  down. <reset /> puts a caught or missed piece back at the start of its fall,
+  <inc /> and <dec /> keep the score and the lives on the basket, and two
+  variable conditions end the game.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+  <window name="Gem Catcher">
+    <width>800</width>
+    <height>600</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="basketwidth">110</variable>
+    <variable name="basketheight">18</variable>
+    <variable name="gem">16</variable>
+    <variable name="bomb">12</variable>
+    <variable name="step">7</variable>
+    <variable name="margin">20</variable>
+    <variable name="goal">15</variable>
+  </variables>
+  <objects>
+    <group name="gems" class="gems">
+      <sprite>
+        <rectangle>
+          <width>gem</width>
+          <height>gem</height>
+          <color>color.cyan</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <y><random min="-500" max="-40" /></y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y><random min="2" max="4" /></y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom">
+          <reset />
+        </collision>
+        <collision object="basket">
+          <inc variable="basket.score" />
+          <reset />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>60</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>190</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>320</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>450</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>580</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>710</x>
+        </position>
+      </member>
+    </group>
+    <group name="bombs" class="bombs">
+      <sprite>
+        <circle>
+          <radius>bomb</radius>
+          <color>color.red</color>
+        </circle>
+      </sprite>
+      <position>
+        <y><random min="-400" max="-40" /></y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y><random min="3" max="5" /></y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom">
+          <reset />
+        </collision>
+        <collision object="basket">
+          <dec variable="basket.lives" />
+          <reset />
+        </collision>
+      </collisions>
+      <member>
+        <position>
+          <x>125</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>385</x>
+        </position>
+      </member>
+      <member>
+        <position>
+          <x>645</x>
+        </position>
+      </member>
+    </group>
+    <object name="basket">
+      <sprite>
+        <rectangle>
+          <width>basketwidth</width>
+          <height>basketheight</height>
+          <color>color.orange</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>window.width.center - basket.width / 2</x>
+        <y>window.bottom - basket.height - margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <stick />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="left">
+          <move direction="left">step</move>
+        </action>
+        <action name="right">
+          <move direction="right">step</move>
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+        <variable name="lives">3</variable>
+      </variables>
+    </object>
+    <object name="score">
+      <sprite>
+        <text>
+          <number>basket.score</number>
+          <size>48</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position>
+        <x>margin</x>
+        <y>margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="lives">
+      <sprite>
+        <text>
+          <number>basket.lives</number>
+          <size>48</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - lives.width - margin</x>
+        <y>margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>GEM CATCHER</content>
+          <size>112</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - title.width / 2</x>
+        <y>window.height.center - title.height / 2 + (-110)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="help">
+      <sprite>
+        <text>
+          <content>catch the gems, dodge the bombs</content>
+          <size>40</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - help.width / 2</x>
+        <y>window.height.center - help.height / 2 + (0)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="keys">
+      <sprite>
+        <text>
+          <content>a and d, or the arrow keys, to move</content>
+          <size>32</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - keys.width / 2</x>
+        <y>window.height.center - keys.height / 2 + (50)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="start">
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - start.width / 2</x>
+        <y>window.height.center - start.height / 2 + (130)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - paused.width / 2</x>
+        <y>window.height.center - paused.height / 2 + (0)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="youwin">
+      <sprite>
+        <text>
+          <content>YOU WIN</content>
+          <size>128</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - youwin.width / 2</x>
+        <y>window.height.center - youwin.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="gameover">
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>128</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - gameover.width / 2</x>
+        <y>window.height.center - gameover.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="again">
+      <sprite>
+        <text>
+          <content>spacebar to play again</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - again.width / 2</x>
+        <y>window.height.center - again.height / 2 + (70)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="help" />
+        <show object="keys" />
+        <show object="start" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <shows>
+        <show object="gems" />
+        <show object="bombs" />
+        <show object="basket" />
+        <show object="score" />
+        <show object="lives" />
+      </shows>
+      <inputs>
+        <input button="a">
+          <trigger object="basket" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="basket" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="basket" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="basket" action="right" />
+        </input>
+        <input button="space">
+          <push state="paused" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="basket" variable="score">
+          <atleast>goal</atleast>
+          <push state="youwin" />
+        </condition>
+        <condition object="basket" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="youwin">
+      <shows>
+        <show object="youwin" />
+        <show object="score" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="gameover" />
+        <show object="score" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>
