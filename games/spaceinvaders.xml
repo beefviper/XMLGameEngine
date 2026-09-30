@@ -19,7 +19,7 @@
       <velocity x="0" y="0" />
       <collisions enabled="false">
         <collision edge="all" action="die()"/>
-        <collision class="bricks" action="die()"/>
+        <collision class="aliens" action="die()"/>
       </collisions>
       <variables>
         <variable name="speed" value="-6" />
@@ -38,7 +38,7 @@
         <action name ="gun" value="fire('bullet')"/>
       </actions>
     </object>
-    <object name="bricks" class="bricks">
+    <object name="aliens" class="aliens">
       <sprite src="grid(11,5,15,15,shape.rectangle(width,height))" />
       <position x="margin" y="margin/2" />
       <velocity x="2" y="0" />
@@ -83,7 +83,7 @@
       <shows>
         <show object="bullet" />
         <show object="player" />
-        <show object="bricks" />
+        <show object="aliens" />
       </shows>
       <inputs>
         <input button="p" action="state('paused')" />

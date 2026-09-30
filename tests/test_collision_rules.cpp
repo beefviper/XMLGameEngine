@@ -5,7 +5,7 @@
 //
 // Catch2 tests for object-against-object <collision> rules, loaded from the
 // shipped games by a real xge::Game. A rule can be written with just a
-// class (or object) to apply to - <collision class="bricks" action="die()"/> -
+// class (or object) to apply to - <collision class="aliens" action="die()"/> -
 // without basic="basic"; basic="basic" on its own is still the rule that
 // matches anything.
 //
@@ -34,9 +34,9 @@ TEST_CASE("a collision naming only a class is an object rule for that class", "[
 	Game game{ "games/spaceinvaders.xml" };
 	const Object& bullet = game.getObject("bullet");
 
-	// spaceinvaders.xml's bullet: <collision class="bricks" action="die()"/>
+	// spaceinvaders.xml's bullet: <collision class="aliens" action="die()"/>
 	REQUIRE(bullet.collisionData.basic.size() == 1);
-	CHECK(bullet.collisionData.basic[0].filterClass == "bricks");
+	CHECK(bullet.collisionData.basic[0].filterClass == "aliens");
 	CHECK(bullet.collisionData.basic[0].filterObject.empty());
 
 	// ...and it did not also turn into a screen-edge rule.
@@ -70,19 +70,19 @@ TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules
 	CHECK(bullet.position.y < player.position.y - bullet.size.y);
 }
 
-TEST_CASE("a bullet dies on touching a brick", "[collision_rules]")
+TEST_CASE("a bullet dies on touching an alien", "[collision_rules]")
 {
 	Game game{ "games/spaceinvaders.xml" };
 	game.setCurrentState("playing");
 
 	Object& bullet = game.getObject("bullet");
-	Object& brick = game.getObject("bricks");
-	brick.size = { 50.0f, 50.0f };
+	Object& alien = game.getObject("aliens");
+	alien.size = { 50.0f, 50.0f };
 	bullet.size = { 8.0f, 8.0f };
 
-	// Just under the brick, its centre a couple of pixels below the bottom
+	// Just under the alien, its centre a couple of pixels below the bottom
 	// edge, so it overlaps by less than its radius.
-	bullet.position = { brick.position.x + 20.0f, brick.position.y + brick.size.y - 2.0f };
+	bullet.position = { alien.position.x + 20.0f, alien.position.y + alien.size.y - 2.0f };
 	bullet.velocity.y = -6.0f;
 	bullet.isVisible = true;
 	bullet.collisionData.enabled = true;

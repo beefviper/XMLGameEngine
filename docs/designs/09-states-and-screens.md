@@ -21,6 +21,7 @@ The useful conclusion was that `model_object` and `model_states` are **parallel*
 ## Design questions still open
 
 - Do conditions belong to states, to objects, or both? Today only states have them. Object-level conditions (for example changing a color when speed passes a limit, or playing a death animation at zero health) were raised, not built ([14](14-conditions-and-win-conditions.md)).
+- Objects that behave differently per state. A state only chooses which objects are shown; it cannot change what a shown object does. Every shown object with a velocity moves, whichever state is current, so decoration on a menu (the Space Invaders aliens standing still behind the title) cannot be told apart from the same objects in play. Ways it could be expressed, none built: a per-`<show>` override (`<show object="aliens" velocity="0"/>`); entry and exit commands on a state (`<enter>`/`<exit>` running `reset('aliens')`-style commands, or a verb that freezes and unfreezes an object); an `active` flag on objects that states switch; or separate copies of the object per state. The last is possible today but duplicates definitions. Related to the question above about where behavior belongs: to the state, the object, or the pairing of the two. **Open**.
 - Menus and settings screens exist as states in every shipped game, but there is no vocabulary for a real settings UI.
 
 ## Sources

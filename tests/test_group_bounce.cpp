@@ -23,7 +23,7 @@ using namespace xge;
 
 namespace
 {
-	constexpr float kBrickWidth = 50.0f;
+	constexpr float kAlienWidth = 50.0f;
 	constexpr float kPadding = 15.0f;
 
 	// The distinct x positions of the block's columns, left to right.
@@ -32,7 +32,7 @@ namespace
 		std::set<float> xs;
 		for (const auto& object : game.getCurrentObjects())
 		{
-			if (object.name == "bricks")
+			if (object.name == "aliens")
 			{
 				xs.insert(object.position.x);
 			}
@@ -46,7 +46,7 @@ namespace
 		REQUIRE(xs.size() == 11);
 		for (std::size_t i = 1; i < xs.size(); ++i)
 		{
-			CHECK(xs[i] - xs[i - 1] == kBrickWidth + kPadding);
+			CHECK(xs[i] - xs[i - 1] == kAlienWidth + kPadding);
 		}
 	}
 }
@@ -59,7 +59,7 @@ TEST_CASE("the invader block keeps its column spacing through every bounce", "[g
 	// Window::init() normally measures these; a Game built on its own has {0, 0}.
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.name == "bricks") { object.size = { kBrickWidth, 50.0f }; }
+		if (object.name == "aliens") { object.size = { kAlienWidth, 50.0f }; }
 		else if (object.name == "player") { object.size = { 50.0f, 50.0f }; }
 	}
 
@@ -67,12 +67,12 @@ TEST_CASE("the invader block keeps its column spacing through every bounce", "[g
 
 	// Right edge, left edge, right edge again.
 	int bounces = 0;
-	float direction = game.getObject("bricks").velocity.x;
+	float direction = game.getObject("aliens").velocity.x;
 	for (int frame = 0; frame < 3000 && bounces < 3; ++frame)
 	{
 		game.updateObjects();
 
-		const float now = game.getObject("bricks").velocity.x;
+		const float now = game.getObject("aliens").velocity.x;
 		if (now != direction)
 		{
 			direction = now;

@@ -190,6 +190,7 @@ Checked once per frame while the state is current. It fires when any object matc
 ## Known limitations
 
 - Object-object collision knows only the four edges of the other object; there are no verbs beyond the table above (no jump, gravity, shooting patterns, AI, sound).
+- An object's velocity and collisions belong to the object, not to a state: any state that shows it lets it move. There is no way to show the Space Invaders aliens standing still behind the menu and have them march only in `playing`; they start marching as soon as they are shown. See [designs/09](designs/09-states-and-screens.md).
 - Object names need not be unique: every cell of a `grid()` shares the grid object's name, so a single brick cannot be addressed.
 - Movement is in pixels per frame with no acceleration and no time step.
 - `CollisionDetector::circleRectangle` picks the touched edge with conditions that compare a coordinate against a rectangle edge minus that same coordinate (for example `midpoint.y > rectTop - midpoint.y`), which does not look geometrically meaningful; it happens to work for the shipped games but has not been proven correct.
