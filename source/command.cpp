@@ -96,8 +96,8 @@ namespace xge
 	Vector2f measureShapeSize(const std::vector<std::string>& spriteParams, ShapeKind shapeKind) noexcept
 	{
 		// spriteParams is always well-formed here - it was built moments
-		// earlier by the matching shape.circle()/shape.rectangle() functor
-		// (see game_expr.h), never handed in from outside, so the indices
+		// earlier from the object's <circle> or <rectangle> sprite (see
+		// game_expr.cpp), never handed in from outside, so the indices
 		// below are guaranteed present whenever shapeKind says they should
 		// be - same assumption SFMLWindow::buildCircle/buildRectangle (and
 		// their Raylib/SDL2 equivalents) already make.

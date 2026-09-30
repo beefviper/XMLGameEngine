@@ -267,14 +267,14 @@ namespace xge
 
 		if (dot == std::string::npos)
 		{
-			// Legacy pattern (e.g. inc('score1') for a text object that just
+			// Older pattern (e.g. <inc variable="score1" /> for a text object that just
 			// displays its own counter, with nothing else deriving its number):
 			// the named object displays and owns its own number - change its
 			// displayed value directly.
 			Object* object = tryGetObject(target);
 			if (!object)
 			{
-				std::cout << "warning: " << verb << "('" << target << "'): no such object\n";
+				std::cout << "warning: <" << verb << " variable=\"" << target << "\" />: no such object\n";
 				return;
 			}
 			const float newValue = std::stof(object->spriteParams.at(1)) + delta;
@@ -283,25 +283,25 @@ namespace xge
 			return;
 		}
 
-		// New pattern (e.g. inc('paddle1.score')): change another object's
+		// Usual pattern (e.g. <inc variable="paddle1.score" />): change another object's
 		// own named <variable>, then refresh every text object whose displayed
 		// number is bound to it (Object::boundVariableOwner/boundVariableName,
-		// set from a sprite like text(paddle1.score,128,...) - see
-		// parseTextVariableBinding).
+		// set from a <text> sprite whose <number> is paddle1.score - see
+		// parseVariableReference).
 		const std::string ownerName = target.substr(0, dot);
 		const std::string variableName = target.substr(dot + 1);
 
 		Object* owner = tryGetObject(ownerName);
 		if (!owner)
 		{
-			std::cout << "warning: " << verb << "('" << target << "'): no object named '" << ownerName << "'\n";
+			std::cout << "warning: <" << verb << " variable=\"" << target << "\" />: no object named '" << ownerName << "'\n";
 			return;
 		}
 
 		auto variableIt = owner->variable.find(variableName);
 		if (variableIt == owner->variable.end())
 		{
-			std::cout << "warning: " << verb << "('" << target << "'): '" << ownerName << "' has no variable named '" << variableName << "'\n";
+			std::cout << "warning: <" << verb << " variable=\"" << target << "\" />: '" << ownerName << "' has no variable named '" << variableName << "'\n";
 			return;
 		}
 
@@ -359,7 +359,7 @@ namespace xge
 		Object* object = tryGetObject(name);
 		if (!object)
 		{
-			std::cout << "warning: reset('" << name << "'): no such object\n";
+			std::cout << "warning: <reset object=\"" << name << "\" />: no such object\n";
 			return;
 		}
 
@@ -444,7 +444,7 @@ namespace xge
 		// Every member gets exactly the same treatment. This used to shift the
 		// members stored before the touching one by three steps and the rest
 		// by one (and repeated that on every right-hand bounce), which pushed
-		// the last column of a grid() further from the others each time.
+		// the last column of a <grid> further from the others each time.
 		for (auto& obj : objects)
 		{
 			if (obj.collisionData.group == groupNum)

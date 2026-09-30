@@ -5,7 +5,7 @@
 //
 // Catch2 tests for games/spacerace.xml, played frame by frame by a real
 // xge::Game with no window. Space Race is described with verbs the language
-// already had (held move.*, wrap(), reset(), inc(), a variable condition), so
+// already had (held <move>, <wrap />, <reset />, <inc />, a variable condition), so
 // these tests are about the game working, not about anything new.
 //
 // Window::init() normally measures each object's size once a backend exists;

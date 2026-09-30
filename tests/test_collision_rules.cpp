@@ -5,12 +5,11 @@
 //
 // Catch2 tests for object-against-object <collision> rules, loaded from the
 // shipped games by a real xge::Game. A rule can be written with just a
-// class (or object) to apply to - <collision class="aliens" action="die()"/> -
-// without basic="basic"; basic="basic" on its own is still the rule that
-// matches anything.
+// class (or object) to apply to - <collision class="aliens"><die /></collision> -
+// and a <collision> with no selector at all is the rule that matches anything.
 //
-// Regression covered: Space Invaders' bullet used `basic="basic"` with no
-// filter, so it died the moment it overlapped the ship that fired it.
+// Regression covered: Space Invaders' bullet used an unfiltered collision
+// rule, so it died the moment it overlapped the ship that fired it.
 
 #include "game.h"
 
@@ -18,12 +17,12 @@
 
 using namespace xge;
 
-TEST_CASE("basic=\"basic\" with no filter still matches anything", "[collision_rules]")
+TEST_CASE("a collision with no selector still matches anything", "[collision_rules]")
 {
 	Game game{ "games/pong.xml" };
 	const Object& ball = game.getObject("ball");
 
-	// pong.xml's ball: <collision basic="basic" action="bounce()" />
+	// pong.xml's ball: <collision><bounce /></collision>
 	REQUIRE(ball.collisionData.basic.size() == 1);
 	CHECK(ball.collisionData.basic[0].filterClass.empty());
 	CHECK(ball.collisionData.basic[0].filterObject.empty());
@@ -34,13 +33,13 @@ TEST_CASE("a collision naming only a class is an object rule for that class", "[
 	Game game{ "games/spaceinvaders.xml" };
 	const Object& bullet = game.getObject("bullet");
 
-	// spaceinvaders.xml's bullet: <collision class="aliens" action="die()"/>
+	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>
 	REQUIRE(bullet.collisionData.basic.size() == 1);
 	CHECK(bullet.collisionData.basic[0].filterClass == "aliens");
 	CHECK(bullet.collisionData.basic[0].filterObject.empty());
 
 	// ...and it did not also turn into a screen-edge rule.
-	CHECK(bullet.collisionData.left.size() == 1); // only the edge="all" die()
+	CHECK(bullet.collisionData.left.size() == 1); // only the edge="all" <die />
 }
 
 TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules]")

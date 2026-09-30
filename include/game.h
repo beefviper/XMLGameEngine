@@ -75,12 +75,12 @@ namespace xge
 		// made public wholesale.
 		void incrementText(const std::string& objectName);
 
-		// dec('owner.variable'): takes 1 off, the same way, and refreshes the
+		// <dec variable="owner.variable" />: takes 1 off, the same way, and refreshes the
 		// same bound texts. A variable may go below zero; a <condition> with
 		// atmost= is what notices it has run out.
 		void decrementText(const std::string& objectName);
 
-		// reset('objectName') from a state's <input>/<condition> action (see
+		// <reset object="objectName" /> from a state's <input>/<condition> (see
 		// CmdResetObject): restores that object's position, velocity, and every
 		// <variable> to their starting values, then refreshes any text display
 		// bound to one of those variables. Used e.g. to zero the paddles' scores
@@ -88,9 +88,9 @@ namespace xge
 		// re-fire.
 		void resetObject(const std::string& name);
 
-		// Bare reset() from a state's <input>/<condition> action (see CmdReset,
+		// Bare <reset /> from a state's <input>/<condition> (see CmdReset,
 		// handled this way only in CommandExecutor::executeInput - a collision's
-		// own bare reset() still just resets that one object's position).
+		// own bare <reset /> still just resets that one object's position).
 		// Resets every object back to how the game loaded (position, velocity,
 		// every <variable>), refreshes every bound text display, and collapses
 		// the whole state stack back down to the very first state - the same

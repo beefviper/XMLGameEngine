@@ -81,7 +81,7 @@ namespace xge
 		isKeyPressed[index] = true;
 
 		// A copy of the State, not a reference into it: a command run below
-		// (state('paused'), state()) pushes or pops the state stack.
+		// (<push state="paused" />, <pop />) pushes or pops the state stack.
 		const State state = game.getCurrentState();
 		const auto binding = state.input.find(key);
 		if (binding == state.input.end())

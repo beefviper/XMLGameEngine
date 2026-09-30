@@ -5,7 +5,7 @@
 //
 // Catch2 tests for moving and colliding inside a real xge::Game: a fast, small
 // object no longer jumps over a thin one between frames, only the object that
-// was hit reacts (each cell of a grid() is its own object), and the rest of a
+// was hit reacts (each cell of a <grid> is its own object), and the rest of a
 // step is played out after a bounce.
 
 #include "command_executor.h"

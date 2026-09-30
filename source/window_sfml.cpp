@@ -38,7 +38,7 @@ namespace xge
 
 	void SFMLWindow::init(std::vector<Object>& objects)
 	{
-		// Object::position is already final by now - including any grid()
+		// Object::position is already final by now - including any <grid>
 		// spacing - finalized entirely within Game's own construction (see
 		// game_expr.cpp, and main.cpp for why Engine/Window no longer needs
 		// to exist first). All that's left here is building each object's

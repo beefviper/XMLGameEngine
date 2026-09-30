@@ -75,7 +75,7 @@ namespace xge
 		{
 			if (objectSizes.count(rawObject.name))
 			{
-				continue; // every cell of a grid() shares its object's name
+				continue; // every cell of a <grid> comes from this one object
 			}
 
 			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'");
@@ -105,9 +105,9 @@ namespace xge
 			const GridData gridData = gridDataOf(rawObject.sprite, where);
 			const ShapeKind rawObjectShapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
 
-			// Every grid cell shares the same footprint (one shape.circle()/
-			// shape.rectangle() call covers the whole grid() - see games/
-			// breakout.xml, games/spaceinvaders.xml), so this is computed
+			// Every grid cell shares the same footprint (one <circle> or
+			// <rectangle> covers the whole <grid> - see games/breakout.xml,
+			// games/spaceinvaders.xml), so this is computed
 			// once per rawObject rather than per cell.
 			const Vector2f gridObjSize = measureShapeSize(tempSpriteParams, rawObjectShapeKind);
 
@@ -120,7 +120,7 @@ namespace xge
 			if ((gridData.max.x > 1 || gridData.max.y > 1)
 				&& (rawObjectShapeKind == ShapeKind::Text || rawObjectShapeKind == ShapeKind::Image))
 			{
-				std::cout << "warning: grid(): '" << rawObject.name << "' is a "
+				std::cout << "warning: <grid>: '" << rawObject.name << "' is a "
 					<< (rawObjectShapeKind == ShapeKind::Text ? "text" : "image")
 					<< " object - its real footprint can't be known without a Window "
 					<< "backend (see measureShapeSize, command.cpp), so grid spacing "

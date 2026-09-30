@@ -28,6 +28,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace xge;
@@ -70,7 +71,19 @@ namespace
 	struct ScratchFile
 	{
 		std::filesystem::path path;
-		~ScratchFile() { std::error_code ignored; std::filesystem::remove(path, ignored); }
+
+		// Moved, never copied: a copy left behind by returning one from a function
+		// (which Debug builds do not elide) would delete the file it was written to.
+		explicit ScratchFile(std::filesystem::path where) : path(std::move(where)) {}
+		ScratchFile(const ScratchFile&) = delete;
+		ScratchFile& operator=(const ScratchFile&) = delete;
+		ScratchFile(ScratchFile&& other) noexcept : path(std::move(other.path)) { other.path.clear(); }
+		~ScratchFile()
+		{
+			if (path.empty()) { return; }
+			std::error_code ignored;
+			std::filesystem::remove(path, ignored);
+		}
 	};
 }
 

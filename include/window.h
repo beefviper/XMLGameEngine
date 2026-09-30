@@ -31,7 +31,7 @@ namespace xge
 
 		// Called once, right after the window is created (see Engine's
 		// constructor): builds and measures every object's initial visual
-		// from its spriteParams. Object::position (including any grid()
+		// from its spriteParams. Object::position (including any <grid>
 		// spacing) is already final by this point - Game finalizes all of
 		// that itself, with no Window needed (see game_expr.cpp and
 		// measureShapeSize in command.cpp) - so this only ever populates

@@ -53,6 +53,9 @@ namespace xge
 		std::vector<RawCommand> bottom;
 		std::vector<RawCommand> left;
 		std::vector<RawCommand> right;
+		// Rules about another object: a <collision> with a class= and/or
+		// object= selector, or with no selector at all (matches anything). The
+		// name is left from when the unfiltered one was written basic="basic".
 		std::vector<RawCollisionRule> basic;
 
 		// TODO: add operator<< to RawCollisionData
@@ -76,6 +79,7 @@ namespace xge
 		std::vector<Command> bottom;
 		std::vector<Command> left;
 		std::vector<Command> right;
+		// Rules about another object (see RawCollisionData::basic).
 		std::vector<CollisionRule> basic;
 
 		// TODO: add operator<< to CollisionData
@@ -150,16 +154,16 @@ namespace xge
 
 	struct Object
 	{
-		// What this object is called. Unique: a grid() gives each of its cells
+		// What this object is called. Unique: a <grid> gives each of its cells
 		// its own name, the object's name followed by the cell's column and row,
-		// counting from 1 - a grid() called aliens has aliens.1.1, aliens.2.1,
+		// counting from 1 - a <grid> called aliens has aliens.1.1, aliens.2.1,
 		// ... aliens.11.5. Anything else is just the name from the XML.
 		std::string name;
 
 		// The name in the XML this object came from: "aliens" for every cell of
 		// the grid above, and the same as `name` for an object that is not a
 		// grid. What a state's <show>, a rule's or condition's object=, and
-		// reset('...') refer to, so they can still mean the whole grid at once;
+		// <reset object="..." /> refer to, so they can still mean the whole grid at once;
 		// a cell can also be named on its own (aliens.3.2).
 		std::string baseName;
 		std::string objClass;
@@ -238,7 +242,7 @@ namespace xge
 		std::vector<std::string> sizeDependencies;
 		std::vector<Vector2f> positionSizesUsed;
 
-		// A grid() cell's offset from the grid's evaluated <position>, so that
+		// A <grid> cell's offset from the grid's evaluated <position>, so that
 		// position can be worked out again later and the offset added back.
 		Vector2f gridOffset{};
 
@@ -266,10 +270,10 @@ namespace xge
 		std::map<std::string, float> variableOriginal;
 
 		// Set when this is a text object whose displayed number tracks another
-		// object's own <variable> (e.g. sprite src="text(paddle1.score,128,...)"
+		// object's own <variable> (e.g. a <text> sprite whose <number> is paddle1.score
 		// -> boundVariableOwner="paddle1", boundVariableName="score"). Empty
 		// owner means this text object isn't bound to anything and only ever
-		// updates via inc() targeting its own name directly (the older,
+		// updates via <inc /> targeting its own name directly (the older,
 		// still-supported pattern for a text object that just displays its own
 		// counter, with nothing else deriving its number - no shipped game
 		// currently needs it, now that pong.xml's score1/score2 are bound to

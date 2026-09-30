@@ -59,7 +59,7 @@ TEST_CASE("parseVariableReference rejects malformed owner.variable shapes rather
 	CHECK_FALSE(parseVariableReference("score").has_value());           // no owner at all
 }
 
-TEST_CASE("formatDisplayNumber matches what someone hand-typing text('0', ...) would write", "[object_variables]")
+TEST_CASE("formatDisplayNumber matches what someone hand-typing a <text> content of 0 would write", "[object_variables]")
 {
 	CHECK(formatDisplayNumber(0.0f) == "0");
 	CHECK(formatDisplayNumber(15.0f) == "15");  // no trailing .0

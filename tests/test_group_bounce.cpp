@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Sept 29, 2026
 //
-// Catch2 test for a grouped grid() bouncing off the screen edges
+// Catch2 test for a grouped <grid> bouncing off the screen edges
 // (Game::updateGroupOfObjects), using the invader block from
 // games/spaceinvaders.xml in a real xge::Game.
 //

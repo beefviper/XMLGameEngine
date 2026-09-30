@@ -51,11 +51,11 @@ namespace xge
 	struct CmdReset {};
 	struct CmdDie {};
 
-	// wrap() - once the object has gone right off the screen through an edge,
+	// <wrap /> - once the object has gone right off the screen through an edge,
 	// it comes back in from the opposite one (see CommandExecutor::wrap).
 	struct CmdWrap {};
 
-	// carry() - in a collision rule about an object it is touching: the
+	// <carry /> - in a collision rule about an object it is touching: the
 	// object rides along with that other one, at its velocity, for as long
 	// as they keep touching (see CommandExecutor::carry).
 	struct CmdCarry {};
@@ -66,8 +66,8 @@ namespace xge
 		float step{};
 	};
 
-	// inc('objectName') - increment a text object's own displayed number, OR
-	// inc('ownerName.variableName') - increment that object's named <variable>
+	// <inc variable="objectName" /> - increment a text object's own displayed number, OR
+	// <inc variable="ownerName.variableName" /> - increment that object's named <variable>
 	// and refresh every text object whose display is bound to it (see
 	// Game::incrementText and Object::boundVariableOwner/boundVariableName).
 	struct CmdIncrement
@@ -75,7 +75,7 @@ namespace xge
 		std::string target;
 	};
 
-	// dec('ownerName.variableName') - the opposite of inc(): takes 1 off that
+	// <dec variable="ownerName.variableName" /> - the opposite of <inc />: takes 1 off that
 	// object's named <variable> (or off a text object's own number) and
 	// refreshes every text bound to it.
 	struct CmdDecrement
@@ -83,11 +83,11 @@ namespace xge
 		std::string target;
 	};
 
-	// hop.up(distance), hop.down(distance), hop.left(distance),
-	// hop.right(distance) - only ever in an object's own <action>: a one-shot
+	// <hop direction="up">distance</hop> (also down, left, right) - only ever in an
+	// object's own <action>: a one-shot
 	// jump of `distance` pixels, made once for each press of the key (see
 	// CommandExecutor::triggerObjectAction and Game::moveObjects). Unlike
-	// move.*, holding the key does nothing more, and a state change never
+	// <move>, holding the key does nothing more, and a state change never
 	// resumes it.
 	struct CmdHop
 	{
@@ -102,23 +102,23 @@ namespace xge
 
 	struct CmdPopState {};
 
-	// fire('projectileName') - spawn/launch a named projectile object
+	// <fire object="projectileName" /> - spawn/launch a named projectile object
 	struct CmdFire
 	{
 		std::string projectileName;
 	};
 
-	// action('objectName', 'actionName') - only ever appears in a State's <input>
-	// list; triggers one of another object's own named <action> entries.
+	// <trigger object="objectName" action="actionName" /> - only ever appears in a
+	// State's <input> list; triggers one of another object's own named <action> entries.
 	struct CmdTriggerAction
 	{
 		std::string object;
 		std::string action;
 	};
 
-	// reset('objectName') - only ever appears in a State's <input> or
-	// <condition> action (unlike the bare, untargeted CmdReset above, which is
-	// only ever produced by a collision's own reset()); resets that named
+	// <reset object="objectName" /> - only ever appears in a State's <input> or
+	// <condition> (unlike the bare, untargeted CmdReset above, which is
+	// also what a collision's own <reset /> produces); resets that named
 	// object's position, velocity, and every <variable> back to their
 	// starting values (see Game::resetObject).
 	struct CmdResetObject
@@ -209,7 +209,7 @@ namespace xge
 	// sub-pixel rounding). Text/image footprints genuinely depend on a real
 	// font/image load - there's no way to know them without a backend - so
 	// those (and ShapeKind::Unknown) come back {0,0}. Used by
-	// game_expr::init() to finalize grid() spacing entirely within Game's
+	// game_expr::init() to finalize <grid> spacing entirely within Game's
 	// own construction, before any Window exists (see window.h's Window::
 	// init(), which now only measures the *real* rendered Object::size for
 	// drawing/collision, not position).
@@ -226,7 +226,7 @@ namespace xge
 
 	// Formats a live numeric value for on-screen display: whole numbers print
 	// without a decimal point (scores, HP, ammo, ...), matching what someone
-	// hand-typing text('0', ...) would have written.
+	// hand-typing a <text> content of 0 would have written.
 	std::string formatDisplayNumber(float value);
 
 	std::ostream& operator<<(std::ostream& o, const Command& command);
