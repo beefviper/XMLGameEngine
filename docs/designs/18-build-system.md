@@ -28,8 +28,13 @@ On Windows, when SFML is fetched from GitHub but finds FreeType through vcpkg, a
 - C++ standard: the target requires C++20 (`cxx_std_20` in `scripts/cmake/targets.cmake`); some later scratch sketches used C++23.
 - The generated build directory is `build/` (ignored by git).
 
+## Second batch: alternatives
+
+- **Per-backend options.** An option for each backend, with defaults on for the window, XML and expression libraries the engine needs first, and a clear error naming what is missing rather than a quiet fallback ([15](15-backend-abstraction.md)).
+
 ## Sources
 
 - "CMake file review" (2026-02-06).
 - "Organizing CMakeLists.txt with logical chunks" (2026-07-20).
 - "Adding Xerces linking to CMake" (2026-07-19), "Setting up SFML3 with CMake" (2026-07-19), "C++23 SFML 3 CMake setup" (2026-09-26).
+- Second batch: "Game Object Pipeline Design" (2026-07-21).

@@ -42,7 +42,14 @@ Choices made: a name that says what it counts (`remaining`) rather than an opera
 
 Open: do conditions belong to states, objects, or both?
 
+## Second batch: alternatives
+
+- **Unwinnable starts.** Some games can deal a losing board no matter the skill. Alternatives: guarantee solvability at setup, detect a state with no legal moves as a loss condition, or leave it.
+- **Performance-driven conditions.** Rules that read how well the player is doing and change stats (help for failure, taxes for excess) need conditions that can compare a rolling measure ([28](28-game-ideas-and-test-games.md)).
+- **State-based predicates.** No moves left, nothing remaining, or a timer, next to the threshold form.
+
 ## Sources
 
-- "Video game collection value in CAD" (2026-05-23): the `pong_full.xml` version with a condition, and the discussion of trigger vs `if`.
+- "Engine design conversation A (a long general chat; only the project segment was used)" (2026-05-23): the `pong_full.xml` version with a condition, and the discussion of trigger vs `if`.
 - "Pong game XML structure" (2026-09-22): a proposed extension using `transitions` and `on-enter` elements; those were guesses about where the engine could go, not accepted design.
+- Second batch: "Unwinnable Game States" (2025-05-23), "Power-Up Mockery Concept" (2025-02-27).

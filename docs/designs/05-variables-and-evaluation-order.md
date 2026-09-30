@@ -39,4 +39,4 @@ Exprtk needs symbols registered before it compiles an expression. Name-to-object
 ## Sources
 
 - "XML variable references in game engine" (2026-09-25).
-- "Stack vs heap allocation in C++" (2026-08-07): two-pass resolution of `paddle1.score`.
+- "C++ design conversation A" (2026-08-07): two-pass resolution of `paddle1.score`.

@@ -44,9 +44,20 @@ A window backend provides lifecycle, `init()` (build and measure each object's v
 - Audio has no interface yet.
 - Compile-time selection with `#ifdef` versus this run-time factory: the factory is used; the CMake options only decide which libraries get built.
 
+## Second batch: alternatives
+
+- **The word backend.** Alternatives: implementation, module, service, provider, adapter. Backend stayed because it says what it is (an interchangeable lower layer), and it still fits when the subsystem list grows: window, graphics, input, audio, network, XML, expressions, filesystem.
+- **Null and software backends.** A null implementation of each subsystem removes checks for absence; a software renderer is the last fallback ([25](25-targets-and-capability-profiles.md)).
+- **Audio.** No audio vocabulary exists; when there is one, an audio interface with a play-by-name call and a null implementation would follow the same pattern.
+- **Validator at the engine layer.** Put schema validation in the engine, use the parser's own when it exists, fall back otherwise, so a new parser only has to parse.
+- **Selection.** A build option per backend and an error when none is chosen, in place of silently searching until something is found; optionally build everything and choose at runtime ([18](18-build-system.md)).
+- **Forward declarations.** Keep third-party types out of headers with forward declarations so they do not leak.
+- **Engine owns the loop.** The main loop lives in the engine and knows only an interface; the game holds plain data and never touches a library; the engine turns updated state into draw instructions for the current backend.
+
 ## Sources
 
-- "C++ interface for multiple XML libraries" (2026-07-27).
-- "Virtual destructor in abstract interface classes" (2026-07-21).
-- "Loading and printing XML in C++" (2026-07-19).
+- "C++ interface conversation A" (2026-07-27).
+- "C++ interface conversation B" (2026-07-21).
+- "C++ interface conversation C" (2026-07-19).
 - "XML game engine project structure review" (2026-07-20).
+- Second batch: "Engine Abstraction Design" (2026-07-20), "Engine and Game Separation" (2026-01-29), "Game Object Pipeline Design" (2026-07-21).

@@ -2,14 +2,15 @@
 
 Working notes for any AI coding agent (or new contributor) picking this project up. Everything the project itself relies on is in [../readme.md](../readme.md) and [../designs/00-designs.md](../designs/00-designs.md); this folder is for agent-facing bookkeeping.
 
-The first version of these docs (the design write-ups, `sources.md` and the scan script) was written by Claude (Sonnet 5.5) on 2026-09-29, from the author's exported chat history plus a read of the source on the `claude` branch. Frogger (`games/frogger.xml`), the verbs it needed and design write-up 21 were added by Claude (Sonnet 5.5) on 2026-09-30, as was Space Race (`games/spacerace.xml`, first to two points, no new verbs).
+The first version of these docs (the design write-ups, `sources.md` and the scan script) was written by Claude (Sonnet 5.5) on 2026-09-29, from the author's exported chat history plus a read of the source on the `claude` branch. Frogger (`games/frogger.xml`), the verbs it needed and design write-up 21 were added by Claude (Sonnet 5.5) on 2026-09-30, as was Space Race (`games/spacerace.xml`, first to two points, no new verbs). A second export (ChatGPT) was mined on 2026-09-30: it added design docs 22 to 28 and a section headed second batch in most earlier docs; only paraphrased ideas were kept, and titles of chats that did not start as game discussions were made generic.
 
 ## What exists
 
 - `docs/readme.md`: the engine as it works now. Update it whenever a verb, attribute or file changes.
 - `docs/designs/00-designs.md`: index of design topics with options and status. One file per topic, numbered `NN-name.md`. Keep the table and the files in step.
 - `docs/agents/sources.md`: which conversations fed which design entry.
-- `docs/agents/scan_export.py`: ranks and dumps conversations from a chat export.
+- `docs/agents/scan_export.py`: ranks and dumps conversations from a Claude chat export.
+- `docs/agents/scan_chatgpt_export.py`: the same for a ChatGPT export (many `conversations-NNN.json` files; keys are `file:position`).
 
 ## Conventions the author asked for
 

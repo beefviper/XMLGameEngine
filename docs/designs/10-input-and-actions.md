@@ -54,6 +54,15 @@ A key can be held while the state changes underneath it (hold Left, pause, unpau
 
 B and C differ only on return: B resumes a held key, C waits for a fresh press. Switching to C means dropping the resume half of `syncHeldKeysToState`.
 
+## Second batch: alternatives
+
+- **A frame-scoped command queue.** Input builds a list of intents (a command with a target and an amount); update consumes it, validating and applying. The queue is cleared every tick. Alternative rejected: a queue inside every object. Benefits listed: determinism, recording and replay, an AI that issues the same commands, and network sync later. The three-layer indirection above is the same idea seen from the XML side.
+- **Actions as data.** The key, the named action and the effect stay decoupled, so a binding can be swapped without touching physics.
+- **Many-to-one bindings.** Two players' inputs combined into one object (sum, same direction, opposite, majority, with momentum) would need a way to name several sources for one action ([28](28-game-ideas-and-test-games.md)).
+- **Few actions, not many buttons.** Complaints about games with a button per command and hold-to-interact everywhere point the same way: give the player a small set of named actions and let context choose the effect.
+- **Axis inversion** is a binding attribute rather than a game rule, if it is added.
+
 ## Sources
 
-- "Video game collection value in CAD" (2026-05-23): the named-action design and the remapping benefit.
+- "Engine design conversation A (a long general chat; only the project segment was used)" (2026-05-23): the named-action design and the remapping benefit.
+- Second batch: "Game Engine Command Queue" (2026-01-17), "Pong with Third Paddle" (2026-07-12), "Game controls and sluggishness" (2025-11-23).

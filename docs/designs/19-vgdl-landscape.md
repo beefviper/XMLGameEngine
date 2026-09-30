@@ -62,6 +62,14 @@ Applications and successors:
 
 The conditionals and loops are implicit, not absent: the engine's per-tick evaluation is the loop and pattern matching on collisions or grid state is the conditional. This is a production-rule or term-rewriting system, the same paradigm as cellular automata, Datalog and regex-based rule languages. The trade-off is explicit in the literature: expressiveness against compactness and generability. VGDL chose compactness so search and evolution can mutate thousands of games; a Turing-complete layer would kill that. It stops making sense where the sprite and interaction vocabulary runs out. XMLGameEngine makes the same bet, with exprtk carrying per-rule arithmetic rather than general control flow, and pays the same price ([01](01-vision-and-scope.md), [12](12-collision-escalation.md)).
 
+## Second batch: alternatives
+
+- **Current state.** The research VGDL is declarative and text-based, built for two-dimensional arcade-style games: sprites, interactions, terminations, a level layout. It became a foundation for general game-playing agents and, more recently, for generating games with language models.
+- **How the XML differs.** A structured element tree with schema validation, opt-in parts per object, and a growing verb set; similar spirit, more explicit structure.
+- **Related structure.** Entity-component systems are a near neighbor; the attraction is the same (parts a game can opt into).
+- **A question worth writing up.** How small can a vocabulary be and still express a class of games; related formal versions ask for the minimal rule set that distinguishes one game from another.
+
 ## Sources
 
 - "Video game description languages: overview and research" (2026-09-22).
+- Second batch: "VGDLs and Technology" (2026-05-09), "VGDL Papers and Projects" (2025-04-24), "Declarative Pong XML redesign" (2026-09-23).

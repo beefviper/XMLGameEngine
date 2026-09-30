@@ -54,6 +54,15 @@ Placing one object by another's size works the same way (`title.width + 10`). Ot
 - **Binding into exprtk**: per-entity variables bound into the symbol table before a condition or action tied to that entity is evaluated.
 - **Cost note:** with a map of strings, each read is a name-to-handle lookup and then a variable lookup. That is fine at Pong or Galaga scale; profile before optimizing.
 
+## Second batch: alternatives
+
+The polling design has a listed alternative that the second batch argued for.
+
+- **Observer everywhere.** Objects that depend on another object's value are notified when it changes, instead of reading it. Pros: decoupling, automatic updates, scaling to many readers (a score shown in several places). Cost: a little boilerplate, indirection. The author leaned toward observers throughout, for the sake of places to swap or reuse pieces later.
+- **Middle path.** References for simple, local dependencies; observers only where decoupling pays. Polling stays what the code does today.
+- **Position and size expressions.** An object's own size and window-relative positions remain plain named references.
+
 ## Sources
 
-- "Stack vs heap allocation in C++" (2026-08-07).
+- "C++ design conversation A" (2026-08-07).
+- Second batch: "Observer Pattern vs Reference" (2026-01-29).

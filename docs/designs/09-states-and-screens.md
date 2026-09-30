@@ -27,4 +27,4 @@ The useful conclusion was that `model_object` and `model_states` are **parallel*
 ## Sources
 
 - "XML game engine project structure review" (2026-07-20).
-- "Renaming game folder file prefixes" (2026-07-20).
+- "Project layout conversation B" (2026-07-20).

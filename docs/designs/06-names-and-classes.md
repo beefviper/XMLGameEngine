@@ -26,7 +26,13 @@ A single condition on `class="paddle"` checks either paddle's score, instead of 
 - **Unique names for every instance.** The author's view is that every object block needs a unique name anyway, so a grid could name its cells `block[x,y]`, and formations `group1[x]`, `group2[x]`. Today all cells of a `grid()` share the grid object's name, so a single brick cannot be addressed (see [07](07-object-variables-and-references.md) for why unique names would also simplify references).
 - **Wildcard queries** over an object's variables (`player1.*`), in the style of mIRC's scripting engine, as a way to work with groups of values. This would sit on top of a per-object variable map ([07](07-object-variables-and-references.md)).
 
+## Second batch: alternatives
+
+- **Tags in rules.** A rule could match by a tag (touching any enemy) instead of a name; this is what classes are for, and the second batch used the word tag for the same thing. Whether an object may carry several is the open part.
+- **Names as references.** A required unique name is what lets rules, inputs and conditions point at objects ([02](02-file-format.md)).
+
 ## Sources
 
-- "Video game collection value in CAD" (2026-05-23): the HTML analogy and the class-filtered win condition.
-- "Stack vs heap allocation in C++" (2026-08-07): unique names, `block[x,y]`, wildcards.
+- "Engine design conversation A (a long general chat; only the project segment was used)" (2026-05-23): the HTML analogy and the class-filtered win condition.
+- "C++ design conversation A" (2026-08-07): unique names, `block[x,y]`, wildcards.
+- Second batch: "Name Attribute in XML" (2026-07-22), "Declarative Pong XML redesign" (2026-09-23).

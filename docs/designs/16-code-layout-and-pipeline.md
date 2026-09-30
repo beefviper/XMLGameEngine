@@ -27,7 +27,15 @@ The layered directories were later flattened into `include/` and `source/` files
 - A `generate` step: nothing emits code from the description yet ([04](04-arithmetic-and-xslt-codegen.md)).
 - Whether a "live snapshot" (current state plus current object instances) should be its own type instead of living inside `Game` ([09](09-states-and-screens.md)).
 
+## Second batch: alternatives
+
+- **Load-time construction.** The game object runs parse, validate, evaluate and generate on creation; if any step fails, no object exists. Caveat: keep the constructor small by delegating to a builder or factory that returns a valid game or an error.
+- **Names for the stages and layers.** Builder versus factory versus compiler; prefixes for phases or managers. The compiler view: XML to raw model, verified model, resolved model, runtime.
+- **Tables resolved once.** Verb names could be turned into handlers when the file loads, so the running game never looks up strings ([25](25-targets-and-capability-profiles.md)).
+- **Phase order.** Input, update, render in the engine; collisions between update and render.
+
 ## Sources
 
 - "XML game engine project structure review" (2026-07-20).
-- "Renaming game folder file prefixes" (2026-07-20).
+- "Project layout conversation B" (2026-07-20).
+- Second batch: "Game Object Pipeline Design" (2026-07-21), "XML Architecture Review" (2026-07-21), "Data-driven tables versus code" (2025-09-04).

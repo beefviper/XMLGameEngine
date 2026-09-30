@@ -59,7 +59,17 @@ Pathfinding is the engine's job, not the XML's. Other likely targeting modes: di
 - **Sound.** There is no audio vocabulary yet.
 - **Pong to Galaxian, written formally.** The chain of tweaks ([01](01-vision-and-scope.md)) could become a design document showing which verbs each step adds.
 
+## Second batch: alternatives
+
+- **Jump.** See [23](23-jump-and-air-control.md): a jump model plus a per-axis air-control ladder, in place of only static and dynamic.
+- **Motion verbs.** [22](22-motion-models.md) for names of the motion models; [24](24-paths-and-formations.md) for scripted paths.
+- **Why the verb approach works.** Shared verbs (bounce, die, destruct) name expectations and hide machinery: detection, normals, restitution, clamping. A verb set stays finite when it counts mechanism families, not games.
+- **Danger sign.** A verb that exists to mean behave like one particular game shows the parameters were not found.
+- **Value helpers.** Clamp, saturate, cap and the other balance tricks in [28](28-game-ideas-and-test-games.md) as candidate value tags.
+- **Battle resolution.** Pairwise, aggregate and dominance styles ([28](28-game-ideas-and-test-games.md)) as parameters of one verb.
+
 ## Sources
 
-- "Video game collection value in CAD" (2026-05-23): jump, Pac-Man AI.
+- "Engine design conversation A (a long general chat; only the project segment was used)" (2026-05-23): jump, Pac-Man AI.
 - "Video game description languages: overview and research" (2026-09-22): jump parameters (that conversation ended before a reply to the final message).
+- Second batch: "Jump Behavior Models" (2026-09-23), "VGDL Design Challenges" (2026-01-28), "VGDLs and Technology" (2026-05-09).

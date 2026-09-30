@@ -60,7 +60,15 @@ Anywhere a value is allowed, a value tag is allowed. Only `<random min max>` exi
 
 Objects have named actions (`<action name="up"><move direction="up">step</move></action>`) and states bind keys to those names. That indirection is good design regardless of how the call is written ([10](10-input-and-actions.md)).
 
+## Second batch: alternatives
+
+- **Statements as a command list.** Several actions in one rule (bounce, then move down) were accepted because the list is sequential, deterministic and has no control flow: a command list, not a script. The condition for staying safe is to keep out conditionals, loops, variables and dynamic dispatch.
+- **Responses as elements.** Two shapes for the reaction to a collision: one element with named effects, or a list of response elements each with a command and a target. The first reads more like a game description; the second is more regular for a schema ([27](27-object-composition-and-shape.md)).
+- **Named parts of an expression.** A window size expressed as a dotted name, and an object's own size in expressions, were kept as readable text; sign and magnitude for random speeds (see [13](13-verb-vocabulary.md)) can be value tags.
+- **A helper set for shaping values.** Clamp, saturate, cap, floor, diminishing returns and multiply-by-a-comparison are the common tricks for balancing without branches; each is a candidate value tag if the arithmetic stays text ([28](28-game-ideas-and-test-games.md)).
+
 ## Sources
 
-- "Video game collection value in CAD" (2026-05-23): first statement of the concern.
+- "Engine design conversation A (a long general chat; only the project segment was used)" (2026-05-23): first statement of the concern.
 - "XML variable references in game engine" (2026-09-25): the `pong.xml` review and the sequencing point.
+- Second batch: "Game Engine Command Queue" (2026-01-17), "Declarative Pong XML redesign" (2026-09-23), "Game Mechanics Tricks" (2026-07-06).

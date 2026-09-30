@@ -40,6 +40,12 @@ Entities declare classes or tags (the existing `class` attribute is the anchor).
 
 The engine today is at the first rung only: `class` and `object` filters on a `basic` rule ([06](06-names-and-classes.md), [11](11-collision-detection-and-response.md)).
 
+## Second batch: alternatives
+
+- **Response as mapping.** Instead of a verb for reflect, describe how the outcome depends on the contact (where, how fast, with what) and let the mapping be the rule ([11](11-collision-detection-and-response.md)).
+- **Interactions as constraints.** The declarative framing: an object reflects off surfaces with a response profile, so the data says what a surface does and what an object does to surfaces. This raises the question of which side owns the reflection.
+
 ## Sources
 
 - "Video game description languages: overview and research" (2026-09-22).
+- Second batch: "VGDL Design Challenges" (2026-01-28), "Pong vs Donkey Kong Physics" (2026-01-29).

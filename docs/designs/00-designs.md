@@ -27,11 +27,18 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 19 | The VGDL landscape | GDL, RBG, Ludii, PuzzleScript, Griddly, GVGAI | Reference only | [19](19-vgdl-landscape.md) |
 | 20 | Ideas parking lot | machine-readable state export; growth components; more | **Idea** | [20](20-ideas-parking-lot.md) |
 | 21 | Frogger and the vocabulary it added | how to say lives, one-step hops, looping lanes, riding, and "unless on a log" | `dec`/`atmost`, `hop`, `wrap`, `carry`, `unless`, more verbs in object rules, named colors. **Built** | [21](21-frogger.md) |
+| 22 | Motion models | position-driven / constant velocity / accelerated; kinematic vs dynamic and other labels; animation-locked vs free control | Kinematic and dynamic as public words; movement-feel options. **Idea** | [22](22-motion-models.md) |
+| 23 | Jump and air control | jump types (static, dynamic) / jump model plus a per-axis air-control ladder / movement as capabilities | Air-control ladder and capability form refine [13](13-verb-vocabulary.md). **Idea** | [23](23-jump-and-air-control.md) |
+| 24 | Paths and formations | lookup table / parametric curve / Bezier / command sequence; formation slots | Support all four behind one interface. **Idea** | [24](24-paths-and-formations.md) |
+| 25 | Targets and capability profiles | one target / several targets with limits and degradation reports; null and software backends; tables resolved at load | Long-term direction. **Idea** | [25](25-targets-and-capability-profiles.md) |
+| 26 | Scrolling and screen regions | camera / world / region scroll; map layers; tile triggers; route branching | Undecided. **Idea** | [26](26-scrolling-and-screen-regions.md) |
+| 27 | Object composition and shape | opt-in parts; position and velocity vs at and moving; response block forms; shapes as reusable outlines | Opt-in parts favored. **Idea** | [27](27-object-composition-and-shape.md) |
+| 28 | Game ideas and test games | Pong variants, mocking difficulty, unwinnable starts, combat styles, packing, balance math | Candidates only. **Idea** | [28](28-game-ideas-and-test-games.md) |
 
 ## Reading order
 
-New to the project: [readme](../readme.md), then 01, 02, 03, 09, 10, 11. Working on the language: 03, 04, 12, 13, 14, 21. Working on the C++: 07, 08, 15, 16.
+New to the project: [readme](../readme.md), then 01, 02, 03, 09, 10, 11. Working on the language: 03, 04, 12, 13, 14, 21, 22, 23, 24. Working on the C++: 07, 08, 15, 16, 25.
 
 ## Where this came from
 
-Compiled by Claude (Sonnet 5.5) on 2026-09-29 from the author's exported conversation history (see [../agents/sources.md](../agents/sources.md)) and checked against the source on the `claude` branch.
+Compiled by Claude (Sonnet 5.5) on 2026-09-29 from the author's exported conversation history (see [../agents/sources.md](../agents/sources.md)) and checked against the source on the `claude` branch. A second batch (docs 22 to 28, plus new sections headed second batch in earlier docs) came from a second export on 2026-09-30.

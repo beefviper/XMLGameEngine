@@ -37,7 +37,14 @@ A component that owns a growth-stage index and regenerates structure (for exampl
 
 Heap allocation for an emulated RAM block was mentioned as an architecture decision in the author's history; details are not in the exported conversations.
 
+## Second batch: alternatives
+
+- **Machine descriptions as data.** Keep a target's tables in files, resolve them at start-up ([25](25-targets-and-capability-profiles.md)).
+- **AI players through a null input.** A scripted or learned player driving the same command queue as a human ([10](10-input-and-actions.md)).
+- **Game ideas** are collected in [28](28-game-ideas-and-test-games.md).
+
 ## Sources
 
 - "Training a local LLM to play classic games" (2026-09-25).
-- "Dynamic tree aging through scaling" (2026-08-20).
+- "Simulation idea conversation" (2026-08-20).
+- Second batch: "Data-driven tables versus code" (2025-09-04).

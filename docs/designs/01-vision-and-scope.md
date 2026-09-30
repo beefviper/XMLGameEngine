@@ -44,7 +44,18 @@ It began as Pong written entirely in C++. Pieces were abstracted into an XML fil
 - Where the vocabulary boundary sits: is scrolling a property of a camera or world, or a verb applied to objects? Is gravity a global parameter of the world, or a force applied to specific objects? ([13](13-verb-vocabulary.md))
 - How far a closed vocabulary can go before games need engine changes, the ceiling every language in this family hits ([19](19-vgdl-landscape.md)).
 
+## Second batch: alternatives
+
+A later set of conversations restated the vision from a few new angles.
+
+- **The pull toward a programming language.** A declarative format that needs real behavior tends to reintroduce a general expression language and slowly become a programming language again. The defense discussed: keep a *verb* language (choose from known behaviors, give them parameters) rather than an *expression* language (compute anything). Arithmetic for positioning across window sizes was judged acceptable; function-call strings were the thing to remove ([03](03-expression-syntax.md)).
+- **A theory of games, not a file format.** Designing this is closer to defining what a collision or an interaction *is* than to serializing data. Each exception becomes a first-class concept, and the difficulty grows with the number of *contexts* a mechanic can appear in (elastic or not, solid or trigger, one-way or not), not with the number of mechanics. The primitives themselves (shapes, motion kinds, forces, interactions, states) are finite.
+- **Recognition over completeness.** Shared words such as bounce and die let a reader recognize familiar behavior without knowing the machinery. The goal is a vocabulary that a person with no programming background can read; tags read as nouns, attributes as descriptions, nesting as containment.
+- **Mechanism families.** Finiteness comes from a small number of families with parameters, not from one verb per game style ([13](13-verb-vocabulary.md), [23](23-jump-and-air-control.md)).
+- **A research angle.** The interesting question a description language raises is how small a vocabulary can be while still describing a class of games; related to entity-component systems in structure ([19](19-vgdl-landscape.md), [27](27-object-composition-and-shape.md)).
+
 ## Sources
 
-- "Video game collection value in CAD" (2026-05-23), the section where the project is first described and the lineage argument is told.
+- "Engine design conversation A (a long general chat; only the project segment was used)" (2026-05-23), the section where the project is first described and the lineage argument is told.
 - "Video game description languages: overview and research" (2026-09-22).
+- Second batch (ChatGPT export): "VGDL Design Challenges" (2026-01-28), "VGDLs and Technology" (2026-05-09), "Declarative Pong XML redesign" (2026-09-23).

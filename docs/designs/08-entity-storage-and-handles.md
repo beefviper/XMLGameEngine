@@ -44,7 +44,13 @@ C++26 reflection does not change this. It is compile-time only; it can generate 
 
 `Game` keeps `std::vector<Object>` and finds objects by linear search on name (`getObject`, `tryGetObject`). There is no handle system, no `Value` variant, and no ECS layer yet.
 
+## Second batch: alternatives
+
+- **Opt-in parts.** An object as a name and a position plus optional physics, appearance, input and actions, so that a HUD element carries no velocity or collision. Storage could hold parts in separate arrays. Details in [27](27-object-composition-and-shape.md).
+- **Component with state.** A part such as a growth stage that owns its own state fits the same model ([20](20-ideas-parking-lot.md)).
+
 ## Sources
 
-- "Stack vs heap allocation in C++" (2026-08-07).
-- "Inheritance vs composition in C++ design" (2026-09-05).
+- "C++ design conversation A" (2026-08-07).
+- "C++ design conversation B" (2026-09-05).
+- Second batch: "Declarative Pong XML redesign" (2026-09-23).

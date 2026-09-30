@@ -44,7 +44,30 @@ The declarative form of the idea: the XML does not spell out an if-the-ball-touc
 - Acceleration is a stated future need (currently only position and velocity).
 - The C++ is scaffolding; the language design is the real project. Collision code should follow the vocabulary, not lead it. See [12](12-collision-escalation.md) for how the vocabulary might scale.
 
+## Second batch: alternatives
+
+**Detection alternatives.**
+
+- **Sorted swept boxes.** Take last and current positions, wrap the swept path in a box, keep objects sorted along an axis, and stop testing at the first that cannot overlap. A cheap "what might collide" pass, then an expensive "how" pass. The built solution has no broad phase (see the notes above); this is the likely shape if one is needed.
+- **Smaller time steps.** Running the physics faster than the frame rate is the other cure for tunneling; the swept approach avoids the extra steps.
+- **Deferred handling.** Detect first and collect the touches; then resolve in a separate pass; then update sprites. Alternatives for the response hook: a virtual method on the object, a collision component, or data-driven actions (the direction taken).
+
+**Naming and targets.**
+
+- **Screen edges as objects.** Treat the world bounds as invisible collidable planes the engine creates, so a rule says touching the left bound rather than testing coordinates. Rules could then read as sentences: on touching a target, do something.
+- **What versus how.** An attribute that says what was hit (edge, object, trigger) is a different concept from one that says what to do; mixing them in one attribute name was the confusing part of an early form. A separate attribute for the target kind was proposed.
+- **Edge orientation.** A hit on the top or bottom edge is a vertical collision, because the surface normal is vertical.
+- **Grouped edges.** Grouping names such as vertical, horizontal and all are shortcuts over the four sides.
+
+**Response alternatives.**
+
+- **Classic.** Reverse a velocity component.
+- **Contact-point mapping.** The hit position on the paddle sets the outgoing angle.
+- **Velocity transfer.** The moving paddle adds a share of its speed; a paddle that can also move along the ball's path changes the rebound speed ([28](28-game-ideas-and-test-games.md)).
+- **Two rules at once.** When several rules apply, is reflection a property of the ball, the paddle, the pair, or the rule? The open question that [12](12-collision-escalation.md) tries to answer.
+
 ## Sources
 
-- "Video game collection value in CAD" (2026-05-23): prototype `game.cpp` and its review.
+- "Engine design conversation A (a long general chat; only the project segment was used)" (2026-05-23): prototype `game.cpp` and its review.
 - "Refactoring SFML Pong game code" (2026-07-11) and "Fixing pong collision and ball sticking issues" (2026-07-13).
+- Second batch: "Collision detection techniques" (2026-07-19), "Deferred Collision Handling" (2025-04-22), "Collision definition suggestions" (2026-07-23), "Vertical Collision Calculation" (2024-12-24), "Pong vs Donkey Kong Physics" (2026-01-29).
