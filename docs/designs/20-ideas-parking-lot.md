@@ -12,8 +12,22 @@ Relevance here: an engine whose whole state is already declared in XML would be 
 
 ## Descriptions the engine could be tested against
 
-- The `games/` files (Pong, Breakout, Space Invaders) are the working proof. A "Galaxian" step, and a game that needs jump, would be the natural next tests of the vocabulary ([01](01-vision-and-scope.md), [13](13-verb-vocabulary.md)).
+- The `games/` files (Pong, Breakout, Space Invaders, Frogger, Space Race) are the working proof. A "Galaxian" step, and a game that needs jump, would be the natural next tests of the vocabulary ([01](01-vision-and-scope.md), [13](13-verb-vocabulary.md)).
 - A written Pong-to-Galaxian chain showing which verb each step adds ([13](13-verb-vocabulary.md)).
+
+## Passing information between states
+
+Space Race (`games/spacerace.xml`) has two win states, `player1wins` and `player2wins`, that are identical except for the text. That is fine for now, but it points at a gap: a state transition carries no information. A condition can send the game to a state, but the destination cannot know which condition fired or which object triggered it.
+
+Idea: let a triggered condition hand something to the state it enters, for example the object (or its name) that satisfied it, so one `wins` state could show "`{winner}` wins" instead of needing one state per player. Related questions: whether the payload is the object, its name, or a copied value, how the destination refers to it (a reserved name such as `trigger`?), and how long it lives once the state is left. The same mechanism would probably also serve high-score entry and "which brick ended the game" style screens. Not designed; noted from the Space Race work (2026-09-30).
+
+## Raylib input polling: possible double poll
+
+SFML and SDL2 have real event queues; Raylib only offers "was this key pressed/released since the last poll" queries. `RaylibWindow::pollEvents()` therefore scans its whole key table every frame and builds `{key, pressed}` pairs from `IsKeyPressed` and `IsKeyReleased`, so the engine sees the same shape of data from every backend. The author likes that pattern and it stays.
+
+Suspected problem, **not verified, Raylib build not tested for it**: `pollEvents()` also calls `PollInputEvents()`, and Raylib's `EndDrawing()` already calls it unless built with `SUPPORT_CUSTOM_FRAME_CONTROL` (not set anywhere in this repo). If both run each frame, the second poll can copy the current key state over the previous one before the scan, so `IsKeyPressed` and `IsKeyReleased` would report nothing and key presses would be dropped.
+
+If Raylib ever seems to miss inputs, check this first. The likely fix is to remove the explicit `PollInputEvents()` call from `pollEvents()` and rely on `EndDrawing()`. Smaller known limits of the scan: a tap shorter than one frame can be lost, and events come out in key-table order rather than the order they happened. Noted 2026-09-30.
 
 ## Growth systems as components
 
