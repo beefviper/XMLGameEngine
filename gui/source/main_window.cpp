@@ -25,7 +25,7 @@ namespace xge
 		view(new GameView),
 		session(new GameSession(*view, this)),
 		inspector(new Inspector(*session)),
-		lastDirectory(QDir("games").exists() ? "games" : ".")
+		lastDirectory(QDir("games").exists() ? QDir("games").absolutePath() : QDir::currentPath())
 	{
 		setWindowTitle(tr("XML Game Engine"));
 

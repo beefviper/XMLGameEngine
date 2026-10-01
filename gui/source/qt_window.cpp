@@ -194,7 +194,18 @@ namespace xge
 
 		image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
+		// QImage::mirrored() was renamed flipped() in Qt 6.9 and now warns.
 		const std::string& flip = object.spriteParams.at(2);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+		if (flip == "flip.horizontal")
+		{
+			image = image.flipped(Qt::Horizontal);
+		}
+		else if (flip == "flip.vertical")
+		{
+			image = image.flipped(Qt::Vertical);
+		}
+#else
 		if (flip == "flip.horizontal")
 		{
 			image = image.mirrored(true, false);
@@ -203,6 +214,7 @@ namespace xge
 		{
 			image = image.mirrored(false, true);
 		}
+#endif
 
 		return image;
 	}

@@ -26,6 +26,10 @@ A value that can change has an editor on its own row: a spin box with up and dow
 
 Editors are only made when their parent row is first opened, because a game has thousands of values (Frogger has 110 objects) and most are never looked at.
 
+### Finding the games and assets
+
+The engine reads `assets/` (the font, images) relative to the working directory, and the games are in `games/`. `XGEGUI` looks for a folder that has both in the working directory, then next to the program, then in the folder above it (a Visual Studio build puts the program in `build/Debug` and the copies of `games/` and `assets/` in `build/`). The first one found becomes the working directory, so the program can be started from anywhere, and the file dialog opens in its `games/`. A game named on the command line is found the way `XGECLI` finds one (a bare name gets `.xml`; then as given, its file name alone, then in `games/`). `XGECLI` still only looks in the working directory.
+
 ## Not done
 
 - States are shown but not editable: a state on the stack is a copy of the one in the game's list, so a change would have to reach both.
