@@ -5,12 +5,19 @@
 
 #include "window_raylib.h"
 
+// raylib is built on GLFW. Asked for only to make the context current again
+// (activate()); no OpenGL declarations are wanted.
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 #include "builtin_font.h"
 #include "color.h"
 
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include <stdexcept>
 
 namespace xge
 {
@@ -84,9 +91,34 @@ namespace xge
 		constexpr ::Color kWhite{ 255, 255, 255, 255 };
 	}
 
-	RaylibWindow::RaylibWindow(const WindowDesc& windowDesc)
+	RaylibWindow::RaylibWindow(const WindowDesc& windowDesc, const WindowTarget& target) :
+		offscreen(target.kind == WindowTarget::Kind::BackBuffer)
 	{
+		if (offscreen)
+		{
+			SetConfigFlags(FLAG_WINDOW_HIDDEN);
+		}
+
 		InitWindow(static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height), windowDesc.name.c_str());
+
+		if (offscreen)
+		{
+			if (!IsWindowReady())
+			{
+				throw std::runtime_error("raylib could not start");
+			}
+
+			graphicsContext = glfwGetCurrentContext();
+			backTarget = LoadRenderTexture(static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height));
+			captured.width = static_cast<int>(windowDesc.width);
+			captured.height = static_cast<int>(windowDesc.height);
+			captured.rgba.assign(static_cast<std::size_t>(captured.width) * static_cast<std::size_t>(captured.height) * 4, 0);
+
+			// No frame wait either: the front end decides when a frame is due.
+			SetExitKey(KEY_NULL);
+			isOpenFlag = true;
+			return;
+		}
 
 		if (windowDesc.fullscreen == "true")
 		{
@@ -125,6 +157,11 @@ namespace xge
 				UnloadFont(font);
 			}
 
+			if (offscreen)
+			{
+				UnloadRenderTexture(backTarget);
+			}
+
 			CloseWindow();
 			isOpenFlag = false;
 		}
@@ -157,6 +194,13 @@ namespace xge
 		// as the other backends' queues.
 		std::vector<std::pair<KeyCode, bool>> events;
 
+		// A hidden window has no keyboard: the front end that owns the real
+		// one passes the keys on itself.
+		if (offscreen)
+		{
+			return events;
+		}
+
 		for (const auto& [rayKey, code] : keyTable)
 		{
 			const bool down = IsKeyDown(rayKey);
@@ -173,7 +217,15 @@ namespace xge
 
 	void RaylibWindow::clear(const std::string& colorName)
 	{
-		BeginDrawing();
+		if (offscreen)
+		{
+			BeginTextureMode(backTarget);
+		}
+		else
+		{
+			BeginDrawing();
+		}
+
 		ClearBackground(toRaylibColor(colorFromName(colorName)));
 	}
 
@@ -187,6 +239,13 @@ namespace xge
 			// SFMLWindow::draw() (window_sfml.cpp).
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);
+
+			// Building a visual draws to its own texture and, when that is
+			// done, leaves raylib drawing to the screen: back to the frame.
+			if (offscreen)
+			{
+				BeginTextureMode(backTarget);
+			}
 		}
 
 		const Texture2D& texture = visual.renderTexture.texture;
@@ -200,8 +259,54 @@ namespace xge
 		DrawTextureRec(texture, source, position, kWhite);
 	}
 
+	const Bitmap* RaylibWindow::backBuffer() const
+	{
+		return offscreen ? &captured : nullptr;
+	}
+
+	void RaylibWindow::activate()
+	{
+		if (graphicsContext)
+		{
+			glfwMakeContextCurrent(static_cast<GLFWwindow*>(graphicsContext));
+		}
+	}
+
+	// Reads the finished frame out of the texture: right way up, and opaque
+	// (the background was).
+	void RaylibWindow::captureBackTarget()
+	{
+		Image image = LoadImageFromTexture(backTarget.texture);
+		ImageFlipVertical(&image);
+
+		if (image.format != PIXELFORMAT_UNCOMPRESSED_R8G8B8A8)
+		{
+			ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+		}
+
+		const std::size_t bytes = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height) * 4;
+		if (image.data && bytes == captured.rgba.size())
+		{
+			std::memcpy(captured.rgba.data(), image.data, bytes);
+
+			for (std::size_t alpha = 3; alpha < bytes; alpha += 4)
+			{
+				captured.rgba[alpha] = 255;
+			}
+		}
+
+		UnloadImage(image);
+	}
+
 	void RaylibWindow::display()
 	{
+		if (offscreen)
+		{
+			EndTextureMode();
+			captureBackTarget();
+			return;
+		}
+
 		EndDrawing();
 
 		// A raylib built with SUPPORT_CUSTOM_FRAME_CONTROL (some package

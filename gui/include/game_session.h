@@ -7,6 +7,7 @@
 
 #include "engine.h"
 #include "game.h"
+#include "session_options.h"
 
 #include <QElapsedTimer>
 #include <QObject>
@@ -17,7 +18,7 @@
 
 namespace xge
 {
-	class GameView;
+	class GameStage;
 
 	// One loaded game and the engine running it, driven from a Qt timer
 	// instead of Engine::loop(), so the application keeps its own event loop
@@ -27,12 +28,12 @@ namespace xge
 		Q_OBJECT
 
 	public:
-		explicit GameSession(GameView& view, QObject* parent = nullptr);
+		explicit GameSession(GameStage& stage, QObject* parent = nullptr);
 		~GameSession() override;
 
-		// Loads a game file and starts it playing. On failure the previous game
-		// is gone and error() says why.
-		bool load(const QString& file);
+		// Loads a game file and, by default, starts it playing. On failure the
+		// previous game is gone and error() says why.
+		bool load(const QString& file, bool startPlaying = true);
 		const QString& error() const noexcept { return lastError; }
 
 		bool isLoaded() const noexcept { return static_cast<bool>(game); }
@@ -41,6 +42,18 @@ namespace xge
 
 		// Null when no game is loaded.
 		Game* currentGame() noexcept { return game.get(); }
+
+		// The video library and XML parser in use, and in use for the next game
+		// loaded.
+		const SessionOptions& options() const noexcept { return currentOptions; }
+
+		// Uses the new options. With a game loaded: a new video library gets
+		// the game just as it is (every object, every value, the state it is in)
+		// and draws it again; the game is left paused, to be played again when
+		// the user wants. A new XML parser has to read the game file again, so
+		// the game starts over (also paused). Returns false if that failed
+		// (error() says why).
+		bool applyOptions(const SessionOptions& next);
 
 	public slots:
 		void play();
@@ -66,8 +79,12 @@ namespace xge
 		void frameAdvanced();
 		void failed(const QString& message);
 
+		// The video library asked for would not start, and the Qt renderer is
+		// being used instead.
+		void videoFellBack(const QString& message);
+
 	private:
-		GameView& view;
+		GameStage& stage;
 		std::unique_ptr<Game> game;
 		std::unique_ptr<Engine> engine;
 		QTimer timer;
@@ -78,12 +95,20 @@ namespace xge
 		bool playing{ false };
 		unsigned long frameCount{ 0 };
 		QString lastError;
+		QString currentFile;
+		SessionOptions currentOptions;
 
 		// The timer's slot: plays however many frames the clock says are due.
 		void advance();
 
 		// One frame of the simulation, drawn.
 		void tick();
+
+		// A Window for the game with the video library chosen: a library's own
+		// window drawing into the stage, or the Qt renderer. If the library
+		// will not start, the Qt renderer, and videoFellBack().
+		std::unique_ptr<Window> makeWindow(const WindowDesc& desc);
+		std::unique_ptr<Window> makeLibraryWindow(const WindowDesc& desc, VideoBackend video);
 		void fail(const QString& message);
 	};
 }

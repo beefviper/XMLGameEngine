@@ -25,7 +25,9 @@ namespace xge
 	class SDL2Window : public Window
 	{
 	public:
-		explicit SDL2Window(const WindowDesc& windowDesc);
+		// With a WindowTarget of Kind::NativeWindow, draws into the front end's
+		// own window (see window.h) instead of opening one.
+		explicit SDL2Window(const WindowDesc& windowDesc, const WindowTarget& target = {});
 		~SDL2Window() override;
 
 		bool isOpen() const override;

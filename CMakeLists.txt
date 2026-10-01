@@ -55,6 +55,7 @@ set(ENGINE_SOURCES
 	"lib/source/window_sfml.cpp"
 	"lib/source/window_raylib.cpp"
 	"lib/source/window_sdl2.cpp"
+	"lib/source/window_opengl.cpp"
 )
 
 set(ENGINE_HEADERS
@@ -83,6 +84,7 @@ set(ENGINE_HEADERS
 	"lib/include/window_sfml.h"
 	"lib/include/window_raylib.h"
 	"lib/include/window_sdl2.h"
+	"lib/include/window_opengl.h"
 )
 
 target_sources(XGELIB PRIVATE

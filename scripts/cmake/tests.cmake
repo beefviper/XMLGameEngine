@@ -59,6 +59,7 @@ add_executable(XGETEST
 	"tests/test_builtin_font.cpp"
 	"tests/test_cli.cpp"
 	"tests/test_data_folder.cpp"
+	"tests/test_window_target.cpp"
 	"cli/source/cli.cpp"
 )
 

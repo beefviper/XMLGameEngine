@@ -13,6 +13,7 @@
 #include "window.h"
 
 #include <array>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,6 +34,15 @@ namespace xge
 		Engine(Game& game, std::unique_ptr<Window> window);
 
 		void loop(void);
+
+		// Swaps the Window for another while the game is running: the old one
+		// is destroyed first (some libraries can only have one window at a
+		// time), then `create` is called for the new one, and every object's
+		// picture is built again for it. Nothing about the game changes - not
+		// the objects, the values, or the state the game is in - and the keys
+		// held stay held. If `create` throws, the engine has no window and can
+		// only be given one by calling this again (or destroyed).
+		void replaceWindow(const std::function<std::unique_ptr<Window>()>& create);
 
 		// What loop() does each frame, split in two so a front end that owns
 		// the event loop (the Qt application, XGEGUI) can run the engine from

@@ -75,6 +75,17 @@ if (NOT FORCE_LOCAL_RAYLIB)
 	find_package(raylib QUIET)
 endif()
 
+# The system's OpenGL library, for the OpenGL backend (window_opengl.cpp). It
+# is part of every platform's SDK, so it is only ever found, never fetched.
+find_package(OpenGL REQUIRED)
+
+# GLFW is the OpenGL backend's window and keyboard (window_opengl.h), and raylib
+# is built on it too: vcpkg installs it for raylib, and a raylib built from
+# source brings its own `glfw` target.
+if (NOT FORCE_LOCAL_GLFW)
+	find_package(glfw3 QUIET)
+endif()
+
 if (NOT FORCE_LOCAL_SDL2)
 	find_package(SDL2 QUIET)
 endif()
@@ -164,6 +175,27 @@ declare_fetched_dependency(
 	NAME raylib
 	REPO https://github.com/raysan5/raylib.git
 	TAG 5.5)
+
+# When neither GLFW nor raylib was found, the fetched raylib builds GLFW itself
+# and defines the same `glfw` target, so GLFW is not fetched a second time.
+if (glfw3_FOUND OR raylib_FOUND)
+	declare_fetched_dependency(
+		FOUND_VAR glfw3_FOUND
+		DISPLAY_NAME "GLFW"
+		INFO_VAR glfw3_DIR
+		NAME glfw
+		REPO https://github.com/glfw/glfw.git
+		TAG 3.4)
+
+	if (NOT glfw3_FOUND)
+		set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build GLFW's examples" FORCE)
+		set(GLFW_BUILD_TESTS OFF CACHE BOOL "Do not build GLFW's tests" FORCE)
+		set(GLFW_BUILD_DOCS OFF CACHE BOOL "Do not build GLFW's documentation" FORCE)
+		set(GLFW_INSTALL OFF CACHE BOOL "Disable GLFW's own install rules" FORCE)
+	endif()
+else()
+	message(STATUS "GLFW not found, and neither is raylib: the raylib built here brings its own.")
+endif()
 
 declare_fetched_dependency(
 	FOUND_VAR SDL2_FOUND

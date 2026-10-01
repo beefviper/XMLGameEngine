@@ -22,6 +22,14 @@ target_link_libraries(XGELIB PUBLIC SFML::System
 # are built in so that choice can be made at runtime instead of at build time.
 target_link_libraries(XGELIB PUBLIC raylib)
 
+# The OpenGL backend (window_opengl.h) is built on GLFW, which raylib is built
+# on too: one `glfw` target either way (found, fetched, or raylib's own).
+target_link_libraries(XGELIB PUBLIC glfw)
+
+# The OpenGL backend calls OpenGL itself (window_opengl.cpp), so it links the
+# system's OpenGL library: opengl32 on Windows, libGL on Linux.
+target_link_libraries(XGELIB PUBLIC OpenGL::GL)
+
 target_link_libraries(XGELIB PUBLIC SDL2::SDL2)
 if (TARGET SDL2::SDL2main)
 	target_link_libraries(XGELIB PUBLIC SDL2::SDL2main)

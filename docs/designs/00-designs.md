@@ -46,6 +46,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 36 | Built-in font | no font file means no text / text from a font stored in the program; a TTF in the executable / a small bitmap table | An 8x8 bitmap font in `builtin_font.cpp`, drawn through `Bitmap`. **Built** | [36](36-builtin-font.md) |
 | 37 | Command line | positional game only / options with attached or spaced values / `--name=value`; defaults / required backends | `-g`, `-w`, `-x` (and long forms), bare game kept, `--game pong` spaced only. **Built** | [37](37-command-line.md) |
 | 38 | Qt front end | embed an SFML/SDL2 window in Qt / draw the picture ourselves with a Qt backend; a tree of the data / a form per object; edit the running game / a copy | A `Window` backend that draws with QPainter into a Qt widget, a tree of the XML structure with an editor on each changeable value, the engine run from a timer so it can be paused and stepped. **Built** | [38](38-qt-front-end.md) |
+| 39 | OpenGL backend and Options | embed raylib/GLFW by reparenting / draw them to a back buffer; GLFW with a loader / plain OpenGL 1.1; options on restart / swap the window live | `Window` gets a `WindowTarget` (own window, native window, back buffer), a GLFW `OpenGLWindow`, `Engine::replaceWindow`, and an Options dialog (video, XML parser). **Built, not run on Windows** | [39](39-opengl-backend-and-options.md) |
 
 ## Reading order
 

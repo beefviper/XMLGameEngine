@@ -5,16 +5,18 @@
 
 #include "game_session.h"
 
-#include "game_view.h"
+#include "embedded_window.h"
+#include "game_stage.h"
 #include "qt_window.h"
 
 #include <exception>
+#include <functional>
 
 namespace xge
 {
-	GameSession::GameSession(GameView& view, QObject* parent) :
+	GameSession::GameSession(GameStage& stage, QObject* parent) :
 		QObject(parent),
-		view(view)
+		stage(stage)
 	{
 		// The timer only wakes the session up often; advance() decides from the
 		// clock whether a frame is due. A timer of the frame's own length
@@ -34,7 +36,7 @@ namespace xge
 		game.reset();
 	}
 
-	bool GameSession::load(const QString& file)
+	bool GameSession::load(const QString& file, bool startPlaying)
 	{
 		pause();
 
@@ -46,12 +48,12 @@ namespace xge
 
 		try
 		{
-			game = std::make_unique<Game>(file.toStdString());
+			game = std::make_unique<Game>(file.toStdString(), currentOptions.xml);
 
 			const WindowDesc& desc = game->getWindowDesc();
-			view.setGameSize(static_cast<int>(desc.width), static_cast<int>(desc.height));
+			stage.setGameSize(static_cast<int>(desc.width), static_cast<int>(desc.height));
 
-			engine = std::make_unique<Engine>(*game, std::make_unique<QtWindow>(view));
+			engine = std::make_unique<Engine>(*game, makeWindow(desc));
 
 			// The frame pace: the game moves a fixed amount a frame, so this is
 			// also its speed.
@@ -68,9 +70,105 @@ namespace xge
 			return false;
 		}
 
+		currentFile = file;
+
 		emit loaded();
-		play();
+
+		if (startPlaying)
+		{
+			play();
+		}
+
 		return true;
+	}
+
+	bool GameSession::applyOptions(const SessionOptions& next)
+	{
+		const bool xmlChanged = next.xml != currentOptions.xml;
+		const bool videoChanged = next.video != currentOptions.video;
+		currentOptions = next;
+
+		if (!game || (!xmlChanged && !videoChanged))
+		{
+			return true;
+		}
+
+		// A new parser means reading the file again; that also builds the
+		// window with the new video library.
+		if (xmlChanged)
+		{
+			return load(currentFile, false);
+		}
+
+		pause();
+		lastError.clear();
+
+		try
+		{
+			engine->replaceWindow([this] { return makeWindow(game->getWindowDesc()); });
+			engine->render();
+		}
+		catch (const std::exception& e)
+		{
+			// The new library could not take the game: the Qt renderer can.
+			try
+			{
+				currentOptions.video = VideoBackend::Qt;
+				engine->replaceWindow([this] { return makeWindow(game->getWindowDesc()); });
+				engine->render();
+				emit videoFellBack(QString::fromUtf8(e.what()));
+			}
+			catch (const std::exception& again)
+			{
+				fail(QString::fromUtf8(again.what()));
+				return false;
+			}
+		}
+
+		stage.focusGame();
+		emit frameAdvanced();
+		return true;
+	}
+
+	std::unique_ptr<Window> GameSession::makeWindow(const WindowDesc& desc)
+	{
+		if (currentOptions.video != VideoBackend::Qt)
+		{
+			try
+			{
+				return makeLibraryWindow(desc, currentOptions.video);
+			}
+			catch (const std::exception& e)
+			{
+				currentOptions.video = VideoBackend::Qt;
+				emit videoFellBack(QString::fromUtf8(e.what()));
+			}
+		}
+
+		stage.showView();
+		return std::make_unique<QtWindow>(stage.view());
+	}
+
+	std::unique_ptr<Window> GameSession::makeLibraryWindow(const WindowDesc& desc, VideoBackend video)
+	{
+		const WindowBackend backend = libraryBackend(video);
+
+		// A library that can draw into a window of someone else's is given
+		// one; one that cannot draws to a back buffer, and the stage shows what
+		// it drew.
+		WindowTarget target;
+		if (WindowFactory::embedding(backend) == Embedding::NativeWindow)
+		{
+			target.kind = WindowTarget::Kind::NativeWindow;
+			target.nativeHandle = stage.showFreshSurface();
+		}
+		else
+		{
+			target.kind = WindowTarget::Kind::BackBuffer;
+			stage.showView();
+		}
+
+		return std::make_unique<EmbeddedWindow>(WindowFactory::create(desc, backend, target), stage);
 	}
 
 	void GameSession::play()

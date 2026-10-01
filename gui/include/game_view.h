@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include "keycode.h"
+#include "bitmap.h"
+#include "key_queue.h"
 
 #include <QImage>
 
@@ -15,7 +16,6 @@
 #include <QWidget>
 #endif
 
-#include <array>
 #include <utility>
 #include <vector>
 
@@ -32,16 +32,16 @@ namespace xge
 	using GameViewBase = QWidget;
 #endif
 
-	// The widget the game is shown in: the picture the QtWindow backend
-	// (qt_window.h) draws a frame into, shown as large as fits without changing
-	// its proportions, and the place the keyboard goes while it has focus. It owns no game logic. The engine draws into
-	// frame(), calls present() when a frame is finished, and asks for the keys
-	// pressed since the last frame with takeKeyEvents(), the same job pollEvents()
-	// does for the other backends.
+	// A widget that shows a picture the program drew itself: the picture the
+	// QtWindow backend (qt_window.h) draws a frame into, or the pixels a window
+	// library drew to a back buffer (showFrame), shown as large as fits without
+	// changing its proportions. It owns no game logic. The engine draws into
+	// frame() (or a library's frame is handed to showFrame()), calls present()
+	// when a frame is finished, and the keys go to the GameStage's KeyQueue.
 	class GameView : public GameViewBase
 	{
 	public:
-		explicit GameView(QWidget* parent = nullptr);
+		GameView(KeyQueue& keys, QWidget* parent = nullptr);
 
 		// Sizes the picture to the game's window (WindowDesc). The widget itself
 		// can be any size: the picture is scaled to fit it.
@@ -55,6 +55,11 @@ namespace xge
 
 		// A frame is finished: show it.
 		void present();
+
+		// Takes a finished frame from a window library that drew it off screen
+		// (opaque pixels, red, green, blue, alpha, row by row from the top) and
+		// shows it.
+		void showFrame(const Bitmap& bitmap);
 
 		// The keys that changed since the last call, as {key, pressed}.
 		std::vector<std::pair<KeyCode, bool>> takeKeyEvents();
@@ -74,11 +79,9 @@ namespace xge
 		bool focusNextPrevChild(bool next) override;
 
 	private:
+		KeyQueue& keys;
 		QImage backBuffer;
-		std::vector<std::pair<KeyCode, bool>> pending;
-		std::array<bool, static_cast<std::size_t>(KeyCode::Count)> down{};
 
-		void queueKey(KeyCode key, bool pressed);
 		void paintFrame(QPainter& painter);
 	};
 }

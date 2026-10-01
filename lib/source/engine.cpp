@@ -34,6 +34,17 @@ namespace xge
 		syncedStateChanges = game.stateChangeCount();
 	}
 
+	void Engine::replaceWindow(const std::function<std::unique_ptr<Window>()>& create)
+	{
+		window.reset();
+		window = create();
+
+		window->init(game.getCurrentObjects());
+
+		// Sizes may differ a little between libraries (text above all).
+		game.resolveSizeDependentPositions();
+	}
+
 	void Engine::loop(void)
 	{
 		while (window->isOpen())

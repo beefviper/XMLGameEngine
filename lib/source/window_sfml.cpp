@@ -11,12 +11,46 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <cstdint>
 #include <optional>
+#include <stdexcept>
+#include <type_traits>
 
 namespace xge
 {
-	SFMLWindow::SFMLWindow(const WindowDesc& windowDesc)
+	namespace
 	{
+		// The platform's window handle is a pointer on Windows (HWND) and a
+		// number on Linux (an X11 window id).
+		sf::WindowHandle toSfmlHandle(void* handle)
+		{
+			if constexpr (std::is_pointer_v<sf::WindowHandle>)
+			{
+				return reinterpret_cast<sf::WindowHandle>(handle);
+			}
+			else
+			{
+				return static_cast<sf::WindowHandle>(reinterpret_cast<std::uintptr_t>(handle));
+			}
+		}
+	}
+
+	SFMLWindow::SFMLWindow(const WindowDesc& windowDesc, const WindowTarget& target)
+	{
+		if (target.kind == WindowTarget::Kind::NativeWindow)
+		{
+			// The front end's window: no frame limit either, the front end
+			// decides when a frame is due.
+			window.create(toSfmlHandle(target.nativeHandle));
+
+			if (!window.isOpen())
+			{
+				throw std::runtime_error("SFML could not draw into the window");
+			}
+
+			return;
+		}
+
 		const auto width = static_cast<unsigned int>(windowDesc.width);
 		const auto height = static_cast<unsigned int>(windowDesc.height);
 		const sf::VideoMode videoMode({ width, height });
@@ -112,6 +146,14 @@ namespace xge
 	void SFMLWindow::display()
 	{
 		window.display();
+	}
+
+	void SFMLWindow::activate()
+	{
+		// SFML remembers which context it made current and would not notice
+		// another library having taken it since, so let go and take it again.
+		static_cast<void>(window.setActive(false));
+		static_cast<void>(window.setActive(true));
 	}
 
 	KeyCode SFMLWindow::sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept

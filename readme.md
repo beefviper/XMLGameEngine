@@ -54,7 +54,7 @@ The one rule of the format: an attribute names or picks something (`name`, `clas
 
 1. An XML library parses and validates the file (Xerces by default, with full XSD validation; TinyXML2, PugiXML or RapidXML with a built-in validator for the subset of XSD used here).
 2. exprtk evaluates every value once. Objects, variables and states are built.
-3. A window library draws and reads the keyboard (SFML 3 by default; Raylib or SDL2).
+3. A window library draws and reads the keyboard (SFML 3 by default; Raylib, SDL2 or OpenGL).
 4. Each frame: keys run the current state's bindings, objects move, collisions are swept and their rules run, conditions are checked, and the frame is drawn.
 
 Collisions are swept, so fast small objects cannot skip over thin ones. States form a stack (menu, playing, paused, game over). Keys are bound to named actions on objects, not to movement, so remapping one key is one edit.
@@ -64,7 +64,7 @@ Collisions are swept, so fast small objects cannot skip over thin ones. States f
 * Xerces-C   https://github.com/apache/xerces-c
 * exprtk     https://github.com/ArashPartow/exprtk
 * SFML 3     https://github.com/SFML/SFML
-* Optional backends: Raylib, SDL2 (with SDL2_image and SDL2_ttf), TinyXML2, PugiXML, RapidXML
+* Optional backends: Raylib, SDL2 (with SDL2_image and SDL2_ttf), OpenGL (GLFW, the same one Raylib is built on), TinyXML2, PugiXML, RapidXML
 * Catch2 for the tests
 
 Each dependency is found through vcpkg or the system, or fetched and built when it is missing. The `FORCE_LOCAL_<NAME>` options force a fetched copy.
@@ -79,7 +79,7 @@ XGECLI frogger
 
 A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/`. The build copies the games and assets into the build directory; `XGECLI` finds them in the working directory, next to the program, or one folder above it (where Visual Studio puts the program, in `build/Debug`), so it can be started from anywhere. With no argument it runs Pong. The XML and window libraries are chosen in C++ (`cli/source/main.cpp` uses Xerces and SFML 3); there is no command-line switch yet.
 
-The build makes three things: `XGELIB`, the engine as a library (static by default; `-DXGE_BUILD_SHARED=ON` for a shared one), `XGECLI`, the command line program above, and `XGEGUI`, the Qt application (built only when Qt 6 is found: `vcpkg install qtbase[widgets]`; add `opengl` so the game view waits for the display's refresh instead of tearing): the game on the left, and on the right play, pause and step controls over a tree of the game's data with editors for its values. `XGEGUI pong` runs a game, and with no argument it opens a file dialog in `games/`. It finds `games/` and `assets/` in the working directory, next to the program, or one folder above it (where Visual Studio puts the program, in `build/Debug`), so it can be started from anywhere. `XGETEST` is the test suite and `XGEDATA` copies the games and assets next to the programs. Each project has its own folder with `source/` and `include/` in it: `lib/`, `cli/` and `gui/`.
+The build makes three things: `XGELIB`, the engine as a library (static by default; `-DXGE_BUILD_SHARED=ON` for a shared one), `XGECLI`, the command line program above, and `XGEGUI`, the Qt application (built only when Qt 6 is found: `vcpkg install qtbase[widgets]`; add `opengl` so the game view waits for the display's refresh instead of tearing): the game on the left, and on the right play, pause and step controls over a tree of the game's data with editors for its values. `XGEGUI pong` runs a game (its Options button picks the video library and the XML parser, SFML 3 and Xerces to start, and can change the video library while a game is loaded), and with no argument it opens a file dialog in `games/`. It finds `games/` and `assets/` in the working directory, next to the program, or one folder above it (where Visual Studio puts the program, in `build/Debug`), so it can be started from anywhere. `XGETEST` is the test suite and `XGEDATA` copies the games and assets next to the programs. Each project has its own folder with `source/` and `include/` in it: `lib/`, `cli/` and `gui/`.
 
 Tests are opt-in: configure with `-DBUILD_TESTING=ON`.
 

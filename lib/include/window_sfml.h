@@ -27,7 +27,9 @@ namespace xge
 	class SFMLWindow : public Window
 	{
 	public:
-		explicit SFMLWindow(const WindowDesc& windowDesc);
+		// With a WindowTarget of Kind::NativeWindow, draws into the front end's
+		// own window (see window.h) instead of opening one.
+		explicit SFMLWindow(const WindowDesc& windowDesc, const WindowTarget& target = {});
 
 		bool isOpen() const override;
 		void close() override;
@@ -36,6 +38,7 @@ namespace xge
 		void clear(const std::string& colorName) override;
 		void draw(Object& object) override;
 		void display() override;
+		void activate() override;
 
 	private:
 		// What Object used to own directly (renderTexture + sprite) - now

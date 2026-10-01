@@ -30,11 +30,23 @@ if (Qt6_FOUND)
 		"gui/source/game_view.cpp"
 		"gui/source/qt_window.cpp"
 		"gui/source/inspector.cpp"
+		"gui/source/key_queue.cpp"
+		"gui/source/native_surface.cpp"
+		"gui/source/game_stage.cpp"
+		"gui/source/embedded_window.cpp"
+		"gui/source/session_options.cpp"
+		"gui/source/options_dialog.cpp"
 		"gui/include/main_window.h"
 		"gui/include/game_session.h"
 		"gui/include/game_view.h"
 		"gui/include/qt_window.h"
 		"gui/include/inspector.h"
+		"gui/include/key_queue.h"
+		"gui/include/native_surface.h"
+		"gui/include/game_stage.h"
+		"gui/include/embedded_window.h"
+		"gui/include/session_options.h"
+		"gui/include/options_dialog.h"
 	)
 
 	set_target_properties(XGEGUI PROPERTIES AUTOMOC ON)

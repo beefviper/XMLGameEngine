@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 
 namespace xge
 {
@@ -69,11 +70,14 @@ namespace xge
 		};
 	}
 
-	SDL2Window::SDL2Window(const WindowDesc& windowDesc)
+	SDL2Window::SDL2Window(const WindowDesc& windowDesc, const WindowTarget& target)
 	{
+		const bool embedded = (target.kind == WindowTarget::Kind::NativeWindow);
+
 		if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		{
 			std::cout << "error: failed to initialize SDL2: " << SDL_GetError() << std::endl;
+			if (embedded) { throw std::runtime_error(std::string("SDL2 could not start: ") + SDL_GetError()); }
 			return;
 		}
 
@@ -96,22 +100,30 @@ namespace xge
 			flags |= SDL_WINDOW_FULLSCREEN;
 		}
 
-		window = SDL_CreateWindow(windowDesc.name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-			static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height), flags);
+		// The front end's own window, when there is one (SDL leaves it alone
+		// when this one is destroyed); otherwise a window of our own.
+		window = embedded
+			? SDL_CreateWindowFrom(target.nativeHandle)
+			: SDL_CreateWindow(windowDesc.name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+				static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height), flags);
 
 		if (!window)
 		{
 			std::cout << "error: failed to create SDL2 window: " << SDL_GetError() << std::endl;
+			if (embedded) { throw std::runtime_error(std::string("SDL2 could not draw into the window: ") + SDL_GetError()); }
 			return;
 		}
 
-		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+		// Waiting for the display's refresh is for a window that runs the game
+		// itself; the front end that owns this one decides when a frame is due.
+		renderer = SDL_CreateRenderer(window, -1, embedded ? SDL_RENDERER_ACCELERATED : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
 
 		if (!renderer)
 		{
 			std::cout << "error: failed to create SDL2 renderer: " << SDL_GetError() << std::endl;
 			SDL_DestroyWindow(window);
 			window = nullptr;
+			if (embedded) { throw std::runtime_error(std::string("SDL2 could not make a renderer: ") + SDL_GetError()); }
 			return;
 		}
 

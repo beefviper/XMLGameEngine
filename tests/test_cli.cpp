@@ -104,6 +104,8 @@ TEST_CASE("the window option picks the window library", "[cli]")
 	CHECK(parseCommandLine({ "-wraylib" }).window == WindowBackend::Raylib);
 	CHECK(parseCommandLine({ "--window", "sdl2" }).window == WindowBackend::SDL2);
 	CHECK(parseCommandLine({ "-w", "SDL2" }).window == WindowBackend::SDL2);
+	CHECK(parseCommandLine({ "-wopengl" }).window == WindowBackend::OpenGL);
+	CHECK(parseCommandLine({ "--window", "OpenGL" }).window == WindowBackend::OpenGL);
 }
 
 TEST_CASE("the xml option picks the XML library", "[cli]")
@@ -166,6 +168,7 @@ TEST_CASE("backend names read back the way the options take them", "[cli]")
 	CHECK(windowBackendName(WindowBackend::SFML3) == "sfml3");
 	CHECK(windowBackendName(WindowBackend::Raylib) == "raylib");
 	CHECK(windowBackendName(WindowBackend::SDL2) == "sdl2");
+	CHECK(windowBackendName(WindowBackend::OpenGL) == "opengl");
 	CHECK(xmlBackendName(XmlBackend::Xerces) == "xerces");
 	CHECK(xmlBackendName(XmlBackend::TinyXml2) == "tinyxml2");
 	CHECK(xmlBackendName(XmlBackend::PugiXml) == "pugixml");

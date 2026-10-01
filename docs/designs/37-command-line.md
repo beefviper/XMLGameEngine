@@ -9,7 +9,7 @@
 ```
 XGECLI [game] [options]
   -g, --game <game>    the game, same as giving it bare
-  -w, --window <name>  sfml3 (default), raylib, sdl2
+  -w, --window <name>  sfml3 (default), raylib, sdl2, opengl
   -x, --xml <name>     xerces (default), tinyxml2, pugixml, rapidxml
   -h, --help           the usage
 ```

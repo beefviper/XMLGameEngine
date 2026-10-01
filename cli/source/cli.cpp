@@ -33,6 +33,7 @@ namespace xge
 			{ "sfml3",  WindowBackend::SFML3 },
 			{ "raylib", WindowBackend::Raylib },
 			{ "sdl2",   WindowBackend::SDL2 },
+			{ "opengl", WindowBackend::OpenGL },
 		};
 
 		constexpr XmlName xmlNames[] = {

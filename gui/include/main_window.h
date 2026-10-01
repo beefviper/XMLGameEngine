@@ -11,12 +11,13 @@
 namespace xge
 {
 	class GameSession;
-	class GameView;
+	class GameStage;
 	class Inspector;
 
 	// The application window: the game on the left, the Inspector (controls
-	// and the tree of game data) on the right, and a File menu to choose the
-	// game.
+	// and the tree of game data) on the right, a File menu and a toolbar to
+	// choose the game, and the Options dialog (the video library and the XML
+	// parser) behind the toolbar's Options button.
 	class MainWindow : public QMainWindow
 	{
 		Q_OBJECT
@@ -31,8 +32,11 @@ namespace xge
 		// Asks which game file to open.
 		void chooseGame();
 
+		// Shows the Options dialog and uses what is chosen in it.
+		void showOptions();
+
 	private:
-		GameView* view;
+		GameStage* stage;
 		GameSession* session;
 		Inspector* inspector;
 		QString lastDirectory;
