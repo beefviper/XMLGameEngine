@@ -34,9 +34,11 @@ A name with no extension gets `.xml`. Then, in order:
 
 1. exactly as given (a path, or a name in the working directory);
 2. its file name alone in the working directory (only different from 1 when a directory was given);
-3. its file name alone in `games/`, beneath the working directory.
+3. its file name alone in the `games/` of the data folder.
 
 If none has it the error names the file that was not found.
+
+The data folder is where `games/` and `assets/` are: the first of the working directory, the folder the program is in, and the folder above that (a Visual Studio build puts the program in `build/Debug` and the copies of `games/` and `assets/` in `build/`) that has both. With none, `games/` beneath the working directory is used. A game given by a relative path is found first, relative to where the program was started; then the working directory is changed to the data folder, because the engine reads `assets/` relative to it. So `XGECLI` can be started from anywhere. The lookup is in `XGELIB` (`lib/include/data_folder.h`) and is shared with `XGEGUI` ([38](38-qt-front-end.md)), so the two stay in step; `findGameFile` takes the games directory it is given and has no idea where it came from.
 
 ## Layout
 
@@ -51,4 +53,4 @@ If none has it the error names the file that was not found.
 
 ## Approximations
 
-Only the parsing and the file lookup are tested, with the arguments as strings and temporary directories. Running `XGECLI` with each backend was not done from here (the sandbox has no SFML, raylib or SDL2 libraries and the full project was not built), and `-h` was added beyond what was asked, since an error needs a usage to show.
+Only the parsing, the file lookup and the data folder search (`tests/test_data_folder.cpp`) are tested, with the arguments as strings and temporary directories. Running `XGECLI` with each backend was not done from here (the sandbox has no SFML, raylib or SDL2 libraries and the full project was not built), and `-h` was added beyond what was asked, since an error needs a usage to show.

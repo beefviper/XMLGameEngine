@@ -4,6 +4,7 @@
 // date: Sept 28, 2026
 
 #include "cli.h"
+#include "data_folder.h"
 
 #include <algorithm>
 #include <cctype>
@@ -235,32 +236,14 @@ namespace xge
 
 	std::string findGameFile(const std::string& game, const std::filesystem::path& gamesDirectory)
 	{
-		std::filesystem::path given(game);
-
-		// A bare name like "pong" gets ".xml" added; a name that already
-		// has an extension (e.g. "pong.xml") is used exactly as given.
-		if (!given.has_extension())
+		// The search itself is shared with XGEGUI (data_folder.h), so the two
+		// programs look in the same places.
+		if (const auto found = locateGameFile(game, gamesDirectory))
 		{
-			given += ".xml";
+			return found->string();
 		}
 
-		const std::filesystem::path fileName = given.filename();
-
-		const std::filesystem::path candidates[] = {
-			given,
-			fileName,
-			gamesDirectory / fileName,
-		};
-
-		for (const auto& candidate : candidates)
-		{
-			if (std::filesystem::is_regular_file(candidate))
-			{
-				return candidate.string();
-			}
-		}
-
-		throw CliError("file not found: " + given.string());
+		throw CliError("file not found: " + gameFileGiven(game).string());
 	}
 
 	std::string windowBackendName(WindowBackend backend)
@@ -294,7 +277,9 @@ namespace xge
 			"\n"
 			"  game                 a game name (pong) or file (pong.xml, path/to/pong.xml);\n"
 			"                       looked for as given, then in the working directory,\n"
-			"                       then in the games directory. Default: pong\n"
+			"                       then in the games directory (games/ in the working\n"
+			"                       directory, next to the program, or one folder above\n"
+			"                       it). Default: pong\n"
 			"\n"
 			"options:\n"
 			"  -g, --game <game>    the game, same as giving it bare\n"

@@ -77,7 +77,7 @@ cmake --build build
 XGECLI frogger
 ```
 
-A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/`. The build copies the games and assets into the build directory, so run it from there. With no argument it runs Pong. The XML and window libraries are chosen in C++ (`cli/source/main.cpp` uses Xerces and SFML 3); there is no command-line switch yet.
+A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/`. The build copies the games and assets into the build directory; `XGECLI` finds them in the working directory, next to the program, or one folder above it (where Visual Studio puts the program, in `build/Debug`), so it can be started from anywhere. With no argument it runs Pong. The XML and window libraries are chosen in C++ (`cli/source/main.cpp` uses Xerces and SFML 3); there is no command-line switch yet.
 
 The build makes three things: `XGELIB`, the engine as a library (static by default; `-DXGE_BUILD_SHARED=ON` for a shared one), `XGECLI`, the command line program above, and `XGEGUI`, the Qt application (built only when Qt 6 is found: `vcpkg install qtbase[widgets]`): the game on the left, and on the right play, pause and step controls over a tree of the game's data with editors for its values. `XGEGUI pong` runs a game, and with no argument it opens a file dialog in `games/`. It finds `games/` and `assets/` in the working directory, next to the program, or one folder above it (where Visual Studio puts the program, in `build/Debug`), so it can be started from anywhere. `XGETEST` is the test suite and `XGEDATA` copies the games and assets next to the programs. Each project has its own folder with `source/` and `include/` in it: `lib/`, `cli/` and `gui/`.
 

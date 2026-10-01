@@ -19,70 +19,17 @@
 // copies of games/ and assets/ in build/. The working directory is then set to
 // the folder they were found in, so the program can be started from anywhere.
 
+#include "data_folder.h"
 #include "main_window.h"
 
 #include <QApplication>
-#include <QDir>
-#include <QFileInfo>
 #include <QString>
-#include <QStringList>
 #include <QTimer>
 
-namespace
-{
-	// The first folder that has both games/ and assets/ in it, or empty.
-	QString findDataFolder()
-	{
-		const QDir program(QApplication::applicationDirPath());
-		const QString candidates[] = {
-			QDir::currentPath(),
-			program.absolutePath(),
-			program.absoluteFilePath(".."),
-		};
+#include <filesystem>
+#include <optional>
 
-		for (const QString& candidate : candidates)
-		{
-			const QDir folder(candidate);
-			if (QFileInfo(folder.filePath("games")).isDir() && QFileInfo(folder.filePath("assets")).isDir())
-			{
-				return folder.canonicalPath();
-			}
-		}
-
-		return QString();
-	}
-
-	// Finds a game the way XGECLI does: a bare name gets .xml added, then it is
-	// looked for as given, by its file name alone, and in games/ (here, the
-	// games/ of the data folder). Returns the full path, or the name as given
-	// when there is no such file (the load will say so).
-	QString findGame(const QString& name, const QString& dataFolder)
-	{
-		QString given = name;
-		if (QFileInfo(given).suffix().isEmpty())
-		{
-			given += ".xml";
-		}
-
-		const QString fileName = QFileInfo(given).fileName();
-
-		QStringList candidates{ given, fileName };
-		if (!dataFolder.isEmpty())
-		{
-			candidates << QDir(dataFolder).filePath("games/" + fileName);
-		}
-
-		for (const QString& candidate : candidates)
-		{
-			if (QFileInfo(candidate).isFile())
-			{
-				return QFileInfo(candidate).absoluteFilePath();
-			}
-		}
-
-		return name;
-	}
-}
+// The lookup itself is shared with XGECLI: see data_folder.h.
 
 int main(int argc, char* argv[])
 {
@@ -90,12 +37,23 @@ int main(int argc, char* argv[])
 
 	// The game named on the command line is relative to where the program was
 	// started, so it is found before the working directory is changed.
-	const QString dataFolder = findDataFolder();
-	const QString game = argc > 1 ? findGame(QString::fromLocal8Bit(argv[1]), dataFolder) : QString();
+	const std::filesystem::path dataFolder = xge::findDataFolder(std::filesystem::current_path(), xge::programDirectory());
 
-	if (!dataFolder.isEmpty())
+	QString game;
+	if (argc > 1)
 	{
-		QDir::setCurrent(dataFolder);
+		const std::string name = QString::fromLocal8Bit(argv[1]).toStdString();
+		const std::filesystem::path gamesDirectory = dataFolder.empty() ? std::filesystem::path("games") : dataFolder / "games";
+		const std::optional<std::filesystem::path> found = xge::locateGameFile(name, gamesDirectory);
+
+		// With no such file the name goes on as given and the load says so.
+		game = QString::fromStdU16String((found ? std::filesystem::absolute(*found) : xge::gameFileGiven(name)).u16string());
+	}
+
+	std::error_code ignored;
+	if (!dataFolder.empty())
+	{
+		std::filesystem::current_path(dataFolder, ignored);
 	}
 
 	xge::MainWindow window;

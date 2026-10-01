@@ -65,7 +65,8 @@ namespace xge
 	//   2. its file name alone in the working directory (the same place as 1
 	//      for a bare name; only differs when a directory was given)
 	//   3. its file name alone in the games directory (default "games",
-	//      beneath the working directory)
+	//      beneath the working directory; XGECLI passes the games/ of the
+	//      folder findDataFolder() found - see data_folder.h)
 	//
 	// Throws CliError, saying which file was not found, if none of them has it.
 	std::string findGameFile(const std::string& game,

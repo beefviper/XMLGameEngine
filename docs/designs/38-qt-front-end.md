@@ -28,7 +28,7 @@ Editors are only made when their parent row is first opened, because a game has 
 
 ### Finding the games and assets
 
-The engine reads `assets/` (the font, images) relative to the working directory, and the games are in `games/`. `XGEGUI` looks for a folder that has both in the working directory, then next to the program, then in the folder above it (a Visual Studio build puts the program in `build/Debug` and the copies of `games/` and `assets/` in `build/`). The first one found becomes the working directory, so the program can be started from anywhere, and the file dialog opens in its `games/`. A game named on the command line is found the way `XGECLI` finds one (a bare name gets `.xml`; then as given, its file name alone, then in `games/`). `XGECLI` still only looks in the working directory.
+The engine reads `assets/` (the font, images) relative to the working directory, and the games are in `games/`. `XGEGUI` and `XGECLI` look for a folder that has both in the working directory, then next to the program, then in the folder above it (a Visual Studio build puts the program in `build/Debug` and the copies of `games/` and `assets/` in `build/`). The first one found becomes the working directory, so the program can be started from anywhere, and the file dialog opens in its `games/`. A game named on the command line is found the way `XGECLI` finds one (a bare name gets `.xml`; then as given, its file name alone, then in `games/`). The search is one piece of code in the library (`lib/include/data_folder.h`, tested in `tests/test_data_folder.cpp`), so the two programs cannot drift apart; `main.cpp` of each only calls it.
 
 ## Not done
 

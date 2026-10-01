@@ -32,6 +32,7 @@ include(scripts/cmake/assets.cmake)
 # (scripts/cmake/tests.cmake), so there is one list of files to keep.
 set(ENGINE_SOURCES
 	"lib/source/game.cpp"
+	"lib/source/data_folder.cpp"
 	"lib/source/engine.cpp"
 	"lib/source/object.cpp"
 	"lib/source/states.cpp"
@@ -58,6 +59,7 @@ set(ENGINE_SOURCES
 
 set(ENGINE_HEADERS
 	"lib/include/game.h"
+	"lib/include/data_folder.h"
 	"lib/include/engine.h"
 	"lib/include/object.h"
 	"lib/include/states.h"

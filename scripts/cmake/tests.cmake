@@ -58,6 +58,7 @@ add_executable(XGETEST
 	"tests/test_lunarlander.cpp"
 	"tests/test_builtin_font.cpp"
 	"tests/test_cli.cpp"
+	"tests/test_data_folder.cpp"
 	"cli/source/cli.cpp"
 )
 

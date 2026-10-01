@@ -4,11 +4,13 @@
 // date: Sept 28, 2026
 
 #include "cli.h"
+#include "data_folder.h"
 #include "game.h"
 #include "engine.h"
 
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -16,6 +18,7 @@
 int main(int argc, char* argv[])
 {
 	std::string filename;
+	std::filesystem::path dataFolder;
 	xge::CliOptions options;
 
 	try
@@ -29,12 +32,27 @@ int main(int argc, char* argv[])
 			return EXIT_SUCCESS;
 		}
 
-		filename = xge::findGameFile(options.game);
+		// games/ and assets/ are looked for in the working directory, next to
+		// the program, and one folder above it (see data_folder.h), the same as
+		// XGEGUI does. A game given as a relative path is relative to where the
+		// program was started, so it is found before the working directory is
+		// changed to the folder they are in.
+		dataFolder = xge::findDataFolder(std::filesystem::current_path(), xge::programDirectory());
+
+		const std::filesystem::path gamesDirectory = dataFolder.empty() ? std::filesystem::path("games") : dataFolder / "games";
+		filename = std::filesystem::absolute(xge::findGameFile(options.game, gamesDirectory)).string();
 	}
 	catch (const xge::CliError& error)
 	{
 		std::cerr << "Error: " << error.what() << "\n\n" << xge::usageText();
 		return EXIT_FAILURE;
+	}
+
+	// The engine reads assets/ relative to the working directory.
+	if (!dataFolder.empty())
+	{
+		std::error_code ignored;
+		std::filesystem::current_path(dataFolder, ignored);
 	}
 
 	std::cout << "file: " << filename << '\n'
