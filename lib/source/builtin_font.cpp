@@ -139,7 +139,10 @@ namespace xge
 
 	int builtinFontScale(int size) noexcept
 	{
-		return std::max(1, (size + kBuiltinGlyphSize / 2) / kBuiltinGlyphSize);
+		// A glyph cell is 8 pixels wide at scale 1, and the real font's
+		// letters average about half the size across (0.4 to 0.6 of it), so
+		// a size of 16 is a scale of 1.
+		return std::max(1, (size + kBuiltinGlyphSize) / (2 * kBuiltinGlyphSize));
 	}
 
 	Bitmap rasterizeText(const std::string& text, int size, const Color& color)

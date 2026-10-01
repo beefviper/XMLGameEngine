@@ -12,7 +12,7 @@ An 8 by 8 pixel glyph for each printable ASCII character (32 to 126) is stored i
 
 `rasterizeText(text, size, color)` draws a string into a `Bitmap` ([34](34-lunar-lander.md)), the same picture type a sprite of `<line>`s becomes. Each backend, when its font load fails, prints the error once (`error: failed to load font: assets/tuffy.ttf - drawing text with the built-in 8x8 font instead`) and from then on draws every text from that bitmap instead of from the font. So the fallback is one function and one new branch in each of the three backends, and the same code can be tested without a window.
 
-- **Size.** The glyphs are scaled by a whole number, `size / 8` rounded and at least 1, so a `<size>` of 48 is 6x and 128 is 16x, and the pixels stay square. Text is chunky, not smooth; the width of a line is characters times 8 times the scale, so layout that centers with `title.width` still works.
+- **Size.** The glyphs are scaled by a whole number, `size / 16` rounded and at least 1, so a `<size>` of 48 is 3x and 128 is 8x, and the pixels stay square. The first version used `size / 8`, which made every letter about twice as wide as the real font's, which averages 0.4 to 0.6 of its size across, and text ran off the screen; a cell of about half the size is the right width. Text is chunky, not smooth; the width of a line is characters times 8 times the scale, so layout that centers with `title.width` still works.
 - **Characters.** Anything but printable ASCII is drawn as `?`; a multi-byte UTF-8 character counts as one. A newline starts a new line, a tab is one space.
 - **When it is used.** Only when the font file cannot be loaded. With the font in place, nothing changes.
 

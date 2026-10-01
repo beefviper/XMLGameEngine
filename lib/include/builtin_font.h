@@ -21,7 +21,9 @@ namespace xge
 	// Draws `text` onto a transparent Bitmap in `color`, each glyph scaled by a
 	// whole number so the pixels stay square and crisp: the scale is the
 	// requested `size` (the same number a <text> sprite's <size> gives)
-	// divided by 8 and rounded, never less than 1. Every character takes a
+	// divided by 16 and rounded, never less than 1: a letter of the real font
+	// is about half its size wide, so a glyph cell of 8 * scale pixels is about as
+	// wide as one of its letters. Every character takes a
 	// cell of 8 * scale pixels, so a line is characters * 8 * scale wide and
 	// each line 8 * scale tall; a '\n' starts a new line. A character the font
 	// does not have (anything but printable ASCII, a multi-byte UTF-8
@@ -29,6 +31,6 @@ namespace xge
 	// empty text.
 	Bitmap rasterizeText(const std::string& text, int size, const Color& color);
 
-	// The scale rasterizeText() would use for a size: size / 8, rounded, at least 1.
+	// The scale rasterizeText() would use for a size: size / 16, rounded, at least 1.
 	int builtinFontScale(int size) noexcept;
 }

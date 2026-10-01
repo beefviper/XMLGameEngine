@@ -48,16 +48,18 @@ namespace
 	}
 }
 
-TEST_CASE("a size becomes a whole-number scale of the 8 pixel glyphs", "[builtin_font]")
+TEST_CASE("a size becomes a whole-number scale of the 8 pixel glyphs, about half of it", "[builtin_font]")
 {
+	// About half the size: a size of 16 is 1x, 32 is 2x, 48 is 3x.
 	CHECK(builtinFontScale(0) == 1);
 	CHECK(builtinFontScale(-5) == 1);
-	CHECK(builtinFontScale(3) == 1);
-	CHECK(builtinFontScale(11) == 1);
-	CHECK(builtinFontScale(12) == 2);
-	CHECK(builtinFontScale(24) == 3);
-	CHECK(builtinFontScale(48) == 6);
-	CHECK(builtinFontScale(128) == 16);
+	CHECK(builtinFontScale(8) == 1);
+	CHECK(builtinFontScale(23) == 1);
+	CHECK(builtinFontScale(24) == 2);
+	CHECK(builtinFontScale(32) == 2);
+	CHECK(builtinFontScale(48) == 3);
+	CHECK(builtinFontScale(64) == 4);
+	CHECK(builtinFontScale(128) == 8);
 }
 
 TEST_CASE("a letter is drawn as its eight by eight glyph, leftmost pixel first", "[builtin_font]")
@@ -98,27 +100,27 @@ TEST_CASE("only the pixels of the glyph are drawn, in the colour asked for", "[b
 TEST_CASE("a bigger size makes every glyph pixel a square block", "[builtin_font]")
 {
 	const Bitmap small = rasterizeText("A", 8, kWhite);
-	const Bitmap big = rasterizeText("A", 48, kWhite); // scale 6
+	const Bitmap big = rasterizeText("A", 48, kWhite); // scale 3
 
-	REQUIRE(big.width == 48);
-	REQUIRE(big.height == 48);
-	CHECK(pixelsDrawn(big) == pixelsDrawn(small) * 36);
+	REQUIRE(big.width == 24);
+	REQUIRE(big.height == 24);
+	CHECK(pixelsDrawn(big) == pixelsDrawn(small) * 9);
 
-	// Each pixel of the small glyph is a 6 by 6 block of the big one.
+	// Each pixel of the small glyph is a 3 by 3 block of the big one.
 	for (int y = 0; y < 8; ++y)
 	{
 		for (int x = 0; x < 8; ++x)
 		{
 			const bool expected = small.solidAt(x, y);
-			CHECK(big.solidAt(x * 6, y * 6) == expected);
-			CHECK(big.solidAt(x * 6 + 5, y * 6 + 5) == expected);
+			CHECK(big.solidAt(x * 3, y * 3) == expected);
+			CHECK(big.solidAt(x * 3 + 2, y * 3 + 2) == expected);
 		}
 	}
 }
 
 TEST_CASE("every character takes one cell, and a newline starts another line", "[builtin_font]")
 {
-	const Bitmap word = rasterizeText("HELLO", 16, kWhite); // scale 2: cells of 16
+	const Bitmap word = rasterizeText("HELLO", 32, kWhite); // scale 2: cells of 16
 	CHECK(word.width == 5 * 16);
 	CHECK(word.height == 16);
 
