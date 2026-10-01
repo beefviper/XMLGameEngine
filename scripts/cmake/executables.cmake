@@ -41,6 +41,12 @@ if (Qt6_FOUND)
 	target_include_directories(XGEGUI PRIVATE gui/include)
 	target_link_libraries(XGEGUI PRIVATE Qt6::Widgets)
 
+	# See dependencies.cmake: the game view is a QOpenGLWidget when this is there.
+	if (Qt6OpenGLWidgets_FOUND)
+		target_link_libraries(XGEGUI PRIVATE Qt6::OpenGLWidgets)
+		target_compile_definitions(XGEGUI PRIVATE XGE_QT_OPENGL)
+	endif()
+
 	# Qt loads its platform plug-in (platforms/qwindows.dll) from a folder next
 	# to the program at run time, so it is never among the DLLs the program
 	# links to, and the copying vcpkg does after each build does not see it:

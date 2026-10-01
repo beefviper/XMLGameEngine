@@ -8,8 +8,10 @@
 #include "window.h"
 
 #include <QImage>
+#include <QPainter>
 
 #include <map>
+#include <memory>
 #include <string>
 
 namespace xge
@@ -38,6 +40,10 @@ namespace xge
 
 	private:
 		GameView& view;
+
+		// One painter for the whole frame, begun by clear() and ended by
+		// display(): making one for every object cost more than drawing it.
+		std::unique_ptr<QPainter> framePainter;
 		bool open{ true };
 
 		// Each object's picture, built once and again whenever the object's

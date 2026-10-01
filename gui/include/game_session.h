@@ -8,6 +8,7 @@
 #include "engine.h"
 #include "game.h"
 
+#include <QElapsedTimer>
 #include <QObject>
 #include <QString>
 #include <QTimer>
@@ -70,10 +71,18 @@ namespace xge
 		std::unique_ptr<Game> game;
 		std::unique_ptr<Engine> engine;
 		QTimer timer;
+		QElapsedTimer clock;
+		qint64 framePeriodNs{ 16'666'667 };
+		qint64 lastNs{ 0 };
+		qint64 owedNs{ 0 };
 		bool playing{ false };
 		unsigned long frameCount{ 0 };
 		QString lastError;
 
+		// The timer's slot: plays however many frames the clock says are due.
+		void advance();
+
+		// One frame of the simulation, drawn.
 		void tick();
 		void fail(const QString& message);
 	};

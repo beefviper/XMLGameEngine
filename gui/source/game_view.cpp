@@ -80,11 +80,13 @@ namespace xge
 	}
 
 	GameView::GameView(QWidget* parent) :
-		QWidget(parent)
+		GameViewBase(parent)
 	{
 		setFocusPolicy(Qt::StrongFocus);
+#ifndef XGE_QT_OPENGL
 		setAttribute(Qt::WA_OpaquePaintEvent);
 		setAutoFillBackground(false);
+#endif
 	}
 
 	void GameView::setGameSize(int width, int height)
@@ -119,9 +121,22 @@ namespace xge
 		return events;
 	}
 
+#ifdef XGE_QT_OPENGL
+	void GameView::paintGL()
+	{
+		QPainter painter(this);
+		paintFrame(painter);
+	}
+#else
 	void GameView::paintEvent(QPaintEvent*)
 	{
 		QPainter painter(this);
+		paintFrame(painter);
+	}
+#endif
+
+	void GameView::paintFrame(QPainter& painter)
+	{
 		painter.fillRect(rect(), QColor(0x20, 0x20, 0x20));
 
 		if (backBuffer.isNull())

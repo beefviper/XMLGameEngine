@@ -66,7 +66,12 @@ namespace xge
 
 	void QtWindow::clear(const std::string& colorName)
 	{
+		// A painter still open from a frame that never reached display() has
+		// to end before the picture is touched.
+		framePainter.reset();
+
 		view.frame().fill(toQColor(colorName));
+		framePainter = std::make_unique<QPainter>(&view.frame());
 	}
 
 	void QtWindow::draw(Object& object)
@@ -78,12 +83,20 @@ namespace xge
 			build(object, visual);
 		}
 
-		QPainter painter(&view.frame());
-		painter.drawImage(QPointF(object.position.x, object.position.y), visual);
+		if (framePainter)
+		{
+			framePainter->drawImage(QPointF(object.position.x, object.position.y), visual);
+		}
+		else
+		{
+			QPainter painter(&view.frame());
+			painter.drawImage(QPointF(object.position.x, object.position.y), visual);
+		}
 	}
 
 	void QtWindow::display()
 	{
+		framePainter.reset();
 		view.present();
 	}
 

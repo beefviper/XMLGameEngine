@@ -8,7 +8,6 @@
 #include "game_view.h"
 #include "qt_window.h"
 
-#include <algorithm>
 #include <exception>
 
 namespace xge
@@ -17,8 +16,13 @@ namespace xge
 		QObject(parent),
 		view(view)
 	{
+		// The timer only wakes the session up often; advance() decides from the
+		// clock whether a frame is due. A timer of the frame's own length
+		// (1000 / 60 = 16 ms) drifts against the clock, and Windows only wakes
+		// a timer on its own grid, so frames came early, late and in pairs.
 		timer.setTimerType(Qt::PreciseTimer);
-		connect(&timer, &QTimer::timeout, this, &GameSession::tick);
+		timer.setInterval(2);
+		connect(&timer, &QTimer::timeout, this, &GameSession::advance);
 	}
 
 	GameSession::~GameSession()
@@ -51,7 +55,7 @@ namespace xge
 
 			// The frame pace: the game moves a fixed amount a frame, so this is
 			// also its speed.
-			timer.setInterval(desc.framerate > 0 ? std::max(1, 1000 / desc.framerate) : 16);
+			framePeriodNs = 1'000'000'000 / (desc.framerate > 0 ? desc.framerate : 60);
 
 			engine->render();
 		}
@@ -77,6 +81,9 @@ namespace xge
 		}
 
 		playing = true;
+		clock.start();
+		lastNs = 0;
+		owedNs = 0;
 		timer.start();
 		emit playingChanged(true);
 	}
@@ -147,6 +154,46 @@ namespace xge
 		{
 			fail(QString::fromUtf8(e.what()));
 		}
+	}
+
+	void GameSession::advance()
+	{
+		const qint64 now = clock.nsecsElapsed();
+		owedNs += now - lastNs;
+		lastNs = now;
+
+		// A late wake-up (the window was being dragged, say) is caught up a
+		// few frames at most; the rest is let go rather than raced through.
+		const qint64 limit = framePeriodNs * 4;
+		if (owedNs > limit)
+		{
+			owedNs = limit;
+		}
+
+		if (owedNs < framePeriodNs || !engine)
+		{
+			return;
+		}
+
+		try
+		{
+			while (owedNs >= framePeriodNs)
+			{
+				engine->step();
+				owedNs -= framePeriodNs;
+				++frameCount;
+			}
+
+			// Only the last of them is ever on the screen: drawn once.
+			engine->render();
+		}
+		catch (const std::exception& e)
+		{
+			fail(QString::fromUtf8(e.what()));
+			return;
+		}
+
+		emit frameAdvanced();
 	}
 
 	void GameSession::tick()
