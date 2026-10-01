@@ -127,7 +127,7 @@ namespace xge
 
 	bool SDL2Window::isOpen() const
 	{
-		return isOpenFlag;
+		return isOpenFlag && !closeRequested;
 	}
 
 	void SDL2Window::close()
@@ -177,7 +177,11 @@ namespace xge
 		{
 			if (event.type == SDL_QUIT)
 			{
-				close();
+				// Not close(): the engine finishes the frame this was read in
+				// (clear, draw, display) before it looks at isOpen() again, and
+				// that needs the renderer, the textures and SDL_ttf. They are
+				// torn down by close() when the window is destroyed.
+				closeRequested = true;
 			}
 			else if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) && event.key.repeat == 0)
 			{

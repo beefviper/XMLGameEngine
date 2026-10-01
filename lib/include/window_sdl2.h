@@ -58,6 +58,10 @@ namespace xge
 		SDL_Window* window{ nullptr };
 		SDL_Renderer* renderer{ nullptr };
 		bool isOpenFlag{ false };
+		// The close button was pressed. isOpen() turns false at once, but
+		// nothing is torn down until close() (the destructor), because the
+		// frame that read the event is still going to clear and draw.
+		bool closeRequested{ false };
 		// Set when the font file could not be loaded: text is then drawn from
 		// the engine's built-in font (see builtin_font.h).
 		bool fontMissing{ false };
