@@ -49,6 +49,12 @@ namespace xge
 		layout->addLayout(form);
 		layout->addWidget(note);
 		layout->addWidget(buttons);
+
+		// Sized up front: the wrapped note makes the layout's minimum depend on
+		// the width, and a dialog first shown smaller than that minimum makes
+		// Windows complain about the geometry Qt asked for.
+		setMinimumWidth(440);
+		resize(sizeHint().expandedTo(minimumSize()));
 	}
 
 	SessionOptions OptionsDialog::options() const
