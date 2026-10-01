@@ -38,33 +38,42 @@ namespace xge
 	{
 		while (window->isOpen())
 		{
-			for (auto& [key, pressed] : window->pollEvents())
-			{
-				if (pressed) { handleKeyPressed(key); }
-				else { handleKeyReleased(key); }
-			}
-
-			game.updateObjects();
-
-			// A <condition> can change the state during updateObjects.
-			syncHeldKeysToState();
-
-			// A text that grew or shrank when last drawn (a score) needs its
-			// position worked out again for the new size.
-			game.resolveSizeDependentPositions();
-
-			window->clear(game.getWindowDesc().background);
-
-			for (auto& object : game.getCurrentObjects())
-			{
-				if (game.isShown(object))
-				{
-					window->draw(object);
-				}
-			}
-
-			window->display();
+			step();
+			render();
 		}
+	}
+
+	void Engine::step(void)
+	{
+		for (auto& [key, pressed] : window->pollEvents())
+		{
+			if (pressed) { handleKeyPressed(key); }
+			else { handleKeyReleased(key); }
+		}
+
+		game.updateObjects();
+
+		// A <condition> can change the state during updateObjects.
+		syncHeldKeysToState();
+
+		// A text that grew or shrank when last drawn (a score) needs its
+		// position worked out again for the new size.
+		game.resolveSizeDependentPositions();
+	}
+
+	void Engine::render(void)
+	{
+		window->clear(game.getWindowDesc().background);
+
+		for (auto& object : game.getCurrentObjects())
+		{
+			if (game.isShown(object))
+			{
+				window->draw(object);
+			}
+		}
+
+		window->display();
 	}
 
 	void Engine::handleKeyPressed(KeyCode key)

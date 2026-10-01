@@ -244,6 +244,11 @@ namespace xge
 		return stateChanges;
 	}
 
+	const std::vector<State>& Game::getStates(void) const noexcept
+	{
+		return states;
+	}
+
 	void Game::setObjectParam(const std::string& name, const std::string& param, const float& value)
 	{
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
@@ -308,16 +313,38 @@ namespace xge
 		}
 
 		variableIt->second += delta;
-		const float newValue = variableIt->second;
+		refreshBoundTexts(ownerName, variableName, variableIt->second);
+	}
 
+	void Game::refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value)
+	{
 		for (auto& object : objects)
 		{
 			if (object.boundVariableOwner == ownerName && object.boundVariableName == variableName)
 			{
-				object.spriteParams.at(1) = formatDisplayNumber(newValue);
+				object.spriteParams.at(1) = formatDisplayNumber(value);
 				object.visualDirty = true;
 			}
 		}
+	}
+
+	bool Game::setVariable(const std::string& objectName, const std::string& variableName, float value)
+	{
+		Object* owner = tryGetObject(objectName);
+		if (!owner)
+		{
+			return false;
+		}
+
+		auto variableIt = owner->variable.find(variableName);
+		if (variableIt == owner->variable.end())
+		{
+			return false;
+		}
+
+		variableIt->second = value;
+		refreshBoundTexts(objectName, variableName, value);
+		return true;
 	}
 
 	namespace

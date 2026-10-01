@@ -34,6 +34,15 @@ namespace xge
 
 		void loop(void);
 
+		// What loop() does each frame, split in two so a front end that owns
+		// the event loop (the Qt application, XGEGUI) can run the engine from
+		// its own timer instead of handing control to loop(). step() is the
+		// simulation: it reads the keys, moves everything, and checks the
+		// conditions. render() draws the current picture without moving
+		// anything, so a paused game can be redrawn after its values are edited.
+		void step(void);
+		void render(void);
+
 		// TODO: make handleKeyPressed and handleKeyReleased private
 		void handleKeyPressed(KeyCode key);
 		void handleKeyReleased(KeyCode key);

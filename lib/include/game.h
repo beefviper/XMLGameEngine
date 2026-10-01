@@ -50,6 +50,10 @@ namespace xge
 		Object* tryGetObject(const std::string& name) noexcept;
 		float getVariable(const std::string& name);
 		State getCurrentState(void);
+
+		// Every state the game file defines, in file order (the current one is
+		// a copy of one of these, pushed on the state stack).
+		const std::vector<State>& getStates(void) const noexcept;
 		std::vector<Object>& getCurrentObjects(void) noexcept;
 
 		void setCurrentState(const int& index);
@@ -63,6 +67,12 @@ namespace xge
 		unsigned long stateChangeCount(void) const noexcept;
 
 		void setObjectParam(const std::string& name, const std::string& param, const float& value);
+
+		// Sets an object's own <variable> to a value (for a front end that lets
+		// the user edit one), and refreshes every text display bound to it, the
+		// same way <inc /> does. Returns false when there is no such object or
+		// variable.
+		bool setVariable(const std::string& objectName, const std::string& variableName, float value);
 
 		// A member of a lockstep block (see <lockstep> in <collisions>) hit the left or
 		// right screen edge: the whole block turns around and steps once in
@@ -103,6 +113,9 @@ namespace xge
 		// The one implementation behind incrementText and decrementText;
 		// `verb` is only for the warning printed when the target is not found.
 		void changeVariable(const std::string& target, float delta, const char* verb);
+
+		// Shows `value` in every text object bound to ownerName.variableName.
+		void refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value);
 
 		std::string filename;
 		WindowDesc windowDesc;

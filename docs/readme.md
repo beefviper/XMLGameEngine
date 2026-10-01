@@ -302,7 +302,7 @@ The other forms:
 
 ## Building: library and programs
 
-The engine (everything in `lib/source/` and `lib/include/`) is a library, the `XGELIB` CMake target. Two programs use it: `XGECLI` (`cli/`) and `XGEGUI` (`gui/`, a stub), and so do the tests (`XGETEST`, in `tests/`). Every project has the same layout, a folder with `source/` and `include/` in it; `XGEDATA` is the target that copies `games/` and `assets/` next to the programs. The library knows nothing about the command line, so a different front end only needs its own `main()`.
+The engine (everything in `lib/source/` and `lib/include/`) is a library, the `XGELIB` CMake target. Two programs use it: `XGECLI` (`cli/`) and `XGEGUI` (`gui/`, the Qt application, built only when Qt 6 is found), and so do the tests (`XGETEST`, in `tests/`). Every project has the same layout, a folder with `source/` and `include/` in it; `XGEDATA` is the target that copies `games/` and `assets/` next to the programs. The library knows nothing about the command line, so a different front end only needs its own `main()`.
 
 The library is static by default: each program has the engine's code copied into it, so `XGECLI` is one self-contained file. `-DXGE_BUILD_SHARED=ON` builds it as a shared library instead (`libXGELIB.so`, or `XGELIB.dll` on Windows), which each program loads when it starts; a shared build needs the library file to be found next to the program or on the system's library path. On Windows the DLL exports every class in the headers (`WINDOWS_EXPORT_ALL_SYMBOLS`) rather than each being marked by hand. The third-party libraries are `PUBLIC` dependencies of the library, because the engine's own headers include theirs. See [design 35](designs/35-library-and-front-ends.md).
 
@@ -311,7 +311,7 @@ The library is static by default: each program has the engine's code copied into
 | File | Responsibility |
 |---|---|
 | `cli/source/main.cpp`, `cli/source/cli.cpp` | XGECLI, the command line program: read the options, find the game file, build `Game` and `Engine` with the chosen backends. The only code outside the engine library |
-| `gui/source/main.cpp` | XGEGUI, a stub for a graphical front end; returns at once |
+| `gui/source/*.cpp` | XGEGUI, the Qt application: `main_window` (the window and the File menu), `game_session` (a loaded game and its engine, run from a timer; play, pause, step, reset), `game_view` (the widget the game is drawn in, and the keyboard), `qt_window` (the Window backend that draws with QPainter), `inspector` (the controls and the tree of game data). See [design 38](designs/38-qt-front-end.md) |
 | `game_xml.cpp` | Walk the parsed XML tags into raw window/variable/object/state data (`RawValue`, `RawCommand`, `RawSprite`); a `<group>` is read here as one raw object per member |
 | `game_expr.cpp` | exprtk symbol table and evaluation of raw values into `Object`s and `State`s |
 | `command.cpp` | Turn raw command tags into typed `Command`s |
@@ -320,7 +320,7 @@ The library is static by default: each program has the engine's code copied into
 | `builtin_font.cpp` | The 8x8 font stored in the program (`rasterizeText`), which draws text into a bitmap when a backend cannot load its font file |
 | `bitmap.cpp` | Draws a sprite's `<line>`s into an RGBA bitmap (`rasterizeLines`): the pixels both the window backends and pixel collisions use |
 | `command_executor.cpp` | What each command does |
-| `engine.cpp` | Frame loop and key handling |
+| `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop) and key handling |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
 | `tests/` | Catch2 tests: collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format and its rejections (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers) lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), and Frogger and Lunar Lander played frame by frame (opt-in with `BUILD_TESTING`) |

@@ -6,8 +6,9 @@
 # The programs built on the engine library (the XGELIB target):
 #   XGECLI  the command line front end: picks a game file from the arguments,
 #           loads it, and runs it in a window (cli/)
-#   XGEGUI  a stub for a future graphical front end (gui/); it only returns
-#           for now
+#   XGEGUI  the Qt front end (gui/): the game in a window, with play, pause and
+#           step controls and a tree of the game's data that can be edited
+#           while it runs. Built only when Qt 6 is found (dependencies.cmake)
 # They are defined here, in the top-level directory's scope, so they land in
 # the build directory itself, next to the games/ and assets/ copies that
 # assets.cmake makes.
@@ -18,11 +19,32 @@ add_executable(XGECLI
 	"cli/include/cli.h"
 )
 
-add_executable(XGEGUI
-	"gui/source/main.cpp"
-)
+set(XGE_PROGRAMS XGECLI)
 
-foreach(program IN ITEMS XGECLI XGEGUI)
+if (Qt6_FOUND)
+	# The headers are listed so that AUTOMOC finds the Q_OBJECT classes in them.
+	add_executable(XGEGUI
+		"gui/source/main.cpp"
+		"gui/source/main_window.cpp"
+		"gui/source/game_session.cpp"
+		"gui/source/game_view.cpp"
+		"gui/source/qt_window.cpp"
+		"gui/source/inspector.cpp"
+		"gui/include/main_window.h"
+		"gui/include/game_session.h"
+		"gui/include/game_view.h"
+		"gui/include/qt_window.h"
+		"gui/include/inspector.h"
+	)
+
+	set_target_properties(XGEGUI PROPERTIES AUTOMOC ON)
+	target_include_directories(XGEGUI PRIVATE gui/include)
+	target_link_libraries(XGEGUI PRIVATE Qt6::Widgets)
+
+	list(APPEND XGE_PROGRAMS XGEGUI)
+endif()
+
+foreach(program IN LISTS XGE_PROGRAMS)
 	target_link_libraries(${program} PRIVATE XGELIB)
 	target_compile_features(${program} PRIVATE cxx_std_20)
 

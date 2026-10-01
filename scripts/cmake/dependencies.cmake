@@ -103,6 +103,18 @@ if (NOT FORCE_LOCAL_RAPIDXML)
 	find_path(RAPIDXML_INCLUDE_DIRS "rapidxml.hpp")
 endif()
 
+# Qt 6 is only for XGEGUI (gui/); nothing in the engine library uses it. Unlike
+# everything above it is found, never fetched: building Qt from source is not
+# something a configure step should do. Without it XGEGUI is left out and the
+# rest builds as before. With vcpkg: vcpkg install qtbase[widgets]
+find_package(Qt6 COMPONENTS Widgets QUIET)
+
+if (Qt6_FOUND)
+	message(STATUS "Qt6 found: ${Qt6_DIR}")
+else()
+	message(STATUS "Qt6 not found, XGEGUI will not be built (install qtbase with the widgets feature).")
+endif()
+
 declare_fetched_dependency(
 	FOUND_VAR XercesC_FOUND
 	DISPLAY_NAME "XercesC"
