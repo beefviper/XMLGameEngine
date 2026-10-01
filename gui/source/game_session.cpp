@@ -29,7 +29,13 @@ namespace xge
 
 	GameSession::~GameSession()
 	{
+		unload();
+	}
+
+	void GameSession::unload()
+	{
 		timer.stop();
+		playing = false;
 
 		// The engine holds a reference to the game: it goes first.
 		engine.reset();

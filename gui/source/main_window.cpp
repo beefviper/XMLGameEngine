@@ -16,12 +16,19 @@
 #include <QFileInfo>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QCloseEvent>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QToolBar>
 
 namespace xge
 {
+	void MainWindow::closeEvent(QCloseEvent* event)
+	{
+		session->unload();
+		QMainWindow::closeEvent(event);
+	}
+
 	MainWindow::MainWindow(QWidget* parent) :
 		QMainWindow(parent),
 		stage(new GameStage),

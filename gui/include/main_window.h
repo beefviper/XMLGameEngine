@@ -28,6 +28,10 @@ namespace xge
 		// Loads a game file, telling the user if it will not load.
 		bool openGame(const QString& file);
 
+	protected:
+		// Frees the game's window before Qt destroys the widget it draws into.
+		void closeEvent(QCloseEvent* event) override;
+
 	public slots:
 		// Asks which game file to open.
 		void chooseGame();

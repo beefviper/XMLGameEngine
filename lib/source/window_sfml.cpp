@@ -56,6 +56,14 @@ namespace xge
 		window.setFramerateLimit(windowDesc.framerate);
 	}
 
+	SFMLWindow::~SFMLWindow()
+	{
+		// The render textures are freed in whichever context is current, so
+		// make it this window's, not another library's.
+		static_cast<void>(window.setActive(true));
+		visuals.clear();
+	}
+
 	bool SFMLWindow::isOpen() const
 	{
 		return window.isOpen();

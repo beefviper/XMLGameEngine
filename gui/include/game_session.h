@@ -36,6 +36,11 @@ namespace xge
 		bool load(const QString& file, bool startPlaying = true);
 		const QString& error() const noexcept { return lastError; }
 
+		// Stops and frees the game and its window. The window must go while
+		// the widget it draws into is still alive: a library's graphics
+		// objects cannot be freed once their window has been destroyed.
+		void unload();
+
 		bool isLoaded() const noexcept { return static_cast<bool>(game); }
 		bool isPlaying() const noexcept { return playing; }
 		unsigned long frames() const noexcept { return frameCount; }

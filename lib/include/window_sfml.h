@@ -30,6 +30,7 @@ namespace xge
 		// With a WindowTarget of Kind::NativeWindow, draws into the front end's
 		// own window (see window.h) instead of opening one.
 		explicit SFMLWindow(const WindowDesc& windowDesc, const WindowTarget& target = {});
+		~SFMLWindow() override;
 
 		bool isOpen() const override;
 		void close() override;
