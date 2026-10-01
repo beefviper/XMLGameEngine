@@ -87,11 +87,18 @@ namespace xge
 			std::cout << "error: failed to initialize SDL2_ttf: " << TTF_GetError() << std::endl;
 		}
 
-		constexpr int imgFlags = IMG_INIT_JPG | IMG_INIT_PNG;
-		imgInitialized = (IMG_Init(imgFlags) & imgFlags) == imgFlags;
+		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
+		// libjpeg-turbo has none), so a missing JPEG is reported but does not
+		// stop the images that can be read.
+		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
 		if (!imgInitialized)
 		{
 			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
+		}
+		else if ((imgLoaded & IMG_INIT_JPG) == 0)
+		{
+			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
 		}
 
 		Uint32 flags = SDL_WINDOW_SHOWN;
