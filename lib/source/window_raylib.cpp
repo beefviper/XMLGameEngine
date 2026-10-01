@@ -94,6 +94,12 @@ namespace xge
 		}
 
 		SetTargetFPS(windowDesc.framerate);
+		frameTarget = windowDesc.framerate > 0 ? 1.0 / windowDesc.framerate : 0.0;
+
+		// Raylib closes the window on Escape by default. Escape is just a key
+		// here (a game can bind it, Lunar Lander pauses with it), as it is on
+		// the other backends; closing is the window's own close button.
+		SetExitKey(KEY_NULL);
 
 		isOpenFlag = true;
 	}
@@ -139,19 +145,26 @@ namespace xge
 
 	std::vector<std::pair<KeyCode, bool>> RaylibWindow::pollEvents()
 	{
-		PollInputEvents();
-
+		// Raylib has no event queue to drain. It reads the keyboard and the
+		// close button itself, once per frame, at the end of EndDrawing() (see
+		// display()), so there is nothing to pump here: calling
+		// PollInputEvents() as well would read the keyboard a second time
+		// each frame, and whatever the first read saw (nearly everything,
+		// since the frame is spent waiting inside EndDrawing()) would be
+		// reset before it could be reported, losing key presses and window
+		// close requests. Instead, compare each key with how it was the last
+		// time this was called, which gives the same press/release changes
+		// as the other backends' queues.
 		std::vector<std::pair<KeyCode, bool>> events;
 
 		for (const auto& [rayKey, code] : keyTable)
 		{
-			if (IsKeyPressed(rayKey))
+			const bool down = IsKeyDown(rayKey);
+
+			if (down != keyWasDown[static_cast<std::size_t>(rayKey)])
 			{
-				events.emplace_back(code, true);
-			}
-			else if (IsKeyReleased(rayKey))
-			{
-				events.emplace_back(code, false);
+				keyWasDown[static_cast<std::size_t>(rayKey)] = down;
+				events.emplace_back(code, down);
 			}
 		}
 
@@ -190,7 +203,39 @@ namespace xge
 	void RaylibWindow::display()
 	{
 		EndDrawing();
+
+		// A raylib built with SUPPORT_CUSTOM_FRAME_CONTROL (some package
+		// builds are) leaves all of this to the program: EndDrawing() then
+		// neither swaps the buffers (the window stays blank), nor reads the
+		// keyboard and window messages (the window stops responding), nor
+		// waits for the frame time (the loop runs flat out). It can be told
+		// from the other kind by EndDrawing() not having worked out the time
+		// the frame took, which GetFrameTime() would give.
+		if (!frameControlChecked)
+		{
+			frameControlChecked = true;
+			manualFrameControl = (GetFrameTime() == 0.0f);
+
+			if (manualFrameControl)
+			{
+				std::cout << "raylib: built with custom frame control, so the window swaps, polls and waits for each frame itself" << std::endl;
+			}
+		}
+
+		if (manualFrameControl)
+		{
+			SwapScreenBuffer();
+			PollInputEvents();
+
+			const double elapsed = GetTime() - frameStart;
+			if (elapsed < frameTarget)
+			{
+				WaitTime(frameTarget - elapsed);
+			}
+			frameStart = GetTime();
+		}
 	}
+
 
 	const Font& RaylibWindow::getFont()
 	{
@@ -216,12 +261,24 @@ namespace xge
 
 	void RaylibWindow::reloadTexture(CachedVisual& visual, int width, int height)
 	{
+		const int wanted = width > 0 ? width : 1;
+		const int tall = height > 0 ? height : 1;
+
 		if (visual.loaded)
 		{
+			// A visual that is rebuilt again at the same size (a score or a
+			// fuel readout that changed digits) is drawn over in the texture it
+			// already has: making a new one is a texture, a depth buffer and a
+			// framebuffer, once per change. Every build clears it first.
+			if (visual.renderTexture.texture.width == wanted && visual.renderTexture.texture.height == tall)
+			{
+				return;
+			}
+
 			UnloadRenderTexture(visual.renderTexture);
 		}
 
-		visual.renderTexture = LoadRenderTexture(width > 0 ? width : 1, height > 0 ? height : 1);
+		visual.renderTexture = LoadRenderTexture(wanted, tall);
 		visual.loaded = true;
 	}
 
@@ -339,13 +396,11 @@ namespace xge
 
 		reloadTexture(visual, bitmap.width, bitmap.height);
 
-		BeginTextureMode(visual.renderTexture);
-		ClearBackground(kTransparent);
-
+		// raylib only reads the pixels while making the texture, so the
+		// bitmap's own memory can be lent to it.
+		Texture2D texture{};
 		if (!bitmap.rgba.empty())
 		{
-			// raylib only reads the pixels while making the texture, so the
-			// bitmap's own memory can be lent to it.
 			Image image{};
 			image.data = const_cast<std::uint8_t*>(bitmap.rgba.data());
 			image.width = bitmap.width;
@@ -353,12 +408,26 @@ namespace xge
 			image.mipmaps = 1;
 			image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
 
-			const Texture2D texture = LoadTextureFromImage(image);
+			texture = LoadTextureFromImage(image);
+		}
+
+		BeginTextureMode(visual.renderTexture);
+		ClearBackground(kTransparent);
+
+		if (texture.id != 0)
+		{
 			DrawTexture(texture, 0, 0, kWhite);
-			UnloadTexture(texture);
 		}
 
 		EndTextureMode();
+
+		// Only now: raylib batches what DrawTexture asks for and draws it
+		// when the texture mode ends, so the texture has to still exist until
+		// then (unloading it before EndTextureMode drew nothing).
+		if (texture.id != 0)
+		{
+			UnloadTexture(texture);
+		}
 	}
 
 	void RaylibWindow::finalizeVisual(Object& object, CachedVisual& visual)

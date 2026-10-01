@@ -9,6 +9,8 @@
 
 #include <raylib.h>
 
+#include <array>
+#include <cstddef>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -54,6 +56,19 @@ namespace xge
 		};
 
 		bool isOpenFlag{ false };
+
+		// How each key (by raylib's key number) was the last time
+		// pollEvents() looked, so it can report only what changed.
+		std::array<bool, 512> keyWasDown{};
+
+		// Whether display() has to finish the frame itself - swap the buffers,
+		// read the keyboard and window, and wait out the frame time - because
+		// this raylib was built with SUPPORT_CUSTOM_FRAME_CONTROL, which makes
+		// EndDrawing() do none of that. Worked out once, after the first frame.
+		bool frameControlChecked{ false };
+		bool manualFrameControl{ false };
+		double frameTarget{ 0.0 };
+		double frameStart{ 0.0 };
 		Font font{};
 		bool fontLoaded{ false };
 		bool customFont{ false };
