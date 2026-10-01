@@ -7,19 +7,29 @@ cmake_minimum_required(VERSION 3.28)
 
 project("XMLGameEngine")
 
-add_executable(${PROJECT_NAME})
-
 include(scripts/cmake/options.cmake)
+
+# The engine is a library (the XMLGameEngine target, named for the project);
+# the programs that use it are separate targets - XGECLI (the command line,
+# cli/) and XGEGUI (a stub for a future windowed front end, gui/) - see
+# scripts/cmake/executables.cmake. Static by default; -DXGE_BUILD_SHARED=ON
+# builds it as a shared library (a DLL on Windows) instead.
+if (XGE_BUILD_SHARED)
+	add_library(${PROJECT_NAME} SHARED)
+else()
+	add_library(${PROJECT_NAME} STATIC)
+endif()
+
 include(scripts/cmake/dependencies.cmake)
 include(scripts/cmake/targets.cmake)
 include(scripts/cmake/platform.cmake)
 include(scripts/cmake/assets.cmake)
 
-# Everything but main.cpp: shared with the test suite's own executable
-# (scripts/cmake/tests.cmake) so the two never drift apart from having the
-# file list maintained by hand in two places.
+# The whole engine: game loading and evaluation, collisions, and every XML
+# and Window backend. Nothing here reads the command line or has a main();
+# that is cli/ (XGECLI). The test suite links this same library
+# (scripts/cmake/tests.cmake), so there is one list of files to keep.
 set(ENGINE_SOURCES
-	"source/cli.cpp"
 	"source/game.cpp"
 	"source/engine.cpp"
 	"source/object.cpp"
@@ -45,7 +55,6 @@ set(ENGINE_SOURCES
 )
 
 set(ENGINE_HEADERS
-	"include/cli.h"
 	"include/game.h"
 	"include/engine.h"
 	"include/object.h"
@@ -72,10 +81,11 @@ set(ENGINE_HEADERS
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
-	"source/main.cpp"
 	${ENGINE_SOURCES}
 	${ENGINE_HEADERS}
 )
+
+include(scripts/cmake/executables.cmake)
 
 if (BUILD_TESTING)
 	include(scripts/cmake/tests.cmake)

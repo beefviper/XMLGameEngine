@@ -7,14 +7,14 @@ XMLGameEngine is a video game description language (VGDL) written in XML, plus a
 ## Running a game
 
 ```
-XMLGameEngine              # loads "pong"
-XMLGameEngine breakout     # a bare name gets ".xml" appended
-XMLGameEngine pong.xml     # a name containing "." is used as given
+XGECLI              # loads "pong"
+XGECLI breakout     # a bare name gets ".xml" appended
+XGECLI pong.xml     # a name containing "." is used as given
 ```
 
 The file is looked for in the current directory first, then in `./games/`. If it is not found the program prints an error and exits. Shipped games: `games/pong.xml`, `games/breakout.xml`, `games/spaceinvaders.xml`, `games/frogger.xml`, `games/spacerace.xml` (two players, W/S and Up/Down, first to two points), `games/kaboom.xml` (A/D or Left/Right; catch bombs in three waves, three missed bombs end the game, 60 points win), `games/freeway.xml` (two players, W/S and Up/Down, first to five crossings), `games/depthcharge.xml` (A/D or Left/Right to move, Space to drop, Space to start; sink all nine submarines before eight charges are wasted) `games/astrosmash.xml` (A/D or Left/Right to move, Space to fire, Space to start; shoot 20 rocks before five land) and `games/lunarlander.xml` (Up or W for the main thruster, Left/Right for the side ones, Space to start; set the lander down on the green pad slower than the safe speed, with fuel to spare, and do not touch anything else).
 
-The XML and window libraries are chosen in C++ (`Game(file, XmlBackend)` and `Engine(game, WindowBackend)`); `main.cpp` uses the defaults, Xerces and SFML3. There is no command-line switch for either yet. See [Backends](#backends).
+The XML and window libraries are chosen in C++ (`Game(file, XmlBackend)` and `Engine(game, WindowBackend)`); `cli/main.cpp` uses the defaults, Xerces and SFML3. There is no command-line switch for either yet. See [Backends](#backends).
 
 ## Game file layout
 
@@ -298,11 +298,18 @@ The other forms:
 
 `Game` and `Engine` only ever see the interfaces. Each interface has a factory that is the single place that knows every implementation. Build-time dependency selection is in `scripts/cmake/` (see the `FORCE_LOCAL_*` options in `options.cmake`).
 
+## Building: library and programs
+
+The engine (everything in `source/` and `include/`) is a library, the `XMLGameEngine` CMake target. Two programs use it: `XGECLI` (`cli/`) and `XGEGUI` (`gui/`, a stub), and so do the tests. The library knows nothing about the command line, so a different front end only needs its own `main()`.
+
+The library is static by default: each program has the engine's code copied into it, so `XGECLI` is one self-contained file. `-DXGE_BUILD_SHARED=ON` builds it as a shared library instead (`libXMLGameEngine.so`, or a DLL on Windows), which each program loads when it starts; a shared build needs the library file to be found next to the program or on the system's library path. On Windows the DLL exports every class in the headers (`WINDOWS_EXPORT_ALL_SYMBOLS`) rather than each being marked by hand. The third-party libraries are `PUBLIC` dependencies of the library, because the engine's own headers include theirs. See [design 35](designs/35-library-and-front-ends.md).
+
 ## Source map
 
 | File | Responsibility |
 |---|---|
-| `main.cpp`, `cli.cpp` | Resolve the game filename, build `Game` and `Engine` |
+| `cli/main.cpp`, `cli/cli.cpp` | XGECLI, the command line program: resolve the game filename, build `Game` and `Engine`. The only code outside the engine library |
+| `gui/main.cpp` | XGEGUI, a stub for a graphical front end; returns at once |
 | `game_xml.cpp` | Walk the parsed XML tags into raw window/variable/object/state data (`RawValue`, `RawCommand`, `RawSprite`); a `<group>` is read here as one raw object per member |
 | `game_expr.cpp` | exprtk symbol table and evaluation of raw values into `Object`s and `State`s |
 | `command.cpp` | Turn raw command tags into typed `Command`s |

@@ -74,10 +74,12 @@ Each dependency is found through vcpkg or the system, or fetched and built when 
 ```
 cmake -B build
 cmake --build build
-XMLGameEngine frogger
+XGECLI frogger
 ```
 
-A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/`. The build copies the games and assets into the build directory, so run it from there. With no argument it runs Pong. The XML and window libraries are chosen in C++ (`main.cpp` uses Xerces and SFML 3); there is no command-line switch yet.
+A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/`. The build copies the games and assets into the build directory, so run it from there. With no argument it runs Pong. The XML and window libraries are chosen in C++ (`cli/main.cpp` uses Xerces and SFML 3); there is no command-line switch yet.
+
+The build makes three things: `XMLGameEngine`, the engine as a library (static by default; `-DXGE_BUILD_SHARED=ON` for a shared one), `XGECLI`, the command line program above, and `XGEGUI`, a stub for a future graphical front end.
 
 Tests are opt-in: configure with `-DBUILD_TESTING=ON`.
 

@@ -28,14 +28,11 @@ else()
 	list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 endif()
 
-# A second executable built from the same engine sources as ${PROJECT_NAME}
-# (see ENGINE_SOURCES/ENGINE_HEADERS in the top-level CMakeLists.txt) plus
-# the actual test files - so tests call into the real command.cpp/game.cpp
-# etc., not a hand-copied reimplementation of them.
+# A second executable: the test files plus the engine library itself (the
+# ${PROJECT_NAME} target), so tests call into the real command.cpp/game.cpp
+# etc., not a hand-copied reimplementation of them. The library brings the
+# include directory and every third-party library it needs along with it.
 add_executable(XMLGameEngineTests
-	${ENGINE_SOURCES}
-	${ENGINE_HEADERS}
-
 	"tests/test_command_parsing.cpp"
 	"tests/test_object_variables.cpp"
 	"tests/test_conditions.cpp"
@@ -64,52 +61,18 @@ add_executable(XMLGameEngineTests
 target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)
 
 # Same flags platform.cmake sets on ${PROJECT_NAME} - in particular /bigobj:
-# game.cpp/game_expr.cpp's exprtk usage generates enough object sections to
-# hit MSVC's C1128 without it, and this target compiles those same files
-# (see ENGINE_SOURCES above) independently of ${PROJECT_NAME}, so it needs
-# its own copy of these options rather than inheriting them.
+# several test files include game_expr.h, whose exprtk use generates enough
+# object sections to hit MSVC's C1128 without it.
 target_compile_options(XMLGameEngineTests PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
 
 target_compile_options(XMLGameEngineTests PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
-target_include_directories(XMLGameEngineTests PRIVATE include)
+target_link_libraries(XMLGameEngineTests PRIVATE ${PROJECT_NAME} Catch2::Catch2WithMain)
 
-target_link_libraries(XMLGameEngineTests PRIVATE Catch2::Catch2WithMain)
-
-target_link_libraries(XMLGameEngineTests PRIVATE XercesC::XercesC)
-
-target_link_libraries(XMLGameEngineTests PRIVATE SFML::System
-	SFML::Window SFML::Graphics SFML::Network SFML::Audio)
-
-# Every Window backend (see window.h) is part of ENGINE_SOURCES, so this
-# target needs the same raylib/SDL2/SDL2_image/SDL2_ttf link libraries as
-# ${PROJECT_NAME} - see targets.cmake.
-target_link_libraries(XMLGameEngineTests PRIVATE raylib)
-
-target_link_libraries(XMLGameEngineTests PRIVATE SDL2::SDL2)
-if (TARGET SDL2::SDL2main)
-	target_link_libraries(XMLGameEngineTests PRIVATE SDL2::SDL2main)
-endif()
-
-target_link_libraries(XMLGameEngineTests PRIVATE SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
-
-# Every XML backend (see xml_document.h) is part of ENGINE_SOURCES, so this
-# target needs the same TinyXML2/PugiXML/RapidXML link libraries as
-# ${PROJECT_NAME} - see targets.cmake.
-target_link_libraries(XMLGameEngineTests PRIVATE tinyxml2::tinyxml2 pugixml::pugixml rapidxml::rapidxml)
-
-if (EXPRTK_PACKAGE_FOUND)
-	target_include_directories(XMLGameEngineTests PRIVATE ${EXPRTK_INCLUDE_DIRS})
-else()
-	target_link_libraries(XMLGameEngineTests PRIVATE exprtk)
-endif()
-
-# None of the current tests load a game XML file, but games/ and assets/
-# ending up next to the test binary (same as they already do for
-# ${PROJECT_NAME} - see assets.cmake) costs nothing and means a future test
-# that does construct a real xge::Game just works.
+# games/ and assets/ end up next to the test binary (same as they do for the
+# programs - see assets.cmake), because several tests load the shipped games.
 add_dependencies(XMLGameEngineTests data-target)
 
 include(CTest)

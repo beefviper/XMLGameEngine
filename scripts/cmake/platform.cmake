@@ -4,7 +4,17 @@
 # date: Feb 6, 2026
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	PROPERTY VS_STARTUP_PROJECT XMLGameEngine)
+	PROPERTY VS_STARTUP_PROJECT XGECLI)
+
+# Warning levels for the engine library; XGECLI, XGEGUI and the tests get the
+# same ones from scripts/cmake/executables.cmake and tests.cmake.
+if (XGE_BUILD_SHARED)
+	# A DLL has to say what it exports; rather than marking every class in the
+	# headers, export all of them, and put the DLL next to the programs.
+	set_target_properties(${PROJECT_NAME} PROPERTIES
+		WINDOWS_EXPORT_ALL_SYMBOLS ON
+		RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)

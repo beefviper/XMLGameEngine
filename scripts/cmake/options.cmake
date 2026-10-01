@@ -28,3 +28,12 @@ force_local_option(CATCH2 "Catch2")
 # Catch2 (found via vcpkg/find_package, or fetched and built from source if
 # not installed), so it's opt-in rather than part of an ordinary build.
 option(BUILD_TESTING "Build the Catch2-based test suite in tests/" OFF)
+
+# How the engine library (the XMLGameEngine target) is built, and so how
+# XGECLI, XGEGUI and the tests link to it. OFF (the default) is a static
+# library: its code is copied into each program, which is one self-contained
+# .exe. ON is a shared library (a DLL on Windows, a .so on Linux): one copy
+# of the engine that the programs load at run time, which is what a plug-in
+# or a second front end sharing one engine install would want. See
+# docs/readme.md, "Building".
+option(XGE_BUILD_SHARED "Build the engine as a shared library instead of a static one" OFF)

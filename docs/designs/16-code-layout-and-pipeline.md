@@ -19,7 +19,7 @@ Feedback given: the layering and the three-phase loop are sound; things worth de
 
 ## What the tree looks like now
 
-The layered directories were later flattened into `include/` and `source/` files with the same responsibilities (`game_xml`, `game_expr`, `game`, `engine`, `command`, `command_executor`, `collision_detector`, `window_*`, `xml_*`, `xsd_lite`, `cli`). See the source map in [docs/readme.md](../readme.md).
+The layered directories were later flattened into `include/` and `source/` files with the same responsibilities (`game_xml`, `game_expr`, `game`, `engine`, `command`, `command_executor`, `collision_detector`, `window_*`, `xml_*`, `xsd_lite`). The command line (`cli.cpp`, `main.cpp`) later moved out of the engine into `cli/`, and the engine became a library ([35](35-library-and-front-ends.md)). See the source map in [docs/readme.md](../readme.md).
 
 ## Open
 

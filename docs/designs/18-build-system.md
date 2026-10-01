@@ -4,7 +4,7 @@
 
 ## Decision
 
-One top-level `CMakeLists.txt`, with the logic split into modules in `scripts/cmake/` (`assets`, `dependencies`, `options`, `platform`, `targets`, `tests`). Source, include and assets directories stay clean; there is no `CMakeLists.txt` in every directory.
+One top-level `CMakeLists.txt`, with the logic split into modules in `scripts/cmake/` (`assets`, `dependencies`, `executables`, `options`, `platform`, `targets`, `tests`). Source, include and assets directories stay clean; there is no `CMakeLists.txt` in every directory. The `XMLGameEngine` target is a library and `executables.cmake` defines the programs built on it ([35](35-library-and-front-ends.md)).
 
 The alternative proposed first was a `CMakeLists.txt` in each subdirectory (main, source, data). The author preferred a single root file plus a `cmake/` (or `scripts/cmake/`) directory.
 
