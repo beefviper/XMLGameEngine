@@ -11,9 +11,8 @@
 
 namespace xge
 {
-	// The page the surface sits on: it keeps the surface (which is the size of
-	// the game, not of the pane) in the middle, cut off at the edges when the
-	// pane is smaller than the game.
+	// The page the surface sits on: it keeps the surface in the middle, scaled
+	// to the largest size in the game's proportions that fits the pane.
 	class NativeHolder : public QWidget
 	{
 	public:
@@ -31,6 +30,10 @@ namespace xge
 		{
 			if (child)
 			{
+				if (auto* surface = dynamic_cast<NativeSurface*>(child))
+				{
+					surface->fitTo(size());
+				}
 				child->move((width() - child->width()) / 2, (height() - child->height()) / 2);
 			}
 		}

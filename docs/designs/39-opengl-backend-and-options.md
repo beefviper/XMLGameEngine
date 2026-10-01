@@ -35,12 +35,12 @@ XGEGUI has a toolbar (Open Game, Options) and Options in the File menu. The dial
 - A new **XML parser** has to read the file again, so the game starts over from the beginning, also paused.
 - If a library will not start (for instance SFML3 where its window cannot be adopted) the game is drawn with the Qt renderer instead, and a message says why.
 
-`GameStage` holds the two ways of showing the game: the `GameView` (a picture: the Qt renderer's, or a back buffer's pixels via `EmbeddedWindow`) and a `NativeSurface` (a widget with a platform window, the size of the game, in the middle of the pane, cut off if the pane is smaller). A new surface is made for every window because a library's choice of pixel format stays on the window it was made for. The keyboard is read by Qt in both (`KeyQueue`) and passed on by `EmbeddedWindow`, which wraps a library's window and ignores that window's own keys, because Qt is what has the keyboard focus. In the native case the library's window is not scaled to the pane.
+`GameStage` holds the two ways of showing the game: the `GameView` (a picture: the Qt renderer's, or a back buffer's pixels via `EmbeddedWindow`) and a `NativeSurface` (a widget with a platform window, scaled to the largest size in the game's proportions that fits the pane, and kept in the middle). A new surface is made for every window because a library's choice of pixel format stays on the window it was made for. The keyboard is read by Qt in both (`KeyQueue`) and passed on by `EmbeddedWindow`, which wraps a library's window and ignores that window's own keys, because Qt is what has the keyboard focus. In the native case the library does the scaling: SFML 3 is given a view of the whole game and SDL2 a logical size, so each draws the whole game into a window of any size.
 
 ## Approximations
 
 - **Not run on Windows.** The SFML3 and SDL2 paths into a Qt-made HWND, and raylib's hidden window, are the parts most likely to need a fix. Each is also the first thing to try again if a picture does not appear: the Qt renderer is always there to switch back to.
-- **Native windows are not scaled.** A back buffer or the Qt renderer is shown as large as fits; a native window is drawn at the game's size.
+- **Native windows are scaled by the library, not by Qt.** The surface changes size with the pane, so the picture is the library's own scaling (a stretch, but the proportions are kept).
 - **raylib's context** is made current again through GLFW (`glfwGetCurrentContext()` right after raylib starts), which assumes raylib and the library share one GLFW (true with vcpkg's dynamic raylib). If not, `activate()` does nothing for raylib and it can draw into Qt's context.
 - The OpenGL backend draws with straight (not premultiplied) alpha, so the edges of text can differ from the other backends by a shade.
 - The options are not remembered between runs.

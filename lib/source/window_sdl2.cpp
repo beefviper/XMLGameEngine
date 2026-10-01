@@ -111,6 +111,13 @@ namespace xge
 		// itself; the front end that owns this one decides when a frame is due.
 		renderer = SDL_CreateRenderer(window, -1, embedded ? SDL_RENDERER_ACCELERATED : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
 
+		if (renderer && embedded)
+		{
+			// The window is whatever size the front end made it; the game is
+			// drawn whole, scaled to fit it.
+			SDL_RenderSetLogicalSize(renderer, static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height));
+		}
+
 		if (!renderer)
 		{
 			std::cout << "error: failed to create SDL2 renderer: " << SDL_GetError() << std::endl;

@@ -9,6 +9,7 @@
 #include <QKeyEvent>
 #include <QMouseEvent>
 
+#include <algorithm>
 #include <cstdint>
 
 namespace xge
@@ -26,7 +27,22 @@ namespace xge
 
 	void NativeSurface::setGameSize(int width, int height)
 	{
-		setFixedSize(width, height);
+		gameWidth = width > 0 ? width : 1;
+		gameHeight = height > 0 ? height : 1;
+		resize(gameWidth, gameHeight);
+	}
+
+	void NativeSurface::fitTo(const QSize& area)
+	{
+		const double scale = std::min(static_cast<double>(area.width()) / gameWidth,
+			static_cast<double>(area.height()) / gameHeight);
+		const int width = std::max(1, static_cast<int>(gameWidth * scale));
+		const int height = std::max(1, static_cast<int>(gameHeight * scale));
+
+		if (width != this->width() || height != this->height())
+		{
+			resize(width, height);
+		}
 	}
 
 	void* NativeSurface::nativeHandle()

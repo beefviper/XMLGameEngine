@@ -43,6 +43,11 @@ namespace xge
 				throw std::runtime_error("SFML could not draw into the window");
 			}
 
+			// The window is whatever size the front end made it; the game is
+			// drawn whole, scaled to fit it.
+			window.setView(sf::View(sf::FloatRect({ 0.f, 0.f },
+				{ static_cast<float>(windowDesc.width), static_cast<float>(windowDesc.height) })));
+
 			return;
 		}
 
