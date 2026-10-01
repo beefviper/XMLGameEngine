@@ -11,6 +11,8 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
+#include <algorithm>
+
 namespace xge
 {
 	OptionsDialog::OptionsDialog(const SessionOptions& current, QWidget* parent) :
@@ -53,7 +55,13 @@ namespace xge
 		// Sized up front: the wrapped note makes the layout's minimum depend on
 		// the width, and a dialog first shown smaller than that minimum makes
 		// Windows complain about the geometry Qt asked for.
-		setMinimumWidth(440);
+		// Wide enough for the note's longest line, so it does not wrap.
+		int widest = 0;
+		for (const QString& line : note->text().split('\n'))
+		{
+			widest = std::max(widest, note->fontMetrics().horizontalAdvance(line));
+		}
+		setMinimumWidth(widest + layout->contentsMargins().left() + layout->contentsMargins().right() + 24);
 		resize(sizeHint().expandedTo(minimumSize()));
 	}
 
