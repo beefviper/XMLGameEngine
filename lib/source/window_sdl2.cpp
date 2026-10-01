@@ -5,6 +5,7 @@
 
 #include "window_sdl2.h"
 
+#include "builtin_font.h"
 #include "color.h"
 
 #include <cmath>
@@ -248,7 +249,12 @@ namespace xge
 		TTF_Font* loaded = TTF_OpenFont("assets/tuffy.ttf", pointSize);
 		if (!loaded)
 		{
-			std::cout << "error: failed to load font: assets/tuffy.ttf: " << TTF_GetError() << std::endl;
+			// Said once, not once for every size asked for.
+			if (!fontMissing)
+			{
+				std::cout << "error: failed to load font: assets/tuffy.ttf: " << TTF_GetError() << " - drawing text with the built-in 8x8 font instead" << std::endl;
+			}
+			fontMissing = true;
 		}
 
 		fontsBySize.emplace(pointSize, loaded);
@@ -343,6 +349,7 @@ namespace xge
 		TTF_Font* font = getFont(requestedSize);
 		if (!font)
 		{
+			buildBitmap(object, visual, rasterizeText(object.spriteParams.at(1), requestedSize, colorFromName(object.spriteParams.at(3))));
 			return;
 		}
 
@@ -394,6 +401,13 @@ namespace xge
 	// (see Bitmap); all that is left is to show that picture.
 	void SDL2Window::buildLines(Object& object, CachedVisual& visual)
 	{
+		buildBitmap(object, visual, *object.bitmap);
+	}
+
+	// Shows a picture the engine drew itself: a sprite of lines, or text in
+	// the built-in font.
+	void SDL2Window::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
+	{
 		if (visual.texture)
 		{
 			SDL_DestroyTexture(visual.texture);
@@ -401,7 +415,6 @@ namespace xge
 		}
 		visual.flip = SDL_FLIP_NONE;
 
-		const Bitmap& bitmap = *object.bitmap;
 		if (bitmap.rgba.empty())
 		{
 			reloadTargetTexture(visual, 1, 1);
@@ -414,7 +427,7 @@ namespace xge
 			bitmap.width, bitmap.height, 32, bitmap.width * 4, SDL_PIXELFORMAT_RGBA32);
 		if (!surface)
 		{
-			std::cout << "error: SDL2: failed to make a surface from the lines of '" << object.name << "': " << SDL_GetError() << std::endl;
+			std::cout << "error: SDL2: failed to make a surface from the picture of '" << object.name << "': " << SDL_GetError() << std::endl;
 			return;
 		}
 

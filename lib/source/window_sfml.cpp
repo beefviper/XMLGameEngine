@@ -5,6 +5,7 @@
 
 #include "window_sfml.h"
 
+#include "builtin_font.h"
 #include "color.h"
 
 #include <cmath>
@@ -229,7 +230,8 @@ namespace xge
 			const std::string fontFile{ "assets/tuffy.ttf" };
 			if (!font.openFromFile(fontFile))
 			{
-				std::cout << "error: failed to load font: " << fontFile << std::endl;
+				std::cout << "error: failed to load font: " << fontFile << " - drawing text with the built-in 8x8 font instead" << std::endl;
+				fontMissing = true;
 			}
 			fontLoaded = true;
 		}
@@ -295,6 +297,12 @@ namespace xge
 	{
 		const sf::Font& f = getFont();
 
+		if (fontMissing)
+		{
+			buildBitmap(object, visual, rasterizeText(object.spriteParams.at(1), std::stoi(object.spriteParams.at(2)), colorFromName(object.spriteParams.at(3))));
+			return;
+		}
+
 		sf::Text text(f);
 		text.setString(object.spriteParams.at(1));
 		text.setCharacterSize(std::stoi(object.spriteParams.at(2)));
@@ -350,7 +358,13 @@ namespace xge
 	// (see Bitmap); all that is left is to show that picture.
 	void SFMLWindow::buildLines(Object& object, CachedVisual& visual)
 	{
-		const Bitmap& bitmap = *object.bitmap;
+		buildBitmap(object, visual, *object.bitmap);
+	}
+
+	// Shows a picture the engine drew itself: a sprite of lines, or text in
+	// the built-in font.
+	void SFMLWindow::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
+	{
 		const auto width = static_cast<unsigned int>(bitmap.width > 0 ? bitmap.width : 1);
 		const auto height = static_cast<unsigned int>(bitmap.height > 0 ? bitmap.height : 1);
 
@@ -369,7 +383,7 @@ namespace xge
 		sf::Texture texture;
 		if (!texture.loadFromImage(image))
 		{
-			std::cout << "error: SFML: failed to make a texture from the lines of '" << object.name << "'\n";
+			std::cout << "error: SFML: failed to make a texture from the picture of '" << object.name << "'\n";
 			return;
 		}
 

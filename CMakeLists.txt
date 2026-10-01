@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.28)
 
-project("XMLGameEngine")
+project("XGE")
 
 include(scripts/cmake/options.cmake)
 
@@ -37,6 +37,7 @@ set(ENGINE_SOURCES
 	"lib/source/states.cpp"
 	"lib/source/color.cpp"
 	"lib/source/bitmap.cpp"
+	"lib/source/builtin_font.cpp"
 	"lib/source/keycode.cpp"
 	"lib/source/game_xml.cpp"
 	"lib/source/xml_document.cpp"
@@ -63,6 +64,7 @@ set(ENGINE_HEADERS
 	"lib/include/types.h"
 	"lib/include/color.h"
 	"lib/include/bitmap.h"
+	"lib/include/builtin_font.h"
 	"lib/include/keycode.h"
 	"lib/include/game_xml.h"
 	"lib/include/xml_document.h"

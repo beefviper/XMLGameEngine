@@ -56,6 +56,7 @@ add_executable(XGETEST
 	"tests/test_astrosmash.cpp"
 	"tests/test_lines_and_pixels.cpp"
 	"tests/test_lunarlander.cpp"
+	"tests/test_builtin_font.cpp"
 )
 
 target_compile_features(XGETEST PRIVATE cxx_std_20)

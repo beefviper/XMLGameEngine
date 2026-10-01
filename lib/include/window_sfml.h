@@ -50,6 +50,9 @@ namespace xge
 		sf::RenderWindow window;
 		sf::Font font;
 		bool fontLoaded{ false };
+		// Set when the font file could not be loaded: text is then drawn from
+		// the engine's built-in font (see builtin_font.h).
+		bool fontMissing{ false };
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static KeyCode sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept;
@@ -66,6 +69,7 @@ namespace xge
 		void buildText(Object& object, CachedVisual& visual);
 		void buildImage(Object& object, CachedVisual& visual);
 		void buildLines(Object& object, CachedVisual& visual);
+		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
 
 		// Finishes a visual after buildShapeOnly() (and, in init()'s case,
 		// after grid position math): measures object.size, finalizes the

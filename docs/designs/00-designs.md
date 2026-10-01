@@ -43,6 +43,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 33 | Astrosmash | rocks that split or drift / a fixed set that cycles; a miss that costs nothing / costs a life | A fixed set that cycles and fall in straight columns, a miss costs a life. **Built** (no new verbs); splitting needs spawning, **Idea** | [33](33-astrosmash.md) |
 | 34 | Lunar Lander | a picture from lines / a box with parts; pixel testing for all / opt-in; gravity per object / a world setting | `<line>` sprites, `<type>pixel</type>` behind the box sweep, `<acceleration>`, held `<accelerate>` with `burn`, `<stop />`, `<slower>`/`<faster>`. **Built** | [34](34-lunar-lander.md) |
 | 35 | Library and front ends | engine as one program / a library with front ends; static / shared linking; one GUI project now / later | A library, `XGECLI` and a stub `XGEGUI`; static by default, shared behind `XGE_BUILD_SHARED`. **Built** | [35](35-library-and-front-ends.md) |
+| 36 | Built-in font | no font file means no text / text from a font stored in the program; a TTF in the executable / a small bitmap table | An 8x8 bitmap font in `builtin_font.cpp`, drawn through `Bitmap`. **Built** | [36](36-builtin-font.md) |
 
 ## Reading order
 

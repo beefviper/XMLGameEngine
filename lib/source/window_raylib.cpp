@@ -5,6 +5,7 @@
 
 #include "window_raylib.h"
 
+#include "builtin_font.h"
 #include "color.h"
 
 #include <cmath>
@@ -203,8 +204,9 @@ namespace xge
 			}
 			else
 			{
-				std::cout << "error: failed to load font: assets/tuffy.ttf" << std::endl;
+				std::cout << "error: failed to load font: assets/tuffy.ttf - drawing text with the built-in 8x8 font instead" << std::endl;
 				font = GetFontDefault();
+				fontMissing = true;
 			}
 			fontLoaded = true;
 		}
@@ -268,6 +270,12 @@ namespace xge
 		const std::string& text = object.spriteParams.at(1);
 		const float fontSize = std::stof(object.spriteParams.at(2));
 
+		if (fontMissing)
+		{
+			buildBitmap(object, visual, rasterizeText(text, static_cast<int>(std::lround(fontSize)), colorFromName(object.spriteParams.at(3))));
+			return;
+		}
+
 		const ::Vector2 measured = MeasureTextEx(f, text.c_str(), fontSize, 1.0f);
 		const int width = static_cast<int>(std::ceil(measured.x));
 		const int height = static_cast<int>(std::ceil(measured.y));
@@ -320,7 +328,14 @@ namespace xge
 	// (see Bitmap); all that is left is to show that picture.
 	void RaylibWindow::buildLines(Object& object, CachedVisual& visual)
 	{
-		const Bitmap& bitmap = *object.bitmap;
+		buildBitmap(object, visual, *object.bitmap);
+	}
+
+	// Shows a picture the engine drew itself: a sprite of lines, or text in
+	// the built-in font.
+	void RaylibWindow::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
+	{
+		(void)object;
 
 		reloadTexture(visual, bitmap.width, bitmap.height);
 

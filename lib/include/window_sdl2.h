@@ -58,6 +58,9 @@ namespace xge
 		SDL_Window* window{ nullptr };
 		SDL_Renderer* renderer{ nullptr };
 		bool isOpenFlag{ false };
+		// Set when the font file could not be loaded: text is then drawn from
+		// the engine's built-in font (see builtin_font.h).
+		bool fontMissing{ false };
 		bool ttfInitialized{ false };
 		bool imgInitialized{ false };
 
@@ -79,6 +82,7 @@ namespace xge
 		void buildText(Object& object, CachedVisual& visual);
 		void buildImage(Object& object, CachedVisual& visual);
 		void buildLines(Object& object, CachedVisual& visual);
+		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
 
 		void finalizeVisual(Object& object, CachedVisual& visual);
 	};
