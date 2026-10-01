@@ -6,6 +6,9 @@
 // Catch2 tests for XGECLI's command line (cli/source/cli.cpp): the options
 // and their short, attached and long forms, the backend names, the errors, and
 // the order a game file is looked for in.
+//
+// Test names must not start with "-" or contain a comma: ctest hands the name to
+// Catch2 on its command line, which reads them as an option or a list.
 
 #include "cli.h"
 
@@ -74,14 +77,14 @@ TEST_CASE("a single bare argument is the game", "[cli]")
 	CHECK(parseCommandLine({ "some/dir/pong.xml" }).window == WindowBackend::SFML3);
 }
 
-TEST_CASE("-g and --game name the game, attached or spaced", "[cli]")
+TEST_CASE("the game option names the game in its short and attached and long forms", "[cli]")
 {
 	CHECK(parseCommandLine({ "-g", "pong" }).game == "pong");
 	CHECK(parseCommandLine({ "-gbreakout" }).game == "breakout");
 	CHECK(parseCommandLine({ "--game", "kaboom.xml" }).game == "kaboom.xml");
 }
 
-TEST_CASE("--game needs a space, not an equals sign", "[cli]")
+TEST_CASE("a long option needs a space and not an equals sign", "[cli]")
 {
 	CHECK_THROWS_AS(parseCommandLine({ "--game=pong" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--gamepong" }), CliError);
@@ -95,7 +98,7 @@ TEST_CASE("the game options fail with no game", "[cli]")
 	CHECK_THROWS_AS(parseCommandLine({ "-g", "" }), CliError);
 }
 
-TEST_CASE("-w and --window pick the window library", "[cli]")
+TEST_CASE("the window option picks the window library", "[cli]")
 {
 	CHECK(parseCommandLine({ "-w", "sfml3" }).window == WindowBackend::SFML3);
 	CHECK(parseCommandLine({ "-wraylib" }).window == WindowBackend::Raylib);
@@ -103,7 +106,7 @@ TEST_CASE("-w and --window pick the window library", "[cli]")
 	CHECK(parseCommandLine({ "-w", "SDL2" }).window == WindowBackend::SDL2);
 }
 
-TEST_CASE("-x and --xml pick the XML library", "[cli]")
+TEST_CASE("the xml option picks the XML library", "[cli]")
 {
 	CHECK(parseCommandLine({ "-x", "xerces" }).xml == XmlBackend::Xerces);
 	CHECK(parseCommandLine({ "-xtinyxml2" }).xml == XmlBackend::TinyXml2);
@@ -111,7 +114,7 @@ TEST_CASE("-x and --xml pick the XML library", "[cli]")
 	CHECK(parseCommandLine({ "-x", "RapidXml" }).xml == XmlBackend::RapidXml);
 }
 
-TEST_CASE("all three options together, in any order and either form", "[cli]")
+TEST_CASE("all three options together in any order and either form", "[cli]")
 {
 	const CliOptions attached = parseCommandLine({ "-gpong", "-wsdl2", "-xtinyxml2" });
 	CHECK(attached.game == "pong");
@@ -169,7 +172,7 @@ TEST_CASE("backend names read back the way the options take them", "[cli]")
 	CHECK(xmlBackendName(XmlBackend::RapidXml) == "rapidxml");
 }
 
-TEST_CASE("-h and --help ask for the usage", "[cli]")
+TEST_CASE("the help options ask for the usage", "[cli]")
 {
 	CHECK(parseCommandLine({ "-h" }).showHelp);
 	CHECK(parseCommandLine({ "--help" }).showHelp);
