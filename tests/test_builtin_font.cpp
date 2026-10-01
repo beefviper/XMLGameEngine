@@ -12,6 +12,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <string>
 
@@ -62,6 +63,29 @@ TEST_CASE("a size becomes a whole-number scale of the 8 pixel glyphs, about half
 	CHECK(builtinFontScale(128) == 8);
 }
 
+TEST_CASE("a cell is as tall as the scale says and half as wide, never under 8", "[builtin_font]")
+{
+	// size   scale   cell (width x height)
+	//    8     1       8 x 8
+	//   16     1       8 x 8
+	//   32     2       8 x 16
+	//   48     3       12 x 24
+	//   64     4       16 x 32
+	//  128     8       32 x 64
+	CHECK(builtinCellWidth(8) == 8);
+	CHECK(builtinCellHeight(8) == 8);
+	CHECK(builtinCellWidth(16) == 8);
+	CHECK(builtinCellHeight(16) == 8);
+	CHECK(builtinCellWidth(32) == 8);
+	CHECK(builtinCellHeight(32) == 16);
+	CHECK(builtinCellWidth(48) == 12);
+	CHECK(builtinCellHeight(48) == 24);
+	CHECK(builtinCellWidth(64) == 16);
+	CHECK(builtinCellHeight(64) == 32);
+	CHECK(builtinCellWidth(128) == 32);
+	CHECK(builtinCellHeight(128) == 64);
+}
+
 TEST_CASE("a letter is drawn as its eight by eight glyph, leftmost pixel first", "[builtin_font]")
 {
 	const Bitmap a = rasterizeText("A", 8, kWhite);
@@ -97,31 +121,51 @@ TEST_CASE("only the pixels of the glyph are drawn, in the colour asked for", "[b
 	CHECK(!bitmap.solidAt(7, 7));
 }
 
-TEST_CASE("a bigger size makes every glyph pixel a square block", "[builtin_font]")
+TEST_CASE("a bigger size makes every glyph pixel a block that is taller than it is wide", "[builtin_font]")
 {
 	const Bitmap small = rasterizeText("A", 8, kWhite);
-	const Bitmap big = rasterizeText("A", 48, kWhite); // scale 3
+	const Bitmap big = rasterizeText("A", 48, kWhite); // cell 12 wide, 24 tall
 
-	REQUIRE(big.width == 24);
+	REQUIRE(big.width == 12);
 	REQUIRE(big.height == 24);
-	CHECK(pixelsDrawn(big) == pixelsDrawn(small) * 9);
 
-	// Each pixel of the small glyph is a 3 by 3 block of the big one.
-	for (int y = 0; y < 8; ++y)
+	// Each pixel of the small glyph is 3 pixels tall, and 12 / 8 = 1.5 wide: a
+	// column at x spans from x * 12 / 8 up to (x + 1) * 12 / 8, so the
+	// columns alternate between 1 and 2 pixels and add up to the cell.
+	int widest = 0;
+	int narrowest = 99;
+	for (int x = 0; x < 8; ++x)
 	{
-		for (int x = 0; x < 8; ++x)
+		const int left = x * 12 / 8;
+		const int right = (x + 1) * 12 / 8;
+		widest = std::max(widest, right - left);
+		narrowest = std::min(narrowest, right - left);
+
+		for (int y = 0; y < 8; ++y)
 		{
 			const bool expected = small.solidAt(x, y);
-			CHECK(big.solidAt(x * 3, y * 3) == expected);
-			CHECK(big.solidAt(x * 3 + 2, y * 3 + 2) == expected);
+			for (int blockX = left; blockX < right; ++blockX)
+			{
+				CHECK(big.solidAt(blockX, y * 3) == expected);
+				CHECK(big.solidAt(blockX, y * 3 + 2) == expected);
+			}
 		}
 	}
+	CHECK(narrowest == 1);
+	CHECK(widest == 2);
+
+	// At a size where the width is a whole multiple, the blocks are even:
+	// 64 is a cell 16 wide, so every glyph pixel is 2 wide and 4 tall.
+	const Bitmap even = rasterizeText("A", 64, kWhite);
+	REQUIRE(even.width == 16);
+	REQUIRE(even.height == 32);
+	CHECK(pixelsDrawn(even) == pixelsDrawn(small) * 8);
 }
 
 TEST_CASE("every character takes one cell, and a newline starts another line", "[builtin_font]")
 {
-	const Bitmap word = rasterizeText("HELLO", 32, kWhite); // scale 2: cells of 16
-	CHECK(word.width == 5 * 16);
+	const Bitmap word = rasterizeText("HELLO", 32, kWhite); // scale 2: cells 8 wide, 16 tall
+	CHECK(word.width == 5 * 8);
 	CHECK(word.height == 16);
 
 	const Bitmap lines = rasterizeText("AB\nCDEF\nG", 8, kWhite);

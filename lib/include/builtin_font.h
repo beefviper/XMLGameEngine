@@ -18,19 +18,26 @@ namespace xge
 	// can always be drawn, with no file to lose.
 	constexpr int kBuiltinGlyphSize = 8;
 
-	// Draws `text` onto a transparent Bitmap in `color`, each glyph scaled by a
-	// whole number so the pixels stay square and crisp: the scale is the
-	// requested `size` (the same number a <text> sprite's <size> gives)
-	// divided by 16 and rounded, never less than 1: a letter of the real font
-	// is about half its size wide, so a glyph cell of 8 * scale pixels is about as
-	// wide as one of its letters. Every character takes a
-	// cell of 8 * scale pixels, so a line is characters * 8 * scale wide and
-	// each line 8 * scale tall; a '\n' starts a new line. A character the font
-	// does not have (anything but printable ASCII, a multi-byte UTF-8
-	// character counting as one) is drawn as '?'. Returns an empty Bitmap for
-	// empty text.
+	// Draws `text` onto a transparent Bitmap in `color`. The height and the
+	// width are scaled separately, so the letters are taller than wide, like
+	// the real font's: the height of a glyph is the scale (see
+	// builtinFontScale) times 8 pixels, and the width is half of that, but
+	// never fewer than the 8 pixels the glyph is drawn with. Every character
+	// takes a cell of builtinCellWidth() by builtinCellHeight() pixels, so a
+	// line is characters * that wide and each line that tall; a '\n' starts a
+	// new line. Pixels are whole-number blocks, except that where the width is
+	// an odd multiple of 4 the columns are alternately a pixel wider. A
+	// character the font does not have (anything but printable ASCII, a
+	// multi-byte UTF-8 character counting as one) is drawn as '?'. Returns an
+	// empty Bitmap for empty text.
 	Bitmap rasterizeText(const std::string& text, int size, const Color& color);
 
-	// The scale rasterizeText() would use for a size: size / 16, rounded, at least 1.
+	// The vertical scale rasterizeText() uses for a size: size / 16, rounded,
+	// at least 1 (the size of a pixel of the glyph, top to bottom).
 	int builtinFontScale(int size) noexcept;
+
+	// The width and height of one character's cell for a size: 8 * scale tall,
+	// and half that wide (4 * scale), at least 8.
+	int builtinCellWidth(int size) noexcept;
+	int builtinCellHeight(int size) noexcept;
 }

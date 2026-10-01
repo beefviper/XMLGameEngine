@@ -139,16 +139,29 @@ namespace xge
 
 	int builtinFontScale(int size) noexcept
 	{
-		// A glyph cell is 8 pixels wide at scale 1, and the real font's
+		// A glyph cell is 8 pixels tall at scale 1, and the real font's
 		// letters average about half the size across (0.4 to 0.6 of it), so
 		// a size of 16 is a scale of 1.
 		return std::max(1, (size + kBuiltinGlyphSize) / (2 * kBuiltinGlyphSize));
 	}
 
+	int builtinCellHeight(int size) noexcept
+	{
+		return kBuiltinGlyphSize * builtinFontScale(size);
+	}
+
+	int builtinCellWidth(int size) noexcept
+	{
+		// Half the height, which is 4 pixels for each step of the scale, but
+		// not narrower than the 8 pixels a glyph is made of.
+		return std::max(kBuiltinGlyphSize, builtinCellHeight(size) / 2);
+	}
+
 	Bitmap rasterizeText(const std::string& text, int size, const Color& color)
 	{
 		const int scale = builtinFontScale(size);
-		const int cell = kBuiltinGlyphSize * scale;
+		const int cellWidth = builtinCellWidth(size);
+		const int cellHeight = builtinCellHeight(size);
 
 		// Split into lines of characters, one entry per character; a
 		// multi-byte UTF-8 character is one entry, drawn as '?'.
@@ -176,8 +189,8 @@ namespace xge
 			return bitmap;
 		}
 
-		bitmap.width = static_cast<int>(longest) * cell;
-		bitmap.height = static_cast<int>(lines.size()) * cell;
+		bitmap.width = static_cast<int>(longest) * cellWidth;
+		bitmap.height = static_cast<int>(lines.size()) * cellHeight;
 		bitmap.rgba.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4, 0);
 
 		for (std::size_t row = 0; row < lines.size(); ++row)
@@ -192,13 +205,18 @@ namespace xge
 					{
 						if (((glyph[static_cast<std::size_t>(y)] >> x) & 1) == 0) { continue; }
 
-						// The glyph pixel becomes a scale by scale block.
-						const int left = static_cast<int>(column) * cell + x * scale;
-						const int top = static_cast<int>(row) * cell + y * scale;
+						// The glyph pixel becomes a block: scale pixels tall, and
+						// as wide as the cell's width makes it (the columns'
+						// edges are the cell width times x / 8, so they add up
+						// to the cell exactly).
+						const int cellLeft = static_cast<int>(column) * cellWidth;
+						const int left = cellLeft + x * cellWidth / kBuiltinGlyphSize;
+						const int right = cellLeft + (x + 1) * cellWidth / kBuiltinGlyphSize;
+						const int top = static_cast<int>(row) * cellHeight + y * scale;
 
 						for (int blockY = top; blockY < top + scale; ++blockY)
 						{
-							for (int blockX = left; blockX < left + scale; ++blockX)
+							for (int blockX = left; blockX < right; ++blockX)
 							{
 								const std::size_t at = (static_cast<std::size_t>(blockY) * static_cast<std::size_t>(bitmap.width) + static_cast<std::size_t>(blockX)) * 4;
 								bitmap.rgba[at + 0] = color.r;
