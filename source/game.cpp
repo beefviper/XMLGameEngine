@@ -85,6 +85,8 @@ namespace xge
 	{
 		auto& currentObjects = getCurrentObjects();
 
+		applyAcceleration();
+
 		// Screen-edge checks: independent per object, order doesn't matter.
 		for (auto& object : currentObjects)
 		{
@@ -342,6 +344,12 @@ namespace xge
 			// the next time some other direction's key event recomputes it.
 			object.activeMoveStep = {};
 
+			// The same goes for thrust still recorded as held, and a <stop />
+			// that took the acceleration away gives it back.
+			object.acceleration = object.accelerationOriginal;
+			object.activeThrust = {};
+			object.activeThrustBurn = {};
+
 			// Nor should a reset object carry on being carried, or jump.
 			object.carry = {};
 			object.hopPending = {};
@@ -562,6 +570,45 @@ namespace xge
 		return motion.x != 0 || motion.y != 0 || object.hopped;
 	}
 
+	// A constant pull (<acceleration>, gravity being one with only a y) and
+	// held thrust (<accelerate>) both change an object's velocity, once a
+	// frame, before it is moved. Thrust that burns a variable takes 1 off it
+	// every frame it is on, and does nothing while the variable is at 0 or
+	// below: a ship out of fuel still falls.
+	void Game::applyAcceleration(void)
+	{
+		for (auto& object : objects)
+		{
+			if (!isShown(object)) { continue; }
+
+			Vector2f change = object.acceleration;
+
+			for (std::size_t i = 0; i < object.activeThrust.size(); ++i)
+			{
+				const float amount = object.activeThrust[i];
+				if (amount == 0.0f) { continue; }
+
+				const std::string& burn = object.activeThrustBurn[i];
+				if (!burn.empty())
+				{
+					const auto fuel = object.variable.find(burn);
+					if (fuel == object.variable.end() || fuel->second <= 0.0f) { continue; }
+					changeVariable(object.name + "." + burn, -1.0f, "accelerate");
+				}
+
+				switch (static_cast<Direction>(i))
+				{
+				case Direction::Up:    change.y -= amount; break;
+				case Direction::Down:  change.y += amount; break;
+				case Direction::Left:  change.x -= amount; break;
+				case Direction::Right: change.x += amount; break;
+				}
+			}
+
+			object.velocity += change;
+		}
+	}
+
 	// Makes the hops queued by hop.*() actions. A hop is a jump, not a slide:
 	// the object is simply somewhere else, one step away, before this frame's
 	// collisions are worked out, so it is judged by where it lands and not by
@@ -727,10 +774,18 @@ namespace xge
 		// passed over while `self` is also touching something of that class.
 		const auto react = [&](Object& self, Object& other, Edge selfEdge)
 		{
+			// How fast it is going at the moment of the touch, for the rules
+			// with slower/faster; taken once, so that a rule that stops it does
+			// not change which of the rules after it run.
+			const Vector2f motion = motionOf(self);
+			const float speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+
 			for (const auto& rule : self.collisionData.basic)
 			{
 				if (!collisionRuleMatches(rule, other)) { continue; }
 				if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
+				if (rule.slower && !(speed < *rule.slower)) { continue; }
+				if (rule.faster && !(speed >= *rule.faster)) { continue; }
 
 				for (const auto& command : rule.commands)
 				{

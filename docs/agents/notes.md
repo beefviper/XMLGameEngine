@@ -2,7 +2,7 @@
 
 Working notes for any AI coding agent (or new contributor) picking this project up. Everything the project itself relies on is in [../readme.md](../readme.md) and [../designs/00-designs.md](../designs/00-designs.md); this folder is for agent-facing bookkeeping.
 
-The first version of these docs (the design write-ups, `sources.md` and the scan script) was written by Claude (Sonnet 5.5) on 2026-09-29, from the author's exported chat history plus a read of the source on the `claude` branch. Frogger (`games/frogger.xml`), the verbs it needed and design write-up 21 were added by Claude (Sonnet 5.5) on 2026-09-30, as was Space Race (`games/spacerace.xml`, first to two points, no new verbs). Kaboom (`games/kaboom.xml`, design write-up 30, no new verbs) was added by Claude (Sonnet 5.5) on 2026-09-30 as a game to have fun with, and to try `<random>` inside a `<group>`; it was first a looser game named Gem Catcher, and was renamed and rewritten to follow the arcade rules (bombs only, waves, a miss sets off the wave and costs a bucket) on the same day. Freeway, Depth Charge and Astrosmash (design write-ups 31 to 33, no new verbs) were added the same day, chosen because they needed nothing the vocabulary lacked. A second export (ChatGPT) was mined on 2026-09-30: it added design docs 22 to 28 and a section headed second batch in most earlier docs; only paraphrased ideas were kept, and titles of chats that did not start as game discussions were made generic.
+The first version of these docs (the design write-ups, `sources.md` and the scan script) was written by Claude (Sonnet 5.5) on 2026-09-29, from the author's exported chat history plus a read of the source on the `claude` branch. Frogger (`games/frogger.xml`), the verbs it needed and design write-up 21 were added by Claude (Sonnet 5.5) on 2026-09-30, as was Space Race (`games/spacerace.xml`, first to two points, no new verbs). Kaboom (`games/kaboom.xml`, design write-up 30, no new verbs) was added by Claude (Sonnet 5.5) on 2026-09-30 as a game to have fun with, and to try `<random>` inside a `<group>`; it was first a looser game named Gem Catcher, and was renamed and rewritten to follow the arcade rules (bombs only, waves, a miss sets off the wave and costs a bucket) on the same day. Freeway, Depth Charge and Astrosmash (design write-ups 31 to 33, no new verbs) were added the same day, chosen because they needed nothing the vocabulary lacked. Lunar Lander (`games/lunarlander.xml`, design write-up 34) was added by Claude (Sonnet 5.5) on 2026-09-30 at the author's request, with the `<line>` sprite shape, `<type>pixel</type>` collisions, `<acceleration>`, `<accelerate>`, `<stop />` and the `slower`/`faster` filters; the window backends for lines were only compile-checked. A second export (ChatGPT) was mined on 2026-09-30: it added design docs 22 to 28 and a section headed second batch in most earlier docs; only paraphrased ideas were kept, and titles of chats that did not start as game discussions were made generic.
 
 ## What exists
 
@@ -19,6 +19,8 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 - Direct answers and clear pushback are preferred over hedging.
 
 ## Facts that are easy to get wrong
+
+- Key conventions for `games/`: Space starts, pauses and plays again (never Enter); player one is W/A/S/D. Where Space fires, pause is P or Escape. Keep new games to this.
 
 - The root `readme.md` is a short overview (games, format, build, status); the detailed description is `docs/readme.md`. Update both when a verb, a game or a dependency changes.
 - The repo has three branches: `master`, `rewrite`, `claude`. The active engine described in these docs is on `claude`.
@@ -37,11 +39,12 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 ## Suggested next steps (not started)
 
 1. Decide design 04 (arithmetic as text vs elements); design 03 is done.
-2. Add an arcing jump ([design 13](../designs/13-verb-vocabulary.md), and the air-control refinement in [design 23](../designs/23-jump-and-air-control.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
+2. Add an arcing jump (gravity now exists: an object's `<acceleration>`, see [design 34](../designs/34-lunar-lander.md); what is missing is grounded-versus-airborne and a jump impulse) ([design 13](../designs/13-verb-vocabulary.md), and the air-control refinement in [design 23](../designs/23-jump-and-air-control.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
 3. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, show and hide verbs, and per-row velocity in `<grid>` (the built `<group>` tag, [design 29](../designs/29-groups.md), covers lanes; its open points are nested groups, a bare `<x>` in a member and evenly spaced members).
 4. Rename `collisionData.basic` (and the `basic=` label in `printGame()`) to something that says what it is.
 5. Sort out the file structure: `source/` and `include/` are flat and growing (23 files each). Move them into folders by responsibility (parse and evaluate, engine loop, collision, window backends, XML backends); the Visual Studio filters are meant to be built from the directories, so this is only about the layout on disk. Not started; design 16 has the history of the earlier, over-layered attempt on the `rewrite` branch and why it was flattened.
-6. Designs 22 to 28 are ideas from a second batch of conversations, not plans; nothing in them is built.
+6. Watch Lunar Lander in each window backend (SFML, raylib, SDL2) once; only the tests have played it so far. Rotation and scoring by fuel left are the obvious next steps for it.
+7. Designs 22 to 28 are ideas from a second batch of conversations, not plans; nothing in them is built.
 
 ## Privacy rule for these docs
 

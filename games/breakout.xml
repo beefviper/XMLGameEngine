@@ -145,8 +145,14 @@
         <input button="space">
           <push state="paused" />
         </input>
+        <input button="a">
+          <trigger object="player" action="left" />
+        </input>
         <input button="left">
           <trigger object="player" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="player" action="right" />
         </input>
         <input button="right">
           <trigger object="player" action="right" />

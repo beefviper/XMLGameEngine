@@ -40,7 +40,7 @@ namespace xge
 	// What kind of sprite an Object was built from. Set once in game_expr::init()
 	// from the object's spriteParams tag, so collision code no longer has to
 	// re-derive it by searching the object's raw XML src string.
-	enum class ShapeKind { Unknown, Circle, Rectangle, Text, Image };
+	enum class ShapeKind { Unknown, Circle, Rectangle, Text, Image, Line };
 
 	// --- Command: what a command tag in the XML becomes once it is loaded.
 	// makeCommand() (command.cpp) is the one place that turns a RawCommand
@@ -95,6 +95,26 @@ namespace xge
 		float distance{};
 	};
 
+	// <accelerate direction="up" burn="fuel">0.04</accelerate> - only ever in an
+	// object's own <action>: while the key is held the object's velocity
+	// changes by `amount` every frame in that direction (a thruster), where
+	// <move> would set the velocity itself. burn names one of the object's own
+	// <variable>s that one is taken off every frame the thrust is on, and the
+	// thrust does nothing while it is at 0 or below (fuel); empty means free
+	// (see Game::applyAcceleration).
+	struct CmdAccelerate
+	{
+		Direction direction{};
+		float amount{};
+		std::string burn;
+	};
+
+	// <stop /> - in a collision rule: the object comes to rest where it is and
+	// stays there. Its velocity goes to 0, it is no longer pulled by its
+	// <acceleration> or pushed by a held <accelerate>, until a reset gives
+	// those back. A landing.
+	struct CmdStop {};
+
 	struct CmdPushState
 	{
 		std::string name;
@@ -128,7 +148,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry,
-		CmdMove, CmdHop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdAccelerate, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject>;
 
 	// --- What the XML says, before any of it is evaluated.
@@ -181,8 +201,9 @@ namespace xge
 		std::string variable;  // inc, dec
 		std::string state;     // push
 		std::string action;    // trigger
-		std::string direction; // move, hop
-		RawValue amount;       // move, hop
+		std::string direction; // move, hop, accelerate
+		std::string burn;      // accelerate
+		RawValue amount;       // move, hop, accelerate
 	};
 
 	// Works out a RawValue to a number; makeCommand is given one so that it can
@@ -196,7 +217,7 @@ namespace xge
 	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate);
 	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate);
 
-	// Maps a spriteParams tag ("circle", "rectangle", "text", "image") to a
+	// Maps a spriteParams tag ("circle", "rectangle", "text", "image", "line") to a
 	// ShapeKind. Returns ShapeKind::Unknown for anything else (including an
 	// empty tag).
 	ShapeKind shapeKindFromTag(const std::string& tag) noexcept;

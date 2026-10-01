@@ -794,6 +794,9 @@
         <input button="down">
           <trigger object="chicken2" action="down" />
         </input>
+        <input button="space">
+          <push state="paused" />
+        </input>
         <input button="p">
           <push state="paused" />
         </input>
@@ -817,6 +820,9 @@
         <show object="paused" />
       </shows>
       <inputs>
+        <input button="space">
+          <pop />
+        </input>
         <input button="p">
           <pop />
         </input>

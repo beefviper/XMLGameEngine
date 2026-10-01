@@ -41,6 +41,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 31 | Freeway | timed rounds / first to N crossings; knocked back a lane / sent to the start; lives or none | First to N crossings, sent to the start, no lives; two players share one road. **Built** (no new verbs); a clock **Idea** | [31](31-freeway.md) |
 | 32 | Depth Charge | ammunition that counts every shot / counts only misses; several charges in flight / one | Count only misses with `dec` in the charge's floor rule, one charge at a time. **Built** (no new verbs) | [32](32-depth-charge.md) |
 | 33 | Astrosmash | rocks that split or drift / a fixed set that cycles; a miss that costs nothing / costs a life | A fixed set that cycles and fall in straight columns, a miss costs a life. **Built** (no new verbs); splitting needs spawning, **Idea** | [33](33-astrosmash.md) |
+| 34 | Lunar Lander | a picture from lines / a box with parts; pixel testing for all / opt-in; gravity per object / a world setting | `<line>` sprites, `<type>pixel</type>` behind the box sweep, `<acceleration>`, held `<accelerate>` with `burn`, `<stop />`, `<slower>`/`<faster>`. **Built** | [34](34-lunar-lander.md) |
 
 ## Reading order
 

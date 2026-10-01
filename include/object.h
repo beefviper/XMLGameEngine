@@ -5,10 +5,13 @@
 
 #pragma once
 
+#include "bitmap.h"
 #include "command.h"
 #include "types.h"
 
 #include <array>
+#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include <map>
@@ -42,13 +45,26 @@ namespace xge
 		// same moment touching something of that class - "water kills the
 		// frog, unless it is also on a log". Empty means no exception.
 		std::string unlessClass;
+
+		// <slower>N</slower> / <faster>N</faster> before the commands: the
+		// rule only runs while the object's own speed is under N (slower) or
+		// N or more (faster) at the moment of the touch - a landing pad that
+		// only a slow ship lands on. Unset means any speed.
+		std::optional<RawValue> slower;
+		std::optional<RawValue> faster;
 		std::vector<RawCommand> commands;
 	};
+
+	// How an object's shape is tested against others: as its bounding box
+	// (Box, the default; a circle as a circle) or by the pixels actually drawn
+	// (Pixel) - see CollisionDetector.
+	enum class CollisionType { Box, Pixel };
 
 	struct RawCollisionData
 	{
 		bool enabled{ false };
 		bool lockstep{ false };
+		CollisionType type{ CollisionType::Box };
 		std::vector<RawCommand> top;
 		std::vector<RawCommand> bottom;
 		std::vector<RawCommand> left;
@@ -68,6 +84,10 @@ namespace xge
 		std::string filterClass;
 		std::string filterObject;
 		std::string unlessClass;
+
+		// The numbers of <slower>/<faster> (see RawCollisionRule).
+		std::optional<float> slower;
+		std::optional<float> faster;
 		std::vector<Command> commands;
 	};
 
@@ -75,6 +95,7 @@ namespace xge
 	{
 		bool enabled{ false };
 		int lockstep{ 0 };
+		CollisionType type{ CollisionType::Box };
 		std::vector<Command> top;
 		std::vector<Command> bottom;
 		std::vector<Command> left;
@@ -106,12 +127,25 @@ namespace xge
 		Vector2i obj{ 0,0 };
 	};
 
+	// One <line> of a sprite drawn from lines: two points, measured in pixels
+	// from the sprite's top left, and how it looks.
+	struct RawLine
+	{
+		RawVector2 from;
+		RawVector2 to;
+		std::string color;           // "" means color.white
+		RawValue thickness;          // only when hasThickness; otherwise 1
+		bool hasThickness{ false };
+	};
+
 	// An object's <sprite>, as written: one shape, optionally repeated as a
-	// <grid>. Which of the fields are used depends on `kind` (circle,
-	// rectangle, text or image).
+	// <grid>, or a drawing made of <line>s. Which of the fields are used
+	// depends on `kind` (circle, rectangle, text, image or line).
 	struct RawSprite
 	{
 		std::string kind;
+
+		std::vector<RawLine> lines;  // line: one or more
 
 		RawValue radius;             // circle
 		RawValue width;              // rectangle
@@ -145,6 +179,8 @@ namespace xge
 		bool isVisible{ true };
 		RawVector2 rawPosition;
 		RawVector2 rawVelocity;
+		RawVector2 rawAcceleration;  // only when hasAcceleration
+		bool hasAcceleration{ false };
 		RawCollisionData rawCollisionData;
 		std::map<std::string, std::vector<RawCommand>> action;
 		std::map<std::string, RawValue> variable;
@@ -191,6 +227,20 @@ namespace xge
 		Vector2f positionOriginal;
 		Vector2f velocity;
 		Vector2f velocityOriginal;
+
+		// A constant pull on the velocity, added to it every frame (gravity is
+		// an acceleration with only a y) - see Game::applyAcceleration.
+		// `accelerationOriginal` is how it started: <stop /> takes the
+		// acceleration away and a reset brings it back.
+		Vector2f acceleration;
+		Vector2f accelerationOriginal;
+
+		// Per-direction thrust currently being held for this object, the way
+		// activeMoveStep holds a <move>'s step, and the variable (if any) each
+		// one burns; set by an <accelerate> in an action, cleared when the key
+		// is let go.
+		std::array<float, 4> activeThrust{};
+		std::array<std::string, 4> activeThrustBurn{};
 
 		// Per-direction move step currently being held for this object, keyed
 		// by static_cast<size_t>(Direction) - sized for Direction's 4 real
@@ -261,6 +311,12 @@ namespace xge
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		ShapeKind shapeKind{ ShapeKind::Unknown };
+
+		// What a sprite of <line>s was drawn as, worked out when the game
+		// loads (game_expr). The window backends draw it as a picture and a
+		// collision of type pixel tests it; null for every other shape. Shared,
+		// not copied, with every copy of the object.
+		std::shared_ptr<const Bitmap> bitmap;
 
 		// True until the active Window backend has built (or rebuilt) this
 		// object's own visual - set again whenever something changes what

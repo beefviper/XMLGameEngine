@@ -349,7 +349,7 @@ TEST_CASE("the lanes loop: a submarine that has left one side comes in from the 
 	CHECK(leftward.position.x > kWindowWidth - leftward.size.x - 10.0f);
 }
 
-TEST_CASE("enter starts a new game from either end screen with everything back", "[depthcharge]")
+TEST_CASE("space starts a new game from either end screen with everything back", "[depthcharge]")
 {
 	Table table;
 	table.freezeSubs();
@@ -378,13 +378,10 @@ TEST_CASE("the keys play the game through the engine", "[depthcharge][engine_inp
 	Object& ship = game.getObject("ship");
 	Object& charge = game.getObject("charge");
 
-	engine.handleKeyPressed(KeyCode::Space); // space means nothing on the menu
 	CHECK(game.getCurrentState().name == "mainmenu");
-	engine.handleKeyReleased(KeyCode::Space);
-
-	engine.handleKeyPressed(KeyCode::Enter);
+	engine.handleKeyPressed(KeyCode::Space); // space starts the game
 	REQUIRE(game.getCurrentState().name == "playing");
-	engine.handleKeyReleased(KeyCode::Enter);
+	engine.handleKeyReleased(KeyCode::Space);
 	CHECK(!charge.isVisible);
 
 	engine.handleKeyPressed(KeyCode::Space);

@@ -16,6 +16,7 @@ namespace xge
 			[&](const CmdStick&) { stick(object, edge); },
 			[&](const CmdReset&) { object.position = object.positionOriginal; },
 			[&](const CmdDie&) { die(object); },
+			[&](const CmdStop&) { stop(object); },
 			[&](const CmdWrap&) { wrap(object, edge); },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target); },
@@ -32,6 +33,7 @@ namespace xge
 		std::visit(overload{
 			[&](const CmdBounce&) { bounceOffEdge(object, edge); },
 			[&](const CmdDie&) { die(object); },
+			[&](const CmdStop&) { stop(object); },
 			[&](const CmdReset&) { object.position = object.positionOriginal; },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target); },
@@ -82,6 +84,10 @@ namespace xge
 			{
 				applyActionVelocity(object, move->direction, move->step);
 			}
+			else if (const auto* thrust = std::get_if<CmdAccelerate>(&actionCommand))
+			{
+				applyActionThrust(object, thrust->direction, thrust->amount, thrust->burn);
+			}
 		}
 
 		return true;
@@ -94,6 +100,19 @@ namespace xge
 	{
 		object.collisionData.enabled = false;
 		object.isVisible = false;
+	}
+
+	// Comes to rest: no velocity, and nothing left to change it - neither the
+	// object's own pull nor a thruster still held. (A reset gives them back.)
+	// Being in motion is what makes collisions run, so an object that has
+	// stopped is no longer asked about what it is resting on.
+	void CommandExecutor::stop(Object& object)
+	{
+		object.velocity = {};
+		object.acceleration = {};
+		object.activeMoveStep = {};
+		object.activeThrust = {};
+		object.activeThrustBurn = {};
 	}
 
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge)
@@ -256,9 +275,11 @@ namespace xge
 				// A hop belongs to the press alone: letting go of the key does
 				// nothing, and it is not among what executeHeldInput resumes.
 				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); } },
+				// Thrust is held like a move: on while the key is down.
+				[&](const CmdAccelerate& a) { applyActionThrust(object, a.direction, keyPressed ? a.amount : 0.0f, a.burn); },
 				[&](const CmdFire& f) { if (keyPressed) { spawnProjectile(object, f.projectileName); } },
 				[&](const auto&) { /* an object's own <action> list only ever produces
-				                      move/hop/fire commands today; ignore anything else. */ }
+				                      move/hop/accelerate/fire commands today; ignore anything else. */ }
 			}, command);
 		}
 	}
@@ -277,6 +298,17 @@ namespace xge
 			- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
 		object.velocity.y = object.activeMoveStep[static_cast<std::size_t>(Direction::Down)]
 			- object.activeMoveStep[static_cast<std::size_t>(Direction::Up)];
+	}
+
+	// Records that `direction` is now being pushed by `amount` a frame (0 =
+	// just released), and the variable it burns; Game::applyAcceleration
+	// applies every direction being held once a frame. Unlike a move's velocity
+	// there is nothing to recombine: each direction adds its own amount.
+	void CommandExecutor::applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn)
+	{
+		const auto index = static_cast<std::size_t>(direction);
+		object.activeThrust[index] = amount;
+		object.activeThrustBurn[index] = amount == 0.0f ? std::string{} : burn;
 	}
 
 	void CommandExecutor::spawnProjectile(Object& shooter, const std::string& projectileName)

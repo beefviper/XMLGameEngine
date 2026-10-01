@@ -44,7 +44,7 @@ namespace xge
 		void executeCondition(const Command& command);
 
 		// A key that was already down when a state began: applies only the
-		// continuous part of its binding (an action's move.*) and returns true
+		// continuous part of its binding (an action's move.* and accelerate.*) and returns true
 		// if the command was one of those. One-shot commands (state changes,
 		// fire) are left alone, since the key was never pressed in this state.
 		bool executeHeldInput(const Command& command);
@@ -60,6 +60,8 @@ namespace xge
 		void wrap(Object& object, Edge edge);
 		void carry(Object& object, const Object& other);
 		void queueHop(Object& object, Direction direction, float distance);
+		void stop(Object& object);
+		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
 
 		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed);
 		void applyActionVelocity(Object& object, Direction direction, float step);

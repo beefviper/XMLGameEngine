@@ -57,6 +57,8 @@ add_executable(XMLGameEngineTests
 	"tests/test_freeway.cpp"
 	"tests/test_depthcharge.cpp"
 	"tests/test_astrosmash.cpp"
+	"tests/test_lines_and_pixels.cpp"
+	"tests/test_lunarlander.cpp"
 )
 
 target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)

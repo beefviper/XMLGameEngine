@@ -245,6 +245,7 @@ namespace xge
 		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
 		case ShapeKind::Text:      buildText(object, visual); break;
 		case ShapeKind::Image:     buildImage(object, visual); break;
+		case ShapeKind::Line:      buildLines(object, visual); break;
 		case ShapeKind::Unknown:   break;
 		}
 	}
@@ -343,6 +344,36 @@ namespace xge
 			std::cout << "error: failed to resize render texture" << std::endl;
 		}
 		visual.renderTexture.draw(sprite);
+	}
+
+	// A sprite of lines was already drawn, pixel by pixel, when the game loaded
+	// (see Bitmap); all that is left is to show that picture.
+	void SFMLWindow::buildLines(Object& object, CachedVisual& visual)
+	{
+		const Bitmap& bitmap = *object.bitmap;
+		const auto width = static_cast<unsigned int>(bitmap.width > 0 ? bitmap.width : 1);
+		const auto height = static_cast<unsigned int>(bitmap.height > 0 ? bitmap.height : 1);
+
+		if (!visual.renderTexture.resize({ width, height }))
+		{
+			std::cout << "error: failed to resize render texture" << std::endl;
+		}
+
+		if (bitmap.rgba.empty())
+		{
+			return;
+		}
+
+		const sf::Image image(sf::Vector2u(width, height), bitmap.rgba.data());
+
+		sf::Texture texture;
+		if (!texture.loadFromImage(image))
+		{
+			std::cout << "error: SFML: failed to make a texture from the lines of '" << object.name << "'\n";
+			return;
+		}
+
+		visual.renderTexture.draw(sf::Sprite(texture));
 	}
 
 	void SFMLWindow::finalizeVisual(Object& object, CachedVisual& visual)

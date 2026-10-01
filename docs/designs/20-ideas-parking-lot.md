@@ -12,7 +12,7 @@ Relevance here: an engine whose whole state is already declared in XML would be 
 
 ## Descriptions the engine could be tested against
 
-- The `games/` files (Pong, Breakout, Space Invaders, Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash) are the working proof. A "Galaxian" step, and a game that needs jump, would be the natural next tests of the vocabulary ([01](01-vision-and-scope.md), [13](13-verb-vocabulary.md)).
+- The `games/` files (Pong, Breakout, Space Invaders, Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander) are the working proof. A "Galaxian" step, and a game that needs jump, would be the natural next tests of the vocabulary ([01](01-vision-and-scope.md), [13](13-verb-vocabulary.md)).
 - A written Pong-to-Galaxian chain showing which verb each step adds ([13](13-verb-vocabulary.md)).
 
 ## Passing information between states

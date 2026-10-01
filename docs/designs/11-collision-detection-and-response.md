@@ -27,6 +27,10 @@ The declarative form of the idea: the XML does not spell out an if-the-ball-touc
 - **`unless` on a rule.** A rule can be passed over while the object is also touching something of another class (`Game::isTouchingClass`, a plain overlap test against everything in play). It is a test of where things are now, so two rules for the same moment do not depend on the order the pairs were found in. This is what lets a wide, static river kill the frog anywhere except where a log is.
 - `stick()` is axis-aware: it corrects position and cancels velocity only on the touched edge's axis, so an object pushed into the bottom wall while holding left or right keeps sliding (the alternative, where any push into a wall freezes the object, feels bad to play). It is also re-applied after the move, because the pre-move edge checks only run for a moving object and would otherwise leave a stopped object overshooting the wall by up to one frame of velocity.
 
+## Pixel collisions
+
+A collision can say `<type>pixel</type>`. The box or circle sweep runs first, as always; only a pair it reports as touching is then walked in half-pixel steps, and bisected, to the first step where a drawn pixel meets a solid one. The response sees the same edge as for a box. Design [34](34-lunar-lander.md) has the decisions.
+
 ## Known weaknesses
 
 - Screen edges are still checked by position before the move, not swept. An object cannot get far past one (the check runs every frame and bounce/stick/die all act on it), but an object faster than a window is wide could skip the check.
@@ -41,7 +45,7 @@ The declarative form of the idea: the XML does not spell out an if-the-ball-touc
 ## Design notes worth keeping
 
 - The prototype's `TODO` about colliding with invisible objects: today only shown objects take part, and a hidden object does not move at all. That is what lets a projectile wait unseen and still until `fire()` shows it; it also means there is no hidden-but-moving-and-colliding object (a trigger zone, an enemy still off-screen). If a game needs one, visibility and "in play" have to become separate flags; `fire()` and `die()` would then flip the second.
-- Acceleration is a stated future need (currently only position and velocity).
+- Acceleration is now an object's `<acceleration>` (see [34](34-lunar-lander.md)).
 - The C++ is scaffolding; the language design is the real project. Collision code should follow the vocabulary, not lead it. See [12](12-collision-escalation.md) for how the vocabulary might scale.
 
 ## Second batch: alternatives

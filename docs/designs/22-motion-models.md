@@ -14,7 +14,7 @@ One useful ladder, from the early-arcade discussion:
 - **Constant velocity.** Position advances by a fixed amount each frame, and a collision rule *rewrites* the velocity (Pong, Space Invaders bullets). No accumulation. Reflection is a teleport of the velocity, not a force.
 - **Accelerated.** Velocity accumulates from a force such as gravity. Motion is asymmetric (up is not the mirror of down), a jump becomes an impulse plus a pull, and states such as grounded and airborne appear (Donkey Kong onward).
 
-The practical point: everything up to the second step fits a rule-driven declarative engine comfortably; the third adds per-object state, continuous updates, and a fixed order inside a frame (gravity, then input, then collision, then response).
+The practical point: everything up to the second step fits a rule-driven declarative engine comfortably; the third is now built for one case: an object's `<acceleration>` and a held `<accelerate>` thrust that burns a variable (Lunar Lander, [34](34-lunar-lander.md)). It adds per-object state, continuous updates, and a fixed order inside a frame (gravity, then input, then collision, then response).
 
 ## Names for the two camps
 

@@ -51,8 +51,24 @@ namespace xge
 		// Are the two overlapping right now? Picks the right test above for the
 		// shapes involved (a circle is measured against the other object's
 		// bounding box, whichever way round they are given), and returns which
-		// edge of `b` was hit by `a`.
+		// edge of `b` was hit by `a`. When either object's collisions are of
+		// type "pixel" this is also the second test: the boxes have to overlap
+		// first, and then some pixel of each has to lie on a pixel of the other
+		// (pixelsOverlap). The edge is then still the boxes' edge - a pixel
+		// touch knows where pixels met, not which way a surface faces.
 		static std::optional<Edge> overlap(const Object& a, const Object& b);
+
+		// Whether either object's collisions are of type pixel, so that a pair
+		// is only a hit where pixels actually meet.
+		static bool usesPixels(const Object& a, const Object& b) noexcept;
+
+		// Do any two pixels, one drawn by each object, fall on the same spot on
+		// the screen? An object of type pixel is its picture (a sprite of lines,
+		// see Bitmap), with empty pixels where nothing was drawn; any other
+		// object, in a pair with one that is, counts as solid all over its
+		// shape (a rectangle, or a circle as a circle). Each pixel of the
+		// screen is asked about at its centre.
+		static bool pixelsOverlap(const Object& a, const Object& b);
 
 		// Moves `a` by moveA and `b` by moveB over one step and finds the first
 		// moment they touch, if they do at all. Unlike checking where the two
@@ -60,7 +76,11 @@ namespace xge
 		// through a thin one between two frames. Two objects that already
 		// overlap are a hit at time 0; two that merely touch and are moving
 		// apart are not a hit. Each object is swept on its own - nothing here
-		// knows about lockstep.
+		// knows about lockstep. A pair of type pixel is swept as boxes first and
+		// then walked along the same path, half a pixel at a time, from the
+		// moment the boxes touch until pixels do (the hit's time is where they
+		// first do, found to a fraction of that), and the edge reported is the
+		// one the motion came in through.
 		static std::optional<SweepHit> sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB);
 	};
 }

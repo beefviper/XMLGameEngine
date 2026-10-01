@@ -167,6 +167,111 @@ namespace xge
 		}
 	}
 
+	namespace
+	{
+		// Whether the pixel of the screen at (x, y) - taken at its centre - is
+		// drawn on by `object` when it is at `position`.
+		bool solidAt(const Object& object, const Vector2f& position, int x, int y)
+		{
+			const float localX = static_cast<float>(x) + 0.5f - position.x;
+			const float localY = static_cast<float>(y) + 0.5f - position.y;
+
+			if (object.collisionData.type == CollisionType::Pixel && object.bitmap)
+			{
+				return object.bitmap->solidAt(static_cast<int>(std::floor(localX)), static_cast<int>(std::floor(localY)));
+			}
+
+			if (localX < 0 || localY < 0 || localX >= object.size.x || localY >= object.size.y)
+			{
+				return false;
+			}
+
+			if (object.shapeKind == ShapeKind::Circle)
+			{
+				const float radius = object.size.x / 2;
+				const float dx = localX - radius;
+				const float dy = localY - radius;
+				return dx * dx + dy * dy <= radius * radius;
+			}
+
+			return true;
+		}
+
+		bool pixelsOverlapAt(const Object& a, const Vector2f& atA, const Object& b, const Vector2f& atB)
+		{
+			// Only the stretch of screen both of them cover needs looking at.
+			const int left = static_cast<int>(std::floor(std::max(atA.x, atB.x)));
+			const int top = static_cast<int>(std::floor(std::max(atA.y, atB.y)));
+			const int right = static_cast<int>(std::ceil(std::min(atA.x + a.size.x, atB.x + b.size.x)));
+			const int bottom = static_cast<int>(std::ceil(std::min(atA.y + a.size.y, atB.y + b.size.y)));
+
+			for (int y = top; y < bottom; ++y)
+			{
+				for (int x = left; x < right; ++x)
+				{
+					if (solidAt(a, atA, x, y) && solidAt(b, atB, x, y))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		// The side of `b` that something moving by `move` relative to it comes
+		// in through, by whichever way it is mostly going.
+		Edge edgeFromMotion(const Vector2f& move)
+		{
+			if (std::abs(move.x) >= std::abs(move.y))
+			{
+				return move.x > 0 ? Edge::Left : Edge::Right;
+			}
+
+			return move.y > 0 ? Edge::Top : Edge::Bottom;
+		}
+
+		// After the boxes have been found to touch at `boxHit`: walk the rest
+		// of the step, half a pixel of the longer way at a time, until the
+		// pixels themselves touch.
+		std::optional<CollisionDetector::SweepHit> firstPixelHit(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB,
+			const CollisionDetector::SweepHit& boxHit)
+		{
+			const Vector2f relative = moveA - moveB;
+			const float reach = std::max(std::abs(relative.x), std::abs(relative.y)) * (1.0f - boxHit.time);
+			const int steps = std::max(1, static_cast<int>(std::ceil(reach / 0.5f)));
+
+			const auto touchesAt = [&](float time)
+			{
+				return pixelsOverlapAt(a, a.position + moveA * time, b, b.position + moveB * time);
+			};
+
+			float previous = boxHit.time;
+			for (int i = 0; i <= steps; ++i)
+			{
+				const float time = boxHit.time + (1.0f - boxHit.time) * static_cast<float>(i) / static_cast<float>(steps);
+
+				if (touchesAt(time))
+				{
+					// Somewhere between the last look (clear) and this one.
+					float low = previous;
+					float high = time;
+					for (int refine = 0; refine < 8 && i > 0; ++refine)
+					{
+						const float middle = (low + high) / 2;
+						if (touchesAt(middle)) { high = middle; } else { low = middle; }
+					}
+
+					return CollisionDetector::SweepHit{ high, edgeFromMotion(relative) };
+				}
+
+				previous = time;
+			}
+
+			return std::nullopt;
+		}
+	}
+
 	bool CollisionDetector::touchesScreenEdge(const Object& object, const WindowDesc& windowDesc, Edge edge)
 	{
 		const auto objectWidth = object.size.x;
@@ -254,18 +359,39 @@ namespace xge
 
 	std::optional<Edge> CollisionDetector::overlap(const Object& a, const Object& b)
 	{
+		std::optional<Edge> edge;
+
 		if (a.shapeKind == ShapeKind::Circle)
 		{
-			return circleRectangle(a, b);
+			edge = circleRectangle(a, b);
 		}
-
-		if (b.shapeKind == ShapeKind::Circle)
+		else if (b.shapeKind == ShapeKind::Circle)
 		{
 			const auto edgeOfA = circleRectangle(b, a);
-			return edgeOfA ? std::optional<Edge>(opposite(*edgeOfA)) : std::nullopt;
+			edge = edgeOfA ? std::optional<Edge>(opposite(*edgeOfA)) : std::nullopt;
+		}
+		else
+		{
+			edge = rectangleRectangle(a, b);
 		}
 
-		return rectangleRectangle(a, b);
+		// Touching boxes are only a first look when pixels are what counts.
+		if (edge && usesPixels(a, b) && !pixelsOverlap(a, b))
+		{
+			return std::nullopt;
+		}
+
+		return edge;
+	}
+
+	bool CollisionDetector::usesPixels(const Object& a, const Object& b) noexcept
+	{
+		return a.collisionData.type == CollisionType::Pixel || b.collisionData.type == CollisionType::Pixel;
+	}
+
+	bool CollisionDetector::pixelsOverlap(const Object& a, const Object& b)
+	{
+		return pixelsOverlapAt(a, a.position, b, b.position);
 	}
 
 	std::optional<CollisionDetector::SweepHit> CollisionDetector::sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)
@@ -283,19 +409,31 @@ namespace xge
 			return std::nullopt;
 		}
 
+		std::optional<SweepHit> boxHit;
+
 		if (a.shapeKind == ShapeKind::Circle)
 		{
-			return sweepCircle(a, relative, b);
+			boxHit = sweepCircle(a, relative, b);
 		}
-
-		if (b.shapeKind == ShapeKind::Circle)
+		else if (b.shapeKind == ShapeKind::Circle)
 		{
 			// Same, the other way round: the circle is b, so it gets the
 			// opposite motion, and the edge it hits belongs to a.
 			const auto hit = sweepCircle(b, relative * -1.0f, a);
-			return hit ? std::optional<SweepHit>(SweepHit{ hit->time, opposite(hit->edgeOfSecond) }) : std::nullopt;
+			boxHit = hit ? std::optional<SweepHit>(SweepHit{ hit->time, opposite(hit->edgeOfSecond) }) : std::nullopt;
+		}
+		else
+		{
+			boxHit = sweepRectangle(a, relative, b);
 		}
 
-		return sweepRectangle(a, relative, b);
+		// The boxes never touched: nor did any pixels. They did, and pixels are
+		// what counts: they may yet not, or only later in the step.
+		if (!boxHit || !usesPixels(a, b))
+		{
+			return boxHit;
+		}
+
+		return firstPixelHit(a, moveA, b, moveB, *boxHit);
 	}
 }

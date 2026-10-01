@@ -319,10 +319,10 @@
         <input button="space">
           <push state="paused" />
         </input>
-        <input button="q">
+        <input button="w">
           <trigger object="paddle1" action="up" />
         </input>
-        <input button="z">
+        <input button="s">
           <trigger object="paddle1" action="down" />
         </input>
         <input button="up">

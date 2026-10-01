@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
+#include <memory>
 #include <stdexcept>
 
 namespace xge
@@ -71,6 +73,7 @@ namespace xge
 		// kept as it came out, so that a <random> in it gives the size used here
 		// and the size drawn the same number.
 		std::map<std::string, std::vector<std::string>> firstPassSpriteParams;
+		std::map<std::string, std::shared_ptr<const Bitmap>> firstPassBitmaps;
 		for (auto& rawObject : rawObjects)
 		{
 			if (objectSizes.count(rawObject.name))
@@ -78,7 +81,7 @@ namespace xge
 				continue; // every cell of a <grid> comes from this one object
 			}
 
-			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'");
+			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name]);
 			const ShapeKind kind = shapeKindFromTag(params.empty() ? std::string{} : params.at(0));
 			objectShapeKinds[rawObject.name] = kind;
 			objectSizes[rawObject.name] = measureShapeSize(params, kind);
@@ -156,6 +159,7 @@ namespace xge
 
 					object.spriteParams = tempSpriteParams;
 					object.shapeKind = rawObjectShapeKind;
+					object.bitmap = firstPassBitmaps[rawObject.name];
 
 					if (object.shapeKind == ShapeKind::Text && rawObject.sprite.textIsNumber
 						&& rawObject.sprite.number.kind == RawValue::Kind::Expression)
@@ -211,10 +215,28 @@ namespace xge
 
 					object.velocityOriginal = object.velocity;
 
+					if (rawObject.hasAcceleration)
+					{
+						object.acceleration.x = evaluate(rawObject.rawAcceleration.x, where);
+						object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
+					}
+					object.accelerationOriginal = object.acceleration;
+
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
 					object.isVisibleOriginal = object.isVisible;
 					object.collisionEnabledOriginal = object.collisionData.enabled;
 					object.collisionData.lockstep = thisLockstep;
+					object.collisionData.type = rawObject.rawCollisionData.type;
+
+					// A pixel collision tests the pixels that are drawn; a line
+					// drawing has them from the start, and a circle or rectangle
+					// is solid all over, but what a text or an image looks like
+					// is only known once a window backend has drawn it.
+					if (object.collisionData.type == CollisionType::Pixel
+						&& (object.shapeKind == ShapeKind::Text || object.shapeKind == ShapeKind::Image))
+					{
+						throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
+					}
 
 					object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
 					object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
@@ -227,6 +249,8 @@ namespace xge
 						rule.filterClass = rawRule.filterClass;
 						rule.filterObject = rawRule.filterObject;
 						rule.unlessClass = rawRule.unlessClass;
+						if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
+						if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
 						rule.commands = processCommands(rawRule.commands, where);
 						object.collisionData.basic.push_back(std::move(rule));
 					}
@@ -340,10 +364,45 @@ namespace xge
 		}
 	}
 
-	std::vector<std::string> game_expr::buildSpriteParams(const RawSprite& sprite, const std::string& where)
+	std::vector<std::string> game_expr::buildSpriteParams(const RawSprite& sprite, const std::string& where,
+		std::shared_ptr<const Bitmap>* bitmap)
 	{
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		std::vector<std::string> params;
+
+		if (sprite.kind == "line")
+		{
+			// Drawn here, once, into the pixels the window shows and a pixel
+			// collision tests; the params only carry its size, which is what the
+			// rest of the engine needs to know without a window.
+			std::vector<LineSegment> segments;
+			for (const RawLine& rawLine : sprite.lines)
+			{
+				LineSegment segment;
+				segment.x1 = evaluate(rawLine.from.x, where);
+				segment.y1 = evaluate(rawLine.from.y, where);
+				segment.x2 = evaluate(rawLine.to.x, where);
+				segment.y2 = evaluate(rawLine.to.y, where);
+				segment.color = colorFromName(rawLine.color.empty() ? "color.white" : rawLine.color);
+				if (rawLine.hasThickness) { segment.thickness = static_cast<int>(std::lround(evaluate(rawLine.thickness, where))); }
+				if (segment.thickness < 1) { throw std::runtime_error(where + ": a <line> has a <thickness> under 1"); }
+				segments.push_back(segment);
+			}
+
+			std::shared_ptr<const Bitmap> drawn;
+			try
+			{
+				drawn = std::make_shared<const Bitmap>(rasterizeLines(segments));
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(where + ": " + error.what());
+			}
+
+			params = { "line", std::to_string(drawn->width), std::to_string(drawn->height) };
+			if (bitmap) { *bitmap = std::move(drawn); }
+			return params;
+		}
 
 		if (sprite.kind == "circle")
 		{

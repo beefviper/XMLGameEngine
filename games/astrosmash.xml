@@ -307,7 +307,7 @@
     <object name="start">
       <sprite>
         <text>
-          <content>press enter to start</content>
+          <content>spacebar to start</content>
           <size>48</size>
           <color>color.white</color>
         </text>
@@ -387,7 +387,7 @@
     <object name="again">
       <sprite>
         <text>
-          <content>press enter to play again</content>
+          <content>spacebar to play again</content>
           <size>48</size>
           <color>color.white</color>
         </text>
@@ -414,7 +414,7 @@
         <show object="start" />
       </shows>
       <inputs>
-        <input button="enter">
+        <input button="space">
           <push state="playing" />
         </input>
       </inputs>
@@ -467,6 +467,9 @@
         <show object="paused" />
       </shows>
       <inputs>
+        <input button="space">
+          <pop />
+        </input>
         <input button="p">
           <pop />
         </input>
@@ -482,7 +485,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="enter">
+        <input button="space">
           <reset />
         </input>
       </inputs>
@@ -494,7 +497,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="enter">
+        <input button="space">
           <reset />
         </input>
       </inputs>

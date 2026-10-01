@@ -1016,6 +1016,9 @@
         <input button="d">
           <trigger object="frog" action="right" />
         </input>
+        <input button="space">
+          <push state="paused" />
+        </input>
         <input button="p">
           <push state="paused" />
         </input>
@@ -1039,6 +1042,9 @@
         <show object="paused" />
       </shows>
       <inputs>
+        <input button="space">
+          <pop />
+        </input>
         <input button="p">
           <pop />
         </input>

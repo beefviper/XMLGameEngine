@@ -7,8 +7,8 @@
 Three decoupled layers:
 
 - An **object** defines what it *can* do, and names it: `<action name="up"><move direction="up">step</move></action>`.
-- A **state** defines which buttons exist and which named action each calls: `<input button="q"><trigger object="paddle1" action="up" /></input>`. It has no idea what the action does.
-- The **key** is only a label: `button="q"`.
+- A **state** defines which buttons exist and which named action each calls: `<input button="w"><trigger object="paddle1" action="up" /></input>`. It has no idea what the action does.
+- The **key** is only a label: `button="w"`.
 
 Consequences the author values:
 

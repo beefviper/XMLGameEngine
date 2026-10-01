@@ -5,7 +5,7 @@
   What a game file is made of. The rule of thumb:
 
     * An attribute NAMES or PICKS something: name, class, object, variable,
-      state, action, button, edge, direction, unless. These are labels, and
+      state, action, button, edge, direction, unless, burn. These are labels, and
       they cannot be computed.
     * Everything else is the content of an element. Wherever the content is a
       number (valueType below) it is either a math expression written out as
@@ -133,9 +133,26 @@
     </xs:choice>
   </xs:group>
 
+  <!--
+    One straight line of a drawing: where from and to, in pixels from the
+    sprite's top left, and optionally its color and how many pixels thick it is
+    (1 if left out). A sprite of one or more of these is drawn once, when the
+    game loads, into the picture that is shown and that a collision of type
+    pixel looks at.
+  -->
+  <xs:complexType name="lineType">
+    <xs:sequence>
+      <xs:element name="from" type="vector2Type" />
+      <xs:element name="to" type="vector2Type" />
+      <xs:element name="color" type="xs:string" minOccurs="0" />
+      <xs:element name="thickness" type="valueType" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="spriteType">
     <xs:choice>
       <xs:group ref="shape" />
+      <xs:element name="line" type="lineType" maxOccurs="unbounded" />
       <xs:element name="grid">
         <xs:complexType>
           <xs:sequence>
@@ -162,6 +179,15 @@
     <xs:attribute name="direction" type="directionType" use="required" />
   </xs:complexType>
 
+  <!-- accelerate: a direction, how much to add to the velocity each frame, and optionally the variable it burns. -->
+  <xs:complexType name="thrustType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="direction" type="directionType" use="required" />
+    <xs:attribute name="burn" type="xs:string" use="optional" />
+  </xs:complexType>
+
   <xs:group name="command">
     <xs:choice>
       <xs:element name="bounce" type="emptyType" />
@@ -169,6 +195,7 @@
       <xs:element name="wrap" type="emptyType" />
       <xs:element name="carry" type="emptyType" />
       <xs:element name="die" type="emptyType" />
+      <xs:element name="stop" type="emptyType" />
       <xs:element name="reset">
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="optional" />
@@ -178,6 +205,7 @@
       <xs:element name="dec" type="variableReferenceType" />
       <xs:element name="move" type="stepType" />
       <xs:element name="hop" type="stepType" />
+      <xs:element name="accelerate" type="thrustType" />
       <xs:element name="push">
         <xs:complexType>
           <xs:attribute name="state" type="xs:string" use="required" />
@@ -201,10 +229,15 @@
   <!--
     A collision rule. With edge it is about a screen edge; without, it is about
     another object, narrowed by class and/or object (neither: anything), and
-    passed over while the object is touching something of the unless class.
+    passed over while the object is touching something of the unless class. A
+    rule about another object may also begin with slower and/or faster, which
+    hold it to when the object's own speed is under (slower) or at least
+    (faster) that number.
   -->
   <xs:complexType name="collisionType">
     <xs:sequence>
+      <xs:element name="slower" type="valueType" minOccurs="0" />
+      <xs:element name="faster" type="valueType" minOccurs="0" />
       <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="edge" type="edgeType" use="optional" />
@@ -257,11 +290,20 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- Whether collisions are on, whether the object moves in lockstep with the others of its grid or group, then the rules. -->
+  <!-- How an object's shape is tested: as a box (the default), or by the pixels drawn. -->
+  <xs:simpleType name="collisionShapeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="box" />
+      <xs:enumeration value="pixel" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Whether collisions are on, whether the object moves in lockstep with the others of its grid or group, how its shape is tested, then the rules. -->
   <xs:complexType name="collisionsType">
     <xs:sequence>
       <xs:element name="enabled" type="xs:boolean" />
       <xs:element name="lockstep" type="xs:boolean" minOccurs="0" />
+      <xs:element name="type" type="collisionShapeType" minOccurs="0" />
       <xs:element name="collision" type="collisionType" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
@@ -285,6 +327,7 @@
       <xs:element name="sprite" type="spriteType" />
       <xs:element name="position" type="vector2Type" />
       <xs:element name="velocity" type="vector2Type" />
+      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />

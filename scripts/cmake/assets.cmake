@@ -18,7 +18,8 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 		"games/kaboom.xml"
 		"games/freeway.xml"
 		"games/depthcharge.xml"
-		"games/astrosmash.xml")
+		"games/astrosmash.xml"
+		"games/lunarlander.xml")
 
 	set(data_assets
 		"assets/tuffy.ttf"

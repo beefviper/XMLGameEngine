@@ -345,7 +345,7 @@ TEST_CASE("the last life ends the game", "[astrosmash]")
 	CHECK(table.game.getCurrentState().name == "gameover");
 }
 
-TEST_CASE("enter starts a new game from either end screen with everything back", "[astrosmash]")
+TEST_CASE("space starts a new game from either end screen with everything back", "[astrosmash]")
 {
 	Table table;
 	table.parkRocks();
@@ -378,13 +378,10 @@ TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_inpu
 	Object& ship = game.getObject("ship");
 	Object& shot = game.getObject("shot");
 
-	engine.handleKeyPressed(KeyCode::Space); // space means nothing on the menu
 	CHECK(game.getCurrentState().name == "mainmenu");
-	engine.handleKeyReleased(KeyCode::Space);
-
-	engine.handleKeyPressed(KeyCode::Enter);
+	engine.handleKeyPressed(KeyCode::Space); // space starts the game
 	REQUIRE(game.getCurrentState().name == "playing");
-	engine.handleKeyReleased(KeyCode::Enter);
+	engine.handleKeyReleased(KeyCode::Space);
 	CHECK(!shot.isVisible);
 
 	engine.handleKeyPressed(KeyCode::Space);

@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "bitmap.h"
+#include "color.h"
 #include "command.h"
 #include "object.h"
 #include "states.h"
@@ -26,6 +28,7 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
 #include <random>
 #include <string>
 #include <utility>
@@ -84,8 +87,12 @@ namespace xge
 		// The spriteParams for a sprite, in the shape the window backends read:
 		// {"circle", radius, "0", color}, {"rectangle", width, height, color},
 		// {"text", label, size, color}, {"image", path, flip-or-color}, and for
-		// a grid, {"grid", columns, rows, xPadding, yPadding} after those.
-		std::vector<std::string> buildSpriteParams(const RawSprite& sprite, const std::string& where);
+		// a grid, {"grid", columns, rows, xPadding, yPadding} after those. A
+		// drawing of lines is {"line", width, height} - the size of the picture
+		// - and the picture itself is handed back through `bitmap` when that is
+		// given (see Object::bitmap).
+		std::vector<std::string> buildSpriteParams(const RawSprite& sprite, const std::string& where,
+			std::shared_ptr<const Bitmap>* bitmap = nullptr);
 		xge::GridData gridDataOf(const RawSprite& sprite, const std::string& where);
 
 		std::vector<Command> processCommands(const std::vector<RawCommand>& raw, const std::string& where);

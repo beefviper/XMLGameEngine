@@ -22,7 +22,11 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <memory>
+#include <string>
 
 using namespace xge;
 
@@ -186,4 +190,26 @@ TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engi
 
 	engine.handleKeyReleased(KeyCode::Space);
 	CHECK_FALSE(bullet.collisionData.enabled);
+}
+
+TEST_CASE("every shipped game follows the shared key conventions", "[engine_input]")
+{
+	// Space starts, pauses and plays again (never Enter), and player one is on
+	// W, A, S and D (never Q and Z).
+	int checked = 0;
+	for (const auto& entry : std::filesystem::directory_iterator("games"))
+	{
+		if (entry.path().extension() != ".xml") { continue; }
+
+		std::ifstream in(entry.path());
+		const std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+
+		INFO(entry.path().string());
+		CHECK(text.find("button=\"enter\"") == std::string::npos);
+		CHECK(text.find("button=\"q\"") == std::string::npos);
+		CHECK(text.find("button=\"z\"") == std::string::npos);
+		CHECK(text.find("button=\"space\"") != std::string::npos);
+		++checked;
+	}
+	CHECK(checked >= 10);
 }

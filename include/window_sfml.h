@@ -65,6 +65,7 @@ namespace xge
 		void buildRectangle(Object& object, CachedVisual& visual);
 		void buildText(Object& object, CachedVisual& visual);
 		void buildImage(Object& object, CachedVisual& visual);
+		void buildLines(Object& object, CachedVisual& visual);
 
 		// Finishes a visual after buildShapeOnly() (and, in init()'s case,
 		// after grid position math): measures object.size, finalizes the

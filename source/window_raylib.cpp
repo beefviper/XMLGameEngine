@@ -231,6 +231,7 @@ namespace xge
 		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
 		case ShapeKind::Text:      buildText(object, visual); break;
 		case ShapeKind::Image:     buildImage(object, visual); break;
+		case ShapeKind::Line:      buildLines(object, visual); break;
 		case ShapeKind::Unknown:   break;
 		}
 	}
@@ -313,6 +314,36 @@ namespace xge
 		EndTextureMode();
 
 		UnloadTexture(texture);
+	}
+
+	// A sprite of lines was already drawn, pixel by pixel, when the game loaded
+	// (see Bitmap); all that is left is to show that picture.
+	void RaylibWindow::buildLines(Object& object, CachedVisual& visual)
+	{
+		const Bitmap& bitmap = *object.bitmap;
+
+		reloadTexture(visual, bitmap.width, bitmap.height);
+
+		BeginTextureMode(visual.renderTexture);
+		ClearBackground(kTransparent);
+
+		if (!bitmap.rgba.empty())
+		{
+			// raylib only reads the pixels while making the texture, so the
+			// bitmap's own memory can be lent to it.
+			Image image{};
+			image.data = const_cast<std::uint8_t*>(bitmap.rgba.data());
+			image.width = bitmap.width;
+			image.height = bitmap.height;
+			image.mipmaps = 1;
+			image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+
+			const Texture2D texture = LoadTextureFromImage(image);
+			DrawTexture(texture, 0, 0, kWhite);
+			UnloadTexture(texture);
+		}
+
+		EndTextureMode();
 	}
 
 	void RaylibWindow::finalizeVisual(Object& object, CachedVisual& visual)

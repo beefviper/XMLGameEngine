@@ -33,6 +33,7 @@ namespace xge
 		if (verb == "bounce") { return CmdBounce{}; }
 		if (verb == "stick")  { return CmdStick{}; }
 		if (verb == "die")    { return CmdDie{}; }
+		if (verb == "stop")   { return CmdStop{}; }
 		if (verb == "wrap")   { return CmdWrap{}; }
 		if (verb == "carry")  { return CmdCarry{}; }
 
@@ -46,6 +47,11 @@ namespace xge
 
 		if (verb == "move") { return CmdMove{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
 		if (verb == "hop")  { return CmdHop{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
+
+		if (verb == "accelerate")
+		{
+			return CmdAccelerate{ directionFromName(raw.direction, verb), evaluate(raw.amount), raw.burn };
+		}
 
 		if (verb == "inc") { return CmdIncrement{ raw.variable }; }
 		if (verb == "dec") { return CmdDecrement{ raw.variable }; }
@@ -90,6 +96,7 @@ namespace xge
 		if (tag == "rectangle") { return ShapeKind::Rectangle; }
 		if (tag == "text")      { return ShapeKind::Text; }
 		if (tag == "image")     { return ShapeKind::Image; }
+		if (tag == "line")      { return ShapeKind::Line; }
 		return ShapeKind::Unknown;
 	}
 
@@ -109,6 +116,7 @@ namespace xge
 			return { radius * 2.0f, radius * 2.0f };
 		}
 		case ShapeKind::Rectangle:
+		case ShapeKind::Line: // {"line", width, height}: the drawing's size, known when it was drawn
 			return { std::stof(spriteParams.at(1)), std::stof(spriteParams.at(2)) };
 		case ShapeKind::Text:
 		case ShapeKind::Image:
@@ -162,6 +170,7 @@ namespace xge
 			[&](const CmdStick&) { o << "stick"; },
 			[&](const CmdReset&) { o << "reset"; },
 			[&](const CmdDie&) { o << "die"; },
+			[&](const CmdStop&) { o << "stop"; },
 			[&](const CmdWrap&) { o << "wrap"; },
 			[&](const CmdCarry&) { o << "carry"; },
 			[&](const CmdMove& m)
@@ -179,6 +188,14 @@ namespace xge
 					: (h.direction == Direction::Left) ? "left"
 					: "right";
 				o << "hop." << direction << "(" << h.distance << ")";
+			},
+			[&](const CmdAccelerate& a)
+			{
+				const char* direction = (a.direction == Direction::Up) ? "up"
+					: (a.direction == Direction::Down) ? "down"
+					: (a.direction == Direction::Left) ? "left"
+					: "right";
+				o << "accelerate." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
 			},
 			[&](const CmdIncrement& c) { o << "inc(" << c.target << ")"; },
 			[&](const CmdDecrement& c) { o << "dec(" << c.target << ")"; },
@@ -206,9 +223,9 @@ namespace xge
 	{
 		o << command.verb;
 
-		if (command.verb == "move" || command.verb == "hop")
+		if (command.verb == "move" || command.verb == "hop" || command.verb == "accelerate")
 		{
-			o << "." << command.direction << "(" << command.amount << ")";
+			o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
 		}
 		else if (command.verb == "inc" || command.verb == "dec")
 		{

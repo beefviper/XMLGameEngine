@@ -184,6 +184,26 @@ namespace xge
 			}
 		}
 
+		// One <line>: where it goes from and to, and optionally its color and
+		// how many pixels thick it is.
+		RawLine readLine(const XmlNode& line, const std::string& where)
+		{
+			const std::string here = where + " > <line>";
+			RawLine rawLine;
+
+			rawLine.from = readVector2(*requireChild(line, "from", here), here);
+			rawLine.to = readVector2(*requireChild(line, "to", here), here);
+
+			if (auto color = findChild(&line, "color")) { rawLine.color = readText(*color); }
+			if (auto thickness = findChild(&line, "thickness"))
+			{
+				rawLine.hasThickness = true;
+				rawLine.thickness = readValue(*thickness, here);
+			}
+
+			return rawLine;
+		}
+
 		RawSprite readSprite(const XmlNode& spriteNode, const std::string& where)
 		{
 			const std::string here = where + " > <sprite>";
@@ -192,7 +212,18 @@ namespace xge
 			std::unique_ptr<XmlNode> first = spriteNode.getFirstChild();
 			if (!first) { fail(here, "is empty; expected a shape or a <grid>"); }
 
-			if (first->getName() == "grid")
+			if (first->getName() == "line")
+			{
+				// A drawing: every <line> of the sprite, drawn in the order written.
+				sprite.kind = "line";
+
+				for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
+				{
+					if (node->getName() != "line") { fail(here, "a sprite of lines holds only <line>s, not <" + node->getName() + ">"); }
+					sprite.lines.push_back(readLine(*node, here));
+				}
+			}
+			else if (first->getName() == "grid")
 			{
 				const std::string gridHere = here + " > <grid>";
 				sprite.isGrid = true;
@@ -206,7 +237,11 @@ namespace xge
 				}
 
 				std::unique_ptr<XmlNode> shape = first->getFirstChild();
-				while (shape && !isShapeTag(shape->getName())) { shape = shape->getNextSibling(); }
+				while (shape && !isShapeTag(shape->getName()))
+				{
+					if (shape->getName() == "line") { fail(gridHere, "cannot repeat a <line>; draw the lines in one sprite instead"); }
+					shape = shape->getNextSibling();
+				}
 				if (!shape) { fail(gridHere, "needs a shape to repeat (<circle>, <rectangle>, <text> or <image>)"); }
 
 				readShape(*shape, sprite, gridHere);
@@ -227,6 +262,7 @@ namespace xge
 		{
 			return name == "bounce" || name == "stick" || name == "wrap" || name == "carry" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
+				|| name == "accelerate" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger";
 		}
 
@@ -242,13 +278,14 @@ namespace xge
 			command.state = node.getAttribute("state");
 			command.action = node.getAttribute("action");
 			command.direction = node.getAttribute("direction");
+			command.burn = node.getAttribute("burn");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec") { requireAttribute(node, "variable", where); }
 			if (verb == "push") { requireAttribute(node, "state", where); }
 			if (verb == "fire") { requireAttribute(node, "object", where); }
 			if (verb == "trigger") { requireAttribute(node, "object", where); requireAttribute(node, "action", where); }
-			if (verb == "move" || verb == "hop")
+			if (verb == "move" || verb == "hop" || verb == "accelerate")
 			{
 				requireAttribute(node, "direction", where);
 				command.amount = readValue(node, where);
@@ -305,6 +342,13 @@ namespace xge
 			{
 				collisionData.lockstep = readBool(*lockstep, collisionsHere);
 			}
+			if (auto type = findChild(&collisions, "type"))
+			{
+				const std::string text = readText(*type);
+				if (text == "box") { collisionData.type = CollisionType::Box; }
+				else if (text == "pixel") { collisionData.type = CollisionType::Pixel; }
+				else { fail(collisionsHere, "<type> is \"" + text + "\"; expected box or pixel"); }
+			}
 
 			for (std::unique_ptr<XmlNode> collision = findChild(&collisions, "collision"); collision != nullptr; collision = collision->getNextSibling())
 			{
@@ -312,7 +356,23 @@ namespace xge
 
 				const std::string ruleHere = collisionsHere + " > <collision>";
 				const std::string edge = collision->getAttribute("edge");
-				std::vector<RawCommand> commands = readCommands(collision->getFirstChild(), ruleHere);
+
+				// A rule about another object may start with a speed filter,
+				// <slower> and/or <faster>; the commands follow.
+				std::optional<RawValue> slower;
+				std::optional<RawValue> faster;
+				std::unique_ptr<XmlNode> firstCommand = collision->getFirstChild();
+				while (firstCommand && (firstCommand->getName() == "slower" || firstCommand->getName() == "faster"))
+				{
+					(firstCommand->getName() == "slower" ? slower : faster) = readValue(*firstCommand, ruleHere);
+					firstCommand = firstCommand->getNextSibling();
+				}
+				if ((slower || faster) && !edge.empty())
+				{
+					fail(ruleHere, "<slower> and <faster> are about speed against another object; a rule about a screen edge has none");
+				}
+
+				std::vector<RawCommand> commands = readCommands(std::move(firstCommand), ruleHere);
 
 				// With an edge the rule is about the screen edge. Without one it
 				// is about another object: class and/or object narrow which, and
@@ -343,6 +403,8 @@ namespace xge
 					rule.filterClass = collision->getAttribute("class");
 					rule.filterObject = collision->getAttribute("object");
 					rule.unlessClass = collision->getAttribute("unless");
+					rule.slower = std::move(slower);
+					rule.faster = std::move(faster);
 					rule.commands = std::move(commands);
 					collisionData.basic.push_back(std::move(rule));
 				}
@@ -386,6 +448,11 @@ namespace xge
 			rawObject.sprite = readSprite(*requireChild(object, "sprite", where), where);
 			rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
 			rawObject.rawVelocity = readVector2(*requireChild(object, "velocity", where), where);
+			if (auto acceleration = findChild(&object, "acceleration"))
+			{
+				rawObject.hasAcceleration = true;
+				rawObject.rawAcceleration = readVector2(*acceleration, where);
+			}
 			rawObject.rawCollisionData = readCollisions(*requireChild(object, "collisions", where), where);
 			readActions(object, where, rawObject.action);
 			readObjectVariables(object, where, rawObject.variable);

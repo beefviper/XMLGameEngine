@@ -275,6 +275,7 @@ namespace xge
 		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
 		case ShapeKind::Text:      buildText(object, visual); break;
 		case ShapeKind::Image:     buildImage(object, visual); break;
+		case ShapeKind::Line:      buildLines(object, visual); break;
 		case ShapeKind::Unknown:   break;
 		}
 	}
@@ -386,6 +387,43 @@ namespace xge
 		else if (object.spriteParams.size() > 2 && object.spriteParams.at(2) == "flip.vertical")
 		{
 			visual.flip = SDL_FLIP_VERTICAL;
+		}
+	}
+
+	// A sprite of lines was already drawn, pixel by pixel, when the game loaded
+	// (see Bitmap); all that is left is to show that picture.
+	void SDL2Window::buildLines(Object& object, CachedVisual& visual)
+	{
+		if (visual.texture)
+		{
+			SDL_DestroyTexture(visual.texture);
+			visual.texture = nullptr;
+		}
+		visual.flip = SDL_FLIP_NONE;
+
+		const Bitmap& bitmap = *object.bitmap;
+		if (bitmap.rgba.empty())
+		{
+			reloadTargetTexture(visual, 1, 1);
+			return;
+		}
+
+		// A surface that only looks at the bitmap's pixels (they are copied
+		// into the texture below, and the surface is freed before the bitmap).
+		SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(const_cast<std::uint8_t*>(bitmap.rgba.data()),
+			bitmap.width, bitmap.height, 32, bitmap.width * 4, SDL_PIXELFORMAT_RGBA32);
+		if (!surface)
+		{
+			std::cout << "error: SDL2: failed to make a surface from the lines of '" << object.name << "': " << SDL_GetError() << std::endl;
+			return;
+		}
+
+		visual.texture = SDL_CreateTextureFromSurface(renderer, surface);
+		SDL_FreeSurface(surface);
+
+		if (visual.texture)
+		{
+			SDL_SetTextureBlendMode(visual.texture, SDL_BLENDMODE_BLEND);
 		}
 	}
 

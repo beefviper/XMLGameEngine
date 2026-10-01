@@ -24,7 +24,8 @@ namespace xge
 			<< "\tvel.x=" << f.rawVelocity.x << ", vel.y=" << f.rawVelocity.y << '\n'
 
 			// TODO: replace with operator<< for rawCollisionData
-			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false");
+			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false")
+			<< (f.rawCollisionData.type == CollisionType::Pixel ? ", type=pixel" : "");
 
 		if (!f.rawCollisionData.top.empty()) { o << ", top=" << f.rawCollisionData.top; }
 		if (!f.rawCollisionData.bottom.empty()) { o << ", bottom=" << f.rawCollisionData.bottom; }
@@ -37,6 +38,8 @@ namespace xge
 			if (!rawRule.filterClass.empty()) { o << " (class=" << rawRule.filterClass << ")"; }
 			if (!rawRule.filterObject.empty()) { o << " (object=" << rawRule.filterObject << ")"; }
 			if (!rawRule.unlessClass.empty()) { o << " (unless=" << rawRule.unlessClass << ")"; }
+			if (rawRule.slower) { o << " (slower=" << *rawRule.slower << ")"; }
+			if (rawRule.faster) { o << " (faster=" << *rawRule.faster << ")"; }
 		}
 		o << '\n';
 
@@ -72,6 +75,11 @@ namespace xge
 
 		o << "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n';
 
+		if (f.acceleration.x != 0 || f.acceleration.y != 0)
+		{
+			o << "\tacc.x=" << f.acceleration.x << ", acc.y=" << f.acceleration.y << '\n';
+		}
+
 		if (f.sizeKnown)
 		{
 			o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';
@@ -81,7 +89,8 @@ namespace xge
 			o << "\tsize= ( Unknown, not yet initialized by Engine )\n";
 		}
 
-		o << "\tcollision=" << (f.collisionData.enabled ? "true" : "false");
+		o << "\tcollision=" << (f.collisionData.enabled ? "true" : "false")
+			<< (f.collisionData.type == CollisionType::Pixel ? ", type=pixel" : "");
 
 
 		// TODO: replace with operator<< for CollisionData
@@ -117,6 +126,8 @@ namespace xge
 			if (!rule.filterClass.empty()) { o << " (class=" << rule.filterClass << ")"; }
 			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
 			if (!rule.unlessClass.empty()) { o << " (unless=" << rule.unlessClass << ")"; }
+			if (rule.slower) { o << " (slower=" << *rule.slower << ")"; }
+			if (rule.faster) { o << " (faster=" << *rule.faster << ")"; }
 		}
 
 		o << '\n';
