@@ -57,7 +57,13 @@ add_executable(XGETEST
 	"tests/test_lines_and_pixels.cpp"
 	"tests/test_lunarlander.cpp"
 	"tests/test_builtin_font.cpp"
+	"tests/test_cli.cpp"
+	"cli/source/cli.cpp"
 )
+
+# cli.cpp is XGECLI's command line code, compiled in again here so test_cli.cpp
+# can call it; the library does not contain it (see executables.cmake).
+target_include_directories(XGETEST PRIVATE cli/include)
 
 target_compile_features(XGETEST PRIVATE cxx_std_20)
 

@@ -7,14 +7,16 @@ XMLGameEngine is a video game description language (VGDL) written in XML, plus a
 ## Running a game
 
 ```
-XGECLI              # loads "pong"
-XGECLI breakout     # a bare name gets ".xml" appended
-XGECLI pong.xml     # a name containing "." is used as given
+XGECLI                       # loads "pong"
+XGECLI breakout              # a bare name gets ".xml" appended
+XGECLI pong.xml              # a name with an extension is used as given
+XGECLI -g pong -w sdl2 -x tinyxml2
+XGECLI --game pong --window raylib --xml pugixml
 ```
 
-The file is looked for in the current directory first, then in `./games/`. If it is not found the program prints an error and exits. Shipped games: `games/pong.xml`, `games/breakout.xml`, `games/spaceinvaders.xml`, `games/frogger.xml`, `games/spacerace.xml` (two players, W/S and Up/Down, first to two points), `games/kaboom.xml` (A/D or Left/Right; catch bombs in three waves, three missed bombs end the game, 60 points win), `games/freeway.xml` (two players, W/S and Up/Down, first to five crossings), `games/depthcharge.xml` (A/D or Left/Right to move, Space to drop, Space to start; sink all nine submarines before eight charges are wasted) `games/astrosmash.xml` (A/D or Left/Right to move, Space to fire, Space to start; shoot 20 rocks before five land) and `games/lunarlander.xml` (Up or W for the main thruster, Left/Right for the side ones, Space to start; set the lander down on the green pad slower than the safe speed, with fuel to spare, and do not touch anything else).
+The game is a bare argument or `-g` / `--game`; both are looked for the same way: as given (a path, or a name in the current directory), then its file name in the working directory, then its file name in `./games/`. If it is not found the program prints an error and exits. `-w` / `--window` picks the window library (`sfml3`, `raylib`, `sdl2`; default `sfml3`) and `-x` / `--xml` the XML library (`xerces`, `tinyxml2`, `pugixml`, `rapidxml`; default `xerces`), not case sensitive. A short option takes its value attached or after a space (`-gpong`, `-g pong`); a long option needs the space (`--game pong`, not `--game=pong`). Each option can be given once, the game only once (bare or with `-g`), and `-h` / `--help` prints the usage. The program starts by printing the file, window library and XML library it chose, one to a line. See [design 37](designs/37-command-line.md). Shipped games: `games/pong.xml`, `games/breakout.xml`, `games/spaceinvaders.xml`, `games/frogger.xml`, `games/spacerace.xml` (two players, W/S and Up/Down, first to two points), `games/kaboom.xml` (A/D or Left/Right; catch bombs in three waves, three missed bombs end the game, 60 points win), `games/freeway.xml` (two players, W/S and Up/Down, first to five crossings), `games/depthcharge.xml` (A/D or Left/Right to move, Space to drop, Space to start; sink all nine submarines before eight charges are wasted) `games/astrosmash.xml` (A/D or Left/Right to move, Space to fire, Space to start; shoot 20 rocks before five land) and `games/lunarlander.xml` (Up or W for the main thruster, Left/Right for the side ones, Space to start; set the lander down on the green pad slower than the safe speed, with fuel to spare, and do not touch anything else).
 
-The XML and window libraries are chosen in C++ (`Game(file, XmlBackend)` and `Engine(game, WindowBackend)`); `cli/source/main.cpp` uses the defaults, Xerces and SFML3. There is no command-line switch for either yet. See [Backends](#backends).
+The XML and window libraries are chosen in C++ with `Game(file, XmlBackend)` and `Engine(game, WindowBackend)`; `XGECLI` passes what `-x` and `-w` named, Xerces and SFML3 when they are not given. See [Backends](#backends).
 
 ## Game file layout
 
@@ -308,7 +310,7 @@ The library is static by default: each program has the engine's code copied into
 
 | File | Responsibility |
 |---|---|
-| `cli/source/main.cpp`, `cli/source/cli.cpp` | XGECLI, the command line program: resolve the game filename, build `Game` and `Engine`. The only code outside the engine library |
+| `cli/source/main.cpp`, `cli/source/cli.cpp` | XGECLI, the command line program: read the options, find the game file, build `Game` and `Engine` with the chosen backends. The only code outside the engine library |
 | `gui/source/main.cpp` | XGEGUI, a stub for a graphical front end; returns at once |
 | `game_xml.cpp` | Walk the parsed XML tags into raw window/variable/object/state data (`RawValue`, `RawCommand`, `RawSprite`); a `<group>` is read here as one raw object per member |
 | `game_expr.cpp` | exprtk symbol table and evaluation of raw values into `Object`s and `State`s |

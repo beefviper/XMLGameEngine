@@ -11,10 +11,35 @@
 #include <exception>
 #include <iostream>
 #include <string>
+#include <vector>
 
 int main(int argc, char* argv[])
 {
-	const std::string filename = xge::resolveGameFilename(argc, argv);
+	std::string filename;
+	xge::CliOptions options;
+
+	try
+	{
+		const std::vector<std::string> args(argv + 1, argv + argc);
+		options = xge::parseCommandLine(args);
+
+		if (options.showHelp)
+		{
+			std::cout << xge::usageText();
+			return EXIT_SUCCESS;
+		}
+
+		filename = xge::findGameFile(options.game);
+	}
+	catch (const xge::CliError& error)
+	{
+		std::cerr << "Error: " << error.what() << "\n\n" << xge::usageText();
+		return EXIT_FAILURE;
+	}
+
+	std::cout << "file: " << filename << '\n'
+		<< "window: " << xge::windowBackendName(options.window) << '\n'
+		<< "xml: " << xge::xmlBackendName(options.xml) << "\n\n";
 
 	// A game file that is wrong - an unknown tag, a missing <radius>, a value
 	// that will not evaluate - is reported by the exception loading it throws,
@@ -33,12 +58,12 @@ int main(int argc, char* argv[])
 		// difference and prints both as "unknown" instead of a misleading {0,0}
 		// if called before Engine exists, so it is called twice: once here to
 		// show what is known without a window, and once after Engine.
-		xge::Game game{ filename };
+		xge::Game game{ filename, options.xml };
 
 		std::cout << "=== before Engine: sizes and size-dependent positions not yet known ===\n\n";
 		game.printGame();
 
-		xge::Engine engine(game);
+		xge::Engine engine(game, options.window);
 
 		std::cout << "=== after Engine: sizes measured, positions finished ===\n\n";
 		game.printGame();
