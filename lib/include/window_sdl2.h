@@ -69,6 +69,7 @@ namespace xge
 		bool fontMissing{ false };
 		bool ttfInitialized{ false };
 		bool imgInitialized{ false };
+		bool imgTried{ false };
 
 		// TTF_Font is opened at a fixed point size (unlike SFML's sf::Font or
 		// raylib's Font, either of which can be measured/drawn at any size
@@ -80,6 +81,9 @@ namespace xge
 
 		static KeyCode sdlKeyToKeyCode(SDL_Keycode key) noexcept;
 		TTF_Font* getFont(int pointSize);
+
+		// Starts SDL2_image on first use; false if it cannot read PNG.
+		bool ensureImages();
 		void reloadTargetTexture(CachedVisual& visual, int width, int height);
 
 		void buildShapeOnly(Object& object, CachedVisual& visual);

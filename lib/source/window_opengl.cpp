@@ -162,20 +162,6 @@ namespace xge
 			std::cout << "error: failed to initialize SDL2_ttf: " << TTF_GetError() << std::endl;
 		}
 
-		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
-		// libjpeg-turbo has none), so a missing JPEG is reported but does not
-		// stop the images that can be read.
-		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
-		if (!imgInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
-		}
-		else if ((imgLoaded & IMG_INIT_JPG) == 0)
-		{
-			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
-		}
-
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -529,6 +515,31 @@ namespace xge
 		}
 	}
 
+	bool OpenGLWindow::ensureImages()
+	{
+		if (imgTried)
+		{
+			return imgInitialized;
+		}
+		imgTried = true;
+
+		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
+		// libjpeg-turbo has none), so a missing JPEG is reported but does not
+		// stop the images that can be read.
+		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
+		if (!imgInitialized)
+		{
+			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
+		}
+		else if ((imgLoaded & IMG_INIT_JPG) == 0)
+		{
+			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
+		}
+
+		return imgInitialized;
+	}
+
 	TTF_Font* OpenGLWindow::getFont(int pointSize)
 	{
 		auto it = fontsBySize.find(pointSize);
@@ -668,7 +679,8 @@ namespace xge
 	void OpenGLWindow::buildImage(Object& object, CachedVisual& visual)
 	{
 		const std::string& imageFile = object.spriteParams.at(1);
-		SDL_Surface* surface = imgInitialized ? IMG_Load(imageFile.c_str()) : nullptr;
+		ensureImages();
+		SDL_Surface* surface = IMG_Load(imageFile.c_str());
 		if (!surface)
 		{
 			throw std::runtime_error("failed to load " + imageFile + ": " + IMG_GetError());

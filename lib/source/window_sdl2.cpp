@@ -87,20 +87,6 @@ namespace xge
 			std::cout << "error: failed to initialize SDL2_ttf: " << TTF_GetError() << std::endl;
 		}
 
-		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
-		// libjpeg-turbo has none), so a missing JPEG is reported but does not
-		// stop the images that can be read.
-		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
-		if (!imgInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
-		}
-		else if ((imgLoaded & IMG_INIT_JPG) == 0)
-		{
-			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
-		}
-
 		Uint32 flags = SDL_WINDOW_SHOWN;
 		if (windowDesc.fullscreen == "true")
 		{
@@ -261,6 +247,31 @@ namespace xge
 		return KeyCode::Unknown;
 	}
 
+	bool SDL2Window::ensureImages()
+	{
+		if (imgTried)
+		{
+			return imgInitialized;
+		}
+		imgTried = true;
+
+		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
+		// libjpeg-turbo has none), so a missing JPEG is reported but does not
+		// stop the images that can be read.
+		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
+		if (!imgInitialized)
+		{
+			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
+		}
+		else if ((imgLoaded & IMG_INIT_JPG) == 0)
+		{
+			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
+		}
+
+		return imgInitialized;
+	}
+
 	TTF_Font* SDL2Window::getFont(int pointSize)
 	{
 		auto it = fontsBySize.find(pointSize);
@@ -399,6 +410,7 @@ namespace xge
 		}
 
 		const std::string& imageFile = object.spriteParams.at(1);
+		ensureImages();
 		SDL_Surface* surface = IMG_Load(imageFile.c_str());
 		if (!surface)
 		{

@@ -79,6 +79,7 @@ namespace xge
 		bool offscreen{ false };
 		bool ttfInitialized{ false };
 		bool imgInitialized{ false };
+		bool imgTried{ false };
 		bool fontMissing{ false };
 		int width{ 0 };
 		int height{ 0 };
@@ -107,6 +108,9 @@ namespace xge
 		void setUpProjection() const;
 		void releaseTarget();
 		TTF_Font* getFont(int pointSize);
+
+		// Starts SDL2_image on first use; false if it cannot read PNG.
+		bool ensureImages();
 
 		void upload(CachedVisual& visual, const Bitmap& bitmap);
 		void buildShapeOnly(Object& object, CachedVisual& visual);
