@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.28)
 
-project("XMLGameEngine")
+project("XGE")
 
 include(scripts/cmake/options.cmake)
 

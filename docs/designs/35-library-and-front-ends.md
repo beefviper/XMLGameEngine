@@ -20,7 +20,7 @@ With two small programs from one repository that are always built together, noth
 - **Keep one executable and add a `--gui` switch.** Simplest, but the command-line code and a window front end would live in one program for good.
 - **A `CMakeLists.txt` in each folder.** Rejected earlier ([18](18-build-system.md)); the programs are defined in one file, `executables.cmake`, in the top-level scope so they land in the build directory next to the copied `games/` and `assets/`.
 - **Third-party libraries `PRIVATE` to the engine.** Not possible yet: the engine's own headers include exprtk, Xerces, SFML and the others, so a program including `engine.h` needs them too. They are `PUBLIC`. Hiding them behind interfaces would be a separate change.
-- **Naming.** Every target is `XGE` plus what it is: `XGELIB` (the library), `XGECLI`, `XGEGUI`, `XGETEST` (the tests) and `XGEDATA` (copying the games and assets). The CMake project, and so the Visual Studio solution, is still `XMLGameEngine`.
+- **Naming.** Every target is `XGE` plus what it is: `XGELIB` (the library), `XGECLI`, `XGEGUI`, `XGETEST` (the tests) and `XGEDATA` (copying the games and assets). The CMake project, and so the Visual Studio solution, is `XGE`.
 - **Layout.** One folder per project, each with `source/` and `include/`: `lib/`, `cli/`, `gui/`. Before, `source/` and `include/` sat at the top with the engine's files in them and the programs beside them with neither, so the engine looked like the default and the programs like extras. `tests/` and `games/` and `assets/` stay at the top. `gui/include/` is empty (it holds a `.gitkeep`).
 
 ## Approximations
