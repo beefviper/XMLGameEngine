@@ -3,7 +3,7 @@
 # author: beefviper
 # date: Oct 1, 2026
 #
-# The programs built on the engine library (the ${PROJECT_NAME} target):
+# The programs built on the engine library (the XGELIB target):
 #   XGECLI  the command line front end: picks a game file from the arguments,
 #           loads it, and runs it in a window (cli/)
 #   XGEGUI  a stub for a future graphical front end (gui/); it only returns
@@ -13,17 +13,17 @@
 # assets.cmake makes.
 
 add_executable(XGECLI
-	"cli/main.cpp"
-	"cli/cli.cpp"
-	"cli/cli.h"
+	"cli/source/main.cpp"
+	"cli/source/cli.cpp"
+	"cli/include/cli.h"
 )
 
 add_executable(XGEGUI
-	"gui/main.cpp"
+	"gui/source/main.cpp"
 )
 
 foreach(program IN ITEMS XGECLI XGEGUI)
-	target_link_libraries(${program} PRIVATE ${PROJECT_NAME})
+	target_link_libraries(${program} PRIVATE XGELIB)
 	target_compile_features(${program} PRIVATE cxx_std_20)
 
 	# Same flags platform.cmake sets on the library.
@@ -33,8 +33,8 @@ foreach(program IN ITEMS XGECLI XGEGUI)
 		$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
 	# The games and assets are copied next to the program, see assets.cmake.
-	add_dependencies(${program} data-target)
+	add_dependencies(${program} XGEDATA)
 endforeach()
 
-# cli.h is not part of the library's include directory: only XGECLI uses it.
-target_include_directories(XGECLI PRIVATE cli)
+# cli/include is not part of the library's include directory: only XGECLI uses it.
+target_include_directories(XGECLI PRIVATE cli/include)

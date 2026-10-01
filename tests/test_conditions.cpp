@@ -7,7 +7,7 @@
 // anonymous namespace inside game.cpp (internal linkage - not callable from
 // outside that translation unit), so this is a small, dependency-free
 // reimplementation of just the matching/threshold logic - copied from
-// Game::checkConditions and matchesClassOrObjectFilter in source/game.cpp -
+// Game::checkConditions and matchesClassOrObjectFilter in lib/source/game.cpp -
 // kept in sync with that code and re-verified here rather than re-derived by
 // hand each time it changes. (Exposing the real helper - e.g. moving it out
 // of the anonymous namespace into a header-declared free function - would let
@@ -39,7 +39,7 @@ namespace
 	};
 
 	// Copied verbatim (modulo the Object -> Candidate rename) from
-	// source/game.cpp's anonymous namespace.
+	// lib/source/game.cpp's anonymous namespace.
 	bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Candidate& candidate)
 	{
 		if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }

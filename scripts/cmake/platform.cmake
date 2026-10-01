@@ -11,15 +11,15 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 if (XGE_BUILD_SHARED)
 	# A DLL has to say what it exports; rather than marking every class in the
 	# headers, export all of them, and put the DLL next to the programs.
-	set_target_properties(${PROJECT_NAME} PROPERTIES
+	set_target_properties(XGELIB PROPERTIES
 		WINDOWS_EXPORT_ALL_SYMBOLS ON
 		RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endif()
 
-target_compile_options(${PROJECT_NAME} PRIVATE
+target_compile_options(XGELIB PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
 
-target_compile_options(${PROJECT_NAME} PRIVATE
+target_compile_options(XGELIB PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
 if (WIN32 AND TARGET Freetype)
@@ -42,7 +42,7 @@ endif()
 
 # Vendored dependencies come in with their own warning levels, which have
 # nothing to do with this project's own code quality - MSVC's /W4 and
-# -Wall above are for ${PROJECT_NAME} only, so silence warnings on
+# -Wall above are for XGELIB only, so silence warnings on
 # third-party targets here instead of fixing warnings in code we don't own.
 function(silence_third_party_warnings target scope)
 	target_compile_options(${target} ${scope}

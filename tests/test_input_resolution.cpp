@@ -4,11 +4,11 @@
 // date: Sept 28, 2026
 //
 // Catch2 tests for CommandExecutor::triggerObjectAction/applyActionVelocity
-// (source/command_executor.cpp) against a real xge::Game built from
+// (lib/source/command_executor.cpp) against a real xge::Game built from
 // games/pong.xml - not a reimplementation. Game's constructor fully
 // evaluates every object's <action> list (including each move's numeric
 // step) without needing a Window/backend first (see the comment on Game's
-// construction in source/main.cpp), so paddle2 - the only pong.xml object
+// construction in cli/source/main.cpp), so paddle2 - the only pong.xml object
 // bound to all four directions - is enough on its own; no Engine required.
 //
 // Regression covered: holding one direction and then tapping the opposite

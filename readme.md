@@ -77,9 +77,9 @@ cmake --build build
 XGECLI frogger
 ```
 
-A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/`. The build copies the games and assets into the build directory, so run it from there. With no argument it runs Pong. The XML and window libraries are chosen in C++ (`cli/main.cpp` uses Xerces and SFML 3); there is no command-line switch yet.
+A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/`. The build copies the games and assets into the build directory, so run it from there. With no argument it runs Pong. The XML and window libraries are chosen in C++ (`cli/source/main.cpp` uses Xerces and SFML 3); there is no command-line switch yet.
 
-The build makes three things: `XMLGameEngine`, the engine as a library (static by default; `-DXGE_BUILD_SHARED=ON` for a shared one), `XGECLI`, the command line program above, and `XGEGUI`, a stub for a future graphical front end.
+The build makes three things: `XGELIB`, the engine as a library (static by default; `-DXGE_BUILD_SHARED=ON` for a shared one), `XGECLI`, the command line program above, and `XGEGUI`, a stub for a future graphical front end. `XGETEST` is the test suite and `XGEDATA` copies the games and assets next to the programs. Each project has its own folder with `source/` and `include/` in it: `lib/`, `cli/` and `gui/`.
 
 Tests are opt-in: configure with `-DBUILD_TESTING=ON`.
 

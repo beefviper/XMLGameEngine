@@ -9,15 +9,16 @@ project("XMLGameEngine")
 
 include(scripts/cmake/options.cmake)
 
-# The engine is a library (the XMLGameEngine target, named for the project);
+# The engine is a library (the XGELIB target, lib/);
 # the programs that use it are separate targets - XGECLI (the command line,
-# cli/) and XGEGUI (a stub for a future windowed front end, gui/) - see
+# cli/) and XGEGUI (a stub for a future windowed front end, gui/); every
+# project has its own source/ and include/ - see
 # scripts/cmake/executables.cmake. Static by default; -DXGE_BUILD_SHARED=ON
 # builds it as a shared library (a DLL on Windows) instead.
 if (XGE_BUILD_SHARED)
-	add_library(${PROJECT_NAME} SHARED)
+	add_library(XGELIB SHARED)
 else()
-	add_library(${PROJECT_NAME} STATIC)
+	add_library(XGELIB STATIC)
 endif()
 
 include(scripts/cmake/dependencies.cmake)
@@ -30,57 +31,57 @@ include(scripts/cmake/assets.cmake)
 # that is cli/ (XGECLI). The test suite links this same library
 # (scripts/cmake/tests.cmake), so there is one list of files to keep.
 set(ENGINE_SOURCES
-	"source/game.cpp"
-	"source/engine.cpp"
-	"source/object.cpp"
-	"source/states.cpp"
-	"source/color.cpp"
-	"source/bitmap.cpp"
-	"source/keycode.cpp"
-	"source/game_xml.cpp"
-	"source/xml_document.cpp"
-	"source/xml_xerces.cpp"
-	"source/xml_tinyxml2.cpp"
-	"source/xml_pugixml.cpp"
-	"source/xml_rapidxml.cpp"
-	"source/xsd_lite.cpp"
-	"source/game_expr.cpp"
-	"source/command.cpp"
-	"source/collision_detector.cpp"
-	"source/command_executor.cpp"
-	"source/window.cpp"
-	"source/window_sfml.cpp"
-	"source/window_raylib.cpp"
-	"source/window_sdl2.cpp"
+	"lib/source/game.cpp"
+	"lib/source/engine.cpp"
+	"lib/source/object.cpp"
+	"lib/source/states.cpp"
+	"lib/source/color.cpp"
+	"lib/source/bitmap.cpp"
+	"lib/source/keycode.cpp"
+	"lib/source/game_xml.cpp"
+	"lib/source/xml_document.cpp"
+	"lib/source/xml_xerces.cpp"
+	"lib/source/xml_tinyxml2.cpp"
+	"lib/source/xml_pugixml.cpp"
+	"lib/source/xml_rapidxml.cpp"
+	"lib/source/xsd_lite.cpp"
+	"lib/source/game_expr.cpp"
+	"lib/source/command.cpp"
+	"lib/source/collision_detector.cpp"
+	"lib/source/command_executor.cpp"
+	"lib/source/window.cpp"
+	"lib/source/window_sfml.cpp"
+	"lib/source/window_raylib.cpp"
+	"lib/source/window_sdl2.cpp"
 )
 
 set(ENGINE_HEADERS
-	"include/game.h"
-	"include/engine.h"
-	"include/object.h"
-	"include/states.h"
-	"include/types.h"
-	"include/color.h"
-	"include/bitmap.h"
-	"include/keycode.h"
-	"include/game_xml.h"
-	"include/xml_document.h"
-	"include/xml_xerces.h"
-	"include/xml_tinyxml2.h"
-	"include/xml_pugixml.h"
-	"include/xml_rapidxml.h"
-	"include/xsd_lite.h"
-	"include/game_expr.h"
-	"include/command.h"
-	"include/collision_detector.h"
-	"include/command_executor.h"
-	"include/window.h"
-	"include/window_sfml.h"
-	"include/window_raylib.h"
-	"include/window_sdl2.h"
+	"lib/include/game.h"
+	"lib/include/engine.h"
+	"lib/include/object.h"
+	"lib/include/states.h"
+	"lib/include/types.h"
+	"lib/include/color.h"
+	"lib/include/bitmap.h"
+	"lib/include/keycode.h"
+	"lib/include/game_xml.h"
+	"lib/include/xml_document.h"
+	"lib/include/xml_xerces.h"
+	"lib/include/xml_tinyxml2.h"
+	"lib/include/xml_pugixml.h"
+	"lib/include/xml_rapidxml.h"
+	"lib/include/xsd_lite.h"
+	"lib/include/game_expr.h"
+	"lib/include/command.h"
+	"lib/include/collision_detector.h"
+	"lib/include/command_executor.h"
+	"lib/include/window.h"
+	"lib/include/window_sfml.h"
+	"lib/include/window_raylib.h"
+	"lib/include/window_sdl2.h"
 )
 
-target_sources(${PROJECT_NAME} PRIVATE
+target_sources(XGELIB PRIVATE
 	${ENGINE_SOURCES}
 	${ENGINE_HEADERS}
 )

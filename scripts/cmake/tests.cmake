@@ -29,10 +29,10 @@ else()
 endif()
 
 # A second executable: the test files plus the engine library itself (the
-# ${PROJECT_NAME} target), so tests call into the real command.cpp/game.cpp
+# XGELIB target), so tests call into the real command.cpp/game.cpp
 # etc., not a hand-copied reimplementation of them. The library brings the
 # include directory and every third-party library it needs along with it.
-add_executable(XMLGameEngineTests
+add_executable(XGETEST
 	"tests/test_command_parsing.cpp"
 	"tests/test_object_variables.cpp"
 	"tests/test_conditions.cpp"
@@ -58,24 +58,24 @@ add_executable(XMLGameEngineTests
 	"tests/test_lunarlander.cpp"
 )
 
-target_compile_features(XMLGameEngineTests PRIVATE cxx_std_20)
+target_compile_features(XGETEST PRIVATE cxx_std_20)
 
-# Same flags platform.cmake sets on ${PROJECT_NAME} - in particular /bigobj:
+# Same flags platform.cmake sets on XGELIB - in particular /bigobj:
 # several test files include game_expr.h, whose exprtk use generates enough
 # object sections to hit MSVC's C1128 without it.
-target_compile_options(XMLGameEngineTests PRIVATE
+target_compile_options(XGETEST PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
 
-target_compile_options(XMLGameEngineTests PRIVATE
+target_compile_options(XGETEST PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
-target_link_libraries(XMLGameEngineTests PRIVATE ${PROJECT_NAME} Catch2::Catch2WithMain)
+target_link_libraries(XGETEST PRIVATE XGELIB Catch2::Catch2WithMain)
 
 # games/ and assets/ end up next to the test binary (same as they do for the
 # programs - see assets.cmake), because several tests load the shipped games.
-add_dependencies(XMLGameEngineTests data-target)
+add_dependencies(XGETEST XGEDATA)
 
 include(CTest)
 include(Catch)
-catch_discover_tests(XMLGameEngineTests
+catch_discover_tests(XGETEST
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

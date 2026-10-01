@@ -3,7 +3,7 @@
 # author: beefviper
 # date: Feb 6, 2026
 
-add_dependencies(${PROJECT_NAME} data-target)
+add_dependencies(XGELIB XGEDATA)
 
 if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 	set(data_xsd
@@ -34,7 +34,7 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 	endforeach()
 endif()
 
-add_custom_target(data-target ALL
+add_custom_target(XGEDATA ALL
 	DEPENDS ${data_xsd} ${data_xml} ${data_assets}
 	SOURCES	${data_xsd} ${data_xml} ${data_assets})
 
