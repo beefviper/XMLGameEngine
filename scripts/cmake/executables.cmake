@@ -41,6 +41,21 @@ if (Qt6_FOUND)
 	target_include_directories(XGEGUI PRIVATE gui/include)
 	target_link_libraries(XGEGUI PRIVATE Qt6::Widgets)
 
+	# Qt loads its platform plug-in (platforms/qwindows.dll) from a folder next
+	# to the program at run time, so it is never among the DLLs the program
+	# links to, and the copying vcpkg does after each build does not see it:
+	# without this the program stops at start with "Could not find the Qt
+	# platform plugin windows". windeployqt puts it, and any other plug-in the
+	# program needs, in place. Qt6::windeployqt is used rather than the tool's
+	# file name because vcpkg points it at windeployqt.debug.bat for the Debug
+	# configuration (the plain tool looks for release DLLs and fails on a debug
+	# build), and a target is resolved for the configuration being built, which
+	# also holds for Visual Studio's multi-configuration generator.
+	if (WIN32 AND TARGET Qt6::windeployqt)
+		add_custom_command(TARGET XGEGUI POST_BUILD
+			COMMAND Qt6::windeployqt --no-translations --no-compiler-runtime "$<TARGET_FILE:XGEGUI>")
+	endif()
+
 	list(APPEND XGE_PROGRAMS XGEGUI)
 endif()
 
