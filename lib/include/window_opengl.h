@@ -7,6 +7,8 @@
 
 #include "window.h"
 
+#include <SDL_ttf.h>
+
 #include <chrono>
 #include <string>
 #include <unordered_map>
@@ -14,7 +16,6 @@
 #include <vector>
 
 struct GLFWwindow;
-struct _TTF_Font;
 
 namespace xge
 {
@@ -97,7 +98,7 @@ namespace xge
 		unsigned int targetTexture{ 0 };
 		Bitmap captured;
 
-		std::unordered_map<int, _TTF_Font*> fontsBySize;
+		std::unordered_map<int, TTF_Font*> fontsBySize;
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -105,7 +106,7 @@ namespace xge
 
 		void setUpProjection() const;
 		void releaseTarget();
-		_TTF_Font* getFont(int pointSize);
+		TTF_Font* getFont(int pointSize);
 
 		void upload(CachedVisual& visual, const Bitmap& bitmap);
 		void buildShapeOnly(Object& object, CachedVisual& visual);

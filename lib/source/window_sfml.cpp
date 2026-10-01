@@ -24,14 +24,9 @@ namespace xge
 		// number on Linux (an X11 window id).
 		sf::WindowHandle toSfmlHandle(void* handle)
 		{
-			if constexpr (std::is_pointer_v<sf::WindowHandle>)
-			{
-				return reinterpret_cast<sf::WindowHandle>(handle);
-			}
-			else
-			{
-				return static_cast<sf::WindowHandle>(reinterpret_cast<std::uintptr_t>(handle));
-			}
+			// A C-style cast is a pointer cast where the handle is a pointer
+			// and an integer cast where it is a number.
+			return (sf::WindowHandle)(handle);
 		}
 	}
 
