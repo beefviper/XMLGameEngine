@@ -9,7 +9,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | File | Game |
 |---|---|
 | `games/pong.xml` | Pong, with a menu, pause and game-over screens |
-| `games/breakout.xml` | Breakout |
+| `games/breakout.xml` | Breakout (six rows of bricks, one color a row, as a group of grids; the game is won when no brick is left and lost when the ball falls) |
 | `games/spaceinvaders.xml` | Space Invaders (three kinds of alien drawn from ASCII bitmaps, two animation frames a second apart, as a group of grids of individually named objects; the game is won when none are left) |
 | `games/frogger.xml` | Frogger: lives, one-step hops, looping lanes, riding logs, a river that kills unless you are on one |
 | `games/spacerace.xml` | Space Race, two players, first to two points |

@@ -16,7 +16,7 @@
     <variable name="ball.radius">10</variable>
     <variable name="width">120</variable>
     <variable name="height">30</variable>
-    <variable name="step">2</variable>
+    <variable name="step">8</variable>
   </variables>
   <objects>
     <object name="ball">
@@ -76,24 +76,9 @@
         </action>
       </actions>
     </object>
-    <object name="bricks">
-      <sprite>
-        <grid>
-          <columns>9</columns>
-          <rows>6</rows>
-          <padding>
-            <x>5</x>
-            <y>5</y>
-          </padding>
-          <rectangle>
-            <width>width</width>
-            <height>height</height>
-          </rectangle>
-        </grid>
-      </sprite>
+    <group name="bricks" class="bricks">
       <position>
         <x>margin</x>
-        <y>margin/2</y>
       </position>
       <velocity>
         <x>0</x>
@@ -109,29 +94,299 @@
           <die />
         </collision>
       </collisions>
+      <member name="row1">
+        <sprite>
+          <grid>
+            <columns>9</columns>
+            <rows>1</rows>
+            <padding>
+              <x>5</x>
+              <y>5</y>
+            </padding>
+            <rectangle>
+              <width>width</width>
+              <height>height</height>
+              <color>color.red</color>
+            </rectangle>
+          </grid>
+        </sprite>
+        <position>
+          <y>margin / 2</y>
+        </position>
+      </member>
+      <member name="row2">
+        <sprite>
+          <grid>
+            <columns>9</columns>
+            <rows>1</rows>
+            <padding>
+              <x>5</x>
+              <y>5</y>
+            </padding>
+            <rectangle>
+              <width>width</width>
+              <height>height</height>
+              <color>color.orange</color>
+            </rectangle>
+          </grid>
+        </sprite>
+        <position>
+          <y>margin / 2 + 1 * (height + 5)</y>
+        </position>
+      </member>
+      <member name="row3">
+        <sprite>
+          <grid>
+            <columns>9</columns>
+            <rows>1</rows>
+            <padding>
+              <x>5</x>
+              <y>5</y>
+            </padding>
+            <rectangle>
+              <width>width</width>
+              <height>height</height>
+              <color>color.yellow</color>
+            </rectangle>
+          </grid>
+        </sprite>
+        <position>
+          <y>margin / 2 + 2 * (height + 5)</y>
+        </position>
+      </member>
+      <member name="row4">
+        <sprite>
+          <grid>
+            <columns>9</columns>
+            <rows>1</rows>
+            <padding>
+              <x>5</x>
+              <y>5</y>
+            </padding>
+            <rectangle>
+              <width>width</width>
+              <height>height</height>
+              <color>color.green</color>
+            </rectangle>
+          </grid>
+        </sprite>
+        <position>
+          <y>margin / 2 + 3 * (height + 5)</y>
+        </position>
+      </member>
+      <member name="row5">
+        <sprite>
+          <grid>
+            <columns>9</columns>
+            <rows>1</rows>
+            <padding>
+              <x>5</x>
+              <y>5</y>
+            </padding>
+            <rectangle>
+              <width>width</width>
+              <height>height</height>
+              <color>color.cyan</color>
+            </rectangle>
+          </grid>
+        </sprite>
+        <position>
+          <y>margin / 2 + 4 * (height + 5)</y>
+        </position>
+      </member>
+      <member name="row6">
+        <sprite>
+          <grid>
+            <columns>9</columns>
+            <rows>1</rows>
+            <padding>
+              <x>5</x>
+              <y>5</y>
+            </padding>
+            <rectangle>
+              <width>width</width>
+              <height>height</height>
+              <color>color.blue</color>
+            </rectangle>
+          </grid>
+        </sprite>
+        <position>
+          <y>margin / 2 + 5 * (height + 5)</y>
+        </position>
+      </member>
+    </group>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>BREAKOUT</content>
+          <size>128</size>
+          <color>color.orange</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - title.width / 2</x>
+        <y>window.height.center - title.height / 2 + (-110)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="help">
+      <sprite>
+        <text>
+          <content>clear every brick and keep the ball in play</content>
+          <size>36</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - help.width / 2</x>
+        <y>window.height.center - help.height / 2 + (-10)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="keys">
+      <sprite>
+        <text>
+          <content>a and d, or the arrow keys, to move</content>
+          <size>32</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - keys.width / 2</x>
+        <y>window.height.center - keys.height / 2 + (40)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="start">
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - start.width / 2</x>
+        <y>window.height.center - start.height / 2 + (130)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - paused.width / 2</x>
+        <y>window.height.center - paused.height / 2 + (0)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="youwin">
+      <sprite>
+        <text>
+          <content>YOU WIN</content>
+          <size>128</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - youwin.width / 2</x>
+        <y>window.height.center - youwin.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="gameover">
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>128</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - gameover.width / 2</x>
+        <y>window.height.center - gameover.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="again">
+      <sprite>
+        <text>
+          <content>spacebar to play again</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - again.width / 2</x>
+        <y>window.height.center - again.height / 2 + (70)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
   </objects>
   <states>
     <state name="mainmenu">
       <shows>
-        <show object="player" />
+        <show object="title" />
+        <show object="help" />
+        <show object="keys" />
+        <show object="start" />
       </shows>
       <inputs>
         <input button="space">
           <push state="playing" />
-        </input>
-        <input button="s">
-          <push state="settings" />
-        </input>
-      </inputs>
-    </state>
-    <state name="settings">
-      <shows>
-        <show object="player" />
-      </shows>
-      <inputs>
-        <input button="escape">
-          <pop />
         </input>
       </inputs>
     </state>
@@ -142,9 +397,6 @@
         <show object="bricks" />
       </shows>
       <inputs>
-        <input button="space">
-          <push state="paused" />
-        </input>
         <input button="a">
           <trigger object="player" action="left" />
         </input>
@@ -157,15 +409,56 @@
         <input button="right">
           <trigger object="player" action="right" />
         </input>
+        <input button="space">
+          <push state="paused" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
       </inputs>
+      <conditions>
+        <condition class="bricks">
+          <remaining>0</remaining>
+          <push state="youwin" />
+        </condition>
+        <condition object="ball">
+          <remaining>0</remaining>
+          <push state="gameover" />
+        </condition>
+      </conditions>
     </state>
     <state name="paused">
       <shows>
-        <show object="player" />
+        <show object="paused" />
       </shows>
       <inputs>
         <input button="space">
           <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="youwin">
+      <shows>
+        <show object="youwin" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="gameover" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
         </input>
       </inputs>
     </state>
