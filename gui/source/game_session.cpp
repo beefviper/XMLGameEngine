@@ -11,9 +11,28 @@
 
 #include <exception>
 #include <functional>
+#include <utility>
 
 namespace xge
 {
+	namespace
+	{
+		// Sets a flag for as long as it lives, and puts back what it was.
+		class Changing
+		{
+		public:
+			explicit Changing(bool& flag) : flag(flag), was(std::exchange(flag, true)) {}
+			~Changing() { flag = was; }
+
+			Changing(const Changing&) = delete;
+			Changing& operator=(const Changing&) = delete;
+
+		private:
+			bool& flag;
+			bool was;
+		};
+	}
+
 	GameSession::GameSession(GameStage& stage, QObject* parent) :
 		QObject(parent),
 		stage(stage)
@@ -45,6 +64,7 @@ namespace xge
 	bool GameSession::load(const QString& file, bool startPlaying)
 	{
 		pause();
+		Changing guard(changing);
 
 		emit aboutToUnload();
 		engine.reset();
@@ -98,6 +118,8 @@ namespace xge
 		{
 			return true;
 		}
+
+		Changing guard(changing);
 
 		// A new parser means reading the file again; that also builds the
 		// window with the new video library.
@@ -225,7 +247,7 @@ namespace xge
 
 	void GameSession::reset()
 	{
-		if (!engine)
+		if (!engine || changing)
 		{
 			return;
 		}
@@ -247,7 +269,7 @@ namespace xge
 
 	void GameSession::redraw()
 	{
-		if (!engine)
+		if (!engine || changing)
 		{
 			return;
 		}
@@ -276,7 +298,7 @@ namespace xge
 			owedNs = limit;
 		}
 
-		if (owedNs < framePeriodNs || !engine)
+		if (owedNs < framePeriodNs || !engine || changing)
 		{
 			return;
 		}
@@ -304,7 +326,7 @@ namespace xge
 
 	void GameSession::tick()
 	{
-		if (!engine)
+		if (!engine || changing)
 		{
 			return;
 		}

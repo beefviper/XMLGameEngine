@@ -289,6 +289,14 @@ namespace xge
 			line->setText(field.getText());
 			connect(line, &QLineEdit::editingFinished, this, [this, index, line]()
 				{
+					// Qt reports a finished edit whenever the box loses the
+					// focus, typed in or not (switching the video library moves
+					// the focus, for one): only a change is an edit.
+					if (line->text() == fields[index].getText())
+					{
+						return;
+					}
+
 					fields[index].setText(line->text());
 					edited();
 				});

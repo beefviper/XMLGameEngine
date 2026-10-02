@@ -99,6 +99,13 @@ namespace xge
 		qint64 lastNs{ 0 };
 		qint64 owedNs{ 0 };
 		bool playing{ false };
+
+		// True while load() or applyOptions() is replacing the game or its
+		// window. Qt can deliver events in the middle of that (showing the
+		// other page of the stage moves the keyboard focus, and an editor
+		// losing it reports an edit), and for part of it the engine has no
+		// window at all: step(), reset() and redraw() do nothing meanwhile.
+		bool changing{ false };
 		unsigned long frameCount{ 0 };
 		QString lastError;
 		QString currentFile;
