@@ -319,6 +319,11 @@ namespace xge
 		{
 			std::cout << "error: failed to resize render texture" << std::endl;
 		}
+
+		// Resizing to the size it already is keeps what was drawn before, so a
+		// rebuilt visual (a turned ship, a text with a new number) would be drawn
+		// over its old self.
+		visual.renderTexture.clear(sf::Color::Transparent);
 		visual.renderTexture.draw(circle);
 	}
 
@@ -340,6 +345,8 @@ namespace xge
 		{
 			std::cout << "error: failed to resize render texture" << std::endl;
 		}
+
+		visual.renderTexture.clear(sf::Color::Transparent);
 		visual.renderTexture.draw(rectangle);
 	}
 
@@ -368,6 +375,8 @@ namespace xge
 		{
 			std::cout << "error: failed to resize render texture" << std::endl;
 		}
+
+		visual.renderTexture.clear(sf::Color::Transparent);
 		visual.renderTexture.draw(text);
 	}
 
@@ -400,6 +409,8 @@ namespace xge
 		{
 			std::cout << "error: failed to resize render texture" << std::endl;
 		}
+
+		visual.renderTexture.clear(sf::Color::Transparent);
 		visual.renderTexture.draw(sprite);
 	}
 
@@ -421,6 +432,8 @@ namespace xge
 		{
 			std::cout << "error: failed to resize render texture" << std::endl;
 		}
+
+		visual.renderTexture.clear(sf::Color::Transparent);
 
 		if (bitmap.rgba.empty())
 		{
