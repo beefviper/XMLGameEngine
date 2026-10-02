@@ -57,3 +57,4 @@ The crash the author actually saw on switching to raylib had a third cause. `Eng
 - **raylib's context** is made current again through GLFW (`glfwGetCurrentContext()` right after raylib starts), which assumes raylib and the library share one GLFW (true with vcpkg's dynamic raylib). If not, `activate()` does nothing for raylib and it can draw into Qt's context.
 - The OpenGL backend draws with straight (not premultiplied) alpha, so the edges of text can differ from the other backends by a shade.
 - The options are not remembered between runs.
+- **Embedding is the costly part.** A later version of XGEGUI could use only the Qt renderer in one window and give the other libraries a second window of their own, which would make the back buffer, native-handle and context-keeper code unnecessary ([40](40-split-windows-in-xgegui.md)).
