@@ -33,6 +33,21 @@ namespace xge
 			bool& flag;
 			bool was;
 		};
+
+		// The short name of a video library, for a title bar.
+		QString videoName(VideoBackend video)
+		{
+			switch (video)
+			{
+			case VideoBackend::Qt:     return QStringLiteral("Qt");
+			case VideoBackend::SFML3:  return QStringLiteral("SFML3");
+			case VideoBackend::SDL2:   return QStringLiteral("SDL2");
+			case VideoBackend::Raylib: return QStringLiteral("raylib");
+			case VideoBackend::OpenGL: return QStringLiteral("OpenGL");
+			}
+
+			return QString();
+		}
 	}
 
 	GameSession::GameSession(GameStage& stage, QObject* parent) :
@@ -90,6 +105,8 @@ namespace xge
 			framePeriodNs = 1'000'000'000 / (desc.framerate > 0 ? desc.framerate : 60);
 
 			engine->render();
+			shownTitle.clear();
+			updateTitle();
 		}
 		catch (const std::exception& e)
 		{
@@ -142,6 +159,8 @@ namespace xge
 		{
 			engine->replaceWindow([this] { return makeWindow(game->getWindowDesc()); });
 			engine->render();
+			shownTitle.clear();
+			updateTitle();
 		}
 		catch (const std::exception& e)
 		{
@@ -151,6 +170,8 @@ namespace xge
 				currentOptions.video = VideoBackend::Qt;
 				engine->replaceWindow([this] { return makeWindow(game->getWindowDesc()); });
 				engine->render();
+				shownTitle.clear();
+				updateTitle();
 				emit videoFellBack(QString::fromUtf8(e.what()));
 			}
 			catch (const std::exception& again)
@@ -198,6 +219,40 @@ namespace xge
 			stage.showView(static_cast<int>(desc.width), static_cast<int>(desc.height), QString::fromStdString(desc.name)));
 	}
 
+	void GameSession::updateTitle()
+	{
+		if (!game || !engine)
+		{
+			return;
+		}
+
+		QString state = tr("Paused");
+		if (playing)
+		{
+			state = framesPerSecond > 0 ? tr("Playing: %1fps").arg(framesPerSecond, 0, 'f', 1) : tr("Playing");
+		}
+
+		const QString title = QStringLiteral("%1 (%2) (%3, %4)")
+			.arg(QString::fromStdString(game->getWindowDesc().name), state,
+				videoName(currentOptions.video), xmlBackendTitle(currentOptions.xml));
+
+		if (title == shownTitle)
+		{
+			return;
+		}
+
+		shownTitle = title;
+		stage.setGameTitle(title);
+		emit titleChanged(title);
+
+		// A library's window has a title bar of its own, and only one that is
+		// still open can be given a title (a closed one is gone).
+		if (libraryWindow && engine->isWindowOpen())
+		{
+			engine->currentWindow()->setTitle(title.toStdString());
+		}
+	}
+
 	void GameSession::rememberPosition()
 	{
 		if (!libraryWindow || !engine || !engine->isWindowOpen())
@@ -222,6 +277,7 @@ namespace xge
 		fpsFrames = 0;
 		owedNs = 0;
 		updateTimer();
+		updateTitle();
 		emit playingChanged(true);
 	}
 
@@ -235,6 +291,7 @@ namespace xge
 		playing = false;
 		framesPerSecond = 0;
 		updateTimer();
+		updateTitle();
 		emit playingChanged(false);
 	}
 
@@ -391,6 +448,7 @@ namespace xge
 					: measured;
 				fpsStartNs = now;
 				fpsFrames = 0;
+				updateTitle();
 			}
 
 			emit frameAdvanced();

@@ -91,5 +91,14 @@ namespace xge
 
 		// The game's window was closed: paused, and back in this window.
 		void gameWindowClosed();
+
+		// This window's title bar: the game's own title (name, playing or
+		// paused, video library and XML parser), whether the game is drawn in
+		// this window or only the controls are; the program's name and the
+		// game file until there is a game.
+		QString gameTitle;
+		QString controlsTitle;
+		void showTitle(const QString& title);
+		void applyTitle();
 	};
 }

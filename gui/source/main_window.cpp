@@ -110,7 +110,8 @@ namespace xge
 		inspector(new Inspector(*session)),
 		lastDirectory(QDir("games").exists() ? QDir("games").absolutePath() : QDir::currentPath())
 	{
-		setWindowTitle(tr("XML Game Engine"));
+		controlsTitle = tr("XML Game Engine");
+		setWindowTitle(controlsTitle);
 
 		// The game takes whatever room the inspector does not need, drawn as
 		// large as fits with its own proportions (in one window).
@@ -166,6 +167,8 @@ namespace xge
 			enterTwoWindows();
 		}
 
+		connect(session, &GameSession::titleChanged, this, &MainWindow::showTitle);
+
 		connect(session, &GameSession::failed, this, [this](const QString& message)
 			{
 				QMessageBox::critical(this, tr("The game stopped"), message);
@@ -199,12 +202,13 @@ namespace xge
 		const bool wasPlaying = session->isPlaying();
 		session->pause();
 
-		OptionsDialog dialog(session->options(), settings.warnBeforeTwoWindows(), this);
+		OptionsDialog dialog(session->options(), settings.warnBeforeTwoWindows(), settings.startGameOnLoad(), this);
 		bool done = true;
 
 		if (dialog.exec() == QDialog::Accepted)
 		{
 			settings.setWarnBeforeTwoWindows(dialog.warnBeforeTwoWindows());
+			settings.setStartGameOnLoad(dialog.startGameOnLoad());
 			done = changeOptions(dialog.options());
 		}
 
@@ -287,6 +291,7 @@ namespace xge
 
 		stage->setSplit(true);
 		twoWindows->setChecked(true);
+		applyTitle();
 	}
 
 	void MainWindow::leaveTwoWindows()
@@ -300,6 +305,7 @@ namespace xge
 		stage->setSplit(false);
 		twoWindows->setChecked(false);
 		setGeometry(oneWindowRect);
+		applyTitle();
 
 		// Only the Qt renderer draws in this window.
 		SessionOptions options = session->options();
@@ -315,6 +321,17 @@ namespace xge
 		}
 	}
 
+	void MainWindow::showTitle(const QString& title)
+	{
+		gameTitle = title;
+		applyTitle();
+	}
+
+	void MainWindow::applyTitle()
+	{
+		setWindowTitle(gameTitle.isEmpty() ? controlsTitle : gameTitle);
+	}
+
 	void MainWindow::gameWindowClosed()
 	{
 		session->pause();
@@ -325,14 +342,15 @@ namespace xge
 	{
 		lastDirectory = QFileInfo(file).absolutePath();
 
-		if (!session->load(file))
+		if (!session->load(file, settings.startGameOnLoad()))
 		{
 			QMessageBox::critical(this, tr("Could not load the game"), session->error());
 			return false;
 		}
 
 		settings.setValue(kGameFileKey, QFileInfo(file).absoluteFilePath());
-		setWindowTitle(tr("XML Game Engine - %1").arg(QFileInfo(file).fileName()));
+		controlsTitle = tr("XML Game Engine - %1").arg(QFileInfo(file).fileName());
+		applyTitle();
 		stage->focusGame();
 		return true;
 	}

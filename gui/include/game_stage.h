@@ -65,6 +65,10 @@ namespace xge
 		// Hides the picture, and the game window with it.
 		void hideView();
 
+		// The text on the title bar of the game's own window (the Qt
+		// renderer's, in two windows); remembered for when it opens.
+		void setGameTitle(const QString& title);
+
 		bool isSplit() const noexcept { return split; }
 
 		// One window or two. Takes the picture, if there is one, to where the

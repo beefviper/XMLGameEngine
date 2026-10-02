@@ -15,6 +15,7 @@ namespace xge
 	namespace
 	{
 		const QString kWarnKey = QStringLiteral("Window/warn_before_two_windows");
+		const QString kStartKey = QStringLiteral("Game/start_game_on_load");
 	}
 
 	AppSettings::AppSettings(const QString& file) :
@@ -23,7 +24,9 @@ namespace xge
 		// Reading a file that is not there makes none.
 		if (QFileInfo::exists(file))
 		{
-			warn = QSettings(file, QSettings::IniFormat).value(kWarnKey, true).toBool();
+			const QSettings settings(file, QSettings::IniFormat);
+			warn = settings.value(kWarnKey, true).toBool();
+			startOnLoad = settings.value(kStartKey, false).toBool();
 		}
 	}
 
@@ -42,6 +45,18 @@ namespace xge
 		warn = value;
 
 		setValue(kWarnKey, value);
+	}
+
+	void AppSettings::setStartGameOnLoad(bool value)
+	{
+		if (value == startOnLoad)
+		{
+			return;
+		}
+
+		startOnLoad = value;
+
+		setValue(kStartKey, value);
 	}
 
 	QVariant AppSettings::value(const QString& key) const

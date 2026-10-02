@@ -37,6 +37,12 @@ namespace xge
 		virtual std::pair<int, int> position() const { return { 0, 0 }; }
 		virtual void setPosition(int x, int y) { (void)x; (void)y; }
 
+		// The text on the window's title bar, which a front end can keep up
+		// to date (the game's name, whether it is playing, how fast). A
+		// window that is not a window of its own has no title bar and ignores
+		// it.
+		virtual void setTitle(const std::string& title) { (void)title; }
+
 		// Called once, right after the window is created (see Engine's
 		// constructor): builds and measures every object's initial visual
 		// from its spriteParams. Object::position (including any <grid>

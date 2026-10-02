@@ -165,6 +165,11 @@ namespace xge
 		SDL_SetWindowPosition(window, x, y);
 	}
 
+	void SDL2Window::setTitle(const std::string& title)
+	{
+		SDL_SetWindowTitle(window, title.c_str());
+	}
+
 	void SDL2Window::init(std::vector<Object>& objects)
 	{
 		// Object::position is already final by now - see the identical

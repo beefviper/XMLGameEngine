@@ -53,6 +53,16 @@ namespace xge
 		return *view;
 	}
 
+	void GameStage::setGameTitle(const QString& text)
+	{
+		title = text;
+
+		if (gameWindow)
+		{
+			gameWindow->setWindowTitle(title);
+		}
+	}
+
 	void GameStage::hideView()
 	{
 		shown = false;

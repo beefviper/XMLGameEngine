@@ -16,11 +16,12 @@
 
 namespace xge
 {
-	OptionsDialog::OptionsDialog(const SessionOptions& current, bool warnBeforeTwoWindows, QWidget* parent) :
+	OptionsDialog::OptionsDialog(const SessionOptions& current, bool warnBeforeTwoWindows, bool startGameOnLoad, QWidget* parent) :
 		QDialog(parent),
 		video(new QComboBox),
 		xml(new QComboBox),
-		warn(new QCheckBox(tr("&Ask before the game moves to a window of its own")))
+		warn(new QCheckBox(tr("&Ask before the game moves to a window of its own"))),
+		start(new QCheckBox(tr("&Start Game on Load")))
 	{
 		setWindowTitle(tr("Options"));
 
@@ -41,6 +42,8 @@ namespace xge
 		form->addRow(tr("&XML parser:"), xml);
 
 		warn->setChecked(warnBeforeTwoWindows);
+		start->setChecked(startGameOnLoad);
+		start->setToolTip(tr("Unchecked, a game opens paused so you can get ready, and starts when you press Play."));
 
 		auto* note = new QLabel(tr(
 			"The game waits while this dialog is open, and carries on when it closes.\n"
@@ -56,6 +59,7 @@ namespace xge
 		auto* layout = new QVBoxLayout(this);
 		layout->addLayout(form);
 		layout->addWidget(warn);
+		layout->addWidget(start);
 		layout->addWidget(note);
 		layout->addWidget(buttons);
 
@@ -75,6 +79,11 @@ namespace xge
 	bool OptionsDialog::warnBeforeTwoWindows() const
 	{
 		return warn->isChecked();
+	}
+
+	bool OptionsDialog::startGameOnLoad() const
+	{
+		return start->isChecked();
 	}
 
 	SessionOptions OptionsDialog::options() const

@@ -148,6 +148,11 @@ namespace xge
 		SetWindowPosition(x, y);
 	}
 
+	void RaylibWindow::setTitle(const std::string& title)
+	{
+		SetWindowTitle(title.c_str());
+	}
+
 	void RaylibWindow::init(std::vector<Object>& objects)
 	{
 		// Object::position is already final by now - see the identical

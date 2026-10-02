@@ -86,6 +86,9 @@ namespace xge
 		void loaded();
 
 		void playingChanged(bool playing);
+
+		// The title the game's windows now have (see updateTitle()).
+		void titleChanged(const QString& title);
 		void frameAdvanced();
 		void failed(const QString& message);
 
@@ -131,6 +134,17 @@ namespace xge
 		// Tells the stage where a library's window is now, so that whatever
 		// window comes next opens there.
 		void rememberPosition();
+
+		// Works out the title every window the game is shown in carries: the
+		// game's name, whether it is playing (and how fast) or paused, and the
+		// video library and XML parser in use, as in "Space Invaders (Playing:
+		// 59.9fps) (SFML3, Xerces)". It goes to a library's own window, to the
+		// stage (for the Qt renderer's window in two windows) and out as
+		// titleChanged() (for the main window, which is the game's window in
+		// one). Does nothing when the title is already that: `shownTitle` is
+		// what it last set, and is cleared when there is a new window to put it on.
+		void updateTitle();
+		QString shownTitle;
 
 		// The timer's slot: plays however many frames the clock says are due
 		// (while paused, only lets a library's window deal with its events and

@@ -30,6 +30,13 @@ namespace xge
 		bool warnBeforeTwoWindows() const noexcept { return warn; }
 		void setWarnBeforeTwoWindows(bool value);
 
+		// Whether a game opened (from the File menu, or the one left open last
+		// time) starts playing at once. Not starting is the default: the game
+		// waits, paused, so the player can get ready and press Play.
+		// In the file: start_game_on_load under [Game].
+		bool startGameOnLoad() const noexcept { return startOnLoad; }
+		void setStartGameOnLoad(bool value);
+
 		// Any other thing kept, by its name in the file ("Windows/game", say);
 		// invalid when the file does not have it.
 		QVariant value(const QString& key) const;
@@ -38,5 +45,6 @@ namespace xge
 	private:
 		QString file;
 		bool warn{ true };
+		bool startOnLoad{ false };
 	};
 }

@@ -54,6 +54,11 @@ namespace xge
 		window.setPosition(sf::Vector2i(x, y));
 	}
 
+	void SFMLWindow::setTitle(const std::string& title)
+	{
+		window.setTitle(sf::String::fromUtf8(title.begin(), title.end()));
+	}
+
 	void SFMLWindow::init(std::vector<Object>& objects)
 	{
 		// Object::position is already final by now - including any <grid>

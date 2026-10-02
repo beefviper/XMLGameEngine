@@ -34,6 +34,7 @@ namespace xge
 		void close() override;
 		std::pair<int, int> position() const override;
 		void setPosition(int x, int y) override;
+		void setTitle(const std::string& title) override;
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override;
 		void clear(const std::string& colorName) override;

@@ -15,14 +15,14 @@ class QComboBox;
 namespace xge
 {
 	// The Options window: which library draws the game, which one reads the
-	// game file, and whether to be asked before the game moves to a window of
-	// its own. Nothing changes until it is closed with OK.
+	// game file, whether to be asked before the game moves to a window of its
+	// own, and whether a game starts playing when it is opened. Nothing changes until it is closed with OK.
 	class OptionsDialog : public QDialog
 	{
 		Q_OBJECT
 
 	public:
-		OptionsDialog(const SessionOptions& current, bool warnBeforeTwoWindows, QWidget* parent = nullptr);
+		OptionsDialog(const SessionOptions& current, bool warnBeforeTwoWindows, bool startGameOnLoad, QWidget* parent = nullptr);
 
 		// What the dropdowns say now.
 		SessionOptions options() const;
@@ -30,9 +30,13 @@ namespace xge
 		// Whether the box asking to be warned is checked.
 		bool warnBeforeTwoWindows() const;
 
+		// Whether the box asking for a game to start on load is checked.
+		bool startGameOnLoad() const;
+
 	private:
 		QComboBox* video;
 		QComboBox* xml;
 		QCheckBox* warn;
+		QCheckBox* start;
 	};
 }

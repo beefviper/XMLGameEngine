@@ -53,7 +53,7 @@ namespace xge
 			case ShapeKind::Rectangle: return "rectangle";
 			case ShapeKind::Text: return "text";
 			case ShapeKind::Image: return "image";
-			case ShapeKind::Line: return "lines";
+			case ShapeKind::Line: return "drawn";
 			case ShapeKind::Unknown: break;
 			}
 			return "unknown";
@@ -79,6 +79,8 @@ namespace xge
 		statusLabel(new QLabel(this)),
 		tree(new QTreeWidget(this))
 	{
+		statusLabel->setTextFormat(Qt::RichText);
+
 		// Clicking a button must not take the keyboard away from the game.
 		for (QPushButton* button : { playButton, stepButton, resetButton })
 		{
@@ -151,7 +153,7 @@ namespace xge
 	{
 		if (!session.isLoaded())
 		{
-			statusLabel->setText(tr("No game loaded"));
+			statusLabel->setText(tr("No game loaded").toHtmlEscaped());
 			return;
 		}
 
@@ -161,10 +163,16 @@ namespace xge
 			frame += tr(" (%1fps)").arg(session.fps(), 0, 'f', 1);
 		}
 
+		// Playing in green and Paused in red, so which it is can be seen at a
+		// glance; both read on a light or a dark theme.
+		const QString mode = session.isPlaying()
+			? QStringLiteral("<b style=\"color:#2fa84f\">%1</b>").arg(tr("Playing").toHtmlEscaped())
+			: QStringLiteral("<b style=\"color:#e5483f\">%1</b>").arg(tr("Paused").toHtmlEscaped());
+
 		statusLabel->setText(tr("State: %1   Frame: %2   %3")
-			.arg(text(game().getCurrentState().name))
-			.arg(frame)
-			.arg(session.isPlaying() ? tr("Playing") : tr("Paused")));
+			.arg(text(game().getCurrentState().name).toHtmlEscaped())
+			.arg(frame.toHtmlEscaped())
+			.arg(mode));
 
 		for (auto& field : fields)
 		{
@@ -570,7 +578,7 @@ namespace xge
 			if (params.size() > 2) { addInfo(sprite, tr("flip"), text(params[2])); }
 			break;
 		case ShapeKind::Line:
-			addInfo(sprite, tr("drawn from"), tr("lines"));
+			addInfo(sprite, tr("drawn from"), tr("pixels"));
 			break;
 		case ShapeKind::Unknown:
 			break;

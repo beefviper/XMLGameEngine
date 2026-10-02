@@ -190,6 +190,11 @@ namespace xge
 		glfwSetWindowPos(window, x, y);
 	}
 
+	void OpenGLWindow::setTitle(const std::string& title)
+	{
+		glfwSetWindowTitle(window, title.c_str());
+	}
+
 	void OpenGLWindow::init(std::vector<Object>& objects)
 	{
 		// Object::position is already final by now - see the identical
