@@ -29,7 +29,7 @@ Two small additions to `Window` go with it, both with a do-nothing default: `bac
 
 ### The Options dialog
 
-XGEGUI has a toolbar (Open Game, Options) and Options in the File menu. The dialog has a **Video** dropdown (SFML 3, SDL2, raylib, OpenGL, and the Qt renderer from design 38) and an **XML parser** dropdown (Xerces, TinyXML2, PugiXML, RapidXML); like XGECLI, SFML 3 and Xerces are what is used until something else is chosen. Nothing changes until OK.
+XGEGUI has Options in the File menu (there is no toolbar). The dialog has a **Video** dropdown (SFML 3, SDL2, raylib, OpenGL, and the Qt renderer from design 38) and an **XML parser** dropdown (Xerces, TinyXML2, PugiXML, RapidXML); like XGECLI, SFML 3 and Xerces are what is used until something else is chosen. Nothing changes until OK.
 
 - The game **waits while the dialog is open** (it cannot be played from there: the dialog has the keyboard), and when the dialog closes it carries on if it was playing, whatever was chosen. Until 2026-10-01 it ran on under the dialog and was paused only after a change of library.
 - A new **video** library is given the game as it is: the old window is destroyed, the new one made, every picture built again, and the picture drawn.

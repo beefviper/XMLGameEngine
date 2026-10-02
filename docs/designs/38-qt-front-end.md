@@ -16,7 +16,7 @@ Keys go to the game only while the game view has the focus (click it); the butto
 
 ### Choosing the libraries
 
-The Options dialog (toolbar and File menu) picks the video library, SFML 3 by default, and the XML parser, Xerces by default, and can change the video library of a running game; see [39](39-opengl-backend-and-options.md). The Qt renderer above is one of the choices. The sentence above about raylib not taking a foreign window is still true; it is shown through a back buffer.
+The Options dialog (File menu) picks the video library, SFML 3 by default, and the XML parser, Xerces by default, and can change the video library of a running game; see [39](39-opengl-backend-and-options.md). The Qt renderer above is one of the choices. The sentence above about raylib not taking a foreign window is still true; it is shown through a back buffer.
 
 ### The tree
 

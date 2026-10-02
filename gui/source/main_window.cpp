@@ -19,7 +19,6 @@
 #include <QCloseEvent>
 #include <QSizePolicy>
 #include <QSplitter>
-#include <QToolBar>
 
 namespace xge
 {
@@ -57,15 +56,10 @@ namespace xge
 		auto* open = fileMenu->addAction(tr("&Open Game..."), this, &MainWindow::chooseGame);
 		open->setShortcut(QKeySequence::Open);
 		fileMenu->addSeparator();
-		auto* optionsAction = fileMenu->addAction(tr("&Options..."), this, &MainWindow::showOptions);
+		fileMenu->addAction(tr("&Options..."), this, &MainWindow::showOptions);
 		fileMenu->addSeparator();
 		auto* quit = fileMenu->addAction(tr("&Quit"), this, &QWidget::close);
 		quit->setShortcut(QKeySequence::Quit);
-
-		auto* toolbar = addToolBar(tr("Main"));
-		toolbar->setMovable(false);
-		toolbar->addAction(open);
-		toolbar->addAction(optionsAction);
 
 		resize(1400, 760);
 

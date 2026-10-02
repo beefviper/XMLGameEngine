@@ -15,9 +15,9 @@ namespace xge
 	class Inspector;
 
 	// The application window: the game on the left, the Inspector (controls
-	// and the tree of game data) on the right, a File menu and a toolbar to
+	// and the tree of game data) on the right, a File menu to
 	// choose the game, and the Options dialog (the video library and the XML
-	// parser) behind the toolbar's Options button.
+	// parser) behind the menu's Options item.
 	class MainWindow : public QMainWindow
 	{
 		Q_OBJECT
