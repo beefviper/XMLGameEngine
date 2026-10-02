@@ -53,8 +53,34 @@ namespace xge
 			return CmdAccelerate{ directionFromName(raw.direction, verb), evaluate(raw.amount), raw.burn };
 		}
 
-		if (verb == "inc") { return CmdIncrement{ raw.variable }; }
-		if (verb == "dec") { return CmdDecrement{ raw.variable }; }
+		if (verb == "turn")
+		{
+			const Direction direction = directionFromName(raw.direction, verb);
+			if (direction != Direction::Left && direction != Direction::Right)
+			{
+				throw std::runtime_error("<turn> has direction=\"" + raw.direction + "\"; expected left or right");
+			}
+			return CmdTurn{ direction, evaluate(raw.amount) };
+		}
+
+		if (verb == "thrust") { return CmdThrust{ evaluate(raw.amount), raw.burn }; }
+
+		if (verb == "release")
+		{
+			const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
+			if (count < 1) { throw std::runtime_error("<release> of " + raw.object + " has a count under 1"); }
+			return CmdRelease{ raw.object, count };
+		}
+
+		// How much an <inc> or <dec> changes by: its amount, or 1 when it has none.
+		const auto amountOf = [&](const RawCommand& command)
+		{
+			const bool none = command.amount.kind == RawValue::Kind::Expression && command.amount.text.empty();
+			return none ? 1.0f : evaluate(command.amount);
+		};
+
+		if (verb == "inc") { return CmdIncrement{ raw.variable, amountOf(raw) }; }
+		if (verb == "dec") { return CmdDecrement{ raw.variable, amountOf(raw) }; }
 
 		if (verb == "push") { return CmdPushState{ raw.state }; }
 		if (verb == "pop")  { return CmdPopState{}; }
@@ -197,8 +223,11 @@ namespace xge
 					: "right";
 				o << "accelerate." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
 			},
-			[&](const CmdIncrement& c) { o << "inc(" << c.target << ")"; },
-			[&](const CmdDecrement& c) { o << "dec(" << c.target << ")"; },
+			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "left" : "right") << "(" << t.rate << ")"; },
+			[&](const CmdThrust& t) { o << "thrust(" << t.amount << (t.burn.empty() ? "" : ", burn " + t.burn) << ")"; },
+			[&](const CmdRelease& r) { o << "release(" << r.target << ", " << r.count << ")"; },
+			[&](const CmdIncrement& c) { o << "inc(" << c.target << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
+			[&](const CmdDecrement& c) { o << "dec(" << c.target << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
 			[&](const CmdPopState&) { o << "state()"; },
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
@@ -223,13 +252,23 @@ namespace xge
 	{
 		o << command.verb;
 
-		if (command.verb == "move" || command.verb == "hop" || command.verb == "accelerate")
+		if (command.verb == "thrust")
+		{
+			o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+		}
+		else if (command.verb == "release")
+		{
+			o << "(" << command.object << ", " << command.amount << ")";
+		}
+		else if (command.verb == "move" || command.verb == "hop" || command.verb == "accelerate" || command.verb == "turn")
 		{
 			o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
 		}
 		else if (command.verb == "inc" || command.verb == "dec")
 		{
-			o << "(" << command.variable << ")";
+			o << "(" << command.variable;
+			if (!(command.amount.kind == RawValue::Kind::Expression && (command.amount.text == "1" || command.amount.text.empty()))) { o << ", " << command.amount; }
+			o << ")";
 		}
 		else if (command.verb == "push")
 		{

@@ -1,0 +1,884 @@
+<!-- asteroids.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 1, 2026 -->
+
+<!--
+  Asteroids, after the 1979 arcade game: a ship that turns and thrusts in the
+  way it faces, drifts on, and wraps round the screen, shooting rocks that break
+  into smaller ones.
+
+  Everything is drawn from <line>s and tested by pixel, as in Lunar Lander.
+  What Asteroids added to the language:
+
+    * <heading> on an object (degrees clockwise from up) and, in its actions,
+      <turn> (held, degrees a frame) and <thrust> (held, pushes along the
+      heading). The ship's drawing is made at 72 headings when the game loads
+      and the one nearest its heading is shown and tested.
+    * <drag>, a fraction of the speed lost every frame, so the ship has a top
+      speed of thrustpower / drag instead of speeding up for ever.
+    * <fire> from an object with a heading leaves its nose, along the heading.
+      Naming a group fires the first of its members that is not in flight, so
+      four shots can be in the air at once.
+    * <hidden> (an object or a group starts out of play) and <release>, which
+      puts members of a pool back in play where the object running the rule is.
+      The language still cannot make an object while the game runs; the medium
+      and small rocks are made ahead of time and handed out.
+
+  Wrapping is Frogger's <wrap />. A shot is put away at the edge of the screen
+  (the original lets it wrap and run out), and a ship that is hit comes back
+  at the middle with no wait for the middle to be clear.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+  <window name="Asteroids">
+    <width>800</width>
+    <height>600</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="turnrate">4</variable>
+    <variable name="thrustpower">0.09</variable>
+    <variable name="drag">0.02</variable>
+    <variable name="shotspeed">8</variable>
+    <variable name="margin">20</variable>
+  </variables>
+  <objects>
+    <!-- The ship: a triangle of four lines, drawn at 72 headings when the game loads. It has a <heading>, so the left and right keys <turn> it, thrust pushes it along the way it faces, and a shot leaves its nose. Pixel collisions look at the picture for the heading it has now. -->
+    <object name="ship" class="ship">
+      <sprite>
+        <line><from><x>12</x><y>0</y></from><to><x>23</x><y>28</y></to><thickness>2</thickness></line>
+        <line><from><x>23</x><y>28</y></from><to><x>12</x><y>22</y></to><thickness>2</thickness></line>
+        <line><from><x>12</x><y>22</y></from><to><x>1</x><y>28</y></to><thickness>2</thickness></line>
+        <line><from><x>1</x><y>28</y></from><to><x>12</x><y>0</y></to><thickness>2</thickness></line>
+      </sprite>
+      <position>
+        <x>window.width.center - ship.width / 2</x>
+        <y>window.height.center - ship.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <heading>0</heading>
+      <drag>drag</drag>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision edge="vertical">
+          <wrap />
+        </collision>
+        <collision class="rocks">
+          <dec variable="ship.lives" />
+          <stop />
+          <reset />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="left">
+          <turn direction="left">turnrate</turn>
+        </action>
+        <action name="right">
+          <turn direction="right">turnrate</turn>
+        </action>
+        <action name="thrust">
+          <thrust>thrustpower</thrust>
+        </action>
+        <action name="fire">
+          <fire object="shots" />
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+        <variable name="lives">3</variable>
+      </variables>
+    </object>
+    <!-- Four shots in a pool: hidden until one is fired, put away again when it hits a rock or leaves the screen. -->
+    <group name="shots" class="shots">
+      <sprite>
+        <rectangle>
+          <width>3</width>
+          <height>3</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>-shotspeed</y>
+      </velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all">
+          <die />
+        </collision>
+        <collision class="rocks">
+          <die />
+        </collision>
+      </collisions>
+      <member />
+      <member />
+      <member />
+      <member />
+    </group>
+    <!-- The rocks. The big ones are in play from the start; the medium and small ones are pools, hidden until a bigger rock breaks and <release>s two of them where it was. 4 big rocks make 8 medium ones make 16 small ones, so the pools are exactly big enough. -->
+    <group name="bigrocks" class="rocks">
+      <sprite>
+        <line><from><x>60</x><y>33</y></from><to><x>44</x><y>40</y></to><thickness>2</thickness></line>
+        <line><from><x>44</x><y>40</y></from><to><x>38</x><y>47</y></to><thickness>2</thickness></line>
+        <line><from><x>38</x><y>47</y></from><to><x>28</x><y>52</y></to><thickness>2</thickness></line>
+        <line><from><x>28</x><y>52</y></from><to><x>14</x><y>53</y></to><thickness>2</thickness></line>
+        <line><from><x>14</x><y>53</y></from><to><x>8</x><y>40</y></to><thickness>2</thickness></line>
+        <line><from><x>8</x><y>40</y></from><to><x>12</x><y>28</y></to><thickness>2</thickness></line>
+        <line><from><x>12</x><y>28</y></from><to><x>13</x><y>18</y></to><thickness>2</thickness></line>
+        <line><from><x>13</x><y>18</y></from><to><x>21</x><y>11</y></to><thickness>2</thickness></line>
+        <line><from><x>21</x><y>11</y></from><to><x>32</x><y>10</y></to><thickness>2</thickness></line>
+        <line><from><x>32</x><y>10</y></from><to><x>44</x><y>10</y></to><thickness>2</thickness></line>
+        <line><from><x>44</x><y>10</y></from><to><x>50</x><y>21</y></to><thickness>2</thickness></line>
+        <line><from><x>50</x><y>21</y></from><to><x>60</x><y>33</y></to><thickness>2</thickness></line>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision edge="vertical">
+          <wrap />
+        </collision>
+        <collision class="shots">
+          <die />
+          <inc variable="ship.score">2</inc>
+          <release object="mediumrocks">2</release>
+        </collision>
+      </collisions>
+    <member>
+      <position><x>60</x><y>70</y></position>
+      <velocity><x>-1.05</x><y>0.1</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>47</x><y>48</y></from><to><x>35</x><y>49</y></to><thickness>2</thickness></line>
+          <line><from><x>35</x><y>49</y></from><to><x>22</x><y>59</y></to><thickness>2</thickness></line>
+          <line><from><x>22</x><y>59</y></from><to><x>15</x><y>44</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>44</y></from><to><x>9</x><y>35</y></to><thickness>2</thickness></line>
+          <line><from><x>9</x><y>35</y></from><to><x>10</x><y>24</y></to><thickness>2</thickness></line>
+          <line><from><x>10</x><y>24</y></from><to><x>11</x><y>11</y></to><thickness>2</thickness></line>
+          <line><from><x>11</x><y>11</y></from><to><x>23</x><y>3</y></to><thickness>2</thickness></line>
+          <line><from><x>23</x><y>3</y></from><to><x>36</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>36</x><y>7</y></from><to><x>46</x><y>15</y></to><thickness>2</thickness></line>
+          <line><from><x>46</x><y>15</y></from><to><x>52</x><y>24</y></to><thickness>2</thickness></line>
+          <line><from><x>52</x><y>24</y></from><to><x>58</x><y>38</y></to><thickness>2</thickness></line>
+          <line><from><x>58</x><y>38</y></from><to><x>47</x><y>48</y></to><thickness>2</thickness></line>
+        </sprite>
+      <position><x>680</x><y>90</y></position>
+      <velocity><x>0.89</x><y>0.3</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>53</x><y>35</y></from><to><x>50</x><y>48</y></to><thickness>2</thickness></line>
+          <line><from><x>50</x><y>48</y></from><to><x>35</x><y>47</y></to><thickness>2</thickness></line>
+          <line><from><x>35</x><y>47</y></from><to><x>24</x><y>56</y></to><thickness>2</thickness></line>
+          <line><from><x>24</x><y>56</y></from><to><x>16</x><y>45</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>45</y></from><to><x>10</x><y>36</y></to><thickness>2</thickness></line>
+          <line><from><x>10</x><y>36</y></from><to><x>11</x><y>26</y></to><thickness>2</thickness></line>
+          <line><from><x>11</x><y>26</y></from><to><x>10</x><y>11</y></to><thickness>2</thickness></line>
+          <line><from><x>10</x><y>11</y></from><to><x>21</x><y>3</y></to><thickness>2</thickness></line>
+          <line><from><x>21</x><y>3</y></from><to><x>36</x><y>4</y></to><thickness>2</thickness></line>
+          <line><from><x>36</x><y>4</y></from><to><x>47</x><y>12</y></to><thickness>2</thickness></line>
+          <line><from><x>47</x><y>12</y></from><to><x>58</x><y>21</y></to><thickness>2</thickness></line>
+          <line><from><x>58</x><y>21</y></from><to><x>53</x><y>35</y></to><thickness>2</thickness></line>
+        </sprite>
+      <position><x>110</x><y>460</y></position>
+      <velocity><x>-0.85</x><y>0.05</y></velocity>
+    </member>
+    <member>
+      <position><x>640</x><y>430</y></position>
+      <velocity><x>0.97</x><y>-0.34</y></velocity>
+    </member>
+    </group>
+    <group name="mediumrocks" class="rocks">
+      <sprite>
+        <line><from><x>27</x><y>28</y></from><to><x>20</x><y>35</y></to><thickness>2</thickness></line>
+        <line><from><x>20</x><y>35</y></from><to><x>10</x><y>34</y></to><thickness>2</thickness></line>
+        <line><from><x>10</x><y>34</y></from><to><x>3</x><y>26</y></to><thickness>2</thickness></line>
+        <line><from><x>3</x><y>26</y></from><to><x>4</x><y>16</y></to><thickness>2</thickness></line>
+        <line><from><x>4</x><y>16</y></from><to><x>9</x><y>8</y></to><thickness>2</thickness></line>
+        <line><from><x>9</x><y>8</y></from><to><x>18</x><y>2</y></to><thickness>2</thickness></line>
+        <line><from><x>18</x><y>2</y></from><to><x>28</x><y>4</y></to><thickness>2</thickness></line>
+        <line><from><x>28</x><y>4</y></from><to><x>29</x><y>15</y></to><thickness>2</thickness></line>
+        <line><from><x>29</x><y>15</y></from><to><x>35</x><y>23</y></to><thickness>2</thickness></line>
+        <line><from><x>35</x><y>23</y></from><to><x>27</x><y>28</y></to><thickness>2</thickness></line>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision edge="vertical">
+          <wrap />
+        </collision>
+        <collision class="shots">
+          <die />
+          <inc variable="ship.score">5</inc>
+          <release object="smallrocks">2</release>
+        </collision>
+      </collisions>
+    <member>
+      <velocity><x>0.9</x><y>1.29</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>32</x><y>19</y></from><to><x>33</x><y>30</y></to><thickness>2</thickness></line>
+          <line><from><x>33</x><y>30</y></from><to><x>23</x><y>33</y></to><thickness>2</thickness></line>
+          <line><from><x>23</x><y>33</y></from><to><x>14</x><y>34</y></to><thickness>2</thickness></line>
+          <line><from><x>14</x><y>34</y></from><to><x>5</x><y>29</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>29</y></from><to><x>8</x><y>19</y></to><thickness>2</thickness></line>
+          <line><from><x>8</x><y>19</y></from><to><x>7</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>9</y></from><to><x>16</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>7</y></from><to><x>23</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>23</x><y>9</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-0.4</x><y>-1.75</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>32</x><y>25</y></from><to><x>28</x><y>35</y></to><thickness>2</thickness></line>
+          <line><from><x>28</x><y>35</y></from><to><x>18</x><y>31</y></to><thickness>2</thickness></line>
+          <line><from><x>18</x><y>31</y></from><to><x>7</x><y>32</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>32</y></from><to><x>8</x><y>21</y></to><thickness>2</thickness></line>
+          <line><from><x>8</x><y>21</y></from><to><x>5</x><y>13</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>13</y></from><to><x>12</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>12</x><y>7</y></from><to><x>20</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>20</x><y>7</y></from><to><x>26</x><y>11</y></to><thickness>2</thickness></line>
+          <line><from><x>26</x><y>11</y></from><to><x>32</x><y>16</y></to><thickness>2</thickness></line>
+          <line><from><x>32</x><y>16</y></from><to><x>32</x><y>25</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>0.36</x><y>-1.27</y></velocity>
+    </member>
+    <member>
+      <velocity><x>0.69</x><y>1.46</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>32</x><y>19</y></from><to><x>33</x><y>30</y></to><thickness>2</thickness></line>
+          <line><from><x>33</x><y>30</y></from><to><x>23</x><y>33</y></to><thickness>2</thickness></line>
+          <line><from><x>23</x><y>33</y></from><to><x>14</x><y>34</y></to><thickness>2</thickness></line>
+          <line><from><x>14</x><y>34</y></from><to><x>5</x><y>29</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>29</y></from><to><x>8</x><y>19</y></to><thickness>2</thickness></line>
+          <line><from><x>8</x><y>19</y></from><to><x>7</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>9</y></from><to><x>16</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>7</y></from><to><x>23</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>23</x><y>9</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-0.7</x><y>-1.13</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>32</x><y>25</y></from><to><x>28</x><y>35</y></to><thickness>2</thickness></line>
+          <line><from><x>28</x><y>35</y></from><to><x>18</x><y>31</y></to><thickness>2</thickness></line>
+          <line><from><x>18</x><y>31</y></from><to><x>7</x><y>32</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>32</y></from><to><x>8</x><y>21</y></to><thickness>2</thickness></line>
+          <line><from><x>8</x><y>21</y></from><to><x>5</x><y>13</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>13</y></from><to><x>12</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>12</x><y>7</y></from><to><x>20</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>20</x><y>7</y></from><to><x>26</x><y>11</y></to><thickness>2</thickness></line>
+          <line><from><x>26</x><y>11</y></from><to><x>32</x><y>16</y></to><thickness>2</thickness></line>
+          <line><from><x>32</x><y>16</y></from><to><x>32</x><y>25</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>1.48</x><y>0.79</y></velocity>
+    </member>
+    <member>
+      <velocity><x>-0.68</x><y>-0.77</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>32</x><y>19</y></from><to><x>33</x><y>30</y></to><thickness>2</thickness></line>
+          <line><from><x>33</x><y>30</y></from><to><x>23</x><y>33</y></to><thickness>2</thickness></line>
+          <line><from><x>23</x><y>33</y></from><to><x>14</x><y>34</y></to><thickness>2</thickness></line>
+          <line><from><x>14</x><y>34</y></from><to><x>5</x><y>29</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>29</y></from><to><x>8</x><y>19</y></to><thickness>2</thickness></line>
+          <line><from><x>8</x><y>19</y></from><to><x>7</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>9</y></from><to><x>16</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>7</y></from><to><x>23</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>23</x><y>9</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>0.2</x><y>1.2</y></velocity>
+    </member>
+    </group>
+    <group name="smallrocks" class="rocks">
+      <sprite>
+        <line><from><x>16</x><y>11</y></from><to><x>16</x><y>17</y></to><thickness>2</thickness></line>
+        <line><from><x>16</x><y>17</y></from><to><x>10</x><y>17</y></to><thickness>2</thickness></line>
+        <line><from><x>10</x><y>17</y></from><to><x>6</x><y>15</y></to><thickness>2</thickness></line>
+        <line><from><x>6</x><y>15</y></from><to><x>3</x><y>10</y></to><thickness>2</thickness></line>
+        <line><from><x>3</x><y>10</y></from><to><x>7</x><y>6</y></to><thickness>2</thickness></line>
+        <line><from><x>7</x><y>6</y></from><to><x>12</x><y>3</y></to><thickness>2</thickness></line>
+        <line><from><x>12</x><y>3</y></from><to><x>18</x><y>5</y></to><thickness>2</thickness></line>
+        <line><from><x>18</x><y>5</y></from><to><x>16</x><y>11</y></to><thickness>2</thickness></line>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision edge="vertical">
+          <wrap />
+        </collision>
+        <collision class="shots">
+          <die />
+          <inc variable="ship.score">10</inc>
+        </collision>
+      </collisions>
+    <member>
+      <velocity><x>2.64</x><y>-0.44</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>12</y></from><to><x>6</x><y>8</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>8</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>5</y></from><to><x>16</x><y>10</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>10</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-1.11</x><y>1.05</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>18</y></from><to><x>9</x><y>16</y></to><thickness>2</thickness></line>
+          <line><from><x>9</x><y>16</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>14</y></from><to><x>6</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>9</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>3</y></from><to><x>13</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>13</x><y>5</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-2.41</x><y>0.66</y></velocity>
+    </member>
+    <member>
+      <velocity><x>2.09</x><y>0.58</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>12</y></from><to><x>6</x><y>8</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>8</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>5</y></from><to><x>16</x><y>10</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>10</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-0.39</x><y>-2.01</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>18</y></from><to><x>9</x><y>16</y></to><thickness>2</thickness></line>
+          <line><from><x>9</x><y>16</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>14</y></from><to><x>6</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>9</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>3</y></from><to><x>13</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>13</x><y>5</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>1.16</x><y>1.34</y></velocity>
+    </member>
+    <member>
+      <velocity><x>1.59</x><y>1.83</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>12</y></from><to><x>6</x><y>8</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>8</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>5</y></from><to><x>16</x><y>10</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>10</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-0.15</x><y>-1.59</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>18</y></from><to><x>9</x><y>16</y></to><thickness>2</thickness></line>
+          <line><from><x>9</x><y>16</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>14</y></from><to><x>6</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>9</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>3</y></from><to><x>13</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>13</x><y>5</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>2.57</x><y>0.16</y></velocity>
+    </member>
+    <member>
+      <velocity><x>-1.56</x><y>-0.07</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>12</y></from><to><x>6</x><y>8</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>8</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>5</y></from><to><x>16</x><y>10</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>10</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-1.76</x><y>1.93</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>18</y></from><to><x>9</x><y>16</y></to><thickness>2</thickness></line>
+          <line><from><x>9</x><y>16</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>14</y></from><to><x>6</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>9</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>3</y></from><to><x>13</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>13</x><y>5</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>1.9</x><y>-1.83</y></velocity>
+    </member>
+    <member>
+      <velocity><x>1.55</x><y>1.79</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+          <line><from><x>5</x><y>12</y></from><to><x>6</x><y>8</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>8</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>5</y></from><to><x>16</x><y>10</y></to><thickness>2</thickness></line>
+          <line><from><x>16</x><y>10</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-1.99</x><y>-1.04</y></velocity>
+    </member>
+    <member>
+        <sprite>
+          <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
+          <line><from><x>15</x><y>18</y></from><to><x>9</x><y>16</y></to><thickness>2</thickness></line>
+          <line><from><x>9</x><y>16</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>14</y></from><to><x>6</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>6</x><y>9</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
+          <line><from><x>7</x><y>3</y></from><to><x>13</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>13</x><y>5</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
+          <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
+        </sprite>
+      <velocity><x>-1.68</x><y>-0.48</y></velocity>
+    </member>
+    <member>
+      <velocity><x>1.96</x><y>-0.47</y></velocity>
+    </member>
+    </group>
+    <object name="scorelabel">
+      <sprite>
+        <text>
+          <content>SCORE</content>
+          <size>30</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>margin</x>
+        <y>margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="scorevalue">
+      <sprite>
+        <text>
+          <number>ship.score</number>
+          <size>30</size>
+          <color>color.orange</color>
+        </text>
+      </sprite>
+      <position>
+        <x>margin + scorelabel.width + 12</x>
+        <y>margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="liveslabel">
+      <sprite>
+        <text>
+          <content>SHIPS</content>
+          <size>30</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - livesvalue.width - liveslabel.width - margin - 12</x>
+        <y>margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="livesvalue">
+      <sprite>
+        <text>
+          <number>ship.lives</number>
+          <size>30</size>
+          <color>color.orange</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.right - livesvalue.width - margin</x>
+        <y>margin</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>ASTEROIDS</content>
+          <size>110</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - title.width / 2</x>
+        <y>window.height.center - title.height / 2 + (-130)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="help">
+      <sprite>
+        <text>
+          <content>break every rock; the big ones come apart</content>
+          <size>32</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - help.width / 2</x>
+        <y>window.height.center - help.height / 2 + (-20)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="keys">
+      <sprite>
+        <text>
+          <content>a and d or left and right turn, w or up thrusts, space fires</content>
+          <size>26</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - keys.width / 2</x>
+        <y>window.height.center - keys.height / 2 + (30)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="start">
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>48</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - start.width / 2</x>
+        <y>window.height.center - start.height / 2 + (110)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - paused.width / 2</x>
+        <y>window.height.center - paused.height / 2 + (0)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="wonmsg">
+      <sprite>
+        <text>
+          <content>ALL CLEAR</content>
+          <size>110</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - wonmsg.width / 2</x>
+        <y>window.height.center - wonmsg.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="overmsg">
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>128</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - overmsg.width / 2</x>
+        <y>window.height.center - overmsg.height / 2 + (-60)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="again">
+      <sprite>
+        <text>
+          <content>spacebar to play again</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - again.width / 2</x>
+        <y>window.height.center - again.height / 2 + (70)</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="help" />
+        <show object="keys" />
+        <show object="start" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <shows>
+        <show object="ship" />
+        <show object="shots" />
+        <show object="bigrocks" />
+        <show object="mediumrocks" />
+        <show object="smallrocks" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="liveslabel" />
+        <show object="livesvalue" />
+      </shows>
+      <inputs>
+        <input button="a">
+          <trigger object="ship" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="ship" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="ship" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="ship" action="right" />
+        </input>
+        <input button="w">
+          <trigger object="ship" action="thrust" />
+        </input>
+        <input button="up">
+          <trigger object="ship" action="thrust" />
+        </input>
+        <input button="space">
+          <trigger object="ship" action="fire" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="ship" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition class="rocks">
+          <remaining>0</remaining>
+          <push state="won" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+        <input button="escape">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="won">
+      <shows>
+        <show object="ship" />
+        <show object="shots" />
+        <show object="bigrocks" />
+        <show object="mediumrocks" />
+        <show object="smallrocks" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="liveslabel" />
+        <show object="livesvalue" />
+        <show object="wonmsg" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="bigrocks" />
+        <show object="mediumrocks" />
+        <show object="smallrocks" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="liveslabel" />
+        <show object="livesvalue" />
+        <show object="overmsg" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>

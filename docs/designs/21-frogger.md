@@ -32,11 +32,11 @@ A few reasons behind the choices worth keeping:
 
 ## Approximations
 
-Frogger as described here is the game without its extras: no diving turtles, crocodiles, snakes or flies; no timer; one point for each frog home, because `inc()` adds one (a way to name an amount is an idea); no speed-up between levels; a lost frog goes back to the start at once, with no animation; and a filled home can be entered again without harm (the frog under the pad is drawn there, and nothing tells the game it is taken). The lanes' hand-set spacing repeats every window width plus the object's size, so a lane is laid out with that in mind.
+Frogger as described here is the game without its extras: no diving turtles, crocodiles, snakes or flies; no timer; one point for each frog home, because `inc()` added one (an amount on `inc`/`dec` came later, with [Asteroids](41-asteroids.md)); no speed-up between levels; a lost frog goes back to the start at once, with no animation; and a filled home can be entered again without harm (the frog under the pad is drawn there, and nothing tells the game it is taken). The lanes' hand-set spacing repeats every window width plus the object's size, so a lane is laid out with that in mind.
 
 ## Ideas that came out of it
 
-- A way to name an amount for `inc`/`dec` (`inc('frog.score', 10)`), or a variable that changes by an expression.
+- A variable that changes by an expression. (An amount on `inc`/`dec` is built: `<inc variable="frog.score">10</inc>`, see [41](41-asteroids.md).)
 - A `<grid>` with a velocity per row, or a list of positions, for lanes. (Done another way: a `<group>` per lane, [29](29-groups.md).)
 - Show and hide as verbs, so a state or a rule can bring an object back without layering.
 - A rule that must be looked at every frame even when nothing moves (see the known weaknesses in [11](11-collision-detection-and-response.md)).

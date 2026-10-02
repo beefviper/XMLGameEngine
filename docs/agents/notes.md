@@ -47,13 +47,14 @@ The first version of these docs (the design write-ups, `sources.md` and the scan
 
 1. Decide design 04 (arithmetic as text vs elements); design 03 is done.
 2. Add an arcing jump (gravity now exists: an object's `<acceleration>`, see [design 34](../designs/34-lunar-lander.md); what is missing is grounded-versus-airborne and a jump impulse) ([design 13](../designs/13-verb-vocabulary.md), and the air-control refinement in [design 23](../designs/23-jump-and-air-control.md)) as the next test of whether the vocabulary approach extends. `hop` (Frogger) was the first: one instant step per press.
-3. The ideas listed at the end of [design 21](../designs/21-frogger.md): an amount for `inc`/`dec`, show and hide verbs, and per-row velocity in `<grid>` (the built `<group>` tag, [design 29](../designs/29-groups.md), covers lanes; its open points are nested groups, a bare `<x>` in a member and evenly spaced members).
+3. The ideas listed at the end of [design 21](../designs/21-frogger.md): show and hide verbs (an amount for `inc`/`dec` is built, see [design 41](../designs/41-asteroids.md)), and per-row velocity in `<grid>` (the built `<group>` tag, [design 29](../designs/29-groups.md), covers lanes; its open points are nested groups, a bare `<x>` in a member and evenly spaced members).
 4. Rename `collisionData.basic` (and the `basic=` label in `printGame()`) to something that says what it is.
 5. Sort out the file structure: `lib/source/` and `lib/include/` are flat and growing (25 and 26 files). Move them into folders by responsibility (parse and evaluate, engine loop, collision, window backends, XML backends); the Visual Studio filters are meant to be built from the directories, so this is only about the layout on disk. Not started; design 16 has the history of the earlier, over-layered attempt on the `rewrite` branch and why it was flattened.
-6. Watch Lunar Lander in each window backend once on Windows; on Linux it has been drawn by SFML 3, raylib 6.0 and OpenGL inside XGEGUI, and by raylib on its own (menu, play and pause screens). Rotation and scoring by fuel left are the obvious next steps for it.
+6. Watch Lunar Lander in each window backend once on Windows; on Linux it has been drawn by SFML 3, raylib 6.0 and OpenGL inside XGEGUI, and by raylib on its own (menu, play and pause screens). Scoring by fuel left is the obvious next step for it (rotation now exists: [design 41](../designs/41-asteroids.md)).
 7. Designs 22 to 28 are ideas from a second batch of conversations, not plans; nothing in them is built.
 8. A build that fetches both SFML and raylib (no vcpkg, no system packages) links them statically, and both carry `stb_image`: the link fails with duplicate `stbi_*` symbols on Linux. vcpkg's DLLs do not have the problem. Building one of the two as a shared library would avoid it; not done.
-9. XGEGUI's SDL2 on Linux/X11 draws nothing into the native surface under a virtual X server (see design 39); unverified on a real X server.
+9. Asteroids (Claude, Sonnet 5.5, 2026-10-01; [design 41](../designs/41-asteroids.md)) added headings, `<turn>`, `<thrust>`, `<drag>`, `<hidden>`, `<release>` and an amount on `<inc>`/`<dec>`. Its open points: shots that wrap and expire, a safe wait before the ship comes back, runtime spawning instead of pools, a flying saucer and more than one wave. Not yet watched in a window backend on Windows.
+10. XGEGUI's SDL2 on Linux/X11 draws nothing into the native surface under a virtual X server (see design 39); unverified on a real X server.
 
 ## Privacy rule for these docs
 

@@ -262,7 +262,7 @@ namespace xge
 		{
 			return name == "bounce" || name == "stick" || name == "wrap" || name == "carry" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
-				|| name == "accelerate" || name == "stop"
+				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger";
 		}
 
@@ -281,14 +281,30 @@ namespace xge
 			command.burn = node.getAttribute("burn");
 
 			const std::string& verb = command.verb;
-			if (verb == "inc" || verb == "dec") { requireAttribute(node, "variable", where); }
+			if (verb == "inc" || verb == "dec")
+			{
+				requireAttribute(node, "variable", where);
+
+				// The amount is optional: a bare <inc variable="..." /> is 1.
+				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
+				else { command.amount = RawValue::expression("1"); }
+			}
 			if (verb == "push") { requireAttribute(node, "state", where); }
 			if (verb == "fire") { requireAttribute(node, "object", where); }
 			if (verb == "trigger") { requireAttribute(node, "object", where); requireAttribute(node, "action", where); }
-			if (verb == "move" || verb == "hop" || verb == "accelerate")
+			if (verb == "move" || verb == "hop" || verb == "accelerate" || verb == "turn")
 			{
 				requireAttribute(node, "direction", where);
 				command.amount = readValue(node, where);
+			}
+			if (verb == "thrust") { command.amount = readValue(node, where); }
+			if (verb == "release")
+			{
+				requireAttribute(node, "object", where);
+
+				// How many is optional: a bare <release object="..." /> is one.
+				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
+				else { command.amount = RawValue::expression("1"); }
 			}
 
 			return command;
@@ -453,6 +469,20 @@ namespace xge
 				rawObject.hasAcceleration = true;
 				rawObject.rawAcceleration = readVector2(*acceleration, where);
 			}
+			if (auto heading = findChild(&object, "heading"))
+			{
+				rawObject.hasHeading = true;
+				rawObject.rawHeading = readValue(*heading, where);
+			}
+			if (auto drag = findChild(&object, "drag"))
+			{
+				rawObject.hasDrag = true;
+				rawObject.rawDrag = readValue(*drag, where);
+			}
+			if (auto hidden = findChild(&object, "hidden"))
+			{
+				if (readBool(*hidden, where)) { rawObject.isVisible = false; }
+			}
 			rawObject.rawCollisionData = readCollisions(*requireChild(object, "collisions", where), where);
 			readActions(object, where, rawObject.action);
 			readObjectVariables(object, where, rawObject.variable);
@@ -504,22 +534,25 @@ namespace xge
 			PartialVector2 position;
 			PartialVector2 velocity;
 			std::optional<RawCollisionData> collisions;
+			bool hidden = false;
 
 			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
 
-				if (tag == "sprite") { sprite = readSprite(*child, where); }
+				if (tag == "hidden") { hidden = readBool(*child, where); }
+				else if (tag == "sprite") { sprite = readSprite(*child, where); }
 				else if (tag == "position") { position = readPartialVector2(*child, where); }
 				else if (tag == "velocity") { velocity = readPartialVector2(*child, where); }
 				else if (tag == "collisions") { collisions = readCollisions(*child, where); }
 				else if (tag != "actions" && tag != "variables" && tag != "member")
 				{
-					fail(where, "unknown <" + tag + ">; expected <sprite>, <position>, <velocity>, <collisions>, <actions>, <variables> or <member>");
+					fail(where, "unknown <" + tag + ">; expected <sprite>, <position>, <velocity>, <hidden>, <collisions>, <actions>, <variables> or <member>");
 				}
 			}
 
 			RawObject shared;
+			shared.isVisible = !hidden;
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
 

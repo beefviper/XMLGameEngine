@@ -62,6 +62,10 @@ namespace xge
 		void queueHop(Object& object, Direction direction, float distance);
 		void stop(Object& object);
 		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
+		void applyActionTurn(Object& object, Direction direction, float rate);
+		void applyActionThrustAhead(Object& object, float amount, const std::string& burn);
+		void release(const Object& from, const std::string& target, int count);
+		void restart(Object& object);
 
 		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed);
 		void applyActionVelocity(Object& object, Direction direction, float step);

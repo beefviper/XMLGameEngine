@@ -181,6 +181,10 @@ namespace xge
 		RawVector2 rawVelocity;
 		RawVector2 rawAcceleration;  // only when hasAcceleration
 		bool hasAcceleration{ false };
+		RawValue rawHeading;         // only when hasHeading
+		bool hasHeading{ false };
+		RawValue rawDrag;            // only when hasDrag
+		bool hasDrag{ false };
 		RawCollisionData rawCollisionData;
 		std::map<std::string, std::vector<RawCommand>> action;
 		std::map<std::string, RawValue> variable;
@@ -234,6 +238,37 @@ namespace xge
 		// acceleration away and a reset brings it back.
 		Vector2f acceleration;
 		Vector2f accelerationOriginal;
+
+		// Which way the object faces: degrees clockwise from straight up, so 0
+		// is up, 90 is right, 180 is down; always from 0 up to (not including)
+		// 360. Only an object whose file gives it a <heading> turns (a <turn>
+		// in its actions), is pushed along it (a <thrust>) or fires along it
+		// (a <fire>). `headingOriginal` is how it started, which a reset puts
+		// back. A sprite of <line>s that has a heading is drawn ahead of time at
+		// headingSteps headings (Object::headingBitmaps), and `bitmap` is the
+		// one nearest the heading, so what is shown and what a pixel collision
+		// tests turn with it - see showHeading.
+		bool hasHeading{ false };
+		float heading{};
+		float headingOriginal{};
+		std::vector<std::shared_ptr<const Bitmap>> headingBitmaps;
+
+		// Held turning, by Direction (only Left and Right are used): degrees a
+		// frame, as activeThrust holds a thruster; and thrust held along the
+		// heading, with the variable it burns. See Game::applyAcceleration.
+		std::array<float, 4> activeTurn{};
+		float activeThrustAhead{};
+		std::string activeThrustAheadBurn;
+
+		// How much of its velocity an object keeps every frame is 1 minus this:
+		// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed
+		// a frame, so a thruster can no longer push it faster than a top speed.
+		float drag{};
+
+		// Points `bitmap` at the drawing nearest the current heading, and
+		// marks the visual to be rebuilt when that is a different one. Does
+		// nothing for an object with no headings drawn.
+		void showHeading();
 
 		// Per-direction thrust currently being held for this object, the way
 		// activeMoveStep holds a <move>'s step, and the variable (if any) each

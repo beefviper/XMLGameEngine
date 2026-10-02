@@ -6,7 +6,8 @@
 // Catch2 tests for the verbs Frogger added, on their own: how dec, hop, wrap
 // and carry parse and print, what a collision rule about another object can do
 // now (reset, inc, dec, move, carry), and the new named colors. The verbs at
-// work in a whole game are in test_frogger.cpp.
+// work in a whole game are in test_frogger.cpp. Also here: an amount on inc
+// and dec.
 
 #include "color.h"
 #include "command.h"
@@ -182,4 +183,48 @@ TEST_CASE("a hop and a carry are only for the frame they were asked for", "[new_
 	CHECK(pair.frog.position.y == 630.0f - 48.0f);
 	CHECK(pair.frog.hopPending.y == 0.0f);
 	CHECK_FALSE(pair.frog.hopped);
+}
+
+// ------------------------------------------------------------ inc and dec with an amount
+
+TEST_CASE("<inc> and <dec> change by 1 unless they are given an amount", "[new_verbs][command_parsing]")
+{
+	RawCommand bare = tag("inc");
+	bare.variable = "frog.score";
+
+	RawCommand five = tag("inc");
+	five.variable = "frog.score";
+	five.amount = RawValue::expression("5");
+
+	RawCommand three = tag("dec");
+	three.variable = "frog.lives";
+	three.amount = RawValue::expression("3");
+
+	const auto commands = makeCommands({ bare, five, three }, evaluatePlainNumber);
+
+	REQUIRE(commands.size() == 3);
+	CHECK(std::get<CmdIncrement>(commands[0]).amount == 1.0f);
+	CHECK(std::get<CmdIncrement>(commands[1]).amount == 5.0f);
+	CHECK(std::get<CmdDecrement>(commands[2]).amount == 3.0f);
+}
+
+TEST_CASE("an <inc> or <dec> amount is added to or taken off the variable", "[new_verbs][collision_rules]")
+{
+	Pair pair;
+
+	pair.executor.executeObjectCollision(Command{ CmdIncrement{ "frog.score", 5.0f } }, pair.frog, pair.hedge, Edge::Top);
+	pair.executor.executeObjectCollision(Command{ CmdIncrement{ "frog.score", 2.5f } }, pair.frog, pair.hedge, Edge::Top);
+	CHECK(pair.frog.variable["score"] == 7.5f);
+
+	pair.executor.executeObjectCollision(Command{ CmdDecrement{ "frog.lives", 2.0f } }, pair.frog, pair.hedge, Edge::Top);
+	CHECK(pair.frog.variable["lives"] == 1.0f);
+}
+
+TEST_CASE("an amount shows in how <inc> and <dec> print, and a plain one does not", "[new_verbs][command_parsing]")
+{
+	std::ostringstream out;
+	out << Command{ CmdIncrement{ "frog.score" } } << ' ' << Command{ CmdIncrement{ "frog.score", 10.0f } } << ' '
+		<< Command{ CmdDecrement{ "frog.lives", 2.0f } };
+
+	CHECK(out.str() == "inc(frog.score) inc(frog.score, 10) dec(frog.lives, 2)");
 }

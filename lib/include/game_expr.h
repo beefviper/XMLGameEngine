@@ -91,8 +91,14 @@ namespace xge
 		// drawing of lines is {"line", width, height} - the size of the picture
 		// - and the picture itself is handed back through `bitmap` when that is
 		// given (see Object::bitmap).
+		//
+		// `turned`, when given, is for an object that has a <heading>: a drawing
+		// of lines is then drawn at every heading (see rasterizeTurned), those
+		// pictures are handed back through it, `bitmap` is the one for heading 0,
+		// and the size in the params is the square all of them share.
 		std::vector<std::string> buildSpriteParams(const RawSprite& sprite, const std::string& where,
-			std::shared_ptr<const Bitmap>* bitmap = nullptr);
+			std::shared_ptr<const Bitmap>* bitmap = nullptr,
+			std::vector<std::shared_ptr<const Bitmap>>* turned = nullptr);
 		xge::GridData gridDataOf(const RawSprite& sprite, const std::string& where);
 
 		std::vector<Command> processCommands(const std::vector<RawCommand>& raw, const std::string& where);

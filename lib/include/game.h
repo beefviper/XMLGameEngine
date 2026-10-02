@@ -88,12 +88,12 @@ namespace xge
 		// Thin forwarders so CommandExecutor (which only sees Game through a few
 		// public entry points) can reach the xml subsystem without it being
 		// made public wholesale.
-		void incrementText(const std::string& objectName);
+		void incrementText(const std::string& objectName, float amount = 1.0f);
 
-		// <dec variable="owner.variable" />: takes 1 off, the same way, and refreshes the
+		// <dec variable="owner.variable" />: takes 1 (or the amount) off, the same way, and refreshes the
 		// same bound texts. A variable may go below zero; a <condition> with
 		// atmost= is what notices it has run out.
-		void decrementText(const std::string& objectName);
+		void decrementText(const std::string& objectName, float amount = 1.0f);
 
 		// <reset object="objectName" /> from a state's <input>/<condition> (see
 		// CmdResetObject): restores that object's position, velocity, and every

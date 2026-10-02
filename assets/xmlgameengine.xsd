@@ -44,6 +44,14 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <!-- The two ways an object with a heading can turn. -->
+  <xs:simpleType name="turnDirectionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="left" />
+      <xs:enumeration value="right" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="flipType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="horizontal" />
@@ -167,7 +175,11 @@
   </xs:complexType>
 
   <!-- Commands: what a collision rule, an object action, a key or a condition does. -->
-  <xs:complexType name="variableReferenceType">
+  <!-- inc and dec: which variable, and by how much (1 when there is nothing between the tags). -->
+  <xs:complexType name="variableReferenceType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
     <xs:attribute name="variable" type="xs:string" use="required" />
   </xs:complexType>
 
@@ -188,6 +200,30 @@
     <xs:attribute name="burn" type="xs:string" use="optional" />
   </xs:complexType>
 
+  <!-- turn: left or right, and how many degrees a frame while the key is held. -->
+  <xs:complexType name="turnType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="direction" type="turnDirectionType" use="required" />
+  </xs:complexType>
+
+  <!-- thrust: how much to add to the velocity each frame along the heading, and optionally the variable it burns. -->
+  <xs:complexType name="aheadType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="burn" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!-- release: the objects (a pool, a group) to put back in play, and how many (one if left out). -->
+  <xs:complexType name="releaseType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="object" type="xs:string" use="required" />
+  </xs:complexType>
+
   <xs:group name="command">
     <xs:choice>
       <xs:element name="bounce" type="emptyType" />
@@ -206,6 +242,9 @@
       <xs:element name="move" type="stepType" />
       <xs:element name="hop" type="stepType" />
       <xs:element name="accelerate" type="thrustType" />
+      <xs:element name="turn" type="turnType" />
+      <xs:element name="thrust" type="aheadType" />
+      <xs:element name="release" type="releaseType" />
       <xs:element name="push">
         <xs:complexType>
           <xs:attribute name="state" type="xs:string" use="required" />
@@ -328,6 +367,9 @@
       <xs:element name="position" type="vector2Type" />
       <xs:element name="velocity" type="vector2Type" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
+      <xs:element name="heading" type="valueType" minOccurs="0" />
+      <xs:element name="drag" type="valueType" minOccurs="0" />
+      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
@@ -360,6 +402,7 @@
       <xs:element name="sprite" type="spriteType" minOccurs="0" />
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />

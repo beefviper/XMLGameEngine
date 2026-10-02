@@ -512,7 +512,7 @@ TEST_CASE("every shipped game loads the same through all four XML libraries", "[
 	// the file, so the text-and-element reading of each one agrees. (The ball's
 	// velocity, and the fall speeds and heights of Kaboom's bombs and Astrosmash's rocks,
 	// are <random>s, so those objects are left out of the comparison.)
-	for (const char* file : { "games/pong.xml", "games/breakout.xml", "games/spaceinvaders.xml", "games/frogger.xml", "games/spacerace.xml", "games/kaboom.xml", "games/freeway.xml", "games/depthcharge.xml", "games/astrosmash.xml" })
+	for (const char* file : { "games/pong.xml", "games/breakout.xml", "games/spaceinvaders.xml", "games/frogger.xml", "games/spacerace.xml", "games/kaboom.xml", "games/freeway.xml", "games/depthcharge.xml", "games/astrosmash.xml", "games/asteroids.xml" })
 	{
 		DYNAMIC_SECTION(file)
 		{

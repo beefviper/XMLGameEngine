@@ -66,13 +66,14 @@ namespace xge
 		float step{};
 	};
 
-	// <inc variable="objectName" /> - increment a text object's own displayed number, OR
+	// <inc variable="objectName" /> - add 1 to (or, for <inc variable="...">5</inc>, add the amount to) a text object's own displayed number, OR
 	// <inc variable="ownerName.variableName" /> - increment that object's named <variable>
 	// and refresh every text object whose display is bound to it (see
 	// Game::incrementText and Object::boundVariableOwner/boundVariableName).
 	struct CmdIncrement
 	{
 		std::string target;
+		float amount{ 1.0f };
 	};
 
 	// <dec variable="ownerName.variableName" /> - the opposite of <inc />: takes 1 off that
@@ -81,6 +82,7 @@ namespace xge
 	struct CmdDecrement
 	{
 		std::string target;
+		float amount{ 1.0f };
 	};
 
 	// <hop direction="up">distance</hop> (also down, left, right) - only ever in an
@@ -107,6 +109,38 @@ namespace xge
 		Direction direction{};
 		float amount{};
 		std::string burn;
+	};
+
+	// <turn direction="left">3</turn> (or right) - only ever in an object's own
+	// <action>: while the key is held the object's heading changes by `rate`
+	// degrees every frame, counterclockwise for left and clockwise for right
+	// (see Object::heading, Game::applyAcceleration). Held like a <move>.
+	struct CmdTurn
+	{
+		Direction direction{};
+		float rate{};
+	};
+
+	// <thrust burn="fuel">0.12</thrust> - only ever in an object's own <action>:
+	// while the key is held the object's velocity changes by `amount` every
+	// frame along the way it is facing (its heading), where <accelerate> pushes
+	// along an axis. burn works as it does for <accelerate>.
+	struct CmdThrust
+	{
+		float amount{};
+		std::string burn;
+	};
+
+	// <release object="mediumrocks">2</release> - in a collision rule: puts
+	// `count` (1 if it is left out) of the objects of that name that are out of
+	// play - hidden at the start, or taken out with <die /> - back in play, in
+	// the middle of the object that is running the rule, at their own starting
+	// velocity. A group is how a pool of them is named: a rock that breaks
+	// into smaller rocks releases them from the pool of smaller rocks.
+	struct CmdRelease
+	{
+		std::string target;
+		int count{ 1 };
 	};
 
 	// <stop /> - in a collision rule: the object comes to rest where it is and
@@ -148,7 +182,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry,
-		CmdMove, CmdHop, CmdAccelerate, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject>;
 
 	// --- What the XML says, before any of it is evaluated.
@@ -197,13 +231,13 @@ namespace xge
 	struct RawCommand
 	{
 		std::string verb;
-		std::string object;    // reset, fire, trigger
+		std::string object;    // reset, fire, release, trigger
 		std::string variable;  // inc, dec
 		std::string state;     // push
 		std::string action;    // trigger
-		std::string direction; // move, hop, accelerate
-		std::string burn;      // accelerate
-		RawValue amount;       // move, hop, accelerate
+		std::string direction; // move, hop, accelerate, turn
+		std::string burn;      // accelerate, thrust
+		RawValue amount;       // move, hop, accelerate, turn, thrust, release (how many)
 	};
 
 	// Works out a RawValue to a number; makeCommand is given one so that it can

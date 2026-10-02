@@ -56,6 +56,21 @@ namespace xge
 	// thickness, and begins at 0, 0, so a sprite's own top left is where its
 	// lines' coordinates are measured from. Endpoints are rounded to whole
 	// pixels. Returns an empty bitmap for no lines. Coordinates must not be
-	// negative (std::invalid_argument).
-	Bitmap rasterizeLines(const std::vector<LineSegment>& lines);
+	// negative (std::invalid_argument). minWidth and minHeight make it at
+	// least that big (the lines stay where they are, the rest is transparent).
+	Bitmap rasterizeLines(const std::vector<LineSegment>& lines, int minWidth = 0, int minHeight = 0);
+
+	// How many headings a turning object's drawing is kept at: 72 is every five
+	// degrees. See rasterizeTurned.
+	inline constexpr int headingSteps = 72;
+
+	// The same drawing turned, about the middle of the box its line ends lie
+	// in, to `steps` evenly spaced headings, clockwise: bitmap 0 is the
+	// drawing as written (its "up"), bitmap steps / 4 has it turned a quarter
+	// of the way round, and so on. All of them are the same square size, big
+	// enough for the drawing at any heading, with the middle of the drawing at
+	// the middle of the square, so an object that turns stays where it is and
+	// keeps its size. Returns nothing for no lines, and throws
+	// std::invalid_argument for a negative coordinate as rasterizeLines does.
+	std::vector<Bitmap> rasterizeTurned(const std::vector<LineSegment>& lines, int steps = headingSteps);
 }

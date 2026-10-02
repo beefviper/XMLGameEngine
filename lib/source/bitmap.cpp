@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>
+#include <utility>
 
 namespace xge
 {
@@ -43,7 +44,7 @@ namespace xge
 		}
 	}
 
-	Bitmap rasterizeLines(const std::vector<LineSegment>& lines)
+	Bitmap rasterizeLines(const std::vector<LineSegment>& lines, int minWidth, int minHeight)
 	{
 		Bitmap bitmap;
 		if (lines.empty()) { return bitmap; }
@@ -66,9 +67,9 @@ namespace xge
 			}
 		}
 
-		bitmap.width = right;
-		bitmap.height = bottom;
-		bitmap.rgba.assign(static_cast<std::size_t>(right) * static_cast<std::size_t>(bottom) * 4, 0);
+		bitmap.width = std::max(right, minWidth);
+		bitmap.height = std::max(bottom, minHeight);
+		bitmap.rgba.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4, 0);
 
 		for (const LineSegment& line : lines)
 		{
@@ -98,5 +99,76 @@ namespace xge
 		}
 
 		return bitmap;
+	}
+
+	std::vector<Bitmap> rasterizeTurned(const std::vector<LineSegment>& lines, int steps)
+	{
+		std::vector<Bitmap> turned;
+		if (lines.empty() || steps < 1) { return turned; }
+
+		float left = lines.front().x1;
+		float right = left;
+		float top = lines.front().y1;
+		float bottom = top;
+		int thickest = 1;
+
+		for (const LineSegment& line : lines)
+		{
+			if (line.x1 < 0 || line.y1 < 0 || line.x2 < 0 || line.y2 < 0)
+			{
+				throw std::invalid_argument("a line has a negative coordinate; a sprite's lines are measured from its top left corner");
+			}
+
+			for (const float x : { line.x1, line.x2 }) { left = std::min(left, x); right = std::max(right, x); }
+			for (const float y : { line.y1, line.y2 }) { top = std::min(top, y); bottom = std::max(bottom, y); }
+			thickest = std::max(thickest, line.thickness);
+		}
+
+		const float middleX = (left + right) / 2.0f;
+		const float middleY = (top + bottom) / 2.0f;
+
+		// The furthest any end lies from the middle is how far the drawing can
+		// reach at any heading; a line is drawn by stamping a square of its
+		// thickness at each point, so that much more on the far side.
+		float reach = 0.0f;
+		for (const LineSegment& line : lines)
+		{
+			reach = std::max(reach, std::hypot(line.x1 - middleX, line.y1 - middleY));
+			reach = std::max(reach, std::hypot(line.x2 - middleX, line.y2 - middleY));
+		}
+
+		const int half = static_cast<int>(std::ceil(reach)) + thickest;
+		const int side = 2 * half + 1;
+		const float pi = 3.14159265358979323846f;
+
+		for (int step = 0; step < steps; ++step)
+		{
+			const float angle = 2.0f * pi * static_cast<float>(step) / static_cast<float>(steps);
+			const float c = std::cos(angle);
+			const float s = std::sin(angle);
+
+			// A clockwise turn on a screen, where y grows downward.
+			const auto place = [&](float x, float y)
+			{
+				const float dx = x - middleX;
+				const float dy = y - middleY;
+				return std::pair<float, float>{ static_cast<float>(half) + dx * c - dy * s, static_cast<float>(half) + dx * s + dy * c };
+			};
+
+			std::vector<LineSegment> turnedLines = lines;
+			for (LineSegment& line : turnedLines)
+			{
+				const auto from = place(line.x1, line.y1);
+				const auto to = place(line.x2, line.y2);
+				line.x1 = from.first;
+				line.y1 = from.second;
+				line.x2 = to.first;
+				line.y2 = to.second;
+			}
+
+			turned.push_back(rasterizeLines(turnedLines, side, side));
+		}
+
+		return turned;
 	}
 }

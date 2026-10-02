@@ -5,8 +5,26 @@
 
 #include "object.h"
 
+#include <cmath>
+
 namespace xge
 {
+	void Object::showHeading()
+	{
+		if (headingBitmaps.empty()) { return; }
+
+		const long steps = static_cast<long>(headingBitmaps.size());
+		long index = std::lround(heading / 360.0f * static_cast<float>(steps)) % steps;
+		if (index < 0) { index += steps; }
+
+		const auto& nearest = headingBitmaps[static_cast<std::size_t>(index)];
+		if (bitmap != nearest)
+		{
+			bitmap = nearest;
+			visualDirty = true;
+		}
+	}
+
 	std::ostream& operator<<(std::ostream& o, const WindowDesc& f)
 	{
 		o << "window: ";
@@ -78,6 +96,16 @@ namespace xge
 		if (f.acceleration.x != 0 || f.acceleration.y != 0)
 		{
 			o << "\tacc.x=" << f.acceleration.x << ", acc.y=" << f.acceleration.y << '\n';
+		}
+
+		if (f.hasHeading)
+		{
+			o << "\theading=" << f.heading << '\n';
+		}
+
+		if (f.drag != 0)
+		{
+			o << "\tdrag=" << f.drag << '\n';
 		}
 
 		if (f.sizeKnown)

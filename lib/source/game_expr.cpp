@@ -69,6 +69,13 @@ namespace xge
 					throw std::runtime_error(where + ": <fire> names '" + fire->projectileName + "', and there is no object of that name");
 				}
 			}
+			else if (const auto* release = std::get_if<CmdRelease>(&command))
+			{
+				if (!findObject(objects, release->target))
+				{
+					throw std::runtime_error(where + ": <release> names '" + release->target + "', and there is no object of that name");
+				}
+			}
 			else if (const auto* reset = std::get_if<CmdResetObject>(&command))
 			{
 				if (!findObject(objects, reset->target))
@@ -98,7 +105,20 @@ namespace xge
 			for (const auto& object : objects)
 			{
 				const std::string where = "object '" + object.baseName + "'";
-				for (const auto& [name, commands] : object.action) { checkAll(commands, where); }
+				for (const auto& [name, commands] : object.action)
+				{
+					checkAll(commands, where);
+
+					// Turning and thrust along the heading mean nothing to an object
+					// that does not face any way.
+					for (const auto& command : commands)
+					{
+						if ((std::holds_alternative<CmdTurn>(command) || std::holds_alternative<CmdThrust>(command)) && !object.hasHeading)
+						{
+							throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");
+						}
+					}
+				}
 				for (const auto& rule : object.collisionData.basic) { checkAll(rule.commands, where); }
 			}
 		}
@@ -163,6 +183,7 @@ namespace xge
 		// and the size drawn the same number.
 		std::map<std::string, std::vector<std::string>> firstPassSpriteParams;
 		std::map<std::string, std::shared_ptr<const Bitmap>> firstPassBitmaps;
+		std::map<std::string, std::vector<std::shared_ptr<const Bitmap>>> firstPassTurned;
 		for (auto& rawObject : rawObjects)
 		{
 			if (objectSizes.count(rawObject.name))
@@ -170,7 +191,8 @@ namespace xge
 				continue; // every cell of a <grid> comes from this one object
 			}
 
-			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name]);
+			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name],
+				rawObject.hasHeading ? &firstPassTurned[rawObject.name] : nullptr);
 			const ShapeKind kind = shapeKindFromTag(params.empty() ? std::string{} : params.at(0));
 			objectShapeKinds[rawObject.name] = kind;
 			objectSizes[rawObject.name] = measureShapeSize(params, kind);
@@ -249,6 +271,7 @@ namespace xge
 					object.spriteParams = tempSpriteParams;
 					object.shapeKind = rawObjectShapeKind;
 					object.bitmap = firstPassBitmaps[rawObject.name];
+					object.headingBitmaps = firstPassTurned[rawObject.name];
 
 					if (object.shapeKind == ShapeKind::Text && rawObject.sprite.textIsNumber
 						&& rawObject.sprite.number.kind == RawValue::Kind::Expression)
@@ -310,6 +333,26 @@ namespace xge
 						object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
 					}
 					object.accelerationOriginal = object.acceleration;
+
+					if (rawObject.hasHeading)
+					{
+						object.hasHeading = true;
+						float degrees = std::fmod(evaluate(rawObject.rawHeading, where), 360.0f);
+						if (degrees < 0.0f) { degrees += 360.0f; }
+						object.heading = degrees;
+					}
+					object.headingOriginal = object.heading;
+
+					if (rawObject.hasDrag)
+					{
+						object.drag = evaluate(rawObject.rawDrag, where);
+						if (object.drag < 0.0f || object.drag >= 1.0f)
+						{
+							throw std::runtime_error(where + ": <drag> is " + std::to_string(object.drag) + "; expected 0 up to (not including) 1");
+						}
+					}
+
+					object.showHeading();
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
 					object.isVisibleOriginal = object.isVisible;
@@ -456,7 +499,7 @@ namespace xge
 	}
 
 	std::vector<std::string> game_expr::buildSpriteParams(const RawSprite& sprite, const std::string& where,
-		std::shared_ptr<const Bitmap>* bitmap)
+		std::shared_ptr<const Bitmap>* bitmap, std::vector<std::shared_ptr<const Bitmap>>* turned)
 	{
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		std::vector<std::string> params;
@@ -483,7 +526,17 @@ namespace xge
 			std::shared_ptr<const Bitmap> drawn;
 			try
 			{
-				drawn = std::make_shared<const Bitmap>(rasterizeLines(segments));
+				if (turned)
+				{
+					// An object that faces somewhere: the drawing at every heading,
+					// all one size, and the one for heading 0 is what it starts as.
+					for (Bitmap& picture : rasterizeTurned(segments))
+					{
+						turned->push_back(std::make_shared<const Bitmap>(std::move(picture)));
+					}
+					if (!turned->empty()) { drawn = turned->front(); }
+				}
+				if (!drawn) { drawn = std::make_shared<const Bitmap>(rasterizeLines(segments)); }
 			}
 			catch (const std::invalid_argument& error)
 			{

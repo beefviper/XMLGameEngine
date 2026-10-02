@@ -7,6 +7,8 @@
 
 #include "game.h"
 
+#include <cmath>
+
 namespace xge
 {
 	void CommandExecutor::executeScreenEdgeCollision(const Command& command, Object& object, Edge edge)
@@ -14,13 +16,14 @@ namespace xge
 		std::visit(overload{
 			[&](const CmdBounce&) { bounceScreenEdge(object, edge); },
 			[&](const CmdStick&) { stick(object, edge); },
-			[&](const CmdReset&) { object.position = object.positionOriginal; },
+			[&](const CmdReset&) { restart(object); },
 			[&](const CmdDie&) { die(object); },
 			[&](const CmdStop&) { stop(object); },
 			[&](const CmdWrap&) { wrap(object, edge); },
+			[&](const CmdRelease& r) { release(object, r.target, r.count); },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
-			[&](const CmdIncrement& i) { game.incrementText(i.target); },
-			[&](const CmdDecrement& d) { game.decrementText(d.target); },
+			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
+			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
 			                      appear in a collisionData list, and carry() is about
 			                      another object, which a screen edge is not; ignore
@@ -34,10 +37,11 @@ namespace xge
 			[&](const CmdBounce&) { bounceOffEdge(object, edge); },
 			[&](const CmdDie&) { die(object); },
 			[&](const CmdStop&) { stop(object); },
-			[&](const CmdReset&) { object.position = object.positionOriginal; },
+			[&](const CmdReset&) { restart(object); },
+			[&](const CmdRelease& r) { release(object, r.target, r.count); },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
-			[&](const CmdIncrement& i) { game.incrementText(i.target); },
-			[&](const CmdDecrement& d) { game.decrementText(d.target); },
+			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
+			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdCarry&) { carry(object, other); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
@@ -88,6 +92,14 @@ namespace xge
 			{
 				applyActionThrust(object, thrust->direction, thrust->amount, thrust->burn);
 			}
+			else if (const auto* turn = std::get_if<CmdTurn>(&actionCommand))
+			{
+				applyActionTurn(object, turn->direction, turn->rate);
+			}
+			else if (const auto* ahead = std::get_if<CmdThrust>(&actionCommand))
+			{
+				applyActionThrustAhead(object, ahead->amount, ahead->burn);
+			}
 		}
 
 		return true;
@@ -113,6 +125,57 @@ namespace xge
 		object.activeMoveStep = {};
 		object.activeThrust = {};
 		object.activeThrustBurn = {};
+		object.activeTurn = {};
+		object.activeThrustAhead = 0.0f;
+		object.activeThrustAheadBurn.clear();
+	}
+
+	// Back where it started, facing the way it started. (Not its velocity:
+	// that is what <stop /> is for, and a bounce off an edge keeps it.)
+	void CommandExecutor::restart(Object& object)
+	{
+		object.position = object.positionOriginal;
+		object.heading = object.headingOriginal;
+		object.showHeading();
+	}
+
+	namespace
+	{
+		bool isNamed(const Object& object, const std::string& name)
+		{
+			return object.name == name || object.baseName == name || (!object.groupName.empty() && object.groupName == name);
+		}
+
+		// What an object measures: what the window measured, or, before there
+		// is one, what its sprite implies.
+		Vector2f sizeOf(const Object& object)
+		{
+			if (object.size.x != 0.0f || object.size.y != 0.0f) { return object.size; }
+			return measureShapeSize(object.spriteParams, object.shapeKind);
+		}
+	}
+
+	// Puts `count` of the objects called `target` that are out of play back in,
+	// each centred on `from` and at its own starting velocity. A pool of them is
+	// a <group>: the first ones found that are not in play are the ones used, and
+	// when there are fewer than asked for the rest are simply not released.
+	void CommandExecutor::release(const Object& from, const std::string& target, int count)
+	{
+		const Vector2f middle = from.position + sizeOf(from) * 0.5f;
+		int released = 0;
+
+		for (auto& candidate : game.getCurrentObjects())
+		{
+			if (released >= count) { break; }
+			if (candidate.isVisible || &candidate == &from || !isNamed(candidate, target)) { continue; }
+
+			candidate.position = middle - sizeOf(candidate) * 0.5f;
+			candidate.velocity = candidate.velocityOriginal;
+			candidate.carry = {};
+			candidate.isVisible = true;
+			candidate.collisionData.enabled = true;
+			++released;
+		}
 	}
 
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge)
@@ -277,6 +340,9 @@ namespace xge
 				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); } },
 				// Thrust is held like a move: on while the key is down.
 				[&](const CmdAccelerate& a) { applyActionThrust(object, a.direction, keyPressed ? a.amount : 0.0f, a.burn); },
+				// So are a turn and a thrust along the heading.
+				[&](const CmdTurn& t) { applyActionTurn(object, t.direction, keyPressed ? t.rate : 0.0f); },
+				[&](const CmdThrust& t) { applyActionThrustAhead(object, keyPressed ? t.amount : 0.0f, t.burn); },
 				[&](const CmdFire& f) { if (keyPressed) { spawnProjectile(object, f.projectileName); } },
 				[&](const auto&) { /* an object's own <action> list only ever produces
 				                      move/hop/accelerate/fire commands today; ignore anything else. */ }
@@ -311,17 +377,59 @@ namespace xge
 		object.activeThrustBurn[index] = amount == 0.0f ? std::string{} : burn;
 	}
 
+	// Records that a turn is now held (rate 0 = just released); Game::
+	// applyAcceleration turns the object once a frame while it is.
+	void CommandExecutor::applyActionTurn(Object& object, Direction direction, float rate)
+	{
+		object.activeTurn[static_cast<std::size_t>(direction)] = rate;
+	}
+
+	// Records that thrust along the heading is now held (amount 0 = just
+	// released), and the variable it burns.
+	void CommandExecutor::applyActionThrustAhead(Object& object, float amount, const std::string& burn)
+	{
+		object.activeThrustAhead = amount;
+		object.activeThrustAheadBurn = amount == 0.0f ? std::string{} : burn;
+	}
+
+	// Launches a projectile that is not already in flight. The name can be a
+	// pool of them (a <group>): the first one not in flight is used, and with
+	// all of them in flight nothing happens. From a shooter with a heading the
+	// shot leaves its nose the way it faces, at the projectile's own speed;
+	// from any other it leaves the top centre, at the projectile's own
+	// velocity.
 	void CommandExecutor::spawnProjectile(Object& shooter, const std::string& projectileName)
 	{
-		Object& projectile = game.getObject(projectileName);
-
-		if (!projectile.collisionData.enabled)
+		Object* projectile = nullptr;
+		for (auto& candidate : game.getCurrentObjects())
 		{
-			projectile.position.x = shooter.position.x + shooter.size.x / 2;
-			projectile.position.y = shooter.position.y;
-			projectile.velocity = projectile.velocityOriginal;
-			projectile.isVisible = true;
-			projectile.collisionData.enabled = true;
+			if (isNamed(candidate, projectileName) && !candidate.collisionData.enabled)
+			{
+				projectile = &candidate;
+				break;
+			}
 		}
+		if (!projectile) { return; }
+
+		if (shooter.hasHeading)
+		{
+			const float radians = shooter.heading * 3.14159265358979323846f / 180.0f;
+			const Vector2f ahead{ std::sin(radians), -std::cos(radians) };
+			const Vector2f size = sizeOf(shooter);
+			const Vector2f centre = shooter.position + size * 0.5f;
+			const float speed = std::hypot(projectile->velocityOriginal.x, projectile->velocityOriginal.y);
+
+			projectile->position = centre + ahead * (std::max(size.x, size.y) / 2.0f) - sizeOf(*projectile) * 0.5f;
+			projectile->velocity = ahead * speed;
+		}
+		else
+		{
+			projectile->position.x = shooter.position.x + shooter.size.x / 2;
+			projectile->position.y = shooter.position.y;
+			projectile->velocity = projectile->velocityOriginal;
+		}
+
+		projectile->isVisible = true;
+		projectile->collisionData.enabled = true;
 	}
 }

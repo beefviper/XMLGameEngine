@@ -271,14 +271,14 @@ namespace xge
 		}
 	}
 
-	void Game::incrementText(const std::string& target)
+	void Game::incrementText(const std::string& target, float amount)
 	{
-		changeVariable(target, 1.0f, "inc");
+		changeVariable(target, amount, "inc");
 	}
 
-	void Game::decrementText(const std::string& target)
+	void Game::decrementText(const std::string& target, float amount)
 	{
-		changeVariable(target, -1.0f, "dec");
+		changeVariable(target, -amount, "dec");
 	}
 
 	void Game::changeVariable(const std::string& target, float delta, const char* verb)
@@ -389,6 +389,13 @@ namespace xge
 			object.acceleration = object.accelerationOriginal;
 			object.activeThrust = {};
 			object.activeThrustBurn = {};
+
+			// Facing the way it started, and no turn or thrust along it still held.
+			object.heading = object.headingOriginal;
+			object.activeTurn = {};
+			object.activeThrustAhead = 0.0f;
+			object.activeThrustAheadBurn.clear();
+			object.showHeading();
 
 			// Nor should a reset object carry on being carried, or jump.
 			object.carry = {};
@@ -623,18 +630,24 @@ namespace xge
 
 			Vector2f change = object.acceleration;
 
+			// Burns one unit of `burn` (an object's own variable), if it names
+			// one, and says whether there was any left to burn. A thruster with
+			// no fuel does nothing.
+			const auto burnFuel = [&](const std::string& burn, const char* verb)
+			{
+				if (burn.empty()) { return true; }
+				const auto fuel = object.variable.find(burn);
+				if (fuel == object.variable.end() || fuel->second <= 0.0f) { return false; }
+				changeVariable(object.name + "." + burn, -1.0f, verb);
+				return true;
+			};
+
 			for (std::size_t i = 0; i < object.activeThrust.size(); ++i)
 			{
 				const float amount = object.activeThrust[i];
 				if (amount == 0.0f) { continue; }
 
-				const std::string& burn = object.activeThrustBurn[i];
-				if (!burn.empty())
-				{
-					const auto fuel = object.variable.find(burn);
-					if (fuel == object.variable.end() || fuel->second <= 0.0f) { continue; }
-					changeVariable(object.name + "." + burn, -1.0f, "accelerate");
-				}
+				if (!burnFuel(object.activeThrustBurn[i], "accelerate")) { continue; }
 
 				switch (static_cast<Direction>(i))
 				{
@@ -645,7 +658,34 @@ namespace xge
 				}
 			}
 
+			// Turning, and thrust along the way the object then faces. A heading
+			// is degrees clockwise from straight up.
+			if (object.hasHeading)
+			{
+				const float turn = object.activeTurn[static_cast<std::size_t>(Direction::Right)]
+					- object.activeTurn[static_cast<std::size_t>(Direction::Left)];
+				if (turn != 0.0f)
+				{
+					object.heading = std::fmod(object.heading + turn, 360.0f);
+					if (object.heading < 0.0f) { object.heading += 360.0f; }
+					object.showHeading();
+				}
+
+				if (object.activeThrustAhead != 0.0f && burnFuel(object.activeThrustAheadBurn, "thrust"))
+				{
+					const float radians = object.heading * 3.14159265358979323846f / 180.0f;
+					change.x += std::sin(radians) * object.activeThrustAhead;
+					change.y -= std::cos(radians) * object.activeThrustAhead;
+				}
+			}
+
 			object.velocity += change;
+
+			// Drag: what is left of the speed after this frame.
+			if (object.drag != 0.0f)
+			{
+				object.velocity *= 1.0f - object.drag;
+			}
 		}
 	}
 
