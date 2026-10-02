@@ -46,6 +46,8 @@ The rule now: every call into a library's window (making it, each frame, freeing
 
 A second, smaller fault went with it. `NativeSurface` asked Qt for a platform window, and Qt then gave one to every widget above it and beside them (the splitter, the inspector, ...). A main window drawn with OpenGL cannot make its context current on those plain windows (Qt warned *Failed to make context current. Expect bad things to happen.*), and drew into whatever context was current instead. The surface now sets `Qt::WA_DontCreateNativeAncestors` and the application `Qt::AA_DontCreateNativeWidgetSiblings`, so only the surface itself has a platform window.
 
+The crash the author actually saw on switching to raylib had a third cause. `Engine::replaceWindow` destroys the old window before it makes the new one, and making a back-buffer window first shows the stage's picture page. Showing it moves the keyboard focus, and an inspector text box that loses the focus reports a finished edit, so the inspector redrew the game in the middle of the switch, with no window: a null pointer. Text boxes now only count a real change, and `GameSession` ignores step, reset and redraw while `load()` or `applyOptions()` is under way. A test that drives `MainWindow::showOptions()` through the real dialog found it; the earlier tests called `applyOptions()` directly and missed it.
+
 ## Approximations
 
 - **Run on Linux only by the agent.** The SFML3 and SDL2 paths into a Qt-made HWND and raylib's and GLFW's hidden windows are the parts most likely to differ on Windows. The Qt renderer is always there to switch back to.
