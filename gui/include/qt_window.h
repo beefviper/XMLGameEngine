@@ -24,8 +24,7 @@ namespace xge
 	// already part of the application - so it is built in XGEGUI, not in
 	// XGELIB, and the engine library needs no Qt. It needs no other library
 	// either, so it is also what the application falls back to when the one
-	// chosen will not start (the library backends are shown through
-	// EmbeddedWindow, embedded_window.h).
+	// chosen will not start.
 	class QtWindow : public Window
 	{
 	public:

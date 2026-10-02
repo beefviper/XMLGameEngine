@@ -5,10 +5,12 @@
 
 #include "game_session.h"
 
-#include "embedded_window.h"
 #include "game_stage.h"
 #include "qt_window.h"
 
+#include <QPoint>
+
+#include <cmath>
 #include <exception>
 #include <functional>
 #include <utility>
@@ -44,6 +46,7 @@ namespace xge
 		timer.setTimerType(Qt::PreciseTimer);
 		timer.setInterval(2);
 		connect(&timer, &QTimer::timeout, this, &GameSession::advance);
+		clock.start();
 	}
 
 	GameSession::~GameSession()
@@ -53,6 +56,7 @@ namespace xge
 
 	void GameSession::unload()
 	{
+		rememberPosition();
 		timer.stop();
 		playing = false;
 
@@ -67,6 +71,7 @@ namespace xge
 		Changing guard(changing);
 
 		emit aboutToUnload();
+		rememberPosition();
 		engine.reset();
 		game.reset();
 		frameCount = 0;
@@ -77,7 +82,6 @@ namespace xge
 			game = std::make_unique<Game>(file.toStdString(), currentOptions.xml);
 
 			const WindowDesc& desc = game->getWindowDesc();
-			stage.setGameSize(static_cast<int>(desc.width), static_cast<int>(desc.height));
 
 			engine = std::make_unique<Engine>(*game, makeWindow(desc));
 
@@ -92,12 +96,14 @@ namespace xge
 			lastError = QString::fromUtf8(e.what());
 			engine.reset();
 			game.reset();
+			updateTimer();
 			emit loaded();
 			return false;
 		}
 
 		currentFile = file;
 
+		updateTimer();
 		emit loaded();
 
 		if (startPlaying)
@@ -130,6 +136,7 @@ namespace xge
 
 		pause();
 		lastError.clear();
+		rememberPosition();
 
 		try
 		{
@@ -153,6 +160,7 @@ namespace xge
 			}
 		}
 
+		updateTimer();
 		stage.focusGame();
 		emit frameAdvanced();
 		return true;
@@ -162,9 +170,21 @@ namespace xge
 	{
 		if (currentOptions.video != VideoBackend::Qt)
 		{
+			// A library draws in a window of its own, and the Qt renderer's
+			// picture is not wanted while it does.
+			stage.hideView();
+
 			try
 			{
-				return makeLibraryWindow(desc, currentOptions.video);
+				auto library = WindowFactory::create(desc, libraryBackend(currentOptions.video));
+
+				if (const auto position = stage.gameWindowPosition())
+				{
+					library->setPosition(position->x(), position->y());
+				}
+
+				libraryWindow = true;
+				return library;
 			}
 			catch (const std::exception& e)
 			{
@@ -173,32 +193,20 @@ namespace xge
 			}
 		}
 
-		stage.showView();
-		return std::make_unique<QtWindow>(stage.view());
+		libraryWindow = false;
+		return std::make_unique<QtWindow>(
+			stage.showView(static_cast<int>(desc.width), static_cast<int>(desc.height), QString::fromStdString(desc.name)));
 	}
 
-	std::unique_ptr<Window> GameSession::makeLibraryWindow(const WindowDesc& desc, VideoBackend video)
+	void GameSession::rememberPosition()
 	{
-		const WindowBackend backend = libraryBackend(video);
-
-		// A library that can draw into a window of someone else's is given
-		// one; one that cannot draws to a back buffer, and the stage shows what
-		// it drew.
-		WindowTarget target;
-		if (WindowFactory::embedding(backend) == Embedding::NativeWindow)
+		if (!libraryWindow || !engine || !engine->isWindowOpen())
 		{
-			target.kind = WindowTarget::Kind::NativeWindow;
-			target.nativeHandle = stage.showFreshSurface();
-		}
-		else
-		{
-			target.kind = WindowTarget::Kind::BackBuffer;
-			stage.showView();
+			return;
 		}
 
-		// Starting the library makes its context current; Qt's is put back.
-		QtContextKeeper keeper;
-		return std::make_unique<EmbeddedWindow>(WindowFactory::create(desc, backend, target), stage);
+		const auto [x, y] = engine->currentWindow()->position();
+		stage.setGameWindowPosition(QPoint(x, y));
 	}
 
 	void GameSession::play()
@@ -209,10 +217,11 @@ namespace xge
 		}
 
 		playing = true;
-		clock.start();
-		lastNs = 0;
+		lastNs = clock.nsecsElapsed();
+		fpsStartNs = lastNs;
+		fpsFrames = 0;
 		owedNs = 0;
-		timer.start();
+		updateTimer();
 		emit playingChanged(true);
 	}
 
@@ -224,8 +233,25 @@ namespace xge
 		}
 
 		playing = false;
-		timer.stop();
+		framesPerSecond = 0;
+		updateTimer();
 		emit playingChanged(false);
+	}
+
+	void GameSession::updateTimer()
+	{
+		const bool needed = engine && (playing || currentOptions.video != VideoBackend::Qt);
+
+		if (needed && !timer.isActive())
+		{
+			lastNs = clock.nsecsElapsed();
+			owedNs = 0;
+			timer.start();
+		}
+		else if (!needed)
+		{
+			timer.stop();
+		}
 	}
 
 	void GameSession::togglePlay()
@@ -286,6 +312,24 @@ namespace xge
 
 	void GameSession::advance()
 	{
+		if (!engine || changing)
+		{
+			return;
+		}
+
+		if (!engine->isWindowOpen())
+		{
+			// The user closed the game's window.
+			pause();
+			timer.stop();
+			emit windowClosed();
+			return;
+		}
+
+		// Kept up to date while it can be asked: once the user closes the
+		// window it can't be.
+		rememberPosition();
+
 		const qint64 now = clock.nsecsElapsed();
 		owedNs += now - lastNs;
 		lastNs = now;
@@ -298,7 +342,7 @@ namespace xge
 			owedNs = limit;
 		}
 
-		if (owedNs < framePeriodNs || !engine || changing)
+		if (owedNs < framePeriodNs)
 		{
 			return;
 		}
@@ -307,9 +351,18 @@ namespace xge
 		{
 			while (owedNs >= framePeriodNs)
 			{
-				engine->step();
+				if (playing)
+				{
+					engine->step();
+					++frameCount;
+					++fpsFrames;
+				}
+				else
+				{
+					engine->pump();
+				}
+
 				owedNs -= framePeriodNs;
-				++frameCount;
 			}
 
 			// Only the last of them is ever on the screen: drawn once.
@@ -321,7 +374,27 @@ namespace xge
 			return;
 		}
 
-		emit frameAdvanced();
+		if (playing)
+		{
+			if (const qint64 span = now - fpsStartNs; span >= 500'000'000)
+			{
+				// An exponential moving average evens out the ripple of a
+				// half second's count (a frame more or less is 0.2 to 0.3 of
+				// a frame a second); a measure that is far from the average
+				// is a real change, and replaces it at once.
+				const double measured = static_cast<double>(fpsFrames) * 1e9 / static_cast<double>(span);
+				constexpr double kSnap = 1.0;
+				constexpr double kWeight = 0.25;
+
+				framesPerSecond = (framesPerSecond > 0 && std::abs(measured - framesPerSecond) < kSnap)
+					? framesPerSecond + kWeight * (measured - framesPerSecond)
+					: measured;
+				fpsStartNs = now;
+				fpsFrames = 0;
+			}
+
+			emit frameAdvanced();
+		}
 	}
 
 	void GameSession::tick()
@@ -349,6 +422,7 @@ namespace xge
 	void GameSession::fail(const QString& message)
 	{
 		pause();
+		timer.stop();
 		lastError = message;
 		emit failed(message);
 	}

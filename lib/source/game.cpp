@@ -442,8 +442,12 @@ namespace xge
 			const auto valueIt = object->variable.find(other.boundVariableName);
 			if (valueIt != object->variable.end())
 			{
-				other.spriteParams.at(1) = formatDisplayNumber(valueIt->second);
-				other.visualDirty = true;
+				const std::string text = formatDisplayNumber(valueIt->second);
+				if (other.spriteParams.at(1) != text)
+				{
+					other.spriteParams.at(1) = text;
+					other.visualDirty = true;
+				}
 			}
 		}
 	}
@@ -475,8 +479,12 @@ namespace xge
 			const auto valueIt = owner->variable.find(object.boundVariableName);
 			if (valueIt != owner->variable.end())
 			{
-				object.spriteParams.at(1) = formatDisplayNumber(valueIt->second);
-				object.visualDirty = true;
+				const std::string text = formatDisplayNumber(valueIt->second);
+				if (object.spriteParams.at(1) != text)
+				{
+					object.spriteParams.at(1) = text;
+					object.visualDirty = true;
+				}
 			}
 		}
 

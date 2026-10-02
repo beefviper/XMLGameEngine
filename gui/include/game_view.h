@@ -5,16 +5,10 @@
 
 #pragma once
 
-#include "bitmap.h"
 #include "key_queue.h"
 
 #include <QImage>
-
-#ifdef XGE_QT_OPENGL
-#include <QOpenGLWidget>
-#else
 #include <QWidget>
-#endif
 
 #include <utility>
 #include <vector>
@@ -23,22 +17,15 @@ class QPainter;
 
 namespace xge
 {
-#ifdef XGE_QT_OPENGL
-	// A QOpenGLWidget swaps its picture onto the screen on the display's
-	// vertical blank, which is what stops a moving picture tearing; a plain
-	// QWidget is copied to the window whenever it is ready.
-	using GameViewBase = QOpenGLWidget;
-#else
-	using GameViewBase = QWidget;
-#endif
-
-	// A widget that shows a picture the program drew itself: the picture the
-	// QtWindow backend (qt_window.h) draws a frame into, or the pixels a window
-	// library drew to a back buffer (showFrame), shown as large as fits without
-	// changing its proportions. It owns no game logic. The engine draws into
-	// frame() (or a library's frame is handed to showFrame()), calls present()
-	// when a frame is finished, and the keys go to the GameStage's KeyQueue.
-	class GameView : public GameViewBase
+	// A widget that shows the picture the QtWindow backend (qt_window.h) draws
+	// a frame into, as large as fits without changing its proportions. It owns
+	// no game logic. The engine draws into frame() and calls present() when a
+	// frame is finished, and the keys go to the GameStage's KeyQueue.
+	//
+	// An ordinary widget, drawn by Qt's raster engine: nothing in the
+	// application uses OpenGL through Qt, so a video library's OpenGL context
+	// (SDL2, raylib, GLFW) is the only one on the thread.
+	class GameView : public QWidget
 	{
 	public:
 		GameView(KeyQueue& keys, QWidget* parent = nullptr);
@@ -56,20 +43,11 @@ namespace xge
 		// A frame is finished: show it.
 		void present();
 
-		// Takes a finished frame from a window library that drew it off screen
-		// (opaque pixels, red, green, blue, alpha, row by row from the top) and
-		// shows it.
-		void showFrame(const Bitmap& bitmap);
-
 		// The keys that changed since the last call, as {key, pressed}.
 		std::vector<std::pair<KeyCode, bool>> takeKeyEvents();
 
 	protected:
-#ifdef XGE_QT_OPENGL
-		void paintGL() override;
-#else
 		void paintEvent(QPaintEvent* event) override;
-#endif
 		void keyPressEvent(QKeyEvent* event) override;
 		void keyReleaseEvent(QKeyEvent* event) override;
 		void mousePressEvent(QMouseEvent* event) override;
@@ -81,7 +59,5 @@ namespace xge
 	private:
 		KeyQueue& keys;
 		QImage backBuffer;
-
-		void paintFrame(QPainter& painter);
 	};
 }

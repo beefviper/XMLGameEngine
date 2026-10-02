@@ -122,18 +122,6 @@ find_package(Qt6 COMPONENTS Widgets QUIET)
 
 if (Qt6_FOUND)
 	message(STATUS "Qt6 found: ${Qt6_DIR}")
-
-	# Optional: with OpenGL the game view is a QOpenGLWidget, which presents
-	# each frame on the display's vertical blank (no tearing). Without it the
-	# view is an ordinary widget and the program works the same, but can tear.
-	# With vcpkg: vcpkg install qtbase[widgets,opengl]
-	find_package(Qt6OpenGLWidgets QUIET)
-
-	if (Qt6OpenGLWidgets_FOUND)
-		message(STATUS "Qt6 OpenGLWidgets found: the game view will wait for the display's refresh.")
-	else()
-		message(STATUS "Qt6 OpenGLWidgets not found: the game view will not wait for the display's refresh (frames can tear).")
-	endif()
 else()
 	message(STATUS "Qt6 not found, XGEGUI will not be built (install qtbase with the widgets feature).")
 endif()

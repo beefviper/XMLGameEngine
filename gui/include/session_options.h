@@ -10,27 +10,29 @@
 
 #include <QString>
 
+#include <optional>
 #include <vector>
 
 namespace xge
 {
-	// How the game is drawn: with one of the library's window backends, or with
-	// the application's own renderer (QtWindow, qt_window.h), which draws with
-	// Qt and needs no window library.
+	// How the game is drawn: with the application's own renderer (QtWindow,
+	// qt_window.h), which draws with Qt in the main window and needs no window
+	// library, or with one of the library's window backends, each in a window of
+	// its own.
 	enum class VideoBackend
 	{
+		Qt,
 		SFML3,
 		SDL2,
 		Raylib,
-		OpenGL,
-		Qt
+		OpenGL
 	};
 
-	// What the Options dialog chooses. Like the command line, SFML3 and Xerces
-	// are what is used unless something else is asked for.
+	// What the Options dialog chooses. The Qt renderer and Xerces are what is
+	// used unless something else is asked for.
 	struct SessionOptions
 	{
-		VideoBackend video{ VideoBackend::SFML3 };
+		VideoBackend video{ VideoBackend::Qt };
 		XmlBackend xml{ XmlBackend::Xerces };
 
 		bool operator==(const SessionOptions& other) const noexcept
@@ -46,6 +48,14 @@ namespace xge
 	// The name shown for a choice.
 	QString videoBackendTitle(VideoBackend backend);
 	QString xmlBackendTitle(XmlBackend backend);
+
+	// A choice's name in the settings file: plain, and never changed, unlike
+	// its title or its place in the enum. The reverse is empty for a name that
+	// is no choice.
+	QString videoBackendKey(VideoBackend backend);
+	QString xmlBackendKey(XmlBackend backend);
+	std::optional<VideoBackend> videoBackendFromKey(const QString& key);
+	std::optional<XmlBackend> xmlBackendFromKey(const QString& key);
 
 	// The library backend a VideoBackend stands for (not for VideoBackend::Qt).
 	WindowBackend libraryBackend(VideoBackend backend);

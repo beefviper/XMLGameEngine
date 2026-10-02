@@ -17,12 +17,9 @@ class QKeyEvent;
 namespace xge
 {
 	// The keys pressed in the game's part of the window since the engine last
-	// asked, as the engine knows them (xge::KeyCode). Every widget the game can
-	// be shown in (GameView, NativeSurface) feeds the one queue of the
-	// GameStage that holds them, so the keys reach the engine the same way
-	// whichever window library is drawing, which is why the keyboard is read
-	// from Qt rather than from the library's own window: it is Qt that has the
-	// keyboard focus.
+	// asked, as the engine knows them (xge::KeyCode). The GameView feeds the
+	// one queue of the GameStage that holds it; the QtWindow backend hands them
+	// to the engine. (A video library's own window reads its own keys.)
 	class KeyQueue
 	{
 	public:

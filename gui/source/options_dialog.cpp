@@ -5,6 +5,7 @@
 
 #include "options_dialog.h"
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -15,10 +16,11 @@
 
 namespace xge
 {
-	OptionsDialog::OptionsDialog(const SessionOptions& current, QWidget* parent) :
+	OptionsDialog::OptionsDialog(const SessionOptions& current, bool warnBeforeTwoWindows, QWidget* parent) :
 		QDialog(parent),
 		video(new QComboBox),
-		xml(new QComboBox)
+		xml(new QComboBox),
+		warn(new QCheckBox(tr("&Ask before the game moves to a window of its own")))
 	{
 		setWindowTitle(tr("Options"));
 
@@ -38,8 +40,11 @@ namespace xge
 		form->addRow(tr("&Video:"), video);
 		form->addRow(tr("&XML parser:"), xml);
 
+		warn->setChecked(warnBeforeTwoWindows);
+
 		auto* note = new QLabel(tr(
 			"The game waits while this dialog is open, and carries on when it closes.\n"
+			"Every video library but the Qt renderer draws in a window of its own.\n"
 			"Changing the video library keeps the game as it is.\n"
 			"Changing the XML parser reads the game file again, so the game starts over."));
 		note->setWordWrap(true);
@@ -50,6 +55,7 @@ namespace xge
 
 		auto* layout = new QVBoxLayout(this);
 		layout->addLayout(form);
+		layout->addWidget(warn);
 		layout->addWidget(note);
 		layout->addWidget(buttons);
 
@@ -64,6 +70,11 @@ namespace xge
 		}
 		setMinimumWidth(widest + layout->contentsMargins().left() + layout->contentsMargins().right() + 24);
 		resize(sizeHint().expandedTo(minimumSize()));
+	}
+
+	bool OptionsDialog::warnBeforeTwoWindows() const
+	{
+		return warn->isChecked();
 	}
 
 	SessionOptions OptionsDialog::options() const

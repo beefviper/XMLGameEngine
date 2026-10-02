@@ -12,7 +12,7 @@ namespace xge
 	const std::vector<VideoBackend>& allVideoBackends()
 	{
 		static const std::vector<VideoBackend> all{
-			VideoBackend::SFML3, VideoBackend::SDL2, VideoBackend::Raylib, VideoBackend::OpenGL, VideoBackend::Qt
+			VideoBackend::Qt, VideoBackend::SFML3, VideoBackend::SDL2, VideoBackend::Raylib, VideoBackend::OpenGL
 		};
 		return all;
 	}
@@ -50,6 +50,59 @@ namespace xge
 		}
 
 		return QString();
+	}
+
+	QString videoBackendKey(VideoBackend backend)
+	{
+		switch (backend)
+		{
+		case VideoBackend::Qt:     return QStringLiteral("qt");
+		case VideoBackend::SFML3:  return QStringLiteral("sfml3");
+		case VideoBackend::SDL2:   return QStringLiteral("sdl2");
+		case VideoBackend::Raylib: return QStringLiteral("raylib");
+		case VideoBackend::OpenGL: return QStringLiteral("opengl");
+		}
+
+		return QString();
+	}
+
+	QString xmlBackendKey(XmlBackend backend)
+	{
+		switch (backend)
+		{
+		case XmlBackend::Xerces:   return QStringLiteral("xerces");
+		case XmlBackend::TinyXml2: return QStringLiteral("tinyxml2");
+		case XmlBackend::PugiXml:  return QStringLiteral("pugixml");
+		case XmlBackend::RapidXml: return QStringLiteral("rapidxml");
+		}
+
+		return QString();
+	}
+
+	std::optional<VideoBackend> videoBackendFromKey(const QString& key)
+	{
+		for (const VideoBackend backend : allVideoBackends())
+		{
+			if (videoBackendKey(backend) == key)
+			{
+				return backend;
+			}
+		}
+
+		return std::nullopt;
+	}
+
+	std::optional<XmlBackend> xmlBackendFromKey(const QString& key)
+	{
+		for (const XmlBackend backend : allXmlBackends())
+		{
+			if (xmlBackendKey(backend) == key)
+			{
+				return backend;
+			}
+		}
+
+		return std::nullopt;
 	}
 
 	WindowBackend libraryBackend(VideoBackend backend)

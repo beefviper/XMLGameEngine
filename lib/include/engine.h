@@ -16,6 +16,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace xge
@@ -34,6 +35,14 @@ namespace xge
 		Engine(Game& game, std::unique_ptr<Window> window);
 
 		void loop(void);
+
+		// False once the window has been closed (the user closed it, or
+		// close() was called), and while a replaceWindow() has left the engine
+		// without one.
+		bool isWindowOpen(void) const;
+
+		// Null while there is no window.
+		Window* currentWindow(void) noexcept { return window.get(); }
 
 		// Swaps the Window for another while the game is running: the old one
 		// is destroyed first (some libraries can only have one window at a
@@ -54,6 +63,13 @@ namespace xge
 		void step(void);
 		void render(void);
 
+		// Lets the window deal with its own events (move, resize, close)
+		// without playing a frame: for a front end that has paused the game
+		// but keeps its window alive. The keys it reports are held back and
+		// handled by the next step(), so none is lost or reaches the game
+		// while it is not running.
+		void pump(void);
+
 		// TODO: make handleKeyPressed and handleKeyReleased private
 		void handleKeyPressed(KeyCode key);
 		void handleKeyReleased(KeyCode key);
@@ -62,6 +78,9 @@ namespace xge
 		Game& game;
 		CommandExecutor commandExecutor;
 		std::unique_ptr<Window> window;
+
+		// Key changes pump() took from the window that step() has not handled yet.
+		std::vector<std::pair<KeyCode, bool>> pumpedKeys;
 
 		// Engine's own per-frame record of which keys are currently held -
 		// built entirely from Window::pollEvents()'s press/release deltas

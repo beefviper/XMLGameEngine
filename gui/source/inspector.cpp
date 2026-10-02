@@ -155,9 +155,15 @@ namespace xge
 			return;
 		}
 
+		QString frame = QString::number(session.frames());
+		if (session.isPlaying() && session.fps() > 0)
+		{
+			frame += tr(" (%1fps)").arg(session.fps(), 0, 'f', 1);
+		}
+
 		statusLabel->setText(tr("State: %1   Frame: %2   %3")
 			.arg(text(game().getCurrentState().name))
-			.arg(session.frames())
+			.arg(frame)
 			.arg(session.isPlaying() ? tr("Playing") : tr("Paused")));
 
 		for (auto& field : fields)

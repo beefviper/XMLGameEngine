@@ -37,13 +37,17 @@ namespace xge
 		const QString& error() const noexcept { return lastError; }
 
 		// Stops and frees the game and its window. The window must go while
-		// the widget it draws into is still alive: a library's graphics
-		// objects cannot be freed once their window has been destroyed.
+		// the widget it draws into is still alive.
 		void unload();
 
 		bool isLoaded() const noexcept { return static_cast<bool>(game); }
 		bool isPlaying() const noexcept { return playing; }
 		unsigned long frames() const noexcept { return frameCount; }
+
+		// Frames a second actually played, measured over half a second at a
+		// time and smoothed (see advance()); 0 while paused and until the first
+		// measure is in.
+		double fps() const noexcept { return framesPerSecond; }
 
 		// Null when no game is loaded.
 		Game* currentGame() noexcept { return game.get(); }
@@ -54,11 +58,11 @@ namespace xge
 
 		// Uses the new options. With a game loaded: a new video library gets
 		// the game just as it is (every object, every value, the state it is in)
-		// and draws it again. A new XML parser has to read the game file again,
-		// so the game starts over. Either way the game is paused afterwards;
-		// whoever asked (the Options dialog, MainWindow::showOptions) plays it
-		// again if it was playing. Returns false if that failed (error() says
-		// why).
+		// and draws it again, in a window of its own unless it is the Qt
+		// renderer. A new XML parser has to read the game file again, so the
+		// game starts over. Either way the game is paused afterwards; whoever
+		// asked (the Options dialog, MainWindow::showOptions) plays it again if
+		// it was playing. Returns false if that failed (error() says why).
 		bool applyOptions(const SessionOptions& next);
 
 	public slots:
@@ -89,6 +93,10 @@ namespace xge
 		// being used instead.
 		void videoFellBack(const QString& message);
 
+		// The window the game is drawn in was closed by the user. The game is
+		// paused and has no window until it is given one (applyOptions).
+		void windowClosed();
+
 	private:
 		GameStage& stage;
 		std::unique_ptr<Game> game;
@@ -107,21 +115,40 @@ namespace xge
 		// window at all: step(), reset() and redraw() do nothing meanwhile.
 		bool changing{ false };
 		unsigned long frameCount{ 0 };
+
+		// The frames played since fpsStartNs, for fps().
+		double framesPerSecond{ 0 };
+		qint64 fpsStartNs{ 0 };
+		unsigned long fpsFrames{ 0 };
 		QString lastError;
 		QString currentFile;
 		SessionOptions currentOptions;
 
-		// The timer's slot: plays however many frames the clock says are due.
+		// Whether the game's window is one of a video library's. The Qt
+		// renderer's window is the stage's.
+		bool libraryWindow{ false };
+
+		// Tells the stage where a library's window is now, so that whatever
+		// window comes next opens there.
+		void rememberPosition();
+
+		// The timer's slot: plays however many frames the clock says are due
+		// (while paused, only lets a library's window deal with its events and
+		// draws it again).
 		void advance();
+
+		// The timer runs while the game is playing, and while it is paused in a
+		// library's window, which has to be looked after to stay responsive.
+		// The Qt renderer's picture needs nothing while the game is paused.
+		void updateTimer();
 
 		// One frame of the simulation, drawn.
 		void tick();
 
-		// A Window for the game with the video library chosen: a library's own
-		// window drawing into the stage, or the Qt renderer. If the library
+		// A Window for the game with the video library chosen: the library's
+		// own window, or the Qt renderer drawing into the stage. If the library
 		// will not start, the Qt renderer, and videoFellBack().
 		std::unique_ptr<Window> makeWindow(const WindowDesc& desc);
-		std::unique_ptr<Window> makeLibraryWindow(const WindowDesc& desc, VideoBackend video);
 		void fail(const QString& message);
 	};
 }

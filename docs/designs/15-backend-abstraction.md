@@ -32,7 +32,7 @@ Only Xerces can do real XSD validation. For the other three backends the project
 
 ## Windows: `Window`
 
-A window backend provides lifecycle, `init()` (build and measure each object's visual), `pollEvents()` (key changes as `{key, pressed}` pairs), `clear`, `draw`, `display`. Everything is in engine terms (`WindowDesc`, `Object`, `KeyCode`, an engine `Color` and `Vector2f`), so no library type leaks upward. Backends: **SFML3**, **Raylib**, **SDL2**, **OpenGL** (GLFW), and in `XGEGUI` a fifth that draws with Qt; a window can also draw into a front end's window or to a back buffer instead of opening its own ([39](39-opengl-backend-and-options.md)). `Object::size` is the one thing only a backend can measure (text and image sizes depend on real fonts and files); collision code reads that field and never a backend type.
+A window backend provides lifecycle, `init()` (build and measure each object's visual), `pollEvents()` (key changes as `{key, pressed}` pairs), `clear`, `draw`, `display`. Everything is in engine terms (`WindowDesc`, `Object`, `KeyCode`, an engine `Color` and `Vector2f`), so no library type leaks upward. Backends: **SFML3**, **Raylib**, **SDL2**, **OpenGL** (GLFW), and in `XGEGUI` a fifth that draws with Qt; every library backend opens a window of its own, and `XGEGUI` shows them in a second window ([40](40-split-windows-in-xgegui.md)). `Object::size` is the one thing only a backend can measure (text and image sizes depend on real fonts and files); collision code reads that field and never a backend type.
 
 ## Both use the same factory pattern
 

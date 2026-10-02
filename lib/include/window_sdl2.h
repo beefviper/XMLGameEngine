@@ -25,13 +25,14 @@ namespace xge
 	class SDL2Window : public Window
 	{
 	public:
-		// With a WindowTarget of Kind::NativeWindow, draws into the front end's
-		// own window (see window.h) instead of opening one.
-		explicit SDL2Window(const WindowDesc& windowDesc, const WindowTarget& target = {});
+		// Throws std::runtime_error if SDL2 cannot make a window.
+		explicit SDL2Window(const WindowDesc& windowDesc);
 		~SDL2Window() override;
 
 		bool isOpen() const override;
 		void close() override;
+		std::pair<int, int> position() const override;
+		void setPosition(int x, int y) override;
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override;
 		void clear(const std::string& colorName) override;

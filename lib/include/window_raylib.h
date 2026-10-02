@@ -27,22 +27,19 @@ namespace xge
 	class RaylibWindow : public Window
 	{
 	public:
-		// With a WindowTarget of Kind::BackBuffer, the window is hidden and the
-		// game is drawn to a texture instead, handed over by backBuffer() after
-		// each frame (raylib always makes a window of its own, so it cannot draw
-		// into one a front end made).
-		explicit RaylibWindow(const WindowDesc& windowDesc, const WindowTarget& target = {});
+		// Throws std::runtime_error if raylib cannot start.
+		explicit RaylibWindow(const WindowDesc& windowDesc);
 		~RaylibWindow() override;
 
 		bool isOpen() const override;
 		void close() override;
+		std::pair<int, int> position() const override;
+		void setPosition(int x, int y) override;
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override;
 		void clear(const std::string& colorName) override;
 		void draw(Object& object) override;
 		void display() override;
-		const Bitmap* backBuffer() const override;
-		void activate() override;
 
 	private:
 		// What SFMLWindow keeps a RenderTexture+Sprite pair for, raylib only
@@ -62,19 +59,6 @@ namespace xge
 		};
 
 		bool isOpenFlag{ false };
-
-		// Drawing to a texture instead of the screen (see the constructor).
-		bool offscreen{ false };
-		RenderTexture2D backTarget{};
-		Bitmap captured;
-
-		// raylib's GLFW window, made current again by activate() because the
-		// front end's other OpenGL users may have taken the context since (see
-		// Window::activate()), and by close() before raylib's things are
-		// freed. Null when it cannot be reached.
-		void* graphicsContext{ nullptr };
-
-		void captureBackTarget();
 
 		// How each key (by raylib's key number) was the last time
 		// pollEvents() looked, so it can report only what changed.

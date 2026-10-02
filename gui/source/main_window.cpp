@@ -11,20 +11,95 @@
 #include "options_dialog.h"
 
 #include <QAction>
+#include <QCheckBox>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <QGuiApplication>
+#include <QScreen>
 #include <QSizePolicy>
 #include <QSplitter>
 
 namespace xge
 {
+	namespace
+	{
+		// Where the windows were left, in the settings file.
+		const QString kOneWindowKey = QStringLiteral("Windows/one_window");
+		const QString kControlsKey = QStringLiteral("Windows/controls");
+		const QString kGameKey = QStringLiteral("Windows/game");
+
+		// What was last in use: one window or two, and the choices of the
+		// Options dialog.
+		const QString kTwoWindowsKey = QStringLiteral("Windows/two_windows");
+		const QString kVideoKey = QStringLiteral("Session/video");
+		const QString kXmlKey = QStringLiteral("Session/xml");
+		const QString kGameFileKey = QStringLiteral("Session/game");
+
+		// The width of the controls until the user has shown otherwise.
+		constexpr int kControlsWidth = 440;
+
+		// Whether a window with its top left corner here can be got at.
+		bool onScreen(const QPoint& corner)
+		{
+			const QRect grip(corner, QSize(100, 50));
+			for (const QScreen* screen : QGuiApplication::screens())
+			{
+				if (screen->availableGeometry().intersects(grip))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+	}
+
+	bool MainWindow::placeAt(const QString& key)
+	{
+		const QRect rect = settings.value(key).toRect();
+		if (!rect.isValid() || !onScreen(rect.topLeft()))
+		{
+			return false;
+		}
+
+		setGeometry(rect);
+		return true;
+	}
+
+	void MainWindow::rememberPlace(const QString& key)
+	{
+		settings.setValue(key, isMaximized() ? normalGeometry() : geometry());
+	}
+
 	void MainWindow::closeEvent(QCloseEvent* event)
 	{
 		session->unload();
+		stage->hideView();
+
+		// Where everything was left, for next time.
+		if (stage->isSplit())
+		{
+			rememberPlace(kControlsKey);
+			settings.setValue(kOneWindowKey, oneWindowRect);
+		}
+		else
+		{
+			rememberPlace(kOneWindowKey);
+		}
+
+		if (const auto position = stage->gameWindowPosition())
+		{
+			settings.setValue(kGameKey, *position);
+		}
+
+		settings.setValue(kTwoWindowsKey, stage->isSplit());
+		settings.setValue(kVideoKey, videoBackendKey(session->options().video));
+		settings.setValue(kXmlKey, xmlBackendKey(session->options().xml));
+
 		QMainWindow::closeEvent(event);
 	}
 
@@ -38,7 +113,7 @@ namespace xge
 		setWindowTitle(tr("XML Game Engine"));
 
 		// The game takes whatever room the inspector does not need, drawn as
-		// large as fits with its own proportions.
+		// large as fits with its own proportions (in one window).
 		stage->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 		inspector->setMinimumWidth(340);
 
@@ -49,7 +124,7 @@ namespace xge
 		splitter->setStretchFactor(1, 0);
 		splitter->setCollapsible(0, false);
 		splitter->setCollapsible(1, false);
-		splitter->setSizes({ 960, 440 });
+		splitter->setSizes({ 1400 - kControlsWidth, kControlsWidth });
 		setCentralWidget(splitter);
 
 		auto* fileMenu = menuBar()->addMenu(tr("&File"));
@@ -61,12 +136,44 @@ namespace xge
 		auto* quit = fileMenu->addAction(tr("&Quit"), this, &QWidget::close);
 		quit->setShortcut(QKeySequence::Quit);
 
+		auto* viewMenu = menuBar()->addMenu(tr("&View"));
+		twoWindows = viewMenu->addAction(tr("&Game in Its Own Window"));
+		twoWindows->setCheckable(true);
+		connect(twoWindows, &QAction::triggered, this, [this](bool checked)
+			{
+				if (checked) { enterTwoWindows(); }
+				else { leaveTwoWindows(); }
+			});
+
 		resize(1400, 760);
+		placeAt(kOneWindowKey);
+
+		if (const QVariant game = settings.value(kGameKey); game.isValid() && onScreen(game.toPoint()))
+		{
+			stage->setGameWindowPosition(game.toPoint());
+		}
+
+		// As it was left: the choices first, then the layout (a video library
+		// needs two windows whatever the file says). No game is loaded yet, so
+		// nothing is asked or drawn.
+		SessionOptions last;
+		last.video = videoBackendFromKey(settings.value(kVideoKey).toString()).value_or(last.video);
+		last.xml = xmlBackendFromKey(settings.value(kXmlKey).toString()).value_or(last.xml);
+		session->applyOptions(last);
+
+		if (settings.value(kTwoWindowsKey).toBool() || last.video != VideoBackend::Qt)
+		{
+			enterTwoWindows();
+		}
 
 		connect(session, &GameSession::failed, this, [this](const QString& message)
 			{
 				QMessageBox::critical(this, tr("The game stopped"), message);
 			});
+
+		// Queued: both arrive from code that is still using the window.
+		connect(stage, &GameStage::gameWindowClosed, this, &MainWindow::gameWindowClosed, Qt::QueuedConnection);
+		connect(session, &GameSession::windowClosed, this, &MainWindow::gameWindowClosed, Qt::QueuedConnection);
 
 		// Queued: this arrives while a game is still being set up.
 		connect(session, &GameSession::videoFellBack, this, [this](const QString& message)
@@ -92,22 +199,126 @@ namespace xge
 		const bool wasPlaying = session->isPlaying();
 		session->pause();
 
-		OptionsDialog dialog(session->options(), this);
-		const bool accepted = dialog.exec() == QDialog::Accepted;
+		OptionsDialog dialog(session->options(), settings.warnBeforeTwoWindows(), this);
+		bool done = true;
 
-		if (accepted && !session->applyOptions(dialog.options()))
+		if (dialog.exec() == QDialog::Accepted)
+		{
+			settings.setWarnBeforeTwoWindows(dialog.warnBeforeTwoWindows());
+			done = changeOptions(dialog.options());
+		}
+
+		if (done && wasPlaying)
+		{
+			session->play();
+		}
+	}
+
+	bool MainWindow::changeOptions(const SessionOptions& next)
+	{
+		SessionOptions wanted = next;
+		bool movesToTwoWindows = wanted.video != VideoBackend::Qt && !stage->isSplit();
+
+		// Saying no keeps the video library as it was; the rest still counts.
+		if (movesToTwoWindows && settings.warnBeforeTwoWindows() && !confirmTwoWindows())
+		{
+			wanted.video = session->options().video;
+			movesToTwoWindows = false;
+		}
+
+		if (!session->applyOptions(wanted))
 		{
 			if (!session->error().isEmpty())
 			{
 				QMessageBox::critical(this, tr("Could not use the options"), session->error());
 			}
-		}
-		else if (wasPlaying)
-		{
-			session->play();
+			return false;
 		}
 
-		stage->focusGame();
+		// If the library would not start the Qt renderer is drawing the game,
+		// and it belongs in this window.
+		if (movesToTwoWindows && session->options().video != VideoBackend::Qt)
+		{
+			enterTwoWindows();
+		}
+
+		return true;
+	}
+
+	bool MainWindow::confirmTwoWindows()
+	{
+		QMessageBox box(QMessageBox::Question, tr("Two windows"),
+			tr("This video library draws the game in a window of its own, so the game will move out of this window into a second one.\n\nSwitch to two windows?"),
+			QMessageBox::Ok | QMessageBox::Cancel, this);
+		box.setDefaultButton(QMessageBox::Ok);
+
+		auto* remember = new QCheckBox(tr("Don't ask me again"));
+		remember->setChecked(true);
+		box.setCheckBox(remember);
+
+		if (box.exec() != QMessageBox::Ok)
+		{
+			return false;
+		}
+
+		if (remember->isChecked())
+		{
+			settings.setWarnBeforeTwoWindows(false);
+		}
+
+		return true;
+	}
+
+	void MainWindow::enterTwoWindows()
+	{
+		if (stage->isSplit())
+		{
+			return;
+		}
+
+		// This window keeps the width the controls had, where it was last left.
+		const int controlsWidth = isVisible() ? inspector->width() : kControlsWidth;
+		oneWindowRect = isMaximized() ? normalGeometry() : geometry();
+
+		if (!placeAt(kControlsKey))
+		{
+			resize(controlsWidth, height());
+		}
+
+		stage->setSplit(true);
+		twoWindows->setChecked(true);
+	}
+
+	void MainWindow::leaveTwoWindows()
+	{
+		if (!stage->isSplit())
+		{
+			return;
+		}
+
+		rememberPlace(kControlsKey);
+		stage->setSplit(false);
+		twoWindows->setChecked(false);
+		setGeometry(oneWindowRect);
+
+		// Only the Qt renderer draws in this window.
+		SessionOptions options = session->options();
+		if (options.video != VideoBackend::Qt)
+		{
+			const bool wasPlaying = session->isPlaying();
+			options.video = VideoBackend::Qt;
+
+			if (changeOptions(options) && wasPlaying)
+			{
+				session->play();
+			}
+		}
+	}
+
+	void MainWindow::gameWindowClosed()
+	{
+		session->pause();
+		leaveTwoWindows();
 	}
 
 	bool MainWindow::openGame(const QString& file)
@@ -120,8 +331,15 @@ namespace xge
 			return false;
 		}
 
+		settings.setValue(kGameFileKey, QFileInfo(file).absoluteFilePath());
 		setWindowTitle(tr("XML Game Engine - %1").arg(QFileInfo(file).fileName()));
 		stage->focusGame();
 		return true;
+	}
+
+	bool MainWindow::openLastGame()
+	{
+		const QString file = settings.value(kGameFileKey).toString();
+		return !file.isEmpty() && QFileInfo::exists(file) && openGame(file);
 	}
 }

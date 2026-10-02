@@ -28,8 +28,7 @@ namespace xge
 	// The drawing is plain OpenGL 1.1 (a projection of the window in pixels,
 	// one textured rectangle for each object), which every driver has and the
 	// system's OpenGL library exports as it is, so there is no OpenGL loader
-	// library to depend on. Only the framebuffer calls used for the back
-	// buffer route (below) are looked up at runtime, through GLFW.
+	// library to depend on.
 	//
 	// The same bake-once-then-rebuild-on-visualDirty architecture as the other
 	// backends. Each object's picture is made on the CPU - circles and
@@ -37,25 +36,22 @@ namespace xge
 	// uploaded as a texture. Text and images are decoded by SDL2_ttf and
 	// SDL2_image, which the library already links for the SDL2 backend; with
 	// no font file, text falls back to the engine's built-in font.
-	//
-	// With a WindowTarget of Kind::BackBuffer the window is hidden and the
-	// frame is drawn to a framebuffer object, read back after display() and
-	// handed over by backBuffer().
 	class OpenGLWindow : public Window
 	{
 	public:
-		explicit OpenGLWindow(const WindowDesc& windowDesc, const WindowTarget& target = {});
+		// Throws std::runtime_error if GLFW cannot make a window.
+		explicit OpenGLWindow(const WindowDesc& windowDesc);
 		~OpenGLWindow() override;
 
 		bool isOpen() const override;
 		void close() override;
+		std::pair<int, int> position() const override;
+		void setPosition(int x, int y) override;
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override;
 		void clear(const std::string& colorName) override;
 		void draw(Object& object) override;
 		void display() override;
-		const Bitmap* backBuffer() const override;
-		void activate() override;
 
 	private:
 		// One object's picture, as an OpenGL texture.
@@ -76,7 +72,6 @@ namespace xge
 		};
 
 		GLFWwindow* window{ nullptr };
-		bool offscreen{ false };
 		bool ttfInitialized{ false };
 		bool imgInitialized{ false };
 		bool imgTried{ false };
@@ -93,12 +88,6 @@ namespace xge
 		std::chrono::steady_clock::duration framePeriod{};
 		std::chrono::steady_clock::time_point lastFrame{};
 
-		// The back buffer route: a framebuffer object, the texture it draws to,
-		// and the last frame read back from it.
-		unsigned int framebuffer{ 0 };
-		unsigned int targetTexture{ 0 };
-		Bitmap captured;
-
 		std::unordered_map<int, TTF_Font*> fontsBySize;
 		std::unordered_map<std::string, CachedVisual> visuals;
 
@@ -106,7 +95,6 @@ namespace xge
 		static KeyCode glfwKeyToKeyCode(int key) noexcept;
 
 		void setUpProjection() const;
-		void releaseTarget();
 		TTF_Font* getFont(int pointSize);
 
 		// Starts SDL2_image on first use; false if it cannot read PNG.

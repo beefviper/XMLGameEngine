@@ -11,46 +11,13 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <cstdint>
 #include <optional>
 #include <stdexcept>
-#include <type_traits>
 
 namespace xge
 {
-	namespace
+	SFMLWindow::SFMLWindow(const WindowDesc& windowDesc)
 	{
-		// The platform's window handle is a pointer on Windows (HWND) and a
-		// number on Linux (an X11 window id).
-		sf::WindowHandle toSfmlHandle(void* handle)
-		{
-			// A C-style cast is a pointer cast where the handle is a pointer
-			// and an integer cast where it is a number.
-			return (sf::WindowHandle)(handle);
-		}
-	}
-
-	SFMLWindow::SFMLWindow(const WindowDesc& windowDesc, const WindowTarget& target)
-	{
-		if (target.kind == WindowTarget::Kind::NativeWindow)
-		{
-			// The front end's window: no frame limit either, the front end
-			// decides when a frame is due.
-			window.create(toSfmlHandle(target.nativeHandle));
-
-			if (!window.isOpen())
-			{
-				throw std::runtime_error("SFML could not draw into the window");
-			}
-
-			// The window is whatever size the front end made it; the game is
-			// drawn whole, scaled to fit it.
-			window.setView(sf::View(sf::FloatRect({ 0.f, 0.f },
-				{ static_cast<float>(windowDesc.width), static_cast<float>(windowDesc.height) })));
-
-			return;
-		}
-
 		const auto width = static_cast<unsigned int>(windowDesc.width);
 		const auto height = static_cast<unsigned int>(windowDesc.height);
 		const sf::VideoMode videoMode({ width, height });
@@ -58,15 +25,13 @@ namespace xge
 		const auto windowState = (windowDesc.fullscreen == "true") ? sf::State::Fullscreen : sf::State::Windowed;
 
 		window.create(videoMode, windowDesc.name, sf::Style::Default, windowState);
-		window.setFramerateLimit(windowDesc.framerate);
-	}
 
-	SFMLWindow::~SFMLWindow()
-	{
-		// The render textures are freed in whichever context is current, so
-		// make it this window's, not another library's.
-		static_cast<void>(window.setActive(true));
-		visuals.clear();
+		if (!window.isOpen())
+		{
+			throw std::runtime_error("SFML could not make a window");
+		}
+
+		window.setFramerateLimit(windowDesc.framerate);
 	}
 
 	bool SFMLWindow::isOpen() const
@@ -77,6 +42,16 @@ namespace xge
 	void SFMLWindow::close()
 	{
 		window.close();
+	}
+
+	std::pair<int, int> SFMLWindow::position() const
+	{
+		return { window.getPosition().x, window.getPosition().y };
+	}
+
+	void SFMLWindow::setPosition(int x, int y)
+	{
+		window.setPosition(sf::Vector2i(x, y));
 	}
 
 	void SFMLWindow::init(std::vector<Object>& objects)
@@ -154,14 +129,6 @@ namespace xge
 	void SFMLWindow::display()
 	{
 		window.display();
-	}
-
-	void SFMLWindow::activate()
-	{
-		// SFML remembers which context it made current and would not notice
-		// another library having taken it since, so let go and take it again.
-		static_cast<void>(window.setActive(false));
-		static_cast<void>(window.setActive(true));
 	}
 
 	KeyCode SFMLWindow::sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept

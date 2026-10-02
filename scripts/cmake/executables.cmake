@@ -31,9 +31,8 @@ if (Qt6_FOUND)
 		"gui/source/qt_window.cpp"
 		"gui/source/inspector.cpp"
 		"gui/source/key_queue.cpp"
-		"gui/source/native_surface.cpp"
 		"gui/source/game_stage.cpp"
-		"gui/source/embedded_window.cpp"
+		"gui/source/app_settings.cpp"
 		"gui/source/session_options.cpp"
 		"gui/source/options_dialog.cpp"
 		"gui/include/main_window.h"
@@ -42,9 +41,8 @@ if (Qt6_FOUND)
 		"gui/include/qt_window.h"
 		"gui/include/inspector.h"
 		"gui/include/key_queue.h"
-		"gui/include/native_surface.h"
 		"gui/include/game_stage.h"
-		"gui/include/embedded_window.h"
+		"gui/include/app_settings.h"
 		"gui/include/session_options.h"
 		"gui/include/options_dialog.h"
 	)
@@ -52,12 +50,6 @@ if (Qt6_FOUND)
 	set_target_properties(XGEGUI PROPERTIES AUTOMOC ON)
 	target_include_directories(XGEGUI PRIVATE gui/include)
 	target_link_libraries(XGEGUI PRIVATE Qt6::Widgets)
-
-	# See dependencies.cmake: the game view is a QOpenGLWidget when this is there.
-	if (Qt6OpenGLWidgets_FOUND)
-		target_link_libraries(XGEGUI PRIVATE Qt6::OpenGLWidgets)
-		target_compile_definitions(XGEGUI PRIVATE XGE_QT_OPENGL)
-	endif()
 
 	# Qt loads its platform plug-in (platforms/qwindows.dll) from a folder next
 	# to the program at run time, so it is never among the DLLs the program

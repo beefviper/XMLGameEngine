@@ -27,37 +27,6 @@ namespace xge
 {
 	namespace
 	{
-		// OpenGL 3.0's framebuffer objects are the one thing used here that
-		// the system's OpenGL library does not export (on Windows it stops at
-		// 1.1), so they are looked up through GLFW, once the context exists.
-		constexpr unsigned int kFramebuffer = 0x8D40;
-		constexpr unsigned int kColorAttachment0 = 0x8CE0;
-		constexpr unsigned int kFramebufferComplete = 0x8CD5;
-
-		struct FramebufferApi
-		{
-			void (APIENTRY* generate)(GLsizei, GLuint*){ nullptr };
-			void (APIENTRY* bind)(GLenum, GLuint){ nullptr };
-			void (APIENTRY* attach)(GLenum, GLenum, GLenum, GLuint, GLint){ nullptr };
-			GLenum (APIENTRY* check)(GLenum){ nullptr };
-			void (APIENTRY* destroy)(GLsizei, const GLuint*){ nullptr };
-
-			bool loaded() const noexcept { return generate && bind && attach && check && destroy; }
-
-			void load() noexcept
-			{
-				generate = reinterpret_cast<decltype(generate)>(glfwGetProcAddress("glGenFramebuffers"));
-				bind = reinterpret_cast<decltype(bind)>(glfwGetProcAddress("glBindFramebuffer"));
-				attach = reinterpret_cast<decltype(attach)>(glfwGetProcAddress("glFramebufferTexture2D"));
-				check = reinterpret_cast<decltype(check)>(glfwGetProcAddress("glCheckFramebufferStatus"));
-				destroy = reinterpret_cast<decltype(destroy)>(glfwGetProcAddress("glDeleteFramebuffers"));
-			}
-		};
-
-		// One at a time is all there is: a window makes its own context current
-		// and these belong to it.
-		FramebufferApi framebufferApi;
-
 		bool imageSizeMatches(const SDL_Surface& surface) noexcept
 		{
 			return surface.w > 0 && surface.h > 0 && surface.pixels != nullptr;
@@ -123,8 +92,7 @@ namespace xge
 		}
 	}
 
-	OpenGLWindow::OpenGLWindow(const WindowDesc& windowDesc, const WindowTarget& target) :
-		offscreen(target.kind == WindowTarget::Kind::BackBuffer),
+	OpenGLWindow::OpenGLWindow(const WindowDesc& windowDesc) :
 		width(static_cast<int>(windowDesc.width)),
 		height(static_cast<int>(windowDesc.height))
 	{
@@ -135,9 +103,8 @@ namespace xge
 
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-		glfwWindowHint(GLFW_VISIBLE, offscreen ? GLFW_FALSE : GLFW_TRUE);
 
-		GLFWmonitor* monitor = (!offscreen && windowDesc.fullscreen == "true") ? glfwGetPrimaryMonitor() : nullptr;
+		GLFWmonitor* monitor = (windowDesc.fullscreen == "true") ? glfwGetPrimaryMonitor() : nullptr;
 		window = glfwCreateWindow(width, height, windowDesc.name.c_str(), monitor, nullptr);
 
 		if (!window)
@@ -168,37 +135,6 @@ namespace xge
 		framePeriod = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
 			std::chrono::duration<double>(windowDesc.framerate > 0 ? 1.0 / windowDesc.framerate : 0.0));
 		lastFrame = std::chrono::steady_clock::now();
-
-		if (offscreen)
-		{
-			captured = filledBitmap(width, height);
-
-			// Draw to a texture of the game's size. If this OpenGL has no
-			// framebuffer objects the frame is drawn to the window's own
-			// back buffer instead, which a hidden window usually allows.
-			framebufferApi.load();
-			if (framebufferApi.loaded())
-			{
-				glGenTextures(1, &targetTexture);
-				glBindTexture(GL_TEXTURE_2D, targetTexture);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-				framebufferApi.generate(1, &framebuffer);
-				framebufferApi.bind(kFramebuffer, framebuffer);
-				framebufferApi.attach(kFramebuffer, kColorAttachment0, GL_TEXTURE_2D, targetTexture, 0);
-
-				if (framebufferApi.check(kFramebuffer) != kFramebufferComplete)
-				{
-					framebufferApi.bind(kFramebuffer, 0);
-					framebufferApi.destroy(1, &framebuffer);
-					framebuffer = 0;
-					glDeleteTextures(1, &targetTexture);
-					targetTexture = 0;
-				}
-			}
-		}
 	}
 
 	OpenGLWindow::~OpenGLWindow()
@@ -211,7 +147,6 @@ namespace xge
 		// Everything OpenGL made goes while its context is current.
 		glfwMakeContextCurrent(window);
 		visuals.clear();
-		releaseTarget();
 
 		for (auto& [size, loadedFont] : fontsBySize)
 		{
@@ -225,22 +160,6 @@ namespace xge
 		glfwDestroyWindow(window);
 		window = nullptr;
 		glfwTerminate();
-	}
-
-	void OpenGLWindow::releaseTarget()
-	{
-		if (framebuffer && framebufferApi.loaded())
-		{
-			framebufferApi.bind(kFramebuffer, 0);
-			framebufferApi.destroy(1, &framebuffer);
-			framebuffer = 0;
-		}
-
-		if (targetTexture)
-		{
-			glDeleteTextures(1, &targetTexture);
-			targetTexture = 0;
-		}
 	}
 
 	bool OpenGLWindow::isOpen() const
@@ -258,12 +177,17 @@ namespace xge
 		}
 	}
 
-	void OpenGLWindow::activate()
+	std::pair<int, int> OpenGLWindow::position() const
 	{
-		if (window)
-		{
-			glfwMakeContextCurrent(window);
-		}
+		int x = 0;
+		int y = 0;
+		glfwGetWindowPos(window, &x, &y);
+		return { x, y };
+	}
+
+	void OpenGLWindow::setPosition(int x, int y)
+	{
+		glfwSetWindowPos(window, x, y);
 	}
 
 	void OpenGLWindow::init(std::vector<Object>& objects)
@@ -281,12 +205,7 @@ namespace xge
 
 	std::vector<std::pair<KeyCode, bool>> OpenGLWindow::pollEvents()
 	{
-		// A hidden window has no keyboard: the front end that owns the real
-		// one passes the keys on itself.
-		if (!offscreen)
-		{
-			glfwPollEvents();
-		}
+		glfwPollEvents();
 
 		std::vector<std::pair<KeyCode, bool>> events;
 		events.swap(pendingKeys);
@@ -308,11 +227,6 @@ namespace xge
 
 	void OpenGLWindow::clear(const std::string& colorName)
 	{
-		if (framebuffer)
-		{
-			framebufferApi.bind(kFramebuffer, framebuffer);
-		}
-
 		setUpProjection();
 
 		const Color c = colorFromName(colorName);
@@ -363,40 +277,6 @@ namespace xge
 
 	void OpenGLWindow::display()
 	{
-		if (offscreen)
-		{
-			// Read the finished frame, right way up (OpenGL's rows start at the
-			// bottom) and opaque (the background was).
-			std::vector<std::uint8_t> raw(static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4);
-
-			if (!framebuffer)
-			{
-				glReadBuffer(GL_BACK);
-			}
-
-			glPixelStorei(GL_PACK_ALIGNMENT, 1);
-			glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, raw.data());
-
-			const std::size_t rowBytes = static_cast<std::size_t>(width) * 4;
-			for (int row = 0; row < height; ++row)
-			{
-				std::uint8_t* destination = captured.rgba.data() + static_cast<std::size_t>(row) * rowBytes;
-				std::memcpy(destination, raw.data() + static_cast<std::size_t>(height - 1 - row) * rowBytes, rowBytes);
-
-				for (std::size_t alpha = 3; alpha < rowBytes; alpha += 4)
-				{
-					destination[alpha] = 255;
-				}
-			}
-
-			if (framebuffer)
-			{
-				framebufferApi.bind(kFramebuffer, 0);
-			}
-
-			return;
-		}
-
 		glfwSwapBuffers(window);
 
 		// Wait out what is left of the frame time. Sleeping is only good to
@@ -422,11 +302,6 @@ namespace xge
 		}
 
 		lastFrame = std::chrono::steady_clock::now();
-	}
-
-	const Bitmap* OpenGLWindow::backBuffer() const
-	{
-		return offscreen ? &captured : nullptr;
 	}
 
 	void OpenGLWindow::keyCallback(GLFWwindow* window, int key, int, int action, int)

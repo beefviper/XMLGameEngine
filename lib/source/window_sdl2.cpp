@@ -70,15 +70,11 @@ namespace xge
 		};
 	}
 
-	SDL2Window::SDL2Window(const WindowDesc& windowDesc, const WindowTarget& target)
+	SDL2Window::SDL2Window(const WindowDesc& windowDesc)
 	{
-		const bool embedded = (target.kind == WindowTarget::Kind::NativeWindow);
-
 		if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		{
-			std::cout << "error: failed to initialize SDL2: " << SDL_GetError() << std::endl;
-			if (embedded) { throw std::runtime_error(std::string("SDL2 could not start: ") + SDL_GetError()); }
-			return;
+			throw std::runtime_error(std::string("SDL2 could not start: ") + SDL_GetError());
 		}
 
 		ttfInitialized = (TTF_Init() == 0);
@@ -93,38 +89,27 @@ namespace xge
 			flags |= SDL_WINDOW_FULLSCREEN;
 		}
 
-		// The front end's own window, when there is one (SDL leaves it alone
-		// when this one is destroyed); otherwise a window of our own.
-		window = embedded
-			? SDL_CreateWindowFrom(target.nativeHandle)
-			: SDL_CreateWindow(windowDesc.name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-				static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height), flags);
+		window = SDL_CreateWindow(windowDesc.name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+			static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height), flags);
 
 		if (!window)
 		{
-			std::cout << "error: failed to create SDL2 window: " << SDL_GetError() << std::endl;
-			if (embedded) { throw std::runtime_error(std::string("SDL2 could not draw into the window: ") + SDL_GetError()); }
-			return;
+			const std::string why = SDL_GetError();
+			if (ttfInitialized) { TTF_Quit(); }
+			SDL_Quit();
+			throw std::runtime_error("SDL2 could not make a window: " + why);
 		}
 
-		// Waiting for the display's refresh is for a window that runs the game
-		// itself; the front end that owns this one decides when a frame is due.
-		renderer = SDL_CreateRenderer(window, -1, embedded ? SDL_RENDERER_ACCELERATED : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
-
-		if (renderer && embedded)
-		{
-			// The window is whatever size the front end made it; the game is
-			// drawn whole, scaled to fit it.
-			SDL_RenderSetLogicalSize(renderer, static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height));
-		}
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 		if (!renderer)
 		{
-			std::cout << "error: failed to create SDL2 renderer: " << SDL_GetError() << std::endl;
+			const std::string why = SDL_GetError();
 			SDL_DestroyWindow(window);
 			window = nullptr;
-			if (embedded) { throw std::runtime_error(std::string("SDL2 could not make a renderer: ") + SDL_GetError()); }
-			return;
+			if (ttfInitialized) { TTF_Quit(); }
+			SDL_Quit();
+			throw std::runtime_error("SDL2 could not make a renderer: " + why);
 		}
 
 		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -165,6 +150,19 @@ namespace xge
 
 		SDL_Quit();
 		isOpenFlag = false;
+	}
+
+	std::pair<int, int> SDL2Window::position() const
+	{
+		int x = 0;
+		int y = 0;
+		SDL_GetWindowPosition(window, &x, &y);
+		return { x, y };
+	}
+
+	void SDL2Window::setPosition(int x, int y)
+	{
+		SDL_SetWindowPosition(window, x, y);
 	}
 
 	void SDL2Window::init(std::vector<Object>& objects)

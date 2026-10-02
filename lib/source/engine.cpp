@@ -55,9 +55,14 @@ namespace xge
 		}
 	}
 
+	bool Engine::isWindowOpen(void) const
+	{
+		return window && window->isOpen();
+	}
+
 	void Engine::loop(void)
 	{
-		while (window && window->isOpen())
+		while (isWindowOpen())
 		{
 			step();
 			render();
@@ -68,7 +73,15 @@ namespace xge
 	{
 		requireWindow();
 
-		for (auto& [key, pressed] : window->pollEvents())
+		auto events = std::move(pumpedKeys);
+		pumpedKeys.clear();
+
+		for (const auto& event : window->pollEvents())
+		{
+			events.push_back(event);
+		}
+
+		for (const auto& [key, pressed] : events)
 		{
 			if (pressed) { handleKeyPressed(key); }
 			else { handleKeyReleased(key); }
@@ -82,6 +95,16 @@ namespace xge
 		// A text that grew or shrank when last drawn (a score) needs its
 		// position worked out again for the new size.
 		game.resolveSizeDependentPositions();
+	}
+
+	void Engine::pump(void)
+	{
+		requireWindow();
+
+		for (const auto& event : window->pollEvents())
+		{
+			pumpedKeys.push_back(event);
+		}
 	}
 
 	void Engine::render(void)

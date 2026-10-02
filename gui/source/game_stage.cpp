@@ -1,121 +1,161 @@
 // game_stage.cpp
 // XML Game Engine
 // author: beefviper
-// date: Oct 1, 2026
+// date: Oct 2, 2026
 
 #include "game_stage.h"
 
-#include <QPalette>
-#include <QResizeEvent>
+#include <QCloseEvent>
+#include <QRect>
+#include <QScreen>
 #include <QSizePolicy>
+#include <QVBoxLayout>
 
 namespace xge
 {
-	// The page the surface sits on: it keeps the surface in the middle, scaled
-	// to the largest size in the game's proportions that fits the pane.
-	class NativeHolder : public QWidget
+	GameWindow::GameWindow() :
+		layout(new QVBoxLayout(this))
 	{
-	public:
-		explicit NativeHolder(QWidget* parent = nullptr) :
-			QWidget(parent)
-		{
-			setAutoFillBackground(true);
+		layout->setContentsMargins(0, 0, 0, 0);
+	}
 
-			QPalette palette = this->palette();
-			palette.setColor(QPalette::Window, QColor(0x20, 0x20, 0x20));
-			setPalette(palette);
-		}
-
-		void center(QWidget* child)
-		{
-			if (child)
-			{
-				if (auto* surface = dynamic_cast<NativeSurface*>(child))
-				{
-					surface->fitTo(size());
-				}
-				child->move((width() - child->width()) / 2, (height() - child->height()) / 2);
-			}
-		}
-
-		QSize minimumSizeHint() const override { return QSize(160, 90); }
-
-	protected:
-		void resizeEvent(QResizeEvent* event) override
-		{
-			QWidget::resizeEvent(event);
-
-			for (QWidget* child : findChildren<QWidget*>(QString(), Qt::FindDirectChildrenOnly))
-			{
-				center(child);
-			}
-		}
-	};
+	void GameWindow::closeEvent(QCloseEvent* event)
+	{
+		QWidget::closeEvent(event);
+		emit closed();
+	}
 
 	GameStage::GameStage(QWidget* parent) :
-		QStackedWidget(parent),
-		gameView(new GameView(keys)),
-		holder(new NativeHolder)
+		QWidget(parent),
+		view(new GameView(keys)),
+		layout(new QVBoxLayout(this))
 	{
-		addWidget(gameView);
-		addWidget(holder);
+		layout->setContentsMargins(0, 0, 0, 0);
+		layout->addWidget(view);
+		view->hide();
 		setFocusPolicy(Qt::NoFocus);
 		setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	}
 
-	void GameStage::setGameSize(int width, int height)
+	GameStage::~GameStage()
 	{
-		gameWidth = width;
-		gameHeight = height;
+		// Not closed: nothing is listening any more.
+		delete gameWindow;
+	}
 
+	GameView& GameStage::showView(int width, int height, const QString& windowTitle)
+	{
 		keys.clear();
-		gameView->setGameSize(width, height);
+		view->setGameSize(width, height);
+		title = windowTitle;
+		shown = true;
+		place();
+		return *view;
+	}
 
-		if (surface)
+	void GameStage::hideView()
+	{
+		shown = false;
+		view->hide();
+
+		if (gameWindow)
 		{
-			surface->setGameSize(width, height);
-			holder->center(surface);
+			gameWindow->hide();
 		}
 	}
 
-	void GameStage::showView()
+	void GameStage::setSplit(bool twoWindows)
 	{
-		setCurrentWidget(gameView);
+		split = twoWindows;
+		setVisible(!split);
+
+		if (shown)
+		{
+			place();
+		}
 	}
 
-	void* GameStage::showFreshSurface()
+	void GameStage::moveViewTo(QVBoxLayout* target)
 	{
-		delete surface;
+		// A widget is in one layout at a time.
+		if (QWidget* from = view->parentWidget(); from && from->layout())
+		{
+			from->layout()->removeWidget(view);
+		}
 
-		surface = new NativeSurface(keys, holder);
-		surface->setGameSize(gameWidth, gameHeight);
-		holder->center(surface);
-		surface->show();
-
-		setCurrentWidget(holder);
-		return surface->nativeHandle();
+		target->addWidget(view);
 	}
 
-	std::vector<std::pair<KeyCode, bool>> GameStage::takeKeyEvents()
+	void GameStage::place()
 	{
-		return keys.take();
+		if (!split)
+		{
+			if (gameWindow)
+			{
+				gameWindow->hide();
+			}
+
+			moveViewTo(layout);
+			view->show();
+			return;
+		}
+
+		const bool first = !gameWindow;
+		if (first)
+		{
+			gameWindow = new GameWindow;
+			connect(gameWindow, &GameWindow::closed, this, &GameStage::gameWindowClosed, Qt::QueuedConnection);
+		}
+
+		gameWindow->setWindowTitle(title);
+		moveViewTo(gameWindow->contents());
+		view->show();
+
+		// Opens at the game's own size, where it was last left or else beside
+		// the main window if there is room, and stays where the user puts it.
+		if (first)
+		{
+			gameWindow->resize(view->sizeHint());
+
+			const QRect beside = window()->frameGeometry();
+			const QScreen* available = window()->screen();
+
+			if (wantedPosition)
+			{
+				gameWindow->move(*wantedPosition);
+			}
+			else if (available && beside.right() + gameWindow->width() <= available->availableGeometry().right())
+			{
+				gameWindow->move(beside.right() + 1, beside.top());
+			}
+		}
+
+		gameWindow->show();
+	}
+
+	std::optional<QPoint> GameStage::gameWindowPosition() const
+	{
+		return gameWindow ? std::optional<QPoint>(gameWindow->pos()) : wantedPosition;
+	}
+
+	void GameStage::setGameWindowPosition(const QPoint& position)
+	{
+		wantedPosition = position;
+
+		if (gameWindow)
+		{
+			gameWindow->move(position);
+		}
 	}
 
 	void GameStage::focusGame()
 	{
-		if (currentWidget() == holder && surface)
-		{
-			surface->setFocus();
-		}
-		else
-		{
-			gameView->setFocus();
-		}
+		view->setFocus();
 	}
 
 	QSize GameStage::sizeHint() const
 	{
-		return gameView->sizeHint();
+		return view->sizeHint();
 	}
 
 	QSize GameStage::minimumSizeHint() const

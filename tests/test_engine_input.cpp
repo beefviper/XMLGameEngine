@@ -27,6 +27,8 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace xge;
 
@@ -44,6 +46,18 @@ namespace
 		void clear(const std::string&) override {}
 		void draw(Object&) override {}
 		void display() override {}
+	};
+
+	// A Window that reports the key changes it is given, once, and can be
+	// closed: what Engine::pump() and isWindowOpen() are tested with.
+	class ScriptedWindow : public FakeWindow
+	{
+	public:
+		bool isOpen() const override { return open; }
+		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return std::exchange(queued, {}); }
+
+		bool open{ true };
+		std::vector<std::pair<KeyCode, bool>> queued;
 	};
 
 	// breakout.xml's <variable name="step" value="2" />.
@@ -190,6 +204,36 @@ TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engi
 
 	engine.handleKeyReleased(KeyCode::Space);
 	CHECK_FALSE(bullet.collisionData.enabled);
+}
+
+TEST_CASE("keys read by pump() wait for the next step", "[engine_input]")
+{
+	Game game{ "games/breakout.xml" };
+	auto scripted = std::make_unique<ScriptedWindow>();
+	ScriptedWindow& window = *scripted;
+	Engine engine(game, std::move(scripted));
+
+	// Space starts the game from the menu. Read while the game is paused, it
+	// must neither start it nor be lost.
+	window.queued = { { KeyCode::Space, true }, { KeyCode::Space, false } };
+	engine.pump();
+	CHECK(game.getCurrentState().name != "playing");
+
+	engine.step();
+	CHECK(game.getCurrentState().name == "playing");
+}
+
+TEST_CASE("the engine knows when its window has been closed", "[engine_input]")
+{
+	Game game{ "games/breakout.xml" };
+	auto scripted = std::make_unique<ScriptedWindow>();
+	ScriptedWindow& window = *scripted;
+	Engine engine(game, std::move(scripted));
+
+	CHECK(engine.isWindowOpen());
+
+	window.open = false;
+	CHECK_FALSE(engine.isWindowOpen());
 }
 
 TEST_CASE("every shipped game follows the shared key conventions", "[engine_input]")

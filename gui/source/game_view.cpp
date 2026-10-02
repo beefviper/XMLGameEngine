@@ -17,14 +17,12 @@
 namespace xge
 {
 	GameView::GameView(KeyQueue& keys, QWidget* parent) :
-		GameViewBase(parent),
+		QWidget(parent),
 		keys(keys)
 	{
 		setFocusPolicy(Qt::StrongFocus);
-#ifndef XGE_QT_OPENGL
 		setAttribute(Qt::WA_OpaquePaintEvent);
 		setAutoFillBackground(false);
-#endif
 	}
 
 	void GameView::setGameSize(int width, int height)
@@ -50,45 +48,14 @@ namespace xge
 		update();
 	}
 
-	void GameView::showFrame(const Bitmap& bitmap)
-	{
-		if (bitmap.rgba.empty() || bitmap.width != backBuffer.width() || bitmap.height != backBuffer.height())
-		{
-			return;
-		}
-
-		// The pixels are opaque, so their alpha byte is ignored.
-		const QImage wrapped(bitmap.rgba.data(), bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBX8888);
-
-		QPainter painter(&backBuffer);
-		painter.setCompositionMode(QPainter::CompositionMode_Source);
-		painter.drawImage(0, 0, wrapped);
-		painter.end();
-
-		update();
-	}
-
 	std::vector<std::pair<KeyCode, bool>> GameView::takeKeyEvents()
 	{
 		return keys.take();
 	}
 
-#ifdef XGE_QT_OPENGL
-	void GameView::paintGL()
-	{
-		QPainter painter(this);
-		paintFrame(painter);
-	}
-#else
 	void GameView::paintEvent(QPaintEvent*)
 	{
 		QPainter painter(this);
-		paintFrame(painter);
-	}
-#endif
-
-	void GameView::paintFrame(QPainter& painter)
-	{
 		painter.fillRect(rect(), QColor(0x20, 0x20, 0x20));
 
 		if (backBuffer.isNull())
@@ -114,7 +81,7 @@ namespace xge
 		}
 		else
 		{
-			GameViewBase::keyPressEvent(event);
+			QWidget::keyPressEvent(event);
 		}
 	}
 
@@ -126,7 +93,7 @@ namespace xge
 		}
 		else
 		{
-			GameViewBase::keyReleaseEvent(event);
+			QWidget::keyReleaseEvent(event);
 		}
 	}
 
@@ -139,7 +106,7 @@ namespace xge
 	void GameView::focusOutEvent(QFocusEvent* event)
 	{
 		keys.releaseAll();
-		GameViewBase::focusOutEvent(event);
+		QWidget::focusOutEvent(event);
 	}
 
 	bool GameView::focusNextPrevChild(bool)

@@ -6,6 +6,8 @@
 // XGEGUI: the graphical front end. The game runs in the view on the left; on
 // the right are the play, pause and step controls and a tree of everything in
 // the game, with editors for the values that can be changed while it runs.
+// The View menu moves the game into a window of its own, which is where the
+// video libraries draw.
 //
 //   XGEGUI [game]
 //
@@ -33,12 +35,6 @@
 
 int main(int argc, char* argv[])
 {
-	// A window library draws into a widget with a platform window of its own
-	// (NativeSurface). Without this, Qt gives every widget beside it one too,
-	// which a main window drawn with OpenGL (the game view is a QOpenGLWidget)
-	// cannot draw into.
-	QCoreApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
-
 	QApplication app(argc, argv);
 
 	// The game named on the command line is relative to where the program was
@@ -69,7 +65,7 @@ int main(int argc, char* argv[])
 	{
 		window.openGame(game);
 	}
-	else
+	else if (!window.openLastGame())
 	{
 		QTimer::singleShot(0, &window, &xge::MainWindow::chooseGame);
 	}
