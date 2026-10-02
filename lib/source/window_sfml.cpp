@@ -379,8 +379,7 @@ namespace xge
 
 		if (!texture.loadFromFile(imageFile))
 		{
-			std::cout << "error: SFML Image: failed to load " << imageFile << '\n';
-			exit(EXIT_FAILURE);
+			throw std::runtime_error("SFML could not load the image " + imageFile);
 		}
 
 		sf::Sprite sprite(texture);

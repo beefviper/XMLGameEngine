@@ -101,14 +101,17 @@ namespace xge
 
 		InitWindow(static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height), windowDesc.name.c_str());
 
+		if (!IsWindowReady())
+		{
+			throw std::runtime_error("raylib could not start");
+		}
+
+		// raylib's context, which InitWindow made current. Kept in either
+		// mode, so close() can free raylib's things in it.
+		graphicsContext = glfwGetCurrentContext();
+
 		if (offscreen)
 		{
-			if (!IsWindowReady())
-			{
-				throw std::runtime_error("raylib could not start");
-			}
-
-			graphicsContext = glfwGetCurrentContext();
 			backTarget = LoadRenderTexture(static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height));
 			captured.width = static_cast<int>(windowDesc.width);
 			captured.height = static_cast<int>(windowDesc.height);
@@ -150,6 +153,11 @@ namespace xge
 	{
 		if (isOpenFlag)
 		{
+			// The textures, the font and raylib's own buffers are freed in
+			// whichever OpenGL context is current: make it raylib's, not one a
+			// front end (or another library) made current since.
+			activate();
+
 			visuals.clear();
 
 			if (customFont)
@@ -457,8 +465,7 @@ namespace xge
 		Image image = LoadImage(imageFile.c_str());
 		if (image.data == nullptr)
 		{
-			std::cout << "error: Raylib Image: failed to load " << imageFile << '\n';
-			exit(EXIT_FAILURE);
+			throw std::runtime_error("raylib could not load the image " + imageFile);
 		}
 
 		if (object.spriteParams.size() > 2 && object.spriteParams.at(2) == "flip.horizontal")

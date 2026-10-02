@@ -24,8 +24,8 @@ namespace xge
 	{
 	public:
 		// backend picks which Window implementation actually opens (SFML3,
-		// Raylib, or SDL2 - see window.h); defaults to SFML3 so existing
-		// callers (main.cpp) don't have to name one.
+		// Raylib, SDL2 or OpenGL - see window.h); defaults to SFML3 so existing
+		// callers don't have to name one.
 		explicit Engine(Game& game, WindowBackend backend = WindowBackend::SFML3);
 
 		// Same, but with an already-built Window - what lets a test drive
@@ -41,7 +41,8 @@ namespace xge
 		// picture is built again for it. Nothing about the game changes - not
 		// the objects, the values, or the state the game is in - and the keys
 		// held stay held. If `create` throws, the engine has no window and can
-		// only be given one by calling this again (or destroyed).
+		// only be given one by calling this again (or destroyed); step() and
+		// render() throw std::logic_error until then.
 		void replaceWindow(const std::function<std::unique_ptr<Window>()>& create);
 
 		// What loop() does each frame, split in two so a front end that owns
@@ -87,5 +88,8 @@ namespace xge
 		// run on a real press (otherwise holding Space through a menu would
 		// pause the game the moment it started).
 		void syncHeldKeysToState();
+
+		// Throws std::logic_error when there is no window (see replaceWindow).
+		void requireWindow(void) const;
 	};
 }

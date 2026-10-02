@@ -638,8 +638,9 @@ namespace xge
 
 		if (!document->load(filename))
 		{
-			std::cout << "XML file failed to load: " << document->getErrorMessage() << "\n\n";
-			exit(EXIT_FAILURE);
+			// Thrown, not exit(): a front end that loads games one after another
+			// (XGEGUI) tells the user and carries on.
+			throw std::runtime_error("XML file failed to load: " + document->getErrorMessage());
 		}
 
 		// find key points in document
@@ -675,8 +676,7 @@ namespace xge
 
 			if (!validator.loadSchema(schemaPath, backend) || !validator.validate(*root))
 			{
-				std::cout << "XML file failed to validate against the schema: " << validator.getErrorMessage() << "\n\n";
-				exit(EXIT_FAILURE);
+				throw std::runtime_error("XML file failed to validate against the schema: " + validator.getErrorMessage());
 			}
 
 			validation = SchemaValidation::Weak;

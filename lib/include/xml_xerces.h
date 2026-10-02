@@ -34,10 +34,10 @@ namespace xge
 		const xc::DOMElement* element;
 	};
 
-	// The Xerces XmlDocument backend - the only one of the three (see also
-	// xml_tinyxml2.h, xml_pugixml.h) that can validate against
-	// assets/xmlgameengine.xsd, since neither TinyXML2 nor PugiXML has a
-	// schema validator at all; those two only ever check well-formedness.
+	// The Xerces XmlDocument backend - the only one of the four (see also
+	// xml_tinyxml2.h, xml_pugixml.h, xml_rapidxml.h) that can validate against
+	// assets/xmlgameengine.xsd by itself; the other three only check
+	// well-formedness, and game_xml.cpp runs xsd_lite.h's validator for them.
 	// Absorbs what used to be the standalone game_xml class's own Xerces
 	// lifecycle (XMLPlatformUtils::Initialize/Terminate, the DOM parser, the
 	// SAX error handler) - game_xml.cpp itself no longer names a Xerces type
@@ -66,8 +66,14 @@ namespace xge
 			void fatalError(const xc::SAXParseException& ex) override;
 			void resetErrors() noexcept override;
 
+			// The first error or fatal error since the last resetErrors(), as
+			// "line L column C: message"; empty when there was none.
+			const std::string& firstError() const noexcept { return first; }
+
 		private:
-			void reportParseException(const xc::SAXParseException& ex);
+			std::string first;
+
+			void reportParseException(const xc::SAXParseException& ex, bool isError);
 		};
 
 		std::unique_ptr<xc::XercesDOMParser> domParser;

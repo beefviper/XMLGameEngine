@@ -68,9 +68,10 @@ namespace xge
 		RenderTexture2D backTarget{};
 		Bitmap captured;
 
-		// raylib's GLFW window, as the front end's other OpenGL users may have
-		// taken the context since (see Window::activate()). Null when it cannot
-		// be reached.
+		// raylib's GLFW window, made current again by activate() because the
+		// front end's other OpenGL users may have taken the context since (see
+		// Window::activate()), and by close() before raylib's things are
+		// freed. Null when it cannot be reached.
 		void* graphicsContext{ nullptr };
 
 		void captureBackTarget();

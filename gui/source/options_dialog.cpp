@@ -39,7 +39,8 @@ namespace xge
 		form->addRow(tr("&XML parser:"), xml);
 
 		auto* note = new QLabel(tr(
-			"Changing the video library keeps the game as it is: it stays paused, ready to play.\n"
+			"The game waits while this dialog is open, and carries on when it closes.\n"
+			"Changing the video library keeps the game as it is.\n"
 			"Changing the XML parser reads the game file again, so the game starts over."));
 		note->setWordWrap(true);
 

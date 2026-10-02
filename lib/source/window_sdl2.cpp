@@ -421,8 +421,7 @@ namespace xge
 		SDL_Surface* surface = IMG_Load(imageFile.c_str());
 		if (!surface)
 		{
-			std::cout << "error: SDL2_image: failed to load " << imageFile << ": " << IMG_GetError() << '\n';
-			exit(EXIT_FAILURE);
+			throw std::runtime_error("SDL2_image could not load the image " + imageFile + ": " + IMG_GetError());
 		}
 
 		visual.texture = SDL_CreateTextureFromSurface(renderer, surface);

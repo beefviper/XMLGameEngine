@@ -15,6 +15,95 @@
 
 namespace xge
 {
+	namespace
+	{
+		// The object a command names: its exact name (aliens.3.2), the name
+		// from the file (aliens), or the name of its <group> - the same lookup
+		// Game::tryGetObject does while the game runs.
+		const Object* findObject(const std::vector<Object>& objects, const std::string& name)
+		{
+			const auto exact = std::find_if(objects.begin(), objects.end(), [&](const Object& object) { return object.name == name; });
+			if (exact != objects.end())
+			{
+				return &*exact;
+			}
+
+			const auto made = std::find_if(objects.begin(), objects.end(), [&](const Object& object)
+				{
+					return object.baseName == name || (!object.groupName.empty() && object.groupName == name);
+				});
+			return made == objects.end() ? nullptr : &*made;
+		}
+
+		// Every state, object and action a command names has to exist. Found
+		// here, when the game loads, rather than the first time the command
+		// runs: pressing a key bound to <push state="pasued" /> would otherwise
+		// stop the game in the middle of play (and used to read past the end of
+		// the list of states).
+		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects, const std::string& where)
+		{
+			if (const auto* push = std::get_if<CmdPushState>(&command))
+			{
+				const bool known = std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == push->name; });
+				if (!known)
+				{
+					throw std::runtime_error(where + ": <push state=\"" + push->name + "\" /> names no state of the game");
+				}
+			}
+			else if (const auto* trigger = std::get_if<CmdTriggerAction>(&command))
+			{
+				const Object* object = findObject(objects, trigger->object);
+				if (!object)
+				{
+					throw std::runtime_error(where + ": an action of '" + trigger->object + "' is asked for, and there is no object of that name");
+				}
+				if (!object->action.count(trigger->action))
+				{
+					throw std::runtime_error(where + ": '" + trigger->object + "' has no action named '" + trigger->action + "'");
+				}
+			}
+			else if (const auto* fire = std::get_if<CmdFire>(&command))
+			{
+				if (!findObject(objects, fire->projectileName))
+				{
+					throw std::runtime_error(where + ": <fire> names '" + fire->projectileName + "', and there is no object of that name");
+				}
+			}
+			else if (const auto* reset = std::get_if<CmdResetObject>(&command))
+			{
+				if (!findObject(objects, reset->target))
+				{
+					throw std::runtime_error(where + ": <reset object=\"" + reset->target + "\" /> names no object of the game");
+				}
+			}
+		}
+
+		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects)
+		{
+			const auto checkAll = [&](const std::vector<Command>& commands, const std::string& where)
+			{
+				for (const auto& command : commands)
+				{
+					checkCommand(command, states, objects, where);
+				}
+			};
+
+			for (const auto& state : states)
+			{
+				const std::string where = "state '" + state.name + "'";
+				for (const auto& [key, commands] : state.input) { checkAll(commands, where); }
+				for (const auto& condition : state.conditions) { checkAll(condition.commands, where); }
+			}
+
+			for (const auto& object : objects)
+			{
+				const std::string where = "object '" + object.baseName + "'";
+				for (const auto& [name, commands] : object.action) { checkAll(commands, where); }
+				for (const auto& rule : object.collisionData.basic) { checkAll(rule.commands, where); }
+			}
+		}
+	}
+
 	void game_expr::init(const WindowDesc& windowDesc,
 		const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 		std::vector<RawState>& rawStates, std::vector<State>& states,
@@ -329,6 +418,8 @@ namespace xge
 
 			states.push_back(state);
 		}
+
+		checkReferences(states, objects);
 	}
 
 	float game_expr::evaluate(const RawValue& value, const std::string& where)

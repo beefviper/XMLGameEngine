@@ -22,9 +22,10 @@ namespace xge
 	// GameView's picture with QPainter, and reads its keys from the view. It is
 	// the one backend that does not open a window of its own - the view is
 	// already part of the application - so it is built in XGEGUI, not in
-	// XGELIB, and the engine library needs no Qt. The SFML, raylib and SDL2
-	// backends each want a window to themselves, which is why this one draws
-	// the picture itself instead of embedding them.
+	// XGELIB, and the engine library needs no Qt. It needs no other library
+	// either, so it is also what the application falls back to when the one
+	// chosen will not start (the library backends are shown through
+	// EmbeddedWindow, embedded_window.h).
 	class QtWindow : public Window
 	{
 	public:

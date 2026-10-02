@@ -5,6 +5,7 @@
 
 #include "engine.h"
 
+#include <stdexcept>
 #include <utility>
 
 namespace xge
@@ -45,9 +46,18 @@ namespace xge
 		game.resolveSizeDependentPositions();
 	}
 
+	void Engine::requireWindow(void) const
+	{
+		// Only after a replaceWindow() whose `create` threw.
+		if (!window)
+		{
+			throw std::logic_error("the engine has no window: the last one asked for could not be made");
+		}
+	}
+
 	void Engine::loop(void)
 	{
-		while (window->isOpen())
+		while (window && window->isOpen())
 		{
 			step();
 			render();
@@ -56,6 +66,8 @@ namespace xge
 
 	void Engine::step(void)
 	{
+		requireWindow();
+
 		for (auto& [key, pressed] : window->pollEvents())
 		{
 			if (pressed) { handleKeyPressed(key); }
@@ -74,6 +86,8 @@ namespace xge
 
 	void Engine::render(void)
 	{
+		requireWindow();
+
 		window->clear(game.getWindowDesc().background);
 
 		for (auto& object : game.getCurrentObjects())

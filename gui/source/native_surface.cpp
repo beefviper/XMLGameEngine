@@ -18,6 +18,14 @@ namespace xge
 		QWidget(parent),
 		keys(keys)
 	{
+		// Only this widget gets a platform window of its own. Without
+		// WA_DontCreateNativeAncestors, Qt makes every widget above it native
+		// too (and, without Qt::AA_DontCreateNativeWidgetSiblings, every widget
+		// beside those: see main.cpp), and when the game view is a
+		// QOpenGLWidget, Qt draws the main window with OpenGL and cannot make its
+		// context current on those plain native windows; it then draws with
+		// whatever OpenGL context is current, which can be a window library's.
+		setAttribute(Qt::WA_DontCreateNativeAncestors);
 		setAttribute(Qt::WA_NativeWindow);
 		setAttribute(Qt::WA_PaintOnScreen);
 		setAttribute(Qt::WA_NoSystemBackground);

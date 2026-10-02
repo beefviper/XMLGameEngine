@@ -93,15 +93,24 @@ namespace xge
 
 	void MainWindow::showOptions()
 	{
-		OptionsDialog dialog(session->options(), this);
-		if (dialog.exec() != QDialog::Accepted)
-		{
-			return;
-		}
+		// The game cannot be played while the dialog is up (it has the
+		// keyboard), so it waits, and carries on afterwards the way it was.
+		const bool wasPlaying = session->isPlaying();
+		session->pause();
 
-		if (!session->applyOptions(dialog.options()) && !session->error().isEmpty())
+		OptionsDialog dialog(session->options(), this);
+		const bool accepted = dialog.exec() == QDialog::Accepted;
+
+		if (accepted && !session->applyOptions(dialog.options()))
 		{
-			QMessageBox::critical(this, tr("Could not use the options"), session->error());
+			if (!session->error().isEmpty())
+			{
+				QMessageBox::critical(this, tr("Could not use the options"), session->error());
+			}
+		}
+		else if (wasPlaying)
+		{
+			session->play();
 		}
 
 		stage->focusGame();

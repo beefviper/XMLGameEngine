@@ -58,7 +58,12 @@ namespace xge
 
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
-		void pushState(std::string name);
+
+		// Throws std::out_of_range for a name that is not one of the game's
+		// states (a game file is checked for that when it loads).
+		void pushState(const std::string& name);
+
+		// Does nothing when only the state the game started in is left.
 		void popState(void) noexcept;
 
 		// Goes up by one every time the state stack changes (any push or pop,
@@ -181,5 +186,7 @@ namespace xge
 		// first one whose target variable has reached its threshold fires its
 		// action and stops (the state may have just changed).
 		void checkConditions();
+
+		void runConditionCommands(std::vector<Command> commands);
 	};
 }

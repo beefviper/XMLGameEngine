@@ -54,10 +54,11 @@ namespace xge
 
 		// Uses the new options. With a game loaded: a new video library gets
 		// the game just as it is (every object, every value, the state it is in)
-		// and draws it again; the game is left paused, to be played again when
-		// the user wants. A new XML parser has to read the game file again, so
-		// the game starts over (also paused). Returns false if that failed
-		// (error() says why).
+		// and draws it again. A new XML parser has to read the game file again,
+		// so the game starts over. Either way the game is paused afterwards;
+		// whoever asked (the Options dialog, MainWindow::showOptions) plays it
+		// again if it was playing. Returns false if that failed (error() says
+		// why).
 		bool applyOptions(const SessionOptions& next);
 
 	public slots:

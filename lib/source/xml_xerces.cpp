@@ -107,17 +107,24 @@ namespace xge
 		return sibling ? std::make_unique<XercesXmlNode>(sibling) : nullptr;
 	}
 
-	void XercesXmlDocument::ParserErrorHandler::reportParseException(const xc::SAXParseException& ex)
+	void XercesXmlDocument::ParserErrorHandler::reportParseException(const xc::SAXParseException& ex, bool isError)
 	{
-		char* msg = xc::XMLString::transcode(ex.getMessage());
-		std::cout << "at line " << ex.getLineNumber() << " column " << ex.getColumnNumber() << " " << msg << '\n';
-		xc::XMLString::release(&msg);
+		const std::string where = "line " + std::to_string(ex.getLineNumber()) + " column " + std::to_string(ex.getColumnNumber());
+		const std::string message = xmlChToStr(ex.getMessage());
+		std::cout << "at " << where << " " << message << '\n';
+
+		// Kept, so the error a front end shows says what was wrong and where,
+		// not only that something was.
+		if (isError && first.empty())
+		{
+			first = where + ": " + message;
+		}
 	}
 
-	void XercesXmlDocument::ParserErrorHandler::warning(const xc::SAXParseException& ex) { reportParseException(ex); }
-	void XercesXmlDocument::ParserErrorHandler::error(const xc::SAXParseException& ex) { reportParseException(ex); }
-	void XercesXmlDocument::ParserErrorHandler::fatalError(const xc::SAXParseException& ex) { reportParseException(ex); }
-	void XercesXmlDocument::ParserErrorHandler::resetErrors() noexcept {}
+	void XercesXmlDocument::ParserErrorHandler::warning(const xc::SAXParseException& ex) { reportParseException(ex, false); }
+	void XercesXmlDocument::ParserErrorHandler::error(const xc::SAXParseException& ex) { reportParseException(ex, true); }
+	void XercesXmlDocument::ParserErrorHandler::fatalError(const xc::SAXParseException& ex) { reportParseException(ex, true); }
+	void XercesXmlDocument::ParserErrorHandler::resetErrors() noexcept { first.clear(); }
 
 	XercesXmlDocument::XercesXmlDocument() noexcept
 	{
@@ -147,6 +154,14 @@ namespace xge
 	{
 		std::cout << "[Xerces] Loading file: " << filename << '\n';
 
+		// The constructor cannot throw; Xerces failing to start shows up here.
+		if (!domParser)
+		{
+			errorMessage = "Xerces could not start";
+			return false;
+		}
+
+		parserErrorHandler.resetErrors();
 		domParser->setErrorHandler(&parserErrorHandler);
 		domParser->setValidationScheme(xc::XercesDOMParser::Val_Auto);
 		domParser->setDoNamespaces(true);
@@ -206,6 +221,10 @@ namespace xge
 		errorMessage = !schemaLocation.empty()
 			? "XML file failed to validate against the schema"
 			: "XML file failed to parse";
+		if (!parserErrorHandler.firstError().empty())
+		{
+			errorMessage += " (" + parserErrorHandler.firstError() + ")";
+		}
 		return false;
 	}
 

@@ -174,6 +174,8 @@ namespace xge
 			stage.showView();
 		}
 
+		// Starting the library makes its context current; Qt's is put back.
+		QtContextKeeper keeper;
 		return std::make_unique<EmbeddedWindow>(WindowFactory::create(desc, backend, target), stage);
 	}
 

@@ -222,19 +222,32 @@ namespace xge
 
 	void Game::setCurrentState(const std::string& name)
 	{
-		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
-		currentState.push(*result);
-		++stateChanges;
+		pushState(name);
 	}
 
-	void Game::pushState(std::string name) {
+	void Game::pushState(const std::string& name)
+	{
 		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
+		if (result == std::end(states))
+		{
+			// The file is checked for this when it loads (see
+			// game_expr::checkReferences); this is for a caller in C++.
+			throw std::out_of_range("no state named '" + name + "'");
+		}
+
 		currentState.push(*result);
 		++stateChanges;
 	}
 
 	void Game::popState(void) noexcept
 	{
+		// The state the game started in is never popped: with no state at
+		// all there would be nothing to show and no keys to read.
+		if (currentState.size() <= 1)
+		{
+			return;
+		}
+
 		currentState.pop();
 		++stateChanges;
 	}
@@ -252,7 +265,7 @@ namespace xge
 	void Game::setObjectParam(const std::string& name, const std::string& param, const float& value)
 	{
 		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
-		if (param == "velocity")
+		if (result != std::end(objects) && param == "velocity")
 		{
 			result->velocity.y = value;
 		}
@@ -846,11 +859,7 @@ namespace xge
 
 				if (static_cast<float>(stillIn) <= *condition.remaining)
 				{
-					CommandExecutor executor(*this);
-					for (const auto& command : condition.commands)
-					{
-						executor.executeCondition(command);
-					}
+					runConditionCommands(condition.commands);
 					return; // the state may have just changed - stop for this frame
 				}
 
@@ -880,13 +889,21 @@ namespace xge
 					continue;
 				}
 
-				CommandExecutor executor(*this);
-				for (const auto& command : condition.commands)
-				{
-					executor.executeCondition(command);
-				}
+				runConditionCommands(condition.commands);
 				return; // the state may have just changed - stop for this frame
 			}
+		}
+	}
+
+	// A copy of the commands, not the state's own list: the list belongs to the
+	// current state, and a <pop /> among them frees that state while the rest
+	// of the list is still to run.
+	void Game::runConditionCommands(std::vector<Command> commands)
+	{
+		CommandExecutor executor(*this);
+		for (const auto& command : commands)
+		{
+			executor.executeCondition(command);
 		}
 	}
 }

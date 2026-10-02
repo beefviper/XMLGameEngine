@@ -87,7 +87,15 @@ namespace
 			"<collisions>" + o.collisions + "</collisions>" + o.extra + "</object>";
 	}
 
-	std::string gameXml(const std::string& variables, const std::string& objects, const std::string& conditions = {})
+	// A state that does nothing, for the commands under test to name.
+	std::string idleState(const std::string& name)
+	{
+		return "<state name=\"" + name + "\"><shows><show object=\"o\" /></shows>"
+			"<inputs><input button=\"space\"><pop /></input></inputs></state>";
+	}
+
+	std::string gameXml(const std::string& variables, const std::string& objects, const std::string& conditions = {},
+		const std::string& moreStates = {})
 	{
 		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
@@ -95,7 +103,7 @@ namespace
 			"<variables>" + variables + "</variables>"
 			"<objects>" + objects + "</objects>"
 			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows>"
-			"<inputs><input button=\"space\"><pop /></input></inputs>" + conditions + "</state></states>"
+			"<inputs><input button=\"space\"><pop /></input></inputs>" + conditions + "</state>" + moreStates + "</states>"
 			"</game>";
 	}
 
@@ -304,8 +312,10 @@ TEST_CASE("state commands: push, pop, trigger, fire and reset with and without a
 		"<input button=\"a\"><push state=\"paused\" /><pop /></input>"
 		"<input button=\"b\"><trigger object=\"o\" action=\"go\" /><fire object=\"o\" /></input>"
 		"<input button=\"c\"><reset /><reset object=\"o\" /></input>"
-		"</inputs></state></states>";
-	std::string xml = gameXml("", objectXml({}));
+		"</inputs></state>" + idleState("paused") + "</states>";
+	ObjectXml o;
+	o.extra = "<actions><action name=\"go\"><move direction=\"left\">1</move></action></actions>";
+	std::string xml = gameXml("", objectXml(o));
 	xml.replace(xml.find("<states>"), xml.find("</states>") + 9 - xml.find("<states>"), states);
 	Loaded loaded(xml);
 	loaded.game.setCurrentState("playing");
@@ -448,7 +458,7 @@ TEST_CASE("a condition is a test tag, then the commands it runs", "[xml_format][
 		"<condition object=\"frog\" variable=\"lives\"><atmost>0</atmost><push state=\"a\" /><push state=\"b\" /></condition>"
 		"<condition class=\"aliens\"><remaining>window.width.center / 400</remaining><pop /></condition>"
 		"</conditions>";
-	Loaded loaded(gameXml("", objectXml({}), conditions));
+	Loaded loaded(gameXml("", objectXml({}), conditions, idleState("gameover") + idleState("a") + idleState("b")));
 	loaded.game.setCurrentState("playing");
 
 	const auto& all = loaded.game.getCurrentState().conditions;
@@ -626,4 +636,52 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 			CHECK_FALSE(verdict.strongAccepts);
 		}
 	}
+}
+
+TEST_CASE("a command that names a state, object or action the game does not have stops the load", "[xml_format][commands]")
+{
+	const auto withInput = [](const std::string& commands, const std::string& extra = {})
+	{
+		ObjectXml o;
+		o.extra = extra;
+		std::string xml = gameXml("", objectXml(o));
+		xml.replace(xml.find("<pop />"), 7, commands);
+		return xml;
+	};
+
+	REQUIRE_THROWS_WITH(Loaded(withInput("<push state=\"pasued\" />")),
+		ContainsSubstring("state 'playing'") && ContainsSubstring("pasued"));
+	REQUIRE_THROWS_WITH(Loaded(withInput("<trigger object=\"nobody\" action=\"go\" />")),
+		ContainsSubstring("no object of that name"));
+	REQUIRE_THROWS_WITH(Loaded(withInput("<trigger object=\"o\" action=\"jump\" />")),
+		ContainsSubstring("'o' has no action named 'jump'"));
+	REQUIRE_THROWS_WITH(Loaded(withInput("<fire object=\"bullet\" />")),
+		ContainsSubstring("bullet"));
+	REQUIRE_THROWS_WITH(Loaded(withInput("<reset object=\"nobody\" />")),
+		ContainsSubstring("nobody"));
+
+	// A condition is checked the same way as a key.
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml({}), "<conditions><condition object=\"o\" variable=\"v\"><atleast>1</atleast><push state=\"over\" /></condition></conditions>")),
+		ContainsSubstring("over"));
+
+	// The names that are there load as before.
+	CHECK_NOTHROW(Loaded(withInput("<trigger object=\"o\" action=\"go\" />",
+		"<actions><action name=\"go\"><move direction=\"left\">1</move></action></actions>")));
+}
+
+TEST_CASE("the state a game starts in is never popped", "[xml_format][states]")
+{
+	Loaded loaded(gameXml("", objectXml({}), {}, idleState("paused")));
+	loaded.game.setCurrentState(0);
+	loaded.game.pushState("paused");
+
+	loaded.game.popState();
+	CHECK(loaded.game.getCurrentState().name == "playing");
+
+	const unsigned long changes = loaded.game.stateChangeCount();
+	loaded.game.popState();
+	CHECK(loaded.game.getCurrentState().name == "playing");
+	CHECK(loaded.game.stateChangeCount() == changes);
+
+	CHECK_THROWS_AS(loaded.game.pushState("nowhere"), std::out_of_range);
 }
