@@ -4,14 +4,15 @@
 // date: Sept 29, 2026
 //
 // Catch2 test for a <grid> in lockstep bouncing off the screen edges
-// (Game::updateLockstepObjects), using the invader block from
-// games/spaceinvaders.xml in a real xge::Game.
+// (Game::updateLockstepObjects), using the invader block of the first Space
+// Invaders game (a copy of it kept in invaders_fixture.h) in a real xge::Game.
 //
 // Regression covered: on every bounce off the right edge the members stored
 // before the touching one were shifted three steps and the rest one, so the
 // last column of the block drifted 4 px further away each time.
 
 #include "game.h"
+#include "invaders_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -53,7 +54,7 @@ namespace
 
 TEST_CASE("the invader block keeps its column spacing through every bounce", "[lockstep_bounce]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
 	// Window::init() normally measures these; a Game built on its own has {0, 0}.

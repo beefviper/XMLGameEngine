@@ -90,16 +90,33 @@ namespace xge
 		// a grid, {"grid", columns, rows, xPadding, yPadding} after those. A
 		// drawing of lines is {"line", width, height} - the size of the picture
 		// - and the picture itself is handed back through `bitmap` when that is
-		// given (see Object::bitmap).
+		// given (see Object::bitmap). A bitmap (a picture in rows of text) is
+		// drawn the same way and has the same params, with a grid's after them
+		// when it is repeated.
 		//
-		// `turned`, when given, is for an object that has a <heading>: a drawing
-		// of lines is then drawn at every heading (see rasterizeTurned), those
-		// pictures are handed back through it, `bitmap` is the one for heading 0,
-		// and the size in the params is the square all of them share.
+		// `turnable`, when given, is for an object that has a <heading>: what a
+		// drawing of lines or a <bitmap> is to be turned from is handed back
+		// through it (see Turnable), `bitmap` is the drawing at heading 0, and
+		// the size in the params is the square it turns in.
 		std::vector<std::string> buildSpriteParams(const RawSprite& sprite, const std::string& where,
 			std::shared_ptr<const Bitmap>* bitmap = nullptr,
-			std::vector<std::shared_ptr<const Bitmap>>* turned = nullptr);
+			std::shared_ptr<const Turnable>* turnable = nullptr);
 		xge::GridData gridDataOf(const RawSprite& sprite, const std::string& where);
+
+		// The pictures of an object's <animation>, each drawn once, in the order
+		// of its <frame>s. Throws std::runtime_error (saying whose) when a frame
+		// is not a <bitmap> or a drawing of <line>s, or when the frames are not
+		// all the same size and the same grid. `turned`, when given, is for an
+		// object with a <heading>: it gets what each frame turns from,
+		// and every frame must turn in the same size of square.
+		std::vector<std::shared_ptr<const Bitmap>> buildAnimationBitmaps(const RawObject& rawObject, const std::string& where,
+			std::vector<std::shared_ptr<const Turnable>>* turnables = nullptr);
+
+		// How many frames of the game each picture of the animation is shown
+		// for: its <interval> in seconds times the window's <framerate>, at
+		// least 1. Throws std::runtime_error for an interval that is not above
+		// 0, or for a window with no framerate to count seconds in.
+		int animationFramesOf(const RawObject& rawObject, const WindowDesc& windowDesc, const std::string& where);
 
 		std::vector<Command> processCommands(const std::vector<RawCommand>& raw, const std::string& where);
 

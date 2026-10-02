@@ -424,7 +424,9 @@ namespace xge
 		}
 		else
 		{
-			projectile->position.x = shooter.position.x + shooter.size.x / 2;
+			// From the shooter's top-centre: the projectile's own middle over
+			// the shooter's, so a thin shot leaves the middle of the gun.
+			projectile->position.x = shooter.position.x + sizeOf(shooter).x / 2 - sizeOf(*projectile).x / 2;
 			projectile->position.y = shooter.position.y;
 			projectile->velocity = projectile->velocityOriginal;
 		}

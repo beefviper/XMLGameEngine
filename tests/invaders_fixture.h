@@ -1,23 +1,34 @@
-<!-- spaceinvaders.xml -->
+// invaders_fixture.h
+// XML Game Engine
+// author: beefviper
+// date: Oct 2, 2026
+//
+// A frozen copy of the first Space Invaders game file: one 11 by 5 <grid> of
+// 50 by 50 rectangles, a 50 by 50 player and a circle for a bullet. Several
+// tests need a real game with a grid in lockstep, a bullet and a win condition
+// to check the engine's grid naming, swept collisions, lockstep bounces and
+// win, and the sizes and names they check were those of this file. The game in
+// games/spaceinvaders.xml has moved on (pictures, three kinds of alien in a
+// group, an animation), so the tests that are about the engine and not about
+// that game load this copy instead, and do not change when the game does.
+
+#pragma once
+
+#include <cstdio>
+#include <filesystem>
+#include <fstream>
+#include <string>
+
+namespace invaders_fixture
+{
+	inline const char* xml()
+	{
+		return R"xml(<!-- spaceinvaders.xml -->
 <!-- XML Game Engine -->
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
-<!--
-  Space Invaders. The ship and the aliens are not rectangles but pictures
-  written as text: a <bitmap> is rows of characters, a period for a clear pixel
-  and an asterisk for a solid one, each character drawn `pixel` (5) real pixels
-  across, so a few characters make a chunky sprite.
-
-  Each kind of alien has two sprites (a and b) and an <animation> that shows
-  them one after the other, each for animation.seconds (1) seconds. The three
-  kinds are the members of one group, so they march, bounce and step down
-  together as a single block; each member is a <grid> of its own sprite, and
-  both of its sprites have to be laid out the same way. The bullet is a thin
-  tall rectangle.
--->
-
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+<game>
   <window name="Space Invaders">
     <width>1024</width>
     <height>768</height>
@@ -27,20 +38,17 @@
   </window>
   <variables>
     <variable name="margin">80</variable>
-    <variable name="pixel">5</variable>
-    <variable name="gap">15</variable>
-    <variable name="animation.seconds">1</variable>
-    <variable name="bulletwidth">4</variable>
-    <variable name="bulletheight">24</variable>
+    <variable name="bullet.radius">4</variable>
+    <variable name="width">50</variable>
+    <variable name="height">50</variable>
     <variable name="step">2</variable>
   </variables>
   <objects>
     <object name="bullet" class="projectile">
       <sprite>
-        <rectangle>
-          <width>bulletwidth</width>
-          <height>bulletheight</height>
-        </rectangle>
+        <circle>
+          <radius>bullet.radius</radius>
+        </circle>
       </sprite>
       <position>
         <x>0</x>
@@ -62,21 +70,14 @@
     </object>
     <object name="player">
       <sprite>
-        <bitmap>
-          <row>.....*.....</row>
-          <row>....***....</row>
-          <row>....***....</row>
-          <row>.*********.</row>
-          <row>***********</row>
-          <row>***********</row>
-          <row>***********</row>
-          <scale>pixel</scale>
-          <color>color.green</color>
-        </bitmap>
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+        </rectangle>
       </sprite>
       <position>
-        <x>window.width.center - player.width / 2</x>
-        <y>window.bottom - player.height * 2</y>
+        <x>window.width.center</x>
+        <y>window.bottom - height * 2</y>
       </position>
       <velocity>
         <x>0</x>
@@ -100,9 +101,24 @@
         </action>
       </actions>
     </object>
-    <group name="aliens" class="aliens">
+    <object name="aliens" class="aliens">
+      <sprite>
+        <grid>
+          <columns>11</columns>
+          <rows>5</rows>
+          <padding>
+            <x>15</x>
+            <y>15</y>
+          </padding>
+          <rectangle>
+            <width>width</width>
+            <height>height</height>
+          </rectangle>
+        </grid>
+      </sprite>
       <position>
         <x>margin</x>
+        <y>margin/2</y>
       </position>
       <velocity>
         <x>2</x>
@@ -119,169 +135,7 @@
           <die />
         </collision>
       </collisions>
-    <member name="squids">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>1</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
-          <bitmap>
-            <row>....***....</row>
-            <row>...*****...</row>
-            <row>..*******..</row>
-            <row>.**.***.**.</row>
-            <row>.*********.</row>
-            <row>...*.*.*...</row>
-            <row>..*..*..*..</row>
-            <row>...*.*.*...</row>
-            <scale>pixel</scale>
-            <color>color.magenta</color>
-          </bitmap>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>1</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
-          <bitmap>
-            <row>....***....</row>
-            <row>...*****...</row>
-            <row>..*******..</row>
-            <row>.**.***.**.</row>
-            <row>.*********.</row>
-            <row>..*..*..*..</row>
-            <row>.*...*...*.</row>
-            <row>..*.....*..</row>
-            <scale>pixel</scale>
-            <color>color.magenta</color>
-          </bitmap>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-      </animation>
-      <position>
-        <y>margin / 2</y>
-      </position>
-    </member>
-    <member name="crabs">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
-          <bitmap>
-            <row>..*.....*..</row>
-            <row>...*...*...</row>
-            <row>..*******..</row>
-            <row>.**.***.**.</row>
-            <row>***********</row>
-            <row>*.*******.*</row>
-            <row>*.*.....*.*</row>
-            <row>...**.**...</row>
-            <scale>pixel</scale>
-            <color>color.cyan</color>
-          </bitmap>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
-          <bitmap>
-            <row>..*.....*..</row>
-            <row>*..*...*..*</row>
-            <row>*.*******.*</row>
-            <row>***.***.***</row>
-            <row>***********</row>
-            <row>.*********.</row>
-            <row>..*.....*..</row>
-            <row>.*.......*.</row>
-            <scale>pixel</scale>
-            <color>color.cyan</color>
-          </bitmap>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-      </animation>
-      <position>
-        <y>margin / 2 + squids.height + gap</y>
-      </position>
-    </member>
-    <member name="octopuses">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
-          <bitmap>
-            <row>...*****...</row>
-            <row>.*********.</row>
-            <row>***********</row>
-            <row>***..*..***</row>
-            <row>***********</row>
-            <row>...**.**...</row>
-            <row>..**...**..</row>
-            <row>***.....***</row>
-            <scale>pixel</scale>
-            <color>color.white</color>
-          </bitmap>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
-          <bitmap>
-            <row>...*****...</row>
-            <row>.*********.</row>
-            <row>***********</row>
-            <row>***..*..***</row>
-            <row>***********</row>
-            <row>..***.***..</row>
-            <row>.**.....**.</row>
-            <row>..**...**..</row>
-            <scale>pixel</scale>
-            <color>color.white</color>
-          </bitmap>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-      </animation>
-      <position>
-        <y>margin / 2 + squids.height + gap + 2 * (crabs.height + gap)</y>
-      </position>
-    </member>
-    </group>
+    </object>
     <object name="title">
       <sprite>
         <text>
@@ -472,3 +326,29 @@
     </state>
   </states>
 </game>
+)xml";
+	}
+
+	// The path of the fixture written to the temp folder, written the first
+	// time it is asked for and removed when the test program ends. It names no
+	// schema, so it is not validated.
+	inline const std::string& path()
+	{
+		struct Written
+		{
+			std::string file;
+
+			Written() :
+				file((std::filesystem::temp_directory_path() / "xge_invaders_fixture.xml").string())
+			{
+				std::ofstream out(file);
+				out << xml();
+			}
+
+			~Written() { std::remove(file.c_str()); }
+		};
+
+		static const Written written;
+		return written.file;
+	}
+}

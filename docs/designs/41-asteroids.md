@@ -22,7 +22,7 @@ An 800 by 600 window. The ship is a triangle of four lines. Left and right turn 
 ## Decisions
 
 - **Heading is degrees clockwise from up**, so 0 is up and 90 is right; the direction is (sin h, -cos h). An object with no `<heading>` is unchanged.
-- **Pre-rotated pictures.** A sprite of lines on an object with a heading is drawn at 72 headings (every 5 degrees) when the game loads (`rasterizeTurned`), all the same square size and turned about the middle of the lines. The object shows the nearest one, so every backend, which already redraws from the object's bitmap, needed no change, and pixel collisions use the picture that is shown.
+- **Pictures drawn at the heading, once per change.** A sprite of lines on an object with a heading is turned about the middle of the lines (`rasterizeTurned`) into a picture of the same square size at every heading. The object shows that picture, so every backend, which already redraws from the object's bitmap, needed no change, and pixel collisions use the picture that is shown. The first version made 72 pictures (every 5 degrees) when the game loaded; [42](42-bitmap-sprites-and-animation.md) replaced that with turning on demand, to the whole degree, so the object keeps only the original and the picture it shows.
 - **`<turn>` and `<thrust>` are held like `<move>` and `<accelerate>`**; `<thrust>` can `burn` a variable. Using either on an object with no `<heading>` is an error when the game loads.
 - **`<drag>` is a fraction from 0 up to (not including) 1**, applied to the velocity once a frame after thrust.
 - **Pools, not spawning.** A `<group>` of rocks is built at load and hidden (`<hidden>true</hidden>`). `<release object="group">N</release>` in a collision rule puts the first N out-of-play members back, centered on the object running the rule, at their own starting velocity. The same idea gives shots: `<fire object="shots" />` picks the first member whose collisions are off.
@@ -38,4 +38,4 @@ An 800 by 600 window. The ship is a triangle of four lines. Left and right turn 
 
 ## Approximations
 
-The ship comes back at the middle straight away, with no wait for a safe spot. A pool member has the same velocity every time it is released. One wave only, no flying saucer, no sound. Headings are rounded to 5 degrees.
+The ship comes back at the middle straight away, with no wait for a safe spot. A pool member has the same velocity every time it is released. One wave only, no flying saucer, no sound. Headings are rounded to a whole degree.

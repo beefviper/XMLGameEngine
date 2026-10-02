@@ -224,7 +224,8 @@ TEST_CASE("firing launches a shot up from the ship, one at a time", "[astrosmash
 
 	table.press("gun");
 	CHECK(table.inFlight());
-	CHECK(table.shot().position.x == table.ship().position.x + table.ship().size.x / 2.0f);
+	// Leaves the middle of the ship: the shot's own middle over the ship's.
+	CHECK(table.shot().position.x + table.shot().size.x / 2.0f == table.ship().position.x + table.ship().size.x / 2.0f);
 	CHECK(table.shot().position.y == table.ship().position.y);
 	CHECK(table.shot().velocity.y == -11.0f);
 

@@ -8,6 +8,8 @@
 #include "color.h"
 
 #include <cstdint>
+#include <memory>
+#include <string>
 #include <vector>
 
 namespace xge
@@ -60,17 +62,52 @@ namespace xge
 	// least that big (the lines stay where they are, the rest is transparent).
 	Bitmap rasterizeLines(const std::vector<LineSegment>& lines, int minWidth = 0, int minHeight = 0);
 
-	// How many headings a turning object's drawing is kept at: 72 is every five
-	// degrees. See rasterizeTurned.
-	inline constexpr int headingSteps = 72;
+	// A picture written as rows of text, one character to a pixel: '.' is a
+	// clear (transparent) pixel and '*' a solid one, drawn in `color`. Every
+	// character becomes a `scale` by `scale` block of real pixels, so a handful
+	// of characters makes a chunky sprite. The bitmap is as wide as the rows and
+	// as tall as there are rows, times scale; rows are measured from the top
+	// left, as a sprite of lines is. Throws std::invalid_argument, saying which
+	// row, for no rows, a row with nothing in it, rows of different lengths, a
+	// character other than '.' and '*', or a scale under 1.
+	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color);
 
-	// The same drawing turned, about the middle of the box its line ends lie
-	// in, to `steps` evenly spaced headings, clockwise: bitmap 0 is the
-	// drawing as written (its "up"), bitmap steps / 4 has it turned a quarter
-	// of the way round, and so on. All of them are the same square size, big
-	// enough for the drawing at any heading, with the middle of the drawing at
-	// the middle of the square, so an object that turns stays where it is and
-	// keeps its size. Returns nothing for no lines, and throws
+	// A turned drawing is made when it is wanted, at a whole number of degrees
+	// from 0 up to (not including) 360, clockwise: 0 is the drawing as written
+	// (its "up"), 90 has it turned a quarter of the way round, and so on. Any
+	// number of degrees is taken round to the nearest whole one and wrapped
+	// into that range. See Turnable.
+
+	// The drawing of lines turned about the middle of the box its line ends lie
+	// in. Every heading comes out the same square size, big enough for the
+	// drawing at any heading, with the middle of the drawing at the middle of
+	// the square, so an object that turns stays where it is and keeps its
+	// size. Returns an empty bitmap for no lines, and throws
 	// std::invalid_argument for a negative coordinate as rasterizeLines does.
-	std::vector<Bitmap> rasterizeTurned(const std::vector<LineSegment>& lines, int steps = headingSteps);
+	Bitmap rasterizeTurned(const std::vector<LineSegment>& lines, float degrees);
+
+	// A finished picture turned the same way. Each pixel of the result takes
+	// the colour of the one pixel of the original that lies under it (no
+	// blending), so chunky pixel art stays chunky and what is drawn is exactly
+	// what a pixel collision tests. The result is the one square size for
+	// every heading, with the middle of the picture at the middle of the
+	// square. Returns an empty bitmap for an empty picture.
+	Bitmap turnBitmap(const Bitmap& picture, float degrees);
+
+	// What an object that turns is drawn from, kept once and shared by every
+	// object made from one definition: either a drawing of lines or a picture.
+	// An object keeps just this and the one picture it shows now, and asks for
+	// a new one only when its heading, rounded to a whole degree, changes.
+	struct Turnable
+	{
+		std::vector<LineSegment> lines;
+		std::shared_ptr<const Bitmap> picture;
+
+		// The drawing at the heading: the lines turned if there are lines,
+		// otherwise the picture turned.
+		Bitmap at(float degrees) const
+		{
+			return lines.empty() ? turnBitmap(*picture, degrees) : rasterizeTurned(lines, degrees);
+		}
+	};
 }

@@ -5,7 +5,7 @@
   What a game file is made of. The rule of thumb:
 
     * An attribute NAMES or PICKS something: name, class, object, variable,
-      state, action, button, edge, direction, unless, burn. These are labels, and
+      state, action, button, edge, direction, unless, burn, sprite. These are labels, and
       they cannot be computed.
     * Everything else is the content of an element. Wherever the content is a
       number (valueType below) it is either a math expression written out as
@@ -138,6 +138,22 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <!--
+        A picture in rows of text, one character to a pixel: a period is a clear
+        pixel and an asterisk a solid one, drawn in the color. Every character
+        becomes scale by scale real pixels (1 if left out), so a few characters
+        make a chunky sprite. The rows must all be the same width. Like a
+        drawing of lines it is made into a picture when the game loads.
+      -->
+      <xs:element name="bitmap">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+            <xs:element name="scale" type="valueType" minOccurs="0" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:group>
 
@@ -157,6 +173,7 @@
     </xs:sequence>
   </xs:complexType>
 
+  <!-- A sprite is named when an object has several, so an animation can pick them out. -->
   <xs:complexType name="spriteType">
     <xs:choice>
       <xs:group ref="shape" />
@@ -172,6 +189,25 @@
         </xs:complexType>
       </xs:element>
     </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!--
+    An animation: how many seconds each picture is shown, and the sprites it
+    shows in turn, round and round, each picked out by the name of one of the
+    object's own sprites. At least two frames; the same sprite may come up more
+    than once. The frames must all be pictures (bitmaps or drawings of lines)
+    of the same size.
+  -->
+  <xs:complexType name="animationType">
+    <xs:sequence>
+      <xs:element name="interval" type="valueType" />
+      <xs:element name="frame" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="sprite" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
 
   <!-- Commands: what a collision rule, an object action, a key or a condition does. -->
@@ -363,7 +399,8 @@
   <!-- Anything that can be drawn, moved or collided with. -->
   <xs:complexType name="objectType">
     <xs:sequence>
-      <xs:element name="sprite" type="spriteType" />
+      <xs:element name="sprite" type="spriteType" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="vector2Type" />
       <xs:element name="velocity" type="vector2Type" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
@@ -390,7 +427,8 @@
   -->
   <xs:complexType name="memberType">
     <xs:sequence>
-      <xs:element name="sprite" type="spriteType" minOccurs="0" />
+      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
@@ -399,7 +437,8 @@
 
   <xs:complexType name="groupType">
     <xs:sequence>
-      <xs:element name="sprite" type="spriteType" minOccurs="0" />
+      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />

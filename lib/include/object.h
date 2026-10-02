@@ -139,13 +139,22 @@ namespace xge
 	};
 
 	// An object's <sprite>, as written: one shape, optionally repeated as a
-	// <grid>, or a drawing made of <line>s. Which of the fields are used
-	// depends on `kind` (circle, rectangle, text, image or line).
+	// <grid>, a drawing made of <line>s, or a picture written as rows of text.
+	// Which of the fields are used depends on `kind` (circle, rectangle, text,
+	// image, line or bitmap).
 	struct RawSprite
 	{
 		std::string kind;
 
+		// <sprite name="...">: what an <animation>'s <frame> calls it. Needed
+		// when an object has more than one sprite.
+		std::string name;
+
 		std::vector<RawLine> lines;  // line: one or more
+
+		std::vector<std::string> bitmapRows; // bitmap: the <row>s, top to bottom
+		RawValue scale;              // bitmap: real pixels to a character; only when hasScale
+		bool hasScale{ false };
 
 		RawValue radius;             // circle
 		RawValue width;              // rectangle
@@ -171,11 +180,25 @@ namespace xge
 		bool hasPadding{ false };
 	};
 
+	// An object's <animation>: the sprites it shows one after the other, each
+	// for `interval` seconds, round and round. The frames are the object's own
+	// <sprite>s picked out by name, in the order the <frame>s are written.
+	struct RawAnimation
+	{
+		RawValue interval;
+		std::vector<RawSprite> frames;
+	};
+
 	struct RawObject
 	{
 		std::string name;
 		std::string objClass;
+
+		// What the object looks like: its only <sprite>, or, when it has an
+		// <animation>, the first frame (the one it starts on).
 		RawSprite sprite;
+		bool hasAnimation{ false };
+		RawAnimation animation;
 		bool isVisible{ true };
 		RawVector2 rawPosition;
 		RawVector2 rawVelocity;
@@ -244,14 +267,46 @@ namespace xge
 		// 360. Only an object whose file gives it a <heading> turns (a <turn>
 		// in its actions), is pushed along it (a <thrust>) or fires along it
 		// (a <fire>). `headingOriginal` is how it started, which a reset puts
-		// back. A sprite of <line>s that has a heading is drawn ahead of time at
-		// headingSteps headings (Object::headingBitmaps), and `bitmap` is the
-		// one nearest the heading, so what is shown and what a pixel collision
-		// tests turn with it - see showHeading.
+		// back. A sprite of <line>s or a <bitmap> that has a heading is kept
+		// once as it was written (Object::turnables, shared by every object
+		// made from the one definition) and `bitmap` is that turned to the
+		// heading, to the nearest whole degree, so what is shown and what a
+		// pixel collision tests turn with it - see showHeading. That makes two
+		// pictures an object has to hold, the original and the one it shows.
 		bool hasHeading{ false };
 		float heading{};
 		float headingOriginal{};
-		std::vector<std::shared_ptr<const Bitmap>> headingBitmaps;
+		std::vector<std::shared_ptr<const Turnable>> turnables;
+
+		// What `bitmap` was last drawn at: the whole degrees of the heading and
+		// which of the turnables, so that a heading that has not moved by a
+		// whole degree costs nothing. -1 for nothing drawn yet.
+		int turnedDegrees{ -1 };
+		std::size_t turnedFrame{};
+
+		// An <animation>: the pictures it shows in turn (all one size, and
+		// `bitmap` is whichever is showing), how many frames of the game each
+		// one stays for (the seconds written, times the window's <framerate>),
+		// how many it has been showing, and which one it is (an index into
+		// animationBitmaps). Only an object that is shown and in play moves
+		// on; a reset starts it again at the first. A sprite of one picture
+		// has none of this. See advanceAnimation.
+		std::vector<std::shared_ptr<const Bitmap>> animationBitmaps;
+		int animationFrames{};
+		int animationTick{};
+		std::size_t animationIndex{};
+
+		// Counts one frame of the game towards the next picture of the
+		// animation, and shows it (marking the visual to be rebuilt) when its
+		// time has come. Does nothing for an object with no animation.
+		void advanceAnimation();
+
+		// Back to the first picture, from the start of its time.
+		void restartAnimation();
+
+		// Points `bitmap` at the picture animationIndex names (turned to the
+		// heading, if it turns) and marks the visual to be rebuilt.
+		void showAnimationFrame();
 
 		// Held turning, by Direction (only Left and Right are used): degrees a
 		// frame, as activeThrust holds a thruster; and thrust held along the
@@ -265,9 +320,10 @@ namespace xge
 		// a frame, so a thruster can no longer push it faster than a top speed.
 		float drag{};
 
-		// Points `bitmap` at the drawing nearest the current heading, and
-		// marks the visual to be rebuilt when that is a different one. Does
-		// nothing for an object with no headings drawn.
+		// Draws `bitmap` again at the current heading (and, for an animated
+		// object, the picture that is showing) when that is not what it
+		// already is, and marks the visual to be rebuilt. Does nothing for an
+		// object that does not turn.
 		void showHeading();
 
 		// Per-direction thrust currently being held for this object, the way

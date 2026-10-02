@@ -44,6 +44,53 @@ namespace xge
 		}
 	}
 
+	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color)
+	{
+		if (rows.empty()) { throw std::invalid_argument("a bitmap has no <row>s"); }
+		if (scale < 1) { throw std::invalid_argument("a bitmap's <scale> is " + std::to_string(scale) + "; expected 1 or more"); }
+
+		const std::size_t columns = rows.front().size();
+		for (std::size_t row = 0; row < rows.size(); ++row)
+		{
+			const std::string& text = rows[row];
+			const std::string name = "row " + std::to_string(row + 1) + " of a bitmap";
+
+			if (text.empty()) { throw std::invalid_argument(name + " is empty"); }
+			if (text.size() != columns)
+			{
+				throw std::invalid_argument(name + " is " + std::to_string(text.size()) + " characters wide, but row 1 is "
+					+ std::to_string(columns) + "; every row must be the same width");
+			}
+
+			for (std::size_t column = 0; column < text.size(); ++column)
+			{
+				if (text[column] != '.' && text[column] != '*')
+				{
+					throw std::invalid_argument(name + " has '" + std::string(1, text[column]) + "' as character " + std::to_string(column + 1)
+						+ "; use '.' for a clear pixel and '*' for a solid one");
+				}
+			}
+		}
+
+		Bitmap bitmap;
+		bitmap.width = static_cast<int>(columns) * scale;
+		bitmap.height = static_cast<int>(rows.size()) * scale;
+		bitmap.rgba.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4, 0);
+
+		for (std::size_t row = 0; row < rows.size(); ++row)
+		{
+			for (std::size_t column = 0; column < columns; ++column)
+			{
+				if (rows[row][column] == '*')
+				{
+					stamp(bitmap, static_cast<int>(column) * scale, static_cast<int>(row) * scale, scale, color);
+				}
+			}
+		}
+
+		return bitmap;
+	}
+
 	Bitmap rasterizeLines(const std::vector<LineSegment>& lines, int minWidth, int minHeight)
 	{
 		Bitmap bitmap;
@@ -101,10 +148,69 @@ namespace xge
 		return bitmap;
 	}
 
-	std::vector<Bitmap> rasterizeTurned(const std::vector<LineSegment>& lines, int steps)
+	namespace
 	{
-		std::vector<Bitmap> turned;
-		if (lines.empty() || steps < 1) { return turned; }
+		// A heading as the whole degrees, from 0 up to 359, that it is drawn at.
+		int wholeDegrees(float degrees)
+		{
+			long whole = std::lround(degrees) % 360;
+			if (whole < 0) { whole += 360; }
+			return static_cast<int>(whole);
+		}
+	}
+
+	Bitmap turnBitmap(const Bitmap& picture, float degrees)
+	{
+		if (picture.width < 1 || picture.height < 1) { return Bitmap{}; }
+
+		const float width = static_cast<float>(picture.width);
+		const float height = static_cast<float>(picture.height);
+		const int side = std::max({ static_cast<int>(std::ceil(std::hypot(width, height))), picture.width, picture.height });
+		const float middle = static_cast<float>(side) / 2.0f;
+		const float pi = 3.14159265358979323846f;
+
+		const float angle = 2.0f * pi * static_cast<float>(wholeDegrees(degrees)) / 360.0f;
+		const float c = std::cos(angle);
+		const float s = std::sin(angle);
+
+		Bitmap turned;
+		turned.width = side;
+		turned.height = side;
+		turned.rgba.assign(static_cast<std::size_t>(side) * static_cast<std::size_t>(side) * 4, 0);
+
+		// 90, 180 and 270 degrees should be exact, not a hair off.
+		const int whole = wholeDegrees(degrees);
+		const float cosine = whole == 90 || whole == 270 ? 0.0f : c;
+		const float sine = whole == 0 || whole == 180 ? 0.0f : s;
+
+		for (int y = 0; y < side; ++y)
+		{
+			for (int x = 0; x < side; ++x)
+			{
+				// The pixel's centre, turned back the other way (a clockwise
+				// turn on a screen, where y grows downward) to find what lies
+				// under it in the original. The small amount keeps a pixel
+				// that lands exactly on an edge from tipping the wrong way
+				// through rounding.
+				const float dx = static_cast<float>(x) + 0.5f - middle;
+				const float dy = static_cast<float>(y) + 0.5f - middle;
+				const int sx = static_cast<int>(std::floor(dx * cosine + dy * sine + width / 2.0f + 0.0001f));
+				const int sy = static_cast<int>(std::floor(-dx * sine + dy * cosine + height / 2.0f + 0.0001f));
+
+				if (!picture.solidAt(sx, sy)) { continue; }
+
+				const std::size_t from = (static_cast<std::size_t>(sy) * static_cast<std::size_t>(picture.width) + static_cast<std::size_t>(sx)) * 4;
+				const std::size_t to = (static_cast<std::size_t>(y) * static_cast<std::size_t>(side) + static_cast<std::size_t>(x)) * 4;
+				for (std::size_t k = 0; k < 4; ++k) { turned.rgba[to + k] = picture.rgba[from + k]; }
+			}
+		}
+
+		return turned;
+	}
+
+	Bitmap rasterizeTurned(const std::vector<LineSegment>& lines, float degrees)
+	{
+		if (lines.empty()) { return Bitmap{}; }
 
 		float left = lines.front().x1;
 		float right = left;
@@ -141,34 +247,29 @@ namespace xge
 		const int side = 2 * half + 1;
 		const float pi = 3.14159265358979323846f;
 
-		for (int step = 0; step < steps; ++step)
+		const float angle = 2.0f * pi * static_cast<float>(wholeDegrees(degrees)) / 360.0f;
+		const float c = std::cos(angle);
+		const float s = std::sin(angle);
+
+		// A clockwise turn on a screen, where y grows downward.
+		const auto place = [&](float x, float y)
 		{
-			const float angle = 2.0f * pi * static_cast<float>(step) / static_cast<float>(steps);
-			const float c = std::cos(angle);
-			const float s = std::sin(angle);
+			const float dx = x - middleX;
+			const float dy = y - middleY;
+			return std::pair<float, float>{ static_cast<float>(half) + dx * c - dy * s, static_cast<float>(half) + dx * s + dy * c };
+		};
 
-			// A clockwise turn on a screen, where y grows downward.
-			const auto place = [&](float x, float y)
-			{
-				const float dx = x - middleX;
-				const float dy = y - middleY;
-				return std::pair<float, float>{ static_cast<float>(half) + dx * c - dy * s, static_cast<float>(half) + dx * s + dy * c };
-			};
-
-			std::vector<LineSegment> turnedLines = lines;
-			for (LineSegment& line : turnedLines)
-			{
-				const auto from = place(line.x1, line.y1);
-				const auto to = place(line.x2, line.y2);
-				line.x1 = from.first;
-				line.y1 = from.second;
-				line.x2 = to.first;
-				line.y2 = to.second;
-			}
-
-			turned.push_back(rasterizeLines(turnedLines, side, side));
+		std::vector<LineSegment> turnedLines = lines;
+		for (LineSegment& line : turnedLines)
+		{
+			const auto from = place(line.x1, line.y1);
+			const auto to = place(line.x2, line.y2);
+			line.x1 = from.first;
+			line.y1 = from.second;
+			line.x2 = to.first;
+			line.y2 = to.second;
 		}
 
-		return turned;
+		return rasterizeLines(turnedLines, side, side);
 	}
 }

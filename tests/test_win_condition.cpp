@@ -10,6 +10,7 @@
 
 #include "command_executor.h"
 #include "game.h"
+#include "invaders_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -36,7 +37,7 @@ namespace
 
 TEST_CASE("the game is not over while any alien is left", "[win_condition]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
 	int killed = 0;
@@ -56,7 +57,7 @@ TEST_CASE("the game is not over while any alien is left", "[win_condition]")
 
 TEST_CASE("killing the last alien ends the game", "[win_condition]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
 	for (auto& object : game.getCurrentObjects())
@@ -72,7 +73,7 @@ TEST_CASE("killing the last alien ends the game", "[win_condition]")
 
 TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
 	// Window::init() normally measures these.
@@ -101,7 +102,7 @@ TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 
 TEST_CASE("reset() from the win screen starts a fresh game", "[win_condition]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
 	for (auto& object : game.getCurrentObjects())

@@ -85,6 +85,14 @@ namespace xge
 	{
 		auto& currentObjects = getCurrentObjects();
 
+		// A picture that changes with time (an <animation>) counts this frame
+		// whether or not the object is moving; only what is shown and in play
+		// does, so a pause or a menu holds it where it was.
+		for (auto& object : currentObjects)
+		{
+			if (isShown(object)) { object.advanceAnimation(); }
+		}
+
 		applyAcceleration();
 
 		// Screen-edge checks: independent per object, order doesn't matter.
@@ -396,6 +404,9 @@ namespace xge
 			object.activeThrustAhead = 0.0f;
 			object.activeThrustAheadBurn.clear();
 			object.showHeading();
+
+			// An animation starts again from its first picture.
+			object.restartAnimation();
 
 			// Nor should a reset object carry on being carried, or jump.
 			object.carry = {};

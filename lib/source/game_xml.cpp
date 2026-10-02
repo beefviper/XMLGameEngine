@@ -134,10 +134,10 @@ namespace xge
 
 		bool isShapeTag(const std::string& name)
 		{
-			return name == "circle" || name == "rectangle" || name == "text" || name == "image";
+			return name == "circle" || name == "rectangle" || name == "text" || name == "image" || name == "bitmap";
 		}
 
-		// One <circle>, <rectangle>, <text> or <image>, written into `sprite`.
+		// One <circle>, <rectangle>, <text>, <image> or <bitmap>, written into `sprite`.
 		void readShape(const XmlNode& shape, RawSprite& sprite, const std::string& where)
 		{
 			const std::string kind = shape.getName();
@@ -153,6 +153,23 @@ namespace xge
 			{
 				sprite.width = readValueOf(shape, "width", here);
 				sprite.height = readValueOf(shape, "height", here);
+			}
+			else if (kind == "bitmap")
+			{
+				// A picture in rows of text, '.' clear and '*' solid. Which
+				// characters are allowed, and that the rows are one width, are
+				// checked when it is drawn (bitmap.cpp), with the row named.
+				for (std::unique_ptr<XmlNode> row = shape.getFirstChild(); row != nullptr; row = row->getNextSibling())
+				{
+					if (row->getName() == "row") { sprite.bitmapRows.push_back(readText(*row)); }
+				}
+				if (sprite.bitmapRows.empty()) { fail(here, "needs at least one <row>"); }
+
+				if (auto scale = findChild(&shape, "scale"))
+				{
+					sprite.hasScale = true;
+					sprite.scale = readValue(*scale, here);
+				}
 			}
 			else if (kind == "text")
 			{
@@ -208,6 +225,7 @@ namespace xge
 		{
 			const std::string here = where + " > <sprite>";
 			RawSprite sprite;
+			sprite.name = spriteNode.getAttribute("name");
 
 			std::unique_ptr<XmlNode> first = spriteNode.getFirstChild();
 			if (!first) { fail(here, "is empty; expected a shape or a <grid>"); }
@@ -242,7 +260,7 @@ namespace xge
 					if (shape->getName() == "line") { fail(gridHere, "cannot repeat a <line>; draw the lines in one sprite instead"); }
 					shape = shape->getNextSibling();
 				}
-				if (!shape) { fail(gridHere, "needs a shape to repeat (<circle>, <rectangle>, <text> or <image>)"); }
+				if (!shape) { fail(gridHere, "needs a shape to repeat (<circle>, <rectangle>, <text>, <image> or <bitmap>)"); }
 
 				readShape(*shape, sprite, gridHere);
 			}
@@ -256,6 +274,106 @@ namespace xge
 			}
 
 			return sprite;
+		}
+
+		// Every <sprite> child of `parent`, in the order written.
+		std::vector<RawSprite> readSprites(const XmlNode& parent, const std::string& where)
+		{
+			std::vector<RawSprite> sprites;
+
+			for (std::unique_ptr<XmlNode> node = parent.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() == "sprite") { sprites.push_back(readSprite(*node, where)); }
+			}
+
+			return sprites;
+		}
+
+		// An <animation> as written: how long each picture is shown, and the
+		// names of the sprites it shows, in order. Which sprites those are is
+		// settled by chooseSprite, once the sprites it can pick from are known
+		// (a group's member can bring its own).
+		struct AnimationSpec
+		{
+			RawValue interval;
+			std::vector<std::string> frames;
+		};
+
+		AnimationSpec readAnimation(const XmlNode& animation, const std::string& where)
+		{
+			const std::string here = where + " > <animation>";
+			AnimationSpec spec;
+
+			spec.interval = readValueOf(animation, "interval", here);
+
+			for (std::unique_ptr<XmlNode> node = animation.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() == "frame") { spec.frames.push_back(requireAttribute(*node, "sprite", here + " > <frame>")); }
+				else if (node->getName() != "interval") { fail(here, "unknown <" + node->getName() + ">; expected an <interval> and then <frame>s"); }
+			}
+
+			return spec;
+		}
+
+		// Settles what `object` looks like from the <sprite>s it has and its
+		// <animation>, if any. One sprite and no animation is the ordinary case.
+		// With an animation, each <frame> names one of the sprites, and the
+		// object is the first of them until it moves on. Anything that cannot
+		// be settled, such as several sprites and nothing to say which is shown
+		// when, or a frame naming a sprite that is not there, stops the load.
+		void chooseSprite(const std::vector<RawSprite>& sprites, const std::optional<AnimationSpec>& animation,
+			const std::string& where, RawObject& object)
+		{
+			if (sprites.empty()) { fail(where, "missing <sprite>"); }
+
+			for (std::size_t i = 0; i < sprites.size(); ++i)
+			{
+				if (sprites[i].name.empty()) { continue; }
+
+				for (std::size_t j = i + 1; j < sprites.size(); ++j)
+				{
+					if (sprites[j].name == sprites[i].name) { fail(where, "two <sprite>s are called \"" + sprites[i].name + "\""); }
+				}
+			}
+
+			if (!animation)
+			{
+				if (sprites.size() > 1)
+				{
+					fail(where, "has " + std::to_string(sprites.size()) + " <sprite>s but no <animation> to show them one after the other");
+				}
+
+				object.sprite = sprites.front();
+				return;
+			}
+
+			if (animation->frames.size() < 2) { fail(where, "<animation> needs at least two <frame>s"); }
+
+			RawAnimation chosen;
+			chosen.interval = animation->interval;
+
+			std::vector<bool> used(sprites.size(), false);
+			for (const std::string& name : animation->frames)
+			{
+				const auto found = std::find_if(sprites.begin(), sprites.end(), [&](const RawSprite& sprite) { return sprite.name == name; });
+				if (found == sprites.end()) { fail(where, "<animation> > <frame sprite=\"" + name + "\">: no <sprite name=\"" + name + "\"> to show"); }
+
+				used[static_cast<std::size_t>(found - sprites.begin())] = true;
+				chosen.frames.push_back(*found);
+			}
+
+			for (std::size_t i = 0; i < sprites.size(); ++i)
+			{
+				if (!used[i])
+				{
+					fail(where, sprites[i].name.empty() ? "a <sprite> with no name is never shown by the <animation>"
+						: "<sprite name=\"" + sprites[i].name + "\"> is never shown by the <animation>");
+				}
+			}
+
+			object.hasAnimation = true;
+			object.sprite = chosen.frames.front();
+			object.animation = std::move(chosen);
 		}
 
 		bool isCommandTag(const std::string& name)
@@ -461,7 +579,9 @@ namespace xge
 
 			const std::string where = "object '" + rawObject.name + "'";
 
-			rawObject.sprite = readSprite(*requireChild(object, "sprite", where), where);
+			std::optional<AnimationSpec> animation;
+			if (auto node = findChild(&object, "animation")) { animation = readAnimation(*node, where); }
+			chooseSprite(readSprites(object, where), animation, where, rawObject);
 			rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
 			rawObject.rawVelocity = readVector2(*requireChild(object, "velocity", where), where);
 			if (auto acceleration = findChild(&object, "acceleration"))
@@ -530,7 +650,8 @@ namespace xge
 			const std::string name = requireAttribute(group, "name", "<group>");
 			const std::string where = "group '" + name + "'";
 
-			std::optional<RawSprite> sprite;
+			std::vector<RawSprite> sprites;
+			std::optional<AnimationSpec> animation;
 			PartialVector2 position;
 			PartialVector2 velocity;
 			std::optional<RawCollisionData> collisions;
@@ -541,13 +662,14 @@ namespace xge
 				const std::string tag = child->getName();
 
 				if (tag == "hidden") { hidden = readBool(*child, where); }
-				else if (tag == "sprite") { sprite = readSprite(*child, where); }
+				else if (tag == "sprite") { sprites.push_back(readSprite(*child, where)); }
+				else if (tag == "animation") { animation = readAnimation(*child, where); }
 				else if (tag == "position") { position = readPartialVector2(*child, where); }
 				else if (tag == "velocity") { velocity = readPartialVector2(*child, where); }
 				else if (tag == "collisions") { collisions = readCollisions(*child, where); }
 				else if (tag != "actions" && tag != "variables" && tag != "member")
 				{
-					fail(where, "unknown <" + tag + ">; expected <sprite>, <position>, <velocity>, <hidden>, <collisions>, <actions>, <variables> or <member>");
+					fail(where, "unknown <" + tag + ">; expected <sprite>, <animation>, <position>, <velocity>, <hidden>, <collisions>, <actions>, <variables> or <member>");
 				}
 			}
 
@@ -567,7 +689,8 @@ namespace xge
 				const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
 				const std::string here = "object '" + memberName + "' (a member of " + where + ")";
 
-				std::optional<RawSprite> ownSprite;
+				std::vector<RawSprite> ownSprites;
+				std::optional<AnimationSpec> ownAnimation;
 				PartialVector2 ownPosition;
 				PartialVector2 ownVelocity;
 
@@ -575,10 +698,11 @@ namespace xge
 				{
 					const std::string tag = child->getName();
 
-					if (tag == "sprite") { ownSprite = readSprite(*child, here); }
+					if (tag == "sprite") { ownSprites.push_back(readSprite(*child, here)); }
+					else if (tag == "animation") { ownAnimation = readAnimation(*child, here); }
 					else if (tag == "position") { ownPosition = readPartialVector2(*child, here); }
 					else if (tag == "velocity") { ownVelocity = readPartialVector2(*child, here); }
-					else { fail(here, "unknown <" + tag + ">; a member can give a <sprite>, <position> or <velocity>"); }
+					else { fail(here, "unknown <" + tag + ">; a member can give <sprite>s, an <animation>, a <position> or a <velocity>"); }
 				}
 
 				RawObject rawObject = shared;
@@ -586,9 +710,11 @@ namespace xge
 				rawObject.objClass = getAttribute(&group, "class");
 				rawObject.groupName = name;
 
-				if (ownSprite) { rawObject.sprite = *ownSprite; }
-				else if (sprite) { rawObject.sprite = *sprite; }
-				else { fail(here, "has no <sprite>, and neither does its group"); }
+				// A member that gives sprites of its own has those instead of the
+				// group's, and its own animation instead of the group's.
+				const std::vector<RawSprite>& usedSprites = ownSprites.empty() ? sprites : ownSprites;
+				if (usedSprites.empty()) { fail(here, "has no <sprite>, and neither does its group"); }
+				chooseSprite(usedSprites, ownAnimation ? ownAnimation : animation, here, rawObject);
 
 				rawObject.rawPosition.x = pickValue(ownPosition.x, position.x, here, "<position><x>");
 				rawObject.rawPosition.y = pickValue(ownPosition.y, position.y, here, "<position><y>");

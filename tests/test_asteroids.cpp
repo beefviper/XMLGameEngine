@@ -7,8 +7,8 @@
 // played frame by frame by a real xge::Game with no window: an object with a
 // <heading> that turns (<turn>), is pushed along the way it faces (<thrust>)
 // and loses speed to <drag>; a drawing of lines made at every heading
-// (rasterizeTurned) and the picture for the current heading being the one that
-// is shown and tested; <fire> along the heading from a pool of shots; <hidden>
+// (rasterizeTurned, whole degrees) and the picture for the current heading
+// being the one that is shown and tested; <fire> along the heading from a pool of shots; <hidden>
 // objects and <release>, which is how a rock that breaks hands out the smaller
 // rocks of a pool; and wrapping round the screen.
 //
@@ -160,34 +160,34 @@ TEST_CASE("a drawing of lines can be made at every heading, all the same size", 
 	// An arrow pointing up: a shaft and a head.
 	const std::vector<LineSegment> arrow = { line(10, 0, 10, 24), line(10, 0, 4, 8), line(10, 0, 16, 8) };
 
-	const std::vector<Bitmap> turned = rasterizeTurned(arrow);
+	const Bitmap first = rasterizeTurned(arrow, 0);
 
-	REQUIRE(turned.size() == static_cast<std::size_t>(headingSteps));
-	for (const Bitmap& bitmap : turned)
+	for (int degrees = 0; degrees < 360; ++degrees)
 	{
-		CHECK(bitmap.width == turned.front().width);
-		CHECK(bitmap.height == turned.front().height);
+		const Bitmap bitmap = rasterizeTurned(arrow, static_cast<float>(degrees));
+		CHECK(bitmap.width == first.width);
+		CHECK(bitmap.height == first.height);
 		CHECK(bitmap.width == bitmap.height);
 	}
 
 	// Heading 0 is the drawing as it was written: tall, and the same size as
 	// the plain drawing is not required, but it is upright.
-	const Extent upright = extentOf(turned[0]);
+	const Extent upright = extentOf(first);
 	CHECK((upright.bottom - upright.top) > (upright.right - upright.left));
 
 	// A quarter of the way round it lies on its side, pointing right: wide, and
 	// the tip is the right-most pixel in the middle row of the picture.
-	const Bitmap& quarter = turned[headingSteps / 4];
+	const Bitmap quarter = rasterizeTurned(arrow, 90);
 	const Extent sideways = extentOf(quarter);
 	CHECK((sideways.right - sideways.left) > (sideways.bottom - sideways.top));
 	CHECK(quarter.solidAt(sideways.right, quarter.height / 2));
 
 	// Half way round it is upside down: its tip is now at the bottom.
-	const Bitmap& half = turned[headingSteps / 2];
+	const Bitmap half = rasterizeTurned(arrow, 180);
 	CHECK(half.solidAt(half.width / 2, extentOf(half).bottom));
 
 	// Three quarters: pointing left.
-	const Bitmap& three = turned[3 * headingSteps / 4];
+	const Bitmap three = rasterizeTurned(arrow, 270);
 	CHECK(three.solidAt(extentOf(three).left, three.height / 2));
 }
 
@@ -195,18 +195,36 @@ TEST_CASE("the middle of the drawing stays at the middle of the picture at every
 {
 	// A dot-like cross about (10, 10): its middle must stay put as it turns.
 	const std::vector<LineSegment> cross = { line(0, 10, 20, 10), line(10, 0, 10, 20) };
-	const std::vector<Bitmap> turned = rasterizeTurned(cross);
 
-	for (const Bitmap& bitmap : turned)
+	for (int degrees = 0; degrees < 360; ++degrees)
 	{
+		const Bitmap bitmap = rasterizeTurned(cross, static_cast<float>(degrees));
 		CHECK(bitmap.solidAt(bitmap.width / 2, bitmap.height / 2));
 	}
 }
 
+TEST_CASE("a heading is taken to the nearest whole degree and wrapped round", "[asteroids][bitmap]")
+{
+	const std::vector<LineSegment> arrow = { line(10, 0, 10, 24), line(10, 0, 4, 8), line(10, 0, 16, 8) };
+	const auto same = [&](float a, float b) { return rasterizeTurned(arrow, a).rgba == rasterizeTurned(arrow, b).rgba; };
+
+	CHECK(same(360.0f, 0.0f));
+	CHECK(same(361.0f, 1.0f));
+	CHECK(same(-90.0f, 270.0f));
+	CHECK(same(0.4f, 0.0f));
+	CHECK(same(44.6f, 45.0f));
+	CHECK_FALSE(same(0.0f, 90.0f));
+
+	// A degree is a step of its own: at the far end of a long drawing it moves
+	// the line by a pixel or more.
+	const std::vector<LineSegment> pole = { line(0, 0, 0, 300) };
+	CHECK(rasterizeTurned(pole, 10.0f).rgba != rasterizeTurned(pole, 11.0f).rgba);
+}
+
 TEST_CASE("no lines, or a negative coordinate, are turned away", "[asteroids][bitmap]")
 {
-	CHECK(rasterizeTurned({}).empty());
-	CHECK_THROWS_AS(rasterizeTurned({ line(-1, 0, 5, 5) }), std::invalid_argument);
+	CHECK(rasterizeTurned({}, 0.0f).width == 0);
+	CHECK_THROWS_AS(rasterizeTurned({ line(-1, 0, 5, 5) }, 0.0f), std::invalid_argument);
 }
 
 // ------------------------------------------------------------ the game loads
@@ -220,8 +238,8 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	CHECK(ship.collisionData.type == CollisionType::Pixel);
 	CHECK(ship.hasHeading);
 	CHECK(ship.heading == 0.0f);
-	CHECK(ship.headingBitmaps.size() == static_cast<std::size_t>(headingSteps));
-	CHECK(ship.bitmap == ship.headingBitmaps[0]);
+	REQUIRE(ship.turnables.size() == 1);
+	CHECK(ship.bitmap->rgba == ship.turnables[0]->at(0.0f).rgba);
 	CHECK_THAT(ship.drag, WithinAbs(0.02f, 1e-6f));
 	CHECK(ship.size.x == static_cast<float>(ship.bitmap->width));
 	CHECK(ship.size.x == ship.size.y);
@@ -256,7 +274,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 		const Object& ship = game.getObject("ship");
 		CHECK(ship.hasHeading);
 		CHECK_THAT(ship.drag, WithinAbs(0.02f, 1e-6f));
-		CHECK(ship.headingBitmaps.size() == static_cast<std::size_t>(headingSteps));
+		CHECK(ship.turnables.size() == 1);
 
 		int hidden = 0;
 		int turns = 0;
@@ -331,11 +349,13 @@ TEST_CASE("the picture shown and tested is the one for the heading", "[asteroids
 	CHECK(ship.bitmap->width == upright->width);
 	CHECK(ship.bitmap->height == upright->height);
 
-	// It is the picture nearest to the heading, 88 / 5 = 17.6 -> the 18th, which
-	// is a quarter turn: the nose is the right-most pixel, in the middle.
-	CHECK(ship.bitmap == ship.headingBitmaps[18]);
+	// It is drawn at the heading to the nearest whole degree, 88, which is all
+	// but a quarter turn: the nose is the right-most pixel, near the middle.
+	CHECK(ship.turnedDegrees == 88);
+	CHECK(ship.bitmap->rgba == ship.turnables[0]->at(88.0f).rgba);
 	const Extent nose = extentOf(*ship.bitmap);
-	CHECK(ship.bitmap->solidAt(nose.right, ship.bitmap->height / 2));
+	const int middle = ship.bitmap->height / 2;
+	CHECK((ship.bitmap->solidAt(nose.right, middle - 1) || ship.bitmap->solidAt(nose.right, middle) || ship.bitmap->solidAt(nose.right, middle + 1)));
 	CHECK(nose.right - nose.left > nose.bottom - nose.top);
 
 	// A full turn comes back to the first picture.
@@ -343,7 +363,7 @@ TEST_CASE("the picture shown and tested is the one for the heading", "[asteroids
 	field.frames(68); // 88 + 272 = 360
 	field.key("right", false);
 	CHECK_THAT(ship.heading, WithinAbs(0.0f, 1e-2f));
-	CHECK(ship.bitmap == upright);
+	CHECK(ship.bitmap->rgba == upright->rgba);
 }
 
 TEST_CASE("turning does not move the ship or change its size", "[asteroids][heading]")
@@ -787,7 +807,7 @@ TEST_CASE("a rock hitting the ship costs a ship, and the ship starts again at th
 	CHECK(field.ship().position == field.ship().positionOriginal);
 	CHECK(field.ship().velocity == Vector2f{});
 	CHECK(field.ship().heading == 0.0f);
-	CHECK(field.ship().bitmap == field.ship().headingBitmaps[0]);
+	CHECK(field.ship().turnedDegrees == 0);
 	CHECK(rock.isVisible); // the rock is not hurt by it
 }
 
@@ -889,7 +909,7 @@ TEST_CASE("playing again puts everything back: rocks, pools, shots, score and sh
 	CHECK(field.score() == 0.0f);
 	CHECK(field.lives() == 3.0f);
 	CHECK(field.ship().heading == 0.0f);
-	CHECK(field.ship().bitmap == field.ship().headingBitmaps[0]);
+	CHECK(field.ship().turnedDegrees == 0);
 	CHECK(field.state() == "mainmenu");
 }
 
@@ -970,7 +990,7 @@ TEST_CASE("a heading, a drag and a hidden are read from the file", "[asteroids][
 	CHECK(ship.hasHeading);
 	CHECK(ship.headingOriginal == 0.0f);
 	CHECK(ship.drag == 0.02f);
-	CHECK(ship.headingBitmaps.size() == static_cast<std::size_t>(headingSteps));
+	CHECK(ship.turnables.size() == 1);
 
 	for (const Object& object : game.getCurrentObjects())
 	{

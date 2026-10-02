@@ -188,7 +188,8 @@ TEST_CASE("dropping a charge launches it from the ship, falling", "[depthcharge]
 	table.press("drop");
 
 	CHECK(table.falling());
-	CHECK(table.charge().position.x == table.ship().position.x + table.ship().size.x / 2.0f);
+	// Leaves the middle of the ship: the charge's own middle over the ship's.
+	CHECK(table.charge().position.x + table.charge().size.x / 2.0f == table.ship().position.x + table.ship().size.x / 2.0f);
 	CHECK(table.charge().position.y == table.ship().position.y);
 	CHECK(table.charge().velocity.x == 0.0f);
 	CHECK(table.charge().velocity.y == 5.0f);

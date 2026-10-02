@@ -94,11 +94,12 @@ Children, in this order:
 
 | Element | Required | What it does |
 |---|---|---|
-| `<sprite>` | yes | What the object looks like: one shape (see [Sprites](#sprites)), or a `<grid>` of them |
+| `<sprite>` | yes | What the object looks like: one shape (see [Sprites](#sprites)), or a `<grid>` of them. An object with an `<animation>` has several, each with a `name` |
+| `<animation>` | no | Which of the object's sprites are shown, in what order, and for how many seconds each: see [Animation](#animation). Objects, and groups and their members |
 | `<position>` | yes | Starting position, in pixels from the top-left: `<x>` and `<y>`, each a value. May use an object's own size by its name, `title.width` and `title.height`, to place it by its size, for example a text called `title` centered: `<x>window.width.center - title.width / 2</x>` |
 | `<velocity>` | yes | Starting velocity, in pixels per frame: `<x>` and `<y>`, each a value |
 | `<acceleration>` | no | A constant pull: `<x>` and `<y>`, each a value, added to the velocity once every frame before anything moves, for as long as the object is shown. Gravity is an acceleration with only a `<y>`. `<stop />` takes it away and a reset gives it back. Objects only, not groups |
-| `<heading>` | no | The way the object faces, in degrees clockwise from straight up (0 is up, 90 is right). It lets `<turn>` and `<thrust>` work, and a sprite of lines is then drawn at 72 headings when the game loads; the object shows the nearest, so a `pixel` collision follows it. A collision `<reset />` puts it back. Objects only |
+| `<heading>` | no | The way the object faces, in degrees clockwise from straight up (0 is up, 90 is right). It lets `<turn>` and `<thrust>` work, and the sprite (of lines or a `<bitmap>`) is then drawn turned to the heading, to the nearest whole degree, so a `pixel` collision follows it. A collision `<reset />` puts it back. Objects only |
 | `<drag>` | no | A value from 0 up to (not including) 1: the fraction of its velocity the object loses every frame, after its thrust is added. Objects only |
 | `<hidden>` | no | `true`: the object starts out of play (not drawn, no collisions, not counted by a condition's `remaining`) until a `<release>` or a `<fire>` brings it in. Objects, and groups (after `<velocity>`) |
 | `<collisions>` | yes | `<enabled>` (`true`/`false`), an optional `<lockstep>` (`true`), an optional `<type>` (`box`, the default, or `pixel`), then zero or more `<collision>` rules. See [Collisions](#collisions) |
@@ -109,9 +110,9 @@ An object with `class="projectile"` starts invisible (used for bullets).
 
 ### `<group>`
 
-A `<group>` is several objects that share a description, written once: a lane of logs, a row of debris, the pads along the top of Frogger. It sits beside `<object>` under `<objects>`. It holds the parts its members have in common, in the same order as an object (`<sprite>`, `<position>`, `<velocity>`, `<collisions>`, `<actions>`, `<variables>`, each optional except `<collisions>`), then one or more `<member>`s. Attributes: `name` (required) and `class` (optional, and every member's class).
+A `<group>` is several objects that share a description, written once: a lane of logs, a row of debris, the pads along the top of Frogger. It sits beside `<object>` under `<objects>`. It holds the parts its members have in common, in the same order as an object (`<sprite>`s, an `<animation>`, `<position>`, `<velocity>`, `<collisions>`, `<actions>`, `<variables>`, each optional except `<collisions>`), then one or more `<member>`s. Attributes: `name` (required) and `class` (optional, and every member's class).
 
-A `<member>` says only what is its own: a `<sprite>`, a `<position>` and a `<velocity>`, and an optional `name`. **Whatever a member leaves out it takes from its group**, and after that it must be as complete as an `<object>` (a missing part is a load error that names the member). A `<position>` or `<velocity>` can give just an `<x>` or just a `<y>`, so a lane gives its row once and each member gives where along it it starts:
+A `<member>` says only what is its own: its `<sprite>`s and `<animation>`, a `<position>` and a `<velocity>`, and an optional `name`. **Whatever a member leaves out it takes from its group**, and after that it must be as complete as an `<object>` (a missing part is a load error that names the member). A `<position>` or `<velocity>` can give just an `<x>` or just a `<y>`, so a lane gives its row once and each member gives where along it it starts:
 
 ```xml
 <group name="logrow3" class="logs">
@@ -147,7 +148,7 @@ A `<grid>` and a `<group>` differ in what they repeat: a `<grid>` makes identica
 
 ### Sprites
 
-A `<sprite>` holds one shape. Colors are named (`color.red`, below); a `<color>` left out is `color.white`.
+A `<sprite>` holds one shape. Colors are named (`color.red`, below); a `<color>` left out is `color.white`. A sprite may be given a `name`, which an object needs only when it has several sprites for an [`<animation>`](#animation) to choose between.
 
 | Shape | Contents | Draws |
 |---|---|---|
@@ -156,6 +157,7 @@ A `<sprite>` holds one shape. Colors are named (`color.red`, below); a `<color>`
 | `<text>` | `<content>` (a fixed label) **or** `<number>` (a value), then `<size>`, `<color>` | Text. `<content>PONG</content>` is written as is. `<number>paddle1.score</number>` shows a number: when the value is exactly one `owner.variable` it is live and redraws when that variable changes; any other value (`paddle1.score + 1`, a `<random>`) is worked out once |
 | `<image>` | `<path>`, then `<flip>` (`horizontal` or `vertical`, optional) | An image file |
 | `<line>` (one or more) | `<from>` and `<to>` (each an `<x>` and a `<y>`), then `<color>` and `<thickness>` (both optional) | Straight lines, all in one sprite. See [Lines](#lines) |
+| `<bitmap>` | one or more `<row>`s of `.` and `*`, then `<scale>` and `<color>` (both optional) | A picture written as rows of text. See [Bitmaps](#bitmaps) |
 
 ### Lines
 
@@ -172,7 +174,7 @@ The lines are drawn once, when the game loads, in the order written (a later one
 
 A sprite of lines is not repeated by a `<grid>`, and cannot be mixed with another shape. One object can be a whole drawing: Lunar Lander's moon is one object of fifteen lines, its lander another, its pad a single thick line.
 
-A `<grid>` repeats a shape as a grid of separate objects (Breakout bricks, Space Invaders): `<columns>`, `<rows>`, an optional `<padding>` (with `<x>` and `<y>`), then the shape.
+A `<grid>` repeats a shape as a grid of separate objects (Breakout bricks, Space Invaders): `<columns>`, `<rows>`, an optional `<padding>` (with `<x>` and `<y>`), then the shape, which may be a `<circle>`, `<rectangle>`, `<text>`, `<image>` or `<bitmap>`.
 
 ```xml
 <sprite>
@@ -187,6 +189,49 @@ A `<grid>` repeats a shape as a grid of separate objects (Breakout bricks, Space
   </grid>
 </sprite>
 ```
+
+### Bitmaps
+
+A sprite of one `<bitmap>` is a picture written as rows of text, one character to a pixel: a period (`.`) is clear and an asterisk (`*`) is solid, drawn in the sprite's `<color>` (default `color.white`). Every character becomes a block of `<scale>` by `<scale>` real pixels (a value, a whole number of at least 1, default 1), so a few characters make a chunky sprite:
+
+```xml
+<sprite>
+  <bitmap>
+    <row>..*...*..</row>
+    <row>..*****..</row>
+    <row>.**.*.**.</row>
+    <row>*********</row>
+    <scale>5</scale>
+    <color>color.green</color>
+  </bitmap>
+</sprite>
+```
+
+That picture is 45 pixels wide and 20 tall. The rows are measured from the top left, must all be the same length and may hold nothing but `.` and `*`: a space or any other character, an empty row, or rows of different lengths stop the load with a message that names the row and the character (`row 3 of a bitmap has 'o' as character 2`). A bitmap is drawn once, when the game loads, into the same kind of bitmap a sprite of [lines](#lines) is, so everything said there holds for it: its size is the object's size (`name.width` and `name.height` work with no window), every window backend shows it as a picture, and a collision of [type pixel](#collisions) tests exactly the solid pixels. Unlike a sprite of lines a `<bitmap>` can be repeated by a `<grid>`, and all the cells share the one picture. It has one color. On an object with a `<heading>` the picture is drawn once like this and then that finished picture is turned to the heading the object faces, to the nearest whole degree (360 headings, 0 and 360 being the same): each pixel of the turned picture takes the one pixel of the original that lies under it, so chunky pixels stay chunky and nothing is blended. The object keeps the original and the one picture it shows, and draws a new one only when its heading moves to another whole degree. Every heading comes out as the same square, big enough for the picture at any angle (for a bitmap 11 by 8 characters at `<scale>` 5 that is a square of 68), and that square is the object's size, as with [lines](#lines).
+
+### Animation
+
+An object normally has one `<sprite>`. One that has several gives each a `name` and follows them with an `<animation>`, which says which are shown, in what order, and for how long:
+
+```xml
+<object name="crab">
+  <sprite name="open"> <bitmap> ... </bitmap> </sprite>
+  <sprite name="closed"> <bitmap> ... </bitmap> </sprite>
+  <animation>
+    <interval>1</interval>
+    <frame sprite="open" />
+    <frame sprite="closed" />
+  </animation>
+  <position>...</position>
+  ...
+</object>
+```
+
+`<interval>` is how many **seconds** each picture is shown (a value above 0, so `0.25` works), and each `<frame sprite="name" />` picks one of the object's own sprites by its name. There are at least two frames, and the same sprite may come up more than once (`open`, `closed`, `open`, `wide`). The object starts on the first frame and goes round and round. Seconds are turned into frames of the game when the game loads, with the window's `<framerate>` (a second at 60 frames a second is 60 frames, and a window with no framerate has nothing to count seconds in); like the speeds in the game, which are in pixels per frame, the animation counts frames of the game and does not read a clock, so a game that runs slower than its framerate animates slower too.
+
+The frames must all be pictures (a `<bitmap>` or `<line>`s, not a circle, rectangle, text or image) of the same size, and where one is repeated by a `<grid>` all of them are, the same way. Every sprite the object has must be shown by its animation, and several sprites without an animation are an error, since nothing would say when each is shown. An object with a `<heading>` can be animated too: whichever frame is showing is drawn at the heading the object faces, and the frames must come out as the same square when turned (equal sized bitmaps always do).
+
+Only an object that is shown by the current state and in play (not dead, not hidden) moves on, so a pause or a menu holds the picture where it was, and a `<reset />` puts it back on the first picture, from the start of its time. Every cell of a `<grid>` has a count of its own, and they all start together, so a block of aliens changes picture as one. A collision of type pixel tests the picture that is showing. In a `<group>`, a member that gives sprites of its own has those instead of the group's, and one that gives an `<animation>` has that instead of the group's; the names in an animation are looked up among the sprites the member ends up with. Space Invaders is the example: its three kinds of alien are the members of one group, each a `<grid>` of two named bitmaps with an animation, so the block marches, bounces and steps down together while each kind flaps on its own sprites.
 
 ### Commands
 
@@ -213,7 +258,7 @@ Commands are tags, and where they are meaningful is what the table says. Any lis
 | `<release object="name">count</release>` | collision (screen edge or another object) | Puts the first `count` (default 1) out-of-play objects of that name or group back in play, centered on the object running the rule, at their own starting velocity. Fewer left in the pool gives what is there. This is how a rock breaks into smaller ones |
 | `<push state="name" />` / `<pop />` | state input or condition | Push a state / pop back. The state named must be one of the game's. `<pop />` with only the first state left does nothing |
 | `<trigger object="name" action="up" />` | state input | Runs one of that object's named `<action>`s. The object and the action must exist |
-| `<fire object="projectile" />` | object action | Launches the named projectile object from the shooter's top-center, moving with the projectile's own `<velocity>`. A projectile is not drawn, moved or collided with until it is fired, and is put away again by `<die />` (hitting a target, or `edge="all"`). The name may be a `<group>`: the first member that is out of play is the one launched, so a group of four is four shots in flight. A shooter with a `<heading>` fires from its nose, along the heading, at the speed of the projectile's `<velocity>`; with none, one projectile name can only be in flight once |
+| `<fire object="projectile" />` | object action | Launches the named projectile object from the shooter's top-center (the middle of the projectile over the middle of the shooter's top edge), moving with the projectile's own `<velocity>`. A projectile is not drawn, moved or collided with until it is fired, and is put away again by `<die />` (hitting a target, or `edge="all"`). The name may be a `<group>`: the first member that is out of play is the one launched, so a group of four is four shots in flight. A shooter with a `<heading>` fires from its nose, along the heading, at the speed of the projectile's `<velocity>`; with none, one projectile name can only be in flight once |
 
 A command the engine does not know, or one missing an attribute it needs, stops the game loading with a message that says where (`object 'ball' > <collisions> > <collision>: unknown command <explode>`). So does a command that names something the game does not have: a state (`<push state="pasued" />`), an object or one of its actions (`<trigger>`), a projectile (`<fire>`) or an object to reset (`<reset object="...">`). These are checked once every object and state has been built, so a name used before the thing it names appears in the file is fine.
 
@@ -297,7 +342,7 @@ The other forms:
 1. **Parse and validate.** The XML backend loads the file. If the file names a schema, it is validated: Xerces does full XSD validation ("strong"); the other three backends use a small built-in validator for the subset of XSD this project uses ("weak", `xsd_lite`). `printGame()` reports which one ran.
 2. **Evaluate.** exprtk evaluates every value once (an expression text, or a value tag such as `<random>`, which is drawn here). Objects, their variables, `<grid>` cells and states are built. Nothing here needs a window.
 3. **Open the window.** `Engine` creates the window backend and measures each object's real size for drawing and collisions, finishes the position of any text or image that uses `objectName.width` or `objectName.height`, then pushes the first state. The program prints the game twice, once before this step (sizes and size-dependent positions shown as unknown) and once after.
-4. **Loop.** Each frame: read key changes and run the current state's bindings for them; change every shown object's velocity by its acceleration and held thrust; run the screen-edge rules; make any queued hops; move every shown object by its velocity, and by what it is being carried at, running the object-against-object rules at each touch on the way (per frame, not scaled by time); check conditions; clear; draw shown objects; present.
+4. **Loop.** Each frame: read key changes and run the current state's bindings for them; count the frame towards the next picture of every shown object that has an [animation](#animation); change every shown object's velocity by its acceleration and held thrust; run the screen-edge rules; make any queued hops; move every shown object by its velocity, and by what it is being carried at, running the object-against-object rules at each touch on the way (per frame, not scaled by time); check conditions; clear; draw shown objects; present.
 
 ## Backends
 
@@ -330,12 +375,12 @@ The library is static by default: each program has the engine's code copied into
 | `game.cpp` | Objects, state stack, per-frame update, collision pairs, conditions, resets |
 | `collision_detector.cpp` | Geometry only: box, circle and swept tests, and the pixel pass for type `pixel` |
 | `builtin_font.cpp` | The 8x8 font stored in the program (`rasterizeText`), which draws text into a bitmap when a backend cannot load its font file |
-| `bitmap.cpp` | Draws a sprite's `<line>`s into an RGBA bitmap (`rasterizeLines`): the pixels both the window backends and pixel collisions use |
+| `bitmap.cpp` | Draws a sprite's `<line>`s (`rasterizeLines`) or `<bitmap>` rows (`rasterizeRows`) into an RGBA bitmap: the pixels both the window backends and pixel collisions use |
 | `command_executor.cpp` | What each command does |
 | `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop) and key handling |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), the built-in font, the command line and the data folder search, `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame |
+| `tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about grids and not about that game), the built-in font, the command line and the data folder search, `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame |
 
 ## Known limitations
 
@@ -347,7 +392,10 @@ The library is static by default: each program has the engine's code copied into
 - Text is drawn with `assets/tuffy.ttf`, found relative to the directory the program is run from. If that file cannot be found, each backend prints `error: failed to load font: assets/tuffy.ttf - drawing text with the built-in 8x8 font instead` once, and draws every text with the font stored in the program: 8 by 8 pixel glyphs for printable ASCII (anything else is a `?`), scaled to about `<size>` / 16 in blocks tall (so a letter is 8 times that tall) and half as wide, so it is chunky and monospaced and its width differs from the real font's ([design 36](designs/36-builtin-font.md)).
 - Movement is in pixels per frame with no time step. Acceleration is constant per object (`<acceleration>`, `<accelerate>`); an object can face a heading and be pushed along it (`<heading>`, `<turn>`, `<thrust>`), and `<drag>` is the only thing that slows an object by itself apart from a rule or an opposing thrust.
 - A `pixel` collision is only as exact as half a pixel of motion: a pair is looked at every half pixel along the longer way it moves in a frame, and two one-pixel lines can cross at a slant without sharing a pixel at all, so lines meant to be tested should be at least 2 pixels thick. It knows nothing about which way a surface faces, so there is no bounce off a slope. Text and images cannot be `pixel` yet (their pixels are only known to a window backend), so a fighting game with image sprites will need the backends to hand their pixels back. The bitmap of a sprite of lines is kept for every object that has one, four bytes a pixel, so one big drawing costs what its bounding box does (Lunar Lander's 800 by 182 moon is about 580 KB).
-- A sprite of lines is measured from 0, 0 and fixed when the game loads: it cannot be moved, scaled or repeated by a `<grid>`, and it turns only on an object with a `<heading>`, in 5-degree steps (72 pictures, each the same square size). Lines are straight, one color each, and have no fill.
+- A sprite of lines is measured from 0, 0 and fixed when the game loads: it cannot be moved, scaled or repeated by a `<grid>`, and it turns only on an object with a `<heading>`, in whole degrees (one picture at a time, always the same square size). Lines are straight, one color each, and have no fill.
+- A `<bitmap>` is fixed when the game loads too, and has one color (an asterisk is that color, a period is clear), so a sprite in two colors is two objects on top of each other. A turning object keeps the original and the one picture it shows, so the memory it costs is about double, and a turn is done again only when the heading moves by a whole degree. The sprite pictures are separate bitmaps, so a game with many large animated sprites keeps them all in memory: four bytes a pixel for each frame, once per object (the cells of a grid share theirs).
+- An animation has one interval for all its frames, and counts frames of the game, not time (see [Animation](#animation)). There is no way yet to show a picture that depends on something other than time (a variable, the direction of travel, a hit), to run an animation once and stop, or to start it from a collision.
+- Each cell of a grid is its own object with its own count of frames. The cells stay in step because they start together (at load, and again at every reset) and only count while shown.
 - A `<random>` is drawn once, when the game loads. A piece that falls, is caught and is reset falls again at the same speed from the same place, so Kaboom's and Astrosmash's rhythm is different on every launch but repeats within one. There is no way yet to draw again on `<reset />`, and nothing in the language creates a new object while the game runs, so things that fall are a fixed set that cycles.
 - A hop is a jump, not a slide: the object is simply one step away, with no animation between and nothing touched on the way (a step is meant to be one lane). It is not the arcing jump planned in [designs/13](designs/13-verb-vocabulary.md).
 - `carry()` lends velocity one frame at a time and only while touching. It is not attached: a carried object that meets a screen edge is handled by that edge's rule like any other (Frogger's frog loses a life), and nothing pushes it into a wall.

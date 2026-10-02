@@ -183,7 +183,9 @@ namespace xge
 		// and the size drawn the same number.
 		std::map<std::string, std::vector<std::string>> firstPassSpriteParams;
 		std::map<std::string, std::shared_ptr<const Bitmap>> firstPassBitmaps;
-		std::map<std::string, std::vector<std::shared_ptr<const Bitmap>>> firstPassTurned;
+		std::map<std::string, std::shared_ptr<const Turnable>> firstPassTurned;
+		std::map<std::string, std::vector<std::shared_ptr<const Bitmap>>> firstPassAnimation;
+		std::map<std::string, std::vector<std::shared_ptr<const Turnable>>> firstPassAnimationTurned;
 		for (auto& rawObject : rawObjects)
 		{
 			if (objectSizes.count(rawObject.name))
@@ -197,6 +199,12 @@ namespace xge
 			objectShapeKinds[rawObject.name] = kind;
 			objectSizes[rawObject.name] = measureShapeSize(params, kind);
 			firstPassSpriteParams[rawObject.name] = params;
+
+			if (rawObject.hasAnimation)
+			{
+				firstPassAnimation[rawObject.name] = buildAnimationBitmaps(rawObject, "object '" + rawObject.name + "'",
+					rawObject.hasHeading ? &firstPassAnimationTurned[rawObject.name] : nullptr);
+			}
 		}
 		for (auto& [name, size] : objectSizes)
 		{
@@ -247,6 +255,10 @@ namespace xge
 
 			const bool isGrid = gridData.max.x > 1 || gridData.max.y > 1;
 
+			// How long each picture of an animation lasts, drawn once for the
+			// object (every cell of a grid shares it).
+			const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject, windowDesc, where) : 0;
+
 			int thisLockstep = 0;
 			if (rawObject.rawCollisionData.lockstep)
 			{
@@ -271,7 +283,15 @@ namespace xge
 					object.spriteParams = tempSpriteParams;
 					object.shapeKind = rawObjectShapeKind;
 					object.bitmap = firstPassBitmaps[rawObject.name];
-					object.headingBitmaps = firstPassTurned[rawObject.name];
+					if (firstPassTurned[rawObject.name]) { object.turnables = { firstPassTurned[rawObject.name] }; }
+
+					if (rawObject.hasAnimation)
+					{
+						object.animationBitmaps = firstPassAnimation[rawObject.name];
+						if (!firstPassAnimationTurned[rawObject.name].empty()) { object.turnables = firstPassAnimationTurned[rawObject.name]; }
+						object.animationFrames = animationFrames;
+						object.bitmap = object.animationBitmaps.front();
+					}
 
 					if (object.shapeKind == ShapeKind::Text && rawObject.sprite.textIsNumber
 						&& rawObject.sprite.number.kind == RawValue::Kind::Expression)
@@ -499,7 +519,7 @@ namespace xge
 	}
 
 	std::vector<std::string> game_expr::buildSpriteParams(const RawSprite& sprite, const std::string& where,
-		std::shared_ptr<const Bitmap>* bitmap, std::vector<std::shared_ptr<const Bitmap>>* turned)
+		std::shared_ptr<const Bitmap>* bitmap, std::shared_ptr<const Turnable>* turnable)
 	{
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		std::vector<std::string> params;
@@ -526,15 +546,15 @@ namespace xge
 			std::shared_ptr<const Bitmap> drawn;
 			try
 			{
-				if (turned)
+				if (turnable)
 				{
-					// An object that faces somewhere: the drawing at every heading,
-					// all one size, and the one for heading 0 is what it starts as.
-					for (Bitmap& picture : rasterizeTurned(segments))
-					{
-						turned->push_back(std::make_shared<const Bitmap>(std::move(picture)));
-					}
-					if (!turned->empty()) { drawn = turned->front(); }
+					// An object that faces somewhere: the lines are kept as they
+					// are, to be drawn at whatever heading it faces; heading 0 is
+					// what it starts as, and its square is its size.
+					auto kept = std::make_shared<Turnable>();
+					kept->lines = segments;
+					if (!segments.empty()) { drawn = std::make_shared<const Bitmap>(kept->at(0.0f)); }
+					*turnable = std::move(kept);
 				}
 				if (!drawn) { drawn = std::make_shared<const Bitmap>(rasterizeLines(segments)); }
 			}
@@ -548,7 +568,39 @@ namespace xge
 			return params;
 		}
 
-		if (sprite.kind == "circle")
+		if (sprite.kind == "bitmap")
+		{
+			// Drawn here, once, like a sprite of lines: the params only carry
+			// its size, and the picture goes to the backends and to a pixel
+			// collision through `bitmap`. A grid of them shares one picture.
+			const int scale = sprite.hasScale ? static_cast<int>(std::lround(evaluate(sprite.scale, where))) : 1;
+
+			std::shared_ptr<const Bitmap> drawn;
+			try
+			{
+				drawn = std::make_shared<const Bitmap>(rasterizeRows(sprite.bitmapRows, scale, colorFromName(color)));
+
+				if (turnable)
+				{
+					// An object that faces somewhere: the picture is drawn once
+					// and kept, to be turned to whatever heading it faces;
+					// heading 0 is what it starts as, and the square it turns in
+					// is its size.
+					auto kept = std::make_shared<Turnable>();
+					kept->picture = drawn;
+					drawn = std::make_shared<const Bitmap>(kept->at(0.0f));
+					*turnable = std::move(kept);
+				}
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(where + ": " + error.what());
+			}
+
+			params = { "line", std::to_string(drawn->width), std::to_string(drawn->height) };
+			if (bitmap) { *bitmap = std::move(drawn); }
+		}
+		else if (sprite.kind == "circle")
 		{
 			params = { "circle", std::to_string(evaluate(sprite.radius, where)), std::to_string(0), color };
 		}
@@ -582,6 +634,71 @@ namespace xge
 		}
 
 		return params;
+	}
+
+	std::vector<std::shared_ptr<const Bitmap>> game_expr::buildAnimationBitmaps(const RawObject& rawObject, const std::string& where,
+		std::vector<std::shared_ptr<const Turnable>>* turnables)
+	{
+		std::vector<std::shared_ptr<const Bitmap>> pictures;
+		GridData firstGrid;
+
+		for (std::size_t i = 0; i < rawObject.animation.frames.size(); ++i)
+		{
+			const RawSprite& frame = rawObject.animation.frames[i];
+			const std::string here = where + " > <animation> > frame " + std::to_string(i + 1)
+				+ (frame.name.empty() ? std::string{} : " (\"" + frame.name + "\")");
+
+			if (frame.kind != "bitmap" && frame.kind != "line")
+			{
+				throw std::runtime_error(here + ": a frame must be a <bitmap> or a drawing of <line>s, not a <" + frame.kind + ">");
+			}
+
+			std::shared_ptr<const Bitmap> picture;
+			std::shared_ptr<const Turnable> turnable;
+			buildSpriteParams(frame, here, &picture, turnables ? &turnable : nullptr);
+
+			const GridData grid = gridDataOf(frame, here);
+			if (i == 0)
+			{
+				firstGrid = grid;
+			}
+			else
+			{
+				if (picture->width != pictures.front()->width || picture->height != pictures.front()->height)
+				{
+					throw std::runtime_error(here + ": is " + std::to_string(picture->width) + " by " + std::to_string(picture->height)
+						+ " pixels, but frame 1 is " + std::to_string(pictures.front()->width) + " by " + std::to_string(pictures.front()->height)
+						+ "; the frames of an animation must all be the same size");
+				}
+
+				if (grid.max.x != firstGrid.max.x || grid.max.y != firstGrid.max.y
+					|| grid.padding.x != firstGrid.padding.x || grid.padding.y != firstGrid.padding.y)
+				{
+					throw std::runtime_error(here + ": is not repeated as a <grid> the same way as frame 1; the frames of an animation must share one layout");
+				}
+			}
+
+			pictures.push_back(std::move(picture));
+			if (turnables) { turnables->push_back(std::move(turnable)); }
+		}
+
+		return pictures;
+	}
+
+	int game_expr::animationFramesOf(const RawObject& rawObject, const WindowDesc& windowDesc, const std::string& where)
+	{
+		const float seconds = evaluate(rawObject.animation.interval, where + " > <animation> > <interval>");
+
+		if (!(seconds > 0.0f))
+		{
+			throw std::runtime_error(where + ": <animation> > <interval> is " + std::to_string(seconds) + "; expected a number of seconds above 0");
+		}
+		if (windowDesc.framerate < 1)
+		{
+			throw std::runtime_error(where + ": <animation> > <interval> is in seconds, so the <window> needs a <framerate> above 0 to count them in");
+		}
+
+		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(windowDesc.framerate))));
 	}
 
 	xge::GridData game_expr::gridDataOf(const RawSprite& sprite, const std::string& where)

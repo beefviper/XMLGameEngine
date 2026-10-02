@@ -11,18 +11,49 @@ namespace xge
 {
 	void Object::showHeading()
 	{
-		if (headingBitmaps.empty()) { return; }
+		if (turnables.empty()) { return; }
 
-		const long steps = static_cast<long>(headingBitmaps.size());
-		long index = std::lround(heading / 360.0f * static_cast<float>(steps)) % steps;
-		if (index < 0) { index += steps; }
+		// An animated object that turns has a turnable for each of its
+		// pictures; the one that is showing is the one to turn.
+		const std::size_t frame = turnables.size() > 1 && animationIndex < turnables.size() ? animationIndex : 0;
 
-		const auto& nearest = headingBitmaps[static_cast<std::size_t>(index)];
-		if (bitmap != nearest)
-		{
-			bitmap = nearest;
-			visualDirty = true;
-		}
+		long degrees = std::lround(heading) % 360;
+		if (degrees < 0) { degrees += 360; }
+
+		if (bitmap && turnedDegrees == degrees && turnedFrame == frame) { return; }
+
+		bitmap = std::make_shared<const Bitmap>(turnables[frame]->at(static_cast<float>(degrees)));
+		turnedDegrees = static_cast<int>(degrees);
+		turnedFrame = frame;
+		visualDirty = true;
+	}
+
+	void Object::advanceAnimation()
+	{
+		if (animationBitmaps.size() < 2 || animationFrames < 1) { return; }
+
+		if (++animationTick < animationFrames) { return; }
+
+		animationTick = 0;
+		animationIndex = (animationIndex + 1) % animationBitmaps.size();
+		showAnimationFrame();
+	}
+
+	void Object::restartAnimation()
+	{
+		animationTick = 0;
+
+		if (animationIndex == 0 || animationBitmaps.empty()) { return; }
+
+		animationIndex = 0;
+		showAnimationFrame();
+	}
+
+	void Object::showAnimationFrame()
+	{
+		if (!turnables.empty()) { showHeading(); }
+		else { bitmap = animationBitmaps[animationIndex]; }
+		visualDirty = true;
 	}
 
 	std::ostream& operator<<(std::ostream& o, const WindowDesc& f)
@@ -37,7 +68,8 @@ namespace xge
 
 	std::ostream& operator<<(std::ostream& o, const RawObject& f) {
 		o << "rawObject: " << "name=" << f.name << (f.groupName.empty() ? "" : ", group=" + f.groupName) << ", sprite=" << f.sprite.kind
-			<< (f.sprite.isGrid ? " (grid)" : "") << '\n'
+			<< (f.sprite.isGrid ? " (grid)" : "")
+			<< (f.hasAnimation ? " (animated, " + std::to_string(f.animation.frames.size()) + " frames)" : "") << '\n'
 			<< "\tpos.x=" << f.rawPosition.x << ", pos.y=" << f.rawPosition.y << '\n'
 			<< "\tvel.x=" << f.rawVelocity.x << ", vel.y=" << f.rawVelocity.y << '\n'
 
@@ -101,6 +133,11 @@ namespace xge
 		if (f.hasHeading)
 		{
 			o << "\theading=" << f.heading << '\n';
+		}
+
+		if (f.animationBitmaps.size() > 1)
+		{
+			o << "\tanimation=" << f.animationBitmaps.size() << " frames, " << f.animationFrames << " game frames each\n";
 		}
 
 		if (f.drag != 0)

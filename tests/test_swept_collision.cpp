@@ -10,6 +10,7 @@
 
 #include "command_executor.h"
 #include "game.h"
+#include "invaders_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -35,7 +36,7 @@ namespace
 
 TEST_CASE("every cell of a grid has its own name", "[swept_collision]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 
 	std::set<std::string> names;
 	int cells = 0;
@@ -66,7 +67,7 @@ TEST_CASE("every cell of a grid has its own name", "[swept_collision]")
 
 TEST_CASE("a plain object keeps its name, and the XML name still finds a grid", "[swept_collision]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 
 	CHECK(game.getObject("player").name == "player");
 	CHECK(game.getObject("player").baseName == "player");
@@ -76,7 +77,7 @@ TEST_CASE("a plain object keeps its name, and the XML name still finds a grid", 
 
 TEST_CASE("a state that shows a grid shows every cell of it", "[swept_collision]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
 	CHECK(game.isShown(game.getObject("aliens.6.3")));
@@ -87,7 +88,7 @@ TEST_CASE("a state that shows a grid shows every cell of it", "[swept_collision]
 
 TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only that alien dies", "[swept_collision]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
@@ -123,7 +124,7 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 
 TEST_CASE("the bullet also hits a cell in the middle of the grid, not just the front row", "[swept_collision]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
@@ -190,7 +191,7 @@ TEST_CASE("a ball fast enough to pass the paddle in one step bounces off it inst
 
 TEST_CASE("a bullet waits unseen and still, flies at its own velocity, and can be fired again", "[swept_collision]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
@@ -229,7 +230,7 @@ TEST_CASE("a bullet waits unseen and still, flies at its own velocity, and can b
 
 TEST_CASE("a full reset puts away a bullet in flight and brings back a dead alien", "[swept_collision]")
 {
-	Game game{ "games/spaceinvaders.xml" };
+	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
 	Object& bullet = game.getObject("bullet");
