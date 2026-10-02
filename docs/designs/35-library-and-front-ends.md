@@ -4,7 +4,7 @@
 
 ## Decision
 
-The engine is a library, the `XGELIB` target, in `lib/`. Everything that loads, runs, draws and tests a game is in it. What was in `main.cpp` and `cli.cpp` (read the arguments, find the game file, build `Game` and `Engine`, run the loop) moved to `cli/` and is a program of its own, `XGECLI`. A second program, `XGEGUI` (`gui/main.cpp`), is a stub that returns at once, to be the graphical front end later. The test suite links the library too, so it no longer compiles the engine's files a second time.
+The engine is a library, the `XGELIB` target, in `lib/`. Everything that loads, runs, draws and tests a game is in it. What was in `main.cpp` and `cli.cpp` (read the arguments, find the game file, build `Game` and `Engine`, run the loop) moved to `cli/` and is a program of its own, `XGECLI`. A second program, `XGEGUI`, started as a stub that returned at once; it is now the Qt application ([38](38-qt-front-end.md)). The test suite links the library too, so it no longer compiles the engine's files a second time.
 
 A new front end is now a `main()` and a few lines in `executables.cmake`; none of the engine changes.
 
@@ -20,9 +20,9 @@ With two small programs from one repository that are always built together, noth
 - **Keep one executable and add a `--gui` switch.** Simplest, but the command-line code and a window front end would live in one program for good.
 - **A `CMakeLists.txt` in each folder.** Rejected earlier ([18](18-build-system.md)); the programs are defined in one file, `executables.cmake`, in the top-level scope so they land in the build directory next to the copied `games/` and `assets/`.
 - **Third-party libraries `PRIVATE` to the engine.** Not possible yet: the engine's own headers include exprtk, Xerces, SFML and the others, so a program including `engine.h` needs them too. They are `PUBLIC`. Hiding them behind interfaces would be a separate change.
-- **Naming.** Every target is `XGE` plus what it is: `XGELIB` (the library), `XGECLI`, `XGEGUI`, `XGETEST` (the tests) and `XGEDATA` (copying the games and assets). The CMake project is `XMLGameEngine`, so the Visual Studio solution is `XMLGameEngine.sln`; the targets are all `XGE`-named.
-- **Layout.** One folder per project, each with `source/` and `include/`: `lib/`, `cli/`, `gui/`. Before, `source/` and `include/` sat at the top with the engine's files in them and the programs beside them with neither, so the engine looked like the default and the programs like extras. `tests/` and `games/` and `assets/` stay at the top. `gui/include/` is empty (it holds a `.gitkeep`).
+- **Naming.** Every target is `XGE` plus what it is: `XGELIB` (the library), `XGECLI`, `XGEGUI`, `XGETEST` (the tests) and `XGEDATA` (copying the games and assets). The CMake project is `XGE` (`project("XGE")` in `CMakeLists.txt`), so a Visual Studio solution is `XGE.sln`; the targets are all `XGE`-named.
+- **Layout.** One folder per project, each with `source/` and `include/`: `lib/`, `cli/`, `gui/`. Before, `source/` and `include/` sat at the top with the engine's files in them and the programs beside them with neither, so the engine looked like the default and the programs like extras. `tests/` and `games/` and `assets/` stay at the top. `gui/include/` held only a `.gitkeep` while `XGEGUI` was a stub; it has the application's headers now.
 
 ## Approximations
 
-`XGEGUI` links the library but uses nothing from it. `cli/include` is not in the library's include path, only `XGECLI` sees it. The run was checked with the window backends replaced by a stub, because the sandbox that built it has no SFML, raylib or SDL2 libraries: configure, build, link and the whole test suite passed for both the static and the shared library, but `XGECLI` has not been run against a real window from this layout.
+When this was written `XGEGUI` linked the library but used nothing from it. `cli/include` is not in the library's include path, only `XGECLI` sees it. The run was checked with the window backends replaced by a stub, because the sandbox that built it has no SFML, raylib or SDL2 libraries: configure, build, link and the whole test suite passed for both the static and the shared library, but `XGECLI` has not been run against a real window from this layout.

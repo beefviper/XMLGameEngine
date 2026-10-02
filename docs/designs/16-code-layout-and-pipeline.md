@@ -23,7 +23,7 @@ The layered directories were later flattened into `include/` and `source/` files
 
 ## Open
 
-- The flat tree has grown to 23 source and 23 header files and needs sorting into folders again. The earlier attempt (the `rewrite` branch, mostly empty stubs, reviewed and retired 2026-09-30) was too layered for the code that existed; a lighter grouping by responsibility (game loading and evaluation, engine loop, collision and commands, window backends, XML backends), fits what is there now. The Visual Studio filters are to be built from the directories, so this is only about the layout on disk.
+- The flat tree of `lib/` has grown to 25 source and 26 header files (2026-10-01) and needs sorting into folders again. The earlier attempt (the `rewrite` branch, mostly empty stubs, reviewed and retired 2026-09-30) was too layered for the code that existed; a lighter grouping by responsibility (game loading and evaluation, engine loop, collision and commands, window backends, XML backends), fits what is there now. The Visual Studio filters are to be built from the directories, so this is only about the layout on disk.
 - Audio service, configuration service.
 - A `generate` step: nothing emits code from the description yet ([04](04-arithmetic-and-xslt-codegen.md)).
 - Whether a "live snapshot" (current state plus current object instances) should be its own type instead of living inside `Game` ([09](09-states-and-screens.md)).

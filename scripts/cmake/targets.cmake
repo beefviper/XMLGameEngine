@@ -17,9 +17,10 @@ target_link_libraries(XGELIB PUBLIC SFML::System
 	SFML::Window SFML::Graphics SFML::Network SFML::Audio)
 
 # Raylib and SDL2 backends - see window_raylib.h/window_sdl2.h. Every game
-# still only links one Window backend at runtime (chosen by whichever
-# WindowBackend Engine is constructed with - see window.h), but all three
-# are built in so that choice can be made at runtime instead of at build time.
+# still only uses one Window backend at runtime (chosen by whichever
+# WindowBackend Engine is constructed with - see window.h), but all four
+# (SFML3 and OpenGL included) are built in so that choice can be made at
+# runtime instead of at build time.
 target_link_libraries(XGELIB PUBLIC raylib)
 
 # The OpenGL backend (window_opengl.h) is built on GLFW, which raylib is built
@@ -38,7 +39,7 @@ endif()
 target_link_libraries(XGELIB PUBLIC SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 
 # TinyXML2, PugiXML, and RapidXML XML backends - see xml_tinyxml2.h/
-# xml_pugixml.h/xml_rapidxml.h. Same reasoning as the three Window backends
+# xml_pugixml.h/xml_rapidxml.h. Same reasoning as the four Window backends
 # above: every game only ever parses with one (chosen by whichever
 # XmlBackend Game is constructed with - see xml_document.h), but all four
 # (Xerces included) are built in so that choice can be made at runtime

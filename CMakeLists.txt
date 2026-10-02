@@ -11,7 +11,7 @@ include(scripts/cmake/options.cmake)
 
 # The engine is a library (the XGELIB target, lib/);
 # the programs that use it are separate targets - XGECLI (the command line,
-# cli/) and XGEGUI (a stub for a future windowed front end, gui/); every
+# cli/) and XGEGUI (the Qt application, gui/, built when Qt 6 is found); every
 # project has its own source/ and include/ - see
 # scripts/cmake/executables.cmake. Static by default; -DXGE_BUILD_SHARED=ON
 # builds it as a shared library (a DLL on Windows) instead.

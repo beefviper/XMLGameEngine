@@ -48,7 +48,7 @@ The data folder is where `games/` and `assets/` are: the first of the working di
 
 - **`--game=pong` as well as `--game pong`.** Common elsewhere; left out on purpose, the author prefers the spaced form for long options.
 - **Last one wins for a repeated option.** Common in shells and aliases, but a quiet way to run the wrong backend; an error was chosen.
-- **Short names for backends (`sfml`, `xerxes`).** Not added; the four XML libraries and three window libraries are named as their libraries are.
+- **Short names for backends (`sfml`, `xerxes`).** Not added; the four XML libraries and four window libraries are named as their libraries are.
 - **Compile-time availability.** Every backend is built in today, so every name is accepted; if a build ever leaves one out, its name should be rejected here with that reason.
 
 ## Approximations
