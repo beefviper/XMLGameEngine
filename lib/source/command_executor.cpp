@@ -24,6 +24,7 @@ namespace xge
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
+			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
 			                      appear in a collisionData list, and carry() is about
 			                      another object, which a screen edge is not; ignore
@@ -43,6 +44,7 @@ namespace xge
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdCarry&) { carry(object, other); },
+			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
@@ -61,6 +63,7 @@ namespace xge
 			// object's own position): with no "colliding object" to be implicit
 			// about, it's the full-game reset - see Game::resetAll.
 			[&](const CmdReset&) { if (keyPressed) { game.resetAll(); } },
+			[&](const CmdPlay& p) { if (keyPressed) { game.requestSound(p.sound); } },
 			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
 			                      directly on a state's <input>; only reachable
 			                      via CmdTriggerAction into an object's own
@@ -344,8 +347,10 @@ namespace xge
 				[&](const CmdTurn& t) { applyActionTurn(object, t.direction, keyPressed ? t.rate : 0.0f); },
 				[&](const CmdThrust& t) { applyActionThrustAhead(object, keyPressed ? t.amount : 0.0f, t.burn); },
 				[&](const CmdFire& f) { if (keyPressed) { spawnProjectile(object, f.projectileName); } },
+				// A sound belongs to the press, like a hop: letting go is silent.
+				[&](const CmdPlay& p) { if (keyPressed) { game.requestSound(p.sound); } },
 				[&](const auto&) { /* an object's own <action> list only ever produces
-				                      move/hop/accelerate/fire commands today; ignore anything else. */ }
+				                      move/hop/accelerate/turn/thrust/fire/play commands today; ignore anything else. */ }
 			}, command);
 		}
 	}

@@ -4,17 +4,18 @@
 
 ## Decision
 
-`XGECLI` takes a game and the two backends:
+`XGECLI` takes a game and the three backends:
 
 ```
 XGECLI [game] [options]
   -g, --game <game>    the game, same as giving it bare
   -w, --window <name>  sfml3 (default), raylib, sdl2, opengl
   -x, --xml <name>     xerces (default), tinyxml2, pugixml, rapidxml
+  -a, --audio <name>   sfml3 (default), raylib, sdl2, none
   -h, --help           the usage
 ```
 
-The simplest use stays the simplest: `XGECLI pong` and `XGECLI pong.xml` work as before, and no argument at all runs `pong`. `-g` and `--game` find the file exactly as the bare argument does (below), and fail with no value; so do `-w` and `-x`. Every option is optional, and the defaults are the ones `Game` and `Engine` already had (Xerces and SFML3).
+The simplest use stays the simplest: `XGECLI pong` and `XGECLI pong.xml` work as before, and no argument at all runs `pong`. `-g` and `--game` find the file exactly as the bare argument does (below), and fail with no value; so do `-w`, `-x` and `-a`. Every option is optional, and the defaults are the ones `Game` and `Engine` already had (Xerces and SFML3, and SFML3 for sound). `-a` was added with sound ([45](45-sound.md)); `none` plays nothing.
 
 A short option takes its value attached or after a space, `-gpong -wsfml3 -xtinyxml2` or `-g pong -w sfml3 -x tinyxml2`. A long option needs the space, `--game pong`; `--game=pong` is an error that says so, because it is not accepted. Backend names are not case sensitive. An option, or the game, given twice is an error rather than the last one winning, and so is an unknown option or backend (the message lists the valid names). Bare and `-g` are the same game, so `pong -g breakout` is two games and an error. A value that starts with `-` is never taken as the value of the option before it, so `-g -w sdl2` says `-g` has no game.
 
@@ -26,6 +27,7 @@ Before anything else is printed, `main()` says what was chosen, one to a line, w
 file: games/pong.xml
 window: sfml3
 xml: xerces
+audio: sfml3
 ```
 
 ## Finding the game file
@@ -42,7 +44,7 @@ The data folder is where `games/` and `assets/` are: the first of the working di
 
 ## Layout
 
-`parseCommandLine` (arguments to `CliOptions`) and `findGameFile` (name to path) are separate functions that throw `CliError`, so each can be tested; neither exits the program, `main()` prints the message and the usage to stderr and returns failure. The window and XML enums were already in the library (`WindowBackend`, `XmlBackend`) and `Game` and `Engine` already took them, so the library did not change: `main()` passes `options.xml` to `Game` and `options.window` to `Engine`. `cli.cpp` is compiled into `XGETEST` as well, for `test_cli.cpp`, since the library does not contain it.
+`parseCommandLine` (arguments to `CliOptions`) and `findGameFile` (name to path) are separate functions that throw `CliError`, so each can be tested; neither exits the program, `main()` prints the message and the usage to stderr and returns failure. The window and XML enums were already in the library (`WindowBackend`, `XmlBackend`) and `Game` and `Engine` already took them, so the library did not change: `main()` passes `options.xml` to `Game` and `options.window` and `options.audio` to `Engine`. `cli.cpp` is compiled into `XGETEST` as well, for `test_cli.cpp`, since the library does not contain it.
 
 ## Options considered
 

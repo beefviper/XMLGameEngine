@@ -98,7 +98,7 @@ namespace xge
 
 			const WindowDesc& desc = game->getWindowDesc();
 
-			engine = std::make_unique<Engine>(*game, makeWindow(desc));
+			engine = std::make_unique<Engine>(*game, makeWindow(desc), makeAudio());
 
 			// The frame pace: the game moves a fixed amount a frame, so this is
 			// also its speed.
@@ -135,9 +135,10 @@ namespace xge
 	{
 		const bool xmlChanged = next.xml != currentOptions.xml;
 		const bool videoChanged = next.video != currentOptions.video;
+		const bool audioChanged = next.audio != currentOptions.audio;
 		currentOptions = next;
 
-		if (!game || (!xmlChanged && !videoChanged))
+		if (!game || (!xmlChanged && !videoChanged && !audioChanged))
 		{
 			return true;
 		}
@@ -153,6 +154,18 @@ namespace xge
 
 		pause();
 		lastError.clear();
+
+		// The sounds go to the new library; nothing else about the game changes.
+		if (audioChanged)
+		{
+			engine->replaceAudio([this] { return makeAudio(); });
+		}
+
+		if (!videoChanged)
+		{
+			return true;
+		}
+
 		rememberPosition();
 
 		try
@@ -217,6 +230,20 @@ namespace xge
 		libraryWindow = false;
 		return std::make_unique<QtWindow>(
 			stage.showView(static_cast<int>(desc.width), static_cast<int>(desc.height), QString::fromStdString(desc.name)));
+	}
+
+	std::unique_ptr<Audio> GameSession::makeAudio()
+	{
+		try
+		{
+			return AudioFactory::create(currentOptions.audio);
+		}
+		catch (const std::exception& e)
+		{
+			currentOptions.audio = AudioBackend::None;
+			emit audioFellBack(QString::fromUtf8(e.what()));
+			return std::make_unique<NullAudio>();
+		}
 	}
 
 	void GameSession::updateTitle()
@@ -290,6 +317,12 @@ namespace xge
 
 		playing = false;
 		framesPerSecond = 0;
+
+		// A tune that was playing stops with the game.
+		if (engine)
+		{
+			engine->silence();
+		}
 		updateTimer();
 		updateTitle();
 		emit playingChanged(false);

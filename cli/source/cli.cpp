@@ -27,6 +27,12 @@ namespace xge
 			XmlBackend backend;
 		};
 
+		struct AudioName
+		{
+			std::string_view name;
+			AudioBackend backend;
+		};
+
 		// The names accepted on the command line, lower case. The first one
 		// in each table is the default.
 		constexpr WindowName windowNames[] = {
@@ -41,6 +47,13 @@ namespace xge
 			{ "tinyxml2", XmlBackend::TinyXml2 },
 			{ "pugixml",  XmlBackend::PugiXml },
 			{ "rapidxml", XmlBackend::RapidXml },
+		};
+
+		constexpr AudioName audioNames[] = {
+			{ "sfml3",  AudioBackend::SFML3 },
+			{ "raylib", AudioBackend::Raylib },
+			{ "sdl2",   AudioBackend::SDL2 },
+			{ "none",   AudioBackend::None },
 		};
 
 		std::string lowerCase(std::string text)
@@ -83,7 +96,7 @@ namespace xge
 		// Which option an argument is, and the value stuck to it if any.
 		struct OptionMatch
 		{
-			char key = 0; // 'g', 'w', 'x' or 'h'
+			char key = 0; // 'g', 'w', 'x', 'a' or 'h'
 			std::optional<std::string> attachedValue;
 		};
 
@@ -93,6 +106,7 @@ namespace xge
 			if (arg == "--game")   return 'g';
 			if (arg == "--window") return 'w';
 			if (arg == "--xml")    return 'x';
+			if (arg == "--audio")  return 'a';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
@@ -109,6 +123,7 @@ namespace xge
 			case 'g': return "game";
 			case 'w': return "window";
 			case 'x': return "xml";
+			case 'a': return "audio";
 			}
 			return "help";
 		}
@@ -121,6 +136,7 @@ namespace xge
 		bool haveGame = false;
 		bool haveWindow = false;
 		bool haveXml = false;
+		bool haveAudio = false;
 
 		auto setGame = [&](const std::string& game)
 		{
@@ -154,6 +170,14 @@ namespace xge
 				}
 				options.xml = lookUp(xmlNames, "XML library", value);
 				haveXml = true;
+				break;
+			case 'a':
+				if (haveAudio)
+				{
+					throw CliError("the sound library was given more than once");
+				}
+				options.audio = lookUp(audioNames, "sound library", value);
+				haveAudio = true;
 				break;
 			}
 		};
@@ -190,7 +214,7 @@ namespace xge
 			else
 			{
 				match.key = arg[1];
-				if (match.key != 'g' && match.key != 'w' && match.key != 'x' && match.key != 'h')
+				if (match.key != 'g' && match.key != 'w' && match.key != 'x' && match.key != 'a' && match.key != 'h')
 				{
 					throw CliError("unknown option '" + arg + "'");
 				}
@@ -271,6 +295,18 @@ namespace xge
 		return "unknown";
 	}
 
+	std::string audioBackendName(AudioBackend backend)
+	{
+		for (const auto& entry : audioNames)
+		{
+			if (entry.backend == backend)
+			{
+				return std::string(entry.name);
+			}
+		}
+		return "unknown";
+	}
+
 	std::string usageText()
 	{
 		return
@@ -286,9 +322,10 @@ namespace xge
 			"  -g, --game <game>    the game, same as giving it bare\n"
 			"  -w, --window <name>  window library: " + namesOf(windowNames) + " (default sfml3)\n"
 			"  -x, --xml <name>     XML library: " + namesOf(xmlNames) + " (default xerces)\n"
+			"  -a, --audio <name>   sound library: " + namesOf(audioNames) + " (default sfml3)\n"
 			"  -h, --help           show this text\n"
 			"\n"
-			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2); a\n"
+			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"
 			"long option needs a space (--game pong).\n";
 	}
 }

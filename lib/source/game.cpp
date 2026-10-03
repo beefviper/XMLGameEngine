@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <stdexcept>
+#include <utility>
 #include <variant>
 
 namespace xge
@@ -17,8 +18,8 @@ namespace xge
 	Game::Game(const std::string& game, XmlBackend xmlBackend) :
 		filename(game)
 	{
-		xml.init(filename, xmlBackend, windowDesc, rawVariables, rawStates, rawObjects, xmlValidation);
-		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects);
+		xml.init(filename, xmlBackend, windowDesc, rawVariables, rawStates, rawObjects, rawSounds, xmlValidation);
+		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds);
 		// Every object's own visual is built later, by Engine, once a real
 		// Window (and therefore a real backend to build against) exists -
 		// see Window::init() in window.h.
@@ -152,6 +153,29 @@ namespace xge
 		{
 			std::cout << state << '\n';
 		}
+
+		for (const auto& sound : sounds)
+		{
+			std::cout << sound << '\n';
+		}
+	}
+
+	const std::vector<SoundDesc>& Game::getSounds(void) const noexcept
+	{
+		return sounds;
+	}
+
+	void Game::requestSound(const std::string& name)
+	{
+		if (std::find(soundRequests.begin(), soundRequests.end(), name) == soundRequests.end())
+		{
+			soundRequests.push_back(name);
+		}
+	}
+
+	std::vector<std::string> Game::takeSoundRequests(void)
+	{
+		return std::exchange(soundRequests, {});
 	}
 
 	WindowDesc& Game::getWindowDesc(void) noexcept

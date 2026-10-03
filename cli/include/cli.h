@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "audio.h"
 #include "window.h"
 #include "xml_document.h"
 
@@ -33,6 +34,7 @@ namespace xge
 
 		WindowBackend window = WindowBackend::SFML3;
 		XmlBackend xml = XmlBackend::Xerces;
+		AudioBackend audio = AudioBackend::SFML3;
 
 		bool showHelp = false;
 	};
@@ -47,6 +49,8 @@ namespace xge
 	//   --window sfml3
 	//   -x xerces -xxerces     the XML library: xerces (default), tinyxml2,
 	//   --xml xerces           pugixml, rapidxml
+	//   -a sfml3 -asfml3       the sound library: sfml3 (default), raylib, sdl2,
+	//   --audio sfml3          none (silent)
 	//   -h  --help             show the usage and exit
 	//
 	// A short option takes its value attached or after a space; a long option
@@ -72,10 +76,11 @@ namespace xge
 	std::string findGameFile(const std::string& game,
 		const std::filesystem::path& gamesDirectory = "games");
 
-	// The command line name of a backend, as -w and -x take it ("sfml3",
+	// The command line name of a backend, as -w, -x and -a take it ("sfml3",
 	// "tinyxml2"), for the start message.
 	std::string windowBackendName(WindowBackend backend);
 	std::string xmlBackendName(XmlBackend backend);
+	std::string audioBackendName(AudioBackend backend);
 
 	// The usage text, for --help and after an error.
 	std::string usageText();

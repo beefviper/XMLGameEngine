@@ -5,8 +5,8 @@
   What a game file is made of. The rule of thumb:
 
     * An attribute NAMES or PICKS something: name, class, object, variable,
-      state, action, button, edge, direction, unless, burn, sprite. These are labels, and
-      they cannot be computed.
+      state, action, button, edge, direction, unless, burn, sprite, sound, wave,
+      pitch, to. These are labels, and they cannot be computed.
     * Everything else is the content of an element. Wherever the content is a
       number (valueType below) it is either a math expression written out as
       text - window.width.center - title.width / 2 - or a single value tag that
@@ -95,6 +95,50 @@
   </xs:complexType>
 
   <xs:complexType name="emptyType" />
+
+  <!-- Sounds: the voices of an old 8-bit sound chip, and a soft sine. -->
+  <xs:simpleType name="waveType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="square" />
+      <xs:enumeration value="triangle" />
+      <xs:enumeration value="sawtooth" />
+      <xs:enumeration value="sine" />
+      <xs:enumeration value="noise" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!--
+    A note: its pitch (a note name with an octave such as C4, F#3 or Bb5 -
+    C4 is middle C - or a number of hertz), optionally a pitch to slide to
+    while it plays, and optionally a wave of its own instead of the sound's.
+    Its content is how long it lasts, in seconds.
+  -->
+  <xs:complexType name="noteType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="pitch" type="xs:string" use="required" />
+    <xs:attribute name="to" type="xs:string" use="optional" />
+    <xs:attribute name="wave" type="waveType" use="optional" />
+  </xs:complexType>
+
+  <!--
+    A sound that <play sound="..." /> starts: how loud (0 to 1, 0.3 when left
+    out), then notes and rests (a rest's content is how many seconds of
+    silence), played one after the other. wave is every note's that does not
+    give its own (square when left out).
+  -->
+  <xs:complexType name="soundType">
+    <xs:sequence>
+      <xs:element name="volume" type="valueType" minOccurs="0" />
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="note" type="noteType" />
+        <xs:element name="rest" type="valueType" />
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="wave" type="waveType" use="optional" />
+  </xs:complexType>
 
   <!-- Sprites: one shape, and optionally a grid of copies of it. -->
   <xs:group name="shape">
@@ -321,6 +365,11 @@
           <xs:attribute name="action" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="play">
+        <xs:complexType>
+          <xs:attribute name="sound" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:group>
 
@@ -493,6 +542,13 @@
           <xs:complexType>
             <xs:sequence>
               <xs:element name="variable" type="variableType" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="sounds" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="sound" type="soundType" maxOccurs="unbounded" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>

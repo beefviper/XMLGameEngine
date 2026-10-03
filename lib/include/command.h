@@ -156,6 +156,15 @@ namespace xge
 
 	struct CmdPopState {};
 
+	// <play sound="bounce" /> - starts one of the game's <sounds> (see sound.h
+	// and audio.h). Anywhere a command can go: a collision rule, an object's
+	// action (on the press), a key in a state, a condition. The game only asks
+	// for it (Game::requestSound); Engine hands it to the Audio backend.
+	struct CmdPlay
+	{
+		std::string sound;
+	};
+
 	// <fire object="projectileName" /> - spawn/launch a named projectile object
 	struct CmdFire
 	{
@@ -183,7 +192,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry,
 		CmdMove, CmdHop, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay>;
 
 	// --- What the XML says, before any of it is evaluated.
 
@@ -237,6 +246,7 @@ namespace xge
 		std::string action;    // trigger
 		std::string direction; // move, hop, accelerate, turn
 		std::string burn;      // accelerate, thrust
+		std::string sound;     // play
 		RawValue amount;       // move, hop, accelerate, turn, thrust, release (how many)
 	};
 

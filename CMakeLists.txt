@@ -26,8 +26,8 @@ include(scripts/cmake/targets.cmake)
 include(scripts/cmake/platform.cmake)
 include(scripts/cmake/assets.cmake)
 
-# The whole engine: game loading and evaluation, collisions, and every XML
-# and Window backend. Nothing here reads the command line or has a main();
+# The whole engine: game loading and evaluation, collisions, and every XML,
+# Window and Audio backend. Nothing here reads the command line or has a main();
 # that is cli/ (XGECLI). The test suite links this same library
 # (scripts/cmake/tests.cmake), so there is one list of files to keep.
 set(ENGINE_SOURCES
@@ -57,6 +57,11 @@ set(ENGINE_SOURCES
 	"lib/source/window_raylib.cpp"
 	"lib/source/window_sdl2.cpp"
 	"lib/source/window_opengl.cpp"
+	"lib/source/sound.cpp"
+	"lib/source/audio.cpp"
+	"lib/source/audio_sfml.cpp"
+	"lib/source/audio_raylib.cpp"
+	"lib/source/audio_sdl2.cpp"
 )
 
 set(ENGINE_HEADERS
@@ -87,6 +92,11 @@ set(ENGINE_HEADERS
 	"lib/include/window_raylib.h"
 	"lib/include/window_sdl2.h"
 	"lib/include/window_opengl.h"
+	"lib/include/sound.h"
+	"lib/include/audio.h"
+	"lib/include/audio_sfml.h"
+	"lib/include/audio_raylib.h"
+	"lib/include/audio_sdl2.h"
 )
 
 target_sources(XGELIB PRIVATE

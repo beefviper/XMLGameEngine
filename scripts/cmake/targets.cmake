@@ -13,6 +13,11 @@ target_include_directories(XGELIB PUBLIC lib/include)
 
 target_link_libraries(XGELIB PUBLIC XercesC::XercesC)
 
+# SFML::Audio is the SFML 3 Audio backend (audio_sfml.h); raylib's and SDL2's
+# sound (audio_raylib.h, audio_sdl2.h) come with the libraries linked below,
+# with nothing more to link. Like the Window backends, every game plays its
+# sounds with one Audio backend (chosen by whichever AudioBackend Engine is
+# constructed with - see audio.h), and all of them are built in.
 target_link_libraries(XGELIB PUBLIC SFML::System
 	SFML::Window SFML::Graphics SFML::Network SFML::Audio)
 

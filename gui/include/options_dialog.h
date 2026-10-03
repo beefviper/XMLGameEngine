@@ -15,7 +15,7 @@ class QComboBox;
 namespace xge
 {
 	// The Options window: which library draws the game, which one reads the
-	// game file, whether to be asked before the game moves to a window of its
+	// game file, which one plays its sounds, whether to be asked before the game moves to a window of its
 	// own, and whether a game starts playing when it is opened. Nothing changes until it is closed with OK.
 	class OptionsDialog : public QDialog
 	{
@@ -36,6 +36,7 @@ namespace xge
 	private:
 		QComboBox* video;
 		QComboBox* xml;
+		QComboBox* audio;
 		QCheckBox* warn;
 		QCheckBox* start;
 	};

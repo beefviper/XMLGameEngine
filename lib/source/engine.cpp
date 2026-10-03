@@ -5,21 +5,44 @@
 
 #include "engine.h"
 
+#include <exception>
+#include <iostream>
 #include <stdexcept>
 #include <utility>
 
 namespace xge
 {
-	Engine::Engine(Game& game, WindowBackend backend) :
-		Engine(game, WindowFactory::create(game.getWindowDesc(), backend))
+	namespace
+	{
+		// The audio library asked for, or silence if it will not start (no
+		// sound device, say): a game is still worth playing without sound.
+		std::unique_ptr<Audio> makeAudioOrSilence(AudioBackend backend)
+		{
+			try
+			{
+				return AudioFactory::create(backend);
+			}
+			catch (const std::exception& error)
+			{
+				std::cerr << "warning: no sound: " << error.what() << '\n';
+				return std::make_unique<NullAudio>();
+			}
+		}
+	}
+
+	Engine::Engine(Game& game, WindowBackend backend, AudioBackend audioBackend) :
+		Engine(game, WindowFactory::create(game.getWindowDesc(), backend), makeAudioOrSilence(audioBackend))
 	{
 	}
 
-	Engine::Engine(Game& game, std::unique_ptr<Window> window) :
+	Engine::Engine(Game& game, std::unique_ptr<Window> window, std::unique_ptr<Audio> audio) :
 		game(game),
 		commandExecutor(game),
-		window(std::move(window))
+		window(std::move(window)),
+		audio(audio ? std::move(audio) : std::make_unique<NullAudio>())
 	{
+		this->audio->load(game.getSounds());
+
 		// Builds and measures every object's initial visual now that a
 		// window (and therefore a real backend to build against) exists -
 		// this used to happen inside Game's own constructor, via the
@@ -44,6 +67,41 @@ namespace xge
 
 		// Sizes may differ a little between libraries (text above all).
 		game.resolveSizeDependentPositions();
+	}
+
+	void Engine::replaceAudio(const std::function<std::unique_ptr<Audio>()>& create)
+	{
+		audio.reset();
+
+		try
+		{
+			audio = create();
+		}
+		catch (...)
+		{
+			audio = std::make_unique<NullAudio>();
+			throw;
+		}
+
+		if (!audio)
+		{
+			audio = std::make_unique<NullAudio>();
+		}
+
+		audio->load(game.getSounds());
+	}
+
+	void Engine::silence(void)
+	{
+		audio->stopAll();
+	}
+
+	void Engine::playRequestedSounds(void)
+	{
+		for (const std::string& name : game.takeSoundRequests())
+		{
+			audio->play(name);
+		}
 	}
 
 	void Engine::requireWindow(void) const
@@ -95,6 +153,9 @@ namespace xge
 		// A text that grew or shrank when last drawn (a score) needs its
 		// position worked out again for the new size.
 		game.resolveSizeDependentPositions();
+
+		// Keys, collisions and conditions have all had their say.
+		playRequestedSounds();
 	}
 
 	void Engine::pump(void)

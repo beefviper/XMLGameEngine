@@ -22,6 +22,40 @@
     <variable name="height">150</variable>
     <variable name="step">2</variable>
   </variables>
+  <!-- sounds -->
+  <sounds>
+    <!-- the ball off the top or bottom wall: a low blip -->
+    <sound name="wall" wave="square">
+      <note pitch="A3">0.04</note>
+    </sound>
+    <!-- the ball off a paddle: a higher blip -->
+    <sound name="paddle" wave="square">
+      <note pitch="A4">0.05</note>
+    </sound>
+    <!-- a point scored: a bloop that falls two octaves -->
+    <sound name="score" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E5" to="E3">0.35</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- fifteen points: a sad little tune, and a hiss to end it -->
+    <sound name="gameover" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G4">0.2</note>
+      <note pitch="F#4">0.2</note>
+      <note pitch="F4">0.2</note>
+      <note pitch="E4" to="D#4">0.5</note>
+      <rest>0.1</rest>
+      <note pitch="2000" wave="noise">0.15</note>
+    </sound>
+  </sounds>
   <!-- objects -->
   <objects>
     <!-- title -->
@@ -70,17 +104,21 @@
         <enabled>true</enabled>
         <collision edge="vertical">
           <bounce />
+          <play sound="wall" />
         </collision>
         <collision edge="left">
           <inc variable="paddle2.score" />
           <reset />
+          <play sound="score" />
         </collision>
         <collision edge="right">
           <inc variable="paddle1.score" />
           <reset />
+          <play sound="score" />
         </collision>
         <collision>
           <bounce />
+          <play sound="paddle" />
         </collision>
       </collisions>
     </object>
@@ -232,6 +270,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
         <input button="s">
           <push state="settings" />
@@ -285,6 +324,7 @@
         <condition class="paddle" variable="score">
           <atleast>15</atleast>
           <push state="gameover" />
+          <play sound="gameover" />
         </condition>
       </conditions>
     </state>

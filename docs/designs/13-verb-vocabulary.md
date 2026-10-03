@@ -8,7 +8,7 @@ A verb is a named behavior with parameters. A good declarative verb captures the
 
 ## Implemented today
 
-the command tags `<bounce />`, `<stick />`, `<die />`, `<reset />`, `<inc />`, `<dec />`, `<wrap />`, `<carry />`, `<move direction=...>`, `<hop direction=...>`, `<push />`, `<pop />`, `<trigger />`, `<fire />`, `<accelerate direction= burn=>`, `<stop />`; sprites `<circle>`, `<rectangle>`, `<text>`, `<image>`, `<line>`, `<grid>`; an object's `<acceleration>`; a collision `<type>` and the rule filters `slower` and `faster`; a collision rule filter, `unless`; the value tag `<random>`; and the condition forms `atleast`, `atmost` and `remaining`. See [docs/readme.md](../readme.md) for exact meanings.
+the command tags `<bounce />`, `<stick />`, `<die />`, `<reset />`, `<inc />`, `<dec />`, `<wrap />`, `<carry />`, `<move direction=...>`, `<hop direction=...>`, `<push />`, `<pop />`, `<trigger />`, `<fire />`, `<accelerate direction= burn=>`, `<stop />`, `<play sound=>`; sprites `<circle>`, `<rectangle>`, `<text>`, `<image>`, `<line>`, `<grid>`; an object's `<acceleration>`; a collision `<type>` and the rule filters `slower` and `faster`; a collision rule filter, `unless`; the value tag `<random>`; and the condition forms `atleast`, `atmost` and `remaining`. See [docs/readme.md](../readme.md) for exact meanings.
 
 Rough coverage by game: Pong is essentially `bounce()` and `stick()`; Breakout adds `die()`; Space Invaders adds `fire()` and formation movement through lockstep bounce; Frogger adds `hop`, `carry`, `wrap`, `dec`, `unless` and `atmost` (see [21](21-frogger.md) for why each is shaped the way it is). Space Race added no verbs: it is `move`, `stick`, `inc`, `reset`, `wrap` and a score condition. Kaboom added none either: `move`, `stick`, `bounce`, `inc`, `dec`, `reset`, `<random>`, a state per wave and variable conditions, one of which does a `reset object=` for the explosion ([30](30-kaboom.md)). Freeway, Depth Charge and Astrosmash added none: Freeway is Frogger's road (`hop`, `wrap`, `reset`, `inc`), Depth Charge is `fire` pointed down with a `dec` on the floor rule and a `remaining` win, and Astrosmash is Kaboom's falling pieces plus `fire` ([31](31-freeway.md), [32](32-depth-charge.md), [33](33-astrosmash.md)). Lunar Lander added the most since Frogger: `<line>`, `<type>pixel</type>`, `<acceleration>`, `<accelerate>` with `burn`, `<stop />`, `<slower>` and `<faster>`, each because gravity, a thrust that runs out, and a landing that is good or bad by speed could not be said without it ([34](34-lunar-lander.md)).
 
@@ -56,7 +56,7 @@ Pathfinding is the engine's job, not the XML's. Other likely targeting modes: di
 ## Related smaller ideas
 
 - **Random speed with a dead zone.** `<random min="-7" max="7" />` can give a near-zero velocity; the workaround so far is to reload. A declarative fix: a random magnitude with a random sign (a random from 3 to 7 times a sign), for example a `<sign>` value tag, avoiding an `if`.
-- **Sound.** There is no audio vocabulary yet.
+- **Sound.** Built: `<play sound="..." />`, a command that works anywhere a command does, and a game's `<sounds>` written as notes ([45](45-sound.md)).
 - **Pong to Galaxian, written formally.** The chain of tweaks ([01](01-vision-and-scope.md)) could become a design document showing which verbs each step adds.
 
 ## Second batch: alternatives

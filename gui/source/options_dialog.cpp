@@ -20,6 +20,7 @@ namespace xge
 		QDialog(parent),
 		video(new QComboBox),
 		xml(new QComboBox),
+		audio(new QComboBox),
 		warn(new QCheckBox(tr("&Ask before the game moves to a window of its own"))),
 		start(new QCheckBox(tr("&Start Game on Load")))
 	{
@@ -37,9 +38,16 @@ namespace xge
 		}
 		xml->setCurrentIndex(xml->findData(static_cast<int>(current.xml)));
 
+		for (const AudioBackend backend : allAudioBackends())
+		{
+			audio->addItem(audioBackendTitle(backend), static_cast<int>(backend));
+		}
+		audio->setCurrentIndex(audio->findData(static_cast<int>(current.audio)));
+
 		auto* form = new QFormLayout;
 		form->addRow(tr("&Video:"), video);
 		form->addRow(tr("&XML parser:"), xml);
+		form->addRow(tr("S&ound:"), audio);
 
 		warn->setChecked(warnBeforeTwoWindows);
 		start->setChecked(startGameOnLoad);
@@ -48,7 +56,7 @@ namespace xge
 		auto* note = new QLabel(tr(
 			"The game waits while this dialog is open, and carries on when it closes.\n"
 			"Every video library but the Qt renderer draws in a window of its own.\n"
-			"Changing the video library keeps the game as it is.\n"
+			"Changing the video or sound library keeps the game as it is.\n"
 			"Changing the XML parser reads the game file again, so the game starts over."));
 		note->setWordWrap(true);
 
@@ -91,6 +99,7 @@ namespace xge
 		SessionOptions chosen;
 		chosen.video = static_cast<VideoBackend>(video->currentData().toInt());
 		chosen.xml = static_cast<XmlBackend>(xml->currentData().toInt());
+		chosen.audio = static_cast<AudioBackend>(audio->currentData().toInt());
 		return chosen;
 	}
 }

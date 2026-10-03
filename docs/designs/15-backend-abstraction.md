@@ -1,6 +1,6 @@
-# 15. Backend abstraction: XML libraries and windowing libraries
+# 15. Backend abstraction: XML libraries, windowing libraries and sound libraries
 
-**Status:** implemented (4 XML backends, 3 window backends)
+**Status:** implemented (4 XML backends, 4 window backends, 3 audio backends and a silent one)
 
 ## Why
 
@@ -34,21 +34,25 @@ Only Xerces can do real XSD validation. For the other three backends the project
 
 A window backend provides lifecycle, `init()` (build and measure each object's visual), `pollEvents()` (key changes as `{key, pressed}` pairs), `clear`, `draw`, `display`. Everything is in engine terms (`WindowDesc`, `Object`, `KeyCode`, an engine `Color` and `Vector2f`), so no library type leaks upward. Backends: **SFML3**, **Raylib**, **SDL2**, **OpenGL** (GLFW), and in `XGEGUI` a fifth that draws with Qt; every library backend opens a window of its own, and `XGEGUI` shows them in a second window ([40](40-split-windows-in-xgegui.md)). `Object::size` is the one thing only a backend can measure (text and image sizes depend on real fonts and files); collision code reads that field and never a backend type.
 
-## Both use the same factory pattern
+## Sound: `Audio`
 
-`XmlDocumentFactory::create(backend)` and `WindowFactory::create(desc, backend)` are the only places that know every implementation. Adding a fifth XML library or fourth window library is one branch and one new pair of files.
+An audio backend provides `load()` (take every sound the game describes, as engine-level `SoundDesc`s), `play(name)` and `stopAll()`. Backends: **SFML3**, **Raylib**, **SDL2**, and **None** (`NullAudio`, which plays nothing: the tests, `-a none`, and the fallback when a library cannot open a sound device). The engine makes every sound's samples itself (`synthesize()` in `sound.cpp`), so a backend only hands 16-bit samples to its library and every library plays the same sound. The audio library is chosen apart from the window library; any goes with any. `Game` only queues what `<play>` asks for, and `Engine` owns the `Audio` and plays the queue once a frame, so nothing below `Engine` knows audio exists. See [45](45-sound.md).
+
+## All three use the same factory pattern
+
+`XmlDocumentFactory::create(backend)`, `WindowFactory::create(desc, backend)` and `AudioFactory::create(backend)` are the only places that know every implementation. Adding a fifth XML library, a fifth window library or a fourth sound library is one branch and one new pair of files.
 
 ## Open
 
-- A command-line switch for the backends (defaults are Xerces and SFML3).
-- Audio has no interface yet.
+- A command-line switch for the backends: built ([37](37-command-line.md)), `-w`, `-x` and `-a`; the defaults are Xerces, SFML3 and SFML3.
+- Audio: built, `Audio` above ([45](45-sound.md)).
 - Compile-time selection with `#ifdef` versus this run-time factory: the factory is used; the CMake options only decide which libraries get built.
 
 ## Second batch: alternatives
 
 - **The word backend.** Alternatives: implementation, module, service, provider, adapter. Backend stayed because it says what it is (an interchangeable lower layer), and it still fits when the subsystem list grows: window, graphics, input, audio, network, XML, expressions, filesystem.
 - **Null and software backends.** A null implementation of each subsystem removes checks for absence; a software renderer is the last fallback ([25](25-targets-and-capability-profiles.md)).
-- **Audio.** No audio vocabulary exists; when there is one, an audio interface with a play-by-name call and a null implementation would follow the same pattern.
+- **Audio.** No audio vocabulary existed; when there was one, an audio interface with a play-by-name call and a null implementation would follow the same pattern. That is what was built ([45](45-sound.md)).
 - **Validator at the engine layer.** Put schema validation in the engine, use the parser's own when it exists, fall back otherwise, so a new parser only has to parse.
 - **Selection.** A build option per backend and an error when none is chosen, in place of silently searching until something is found; optionally build everything and choose at runtime ([18](18-build-system.md)).
 - **Forward declarations.** Keep third-party types out of headers with forward declarations so they do not leak.

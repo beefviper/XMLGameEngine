@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "audio.h"
 #include "command.h"
 #include "command_executor.h"
 #include "game.h"
@@ -25,14 +26,18 @@ namespace xge
 	{
 	public:
 		// backend picks which Window implementation actually opens (SFML3,
-		// Raylib, SDL2 or OpenGL - see window.h); defaults to SFML3 so existing
-		// callers don't have to name one.
-		explicit Engine(Game& game, WindowBackend backend = WindowBackend::SFML3);
+		// Raylib, SDL2 or OpenGL - see window.h), and audioBackend which Audio
+		// plays the game's sounds (SFML3, Raylib, SDL2 or None - see audio.h);
+		// both default to SFML3 so existing callers don't have to name one. A
+		// window that cannot be made throws; sound that cannot start is not
+		// worth stopping a game for, so it prints a warning and the game plays
+		// silently (NullAudio).
+		explicit Engine(Game& game, WindowBackend backend = WindowBackend::SFML3, AudioBackend audioBackend = AudioBackend::SFML3);
 
-		// Same, but with an already-built Window - what lets a test drive
-		// Engine's key handling with a fake window instead of opening a real
-		// one.
-		Engine(Game& game, std::unique_ptr<Window> window);
+		// Same, but with an already-built Window (and Audio) - what lets a test
+		// drive Engine's key handling with a fake window instead of opening a
+		// real one. No audio (nullptr) is NullAudio: silent.
+		Engine(Game& game, std::unique_ptr<Window> window, std::unique_ptr<Audio> audio = nullptr);
 
 		void loop(void);
 
@@ -43,6 +48,20 @@ namespace xge
 
 		// Null while there is no window.
 		Window* currentWindow(void) noexcept { return window.get(); }
+
+		// Never null: NullAudio when there is no sound.
+		Audio* currentAudio(void) noexcept { return audio.get(); }
+
+		// Swaps the Audio for another while the game is running, as
+		// replaceWindow() does the Window: the old one is destroyed first, then
+		// `create` is called and the game's sounds are loaded into the new one.
+		// If `create` throws (or gives nullptr), the game carries on silently
+		// with NullAudio, and the exception is passed on so the caller can say
+		// so.
+		void replaceAudio(const std::function<std::unique_ptr<Audio>()>& create);
+
+		// Stops every sound that is playing: for a front end pausing the game.
+		void silence(void);
 
 		// Swaps the Window for another while the game is running: the old one
 		// is destroyed first (some libraries can only have one window at a
@@ -57,8 +76,8 @@ namespace xge
 		// What loop() does each frame, split in two so a front end that owns
 		// the event loop (the Qt application, XGEGUI) can run the engine from
 		// its own timer instead of handing control to loop(). step() is the
-		// simulation: it reads the keys, moves everything, and checks the
-		// conditions. render() draws the current picture without moving
+		// simulation: it reads the keys, moves everything, checks the
+		// conditions, and plays the sounds the frame asked for. render() draws the current picture without moving
 		// anything, so a paused game can be redrawn after its values are edited.
 		void step(void);
 		void render(void);
@@ -78,6 +97,7 @@ namespace xge
 		Game& game;
 		CommandExecutor commandExecutor;
 		std::unique_ptr<Window> window;
+		std::unique_ptr<Audio> audio;
 
 		// Key changes pump() took from the window that step() has not handled yet.
 		std::vector<std::pair<KeyCode, bool>> pumpedKeys;
@@ -110,5 +130,8 @@ namespace xge
 
 		// Throws std::logic_error when there is no window (see replaceWindow).
 		void requireWindow(void) const;
+
+		// Plays what the game asked for this frame (Game::requestSound).
+		void playRequestedSounds(void);
 	};
 }

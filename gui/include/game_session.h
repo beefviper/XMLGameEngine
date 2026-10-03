@@ -52,14 +52,15 @@ namespace xge
 		// Null when no game is loaded.
 		Game* currentGame() noexcept { return game.get(); }
 
-		// The video library and XML parser in use, and in use for the next game
-		// loaded.
+		// The video library, XML parser and sound library in use, and in use for
+		// the next game loaded.
 		const SessionOptions& options() const noexcept { return currentOptions; }
 
 		// Uses the new options. With a game loaded: a new video library gets
 		// the game just as it is (every object, every value, the state it is in)
 		// and draws it again, in a window of its own unless it is the Qt
-		// renderer. A new XML parser has to read the game file again, so the
+		// renderer; a new sound library gets the game's sounds, and nothing
+		// else changes. A new XML parser has to read the game file again, so the
 		// game starts over. Either way the game is paused afterwards; whoever
 		// asked (the Options dialog, MainWindow::showOptions) plays it again if
 		// it was playing. Returns false if that failed (error() says why).
@@ -95,6 +96,10 @@ namespace xge
 		// The video library asked for would not start, and the Qt renderer is
 		// being used instead.
 		void videoFellBack(const QString& message);
+
+		// The sound library asked for would not start, and the game is silent
+		// (the choice is None) instead.
+		void audioFellBack(const QString& message);
 
 		// The window the game is drawn in was closed by the user. The game is
 		// paused and has no window until it is given one (applyOptions).
@@ -163,6 +168,10 @@ namespace xge
 		// own window, or the Qt renderer drawing into the stage. If the library
 		// will not start, the Qt renderer, and videoFellBack().
 		std::unique_ptr<Window> makeWindow(const WindowDesc& desc);
+
+		// An Audio with the sound library chosen. If it will not start,
+		// NullAudio, the choice becomes None, and audioFellBack().
+		std::unique_ptr<Audio> makeAudio();
 		void fail(const QString& message);
 	};
 }
