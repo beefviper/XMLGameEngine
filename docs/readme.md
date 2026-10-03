@@ -12,23 +12,25 @@ XGECLI breakout              # a bare name gets ".xml" appended
 XGECLI pong.xml              # a name with an extension is used as given
 XGECLI -g pong -w sdl2 -x tinyxml2
 XGECLI --game pong --window raylib --xml pugixml
+XGECLI pong -a sdl2          # sounds played by SDL2 (or -a none for silence)
 ```
 
-The game is a bare argument or `-g` / `--game`; both are looked for the same way: as given (a path, or a name in the current directory), then its file name in the working directory, then its file name in `games/` of the data folder (the first of the working directory, the program's folder and the folder above it that has both `games/` and `assets/`; the program then runs from there, so it can be started from anywhere). If it is not found the program prints an error and exits. `-w` / `--window` picks the window library (`sfml3`, `raylib`, `sdl2`, `opengl`; default `sfml3`) and `-x` / `--xml` the XML library (`xerces`, `tinyxml2`, `pugixml`, `rapidxml`; default `xerces`), not case sensitive. A short option takes its value attached or after a space (`-gpong`, `-g pong`); a long option needs the space (`--game pong`, not `--game=pong`). Each option can be given once, the game only once (bare or with `-g`), and `-h` / `--help` prints the usage. The program starts by printing the file, window library and XML library it chose, one to a line. See [design 37](designs/37-command-line.md). Shipped games: `games/pong.xml`, `games/breakout.xml`, `games/spaceinvaders.xml`, `games/frogger.xml`, `games/spacerace.xml` (two players, W/S and Up/Down, first to two points), `games/kaboom.xml` (A/D or Left/Right; catch bombs in three waves, three missed bombs end the game, 60 points win), `games/freeway.xml` (two players, W/S and Up/Down, first to five crossings), `games/depthcharge.xml` (A/D or Left/Right to move, Space to drop, Space to start; sink all nine submarines before eight charges are wasted) `games/astrosmash.xml` (A/D or Left/Right to move, Space to fire, Space to start; shoot 20 rocks before five land) and `games/lunarlander.xml` (Up or W for the main thruster, Left/Right for the side ones, Space to start; set the lander down on the green pad slower than the safe speed, with fuel to spare, and do not touch anything else).
+The game is a bare argument or `-g` / `--game`; both are looked for the same way: as given (a path, or a name in the current directory), then its file name in the working directory, then its file name in `games/` of the data folder (the first of the working directory, the program's folder and the folder above it that has both `games/` and `assets/`; the program then runs from there, so it can be started from anywhere). If it is not found the program prints an error and exits. `-w` / `--window` picks the window library (`sfml3`, `raylib`, `sdl2`, `opengl`; default `sfml3`) `-x` / `--xml` the XML library (`xerces`, `tinyxml2`, `pugixml`, `rapidxml`; default `xerces`) and `-a` / `--audio` the sound library (`sfml3`, `raylib`, `sdl2`, `none`; default `sfml3`), not case sensitive. Any sound library goes with any window library. A short option takes its value attached or after a space (`-gpong`, `-g pong`); a long option needs the space (`--game pong`, not `--game=pong`). Each option can be given once, the game only once (bare or with `-g`), and `-h` / `--help` prints the usage. The program starts by printing the file, window library, XML library and sound library it chose, one to a line. See [design 37](designs/37-command-line.md). Shipped games: `games/pong.xml`, `games/breakout.xml`, `games/spaceinvaders.xml`, `games/frogger.xml`, `games/spacerace.xml` (two players, W/S and Up/Down, first to two points), `games/kaboom.xml` (A/D or Left/Right; catch bombs in three waves, three missed bombs end the game, 60 points win), `games/freeway.xml` (two players, W/S and Up/Down, first to five crossings), `games/depthcharge.xml` (A/D or Left/Right to move, Space to drop, Space to start; sink all nine submarines before eight charges are wasted) `games/astrosmash.xml` (A/D or Left/Right to move, Space to fire, Space to start; shoot 20 rocks before five land) and `games/lunarlander.xml` (Up or W for the main thruster, Left/Right for the side ones, Space to start; set the lander down on the green pad slower than the safe speed, with fuel to spare, and do not touch anything else).
 
-The XML and window libraries are chosen in C++ with `Game(file, XmlBackend)` and `Engine(game, WindowBackend)`; `XGECLI` passes what `-x` and `-w` named, Xerces and SFML3 when they are not given. `XGEGUI` (the Qt application) takes the game the same way, `XGEGUI pong`, or opens a file dialog in `games/` when none is named; its Options dialog picks the video library and the XML parser. See [Backends](#backends).
+The XML, window and sound libraries are chosen in C++ with `Game(file, XmlBackend)` and `Engine(game, WindowBackend, AudioBackend)`; `XGECLI` passes what `-x`, `-w` and `-a` named, Xerces, SFML3 and SFML3 when they are not given. `XGEGUI` (the Qt application) takes the game the same way, `XGEGUI pong`, or opens a file dialog in `games/` when none is named; its Options dialog picks the video library, the XML parser and the sound library. See [Backends](#backends).
 
 A game file that is wrong (it does not match the schema, an expression will not evaluate, a command names a state or object the game does not have) stops the load with a message saying where; `XGECLI` prints it and exits, `XGEGUI` shows it and carries on.
 
 ## Game file layout
 
-A game file has one `<game>` root with exactly four children, in this order, as enforced by [assets/xmlgameengine.xsd](../assets/xmlgameengine.xsd):
+A game file has one `<game>` root with four children, and an optional fifth (`<sounds>`), in this order, as enforced by [assets/xmlgameengine.xsd](../assets/xmlgameengine.xsd):
 
 ```xml
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <window name="..."> ... </window>
   <variables> <variable name="...">...</variable> ... </variables>
+  <sounds>    <sound name="..."> ... </sound> ... </sounds>   (optional)
   <objects>   <object name="..."> ... </object> <group name="..."> ... </group> ... </objects>
   <states>    <state name="..."> ... </state> ... </states>
 </game>
@@ -38,7 +40,7 @@ A game file has one `<game>` root with exactly four children, in this order, as 
 
 The rule the whole format follows: **an attribute names or picks something; everything else is the content of an element.**
 
-- Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`. `<inc variable="paddle1.score" />`, `<collision edge="left">`, `<input button="space">`.
+- Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`, and for sounds `sound`, `wave`, `pitch` and `to`. `<inc variable="paddle1.score" />`, `<collision edge="left">`, `<input button="space">`.
 - Everything else, a size, a color, a position, a flag, is written between tags. `<radius>10</radius>`, `<fullscreen>false</fullscreen>`.
 - What something *does* is a list of command tags, run in the order written. There are no `;`-separated strings.
 
@@ -85,6 +87,37 @@ The other exprtk math functions (`min`, `max`, `sqrt`, ...) exist because exprtk
 ### `<variables>`
 
 Global named numbers. Each `<variable name="margin">30</variable>` becomes a constant that any expression in the file can use (for example `margin`, `ball.radius`). Names may contain dots. The content is a value, so `<variable name="b">a * 2</variable>` and `<variable name="start"><random min="1" max="3" /></variable>` both work. Declaring a name twice keeps the later value.
+
+### `<sounds>`
+
+Optional. The bleeps, bloops and little tunes of an old 8-bit machine, written as notes: nothing is loaded from a sound file. Each `<sound name="...">` is something a `<play sound="..." />` command (see [Commands](#commands)) can start. Its children, in this order: an optional `<volume>` (a value, 0 for silent to 1 for the loudest; 0.3 if left out), then any mix of `<note>`s and `<rest>`s, played one after the other.
+
+```xml
+<sounds>
+  <sound name="wall" wave="square">
+    <note pitch="A3">0.04</note>
+  </sound>
+  <sound name="score" wave="triangle">
+    <volume>0.4</volume>
+    <note pitch="E5" to="E3">0.35</note>
+  </sound>
+  <sound name="gameover" wave="square">
+    <note pitch="G4">0.2</note>
+    <note pitch="F#4">0.2</note>
+    <note pitch="E4" to="D#4">0.5</note>
+    <rest>0.1</rest>
+    <note pitch="2000" wave="noise">0.15</note>
+  </sound>
+</sounds>
+```
+
+- **`<note pitch="..." to="..." wave="...">seconds</note>`**: a tone. The content is how long it lasts, a value in seconds (so `<note pitch="C5">beat / 2</note>` works with a variable `beat`), more than 0 and at most 10. `pitch` is a note name with an octave, a letter `A` to `G`, an optional `#` (sharp) or `b` (flat), then the octave: `C4` is middle C and `A4` is 440 Hz, as on a piano; or a plain number of hertz (`440`, `97.5`). `to` (optional) is a pitch to slide to while the note plays, evenly in semitones: a bloop that falls, a laser that rises. `wave` (optional) is the note's own wave instead of the sound's.
+- **`<rest>seconds</rest>`**: silence that long, between notes.
+- **`wave`** on a `<sound>` is the wave of every note that does not give its own: `square` (the default; the classic beep), `triangle` (softer, the bass of an old console), `sawtooth` (buzzy), `sine` (pure and soft, which no 8-bit chip had) or `noise` (hiss and crashes: a new random level every half cycle of the pitch, so a high pitch is a hiss and a low one a rumble).
+
+Every sound is made into samples (16 bit, one channel, 44100 a second) by the engine when the window opens, the same for every sound library ([design 43](designs/43-sound.md)). Each note fades in and out over a couple of milliseconds so it does not click. Each sound has one voice, like a channel of a sound chip: playing a sound that is still playing starts it again from the beginning, and different sounds play over each other. A sound asked for more than once in one frame is played once.
+
+A wave, pitch or length the engine cannot use, a `<volume>` outside 0 to 1 or after a note, a sound with no notes, two sounds of one name, and a `<play>` naming no sound all stop the game loading with a message saying where (`sound 'wall' > <note> 1: pitch="H2" is not a pitch; ...`).
 
 ### `<object>`
 
@@ -258,9 +291,10 @@ Commands are tags, and where they are meaningful is what the table says. Any lis
 | `<release object="name">count</release>` | collision (screen edge or another object) | Puts the first `count` (default 1) out-of-play objects of that name or group back in play, centered on the object running the rule, at their own starting velocity. Fewer left in the pool gives what is there. This is how a rock breaks into smaller ones |
 | `<push state="name" />` / `<pop />` | state input or condition | Push a state / pop back. The state named must be one of the game's. `<pop />` with only the first state left does nothing |
 | `<trigger object="name" action="up" />` | state input | Runs one of that object's named `<action>`s. The object and the action must exist |
+| `<play sound="name" />` | anywhere: collision (screen edge or another object), object `<action>`, state input or condition | Plays one of the game's [sounds](#sounds). In an action or an input it plays on the press, not on the release. The game only asks for the sound; the engine plays everything asked for once the frame's keys, collisions and conditions have run |
 | `<fire object="projectile" />` | object action | Launches the named projectile object from the shooter's top-center (the middle of the projectile over the middle of the shooter's top edge), moving with the projectile's own `<velocity>`. A projectile is not drawn, moved or collided with until it is fired, and is put away again by `<die />` (hitting a target, or `edge="all"`). The name may be a `<group>`: the first member that is out of play is the one launched, so a group of four is four shots in flight. A shooter with a `<heading>` fires from its nose, along the heading, at the speed of the projectile's `<velocity>`; with none, one projectile name can only be in flight once |
 
-A command the engine does not know, or one missing an attribute it needs, stops the game loading with a message that says where (`object 'ball' > <collisions> > <collision>: unknown command <explode>`). So does a command that names something the game does not have: a state (`<push state="pasued" />`), an object or one of its actions (`<trigger>`), a projectile (`<fire>`) or an object to reset (`<reset object="...">`). These are checked once every object and state has been built, so a name used before the thing it names appears in the file is fine.
+A command the engine does not know, or one missing an attribute it needs, stops the game loading with a message that says where (`object 'ball' > <collisions> > <collision>: unknown command <explode>`). So does a command that names something the game does not have: a state (`<push state="pasued" />`), an object or one of its actions (`<trigger>`), a projectile (`<fire>`), an object to reset (`<reset object="...">`) or a sound (`<play>`). These are checked once every object and state has been built, so a name used before the thing it names appears in the file is fine.
 
 **Colors:** `color.black`, `color.white`, `color.red`, `color.green`, `color.blue`, `color.yellow`, `color.magenta`, `color.cyan`, and the muted `color.grey`, `color.darkgrey`, `color.lightgrey`, `color.brown`, `color.orange`, `color.purple`, `color.darkblue`, `color.darkgreen`, `color.forestgreen`. Any other name is fully transparent.
 
@@ -340,9 +374,9 @@ The other forms:
 ## What happens when a game runs
 
 1. **Parse and validate.** The XML backend loads the file. If the file names a schema, it is validated: Xerces does full XSD validation ("strong"); the other three backends use a small built-in validator for the subset of XSD this project uses ("weak", `xsd_lite`). `printGame()` reports which one ran.
-2. **Evaluate.** exprtk evaluates every value once (an expression text, or a value tag such as `<random>`, which is drawn here). Objects, their variables, `<grid>` cells and states are built. Nothing here needs a window.
-3. **Open the window.** `Engine` creates the window backend and measures each object's real size for drawing and collisions, finishes the position of any text or image that uses `objectName.width` or `objectName.height`, then pushes the first state. The program prints the game twice, once before this step (sizes and size-dependent positions shown as unknown) and once after.
-4. **Loop.** Each frame: read key changes and run the current state's bindings for them; count the frame towards the next picture of every shown object that has an [animation](#animation); change every shown object's velocity by its acceleration and held thrust; run the screen-edge rules; make any queued hops; move every shown object by its velocity, and by what it is being carried at, running the object-against-object rules at each touch on the way (per frame, not scaled by time); check conditions; clear; draw shown objects; present.
+2. **Evaluate.** exprtk evaluates every value once (an expression text, or a value tag such as `<random>`, which is drawn here). Objects, their variables, `<grid>` cells, states and sounds are built. Nothing here needs a window or a sound device.
+3. **Open the window and the sound.** `Engine` creates the window backend and the audio backend (if the sound library will not start, it prints a warning and the game plays silently), makes every sound into samples and hands them to the audio backend, measures each object's real size for drawing and collisions, finishes the position of any text or image that uses `objectName.width` or `objectName.height`, then pushes the first state. The program prints the game twice, once before this step (sizes and size-dependent positions shown as unknown) and once after.
+4. **Loop.** Each frame: read key changes and run the current state's bindings for them; count the frame towards the next picture of every shown object that has an [animation](#animation); change every shown object's velocity by its acceleration and held thrust; run the screen-edge rules; make any queued hops; move every shown object by its velocity, and by what it is being carried at, running the object-against-object rules at each touch on the way (per frame, not scaled by time); check conditions; play the sounds the frame asked for; clear; draw shown objects; present.
 
 ## Backends
 
@@ -350,8 +384,11 @@ The other forms:
 |---|---|---|
 | Read XML | `XmlDocument` / `XmlNode` (`xml_document.h`) | Xerces (default), TinyXML2, PugiXML, RapidXML |
 | Window, drawing, keyboard | `Window` (`window.h`) | SFML3 (default), Raylib, SDL2, OpenGL (GLFW) |
+| Sound | `Audio` (`audio.h`) | SFML3 (default), Raylib, SDL2, None (silent) |
 
-`Game` and `Engine` only ever see the interfaces. Each interface has a factory that is the single place that knows every implementation. Build-time dependency selection is in `scripts/cmake/` (see the `FORCE_LOCAL_*` options in `options.cmake`).
+`Game` and `Engine` only ever see the interfaces. Each interface has a factory that is the single place that knows every implementation (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`).
+
+The sound library is chosen apart from the window library, and any goes with any (OpenGL, which has no sound of its own, included). `Game` never makes a noise: `<play>` only asks for a sound (`Game::requestSound`), and `Engine` hands what a frame asked for to its `Audio`, so a game runs and is tested with no sound device. The engine makes every sound's samples itself (`synthesize()`, `sound.h`), so a sound is the same whichever library plays it; a backend only hands the samples to its library: an `sf::SoundBuffer` and `sf::Sound` (SFML 3), a `Sound` made with `LoadSoundFromWave` (raylib, which opens its sound device apart from its window), or a small mixer of its own in an SDL audio callback (SDL2, which has no mixer without SDL_mixer). The SDL2 window and the SDL2 sound each start and stop only their own part of SDL, so either can go first. `Engine::replaceAudio()` swaps the sound library of a running game, which is how the Options dialog changes it, and `Engine::silence()` stops what is playing, which `XGEGUI` does when the game is paused. `NullAudio` plays nothing: the tests use it, and so does `-a none`. Build-time dependency selection is in `scripts/cmake/` (see the `FORCE_LOCAL_*` options in `options.cmake`).
 
 Every window backend opens a window of its own, which is what `XGECLI` uses. `XGEGUI` shows the game in one of two layouts ([design 40](designs/40-split-windows-in-xgegui.md)): in one window, drawn by a renderer of its own that draws with Qt (`QtWindow`, the default), or in two, where the main window holds only the controls and the tree and the game is in a window of its own, opened by the chosen library (SFML3, SDL2, raylib or OpenGL) or by the Qt renderer. `Engine::replaceWindow()` swaps the window of a running game for another without touching the game, which is how the Options dialog changes the video library. A front end that has paused the game but keeps its window calls `Engine::pump()` so the window can still be moved and closed, and `Engine::isWindowOpen()` tells it when the user closed it.
 
@@ -368,7 +405,7 @@ The library is static by default: each program has the engine's code copied into
 | File | Responsibility |
 |---|---|
 | `cli/source/main.cpp`, `cli/source/cli.cpp` | XGECLI, the command line program: read the options, find the game file, build `Game` and `Engine` with the chosen backends. The only code outside the engine library |
-| `gui/source/*.cpp` | XGEGUI, the Qt application ([design 38](designs/38-qt-front-end.md), [39](designs/39-opengl-backend-and-options.md), [40](designs/40-split-windows-in-xgegui.md)): `main_window` (the window, the File and View menus, the question about two windows), `game_session` (a loaded game and its engine, run from a timer; play, pause, step, reset, and changing the libraries), `game_stage` (where the Qt renderer's picture is: the left pane, or a window of its own), `game_view` (the widget a picture is shown in), `key_queue` (the keyboard, read by Qt), `qt_window` (the `Window` that draws with QPainter), `options_dialog` and `session_options` (the video library and XML parser choice), `app_settings` (`xgegui.ini`, next to the program), `inspector` (the controls and the tree of game data) |
+| `gui/source/*.cpp` | XGEGUI, the Qt application ([design 38](designs/38-qt-front-end.md), [39](designs/39-opengl-backend-and-options.md), [40](designs/40-split-windows-in-xgegui.md)): `main_window` (the window, the File and View menus, the question about two windows), `game_session` (a loaded game and its engine, run from a timer; play, pause, step, reset, and changing the libraries), `game_stage` (where the Qt renderer's picture is: the left pane, or a window of its own), `game_view` (the widget a picture is shown in), `key_queue` (the keyboard, read by Qt), `qt_window` (the `Window` that draws with QPainter), `options_dialog` and `session_options` (the video library, XML parser and sound library choice), `app_settings` (`xgegui.ini`, next to the program), `inspector` (the controls and the tree of game data) |
 | `game_xml.cpp` | Walk the parsed XML tags into raw window/variable/object/state data (`RawValue`, `RawCommand`, `RawSprite`); a `<group>` is read here as one raw object per member |
 | `game_expr.cpp` | exprtk symbol table and evaluation of raw values into `Object`s and `State`s |
 | `command.cpp` | Turn raw command tags into typed `Command`s |
@@ -377,14 +414,17 @@ The library is static by default: each program has the engine's code copied into
 | `builtin_font.cpp` | The 8x8 font stored in the program (`rasterizeText`), which draws text into a bitmap when a backend cannot load its font file |
 | `bitmap.cpp` | Draws a sprite's `<line>`s (`rasterizeLines`) or `<bitmap>` rows (`rasterizeRows`) into an RGBA bitmap: the pixels both the window backends and pixel collisions use |
 | `command_executor.cpp` | What each command does |
-| `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop) and key handling |
+| `sound.cpp` | Pitch names, wave names, and `synthesize()`: a sound's notes made into 16-bit samples, the same for every audio backend |
+| `audio.cpp`, `audio_*.cpp` | `AudioFactory` and the sound backends (SFML 3, raylib, SDL2; `NullAudio` is in `audio.h`) |
+| `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop), key handling, and playing the sounds each frame asks for |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about grids and not about that game), the built-in font, the command line and the data folder search, `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame |
+| `tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about grids and not about that game), the built-in font, the command line and the data folder search, sound (`test_sound`: pitch names, the synthesizer, `<sounds>` and its rejections, Pong asking for its sounds, `Engine` and a recording `Audio`), `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame |
 
 ## Known limitations
 
-- Object-object collision knows only the four edges of the other object (and, for a pixel hit, the side the motion came in through); there are no verbs beyond the table above (no arcing jump (`hop` is a single step), no rotation, no shooting patterns, AI, sound).
+- Object-object collision knows only the four edges of the other object (and, for a pixel hit, the side the motion came in through); there are no verbs beyond the table above (no arcing jump (`hop` is a single step), no shooting patterns, AI).
+- Sound is short effects and little tunes, not music: one wave at a time per sound (no chords inside one sound; two sounds at once do play together), no looping background tune, no stopping a sound from the game file, no volume envelope beyond the click-free fade (a note does not decay like a plucked string), and no stereo. A sound is made when the window opens, so its notes cannot change with a variable while the game runs. It starts on the frame it is asked for, so it is as late as the sound library's buffer (a few hundredths of a second).
 - An object that is not visible is not moved and does not collide, whatever its velocity; that is how a bullet waits, unseen and still, to be fired. There are no hidden objects that still move and collide (an invisible trigger zone, an off-screen enemy on its way in); a game that wants one will need visibility and "in play" to be separate things.
 - An object's velocity and collisions belong to the object, not to a state: any state that shows it lets it move. There is no way to show the Space Invaders aliens standing still behind the menu and have them march only in `playing`; they start marching as soon as they are shown. See [designs/09](designs/09-states-and-screens.md).
 - An object's own `<variable>` named `width` or `height` shadows its measured size (`objectName.width` then reads the variable). A non-colliding spelling is under consideration; see design note 07.

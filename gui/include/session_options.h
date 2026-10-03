@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "audio.h"
 #include "window.h"
 #include "xml_document.h"
 
@@ -28,34 +29,39 @@ namespace xge
 		OpenGL
 	};
 
-	// What the Options dialog chooses. The Qt renderer and Xerces are what is
-	// used unless something else is asked for.
+	// What the Options dialog chooses. The Qt renderer, Xerces and SFML 3's
+	// sound are what is used unless something else is asked for.
 	struct SessionOptions
 	{
 		VideoBackend video{ VideoBackend::Qt };
 		XmlBackend xml{ XmlBackend::Xerces };
+		AudioBackend audio{ AudioBackend::SFML3 };
 
 		bool operator==(const SessionOptions& other) const noexcept
 		{
-			return video == other.video && xml == other.xml;
+			return video == other.video && xml == other.xml && audio == other.audio;
 		}
 	};
 
 	// Every choice, in the order the dropdowns list them (the default first).
 	const std::vector<VideoBackend>& allVideoBackends();
 	const std::vector<XmlBackend>& allXmlBackends();
+	const std::vector<AudioBackend>& allAudioBackends();
 
 	// The name shown for a choice.
 	QString videoBackendTitle(VideoBackend backend);
 	QString xmlBackendTitle(XmlBackend backend);
+	QString audioBackendTitle(AudioBackend backend);
 
 	// A choice's name in the settings file: plain, and never changed, unlike
 	// its title or its place in the enum. The reverse is empty for a name that
 	// is no choice.
 	QString videoBackendKey(VideoBackend backend);
 	QString xmlBackendKey(XmlBackend backend);
+	QString audioBackendKey(AudioBackend backend);
 	std::optional<VideoBackend> videoBackendFromKey(const QString& key);
 	std::optional<XmlBackend> xmlBackendFromKey(const QString& key);
+	std::optional<AudioBackend> audioBackendFromKey(const QString& key);
 
 	// The library backend a VideoBackend stands for (not for VideoBackend::Qt).
 	WindowBackend libraryBackend(VideoBackend backend);

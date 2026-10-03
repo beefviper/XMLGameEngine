@@ -9,6 +9,7 @@
 #include "color.h"
 #include "command.h"
 #include "object.h"
+#include "sound.h"
 #include "states.h"
 
 // exprtk is a third-party header. MSVC reports C4702 (unreachable code) from
@@ -46,12 +47,14 @@ namespace xge
 	{
 	public:
 		// Fills `variables` from rawVariables (in order, so a variable's value
-		// can use the ones declared before it), then builds every object and
-		// state.
+		// can use the ones declared before it), then builds every object, state
+		// and sound. A wave, pitch or length a sound cannot use, and a <play>
+		// naming no sound, throw std::runtime_error saying where.
 		void init(const WindowDesc& windowDesc,
 			const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 			std::vector<RawState>& rawStates, std::vector<State>& states,
-			std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
+			std::vector<RawObject>& rawObjects, std::vector<Object>& objects,
+			const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds);
 
 		// Every object's size, keyed by object name and bound into symbolTable as
 		// "name.width" / "name.height" (unless the object declares a <variable>
@@ -119,6 +122,9 @@ namespace xge
 		int animationFramesOf(const RawObject& rawObject, const WindowDesc& windowDesc, const std::string& where);
 
 		std::vector<Command> processCommands(const std::vector<RawCommand>& raw, const std::string& where);
+
+		// A <sound> worked out: its words checked and its lengths evaluated.
+		SoundDesc processSound(const RawSound& raw);
 
 		// Every object-declared <variable>, keyed "ownerName.variableName", bound
 		// by reference into symbolTable (see init()) so any expression - not just

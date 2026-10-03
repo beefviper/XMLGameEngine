@@ -70,9 +70,24 @@ namespace xge
 		};
 	}
 
+	namespace
+	{
+		// Only SDL's video goes: the SDL2 audio backend (audio_sdl2.h) may still
+		// be playing with SDL's audio, which SDL_Quit() would stop too. The last
+		// of the two to finish shuts SDL down.
+		void quitVideo()
+		{
+			SDL_QuitSubSystem(SDL_INIT_VIDEO);
+			if (SDL_WasInit(0) == 0)
+			{
+				SDL_Quit();
+			}
+		}
+	}
+
 	SDL2Window::SDL2Window(const WindowDesc& windowDesc)
 	{
-		if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
 		{
 			throw std::runtime_error(std::string("SDL2 could not start: ") + SDL_GetError());
 		}
@@ -96,7 +111,7 @@ namespace xge
 		{
 			const std::string why = SDL_GetError();
 			if (ttfInitialized) { TTF_Quit(); }
-			SDL_Quit();
+			quitVideo();
 			throw std::runtime_error("SDL2 could not make a window: " + why);
 		}
 
@@ -108,7 +123,7 @@ namespace xge
 			SDL_DestroyWindow(window);
 			window = nullptr;
 			if (ttfInitialized) { TTF_Quit(); }
-			SDL_Quit();
+			quitVideo();
 			throw std::runtime_error("SDL2 could not make a renderer: " + why);
 		}
 
@@ -148,7 +163,7 @@ namespace xge
 		if (imgInitialized) { IMG_Quit(); imgInitialized = false; }
 		if (ttfInitialized) { TTF_Quit(); ttfInitialized = false; }
 
-		SDL_Quit();
+		quitVideo();
 		isOpenFlag = false;
 	}
 

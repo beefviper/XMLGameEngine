@@ -381,7 +381,7 @@ namespace xge
 			return name == "bounce" || name == "stick" || name == "wrap" || name == "carry" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
-				|| name == "push" || name == "pop" || name == "fire" || name == "trigger";
+				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -397,6 +397,7 @@ namespace xge
 			command.action = node.getAttribute("action");
 			command.direction = node.getAttribute("direction");
 			command.burn = node.getAttribute("burn");
+			command.sound = node.getAttribute("sound");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec")
@@ -409,6 +410,7 @@ namespace xge
 			}
 			if (verb == "push") { requireAttribute(node, "state", where); }
 			if (verb == "fire") { requireAttribute(node, "object", where); }
+			if (verb == "play") { requireAttribute(node, "sound", where); }
 			if (verb == "trigger") { requireAttribute(node, "object", where); requireAttribute(node, "action", where); }
 			if (verb == "move" || verb == "hop" || verb == "accelerate" || verb == "turn")
 			{
@@ -730,6 +732,53 @@ namespace xge
 			if (count == 0) { fail(where, "has no <member>"); }
 		}
 
+		// <sound name="..." wave="square">: an optional <volume>, then <note>s and
+		// <rest>s in the order they play. The words (wave, pitch) are checked by
+		// game_expr, which also works out the lengths.
+		RawSound readSound(const XmlNode& sound)
+		{
+			RawSound raw;
+			raw.name = requireAttribute(sound, "name", "<sounds>");
+			raw.wave = sound.getAttribute("wave");
+
+			const std::string where = "sound '" + raw.name + "'";
+
+			for (std::unique_ptr<XmlNode> child = sound.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+
+				if (tag == "volume")
+				{
+					if (!raw.notes.empty()) { fail(where, "<volume> has to come before the <note>s and <rest>s"); }
+					raw.volume = readValue(*child, where);
+				}
+				else if (tag == "note")
+				{
+					RawNote note;
+					note.wave = child->getAttribute("wave");
+					note.pitch = requireAttribute(*child, "pitch", where);
+					note.to = child->getAttribute("to");
+					note.length = readValue(*child, where);
+					raw.notes.push_back(std::move(note));
+				}
+				else if (tag == "rest")
+				{
+					RawNote rest;
+					rest.rest = true;
+					rest.length = readValue(*child, where);
+					raw.notes.push_back(std::move(rest));
+				}
+				else
+				{
+					fail(where, "unknown <" + tag + ">; expected a <volume>, then <note>s and <rest>s");
+				}
+			}
+
+			if (raw.notes.empty()) { fail(where, "has no <note>"); }
+
+			return raw;
+		}
+
 		RawState readState(const XmlNode& state)
 		{
 			RawState rawState{};
@@ -791,7 +840,7 @@ namespace xge
 
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
-		std::vector<RawObject>& rawObjects, SchemaValidation& validation)
+		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
 
@@ -860,6 +909,15 @@ namespace xge
 
 		// load variables
 		readVariables(variablesNode.get(), "<variables>", rawVariables);
+
+		// load sounds (optional: a game can be silent)
+		if (std::unique_ptr<XmlNode> soundsNode = findChild(root.get(), "sounds"))
+		{
+			for (std::unique_ptr<XmlNode> sound = soundsNode->getFirstChild(); sound != nullptr; sound = sound->getNextSibling())
+			{
+				rawSounds.push_back(readSound(*sound));
+			}
+		}
 
 		// load objects
 		for (std::unique_ptr<XmlNode> object = objectsNode->getFirstChild(); object != nullptr; object = object->getNextSibling())

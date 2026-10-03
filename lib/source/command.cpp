@@ -85,6 +85,7 @@ namespace xge
 		if (verb == "push") { return CmdPushState{ raw.state }; }
 		if (verb == "pop")  { return CmdPopState{}; }
 
+		if (verb == "play")    { return CmdPlay{ raw.sound }; }
 		if (verb == "fire")    { return CmdFire{ raw.object }; }
 		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action }; }
 
@@ -233,6 +234,7 @@ namespace xge
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
 			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << ")"; },
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
+			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
 		}, command);
 
 		return o;
@@ -277,6 +279,10 @@ namespace xge
 		else if (command.verb == "fire" || (command.verb == "reset" && !command.object.empty()))
 		{
 			o << "(" << command.object << ")";
+		}
+		else if (command.verb == "play")
+		{
+			o << "(" << command.sound << ")";
 		}
 		else if (command.verb == "trigger")
 		{

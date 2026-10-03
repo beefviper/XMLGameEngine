@@ -11,6 +11,7 @@
 #include <cctype>
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 
 namespace xge
@@ -40,9 +41,18 @@ namespace xge
 		// runs: pressing a key bound to <push state="pasued" /> would otherwise
 		// stop the game in the middle of play (and used to read past the end of
 		// the list of states).
-		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects, const std::string& where)
+		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
+			const std::vector<SoundDesc>& sounds, const std::string& where)
 		{
-			if (const auto* push = std::get_if<CmdPushState>(&command))
+			if (const auto* play = std::get_if<CmdPlay>(&command))
+			{
+				const bool known = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == play->sound; });
+				if (!known)
+				{
+					throw std::runtime_error(where + ": <play sound=\"" + play->sound + "\" /> names no sound of the game");
+				}
+			}
+			else if (const auto* push = std::get_if<CmdPushState>(&command))
 			{
 				const bool known = std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == push->name; });
 				if (!known)
@@ -85,13 +95,13 @@ namespace xge
 			}
 		}
 
-		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects)
+		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds)
 		{
 			const auto checkAll = [&](const std::vector<Command>& commands, const std::string& where)
 			{
 				for (const auto& command : commands)
 				{
-					checkCommand(command, states, objects, where);
+					checkCommand(command, states, objects, sounds, where);
 				}
 			};
 
@@ -127,7 +137,8 @@ namespace xge
 	void game_expr::init(const WindowDesc& windowDesc,
 		const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 		std::vector<RawState>& rawStates, std::vector<State>& states,
-		std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
+		std::vector<RawObject>& rawObjects, std::vector<Object>& objects,
+		const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds)
 	{
 		generator.seed(seed());
 
@@ -482,7 +493,86 @@ namespace xge
 			states.push_back(state);
 		}
 
-		checkReferences(states, objects);
+		// The sounds, worked out after everything else so that a length can use
+		// any variable.
+		for (const RawSound& rawSound : rawSounds)
+		{
+			const bool taken = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == rawSound.name; });
+			if (taken)
+			{
+				throw std::runtime_error("sound '" + rawSound.name + "': there is already a sound of that name");
+			}
+			sounds.push_back(processSound(rawSound));
+		}
+
+		checkReferences(states, objects, sounds);
+	}
+
+	SoundDesc game_expr::processSound(const RawSound& raw)
+	{
+		const std::string where = "sound '" + raw.name + "'";
+
+		SoundDesc sound;
+		sound.name = raw.name;
+
+		const bool noVolume = raw.volume.kind == RawValue::Kind::Expression && raw.volume.text.empty();
+		if (!noVolume)
+		{
+			sound.volume = evaluate(raw.volume, where + " > <volume>");
+			if (!(sound.volume >= 0.0f && sound.volume <= 1.0f))
+			{
+				throw std::runtime_error(where + ": <volume> is " + std::to_string(sound.volume) + "; expected 0 (silent) to 1 (loudest)");
+			}
+		}
+
+		const auto waveOf = [&](const std::string& name, const std::string& here)
+		{
+			if (name.empty()) { return Waveform::Square; }
+			const std::optional<Waveform> wave = waveformFromName(name);
+			if (!wave)
+			{
+				throw std::runtime_error(here + ": wave=\"" + name + "\"; expected square, triangle, sawtooth, sine or noise");
+			}
+			return *wave;
+		};
+
+		const auto pitchOf = [&](const std::string& name, const char* attribute, const std::string& here)
+		{
+			const std::optional<float> hz = pitchFromName(name);
+			if (!hz)
+			{
+				throw std::runtime_error(here + ": " + attribute + "=\"" + name + "\" is not a pitch; expected a note such as C4, F#3 or Bb5, or a number of hertz");
+			}
+			return *hz;
+		};
+
+		const Waveform soundWave = waveOf(raw.wave, where);
+
+		for (std::size_t i = 0; i < raw.notes.size(); ++i)
+		{
+			const RawNote& rawNote = raw.notes[i];
+			const std::string here = where + " > " + (rawNote.rest ? "<rest>" : "<note>") + " " + std::to_string(i + 1);
+
+			SoundNote note;
+			note.rest = rawNote.rest;
+			note.seconds = evaluate(rawNote.length, here);
+			if (!(note.seconds > 0.0f && note.seconds <= kMaxNoteSeconds))
+			{
+				throw std::runtime_error(here + ": lasts " + std::to_string(note.seconds) + " seconds; expected more than 0 and at most "
+					+ std::to_string(static_cast<int>(kMaxNoteSeconds)));
+			}
+
+			if (!rawNote.rest)
+			{
+				note.wave = rawNote.wave.empty() ? soundWave : waveOf(rawNote.wave, here);
+				note.startHz = pitchOf(rawNote.pitch, "pitch", here);
+				note.endHz = rawNote.to.empty() ? note.startHz : pitchOf(rawNote.to, "to", here);
+			}
+
+			sound.notes.push_back(note);
+		}
+
+		return sound;
 	}
 
 	float game_expr::evaluate(const RawValue& value, const std::string& where)

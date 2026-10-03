@@ -57,7 +57,8 @@ int main(int argc, char* argv[])
 
 	std::cout << "file: " << filename << '\n'
 		<< "window: " << xge::windowBackendName(options.window) << '\n'
-		<< "xml: " << xge::xmlBackendName(options.xml) << "\n\n";
+		<< "xml: " << xge::xmlBackendName(options.xml) << '\n'
+		<< "audio: " << xge::audioBackendName(options.audio) << "\n\n";
 
 	// A game file that is wrong - an unknown tag, a missing <radius>, a value
 	// that will not evaluate - is reported by the exception loading it throws,
@@ -81,7 +82,7 @@ int main(int argc, char* argv[])
 		std::cout << "=== before Engine: sizes and size-dependent positions not yet known ===\n\n";
 		game.printGame();
 
-		xge::Engine engine(game, options.window);
+		xge::Engine engine(game, options.window, options.audio);
 
 		std::cout << "=== after Engine: sizes measured, positions finished ===\n\n";
 		game.printGame();

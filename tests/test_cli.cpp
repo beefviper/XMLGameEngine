@@ -67,6 +67,7 @@ TEST_CASE("no arguments means pong with the default backends", "[cli]")
 	CHECK(options.game == "pong");
 	CHECK(options.window == WindowBackend::SFML3);
 	CHECK(options.xml == XmlBackend::Xerces);
+	CHECK(options.audio == AudioBackend::SFML3);
 	CHECK_FALSE(options.showHelp);
 }
 
@@ -114,6 +115,23 @@ TEST_CASE("the xml option picks the XML library", "[cli]")
 	CHECK(parseCommandLine({ "-xtinyxml2" }).xml == XmlBackend::TinyXml2);
 	CHECK(parseCommandLine({ "--xml", "pugixml" }).xml == XmlBackend::PugiXml);
 	CHECK(parseCommandLine({ "-x", "RapidXml" }).xml == XmlBackend::RapidXml);
+}
+
+TEST_CASE("the audio option picks the sound library, or none", "[cli]")
+{
+	CHECK(parseCommandLine({ "-a", "sfml3" }).audio == AudioBackend::SFML3);
+	CHECK(parseCommandLine({ "-araylib" }).audio == AudioBackend::Raylib);
+	CHECK(parseCommandLine({ "--audio", "sdl2" }).audio == AudioBackend::SDL2);
+	CHECK(parseCommandLine({ "-a", "None" }).audio == AudioBackend::None);
+	CHECK_THROWS_AS(parseCommandLine({ "-a" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--audio", "openal" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "-anone", "-asdl2" }), CliError);
+
+	const CliOptions all = parseCommandLine({ "-wraylib", "breakout", "--audio", "raylib", "-xpugixml" });
+	CHECK(all.game == "breakout");
+	CHECK(all.window == WindowBackend::Raylib);
+	CHECK(all.audio == AudioBackend::Raylib);
+	CHECK(all.xml == XmlBackend::PugiXml);
 }
 
 TEST_CASE("all three options together in any order and either form", "[cli]")
@@ -173,6 +191,10 @@ TEST_CASE("backend names read back the way the options take them", "[cli]")
 	CHECK(xmlBackendName(XmlBackend::TinyXml2) == "tinyxml2");
 	CHECK(xmlBackendName(XmlBackend::PugiXml) == "pugixml");
 	CHECK(xmlBackendName(XmlBackend::RapidXml) == "rapidxml");
+	CHECK(audioBackendName(AudioBackend::SFML3) == "sfml3");
+	CHECK(audioBackendName(AudioBackend::Raylib) == "raylib");
+	CHECK(audioBackendName(AudioBackend::SDL2) == "sdl2");
+	CHECK(audioBackendName(AudioBackend::None) == "none");
 }
 
 TEST_CASE("the help options ask for the usage", "[cli]")

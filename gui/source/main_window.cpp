@@ -37,6 +37,7 @@ namespace xge
 		const QString kTwoWindowsKey = QStringLiteral("Windows/two_windows");
 		const QString kVideoKey = QStringLiteral("Session/video");
 		const QString kXmlKey = QStringLiteral("Session/xml");
+		const QString kAudioKey = QStringLiteral("Session/audio");
 		const QString kGameFileKey = QStringLiteral("Session/game");
 
 		// The width of the controls until the user has shown otherwise.
@@ -99,6 +100,7 @@ namespace xge
 		settings.setValue(kTwoWindowsKey, stage->isSplit());
 		settings.setValue(kVideoKey, videoBackendKey(session->options().video));
 		settings.setValue(kXmlKey, xmlBackendKey(session->options().xml));
+		settings.setValue(kAudioKey, audioBackendKey(session->options().audio));
 
 		QMainWindow::closeEvent(event);
 	}
@@ -160,6 +162,7 @@ namespace xge
 		SessionOptions last;
 		last.video = videoBackendFromKey(settings.value(kVideoKey).toString()).value_or(last.video);
 		last.xml = xmlBackendFromKey(settings.value(kXmlKey).toString()).value_or(last.xml);
+		last.audio = audioBackendFromKey(settings.value(kAudioKey).toString()).value_or(last.audio);
 		session->applyOptions(last);
 
 		if (settings.value(kTwoWindowsKey).toBool() || last.video != VideoBackend::Qt)
@@ -183,6 +186,12 @@ namespace xge
 			{
 				QMessageBox::warning(this, tr("Video library"),
 					tr("The video library chosen would not start, so the game is drawn with the Qt renderer instead.\n\n%1").arg(message));
+			}, Qt::QueuedConnection);
+
+		connect(session, &GameSession::audioFellBack, this, [this](const QString& message)
+			{
+				QMessageBox::warning(this, tr("Sound library"),
+					tr("The sound library chosen would not start, so the game is silent.\n\n%1").arg(message));
 			}, Qt::QueuedConnection);
 	}
 

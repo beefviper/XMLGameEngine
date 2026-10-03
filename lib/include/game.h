@@ -10,6 +10,7 @@
 #include "game_xml.h"
 #include "game_expr.h"
 #include "object.h"
+#include "sound.h"
 #include "states.h"
 #include "xml_document.h"
 
@@ -72,6 +73,21 @@ namespace xge
 		unsigned long stateChangeCount(void) const noexcept;
 
 		void setObjectParam(const std::string& name, const std::string& param, const float& value);
+
+		// Every sound the game file describes (<sounds>), worked out; what an
+		// Audio backend loads (see audio.h, Engine).
+		const std::vector<SoundDesc>& getSounds(void) const noexcept;
+
+		// <play sound="..." />: the game only asks for a sound, and Engine,
+		// which owns the Audio, plays what was asked for once a frame
+		// (takeSoundRequests). Game itself never makes a noise, so it runs and
+		// is tested without a sound device. A sound asked for twice in one
+		// frame (two bricks broken at once) is played once.
+		void requestSound(const std::string& name);
+
+		// The sounds asked for since the last call, in the order asked, and
+		// forgets them.
+		std::vector<std::string> takeSoundRequests(void);
 
 		// Sets an object's own <variable> to a value (for a front end that lets
 		// the user edit one), and refreshes every text display bound to it, the
@@ -140,6 +156,9 @@ namespace xge
 		std::vector<State> states;
 		std::vector<RawObject> rawObjects;
 		std::vector<Object> objects;
+		std::vector<RawSound> rawSounds;
+		std::vector<SoundDesc> sounds;
+		std::vector<std::string> soundRequests;
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
 

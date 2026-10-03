@@ -22,7 +22,7 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 12 | Collision escalation | per-type-pair rules / class hierarchy / TCG-style verbs and phases | Verb protocol idea from Mario model. **Idea** | [12](12-collision-escalation.md) |
 | 13 | Verb vocabulary | small closed set now; static vs dynamic jump; AI targeting modes | Grow only when a game needs it: `dec`, `hop`, `wrap`, `carry` added for Frogger. Set **Built**; arcing jump and AI **Decided in outline**, not built | [13](13-verb-vocabulary.md) |
 | 14 | Conditions and win conditions | `if` / trigger; state-level vs object-level; `>=` only vs richer | State-level `condition`: variable threshold (`atleast`, or `atmost` from above), or `remaining` (none left). **Built**, minimal | [14](14-conditions-and-win-conditions.md) |
-| 15 | Backend abstraction | concrete node vs interface; pointers vs values; read-only vs mutable; strong vs weak XSD | Interfaces + factories: 4 XML and 3 window backends, Strong/Weak validation. **Built** | [15](15-backend-abstraction.md) |
+| 15 | Backend abstraction | concrete node vs interface; pointers vs values; read-only vs mutable; strong vs weak XSD | Interfaces + factories: 4 XML, 4 window and 3 audio backends (and a silent one), Strong/Weak validation. **Built** | [15](15-backend-abstraction.md) |
 | 16 | Code layout and pipeline | layered directories / flat files; parse-validate-evaluate-generate | Pipeline concept kept, tree flattened; no `generate` step. **Built** (partial) | [16](16-code-layout-and-pipeline.md) |
 | 17 | Reference Pong in C++ | tunables, generic helpers, swept vs simple collision | Kept as the yardstick; its swept collision idea is now in the engine ([11](11-collision-detection-and-response.md)). **Prototype** | [17](17-reference-pong.md) |
 | 18 | Build system | CMake per directory / one root file + modules; find vs FetchContent | One root file, modules in `scripts/cmake/`. **Built** | [18](18-build-system.md) |
@@ -50,10 +50,11 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 40 | One window or two in XGEGUI | embed every video library in the main window / Qt's own surface only in one window, and a second window of the library's own for the rest | One window draws with the Qt renderer; a View option, or picking a video library (after a question that can be turned off, kept in `xgegui.ini`), moves the game to a window of its own that the library opens as it does in `XGECLI`. All the embedding code was removed, and the game view is an ordinary widget so Qt uses no OpenGL. **Built** | [40](40-split-windows-in-xgegui.md) |
 | 41 | Asteroids | rotate at draw time / pre-rotated pictures at load; spawn while running / pools of hidden objects and a release verb | `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<hidden>`, `<release>`, `<fire>` from a pool along the heading. **Built** | [41](41-asteroids.md) |
 | 42 | Bitmap sprites and animation | ASCII rows / an image file / more lines; one text block / `<row>` elements; a palette / one colour per sprite; a clock per object / a global one | `<bitmap>` rows (`*` filled, `.` clear) with an optional `<scale>`, named `<sprite>`s, an `<animation>` of `<frame>`s on an interval in seconds, and `<fire>` centred on the shooter. **Built** | [42](42-bitmap-sprites-and-animation.md) |
+| 43 | Sound | sound files / notes in the XML / a tracker string; each library's own synthesis / the engine's own samples; one voice per sound / a pool; sound tied to the window library / chosen apart | `<sounds>` of `<note>`s (square, triangle, sawtooth, sine, noise; slides with `to`) and `<rest>`s, made into samples by the engine; `<play sound>` anywhere a command goes; an `Audio` backend (SFML 3, raylib, SDL2, none) chosen with `-a` and in XGEGUI's Options. **Built** | [43](43-sound.md) |
 
 ## Reading order
 
-New to the project: [readme](../readme.md), then 01, 02, 03, 09, 10, 11. Working on the language: 03, 04, 12, 13, 14, 21, 22, 23, 24, 29. Working on the C++: 07, 08, 15, 16, 25.
+New to the project: [readme](../readme.md), then 01, 02, 03, 09, 10, 11. Working on the language: 03, 04, 12, 13, 14, 21, 22, 23, 24, 29. Working on the C++: 07, 08, 15, 16, 25, 43.
 
 ## Where this came from
 

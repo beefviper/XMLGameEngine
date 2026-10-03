@@ -25,6 +25,14 @@ namespace xge
 		return all;
 	}
 
+	const std::vector<AudioBackend>& allAudioBackends()
+	{
+		static const std::vector<AudioBackend> all{
+			AudioBackend::SFML3, AudioBackend::Raylib, AudioBackend::SDL2, AudioBackend::None
+		};
+		return all;
+	}
+
 	QString videoBackendTitle(VideoBackend backend)
 	{
 		switch (backend)
@@ -47,6 +55,19 @@ namespace xge
 		case XmlBackend::TinyXml2: return QCoreApplication::translate("xge", "TinyXML2");
 		case XmlBackend::PugiXml:  return QCoreApplication::translate("xge", "PugiXML");
 		case XmlBackend::RapidXml: return QCoreApplication::translate("xge", "RapidXML");
+		}
+
+		return QString();
+	}
+
+	QString audioBackendTitle(AudioBackend backend)
+	{
+		switch (backend)
+		{
+		case AudioBackend::SFML3:  return QCoreApplication::translate("xge", "SFML 3");
+		case AudioBackend::Raylib: return QCoreApplication::translate("xge", "raylib");
+		case AudioBackend::SDL2:   return QCoreApplication::translate("xge", "SDL2");
+		case AudioBackend::None:   return QCoreApplication::translate("xge", "None (silent)");
 		}
 
 		return QString();
@@ -79,6 +100,19 @@ namespace xge
 		return QString();
 	}
 
+	QString audioBackendKey(AudioBackend backend)
+	{
+		switch (backend)
+		{
+		case AudioBackend::SFML3:  return QStringLiteral("sfml3");
+		case AudioBackend::Raylib: return QStringLiteral("raylib");
+		case AudioBackend::SDL2:   return QStringLiteral("sdl2");
+		case AudioBackend::None:   return QStringLiteral("none");
+		}
+
+		return QString();
+	}
+
 	std::optional<VideoBackend> videoBackendFromKey(const QString& key)
 	{
 		for (const VideoBackend backend : allVideoBackends())
@@ -97,6 +131,19 @@ namespace xge
 		for (const XmlBackend backend : allXmlBackends())
 		{
 			if (xmlBackendKey(backend) == key)
+			{
+				return backend;
+			}
+		}
+
+		return std::nullopt;
+	}
+
+	std::optional<AudioBackend> audioBackendFromKey(const QString& key)
+	{
+		for (const AudioBackend backend : allAudioBackends())
+		{
+			if (audioBackendKey(backend) == key)
 			{
 				return backend;
 			}
