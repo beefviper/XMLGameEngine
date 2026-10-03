@@ -4,7 +4,7 @@
 
 ## Decision
 
-One top-level `CMakeLists.txt`, with the logic split into modules in `scripts/cmake/` (`assets`, `dependencies`, `executables`, `options`, `platform`, `targets`, `tests`). Source, include and assets directories stay clean; there is no `CMakeLists.txt` in every directory. The `XGELIB` target is a library and `executables.cmake` defines the programs built on it ([35](35-library-and-front-ends.md)).
+One top-level `CMakeLists.txt`, with the logic split into modules in `scripts/cmake/` (`assets`, `dependencies`, `executables`, `options`, `output`, `platform`, `targets`, `tests`). Source, include and assets directories stay clean; there is no `CMakeLists.txt` in every directory. The `XGELIB` target is a library and `executables.cmake` defines the programs built on it ([35](35-library-and-front-ends.md)).
 
 The alternative proposed first was a `CMakeLists.txt` in each subdirectory (main, source, data). The author preferred a single root file plus a `cmake/` (or `scripts/cmake/`) directory.
 
@@ -27,6 +27,7 @@ On Windows, when SFML is fetched from GitHub but finds FreeType through vcpkg, a
 
 - C++ standard: the target requires C++20 (`cxx_std_20` in `scripts/cmake/targets.cmake`); some later scratch sketches used C++23.
 - The generated build directory is `build/` (ignored by git).
+- What a game needs to run goes in `output/` at the top of the repository (ignored by git), in a folder per configuration: `output/Debug`, `output/Release`. Each has the programs, the DLLs (`.so` on Linux) they load, and copies of `games/` and `assets/`. `scripts/cmake/output.cmake` sets `CMAKE_RUNTIME_OUTPUT_DIRECTORY` and `CMAKE_LIBRARY_OUTPUT_DIRECTORY` to `output/$<CONFIG>` before any target is made, so fetched dependencies follow too; the generator expression stops Visual Studio and Ninja Multi-Config adding a configuration folder of their own, so every generator gives the same layout, and `assets.cmake` copies into the same path. `platform.cmake` points fetched libraries that set their own output folder (SFML, Xerces) back at it, and vcpkg's copy of its DLLs and `windeployqt` follow the program wherever it is. A single-configuration build with no `CMAKE_BUILD_TYPE` is made a Debug build, so the folder has a name. Static libraries and a DLL's import `.lib` stay in the build directory.
 
 ## Second batch: alternatives
 

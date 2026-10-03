@@ -10,10 +10,10 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 # same ones from scripts/cmake/executables.cmake and tests.cmake.
 if (XGE_BUILD_SHARED)
 	# A DLL has to say what it exports; rather than marking every class in the
-	# headers, export all of them, and put the DLL next to the programs.
+	# headers, export all of them. The DLL goes next to the programs, in
+	# output/<config> (output.cmake).
 	set_target_properties(XGELIB PROPERTIES
-		WINDOWS_EXPORT_ALL_SYMBOLS ON
-		RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+		WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
 target_compile_options(XGELIB PRIVATE
@@ -52,7 +52,7 @@ endfunction()
 if (NOT XercesC_FOUND)
 	set_target_properties(xerces-c PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 	silence_third_party_warnings(xerces-c PRIVATE)
-	set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+	set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${XGE_OUTPUT_DIR} LIBRARY_OUTPUT_DIRECTORY ${XGE_OUTPUT_DIR})
 endif()
 
 if (NOT EXPRTK_PACKAGE_FOUND)
@@ -64,9 +64,12 @@ if (NOT lunasvg_FOUND)
 	silence_third_party_warnings(plutovg PRIVATE)
 endif()
 
+# A fetched library that sets its own output folder (SFML puts its DLLs in
+# its bin/) is pointed back at output/<config> (output.cmake), next to the
+# programs, so they find it when they start.
 if (NOT SFML_FOUND)
 	foreach(sfml_target IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
-		set_target_properties(${sfml_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+		set_target_properties(${sfml_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${XGE_OUTPUT_DIR} LIBRARY_OUTPUT_DIRECTORY ${XGE_OUTPUT_DIR})
 	endforeach()
 endif()
 
@@ -79,7 +82,7 @@ foreach(fetched_target IN ITEMS raylib SDL2 SDL2main SDL2_image SDL2_ttf tinyxml
 	if (TARGET ${fetched_target})
 		get_target_property(fetched_target_type ${fetched_target} TYPE)
 		if (fetched_target_type STREQUAL "SHARED_LIBRARY")
-			set_target_properties(${fetched_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+			set_target_properties(${fetched_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${XGE_OUTPUT_DIR} LIBRARY_OUTPUT_DIRECTORY ${XGE_OUTPUT_DIR})
 		endif()
 	endif()
 endforeach()
