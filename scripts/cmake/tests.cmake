@@ -89,6 +89,10 @@ target_link_libraries(XGETEST PRIVATE XGELIB Catch2::Catch2WithMain)
 # several tests load the shipped games; the tests run from that folder.
 add_dependencies(XGETEST XGEDATA)
 
+# In output/<config>, with its DLLs in libraries/ (output.cmake). Before
+# catch_discover_tests(), which runs the program after it is built.
+xge_place_program(XGETEST)
+
 include(CTest)
 include(Catch)
 catch_discover_tests(XGETEST
