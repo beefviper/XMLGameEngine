@@ -59,6 +59,7 @@ add_executable(XGETEST
 	"tests/test_svg_sprites.cpp"
 	"tests/test_lunarlander.cpp"
 	"tests/test_asteroids.cpp"
+	"tests/test_ai_games.cpp"
 	"tests/test_builtin_font.cpp"
 	"tests/test_cli.cpp"
 	"tests/test_data_folder.cpp"

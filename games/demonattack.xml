@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<game>
+  <window name="Demon Attack">
+    <width>160</width>
+    <height>210</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+
+  <variables>
+    <variable name="margin">4</variable>
+  </variables>
+
+  <objects>
+    <object name="player" class="player">
+      <sprite name="ship">
+        <rectangle>
+          <width>16</width>
+          <height>8</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position><x>72</x><y>190</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="alien">
+          <dec variable="player.lives">1</dec>
+          <reset />
+        </collision>
+        <collision edge="left"><wrap/></collision>
+        <collision edge="right"><wrap/></collision>
+      </collisions>
+      <actions>
+        <action name="left">
+          <move direction="left">2</move>
+        </action>
+        <action name="right">
+          <move direction="right">2</move>
+        </action>
+        <action name="gun">
+          <fire object="bullet" />
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+        <variable name="lives">3</variable>
+      </variables>
+    </object>
+
+    <object name="bullet" class="bullet">
+      <sprite name="shot">
+        <rectangle>
+          <width>2</width>
+          <height>8</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>-4</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all"><die/></collision>
+        <collision class="alien"><die/></collision>
+      </collisions>
+    </object>
+
+    <group name="aliens" class="alien">
+      <sprite name="demon">
+        <rectangle>
+          <width>12</width>
+          <height>8</height>
+          <color>color.magenta</color>
+        </rectangle>
+      </sprite>
+      <velocity><x>1</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="bullet">
+          <die/>
+          <inc variable="player.score">10</inc>
+        </collision>
+        <collision edge="left"><bounce/></collision>
+        <collision edge="right"><bounce/></collision>
+      </collisions>
+
+      <member name="a1"><position><x>20</x><y>30</y></position></member>
+      <member name="a2"><position><x>50</x><y>30</y></position></member>
+      <member name="a3"><position><x>80</x><y>30</y></position></member>
+      <member name="a4"><position><x>110</x><y>30</y></position></member>
+      <member name="a5"><position><x>35</x><y>50</y></position></member>
+      <member name="a6"><position><x>65</x><y>50</y></position></member>
+      <member name="a7"><position><x>95</x><y>50</y></position></member>
+    </group>
+    <object name="score">
+      <sprite>
+        <text>
+          <number>player.score</number>
+          <size>16</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+    <object name="lives">
+      <sprite>
+        <text>
+          <number>player.lives</number>
+          <size>16</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+  </objects>
+
+  <states>
+    <state name="title">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="lives"/>
+        <show object="aliens"/>
+      </shows>
+      <inputs>
+        <input button="space"><push state="playing"/></input>
+      </inputs>
+    </state>
+
+    <state name="playing">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="lives"/>
+        <show object="aliens"/>
+        <show object="bullet"/>
+      </shows>
+      <inputs>
+        <input button="left"><trigger object="player" action="left" /></input>
+        <input button="a"><trigger object="player" action="left" /></input>
+        <input button="right"><trigger object="player" action="right" /></input>
+        <input button="d"><trigger object="player" action="right" /></input>
+        <input button="space"><trigger object="player" action="gun" /></input>
+      </inputs>
+      <conditions>
+        <condition class="alien">
+          <remaining>0</remaining>
+          <reset object="aliens"/>
+        </condition>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover"/>
+        </condition>
+      </conditions>
+    </state>
+
+    <state name="gameover">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="lives"/>
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

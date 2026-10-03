@@ -20,6 +20,9 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/astrosmash.xml` | Astrosmash: shoot falling rocks before they land; fall speeds and starting heights are `<random>` |
 | `games/lunarlander.xml` | Lunar Lander: land gently on the pad with fuel to spare; every picture is drawn from `<line>`s and collisions follow the drawn pixels |
 | `games/asteroids.xml` | Asteroids: turn, thrust along the way you face and coast, shoot rocks that break into smaller rocks; the screen wraps on every side |
+| `games/berserk.xml` | Berserk: a maze and four robots, shot with Space; clearing the robots goes on to the next room (written by another AI from the schema alone, see [design 44](docs/designs/44-games-written-by-another-ai.md)) |
+| `games/demonattack.xml` | Demon Attack: slide along the bottom and shoot the demons, which bounce from side to side; a demon on the cannon costs a life (written by another AI) |
+| `games/frostbite.xml` | Frostbite: hop up the ice floes to the igloo before the cold gets you, and keep away from the bird and the fish (written by another AI) |
 
 ## What a game file looks like
 

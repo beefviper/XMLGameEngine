@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<game>
+  <window name="Frostbite">
+    <width>160</width>
+    <height>210</height>
+    <background>color.darkblue</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+
+  <variables>
+    <variable name="margin">4</variable>
+  </variables>
+
+  <objects>
+    <object name="player" class="player">
+      <sprite name="bailey">
+        <rectangle>
+          <width>12</width>
+          <height>16</height>
+          <color>color.orange</color>
+        </rectangle>
+      </sprite>
+      <position><x>80</x><y>190</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="igloo">
+          <inc variable="player.score">50</inc>
+          <reset />
+        </collision>
+        <collision class="floe"><carry/></collision>
+        <collision class="bird">
+          <dec variable="player.temperature">10</dec>
+          <reset />
+        </collision>
+        <collision class="fish">
+          <dec variable="player.temperature">10</dec>
+          <reset />
+        </collision>
+        <collision edge="left"><wrap/></collision>
+        <collision edge="right"><wrap/></collision>
+      </collisions>
+      <actions>
+        <action name="up">
+          <move direction="up">1</move>
+        </action>
+        <action name="down">
+          <move direction="down">1</move>
+        </action>
+        <action name="left">
+          <move direction="left">1</move>
+        </action>
+        <action name="right">
+          <move direction="right">1</move>
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+        <variable name="temperature">120</variable>
+      </variables>
+    </object>
+
+    <object name="igloo" class="igloo">
+      <sprite name="igloo">
+        <rectangle>
+          <width>32</width>
+          <height>24</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position><x>64</x><y>20</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>true</enabled></collisions>
+    </object>
+
+    <group name="floes" class="floe">
+      <sprite name="floe">
+        <rectangle>
+          <width>32</width>
+          <height>16</height>
+          <color>color.lightgrey</color>
+        </rectangle>
+      </sprite>
+      <velocity><x>1</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="left"><wrap/></collision>
+        <collision edge="right"><wrap/></collision>
+      </collisions>
+      <member name="f1"><position><x>20</x><y>60</y></position></member>
+      <member name="f2"><position><x>70</x><y>60</y></position></member>
+      <member name="f3"><position><x>120</x><y>60</y></position></member>
+      <member name="f4"><position><x>40</x><y>90</y></position></member>
+      <member name="f5"><position><x>90</x><y>90</y></position></member>
+      <member name="f6"><position><x>10</x><y>120</y></position></member>
+      <member name="f7"><position><x>60</x><y>120</y></position></member>
+      <member name="f8"><position><x>110</x><y>120</y></position></member>
+      <member name="f9"><position><x>30</x><y>150</y></position></member>
+      <member name="f10"><position><x>80</x><y>150</y></position></member>
+    </group>
+
+    <group name="birds" class="bird">
+      <sprite name="bird">
+        <rectangle>
+          <width>12</width>
+          <height>8</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <velocity><x>-2</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="left"><wrap/></collision>
+      </collisions>
+      <member name="b1"><position><x>150</x><y>40</y></position></member>
+    </group>
+
+    <group name="fish" class="fish">
+      <sprite name="fish">
+        <rectangle>
+          <width>12</width>
+          <height>8</height>
+          <color>color.cyan</color>
+        </rectangle>
+      </sprite>
+      <velocity><x>2</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="right"><wrap/></collision>
+      </collisions>
+      <member name="fi1"><position><x>10</x><y>170</y></position></member>
+    </group>
+
+    <object name="clock" class="clock">
+      <sprite name="dot">
+        <rectangle>
+          <width>1</width>
+          <height>1</height>
+          <color>color.darkblue</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>160 / 60</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="right">
+          <dec variable="player.temperature">1</dec>
+          <wrap />
+        </collision>
+      </collisions>
+    </object>
+    <object name="score">
+      <sprite>
+        <text>
+          <number>player.score</number>
+          <size>16</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+    <object name="temperature">
+      <sprite>
+        <text>
+          <number>player.temperature</number>
+          <size>16</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.right - temperature.width - margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+  </objects>
+
+  <states>
+    <state name="title">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="temperature"/>
+        <show object="igloo"/>
+        <show object="floes"/>
+        <show object="birds"/>
+        <show object="fish"/>
+      </shows>
+      <inputs>
+        <input button="space"><push state="playing"/></input>
+      </inputs>
+    </state>
+
+    <state name="playing">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="temperature"/>
+        <show object="igloo"/>
+        <show object="floes"/>
+        <show object="birds"/>
+        <show object="fish"/>
+        <show object="clock"/>
+      </shows>
+      <inputs>
+        <input button="up"><trigger object="player" action="up" /></input>
+        <input button="w"><trigger object="player" action="up" /></input>
+        <input button="down"><trigger object="player" action="down" /></input>
+        <input button="s"><trigger object="player" action="down" /></input>
+        <input button="left"><trigger object="player" action="left" /></input>
+        <input button="a"><trigger object="player" action="left" /></input>
+        <input button="right"><trigger object="player" action="right" /></input>
+        <input button="d"><trigger object="player" action="right" /></input>
+      </inputs>
+      <conditions>
+        <condition object="player" variable="temperature">
+          <atmost>0</atmost>
+          <push state="gameover"/>
+        </condition>
+      </conditions>
+    </state>
+
+    <state name="gameover">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="temperature"/>
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

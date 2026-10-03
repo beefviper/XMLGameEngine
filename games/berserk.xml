@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<game>
+  <window name="Berserk">
+    <width>160</width>
+    <height>210</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+
+  <variables>
+    <variable name="margin">4</variable>
+  </variables>
+
+  <objects>
+    <object name="player" class="player">
+      <sprite name="hero">
+        <rectangle>
+          <width>12</width>
+          <height>12</height>
+          <color>color.green</color>
+        </rectangle>
+      </sprite>
+      <position><x>80</x><y>190</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+        <collision object="walls"><stick/></collision>
+        <collision class="robot">
+          <dec variable="player.lives">1</dec>
+          <reset />
+        </collision>
+        <collision edge="left"><wrap/></collision>
+        <collision edge="right"><wrap/></collision>
+      </collisions>
+      <actions>
+        <action name="up">
+          <move direction="up">2</move>
+        </action>
+        <action name="down">
+          <move direction="down">2</move>
+        </action>
+        <action name="left">
+          <move direction="left">2</move>
+        </action>
+        <action name="right">
+          <move direction="right">2</move>
+        </action>
+        <action name="gun">
+          <fire object="bullet" />
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+        <variable name="lives">3</variable>
+      </variables>
+    </object>
+
+    <object name="bullet" class="bullet">
+      <sprite name="shot">
+        <rectangle>
+          <width>2</width>
+          <height>6</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>-5</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all"><die/></collision>
+        <collision class="robot"><die/></collision>
+      </collisions>
+    </object>
+
+    <object name="walls" class="wall">
+      <sprite name="maze">
+        <bitmap>
+          <row>****************</row>
+          <row>*..............*</row>
+          <row>*..********....*</row>
+          <row>*..............*</row>
+          <row>****************</row>
+          <scale>8</scale>
+          <color>color.blue</color>
+        </bitmap>
+      </sprite>
+      <position><x>16</x><y>40</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+      </collisions>
+    </object>
+
+    <group name="robots" class="robot">
+      <sprite name="robot">
+        <rectangle>
+          <width>12</width>
+          <height>12</height>
+          <color>color.red</color>
+        </rectangle>
+      </sprite>
+      <velocity><x>1</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="bullet">
+          <die/>
+          <inc variable="player.score">10</inc>
+        </collision>
+        <collision edge="left"><bounce/></collision>
+        <collision edge="right"><bounce/></collision>
+      </collisions>
+      <member name="r1"><position><x>40</x><y>70</y></position></member>
+      <member name="r2"><position><x>80</x><y>70</y></position></member>
+      <member name="r3"><position><x>120</x><y>70</y></position></member>
+      <member name="r4"><position><x>60</x><y>110</y></position></member>
+    </group>
+    <object name="score">
+      <sprite>
+        <text>
+          <number>player.score</number>
+          <size>16</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+    <object name="lives">
+      <sprite>
+        <text>
+          <number>player.lives</number>
+          <size>16</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+  </objects>
+
+  <states>
+    <state name="title">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="lives"/>
+        <show object="walls"/>
+        <show object="robots"/>
+      </shows>
+      <inputs>
+        <input button="space"><push state="room1"/></input>
+      </inputs>
+    </state>
+
+    <state name="room1">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="lives"/>
+        <show object="walls"/>
+        <show object="robots"/>
+        <show object="bullet"/>
+      </shows>
+      <inputs>
+        <input button="up"><trigger object="player" action="up" /></input>
+        <input button="w"><trigger object="player" action="up" /></input>
+        <input button="down"><trigger object="player" action="down" /></input>
+        <input button="s"><trigger object="player" action="down" /></input>
+        <input button="left"><trigger object="player" action="left" /></input>
+        <input button="a"><trigger object="player" action="left" /></input>
+        <input button="right"><trigger object="player" action="right" /></input>
+        <input button="d"><trigger object="player" action="right" /></input>
+        <input button="space"><trigger object="player" action="gun" /></input>
+      </inputs>
+      <conditions>
+        <condition class="robot">
+          <remaining>0</remaining>
+          <reset object="robots"/>
+          <push state="room2"/>
+        </condition>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover"/>
+        </condition>
+      </conditions>
+    </state>
+
+    <state name="room2">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="lives"/>
+        <show object="walls"/>
+        <show object="robots"/>
+        <show object="bullet"/>
+      </shows>
+      <inputs>
+        <input button="up"><trigger object="player" action="up" /></input>
+        <input button="w"><trigger object="player" action="up" /></input>
+        <input button="down"><trigger object="player" action="down" /></input>
+        <input button="s"><trigger object="player" action="down" /></input>
+        <input button="left"><trigger object="player" action="left" /></input>
+        <input button="a"><trigger object="player" action="left" /></input>
+        <input button="right"><trigger object="player" action="right" /></input>
+        <input button="d"><trigger object="player" action="right" /></input>
+        <input button="space"><trigger object="player" action="gun" /></input>
+      </inputs>
+      <conditions>
+        <condition class="robot">
+          <remaining>0</remaining>
+          <reset object="robots"/>
+          <push state="room1"/>
+        </condition>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover"/>
+        </condition>
+      </conditions>
+    </state>
+
+    <state name="gameover">
+      <shows>
+        <show object="player"/>
+        <show object="score"/>
+        <show object="lives"/>
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>
