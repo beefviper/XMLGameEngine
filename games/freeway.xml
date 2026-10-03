@@ -47,14 +47,8 @@
           <color>color.darkgreen</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>0</x>
-        <y>0</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -67,14 +61,8 @@
           <color>color.darkgrey</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>0</x>
-        <y>cell</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>0</x><y>cell</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -87,14 +75,8 @@
           <color>color.forestgreen</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>0</x>
-        <y>11 * cell</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>0</x><y>11 * cell</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -107,13 +89,8 @@
           <color>color.white</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>1 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>-2</x>
-        <y>0</y>
-      </velocity>
+      <position><y>1 * cell + inset</y></position>
+      <velocity><x>-2</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -121,14 +98,10 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>-56</x>
-        </position>
+        <position><x>-56</x></position>
       </member>
       <member>
-        <position>
-          <x>392</x>
-        </position>
+        <position><x>392</x></position>
       </member>
     </group>
     <group name="lane2" class="traffic">
@@ -139,13 +112,8 @@
           <color>color.red</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>2 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>3</x>
-        <y>0</y>
-      </velocity>
+      <position><y>2 * cell + inset</y></position>
+      <velocity><x>3</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -153,19 +121,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>-54</x>
-        </position>
+        <position><x>-54</x></position>
       </member>
       <member>
-        <position>
-          <x>230</x>
-        </position>
+        <position><x>230</x></position>
       </member>
       <member>
-        <position>
-          <x>514</x>
-        </position>
+        <position><x>514</x></position>
       </member>
     </group>
     <group name="lane3" class="traffic">
@@ -176,13 +138,8 @@
           <color>color.yellow</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>3 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>-4</x>
-        <y>0</y>
-      </velocity>
+      <position><y>3 * cell + inset</y></position>
+      <velocity><x>-4</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -190,19 +147,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>76</x>
-        </position>
+        <position><x>76</x></position>
       </member>
       <member>
-        <position>
-          <x>360</x>
-        </position>
+        <position><x>360</x></position>
       </member>
       <member>
-        <position>
-          <x>644</x>
-        </position>
+        <position><x>644</x></position>
       </member>
     </group>
     <group name="lane4" class="traffic">
@@ -213,13 +164,8 @@
           <color>color.orange</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>4 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>2</x>
-        <y>0</y>
-      </velocity>
+      <position><y>4 * cell + inset</y></position>
+      <velocity><x>2</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -227,14 +173,10 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>204</x>
-        </position>
+        <position><x>204</x></position>
       </member>
       <member>
-        <position>
-          <x>652</x>
-        </position>
+        <position><x>652</x></position>
       </member>
     </group>
     <group name="lane5" class="traffic">
@@ -245,13 +187,8 @@
           <color>color.cyan</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>5 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>-3</x>
-        <y>0</y>
-      </velocity>
+      <position><y>5 * cell + inset</y></position>
+      <velocity><x>-3</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -259,19 +196,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>6</x>
-        </position>
+        <position><x>6</x></position>
       </member>
       <member>
-        <position>
-          <x>290</x>
-        </position>
+        <position><x>290</x></position>
       </member>
       <member>
-        <position>
-          <x>574</x>
-        </position>
+        <position><x>574</x></position>
       </member>
     </group>
     <group name="lane6" class="traffic">
@@ -282,13 +213,8 @@
           <color>color.magenta</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>6 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>4</x>
-        <y>0</y>
-      </velocity>
+      <position><y>6 * cell + inset</y></position>
+      <velocity><x>4</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -296,19 +222,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>146</x>
-        </position>
+        <position><x>146</x></position>
       </member>
       <member>
-        <position>
-          <x>430</x>
-        </position>
+        <position><x>430</x></position>
       </member>
       <member>
-        <position>
-          <x>714</x>
-        </position>
+        <position><x>714</x></position>
       </member>
     </group>
     <group name="lane7" class="traffic">
@@ -319,13 +239,8 @@
           <color>color.lightgrey</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>7 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>-2</x>
-        <y>0</y>
-      </velocity>
+      <position><y>7 * cell + inset</y></position>
+      <velocity><x>-2</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -333,14 +248,10 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>304</x>
-        </position>
+        <position><x>304</x></position>
       </member>
       <member>
-        <position>
-          <x>752</x>
-        </position>
+        <position><x>752</x></position>
       </member>
     </group>
     <group name="lane8" class="traffic">
@@ -351,13 +262,8 @@
           <color>color.blue</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>8 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>3</x>
-        <y>0</y>
-      </velocity>
+      <position><y>8 * cell + inset</y></position>
+      <velocity><x>3</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -365,19 +271,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>36</x>
-        </position>
+        <position><x>36</x></position>
       </member>
       <member>
-        <position>
-          <x>320</x>
-        </position>
+        <position><x>320</x></position>
       </member>
       <member>
-        <position>
-          <x>604</x>
-        </position>
+        <position><x>604</x></position>
       </member>
     </group>
     <group name="lane9" class="traffic">
@@ -388,13 +288,8 @@
           <color>color.red</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>9 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>-4</x>
-        <y>0</y>
-      </velocity>
+      <position><y>9 * cell + inset</y></position>
+      <velocity><x>-4</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -402,19 +297,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>196</x>
-        </position>
+        <position><x>196</x></position>
       </member>
       <member>
-        <position>
-          <x>480</x>
-        </position>
+        <position><x>480</x></position>
       </member>
       <member>
-        <position>
-          <x>764</x>
-        </position>
+        <position><x>764</x></position>
       </member>
     </group>
     <group name="lane10" class="traffic">
@@ -425,13 +314,8 @@
           <color>color.yellow</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>10 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>2</x>
-        <y>0</y>
-      </velocity>
+      <position><y>10 * cell + inset</y></position>
+      <velocity><x>2</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -439,14 +323,10 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>-86</x>
-        </position>
+        <position><x>-86</x></position>
       </member>
       <member>
-        <position>
-          <x>362</x>
-        </position>
+        <position><x>362</x></position>
       </member>
     </group>
     <object name="chicken1" class="chicken">
@@ -457,14 +337,8 @@
           <color>color.white</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>window.width.center / 2 - body / 2</x>
-        <y>11 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center / 2 - body / 2</x><y>11 * cell + inset</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision class="traffic">
@@ -495,14 +369,8 @@
           <color>color.yellow</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>window.width.center * 1.5 - body / 2</x>
-        <y>11 * cell + inset</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center * 1.5 - body / 2</x><y>11 * cell + inset</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision class="traffic">
@@ -533,14 +401,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center / 2 - score1.width / 2</x>
-        <y>6</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center / 2 - score1.width / 2</x><y>6</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -553,14 +415,8 @@
           <color>color.yellow</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center * 1.5 - score2.width / 2</x>
-        <y>6</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center * 1.5 - score2.width / 2</x><y>6</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -573,14 +429,8 @@
           <color>color.yellow</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - title.width / 2</x>
-        <y>window.height.center - title.height / 2 + (-130)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -593,14 +443,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - help.width / 2</x>
-        <y>window.height.center - help.height / 2 + (-20)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -613,14 +457,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - keys1.width / 2</x>
-        <y>window.height.center - keys1.height / 2 + (40)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - keys1.width / 2</x><y>window.height.center - keys1.height / 2 + (40)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -633,14 +471,8 @@
           <color>color.yellow</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - keys2.width / 2</x>
-        <y>window.height.center - keys2.height / 2 + (80)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - keys2.width / 2</x><y>window.height.center - keys2.height / 2 + (80)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -653,14 +485,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - start.width / 2</x>
-        <y>window.height.center - start.height / 2 + (160)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (160)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -673,14 +499,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - paused.width / 2</x>
-        <y>window.height.center - paused.height / 2 + (0)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -693,14 +513,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - p1wins.width / 2</x>
-        <y>window.height.center - p1wins.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - p1wins.width / 2</x><y>window.height.center - p1wins.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -713,14 +527,8 @@
           <color>color.yellow</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - p2wins.width / 2</x>
-        <y>window.height.center - p2wins.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - p2wins.width / 2</x><y>window.height.center - p2wins.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -733,14 +541,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - again.width / 2</x>
-        <y>window.height.center - again.height / 2 + (60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>

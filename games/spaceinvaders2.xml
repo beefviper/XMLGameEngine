@@ -62,14 +62,8 @@
           <hide>backdrop</hide>
         </svg>
       </sprite>
-      <position>
-        <x>0</x>
-        <y>0</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>-12</y>
-      </velocity>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>-12</y></velocity>
       <collisions>
         <enabled>false</enabled>
         <collision edge="all">
@@ -92,14 +86,8 @@
           <hide>backdrop</hide>
         </svg>
       </sprite>
-      <position>
-        <x>window.width.center - player.width / 2</x>
-        <y>window.bottom - player.height * 2</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - player.width / 2</x><y>window.bottom - player.height * 2</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -119,13 +107,8 @@
       </actions>
     </object>
     <group name="aliens" class="aliens">
-      <position>
-        <x>margin</x>
-      </position>
-      <velocity>
-        <x>2</x>
-        <y>0</y>
-      </velocity>
+      <position><x>margin</x></position>
+      <velocity><x>2</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <lockstep>true</lockstep>
@@ -142,10 +125,7 @@
         <grid>
           <columns>11</columns>
           <rows>1</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>1.5</x>
@@ -161,10 +141,7 @@
         <grid>
           <columns>11</columns>
           <rows>1</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>33.5</x>
@@ -180,10 +157,7 @@
         <grid>
           <columns>11</columns>
           <rows>1</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>65.5</x>
@@ -201,19 +175,14 @@
         <frame sprite="b" />
         <frame sprite="c" />
       </animation>
-      <position>
-        <y>margin / 2</y>
-      </position>
+      <position><y>margin / 2</y></position>
     </member>
     <member name="crabs">
       <sprite name="a">
         <grid>
           <columns>11</columns>
           <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>98</x>
@@ -229,10 +198,7 @@
         <grid>
           <columns>11</columns>
           <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>130</x>
@@ -248,10 +214,7 @@
         <grid>
           <columns>11</columns>
           <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>162</x>
@@ -269,19 +232,14 @@
         <frame sprite="b" />
         <frame sprite="c" />
       </animation>
-      <position>
-        <y>margin / 2 + squids.height + gap</y>
-      </position>
+      <position><y>margin / 2 + squids.height + gap</y></position>
     </member>
     <member name="octopuses">
       <sprite name="a">
         <grid>
           <columns>11</columns>
           <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>1.5</x>
@@ -297,10 +255,7 @@
         <grid>
           <columns>11</columns>
           <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>33.5</x>
@@ -316,10 +271,7 @@
         <grid>
           <columns>11</columns>
           <rows>2</rows>
-          <padding>
-            <x>gap</x>
-            <y>gap</y>
-          </padding>
+          <padding><x>gap</x><y>gap</y></padding>
           <svg>
             <path>assets/Space Invaders Color Sprites.svg</path>
             <x>65.5</x>
@@ -337,9 +289,7 @@
         <frame sprite="b" />
         <frame sprite="c" />
       </animation>
-      <position>
-        <y>margin / 2 + squids.height + gap + 2 * (crabs.height + gap)</y>
-      </position>
+      <position><y>margin / 2 + squids.height + gap + 2 * (crabs.height + gap)</y></position>
     </member>
     </group>
     <object name="title">
@@ -350,14 +300,8 @@
           <color>color.green</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - title.width / 2</x>
-        <y>window.height.center - title.height / 2 - 100</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 - 100</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -370,14 +314,8 @@
           <color>color.green</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - youwin.width / 2</x>
-        <y>window.height.center - 150</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - 150</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -390,14 +328,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - continue.width / 2</x>
-        <y>window.height.center + 60</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - continue.width / 2</x><y>window.height.center + 60</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -410,14 +342,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - settings.width / 2</x>
-        <y>window.height.center - settings.height / 2</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - settings.width / 2</x><y>window.height.center - settings.height / 2</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -430,14 +356,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - paused.width / 2</x>
-        <y>window.height.center - paused.height / 2</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>

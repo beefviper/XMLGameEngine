@@ -45,14 +45,8 @@
           <color>color.darkblue</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>0</x>
-        <y>100</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>0</x><y>100</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -65,14 +59,8 @@
           <color>color.orange</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>0</x>
-        <y>0</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>5</y>
-      </velocity>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>5</y></velocity>
       <collisions>
         <enabled>false</enabled>
         <collision edge="bottom">
@@ -93,13 +81,8 @@
           <color>color.yellow</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>190</y>
-      </position>
-      <velocity>
-        <x>2</x>
-        <y>0</y>
-      </velocity>
+      <position><y>190</y></position>
+      <velocity><x>2</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -110,19 +93,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>-50</x>
-        </position>
+        <position><x>-50</x></position>
       </member>
       <member>
-        <position>
-          <x>240</x>
-        </position>
+        <position><x>240</x></position>
       </member>
       <member>
-        <position>
-          <x>530</x>
-        </position>
+        <position><x>530</x></position>
       </member>
     </group>
     <group name="subs2" class="subs">
@@ -133,13 +110,8 @@
           <color>color.green</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>300</y>
-      </position>
-      <velocity>
-        <x>-3</x>
-        <y>0</y>
-      </velocity>
+      <position><y>300</y></position>
+      <velocity><x>-3</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -150,19 +122,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>80</x>
-        </position>
+        <position><x>80</x></position>
       </member>
       <member>
-        <position>
-          <x>370</x>
-        </position>
+        <position><x>370</x></position>
       </member>
       <member>
-        <position>
-          <x>660</x>
-        </position>
+        <position><x>660</x></position>
       </member>
     </group>
     <group name="subs3" class="subs">
@@ -173,13 +139,8 @@
           <color>color.grey</color>
         </rectangle>
       </sprite>
-      <position>
-        <y>410</y>
-      </position>
-      <velocity>
-        <x>4</x>
-        <y>0</y>
-      </velocity>
+      <position><y>410</y></position>
+      <velocity><x>4</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -190,19 +151,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>-10</x>
-        </position>
+        <position><x>-10</x></position>
       </member>
       <member>
-        <position>
-          <x>280</x>
-        </position>
+        <position><x>280</x></position>
       </member>
       <member>
-        <position>
-          <x>570</x>
-        </position>
+        <position><x>570</x></position>
       </member>
     </group>
     <object name="ship">
@@ -213,14 +168,8 @@
           <color>color.lightgrey</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>window.width.center - ship.width / 2</x>
-        <y>76</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - ship.width / 2</x><y>76</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -251,14 +200,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>margin</x>
-        <y>margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -271,14 +214,8 @@
           <color>color.green</color>
         </text>
       </sprite>
-      <position>
-        <x>margin + sunklabel.width + 12</x>
-        <y>margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>margin + sunklabel.width + 12</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -291,14 +228,8 @@
           <color>color.orange</color>
         </text>
       </sprite>
-      <position>
-        <x>window.right - chargesvalue.width - margin</x>
-        <y>margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.right - chargesvalue.width - margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -311,14 +242,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.right - chargesvalue.width - chargeslabel.width - margin - 12</x>
-        <y>margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.right - chargesvalue.width - chargeslabel.width - margin - 12</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -331,14 +256,8 @@
           <color>color.cyan</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - title.width / 2</x>
-        <y>window.height.center - title.height / 2 + (-130)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -351,14 +270,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - help.width / 2</x>
-        <y>window.height.center - help.height / 2 + (-20)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -371,14 +284,8 @@
           <color>color.lightgrey</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - keys.width / 2</x>
-        <y>window.height.center - keys.height / 2 + (30)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (30)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -391,14 +298,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - start.width / 2</x>
-        <y>window.height.center - start.height / 2 + (130)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (130)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -411,14 +312,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - paused.width / 2</x>
-        <y>window.height.center - paused.height / 2 + (0)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -431,14 +326,8 @@
           <color>color.green</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - youwin.width / 2</x>
-        <y>window.height.center - youwin.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -451,14 +340,8 @@
           <color>color.red</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - gameover.width / 2</x>
-        <y>window.height.center - gameover.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -471,14 +354,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - again.width / 2</x>
-        <y>window.height.center - again.height / 2 + (70)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>

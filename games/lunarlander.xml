@@ -59,14 +59,8 @@
         <line><from><x>700</x><y>150</y></from><to><x>740</x><y>110</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
         <line><from><x>740</x><y>110</y></from><to><x>798</x><y>160</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
       </sprite>
-      <position>
-        <x>0</x>
-        <y>380</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>0</x><y>380</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
@@ -76,14 +70,8 @@
       <sprite>
         <line><from><x>0</x><y>0</y></from><to><x>76</x><y>0</y></to><color>color.green</color><thickness>4</thickness></line>
       </sprite>
-      <position>
-        <x>500</x>
-        <y>560</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>500</x><y>560</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
@@ -105,18 +93,9 @@
         <line><from><x>0</x><y>29</y></from><to><x>6</x><y>29</y></to><thickness>2</thickness></line>
         <line><from><x>24</x><y>29</y></from><to><x>30</x><y>29</y></to><thickness>2</thickness></line>
       </sprite>
-      <position>
-        <x>window.width.center - lander.width / 2</x>
-        <y>40</y>
-      </position>
-      <velocity>
-        <x>0.5</x>
-        <y>0</y>
-      </velocity>
-      <acceleration>
-        <x>0</x>
-        <y>gravity</y>
-      </acceleration>
+      <position><x>window.width.center - lander.width / 2</x><y>40</y></position>
+      <velocity><x>0.5</x><y>0</y></velocity>
+      <acceleration><x>0</x><y>gravity</y></acceleration>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
@@ -170,14 +149,8 @@
           <color>color.orange</color>
         </text>
       </sprite>
-      <position>
-        <x>window.right - fuelvalue.width - margin</x>
-        <y>margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.right - fuelvalue.width - margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -190,14 +163,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.right - fuelvalue.width - fuellabel.width - margin - 12</x>
-        <y>margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.right - fuelvalue.width - fuellabel.width - margin - 12</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -210,14 +177,8 @@
           <color>color.cyan</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - title.width / 2</x>
-        <y>window.height.center - title.height / 2 + (-130)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -230,14 +191,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - help.width / 2</x>
-        <y>window.height.center - help.height / 2 + (-20)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -250,14 +205,8 @@
           <color>color.lightgrey</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - keys.width / 2</x>
-        <y>window.height.center - keys.height / 2 + (30)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (30)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -270,14 +219,8 @@
           <color>color.green</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - start.width / 2</x>
-        <y>window.height.center - start.height / 2 + (110)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (110)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -290,14 +233,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - paused.width / 2</x>
-        <y>window.height.center - paused.height / 2 + (0)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -310,14 +247,8 @@
           <color>color.green</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - landedmsg.width / 2</x>
-        <y>window.height.center - landedmsg.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - landedmsg.width / 2</x><y>window.height.center - landedmsg.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -330,14 +261,8 @@
           <color>color.red</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - crashedmsg.width / 2</x>
-        <y>window.height.center - crashedmsg.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - crashedmsg.width / 2</x><y>window.height.center - crashedmsg.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -350,14 +275,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - again.width / 2</x>
-        <y>window.height.center - again.height / 2 + (70)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>

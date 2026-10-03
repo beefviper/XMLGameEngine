@@ -39,13 +39,8 @@
           <height>16</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>75</y>
-      </position>
-      <velocity>
-        <x>2.0</x>
-        <y>0</y>
-      </velocity>
+      <position><y>75</y></position>
+      <velocity><x>2.0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -53,19 +48,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>0</x>
-        </position>
+        <position><x>0</x></position>
       </member>
       <member>
-        <position>
-          <x>272</x>
-        </position>
+        <position><x>272</x></position>
       </member>
       <member>
-        <position>
-          <x>544</x>
-        </position>
+        <position><x>544</x></position>
       </member>
     </group>
     <group name="debris2" class="debris">
@@ -75,13 +64,8 @@
           <height>14</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>122</y>
-      </position>
-      <velocity>
-        <x>-3.0</x>
-        <y>0</y>
-      </velocity>
+      <position><y>122</y></position>
+      <velocity><x>-3.0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -89,19 +73,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>97</x>
-        </position>
+        <position><x>97</x></position>
       </member>
       <member>
-        <position>
-          <x>368</x>
-        </position>
+        <position><x>368</x></position>
       </member>
       <member>
-        <position>
-          <x>639</x>
-        </position>
+        <position><x>639</x></position>
       </member>
     </group>
     <group name="debris3" class="debris">
@@ -111,13 +89,8 @@
           <height>18</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>166</y>
-      </position>
-      <velocity>
-        <x>1.5</x>
-        <y>0</y>
-      </velocity>
+      <position><y>166</y></position>
+      <velocity><x>1.5</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -125,19 +98,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>194</x>
-        </position>
+        <position><x>194</x></position>
       </member>
       <member>
-        <position>
-          <x>466</x>
-        </position>
+        <position><x>466</x></position>
       </member>
       <member>
-        <position>
-          <x>739</x>
-        </position>
+        <position><x>739</x></position>
       </member>
     </group>
     <group name="debris4" class="debris">
@@ -147,13 +114,8 @@
           <height>12</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>215</y>
-      </position>
-      <velocity>
-        <x>-2.5</x>
-        <y>0</y>
-      </velocity>
+      <position><y>215</y></position>
+      <velocity><x>-2.5</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -161,19 +123,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>21</x>
-        </position>
+        <position><x>21</x></position>
       </member>
       <member>
-        <position>
-          <x>291</x>
-        </position>
+        <position><x>291</x></position>
       </member>
       <member>
-        <position>
-          <x>562</x>
-        </position>
+        <position><x>562</x></position>
       </member>
     </group>
     <group name="debris5" class="debris">
@@ -183,13 +139,8 @@
           <height>16</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>259</y>
-      </position>
-      <velocity>
-        <x>3.5</x>
-        <y>0</y>
-      </velocity>
+      <position><y>259</y></position>
+      <velocity><x>3.5</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -197,19 +148,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>116</x>
-        </position>
+        <position><x>116</x></position>
       </member>
       <member>
-        <position>
-          <x>388</x>
-        </position>
+        <position><x>388</x></position>
       </member>
       <member>
-        <position>
-          <x>660</x>
-        </position>
+        <position><x>660</x></position>
       </member>
     </group>
     <group name="debris6" class="debris">
@@ -219,13 +164,8 @@
           <height>14</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>306</y>
-      </position>
-      <velocity>
-        <x>-1.5</x>
-        <y>0</y>
-      </velocity>
+      <position><y>306</y></position>
+      <velocity><x>-1.5</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -233,19 +173,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>214</x>
-        </position>
+        <position><x>214</x></position>
       </member>
       <member>
-        <position>
-          <x>485</x>
-        </position>
+        <position><x>485</x></position>
       </member>
       <member>
-        <position>
-          <x>756</x>
-        </position>
+        <position><x>756</x></position>
       </member>
     </group>
     <group name="debris7" class="debris">
@@ -255,13 +189,8 @@
           <height>18</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>350</y>
-      </position>
-      <velocity>
-        <x>2.5</x>
-        <y>0</y>
-      </velocity>
+      <position><y>350</y></position>
+      <velocity><x>2.5</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -269,19 +198,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>38</x>
-        </position>
+        <position><x>38</x></position>
       </member>
       <member>
-        <position>
-          <x>310</x>
-        </position>
+        <position><x>310</x></position>
       </member>
       <member>
-        <position>
-          <x>583</x>
-        </position>
+        <position><x>583</x></position>
       </member>
     </group>
     <group name="debris8" class="debris">
@@ -291,13 +214,8 @@
           <height>12</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>399</y>
-      </position>
-      <velocity>
-        <x>-3.5</x>
-        <y>0</y>
-      </velocity>
+      <position><y>399</y></position>
+      <velocity><x>-3.5</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -305,19 +223,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>139</x>
-        </position>
+        <position><x>139</x></position>
       </member>
       <member>
-        <position>
-          <x>409</x>
-        </position>
+        <position><x>409</x></position>
       </member>
       <member>
-        <position>
-          <x>680</x>
-        </position>
+        <position><x>680</x></position>
       </member>
     </group>
     <group name="debris9" class="debris">
@@ -327,13 +239,8 @@
           <height>16</height>
         </rectangle>
       </sprite>
-      <position>
-        <y>443</y>
-      </position>
-      <velocity>
-        <x>1.0</x>
-        <y>0</y>
-      </velocity>
+      <position><y>443</y></position>
+      <velocity><x>1.0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -341,19 +248,13 @@
         </collision>
       </collisions>
       <member>
-        <position>
-          <x>232</x>
-        </position>
+        <position><x>232</x></position>
       </member>
       <member>
-        <position>
-          <x>504</x>
-        </position>
+        <position><x>504</x></position>
       </member>
       <member>
-        <position>
-          <x>776</x>
-        </position>
+        <position><x>776</x></position>
       </member>
     </group>
     <object name="rocket1" class="rocket">
@@ -364,14 +265,8 @@
           <color>color.cyan</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>window.width.center / 2 - rocket1.width / 2</x>
-        <y>window.bottom - rocket1.height - margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center / 2 - rocket1.width / 2</x><y>window.bottom - rocket1.height - margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="bottom">
@@ -405,14 +300,8 @@
           <color>color.yellow</color>
         </rectangle>
       </sprite>
-      <position>
-        <x>window.width.center * 1.5 - rocket2.width / 2</x>
-        <y>window.bottom - rocket2.height - margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center * 1.5 - rocket2.width / 2</x><y>window.bottom - rocket2.height - margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="bottom">
@@ -446,14 +335,8 @@
           <color>color.cyan</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - 60 - score1.width</x>
-        <y>window.bottom - score1.height - margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - 60 - score1.width</x><y>window.bottom - score1.height - margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -466,14 +349,8 @@
           <color>color.yellow</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center + 60</x>
-        <y>window.bottom - score2.height - margin</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center + 60</x><y>window.bottom - score2.height - margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -486,14 +363,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - title.width / 2</x>
-        <y>window.height.center - title.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -506,14 +377,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - start.width / 2</x>
-        <y>window.height.center - start.height / 2 + (70)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (70)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -526,14 +391,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - paused.width / 2</x>
-        <y>window.height.center - paused.height / 2 + (0)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -546,14 +405,8 @@
           <color>color.cyan</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - player1wins.width / 2</x>
-        <y>window.height.center - player1wins.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - player1wins.width / 2</x><y>window.height.center - player1wins.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -566,14 +419,8 @@
           <color>color.yellow</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - player2wins.width / 2</x>
-        <y>window.height.center - player2wins.height / 2 + (-60)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - player2wins.width / 2</x><y>window.height.center - player2wins.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
@@ -586,14 +433,8 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position>
-        <x>window.width.center - continue.width / 2</x>
-        <y>window.height.center - continue.height / 2 + (70)</y>
-      </position>
-      <velocity>
-        <x>0</x>
-        <y>0</y>
-      </velocity>
+      <position><x>window.width.center - continue.width / 2</x><y>window.height.center - continue.height / 2 + (70)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
