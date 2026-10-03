@@ -55,12 +55,17 @@ namespace xge
 		QPalette palette = app.palette();
 		const QColor window = palette.color(QPalette::Window);
 		const QColor base = palette.color(QPalette::Base);
-		const QColor accent = palette.color(QPalette::Highlight);
 		const bool dark = window.lightness() < 128;
 
-		// Every other row, tinted a little towards the selection color so the
-		// stripes read as part of the theme and not as grey.
-		const QColor stripe = mix(base, accent, dark ? 0.18 : 0.10);
+		// No color of its own: the selection, hover and focus are shades of
+		// grey, so nothing depends on (or clashes with) the system's accent
+		// color. A darker grey on a light theme and a lighter one on a dark.
+		const QColor accent = dark ? QColor(0x86, 0x86, 0x86) : QColor(0x5c, 0x5c, 0x5c);
+		palette.setColor(QPalette::Highlight, accent);
+		palette.setColor(QPalette::HighlightedText, Qt::white);
+
+		// Every other row a slightly different grey.
+		const QColor stripe = mix(base, accent, dark ? 0.16 : 0.09);
 		palette.setColor(QPalette::AlternateBase, stripe);
 		app.setPalette(palette);
 
@@ -71,8 +76,8 @@ namespace xge
 		// Raised buttons: light on top, shaded at the bottom, a darker border.
 		const QColor buttonTop = window.lighter(dark ? 140 : 118);
 		const QColor buttonBottom = window.darker(dark ? 120 : 110);
-		const QColor hoverTop = mix(buttonTop, accent, 0.18);
-		const QColor hoverBottom = mix(buttonBottom, accent, 0.18);
+		const QColor hoverTop = mix(buttonTop, accent, 0.10);
+		const QColor hoverBottom = mix(buttonBottom, accent, 0.10);
 		const QColor pressedTop = window.darker(dark ? 130 : 112);
 		const QColor pressedBottom = window.darker(dark ? 105 : 100);
 		const QColor disabledText = palette.color(QPalette::Disabled, QPalette::ButtonText);
@@ -86,7 +91,7 @@ namespace xge
 		// a sheet that touches the box's border takes them away.)
 		const QColor inputBackground = dark ? base.lighter(165) : QColor(Qt::white);
 
-		const QColor hover = mix(base, accent, dark ? 0.28 : 0.16);
+		const QColor hover = mix(base, accent, dark ? 0.30 : 0.18);
 		const QColor selectedTop = accent.lighter(112);
 		const QColor selectedBottom = accent.darker(108);
 
