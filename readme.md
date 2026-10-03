@@ -10,19 +10,19 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 |---|---|
 | `games/pong.xml` | Pong, with a menu, pause and game-over screens, and 8-bit sounds for the walls, the paddles, a point, the start and the end |
 | `games/breakout.xml` | Breakout (six rows of bricks, one color a row, as a group of grids; the game is won when no brick is left and lost when the ball falls) |
-| `games/spaceinvaders.xml` | Space Invaders (three kinds of alien drawn from ASCII bitmaps, two animation frames a second apart, as a group of grids of individually named objects; the game is won when none are left) |
-| `games/spaceinvaders2.xml` | Space Invaders again, drawn from an SVG sprite sheet (`assets/Space Invaders Color Sprites.svg`): the same game and group of grids, with three-frame animations for the three kinds of alien, a ship and a bolt cut out of the sheet by `<svg>` sprites |
+| `games/spaceinvaders.xml` | Space Invaders (three kinds of alien drawn from ASCII bitmaps, two animation frames a second apart, as a group of grids of individually named objects; the game is won when none are left; the aliens drop bombs back, three hits and the game is lost) |
+| `games/spaceinvaders2.xml` | Space Invaders again, drawn from an SVG sprite sheet (`assets/Space Invaders Color Sprites.svg`): the same game and group of grids, with three-frame animations for the three kinds of alien, a ship and a bolt cut out of the sheet by `<svg>` sprites, and the aliens firing the sheet's plasma bolts back |
 | `games/frogger.xml` | Frogger: lives, one-step hops, looping lanes, riding logs, a river that kills unless you are on one |
 | `games/spacerace.xml` | Space Race, two players, first to two points |
-| `games/kaboom.xml` | Kaboom!: catch the falling bombs in three waves, each faster and worth more; a miss sets off the wave and costs a bucket; fall speeds and starting heights are `<random>` |
+| `games/kaboom.xml` | Kaboom!: the Mad Bomber paces the rooftop, changing direction when he likes, and drops bombs as he goes; catch them in three waves, each faster and worth more; a miss sets off every falling bomb and costs a bucket |
 | `games/freeway.xml` | Freeway, two players: hop a chicken across ten lanes of traffic, first to five crossings wins |
 | `games/depthcharge.xml` | Depth Charge: drop one charge at a time on submarines in three lanes; only misses use up your charges |
 | `games/astrosmash.xml` | Astrosmash: shoot falling rocks before they land; fall speeds and starting heights are `<random>` |
 | `games/lunarlander.xml` | Lunar Lander: land gently on the pad with fuel to spare; every picture is drawn from `<line>`s and collisions follow the drawn pixels |
 | `games/asteroids.xml` | Asteroids: turn, thrust along the way you face and coast, shoot rocks that break into smaller rocks; the screen wraps on every side |
-| `games/berserk.xml` | Berserk: a maze and four robots, shot with Space; clearing the robots goes on to the next room (written by another AI from the schema alone, see [design 44](docs/designs/44-games-written-by-another-ai.md)) |
-| `games/demonattack.xml` | Demon Attack: slide along the bottom and shoot the demons, which bounce from side to side; a demon on the cannon costs a life (written by another AI) |
-| `games/frostbite.xml` | Frostbite: hop up the ice floes to the igloo before the cold gets you, and keep away from the bird and the fish (written by another AI) |
+| `games/berserk.xml` | Berserk: a maze with electrified walls and four robots that shoot back; the man shoots the way he last walked; clearing the robots goes on to the next room (first written by another AI from the schema alone, see [design 44](docs/designs/44-games-written-by-another-ai.md)) |
+| `games/demonattack.xml` | Demon Attack: slide along the bottom and shoot the demons, which bounce from side to side and fire down at you (first written by another AI) |
+| `games/frostbite.xml` | Frostbite: jump Bailey between the snowy shore and four rows of drifting ice; every white row he lands on turns blue and adds a block to his igloo; the water, the cold and the snow geese are against him; finish the igloo and walk in |
 
 ## What a game file looks like
 
@@ -92,7 +92,7 @@ Tests are opt-in: configure with `-DBUILD_TESTING=ON`.
 
 ## Status
 
-The engine is still growing. It has no gravity or acceleration, no arcing jump (`hop` is a single step), and no scrolling; all movement is pixels per frame. Sound is short effects and little tunes made from notes, not music or sound files. The full list of known limits is in [docs/readme.md](docs/readme.md).
+The engine is still growing. It has no arcing jump (`hop` is a single step and `<jump>` a straight, timed one), no aiming, and no scrolling; all movement is pixels per frame, and timers count frames. Objects can act on their own on timers (enemies fire back), face a way, change their look, and states share named key sets. Sound is short effects and little tunes made from notes, not music or sound files. The full list of known limits is in [docs/readme.md](docs/readme.md).
 
 ## Documentation
 

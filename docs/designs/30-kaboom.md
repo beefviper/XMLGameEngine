@@ -1,6 +1,6 @@
 # 30. Kaboom
 
-**Status:** built (`games/kaboom.xml`, `tests/test_kaboom.cpp`); no new verbs
+**Status:** built (`games/kaboom.xml`, `tests/test_kaboom.cpp`); no new verbs. **Reworked** (2026-10-03, [46](46-timers-facing-jumps-and-looks.md)): the Mad Bomber now drops the bombs from a pool on a timer, turning at random, with a bomb on the ground resetting the pool; the fixed falling columns, the `tally` object and the explosion condition described below are gone. What follows is the first version and why it was written that way
 
 ## Why this game
 
