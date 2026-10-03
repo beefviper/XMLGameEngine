@@ -60,8 +60,8 @@ namespace
 		std::vector<std::pair<KeyCode, bool>> queued;
 	};
 
-	// breakout.xml's <variable name="step" value="2" />.
-	constexpr float kStep = 2.0f;
+	// breakout.xml's <variable name="step">8</variable>.
+	constexpr float kStep = 8.0f;
 
 	void tap(Engine& engine, KeyCode key)
 	{
