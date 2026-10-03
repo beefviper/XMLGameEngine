@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.28)
 project("XMLGameEngine")
 
 include(scripts/cmake/options.cmake)
+include(scripts/cmake/output.cmake)
 
 # The engine is a library (the XGELIB target, lib/);
 # the programs that use it are separate targets - XGECLI (the command line,

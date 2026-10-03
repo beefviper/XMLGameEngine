@@ -84,11 +84,16 @@ target_compile_options(XGETEST PRIVATE
 
 target_link_libraries(XGETEST PRIVATE XGELIB Catch2::Catch2WithMain)
 
-# games/ and assets/ end up next to the test binary (same as they do for the
-# programs - see assets.cmake), because several tests load the shipped games.
+# games/ and assets/ end up next to the test binary, in output/<config> (same
+# as they do for the programs - see output.cmake and assets.cmake), because
+# several tests load the shipped games; the tests run from that folder.
 add_dependencies(XGETEST XGEDATA)
+
+# In output/<config>, with its DLLs in libraries/ (output.cmake). Before
+# catch_discover_tests(), which runs the program after it is built.
+xge_place_program(XGETEST)
 
 include(CTest)
 include(Catch)
 catch_discover_tests(XGETEST
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+	WORKING_DIRECTORY "$<TARGET_FILE_DIR:XGETEST>")

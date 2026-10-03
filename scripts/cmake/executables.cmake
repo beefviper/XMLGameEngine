@@ -63,9 +63,20 @@ if (Qt6_FOUND)
 	# configuration (the plain tool looks for release DLLs and fails on a debug
 	# build), and a target is resolved for the configuration being built, which
 	# also holds for Visual Studio's multi-configuration generator.
+	#
+	# The Qt DLLs go in libraries/ with the others and the plug-ins in
+	# libraries/plugins (output.cmake); qt.conf next to the program tells Qt
+	# where the plug-ins are, as a path relative to the program's folder.
 	if (WIN32 AND TARGET Qt6::windeployqt)
 		add_custom_command(TARGET XGEGUI POST_BUILD
-			COMMAND Qt6::windeployqt --no-translations --no-compiler-runtime "$<TARGET_FILE:XGEGUI>")
+			COMMAND Qt6::windeployqt --no-translations --no-compiler-runtime
+				--libdir "$<TARGET_FILE_DIR:XGEGUI>/${XGE_LIBRARY_FOLDER}"
+				--plugindir "$<TARGET_FILE_DIR:XGEGUI>/${XGE_LIBRARY_FOLDER}/plugins"
+				"$<TARGET_FILE:XGEGUI>"
+			VERBATIM)
+
+		file(GENERATE OUTPUT "$<TARGET_FILE_DIR:XGEGUI>/qt.conf"
+			CONTENT "[Paths]\nPlugins = ${XGE_LIBRARY_FOLDER}/plugins\n")
 	endif()
 
 	list(APPEND XGE_PROGRAMS XGEGUI)
@@ -83,6 +94,10 @@ foreach(program IN LISTS XGE_PROGRAMS)
 
 	# The games and assets are copied next to the program, see assets.cmake.
 	add_dependencies(${program} XGEDATA)
+
+	# In output/<config>, with its DLLs in libraries/ (output.cmake). After
+	# windeployqt above, so the Qt DLLs are in the list it writes.
+	xge_place_program(${program})
 endforeach()
 
 # cli/include is not part of the library's include directory: only XGECLI uses it.
