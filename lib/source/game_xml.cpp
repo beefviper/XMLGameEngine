@@ -138,6 +138,22 @@ namespace xge
 			return name == "circle" || name == "rectangle" || name == "text" || name == "image" || name == "bitmap" || name == "svg";
 		}
 
+		// The <flip> of a picture the engine draws itself (a <bitmap> or an
+		// <svg>): "", "horizontal" or "vertical". Checked here, since only
+		// Xerces would catch a wrong word from the schema.
+		std::string readPictureFlip(const XmlNode& shape, const std::string& where)
+		{
+			const auto flip = findChild(&shape, "flip");
+			if (!flip) { return {}; }
+
+			const std::string text = readText(*flip);
+			if (text != "horizontal" && text != "vertical")
+			{
+				fail(where, "<flip> is \"" + text + "\"; expected horizontal or vertical");
+			}
+			return text;
+		}
+
 		// One <circle>, <rectangle>, <text>, <image>, <bitmap> or <svg>, written into `sprite`.
 		void readShape(const XmlNode& shape, RawSprite& sprite, const std::string& where)
 		{
@@ -171,6 +187,7 @@ namespace xge
 					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, here);
 				}
+				sprite.flip = readPictureFlip(shape, here);
 			}
 			else if (kind == "svg")
 			{
@@ -204,6 +221,7 @@ namespace xge
 				{
 					if (hide->getName() == "hide") { sprite.svgHide.push_back(readText(*hide)); }
 				}
+				sprite.flip = readPictureFlip(shape, here);
 			}
 			else if (kind == "text")
 			{

@@ -751,105 +751,91 @@ namespace xge
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		std::vector<std::string> params;
 
-		if (sprite.kind == "line")
+		// Lines, rows of text and SVG drawings are all pictures the engine draws
+		// itself, and all go the same way, here, once, when the game loads:
+		//   1. read what the file describes (line ends, rows, a part of a drawing);
+		//   2. draw it into a Bitmap, the pixels every window backend shows and a
+		//      pixel collision tests, so no backend ever draws one itself;
+		//   3. flip it, if the sprite says so (a <bitmap> or an <svg>);
+		//   4. for an object with a <heading>, keep it (a Turnable) to be turned
+		//      to whatever heading it faces, and start it at heading 0.
+		// The params carry only the picture's size. The one difference is in the
+		// turning: lines are kept as lines and drawn again at each heading, which
+		// keeps their edges sharp, where a finished picture's pixels are turned.
+		if (sprite.kind == "line" || sprite.kind == "bitmap" || sprite.kind == "svg")
 		{
-			// Drawn here, once, into the pixels the window shows and a pixel
-			// collision tests; the params only carry its size, which is what the
-			// rest of the engine needs to know without a window.
-			std::vector<LineSegment> segments;
-			for (const RawLine& rawLine : sprite.lines)
-			{
-				LineSegment segment;
-				segment.x1 = evaluate(rawLine.from.x, where);
-				segment.y1 = evaluate(rawLine.from.y, where);
-				segment.x2 = evaluate(rawLine.to.x, where);
-				segment.y2 = evaluate(rawLine.to.y, where);
-				segment.color = colorFromName(rawLine.color.empty() ? "color.white" : rawLine.color);
-				if (rawLine.hasThickness) { segment.thickness = static_cast<int>(std::lround(evaluate(rawLine.thickness, where))); }
-				if (segment.thickness < 1) { throw std::runtime_error(where + ": a <line> has a <thickness> under 1"); }
-				segments.push_back(segment);
-			}
-
+			auto kept = std::make_shared<Turnable>();
 			std::shared_ptr<const Bitmap> drawn;
+
 			try
 			{
-				if (turnable)
+				if (sprite.kind == "line")
 				{
-					// An object that faces somewhere: the lines are kept as they
-					// are, to be drawn at whatever heading it faces; heading 0 is
-					// what it starts as, and its square is its size.
-					auto kept = std::make_shared<Turnable>();
-					kept->lines = segments;
-					if (!segments.empty()) { drawn = std::make_shared<const Bitmap>(kept->at(0.0f)); }
-					*turnable = std::move(kept);
+					// 1. The line ends, colours and thicknesses.
+					for (const RawLine& rawLine : sprite.lines)
+					{
+						LineSegment segment;
+						segment.x1 = evaluate(rawLine.from.x, where);
+						segment.y1 = evaluate(rawLine.from.y, where);
+						segment.x2 = evaluate(rawLine.to.x, where);
+						segment.y2 = evaluate(rawLine.to.y, where);
+						segment.color = colorFromName(rawLine.color.empty() ? "color.white" : rawLine.color);
+						if (rawLine.hasThickness) { segment.thickness = static_cast<int>(std::lround(evaluate(rawLine.thickness, where))); }
+						if (segment.thickness < 1) { throw std::invalid_argument("a <line> has a <thickness> under 1"); }
+						kept->lines.push_back(segment);
+					}
+
+					// 2. Drawn. (Kept as lines for turning: see step 4.)
+					drawn = std::make_shared<const Bitmap>(rasterizeLines(kept->lines));
 				}
-				if (!drawn) { drawn = std::make_shared<const Bitmap>(rasterizeLines(segments)); }
-			}
-			catch (const std::invalid_argument& error)
-			{
-				throw std::runtime_error(where + ": " + error.what());
-			}
-
-			params = { "line", std::to_string(drawn->width), std::to_string(drawn->height) };
-			if (bitmap) { *bitmap = std::move(drawn); }
-			return params;
-		}
-
-		if (sprite.kind == "bitmap" || sprite.kind == "svg")
-		{
-			// Drawn here, once, like a sprite of lines: the params only carry
-			// its size, and the picture goes to the backends and to a pixel
-			// collision through `bitmap`. A grid of them shares one picture.
-			// A <bitmap> is rows of text and an <svg> a drawing from a file
-			// (svg.cpp), but from here on they are the same kind of picture.
-			SvgRegion region;
-			float svgScale = 1.0f;
-			int rowsScale = 1;
-			if (sprite.kind == "svg")
-			{
-				if (sprite.hasSvgRegion)
+				else if (sprite.kind == "svg")
 				{
-					region = { evaluate(sprite.svgX, where), evaluate(sprite.svgY, where),
-						evaluate(sprite.svgWidth, where), evaluate(sprite.svgHeight, where) };
-				}
-				if (sprite.hasScale) { svgScale = evaluate(sprite.scale, where); }
-			}
-			else if (sprite.hasScale)
-			{
-				rowsScale = static_cast<int>(std::lround(evaluate(sprite.scale, where)));
-			}
+					// 1. The part of the drawing, and how many pixels to a unit.
+					SvgRegion region;
+					float svgScale = 1.0f;
+					if (sprite.hasSvgRegion)
+					{
+						region = { evaluate(sprite.svgX, where), evaluate(sprite.svgY, where),
+							evaluate(sprite.svgWidth, where), evaluate(sprite.svgHeight, where) };
+						if (region.isWhole()) { throw std::invalid_argument("an svg's <width> and <height> must both be above 0"); }
+					}
+					if (sprite.hasScale) { svgScale = evaluate(sprite.scale, where); }
 
-			std::shared_ptr<const Bitmap> drawn;
-			try
-			{
-				if (sprite.kind == "svg")
-				{
-					if (sprite.hasSvgRegion && region.isWhole()) { throw std::invalid_argument("an svg's <width> and <height> must both be above 0"); }
-
+					// 2. Drawn by lunasvg (svg.cpp).
 					drawn = std::make_shared<const Bitmap>(rasterizeSvg(sprite.path, region, svgScale, sprite.svgHide));
 				}
 				else
 				{
+					// 1. The rows, and how many pixels to a character.
+					const int rowsScale = sprite.hasScale ? static_cast<int>(std::lround(evaluate(sprite.scale, where))) : 1;
+
+					// 2. Drawn.
 					drawn = std::make_shared<const Bitmap>(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color)));
 				}
 
+				// 3. Flipped.
+				if (!sprite.flip.empty() && sprite.kind != "line")
+				{
+					drawn = std::make_shared<const Bitmap>(flipBitmap(*drawn, sprite.flip == "horizontal", sprite.flip == "vertical"));
+				}
+
+				// 4. Kept to be turned, for an object that faces somewhere; heading 0
+				// is what it starts as, and the square it turns in is its size.
 				if (turnable)
 				{
-					// An object that faces somewhere: the picture is drawn once
-					// and kept, to be turned to whatever heading it faces;
-					// heading 0 is what it starts as, and the square it turns in
-					// is its size.
-					auto kept = std::make_shared<Turnable>();
-					kept->picture = drawn;
-					drawn = std::make_shared<const Bitmap>(kept->at(0.0f));
+					if (kept->lines.empty()) { kept->picture = drawn; }
+					if (!kept->lines.empty() || drawn->width > 0)
+					{
+						drawn = std::make_shared<const Bitmap>(kept->at(0.0f));
+					}
 					*turnable = std::move(kept);
 				}
 			}
 			catch (const std::exception& error)
 			{
-				// std::invalid_argument is a mistake in the numbers or rows,
-				// std::runtime_error an svg file that cannot be read; either
-				// way it is the game file that is at fault, so say where.
+				// std::invalid_argument is a mistake in the numbers, rows or
+				// lines, std::runtime_error an svg file that cannot be read;
+				// either way it is the game file that is at fault, so say where.
 				throw std::runtime_error(where + ": " + error.what());
 			}
 

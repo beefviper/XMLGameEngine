@@ -40,3 +40,7 @@ A sheet of sprites drawn in a vector editor (the Space Invaders sheet: six frame
 - **Rasterize at the size the window is drawn at** (resolution independent sprites). The engine's units are pixels and `<scale>` already says what a unit is; redrawing on a resize is a bigger change and not needed.
 - **A palette or recolor** for sprites that differ only by color. The sheet already has them in different colors.
 - **Caching the loaded drawing by file name.** Cheap to add if loading the same sheet for every sprite ever shows up as slow.
+
+## Later: flipping, and one path for every drawn picture
+
+On 2026-10-03 `<flip>` (horizontal or vertical) was added to `<svg>` and `<bitmap>` sprites, applied to the pixels right after the picture is drawn and before it is kept for turning, so a flipped picture keeps its exact size and a pixel collision tests the flipped pixels. Turning a picture half a round with a `<heading>` would have done the same for a vertical flip, but every heading's picture is one square big enough for any angle, which would have given Space Invaders 2's thin falling bolt (the sheet's enemy bolt, drawn flying up, now `<flip>vertical</flip>`) a box about 38 pixels square. The code that draws lines, bitmaps and SVGs was made one path (`game_expr::buildSpriteParams`): read, draw, flip, keep for turning. Lines still turn by drawing the turned lines again, not by turning their pixels, which keeps them sharp. Tests: `tests/test_pictures.cpp`.

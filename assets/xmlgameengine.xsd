@@ -195,6 +195,7 @@
             <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
             <xs:element name="scale" type="valueType" minOccurs="0" />
             <xs:element name="color" type="xs:string" minOccurs="0" />
+            <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -218,6 +219,7 @@
             <xs:element name="height" type="valueType" minOccurs="0" />
             <xs:element name="scale" type="valueType" minOccurs="0" />
             <xs:element name="hide" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
         </xs:complexType>
       </xs:element>

@@ -192,8 +192,8 @@ A `<sprite>` holds one shape. Colors are named (`color.red`, below); a `<color>`
 | `<text>` | `<content>` (a fixed label) **or** `<number>` (a value), then `<size>`, `<color>` | Text. `<content>PONG</content>` is written as is. `<number>paddle1.score</number>` shows a number: when the value is exactly one `owner.variable` it is live and redraws when that variable changes; any other value (`paddle1.score + 1`, a `<random>`) is worked out once |
 | `<image>` | `<path>`, then `<flip>` (`horizontal` or `vertical`, optional) | An image file |
 | `<line>` (one or more) | `<from>` and `<to>` (each an `<x>` and a `<y>`), then `<color>` and `<thickness>` (both optional) | Straight lines, all in one sprite. See [Lines](#lines) |
-| `<bitmap>` | one or more `<row>`s of `.` and `*`, then `<scale>` and `<color>` (both optional) | A picture written as rows of text. See [Bitmaps](#bitmaps) |
-| `<svg>` | `<path>`, then `<x>`, `<y>`, `<width>`, `<height>` (all four or none), `<scale>` and any number of `<hide>` (all optional) | A drawing, or a part of one, from an SVG file. See [SVG pictures](#svg-pictures) |
+| `<bitmap>` | one or more `<row>`s of `.` and `*`, then `<scale>`, `<color>` and `<flip>` (all optional) | A picture written as rows of text. See [Bitmaps](#bitmaps) |
+| `<svg>` | `<path>`, then `<x>`, `<y>`, `<width>`, `<height>` (all four or none), `<scale>`, any number of `<hide>`, and `<flip>` (all optional) | A drawing, or a part of one, from an SVG file. See [SVG pictures](#svg-pictures) |
 
 ### Lines
 
@@ -225,6 +225,17 @@ A `<grid>` repeats a shape as a grid of separate objects (Breakout bricks, Space
   </grid>
 </sprite>
 ```
+
+### Pictures the engine draws
+
+A sprite of `<line>`s, a `<bitmap>` and an `<svg>` are three ways of describing a picture, and all three go the same way, once, when the game loads (`game_expr::buildSpriteParams`):
+
+1. **Read** what the file describes: line ends and thicknesses, rows of characters, or a part of a drawing.
+2. **Draw** it into the engine's own `Bitmap`, the pixels every window backend uploads and shows and a `pixel` collision tests. No backend draws one itself, so they all show the same picture.
+3. **Flip** it, if a `<bitmap>` or an `<svg>` has `<flip>horizontal</flip>` or `<flip>vertical</flip>`: the pixels are mirrored and the size stays the same.
+4. **Turn** it, for an object with a `<heading>`: the picture is kept, and what is shown is the kept picture turned to the heading, a whole degree at a time, made again only when the heading moves by a degree. A drawing of lines is kept as lines and drawn again at each heading, which keeps its edges sharp; a `<bitmap>` or `<svg>` has its finished pixels turned.
+
+An `<image>` is not drawn by the engine (each backend loads the file), and its `<flip>` is done by the backend.
 
 ### Bitmaps
 
@@ -495,7 +506,7 @@ The library is static by default: each program has the engine's code copied into
 | `game.cpp` | Objects, state stack, per-frame update, collision pairs, conditions, resets |
 | `collision_detector.cpp` | Geometry only: box, circle and swept tests, and the pixel pass for type `pixel` |
 | `builtin_font.cpp` | The 8x8 font stored in the program (`rasterizeText`), which draws text into a bitmap when a backend cannot load its font file |
-| `bitmap.cpp` | Draws a sprite's `<line>`s (`rasterizeLines`) or `<bitmap>` rows (`rasterizeRows`) into an RGBA bitmap: the pixels both the window backends and pixel collisions use |
+| `bitmap.cpp` | Draws a sprite's `<line>`s (`rasterizeLines`) or `<bitmap>` rows (`rasterizeRows`) into an RGBA bitmap, the pixels both the window backends and pixel collisions use, and flips (`flipBitmap`) and turns (`turnBitmap`, `rasterizeTurned`) them |
 | `svg.cpp` | Draws a part of an SVG file (`rasterizeSvg`) into an RGBA bitmap, with lunasvg; the only file that includes it |
 | `command_executor.cpp` | What each command does |
 | `sound.cpp` | Pitch names, wave names, and `synthesize()`: a sound's notes made into 16-bit samples, the same for every audio backend |
@@ -503,7 +514,7 @@ The library is static by default: each program has the engine's code copied into
 | `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop), key handling, and playing the sounds each frame asks for |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about grids and not about that game), the built-in font, the command line and the data folder search, sound (`test_sound`: pitch names, the synthesizer, `<sounds>` and its rejections, Pong asking for its sounds, `Engine` and a recording `Audio`), timers, facing, jumps, `<reverse />`, looks, `<reveal>`, conditions that count and key sets (`test_gameplay_verbs`), `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame , Berserk and Demon Attack (`test_ai_games`: each played from the title to the end screen, with enemies firing back and Berserk's man shooting the way he faces), and Frostbite (`test_frostbite`: jumps, rows turning blue, the igloo, the cold, drowning, the geese and the fish) |
+| `tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about grids and not about that game), the built-in font, the command line and the data folder search, sound (`test_sound`: pitch names, the synthesizer, `<sounds>` and its rejections, Pong asking for its sounds, `Engine` and a recording `Audio`), the one path of drawn pictures and `<flip>` (`test_pictures`), timers, facing, jumps, `<reverse />`, looks, `<reveal>`, conditions that count and key sets (`test_gameplay_verbs`), `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame , Berserk and Demon Attack (`test_ai_games`: each played from the title to the end screen, with enemies firing back and Berserk's man shooting the way he faces), and Frostbite (`test_frostbite`: jumps, rows turning blue, the igloo, the cold, drowning, the geese and the fish) |
 
 ## Known limitations
 

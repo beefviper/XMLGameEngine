@@ -145,6 +145,8 @@
           <height>23</height>
           <scale>boltzoom</scale>
           <hide>backdrop</hide>
+          <!-- drawn flying up the sheet; these fly down -->
+          <flip>vertical</flip>
         </svg>
       </sprite>
       <position><x>0</x><y>0</y></position>

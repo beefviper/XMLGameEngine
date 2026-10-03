@@ -159,6 +159,31 @@ namespace xge
 		}
 	}
 
+	Bitmap flipBitmap(const Bitmap& picture, bool horizontal, bool vertical)
+	{
+		Bitmap flipped;
+		flipped.width = picture.width;
+		flipped.height = picture.height;
+		flipped.rgba.resize(picture.rgba.size());
+
+		for (int y = 0; y < picture.height; ++y)
+		{
+			const int fromY = vertical ? picture.height - 1 - y : y;
+			for (int x = 0; x < picture.width; ++x)
+			{
+				const int fromX = horizontal ? picture.width - 1 - x : x;
+				const std::size_t to = (static_cast<std::size_t>(y) * static_cast<std::size_t>(picture.width) + static_cast<std::size_t>(x)) * 4;
+				const std::size_t from = (static_cast<std::size_t>(fromY) * static_cast<std::size_t>(picture.width) + static_cast<std::size_t>(fromX)) * 4;
+				for (std::size_t channel = 0; channel < 4; ++channel)
+				{
+					flipped.rgba[to + channel] = picture.rgba[from + channel];
+				}
+			}
+		}
+
+		return flipped;
+	}
+
 	Bitmap turnBitmap(const Bitmap& picture, float degrees)
 	{
 		if (picture.width < 1 || picture.height < 1) { return Bitmap{}; }
