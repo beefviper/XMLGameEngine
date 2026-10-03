@@ -25,6 +25,7 @@
 #include <vector>
 
 using namespace xge;
+using Catch::Approx;
 
 namespace
 {
@@ -258,4 +259,88 @@ TEST_CASE("a demon on the cannon costs a life, and three is game over", "[ai_gam
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(player.variable["lives"] == 3.0f);
+}
+
+// ------------------------------------------------------- firing back, facing
+
+TEST_CASE("Berserk's man shoots the way he last walked", "[ai_games][berserk][facing]")
+{
+	Play play("games/berserk.xml");
+	play.tap(KeyCode::Space);
+	play.freeze("robot");
+	for (auto& object : play.game.getCurrentObjects())
+	{
+		if (object.objClass == "robot") { object.timers.clear(); } // no robot fire in this test
+	}
+
+	Object& player = play.object("player");
+	Object& bullet = play.object("bullet");
+	player.position = { 60.0f, 160.0f };
+
+	play.engine.handleKeyPressed(KeyCode::A);
+	play.frames(3);
+	play.engine.handleKeyReleased(KeyCode::A);
+	CHECK(player.facing == Direction::Left);
+
+	play.tap(KeyCode::Space);
+	REQUIRE(bullet.isVisible);
+	CHECK(bullet.velocity.x < 0);
+	CHECK(bullet.velocity.y == 0);
+	CHECK(bullet.position.x + bullet.size.x <= player.position.x);
+
+	play.frames(80);
+	play.engine.handleKeyPressed(KeyCode::S);
+	play.frames(1);
+	play.engine.handleKeyReleased(KeyCode::S);
+	play.tap(KeyCode::Space);
+	CHECK(bullet.velocity.y > 0);
+}
+
+TEST_CASE("Berserk's robots fire back, and their shots and the electrified walls cost a life", "[ai_games][berserk]")
+{
+	Play play("games/berserk.xml");
+	play.tap(KeyCode::Space);
+	Object& player = play.object("player");
+
+	// Within ten seconds the robots have fired.
+	bool fired = false;
+	for (int frame = 0; frame < 600 && !fired; ++frame)
+	{
+		play.frames(1);
+		fired = play.alive("robotshot") > 0;
+	}
+	CHECK(fired);
+
+	// Walking into the maze's wall.
+	player.position = { 80.0f, 86.0f };
+	play.engine.handleKeyPressed(KeyCode::W);
+	play.frames(10);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(player.variable["lives"] <= 2.0f);
+	CHECK(player.position.y == Approx(190.0f).margin(30.0f)); // sent back to the start
+}
+
+TEST_CASE("Demon Attack's demons fire down at the cannon, and a hit costs a life", "[ai_games][demonattack]")
+{
+	Play play("games/demonattack.xml");
+	play.tap(KeyCode::Space);
+	Object& player = play.object("player");
+
+	// Wait for a shot, then put the cannon under it.
+	Object* shot = nullptr;
+	for (int frame = 0; frame < 600 && !shot; ++frame)
+	{
+		play.frames(1);
+		for (auto& object : play.game.getCurrentObjects())
+		{
+			if (object.objClass == "demonshot" && object.isVisible) { shot = &object; break; }
+		}
+	}
+	REQUIRE(shot);
+	CHECK(shot->velocity.y > 0);
+
+	const float lives = player.variable["lives"];
+	player.position.x = shot->position.x - 6.0f;
+	play.frames(120);
+	CHECK(player.variable["lives"] < lives);
 }

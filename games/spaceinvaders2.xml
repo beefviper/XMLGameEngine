@@ -49,6 +49,23 @@
     <variable name="animation.seconds">0.5</variable>
     <variable name="step">2</variable>
   </variables>
+  <sounds>
+    <!-- the cannon firing -->
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C6" to="C5">0.08</note>
+    </sound>
+    <!-- an alien hit -->
+    <sound name="alienhit" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="6000" to="1500">0.15</note>
+    </sound>
+    <!-- the cannon hit by a bolt -->
+    <sound name="playerhit" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="2000" to="100">0.7</note>
+    </sound>
+  </sounds>
   <objects>
     <object name="bullet" class="projectile">
       <sprite>
@@ -93,6 +110,10 @@
         <collision edge="horizontal">
           <stick />
         </collision>
+        <collision class="bomb">
+          <dec variable="player.lives" />
+          <play sound="playerhit" />
+        </collision>
       </collisions>
       <actions>
         <action name="left">
@@ -103,12 +124,49 @@
         </action>
         <action name="gun">
           <fire object="bullet" />
+          <play sound="shoot" />
         </action>
       </actions>
+      <variables>
+        <variable name="lives">3</variable>
+      </variables>
     </object>
+    <!--
+      The aliens' plasma bolts (the sheet's enemy bolt, (0,1)): a pool of
+      three. Every alien faces down and drops one after a random wait.
+    -->
+    <group name="bombs" class="bomb">
+      <sprite>
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>11</x>
+          <y>37</y>
+          <width>10</width>
+          <height>23</height>
+          <scale>boltzoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>5</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all">
+          <die />
+        </collision>
+        <collision object="player">
+          <die />
+        </collision>
+      </collisions>
+      <member />
+      <member />
+      <member />
+    </group>
     <group name="aliens" class="aliens">
       <position><x>margin</x></position>
       <velocity><x>2</x><y>0</y></velocity>
+      <facing>down</facing>
       <collisions>
         <enabled>true</enabled>
         <lockstep>true</lockstep>
@@ -116,10 +174,17 @@
           <bounce />
           <move direction="down">10</move>
         </collision>
-        <collision>
+        <collision object="bullet">
+          <play sound="alienhit" />
           <die />
         </collision>
       </collisions>
+      <timers>
+        <timer>
+          <every><random min="2" max="25" /></every>
+          <fire object="bombs" />
+        </timer>
+      </timers>
     <member name="squids">
       <sprite name="a">
         <grid>
@@ -362,6 +427,34 @@
         <enabled>false</enabled>
       </collisions>
     </object>
+    <object name="lives">
+      <sprite>
+        <text>
+          <number>player.lives</number>
+          <size>40</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position><x>20</x><y>window.bottom - 50</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="youlose">
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>128</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - youlose.width / 2</x><y>window.height.center - 150</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
   </objects>
   <states>
     <state name="mainmenu">
@@ -392,8 +485,10 @@
     <state name="playing">
       <shows>
         <show object="bullet" />
+        <show object="bombs" />
         <show object="player" />
         <show object="aliens" />
+        <show object="lives" />
       </shows>
       <inputs>
         <input button="p">
@@ -423,6 +518,10 @@
           <remaining>0</remaining>
           <push state="gameover" />
         </condition>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="lost" />
+        </condition>
       </conditions>
     </state>
     <state name="paused">
@@ -436,6 +535,17 @@
         </input>
         <input button="p">
           <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="lost">
+      <shows>
+        <show object="youlose" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
         </input>
       </inputs>
     </state>

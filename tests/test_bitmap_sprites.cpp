@@ -1113,3 +1113,56 @@ TEST_CASE("an attribute the schema does not declare is turned away by Xerces, wh
 	CHECK(verdict.weakAccepts);
 	CHECK_FALSE(verdict.strongAccepts);
 }
+
+TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the cannon end the game", "[spaceinvaders][facing]")
+{
+	Game game{ "games/spaceinvaders.xml" };
+	for (auto& object : game.getCurrentObjects())
+	{
+		object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+	}
+	game.setCurrentState(0);
+	game.pushState("playing");
+
+	const auto falling = [&]
+	{
+		int n = 0;
+		for (const auto& object : game.getCurrentObjects()) { if (object.objClass == "bomb" && object.isVisible) { ++n; } }
+		return n;
+	};
+
+	int most = 0;
+	for (int frame = 0; frame < 600; ++frame)
+	{
+		game.updateObjects();
+		most = std::max(most, falling());
+	}
+	CHECK(most >= 1);
+	CHECK(most <= 3);
+
+	// Every bomb falls straight down from below an alien, and none kills one.
+	for (const auto& object : game.getCurrentObjects())
+	{
+		if (object.objClass == "bomb" && object.isVisible) { CHECK(object.velocity.y > 0); }
+	}
+	int aliens = 0;
+	for (const auto& object : game.getCurrentObjects()) { if (object.objClass == "aliens" && object.isVisible) { ++aliens; } }
+	CHECK(aliens == 55);
+
+	// Bombs put on the cannon (a stray one may find it first) until the game is lost.
+	Object& player = game.getObject("player");
+	for (int frame = 0; frame < 6000 && game.getCurrentState().name == "playing"; ++frame)
+	{
+		game.updateObjects();
+		for (auto& object : game.getCurrentObjects())
+		{
+			if (object.objClass == "bomb" && object.isVisible && object.position.y < player.position.y - 40)
+			{
+				object.position = { player.position.x + player.size.x / 2, player.position.y - object.size.y - 2 };
+				break;
+			}
+		}
+	}
+	CHECK(player.variable.at("lives") <= 0);
+	CHECK(game.getCurrentState().name == "lost");
+}

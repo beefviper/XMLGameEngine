@@ -12,6 +12,17 @@
     <variable name="margin">4</variable>
   </variables>
 
+  <sounds>
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="E6" to="E5">0.06</note>
+    </sound>
+    <sound name="hit" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="3000" to="150">0.5</note>
+    </sound>
+  </sounds>
+
   <objects>
     <object name="player" class="player">
       <sprite name="ship">
@@ -27,7 +38,12 @@
         <enabled>true</enabled>
         <collision class="alien">
           <dec variable="player.lives">1</dec>
+          <play sound="hit" />
           <reset />
+        </collision>
+        <collision class="demonshot">
+          <dec variable="player.lives">1</dec>
+          <play sound="hit" />
         </collision>
         <collision edge="left"><wrap/></collision>
         <collision edge="right"><wrap/></collision>
@@ -41,6 +57,7 @@
         </action>
         <action name="gun">
           <fire object="bullet" />
+          <play sound="shoot" />
         </action>
       </actions>
       <variables>
@@ -67,6 +84,29 @@
       </collisions>
     </object>
 
+    <!-- the demons' shots: a pool of four -->
+    <group name="demonshots" class="demonshot">
+      <sprite name="shot">
+        <rectangle>
+          <width>2</width>
+          <height>6</height>
+          <color>color.red</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>2.5</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all"><die/></collision>
+        <collision object="player"><die/></collision>
+      </collisions>
+      <member />
+      <member />
+      <member />
+      <member />
+    </group>
+
     <group name="aliens" class="alien">
       <sprite name="demon">
         <rectangle>
@@ -76,6 +116,8 @@
         </rectangle>
       </sprite>
       <velocity><x>1</x><y>0</y></velocity>
+      <!-- the demons face down and fire at the cannon after a random wait -->
+      <facing>down</facing>
       <collisions>
         <enabled>true</enabled>
         <collision object="bullet">
@@ -85,6 +127,12 @@
         <collision edge="left"><bounce/></collision>
         <collision edge="right"><bounce/></collision>
       </collisions>
+      <timers>
+        <timer>
+          <every><random min="1" max="4" /></every>
+          <fire object="demonshots" />
+        </timer>
+      </timers>
 
       <member name="a1"><position><x>20</x><y>30</y></position></member>
       <member name="a2"><position><x>50</x><y>30</y></position></member>
@@ -140,12 +188,11 @@
         <show object="lives"/>
         <show object="aliens"/>
         <show object="bullet"/>
+        <show object="demonshots"/>
       </shows>
       <inputs>
-        <input button="left"><trigger object="player" action="left" /></input>
-        <input button="a"><trigger object="player" action="left" /></input>
-        <input button="right"><trigger object="player" action="right" /></input>
-        <input button="d"><trigger object="player" action="right" /></input>
+        <input button="left a"><trigger object="player" action="left" /></input>
+        <input button="right d"><trigger object="player" action="right" /></input>
         <input button="space"><trigger object="player" action="gun" /></input>
       </inputs>
       <conditions>
