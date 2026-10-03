@@ -114,6 +114,14 @@ if (NOT FORCE_LOCAL_RAPIDXML)
 	find_path(RAPIDXML_INCLUDE_DIRS "rapidxml.hpp")
 endif()
 
+# lunasvg draws the SVG files an <svg> sprite names (lib/source/svg.cpp). It is
+# the engine's own tool, not a Window backend: only svg.cpp includes it, and
+# what it draws goes to every backend as an ordinary picture. The plutovg
+# library it draws with comes along inside it. With vcpkg: vcpkg install lunasvg
+if (NOT FORCE_LOCAL_LUNASVG)
+	find_package(lunasvg QUIET)
+endif()
+
 # Qt 6 is only for XGEGUI (gui/); nothing in the engine library uses it. Unlike
 # everything above it is found, never fetched: building Qt from source is not
 # something a configure step should do. Without it XGEGUI is left out and the
@@ -254,6 +262,19 @@ declare_fetched_dependency(
 	TAG 2ae4b2888165a393dfb6382168825fddf00c27b9
 	SET_FOUND_VAR RAPIDXML_PACKAGE_FOUND
 	FETCH_VERB "download it locally")
+
+declare_fetched_dependency(
+	FOUND_VAR lunasvg_FOUND
+	DISPLAY_NAME "lunasvg"
+	INFO_VAR lunasvg_DIR
+	NAME lunasvg
+	REPO https://github.com/sammycage/lunasvg.git
+	TAG v3.5.0)
+
+if (NOT lunasvg_FOUND)
+	set(LUNASVG_BUILD_EXAMPLES OFF CACHE BOOL "Do not build lunasvg's examples" FORCE)
+	set(PLUTOVG_BUILD_EXAMPLES OFF CACHE BOOL "Do not build plutovg's examples" FORCE)
+endif()
 
 if (FETCHED_LIBRARIES)
 	FetchContent_MakeAvailable(${FETCHED_LIBRARIES})

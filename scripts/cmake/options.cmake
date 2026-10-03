@@ -21,6 +21,7 @@ force_local_option(SDL2_TTF "SDL2_ttf")
 force_local_option(TINYXML2 "TinyXML2")
 force_local_option(PUGIXML "PugiXML")
 force_local_option(RAPIDXML "RapidXML")
+force_local_option(LUNASVG "lunasvg")
 force_local_option(CATCH2 "Catch2")
 
 # Declared here, before scripts/cmake/tests.cmake's own include(CTest), so

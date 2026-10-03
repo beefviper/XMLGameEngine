@@ -1,0 +1,534 @@
+<!-- spaceinvaders2.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 2, 2026 -->
+
+<!--
+  Space Invaders, drawn from an SVG sprite sheet instead of rows of text.
+
+  assets/Space Invaders Color Sprites.svg is a sheet of 32 by 32 unit cells, six
+  across and four down, with the frames of each picture running left to right
+  (column, row):
+
+    row 0   ship (0,0) idle, (1,0) banking left, (2,0) banking right, (3,0) hit
+            flash; player bolts (4,0) and (5,0) charged
+    row 1   enemy bolt (0,1), enemy bomb (1,1); explosion frames (2,1) to (5,1)
+    row 2   alien A, frames (0,2) (1,2) (2,2); alien B, frames (3,2) (4,2) (5,2)
+    row 3   alien C, frames (0,3) (1,3) (2,3); a flying saucer, frames (3,3) to (5,3)
+
+  An <svg> sprite takes a part of a drawing (<x>, <y>, <width>, <height>, in the
+  drawing's own units) and draws it `scale` real pixels to a unit, once, when the
+  game loads; it is then an ordinary picture, so every window backend shows it
+  alike. The parts here are cut close round the drawn pixels, so the box that is
+  tested for a hit is about the size of the alien, and the same size for all the
+  frames of one alien, which an animation needs. The sheet carries a backdrop of
+  its own, which each sprite leaves out with <hide>.
+
+  The three kinds of alien (A, B, C) are the members of one group, so they march,
+  bounce and step down together as a single block; each member is a <grid> of
+  its own three frames, which an <animation> shows one after the other, each for
+  animation.seconds seconds. The ship is the idle picture, and the bullet is the
+  player bolt. The rest of the sheet (banking, the hit flash, the charged bolt,
+  the enemy bolts and the explosions, the saucer) is not used yet: a picture that
+  changes with a key, a hit or a death is not something the language has.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+  <window name="Space Invaders 2">
+    <width>1024</width>
+    <height>768</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="margin">80</variable>
+    <variable name="zoom">2</variable>
+    <variable name="boltzoom">1.5</variable>
+    <variable name="gap">15</variable>
+    <variable name="animation.seconds">0.5</variable>
+    <variable name="step">2</variable>
+  </variables>
+  <objects>
+    <object name="bullet" class="projectile">
+      <sprite>
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>140.5</x>
+          <y>2.5</y>
+          <width>7</width>
+          <height>27</height>
+          <scale>boltzoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>-12</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all">
+          <die />
+        </collision>
+        <collision class="aliens">
+          <die />
+        </collision>
+      </collisions>
+    </object>
+    <object name="player">
+      <sprite>
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>4</x>
+          <y>3.5</y>
+          <width>24</width>
+          <height>26</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <position>
+        <x>window.width.center - player.width / 2</x>
+        <y>window.bottom - player.height * 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <stick />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="left">
+          <move direction="left">step</move>
+        </action>
+        <action name="right">
+          <move direction="right">step</move>
+        </action>
+        <action name="gun">
+          <fire object="bullet" />
+        </action>
+      </actions>
+    </object>
+    <group name="aliens" class="aliens">
+      <position>
+        <x>margin</x>
+      </position>
+      <velocity>
+        <x>2</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <lockstep>true</lockstep>
+        <collision edge="horizontal">
+          <bounce />
+          <move direction="down">10</move>
+        </collision>
+        <collision>
+          <die />
+        </collision>
+      </collisions>
+    <member name="squids">
+      <sprite name="a">
+        <grid>
+          <columns>11</columns>
+          <rows>1</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>1.5</x>
+            <y>64.5</y>
+            <width>28</width>
+            <height>25</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <sprite name="b">
+        <grid>
+          <columns>11</columns>
+          <rows>1</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>33.5</x>
+            <y>64.5</y>
+            <width>28</width>
+            <height>25</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <sprite name="c">
+        <grid>
+          <columns>11</columns>
+          <rows>1</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>65.5</x>
+            <y>64.5</y>
+            <width>28</width>
+            <height>25</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <animation>
+        <interval>animation.seconds</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+      </animation>
+      <position>
+        <y>margin / 2</y>
+      </position>
+    </member>
+    <member name="crabs">
+      <sprite name="a">
+        <grid>
+          <columns>11</columns>
+          <rows>2</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>98</x>
+            <y>70.5</y>
+            <width>28</width>
+            <height>23</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <sprite name="b">
+        <grid>
+          <columns>11</columns>
+          <rows>2</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>130</x>
+            <y>70.5</y>
+            <width>28</width>
+            <height>23</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <sprite name="c">
+        <grid>
+          <columns>11</columns>
+          <rows>2</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>162</x>
+            <y>70.5</y>
+            <width>28</width>
+            <height>23</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <animation>
+        <interval>animation.seconds</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+      </animation>
+      <position>
+        <y>margin / 2 + squids.height + gap</y>
+      </position>
+    </member>
+    <member name="octopuses">
+      <sprite name="a">
+        <grid>
+          <columns>11</columns>
+          <rows>2</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>1.5</x>
+            <y>99.5</y>
+            <width>28</width>
+            <height>24.5</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <sprite name="b">
+        <grid>
+          <columns>11</columns>
+          <rows>2</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>33.5</x>
+            <y>99.5</y>
+            <width>28</width>
+            <height>24.5</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <sprite name="c">
+        <grid>
+          <columns>11</columns>
+          <rows>2</rows>
+          <padding>
+            <x>gap</x>
+            <y>gap</y>
+          </padding>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>65.5</x>
+            <y>99.5</y>
+            <width>28</width>
+            <height>24.5</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </grid>
+      </sprite>
+      <animation>
+        <interval>animation.seconds</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+      </animation>
+      <position>
+        <y>margin / 2 + squids.height + gap + 2 * (crabs.height + gap)</y>
+      </position>
+    </member>
+    </group>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>SPACE INVADERS</content>
+          <size>110</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - title.width / 2</x>
+        <y>window.height.center - title.height / 2 - 100</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="youwin">
+      <sprite>
+        <text>
+          <content>YOU WIN</content>
+          <size>128</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - youwin.width / 2</x>
+        <y>window.height.center - 150</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="continue">
+      <sprite>
+        <text>
+          <content>spacebar to continue</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - continue.width / 2</x>
+        <y>window.height.center + 60</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="settings">
+      <sprite>
+        <text>
+          <content>settings</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - settings.width / 2</x>
+        <y>window.height.center - settings.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>paused</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position>
+        <x>window.width.center - paused.width / 2</x>
+        <y>window.height.center - paused.height / 2</y>
+      </position>
+      <velocity>
+        <x>0</x>
+        <y>0</y>
+      </velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="player" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+        <input button="s">
+          <push state="settings" />
+        </input>
+      </inputs>
+    </state>
+    <state name="settings">
+      <shows>
+        <show object="settings" />
+        <show object="player" />
+      </shows>
+      <inputs>
+        <input button="escape">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <shows>
+        <show object="bullet" />
+        <show object="player" />
+        <show object="aliens" />
+      </shows>
+      <inputs>
+        <input button="p">
+          <push state="paused" />
+        </input>
+        <input button="a">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="player" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="player" action="right" />
+        </input>
+        <input button="space">
+          <trigger object="player" action="gun" />
+        </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition class="aliens">
+          <remaining>0</remaining>
+          <push state="gameover" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+        <show object="player" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="youwin" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>

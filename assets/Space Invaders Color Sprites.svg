@@ -1,0 +1,330 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="128" viewBox="0 0 192 128">
+
+  <!-- ============================================================
+       OPTIONAL BACKDROP — delete this <g> for a transparent PNG
+       ============================================================ -->
+  <g id="backdrop">
+    <rect width="192" height="128" fill="#070b16"/>
+    <g stroke="#1b2740" stroke-width="0.5">
+      <path d="M32 0V128 M64 0V128 M96 0V128 M128 0V128 M160 0V128
+               M0 32H192 M0 64H192 M0 96H192"/>
+    </g>
+    <rect x="0.25" y="0.25" width="191.5" height="127.5" fill="none" stroke="#2b3d63" stroke-width="0.5"/>
+  </g>
+
+  <!-- ============================================================
+       REUSABLE SHIP
+       ============================================================ -->
+  <defs>
+    <g id="ship">
+      <polygon points="16,5 21,14 21,22 26,25 26,29 6,29 6,25 11,22 11,14"
+               fill="#0a2a3d" stroke="#25e0ff" stroke-width="1.4" stroke-linejoin="round"/>
+      <polygon points="11,22 6.5,25 6.5,28.5 11,28.5" fill="#0b7f9e"/>
+      <polygon points="21,22 25.5,25 25.5,28.5 21,28.5" fill="#0b7f9e"/>
+      <polygon points="16,9 19.5,15 16,19 12.5,15" fill="#c9fdff"/>
+      <circle cx="16" cy="21.5" r="2" fill="#5ffbf1"/>
+      <rect x="12" y="26.5" width="8" height="1.5" rx="0.75" fill="#8ff9ff" opacity="0.9"/>
+    </g>
+  </defs>
+
+  <!-- ============================================================
+       ROW 0 — PLAYER SHIP + PLAYER PROJECTILES
+       ============================================================ -->
+
+  <!-- (0,0) Ship — idle -->
+  <g transform="translate(0,0)"><use href="#ship"/></g>
+
+  <!-- (1,0) Ship — banking left -->
+  <g transform="translate(32,0)"><g transform="rotate(-9 16 18)"><use href="#ship"/></g></g>
+
+  <!-- (2,0) Ship — banking right -->
+  <g transform="translate(64,0)"><g transform="rotate(9 16 18)"><use href="#ship"/></g></g>
+
+  <!-- (3,0) Ship — hit flash -->
+  <g transform="translate(96,0)">
+    <polygon points="16,5 21,14 21,22 26,25 26,29 6,29 6,25 11,22 11,14"
+             fill="#ffffff" stroke="#ff5c5c" stroke-width="1.4" stroke-linejoin="round"/>
+    <polygon points="11,22 6.5,25 6.5,28.5 11,28.5" fill="#ffd0d0"/>
+    <polygon points="21,22 25.5,25 25.5,28.5 21,28.5" fill="#ffd0d0"/>
+    <polygon points="16,9 19.5,15 16,19 12.5,15" fill="#ff9d9d"/>
+    <circle cx="16" cy="21.5" r="2" fill="#ffffff"/>
+  </g>
+
+  <!-- (4,0) Player bolt — pulse -->
+  <g transform="translate(128,0)">
+    <rect x="13" y="26" width="6" height="3" rx="1.5" fill="#25e0ff" opacity="0.55"/>
+    <rect x="14.5" y="4" width="3" height="24" rx="1.5" fill="#5ffbf1"/>
+    <rect x="15.5" y="4" width="1" height="24" fill="#ffffff"/>
+    <ellipse cx="16" cy="7" rx="3" ry="4" fill="#bffcff" opacity="0.9"/>
+  </g>
+
+  <!-- (5,0) Player bolt — charged / heavy -->
+  <g transform="translate(160,0)">
+    <rect x="11" y="24" width="10" height="4" rx="2" fill="#25e0ff" opacity="0.5"/>
+    <rect x="13" y="6" width="6" height="22" rx="3" fill="#25e0ff" opacity="0.65"/>
+    <rect x="14.5" y="6" width="3" height="22" rx="1.5" fill="#ffffff"/>
+    <rect x="12" y="1" width="8" height="8" rx="2" fill="#8ff9ff" opacity="0.45"/>
+    <polygon points="16,2 20,7 16,11 12,7" fill="#bffcff"/>
+  </g>
+
+  <!-- ============================================================
+       ROW 1 — ENEMY PROJECTILES + EXPLOSION SEQUENCE
+       ============================================================ -->
+
+  <!-- (0,1) Enemy plasma bolt -->
+  <g transform="translate(0,32)">
+    <rect x="15" y="19" width="2" height="9" rx="1" fill="#ff3b3b" opacity="0.45"/>
+    <polygon points="16,5 21,14 16,20 11,14" fill="#ff3b3b"/>
+    <polygon points="16,8.5 18.5,14 16,17.5 13.5,14" fill="#ffe3e3"/>
+    <circle cx="16" cy="13" r="1.2" fill="#ffffff"/>
+  </g>
+
+  <!-- (1,1) Enemy bomb — heavy -->
+  <g transform="translate(32,32)">
+    <rect x="15" y="5" width="2" height="6" fill="#ffb020" opacity="0.65"/>
+    <polygon points="10,15 5,20 10,20" fill="#ffb020"/>
+    <polygon points="22,15 27,20 22,20" fill="#ffb020"/>
+    <ellipse cx="16" cy="16" rx="6" ry="6.5" fill="#ff8a1f"/>
+    <ellipse cx="16" cy="16" rx="3" ry="3.2" fill="#fff2c9"/>
+    <circle cx="16" cy="16" r="1.2" fill="#ffffff"/>
+    <rect x="8" y="13" width="16" height="1.2" rx="0.6" fill="#ffd98a" opacity="0.7"/>
+  </g>
+
+  <!-- (2,1) Explosion — frame 1 (flash) -->
+  <g transform="translate(64,32)">
+    <circle cx="16" cy="16" r="5" fill="#fff3b0"/>
+    <circle cx="16" cy="16" r="2.5" fill="#ffffff"/>
+    <circle cx="11" cy="11" r="1.5" fill="#ffd166"/>
+    <circle cx="21" cy="21" r="1.5" fill="#ffd166"/>
+    <circle cx="21" cy="11" r="1.2" fill="#ffd166"/>
+    <circle cx="11" cy="21" r="1.2" fill="#ffd166"/>
+  </g>
+
+  <!-- (3,1) Explosion — frame 2 (core burst) -->
+  <g transform="translate(96,32)">
+    <circle cx="16" cy="16" r="9" fill="#ffb020" opacity="0.35"/>
+    <circle cx="16" cy="16" r="6.5" fill="#ffb020"/>
+    <circle cx="16" cy="16" r="4" fill="#ffe08a"/>
+    <circle cx="16" cy="16" r="1.8" fill="#ffffff"/>
+    <circle cx="16" cy="6" r="1.4" fill="#ffd166"/>
+    <circle cx="26" cy="16" r="1.4" fill="#ffd166"/>
+    <circle cx="16" cy="26" r="1.4" fill="#ffd166"/>
+    <circle cx="6" cy="16" r="1.4" fill="#ffd166"/>
+  </g>
+
+  <!-- (4,1) Explosion — frame 3 (expanding ring) -->
+  <g transform="translate(128,32)">
+    <circle cx="16" cy="16" r="10" fill="#ff7a1f" opacity="0.18"/>
+    <circle cx="16" cy="16" r="8" fill="none" stroke="#ff7a1f" stroke-width="2"/>
+    <circle cx="16" cy="16" r="4" fill="#ffb020" opacity="0.8"/>
+    <circle cx="16" cy="16" r="1.5" fill="#fff3b0"/>
+    <circle cx="16" cy="4" r="1.5" fill="#ffb020"/>
+    <circle cx="28" cy="16" r="1.5" fill="#ffb020"/>
+    <circle cx="16" cy="28" r="1.5" fill="#ffb020"/>
+    <circle cx="4" cy="16" r="1.5" fill="#ffb020"/>
+    <circle cx="7" cy="7" r="1.2" fill="#ffd166"/>
+    <circle cx="25" cy="25" r="1.2" fill="#ffd166"/>
+    <circle cx="25" cy="7" r="1.2" fill="#ffd166"/>
+    <circle cx="7" cy="25" r="1.2" fill="#ffd166"/>
+  </g>
+
+  <!-- (5,1) Explosion — frame 4 (embers / fade) -->
+  <g transform="translate(160,32)">
+    <circle cx="16" cy="16" r="5" fill="#ff4d2e" opacity="0.3"/>
+    <circle cx="16" cy="16" r="2.5" fill="#ffe08a" opacity="0.6"/>
+    <circle cx="10" cy="9" r="1.6" fill="#ff7a1f"/>
+    <circle cx="23" cy="12" r="1.4" fill="#ffb020"/>
+    <circle cx="8" cy="22" r="1.2" fill="#ff4d2e"/>
+    <circle cx="24" cy="23" r="1.6" fill="#ff7a1f"/>
+    <circle cx="16" cy="27" r="1.2" fill="#ffb020"/>
+    <circle cx="16" cy="5" r="1" fill="#ff4d2e"/>
+    <circle cx="5" cy="15" r="1" fill="#ffb020"/>
+    <circle cx="28" cy="16" r="1.2" fill="#ff7a1f"/>
+  </g>
+
+  <!-- ============================================================
+       ROW 2 — ENEMY A (MAGENTA / SQUID) + ENEMY B (AMBER / CRAB)
+       ============================================================ -->
+
+  <!-- (0,2) Enemy A — frame 1 -->
+  <g transform="translate(0,64)">
+    <circle cx="16" cy="3" r="1.6" fill="#ffd9ef"/>
+    <rect x="15" y="3" width="2" height="3" fill="#ff8ad1"/>
+    <path d="M16 5 L25 12 L25 18 L7 18 L7 12 Z"
+          fill="#4a0b2e" stroke="#ff3fa4" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="8" y="14.5" width="16" height="2" fill="#ff8ad1"/>
+    <rect x="10" y="10" width="4" height="3" rx="1" fill="#ffe9f5"/>
+    <rect x="18" y="10" width="4" height="3" rx="1" fill="#ffe9f5"/>
+    <rect x="8" y="18" width="2" height="5" fill="#ff3fa4"/>
+    <rect x="12" y="18" width="2" height="6" fill="#ff3fa4"/>
+    <rect x="18" y="18" width="2" height="6" fill="#ff3fa4"/>
+    <rect x="22" y="18" width="2" height="5" fill="#ff3fa4"/>
+  </g>
+
+  <!-- (1,2) Enemy A — frame 2 -->
+  <g transform="translate(32,64)">
+    <circle cx="16" cy="3" r="1.6" fill="#ffd9ef"/>
+    <rect x="15" y="3" width="2" height="3" fill="#ff8ad1"/>
+    <path d="M16 5 L25 12 L25 18 L7 18 L7 12 Z"
+          fill="#4a0b2e" stroke="#ff3fa4" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="8" y="14.5" width="16" height="2" fill="#ff8ad1"/>
+    <rect x="10" y="10" width="4" height="3" rx="1" fill="#ffe9f5"/>
+    <rect x="18" y="10" width="4" height="3" rx="1" fill="#ffe9f5"/>
+    <rect x="9" y="18" width="2" height="7" fill="#ff3fa4"/>
+    <rect x="13" y="18" width="2" height="4" fill="#ff3fa4"/>
+    <rect x="17" y="18" width="2" height="4" fill="#ff3fa4"/>
+    <rect x="21" y="18" width="2" height="7" fill="#ff3fa4"/>
+  </g>
+
+  <!-- (2,2) Enemy A — frame 3 -->
+  <g transform="translate(64,64)">
+    <circle cx="16" cy="3" r="1.6" fill="#ffd9ef"/>
+    <rect x="15" y="3" width="2" height="3" fill="#ff8ad1"/>
+    <path d="M16 5 L25 12 L25 18 L7 18 L7 12 Z"
+          fill="#4a0b2e" stroke="#ff3fa4" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="8" y="14.5" width="16" height="2" fill="#ff8ad1"/>
+    <rect x="10" y="10" width="4" height="3" rx="1" fill="#ffe9f5"/>
+    <rect x="18" y="10" width="4" height="3" rx="1" fill="#ffe9f5"/>
+    <rect x="7" y="18" width="2" height="4" fill="#ff3fa4"/>
+    <rect x="12" y="18" width="2" height="7" fill="#ff3fa4"/>
+    <rect x="18" y="18" width="2" height="7" fill="#ff3fa4"/>
+    <rect x="23" y="18" width="2" height="4" fill="#ff3fa4"/>
+  </g>
+
+  <!-- (3,2) Enemy B — frame 1 -->
+  <g transform="translate(96,64)">
+    <rect x="2" y="11" width="4" height="6" rx="1.5" fill="#ffb020"/>
+    <rect x="26" y="11" width="4" height="6" rx="1.5" fill="#ffb020"/>
+    <path d="M16 8 L26 13 L26 19 L22 23 L10 23 L6 19 L6 13 Z"
+          fill="#5a3300" stroke="#ffb020" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="12" y="18" width="8" height="2" fill="#ffd98a"/>
+    <rect x="11" y="13" width="3" height="3" rx="1" fill="#fff6d9"/>
+    <rect x="18" y="13" width="3" height="3" rx="1" fill="#fff6d9"/>
+    <rect x="8" y="23" width="2" height="4" fill="#ffb020"/>
+    <rect x="12" y="23" width="2" height="5" fill="#ffb020"/>
+    <rect x="18" y="23" width="2" height="5" fill="#ffb020"/>
+    <rect x="22" y="23" width="2" height="4" fill="#ffb020"/>
+  </g>
+
+  <!-- (4,2) Enemy B — frame 2 -->
+  <g transform="translate(128,64)">
+    <rect x="2" y="11" width="4" height="6" rx="1.5" fill="#ffb020"/>
+    <rect x="26" y="11" width="4" height="6" rx="1.5" fill="#ffb020"/>
+    <path d="M16 8 L26 13 L26 19 L22 23 L10 23 L6 19 L6 13 Z"
+          fill="#5a3300" stroke="#ffb020" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="12" y="18" width="8" height="2" fill="#ffd98a"/>
+    <rect x="11" y="13" width="3" height="3" rx="1" fill="#fff6d9"/>
+    <rect x="18" y="13" width="3" height="3" rx="1" fill="#fff6d9"/>
+    <rect x="6" y="23" width="2" height="5" fill="#ffb020"/>
+    <rect x="11" y="23" width="2" height="3" fill="#ffb020"/>
+    <rect x="19" y="23" width="2" height="3" fill="#ffb020"/>
+    <rect x="24" y="23" width="2" height="5" fill="#ffb020"/>
+  </g>
+
+  <!-- (5,2) Enemy B — frame 3 -->
+  <g transform="translate(160,64)">
+    <rect x="2" y="11" width="4" height="6" rx="1.5" fill="#ffb020"/>
+    <rect x="26" y="11" width="4" height="6" rx="1.5" fill="#ffb020"/>
+    <path d="M16 8 L26 13 L26 19 L22 23 L10 23 L6 19 L6 13 Z"
+          fill="#5a3300" stroke="#ffb020" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="12" y="18" width="8" height="2" fill="#ffd98a"/>
+    <rect x="11" y="13" width="3" height="3" rx="1" fill="#fff6d9"/>
+    <rect x="18" y="13" width="3" height="3" rx="1" fill="#fff6d9"/>
+    <rect x="9" y="23" width="2" height="6" fill="#ffb020"/>
+    <rect x="13" y="23" width="2" height="4" fill="#ffb020"/>
+    <rect x="17" y="23" width="2" height="4" fill="#ffb020"/>
+    <rect x="21" y="23" width="2" height="6" fill="#ffb020"/>
+  </g>
+
+  <!-- ============================================================
+       ROW 3 — ENEMY C (LIME / OCTO) + ENEMY D (VIOLET / UFO)
+       ============================================================ -->
+
+  <!-- (0,3) Enemy C — frame 1 -->
+  <g transform="translate(0,96)">
+    <path d="M16 5 C24 5 27 11 27 16 L27 20 L5 20 L5 16 C5 11 8 5 16 5 Z"
+          fill="#123d0a" stroke="#7dff4d" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="7" y="15" width="18" height="1.6" fill="#c8ff9e" opacity="0.8"/>
+    <circle cx="12" cy="11" r="2.4" fill="#eaffdc"/>
+    <circle cx="20" cy="11" r="2.4" fill="#eaffdc"/>
+    <circle cx="12" cy="11" r="1" fill="#123d0a"/>
+    <circle cx="20" cy="11" r="1" fill="#123d0a"/>
+    <rect x="7" y="20" width="2" height="5" fill="#7dff4d"/>
+    <rect x="12" y="20" width="2" height="6" fill="#7dff4d"/>
+    <rect x="18" y="20" width="2" height="6" fill="#7dff4d"/>
+    <rect x="23" y="20" width="2" height="5" fill="#7dff4d"/>
+  </g>
+
+  <!-- (1,3) Enemy C — frame 2 -->
+  <g transform="translate(32,96)">
+    <path d="M16 5 C24 5 27 11 27 16 L27 20 L5 20 L5 16 C5 11 8 5 16 5 Z"
+          fill="#123d0a" stroke="#7dff4d" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="7" y="15" width="18" height="1.6" fill="#c8ff9e" opacity="0.8"/>
+    <circle cx="12" cy="11" r="2.4" fill="#eaffdc"/>
+    <circle cx="20" cy="11" r="2.4" fill="#eaffdc"/>
+    <circle cx="12" cy="11" r="1" fill="#123d0a"/>
+    <circle cx="20" cy="11" r="1" fill="#123d0a"/>
+    <rect x="5" y="20" width="2" height="6" fill="#7dff4d"/>
+    <rect x="11" y="20" width="2" height="4" fill="#7dff4d"/>
+    <rect x="19" y="20" width="2" height="4" fill="#7dff4d"/>
+    <rect x="25" y="20" width="2" height="6" fill="#7dff4d"/>
+  </g>
+
+  <!-- (2,3) Enemy C — frame 3 -->
+  <g transform="translate(64,96)">
+    <path d="M16 5 C24 5 27 11 27 16 L27 20 L5 20 L5 16 C5 11 8 5 16 5 Z"
+          fill="#123d0a" stroke="#7dff4d" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="7" y="15" width="18" height="1.6" fill="#c8ff9e" opacity="0.8"/>
+    <circle cx="12" cy="11" r="2.4" fill="#eaffdc"/>
+    <circle cx="20" cy="11" r="2.4" fill="#eaffdc"/>
+    <circle cx="12" cy="11" r="1" fill="#123d0a"/>
+    <circle cx="20" cy="11" r="1" fill="#123d0a"/>
+    <rect x="8" y="20" width="2" height="4" fill="#7dff4d"/>
+    <rect x="13" y="20" width="2" height="7" fill="#7dff4d"/>
+    <rect x="17" y="20" width="2" height="7" fill="#7dff4d"/>
+    <rect x="22" y="20" width="2" height="4" fill="#7dff4d"/>
+  </g>
+
+  <!-- (3,3) Enemy D — UFO, frame 1 -->
+  <g transform="translate(96,96)">
+    <path d="M10 11 C10 5 22 5 22 11 Z"
+          fill="#3d1a70" stroke="#a86bff" stroke-width="1.2"/>
+    <ellipse cx="16" cy="8.5" rx="3" ry="2.5" fill="#d9bcff"/>
+    <ellipse cx="16" cy="15" rx="14" ry="5"
+             fill="#2a1050" stroke="#a86bff" stroke-width="1.4"/>
+    <ellipse cx="16" cy="13.4" rx="8" ry="1.8" fill="#a86bff" opacity="0.45"/>
+    <circle cx="6" cy="15.5" r="1.4" fill="#ffffff"/>
+    <circle cx="16" cy="15.5" r="1.4" fill="#d9bcff"/>
+    <circle cx="26" cy="15.5" r="1.4" fill="#ffffff"/>
+    <rect x="10" y="19" width="12" height="1.4" rx="0.7" fill="#a86bff" opacity="0.7"/>
+  </g>
+
+  <!-- (4,3) Enemy D — UFO, frame 2 -->
+  <g transform="translate(128,96)">
+    <path d="M10 11 C10 5 22 5 22 11 Z"
+          fill="#3d1a70" stroke="#a86bff" stroke-width="1.2"/>
+    <ellipse cx="16" cy="8.5" rx="3" ry="2.5" fill="#d9bcff"/>
+    <ellipse cx="16" cy="15" rx="14" ry="5"
+             fill="#2a1050" stroke="#a86bff" stroke-width="1.4"/>
+    <ellipse cx="16" cy="13.4" rx="8" ry="1.8" fill="#a86bff" opacity="0.45"/>
+    <circle cx="10" cy="15.5" r="1.8" fill="#d9bcff"/>
+    <circle cx="16" cy="15.5" r="1.4" fill="#ffffff"/>
+    <circle cx="22" cy="15.5" r="1.8" fill="#d9bcff"/>
+    <rect x="10" y="19" width="12" height="1.4" rx="0.7" fill="#a86bff" opacity="0.7"/>
+  </g>
+
+  <!-- (5,3) Enemy D — UFO, frame 3 -->
+  <g transform="translate(160,96)">
+    <path d="M10 11 C10 5 22 5 22 11 Z"
+          fill="#3d1a70" stroke="#a86bff" stroke-width="1.2"/>
+    <ellipse cx="16" cy="8.5" rx="3" ry="2.5" fill="#d9bcff"/>
+    <ellipse cx="16" cy="15" rx="14" ry="5"
+             fill="#2a1050" stroke="#a86bff" stroke-width="1.4"/>
+    <ellipse cx="16" cy="13.4" rx="8" ry="1.8" fill="#a86bff" opacity="0.45"/>
+    <circle cx="4" cy="15.5" r="1.4" fill="#ffffff"/>
+    <circle cx="16" cy="15.5" r="1.8" fill="#d9bcff"/>
+    <circle cx="28" cy="15.5" r="1.4" fill="#ffffff"/>
+    <rect x="10" y="19" width="12" height="1.4" rx="0.7" fill="#a86bff" opacity="0.7"/>
+  </g>
+
+</svg>

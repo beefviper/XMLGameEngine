@@ -134,10 +134,10 @@ namespace xge
 
 		bool isShapeTag(const std::string& name)
 		{
-			return name == "circle" || name == "rectangle" || name == "text" || name == "image" || name == "bitmap";
+			return name == "circle" || name == "rectangle" || name == "text" || name == "image" || name == "bitmap" || name == "svg";
 		}
 
-		// One <circle>, <rectangle>, <text>, <image> or <bitmap>, written into `sprite`.
+		// One <circle>, <rectangle>, <text>, <image>, <bitmap> or <svg>, written into `sprite`.
 		void readShape(const XmlNode& shape, RawSprite& sprite, const std::string& where)
 		{
 			const std::string kind = shape.getName();
@@ -171,6 +171,39 @@ namespace xge
 					sprite.scale = readValue(*scale, here);
 				}
 			}
+			else if (kind == "svg")
+			{
+				// A drawing in an SVG file, made into a picture when the game
+				// loads (svg.cpp): the file, optionally the part of it to take
+				// and how many pixels a unit of it is, and elements to leave out.
+				sprite.path = readText(*requireChild(shape, "path", here));
+
+				const auto x = findChild(&shape, "x");
+				const auto y = findChild(&shape, "y");
+				const auto width = findChild(&shape, "width");
+				const auto height = findChild(&shape, "height");
+				if (x || y || width || height)
+				{
+					if (!(x && y && width && height)) { fail(here, "takes a part of the drawing with all four of <x>, <y>, <width> and <height>, or none of them"); }
+
+					sprite.hasSvgRegion = true;
+					sprite.svgX = readValue(*x, here);
+					sprite.svgY = readValue(*y, here);
+					sprite.svgWidth = readValue(*width, here);
+					sprite.svgHeight = readValue(*height, here);
+				}
+
+				if (auto scale = findChild(&shape, "scale"))
+				{
+					sprite.hasScale = true;
+					sprite.scale = readValue(*scale, here);
+				}
+
+				for (std::unique_ptr<XmlNode> hide = shape.getFirstChild(); hide != nullptr; hide = hide->getNextSibling())
+				{
+					if (hide->getName() == "hide") { sprite.svgHide.push_back(readText(*hide)); }
+				}
+			}
 			else if (kind == "text")
 			{
 				if (auto content = findChild(&shape, "content"))
@@ -195,7 +228,7 @@ namespace xge
 				if (auto flip = findChild(&shape, "flip")) { sprite.flip = readText(*flip); }
 			}
 
-			if (kind != "image")
+			if (kind != "image" && kind != "svg")
 			{
 				if (auto color = findChild(&shape, "color")) { sprite.color = readText(*color); }
 			}
@@ -260,7 +293,7 @@ namespace xge
 					if (shape->getName() == "line") { fail(gridHere, "cannot repeat a <line>; draw the lines in one sprite instead"); }
 					shape = shape->getNextSibling();
 				}
-				if (!shape) { fail(gridHere, "needs a shape to repeat (<circle>, <rectangle>, <text>, <image> or <bitmap>)"); }
+				if (!shape) { fail(gridHere, "needs a shape to repeat (<circle>, <rectangle>, <text>, <image>, <bitmap> or <svg>)"); }
 
 				readShape(*shape, sprite, gridHere);
 			}

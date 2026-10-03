@@ -141,7 +141,7 @@ namespace xge
 	// An object's <sprite>, as written: one shape, optionally repeated as a
 	// <grid>, a drawing made of <line>s, or a picture written as rows of text.
 	// Which of the fields are used depends on `kind` (circle, rectangle, text,
-	// image, line or bitmap).
+	// image, line, bitmap or svg).
 	struct RawSprite
 	{
 		std::string kind;
@@ -153,8 +153,18 @@ namespace xge
 		std::vector<RawLine> lines;  // line: one or more
 
 		std::vector<std::string> bitmapRows; // bitmap: the <row>s, top to bottom
-		RawValue scale;              // bitmap: real pixels to a character; only when hasScale
+		RawValue scale;              // bitmap: real pixels to a character; svg: real pixels to a unit of the drawing; only when hasScale
 		bool hasScale{ false };
+
+		// svg: the file is `path` (as for an image). The part of the drawing to
+		// take, in the drawing's units, is x, y, width and height, all four
+		// given or none (then all of it). hide names elements to leave out.
+		RawValue svgX;
+		RawValue svgY;
+		RawValue svgWidth;
+		RawValue svgHeight;
+		bool hasSvgRegion{ false };
+		std::vector<std::string> svgHide;
 
 		RawValue radius;             // circle
 		RawValue width;              // rectangle
@@ -168,7 +178,7 @@ namespace xge
 		bool textIsNumber{ false };
 		RawValue number;             // text, when textIsNumber
 
-		std::string path;            // image
+		std::string path;            // image, svg
 		std::string flip;            // image: "", "horizontal" or "vertical"
 		std::string color;           // "" means color.white
 

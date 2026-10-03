@@ -59,6 +59,11 @@ if (NOT EXPRTK_PACKAGE_FOUND)
 	silence_third_party_warnings(exprtk INTERFACE)
 endif()
 
+if (NOT lunasvg_FOUND)
+	silence_third_party_warnings(lunasvg PRIVATE)
+	silence_third_party_warnings(plutovg PRIVATE)
+endif()
+
 if (NOT SFML_FOUND)
 	foreach(sfml_target IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
 		set_target_properties(${sfml_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})

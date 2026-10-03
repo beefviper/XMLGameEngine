@@ -154,6 +154,29 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <!--
+        A drawing from an SVG file, made into a picture when the game loads, so
+        every graphics library shows it the same way and a pixel collision tests
+        what is shown. The path is read like an image's. x, y, width and height
+        (all four, or none for the whole drawing) pick the part of the drawing to
+        take, in the drawing's own units, which is how one sheet of sprites
+        serves many objects. scale is how many real pixels a unit is (1 if left
+        out; it need not be a whole number). Each hide is the id of an element to
+        leave out, such as a backdrop. The colors are the drawing's own.
+      -->
+      <xs:element name="svg">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="path" type="xs:string" />
+            <xs:element name="x" type="valueType" minOccurs="0" />
+            <xs:element name="y" type="valueType" minOccurs="0" />
+            <xs:element name="width" type="valueType" minOccurs="0" />
+            <xs:element name="height" type="valueType" minOccurs="0" />
+            <xs:element name="scale" type="valueType" minOccurs="0" />
+            <xs:element name="hide" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:group>
 
@@ -196,8 +219,8 @@
     An animation: how many seconds each picture is shown, and the sprites it
     shows in turn, round and round, each picked out by the name of one of the
     object's own sprites. At least two frames; the same sprite may come up more
-    than once. The frames must all be pictures (bitmaps or drawings of lines)
-    of the same size.
+    than once. The frames must all be pictures (bitmaps, svgs or drawings of
+    lines) of the same size.
   -->
   <xs:complexType name="animationType">
     <xs:sequence>

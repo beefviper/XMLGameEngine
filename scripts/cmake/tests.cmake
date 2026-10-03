@@ -56,6 +56,7 @@ add_executable(XGETEST
 	"tests/test_astrosmash.cpp"
 	"tests/test_lines_and_pixels.cpp"
 	"tests/test_bitmap_sprites.cpp"
+	"tests/test_svg_sprites.cpp"
 	"tests/test_lunarlander.cpp"
 	"tests/test_asteroids.cpp"
 	"tests/test_builtin_font.cpp"

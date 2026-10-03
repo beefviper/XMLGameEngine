@@ -158,6 +158,7 @@ A `<sprite>` holds one shape. Colors are named (`color.red`, below); a `<color>`
 | `<image>` | `<path>`, then `<flip>` (`horizontal` or `vertical`, optional) | An image file |
 | `<line>` (one or more) | `<from>` and `<to>` (each an `<x>` and a `<y>`), then `<color>` and `<thickness>` (both optional) | Straight lines, all in one sprite. See [Lines](#lines) |
 | `<bitmap>` | one or more `<row>`s of `.` and `*`, then `<scale>` and `<color>` (both optional) | A picture written as rows of text. See [Bitmaps](#bitmaps) |
+| `<svg>` | `<path>`, then `<x>`, `<y>`, `<width>`, `<height>` (all four or none), `<scale>` and any number of `<hide>` (all optional) | A drawing, or a part of one, from an SVG file. See [SVG pictures](#svg-pictures) |
 
 ### Lines
 
@@ -209,6 +210,27 @@ A sprite of one `<bitmap>` is a picture written as rows of text, one character t
 
 That picture is 45 pixels wide and 20 tall. The rows are measured from the top left, must all be the same length and may hold nothing but `.` and `*`: a space or any other character, an empty row, or rows of different lengths stop the load with a message that names the row and the character (`row 3 of a bitmap has 'o' as character 2`). A bitmap is drawn once, when the game loads, into the same kind of bitmap a sprite of [lines](#lines) is, so everything said there holds for it: its size is the object's size (`name.width` and `name.height` work with no window), every window backend shows it as a picture, and a collision of [type pixel](#collisions) tests exactly the solid pixels. Unlike a sprite of lines a `<bitmap>` can be repeated by a `<grid>`, and all the cells share the one picture. It has one color. On an object with a `<heading>` the picture is drawn once like this and then that finished picture is turned to the heading the object faces, to the nearest whole degree (360 headings, 0 and 360 being the same): each pixel of the turned picture takes the one pixel of the original that lies under it, so chunky pixels stay chunky and nothing is blended. The object keeps the original and the one picture it shows, and draws a new one only when its heading moves to another whole degree. Every heading comes out as the same square, big enough for the picture at any angle (for a bitmap 11 by 8 characters at `<scale>` 5 that is a square of 68), and that square is the object's size, as with [lines](#lines).
 
+### SVG pictures
+
+A sprite of one `<svg>` is a drawing from an SVG file, made into a picture when the game loads, the same way a `<bitmap>` is. `<path>` is the file, found like an `<image>`'s (relative to the folder the program runs from). `<scale>` is how many real pixels one unit of the drawing is (a value above 0, default 1; it need not be a whole number), where a unit is what the drawing's own `width` and `height` are written in:
+
+```xml
+<sprite>
+  <svg>
+    <path>assets/Space Invaders Color Sprites.svg</path>
+    <x>96</x> <y>64</y> <width>32</width> <height>32</height>
+    <scale>2</scale>
+    <hide>backdrop</hide>
+  </svg>
+</sprite>
+```
+
+`<x>`, `<y>`, `<width>` and `<height>` (values, in the drawing's units, all four or none) pick a part of the drawing to take, so one sheet of sprites can serve many objects: the part goes to the top left of the picture, and the picture is `<width>` by `<height>` times `<scale>`, rounded up to whole pixels. Leave them all out for the whole drawing. Each `<hide>` is the id of an element of the drawing to leave out (and everything inside it), for a sheet that carries a backdrop or a grid of its own; an id nothing has is ignored.
+
+The picture keeps the drawing's own colors, antialiased, with soft edges coming out as partly transparent pixels, so there is no `<color>`. Everything after the drawing is the same as for a `<bitmap>`: the picture is made once, its size is the object's size (`name.width` and `name.height` work with no window), every window backend shows it as a picture (the engine draws it itself, with a library used only by `svg.cpp`, so no backend loads an SVG: SFML and raylib could not, SDL2 and OpenGL could), a `<grid>` repeats it and its cells share the one picture, it can be a frame of an [animation](#animation), and a collision of [type pixel](#collisions) tests its pixels, a pixel counting as solid if anything at all was drawn on it, so a faint edge counts. A picture cut close round what is drawn also has a close-fitting box for the collisions that are not `pixel`. A missing or unreadable file, a part with no size or entirely outside the drawing, and a scale of 0 or less stop the load with a message that names the object and the file.
+
+An `<svg>` on an object with a `<heading>` is turned the way a `<bitmap>` is (the finished picture, a pixel at a time, nothing blended), so the soft edges of the drawing turn into hard stepped ones; drawing the SVG again at each heading would be smoother, and is not done. The drawing is fixed when the game loads: it cannot change size or color while the game runs. What can be drawn is whatever lunasvg draws; the shapes, polygons, strokes, `<use>`, `<defs>`, opacity and rotation of the shipped sprite sheet are what the tests exercise.
+
 ### Animation
 
 An object normally has one `<sprite>`. One that has several gives each a `name` and follows them with an `<animation>`, which says which are shown, in what order, and for how long:
@@ -229,7 +251,7 @@ An object normally has one `<sprite>`. One that has several gives each a `name` 
 
 `<interval>` is how many **seconds** each picture is shown (a value above 0, so `0.25` works), and each `<frame sprite="name" />` picks one of the object's own sprites by its name. There are at least two frames, and the same sprite may come up more than once (`open`, `closed`, `open`, `wide`). The object starts on the first frame and goes round and round. Seconds are turned into frames of the game when the game loads, with the window's `<framerate>` (a second at 60 frames a second is 60 frames, and a window with no framerate has nothing to count seconds in); like the speeds in the game, which are in pixels per frame, the animation counts frames of the game and does not read a clock, so a game that runs slower than its framerate animates slower too.
 
-The frames must all be pictures (a `<bitmap>` or `<line>`s, not a circle, rectangle, text or image) of the same size, and where one is repeated by a `<grid>` all of them are, the same way. Every sprite the object has must be shown by its animation, and several sprites without an animation are an error, since nothing would say when each is shown. An object with a `<heading>` can be animated too: whichever frame is showing is drawn at the heading the object faces, and the frames must come out as the same square when turned (equal sized bitmaps always do).
+The frames must all be pictures (a `<bitmap>`, an `<svg>` or `<line>`s, not a circle, rectangle, text or image) of the same size, and where one is repeated by a `<grid>` all of them are, the same way. Every sprite the object has must be shown by its animation, and several sprites without an animation are an error, since nothing would say when each is shown. An object with a `<heading>` can be animated too: whichever frame is showing is drawn at the heading the object faces, and the frames must come out as the same square when turned (equal sized bitmaps always do).
 
 Only an object that is shown by the current state and in play (not dead, not hidden) moves on, so a pause or a menu holds the picture where it was, and a `<reset />` puts it back on the first picture, from the start of its time. Every cell of a `<grid>` has a count of its own, and they all start together, so a block of aliens changes picture as one. A collision of type pixel tests the picture that is showing. In a `<group>`, a member that gives sprites of its own has those instead of the group's, and one that gives an `<animation>` has that instead of the group's; the names in an animation are looked up among the sprites the member ends up with. Space Invaders is the example: its three kinds of alien are the members of one group, each a `<grid>` of two named bitmaps with an animation, so the block marches, bounces and steps down together while each kind flaps on its own sprites.
 
@@ -351,6 +373,8 @@ The other forms:
 | Read XML | `XmlDocument` / `XmlNode` (`xml_document.h`) | Xerces (default), TinyXML2, PugiXML, RapidXML |
 | Window, drawing, keyboard | `Window` (`window.h`) | SFML3 (default), Raylib, SDL2, OpenGL (GLFW) |
 
+One more library is used by the engine itself and is not a backend: lunasvg draws the SVG files an `<svg>` sprite names, into the same kind of bitmap a `<bitmap>` makes, so no window backend knows about SVG ([design 43](designs/43-svg-sprites.md)). Only `svg.cpp` includes it.
+
 `Game` and `Engine` only ever see the interfaces. Each interface has a factory that is the single place that knows every implementation. Build-time dependency selection is in `scripts/cmake/` (see the `FORCE_LOCAL_*` options in `options.cmake`).
 
 Every window backend opens a window of its own, which is what `XGECLI` uses. `XGEGUI` shows the game in one of two layouts ([design 40](designs/40-split-windows-in-xgegui.md)): in one window, drawn by a renderer of its own that draws with Qt (`QtWindow`, the default), or in two, where the main window holds only the controls and the tree and the game is in a window of its own, opened by the chosen library (SFML3, SDL2, raylib or OpenGL) or by the Qt renderer. `Engine::replaceWindow()` swaps the window of a running game for another without touching the game, which is how the Options dialog changes the video library. A front end that has paused the game but keeps its window calls `Engine::pump()` so the window can still be moved and closed, and `Engine::isWindowOpen()` tells it when the user closed it.
@@ -376,6 +400,7 @@ The library is static by default: each program has the engine's code copied into
 | `collision_detector.cpp` | Geometry only: box, circle and swept tests, and the pixel pass for type `pixel` |
 | `builtin_font.cpp` | The 8x8 font stored in the program (`rasterizeText`), which draws text into a bitmap when a backend cannot load its font file |
 | `bitmap.cpp` | Draws a sprite's `<line>`s (`rasterizeLines`) or `<bitmap>` rows (`rasterizeRows`) into an RGBA bitmap: the pixels both the window backends and pixel collisions use |
+| `svg.cpp` | Draws a part of an SVG file (`rasterizeSvg`) into an RGBA bitmap, with lunasvg; the only file that includes it |
 | `command_executor.cpp` | What each command does |
 | `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop) and key handling |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
@@ -394,6 +419,7 @@ The library is static by default: each program has the engine's code copied into
 - A `pixel` collision is only as exact as half a pixel of motion: a pair is looked at every half pixel along the longer way it moves in a frame, and two one-pixel lines can cross at a slant without sharing a pixel at all, so lines meant to be tested should be at least 2 pixels thick. It knows nothing about which way a surface faces, so there is no bounce off a slope. Text and images cannot be `pixel` yet (their pixels are only known to a window backend), so a fighting game with image sprites will need the backends to hand their pixels back. The bitmap of a sprite of lines is kept for every object that has one, four bytes a pixel, so one big drawing costs what its bounding box does (Lunar Lander's 800 by 182 moon is about 580 KB).
 - A sprite of lines is measured from 0, 0 and fixed when the game loads: it cannot be moved, scaled or repeated by a `<grid>`, and it turns only on an object with a `<heading>`, in whole degrees (one picture at a time, always the same square size). Lines are straight, one color each, and have no fill.
 - A `<bitmap>` is fixed when the game loads too, and has one color (an asterisk is that color, a period is clear), so a sprite in two colors is two objects on top of each other. A turning object keeps the original and the one picture it shows, so the memory it costs is about double, and a turn is done again only when the heading moves by a whole degree. The sprite pictures are separate bitmaps, so a game with many large animated sprites keeps them all in memory: four bytes a pixel for each frame, once per object (the cells of a grid share theirs).
+- An `<svg>` is drawn once, when the game loads, at one scale: to show one at two sizes, make two sprites. A pixel collision counts any partly transparent edge pixel as solid, and the picture an animation or a `<grid>` shows cannot depend on a key, a hit or a death yet, so the banking, hit-flash, enemy-bolt, explosion and saucer pictures on the Space Invaders 2 sprite sheet are unused (see [design 43](designs/43-svg-sprites.md)).
 - An animation has one interval for all its frames, and counts frames of the game, not time (see [Animation](#animation)). There is no way yet to show a picture that depends on something other than time (a variable, the direction of travel, a hit), to run an animation once and stop, or to start it from a collision.
 - Each cell of a grid is its own object with its own count of frames. The cells stay in step because they start together (at load, and again at every reset) and only count while shown.
 - A `<random>` is drawn once, when the game loads. A piece that falls, is caught and is reset falls again at the same speed from the same place, so Kaboom's and Astrosmash's rhythm is different on every launch but repeats within one. There is no way yet to draw again on `<reset />`, and nothing in the language creates a new object while the game runs, so things that fall are a fixed set that cycles.

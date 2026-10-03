@@ -14,7 +14,7 @@ A `.cmake` file included from the main file runs immediately. A file can both ru
 
 ## Dependencies
 
-- Libraries: Xerces-C, exprtk, SFML 3 (and the other backends: Raylib, GLFW and the system OpenGL, SDL2 with SDL2_image and SDL2_ttf, TinyXML2, PugiXML, RapidXML), Catch2 for tests, and Qt 6 for XGEGUI (found only; without it XGEGUI is left out).
+- Libraries: Xerces-C, exprtk, SFML 3 (and the other backends: Raylib, GLFW and the system OpenGL, SDL2 with SDL2_image and SDL2_ttf, TinyXML2, PugiXML, RapidXML), lunasvg (for `<svg>` sprites, used inside the engine and linked `PRIVATE`; [43](43-svg-sprites.md)), Catch2 for tests, and Qt 6 for XGEGUI (found only; without it XGEGUI is left out).
 - Each is found (vcpkg or the system) or fetched and built with FetchContent. `FORCE_LOCAL_<NAME>` options force a fetched copy.
 - `BUILD_TESTING` is off by default, so the test suite (Catch2) is opt-in.
 - Platform shell scripts exist for `apt`, `dnf` and `pacman` prerequisites.

@@ -13,6 +13,7 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 		"games/pong.xml"
 		"games/breakout.xml"
 		"games/spaceinvaders.xml"
+		"games/spaceinvaders2.xml"
 		"games/frogger.xml"
 		"games/spacerace.xml"
 		"games/kaboom.xml"
@@ -24,7 +25,8 @@ if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 
 	set(data_assets
 		"assets/tuffy.ttf"
-		"assets/paddle.jpg")
+		"assets/paddle.jpg"
+		"assets/Space Invaders Color Sprites.svg")
 
 	foreach(item IN LISTS data_xsd data_xml data_assets)
 		message(STATUS ${item})

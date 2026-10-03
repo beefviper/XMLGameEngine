@@ -38,6 +38,10 @@ endif()
 
 target_link_libraries(XGELIB PUBLIC SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 
+# lunasvg is PRIVATE: only svg.cpp uses it, and svg.h speaks in the engine's
+# own Bitmap, so nothing that includes the engine's headers needs it.
+target_link_libraries(XGELIB PRIVATE lunasvg::lunasvg)
+
 # TinyXML2, PugiXML, and RapidXML XML backends - see xml_tinyxml2.h/
 # xml_pugixml.h/xml_rapidxml.h. Same reasoning as the four Window backends
 # above: every game only ever parses with one (chosen by whichever

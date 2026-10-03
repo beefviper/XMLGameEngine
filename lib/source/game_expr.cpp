@@ -6,6 +6,7 @@
 #include "game_expr.h"
 
 #include "keycode.h"
+#include "svg.h"
 
 #include <algorithm>
 #include <cctype>
@@ -568,17 +569,43 @@ namespace xge
 			return params;
 		}
 
-		if (sprite.kind == "bitmap")
+		if (sprite.kind == "bitmap" || sprite.kind == "svg")
 		{
 			// Drawn here, once, like a sprite of lines: the params only carry
 			// its size, and the picture goes to the backends and to a pixel
 			// collision through `bitmap`. A grid of them shares one picture.
-			const int scale = sprite.hasScale ? static_cast<int>(std::lround(evaluate(sprite.scale, where))) : 1;
+			// A <bitmap> is rows of text and an <svg> a drawing from a file
+			// (svg.cpp), but from here on they are the same kind of picture.
+			SvgRegion region;
+			float svgScale = 1.0f;
+			int rowsScale = 1;
+			if (sprite.kind == "svg")
+			{
+				if (sprite.hasSvgRegion)
+				{
+					region = { evaluate(sprite.svgX, where), evaluate(sprite.svgY, where),
+						evaluate(sprite.svgWidth, where), evaluate(sprite.svgHeight, where) };
+				}
+				if (sprite.hasScale) { svgScale = evaluate(sprite.scale, where); }
+			}
+			else if (sprite.hasScale)
+			{
+				rowsScale = static_cast<int>(std::lround(evaluate(sprite.scale, where)));
+			}
 
 			std::shared_ptr<const Bitmap> drawn;
 			try
 			{
-				drawn = std::make_shared<const Bitmap>(rasterizeRows(sprite.bitmapRows, scale, colorFromName(color)));
+				if (sprite.kind == "svg")
+				{
+					if (sprite.hasSvgRegion && region.isWhole()) { throw std::invalid_argument("an svg's <width> and <height> must both be above 0"); }
+
+					drawn = std::make_shared<const Bitmap>(rasterizeSvg(sprite.path, region, svgScale, sprite.svgHide));
+				}
+				else
+				{
+					drawn = std::make_shared<const Bitmap>(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color)));
+				}
 
 				if (turnable)
 				{
@@ -592,8 +619,11 @@ namespace xge
 					*turnable = std::move(kept);
 				}
 			}
-			catch (const std::invalid_argument& error)
+			catch (const std::exception& error)
 			{
+				// std::invalid_argument is a mistake in the numbers or rows,
+				// std::runtime_error an svg file that cannot be read; either
+				// way it is the game file that is at fault, so say where.
 				throw std::runtime_error(where + ": " + error.what());
 			}
 
@@ -648,9 +678,9 @@ namespace xge
 			const std::string here = where + " > <animation> > frame " + std::to_string(i + 1)
 				+ (frame.name.empty() ? std::string{} : " (\"" + frame.name + "\")");
 
-			if (frame.kind != "bitmap" && frame.kind != "line")
+			if (frame.kind != "bitmap" && frame.kind != "svg" && frame.kind != "line")
 			{
-				throw std::runtime_error(here + ": a frame must be a <bitmap> or a drawing of <line>s, not a <" + frame.kind + ">");
+				throw std::runtime_error(here + ": a frame must be a <bitmap>, an <svg> or a drawing of <line>s, not a <" + frame.kind + ">");
 			}
 
 			std::shared_ptr<const Bitmap> picture;
