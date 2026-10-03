@@ -13,6 +13,7 @@
 #include <iostream>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 
 namespace xge
@@ -414,7 +415,8 @@ namespace xge
 			return name == "bounce" || name == "stick" || name == "wrap" || name == "carry" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
-				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play";
+				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play"
+				|| name == "jump" || name == "reverse";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -451,6 +453,21 @@ namespace xge
 				command.amount = readValue(node, where);
 			}
 			if (verb == "thrust") { command.amount = readValue(node, where); }
+			if (verb == "jump")
+			{
+				// A distance and a time: two values, so two elements.
+				requireAttribute(node, "direction", where);
+				const std::string here = where + " > <jump>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "distance" && child->getName() != "seconds")
+					{
+						fail(here, "unknown <" + child->getName() + ">; expected <distance> and <seconds>");
+					}
+				}
+				command.amount = readValueOf(node, "distance", here);
+				if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+			}
 			if (verb == "release")
 			{
 				requireAttribute(node, "object", where);
@@ -474,6 +491,41 @@ namespace xge
 			}
 
 			return commands;
+		}
+
+		// <timers>: each <timer> an <every> or an <after>, then its commands.
+		std::vector<RawTimer> readTimers(const XmlNode* timersNode, const std::string& where)
+		{
+			std::vector<RawTimer> timers;
+			if (!timersNode) { return timers; }
+
+			for (std::unique_ptr<XmlNode> timer = timersNode->getFirstChild(); timer != nullptr; timer = timer->getNextSibling())
+			{
+				const std::string here = where + " > <timer>";
+				std::unique_ptr<XmlNode> when = timer->getFirstChild();
+				if (!when || (when->getName() != "every" && when->getName() != "after"))
+				{
+					fail(here, "needs an <every> or an <after> first: how many seconds");
+				}
+
+				RawTimer raw;
+				raw.repeat = when->getName() == "every";
+				raw.interval = readValue(*when, here);
+				raw.commands = readCommands(when->getNextSibling(), here);
+				timers.push_back(std::move(raw));
+			}
+
+			return timers;
+		}
+
+		std::string readFacing(const XmlNode& node, const std::string& where)
+		{
+			const std::string facing = readText(node);
+			if (facing != "up" && facing != "down" && facing != "left" && facing != "right")
+			{
+				fail(where, "<facing> is \"" + facing + "\"; expected up, down, left or right");
+			}
+			return facing;
 		}
 
 		void appendCommands(std::vector<RawCommand>& existing, const std::vector<RawCommand>& more)
@@ -634,6 +686,8 @@ namespace xge
 				rawObject.hasDrag = true;
 				rawObject.rawDrag = readValue(*drag, where);
 			}
+			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readFacing(*facing, where); }
+			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
 			if (auto hidden = findChild(&object, "hidden"))
 			{
 				if (readBool(*hidden, where)) { rawObject.isVisible = false; }
@@ -691,6 +745,7 @@ namespace xge
 			PartialVector2 velocity;
 			std::optional<RawCollisionData> collisions;
 			bool hidden = false;
+			std::string facing;
 
 			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
@@ -702,14 +757,17 @@ namespace xge
 				else if (tag == "position") { position = readPartialVector2(*child, where); }
 				else if (tag == "velocity") { velocity = readPartialVector2(*child, where); }
 				else if (tag == "collisions") { collisions = readCollisions(*child, where); }
-				else if (tag != "actions" && tag != "variables" && tag != "member")
+				else if (tag == "facing") { facing = readFacing(*child, where); }
+				else if (tag != "actions" && tag != "variables" && tag != "timers" && tag != "member")
 				{
-					fail(where, "unknown <" + tag + ">; expected <sprite>, <animation>, <position>, <velocity>, <hidden>, <collisions>, <actions>, <variables> or <member>");
+					fail(where, "unknown <" + tag + ">; expected <sprite>, <animation>, <position>, <velocity>, <facing>, <hidden>, <collisions>, <actions>, <variables>, <timers> or <member>");
 				}
 			}
 
 			RawObject shared;
 			shared.isVisible = !hidden;
+			shared.facing = facing;
+			shared.timers = readTimers(findChild(&group, "timers").get(), where);
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
 
@@ -812,7 +870,27 @@ namespace xge
 			return raw;
 		}
 
-		RawState readState(const XmlNode& state)
+		using KeyBindings = std::map<std::string, std::vector<RawCommand>>;
+
+		// The <input>s under a node (a state's <inputs>, or a <keys> set): a key,
+		// or several keys separated by spaces (button="a left"), and the
+		// commands each one runs. A key given twice keeps the later binding.
+		void readInputs(const XmlNode& node, const std::string& where, KeyBindings& out)
+		{
+			for (std::unique_ptr<XmlNode> input = node.getFirstChild(); input != nullptr; input = input->getNextSibling())
+			{
+				const std::string buttons = requireAttribute(*input, "button", where);
+				const std::vector<RawCommand> commands = readCommands(input->getFirstChild(), where + " > <input button=\"" + buttons + "\">");
+
+				std::istringstream words(buttons);
+				for (std::string button; words >> button;)
+				{
+					out[button] = commands;
+				}
+			}
+		}
+
+		RawState readState(const XmlNode& state, const std::map<std::string, KeyBindings>& keySets)
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");
@@ -826,13 +904,18 @@ namespace xge
 				rawState.show.push_back(requireAttribute(*show, "object", where + " > <shows>"));
 			}
 
-			// <inputs>: a key and the commands it runs
+			// <inputs>: the named <keys> sets it uses (keys="player menu"), in
+			// order, each over the one before, then its own <input>s over those: a
+			// state can use a set and still give one of its keys a job of its own.
 			std::unique_ptr<XmlNode> inputs = requireChild(state, "inputs", where);
-			for (std::unique_ptr<XmlNode> input = inputs->getFirstChild(); input != nullptr; input = input->getNextSibling())
+			std::istringstream setNames(inputs->getAttribute("keys"));
+			for (std::string setName; setNames >> setName;)
 			{
-				const std::string button = requireAttribute(*input, "button", where + " > <inputs>");
-				rawState.input[button] = readCommands(input->getFirstChild(), where + " > <input button=\"" + button + "\">");
+				const auto set = keySets.find(setName);
+				if (set == keySets.end()) { fail(where + " > <inputs>", "keys=\"" + setName + "\" names no <keys> set"); }
+				for (const auto& [button, commands] : set->second) { rawState.input[button] = commands; }
 			}
+			readInputs(*inputs, where + " > <inputs>", rawState.input);
 
 			// <conditions> (optional - the schema allows a state with none): a
 			// test, then the commands to run when it holds.
@@ -866,6 +949,9 @@ namespace xge
 					rawState.conditions.push_back(std::move(raw));
 				}
 			}
+
+			// <timers> (optional): counted while this is the current state.
+			rawState.timers = readTimers(findChild(&state, "timers").get(), where);
 
 			return rawState;
 		}
@@ -959,10 +1045,20 @@ namespace xge
 			else { rawObjects.push_back(readObject(*object)); }
 		}
 
-		// load states
+		// load states: the named <keys> sets first, so any state can use any of them
+		std::map<std::string, KeyBindings> keySets;
+		for (std::unique_ptr<XmlNode> node = states->getFirstChild(); node != nullptr; node = node->getNextSibling())
+		{
+			if (node->getName() != "keys") { continue; }
+			const std::string name = requireAttribute(*node, "name", "<states> > <keys>");
+			if (keySets.count(name)) { fail("<states>", "two <keys> sets are called '" + name + "'"); }
+			readInputs(*node, "<keys name=\"" + name + "\">", keySets[name]);
+		}
+
 		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
 		{
-			rawStates.push_back(readState(*state));
+			if (state->getName() == "keys") { continue; }
+			rawStates.push_back(readState(*state, keySets));
 		}
 	}
 }

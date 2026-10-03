@@ -20,6 +20,11 @@ namespace xge
 	{
 		xml.init(filename, xmlBackend, windowDesc, rawVariables, rawStates, rawObjects, rawSounds, xmlValidation);
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds);
+
+		for (const auto& state : states)
+		{
+			stateTimers[state.name] = state.timers;
+		}
 		// Every object's own visual is built later, by Engine, once a real
 		// Window (and therefore a real backend to build against) exists -
 		// see Window::init() in window.h.
@@ -93,6 +98,10 @@ namespace xge
 		{
 			if (isShown(object)) { object.advanceAnimation(); }
 		}
+
+		// Timers go off before anything moves, so a bomb dropped this frame
+		// starts falling this frame.
+		updateTimers();
 
 		applyAcceleration();
 
@@ -361,8 +370,100 @@ namespace xge
 		refreshBoundTexts(ownerName, variableName, variableIt->second);
 	}
 
+	int Game::framesFor(float seconds) const noexcept
+	{
+		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
+		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framerate))));
+	}
+
+	bool Game::tickTimer(Timer& timer, const std::string& where)
+	{
+		if (timer.done)
+		{
+			return false;
+		}
+
+		if (timer.framesLeft < 0)
+		{
+			timer.framesLeft = framesFor(expr.evaluate(timer.interval, where));
+		}
+
+		if (--timer.framesLeft > 0)
+		{
+			return false;
+		}
+
+		// Gone off: a repeating timer starts over, with its interval worked out
+		// again on the next frame, after its commands have run (so they can
+		// change it, and a <random> waits a new time); a once-only one is
+		// finished.
+		if (timer.repeat) { timer.framesLeft = -1; }
+		else { timer.done = true; }
+		return true;
+	}
+
+	void Game::updateTimers(void)
+	{
+		CommandExecutor executor(*this);
+
+		// An object's timers, while it is shown and in play. By index: a timer
+		// can fire a projectile or release a pool, which changes other objects
+		// but never how many there are.
+		for (std::size_t i = 0; i < objects.size(); ++i)
+		{
+			for (std::size_t t = 0; t < objects[i].timers.size(); ++t)
+			{
+				if (!isShown(objects[i]))
+				{
+					break;
+				}
+
+				if (tickTimer(objects[i].timers[t], "object '" + objects[i].baseName + "' > <timer>"))
+				{
+					// A copy: a command may reset the object, and its timers with it.
+					const std::vector<Command> commands = objects[i].timers[t].commands;
+					for (const auto& command : commands)
+					{
+						executor.executeTimer(command, &objects[i]);
+					}
+				}
+			}
+		}
+
+		// The current state's timers. A command can change the state, which
+		// ends this state's turn for the frame.
+		const std::string stateName = currentState.top().name;
+		auto found = stateTimers.find(stateName);
+		if (found == stateTimers.end())
+		{
+			return;
+		}
+
+		const unsigned long changes = stateChanges;
+		for (std::size_t t = 0; t < found->second.size() && stateChanges == changes; ++t)
+		{
+			if (tickTimer(found->second[t], "state '" + stateName + "' > <timer>"))
+			{
+				const std::vector<Command> commands = found->second[t].commands;
+				for (const auto& command : commands)
+				{
+					executor.executeTimer(command, nullptr);
+					if (stateChanges != changes) { break; }
+				}
+			}
+		}
+	}
+
 	void Game::refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value)
 	{
+		// Expressions read the variable too (a timer's <every>, worked out again
+		// each round), so they see the new value.
+		const auto expressionVariable = expr.objectVariables.find(ownerName + "." + variableName);
+		if (expressionVariable != expr.objectVariables.end())
+		{
+			expressionVariable->second = value;
+		}
+
 		for (auto& object : objects)
 		{
 			if (object.boundVariableOwner == ownerName && object.boundVariableName == variableName)
@@ -432,10 +533,19 @@ namespace xge
 			// An animation starts again from its first picture.
 			object.restartAnimation();
 
-			// Nor should a reset object carry on being carried, or jump.
+			// Nor should a reset object carry on being carried, or jump; it
+			// faces the way it started, and its timers start over.
 			object.carry = {};
 			object.hopPending = {};
 			object.hopped = false;
+			object.jumpStep = {};
+			object.jumpFramesLeft = 0;
+			object.facing = object.facingOriginal;
+			for (auto& timer : object.timers)
+			{
+				timer.framesLeft = -1;
+				timer.done = false;
+			}
 
 			for (auto& [variableName, originalValue] : object.variableOriginal)
 			{
@@ -492,6 +602,11 @@ namespace xge
 		for (auto& object : objects)
 		{
 			resetObjectState(object);
+		}
+
+		for (const auto& state : states)
+		{
+			stateTimers[state.name] = state.timers;
 		}
 
 		// Refresh every text display bound to another object's variable, now
@@ -635,6 +750,12 @@ namespace xge
 			return false;
 		}
 
+		// Something in the middle of a jump is over everything.
+		if (a.isAirborne() || b.isAirborne())
+		{
+			return false;
+		}
+
 		if (a.collisionData.lockstep != 0 && a.collisionData.lockstep == b.collisionData.lockstep)
 		{
 			return false;
@@ -748,6 +869,22 @@ namespace xge
 
 			// Whatever last frame's collisions said, this frame's start over.
 			object.carry = {};
+
+			// A jump under way goes on a step; the frame it lands, it counts as
+			// having moved, so it meets whatever it landed on.
+			if (object.isAirborne())
+			{
+				if (isShown(object))
+				{
+					const Vector2f target = object.position + object.jumpStep;
+					const bool inside = target.x >= 0 && target.y >= 0
+						&& target.x + object.size.x <= windowDesc.width
+						&& target.y + object.size.y <= windowDesc.height;
+					if (inside) { object.position = target; }
+				}
+				--object.jumpFramesLeft;
+				object.hopped = true;
+			}
 
 			if (object.hopPending.x == 0 && object.hopPending.y == 0)
 			{
@@ -881,6 +1018,7 @@ namespace xge
 		return std::any_of(objects.begin(), objects.end(), [&](const Object& other)
 			{
 				return &other != &object && &other != &excluding
+					&& !other.isAirborne()
 					&& other.objClass == objClass
 					&& isShown(other) && other.collisionData.enabled
 					&& CollisionDetector::overlap(object, other).has_value();

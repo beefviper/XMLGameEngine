@@ -56,6 +56,7 @@ namespace xge
 		std::vector<std::string> show;
 		std::map<std::string, std::vector<RawCommand>> input;
 		std::vector<RawCondition> conditions;
+		std::vector<RawTimer> timers;
 
 		friend std::ostream& operator<<(std::ostream& o, RawState const& f);
 
@@ -70,6 +71,11 @@ namespace xge
 		std::vector<std::string> show;
 		std::map<KeyCode, std::vector<Command>> input;
 		std::vector<Condition> conditions;
+
+		// Counted while this is the current state (Game::updateTimers); the
+		// counts themselves are kept by Game, per state, so a state pushed
+		// again after a pause carries on where it was.
+		std::vector<Timer> timers;
 
 		friend std::ostream& operator<<(std::ostream& o, State const& f);
 

@@ -218,6 +218,8 @@ namespace xge
 		bool hasHeading{ false };
 		RawValue rawDrag;            // only when hasDrag
 		bool hasDrag{ false };
+		std::string facing;          // "" when the object has no <facing>
+		std::vector<RawTimer> timers;
 		RawCollisionData rawCollisionData;
 		std::map<std::string, std::vector<RawCommand>> action;
 		std::map<std::string, RawValue> variable;
@@ -324,6 +326,30 @@ namespace xge
 		std::array<float, 4> activeTurn{};
 		float activeThrustAhead{};
 		std::string activeThrustAheadBurn;
+
+		// Which way an object with a <facing> is facing, one of the four
+		// directions, without turning its picture (a <heading> turns it). It
+		// follows the last <move>, <hop> or <jump> made, and a <fire> leaves the
+		// middle of that side, moving that way at the projectile's own speed:
+		// a man in a maze shoots the way he last walked, an invader facing
+		// down drops its bombs below it. An object with no <facing> fires from
+		// its top, at the projectile's own velocity, as before. A reset puts
+		// back facingOriginal. See CommandExecutor::spawnProjectile.
+		bool hasFacing{ false };
+		Direction facing{ Direction::Up };
+		Direction facingOriginal{ Direction::Up };
+
+		// A <jump> under way: how far the object travels each frame, and how
+		// many frames are left. While framesLeft is above 0 the object is in
+		// the air: it touches no other object (Game::canCollide). A reset
+		// lands it where it starts.
+		Vector2f jumpStep{};
+		int jumpFramesLeft{ 0 };
+		bool isAirborne() const noexcept { return jumpFramesLeft > 0; }
+
+		// The object's <timers>, which count while it is shown and in play
+		// (see Timer, Game::updateTimers).
+		std::vector<Timer> timers;
 
 		// How much of its velocity an object keeps every frame is 1 minus this:
 		// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed

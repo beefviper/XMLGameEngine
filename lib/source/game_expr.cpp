@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -111,11 +112,13 @@ namespace xge
 				const std::string where = "state '" + state.name + "'";
 				for (const auto& [key, commands] : state.input) { checkAll(commands, where); }
 				for (const auto& condition : state.conditions) { checkAll(condition.commands, where); }
+				for (const auto& timer : state.timers) { checkAll(timer.commands, where + " > <timer>"); }
 			}
 
 			for (const auto& object : objects)
 			{
 				const std::string where = "object '" + object.baseName + "'";
+				for (const auto& timer : object.timers) { checkAll(timer.commands, where + " > <timer>"); }
 				for (const auto& [name, commands] : object.action)
 				{
 					checkAll(commands, where);
@@ -384,6 +387,17 @@ namespace xge
 						}
 					}
 
+					if (!rawObject.facing.empty())
+					{
+						object.hasFacing = true;
+						object.facing = rawObject.facing == "down" ? Direction::Down
+							: rawObject.facing == "left" ? Direction::Left
+							: rawObject.facing == "right" ? Direction::Right
+							: Direction::Up;
+					}
+					object.facingOriginal = object.facing;
+					object.timers = processTimers(rawObject.timers, where);
+
 					object.showHeading();
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
@@ -491,6 +505,8 @@ namespace xge
 				state.conditions.push_back(std::move(condition));
 			}
 
+			state.timers = processTimers(rawState.timers, where);
+
 			states.push_back(state);
 		}
 
@@ -595,6 +611,39 @@ namespace xge
 			throw std::runtime_error(where + ": cannot read \"" + text + "\": " + parser.error().c_str());
 		}
 		return expression.value();
+	}
+
+	std::vector<Timer> game_expr::processTimers(const std::vector<RawTimer>& raw, const std::string& where)
+	{
+		std::vector<Timer> timers;
+		const std::string here = where + " > <timer>";
+
+		for (const RawTimer& rawTimer : raw)
+		{
+			Timer timer;
+			timer.repeat = rawTimer.repeat;
+			timer.interval = rawTimer.interval;
+			timer.commands = processCommands(rawTimer.commands, here);
+
+			// Worked out once now so that a mistake in it is a load error; it
+			// is worked out again every time the timer starts over. Only a plain
+			// number can be held to being above 0 now: an expression may read a
+			// variable that has no value yet (and at run time a timer never
+			// waits less than one frame).
+			const float seconds = evaluate(rawTimer.interval, here);
+			char* end = nullptr;
+			const std::string& text = rawTimer.interval.text;
+			const bool plainNumber = rawTimer.interval.kind == RawValue::Kind::Expression && !text.empty()
+				&& (std::strtof(text.c_str(), &end), end == text.c_str() + text.size());
+			if (plainNumber && !(seconds > 0.0f))
+			{
+				throw std::runtime_error(here + ": " + (rawTimer.repeat ? "<every>" : "<after>") + " is " + std::to_string(seconds) + "; expected a number of seconds above 0");
+			}
+
+			timers.push_back(std::move(timer));
+		}
+
+		return timers;
 	}
 
 	std::vector<Command> game_expr::processCommands(const std::vector<RawCommand>& raw, const std::string& where)

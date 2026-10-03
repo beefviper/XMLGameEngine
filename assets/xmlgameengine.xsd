@@ -327,6 +327,15 @@
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
+  <!-- jump: a direction, how far, and how many seconds it takes (0.3 if left out). -->
+  <xs:complexType name="jumpType">
+    <xs:sequence>
+      <xs:element name="distance" type="valueType" />
+      <xs:element name="seconds" type="valueType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="direction" type="directionType" use="required" />
+  </xs:complexType>
+
   <xs:group name="command">
     <xs:choice>
       <xs:element name="bounce" type="emptyType" />
@@ -344,6 +353,8 @@
       <xs:element name="dec" type="variableReferenceType" />
       <xs:element name="move" type="stepType" />
       <xs:element name="hop" type="stepType" />
+      <xs:element name="jump" type="jumpType" />
+      <xs:element name="reverse" type="emptyType" />
       <xs:element name="accelerate" type="thrustType" />
       <xs:element name="turn" type="turnType" />
       <xs:element name="thrust" type="aheadType" />
@@ -401,7 +412,7 @@
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- What pressing a key does in a state. -->
+  <!-- What pressing a key does in a state: button is one key, or several separated by spaces ("a left"). -->
   <xs:complexType name="inputType">
     <xs:sequence>
       <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
@@ -427,6 +438,28 @@
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="variable" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!--
+    Timers: each goes off after a number of seconds - <every> again and again
+    (worked out again each time, so a <random> waits a new time), <after>
+    once - and runs its commands. An object's count while it is shown and in
+    play; a state's while it is the current state. A reset starts them over.
+  -->
+  <xs:complexType name="timerType">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="every" type="valueType" />
+        <xs:element name="after" type="valueType" />
+      </xs:choice>
+      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="timersType">
+    <xs:sequence>
+      <xs:element name="timer" type="timerType" maxOccurs="unbounded" />
+    </xs:sequence>
   </xs:complexType>
 
   <!-- Some of two numbers: a group's or a member's <position> and <velocity>. -->
@@ -478,10 +511,12 @@
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
+      <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
+      <xs:element name="timers" type="timersType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="class" type="xs:string" use="optional" />
@@ -513,10 +548,12 @@
       <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
+      <xs:element name="timers" type="timersType" minOccurs="0" />
       <xs:element name="member" type="memberType" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
@@ -563,6 +600,19 @@
         <xs:element name="states">
           <xs:complexType>
             <xs:sequence>
+              <!--
+                A named set of key bindings that states can share: a state's
+                <inputs keys="name"> takes them, and its own <input>s go over
+                them, key by key.
+              -->
+              <xs:element name="keys" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="input" type="inputType" maxOccurs="unbounded" />
+                  </xs:sequence>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
               <xs:element name="state" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:sequence>
@@ -580,8 +630,9 @@
                     <xs:element name="inputs">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element name="input" type="inputType" maxOccurs="unbounded" />
+                          <xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
                         </xs:sequence>
+                        <xs:attribute name="keys" type="xs:string" use="optional" />
                       </xs:complexType>
                     </xs:element>
                     <xs:element name="conditions" minOccurs="0">
@@ -591,6 +642,7 @@
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
+                    <xs:element name="timers" type="timersType" minOccurs="0" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />
                 </xs:complexType>

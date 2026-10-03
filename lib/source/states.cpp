@@ -86,6 +86,16 @@ namespace xge
 			o << '\n';
 		}
 
+		for (auto& timer : f.timers)
+		{
+			o << "       timer: " << (timer.repeat ? "every=" : "after=") << timer.interval << ", action=";
+			for (auto& command : timer.commands)
+			{
+				o << command << (&command != &timer.commands.back() ? ";" : "");
+			}
+			o << '\n';
+		}
+
 		return o;
 	}
 }

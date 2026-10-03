@@ -207,5 +207,24 @@ namespace xge
 		void checkConditions();
 
 		void runConditionCommands(std::vector<Command> commands);
+
+		// Every state's <timers> as they are counting (State::timers is how
+		// they start); kept here, by state name, because the state stack
+		// holds copies of states. A reset starts them all over.
+		std::map<std::string, std::vector<Timer>> stateTimers;
+
+		// Counts a frame on every object timer of what is shown and every
+		// timer of the current state, and runs the commands of the ones that
+		// go off (CommandExecutor::executeTimer).
+		void updateTimers(void);
+
+		// One frame off one timer; true when it has gone off.
+		bool tickTimer(Timer& timer, const std::string& where);
+
+	public:
+		// A number of seconds as frames of the game, at least one.
+		int framesFor(float seconds) const noexcept;
+
+	private:
 	};
 }

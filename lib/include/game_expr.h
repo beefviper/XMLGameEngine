@@ -123,6 +123,10 @@ namespace xge
 
 		std::vector<Command> processCommands(const std::vector<RawCommand>& raw, const std::string& where);
 
+		// An object's or a state's <timers>: the commands made, the interval
+		// checked and kept as written (see Timer).
+		std::vector<Timer> processTimers(const std::vector<RawTimer>& raw, const std::string& where);
+
 		// A <sound> worked out: its words checked and its lengths evaluated.
 		SoundDesc processSound(const RawSound& raw);
 

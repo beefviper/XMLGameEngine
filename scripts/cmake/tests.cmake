@@ -62,6 +62,7 @@ add_executable(XGETEST
 	"tests/test_ai_games.cpp"
 	"tests/test_builtin_font.cpp"
 	"tests/test_sound.cpp"
+	"tests/test_gameplay_verbs.cpp"
 	"tests/test_cli.cpp"
 	"tests/test_data_folder.cpp"
 	"cli/source/cli.cpp"

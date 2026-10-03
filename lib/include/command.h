@@ -97,6 +97,25 @@ namespace xge
 		float distance{};
 	};
 
+	// <jump direction="down"><distance>40</distance><seconds>0.4</seconds></jump>
+	// (also up, left, right) - only ever in an object's own <action>: once for
+	// each press, the object travels `distance` pixels that way over `seconds`
+	// (0.3 when left out), through the air: while it is in the air it touches
+	// no other object, so it cannot be hit, ride or drown until it lands, and a
+	// second jump waits for the landing. Unlike <hop> (an instant step) it
+	// takes time and passes over what is between. See Game::applyHops.
+	struct CmdJump
+	{
+		Direction direction{};
+		float distance{};
+		float seconds{ 0.3f };
+	};
+
+	// <reverse /> - the object's velocity turns round, both ways at once: a
+	// bomber pacing the top of the screen changing its mind (from a <timer>),
+	// or anything bouncing back off something it has no edge to bounce from.
+	struct CmdReverse {};
+
 	// <accelerate direction="up" burn="fuel">0.04</accelerate> - only ever in an
 	// object's own <action>: while the key is held the object's velocity
 	// changes by `amount` every frame in that direction (a thruster), where
@@ -190,8 +209,8 @@ namespace xge
 	};
 
 	using Command = std::variant<
-		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry,
-		CmdMove, CmdHop, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
+		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry, CmdReverse,
+		CmdMove, CmdHop, CmdJump, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay>;
 
 	// --- What the XML says, before any of it is evaluated.
@@ -247,7 +266,39 @@ namespace xge
 		std::string direction; // move, hop, accelerate, turn
 		std::string burn;      // accelerate, thrust
 		std::string sound;     // play
-		RawValue amount;       // move, hop, accelerate, turn, thrust, release (how many)
+		RawValue amount;       // move, hop, accelerate, turn, thrust, release (how many), jump (distance)
+		RawValue seconds;      // jump (empty text: the default)
+	};
+
+	// A <timer> as written: <every> (again and again) or <after> (once), a
+	// number of seconds, then the commands it runs each time it goes off.
+	// See Timer.
+	struct RawTimer
+	{
+		bool repeat{ true };
+		RawValue interval;
+		std::vector<RawCommand> commands;
+	};
+
+	// A <timer>, on an object or in a state, made ready to run. It counts
+	// frames of the game (seconds times the window's <framerate>), so like
+	// everything else it runs slow on a machine that cannot keep up. The
+	// interval is kept as written and worked out again each time the timer
+	// starts over, so <every><random min="1" max="3" /></every> waits a
+	// different time each round. An object's timers count while it is shown
+	// and in play; a state's while it is the current state. A reset starts
+	// them over. See Game::updateTimers.
+	struct Timer
+	{
+		bool repeat{ true };
+		RawValue interval;
+		std::vector<Command> commands;
+
+		// Frames until it goes off; -1 means not started yet (worked out on
+		// the first frame it counts). `done` is a once-only timer that has
+		// gone off.
+		int framesLeft{ -1 };
+		bool done{ false };
 	};
 
 	// Works out a RawValue to a number; makeCommand is given one so that it can
