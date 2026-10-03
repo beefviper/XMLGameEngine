@@ -35,6 +35,7 @@ if (Qt6_FOUND)
 		"gui/source/app_settings.cpp"
 		"gui/source/session_options.cpp"
 		"gui/source/options_dialog.cpp"
+		"gui/source/theme.cpp"
 		"gui/include/main_window.h"
 		"gui/include/game_session.h"
 		"gui/include/game_view.h"
@@ -45,6 +46,7 @@ if (Qt6_FOUND)
 		"gui/include/app_settings.h"
 		"gui/include/session_options.h"
 		"gui/include/options_dialog.h"
+		"gui/include/theme.h"
 	)
 
 	set_target_properties(XGEGUI PROPERTIES AUTOMOC ON)

@@ -11,6 +11,7 @@
 #include <QAbstractSpinBox>
 #include <QCheckBox>
 #include <QDoubleSpinBox>
+#include <QFont>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
@@ -100,6 +101,11 @@ namespace xge
 		tree->setColumnCount(2);
 		tree->setHeaderLabels({ tr("Name"), tr("Value") });
 		tree->setUniformRowHeights(true);
+
+		// Every other row is tinted (the color comes from the theme, theme.h),
+		// so a name can be followed across to its value.
+		tree->setAlternatingRowColors(true);
+		tree->setIndentation(18);
 		tree->header()->setStretchLastSection(true);
 		tree->header()->setSectionResizeMode(0, QHeaderView::Interactive);
 		tree->setColumnWidth(0, 200);
@@ -331,6 +337,17 @@ namespace xge
 		auto* item = parent ? new QTreeWidgetItem(parent) : new QTreeWidgetItem(tree);
 		item->setText(0, name);
 		item->setText(1, summary);
+
+		// The sections (Window, Objects, States) in bold, so where one ends
+		// and the next begins can be seen at a glance.
+		if (!parent)
+		{
+			QFont bold = item->font(0);
+			bold.setBold(true);
+			item->setFont(0, bold);
+			item->setFont(1, bold);
+		}
+
 		return item;
 	}
 

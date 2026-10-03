@@ -23,6 +23,7 @@
 
 #include "data_folder.h"
 #include "main_window.h"
+#include "theme.h"
 
 #include <QApplication>
 #include <QString>
@@ -36,6 +37,7 @@
 int main(int argc, char* argv[])
 {
 	QApplication app(argc, argv);
+	xge::applyTheme(app);
 
 	// The game named on the command line is relative to where the program was
 	// started, so it is found before the working directory is changed.
