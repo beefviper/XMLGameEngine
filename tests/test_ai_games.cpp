@@ -3,9 +3,10 @@
 // author: beefviper
 // date: Oct 3, 2026
 //
-// Catch2 tests for games/berserk.xml, games/demonattack.xml and
-// games/frostbite.xml, three games written by another AI from the schema alone
-// to see whether the language was expressive enough. Each is played frame by
+// Catch2 tests for games/berserk.xml and games/demonattack.xml, two of three
+// games written by another AI from the schema alone to see whether the
+// language was expressive enough (the third, Frostbite, has been rewritten
+// since and is tested in test_frostbite.cpp). Each is played frame by
 // frame through a real xge::Engine with no window, with the keys a player
 // would press: Space starts, W, A, S, D (or the arrows) move, Space fires.
 //
@@ -257,91 +258,4 @@ TEST_CASE("a demon on the cannon costs a life, and three is game over", "[ai_gam
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(player.variable["lives"] == 3.0f);
-}
-
-// ----------------------------------------------------------------- Frostbite
-
-TEST_CASE("frostbite.xml loads a builder, an igloo, ten floes, a bird and a fish", "[ai_games][frostbite]")
-{
-	Play play("games/frostbite.xml");
-
-	CHECK(play.state() == "title");
-	CHECK(play.alive("floe") == 10);
-	CHECK(play.alive("bird") == 1);
-	CHECK(play.alive("fish") == 1);
-	CHECK(play.object("player").variable["temperature"] == 120.0f);
-}
-
-TEST_CASE("the four keys hop the builder about, a step at a time", "[ai_games][frostbite]")
-{
-	Play play("games/frostbite.xml");
-	play.tap(KeyCode::Space);
-	CHECK(play.state() == "playing");
-
-	Object& player = play.object("player");
-	const float y = player.position.y;
-	play.engine.handleKeyPressed(KeyCode::W);
-	play.frames(5);
-	play.engine.handleKeyReleased(KeyCode::W);
-	CHECK(player.position.y < y);
-}
-
-TEST_CASE("a floe carries the builder along", "[ai_games][frostbite]")
-{
-	Play play("games/frostbite.xml");
-	play.tap(KeyCode::Space);
-
-	Object& player = play.object("player");
-	Object& floe = play.object("f10");
-	player.position = { floe.position.x + 8.0f, floe.position.y };
-	const float x = player.position.x;
-	play.frames(10);
-	CHECK(player.position.x > x);
-}
-
-TEST_CASE("the cold takes a degree a second, and a bird or a fish takes ten", "[ai_games][frostbite]")
-{
-	Play play("games/frostbite.xml");
-	play.tap(KeyCode::Space);
-	play.freeze("floe");
-	play.freeze("bird");
-	play.freeze("fish");
-
-	Object& player = play.object("player");
-	play.frames(75);
-	CHECK(player.variable["temperature"] <= 119.0f);
-	CHECK(player.variable["temperature"] >= 118.0f);
-
-	const float before = player.variable["temperature"];
-	Object& bird = play.object("b1");
-	player.position = { bird.position.x - 14.0f, bird.position.y };
-	play.engine.handleKeyPressed(KeyCode::D);
-	play.frames(4);
-	play.engine.handleKeyReleased(KeyCode::D);
-	CHECK(player.variable["temperature"] <= before - 10.0f);
-}
-
-TEST_CASE("reaching the igloo scores fifty, and freezing is game over", "[ai_games][frostbite]")
-{
-	Play play("games/frostbite.xml");
-	play.tap(KeyCode::Space);
-	play.freeze("floe");
-	play.freeze("bird");
-	play.freeze("fish");
-
-	Object& player = play.object("player");
-	Object& igloo = play.object("igloo");
-	player.position = { igloo.position.x, igloo.position.y + 30.0f };
-	play.engine.handleKeyPressed(KeyCode::W);
-	play.frames(10);
-	play.engine.handleKeyReleased(KeyCode::W);
-	CHECK(play.object("player").variable["score"] == 50.0f);
-
-	player.variable["temperature"] = 0.0f;
-	play.frames(2);
-	CHECK(play.state() == "gameover");
-
-	play.tap(KeyCode::Space);
-	CHECK(play.state() == "title");
-	CHECK(player.variable["temperature"] == 120.0f);
 }

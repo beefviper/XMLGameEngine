@@ -111,6 +111,30 @@ namespace xge
 		float seconds{ 0.3f };
 	};
 
+	// <become sprite="blue" /> - the object shows another of its named
+	// <sprite>s from now on (its look; a reset goes back to the first), or,
+	// with object="name", every object of that name or <group> does: a row of
+	// ice turning blue when it is stood on, a light going green. A collision
+	// rule with sprite="..." runs only while its object shows that sprite, so
+	// a look is also a simple state. See Object::looks.
+	struct CmdBecome
+	{
+		std::string sprite;
+		std::string target; // empty: the object running the command
+	};
+
+	// <reveal object="igloo">count</reveal> - brings back the first `count`
+	// (1 when left out) objects of that name or <group> that are out of play
+	// (hidden at the start, or taken out by <die />), each where it started
+	// and at its own starting velocity. Where <release> puts them in the
+	// middle of the object running it (rocks breaking), this puts them where
+	// they belong: an igloo built a block at a time, a door that appears.
+	struct CmdReveal
+	{
+		std::string target;
+		int count{ 1 };
+	};
+
 	// <reverse /> - the object's velocity turns round, both ways at once: a
 	// bomber pacing the top of the screen changing its mind (from a <timer>),
 	// or anything bouncing back off something it has no edge to bounce from.
@@ -211,7 +235,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdBecome, CmdReveal>;
 
 	// --- What the XML says, before any of it is evaluated.
 
@@ -266,6 +290,7 @@ namespace xge
 		std::string direction; // move, hop, accelerate, turn
 		std::string burn;      // accelerate, thrust
 		std::string sound;     // play
+		std::string sprite;    // become
 		RawValue amount;       // move, hop, accelerate, turn, thrust, release (how many), jump (distance)
 		RawValue seconds;      // jump (empty text: the default)
 	};

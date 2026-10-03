@@ -130,6 +130,14 @@ namespace xge
 		// stack forever.
 		void resetAll();
 
+		// <become sprite="..." object="name" />: every object of that name or
+		// group that has the look shows it.
+		void become(const std::string& target, const std::string& sprite);
+
+		// <reveal object="name">count</reveal>: the first `count` objects of
+		// that name or group that are out of play come back where they started.
+		void reveal(const std::string& target, int count);
+
 	private:
 		// The one implementation behind incrementText and decrementText;
 		// `verb` is only for the warning printed when the target is not found.

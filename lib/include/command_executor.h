@@ -68,6 +68,10 @@ namespace xge
 		void queueHop(Object& object, Direction direction, float distance);
 		void startJump(Object& object, const CmdJump& jump);
 		void reverse(Object& object);
+
+		// <become>: the object running it (self, which a state's commands do
+		// not have), or every object its object= names.
+		void become(Object* self, const CmdBecome& command);
 		void stop(Object& object);
 		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
 		void applyActionTurn(Object& object, Direction direction, float rate);

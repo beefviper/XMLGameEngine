@@ -27,6 +27,8 @@ namespace xge
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const CmdReverse&) { reverse(object); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
+			[&](const CmdBecome& b) { become(&object, b); },
+			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
 			                      appear in a collisionData list, and carry() is about
 			                      another object, which a screen edge is not; ignore
@@ -49,6 +51,8 @@ namespace xge
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const CmdReverse&) { reverse(object); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
+			[&](const CmdBecome& b) { become(&object, b); },
+			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
@@ -68,6 +72,12 @@ namespace xge
 			// about, it's the full-game reset - see Game::resetAll.
 			[&](const CmdReset&) { if (keyPressed) { game.resetAll(); } },
 			[&](const CmdPlay& p) { if (keyPressed) { game.requestSound(p.sound); } },
+			// What a <condition> (or a key) can also do to the game's objects:
+			// change a variable, a look, or bring something back into play.
+			[&](const CmdIncrement& i) { if (keyPressed) { game.incrementText(i.target, i.amount); } },
+			[&](const CmdDecrement& d) { if (keyPressed) { game.decrementText(d.target, d.amount); } },
+			[&](const CmdBecome& b) { if (keyPressed) { become(nullptr, b); } },
+			[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
 			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
 			                      directly on a state's <input>; only reachable
 			                      via CmdTriggerAction into an object's own
@@ -85,6 +95,8 @@ namespace xge
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
+			[&](const CmdBecome& b) { become(owner, b); },
+			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			// On an object, a bare reset puts that object back; in a state, it is
 			// the whole game, as on a key.
 			[&](const CmdReset&) { if (owner) { restart(*owner); } else { game.resetAll(); } },
@@ -97,6 +109,18 @@ namespace xge
 			[&](const auto&) { /* the rest are about a key held, an edge or another
 			                      object touched, none of which a timer has */ }
 		}, command);
+	}
+
+	void CommandExecutor::become(Object* self, const CmdBecome& command)
+	{
+		if (!command.target.empty())
+		{
+			game.become(command.target, command.sprite);
+		}
+		else if (self)
+		{
+			showLookNamed(*self, command.sprite);
+		}
 	}
 
 	void CommandExecutor::reverse(Object& object)
@@ -310,6 +334,23 @@ namespace xge
 			return;
 		}
 
+		// A jump that would land off the screen is not made at all (up from the
+		// top row stays where it is), rather than going part of the way.
+		Vector2f landing = object.position;
+		switch (jump.direction)
+		{
+		case Direction::Up:    landing.y -= jump.distance; break;
+		case Direction::Down:  landing.y += jump.distance; break;
+		case Direction::Left:  landing.x -= jump.distance; break;
+		case Direction::Right: landing.x += jump.distance; break;
+		}
+		const WindowDesc& window = game.getWindowDesc();
+		const Vector2f size = sizeOf(object);
+		if (landing.x < 0 || landing.y < 0 || landing.x + size.x > window.width || landing.y + size.y > window.height)
+		{
+			return;
+		}
+
 		const int frames = game.framesFor(jump.seconds);
 		const float step = jump.distance / static_cast<float>(frames);
 
@@ -402,6 +443,11 @@ namespace xge
 				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); object.facing = h.direction; } },
 				// So does a jump, and one in the air waits for the landing.
 				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
+				// And a bare reset (the object back where it started), a change of
+				// look and a reveal.
+				[&](const CmdReset&) { if (keyPressed) { restart(object); } },
+				[&](const CmdBecome& b) { if (keyPressed) { become(&object, b); } },
+				[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
 				// Thrust is held like a move: on while the key is down.
 				[&](const CmdAccelerate& a) { applyActionThrust(object, a.direction, keyPressed ? a.amount : 0.0f, a.burn); },
 				// So are a turn and a thrust along the heading.

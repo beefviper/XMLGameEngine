@@ -703,10 +703,18 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 	const std::string aLine =
 		"<sprite name=\"c\"><line><from><x>0</x><y>0</y></from><to><x>3</x><y>3</y></to></line></sprite>";
 
-	SECTION("several sprites and nothing to say when each is shown")
+	SECTION("several sprites and no animation are looks for <become>, so each needs a name")
 	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB), shows)),
-			ContainsSubstring("object 'thing'") && ContainsSubstring("2 <sprite>s") && ContainsSubstring("<animation>"));
+		const std::string unnamed = "<sprite><line><from><x>0</x><y>0</y></from><to><x>3</x><y>3</y></to></line></sprite>";
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + unnamed), shows)),
+			ContainsSubstring("object 'thing'") && ContainsSubstring("2 <sprite>s") && ContainsSubstring("every one needs a name"));
+
+		// Named, they load: the object shows the first and can become the other.
+		Loaded loaded(gameXml(objectWith(kA + kB), shows));
+		const Object& thing = loaded.game.getObject("thing");
+		REQUIRE(thing.looks.size() == 2);
+		CHECK(thing.lookName() == "a");
+		CHECK(thing.looks[1].name == "b");
 	}
 
 	SECTION("a frame that names a sprite that is not there")

@@ -372,9 +372,19 @@ namespace xge
 
 			if (!animation)
 			{
+				// Several sprites and no animation: the object's looks, which
+				// <become> switches between; it starts as the first. Each needs a
+				// name to be asked for by.
 				if (sprites.size() > 1)
 				{
-					fail(where, "has " + std::to_string(sprites.size()) + " <sprite>s but no <animation> to show them one after the other");
+					for (const RawSprite& sprite : sprites)
+					{
+						if (sprite.name.empty())
+						{
+							fail(where, "has " + std::to_string(sprites.size()) + " <sprite>s and no <animation>, so they are looks for <become>, and every one needs a name");
+						}
+					}
+					object.looks = sprites;
 				}
 
 				object.sprite = sprites.front();
@@ -416,7 +426,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play"
-				|| name == "jump" || name == "reverse";
+				|| name == "jump" || name == "reverse" || name == "become" || name == "reveal";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -433,6 +443,7 @@ namespace xge
 			command.direction = node.getAttribute("direction");
 			command.burn = node.getAttribute("burn");
 			command.sound = node.getAttribute("sound");
+			command.sprite = node.getAttribute("sprite");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec")
@@ -446,6 +457,15 @@ namespace xge
 			if (verb == "push") { requireAttribute(node, "state", where); }
 			if (verb == "fire") { requireAttribute(node, "object", where); }
 			if (verb == "play") { requireAttribute(node, "sound", where); }
+			if (verb == "become") { requireAttribute(node, "sprite", where); }
+			if (verb == "reveal")
+			{
+				requireAttribute(node, "object", where);
+
+				// How many is optional: a bare <reveal object="..." /> is one.
+				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
+				else { command.amount = RawValue::expression("1"); }
+			}
 			if (verb == "trigger") { requireAttribute(node, "object", where); requireAttribute(node, "action", where); }
 			if (verb == "move" || verb == "hop" || verb == "accelerate" || verb == "turn")
 			{
@@ -624,6 +644,7 @@ namespace xge
 					rule.filterClass = collision->getAttribute("class");
 					rule.filterObject = collision->getAttribute("object");
 					rule.unlessClass = collision->getAttribute("unless");
+					rule.whileSprite = collision->getAttribute("sprite");
 					rule.slower = std::move(slower);
 					rule.faster = std::move(faster);
 					rule.commands = std::move(commands);

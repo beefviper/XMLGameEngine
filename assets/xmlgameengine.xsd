@@ -6,7 +6,7 @@
 
     * An attribute NAMES or PICKS something: name, class, object, variable,
       state, action, button, edge, direction, unless, burn, sprite, sound, wave,
-      pitch, to. These are labels, and they cannot be computed.
+      pitch, to, keys. These are labels, and they cannot be computed.
     * Everything else is the content of an element. Wherever the content is a
       number (valueType below) it is either a math expression written out as
       text - window.width.center - title.width / 2 - or a single value tag that
@@ -355,6 +355,13 @@
       <xs:element name="hop" type="stepType" />
       <xs:element name="jump" type="jumpType" />
       <xs:element name="reverse" type="emptyType" />
+      <xs:element name="become">
+        <xs:complexType>
+          <xs:attribute name="sprite" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="reveal" type="releaseType" />
       <xs:element name="accelerate" type="thrustType" />
       <xs:element name="turn" type="turnType" />
       <xs:element name="thrust" type="aheadType" />
@@ -390,7 +397,8 @@
     passed over while the object is touching something of the unless class. A
     rule about another object may also begin with slower and/or faster, which
     hold it to when the object's own speed is under (slower) or at least
-    (faster) that number.
+    (faster) that number. With sprite, it runs only while the object shows its
+    sprite of that name (see become).
   -->
   <xs:complexType name="collisionType">
     <xs:sequence>
@@ -402,6 +410,7 @@
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="unless" type="xs:string" use="optional" />
+    <xs:attribute name="sprite" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!-- A named thing an object can do, run by a <trigger>. -->

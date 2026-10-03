@@ -96,6 +96,13 @@ namespace xge
 		if (verb == "pop")  { return CmdPopState{}; }
 
 		if (verb == "play")    { return CmdPlay{ raw.sound }; }
+		if (verb == "become")  { return CmdBecome{ raw.sprite, raw.object }; }
+		if (verb == "reveal")
+		{
+			const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
+			if (count < 1) { throw std::runtime_error("<reveal> of " + raw.object + " has a count under 1"); }
+			return CmdReveal{ raw.object, count };
+		}
 		if (verb == "fire")    { return CmdFire{ raw.object }; }
 		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action }; }
 
@@ -254,6 +261,8 @@ namespace xge
 			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << ")"; },
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
+			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << ")"; },
+			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
 		}, command);
 
 		return o;

@@ -46,7 +46,36 @@ namespace xge
 		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
 			const std::vector<SoundDesc>& sounds, const std::string& where)
 		{
-			if (const auto* play = std::get_if<CmdPlay>(&command))
+			if (const auto* become = std::get_if<CmdBecome>(&command))
+			{
+				if (!become->target.empty())
+				{
+					bool any = false;
+					for (const Object& object : objects)
+					{
+						const bool named = object.name == become->target || object.baseName == become->target
+							|| (!object.groupName.empty() && object.groupName == become->target);
+						if (!named) { continue; }
+						any = true;
+						if (std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+						{
+							throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
+						}
+					}
+					if (!any)
+					{
+						throw std::runtime_error(where + ": <become> names '" + become->target + "', and there is no object of that name");
+					}
+				}
+			}
+			else if (const auto* reveal = std::get_if<CmdReveal>(&command))
+			{
+				if (!findObject(objects, reveal->target))
+				{
+					throw std::runtime_error(where + ": <reveal> names '" + reveal->target + "', and there is no object of that name");
+				}
+			}
+			else if (const auto* play = std::get_if<CmdPlay>(&command))
 			{
 				const bool known = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == play->sound; });
 				if (!known)
@@ -107,18 +136,43 @@ namespace xge
 				}
 			};
 
+			// A <become> with no object= is about the object running it, which
+			// a state's commands do not have, and which must have that look.
+			const auto checkOwnLooks = [&](const std::vector<Command>& commands, const Object* self, const std::string& where)
+			{
+				for (const auto& command : commands)
+				{
+					const auto* become = std::get_if<CmdBecome>(&command);
+					if (!become || !become->target.empty()) { continue; }
+					if (!self)
+					{
+						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
+					}
+					if (std::none_of(self->looks.begin(), self->looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+					{
+						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");
+					}
+				}
+			};
+
 			for (const auto& state : states)
 			{
 				const std::string where = "state '" + state.name + "'";
-				for (const auto& [key, commands] : state.input) { checkAll(commands, where); }
-				for (const auto& condition : state.conditions) { checkAll(condition.commands, where); }
-				for (const auto& timer : state.timers) { checkAll(timer.commands, where + " > <timer>"); }
+				for (const auto& [key, commands] : state.input) { checkAll(commands, where); checkOwnLooks(commands, nullptr, where); }
+				for (const auto& condition : state.conditions) { checkAll(condition.commands, where); checkOwnLooks(condition.commands, nullptr, where); }
+				for (const auto& timer : state.timers) { checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, nullptr, where + " > <timer>"); }
 			}
 
 			for (const auto& object : objects)
 			{
 				const std::string where = "object '" + object.baseName + "'";
-				for (const auto& timer : object.timers) { checkAll(timer.commands, where + " > <timer>"); }
+				for (const auto& timer : object.timers) { checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, &object, where + " > <timer>"); }
+				for (const auto& [name, commands] : object.action) { checkOwnLooks(commands, &object, where); }
+				for (const auto& rule : object.collisionData.basic) { checkOwnLooks(rule.commands, &object, where); }
+				for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+				{
+					checkOwnLooks(*edge, &object, where);
+				}
 				for (const auto& [name, commands] : object.action)
 				{
 					checkAll(commands, where);
@@ -274,6 +328,33 @@ namespace xge
 			// object (every cell of a grid shares it).
 			const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject, windowDesc, where) : 0;
 
+			// The object's looks, if it has several sprites and no animation:
+			// built once, shared by every cell.
+			std::vector<Object::Look> looks;
+			if (!rawObject.looks.empty())
+			{
+				if (rawObject.hasHeading) { throw std::runtime_error(where + ": an object with a <heading> cannot have several looks"); }
+				if (isGrid) { throw std::runtime_error(where + ": a <grid> cannot have several looks"); }
+
+				for (const RawSprite& rawLook : rawObject.looks)
+				{
+					Object::Look look;
+					look.name = rawLook.name;
+					look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap);
+					look.shapeKind = shapeKindFromTag(look.spriteParams.empty() ? std::string{} : look.spriteParams.at(0));
+					if (look.shapeKind == ShapeKind::Text && rawLook.textIsNumber)
+					{
+						throw std::runtime_error(where + ": a look cannot be a text showing a <number>");
+					}
+					looks.push_back(std::move(look));
+				}
+
+				// The first look is the sprite the object starts with; it must be
+				// the very same picture.
+				looks.front().spriteParams = tempSpriteParams;
+				looks.front().bitmap = firstPassBitmaps[rawObject.name];
+			}
+
 			int thisLockstep = 0;
 			if (rawObject.rawCollisionData.lockstep)
 			{
@@ -397,6 +478,7 @@ namespace xge
 					}
 					object.facingOriginal = object.facing;
 					object.timers = processTimers(rawObject.timers, where);
+					object.looks = looks;
 
 					object.showHeading();
 
@@ -427,6 +509,11 @@ namespace xge
 						rule.filterClass = rawRule.filterClass;
 						rule.filterObject = rawRule.filterObject;
 						rule.unlessClass = rawRule.unlessClass;
+						rule.whileSprite = rawRule.whileSprite;
+						if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
+						{
+							throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
+						}
 						if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
 						if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
 						rule.commands = processCommands(rawRule.commands, where);

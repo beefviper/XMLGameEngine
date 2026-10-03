@@ -9,6 +9,39 @@
 
 namespace xge
 {
+	const std::string& Object::lookName() const
+	{
+		static const std::string none;
+		return looks.empty() ? none : looks[look].name;
+	}
+
+	void Object::showLook(std::size_t index)
+	{
+		if (index >= looks.size())
+		{
+			return;
+		}
+
+		look = index;
+		spriteParams = looks[index].spriteParams;
+		shapeKind = looks[index].shapeKind;
+		bitmap = looks[index].bitmap;
+		visualDirty = true;
+	}
+
+	bool showLookNamed(Object& object, const std::string& name)
+	{
+		for (std::size_t i = 0; i < object.looks.size(); ++i)
+		{
+			if (object.looks[i].name == name)
+			{
+				if (object.look != i) { object.showLook(i); }
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void Object::showHeading()
 	{
 		if (turnables.empty()) { return; }

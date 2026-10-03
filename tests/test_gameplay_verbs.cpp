@@ -433,3 +433,116 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 		plain, "<jump> has <seconds> of 0");
 	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, {}, {}, " keys=\"nothing\""), "keys=\"nothing\" names no <keys> set");
 }
+
+TEST_CASE("an object with several named sprites can <become> each of them, and a reset brings back the first", "[looks]")
+{
+	const std::string lamp = "<object name=\"lamp\" class=\"lamp\">"
+		"<sprite name=\"off\"><rectangle><width>10</width><height>10</height><color>color.grey</color></rectangle></sprite>"
+		"<sprite name=\"on\"><rectangle><width>10</width><height>10</height><color>color.yellow</color></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position><velocity><x>0</x><y>0</y></velocity>"
+		"<collisions><enabled>true</enabled>"
+		"<collision class=\"ball\" sprite=\"off\"><become sprite=\"on\" /><inc variable=\"lamp.lit\" /></collision>"
+		"</collisions><variables><variable name=\"lit\">0</variable></variables></object>";
+	const std::string ball = box("ball", 60, 100, 10, 10, "<enabled>true</enabled>", {}, {}, "<x>2</x><y>0</y>", " class=\"ball\"");
+
+	Loaded loaded(gameXml(lamp + ball,
+		state("playing", { "lamp", "ball" }, "<input button=\"space\"><become object=\"lamp\" sprite=\"off\" /></input>")));
+
+	Object& lamp1 = loaded.game.getObject("lamp");
+	CHECK(lamp1.lookName() == "off");
+	CHECK(lamp1.spriteParams.at(3) == "color.grey");
+
+	// The ball runs into it: the rule runs while it is off, and turns it on.
+	loaded.frames(40);
+	CHECK(lamp1.lookName() == "on");
+	CHECK(lamp1.spriteParams.at(3) == "color.yellow");
+	CHECK(loaded.variable("lamp", "lit") == 1); // once: the rule is for an unlit lamp
+
+	// A key in a state can name it; a reset brings back the first look.
+	CommandExecutor executor(loaded.game);
+	executor.executeInput(CmdBecome{ "off", "lamp" }, true);
+	CHECK(lamp1.lookName() == "off");
+	executor.executeInput(CmdBecome{ "on", "lamp" }, true);
+	loaded.game.resetAll();
+	CHECK(lamp1.lookName() == "off");
+}
+
+TEST_CASE("<reveal> brings hidden members of a pool back where they started, as many as asked", "[reveal]")
+{
+	const std::string pool = "<group name=\"blocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>0</y></velocity><hidden>true</hidden><collisions><enabled>false</enabled></collisions>"
+		"<member><position><x>10</x><y>10</y></position></member>"
+		"<member><position><x>30</x><y>10</y></position></member>"
+		"<member><position><x>50</x><y>10</y></position></member></group>";
+	const std::string builder = box("builder", 0, 0, 1, 1, "<enabled>false</enabled>", {},
+		"<variables><variable name=\"n\">0</variable></variables><timers><timer><every>1</every><reveal object=\"blocks\" /></timer></timers>");
+
+	Loaded loaded(gameXml(pool + builder,
+		state("playing", { "blocks", "builder" }, "<input button=\"space\"><reveal object=\"blocks\">2</reveal></input>")));
+
+	const auto shown = [&]
+	{
+		int n = 0;
+		for (const auto& object : loaded.game.getCurrentObjects()) { if (object.groupName == "blocks" && object.isVisible) { ++n; } }
+		return n;
+	};
+
+	CHECK(shown() == 0);
+	loaded.frames(60);
+	CHECK(shown() == 1);
+	CHECK(loaded.game.getObject("blocks.1").isVisible);
+	CHECK(loaded.game.getObject("blocks.1").position.x == Approx(10));
+
+	CommandExecutor executor(loaded.game);
+	executor.executeInput(CmdReveal{ "blocks", 2 }, true);
+	CHECK(shown() == 3);
+	CHECK(loaded.game.getObject("blocks.3").position.x == Approx(50));
+
+	// None left to bring back: nothing happens.
+	loaded.frames(60);
+	CHECK(shown() == 3);
+}
+
+TEST_CASE("a condition can change a variable, so it can count and start over", "[conditions]")
+{
+	Loaded loaded(gameXml(
+		box("counter", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter + "<timers><timer><every>0.1</every><inc variable=\"counter.n\" /></timer></timers>"),
+		state("playing", { "counter" }, "<input button=\"space\"><pop /></input>",
+			"<conditions><condition object=\"counter\" variable=\"n\"><atleast>3</atleast><dec variable=\"counter.n\">3</dec><inc variable=\"counter.gap\" /></condition></conditions>")));
+
+	loaded.frames(18);
+	CHECK(loaded.variable("counter", "n") == 0);
+	CHECK(loaded.variable("counter", "gap") == 2);
+	loaded.frames(18);
+	CHECK(loaded.variable("counter", "gap") == 3);
+}
+
+TEST_CASE("looks and reveals that name nothing are turned away when the game loads", "[looks][reveal][errors]")
+{
+	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
+	{
+		INFO(objects << states);
+		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+			"<objects>" + objects + "</objects><states>" + states + "</states></game>";
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / "xge_verbs_errors.xml" };
+		{
+			std::ofstream out(scratch.path);
+			out << xml;
+		}
+		CHECK_THROWS_WITH(Game{ scratch.path.string() }, ContainsSubstring(expected));
+	};
+
+	const std::string twoLooks = "<object name=\"o\"><sprite name=\"a\"><rectangle><width>5</width><height>5</height></rectangle></sprite>"
+		"<sprite name=\"b\"><rectangle><width>5</width><height>5</height></rectangle></sprite>"
+		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions></object>";
+
+	fails(twoLooks, state("playing", { "o" }, "<input button=\"space\"><become sprite=\"a\" /></input>"), "needs object=");
+	fails(twoLooks, state("playing", { "o" }, "<input button=\"space\"><become object=\"o\" sprite=\"c\" /></input>"), "has no look of that name");
+	fails(twoLooks, state("playing", { "o" }, "<input button=\"space\"><become object=\"nobody\" sprite=\"a\" /></input>"), "no object of that name");
+	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"x\"><become sprite=\"a\" /></action></actions>"),
+		state("playing", { "o" }), "it has no look of that name");
+	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision class=\"x\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
+		"names no look of the object");
+	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, "<input button=\"space\"><reveal object=\"ghost\" /></input>"), "<reveal> names 'ghost'");
+}

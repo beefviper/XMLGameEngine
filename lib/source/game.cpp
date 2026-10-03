@@ -541,6 +541,7 @@ namespace xge
 			object.jumpStep = {};
 			object.jumpFramesLeft = 0;
 			object.facing = object.facingOriginal;
+			if (!object.looks.empty()) { object.showLook(0); }
 			for (auto& timer : object.timers)
 			{
 				timer.framesLeft = -1;
@@ -594,6 +595,34 @@ namespace xge
 					other.visualDirty = true;
 				}
 			}
+		}
+	}
+
+	void Game::become(const std::string& target, const std::string& sprite)
+	{
+		for (auto& object : objects)
+		{
+			if (object.name == target || object.baseName == target || (!object.groupName.empty() && object.groupName == target))
+			{
+				showLookNamed(object, sprite);
+			}
+		}
+	}
+
+	void Game::reveal(const std::string& target, int count)
+	{
+		for (auto& object : objects)
+		{
+			if (count <= 0) { break; }
+
+			const bool named = object.name == target || object.baseName == target || (!object.groupName.empty() && object.groupName == target);
+			if (!named || object.isVisible) { continue; }
+
+			object.position = object.positionOriginal;
+			object.velocity = object.velocityOriginal;
+			object.isVisible = true;
+			object.collisionData.enabled = object.collisionEnabledOriginal;
+			--count;
 		}
 	}
 
@@ -1044,6 +1073,7 @@ namespace xge
 			for (const auto& rule : self.collisionData.basic)
 			{
 				if (!collisionRuleMatches(rule, other)) { continue; }
+				if (!rule.whileSprite.empty() && self.lookName() != rule.whileSprite) { continue; }
 				if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
 				if (rule.slower && !(speed < *rule.slower)) { continue; }
 				if (rule.faster && !(speed >= *rule.faster)) { continue; }
