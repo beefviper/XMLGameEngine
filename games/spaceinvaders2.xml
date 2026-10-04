@@ -27,10 +27,10 @@
   The three kinds of alien (A, B, C) are the members of one group, so they march,
   bounce and step down together as a single block; each member is a <grid> of
   its own three frames, which an <animation> shows one after the other, each for
-  animation.seconds seconds. The ship is the idle picture, and the bullet is the
-  player bolt. The rest of the sheet (banking, the hit flash, the charged bolt,
-  the enemy bolts and the explosions, the saucer) is not used yet: a picture that
-  changes with a key, a hit or a death is not something the language has.
+  animation.seconds seconds. The ship is the idle picture, the bullet is the
+  player bolt, and the aliens' bombs are the enemy bolt, flipped to fly down.
+  The rest of the sheet (banking, the hit flash, the charged bolt, the enemy
+  bomb, the explosions, the saucer) is not used yet.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">

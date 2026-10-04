@@ -13,8 +13,9 @@
 
     * <heading> on an object (degrees clockwise from up) and, in its actions,
       <turn> (held, degrees a frame) and <thrust> (held, pushes along the
-      heading). The ship's drawing is made at 72 headings when the game loads
-      and the one nearest its heading is shown and tested.
+      heading). The ship's lines are drawn again at its heading, to the
+      nearest whole degree, whenever that changes; that picture is shown and
+      tested.
     * <drag>, a fraction of the speed lost every frame, so the ship has a top
       speed of thrustpower / drag instead of speeding up for ever.
     * <fire> from an object with a heading leaves its nose, along the heading.
@@ -46,7 +47,7 @@
     <variable name="margin">20</variable>
   </variables>
   <objects>
-    <!-- The ship: a triangle of four lines, drawn at 72 headings when the game loads. It has a <heading>, so the left and right keys <turn> it, thrust pushes it along the way it faces, and a shot leaves its nose. Pixel collisions look at the picture for the heading it has now. -->
+    <!-- The ship: a triangle of four lines, drawn again at its heading (to the whole degree) when that changes. It has a <heading>, so the left and right keys <turn> it, thrust pushes it along the way it faces, and a shot leaves its nose. Pixel collisions look at the picture for the heading it has now. -->
     <object name="ship" class="ship">
       <sprite>
         <line><from><x>12</x><y>0</y></from><to><x>23</x><y>28</y></to><thickness>2</thickness></line>

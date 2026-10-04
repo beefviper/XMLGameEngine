@@ -34,7 +34,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - **lunasvg v3.5.0, not a backend:** no interface, factory, command-line choice or Options entry (a choice would only make one sprite look different in different libraries). `svg.h` speaks only in `Bitmap`; only `svg.cpp` includes the library, linked `PRIVATE`. Fetched pinned by `FetchContent`, or found through `find_package`. It supports `<use>` (the sheet defines the ship once and shows it three times); nanosvg does not. It adds no `stb_image` symbols.
 - The sheet is cut close round what is drawn, because non-pixel collisions use the whole picture box; all three frames of an alien share one cut so the animation frames match in size.
 - Rejected: SDL_image in backends (pictures differ per library), converting to PNG at build time (a tool, a second file to keep in step, no part or scale in the game file), rasterizing at window size (resize redraws; `<scale>` already says what a unit is), a palette/recolor, caching the drawing by file (cheap if loading the sheet per sprite is ever slow).
-- Mistakes stop the load naming object and file. Unused sheet pictures (banking ship, hit flash, explosions, enemy bolts, saucer) need a picture that depends on a key, a hit or a death.
+- Mistakes stop the load naming object and file. Space Invaders 2 uses the aliens, the idle ship, the player bolt and the enemy bolt (flipped). The banking ship, hit flash, charged bolt, explosions and saucer are unused; they could now be written with looks (`<become>` from the ship's actions and rules), a pool released where an alien died, and a timer for the saucer, but the game has not been.
 
 ## Flip and turning
 
@@ -45,7 +45,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 ## Animation
 
 - Need: arcade creatures flap between two poses; nothing changed a picture over time.
-- An object with several `<sprite name="...">`s and an `<animation>`: `<interval>` seconds (a value above 0) and `<frame sprite="name" />` elements that refer to sprites by name (so a sprite can be reused in the sequence). At least two frames; every sprite must be shown; several sprites with no animation or looks is an error; frames must be pictures of one size and one grid layout.
+- An object with several `<sprite name="...">`s and an `<animation>`: `<interval>` seconds (a value above 0) and `<frame sprite="name" />` elements that refer to sprites by name (so a sprite can be reused in the sequence). At least two frames; every sprite must be shown; frames must be pictures of one size and one grid layout. (Several named sprites with *no* animation are looks, below.)
 - **Seconds in the file, frames in the engine:** turned into frames with `<framerate>` at load (a window with no framerate is an error); a slow machine animates slowly with everything else. One count per object, advanced by `Game::updateObjects` for objects that are shown and in play; a pause or menu holds the picture; a reset restores frame one. Cells of a grid animate together because they start together and share the pictures.
 - Groups: a member's own sprites replace the group's; an animation (its own, else the group's) is looked up in the sprites the member ends up with. This is what gives Space Invaders three alien kinds in one lockstep group.
 - Frames of a turned object each keep their own `Turnable`; equal-sized bitmaps turn to equal squares.

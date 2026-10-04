@@ -1,22 +1,22 @@
 # 10. Games as tests of the vocabulary
 
-**Status:** each game below is built in `games/` and played frame by frame in `tests/test_<game>.cpp`.
+**Status:** all 15 games are built in `games/`. Most are played frame by frame in `tests/test_<game>.cpp`; Pong is covered by `test_sound` and `test_deflect`, Space Invaders by `test_bitmap_sprites`, Space Invaders 2 by `test_svg_sprites`, Demon Attack by `test_ai_games`, Breakout by the input and format tests.
 
 Games are picked to *test* the vocabulary: add a verb only when the game cannot be said without it, otherwise record that the vocabulary was enough. Each game is an approximation of the arcade original (rectangles for art, no attract mode).
 
 ## At a glance
 
-| Game | Chosen to test | Forced (new) | Could not do |
+| Game | Chosen to test | Forced (new) | Left out |
 |---|---|---|---|
 | Pong, Breakout, Space Invaders | the core: bounce, stick, die, fire, lockstep grids | `<deflect>` (Pong), bitmaps, animation, SVG sprites, enemy fire (Invaders 1 and 2) | |
-| Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `carry`, `unless`, verbs in object rules, colors | diving turtles, crocodiles, timer, speed-up |
+| Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `carry`, `unless`, verbs in object rules, colors | diving turtles, crocodiles, a timer, speed-up (timers and looks would now allow the first three) |
 | Space Race | a second game on the same vocabulary | nothing | |
-| Kaboom | `<random>` in a `<group>`; many states differing only in what they show | nothing at first; later timers, `<reset object>` | |
-| Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | timed round (now possible with timers) |
-| Depth Charge | limited ammunition without a countdown | nothing | several charges in flight |
-| Astrosmash | Kaboom's pieces plus a gun | nothing | splitting rocks (needs spawning) |
-| Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation, score by fuel |
-| Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping shots, saucer, waves |
+| Kaboom | `<random>` in a `<group>`; states differing only in what they show | nothing at first; when reworked, timers, `<facing>` fire, `<reset object>` in a rule | bucket stack, speed-up inside a wave |
+| Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | timed round (timers exist now, but "most crossings wins" needs a condition comparing two variables) |
+| Depth Charge | limited ammunition without a countdown | nothing | several charges in flight, subs that fire back |
+| Astrosmash | Kaboom's pieces plus a gun | nothing | splitting rocks (a pool and `<release>` would now do it, as in Asteroids) |
+| Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation (headings exist now), score by fuel |
+| Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping and expiring shots, saucer, waves, a safe respawn |
 | Berserk, Demon Attack, Frostbite (written by another AI) | can the schema alone be enough for an author | (found gaps) then timers, facing, jump, looks, key sets | chasing, aiming |
 
 ## Frogger
@@ -38,29 +38,30 @@ Games are picked to *test* the vocabulary: add a verb only when the game cannot 
 
 ## Kaboom
 
-- Arcade rules: an 800 by 600 window, a bucket stopped at the sides by `<stick />`, bombs falling six columns, three buckets, three waves. Waves are states (`playing`, `wave2`, `wave3`) showing their own group, differing in color, speed range and catch value (a score condition pushes the next at 10 then 30 points; 90 points wins; thresholds are global `<variable>`s). The arcade game has no end.
-- First shipped as a looser game (Gem Catcher), rewritten to follow the rules. Reworked again with timers: the Mad Bomber paces the rooftop, turns on a random timer, drops bombs from a pool under him, so bombs come in trails and clusters that follow him. A bomb on the ground does `<reset object="bombsN" />`: every falling bomb at once, one miss costs one bucket. A test plays wave one with an automatic player that follows the lowest bomb.
-- Showed: a group's shared part can hold `<random>` and each member still draws its own numbers; one event cannot act on many objects from a rule (before `<reset object>` in collisions it went through a `tally` object and a condition); keys held across a state change keep moving the bucket.
-- Rejected: a new speed on every reset (`<random>` re-drawn at runtime), a bucket stack that loses its top (needs hide), speed rising within a wave (needs acceleration; three fixed speeds stand in).
+- An 800 by 600 window, a bucket stopped at the sides by `<stick />`, three buckets, three waves. Each wave is a state (`wave1`, `wave2`, `wave3`) with its own bomber and its own pool of ten bombs, faster each time and worth 1, 2, then 3 a catch; a score condition moves on at `wave2at` (15) and `wave3at` (45), and `goal` (90) wins. The arcade game has no end. The waves share one `<keys>` set.
+- The Mad Bomber paces the rooftop, `<reverse />`s on a timer with a random wait, and `<fire>`s a bomb from his pool every `dropN` seconds; he has `<facing>down</facing>`, so bombs leave from under him and come in trails and clusters that follow him. A caught bomb `<die />`s back into the pool. A bomb on the ground does `<reset object="bombsN" />`: every falling bomb at once, so one miss costs one bucket. The tests play wave one with an automatic player and check the last wave is harder.
+- History: first a looser game (Gem Catcher), then the arcade rules with bombs in six fixed columns, `<random>` speeds drawn once, and a `tally` object a condition turned into the explosion (a rule could not reset other objects then). Reworked with timers when those came.
+- Showed: a group's shared part can hold `<random>` and each member still draws its own numbers; keys held across a state change keep moving the bucket.
+- Rejected: a new speed on every reset (`<random>` re-drawn at runtime), a stack of buckets that loses its top (the count is a number), speed rising within a wave (three fixed speeds stand in).
 
 ## Freeway
 
 - 800 by 600, 50-pixel cells, twelve rows: far side, ten lanes (cars and trucks alternating, each lane its own speed and direction), near side. Two players share the road, each chicken with its own score, two actions and two key sets (W/S and Up/Down), no rule about the other. First to `crossings` (global variable) wins. Lane spacing follows Frogger's rule (window width plus object size).
 - The far side is an object (`class="farside"`) the chicken has a rule for; a hop into that row is judged where it lands, so it scores at once. A car hits a chicken that hops into it because a hopped object counts as moving; two stationary objects are never checked.
-- Rejected: a timed round (no clock then; now possible with timers), knocked back one lane instead of to the start (closer to the arcade, one `<move>` line; sending to the start makes a hit far too costly near the far side and costs nothing near the start), lives (kept different from Frogger).
+- Rejected: a timed round (there was no clock; timers exist now, but picking the winner by most crossings needs a condition that compares two variables), knocked back one lane instead of to the start (closer to the arcade, one `<move>` line; sending to the start makes a hit far too costly near the far side and costs nothing near the start), lives (kept different from Frogger).
 
 ## Depth Charge
 
 - Ship stopped by `<stick />`, one charge falling at a time, nine submarines in three lanes looping with `<wrap />`, a charge hit sinks both (`<die />`), win when `<remaining>0</remaining>` on `class="subs"`.
 - **Limited ammunition without a countdown on every shot:** count the other way. `ship.charges` starts at the number of misses allowed and the floor rule does `<dec>` and `<die />`; a hit does not touch it, so a good player never runs out. Eight wasted charges end the game.
 - `<fire>` copies the projectile's own `<velocity>` (positive y falls) and starts inside the ship, leaving in a few frames; no ship rule about the charge, so it is not a collision.
-- Rejected: counting every shot (a `<dec>` in the fire action, which could not hold it then), several charges in flight (a different, easier game), submarines worth different amounts (an amount on `inc`, now built).
+- Rejected: counting every shot (would need `<dec>` in the ship's fire action; object actions cannot run `<inc>`/`<dec>`), several charges in flight (a different, easier game), submarines worth different amounts (an amount on `inc` exists now).
 
 ## Astrosmash
 
 - Eight rocks (four slow, four fast) fall fixed columns with `<random>` speeds and heights; a ship fires one shot at a time. A shot kills (`<die />` on the shot, `<inc>` then `<reset />` on the rock: `<die />` is for things that stay dead). A rock reaching the ground or the ship costs a life. 20 points win, five lives lost is game over. Both groups share class `rocks`.
 - A hidden, collision-less shot does not interfere with rocks passing where it sits.
-- Rejected: splitting rocks (needs spawning), drifting (needs wall rules, harder columns), a free miss (unloseable by neglect), differently scored rocks (an amount on `inc`, now built).
+- Rejected: splitting rocks (there was no way then; pools and `<release>` now do it in Asteroids), drifting (needs wall rules, harder columns), a free miss (unloseable by neglect), differently scored rocks (an amount on `inc` exists now).
 
 ## Lunar Lander
 
@@ -72,7 +73,7 @@ Games are picked to *test* the vocabulary: add a verb only when the game cannot 
 
 ## Space Invaders 1 and 2
 
-- Invaders 1 was a grid of identical rectangles; redrawn with three alien kinds (squid, two rows of crab, two of octopus) as a group of three grids of two named bitmaps animated on a one-second interval, a bitmap cannon and a thin bullet. Making the bullet thin showed `<fire>` put its left edge, not its middle, at the middle of the shooter; now centered (this moved Depth Charge's and Astrosmash's shots by half their width). Invaders 2 is the same game drawn from an SVG sprite sheet with three-frame animations a half second apart ([07](07-pictures-and-text.md)); aliens and Demon Attack fire back from pools on random timers.
+- Invaders 1 was a grid of identical rectangles; redrawn with three alien kinds (squid, two rows of crab, two of octopus) as a group of three grids of two named bitmaps animated on a one-second interval, a bitmap cannon and a thin bullet. Making the bullet thin showed `<fire>` put its left edge, not its middle, at the middle of the shooter; now centered (this moved Depth Charge's and Astrosmash's shots by half their width). Invaders 2 is the same game drawn from an SVG sprite sheet with three-frame animations a half second apart ([07](07-pictures-and-text.md)). In both, and in Demon Attack, the aliens fire back from pools on random timers, and the cannon has three lives.
 - Moving the game to three kinds broke tests that borrowed it as a grid fixture, so those load `tests/invaders_fixture.h`, a frozen copy of the first game.
 
 ## Games written by another AI (Berserk, Demon Attack, Frostbite)
@@ -81,7 +82,7 @@ The author asked another AI to write three games from `assets/xmlgameengine.xsd`
 
 - **Colors** like `white` or `#00ff00` (a color is a `color.` name; anything else is transparent). **Key names** the engine lacks (`button="fire"` reads as `Unknown` and never runs).
 - **`<move>` / `<fire>` in an `<input>`** (they only mean something in an object `<action>`), **`<inc>`/`<dec>` in a `<condition>`** and **`<reset object>` in a `<collision>`** (fixed later by [08](08-timers-and-enemy-behavior.md)).
-- **A group named in a collision's `object=`** (a group is matched by `class`), **a variable with no owner** (`<inc variable="score">` does nothing; score and lives live on the player), **a spare projectile that starts enabled** (never fired; it flew off with nothing to put it away).
+- **A variable with no owner** (`<inc variable="score">` does nothing; score and lives live on the player), **a spare projectile that starts enabled** (never fired; it flew off with nothing to put it away).
 - Lesson: the vocabulary was enough (no tag was added), but the schema cannot tell an author a command is in the wrong place. Making the loader refuse unknown buttons and misplaced commands, and warn about unowned variables, would turn each mistake into a load error naming the line; **not done, for the author to decide** ([01](01-vision-and-format.md)).
 - `tests/test_ai_games.cpp` plays Demon Attack from title to end screen; unknown colors are checked by a test that reads every `<color>` and `<background>`.
 

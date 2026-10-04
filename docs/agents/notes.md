@@ -4,14 +4,13 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 
 ## State of the project (2026-10-04)
 
-- 15 games in `games/`; a test file for nearly each. The newest work (sound, `<deflect>`, timers, facing, jumps, looks, key sets, SVG sprites, Berserk) is on branch `working`; check `git branch -r` and `git log` for the freshest branch before starting.
-- Agents have only ever built in a Linux sandbox, often a reduced one (no window backends, no sound, sometimes no Qt). **Never run on Windows by an agent:** XGEGUI, raylib and SFML 3 windows in XGEGUI's second window, sound on a real card, the `output/` manifest layout. Nothing has been listened to. Berserk's speeds, sizes and waits were never watched in play: tune them first.
-- A flaky test: "a game left running eventually brings bombs down on a moving bucket" (`test_kaboom.cpp`) failed once and passed on every rerun; it is random in a way Catch2's seed does not control.
+- 15 games in `games/` (list and keys in [../readme.md](../readme.md)), 37 test files. The newest work (sound, `<deflect>`, timers, facing, jumps, looks, key sets, SVG sprites, Berserk) landed on branch `working` ahead of `master`; check `git branch -r` and `git log` for the freshest branch before starting.
+- The author builds and runs on Windows (Visual Studio, vcpkg); the `output/` layout with `libraries/` and its manifest was confirmed there on 2026-10-03. Agents build in a Linux sandbox, often without some libraries (no Qt, no window or sound backends), and cannot watch or listen. Berserk's speeds, sizes and waits were chosen without seeing it played: tune them first.
 
 ## Gotchas (easy to get wrong)
 
 **Engine**
-- Everything numeric is evaluated **once at load**, except a timer's `<every>`/`<after>`. A condition's `<atleast>`/`<atmost>`/`<remaining>` and an `<inc>`/`<dec>` amount cannot follow a variable. `<random>` is drawn once, so `<reset />` repeats it ([design 02](../designs/02-values-variables-and-names.md)).
+- Everything numeric is evaluated **once at load**, except a timer's `<every>`/`<after>` and positions that use a text's or image's measured size. A condition's `<atleast>`/`<atmost>`/`<remaining>` and an `<inc>`/`<dec>` amount cannot follow a variable. `<random>` is drawn once, so `<reset />` repeats it ([design 02](../designs/02-values-variables-and-names.md)).
 - `<reset object="x" />` resets **every variable** of x, not just its position. A rule's bare `<reset />` puts only its own object back. Never put `<reset object="player" />` in someone else's rule.
 - No handle system and no `Value` variant exist; variables are `float`. `collisionData.basic` is the old name for the list of object-against-object rules (rename pending).
 - `ShapeKind::Line` means any picture the engine draws itself (`<line>`, `<bitmap>`, `<svg>`): all become a `Bitmap`, params `{"line", w, h}`, built in one block, `game_expr::buildSpriteParams` (read, draw, flip, keep a `Turnable`). Keep new picture kinds on that path; never rotate or draw in a backend ([design 07](../designs/07-pictures-and-text.md)).
@@ -34,7 +33,7 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 **XGEGUI**
 - No OpenGL through Qt: `GameView` is an ordinary widget; do not bring back a `QOpenGLWidget` without a guard around every library call ([design 12](../designs/12-front-ends.md)).
 - Anything that can run while `GameSession` swaps the game or window (a focus signal, a timer) must check its `changing` guard: the engine has no window for part of a swap.
-- Do not style `QSpinBox` borders in the style sheet (arrows vanish). The inspector label change for "drawn/pixels" sprites and the theme were never compiled by an agent without Qt.
+- Do not style `QSpinBox` borders in the style sheet (arrows vanish). The inspector calls an engine-drawn sprite "drawn" (`ShapeKind::Line`).
 
 ## Next steps (not started)
 
@@ -42,9 +41,9 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 2. Arcing jump with grounded/airborne and an air-control ladder ([06](../designs/06-motion-and-verbs.md)); `<goto state>` so Kaboom's waves and Berserk's rooms stop growing the stack.
 3. Make the loader refuse unknown button names and misplaced commands and warn about unowned variables (author's decision; [design 10](../designs/10-games-as-tests.md)).
 4. Sort `lib/` into folders; rename `collisionData.basic` ([design 11](../designs/11-backends-build-and-layout.md)).
-5. Sound for the other games; looping music; envelope. Breakout could use `<deflect>`; Pong serve at a set speed and random angle; speed-up per hit.
-6. Pictures that depend on a key, hit or death (ship banking, explosions, saucer on the SVG sheet); a palette; per-frame intervals; animation that runs once ([07](../designs/07-pictures-and-text.md)).
-7. Watch on Windows: every game in each window backend, XGEGUI's two-window layout with SFML 3 and raylib, sound with each library, the `output/` manifest layout.
+5. Sound for the eight silent games (Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander, Asteroids); looping music; an envelope. Breakout could use `<deflect>`; Pong serve at a set speed and random angle; speed-up per hit.
+6. Use the rest of the Space Invaders 2 sheet (banking ship and hit flash as looks, explosions as a released pool, the saucer on a timer); looks on animated objects; a palette; per-frame intervals; animation that runs once ([07](../designs/07-pictures-and-text.md)).
+7. Asteroids: wrapping and expiring shots, a safe respawn, a saucer, more waves. Lunar Lander could turn with `<heading>` and score by fuel left.
 8. Groups: nested groups, a bare `<x>` in a member, evenly spaced members ([03](../designs/03-objects-groups-and-storage.md)). Arithmetic in text vs elements ([01](../designs/01-vision-and-format.md)).
 
 ## Tools in this folder

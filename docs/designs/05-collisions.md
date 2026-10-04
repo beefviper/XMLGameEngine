@@ -15,7 +15,7 @@
 
 - **Screen edges** are checked by position before the move (not swept). An object faster than a window is wide could skip them.
 - **Swept object-against-object.** Reduce both motions to one (hold B still, move A by the difference). Rectangle vs rectangle: slab method against B grown by A's size. Circle vs rectangle: the centre against the rectangle grown by the radius, with rounded corners solved as a ray against a circle. Returns the time (0 to 1) and B's touched edge. Touching and moving apart is not a hit. Static overlap (`overlap`, `rectangleRectangle`, `circleRectangle`) covers pairs already overlapping at frame start.
-- **Frame loop (`Game::moveObjects`).** Candidate pairs: one has a rule answering to the other, they are not group-mates, one is moving. Each round every pair is swept for the time left; the earliest hit anywhere wins; all shown objects advance to that moment; that pair's rules run; the rest of the frame plays with whatever velocities they left. A pair reacts at most once per frame (bounds the loop and stops a bounce re-triggering).
+- **Frame loop (`Game::moveObjects`).** Candidate pairs: one has a rule answering to the other, they are not in lockstep with each other, neither is in the air mid-`<jump>`, one is moving. (Members of a group without lockstep do collide with each other if a rule answers.) Each round every pair is swept for the time left; the earliest hit anywhere wins; all shown objects advance to that moment; that pair's rules run; the rest of the frame plays with whatever velocities they left. A pair reacts at most once per frame (bounds the loop and stops a bounce re-triggering).
 - Each object is swept alone ([03](03-objects-groups-and-storage.md) lockstep).
 - **Hops and jumps land before collisions.** A queued hop is made at the start of the move and judged where it lands, not swept: swept, a frog hopping onto a log would first touch the *water*. A jump in the air is in no pair; the landing frame counts as moving.
 - **Riding (`<carry />`).** Lends the other's velocity for the frame (`Object::carry`), added in movement, the sweep and edge checks; cleared each frame and recomputed from current touches, so stepping off needs no undo. Alternatives rejected: copy the velocity into the object's own (must be undone, fights hop and keys), attach as a child (an ownership model the language lacks), a position offset (bypasses the sweep).
@@ -40,7 +40,7 @@
 - Need: the ball only ever kept its random slope. The arcade rule: middle of the paddle sends it straight back, ends send it back at 45 degrees. No command could say where along the side the hit was.
 - **Chosen: `<deflect>angle</deflect>`**, a new verb in a rule about another object (angle is a value, 0 up to 90). Measured from the side's middle: half the side's length is the full angle, in proportion between; leaves away from the side touched; **speed kept**. Pong uses 45.
 - Rejected: `<bounce>45</bounce>` (bounce also runs on screen edges and in lockstep, keep every bounce unchanged); measuring to the ball's own edge (gave about 40 degrees at the top corner).
-- Open: serve at a set speed and random angle, speeding up per hit with a cap, adding the paddle's motion to the angle (velocity transfer). Breakout does not use it yet.
+- Open: serve at a set speed and random angle, speeding up per hit with a cap, adding the paddle's motion to the angle (velocity transfer). Breakout's paddle does not use it yet (plain `<bounce />`).
 
 ## Known weaknesses
 

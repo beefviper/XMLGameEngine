@@ -1,6 +1,6 @@
 # 09. Sound
 
-**Status:** built (`sound.h`, `audio.h`, `audio_*.cpp`, Pong's five sounds). Not listened to on a real sound card or on Windows.
+**Status:** built (`sound.h`, `audio.h`, `audio_*.cpp`); seven games have sounds.
 
 ## What we wanted
 
@@ -23,7 +23,7 @@ A game has an optional `<sounds>` after `<variables>`. Each `<sound name wave>` 
 - **The sound library is its own choice** (`AudioBackend`: SFML3, Raylib, SDL2, None; `-a`/`--audio`, an Options entry), not tied to the window, so an OpenGL window (GLFW has no sound) can have sound, and `-a none` plays silently. Default SFML 3.
 - **No sound is not an error:** a window that will not open stops the game; a sound device that will not open prints a warning and uses `NullAudio` (XGEGUI says so and sets the choice to None).
 - **SDL is shared** by `SDL2Window` and `SDL2Audio`: each starts and stops only its own subsystem (`SDL_InitSubSystem`/`QuitSubSystem`), the last one out calls `SDL_Quit()`. raylib opens its sound device apart from its window. SFML 3 and raylib both carry miniaudio and `stb_image` (link clashes when both are built static from source; [11](11-backends-build-and-layout.md)).
-- **Pong is the test:** low square blip (A3) off walls, higher (A4) off a paddle, a falling triangle bloop for a point, a rising arpeggio on start, a falling four-note tune with a hiss of noise when someone reaches 15.
+- **Pong was the test:** low square blip (A3) off walls, higher (A4) off a paddle, a falling triangle bloop for a point, a rising arpeggio on start, a falling four-note tune with a hiss of noise when someone reaches 15. Since then Space Invaders (both), Kaboom, Demon Attack, Frostbite and Berserk have sounds too (shots, hits, explosions, jumps, waves, game over). Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids are still silent.
 
 ## Rejected
 
@@ -31,4 +31,4 @@ Sound files as the only form; a tracker or MML string (`"t120 o4 c8 e8 g8"`: a l
 
 ## Not done
 
-Looping music behind a state, stopping a sound from the game file, chords inside one sound, a volume envelope, stereo/panning, a sound-file tag, notes that follow a variable at runtime (a sound is made once when the window opens), sounds for the other games (Breakout's bricks, Invaders' march and shots, Asteroids' thrust and explosions are the obvious ones).
+Looping music behind a state, stopping a sound from the game file, chords inside one sound, a volume envelope, stereo/panning, a sound-file tag, notes that follow a variable at runtime (a sound is made once when the window opens), sounds for the eight silent games (Breakout's bricks, Asteroids' thrust and explosions, Invaders' march are the obvious ones).

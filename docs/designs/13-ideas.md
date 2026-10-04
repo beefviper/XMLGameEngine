@@ -35,7 +35,7 @@
 
 ## Smaller ideas
 
-- Show/hide as general verbs; a rule that must be looked at every frame even when nothing moves; a general way to say where in a sequence of rules a touch falls if `unless` is not enough ([05](05-collisions.md)).
-- A variable that changes by an expression; an amount per member in a group (`count`, `gap`).
+- A rule that must be looked at every frame even when nothing moves (show and hide exist: `<reveal>` and `<die />`); a general way to say where in a sequence of rules a touch falls if `unless` is not enough ([05](05-collisions.md)).
+- An `<inc>` amount, or a condition threshold, that follows a variable at runtime (both are worked out at load); evenly spaced group members (`count`, `gap`).
 - Polish: a per-glyph or per-value offset in the text vocabulary (a score "1" looks too close to the center line).
 - Performance-driven conditions, state predicates (no moves left, a timer).

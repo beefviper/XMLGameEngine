@@ -1,6 +1,6 @@
 # 12. Front ends: command line and XGEGUI
 
-**Status:** built. SFML 3 and raylib in XGEGUI's second window were never run by an agent; nothing was run on Windows by an agent.
+**Status:** built.
 
 ## XGECLI
 
@@ -36,5 +36,5 @@ XGECLI [game] [options]
   - Added: `Engine::isWindowOpen()` and `Engine::pump()` (a library's window needs events handled while paused or it cannot be moved or closed, and is "not responding" on Windows; pump polls without playing a frame and keeps the keys for the next `step()`); `GameSession::windowClosed()`; `GameStage` (the Qt renderer's picture: left pane or a `GameWindow`).
   - A swap in progress must tolerate edits: text boxes report a finished edit on losing focus and showing a stage page moved focus, so the inspector redrew a game with no window. `GameSession` ignores step/reset/redraw while `load()`/`applyOptions()` runs (`changing` guard), and text boxes count only real changes. Anything else in XGEGUI that can run during a swap must check it.
 - **Title:** every window shows the same title, `Space Invaders (Playing: 59.9fps) (SFML3, Xerces)` or `(Paused) (Qt, Xerces)`, worked out by `GameSession` when state or the half-second frame rate changes (`Window::setTitle`). The status line colors Playing green and Paused red. Games start paused unless `start_game_on_load` is set.
-- **Remembered in `xgegui.ini`** (next to the program, written only when something changes): `[Window] warn_before_two_windows`, `[Game] start_game_on_load`, `[Windows]` places (one window, controls, game corner; ignored if off screen), `[Session]` two windows, video, xml, last game (reopened when started with no game). Game window size is not kept. Pacing: a library's window waits its own frame, so the controls can lag by up to a frame; a backend would need "do not wait".
+- **Remembered in `xgegui.ini`** (next to the program, written only when something changes): `[Window] warn_before_two_windows`, `[Game] start_game_on_load`, `[Windows]` `one_window`, `controls`, `game` (window places; ignored if off screen) and `two_windows`; `[Session]` `video`, `xml`, `audio` and `game` (the last game, reopened when started with no game; a library other than Qt always starts in two windows). Game window size is not kept. Pacing: a library's window waits its own frame, so the controls can lag by up to a frame; a backend would need "do not wait".
 - **Windows deployment:** see [11](11-backends-build-and-layout.md).
