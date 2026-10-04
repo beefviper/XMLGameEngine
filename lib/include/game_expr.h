@@ -31,6 +31,7 @@
 #include <map>
 #include <memory>
 #include <random>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -50,6 +51,12 @@ namespace xge
 		// can use the ones declared before it), then builds every object, state
 		// and sound. A wave, pitch or length a sound cannot use, and a <play>
 		// naming no sound, throw std::runtime_error saying where.
+		// Called when the game has been loaded. From then on a value worked out
+		// again while the game runs (a timer's interval, a position finished
+		// once a text is measured) never throws for a division by 0: see
+		// evaluateOperation.
+		void finishLoading() { loading = false; }
+
 		void init(const WindowDesc& windowDesc,
 			const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 			std::vector<RawState>& rawStates, std::vector<State>& states,
@@ -77,6 +84,9 @@ namespace xge
 			return kind == ShapeKind::Text || kind == ShapeKind::Image;
 		}
 
+		bool loading{ true };
+		std::set<std::string> warnedDivisions;
+
 		exprtk::symbol_table<float> symbolTable;
 		exprtk::expression<float> expression;
 		exprtk::parser<float> parser;
@@ -86,11 +96,35 @@ namespace xge
 		// expression does not compile (std::runtime_error).
 		float evaluate(const RawValue& value, const std::string& where);
 
+		// A number worked out, and whether it may still change: `late` is true
+		// when it was made from something that has no final value while the game
+		// is loading (another object's variable, which reads 0 until that object
+		// is built, or an object's size, which reads 0 until a window has
+		// measured a text or image). Such a number is worked out again once it
+		// is known (a position, a timer's interval).
+		struct Answer
+		{
+			float value{ 0.0f };
+			bool late{ false };
+		};
+
 		// One <add>, <subtract>, <multiply> or <divide> of an <equation> or a
 		// <formula>: its first operand combined with each of the others in turn.
 		// `steps` holds the answers of the equation's named steps so far (a
 		// formula has none); an operand that names one is that answer.
-		float evaluateOperation(const RawOperation& operation, const std::map<std::string, float>& steps, const std::string& where);
+		//
+		// A divisor of 0 is a load error (std::runtime_error saying which
+		// <divide>) when it is certainly 0 - a number, a global variable, or
+		// something made only of those - since nothing sensible can be placed or
+		// timed with an infinity. A divisor that is only 0 because it is `late`
+		// gives 0 and nothing is said: it is worked out again when it is known.
+		// Worked out again while the game runs, where throwing would end it, a
+		// divisor of 0 gives the answer 0 and a warning, printed once for each
+		// place it happens.
+		Answer evaluateOperation(const RawOperation& operation, const std::map<std::string, Answer>& steps, const std::string& where);
+
+		// Whether an operand's name is something that is `late` while loading.
+		bool isLate(const std::string& name) const;
 		float evaluateExpression(const std::string& text, const std::string& where);
 
 		// The spriteParams for a sprite, in the shape the window backends read:

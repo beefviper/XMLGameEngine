@@ -692,20 +692,21 @@ namespace xge
 
 		case RawValue::Kind::Equation:
 		{
-			std::map<std::string, float> steps;
-			float answer = 0.0f;
+			std::map<std::string, Answer> steps;
+			Answer answer;
+			const std::string here = where + " > <equation>";
 
 			for (const RawOperation& step : *value.operations)
 			{
-				answer = evaluateOperation(step, steps, where);
+				answer = evaluateOperation(step, steps, here);
 				if (!step.name.empty()) { steps[step.name] = answer; }
 			}
 
-			return answer;
+			return answer.value;
 		}
 
 		case RawValue::Kind::Formula:
-			return evaluateOperation(value.operations->front(), {}, where);
+			return evaluateOperation(value.operations->front(), {}, where + " > <formula>").value;
 
 		case RawValue::Kind::Expression:
 			break;
@@ -714,29 +715,64 @@ namespace xge
 		return evaluateExpression(value.text, where);
 	}
 
-	float game_expr::evaluateOperation(const RawOperation& operation, const std::map<std::string, float>& steps, const std::string& where)
+	bool game_expr::isLate(const std::string& name) const
+	{
+		if (objectVariables.count(name)) { return true; }
+
+		for (const char* suffix : { ".width", ".height" })
+		{
+			const std::string tail = suffix;
+			if (name.size() > tail.size() && name.compare(name.size() - tail.size(), tail.size(), tail) == 0
+				&& objectSizes.count(name.substr(0, name.size() - tail.size())))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	game_expr::Answer game_expr::evaluateOperation(const RawOperation& operation, const std::map<std::string, Answer>& steps, const std::string& where)
 	{
 		const std::string here = where + " > <" + operation.op + ">";
 
-		const auto operandValue = [&](const RawOperand& operand)
+		const auto operandAnswer = [&](const RawOperand& operand)
 		{
 			if (operand.value.kind == RawValue::Kind::Expression)
 			{
 				if (const auto step = steps.find(operand.value.text); step != steps.end()) { return step->second; }
+				return Answer{ evaluate(operand.value, here), isLate(operand.value.text) };
 			}
-			return evaluate(operand.value, here);
+
+			// An operation nested in a formula is part of the same formula.
+			if (operand.value.kind == RawValue::Kind::Formula) { return evaluateOperation(operand.value.operations->front(), {}, here); }
+
+			return Answer{ evaluate(operand.value, here), false };
 		};
 
-		float answer = operandValue(operation.operands.front());
+		Answer answer = operandAnswer(operation.operands.front());
 
 		for (std::size_t i = 1; i < operation.operands.size(); ++i)
 		{
-			const float operand = operandValue(operation.operands[i]);
+			const Answer operand = operandAnswer(operation.operands[i]);
+			answer.late = answer.late || operand.late;
 
-			if (operation.op == "add") { answer += operand; }
-			else if (operation.op == "subtract") { answer -= operand; }
-			else if (operation.op == "multiply") { answer *= operand; }
-			else { answer /= operand; }
+			if (operation.op == "divide" && operand.value == 0.0f)
+			{
+				if (loading && !operand.late) { throw std::runtime_error(here + ": the divisor is 0"); }
+
+				// Late while loading: not known yet, so nothing to say; it is worked out again.
+				if (!loading && warnedDivisions.insert(here).second)
+				{
+					std::cerr << "warning: " << here << ": the divisor is 0; using 0 for the answer" << std::endl;
+				}
+				return Answer{ 0.0f, answer.late };
+			}
+
+			if (operation.op == "add") { answer.value += operand.value; }
+			else if (operation.op == "subtract") { answer.value -= operand.value; }
+			else if (operation.op == "multiply") { answer.value *= operand.value; }
+			else { answer.value /= operand.value; }
 		}
 
 		return answer;

@@ -9,7 +9,8 @@
 // operands are themselves numbers, operations included). Both are value tags,
 // like <random>, so the text form (exprtk) still works beside them, and all
 // three must give the same number. Then what each mistake says, the printed
-// form, both schema checkers against the same good and bad files, and the two
+// form, a divisor of 0 (a load error, and a warning instead once the game is
+// running), both schema checkers against the same good and bad files, and the two
 // shipped games that are written with them (Pong's title with an <equation>,
 // Breakout's with <formula>s), against real xge::Games.
 //
@@ -25,10 +26,13 @@
 #include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -505,4 +509,174 @@ TEST_CASE("Breakout's title is placed by <formula>s of its own size", "[equation
 	CHECK(title.positionResolved);
 	CHECK(title.position.x == 640.0f - 300.0f);          // window.width.center - title.width / 2
 	CHECK(title.position.y == 360.0f - 100.0f - 110.0f); // window.height.center - title.height / 2 + (-110)
+}
+
+// -------------------------------------------------------- a divisor of 0
+namespace
+{
+	// One object with the given inner XML after its collisions (variables and
+	// timers), and a state that shows it.
+	std::string gameWithObject(const std::string& name, const std::string& sprite, const std::string& x, const std::string& more = {})
+	{
+		return "<game>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<variables><variable name=\"zero\">0</variable></variables>"
+			"<objects><object name=\"" + name + "\"><sprite>" + sprite + "</sprite>"
+			"<position><x>" + x + "</x><y>0</y></position>"
+			"<velocity><x>0</x><y>0</y></velocity>"
+			"<collisions><enabled>false</enabled></collisions>" + more + "</object></objects>"
+			"<states><state name=\"playing\"><shows><show object=\"" + name + "\" /></shows>"
+			"<inputs><input button=\"space\"><pop /></input></inputs></state></states>"
+			"</game>";
+	}
+
+	// Collects what is written to std::cerr while it lives.
+	struct CaptureStderr
+	{
+		std::ostringstream text;
+		std::streambuf* before;
+
+		CaptureStderr() : before(std::cerr.rdbuf(text.rdbuf())) {}
+		~CaptureStderr() { std::cerr.rdbuf(before); }
+	};
+
+	std::size_t countOf(const std::string& text, const std::string& part)
+	{
+		std::size_t count = 0;
+		for (auto at = text.find(part); at != std::string::npos; at = text.find(part, at + part.size())) { ++count; }
+		return count;
+	}
+}
+
+TEST_CASE("a divisor of 0 stops the load, and says which divide", "[equations][errors][zero]")
+{
+	struct Mistake
+	{
+		const char* what;
+		std::string value;
+		const char* where;
+	};
+
+	const Mistake mistakes[] = {
+		{ "a number, in an equation", "<equation><divide dividend=\"1\" divisor=\"0\" /></equation>", "<equation> > <divide>" },
+		{ "a variable that is 0, in an equation", "<equation><divide dividend=\"1\" divisor=\"zero\" /></equation>", "<equation> > <divide>" },
+		{ "a step that works out to 0", "<equation><subtract name=\"gone\" minuend=\"3\" subtrahend=\"3\" /><divide dividend=\"1\" divisor=\"gone\" /></equation>", "<equation> > <divide>" },
+		{ "a number, in a formula", "<formula><divide><dividend>1</dividend><divisor>0</divisor></divide></formula>", "<formula> > <divide>" },
+		{ "a variable that is 0, in a formula", "<formula><divide><dividend>1</dividend><divisor>zero</divisor></divide></formula>", "<formula> > <divide>" },
+		{ "a later divisor of a chain", "<formula><divide><dividend>100</dividend><divisor>5</divisor><divisor>0</divisor></divide></formula>", "<formula> > <divide>" },
+		{ "an operation that works out to 0, nested", "<formula><divide><dividend>1</dividend><divisor><subtract><minuend>2</minuend><subtrahend>2</subtrahend></subtract></divisor></divide></formula>", "<formula> > <divide>" },
+	};
+
+	for (const Mistake& mistake : mistakes)
+	{
+		DYNAMIC_SECTION(mistake.what)
+		{
+			REQUIRE_THROWS_WITH(Loaded(gameXml(mistake.value, "0", "<variable name=\"zero\">0</variable>")),
+				ContainsSubstring("object 'o'") && ContainsSubstring(mistake.where) && ContainsSubstring("the divisor is 0"));
+		}
+	}
+}
+
+TEST_CASE("only a divisor matters: 0 as a dividend, or in other operations, is fine", "[equations][zero]")
+{
+	CHECK(xOf("<equation><divide dividend=\"0\" divisor=\"5\" /></equation>") == 0.0f);
+	CHECK(xOf("<formula><divide><dividend>0</dividend><divisor>5</divisor></divide></formula>") == 0.0f);
+	CHECK(xOf("<equation><multiply multiplicand=\"7\" multiplier=\"0\" /></equation>") == 0.0f);
+	CHECK(xOf("<equation><add augend=\"0\" addend=\"0\" /></equation>") == 0.0f);
+	CHECK(xOf("<equation><subtract minuend=\"4\" subtrahend=\"0\" /></equation>") == 4.0f);
+}
+
+TEST_CASE("the exprtk text is left alone: it divides by 0 as it always did", "[equations][zero]")
+{
+	// Not an error, as before; the tags are where the engine looks.
+	Loaded loaded(gameXml("1 / zero", "0", "<variable name=\"zero\">0</variable>"));
+	CHECK(std::isinf(loaded.x()));
+}
+
+TEST_CASE("a position finished once a text is measured warns, once, instead of ending the game", "[equations][zero]")
+{
+	// The text's width is unknown until a window measures it, so nothing is
+	// divided at load; a text measured as 0 wide is the divisor of 0.
+	const std::string xml = gameWithObject("t", "<text><content>hi</content><size>20</size></text>",
+		"<equation><divide dividend=\"100\" divisor=\"t.width\" /></equation>");
+
+	Loaded loaded(xml);
+	Object& text = loaded.game.getObject("t");
+	loaded.game.setCurrentState(0);
+	CHECK(text.positionUsesSize);
+
+	CaptureStderr captured;
+
+	measure(text, 0.0f, 10.0f);
+	REQUIRE_NOTHROW(loaded.game.resolveSizeDependentPositions());
+	CHECK(text.positionResolved);
+	CHECK(text.position.x == 0.0f);
+
+	// The size changes, so it is worked out again: still 0 wide, so the same place, no second warning.
+	measure(text, 0.0f, 12.0f);
+	REQUIRE_NOTHROW(loaded.game.resolveSizeDependentPositions());
+	CHECK(text.position.x == 0.0f);
+
+	CHECK(countOf(captured.text.str(), "the divisor is 0; using 0 for the answer") == 1);
+	CHECK_THAT(captured.text.str(), ContainsSubstring("object 't'") && ContainsSubstring("<divide>"));
+
+	// Measured as a width that works, it is placed properly.
+	measure(text, 50.0f, 12.0f);
+	loaded.game.resolveSizeDependentPositions();
+	CHECK(text.position.x == 2.0f);
+}
+
+TEST_CASE("a timer whose interval reaches a divisor of 0 keeps going, with one warning", "[equations][zero]")
+{
+	// Every 1 / rate seconds; each time it goes off it takes 1 off rate, so the
+	// second interval divides by 0.
+	const std::string xml = gameWithObject("c", "<circle><radius>5</radius></circle>", "0",
+		"<variables><variable name=\"rate\">1</variable><variable name=\"n\">0</variable></variables>"
+		"<timers><timer>"
+		"<every><formula><divide><dividend>1</dividend><divisor>c.rate</divisor></divide></formula></every>"
+		"<dec variable=\"c.rate\" /><inc variable=\"c.n\" />"
+		"</timer></timers>");
+
+	Loaded loaded(xml);
+	loaded.game.setCurrentState(0);
+
+	CaptureStderr captured;
+
+	for (int i = 0; i < 59; ++i) { REQUIRE_NOTHROW(loaded.game.updateObjects()); }
+	CHECK(loaded.game.getObject("c").variable.at("n") == 0.0f); // a second at 60 frames a second
+
+	for (int i = 0; i < 10; ++i) { REQUIRE_NOTHROW(loaded.game.updateObjects()); }
+
+	CHECK(loaded.game.getObject("c").variable.at("rate") < 1.0f);
+	CHECK(loaded.game.getObject("c").variable.at("n") >= 2.0f);
+	CHECK(countOf(captured.text.str(), "the divisor is 0") == 1);
+}
+
+TEST_CASE("a divisor that is 0 only because it is not known yet is not refused at load", "[equations][zero]")
+{
+	// b is built after a, so b.w reads 0 while a is being built; and the width of
+	// a text reads 0 until a window has measured it. Neither is a mistake.
+	const std::string xml =
+		"<game>"
+		"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+		"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+		"<variables></variables>"
+		"<objects>"
+		"<object name=\"a\"><sprite><circle><radius>5</radius></circle></sprite>"
+		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"
+		"<collisions><enabled>false</enabled></collisions>"
+		"<variables><variable name=\"v\"><formula><divide><dividend>1</dividend><divisor>b.w</divisor></divide></formula></variable></variables></object>"
+		"<object name=\"b\"><sprite><text><content>hi</content><size>20</size></text></sprite>"
+		"<position><x><equation><divide dividend=\"100\" divisor=\"b.width\" /></equation></x><y>0</y></position>"
+		"<velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
+		"<variables><variable name=\"w\">4</variable></variables></object>"
+		"</objects>"
+		"<states><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
+		"<inputs><input button=\"space\"><pop /></input></inputs></state></states>"
+		"</game>";
+
+	CaptureStderr captured;
+	REQUIRE_NOTHROW(Loaded(xml));
+	CHECK(captured.text.str().find("divisor is 0") == std::string::npos); // and nothing is said
 }

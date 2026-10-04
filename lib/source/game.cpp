@@ -20,6 +20,7 @@ namespace xge
 	{
 		xml.init(filename, xmlBackend, windowDesc, rawVariables, rawStates, rawObjects, rawSounds, xmlValidation);
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds);
+		expr.finishLoading();
 
 		for (const auto& state : states)
 		{
