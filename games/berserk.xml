@@ -1,75 +1,272 @@
-<?xml version="1.0" encoding="utf-8"?>
-<game>
+<!-- berserk.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 4, 2026 -->
+
+<!--
+  Berserk, after Stern's 1980 arcade game Berzerk. A man runs through rooms
+  of electrified walls with robots in them. The walls kill him, the robots
+  kill him, the robots' shots kill him, and so does Evil Otto, the grinning
+  face that turns up if he lingers and cannot be shot. He shoots back, one
+  shot at a time, and the only way out of a room is through one of the gaps in
+  its outer wall (the next room opens when he walks through). A robot is 50
+  points, and shooting every robot of a room is worth 10 more for each. An
+  extra man for every 2000 points. Four rooms, and then the first again, with
+  the robots quicker to fire and Otto quicker to arrive.
+
+  W A S D or the arrow keys walk, Space fires the way he last walked. P or
+  Escape pauses.
+
+  How it is written:
+  * Four rooms, each a bitmap of its walls (a maze drawn as rows of text,
+    scaled up) and its own robots. A <state> is a room, so leaving one is a
+    <push> to the next, and after the fourth it is the first again, harder.
+  * The man has four looks, one for each way he faces, and <become> in his
+    actions picks it; <facing> makes <fire> leave the way he looks.
+  * Robots patrol their corridors and turn at a wall (<reverse />); each has
+    two animated frames. A robot fires the way its group faces, from a timer
+    whose wait is drawn again after every shot, between ends that shrink as
+    player.depth grows.
+  * Every rule that costs the man a life is his own (class="wall",
+    "robotshot", "otto", one for each room's robots), because the <reset /> in
+    a rule puts only that object back at the start, where a <reset object=... />
+    from somebody else's rule would put its variables back too (his score and
+    his lives). The exits are four door objects per room; walking into one
+    adds to player.exited, and a condition of the room sees it and pushes the
+    next room.
+  * Conditions read their thresholds once, when the game loads, so a count
+    that has to start again is its own variable: each room has a tally object
+    holding the robots shot there (a reset of it clears it on the way out), and
+    player.lifepoints is the score since the last extra man.
+  * Evil Otto is revealed by a timer of the room whose wait is an expression
+    of player.depth (the number of rooms the man has left), so the second lap
+    brings him sooner, and at once if every robot is gone; he bounces about
+    over the walls.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <window name="Berserk">
-    <width>160</width>
-    <height>210</height>
+    <width>584</width>
+    <height>440</height>
     <background>color.black</background>
     <fullscreen>false</fullscreen>
     <framerate>60</framerate>
   </window>
 
   <variables>
-    <variable name="margin">4</variable>
+    <variable name="margin">8</variable>
+    <variable name="walk">2</variable>
   </variables>
 
   <sounds>
     <sound name="shoot" wave="square">
       <volume>0.15</volume>
-      <note pitch="A5" to="A4">0.06</note>
+      <note pitch="A5" to="A4">0.07</note>
+    </sound>
+    <sound name="robotshoot" wave="square">
+      <volume>0.1</volume>
+      <note pitch="E4" to="E3">0.1</note>
+    </sound>
+    <sound name="boom" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="3000" to="200">0.3</note>
     </sound>
     <sound name="zap" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="8000" to="400">0.5</note>
+    </sound>
+    <sound name="otto" wave="triangle">
       <volume>0.4</volume>
-      <note pitch="8000" to="400">0.4</note>
+      <note pitch="C4" to="C5">0.12</note>
+      <note pitch="C5" to="C4">0.12</note>
+      <note pitch="C4" to="C5">0.12</note>
+    </sound>
+    <sound name="door" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5">0.05</note>
+      <note pitch="G5">0.08</note>
+    </sound>
+    <sound name="extralife" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.2</note>
     </sound>
   </sounds>
 
   <objects>
+    <!-- the man. He faces the way he last walked (<facing>), shows it with one of
+         four looks, and shoots that way. -->
     <object name="player" class="player">
-      <sprite name="hero">
-        <rectangle>
-          <width>12</width>
-          <height>12</height>
-          <color>color.green</color>
-        </rectangle>
+      <sprite name="down">
+        <bitmap>
+          <row>..***..</row>
+          <row>.*.*.*.</row>
+          <row>..***..</row>
+          <row>...*...</row>
+          <row>.*****.</row>
+          <row>*..*..*</row>
+          <row>*..*..*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
       </sprite>
-      <position><x>80</x><y>190</y></position>
+      <sprite name="up">
+        <bitmap>
+          <row>..***..</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>*..*..*</row>
+          <row>*.***.*</row>
+          <row>*..*..*</row>
+          <row>...*...</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <sprite name="left">
+        <bitmap>
+          <row>..***..</row>
+          <row>.**.**.</row>
+          <row>..***..</row>
+          <row>...*...</row>
+          <row>*****..</row>
+          <row>*..*...</row>
+          <row>...*...</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <sprite name="right">
+        <bitmap>
+          <row>..***..</row>
+          <row>.**.**.</row>
+          <row>..***..</row>
+          <row>...*...</row>
+          <row>..*****</row>
+          <row>...*..*</row>
+          <row>...*...</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <position><x>21</x><y>209</y></position>
       <velocity><x>0</x><y>0</y></velocity>
-      <!-- he faces the way he last walked, and shoots that way -->
-      <facing>up</facing>
+      <facing>right</facing>
       <collisions>
         <enabled>true</enabled>
-        <type>pixel</type>
-        <!-- the walls are electrified -->
-        <collision object="walls">
+        <!-- the walls are electrified, and so is everything else that touches him.
+             The rules are his own: a <reset /> in one only puts him back at the
+             start, where somebody else's <reset object="player" /> would take his
+             score and his lives as well. -->
+        <collision class="wall">
           <dec variable="player.lives">1</dec>
           <play sound="zap" />
           <reset />
-        </collision>
-        <collision class="robot">
-          <dec variable="player.lives">1</dec>
-          <play sound="zap" />
-          <reset />
+          <reset object="bullet" />
+          <reset object="robotshots" />
         </collision>
         <collision class="robotshot">
           <dec variable="player.lives">1</dec>
           <play sound="zap" />
           <reset />
+          <reset object="bullet" />
+          <reset object="robotshots" />
         </collision>
-        <collision edge="left"><wrap/></collision>
-        <collision edge="right"><wrap/></collision>
+        <collision class="otto">
+          <dec variable="player.lives">1</dec>
+          <play sound="zap" />
+          <reset />
+          <reset object="bullet" />
+          <reset object="robotshots" />
+        </collision>
+        <collision class="robots1">
+          <dec variable="player.lives">1</dec>
+          <play sound="zap" />
+          <reset />
+          <reset object="bullet" />
+          <reset object="robotshots" />
+        </collision>
+        <!-- through an exit: a condition of the room sees it and goes on -->
+        <collision class="exit1">
+          <inc variable="player.exited">1</inc>
+          <play sound="door" />
+          <reset />
+        </collision>
+        <collision class="robots2">
+          <dec variable="player.lives">1</dec>
+          <play sound="zap" />
+          <reset />
+          <reset object="bullet" />
+          <reset object="robotshots" />
+        </collision>
+        <!-- through an exit: a condition of the room sees it and goes on -->
+        <collision class="exit2">
+          <inc variable="player.exited">1</inc>
+          <play sound="door" />
+          <reset />
+        </collision>
+        <collision class="robots3">
+          <dec variable="player.lives">1</dec>
+          <play sound="zap" />
+          <reset />
+          <reset object="bullet" />
+          <reset object="robotshots" />
+        </collision>
+        <!-- through an exit: a condition of the room sees it and goes on -->
+        <collision class="exit3">
+          <inc variable="player.exited">1</inc>
+          <play sound="door" />
+          <reset />
+        </collision>
+        <collision class="robots4">
+          <dec variable="player.lives">1</dec>
+          <play sound="zap" />
+          <reset />
+          <reset object="bullet" />
+          <reset object="robotshots" />
+        </collision>
+        <!-- through an exit: a condition of the room sees it and goes on -->
+        <collision class="exit4">
+          <inc variable="player.exited">1</inc>
+          <play sound="door" />
+          <reset />
+        </collision>
+        <collision edge="all"><stick /></collision>
       </collisions>
       <actions>
         <action name="up">
-          <move direction="up">2</move>
+          <move direction="up">walk</move>
+          <become sprite="up" />
         </action>
         <action name="down">
-          <move direction="down">2</move>
+          <move direction="down">walk</move>
+          <become sprite="down" />
         </action>
         <action name="left">
-          <move direction="left">2</move>
+          <move direction="left">walk</move>
+          <become sprite="left" />
         </action>
         <action name="right">
-          <move direction="right">2</move>
+          <move direction="right">walk</move>
+          <become sprite="right" />
         </action>
         <action name="gun">
           <fire object="bullet" />
@@ -79,64 +276,145 @@
       <variables>
         <variable name="score">0</variable>
         <variable name="lives">3</variable>
+        <variable name="lifepoints">0</variable>
+        <variable name="exited">0</variable>
+        <variable name="depth">0</variable>
       </variables>
     </object>
 
+    <!-- his shot: one at a time, like the arcade game. It is put away by
+         whatever it hits, and a robot it hits puts it away itself. -->
     <object name="bullet" class="bullet">
-      <sprite name="shot">
+      <sprite>
         <rectangle>
-          <width>3</width>
-          <height>3</height>
+          <width>5</width>
+          <height>5</height>
           <color>color.white</color>
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>-5</y></velocity>
+      <velocity><x>0</x><y>-8</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
-        <collision edge="all"><die/></collision>
-        <collision class="robot"><die/></collision>
-        <collision object="walls"><die/></collision>
+        <type>box</type>
+        <collision edge="all"><die /></collision>
+        <collision class="wall"><die /></collision>
+        <collision class="otto"><die /></collision>
       </collisions>
     </object>
 
-    <!-- the robots' shots: a pool of three -->
+    <!-- the robots' shots, a pool of four shared by every robot in the room -->
     <group name="robotshots" class="robotshot">
-      <sprite name="shot">
+      <sprite>
         <rectangle>
-          <width>3</width>
-          <height>3</height>
-          <color>color.yellow</color>
+          <width>5</width>
+          <height>5</height>
+          <color>color.orange</color>
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>2</y></velocity>
+      <velocity><x>0</x><y>3</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
-        <collision edge="all"><die/></collision>
-        <collision object="player"><die/></collision>
-        <collision object="walls"><die/></collision>
+        <collision edge="all"><die /></collision>
+        <collision class="wall"><die /></collision>
+        <collision object="player"><die /></collision>
       </collisions>
+      <member />
       <member />
       <member />
       <member />
     </group>
 
-    <object name="walls" class="wall">
-      <sprite name="maze">
+    <!-- Evil Otto: bounces about over the walls, cannot be shot, and one touch
+         is the end of a man. A timer of each room brings him in, and he comes
+         at once when every robot in the room is gone. -->
+    <object name="otto" class="otto">
+      <sprite>
         <bitmap>
-          <row>****************</row>
-          <row>*..............*</row>
-          <row>*..********....*</row>
-          <row>*..............*</row>
-          <row>****************</row>
+          <row>..*****..</row>
+          <row>.*.....*.</row>
+          <row>*.**.**.*</row>
+          <row>*.**.**.*</row>
+          <row>*.......*</row>
+          <row>*.*...*.*</row>
+          <row>*..***..*</row>
+          <row>.*.....*.</row>
+          <row>..*****..</row>
+          <scale>3</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <position><x>504</x><y>72</y></position>
+      <velocity><x>-1.2</x><y>0.9</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><bounce /></collision>
+        <collision object="player"><die /></collision>
+      </collisions>
+    </object>
+
+    <!-- ======================================================== room 1 -->
+    <object name="walls1" class="wall">
+      <sprite>
+        <bitmap>
+          <row>*******************************.....*************************************</row>
+          <row>*.....*.........................................*...........*.....*.....*</row>
+          <row>*.....*.........................................*...........*.....*.....*</row>
+          <row>*.....*.........................................*...........*.....*.....*</row>
+          <row>*.....*.........................................*...........*.....*.....*</row>
+          <row>*.....*.........................................*...........*.....*.....*</row>
+          <row>*.....*.....*.....*************************.....*...........*.....*.....*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*******************.....*******.................*******************.....*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*.....*******.....*.....*...........*...........*</row>
+          <row>........................*.................*.....*........................</row>
+          <row>........................*.................*.....*........................</row>
+          <row>........................*.................*.....*........................</row>
+          <row>........................*.................*.....*........................</row>
+          <row>........................*.................*.....*........................</row>
+          <row>*******.....*...........*******...........*.....*.....*******************</row>
+          <row>*...........*...........*.................*.....*.......................*</row>
+          <row>*...........*...........*.................*.....*.......................*</row>
+          <row>*...........*...........*.................*.....*.......................*</row>
+          <row>*...........*...........*.................*.....*.......................*</row>
+          <row>*...........*...........*.................*.....*.......................*</row>
+          <row>*...........*.....*************...........*.....*.......................*</row>
+          <row>*...........*.....*.....*.......................*.......................*</row>
+          <row>*...........*.....*.....*.......................*.......................*</row>
+          <row>*...........*.....*.....*.......................*.......................*</row>
+          <row>*...........*.....*.....*.......................*.......................*</row>
+          <row>*...........*.....*.....*.......................*.......................*</row>
+          <row>*...........*.....*.....*.......................*.......................*</row>
+          <row>*...........*.....*.............................*.......................*</row>
+          <row>*...........*.....*.............................*.......................*</row>
+          <row>*...........*.....*.............................*.......................*</row>
+          <row>*...........*.....*.............................*.......................*</row>
+          <row>*...........*.....*.............................*.......................*</row>
+          <row>*...........*.....*******...........*******.....*.....*******************</row>
+          <row>*...........*...................................*.......................*</row>
+          <row>*...........*...................................*.......................*</row>
+          <row>*...........*...................................*.......................*</row>
+          <row>*...........*...................................*.......................*</row>
+          <row>*...........*...................................*.......................*</row>
+          <row>*******************************.....*************************************</row>
           <scale>8</scale>
           <color>color.blue</color>
         </bitmap>
       </sprite>
-      <position><x>16</x><y>40</y></position>
+      <position><x>0</x><y>48</y></position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
@@ -144,42 +422,804 @@
       </collisions>
     </object>
 
-    <group name="robots" class="robot">
-      <sprite name="robot">
-        <rectangle>
-          <width>12</width>
-          <height>12</height>
-          <color>color.red</color>
-        </rectangle>
-      </sprite>
-      <velocity><x>1</x><y>0</y></velocity>
-      <!-- they face down the screen, towards where the player comes in -->
-      <facing>down</facing>
+    <!-- the four exits of room 1, black in the gaps of the outer wall. Walking
+         into one is leaving (the man's rule for class exit1); the robots turn at them. -->
+    <group name="exits1" class="exit1">
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
+      </collisions>
+      <member>
+        <sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite>
+        <position><x>248</x><y>48</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite>
+        <position><x>248</x><y>432</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite>
+        <position><x>0</x><y>200</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite>
+        <position><x>576</x><y>200</y></position>
+      </member>
+    </group>
+
+    <!-- room 1's count of the robots shot, which the room's condition reads and
+         a reset puts back to nothing -->
+    <object name="tally1">
+      <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+      <variables>
+        <variable name="kills">0</variable>
+      </variables>
+    </object>
+
+    <group name="robots1left" class="robots1">
+      <sprite name="a">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>*******</row>
+          <row>*.***.*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.green</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>.*****.</row>
+          <row>*.***.*</row>
+          <row>.*...*.</row>
+          <row>.*...*.</row>
+          <row>**...**</row>
+          <scale>2</scale>
+          <color>color.green</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.25</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <facing>left</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="wall"><reverse /></collision>
+        <collision class="exit1"><reverse /></collision>
         <collision object="bullet">
-          <die/>
-          <inc variable="player.score">10</inc>
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="tally1.kills">1</inc>
+          <play sound="boom" />
+          <reset object="bullet" />
         </collision>
-        <collision edge="left"><bounce/></collision>
-        <collision edge="right"><bounce/></collision>
       </collisions>
       <timers>
         <timer>
-          <every><random min="1.5" max="5" /></every>
+          <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
           <fire object="robotshots" />
+          <play sound="robotshoot" />
         </timer>
       </timers>
-      <member name="r1"><position><x>40</x><y>70</y></position></member>
-      <member name="r2"><position><x>80</x><y>70</y></position></member>
-      <member name="r3"><position><x>120</x><y>70</y></position></member>
-      <member name="r4"><position><x>60</x><y>110</y></position></member>
+      <member><position><x>213</x><y>307</y></position><velocity><x>-0.8</x><y>0</y></velocity></member>
     </group>
+
+    <group name="robots1up" class="robots1">
+      <sprite name="a">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>*******</row>
+          <row>*.***.*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.green</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>.*****.</row>
+          <row>*.***.*</row>
+          <row>.*...*.</row>
+          <row>.*...*.</row>
+          <row>**...**</row>
+          <scale>2</scale>
+          <color>color.green</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.25</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <facing>up</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="wall"><reverse /></collision>
+        <collision class="exit1"><reverse /></collision>
+        <collision object="bullet">
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="tally1.kills">1</inc>
+          <play sound="boom" />
+          <reset object="bullet" />
+        </collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <fire object="robotshots" />
+          <play sound="robotshoot" />
+        </timer>
+      </timers>
+      <member><position><x>117</x><y>355</y></position><velocity><x>0</x><y>-0.8</y></velocity></member>
+      <member><position><x>357</x><y>211</y></position><velocity><x>0</x><y>0.8</y></velocity></member>
+    </group>
+
+    <!-- ======================================================== room 2 -->
+    <object name="walls2" class="wall">
+      <sprite>
+        <bitmap>
+          <row>*******************************.....*************************************</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*...................................*...........*</row>
+          <row>*...........*...........*******************.....*.....*.....*******.....*</row>
+          <row>*...........*.............................*.....*.....*.....*...........*</row>
+          <row>*...........*.............................*.....*.....*.....*...........*</row>
+          <row>*...........*.............................*.....*.....*.....*...........*</row>
+          <row>*...........*.............................*.....*.....*.....*...........*</row>
+          <row>*...........*.............................*.....*.....*.....*...........*</row>
+          <row>*...........*.............................*.....*.....*.....*.....*.....*</row>
+          <row>*...............................................*.....*...........*.....*</row>
+          <row>*...............................................*.....*...........*.....*</row>
+          <row>*...............................................*.....*...........*.....*</row>
+          <row>*...............................................*.....*...........*.....*</row>
+          <row>*...............................................*.....*...........*.....*</row>
+          <row>*.................*******************************.....*...........*.....*</row>
+          <row>................................................*.....*...........*......</row>
+          <row>................................................*.....*...........*......</row>
+          <row>................................................*.....*...........*......</row>
+          <row>................................................*.....*...........*......</row>
+          <row>................................................*.....*...........*......</row>
+          <row>*.....*************************.....*******.....*.....*******************</row>
+          <row>*.....................................................*.....*.....*.....*</row>
+          <row>*.....................................................*.....*.....*.....*</row>
+          <row>*.....................................................*.....*.....*.....*</row>
+          <row>*.....................................................*.....*.....*.....*</row>
+          <row>*.....................................................*.....*.....*.....*</row>
+          <row>*.....*************...........*.....*******************.....*.....*.....*</row>
+          <row>*.............................*.................*.....*.................*</row>
+          <row>*.............................*.................*.....*.................*</row>
+          <row>*.............................*.................*.....*.................*</row>
+          <row>*.............................*.................*.....*.................*</row>
+          <row>*.............................*.................*.....*.................*</row>
+          <row>*.............................*.....*.....*.....*.....*.....*************</row>
+          <row>*.............................*.....*.....*.....*.......................*</row>
+          <row>*.............................*.....*.....*.....*.......................*</row>
+          <row>*.............................*.....*.....*.....*.......................*</row>
+          <row>*.............................*.....*.....*.....*.......................*</row>
+          <row>*.............................*.....*.....*.....*.......................*</row>
+          <row>*...........*************.....*.....*.....*.....*.......................*</row>
+          <row>*.......................................................................*</row>
+          <row>*.......................................................................*</row>
+          <row>*.......................................................................*</row>
+          <row>*.......................................................................*</row>
+          <row>*.......................................................................*</row>
+          <row>*******************************.....*************************************</row>
+          <scale>8</scale>
+          <color>color.blue</color>
+        </bitmap>
+      </sprite>
+      <position><x>0</x><y>48</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+      </collisions>
+    </object>
+
+    <!-- the four exits of room 2, black in the gaps of the outer wall. Walking
+         into one is leaving (the man's rule for class exit2); the robots turn at them. -->
+    <group name="exits2" class="exit2">
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <member>
+        <sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite>
+        <position><x>248</x><y>48</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite>
+        <position><x>248</x><y>432</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite>
+        <position><x>0</x><y>200</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite>
+        <position><x>576</x><y>200</y></position>
+      </member>
+    </group>
+
+    <!-- room 2's count of the robots shot, which the room's condition reads and
+         a reset puts back to nothing -->
+    <object name="tally2">
+      <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+      <variables>
+        <variable name="kills">0</variable>
+      </variables>
+    </object>
+
+    <group name="robots2right" class="robots2">
+      <sprite name="a">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>*******</row>
+          <row>*.***.*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>.*****.</row>
+          <row>*.***.*</row>
+          <row>.*...*.</row>
+          <row>.*...*.</row>
+          <row>**...**</row>
+          <scale>2</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.25</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <facing>right</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="wall"><reverse /></collision>
+        <collision class="exit2"><reverse /></collision>
+        <collision object="bullet">
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="tally2.kills">1</inc>
+          <play sound="boom" />
+          <reset object="bullet" />
+        </collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <fire object="robotshots" />
+          <play sound="robotshoot" />
+        </timer>
+      </timers>
+      <member><position><x>357</x><y>259</y></position><velocity><x>-1.0</x><y>0</y></velocity></member>
+      <member><position><x>117</x><y>403</y></position><velocity><x>1.0</x><y>0</y></velocity></member>
+      <member><position><x>309</x><y>67</y></position><velocity><x>1.0</x><y>0</y></velocity></member>
+      <member><position><x>213</x><y>307</y></position><velocity><x>1.0</x><y>0</y></velocity></member>
+    </group>
+
+    <!-- ======================================================== room 3 -->
+    <object name="walls3" class="wall">
+      <sprite>
+        <bitmap>
+          <row>*******************************.....*************************************</row>
+          <row>*.............................*.........................................*</row>
+          <row>*.............................*.........................................*</row>
+          <row>*.............................*.........................................*</row>
+          <row>*.............................*.........................................*</row>
+          <row>*.............................*.........................................*</row>
+          <row>*************************.....*.....*.................*******************</row>
+          <row>*...................................*...................................*</row>
+          <row>*...................................*...................................*</row>
+          <row>*...................................*...................................*</row>
+          <row>*...................................*...................................*</row>
+          <row>*...................................*...................................*</row>
+          <row>*...........*******.................*...........*...........*.....*******</row>
+          <row>*...................................*...........*...........*...........*</row>
+          <row>*...................................*...........*...........*...........*</row>
+          <row>*...................................*...........*...........*...........*</row>
+          <row>*...................................*...........*...........*...........*</row>
+          <row>*...................................*...........*...........*...........*</row>
+          <row>*.......................*************...........*.....*************.....*</row>
+          <row>....................................*...........*...........*.....*......</row>
+          <row>....................................*...........*...........*.....*......</row>
+          <row>....................................*...........*...........*.....*......</row>
+          <row>....................................*...........*...........*.....*......</row>
+          <row>....................................*...........*...........*.....*......</row>
+          <row>*...........*************************************.....*.....*.....*.....*</row>
+          <row>*.......................*.....*.......................*...........*.....*</row>
+          <row>*.......................*.....*.......................*...........*.....*</row>
+          <row>*.......................*.....*.......................*...........*.....*</row>
+          <row>*.......................*.....*.......................*...........*.....*</row>
+          <row>*.......................*.....*.......................*...........*.....*</row>
+          <row>*.....*******...........*.....*...........*...........*...........*.....*</row>
+          <row>*.............................*...........*...........*...........*.....*</row>
+          <row>*.............................*...........*...........*...........*.....*</row>
+          <row>*.............................*...........*...........*...........*.....*</row>
+          <row>*.............................*...........*...........*...........*.....*</row>
+          <row>*.............................*...........*...........*...........*.....*</row>
+          <row>*******************************...........*...........*******************</row>
+          <row>*.........................................*...........*.................*</row>
+          <row>*.........................................*...........*.................*</row>
+          <row>*.........................................*...........*.................*</row>
+          <row>*.........................................*...........*.................*</row>
+          <row>*.........................................*...........*.................*</row>
+          <row>*.............................*******.....*...........*******...........*</row>
+          <row>*.............................*...........*.............................*</row>
+          <row>*.............................*...........*.............................*</row>
+          <row>*.............................*...........*.............................*</row>
+          <row>*.............................*...........*.............................*</row>
+          <row>*.............................*...........*.............................*</row>
+          <row>*******************************.....*************************************</row>
+          <scale>8</scale>
+          <color>color.blue</color>
+        </bitmap>
+      </sprite>
+      <position><x>0</x><y>48</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+      </collisions>
+    </object>
+
+    <!-- the four exits of room 3, black in the gaps of the outer wall. Walking
+         into one is leaving (the man's rule for class exit3); the robots turn at them. -->
+    <group name="exits3" class="exit3">
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <member>
+        <sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite>
+        <position><x>248</x><y>48</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite>
+        <position><x>248</x><y>432</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite>
+        <position><x>0</x><y>200</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite>
+        <position><x>576</x><y>200</y></position>
+      </member>
+    </group>
+
+    <!-- room 3's count of the robots shot, which the room's condition reads and
+         a reset puts back to nothing -->
+    <object name="tally3">
+      <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+      <variables>
+        <variable name="kills">0</variable>
+      </variables>
+    </object>
+
+    <group name="robots3left" class="robots3">
+      <sprite name="a">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>*******</row>
+          <row>*.***.*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.red</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>.*****.</row>
+          <row>*.***.*</row>
+          <row>.*...*.</row>
+          <row>.*...*.</row>
+          <row>**...**</row>
+          <scale>2</scale>
+          <color>color.red</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.25</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <facing>left</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="wall"><reverse /></collision>
+        <collision class="exit3"><reverse /></collision>
+        <collision object="bullet">
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="tally3.kills">1</inc>
+          <play sound="boom" />
+          <reset object="bullet" />
+        </collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <fire object="robotshots" />
+          <play sound="robotshoot" />
+        </timer>
+      </timers>
+      <member><position><x>549</x><y>403</y></position><velocity><x>1.2</x><y>0</y></velocity></member>
+      <member><position><x>309</x><y>67</y></position><velocity><x>-1.2</x><y>0</y></velocity></member>
+      <member><position><x>117</x><y>67</y></position><velocity><x>-1.2</x><y>0</y></velocity></member>
+      <member><position><x>117</x><y>307</y></position><velocity><x>-1.2</x><y>0</y></velocity></member>
+    </group>
+
+    <group name="robots3up" class="robots3">
+      <sprite name="a">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>*******</row>
+          <row>*.***.*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.red</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>.*****.</row>
+          <row>*.***.*</row>
+          <row>.*...*.</row>
+          <row>.*...*.</row>
+          <row>**...**</row>
+          <scale>2</scale>
+          <color>color.red</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.25</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <facing>up</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="wall"><reverse /></collision>
+        <collision class="exit3"><reverse /></collision>
+        <collision object="bullet">
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="tally3.kills">1</inc>
+          <play sound="boom" />
+          <reset object="bullet" />
+        </collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <fire object="robotshots" />
+          <play sound="robotshoot" />
+        </timer>
+      </timers>
+      <member><position><x>309</x><y>259</y></position><velocity><x>0</x><y>1.2</y></velocity></member>
+    </group>
+
+    <!-- ======================================================== room 4 -->
+    <object name="walls4" class="wall">
+      <sprite>
+        <bitmap>
+          <row>*******************************.....*************************************</row>
+          <row>*.......................*...............................................*</row>
+          <row>*.......................*...............................................*</row>
+          <row>*.......................*...............................................*</row>
+          <row>*.......................*...............................................*</row>
+          <row>*.......................*...............................................*</row>
+          <row>*.....*.....*...........*.................*...........*************.....*</row>
+          <row>*.....*.....*...........*.................*.......................*.....*</row>
+          <row>*.....*.....*...........*.................*.......................*.....*</row>
+          <row>*.....*.....*...........*.................*.......................*.....*</row>
+          <row>*.....*.....*...........*.................*.......................*.....*</row>
+          <row>*.....*.....*...........*.................*.......................*.....*</row>
+          <row>*.....*******************.....*******.....*...........*******************</row>
+          <row>*.....*.....*.......................*.....*.............................*</row>
+          <row>*.....*.....*.......................*.....*.............................*</row>
+          <row>*.....*.....*.......................*.....*.............................*</row>
+          <row>*.....*.....*.......................*.....*.............................*</row>
+          <row>*.....*.....*.......................*.....*.............................*</row>
+          <row>*.....*.....*.....*******************.....*.....*...........*************</row>
+          <row>..........................................*.....*........................</row>
+          <row>..........................................*.....*........................</row>
+          <row>..........................................*.....*........................</row>
+          <row>..........................................*.....*........................</row>
+          <row>..........................................*.....*........................</row>
+          <row>*.....*.....*************.....*...........*************.....*************</row>
+          <row>*.....*...........*.....*.....*...........*.................*...........*</row>
+          <row>*.....*...........*.....*.....*...........*.................*...........*</row>
+          <row>*.....*...........*.....*.....*...........*.................*...........*</row>
+          <row>*.....*...........*.....*.....*...........*.................*...........*</row>
+          <row>*.....*...........*.....*.....*...........*.................*...........*</row>
+          <row>*.....*...........*.....*.....*.....*************...........*...........*</row>
+          <row>*.....*...........*.....*.....*.............................*...........*</row>
+          <row>*.....*...........*.....*.....*.............................*...........*</row>
+          <row>*.....*...........*.....*.....*.............................*...........*</row>
+          <row>*.....*...........*.....*.....*.............................*...........*</row>
+          <row>*.....*...........*.....*.....*.............................*...........*</row>
+          <row>*.....*.....*******.....*.....*******.....*************.....*...........*</row>
+          <row>*.....*.......................*.....*.....*.............................*</row>
+          <row>*.....*.......................*.....*.....*.............................*</row>
+          <row>*.....*.......................*.....*.....*.............................*</row>
+          <row>*.....*.......................*.....*.....*.............................*</row>
+          <row>*.....*.......................*.....*.....*.............................*</row>
+          <row>*.....*.......................*.....*.....*.......................*.....*</row>
+          <row>*.....*.............................*.....*.......................*.....*</row>
+          <row>*.....*.............................*.....*.......................*.....*</row>
+          <row>*.....*.............................*.....*.......................*.....*</row>
+          <row>*.....*.............................*.....*.......................*.....*</row>
+          <row>*.....*.............................*.....*.......................*.....*</row>
+          <row>*******************************.....*************************************</row>
+          <scale>8</scale>
+          <color>color.blue</color>
+        </bitmap>
+      </sprite>
+      <position><x>0</x><y>48</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+      </collisions>
+    </object>
+
+    <!-- the four exits of room 4, black in the gaps of the outer wall. Walking
+         into one is leaving (the man's rule for class exit4); the robots turn at them. -->
+    <group name="exits4" class="exit4">
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <member>
+        <sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite>
+        <position><x>248</x><y>48</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite>
+        <position><x>248</x><y>432</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite>
+        <position><x>0</x><y>200</y></position>
+      </member>
+      <member>
+        <sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite>
+        <position><x>576</x><y>200</y></position>
+      </member>
+    </group>
+
+    <!-- room 4's count of the robots shot, which the room's condition reads and
+         a reset puts back to nothing -->
+    <object name="tally4">
+      <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+      <variables>
+        <variable name="kills">0</variable>
+      </variables>
+    </object>
+
+    <group name="robots4right" class="robots4">
+      <sprite name="a">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>*******</row>
+          <row>*.***.*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>.*****.</row>
+          <row>*.***.*</row>
+          <row>.*...*.</row>
+          <row>.*...*.</row>
+          <row>**...**</row>
+          <scale>2</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.25</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <facing>right</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="wall"><reverse /></collision>
+        <collision class="exit4"><reverse /></collision>
+        <collision object="bullet">
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="tally4.kills">1</inc>
+          <play sound="boom" />
+          <reset object="bullet" />
+        </collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <fire object="robotshots" />
+          <play sound="robotshoot" />
+        </timer>
+      </timers>
+      <member><position><x>549</x><y>163</y></position><velocity><x>-1.4</x><y>0</y></velocity></member>
+      <member><position><x>117</x><y>355</y></position><velocity><x>-1.4</x><y>0</y></velocity></member>
+      <member><position><x>453</x><y>259</y></position><velocity><x>-1.4</x><y>0</y></velocity></member>
+      <member><position><x>453</x><y>403</y></position><velocity><x>-1.4</x><y>0</y></velocity></member>
+    </group>
+
+    <group name="robots4down" class="robots4">
+      <sprite name="a">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>*******</row>
+          <row>*.***.*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.*****.</row>
+          <row>.*.*.*.</row>
+          <row>.*****.</row>
+          <row>..***..</row>
+          <row>.*****.</row>
+          <row>*.***.*</row>
+          <row>.*...*.</row>
+          <row>.*...*.</row>
+          <row>**...**</row>
+          <scale>2</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.25</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <facing>down</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="wall"><reverse /></collision>
+        <collision class="exit4"><reverse /></collision>
+        <collision object="bullet">
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="tally4.kills">1</inc>
+          <play sound="boom" />
+          <reset object="bullet" />
+        </collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <fire object="robotshots" />
+          <play sound="robotshoot" />
+        </timer>
+      </timers>
+      <member><position><x>357</x><y>115</y></position><velocity><x>0</x><y>-1.4</y></velocity></member>
+      <member><position><x>213</x><y>307</y></position><velocity><x>0</x><y>-1.4</y></velocity></member>
+    </group>
+
+    <!-- the score, and the men left -->
     <object name="score">
       <sprite>
         <text>
           <number>player.score</number>
-          <size>16</size>
+          <size>28</size>
           <color>color.white</color>
         </text>
       </sprite>
@@ -187,11 +1227,12 @@
       <velocity><x>0</x><y>0</y></velocity>
       <collisions><enabled>false</enabled></collisions>
     </object>
+
     <object name="lives">
       <sprite>
         <text>
           <number>player.lives</number>
-          <size>16</size>
+          <size>28</size>
           <color>color.yellow</color>
         </text>
       </sprite>
@@ -199,84 +1240,432 @@
       <velocity><x>0</x><y>0</y></velocity>
       <collisions><enabled>false</enabled></collisions>
     </object>
+
+    <object name="liveicon">
+      <sprite>
+        <bitmap>
+          <row>..***..</row>
+          <row>.*.*.*.</row>
+          <row>..***..</row>
+          <row>...*...</row>
+          <row>.*****.</row>
+          <row>*..*..*</row>
+          <row>*..*..*</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>..*.*..</row>
+          <row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <position><x>window.right - lives.width - margin * 2 - 14</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+
+    <object name="title">
+      <sprite>
+        <text>
+          <content>BERSERK</content>
+          <size>110</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - title.width / 2</x><y>70</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+
+    <object name="taunt">
+      <sprite>
+        <text>
+          <content>Chicken! Fight like a robot!</content>
+          <size>30</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - taunt.width / 2</x><y>205</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+
+    <object name="help1">
+      <sprite>
+        <text>
+          <content>W A S D or the arrow keys walk, Space fires the way you face</content>
+          <size>22</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - help1.width / 2</x><y>270</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+
+    <object name="help2">
+      <sprite>
+        <text>
+          <content>The walls are electrified: leave by any gap. P pauses.</content>
+          <size>22</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - help2.width / 2</x><y>305</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+
+    <object name="start">
+      <sprite>
+        <text>
+          <content>Press Space to start</content>
+          <size>32</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - start.width / 2</x><y>380</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>110</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - paused.width / 2</x><y>150</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+
+    <object name="gameover">
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>110</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - gameover.width / 2</x><y>120</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
+
+    <object name="again">
+      <sprite>
+        <text>
+          <content>Press Space to play again</content>
+          <size>32</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - again.width / 2</x><y>300</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions><enabled>false</enabled></collisions>
+    </object>
   </objects>
 
   <states>
-    <!-- the keys both rooms use -->
-    <keys name="player">
+    <!-- the keys every room uses -->
+    <keys name="man">
       <input button="up w"><trigger object="player" action="up" /></input>
       <input button="down s"><trigger object="player" action="down" /></input>
       <input button="left a"><trigger object="player" action="left" /></input>
       <input button="right d"><trigger object="player" action="right" /></input>
       <input button="space"><trigger object="player" action="gun" /></input>
+      <input button="p escape"><push state="paused" /></input>
     </keys>
 
     <state name="title">
       <shows>
-        <show object="player"/>
-        <show object="score"/>
-        <show object="lives"/>
-        <show object="walls"/>
-        <show object="robots"/>
+        <show object="title" />
+        <show object="taunt" />
+        <show object="help1" />
+        <show object="help2" />
+        <show object="start" />
       </shows>
       <inputs>
-        <input button="space"><push state="room1"/></input>
+        <input button="space"><push state="room1" /></input>
       </inputs>
     </state>
 
     <state name="room1">
       <shows>
-        <show object="player"/>
-        <show object="score"/>
-        <show object="lives"/>
-        <show object="walls"/>
-        <show object="robots"/>
-        <show object="bullet"/>
-        <show object="robotshots"/>
+        <show object="walls1" />
+        <show object="exits1" />
+        <show object="tally1" />
+        <show object="robots1left" />
+        <show object="robots1up" />
+        <show object="player" />
+        <show object="bullet" />
+        <show object="robotshots" />
+        <show object="otto" />
+        <show object="score" />
+        <show object="lives" />
+        <show object="liveicon" />
       </shows>
-      <inputs keys="player"/>
+      <inputs keys="man" />
       <conditions>
-        <condition class="robot">
-          <remaining>0</remaining>
-          <reset object="robots"/>
-          <push state="room2"/>
-        </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover"/>
+          <push state="gameover" />
+        </condition>
+        <!-- through an exit: tidy this room and go on to the next -->
+        <condition object="player" variable="exited">
+          <atleast>1</atleast>
+          <dec variable="player.exited">1</dec>
+          <inc variable="player.depth">1</inc>
+          <reset object="bullet" />
+          <reset object="robotshots" />
+          <reset object="otto" />
+          <reset object="tally1" />
+          <reset object="robots1left" />
+          <reset object="robots1up" />
+          <push state="room2" />
+        </condition>
+        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
+        <condition object="player" variable="lifepoints">
+          <atleast>2000</atleast>
+          <inc variable="player.lives">1</inc>
+          <dec variable="player.lifepoints">2000</dec>
+          <play sound="extralife" />
+        </condition>
+        <!-- every robot of the room shot: ten more for each of them -->
+        <condition object="tally1" variable="kills">
+          <atleast>3</atleast>
+          <dec variable="tally1.kills">3</dec>
+          <inc variable="player.score">30</inc>
+          <inc variable="player.lifepoints">30</inc>
+          <play sound="extralife" />
+        </condition>
+        <!-- every robot gone: Otto comes at once -->
+        <condition class="robots1">
+          <remaining>0</remaining>
+          <reveal object="otto" />
         </condition>
       </conditions>
+      <timers>
+        <timer>
+          <every>max(6, 14 - player.depth)</every>
+          <reveal object="otto" />
+          <play sound="otto" />
+        </timer>
+      </timers>
     </state>
 
     <state name="room2">
       <shows>
-        <show object="player"/>
-        <show object="score"/>
-        <show object="lives"/>
-        <show object="walls"/>
-        <show object="robots"/>
-        <show object="bullet"/>
-        <show object="robotshots"/>
+        <show object="walls2" />
+        <show object="exits2" />
+        <show object="tally2" />
+        <show object="robots2right" />
+        <show object="player" />
+        <show object="bullet" />
+        <show object="robotshots" />
+        <show object="otto" />
+        <show object="score" />
+        <show object="lives" />
+        <show object="liveicon" />
       </shows>
-      <inputs keys="player"/>
+      <inputs keys="man" />
       <conditions>
-        <condition class="robot">
-          <remaining>0</remaining>
-          <reset object="robots"/>
-          <push state="room1"/>
-        </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover"/>
+          <push state="gameover" />
+        </condition>
+        <!-- through an exit: tidy this room and go on to the next -->
+        <condition object="player" variable="exited">
+          <atleast>1</atleast>
+          <dec variable="player.exited">1</dec>
+          <inc variable="player.depth">1</inc>
+          <reset object="bullet" />
+          <reset object="robotshots" />
+          <reset object="otto" />
+          <reset object="tally2" />
+          <reset object="robots2right" />
+          <push state="room3" />
+        </condition>
+        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
+        <condition object="player" variable="lifepoints">
+          <atleast>2000</atleast>
+          <inc variable="player.lives">1</inc>
+          <dec variable="player.lifepoints">2000</dec>
+          <play sound="extralife" />
+        </condition>
+        <!-- every robot of the room shot: ten more for each of them -->
+        <condition object="tally2" variable="kills">
+          <atleast>4</atleast>
+          <dec variable="tally2.kills">4</dec>
+          <inc variable="player.score">40</inc>
+          <inc variable="player.lifepoints">40</inc>
+          <play sound="extralife" />
+        </condition>
+        <!-- every robot gone: Otto comes at once -->
+        <condition class="robots2">
+          <remaining>0</remaining>
+          <reveal object="otto" />
         </condition>
       </conditions>
+      <timers>
+        <timer>
+          <every>max(6, 14 - player.depth)</every>
+          <reveal object="otto" />
+          <play sound="otto" />
+        </timer>
+      </timers>
+    </state>
+
+    <state name="room3">
+      <shows>
+        <show object="walls3" />
+        <show object="exits3" />
+        <show object="tally3" />
+        <show object="robots3left" />
+        <show object="robots3up" />
+        <show object="player" />
+        <show object="bullet" />
+        <show object="robotshots" />
+        <show object="otto" />
+        <show object="score" />
+        <show object="lives" />
+        <show object="liveicon" />
+      </shows>
+      <inputs keys="man" />
+      <conditions>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <!-- through an exit: tidy this room and go on to the next -->
+        <condition object="player" variable="exited">
+          <atleast>1</atleast>
+          <dec variable="player.exited">1</dec>
+          <inc variable="player.depth">1</inc>
+          <reset object="bullet" />
+          <reset object="robotshots" />
+          <reset object="otto" />
+          <reset object="tally3" />
+          <reset object="robots3left" />
+          <reset object="robots3up" />
+          <push state="room4" />
+        </condition>
+        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
+        <condition object="player" variable="lifepoints">
+          <atleast>2000</atleast>
+          <inc variable="player.lives">1</inc>
+          <dec variable="player.lifepoints">2000</dec>
+          <play sound="extralife" />
+        </condition>
+        <!-- every robot of the room shot: ten more for each of them -->
+        <condition object="tally3" variable="kills">
+          <atleast>5</atleast>
+          <dec variable="tally3.kills">5</dec>
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <play sound="extralife" />
+        </condition>
+        <!-- every robot gone: Otto comes at once -->
+        <condition class="robots3">
+          <remaining>0</remaining>
+          <reveal object="otto" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every>max(6, 14 - player.depth)</every>
+          <reveal object="otto" />
+          <play sound="otto" />
+        </timer>
+      </timers>
+    </state>
+
+    <state name="room4">
+      <shows>
+        <show object="walls4" />
+        <show object="exits4" />
+        <show object="tally4" />
+        <show object="robots4right" />
+        <show object="robots4down" />
+        <show object="player" />
+        <show object="bullet" />
+        <show object="robotshots" />
+        <show object="otto" />
+        <show object="score" />
+        <show object="lives" />
+        <show object="liveicon" />
+      </shows>
+      <inputs keys="man" />
+      <conditions>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <!-- through an exit: tidy this room and go on to the next -->
+        <condition object="player" variable="exited">
+          <atleast>1</atleast>
+          <dec variable="player.exited">1</dec>
+          <inc variable="player.depth">1</inc>
+          <reset object="bullet" />
+          <reset object="robotshots" />
+          <reset object="otto" />
+          <reset object="tally4" />
+          <reset object="robots4right" />
+          <reset object="robots4down" />
+          <push state="room1" />
+        </condition>
+        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
+        <condition object="player" variable="lifepoints">
+          <atleast>2000</atleast>
+          <inc variable="player.lives">1</inc>
+          <dec variable="player.lifepoints">2000</dec>
+          <play sound="extralife" />
+        </condition>
+        <!-- every robot of the room shot: ten more for each of them -->
+        <condition object="tally4" variable="kills">
+          <atleast>6</atleast>
+          <dec variable="tally4.kills">6</dec>
+          <inc variable="player.score">60</inc>
+          <inc variable="player.lifepoints">60</inc>
+          <play sound="extralife" />
+        </condition>
+        <!-- every robot gone: Otto comes at once -->
+        <condition class="robots4">
+          <remaining>0</remaining>
+          <reveal object="otto" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every>max(6, 14 - player.depth)</every>
+          <reveal object="otto" />
+          <play sound="otto" />
+        </timer>
+      </timers>
+    </state>
+
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+        <show object="score" />
+        <show object="lives" />
+        <show object="liveicon" />
+      </shows>
+      <inputs>
+        <input button="space p escape"><pop /></input>
+      </inputs>
     </state>
 
     <state name="gameover">
       <shows>
-        <show object="player"/>
-        <show object="score"/>
-        <show object="lives"/>
+        <show object="gameover" />
+        <show object="score" />
+        <show object="lives" />
+        <show object="liveicon" />
+        <show object="again" />
       </shows>
       <inputs>
         <input button="space"><reset /></input>

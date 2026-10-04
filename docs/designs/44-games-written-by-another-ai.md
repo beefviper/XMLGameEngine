@@ -1,6 +1,6 @@
 # 44. Games written by another AI
 
-**Status:** built (`games/berserk.xml`, `games/demonattack.xml`, `games/frostbite.xml`, `tests/test_ai_games.cpp`); no new tags
+**Status:** built (`games/berserk.xml`, `games/demonattack.xml`, `games/frostbite.xml`, `tests/test_ai_games.cpp`); no new tags. Frostbite and Berserk have since been rewritten ([47](47-timers-facing-jumps-and-looks.md), [48](48-berserk.md))
 
 ## Why
 
@@ -34,3 +34,5 @@ The vocabulary was enough: the three games are written with what was already the
 ## Later
 
 On 2026-10-03 ([47](47-timers-facing-jumps-and-looks.md)) Frostbite was rewritten from scratch (the shore and igloo at the top, rows of ice below, jumps between them; `tests/test_frostbite.cpp`), and the two others were changed: Demon Attack's demons fire back, and Berserk's robots fire back, its man shoots the way he faces, and its walls kill (the `<stick />` against an object the other AI wrote did nothing). Two of the gaps above are closed by the same change: a `<condition>` now runs `<inc>` and `<dec>`, and a collision runs `<reset object>`. The schema is still not strict about where a command goes.
+
+On 2026-10-04 ([48](48-berserk.md)) Berserk was rewritten after the arcade game: four mazes with exits, robots that patrol and fire, Evil Otto, and a man who faces and shoots four ways (`tests/test_berserk.cpp`, which replaced the Berserk tests in `tests/test_ai_games.cpp`).

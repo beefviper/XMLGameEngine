@@ -3,12 +3,12 @@
 // author: beefviper
 // date: Oct 3, 2026
 //
-// Catch2 tests for games/berserk.xml and games/demonattack.xml, two of three
-// games written by another AI from the schema alone to see whether the
-// language was expressive enough (the third, Frostbite, has been rewritten
-// since and is tested in test_frostbite.cpp). Each is played frame by
+// Catch2 tests for games/demonattack.xml, one of three games written by
+// another AI from the schema alone to see whether the language was
+// expressive enough (Frostbite and Berserk have been rewritten since and are
+// tested in test_frostbite.cpp and test_berserk.cpp). It is played frame by
 // frame through a real xge::Engine with no window, with the keys a player
-// would press: Space starts, W, A, S, D (or the arrows) move, Space fires.
+// would press: Space starts, A and D (or the arrows) move, Space fires.
 //
 // Window::init() normally measures each object's size once a backend exists;
 // measure() gives every shape the size its sprite implies instead.
@@ -91,100 +91,6 @@ namespace
 	};
 }
 
-// ------------------------------------------------------------------ Berserk
-
-TEST_CASE("berserk.xml loads a player, a bullet, a maze and four robots", "[ai_games][berserk]")
-{
-	Play play("games/berserk.xml");
-
-	CHECK(play.state() == "title");
-	CHECK(play.object("player").isVisible);
-	CHECK_FALSE(play.object("bullet").isVisible);
-	CHECK(play.object("walls").size.x > 0.0f);
-	CHECK(play.alive("robot") == 4);
-	CHECK(play.object("player").variable["lives"] == 3.0f);
-}
-
-TEST_CASE("Space starts Berserk and the keys move the player", "[ai_games][berserk]")
-{
-	Play play("games/berserk.xml");
-
-	play.tap(KeyCode::Space);
-	CHECK(play.state() == "room1");
-
-	const float x = play.object("player").position.x;
-	play.engine.handleKeyPressed(KeyCode::A);
-	play.frames(5);
-	play.engine.handleKeyReleased(KeyCode::A);
-	CHECK(play.object("player").position.x < x);
-
-	const float y = play.object("player").position.y;
-	play.engine.handleKeyPressed(KeyCode::Up);
-	play.frames(5);
-	play.engine.handleKeyReleased(KeyCode::Up);
-	CHECK(play.object("player").position.y < y);
-}
-
-TEST_CASE("a shot kills the robot it hits and scores ten", "[ai_games][berserk]")
-{
-	Play play("games/berserk.xml");
-	play.tap(KeyCode::Space);
-	play.freeze("robot");
-
-	Object& player = play.object("player");
-	Object& robot = play.object("r4");
-	player.position = { robot.position.x, 170.0f };
-
-	play.tap(KeyCode::Space); // fire
-	CHECK(play.object("bullet").isVisible);
-	play.frames(60);
-
-	CHECK_FALSE(robot.isVisible);
-	CHECK(play.alive("robot") == 3);
-	CHECK(play.object("player").variable["score"] == 10.0f);
-}
-
-TEST_CASE("a robot touching the player costs a life and sends the player back", "[ai_games][berserk]")
-{
-	Play play("games/berserk.xml");
-	play.tap(KeyCode::Space);
-	play.freeze("robot");
-
-	Object& player = play.object("player");
-	const Vector2f start = player.position;
-	Object& robot = play.object("r4");
-	player.position = { robot.position.x - 14.0f, robot.position.y };
-	play.engine.handleKeyPressed(KeyCode::D);
-	play.frames(3);
-	play.engine.handleKeyReleased(KeyCode::D);
-
-	CHECK(player.variable["lives"] == 2.0f);
-	CHECK(player.position.x == Catch::Approx(start.x).margin(8.0));
-	CHECK(player.position.y == start.y);
-}
-
-TEST_CASE("killing every robot moves to the next room, and no lives is game over", "[ai_games][berserk]")
-{
-	Play play("games/berserk.xml");
-	play.tap(KeyCode::Space);
-
-	for (auto& object : play.game.getCurrentObjects())
-	{
-		if (object.objClass == "robot") { object.isVisible = false; object.collisionData.enabled = false; }
-	}
-	play.frames(2);
-	CHECK(play.state() == "room2");
-
-	play.object("player").variable["lives"] = 0.0f;
-	play.frames(2);
-	CHECK(play.state() == "gameover");
-
-	play.tap(KeyCode::Space);
-	CHECK(play.state() == "title");
-	CHECK(play.object("player").variable["lives"] == 3.0f);
-	CHECK(play.alive("robot") == 4);
-}
-
 // -------------------------------------------------------------- Demon Attack
 
 TEST_CASE("demonattack.xml loads a cannon, a shot and seven demons", "[ai_games][demonattack]")
@@ -262,63 +168,6 @@ TEST_CASE("a demon on the cannon costs a life, and three is game over", "[ai_gam
 }
 
 // ------------------------------------------------------- firing back, facing
-
-TEST_CASE("Berserk's man shoots the way he last walked", "[ai_games][berserk][facing]")
-{
-	Play play("games/berserk.xml");
-	play.tap(KeyCode::Space);
-	play.freeze("robot");
-	for (auto& object : play.game.getCurrentObjects())
-	{
-		if (object.objClass == "robot") { object.timers.clear(); } // no robot fire in this test
-	}
-
-	Object& player = play.object("player");
-	Object& bullet = play.object("bullet");
-	player.position = { 60.0f, 160.0f };
-
-	play.engine.handleKeyPressed(KeyCode::A);
-	play.frames(3);
-	play.engine.handleKeyReleased(KeyCode::A);
-	CHECK(player.facing == Direction::Left);
-
-	play.tap(KeyCode::Space);
-	REQUIRE(bullet.isVisible);
-	CHECK(bullet.velocity.x < 0);
-	CHECK(bullet.velocity.y == 0);
-	CHECK(bullet.position.x + bullet.size.x <= player.position.x);
-
-	play.frames(80);
-	play.engine.handleKeyPressed(KeyCode::S);
-	play.frames(1);
-	play.engine.handleKeyReleased(KeyCode::S);
-	play.tap(KeyCode::Space);
-	CHECK(bullet.velocity.y > 0);
-}
-
-TEST_CASE("Berserk's robots fire back, and their shots and the electrified walls cost a life", "[ai_games][berserk]")
-{
-	Play play("games/berserk.xml");
-	play.tap(KeyCode::Space);
-	Object& player = play.object("player");
-
-	// Within ten seconds the robots have fired.
-	bool fired = false;
-	for (int frame = 0; frame < 600 && !fired; ++frame)
-	{
-		play.frames(1);
-		fired = play.alive("robotshot") > 0;
-	}
-	CHECK(fired);
-
-	// Walking into the maze's wall.
-	player.position = { 80.0f, 86.0f };
-	play.engine.handleKeyPressed(KeyCode::W);
-	play.frames(10);
-	play.engine.handleKeyReleased(KeyCode::W);
-	CHECK(player.variable["lives"] <= 2.0f);
-	CHECK(player.position.y == Approx(190.0f).margin(30.0f)); // sent back to the start
-}
 
 TEST_CASE("Demon Attack's demons fire down at the cannon, and a hit costs a life", "[ai_games][demonattack]")
 {
