@@ -30,7 +30,7 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 - Building SFML and raylib both static from source fails to link on Linux (duplicate `stbi_*`, miniaudio); use shared builds or vcpkg. A CMake target named `m` collides with plutovg's `-lm`. More in [design 11](../designs/11-backends-build-and-layout.md).
 - A text falls back to the built-in 8x8 font when `assets/tuffy.ttf` is not found; programs make the folder holding `games/` and `assets/` the working directory first (`data_folder.cpp`).
 
-**XGEGUI**
+**xgegui**
 - No OpenGL through Qt: `GameView` is an ordinary widget; do not bring back a `QOpenGLWidget` without a guard around every library call ([design 12](../designs/12-front-ends.md)).
 - Anything that can run while `GameSession` swaps the game or window (a focus signal, a timer) must check its `changing` guard: the engine has no window for part of a swap.
 - Do not style `QSpinBox` borders in the style sheet (arrows vanish). The inspector calls an engine-drawn sprite "drawn" (`ShapeKind::Line`).

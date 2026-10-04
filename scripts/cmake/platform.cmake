@@ -4,22 +4,22 @@
 # date: Feb 6, 2026
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	PROPERTY VS_STARTUP_PROJECT XGECLI)
+	PROPERTY VS_STARTUP_PROJECT xgecli)
 
-# Warning levels for the engine library; XGECLI, XGEGUI and the tests get the
+# Warning levels for the engine library; xgecli, xgegui and the tests get the
 # same ones from scripts/cmake/executables.cmake and tests.cmake.
 if (XGE_BUILD_SHARED)
 	# A DLL has to say what it exports; rather than marking every class in the
 	# headers, export all of them. The DLL goes in output/<config>/libraries
 	# with the others (output.cmake).
-	set_target_properties(XGELIB PROPERTIES
+	set_target_properties(xgelib PROPERTIES
 		WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-target_compile_options(XGELIB PRIVATE
+target_compile_options(xgelib PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
 
-target_compile_options(XGELIB PRIVATE
+target_compile_options(xgelib PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
 if (WIN32 AND TARGET Freetype)
@@ -42,7 +42,7 @@ endif()
 
 # Vendored dependencies come in with their own warning levels, which have
 # nothing to do with this project's own code quality - MSVC's /W4 and
-# -Wall above are for XGELIB only, so silence warnings on
+# -Wall above are for xgelib only, so silence warnings on
 # third-party targets here instead of fixing warnings in code we don't own.
 function(silence_third_party_warnings target scope)
 	target_compile_options(${target} ${scope}

@@ -3,22 +3,22 @@
 # author: beefviper
 # date: Feb 6, 2026
 
-# XGELIB is the engine library. The third-party libraries below are
+# xgelib is the engine library. The third-party libraries below are
 # PUBLIC because the engine's own headers include theirs (game_expr.h
 # includes exprtk, xml_xerces.h includes Xerces, window_sfml.h includes SFML,
 # and so on), so anything that includes the engine's headers needs them too.
-target_compile_features(XGELIB PUBLIC cxx_std_20)
+target_compile_features(xgelib PUBLIC cxx_std_20)
 
-target_include_directories(XGELIB PUBLIC lib/include)
+target_include_directories(xgelib PUBLIC lib/include)
 
-target_link_libraries(XGELIB PUBLIC XercesC::XercesC)
+target_link_libraries(xgelib PUBLIC XercesC::XercesC)
 
 # SFML::Audio is the SFML 3 Audio backend (audio_sfml.h); raylib's and SDL2's
 # sound (audio_raylib.h, audio_sdl2.h) come with the libraries linked below,
 # with nothing more to link. Like the Window backends, every game plays its
 # sounds with one Audio backend (chosen by whichever AudioBackend Engine is
 # constructed with - see audio.h), and all of them are built in.
-target_link_libraries(XGELIB PUBLIC SFML::System
+target_link_libraries(xgelib PUBLIC SFML::System
 	SFML::Window SFML::Graphics SFML::Network SFML::Audio)
 
 # Raylib and SDL2 backends - see window_raylib.h/window_sdl2.h. Every game
@@ -26,26 +26,26 @@ target_link_libraries(XGELIB PUBLIC SFML::System
 # WindowBackend Engine is constructed with - see window.h), but all four
 # (SFML3 and OpenGL included) are built in so that choice can be made at
 # runtime instead of at build time.
-target_link_libraries(XGELIB PUBLIC raylib)
+target_link_libraries(xgelib PUBLIC raylib)
 
 # The OpenGL backend (window_opengl.h) is built on GLFW, which raylib is built
 # on too: one `glfw` target either way (found, fetched, or raylib's own).
-target_link_libraries(XGELIB PUBLIC glfw)
+target_link_libraries(xgelib PUBLIC glfw)
 
 # The OpenGL backend calls OpenGL itself (window_opengl.cpp), so it links the
 # system's OpenGL library: opengl32 on Windows, libGL on Linux.
-target_link_libraries(XGELIB PUBLIC OpenGL::GL)
+target_link_libraries(xgelib PUBLIC OpenGL::GL)
 
-target_link_libraries(XGELIB PUBLIC SDL2::SDL2)
+target_link_libraries(xgelib PUBLIC SDL2::SDL2)
 if (TARGET SDL2::SDL2main)
-	target_link_libraries(XGELIB PUBLIC SDL2::SDL2main)
+	target_link_libraries(xgelib PUBLIC SDL2::SDL2main)
 endif()
 
-target_link_libraries(XGELIB PUBLIC SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+target_link_libraries(xgelib PUBLIC SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 
 # lunasvg is PRIVATE: only svg.cpp uses it, and svg.h speaks in the engine's
 # own Bitmap, so nothing that includes the engine's headers needs it.
-target_link_libraries(XGELIB PRIVATE lunasvg::lunasvg)
+target_link_libraries(xgelib PRIVATE lunasvg::lunasvg)
 
 # TinyXML2, PugiXML, and RapidXML XML backends - see xml_tinyxml2.h/
 # xml_pugixml.h/xml_rapidxml.h. Same reasoning as the four Window backends
@@ -53,10 +53,10 @@ target_link_libraries(XGELIB PRIVATE lunasvg::lunasvg)
 # XmlBackend Game is constructed with - see xml_document.h), but all four
 # (Xerces included) are built in so that choice can be made at runtime
 # instead of at build time.
-target_link_libraries(XGELIB PUBLIC tinyxml2::tinyxml2 pugixml::pugixml rapidxml::rapidxml)
+target_link_libraries(xgelib PUBLIC tinyxml2::tinyxml2 pugixml::pugixml rapidxml::rapidxml)
 
 if (EXPRTK_PACKAGE_FOUND)
-	target_include_directories(XGELIB PUBLIC ${EXPRTK_INCLUDE_DIRS})
+	target_include_directories(xgelib PUBLIC ${EXPRTK_INCLUDE_DIRS})
 else()
-	target_link_libraries(XGELIB PUBLIC exprtk)
+	target_link_libraries(xgelib PUBLIC exprtk)
 endif()

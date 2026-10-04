@@ -3,7 +3,7 @@
 # author: beefviper
 # date: Feb 6, 2026
 
-add_dependencies(XGELIB XGEDATA)
+add_dependencies(xgelib xgedata)
 
 # The games and assets are copied into output/<config> (output.cmake), next to
 # the programs, keeping their games/ and assets/ folders. Each file is its own
@@ -43,7 +43,7 @@ foreach(item IN LISTS data_xsd data_xml data_assets)
 	list(APPEND data_outputs "${XGE_OUTPUT_DIR}/${item}")
 endforeach()
 
-add_custom_target(XGEDATA ALL
+add_custom_target(xgedata ALL
 	DEPENDS ${data_outputs}
 	SOURCES	${data_xsd} ${data_xml} ${data_assets})
 

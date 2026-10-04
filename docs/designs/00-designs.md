@@ -19,7 +19,7 @@ Status key: **Reference** = a map or summary, nothing to decide. **Built** = in 
 | [09](09-sound.md) | Sound as notes made into samples by the engine | `<sounds>`, `<play>`, an `Audio` backend. **Built** |
 | [10](10-games-as-tests.md) | What each shipped game tested and forced; the games another AI wrote; Berserk | **Built** |
 | [11](11-backends-build-and-layout.md) | Backend interfaces and factories, library + programs, CMake modules, `output/`, code layout | **Built.** Folder layout of `lib/` **Open** |
-| [12](12-front-ends.md) | `XGECLI` options, `XGEGUI` (Qt renderer, tree, Options, one or two windows, OpenGL backend) | **Built** |
+| [12](12-front-ends.md) | `xgecli` options, `xgegui` (Qt renderer, tree, Options, one or two windows, OpenGL backend) | **Built** |
 | [13](13-ideas.md) | Scrolling, targets and capability profiles, state export, game ideas, small ideas | **Idea** |
 | [14](14-vocabulary-map.md) | Every word the language knows by grammar (noun, verb, adjective, adverb, preposition) and by engine layer; the categories still missing | A reference, not a decision: collision is the richest layer, values the thinnest; frames the math words of the open arithmetic question in 01. **Reference** |
 

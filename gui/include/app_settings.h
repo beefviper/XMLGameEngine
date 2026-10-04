@@ -10,7 +10,7 @@
 
 namespace xge
 {
-	// What XGEGUI remembers between runs, kept in an ini file next to the
+	// What xgegui remembers between runs, kept in an ini file next to the
 	// program. The file is only written when a setting is changed; a setting
 	// that cannot be saved (the folder is read-only) still holds for the run.
 	// Besides the settings below it holds where the windows were left (see

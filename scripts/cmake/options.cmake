@@ -31,8 +31,8 @@ force_local_option(CATCH2 "Catch2")
 # not installed), so it's opt-in rather than part of an ordinary build.
 option(BUILD_TESTING "Build the Catch2-based test suite in tests/" OFF)
 
-# How the engine library (the XGELIB target) is built, and so how
-# XGECLI, XGEGUI and the tests link to it. OFF (the default) is a static
+# How the engine library (the xgelib target) is built, and so how
+# xgecli, xgegui and the tests link to it. OFF (the default) is a static
 # library: its code is copied into each program, which is one self-contained
 # .exe. ON is a shared library (a DLL on Windows, a .so on Linux): one copy
 # of the engine that the programs load at run time, which is what a plug-in

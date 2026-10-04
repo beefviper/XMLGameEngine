@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Oct 1, 2026
 //
-// Catch2 tests for XGECLI's command line (cli/source/cli.cpp): the options
+// Catch2 tests for xgecli's command line (cli/source/cli.cpp): the options
 // and their short, attached and long forms, the backend names, the errors, and
 // the order a game file is looked for in.
 //

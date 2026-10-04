@@ -6,7 +6,7 @@
 # Everything needed to run a game goes in one folder per configuration at the
 # top of the repository, output/Debug or output/Release (output/RelWithDebInfo,
 # output/MinSizeRel):
-#   XGECLI, XGEGUI, XGETEST   the programs
+#   xgecli, xgegui, xgetest   the programs
 #   games/, assets/           copied next to them by assets.cmake
 #   libraries/                every DLL (.so on Linux) the programs load, and
 #                             Qt's plug-ins in libraries/plugins

@@ -1175,7 +1175,7 @@ namespace xge
 		if (!document->load(filename))
 		{
 			// Thrown, not exit(): a front end that loads games one after another
-			// (XGEGUI) tells the user and carries on.
+			// (xgegui) tells the user and carries on.
 			throw std::runtime_error("XML file failed to load: " + document->getErrorMessage());
 		}
 

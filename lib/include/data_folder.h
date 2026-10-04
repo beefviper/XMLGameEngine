@@ -12,7 +12,7 @@
 namespace xge
 {
 	// Where the games and the assets are, shared by every program that runs a
-	// game (XGECLI and XGEGUI), so they look in the same places. The engine reads
+	// game (xgecli and xgegui), so they look in the same places. The engine reads
 	// assets/ (the font, images) relative to the working directory, and the
 	// games are in games/; the build puts a copy of both in the build directory,
 	// which is one folder above the programs in a Visual Studio build

@@ -21,8 +21,8 @@ namespace xge
 	// The Window backend for the Qt application: draws every object into the
 	// GameView's picture with QPainter, and reads its keys from the view. It is
 	// the one backend that does not open a window of its own - the view is
-	// already part of the application - so it is built in XGEGUI, not in
-	// XGELIB, and the engine library needs no Qt. It needs no other library
+	// already part of the application - so it is built in xgegui, not in
+	// xgelib, and the engine library needs no Qt. It needs no other library
 	// either, so it is also what the application falls back to when the one
 	// chosen will not start.
 	class QtWindow : public Window

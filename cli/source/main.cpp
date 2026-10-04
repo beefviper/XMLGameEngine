@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
 		// games/ and assets/ are looked for in the working directory, next to
 		// the program, and one folder above it (see data_folder.h), the same as
-		// XGEGUI does. A game given as a relative path is relative to where the
+		// xgegui does. A game given as a relative path is relative to where the
 		// program was started, so it is found before the working directory is
 		// changed to the folder they are in.
 		dataFolder = xge::findDataFolder(std::filesystem::current_path(), xge::programDirectory());

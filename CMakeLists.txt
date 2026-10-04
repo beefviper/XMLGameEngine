@@ -10,16 +10,16 @@ project("XMLGameEngine")
 include(scripts/cmake/options.cmake)
 include(scripts/cmake/output.cmake)
 
-# The engine is a library (the XGELIB target, lib/);
-# the programs that use it are separate targets - XGECLI (the command line,
-# cli/) and XGEGUI (the Qt application, gui/, built when Qt 6 is found); every
+# The engine is a library (the xgelib target, lib/);
+# the programs that use it are separate targets - xgecli (the command line,
+# cli/) and xgegui (the Qt application, gui/, built when Qt 6 is found); every
 # project has its own source/ and include/ - see
 # scripts/cmake/executables.cmake. Static by default; -DXGE_BUILD_SHARED=ON
 # builds it as a shared library (a DLL on Windows) instead.
 if (XGE_BUILD_SHARED)
-	add_library(XGELIB SHARED)
+	add_library(xgelib SHARED)
 else()
-	add_library(XGELIB STATIC)
+	add_library(xgelib STATIC)
 endif()
 
 include(scripts/cmake/dependencies.cmake)
@@ -29,7 +29,7 @@ include(scripts/cmake/assets.cmake)
 
 # The whole engine: game loading and evaluation, collisions, and every XML,
 # Window and Audio backend. Nothing here reads the command line or has a main();
-# that is cli/ (XGECLI). The test suite links this same library
+# that is cli/ (xgecli). The test suite links this same library
 # (scripts/cmake/tests.cmake), so there is one list of files to keep.
 set(ENGINE_SOURCES
 	"lib/source/game.cpp"
@@ -100,7 +100,7 @@ set(ENGINE_HEADERS
 	"lib/include/audio_sdl2.h"
 )
 
-target_sources(XGELIB PRIVATE
+target_sources(xgelib PRIVATE
 	${ENGINE_SOURCES}
 	${ENGINE_HEADERS}
 )

@@ -74,7 +74,7 @@ namespace xge
 		void replaceWindow(const std::function<std::unique_ptr<Window>()>& create);
 
 		// What loop() does each frame, split in two so a front end that owns
-		// the event loop (the Qt application, XGEGUI) can run the engine from
+		// the event loop (the Qt application, xgegui) can run the engine from
 		// its own timer instead of handing control to loop(). step() is the
 		// simulation: it reads the keys, moves everything, checks the
 		// conditions, and plays the sounds the frame asked for. render() draws the current picture without moving

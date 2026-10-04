@@ -9,7 +9,7 @@ class QApplication;
 
 namespace xge
 {
-	// Gives every control of XGEGUI more to see than a flat, one-colored
+	// Gives every control of xgegui more to see than a flat, one-colored
 	// default: the Fusion style (the same raised, shaded controls on every
 	// platform, with sunken text and number boxes), a faint tint on every
 	// other row of a list or tree, and buttons, column headings, the splitter

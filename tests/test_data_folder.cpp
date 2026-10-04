@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Oct 1, 2026
 //
-// Catch2 tests for lib/source/data_folder.cpp: where XGECLI and XGEGUI look for
+// Catch2 tests for lib/source/data_folder.cpp: where xgecli and xgegui look for
 // games/ and assets/ (the working directory, the program's folder, the folder
 // above it) and for a game file.
 //

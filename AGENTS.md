@@ -14,10 +14,10 @@ The root [readme.md](readme.md) is the short public overview (games, build, stat
 
 | Path | What |
 |---|---|
-| `lib/` | `XGELIB`, the engine (`source/`, `include/`; flat). Throws, never `exit()`s |
-| `cli/` | `XGECLI`, the command line program |
-| `gui/` | `XGEGUI`, the Qt 6 application (built only when Qt is found) |
-| `tests/` | Catch2 (`XGETEST`), one `test_<topic>.cpp` per area; games are played frame by frame |
+| `lib/` | `xgelib`, the engine (`source/`, `include/`; flat). Throws, never `exit()`s |
+| `cli/` | `xgecli`, the command line program |
+| `gui/` | `xgegui`, the Qt 6 application (built only when Qt is found) |
+| `tests/` | Catch2 (`xgetest`), one `test_<topic>.cpp` per area; games are played frame by frame |
 | `games/`, `assets/` | the games; the schema, font, sprite sheet |
 | `scripts/cmake/`, `scripts/shell/` | CMake modules; prerequisite installers |
 
@@ -28,11 +28,11 @@ Flow: `game_xml` (parse, validate) → `game_expr` (evaluate with exprtk) → `O
 ```
 cmake -B build -DBUILD_TESTING=ON
 cmake --build build
-output/Debug/XGETEST            # all tests; Catch2 filters work (e.g. "[kaboom]" or a test name)
-output/Debug/XGECLI frogger     # -w window, -x xml, -a audio libraries
+output/Debug/xgetest            # all tests; Catch2 filters work (e.g. "[kaboom]" or a test name)
+output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
 ```
 
-Dependencies are found (vcpkg or system) or fetched; `FORCE_LOCAL_<NAME>` forces a fetched copy. Outputs land in `output/<Config>` (programs, `games/`, `assets/`, `libraries/`). Tests link `XGELIB`.
+Dependencies are found (vcpkg or system) or fetched; `FORCE_LOCAL_<NAME>` forces a fetched copy. Outputs land in `output/<Config>` (programs, `games/`, `assets/`, `libraries/`). Tests link `xgelib`.
 
 ## Conventions
 

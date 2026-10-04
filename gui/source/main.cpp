@@ -3,13 +3,13 @@
 // author: beefviper
 // date: Oct 1, 2026
 
-// XGEGUI: the graphical front end. The game runs in the view on the left; on
+// xgegui: the graphical front end. The game runs in the view on the left; on
 // the right are the play, pause and step controls and a tree of everything in
 // the game, with editors for the values that can be changed while it runs.
 // The View menu moves the game into a window of its own, which is where the
 // video libraries draw.
 //
-//   XGEGUI [game]
+//   xgegui [game]
 //
 // `game` is a game file, or the name of one in games/ (pong, or pong.xml). With
 // none, a file dialog opens, in games/.
@@ -32,7 +32,7 @@
 #include <filesystem>
 #include <optional>
 
-// The lookup itself is shared with XGECLI: see data_folder.h.
+// The lookup itself is shared with xgecli: see data_folder.h.
 
 int main(int argc, char* argv[])
 {

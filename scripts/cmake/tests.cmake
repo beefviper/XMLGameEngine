@@ -29,10 +29,10 @@ else()
 endif()
 
 # A second executable: the test files plus the engine library itself (the
-# XGELIB target), so tests call into the real command.cpp/game.cpp
+# xgelib target), so tests call into the real command.cpp/game.cpp
 # etc., not a hand-copied reimplementation of them. The library brings the
 # include directory and every third-party library it needs along with it.
-add_executable(XGETEST
+add_executable(xgetest
 	"tests/test_command_parsing.cpp"
 	"tests/test_object_variables.cpp"
 	"tests/test_conditions.cpp"
@@ -73,33 +73,33 @@ add_executable(XGETEST
 	"cli/source/cli.cpp"
 )
 
-# cli.cpp is XGECLI's command line code, compiled in again here so test_cli.cpp
+# cli.cpp is xgecli's command line code, compiled in again here so test_cli.cpp
 # can call it; the library does not contain it (see executables.cmake).
-target_include_directories(XGETEST PRIVATE cli/include)
+target_include_directories(xgetest PRIVATE cli/include)
 
-target_compile_features(XGETEST PRIVATE cxx_std_20)
+target_compile_features(xgetest PRIVATE cxx_std_20)
 
-# Same flags platform.cmake sets on XGELIB - in particular /bigobj:
+# Same flags platform.cmake sets on xgelib - in particular /bigobj:
 # several test files include game_expr.h, whose exprtk use generates enough
 # object sections to hit MSVC's C1128 without it.
-target_compile_options(XGETEST PRIVATE
+target_compile_options(xgetest PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
 
-target_compile_options(XGETEST PRIVATE
+target_compile_options(xgetest PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
-target_link_libraries(XGETEST PRIVATE XGELIB Catch2::Catch2WithMain)
+target_link_libraries(xgetest PRIVATE xgelib Catch2::Catch2WithMain)
 
 # games/ and assets/ end up next to the test binary, in output/<config> (same
 # as they do for the programs - see output.cmake and assets.cmake), because
 # several tests load the shipped games; the tests run from that folder.
-add_dependencies(XGETEST XGEDATA)
+add_dependencies(xgetest xgedata)
 
 # In output/<config>, with its DLLs in libraries/ (output.cmake). Before
 # catch_discover_tests(), which runs the program after it is built.
-xge_place_program(XGETEST)
+xge_place_program(xgetest)
 
 include(CTest)
 include(Catch)
-catch_discover_tests(XGETEST
-	WORKING_DIRECTORY "$<TARGET_FILE_DIR:XGETEST>")
+catch_discover_tests(xgetest
+	WORKING_DIRECTORY "$<TARGET_FILE_DIR:xgetest>")

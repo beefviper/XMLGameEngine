@@ -3,27 +3,27 @@
 # author: beefviper
 # date: Oct 1, 2026
 #
-# The programs built on the engine library (the XGELIB target):
-#   XGECLI  the command line front end: picks a game file from the arguments,
+# The programs built on the engine library (the xgelib target):
+#   xgecli  the command line front end: picks a game file from the arguments,
 #           loads it, and runs it in a window (cli/)
-#   XGEGUI  the Qt front end (gui/): the game in a window, with play, pause and
+#   xgegui  the Qt front end (gui/): the game in a window, with play, pause and
 #           step controls and a tree of the game's data that can be edited
 #           while it runs. Built only when Qt 6 is found (dependencies.cmake)
 # They are defined here, in the top-level directory's scope, so they land in
 # the build directory itself, next to the games/ and assets/ copies that
 # assets.cmake makes.
 
-add_executable(XGECLI
+add_executable(xgecli
 	"cli/source/main.cpp"
 	"cli/source/cli.cpp"
 	"cli/include/cli.h"
 )
 
-set(XGE_PROGRAMS XGECLI)
+set(XGE_PROGRAMS xgecli)
 
 if (Qt6_FOUND)
 	# The headers are listed so that AUTOMOC finds the Q_OBJECT classes in them.
-	add_executable(XGEGUI
+	add_executable(xgegui
 		"gui/source/main.cpp"
 		"gui/source/main_window.cpp"
 		"gui/source/game_session.cpp"
@@ -49,9 +49,9 @@ if (Qt6_FOUND)
 		"gui/include/theme.h"
 	)
 
-	set_target_properties(XGEGUI PROPERTIES AUTOMOC ON)
-	target_include_directories(XGEGUI PRIVATE gui/include)
-	target_link_libraries(XGEGUI PRIVATE Qt6::Widgets)
+	set_target_properties(xgegui PROPERTIES AUTOMOC ON)
+	target_include_directories(xgegui PRIVATE gui/include)
+	target_link_libraries(xgegui PRIVATE Qt6::Widgets)
 
 	# Qt loads its platform plug-in (platforms/qwindows.dll) from a folder next
 	# to the program at run time, so it is never among the DLLs the program
@@ -68,22 +68,22 @@ if (Qt6_FOUND)
 	# libraries/plugins (output.cmake); qt.conf next to the program tells Qt
 	# where the plug-ins are, as a path relative to the program's folder.
 	if (WIN32 AND TARGET Qt6::windeployqt)
-		add_custom_command(TARGET XGEGUI POST_BUILD
+		add_custom_command(TARGET xgegui POST_BUILD
 			COMMAND Qt6::windeployqt --no-translations --no-compiler-runtime
-				--libdir "$<TARGET_FILE_DIR:XGEGUI>/${XGE_LIBRARY_FOLDER}"
-				--plugindir "$<TARGET_FILE_DIR:XGEGUI>/${XGE_LIBRARY_FOLDER}/plugins"
-				"$<TARGET_FILE:XGEGUI>"
+				--libdir "$<TARGET_FILE_DIR:xgegui>/${XGE_LIBRARY_FOLDER}"
+				--plugindir "$<TARGET_FILE_DIR:xgegui>/${XGE_LIBRARY_FOLDER}/plugins"
+				"$<TARGET_FILE:xgegui>"
 			VERBATIM)
 
-		file(GENERATE OUTPUT "$<TARGET_FILE_DIR:XGEGUI>/qt.conf"
+		file(GENERATE OUTPUT "$<TARGET_FILE_DIR:xgegui>/qt.conf"
 			CONTENT "[Paths]\nPlugins = ${XGE_LIBRARY_FOLDER}/plugins\n")
 	endif()
 
-	list(APPEND XGE_PROGRAMS XGEGUI)
+	list(APPEND XGE_PROGRAMS xgegui)
 endif()
 
 foreach(program IN LISTS XGE_PROGRAMS)
-	target_link_libraries(${program} PRIVATE XGELIB)
+	target_link_libraries(${program} PRIVATE xgelib)
 	target_compile_features(${program} PRIVATE cxx_std_20)
 
 	# Same flags platform.cmake sets on the library.
@@ -93,12 +93,12 @@ foreach(program IN LISTS XGE_PROGRAMS)
 		$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
 
 	# The games and assets are copied next to the program, see assets.cmake.
-	add_dependencies(${program} XGEDATA)
+	add_dependencies(${program} xgedata)
 
 	# In output/<config>, with its DLLs in libraries/ (output.cmake). After
 	# windeployqt above, so the Qt DLLs are in the list it writes.
 	xge_place_program(${program})
 endforeach()
 
-# cli/include is not part of the library's include directory: only XGECLI uses it.
-target_include_directories(XGECLI PRIVATE cli/include)
+# cli/include is not part of the library's include directory: only xgecli uses it.
+target_include_directories(xgecli PRIVATE cli/include)
