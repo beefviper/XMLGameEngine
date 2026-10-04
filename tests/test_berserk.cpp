@@ -5,7 +5,7 @@
 //
 // Catch2 tests for games/berserk.xml, rewritten on 2026-10-04 after Stern's
 // Berzerk (the first version was one of the games another AI wrote from the
-// schema alone, see design 44). Played frame by frame through a real
+// schema alone, see design 10). Played frame by frame through a real
 // xge::Engine with no window, with the keys a player would press: Space
 // starts, W, A, S, D (or the arrows) walk and set which way the man faces,
 // Space fires, P pauses.

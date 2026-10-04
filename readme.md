@@ -20,7 +20,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/astrosmash.xml` | Astrosmash: shoot falling rocks before they land; fall speeds and starting heights are `<random>` |
 | `games/lunarlander.xml` | Lunar Lander: land gently on the pad with fuel to spare; every picture is drawn from `<line>`s and collisions follow the drawn pixels |
 | `games/asteroids.xml` | Asteroids: turn, thrust along the way you face and coast, shoot rocks that break into smaller rocks; the screen wraps on every side |
-| `games/berserk.xml` | Berserk, after the arcade game Berzerk: four mazes of electrified walls with robots that patrol and shoot back, a man who shoots the way he faces, Evil Otto if you linger, exits in every outer wall (see [design 48](docs/designs/48-berserk.md); first written by another AI from the schema alone, see [design 44](docs/designs/44-games-written-by-another-ai.md)) |
+| `games/berserk.xml` | Berserk, after the arcade game Berzerk: four mazes of electrified walls with robots that patrol and shoot back, a man who shoots the way he faces, Evil Otto if you linger, exits in every outer wall (see [design 10](docs/designs/10-games-as-tests.md); first written by another AI from the schema alone, see [design 10](docs/designs/10-games-as-tests.md)) |
 | `games/demonattack.xml` | Demon Attack: slide along the bottom and shoot the demons, which bounce from side to side and fire down at you (first written by another AI) |
 | `games/frostbite.xml` | Frostbite: jump Bailey between the snowy shore and four rows of drifting ice; every white row he lands on turns blue and adds a block to his igloo; the water, the cold and the snow geese are against him; finish the igloo and walk in |
 
