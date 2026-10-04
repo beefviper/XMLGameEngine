@@ -378,12 +378,20 @@ TEST_CASE("robots fire straight, and a shot that reaches the man costs a life", 
 	REQUIRE(shot);
 	CHECK(((shot->velocity.x == 0.0f) != (shot->velocity.y == 0.0f)));
 
+	// Nothing else fires while this is looked at: the robots' waits are random,
+	// and another robot's shot would come out of the pool in the very slot this
+	// one is put away into (which is what made this test fail one run in fifty).
+	for (auto& object : play.game.getCurrentObjects())
+	{
+		for (auto& timer : object.timers) { timer.framesLeft = 1000000; }
+	}
+
 	// And one that meets the man ends a life (a wall in the way would do as much).
 	play.man().variable["lives"] = 3.0f;
 	play.man().position = { shot->position.x - 4.0f, shot->position.y - 8.0f };
 	play.frames(3);
 	CHECK(play.lives() < 3.0f);
-	CHECK(play.alive("robotshot") == 0);
+	CHECK_FALSE(shot->isVisible);
 }
 
 TEST_CASE("robots fire more often, and Otto comes sooner, the deeper the man has gone", "[berserk]")
