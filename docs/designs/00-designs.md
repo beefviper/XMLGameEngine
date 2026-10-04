@@ -8,7 +8,7 @@ Status key: **Reference** = a map or summary, nothing to decide. **Built** = in 
 
 | # | Topic | Chosen / status |
 |---|---|---|
-| [01](01-vision-and-format.md) | Vision, file format, the VGDL landscape, attributes vs content, arithmetic in text | Declarative + `condition` triggers; XML + XSD, one file; function syntax removed, arithmetic stays text. **Built.** Arithmetic and XSLT code generation **Open** |
+| [01](01-vision-and-format.md) | Vision, file format, the VGDL landscape, attributes vs content, arithmetic as text or tags | Declarative + `condition` triggers; XML + XSD, one file; function syntax removed; arithmetic written as text, or as `<equation>` / `<formula>` tags beside it. **Built.** XSLT code generation **Open** |
 | [02](02-values-variables-and-names.md) | Values (`<random>`), evaluation order, variables, an object's size in expressions, names and classes | Two-pass registration; polling floats by `owner.variable`; `name.width`; `name` + `class`. **Built.** `Value` variant **Decided**; selectors, inheritance **Idea** |
 | [03](03-objects-groups-and-storage.md) | What an object is, storage and handles, grids, lockstep, groups | `vector<Object>` and name search; `<group>` with members that take what they leave out. **Built.** Handles **Decided**; opt-in parts, shapes **Idea** |
 | [04](04-states-conditions-and-input.md) | States, conditions, input and held keys | State stack; `atleast`/`atmost`/`remaining`; objects name actions, states bind keys; live held keys. **Built.** Per-state behavior, `goto`, data between states **Open** |

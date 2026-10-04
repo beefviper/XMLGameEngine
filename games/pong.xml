@@ -67,7 +67,16 @@
           <color>color.red</color>
         </text>
       </sprite>
-      <position><x>window.width.center - title.width / 2</x><y>margin</y></position>
+      <!-- x is window.width.center - title.width / 2, written as an <equation>: steps, each naming its answer for the next -->
+      <position>
+        <x>
+          <equation>
+            <divide name="half" dividend="title.width" divisor="2" />
+            <subtract minuend="window.width.center" subtrahend="half" />
+          </equation>
+        </x>
+        <y>margin</y>
+      </position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>

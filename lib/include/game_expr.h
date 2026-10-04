@@ -85,6 +85,12 @@ namespace xge
 		// makes. `where` says whose value it is, for the message if the
 		// expression does not compile (std::runtime_error).
 		float evaluate(const RawValue& value, const std::string& where);
+
+		// One <add>, <subtract>, <multiply> or <divide> of an <equation> or a
+		// <formula>: its first operand combined with each of the others in turn.
+		// `steps` holds the answers of the equation's named steps so far (a
+		// formula has none); an operand that names one is that answer.
+		float evaluateOperation(const RawOperation& operation, const std::map<std::string, float>& steps, const std::string& where);
 		float evaluateExpression(const std::string& text, const std::string& where);
 
 		// The spriteParams for a sprite, in the shape the window backends read:

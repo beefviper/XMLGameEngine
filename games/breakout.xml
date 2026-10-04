@@ -179,7 +179,30 @@
           <color>color.orange</color>
         </text>
       </sprite>
-      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-110)</y></position>
+      <!-- x is window.width.center - title.width / 2 and y is window.height.center - title.height / 2 + (-110), written as <formula>s: one operation, its operands nested inside it -->
+      <position>
+        <x>
+          <formula>
+            <subtract>
+              <minuend>window.width.center</minuend>
+              <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
+            </subtract>
+          </formula>
+        </x>
+        <y>
+          <formula>
+            <add>
+              <augend>
+                <subtract>
+                  <minuend>window.height.center</minuend>
+                  <subtrahend><divide><dividend>title.height</dividend><divisor>2</divisor></divide></subtrahend>
+                </subtract>
+              </augend>
+              <addend>-110</addend>
+            </add>
+          </formula>
+        </y>
+      </position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>

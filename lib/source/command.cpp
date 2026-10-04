@@ -279,14 +279,99 @@ namespace xge
 		return o;
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawValue& value)
+	const OperationShape* operationShape(const std::string& tag)
 	{
-		if (value.kind == RawValue::Kind::Random)
+		static const OperationShape shapes[] = {
+			{ "add", "augend", "addend", '+' },
+			{ "subtract", "minuend", "subtrahend", '-' },
+			{ "multiply", "multiplicand", "multiplier", '*' },
+			{ "divide", "dividend", "divisor", '/' },
+		};
+
+		for (const OperationShape& shape : shapes)
 		{
-			return o << "random(" << value.min << ", " << value.max << ")";
+			if (tag == shape.tag) { return &shape; }
 		}
 
-		return o << value.text;
+		return nullptr;
+	}
+
+	namespace
+	{
+		std::string operationText(const RawOperation& operation)
+		{
+			const OperationShape* shape = operationShape(operation.op);
+			const std::string symbol = shape ? std::string(1, shape->symbol) : operation.op;
+
+			std::string text = "(";
+			for (std::size_t i = 0; i < operation.operands.size(); ++i)
+			{
+				if (i > 0) { text += " " + symbol + " "; }
+				text += valueText(operation.operands[i].value);
+			}
+			return text + ")";
+		}
+	}
+
+	std::string valueText(const RawValue& value)
+	{
+		switch (value.kind)
+		{
+		case RawValue::Kind::Random:
+			return "random(" + value.min + ", " + value.max + ")";
+
+		case RawValue::Kind::Formula:
+			return value.operations && !value.operations->empty() ? operationText(value.operations->front()) : "";
+
+		case RawValue::Kind::Equation:
+		{
+			std::string text = "equation{ ";
+			if (value.operations)
+			{
+				for (std::size_t i = 0; i < value.operations->size(); ++i)
+				{
+					const RawOperation& step = (*value.operations)[i];
+					if (i > 0) { text += "; "; }
+					if (!step.name.empty()) { text += step.name + " = "; }
+					text += operationText(step);
+				}
+			}
+			return text + " }";
+		}
+
+		case RawValue::Kind::Expression:
+			break;
+		}
+
+		return value.text;
+	}
+
+	std::vector<const std::string*> RawValue::expressions() const
+	{
+		if (kind == Kind::Random) { return { &min, &max }; }
+
+		if (kind == Kind::Equation || kind == Kind::Formula)
+		{
+			std::vector<const std::string*> all;
+			if (operations)
+			{
+				for (const RawOperation& operation : *operations)
+				{
+					for (const RawOperand& operand : operation.operands)
+					{
+						for (const std::string* text : operand.value.expressions()) { all.push_back(text); }
+					}
+				}
+			}
+			return all;
+		}
+
+		return { &text };
+	}
+
+	std::ostream& operator<<(std::ostream& o, const RawValue& value)
+	{
+		return o << valueText(value);
 	}
 
 	std::ostream& operator<<(std::ostream& o, const RawCommand& command)

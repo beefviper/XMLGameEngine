@@ -8,11 +8,14 @@
 #include "xsd_lite.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <optional>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 
@@ -88,6 +91,178 @@ namespace xge
 			fail(where, "<" + node.getName() + "> is \"" + text + "\"; expected true or false");
 		}
 
+		RawValue readRandom(const XmlNode& tag, const std::string& here)
+		{
+			RawValue value;
+			value.kind = RawValue::Kind::Random;
+			value.min = requireAttribute(tag, "min", here);
+			value.max = requireAttribute(tag, "max", here);
+			return value;
+		}
+
+		// Whether text is a plain number (`2`, `-130`, `0.5`, `1e3`): digits, a
+		// sign, a point and an exponent, nothing else, so that "inf" and "0x10"
+		// are not.
+		bool isNumber(const std::string& text)
+		{
+			if (text.empty() || text.find_first_not_of("0123456789+-.eE") != std::string::npos) { return false; }
+
+			char* end = nullptr;
+			std::strtod(text.c_str(), &end);
+			return end == text.c_str() + text.size();
+		}
+
+		// Whether text is a name: a letter or underscore, then letters, digits,
+		// underscores and (when dots is true) dots, like `window.width.center`.
+		bool isName(const std::string& text, bool dots)
+		{
+			if (text.empty() || !(std::isalpha(static_cast<unsigned char>(text[0])) || text[0] == '_')) { return false; }
+
+			return std::all_of(text.begin(), text.end(), [dots](char c)
+			{
+				return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || (dots && c == '.');
+			});
+		}
+
+		// An operand of an equation or formula is a name or a number and
+		// nothing else: anything more is an operation of its own.
+		std::string requireTerm(const std::string& text, const std::string& here)
+		{
+			if (!isNumber(text) && !isName(text, true))
+			{
+				fail(here, "\"" + text + "\" is not a name or a number; an operand is one or the other, so write anything more than that as an operation of its own");
+			}
+			return text;
+		}
+
+		// One step of an <equation>: <divide name="half" dividend="title.width"
+		// divisor="2" />. The operands are attributes, a name or a number each;
+		// a name is an earlier step's, or one the game's expressions can use.
+		RawOperation readEquationStep(const XmlNode& node, const OperationShape& shape, const std::string& where)
+		{
+			const std::string here = where + " > <" + shape.tag + ">";
+
+			if (node.getFirstChild()) { fail(here, "is a step of an <equation>, which takes its operands as attributes (" + std::string(shape.first) + "=\"...\" " + shape.rest + "=\"...\"); operands written as elements belong in a <formula>"); }
+
+			RawOperation step;
+			step.op = shape.tag;
+			step.name = trim(node.getAttribute("name"));
+
+			if (!step.name.empty() && !isName(step.name, false)) { fail(here, "name=\"" + step.name + "\" is not a name; a step's name is letters, digits and underscores, with no dots"); }
+
+			for (const char* role : { shape.first, shape.rest })
+			{
+				RawOperand operand;
+				operand.role = role;
+				operand.value = RawValue::expression(requireTerm(trim(requireAttribute(node, role, here)), here + " " + role));
+				step.operands.push_back(std::move(operand));
+			}
+
+			return step;
+		}
+
+		RawValue readEquation(const XmlNode& node, const std::string& where)
+		{
+			const std::string here = where + " > <equation>";
+			auto steps = std::make_shared<std::vector<RawOperation>>();
+			std::set<std::string> names;
+
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
+			{
+				const OperationShape* shape = operationShape(child->getName());
+				if (!shape) { fail(here, "has <" + child->getName() + ">, which is not a step; a step is <add>, <subtract>, <multiply> or <divide>"); }
+
+				RawOperation step = readEquationStep(*child, *shape, here);
+				if (!step.name.empty() && !names.insert(step.name).second) { fail(here, "two steps are called \"" + step.name + "\""); }
+				steps->push_back(std::move(step));
+			}
+
+			if (steps->empty()) { fail(here, "has no steps"); }
+
+			RawValue value;
+			value.kind = RawValue::Kind::Equation;
+			value.operations = std::move(steps);
+			return value;
+		}
+
+		RawOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where);
+
+		// An operand of a <formula> operation: <minuend>window.width.center
+		// </minuend>, or an operation in place of the name, or a <random>.
+		RawValue readFormulaOperand(const XmlNode& node, const std::string& where)
+		{
+			const std::string text = readText(node);
+			const std::string here = where + " > <" + node.getName() + ">";
+			std::unique_ptr<XmlNode> tag = node.getFirstChild();
+
+			if (!tag)
+			{
+				if (text.empty()) { fail(here, "has no value"); }
+				return RawValue::expression(requireTerm(text, here));
+			}
+
+			if (!text.empty()) { fail(here, "holds both the text \"" + text + "\" and a <" + tag->getName() + "> tag; use one or the other"); }
+			if (tag->getNextSibling()) { fail(here, "holds more than one tag"); }
+
+			if (tag->getName() == "random") { return readRandom(*tag, here); }
+
+			const OperationShape* shape = operationShape(tag->getName());
+			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected a name, a number, <random>, <add>, <subtract>, <multiply> or <divide>"); }
+
+			RawValue value;
+			value.kind = RawValue::Kind::Formula;
+			value.operations = std::make_shared<std::vector<RawOperation>>(1, readFormulaOperation(*tag, *shape, here));
+			return value;
+		}
+
+		// <subtract><minuend>..</minuend><subtrahend>..</subtrahend>
+		// <subtrahend>..</subtrahend></subtract>: the first operand, then one or
+		// more of the second, taken one after another.
+		RawOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where)
+		{
+			const std::string here = where + " > <" + shape.tag + ">";
+
+			if (!node.getAttribute("name").empty()) { fail(here, "has a name; only a step of an <equation> is named, and an operation nested in a <formula> is used where it stands"); }
+
+			RawOperation operation;
+			operation.op = shape.tag;
+
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
+			{
+				const char* expected = operation.operands.empty() ? shape.first : shape.rest;
+				if (child->getName() != expected)
+				{
+					fail(here, "has <" + child->getName() + "> where <" + expected + "> belongs: " + shape.first + " first, then one or more " + shape.rest);
+				}
+
+				RawOperand operand;
+				operand.role = expected;
+				operand.value = readFormulaOperand(*child, here);
+				operation.operands.push_back(std::move(operand));
+			}
+
+			if (operation.operands.size() < 2) { fail(here, "needs a <" + std::string(shape.first) + "> and at least one <" + shape.rest + ">"); }
+
+			return operation;
+		}
+
+		RawValue readFormula(const XmlNode& node, const std::string& where)
+		{
+			const std::string here = where + " > <formula>";
+			std::unique_ptr<XmlNode> tag = node.getFirstChild();
+
+			if (!tag) { fail(here, "has no operation"); }
+			if (tag->getNextSibling()) { fail(here, "holds more than one operation; a formula is one, with the others inside it"); }
+
+			const OperationShape* shape = operationShape(tag->getName());
+			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected <add>, <subtract>, <multiply> or <divide>"); }
+
+			RawValue value;
+			value.kind = RawValue::Kind::Formula;
+			value.operations = std::make_shared<std::vector<RawOperation>>(1, readFormulaOperation(*tag, *shape, here));
+			return value;
+		}
+
 		// A number, written either as an expression (the text of the element) or
 		// as one value tag inside it - see RawValue.
 		RawValue readValue(const XmlNode& node, const std::string& where)
@@ -107,14 +282,9 @@ namespace xge
 
 			const std::string tagName = tag->getName();
 
-			if (tagName == "random")
-			{
-				RawValue value;
-				value.kind = RawValue::Kind::Random;
-				value.min = requireAttribute(*tag, "min", here);
-				value.max = requireAttribute(*tag, "max", here);
-				return value;
-			}
+			if (tagName == "random") { return readRandom(*tag, here); }
+			if (tagName == "equation") { return readEquation(*tag, here); }
+			if (tagName == "formula") { return readFormula(*tag, here); }
 
 			fail(here, "unknown value tag <" + tagName + ">");
 		}

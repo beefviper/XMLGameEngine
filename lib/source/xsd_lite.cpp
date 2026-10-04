@@ -125,6 +125,13 @@ namespace xge
 		std::map<std::string, Particle> groups;
 		std::set<std::string> inProgress;
 
+		// Types that contain themselves point at each other through shared
+		// pointers; emptying every named type lets them all go.
+		~Model()
+		{
+			for (auto& [name, type] : complexTypes) { type->content.reset(); }
+		}
+
 		// -------------------------------------------------------- building
 		bool build(const XmlNode& schemaRoot, std::string& error);
 		bool buildSimpleType(const XmlNode& node, std::string& error);
@@ -349,18 +356,20 @@ namespace xge
 			return false;
 		}
 
-		if (!inProgress.insert("type:" + name).second)
+		// A type may contain itself, through an element (or elements of other
+		// types) that name it: it is recorded before it is built, so that the
+		// reference inside it finds the type being made. (A <formula>'s
+		// operands hold operations whose operands are operations.) The cycle
+		// is broken again when the model goes (~Model).
+		auto type = std::make_shared<ComplexType>();
+		complexTypes[name] = type;
+
+		if (!buildComplexType(*node->second, *type, error))
 		{
-			error = "the schema type '" + name + "' contains itself, which this validator does not support";
+			complexTypes.erase(name);
 			return false;
 		}
 
-		auto type = std::make_shared<ComplexType>();
-		const bool ok = buildComplexType(*node->second, *type, error);
-		inProgress.erase("type:" + name);
-		if (!ok) { return false; }
-
-		complexTypes[name] = type;
 		out = type;
 		return true;
 	}

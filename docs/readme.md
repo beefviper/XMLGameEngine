@@ -46,10 +46,10 @@ The rule the whole format follows: **an attribute names or picks something; ever
 
 ### Values
 
-Wherever the content of an element is a number (a position, a velocity, a size, a variable's value, a threshold, a step) it is a **value**, and a value is one of two things:
+Wherever the content of an element is a number (a position, a velocity, a size, a variable's value, a threshold, a step) it is a **value**, and a value is one of three things:
 
 - **An expression written out as text.** Ordinary arithmetic, with the names below: `window.width.center - title.width / 2`, `margin`, `ball.radius * 2`, `30`. It is evaluated by exprtk at load time.
-- **One value tag**, which makes the number. Today there is one: `<random min="-7" max="7" />`, a random number from `min` to `max` (in either order; both ends are themselves expressions). Any place that takes a value takes it:
+- **One value tag**, which makes the number: `<random min="-7" max="7" />`, a random number from `min` to `max` (in either order; both ends are themselves expressions). Any place that takes a value takes it:
 
 ```xml
 <velocity>
@@ -59,6 +59,8 @@ Wherever the content of an element is a number (a position, a velocity, a size, 
 ```
 
 A value holds text or a tag, not both, and not two tags (`<x>5 <random .../></x>` is an error naming the element). A value tag that is evaluated at load gives one number for the whole run: a `reset()` puts an object back to the position and velocity it started with, not a new draw.
+
+- **Arithmetic written as tags**, an `<equation>` or a `<formula>`: the same sums as the expression text, with nothing left in a string for a tool to parse. They are value tags too, so they go wherever `<random>` does. See [Arithmetic as tags](#arithmetic-as-tags).
 
 The names an expression can use:
 
@@ -71,7 +73,48 @@ The names an expression can use:
 | any `objectName.variableName` | that object's variable (available regardless of the order objects appear in the file) |
 | `objectName.width`, `objectName.height` | the width and height of any object (its sprite's footprint); an object refers to itself by its own name, like any other field. Meant for `<position>`. An object's own `<variable>` named `width` or `height` wins over its size. A circle's or rectangle's size is known from its sprite, so the position is exact at load. A text's or image's size is only known once the window has measured it, so its position is finished then, and worked out again whenever the size changes (a score gaining a digit); until then `printGame` shows it as unknown. |
 
-The other exprtk math functions (`min`, `max`, `sqrt`, ...) work too, because exprtk brings them; Berserk uses `max` to keep its waits from shrinking below a floor (`max(6, 14 - player.depth)`). Nothing else about the format depends on them.
+The other exprtk math functions (`min`, `max`, `sqrt`, ...) work too, because exprtk brings them; Berserk uses `max` to keep its waits from shrinking below a floor (`max(6, 14 - player.depth)`). Nothing else about the format depends on them. (Neither tag has a `min` or `max` yet; see [Arithmetic as tags](#arithmetic-as-tags).)
+
+### Arithmetic as tags
+
+The same arithmetic has three spellings, and all three give the same number: expression text (`window.width.center - title.width / 2`), an `<equation>` and a `<formula>`. They sit side by side in one game, even in one object; use whichever reads best. Pong's title is placed with an `<equation>` and Breakout's with `<formula>`s, so each is played by a real game.
+
+Both are built from the same four operations, each with a first operand and a second, named for what they are:
+
+| Operation | First operand | Second operand | Means |
+|---|---|---|---|
+| `<add>` | `augend` | `addend` | first + second |
+| `<subtract>` | `minuend` | `subtrahend` | first - second |
+| `<multiply>` | `multiplicand` | `multiplier` | first * second |
+| `<divide>` | `dividend` | `divisor` | first / second |
+
+An operand is a **name or a number**, never an expression: `window.width.center`, `title.width`, `xoffset`, `2`, `-110`, `0.5`. Anything more is an operation of its own, which is how precedence is written: the operations are worked out in the order they are given, innermost first, so there is nothing to parse.
+
+**`<equation>`** is a list of steps, run in order, one operation each, the operands written as attributes. A step may be given a `name`, and the steps after it (in the same equation) use that name for its answer; the last step is the answer of the whole equation. A step name is letters, digits and underscores with no dots, is local to the equation, and is used before a variable or object value of the same name; two steps cannot share one.
+
+```xml
+<x>
+  <equation>
+    <divide   name="half" dividend="title.width" divisor="2" />
+    <subtract minuend="window.width.center" subtrahend="half" />
+  </equation>
+</x>
+```
+
+**`<formula>`** is one operation whose operands are elements, each holding a name, a number, a `<random>` or another operation. The first operand is combined with each of the others in turn, left to right, so `a - b - c` is one `<subtract>` with a `<minuend>` and two `<subtrahend>`s, and `a / b / c` one `<divide>` with two `<divisor>`s. There must be a first operand and at least one second.
+
+```xml
+<x>
+  <formula>
+    <subtract>
+      <minuend>window.width.center</minuend>
+      <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
+    </subtract>
+  </formula>
+</x>
+```
+
+A step of an `<equation>` takes its operands as attributes and an operation inside a `<formula>` as elements, and each form says so when it is written the other way. Which operations may sit where is checked by the schema (both validators), and what an operand may be, and the names, by the loader, with a message that names the element (`object 'title' > <position> > <x> > <equation> > <add>: "a + b" is not a name or a number; ...`). Everything is worked out when the game loads, like any value, and a size-dependent position (a text centered by its own width) is finished once the window has measured it, as it is for text. `printGame` shows an equation or formula as infix with its brackets. Division by 0 is not checked: the answer is whatever a float division by 0 gives (infinity).
 
 ### `<window>`
 
@@ -499,8 +542,8 @@ The library is static by default: each program has the engine's code copied into
 | `cli/source/main.cpp`, `cli/source/cli.cpp` | XGECLI, the command line program: read the options, find the game file, build `Game` and `Engine` with the chosen backends. The only code outside the engine library |
 | `gui/source/*.cpp` | XGEGUI, the Qt application ([design 12](designs/12-front-ends.md)): `main_window` (the window, the File and View menus, the question about two windows), `game_session` (a loaded game and its engine, run from a timer; play, pause, step, reset, and changing the libraries), `game_stage` (where the Qt renderer's picture is: the left pane, or a window of its own), `game_view` (the widget a picture is shown in), `key_queue` (the keyboard, read by Qt), `qt_window` (the `Window` that draws with QPainter), `options_dialog` and `session_options` (the video library, XML parser and sound library choice), `app_settings` (`xgegui.ini`, next to the program), `inspector` (the controls and the tree of game data) |
 | `game_xml.cpp` | Walk the parsed XML tags into raw window/variable/object/state data (`RawValue`, `RawCommand`, `RawSprite`); a `<group>` is read here as one raw object per member |
-| `game_expr.cpp` | exprtk symbol table and evaluation of raw values into `Object`s and `State`s |
-| `command.cpp` | Turn raw command tags into typed `Command`s |
+| `game_expr.cpp` | exprtk symbol table and evaluation of raw values (expressions, `<random>`, `<equation>`, `<formula>`) into `Object`s and `State`s |
+| `command.cpp` | Turn raw command tags into typed `Command`s; the table of arithmetic operations (`operationShape`) and a value printed as text (`valueText`) |
 | `game.cpp` | Objects, state stack, per-frame update, collision pairs, conditions, resets |
 | `collision_detector.cpp` | Geometry only: box, circle and swept tests, and the pixel pass for type `pixel` |
 | `builtin_font.cpp` | The 8x8 font stored in the program (`rasterizeText`), which draws text into a bitmap when a backend cannot load its font file |
@@ -512,7 +555,7 @@ The library is static by default: each program has the engine's code copied into
 | `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop), key handling, and playing the sounds each frame asks for |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about grids and not about that game), the built-in font, the command line and the data folder search, sound (`test_sound`: pitch names, the synthesizer, `<sounds>` and its rejections, Pong asking for its sounds, `Engine` and a recording `Audio`), the one path of drawn pictures and `<flip>` (`test_pictures`), timers, facing, jumps, `<reverse />`, looks, `<reveal>`, conditions that count and key sets (`test_gameplay_verbs`), `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame , Demon Attack (`test_ai_games`: played from the title to the end screen, with the demons firing back), Berserk (`test_berserk`: the man's four looks and shots, robots patrolling and firing, the exits and the room bonus, Otto, extra men, pausing and game over), and Frostbite (`test_frostbite`: jumps, rows turning blue, the igloo, the cold, drowning, the geese and the fish) |
+| `tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `carry`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), arithmetic as tags (`test_equations`: the three spellings agreeing, each operation in both forms, chains, nesting, step names, every rejection with its message, both schema checkers, and Pong's and Breakout's titles), groups (`test_group`: expansion, overrides, names, lockstep, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about grids and not about that game), the built-in font, the command line and the data folder search, sound (`test_sound`: pitch names, the synthesizer, `<sounds>` and its rejections, Pong asking for its sounds, `Engine` and a recording `Audio`), the one path of drawn pictures and `<flip>` (`test_pictures`), timers, facing, jumps, `<reverse />`, looks, `<reveal>`, conditions that count and key sets (`test_gameplay_verbs`), `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame , Demon Attack (`test_ai_games`: played from the title to the end screen, with the demons firing back), Berserk (`test_berserk`: the man's four looks and shots, robots patrolling and firing, the exits and the room bonus, Otto, extra men, pausing and game over), and Frostbite (`test_frostbite`: jumps, rows turning blue, the igloo, the cold, drowning, the geese and the fish) |
 
 ## Known limitations
 
@@ -543,5 +586,6 @@ The library is static by default: each program has the engine's code copied into
 - `wrap()` assumes what it wraps is spaced with its own size in mind (a lane of things that are `size` wide repeats every window width plus `size`), and the members of a lane (a `<group>`) are placed by hand, one `<x>` each: there is no way yet to say "this many, evenly spaced". A `<grid>` gives one velocity and one spacing to all its cells.
 - Only the object-against-object test is swept. A screen edge is still checked by position before the move, so an object that moves more than a whole window's width in one frame is not caught by it; rotation is not modeled. A shape that is not a rectangle or circle (text, image) is treated as its bounding box, unless it is a sprite of lines tested by `pixel`.
 - Expressions inside a value are not checked by the schema (they are text); a typo in one is found when the game loads (the load stops with a message naming where), not by validation. Structure, tag names, attributes and command verbs are checked by the schema; the names a command uses are checked by the engine when it loads.
-- The weak validator (`xsd_lite`) covers only the XSD subset this project uses; Xerces is the full check.
+- The weak validator (`xsd_lite`) covers only the XSD subset this project uses; Xerces is the full check. It follows a named type that contains itself (a `<formula>`'s operands), but not a group that does.
+- `<equation>` and `<formula>` have four operations and no more: no `min`, `max`, `negate`, `abs`, `clamp`, `sign` or `pick` (the exprtk text has them). An operand is a name or a number, so a sum that is needed in two places is a named `<equation>` step; an `<equation>` has no `<random>` step (a `<formula>` operand can be one). Only Pong and Breakout use the tags; every other game still writes its arithmetic as text.
 - The window's `width`, `height` and `framerate` are plain numbers, not values, and are read once, before the window opens. The size cannot be changed while a game runs, in `XGEGUI` either.

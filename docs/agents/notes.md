@@ -20,7 +20,7 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 - `Game` never touches audio: `<play>` queues a name (`requestSound`, once per name per frame) and `Engine::step()` plays the queue. `Engine(game, window)` with no audio is `NullAudio`. Tests that build a `Game` without an `Engine` must call `setCurrentState(0)` and measure sizes (`measureShapeSize`) or nothing is shown and every size is 0.
 - `<fire>` centers the projectile on the shooter's top edge (or the middle of its facing side). Depth Charge and Astrosmash tests expect that.
 - Frogger and Space Race are `<group>`s of lanes read as one object per member (`logrow3.2`, `pads.1`); tests address members by those names. `tests/invaders_fixture.h` is a frozen copy of the first Space Invaders for grid/swept/lockstep tests; Space Invaders itself is tested in `test_bitmap_sprites.cpp`.
-- Add a test to `tests/test_collision_geometry.cpp` before touching `CollisionDetector::circleRectangle`. `tests/test_xml_format.cpp` pins what both validators must reject; `xsd_lite` covers only the XSD subset the schema uses.
+- Add a test to `tests/test_collision_geometry.cpp` before touching `CollisionDetector::circleRectangle`. `tests/test_xml_format.cpp` pins what both validators must reject; `xsd_lite` covers only the XSD subset the schema uses (named types may contain themselves, as a `<formula>`'s operands do; groups may not). `RawValue` is a tree now (`Kind::Equation`, `Kind::Formula`, `operations`); the arithmetic words live in one table, `operationShape` in `command.cpp`, and a new operation is a row there plus one case in `game_expr::evaluateOperation` and the schema types. `tests/test_equations.cpp` covers it, and Pong's and Breakout's titles are written with the tags so the size-dependent-position tests exercise them.
 - The schema checks shape, not meaning (commands in the wrong place, unknown key names, unowned variables load and silently do nothing). The loader checks names a command uses once everything is built.
 
 **Backends and build**
@@ -44,7 +44,7 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 5. Sound for the eight silent games (Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander, Asteroids); looping music; an envelope. Breakout could use `<deflect>`; Pong serve at a set speed and random angle; speed-up per hit.
 6. Use the rest of the Space Invaders 2 sheet (banking ship and hit flash as looks, explosions as a released pool, the saucer on a timer); looks on animated objects; a palette; per-frame intervals; animation that runs once ([07](../designs/07-pictures-and-text.md)).
 7. Asteroids: wrapping and expiring shots, a safe respawn, a saucer, more waves. Lunar Lander could turn with `<heading>` and score by fuel left.
-8. Groups: nested groups, a bare `<x>` in a member, evenly spaced members ([03](../designs/03-objects-groups-and-storage.md)). Arithmetic in text vs elements ([01](../designs/01-vision-and-format.md); [14](../designs/14-vocabulary-map.md) maps the vocabulary it would extend).
+8. Groups: nested groups, a bare `<x>` in a member, evenly spaced members ([03](../designs/03-objects-groups-and-storage.md)). Moving the other games' arithmetic to `<equation>`/`<formula>` if wanted, and the operations those two lack (`min`, `max`, `negate`, `abs`, `clamp`; a `<random>` step in an equation): [01](../designs/01-vision-and-format.md#arithmetic-in-text-and-as-tags), and [14](../designs/14-vocabulary-map.md) maps the vocabulary.
 
 ## Tools in this folder
 

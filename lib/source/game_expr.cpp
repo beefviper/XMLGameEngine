@@ -681,14 +681,65 @@ namespace xge
 
 	float game_expr::evaluate(const RawValue& value, const std::string& where)
 	{
-		if (value.kind == RawValue::Kind::Random)
+		switch (value.kind)
+		{
+		case RawValue::Kind::Random:
 		{
 			const float min = evaluateExpression(value.min, where);
 			const float max = evaluateExpression(value.max, where);
 			return randomNumberRange(min, max);
 		}
 
+		case RawValue::Kind::Equation:
+		{
+			std::map<std::string, float> steps;
+			float answer = 0.0f;
+
+			for (const RawOperation& step : *value.operations)
+			{
+				answer = evaluateOperation(step, steps, where);
+				if (!step.name.empty()) { steps[step.name] = answer; }
+			}
+
+			return answer;
+		}
+
+		case RawValue::Kind::Formula:
+			return evaluateOperation(value.operations->front(), {}, where);
+
+		case RawValue::Kind::Expression:
+			break;
+		}
+
 		return evaluateExpression(value.text, where);
+	}
+
+	float game_expr::evaluateOperation(const RawOperation& operation, const std::map<std::string, float>& steps, const std::string& where)
+	{
+		const std::string here = where + " > <" + operation.op + ">";
+
+		const auto operandValue = [&](const RawOperand& operand)
+		{
+			if (operand.value.kind == RawValue::Kind::Expression)
+			{
+				if (const auto step = steps.find(operand.value.text); step != steps.end()) { return step->second; }
+			}
+			return evaluate(operand.value, here);
+		};
+
+		float answer = operandValue(operation.operands.front());
+
+		for (std::size_t i = 1; i < operation.operands.size(); ++i)
+		{
+			const float operand = operandValue(operation.operands[i]);
+
+			if (operation.op == "add") { answer += operand; }
+			else if (operation.op == "subtract") { answer -= operand; }
+			else if (operation.op == "multiply") { answer *= operand; }
+			else { answer /= operand; }
+		}
+
+		return answer;
 	}
 
 	float game_expr::evaluateExpression(const std::string& text, const std::string& where)

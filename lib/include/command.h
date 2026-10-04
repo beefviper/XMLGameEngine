@@ -8,6 +8,7 @@
 #include "types.h"
 
 #include <functional>
+#include <memory>
 #include <ostream>
 #include <optional>
 #include <string>
@@ -250,25 +251,38 @@ namespace xge
 
 	// --- What the XML says, before any of it is evaluated.
 
+	struct RawOperation;
+
 	// A value in the XML: an element's content wherever a number is wanted.
-	// It is either a math expression written out as text (`window.width.center
-	// - title.width / 2`), or one tag that makes the number, such as
-	// <random min="-7" max="7"/>. game_expr evaluates it (see
-	// game_expr::evaluate), so a new kind of value tag is one more Kind here,
-	// one more case in game_xml's readValue and one more in game_expr's
-	// evaluate.
+	// It is one of
+	//   * a math expression written out as text (`window.width.center -
+	//     title.width / 2`);
+	//   * one tag that makes the number, such as <random min="-7" max="7"/>;
+	//   * an <equation>: arithmetic as a list of steps, each one operation on
+	//     two names or numbers, a step able to name its answer for the steps
+	//     after it (Equation);
+	//   * a <formula>: arithmetic as one operation whose operands are
+	//     themselves numbers, operations included (Formula).
+	// game_expr evaluates it (see game_expr::evaluate), so a new kind of value
+	// tag is one more Kind here, one more case in game_xml's readValue and one
+	// more in game_expr's evaluate.
 	struct RawValue
 	{
-		enum class Kind { Expression, Random };
+		enum class Kind { Expression, Random, Equation, Formula };
 
 		Kind kind{ Kind::Expression };
 
-		// Expression: the expression. Random: unused.
+		// Expression: the expression. Otherwise unused.
 		std::string text;
 
 		// Random: the two ends, each itself an expression.
 		std::string min;
 		std::string max;
+
+		// Equation: its steps in the order written, the last being the answer.
+		// Formula: the one operation it is. Shared, not copied, when a value
+		// is.
+		std::shared_ptr<const std::vector<RawOperation>> operations;
 
 		static RawValue expression(std::string text)
 		{
@@ -279,13 +293,49 @@ namespace xge
 
 		// Every expression written inside this value, for the ones that only
 		// need to look at what the expressions name (see
-		// game_expr::sizeDependenciesOf).
-		std::vector<const std::string*> expressions() const
-		{
-			if (kind == Kind::Random) { return { &min, &max }; }
-			return { &text };
-		}
+		// game_expr::sizeDependenciesOf). The operands of an equation or a
+		// formula are names and numbers, and are listed the same way.
+		std::vector<const std::string*> expressions() const;
 	};
+
+	// One operand of an operation: the number it is, and the role it plays
+	// (`dividend`, `subtrahend`, ...; see operationShape).
+	struct RawOperand
+	{
+		std::string role;
+		RawValue value;
+	};
+
+	// One arithmetic operation from an <equation> or a <formula>: `op` is the
+	// tag (add, subtract, multiply, divide). The first operand is combined
+	// with each of the others in turn, left to right, so that `a - b - c` is
+	// one subtract with two subtrahends. `name` is only for an equation's
+	// step, and what later steps call its answer.
+	struct RawOperation
+	{
+		std::string op;
+		std::string name;
+		std::vector<RawOperand> operands;
+	};
+
+	// What an arithmetic tag is: its name, the role of its first operand and of
+	// the others (a formula wants one of the first and one or more of the
+	// second; an equation's step has one of each, as attributes), and the
+	// symbol it is printed with.
+	struct OperationShape
+	{
+		const char* tag;
+		const char* first;
+		const char* rest;
+		char symbol;
+	};
+
+	// The shape of an arithmetic tag, or null when the tag is not one.
+	const OperationShape* operationShape(const std::string& tag);
+
+	// A value as one line of text, the way a game is printed: an expression as
+	// written, an operation tree in infix with its brackets.
+	std::string valueText(const RawValue& value);
 
 	// One command tag from the XML - <bounce/>, <inc variable="a.b"/>,
 	// <move direction="up">step</move>, ... - before its number is worked out.

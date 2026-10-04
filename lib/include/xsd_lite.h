@@ -21,7 +21,9 @@ namespace xge
 	//     or a simple type;
 	//   * xs:complexType (named or inline; mixed) whose content is xs:sequence
 	//     and xs:choice of elements, nested, each with minOccurs/maxOccurs, and
-	//     xs:group ref= to a named xs:group of the same;
+	//     xs:group ref= to a named xs:group of the same (a named complexType
+	//     may contain itself, through its elements, as a <formula>'s operands
+	//     do; a group may not);
 	//   * xs:attribute (name/type/use) on any complexType;
 	//   * xs:simpleType > xs:restriction > xs:enumeration, and the built-ins
 	//     xs:string, xs:boolean, xs:integer, xs:unsignedByte, xs:unsignedShort.

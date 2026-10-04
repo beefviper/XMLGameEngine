@@ -4,7 +4,7 @@
 
 ## Why
 
-The vocabulary grew one game at a time ([06](06-motion-and-verbs.md): a word is added only when a real game cannot be written without it), so it was never laid out as a whole. Laying it out shows where the language is rich (collision), where it is thin (values) and what kind of word each gap needs. It also frames the open arithmetic question in [01](01-vision-and-format.md#arithmetic-in-text-open): arithmetic is the one place structure still hides in strings, and removing it (option E4) means adding a new category of word, not just more verbs.
+The vocabulary grew one game at a time ([06](06-motion-and-verbs.md): a word is added only when a real game cannot be written without it), so it was never laid out as a whole. Laying it out shows where the language is rich (collision), where it is thin (values) and what kind of word each gap needs. It also frames the arithmetic question in [01](01-vision-and-format.md#arithmetic-in-text-and-as-tags): arithmetic was the one place structure hid in strings, and writing it as tags (option E4, now built beside the text) meant adding a new category of word, not just more verbs.
 
 Read from the readme and `assets/xmlgameengine.xsd` of the `working` branch on 2026-10-04.
 
@@ -53,7 +53,9 @@ Time words arrived with timers and sound: `every` (again and again), `after` (on
 
 **Values**
 
-- Text expressions evaluated by exprtk, and one value tag, `<random min max>`. That is the only math word in the XML itself. exprtk's own functions work too (Berserk uses `max` to keep a wait above a floor), but the format does not depend on them.
+- Text expressions evaluated by exprtk, one value tag that draws a number, `<random min max>`, and two value tags that write arithmetic out as tags: `<equation>` (flat steps, operands as attributes, a step's `name` for the ones after it) and `<formula>` (one operation, operands as nested elements).
+- Both are built from four operation words, each with a first and a second operand named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`). An operand is a name or a number, never an expression.
+- exprtk's own functions work in the text form (Berserk uses `max` to keep a wait above a floor), but the format does not depend on them, and the tags have no `min`, `max` or the like yet.
 
 A note on pictures: an `<image>` is a file loaded by whichever window backend is running, and so can be a JPEG or a PNG (`assets/paddle.jpg` is one; the loader code was not checked for the exact list). An `<svg>` is different: the engine draws it itself into its own bitmap (`svg.cpp`), so no backend loads one. A `<bitmap>` is the ASCII-rows form, and `<line>`s are the command-sequence form. Lines, bitmaps and SVGs share one path and can all be `pixel` collision shapes; an `<image>` cannot ([07](07-pictures-and-text.md)).
 
@@ -69,7 +71,7 @@ A note on pictures: an `<image>` is a file loaded by whichever window backend is
 | Sound | `sounds`, `note`, `rest`, `wave`, `pitch`, `to`, `volume`, `play` | built; no looping music, no envelope |
 | Input | `input`, `button`, `keys`, `action`, `trigger` | small and clean |
 | Game flow | states, `push`, `pop`, conditions | enough for the shipped games; no `goto` |
-| Values | expressions, `random` | thin |
+| Values | expressions, `random`, `equation`, `formula` with four operations | thin; no `min`, `max`, `clamp`, `negate` as tags |
 
 A collision rule reads like a sentence: *this object* (noun), *when it touches* (preposition) *that class* (noun), *unless* (conjunction) *it is on a log*, *do this* (verb). The "when does this apply" words (`class`, `object`, `edge`, `unless`, `sprite`, `slower`, `faster`) are where the language works hardest.
 
@@ -77,7 +79,7 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 
 | Missing category | Words it would hold | Where it is discussed |
 |---|---|---|
-| **Math** | add, subtract, multiply, divide, `clamp`, `min`, `max`, `floor`, `sign`, `pick`, an integer `random`, a `count` of objects | [01](01-vision-and-format.md#arithmetic-in-text-open) (E4), [02](02-values-variables-and-names.md), [13](13-ideas.md) (balance helpers) |
+| **Math**, beyond the four operations | `min`, `max`, `negate`, `abs`, `clamp`, `floor`, `sign`, `pick`, an integer `random`, a `count` of objects; a `<random>` step in an `<equation>` | [01](01-vision-and-format.md#arithmetic-in-text-and-as-tags), [02](02-values-variables-and-names.md), [13](13-ideas.md) (balance helpers) |
 | **Creation** | `create`, `destroy`. Nothing makes an object while a game runs; `fire`, `release` and `reveal` bring members of a hidden pool into play | [08](08-timers-and-enemy-behavior.md) |
 | **Aiming and chasing** | `aim`, `chase`, `ai targeting=...`, paths and formations | [06](06-motion-and-verbs.md), [08](08-timers-and-enemy-behavior.md) |
 | **Arcing jump** | grounded versus airborne, a jump impulse, air control | [06](06-motion-and-verbs.md) |
@@ -89,9 +91,9 @@ Time and sound were gaps in the first version of this map and are filled now; th
 
 ## The shape this suggests
 
-Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is already regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which today is exprtk text. Growing the language toward E4 means giving values a vocabulary of their own (math words, `random`, `pick`, `count`), each of which is a tag in the XSD and one case in the evaluator ([01](01-vision-and-format.md)).
+Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is already regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which was all exprtk text and now has a vocabulary of its own: `random`, and four arithmetic words in two spellings, with the text still accepted beside them. Each further word (`min`, `max`, `pick`, `count`) is a tag in the XSD and one case in the evaluator ([01](01-vision-and-format.md#arithmetic-in-text-and-as-tags)).
 
-The rule of thumb stands: a word is added only when a real game cannot be described without it, and a verb that means "behave like one particular game" shows that its parameters were not found ([06](06-motion-and-verbs.md)). Of the gaps above, the math words are the likeliest to pass that test next (a clamped speed, a random sign; Berserk already reaches for `max`), and aiming is the one the shipped games work around most.
+The rule of thumb stands: a word is added only when a real game cannot be described without it, and a verb that means "behave like one particular game" shows that its parameters were not found ([06](06-motion-and-verbs.md)). Of the gaps above, `min` and `max` are the likeliest to pass that test next (a clamped speed, a random sign; Berserk already reaches for `max` in text), and aiming is the one the shipped games work around most.
 
 ## Keeping this current
 

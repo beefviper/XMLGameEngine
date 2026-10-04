@@ -53,7 +53,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 </object>
 ```
 
-The one rule of the format: an attribute names or picks something (`name`, `class`, `edge`, `button`, `state`, ...); everything else is element content. Numbers may be plain arithmetic over named values such as `window.width.center` or `ball.radius`, evaluated by exprtk.
+The one rule of the format: an attribute names or picks something (`name`, `class`, `edge`, `button`, `state`, ...); everything else is element content. Numbers may be plain arithmetic over named values such as `window.width.center` or `ball.radius`, evaluated by exprtk, or the same arithmetic written as `<equation>` (steps) or `<formula>` (nested) tags, which leave nothing in a string for a tool to parse.
 
 ## How it works
 

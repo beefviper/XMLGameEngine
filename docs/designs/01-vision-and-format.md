@@ -1,6 +1,6 @@
 # 01. Vision, file format and the VGDL landscape
 
-**Status:** built. The only open item is [arithmetic in value text](#arithmetic-in-text-open).
+**Status:** built. Arithmetic can be written as text, as an `<equation>` or as a `<formula>` ([arithmetic](#arithmetic-in-text-and-as-tags)); generating code from a game is the open item.
 
 ## What we want
 
@@ -48,18 +48,37 @@ The rule, reached by removing a small scripting language that had grown inside a
 - A list of commands is accepted because it is sequential with no control flow. The line to hold: no conditionals, loops, variables or dynamic dispatch inside a command list.
 - Rejected elsewhere: statements as a mini language (MML strings for sound, [09](09-sound.md)), one multi-line text block for bitmap rows ([07](07-pictures-and-text.md)).
 
-### Arithmetic in text (open)
+### Arithmetic in text and as tags
 
-Arithmetic (`window.width.center - ball.radius`) is the last thing hidden from XSD and XSLT.
+Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from XSD and XSLT: a string a tool cannot see into. What we looked for: a way to write it that a schema can check and a transformation can walk, that does not cost every game its readability, and that does not need a second tool in the pipeline.
 
 | Option | Notes |
 |---|---|
 | E1. Paste the string through | Works for C++ targets (infix is valid C++), not assembly |
 | E2. XSLT parses it | Possible with `analyze-string`, awkward precedence parsing |
-| E3. Parse once in C++ into AST-as-XML, XSLT walks it | Keeps the fragile part testable; adds a step. Suggested |
-| E4. Remove arithmetic: computation as elements | Fully toolable, verbose, needs a math vocabulary |
+| E3. Parse once in C++ into AST-as-XML, XSLT walks it | Keeps the fragile part testable; adds a step |
+| E4. Remove arithmetic: computation as elements | Fully toolable, verbose, needs a math vocabulary. **Built, in two spellings, beside the text** |
 
-No decision. The author would rather not add tooling and leans toward asking whether E4 is feasible. No code generator exists ([11](11-backends-build-and-layout.md)). [14](14-vocabulary-map.md) lists every word the language has and the math words it lacks, the starting point for E4.
+**What was built (E4).** Two value tags, siblings of `<random>`, so they go anywhere a number does, and the exprtk text stays valid everywhere (a game is not forced to change: every other game still uses text):
+
+- **`<equation>`**, flat: steps, one operation each, operands as attributes, a step able to `name` its answer for the later ones; the last step is the answer. Three-address code, and the closest to an assembly target. The test game is Pong's title.
+- **`<formula>`**, nested: one operation whose operands are elements that hold a name, a number, a `<random>` or another operation. Precedence is the nesting, and a chain (`a - b - c`) is one operation with several second operands. Closest to a C++ expression tree. The test game is Breakout's title.
+
+Both use four operations named for their operands (`augend`/`addend`, `minuend`/`subtrahend`, `multiplicand`/`multiplier`, `dividend`/`divisor`); one table, `operationShape` in `command.cpp`, drives the loader, the evaluator and the printer.
+
+**Why two forms, and two names.** The author saw them as different enough in taste (flat steps with names against one nested tree: `printf` against `cout`) that people would have strong opinions, so both exist. Different names (`<equation>`, `<formula>`) keep them from sharing an element: the step `<divide dividend=".." />` and the operation `<divide><dividend>..</dividend></divide>` are different types in different places, so neither can be mistaken for the other and each says so when written the wrong way.
+
+**Decisions inside it.**
+
+- *An operand is a name or a number, never an expression.* Otherwise `<dividend>a + b</dividend>` brings the hidden string back. It also keeps the format's rule (an attribute names or picks something) honest for the attribute operands: a name or a plain number is that, and anything computed is an operation. The price is verbosity: roughly 380 expressions in the games have two or three operators each, so converting all of them would give roughly a thousand operation lines (a rough count).
+- *Step names are local to the equation*, with no dots, so they cannot be mistaken for `object.variable` or collide with the global namespace; a step name is used before a variable of the same name.
+- *Evaluated at load* like every value, in the written order; a size-dependent position is finished once the window has measured, the same as for text.
+
+**Rejected on the way.** Operators as empty tags between operands (`<divide>window.width<by/>2</divide>`, and with a `<divided-by/>` between named operands): mixed content the schema cannot check, with operands still strings, or a separator that carries no information. One element accepting both operand spellings: harder to validate and to explain than two names. Output names per operation (`quotient=`, `difference=`): a word and a schema type for every operation; `name` already means "this thing's label". Dotted outputs written into an object (`object.middle`): they would collide with real names.
+
+**Schema and validators.** A formula's operands hold operations whose operands are operations, so the schema has types that contain themselves. Xerces handles that; `xsd_lite` did not, and now follows a named type that refers to itself (and frees the cycle when the model goes). A group that contains itself is still refused there.
+
+**Open.** More operations (`min`, `max`, `negate`, `abs`, `clamp`, `sign`, `pick`) are not built: add one when a game cannot be written without it, as for verbs ([06](06-motion-and-verbs.md)), until then the exprtk text has them. A `<random>` step in an `<equation>`. Moving the other games over, a game at a time. And the reason for all of it: generating code for another target (XSLT to C++ or assembly) has no generator yet ([11](11-backends-build-and-layout.md)), so the tags are ready for it, but nothing yet reads them except the engine. [14](14-vocabulary-map.md) lists every word the language has.
 
 ## The VGDL landscape (reference only)
 

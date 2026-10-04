@@ -62,14 +62,120 @@
   <!-- Value tags: the ways, besides writing an expression, to give a number. -->
   <xs:group name="valueTag">
     <xs:choice>
-      <xs:element name="random">
-        <xs:complexType>
-          <xs:attribute name="min" type="xs:string" use="required" />
-          <xs:attribute name="max" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
+      <xs:element name="random" type="randomType" />
+      <xs:element name="equation" type="equationType" />
+      <xs:element name="formula" type="formulaType" />
     </xs:choice>
   </xs:group>
+
+  <xs:complexType name="randomType">
+    <xs:attribute name="min" type="xs:string" use="required" />
+    <xs:attribute name="max" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- Arithmetic without a string to parse, in two spellings that mean the same.
+
+       <equation> is a list of steps, one operation each, the operands
+       attributes (a name or a number); a step's name is what later steps call
+       its answer, and the last step is the answer of the whole equation:
+         <equation>
+           <divide name="half" dividend="title.width" divisor="2" />
+           <subtract minuend="window.width.center" subtrahend="half" />
+         </equation>
+
+       <formula> is one operation whose operands are elements: a name, a number,
+       <random> or another operation. The first operand is combined with each
+       of the others in turn, so a - b - c is a subtract with two subtrahends:
+         <formula>
+           <subtract>
+             <minuend>window.width.center</minuend>
+             <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
+           </subtract>
+         </formula>
+
+       Both are value tags, so they go anywhere an expression or <random> does.
+       Operations, one per arithmetic word: add, subtract, multiply, divide. -->
+
+  <xs:complexType name="addStepType">
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="augend" type="xs:string" use="required" />
+    <xs:attribute name="addend" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="subtractStepType">
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="minuend" type="xs:string" use="required" />
+    <xs:attribute name="subtrahend" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="multiplyStepType">
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="multiplicand" type="xs:string" use="required" />
+    <xs:attribute name="multiplier" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="divideStepType">
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="dividend" type="xs:string" use="required" />
+    <xs:attribute name="divisor" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="equationType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="add" type="addStepType" />
+      <xs:element name="subtract" type="subtractStepType" />
+      <xs:element name="multiply" type="multiplyStepType" />
+      <xs:element name="divide" type="divideStepType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="formulaType">
+    <xs:choice>
+      <xs:element name="add" type="addType" />
+      <xs:element name="subtract" type="subtractType" />
+      <xs:element name="multiply" type="multiplyType" />
+      <xs:element name="divide" type="divideType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <!-- An operand of a formula: text (a name or a number), <random> or an operation, which contains operands in turn. -->
+  <xs:complexType name="operandType" mixed="true">
+    <xs:choice minOccurs="0">
+      <xs:element name="random" type="randomType" />
+      <xs:element name="add" type="addType" />
+      <xs:element name="subtract" type="subtractType" />
+      <xs:element name="multiply" type="multiplyType" />
+      <xs:element name="divide" type="divideType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="addType">
+    <xs:sequence>
+      <xs:element name="augend" type="operandType" />
+      <xs:element name="addend" type="operandType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="subtractType">
+    <xs:sequence>
+      <xs:element name="minuend" type="operandType" />
+      <xs:element name="subtrahend" type="operandType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="multiplyType">
+    <xs:sequence>
+      <xs:element name="multiplicand" type="operandType" />
+      <xs:element name="multiplier" type="operandType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="divideType">
+    <xs:sequence>
+      <xs:element name="dividend" type="operandType" />
+      <xs:element name="divisor" type="operandType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
 
   <!-- A number: text (an expression) or one value tag, not both. -->
   <xs:complexType name="valueType" mixed="true">

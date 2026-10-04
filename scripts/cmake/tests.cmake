@@ -48,6 +48,7 @@ add_executable(XGETEST
 	"tests/test_new_verbs.cpp"
 	"tests/test_deflect.cpp"
 	"tests/test_xml_format.cpp"
+	"tests/test_equations.cpp"
 	"tests/test_group.cpp"
 	"tests/test_frogger.cpp"
 	"tests/test_spacerace.cpp"
