@@ -327,9 +327,17 @@
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
+  <!-- deflect: the widest angle, in degrees, a bounce off another object leaves at (at the ends of the side it hit). -->
+  <xs:complexType name="deflectType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:group name="command">
     <xs:choice>
       <xs:element name="bounce" type="emptyType" />
+      <xs:element name="deflect" type="deflectType" />
       <xs:element name="stick" type="emptyType" />
       <xs:element name="wrap" type="emptyType" />
       <xs:element name="carry" type="emptyType" />

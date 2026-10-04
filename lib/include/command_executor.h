@@ -55,6 +55,7 @@ namespace xge
 		void die(Object& object);
 		void bounceScreenEdge(Object& object, Edge edge);
 		void bounceOffEdge(Object& object, Edge edge);
+		void deflect(Object& object, const Object& other, Edge edge, float maxAngle);
 		void stick(Object& object, Edge edge);
 		void moveByStep(Object& object, Direction direction, float step);
 		void wrap(Object& object, Edge edge);

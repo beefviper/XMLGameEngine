@@ -60,6 +60,17 @@ namespace xge
 	// as they keep touching (see CommandExecutor::carry).
 	struct CmdCarry {};
 
+	// <deflect>45</deflect> - in a collision rule about another object: a
+	// bounce whose angle depends on where along the touched side of the other
+	// object it hit. Square in the middle goes straight back out; at either
+	// end it leaves at maxAngle degrees, towards that end; in between, in
+	// proportion. The speed is kept (see CommandExecutor::deflect). A Pong
+	// paddle.
+	struct CmdDeflect
+	{
+		float maxAngle{};
+	};
+
 	struct CmdMove
 	{
 		Direction direction{};
@@ -190,7 +201,7 @@ namespace xge
 	};
 
 	using Command = std::variant<
-		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry,
+		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry, CmdDeflect,
 		CmdMove, CmdHop, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay>;
 
@@ -247,7 +258,7 @@ namespace xge
 		std::string direction; // move, hop, accelerate, turn
 		std::string burn;      // accelerate, thrust
 		std::string sound;     // play
-		RawValue amount;       // move, hop, accelerate, turn, thrust, release (how many)
+		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many)
 	};
 
 	// Works out a RawValue to a number; makeCommand is given one so that it can

@@ -411,7 +411,7 @@ namespace xge
 
 		bool isCommandTag(const std::string& name)
 		{
-			return name == "bounce" || name == "stick" || name == "wrap" || name == "carry" || name == "die"
+			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "carry" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play";
@@ -450,7 +450,7 @@ namespace xge
 				requireAttribute(node, "direction", where);
 				command.amount = readValue(node, where);
 			}
-			if (verb == "thrust") { command.amount = readValue(node, where); }
+			if (verb == "thrust" || verb == "deflect") { command.amount = readValue(node, where); }
 			if (verb == "release")
 			{
 				requireAttribute(node, "object", where);

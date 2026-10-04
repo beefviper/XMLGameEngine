@@ -65,6 +65,16 @@ namespace xge
 
 		if (verb == "thrust") { return CmdThrust{ evaluate(raw.amount), raw.burn }; }
 
+		if (verb == "deflect")
+		{
+			const float maxAngle = evaluate(raw.amount);
+			if (!(maxAngle >= 0.0f && maxAngle < 90.0f))
+			{
+				throw std::runtime_error("<deflect> has an angle of " + formatDisplayNumber(maxAngle) + "; expected 0 up to (not including) 90 degrees");
+			}
+			return CmdDeflect{ maxAngle };
+		}
+
 		if (verb == "release")
 		{
 			const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
@@ -200,6 +210,7 @@ namespace xge
 			[&](const CmdStop&) { o << "stop"; },
 			[&](const CmdWrap&) { o << "wrap"; },
 			[&](const CmdCarry&) { o << "carry"; },
+			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
 			[&](const CmdMove& m)
 			{
 				const char* direction = (m.direction == Direction::Up) ? "up"
@@ -254,7 +265,7 @@ namespace xge
 	{
 		o << command.verb;
 
-		if (command.verb == "thrust")
+		if (command.verb == "thrust" || command.verb == "deflect")
 		{
 			o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
 		}
