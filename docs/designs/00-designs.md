@@ -4,7 +4,7 @@ These files record **why**: what we were looking for, what we looked at, what we
 
 Verbs are sometimes written `bounce()` for short; in a game file they are always tags.
 
-Status key: **Built** = in the code. **Decided** = chosen, not built. **Leaning** = a direction, not final. **Open** = undecided. **Idea** = floated, not adopted.
+Status key: **Reference** = a map or summary, nothing to decide. **Built** = in the code. **Decided** = chosen, not built. **Leaning** = a direction, not final. **Open** = undecided. **Idea** = floated, not adopted.
 
 | # | Topic | Chosen / status |
 |---|---|---|
@@ -21,9 +21,10 @@ Status key: **Built** = in the code. **Decided** = chosen, not built. **Leaning*
 | [11](11-backends-build-and-layout.md) | Backend interfaces and factories, library + programs, CMake modules, `output/`, code layout | **Built.** Folder layout of `lib/` **Open** |
 | [12](12-front-ends.md) | `XGECLI` options, `XGEGUI` (Qt renderer, tree, Options, one or two windows, OpenGL backend) | **Built** |
 | [13](13-ideas.md) | Scrolling, targets and capability profiles, state export, game ideas, small ideas | **Idea** |
+| [14](14-vocabulary-map.md) | Every word the language knows by grammar (noun, verb, adjective, adverb, preposition) and by engine layer; the categories still missing | A reference, not a decision: collision is the richest layer, values the thinnest; frames the math words of the open arithmetic question in 01. **Reference** |
 
 ## Reading order
 
-New to the project: [readme](../readme.md), then 01, 04, 05. Working on the language: 01, 02, 06, 08. Working on pictures or sound: 07, 09. Working on the C++: 03, 11, 12.
+New to the project: [readme](../readme.md), then 01, 04, 05. Working on the language: 14, 01, 02, 06, 08. Working on pictures or sound: 07, 09. Working on the C++: 03, 11, 12.
 
 Add a new topic to the closest existing file before creating a new one; keep this table and the files in step.

@@ -59,7 +59,7 @@ Arithmetic (`window.width.center - ball.radius`) is the last thing hidden from X
 | E3. Parse once in C++ into AST-as-XML, XSLT walks it | Keeps the fragile part testable; adds a step. Suggested |
 | E4. Remove arithmetic: computation as elements | Fully toolable, verbose, needs a math vocabulary |
 
-No decision. The author would rather not add tooling and leans toward asking whether E4 is feasible. No code generator exists ([11](11-backends-build-and-layout.md)).
+No decision. The author would rather not add tooling and leans toward asking whether E4 is feasible. No code generator exists ([11](11-backends-build-and-layout.md)). [14](14-vocabulary-map.md) lists every word the language has and the math words it lacks, the starting point for E4.
 
 ## The VGDL landscape (reference only)
 

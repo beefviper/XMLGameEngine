@@ -44,7 +44,7 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 5. Sound for the eight silent games (Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander, Asteroids); looping music; an envelope. Breakout could use `<deflect>`; Pong serve at a set speed and random angle; speed-up per hit.
 6. Use the rest of the Space Invaders 2 sheet (banking ship and hit flash as looks, explosions as a released pool, the saucer on a timer); looks on animated objects; a palette; per-frame intervals; animation that runs once ([07](../designs/07-pictures-and-text.md)).
 7. Asteroids: wrapping and expiring shots, a safe respawn, a saucer, more waves. Lunar Lander could turn with `<heading>` and score by fuel left.
-8. Groups: nested groups, a bare `<x>` in a member, evenly spaced members ([03](../designs/03-objects-groups-and-storage.md)). Arithmetic in text vs elements ([01](../designs/01-vision-and-format.md)).
+8. Groups: nested groups, a bare `<x>` in a member, evenly spaced members ([03](../designs/03-objects-groups-and-storage.md)). Arithmetic in text vs elements ([01](../designs/01-vision-and-format.md); [14](../designs/14-vocabulary-map.md) maps the vocabulary it would extend).
 
 ## Tools in this folder
 
