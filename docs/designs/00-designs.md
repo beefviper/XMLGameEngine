@@ -54,10 +54,11 @@ Status key: **Built** = in the code today. **Decided** = chosen, not built. **Le
 | 44 | Games written by another AI | accept them as written / correct them to what the engine runs; leave the loader as it is / make it refuse what it ignores | Berserk, Demon Attack and Frostbite, from the schema alone, loaded but could not be played: keys the engine does not have, `<move>`, `<fire>`, `<inc>` and `<reset object>` where they do nothing, groups matched by name, variables with no owner. Fixed in the games, played by `tests/test_ai_games.cpp`; the loader still accepts them. |
 | 45 | Sound | sound files / notes in the XML / a tracker string; each library's own synthesis / the engine's own samples; one voice per sound / a pool; sound tied to the window library / chosen apart | `<sounds>` of `<note>`s (square, triangle, sawtooth, sine, noise; slides with `to`) and `<rest>`s, made into samples by the engine; `<play sound>` anywhere a command goes; an `Audio` backend (SFML 3, raylib, SDL2, none) chosen with `-a` and in XGEGUI's Options. **Built** | [45](45-sound.md) |
 | 46 | Paddle deflect | `<bounce>` with an angle / a new verb; angle measured to the paddle's end / to the ball's edge; keep the speed / speed up | `<deflect>angle</deflect>` in a rule about another object: straight out from the middle of the side hit, the full angle at its ends, in proportion between, at the same speed. Pong's ball uses 45. **Built** | [46](46-paddle-deflect.md) |
+| 47 | Timers, facing, jumps, looks and key sets | a timer on objects and states / a global event queue; a time value in expressions / a timer counting a variable; facing as four directions / a heading; looks as named sprites / class changes; key sets with overrides | `<timers>` (`<every>`, `<after>`) on objects, groups and states, `<facing>` and `<fire>` along it, `<jump>`, `<reverse />`, `<become>` and `sprite=` on a rule, `<reveal>`, commands that work in every context, `<keys>` sets and several keys to an `<input>`. Kaboom reworked, Frostbite rewritten, enemies fire back. **Built** | [47](47-timers-facing-jumps-and-looks.md) |
 
 ## Reading order
 
-New to the project: [readme](../readme.md), then 01, 02, 03, 09, 10, 11. Working on the language: 03, 04, 12, 13, 14, 21, 22, 23, 24, 29. Working on the C++: 07, 08, 15, 16, 25, 43.
+New to the project: [readme](../readme.md), then 01, 02, 03, 09, 10, 11. Working on the language: 03, 04, 12, 13, 14, 21, 22, 23, 24, 29, 46. Working on the C++: 07, 08, 15, 16, 25, 43.
 
 ## Where this came from
 

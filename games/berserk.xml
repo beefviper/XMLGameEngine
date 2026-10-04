@@ -12,6 +12,17 @@
     <variable name="margin">4</variable>
   </variables>
 
+  <sounds>
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="A5" to="A4">0.06</note>
+    </sound>
+    <sound name="zap" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="8000" to="400">0.4</note>
+    </sound>
+  </sounds>
+
   <objects>
     <object name="player" class="player">
       <sprite name="hero">
@@ -23,12 +34,25 @@
       </sprite>
       <position><x>80</x><y>190</y></position>
       <velocity><x>0</x><y>0</y></velocity>
+      <!-- he faces the way he last walked, and shoots that way -->
+      <facing>up</facing>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
-        <collision object="walls"><stick/></collision>
+        <!-- the walls are electrified -->
+        <collision object="walls">
+          <dec variable="player.lives">1</dec>
+          <play sound="zap" />
+          <reset />
+        </collision>
         <collision class="robot">
           <dec variable="player.lives">1</dec>
+          <play sound="zap" />
+          <reset />
+        </collision>
+        <collision class="robotshot">
+          <dec variable="player.lives">1</dec>
+          <play sound="zap" />
           <reset />
         </collision>
         <collision edge="left"><wrap/></collision>
@@ -49,6 +73,7 @@
         </action>
         <action name="gun">
           <fire object="bullet" />
+          <play sound="shoot" />
         </action>
       </actions>
       <variables>
@@ -60,8 +85,8 @@
     <object name="bullet" class="bullet">
       <sprite name="shot">
         <rectangle>
-          <width>2</width>
-          <height>6</height>
+          <width>3</width>
+          <height>3</height>
           <color>color.white</color>
         </rectangle>
       </sprite>
@@ -72,8 +97,32 @@
         <enabled>false</enabled>
         <collision edge="all"><die/></collision>
         <collision class="robot"><die/></collision>
+        <collision object="walls"><die/></collision>
       </collisions>
     </object>
+
+    <!-- the robots' shots: a pool of three -->
+    <group name="robotshots" class="robotshot">
+      <sprite name="shot">
+        <rectangle>
+          <width>3</width>
+          <height>3</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>2</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all"><die/></collision>
+        <collision object="player"><die/></collision>
+        <collision object="walls"><die/></collision>
+      </collisions>
+      <member />
+      <member />
+      <member />
+    </group>
 
     <object name="walls" class="wall">
       <sprite name="maze">
@@ -104,6 +153,8 @@
         </rectangle>
       </sprite>
       <velocity><x>1</x><y>0</y></velocity>
+      <!-- they face down the screen, towards where the player comes in -->
+      <facing>down</facing>
       <collisions>
         <enabled>true</enabled>
         <collision object="bullet">
@@ -113,6 +164,12 @@
         <collision edge="left"><bounce/></collision>
         <collision edge="right"><bounce/></collision>
       </collisions>
+      <timers>
+        <timer>
+          <every><random min="1.5" max="5" /></every>
+          <fire object="robotshots" />
+        </timer>
+      </timers>
       <member name="r1"><position><x>40</x><y>70</y></position></member>
       <member name="r2"><position><x>80</x><y>70</y></position></member>
       <member name="r3"><position><x>120</x><y>70</y></position></member>
@@ -145,6 +202,15 @@
   </objects>
 
   <states>
+    <!-- the keys both rooms use -->
+    <keys name="player">
+      <input button="up w"><trigger object="player" action="up" /></input>
+      <input button="down s"><trigger object="player" action="down" /></input>
+      <input button="left a"><trigger object="player" action="left" /></input>
+      <input button="right d"><trigger object="player" action="right" /></input>
+      <input button="space"><trigger object="player" action="gun" /></input>
+    </keys>
+
     <state name="title">
       <shows>
         <show object="player"/>
@@ -166,18 +232,9 @@
         <show object="walls"/>
         <show object="robots"/>
         <show object="bullet"/>
+        <show object="robotshots"/>
       </shows>
-      <inputs>
-        <input button="up"><trigger object="player" action="up" /></input>
-        <input button="w"><trigger object="player" action="up" /></input>
-        <input button="down"><trigger object="player" action="down" /></input>
-        <input button="s"><trigger object="player" action="down" /></input>
-        <input button="left"><trigger object="player" action="left" /></input>
-        <input button="a"><trigger object="player" action="left" /></input>
-        <input button="right"><trigger object="player" action="right" /></input>
-        <input button="d"><trigger object="player" action="right" /></input>
-        <input button="space"><trigger object="player" action="gun" /></input>
-      </inputs>
+      <inputs keys="player"/>
       <conditions>
         <condition class="robot">
           <remaining>0</remaining>
@@ -199,18 +256,9 @@
         <show object="walls"/>
         <show object="robots"/>
         <show object="bullet"/>
+        <show object="robotshots"/>
       </shows>
-      <inputs>
-        <input button="up"><trigger object="player" action="up" /></input>
-        <input button="w"><trigger object="player" action="up" /></input>
-        <input button="down"><trigger object="player" action="down" /></input>
-        <input button="s"><trigger object="player" action="down" /></input>
-        <input button="left"><trigger object="player" action="left" /></input>
-        <input button="a"><trigger object="player" action="left" /></input>
-        <input button="right"><trigger object="player" action="right" /></input>
-        <input button="d"><trigger object="player" action="right" /></input>
-        <input button="space"><trigger object="player" action="gun" /></input>
-      </inputs>
+      <inputs keys="player"/>
       <conditions>
         <condition class="robot">
           <remaining>0</remaining>

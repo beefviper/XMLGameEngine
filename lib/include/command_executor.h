@@ -43,6 +43,12 @@ namespace xge
 		// state), so this is just executeInput as an always-"pressed" input.
 		void executeCondition(const Command& command);
 
+		// A <timer> that has gone off: on an object (owner) or in a state (no
+		// owner). The state commands, inc, dec, play and trigger work in both;
+		// on an object, fire, reverse, move, die, stop, release and a bare reset
+		// act on that object (a bare reset in a state resets the game).
+		void executeTimer(const Command& command, Object* owner);
+
 		// A key that was already down when a state began: applies only the
 		// continuous part of its binding (an action's move.* and accelerate.*) and returns true
 		// if the command was one of those. One-shot commands (state changes,
@@ -61,6 +67,12 @@ namespace xge
 		void wrap(Object& object, Edge edge);
 		void carry(Object& object, const Object& other);
 		void queueHop(Object& object, Direction direction, float distance);
+		void startJump(Object& object, const CmdJump& jump);
+		void reverse(Object& object);
+
+		// <become>: the object running it (self, which a state's commands do
+		// not have), or every object its object= names.
+		void become(Object* self, const CmdBecome& command);
 		void stop(Object& object);
 		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
 		void applyActionTurn(Object& object, Direction direction, float rate);

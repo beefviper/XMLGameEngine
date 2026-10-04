@@ -72,6 +72,12 @@ namespace xge
 	// character other than '.' and '*', or a scale under 1.
 	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color);
 
+	// The picture mirrored: left for right (horizontal), top for bottom
+	// (vertical), or both. The same size, each pixel exactly as it was, only
+	// moved, so a flipped picture is as sharp as the original and a pixel
+	// collision tests the flipped pixels.
+	Bitmap flipBitmap(const Bitmap& picture, bool horizontal, bool vertical);
+
 	// A turned drawing is made when it is wanted, at a whole number of degrees
 	// from 0 up to (not including) 360, clockwise: 0 is the drawing as written
 	// (its "up"), 90 has it turned a quarter of the way round, and so on. Any

@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -45,7 +46,36 @@ namespace xge
 		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
 			const std::vector<SoundDesc>& sounds, const std::string& where)
 		{
-			if (const auto* play = std::get_if<CmdPlay>(&command))
+			if (const auto* become = std::get_if<CmdBecome>(&command))
+			{
+				if (!become->target.empty())
+				{
+					bool any = false;
+					for (const Object& object : objects)
+					{
+						const bool named = object.name == become->target || object.baseName == become->target
+							|| (!object.groupName.empty() && object.groupName == become->target);
+						if (!named) { continue; }
+						any = true;
+						if (std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+						{
+							throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
+						}
+					}
+					if (!any)
+					{
+						throw std::runtime_error(where + ": <become> names '" + become->target + "', and there is no object of that name");
+					}
+				}
+			}
+			else if (const auto* reveal = std::get_if<CmdReveal>(&command))
+			{
+				if (!findObject(objects, reveal->target))
+				{
+					throw std::runtime_error(where + ": <reveal> names '" + reveal->target + "', and there is no object of that name");
+				}
+			}
+			else if (const auto* play = std::get_if<CmdPlay>(&command))
 			{
 				const bool known = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == play->sound; });
 				if (!known)
@@ -106,16 +136,43 @@ namespace xge
 				}
 			};
 
+			// A <become> with no object= is about the object running it, which
+			// a state's commands do not have, and which must have that look.
+			const auto checkOwnLooks = [&](const std::vector<Command>& commands, const Object* self, const std::string& where)
+			{
+				for (const auto& command : commands)
+				{
+					const auto* become = std::get_if<CmdBecome>(&command);
+					if (!become || !become->target.empty()) { continue; }
+					if (!self)
+					{
+						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
+					}
+					if (std::none_of(self->looks.begin(), self->looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+					{
+						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");
+					}
+				}
+			};
+
 			for (const auto& state : states)
 			{
 				const std::string where = "state '" + state.name + "'";
-				for (const auto& [key, commands] : state.input) { checkAll(commands, where); }
-				for (const auto& condition : state.conditions) { checkAll(condition.commands, where); }
+				for (const auto& [key, commands] : state.input) { checkAll(commands, where); checkOwnLooks(commands, nullptr, where); }
+				for (const auto& condition : state.conditions) { checkAll(condition.commands, where); checkOwnLooks(condition.commands, nullptr, where); }
+				for (const auto& timer : state.timers) { checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, nullptr, where + " > <timer>"); }
 			}
 
 			for (const auto& object : objects)
 			{
 				const std::string where = "object '" + object.baseName + "'";
+				for (const auto& timer : object.timers) { checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, &object, where + " > <timer>"); }
+				for (const auto& [name, commands] : object.action) { checkOwnLooks(commands, &object, where); }
+				for (const auto& rule : object.collisionData.basic) { checkOwnLooks(rule.commands, &object, where); }
+				for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+				{
+					checkOwnLooks(*edge, &object, where);
+				}
 				for (const auto& [name, commands] : object.action)
 				{
 					checkAll(commands, where);
@@ -271,6 +328,33 @@ namespace xge
 			// object (every cell of a grid shares it).
 			const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject, windowDesc, where) : 0;
 
+			// The object's looks, if it has several sprites and no animation:
+			// built once, shared by every cell.
+			std::vector<Object::Look> looks;
+			if (!rawObject.looks.empty())
+			{
+				if (rawObject.hasHeading) { throw std::runtime_error(where + ": an object with a <heading> cannot have several looks"); }
+				if (isGrid) { throw std::runtime_error(where + ": a <grid> cannot have several looks"); }
+
+				for (const RawSprite& rawLook : rawObject.looks)
+				{
+					Object::Look look;
+					look.name = rawLook.name;
+					look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap);
+					look.shapeKind = shapeKindFromTag(look.spriteParams.empty() ? std::string{} : look.spriteParams.at(0));
+					if (look.shapeKind == ShapeKind::Text && rawLook.textIsNumber)
+					{
+						throw std::runtime_error(where + ": a look cannot be a text showing a <number>");
+					}
+					looks.push_back(std::move(look));
+				}
+
+				// The first look is the sprite the object starts with; it must be
+				// the very same picture.
+				looks.front().spriteParams = tempSpriteParams;
+				looks.front().bitmap = firstPassBitmaps[rawObject.name];
+			}
+
 			int thisLockstep = 0;
 			if (rawObject.rawCollisionData.lockstep)
 			{
@@ -384,6 +468,18 @@ namespace xge
 						}
 					}
 
+					if (!rawObject.facing.empty())
+					{
+						object.hasFacing = true;
+						object.facing = rawObject.facing == "down" ? Direction::Down
+							: rawObject.facing == "left" ? Direction::Left
+							: rawObject.facing == "right" ? Direction::Right
+							: Direction::Up;
+					}
+					object.facingOriginal = object.facing;
+					object.timers = processTimers(rawObject.timers, where);
+					object.looks = looks;
+
 					object.showHeading();
 
 					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
@@ -413,6 +509,11 @@ namespace xge
 						rule.filterClass = rawRule.filterClass;
 						rule.filterObject = rawRule.filterObject;
 						rule.unlessClass = rawRule.unlessClass;
+						rule.whileSprite = rawRule.whileSprite;
+						if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
+						{
+							throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
+						}
 						if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
 						if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
 						rule.commands = processCommands(rawRule.commands, where);
@@ -490,6 +591,8 @@ namespace xge
 				condition.commands = processCommands(rawCondition.commands, where);
 				state.conditions.push_back(std::move(condition));
 			}
+
+			state.timers = processTimers(rawState.timers, where);
 
 			states.push_back(state);
 		}
@@ -597,6 +700,39 @@ namespace xge
 		return expression.value();
 	}
 
+	std::vector<Timer> game_expr::processTimers(const std::vector<RawTimer>& raw, const std::string& where)
+	{
+		std::vector<Timer> timers;
+		const std::string here = where + " > <timer>";
+
+		for (const RawTimer& rawTimer : raw)
+		{
+			Timer timer;
+			timer.repeat = rawTimer.repeat;
+			timer.interval = rawTimer.interval;
+			timer.commands = processCommands(rawTimer.commands, here);
+
+			// Worked out once now so that a mistake in it is a load error; it
+			// is worked out again every time the timer starts over. Only a plain
+			// number can be held to being above 0 now: an expression may read a
+			// variable that has no value yet (and at run time a timer never
+			// waits less than one frame).
+			const float seconds = evaluate(rawTimer.interval, here);
+			char* end = nullptr;
+			const std::string& text = rawTimer.interval.text;
+			const bool plainNumber = rawTimer.interval.kind == RawValue::Kind::Expression && !text.empty()
+				&& (std::strtof(text.c_str(), &end), end == text.c_str() + text.size());
+			if (plainNumber && !(seconds > 0.0f))
+			{
+				throw std::runtime_error(here + ": " + (rawTimer.repeat ? "<every>" : "<after>") + " is " + std::to_string(seconds) + "; expected a number of seconds above 0");
+			}
+
+			timers.push_back(std::move(timer));
+		}
+
+		return timers;
+	}
+
 	std::vector<Command> game_expr::processCommands(const std::vector<RawCommand>& raw, const std::string& where)
 	{
 		try
@@ -615,105 +751,91 @@ namespace xge
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		std::vector<std::string> params;
 
-		if (sprite.kind == "line")
+		// Lines, rows of text and SVG drawings are all pictures the engine draws
+		// itself, and all go the same way, here, once, when the game loads:
+		//   1. read what the file describes (line ends, rows, a part of a drawing);
+		//   2. draw it into a Bitmap, the pixels every window backend shows and a
+		//      pixel collision tests, so no backend ever draws one itself;
+		//   3. flip it, if the sprite says so (a <bitmap> or an <svg>);
+		//   4. for an object with a <heading>, keep it (a Turnable) to be turned
+		//      to whatever heading it faces, and start it at heading 0.
+		// The params carry only the picture's size. The one difference is in the
+		// turning: lines are kept as lines and drawn again at each heading, which
+		// keeps their edges sharp, where a finished picture's pixels are turned.
+		if (sprite.kind == "line" || sprite.kind == "bitmap" || sprite.kind == "svg")
 		{
-			// Drawn here, once, into the pixels the window shows and a pixel
-			// collision tests; the params only carry its size, which is what the
-			// rest of the engine needs to know without a window.
-			std::vector<LineSegment> segments;
-			for (const RawLine& rawLine : sprite.lines)
-			{
-				LineSegment segment;
-				segment.x1 = evaluate(rawLine.from.x, where);
-				segment.y1 = evaluate(rawLine.from.y, where);
-				segment.x2 = evaluate(rawLine.to.x, where);
-				segment.y2 = evaluate(rawLine.to.y, where);
-				segment.color = colorFromName(rawLine.color.empty() ? "color.white" : rawLine.color);
-				if (rawLine.hasThickness) { segment.thickness = static_cast<int>(std::lround(evaluate(rawLine.thickness, where))); }
-				if (segment.thickness < 1) { throw std::runtime_error(where + ": a <line> has a <thickness> under 1"); }
-				segments.push_back(segment);
-			}
-
+			auto kept = std::make_shared<Turnable>();
 			std::shared_ptr<const Bitmap> drawn;
+
 			try
 			{
-				if (turnable)
+				if (sprite.kind == "line")
 				{
-					// An object that faces somewhere: the lines are kept as they
-					// are, to be drawn at whatever heading it faces; heading 0 is
-					// what it starts as, and its square is its size.
-					auto kept = std::make_shared<Turnable>();
-					kept->lines = segments;
-					if (!segments.empty()) { drawn = std::make_shared<const Bitmap>(kept->at(0.0f)); }
-					*turnable = std::move(kept);
+					// 1. The line ends, colours and thicknesses.
+					for (const RawLine& rawLine : sprite.lines)
+					{
+						LineSegment segment;
+						segment.x1 = evaluate(rawLine.from.x, where);
+						segment.y1 = evaluate(rawLine.from.y, where);
+						segment.x2 = evaluate(rawLine.to.x, where);
+						segment.y2 = evaluate(rawLine.to.y, where);
+						segment.color = colorFromName(rawLine.color.empty() ? "color.white" : rawLine.color);
+						if (rawLine.hasThickness) { segment.thickness = static_cast<int>(std::lround(evaluate(rawLine.thickness, where))); }
+						if (segment.thickness < 1) { throw std::invalid_argument("a <line> has a <thickness> under 1"); }
+						kept->lines.push_back(segment);
+					}
+
+					// 2. Drawn. (Kept as lines for turning: see step 4.)
+					drawn = std::make_shared<const Bitmap>(rasterizeLines(kept->lines));
 				}
-				if (!drawn) { drawn = std::make_shared<const Bitmap>(rasterizeLines(segments)); }
-			}
-			catch (const std::invalid_argument& error)
-			{
-				throw std::runtime_error(where + ": " + error.what());
-			}
-
-			params = { "line", std::to_string(drawn->width), std::to_string(drawn->height) };
-			if (bitmap) { *bitmap = std::move(drawn); }
-			return params;
-		}
-
-		if (sprite.kind == "bitmap" || sprite.kind == "svg")
-		{
-			// Drawn here, once, like a sprite of lines: the params only carry
-			// its size, and the picture goes to the backends and to a pixel
-			// collision through `bitmap`. A grid of them shares one picture.
-			// A <bitmap> is rows of text and an <svg> a drawing from a file
-			// (svg.cpp), but from here on they are the same kind of picture.
-			SvgRegion region;
-			float svgScale = 1.0f;
-			int rowsScale = 1;
-			if (sprite.kind == "svg")
-			{
-				if (sprite.hasSvgRegion)
+				else if (sprite.kind == "svg")
 				{
-					region = { evaluate(sprite.svgX, where), evaluate(sprite.svgY, where),
-						evaluate(sprite.svgWidth, where), evaluate(sprite.svgHeight, where) };
-				}
-				if (sprite.hasScale) { svgScale = evaluate(sprite.scale, where); }
-			}
-			else if (sprite.hasScale)
-			{
-				rowsScale = static_cast<int>(std::lround(evaluate(sprite.scale, where)));
-			}
+					// 1. The part of the drawing, and how many pixels to a unit.
+					SvgRegion region;
+					float svgScale = 1.0f;
+					if (sprite.hasSvgRegion)
+					{
+						region = { evaluate(sprite.svgX, where), evaluate(sprite.svgY, where),
+							evaluate(sprite.svgWidth, where), evaluate(sprite.svgHeight, where) };
+						if (region.isWhole()) { throw std::invalid_argument("an svg's <width> and <height> must both be above 0"); }
+					}
+					if (sprite.hasScale) { svgScale = evaluate(sprite.scale, where); }
 
-			std::shared_ptr<const Bitmap> drawn;
-			try
-			{
-				if (sprite.kind == "svg")
-				{
-					if (sprite.hasSvgRegion && region.isWhole()) { throw std::invalid_argument("an svg's <width> and <height> must both be above 0"); }
-
+					// 2. Drawn by lunasvg (svg.cpp).
 					drawn = std::make_shared<const Bitmap>(rasterizeSvg(sprite.path, region, svgScale, sprite.svgHide));
 				}
 				else
 				{
+					// 1. The rows, and how many pixels to a character.
+					const int rowsScale = sprite.hasScale ? static_cast<int>(std::lround(evaluate(sprite.scale, where))) : 1;
+
+					// 2. Drawn.
 					drawn = std::make_shared<const Bitmap>(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color)));
 				}
 
+				// 3. Flipped.
+				if (!sprite.flip.empty() && sprite.kind != "line")
+				{
+					drawn = std::make_shared<const Bitmap>(flipBitmap(*drawn, sprite.flip == "horizontal", sprite.flip == "vertical"));
+				}
+
+				// 4. Kept to be turned, for an object that faces somewhere; heading 0
+				// is what it starts as, and the square it turns in is its size.
 				if (turnable)
 				{
-					// An object that faces somewhere: the picture is drawn once
-					// and kept, to be turned to whatever heading it faces;
-					// heading 0 is what it starts as, and the square it turns in
-					// is its size.
-					auto kept = std::make_shared<Turnable>();
-					kept->picture = drawn;
-					drawn = std::make_shared<const Bitmap>(kept->at(0.0f));
+					if (kept->lines.empty()) { kept->picture = drawn; }
+					if (!kept->lines.empty() || drawn->width > 0)
+					{
+						drawn = std::make_shared<const Bitmap>(kept->at(0.0f));
+					}
 					*turnable = std::move(kept);
 				}
 			}
 			catch (const std::exception& error)
 			{
-				// std::invalid_argument is a mistake in the numbers or rows,
-				// std::runtime_error an svg file that cannot be read; either
-				// way it is the game file that is at fault, so say where.
+				// std::invalid_argument is a mistake in the numbers, rows or
+				// lines, std::runtime_error an svg file that cannot be read;
+				// either way it is the game file that is at fault, so say where.
 				throw std::runtime_error(where + ": " + error.what());
 			}
 

@@ -26,6 +26,10 @@ namespace xge
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
+			[&](const CmdReverse&) { reverse(object); },
+			[&](const CmdResetObject& r) { game.resetObject(r.target); },
+			[&](const CmdBecome& b) { become(&object, b); },
+			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
 			                      appear in a collisionData list, and carry() and
 			                      deflect() are about another object, which a screen
@@ -47,6 +51,10 @@ namespace xge
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdCarry&) { carry(object, other); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
+			[&](const CmdReverse&) { reverse(object); },
+			[&](const CmdResetObject& r) { game.resetObject(r.target); },
+			[&](const CmdBecome& b) { become(&object, b); },
+			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
@@ -66,11 +74,60 @@ namespace xge
 			// about, it's the full-game reset - see Game::resetAll.
 			[&](const CmdReset&) { if (keyPressed) { game.resetAll(); } },
 			[&](const CmdPlay& p) { if (keyPressed) { game.requestSound(p.sound); } },
+			// What a <condition> (or a key) can also do to the game's objects:
+			// change a variable, a look, or bring something back into play.
+			[&](const CmdIncrement& i) { if (keyPressed) { game.incrementText(i.target, i.amount); } },
+			[&](const CmdDecrement& d) { if (keyPressed) { game.decrementText(d.target, d.amount); } },
+			[&](const CmdBecome& b) { if (keyPressed) { become(nullptr, b); } },
+			[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
 			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
 			                      directly on a state's <input>; only reachable
 			                      via CmdTriggerAction into an object's own
 			                      action list. */ }
 		}, command);
+	}
+
+	void CommandExecutor::executeTimer(const Command& command, Object* owner)
+	{
+		std::visit(overload{
+			[&](const CmdPushState& s) { game.pushState(s.name); },
+			[&](const CmdPopState&) { game.popState(); },
+			[&](const CmdResetObject& r) { game.resetObject(r.target); },
+			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
+			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
+			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
+			[&](const CmdPlay& p) { game.requestSound(p.sound); },
+			[&](const CmdBecome& b) { become(owner, b); },
+			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
+			// On an object, a bare reset puts that object back; in a state, it is
+			// the whole game, as on a key.
+			[&](const CmdReset&) { if (owner) { restart(*owner); } else { game.resetAll(); } },
+			[&](const CmdFire& f) { if (owner) { spawnProjectile(*owner, f.projectileName); } },
+			[&](const CmdReverse&) { if (owner) { reverse(*owner); } },
+			[&](const CmdDie&) { if (owner) { die(*owner); } },
+			[&](const CmdStop&) { if (owner) { stop(*owner); } },
+			[&](const CmdMove& m) { if (owner) { moveByStep(*owner, m.direction, m.step); } },
+			[&](const CmdRelease& r) { if (owner) { release(*owner, r.target, r.count); } },
+			[&](const auto&) { /* the rest are about a key held, an edge or another
+			                      object touched, none of which a timer has */ }
+		}, command);
+	}
+
+	void CommandExecutor::become(Object* self, const CmdBecome& command)
+	{
+		if (!command.target.empty())
+		{
+			game.become(command.target, command.sprite);
+		}
+		else if (self)
+		{
+			showLookNamed(*self, command.sprite);
+		}
+	}
+
+	void CommandExecutor::reverse(Object& object)
+	{
+		object.velocity = object.velocity * -1.0f;
 	}
 
 	void CommandExecutor::executeCondition(const Command& command)
@@ -304,6 +361,45 @@ namespace xge
 	// moveObjects makes it at the start of the frame's move, where it can be
 	// refused if it would leave the window. Asking twice in one frame keeps
 	// the later one, so a hop is always a single step in one direction.
+	void CommandExecutor::startJump(Object& object, const CmdJump& jump)
+	{
+		if (object.isAirborne())
+		{
+			return;
+		}
+
+		// A jump that would land off the screen is not made at all (up from the
+		// top row stays where it is), rather than going part of the way.
+		Vector2f landing = object.position;
+		switch (jump.direction)
+		{
+		case Direction::Up:    landing.y -= jump.distance; break;
+		case Direction::Down:  landing.y += jump.distance; break;
+		case Direction::Left:  landing.x -= jump.distance; break;
+		case Direction::Right: landing.x += jump.distance; break;
+		}
+		const WindowDesc& window = game.getWindowDesc();
+		const Vector2f size = sizeOf(object);
+		if (landing.x < 0 || landing.y < 0 || landing.x + size.x > window.width || landing.y + size.y > window.height)
+		{
+			return;
+		}
+
+		const int frames = game.framesFor(jump.seconds);
+		const float step = jump.distance / static_cast<float>(frames);
+
+		switch (jump.direction)
+		{
+		case Direction::Up:    object.jumpStep = { 0.0f, -step }; break;
+		case Direction::Down:  object.jumpStep = { 0.0f, step }; break;
+		case Direction::Left:  object.jumpStep = { -step, 0.0f }; break;
+		case Direction::Right: object.jumpStep = { step, 0.0f }; break;
+		}
+
+		object.jumpFramesLeft = frames;
+		object.facing = jump.direction;
+	}
+
 	void CommandExecutor::queueHop(Object& object, Direction direction, float distance)
 	{
 		switch (direction)
@@ -371,10 +467,21 @@ namespace xge
 		for (const auto& command : object.action[actionName])
 		{
 			std::visit(overload{
-				[&](const CmdMove& m) { applyActionVelocity(object, m.direction, keyPressed ? m.step : 0.0f); },
+				[&](const CmdMove& m)
+				{
+					applyActionVelocity(object, m.direction, keyPressed ? m.step : 0.0f);
+					if (keyPressed && m.step != 0.0f) { object.facing = m.direction; }
+				},
 				// A hop belongs to the press alone: letting go of the key does
 				// nothing, and it is not among what executeHeldInput resumes.
-				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); } },
+				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); object.facing = h.direction; } },
+				// So does a jump, and one in the air waits for the landing.
+				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
+				// And a bare reset (the object back where it started), a change of
+				// look and a reveal.
+				[&](const CmdReset&) { if (keyPressed) { restart(object); } },
+				[&](const CmdBecome& b) { if (keyPressed) { become(&object, b); } },
+				[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
 				// Thrust is held like a move: on while the key is down.
 				[&](const CmdAccelerate& a) { applyActionThrust(object, a.direction, keyPressed ? a.amount : 0.0f, a.burn); },
 				// So are a turn and a thrust along the heading.
@@ -460,6 +567,36 @@ namespace xge
 
 			projectile->position = centre + ahead * (std::max(size.x, size.y) / 2.0f) - sizeOf(*projectile) * 0.5f;
 			projectile->velocity = ahead * speed;
+		}
+		else if (shooter.hasFacing)
+		{
+			// From the middle of the side it faces, just clear of it, moving that
+			// way at the projectile's own speed.
+			const Vector2f size = sizeOf(shooter);
+			const Vector2f shot = sizeOf(*projectile);
+			const float speed = std::hypot(projectile->velocityOriginal.x, projectile->velocityOriginal.y);
+			const float middleX = shooter.position.x + size.x / 2 - shot.x / 2;
+			const float middleY = shooter.position.y + size.y / 2 - shot.y / 2;
+
+			switch (shooter.facing)
+			{
+			case Direction::Up:
+				projectile->position = { middleX, shooter.position.y - shot.y };
+				projectile->velocity = { 0.0f, -speed };
+				break;
+			case Direction::Down:
+				projectile->position = { middleX, shooter.position.y + size.y };
+				projectile->velocity = { 0.0f, speed };
+				break;
+			case Direction::Left:
+				projectile->position = { shooter.position.x - shot.x, middleY };
+				projectile->velocity = { -speed, 0.0f };
+				break;
+			case Direction::Right:
+				projectile->position = { shooter.position.x + size.x, middleY };
+				projectile->velocity = { speed, 0.0f };
+				break;
+			}
 		}
 		else
 		{

@@ -36,6 +36,7 @@ namespace xge
 		if (verb == "stop")   { return CmdStop{}; }
 		if (verb == "wrap")   { return CmdWrap{}; }
 		if (verb == "carry")  { return CmdCarry{}; }
+		if (verb == "reverse") { return CmdReverse{}; }
 
 		// <reset/> puts the object in the rule (or, in a state's input or
 		// condition, the whole game) back; <reset object="name"/> that one object.
@@ -47,6 +48,15 @@ namespace xge
 
 		if (verb == "move") { return CmdMove{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
 		if (verb == "hop")  { return CmdHop{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
+
+		if (verb == "jump")
+		{
+			CmdJump jump{ directionFromName(raw.direction, verb), evaluate(raw.amount) };
+			const bool noSeconds = raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty();
+			if (!noSeconds) { jump.seconds = evaluate(raw.seconds); }
+			if (!(jump.seconds > 0.0f)) { throw std::runtime_error("<jump> has <seconds> of " + std::to_string(jump.seconds) + "; expected more than 0"); }
+			return jump;
+		}
 
 		if (verb == "accelerate")
 		{
@@ -96,6 +106,13 @@ namespace xge
 		if (verb == "pop")  { return CmdPopState{}; }
 
 		if (verb == "play")    { return CmdPlay{ raw.sound }; }
+		if (verb == "become")  { return CmdBecome{ raw.sprite, raw.object }; }
+		if (verb == "reveal")
+		{
+			const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
+			if (count < 1) { throw std::runtime_error("<reveal> of " + raw.object + " has a count under 1"); }
+			return CmdReveal{ raw.object, count };
+		}
 		if (verb == "fire")    { return CmdFire{ raw.object }; }
 		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action }; }
 
@@ -211,6 +228,7 @@ namespace xge
 			[&](const CmdWrap&) { o << "wrap"; },
 			[&](const CmdCarry&) { o << "carry"; },
 			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
+			[&](const CmdReverse&) { o << "reverse"; },
 			[&](const CmdMove& m)
 			{
 				const char* direction = (m.direction == Direction::Up) ? "up"
@@ -226,6 +244,14 @@ namespace xge
 					: (h.direction == Direction::Left) ? "left"
 					: "right";
 				o << "hop." << direction << "(" << h.distance << ")";
+			},
+			[&](const CmdJump& j)
+			{
+				const char* direction = (j.direction == Direction::Up) ? "up"
+					: (j.direction == Direction::Down) ? "down"
+					: (j.direction == Direction::Left) ? "left"
+					: "right";
+				o << "jump." << direction << "(" << j.distance << ", " << j.seconds << "s)";
 			},
 			[&](const CmdAccelerate& a)
 			{
@@ -246,6 +272,8 @@ namespace xge
 			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << ")"; },
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
+			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << ")"; },
+			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
 		}, command);
 
 		return o;
@@ -272,6 +300,10 @@ namespace xge
 		else if (command.verb == "release")
 		{
 			o << "(" << command.object << ", " << command.amount << ")";
+		}
+		else if (command.verb == "jump")
+		{
+			o << "." << command.direction << "(" << command.amount << ", " << command.seconds << ")";
 		}
 		else if (command.verb == "move" || command.verb == "hop" || command.verb == "accelerate" || command.verb == "turn")
 		{

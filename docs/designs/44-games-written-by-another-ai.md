@@ -30,3 +30,7 @@ The games are small on purpose and were not made better. Berserk's robots pace s
 ## What this says about the language
 
 The vocabulary was enough: the three games are written with what was already there, and no tag was added. The schema is not strict enough to tell an author when a command is in the wrong place, and an author who has never seen the engine finds that out only by playing. Making the loader refuse an unknown button name and the commands an `<input>`, a `<condition>` or a `<collision>` would not run, and warn about a variable no object owns, would have turned each of the mistakes above into a load error naming the line. Not done; it is a change to the engine and to the schema's content models, for the author to decide.
+
+## Later
+
+On 2026-10-03 ([47](47-timers-facing-jumps-and-looks.md)) Frostbite was rewritten from scratch (the shore and igloo at the top, rows of ice below, jumps between them; `tests/test_frostbite.cpp`), and the two others were changed: Demon Attack's demons fire back, and Berserk's robots fire back, its man shoots the way he faces, and its walls kill (the `<stick />` against an object the other AI wrote did nothing). Two of the gaps above are closed by the same change: a `<condition>` now runs `<inc>` and `<dec>`, and a collision runs `<reset object>`. The schema is still not strict about where a command goes.

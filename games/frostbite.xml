@@ -1,234 +1,770 @@
-<?xml version="1.0" encoding="utf-8"?>
-<game>
+<!-- frostbite.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 3, 2026 -->
+
+<!--
+  Frostbite, after the 1983 Atari 2600 game. Frostbite Bailey lives on the
+  snowy shore along the top of the screen, and builds his igloo there from
+  blocks of ice he gets by jumping down onto the floes drifting below. Every
+  row of ice he lands on while it is white turns blue and puts one more block
+  on the igloo; once all four rows are blue they all turn white again. Land in
+  the water and he is lost; the temperature drops a degree every second, and
+  at zero he freezes. Snow geese fly along two of the rows and push him along
+  if they catch him, off the ice if he is not quick. A fish swims along the
+  third row, worth a bonus if he catches it. When the igloo is finished its
+  door appears: walk in to win.
+
+  W or Up jumps up a row, S or Down jumps down one, A and D or Left and Right
+  walk. Space or P pauses.
+
+  How it is written:
+  * <jump>: a jump between rows takes a moment and passes over the water; he
+    only meets what he lands on. Water drowns him unless he is on a floe
+    (unless="floe"), and a floe carries him (<carry />).
+  * Each row is a <group> with two looks, a white <sprite> and a blue one. Its
+    rule sprite="white" runs only while it is white, and does
+    <become object="rowN" sprite="blue" />, so the whole row turns blue at once.
+  * The igloo is a pool of hidden blocks, each where it belongs; a row landed
+    on <reveal>s the next one. The door is hidden until a condition on the
+    blocks reveals it.
+  * The cold is a state <timer> taking a degree a second off the thermometer;
+    another brings the fish back from time to time.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
   <window name="Frostbite">
-    <width>160</width>
-    <height>210</height>
+    <width>800</width>
+    <height>600</height>
     <background>color.darkblue</background>
     <fullscreen>false</fullscreen>
     <framerate>60</framerate>
   </window>
-
   <variables>
-    <variable name="margin">4</variable>
+    <variable name="shore">125</variable>
+    <variable name="home.x">110</variable>
+    <variable name="home.y">80</variable>
+    <variable name="row1">172</variable>
+    <variable name="rowgap">90</variable>
+    <variable name="floewidth">120</variable>
+    <variable name="floeheight">30</variable>
+    <variable name="walk">2</variable>
+    <variable name="leap">0.35</variable>
+    <variable name="igloox">520</variable>
+    <variable name="iglooground">112</variable>
+    <variable name="blockwidth">30</variable>
+    <variable name="blockheight">14</variable>
+    <variable name="margin">10</variable>
   </variables>
-
+  <sounds>
+    <sound name="jump" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5" to="C6">0.08</note>
+    </sound>
+    <sound name="block" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G5">0.05</note>
+      <note pitch="C6">0.08</note>
+    </sound>
+    <sound name="splash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="5000" to="300">0.5</note>
+    </sound>
+    <sound name="freeze" wave="sine">
+      <volume>0.4</volume>
+      <note pitch="E6" to="E4">0.8</note>
+    </sound>
+    <sound name="bonus" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C6">0.05</note>
+      <note pitch="E6">0.05</note>
+      <note pitch="G6">0.1</note>
+    </sound>
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
   <objects>
-    <object name="player" class="player">
-      <sprite name="bailey">
+    <!-- the snowy shore along the top; below it all is water -->
+    <object name="snow">
+      <sprite>
         <rectangle>
-          <width>12</width>
-          <height>16</height>
-          <color>color.orange</color>
+          <width>window.right</width>
+          <height>shore</height>
+          <color>color.white</color>
         </rectangle>
       </sprite>
-      <position><x>80</x><y>190</y></position>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="water" class="water">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>window.bottom - shore</height>
+          <color>color.darkblue</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>shore</y></position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
-        <collision object="igloo">
-          <inc variable="player.score">50</inc>
-          <reset />
+      </collisions>
+    </object>
+    <!-- the igloo: blocks hidden until earned, each where it belongs -->
+    <group name="igloo" class="igloo">
+      <sprite>
+        <rectangle>
+          <width>blockwidth</width>
+          <height>blockheight</height>
+          <color>color.lightgrey</color>
+        </rectangle>
+      </sprite>
+      <velocity><x>0</x><y>0</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+      <member><position><x>igloox + 0 * (blockwidth + 2)</x><y>iglooground - blockheight</y></position></member>
+      <member><position><x>igloox + 1 * (blockwidth + 2)</x><y>iglooground - blockheight</y></position></member>
+      <member><position><x>igloox + 2 * (blockwidth + 2)</x><y>iglooground - blockheight</y></position></member>
+      <member><position><x>igloox + 3 * (blockwidth + 2)</x><y>iglooground - blockheight</y></position></member>
+      <member><position><x>igloox + 0 * (blockwidth + 2)</x><y>iglooground - 2 * blockheight - 2</y></position></member>
+      <member><position><x>igloox + 1 * (blockwidth + 2)</x><y>iglooground - 2 * blockheight - 2</y></position></member>
+      <member><position><x>igloox + 2 * (blockwidth + 2)</x><y>iglooground - 2 * blockheight - 2</y></position></member>
+      <member><position><x>igloox + 3 * (blockwidth + 2)</x><y>iglooground - 2 * blockheight - 2</y></position></member>
+      <member><position><x>igloox + 0 * (blockwidth + 2)</x><y>iglooground - 3 * blockheight - 4</y></position></member>
+      <member><position><x>igloox + 1 * (blockwidth + 2)</x><y>iglooground - 3 * blockheight - 4</y></position></member>
+      <member><position><x>igloox + 2 * (blockwidth + 2)</x><y>iglooground - 3 * blockheight - 4</y></position></member>
+      <member><position><x>igloox + 3 * (blockwidth + 2)</x><y>iglooground - 3 * blockheight - 4</y></position></member>
+      <member><position><x>igloox + blockwidth / 2 + 1</x><y>iglooground - 4 * blockheight - 6</y></position></member>
+      <member><position><x>igloox + 1.5 * blockwidth + 3</x><y>iglooground - 4 * blockheight - 6</y></position></member>
+      <member><position><x>igloox + 2.5 * blockwidth + 5</x><y>iglooground - 4 * blockheight - 6</y></position></member>
+    </group>
+    <!-- the door, which appears once the igloo is finished -->
+    <object name="door" class="door">
+      <sprite>
+        <rectangle>
+          <width>24</width>
+          <height>30</height>
+          <color>color.black</color>
+        </rectangle>
+      </sprite>
+      <position><x>igloox + 2 * blockwidth + 2 - 12</x><y>iglooground - 30</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+    <!-- the thermometer, which holds the temperature -->
+    <object name="thermometer">
+      <sprite>
+        <bitmap>
+          <row>.**.</row>
+          <row>.**.</row>
+          <row>.**.</row>
+          <row>.**.</row>
+          <row>****</row>
+          <row>****</row>
+          <scale>4</scale>
+          <color>color.red</color>
+        </bitmap>
+      </sprite>
+      <position><x>window.right - 150</x><y>margin + 4</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+      <variables>
+        <variable name="degrees">45</variable>
+      </variables>
+    </object>
+    <!-- row 1 of ice: three floes drifting right, white until it is landed on -->
+    <group name="row1" class="floe">
+      <sprite name="white">
+        <rectangle>
+          <width>floewidth</width>
+          <height>floeheight</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <sprite name="blue">
+        <rectangle>
+          <width>floewidth</width>
+          <height>floeheight</height>
+          <color>color.blue</color>
+        </rectangle>
+      </sprite>
+      <position><y>row1 + 0 * rowgap</y></position>
+      <velocity><x>1.2</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
         </collision>
-        <collision class="floe"><carry/></collision>
-        <collision class="bird">
-          <dec variable="player.temperature">10</dec>
+        <collision object="bailey" sprite="white">
+          <become object="row1" sprite="blue" />
+          <inc variable="bailey.score">10</inc>
+          <inc variable="bailey.blocks" />
+          <inc variable="bailey.blue" />
+          <reveal object="igloo" />
+          <play sound="block" />
+        </collision>
+      </collisions>
+      <member><position><x>0</x></position></member>
+      <member><position><x>307</x></position></member>
+      <member><position><x>614</x></position></member>
+    </group>
+    <!-- row 2 of ice: three floes drifting left, white until it is landed on -->
+    <group name="row2" class="floe">
+      <sprite name="white">
+        <rectangle>
+          <width>floewidth</width>
+          <height>floeheight</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <sprite name="blue">
+        <rectangle>
+          <width>floewidth</width>
+          <height>floeheight</height>
+          <color>color.blue</color>
+        </rectangle>
+      </sprite>
+      <position><y>row1 + 1 * rowgap</y></position>
+      <velocity><x>-1.6</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision object="bailey" sprite="white">
+          <become object="row2" sprite="blue" />
+          <inc variable="bailey.score">10</inc>
+          <inc variable="bailey.blocks" />
+          <inc variable="bailey.blue" />
+          <reveal object="igloo" />
+          <play sound="block" />
+        </collision>
+      </collisions>
+      <member><position><x>0</x></position></member>
+      <member><position><x>307</x></position></member>
+      <member><position><x>614</x></position></member>
+    </group>
+    <!-- row 3 of ice: three floes drifting right, white until it is landed on -->
+    <group name="row3" class="floe">
+      <sprite name="white">
+        <rectangle>
+          <width>floewidth</width>
+          <height>floeheight</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <sprite name="blue">
+        <rectangle>
+          <width>floewidth</width>
+          <height>floeheight</height>
+          <color>color.blue</color>
+        </rectangle>
+      </sprite>
+      <position><y>row1 + 2 * rowgap</y></position>
+      <velocity><x>2</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision object="bailey" sprite="white">
+          <become object="row3" sprite="blue" />
+          <inc variable="bailey.score">10</inc>
+          <inc variable="bailey.blocks" />
+          <inc variable="bailey.blue" />
+          <reveal object="igloo" />
+          <play sound="block" />
+        </collision>
+      </collisions>
+      <member><position><x>0</x></position></member>
+      <member><position><x>307</x></position></member>
+      <member><position><x>614</x></position></member>
+    </group>
+    <!-- row 4 of ice: three floes drifting left, white until it is landed on -->
+    <group name="row4" class="floe">
+      <sprite name="white">
+        <rectangle>
+          <width>floewidth</width>
+          <height>floeheight</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <sprite name="blue">
+        <rectangle>
+          <width>floewidth</width>
+          <height>floeheight</height>
+          <color>color.blue</color>
+        </rectangle>
+      </sprite>
+      <position><y>row1 + 3 * rowgap</y></position>
+      <velocity><x>-1.4</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision object="bailey" sprite="white">
+          <become object="row4" sprite="blue" />
+          <inc variable="bailey.score">10</inc>
+          <inc variable="bailey.blocks" />
+          <inc variable="bailey.blue" />
+          <reveal object="igloo" />
+          <play sound="block" />
+        </collision>
+      </collisions>
+      <member><position><x>0</x></position></member>
+      <member><position><x>307</x></position></member>
+      <member><position><x>614</x></position></member>
+    </group>
+    <!-- snow geese: they push Bailey along with them if they catch him -->
+    <group name="geese" class="goose">
+      <sprite>
+        <bitmap>
+          <row>*......*</row>
+          <row>.*....*.</row>
+          <row>..****..</row>
+          <row>...**...</row>
+          <scale>4</scale>
+          <color>color.lightgrey</color>
+        </bitmap>
+      </sprite>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member><position><x>500</x><y>row1 + rowgap - 4</y></position><velocity><x>2.4</x><y>0</y></velocity></member>
+      <member><position><x>100</x><y>row1 + 3 * rowgap - 4</y></position><velocity><x>2.2</x><y>0</y></velocity></member>
+    </group>
+    <!-- a fish along the third row: a bonus, back every so often -->
+    <object name="fish" class="fish">
+      <sprite>
+        <bitmap>
+          <row>.***..*</row>
+          <row>*******</row>
+          <row>.***..*</row>
+          <scale>4</scale>
+          <color>color.orange</color>
+        </bitmap>
+      </sprite>
+      <position><x>700</x><y>row1 + 2 * rowgap - 6</y></position>
+      <velocity><x>-1</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision object="bailey">
+          <die />
+        </collision>
+      </collisions>
+    </object>
+    <!-- Frostbite Bailey -->
+    <object name="bailey" class="player">
+      <sprite>
+        <bitmap>
+          <row>..**..</row>
+          <row>.****.</row>
+          <row>..**..</row>
+          <row>.****.</row>
+          <row>*.**.*</row>
+          <row>..**..</row>
+          <row>.*..*.</row>
+          <row>**..**</row>
+          <scale>4</scale>
+          <color>color.orange</color>
+        </bitmap>
+      </sprite>
+      <position><x>home.x</x><y>home.y</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <stick />
+        </collision>
+        <collision class="floe">
+          <carry />
+        </collision>
+        <collision class="goose">
+          <carry />
+        </collision>
+        <collision class="water" unless="floe">
+          <dec variable="bailey.lives" />
+          <reset object="thermometer" />
+          <play sound="splash" />
           <reset />
         </collision>
         <collision class="fish">
-          <dec variable="player.temperature">10</dec>
-          <reset />
+          <inc variable="bailey.score">100</inc>
+          <play sound="bonus" />
         </collision>
-        <collision edge="left"><wrap/></collision>
-        <collision edge="right"><wrap/></collision>
+        <collision object="door">
+          <inc variable="bailey.home" />
+        </collision>
       </collisions>
       <actions>
-        <action name="up">
-          <move direction="up">1</move>
-        </action>
-        <action name="down">
-          <move direction="down">1</move>
-        </action>
         <action name="left">
-          <move direction="left">1</move>
+          <move direction="left">walk</move>
         </action>
         <action name="right">
-          <move direction="right">1</move>
+          <move direction="right">walk</move>
+        </action>
+        <action name="up">
+          <jump direction="up"><distance>rowgap</distance><seconds>leap</seconds></jump>
+          <play sound="jump" />
+        </action>
+        <action name="down">
+          <jump direction="down"><distance>rowgap</distance><seconds>leap</seconds></jump>
+          <play sound="jump" />
+        </action>
+        <action name="home">
+          <reset />
         </action>
       </actions>
       <variables>
         <variable name="score">0</variable>
-        <variable name="temperature">120</variable>
+        <variable name="lives">4</variable>
+        <variable name="blocks">0</variable>
+        <variable name="blue">0</variable>
+        <variable name="home">0</variable>
       </variables>
     </object>
-
-    <object name="igloo" class="igloo">
-      <sprite name="igloo">
-        <rectangle>
-          <width>32</width>
-          <height>24</height>
-          <color>color.white</color>
-        </rectangle>
-      </sprite>
-      <position><x>64</x><y>20</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>true</enabled></collisions>
-    </object>
-
-    <group name="floes" class="floe">
-      <sprite name="floe">
-        <rectangle>
-          <width>32</width>
-          <height>16</height>
-          <color>color.lightgrey</color>
-        </rectangle>
-      </sprite>
-      <velocity><x>1</x><y>0</y></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="left"><wrap/></collision>
-        <collision edge="right"><wrap/></collision>
-      </collisions>
-      <member name="f1"><position><x>20</x><y>60</y></position></member>
-      <member name="f2"><position><x>70</x><y>60</y></position></member>
-      <member name="f3"><position><x>120</x><y>60</y></position></member>
-      <member name="f4"><position><x>40</x><y>90</y></position></member>
-      <member name="f5"><position><x>90</x><y>90</y></position></member>
-      <member name="f6"><position><x>10</x><y>120</y></position></member>
-      <member name="f7"><position><x>60</x><y>120</y></position></member>
-      <member name="f8"><position><x>110</x><y>120</y></position></member>
-      <member name="f9"><position><x>30</x><y>150</y></position></member>
-      <member name="f10"><position><x>80</x><y>150</y></position></member>
-    </group>
-
-    <group name="birds" class="bird">
-      <sprite name="bird">
-        <rectangle>
-          <width>12</width>
-          <height>8</height>
-          <color>color.white</color>
-        </rectangle>
-      </sprite>
-      <velocity><x>-2</x><y>0</y></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="left"><wrap/></collision>
-      </collisions>
-      <member name="b1"><position><x>150</x><y>40</y></position></member>
-    </group>
-
-    <group name="fish" class="fish">
-      <sprite name="fish">
-        <rectangle>
-          <width>12</width>
-          <height>8</height>
-          <color>color.cyan</color>
-        </rectangle>
-      </sprite>
-      <velocity><x>2</x><y>0</y></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="right"><wrap/></collision>
-      </collisions>
-      <member name="fi1"><position><x>10</x><y>170</y></position></member>
-    </group>
-
-    <object name="clock" class="clock">
-      <sprite name="dot">
-        <rectangle>
-          <width>1</width>
-          <height>1</height>
-          <color>color.darkblue</color>
-        </rectangle>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <velocity><x>160 / 60</x><y>0</y></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="right">
-          <dec variable="player.temperature">1</dec>
-          <wrap />
-        </collision>
-      </collisions>
-    </object>
-    <object name="score">
+    <!-- along the top -->
+    <object name="scorelabel">
       <sprite>
         <text>
-          <number>player.score</number>
-          <size>16</size>
-          <color>color.white</color>
+          <content>SCORE</content>
+          <size>26</size>
+          <color>color.darkblue</color>
         </text>
       </sprite>
       <position><x>margin</x><y>margin</y></position>
       <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
-    <object name="temperature">
+    <object name="scorevalue">
       <sprite>
         <text>
-          <number>player.temperature</number>
-          <size>16</size>
+          <number>bailey.score</number>
+          <size>26</size>
+          <color>color.blue</color>
+        </text>
+      </sprite>
+      <position><x>margin + scorelabel.width + 10</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="liveslabel">
+      <sprite>
+        <text>
+          <content>LIVES</content>
+          <size>26</size>
+          <color>color.darkblue</color>
+        </text>
+      </sprite>
+      <position><x>230</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="livesvalue">
+      <sprite>
+        <text>
+          <number>bailey.lives</number>
+          <size>26</size>
+          <color>color.blue</color>
+        </text>
+      </sprite>
+      <position><x>230 + liveslabel.width + 10</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="degreesvalue">
+      <sprite>
+        <text>
+          <number>thermometer.degrees</number>
+          <size>26</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position><x>window.right - 120</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>FROSTBITE</content>
+          <size>110</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - title.width / 2</x><y>170</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="help">
+      <sprite>
+        <text>
+          <content>land on white ice to build the igloo, then walk in</content>
+          <size>30</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - help.width / 2</x><y>320</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="keys">
+      <sprite>
+        <text>
+          <content>w and s jump, a and d walk</content>
+          <size>28</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - keys.width / 2</x><y>370</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="start">
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>44</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - start.width / 2</x><y>450</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>110</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - paused.width / 2</x><y>250</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="youwin">
+      <sprite>
+        <text>
+          <content>HOME AND WARM</content>
+          <size>90</size>
           <color>color.yellow</color>
         </text>
       </sprite>
-      <position><x>window.right - temperature.width - margin</x><y>margin</y></position>
+      <position><x>window.width.center - youwin.width / 2</x><y>230</y></position>
       <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="gameover">
+      <sprite>
+        <text>
+          <content>FROZEN SOLID</content>
+          <size>90</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - gameover.width / 2</x><y>230</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="again">
+      <sprite>
+        <text>
+          <content>spacebar to play again</content>
+          <size>40</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - again.width / 2</x><y>360</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
     </object>
   </objects>
-
   <states>
-    <state name="title">
+    <keys name="bailey">
+      <input button="a left">
+        <trigger object="bailey" action="left" />
+      </input>
+      <input button="d right">
+        <trigger object="bailey" action="right" />
+      </input>
+      <input button="w up">
+        <trigger object="bailey" action="up" />
+      </input>
+      <input button="s down">
+        <trigger object="bailey" action="down" />
+      </input>
+      <input button="space p">
+        <push state="paused" />
+      </input>
+    </keys>
+    <state name="mainmenu">
       <shows>
-        <show object="player"/>
-        <show object="score"/>
-        <show object="temperature"/>
-        <show object="igloo"/>
-        <show object="floes"/>
-        <show object="birds"/>
-        <show object="fish"/>
+        <show object="title" />
+        <show object="help" />
+        <show object="keys" />
+        <show object="start" />
       </shows>
       <inputs>
-        <input button="space"><push state="playing"/></input>
+        <input button="space">
+          <push state="playing" />
+        </input>
       </inputs>
     </state>
-
     <state name="playing">
       <shows>
-        <show object="player"/>
-        <show object="score"/>
-        <show object="temperature"/>
-        <show object="igloo"/>
-        <show object="floes"/>
-        <show object="birds"/>
-        <show object="fish"/>
-        <show object="clock"/>
+        <show object="snow" />
+        <show object="water" />
+        <show object="igloo" />
+        <show object="door" />
+        <show object="thermometer" />
+        <show object="row1" />
+        <show object="row2" />
+        <show object="row3" />
+        <show object="row4" />
+        <show object="geese" />
+        <show object="fish" />
+        <show object="bailey" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="liveslabel" />
+        <show object="livesvalue" />
+        <show object="degreesvalue" />
       </shows>
-      <inputs>
-        <input button="up"><trigger object="player" action="up" /></input>
-        <input button="w"><trigger object="player" action="up" /></input>
-        <input button="down"><trigger object="player" action="down" /></input>
-        <input button="s"><trigger object="player" action="down" /></input>
-        <input button="left"><trigger object="player" action="left" /></input>
-        <input button="a"><trigger object="player" action="left" /></input>
-        <input button="right"><trigger object="player" action="right" /></input>
-        <input button="d"><trigger object="player" action="right" /></input>
-      </inputs>
+      <inputs keys="bailey" />
       <conditions>
-        <condition object="player" variable="temperature">
+        <condition object="bailey" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover"/>
+          <push state="gameover" />
+          <play sound="gameover" />
+        </condition>
+        <condition object="bailey" variable="home">
+          <atleast>1</atleast>
+          <push state="youwin" />
+          <play sound="win" />
+        </condition>
+        <condition object="thermometer" variable="degrees">
+          <atmost>0</atmost>
+          <dec variable="bailey.lives" />
+          <reset object="thermometer" />
+          <trigger object="bailey" action="home" />
+          <play sound="freeze" />
+        </condition>
+        <condition object="bailey" variable="blue">
+          <atleast>4</atleast>
+          <become object="row1" sprite="white" />
+          <become object="row2" sprite="white" />
+          <become object="row3" sprite="white" />
+          <become object="row4" sprite="white" />
+          <dec variable="bailey.blue">4</dec>
+        </condition>
+        <condition object="bailey" variable="blocks">
+          <atleast>15</atleast>
+          <reveal object="door" />
         </condition>
       </conditions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <dec variable="thermometer.degrees" />
+        </timer>
+        <timer>
+          <every>12</every>
+          <reveal object="fish" />
+        </timer>
+      </timers>
     </state>
-
-    <state name="gameover">
+    <state name="paused">
       <shows>
-        <show object="player"/>
-        <show object="score"/>
-        <show object="temperature"/>
+        <show object="paused" />
       </shows>
       <inputs>
-        <input button="space"><reset /></input>
+        <input button="space p">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="youwin">
+      <shows>
+        <show object="youwin" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="gameover" />
+        <show object="scorelabel" />
+        <show object="scorevalue" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
       </inputs>
     </state>
   </states>

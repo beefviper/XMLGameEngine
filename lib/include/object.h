@@ -52,6 +52,10 @@ namespace xge
 		// only a slow ship lands on. Unset means any speed.
 		std::optional<RawValue> slower;
 		std::optional<RawValue> faster;
+
+		// sprite="name": the rule only runs while the object running it shows
+		// its sprite of that name (see <become>). Empty means whatever it shows.
+		std::string whileSprite;
 		std::vector<RawCommand> commands;
 	};
 
@@ -88,6 +92,7 @@ namespace xge
 		// The numbers of <slower>/<faster> (see RawCollisionRule).
 		std::optional<float> slower;
 		std::optional<float> faster;
+		std::string whileSprite;
 		std::vector<Command> commands;
 	};
 
@@ -209,6 +214,10 @@ namespace xge
 		RawSprite sprite;
 		bool hasAnimation{ false };
 		RawAnimation animation;
+
+		// An object's looks: its <sprite>s, each named, when it has more than
+		// one and no animation (sprite is the first). Empty otherwise.
+		std::vector<RawSprite> looks;
 		bool isVisible{ true };
 		RawVector2 rawPosition;
 		RawVector2 rawVelocity;
@@ -218,6 +227,8 @@ namespace xge
 		bool hasHeading{ false };
 		RawValue rawDrag;            // only when hasDrag
 		bool hasDrag{ false };
+		std::string facing;          // "" when the object has no <facing>
+		std::vector<RawTimer> timers;
 		RawCollisionData rawCollisionData;
 		std::map<std::string, std::vector<RawCommand>> action;
 		std::map<std::string, RawValue> variable;
@@ -324,6 +335,51 @@ namespace xge
 		std::array<float, 4> activeTurn{};
 		float activeThrustAhead{};
 		std::string activeThrustAheadBurn;
+
+		// Which way an object with a <facing> is facing, one of the four
+		// directions, without turning its picture (a <heading> turns it). It
+		// follows the last <move>, <hop> or <jump> made, and a <fire> leaves the
+		// middle of that side, moving that way at the projectile's own speed:
+		// a man in a maze shoots the way he last walked, an invader facing
+		// down drops its bombs below it. An object with no <facing> fires from
+		// its top, at the projectile's own velocity, as before. A reset puts
+		// back facingOriginal. See CommandExecutor::spawnProjectile.
+		bool hasFacing{ false };
+		Direction facing{ Direction::Up };
+		Direction facingOriginal{ Direction::Up };
+
+		// A <jump> under way: how far the object travels each frame, and how
+		// many frames are left. While framesLeft is above 0 the object is in
+		// the air: it touches no other object (Game::canCollide). A reset
+		// lands it where it starts.
+		Vector2f jumpStep{};
+		int jumpFramesLeft{ 0 };
+		bool isAirborne() const noexcept { return jumpFramesLeft > 0; }
+
+		// The looks <become> switches between: each named sprite as the window
+		// backends draw it (spriteParams, and the picture for a bitmap or a
+		// drawing of lines), shared by every object made from the definition.
+		// `look` is the one showing; a reset shows the first again. An object
+		// with one sprite, or an animation, has none.
+		struct Look
+		{
+			std::string name;
+			std::vector<std::string> spriteParams;
+			ShapeKind shapeKind{ ShapeKind::Unknown };
+			std::shared_ptr<const Bitmap> bitmap;
+		};
+		std::vector<Look> looks;
+		std::size_t look{ 0 };
+
+		// The name of the look showing ("" for an object with none).
+		const std::string& lookName() const;
+
+		// Shows looks[index], and marks the visual to be built again.
+		void showLook(std::size_t index);
+
+		// The object's <timers>, which count while it is shown and in play
+		// (see Timer, Game::updateTimers).
+		std::vector<Timer> timers;
 
 		// How much of its velocity an object keeps every frame is 1 minus this:
 		// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed
@@ -452,4 +508,8 @@ namespace xge
 
 		friend std::ostream& operator<<(std::ostream& o, Object const& f);
 	};
+
+	// Shows the object's look of that name; false (and nothing changes) if it
+	// has none of that name.
+	bool showLookNamed(Object& object, const std::string& name);
 }
