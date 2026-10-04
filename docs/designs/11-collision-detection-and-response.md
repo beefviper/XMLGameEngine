@@ -66,7 +66,7 @@ A collision can say `<type>pixel</type>`. The box or circle sweep runs first, as
 **Response alternatives.**
 
 - **Classic.** Reverse a velocity component.
-- **Contact-point mapping.** The hit position on the paddle sets the outgoing angle.
+- **Contact-point mapping.** The hit position on the paddle sets the outgoing angle. Built as `<deflect>` ([46](46-paddle-deflect.md)).
 - **Velocity transfer.** The moving paddle adds a share of its speed; a paddle that can also move along the ball's path changes the rebound speed ([28](28-game-ideas-and-test-games.md)).
 - **Two rules at once.** When several rules apply, is reflection a property of the ball, the paddle, the pair, or the rule? The open question that [12](12-collision-escalation.md) tries to answer.
 

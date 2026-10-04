@@ -7,6 +7,7 @@
 
 #include "game.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace xge
@@ -26,9 +27,9 @@ namespace xge
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
-			                      appear in a collisionData list, and carry() is about
-			                      another object, which a screen edge is not; ignore
-			                      defensively. */ }
+			                      appear in a collisionData list, and carry() and
+			                      deflect() are about another object, which a screen
+			                      edge is not; ignore defensively. */ }
 		}, command);
 	}
 
@@ -36,6 +37,7 @@ namespace xge
 	{
 		std::visit(overload{
 			[&](const CmdBounce&) { bounceOffEdge(object, edge); },
+			[&](const CmdDeflect& d) { deflect(object, other, edge, d.maxAngle); },
 			[&](const CmdDie&) { die(object); },
 			[&](const CmdStop&) { stop(object); },
 			[&](const CmdReset&) { restart(object); },
@@ -204,6 +206,38 @@ namespace xge
 		case Edge::Right:  object.velocity.x = -std::abs(object.velocity.x); break;
 		case Edge::Top:    object.velocity.y = std::abs(object.velocity.y); break;
 		case Edge::Bottom: object.velocity.y = -std::abs(object.velocity.y); break;
+		}
+	}
+
+	// A bounce off `other` that leaves at an angle set by where it hit. How far
+	// the object's middle is from the middle of the touched side, as a share of
+	// half that side's length (-1 at one end, 1 at the other, held there past
+	// the ends), times maxAngle, is the angle away from straight back out,
+	// towards the end it hit nearer to: off a Pong paddle's top half the ball
+	// goes back up, off its bottom half down. The speed is what it was.
+	void CommandExecutor::deflect(Object& object, const Object& other, Edge edge, float maxAngle)
+	{
+		const float speed = std::hypot(object.velocity.x, object.velocity.y);
+
+		const Vector2f middle = object.position + sizeOf(object) * 0.5f;
+		const Vector2f otherSize = sizeOf(other);
+		const Vector2f otherMiddle = other.position + otherSize * 0.5f;
+
+		const bool side = (edge == Edge::Left || edge == Edge::Right);
+		const float offset = side ? middle.y - otherMiddle.y : middle.x - otherMiddle.x;
+		const float half = (side ? otherSize.y : otherSize.x) * 0.5f;
+		const float along = (half > 0.0f) ? std::clamp(offset / half, -1.0f, 1.0f) : 0.0f;
+
+		const float radians = maxAngle * along * 3.14159265358979323846f / 180.0f;
+		const float away = speed * std::cos(radians);
+		const float across = speed * std::sin(radians);
+
+		switch (edge)
+		{
+		case Edge::Left:   object.velocity = { away, across }; break;
+		case Edge::Right:  object.velocity = { -away, across }; break;
+		case Edge::Top:    object.velocity = { across, away }; break;
+		case Edge::Bottom: object.velocity = { across, -away }; break;
 		}
 	}
 

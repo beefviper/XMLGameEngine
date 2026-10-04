@@ -19,7 +19,7 @@ While the XML engine was being rebuilt, a plain C++ Pong (SFML 3, single file) w
 - **Swept collision against a moving frame of reference:** the ball and the paddle are both moving, so the test uses the relative velocity, expanding the paddle by the ball's radius and finding the earliest time of entry in the range 0 to 1 (the slab method). This stops fast objects tunnelling through thin ones.
 - **Broad phase must sweep both objects,** not just one; a fast paddle can skip past a slow ball.
 - **Push-out on penetration** along the contact normal, plus reflecting the direction.
-- **Variable bounce:** the exit angle depends on where the ball hits the paddle and on the paddle's motion; the ball speeds up on each hit and there is a speed cap.
+- **Variable bounce:** the exit angle depends on where the ball hits the paddle and on the paddle's motion; the ball speeds up on each hit and there is a speed cap. The angle from where it hits is now in the engine as `<deflect>` ([46](46-paddle-deflect.md)); the paddle's motion and the speed-up are not.
 - **Frame-time cap.** A maximum delta time (50 ms) so dragging the window cannot let the ball skip through a paddle.
 - **Wall bounces** clamp the position back inside the window after flipping, otherwise a ball still overlapping the wall re-triggers every frame and jitters along the edge.
 - A version with a small paddle "wiggle" (limited horizontal movement in and out) and forward/back speed effects existed; hitting the top or bottom of a paddle pushes the ball to the front face and sends it out at a steep angle.

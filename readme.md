@@ -8,7 +8,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 
 | File | Game |
 |---|---|
-| `games/pong.xml` | Pong, with a menu, pause and game-over screens, and 8-bit sounds for the walls, the paddles, a point, the start and the end |
+| `games/pong.xml` | Pong, with a menu, pause and game-over screens, 8-bit sounds for the walls, the paddles, a point, the start and the end, and a ball that comes off a paddle at an angle set by where it hit |
 | `games/breakout.xml` | Breakout (six rows of bricks, one color a row, as a group of grids; the game is won when no brick is left and lost when the ball falls) |
 | `games/spaceinvaders.xml` | Space Invaders (three kinds of alien drawn from ASCII bitmaps, two animation frames a second apart, as a group of grids of individually named objects; the game is won when none are left) |
 | `games/spaceinvaders2.xml` | Space Invaders again, drawn from an SVG sprite sheet (`assets/Space Invaders Color Sprites.svg`): the same game and group of grids, with three-frame animations for the three kinds of alien, a ship and a bolt cut out of the sheet by `<svg>` sprites |

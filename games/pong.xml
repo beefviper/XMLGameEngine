@@ -116,8 +116,9 @@
           <reset />
           <play sound="score" />
         </collision>
+        <!-- off a paddle: straight back from its middle, up to 45 degrees up or down towards its ends -->
         <collision>
-          <bounce />
+          <deflect>45</deflect>
           <play sound="paddle" />
         </collision>
       </collisions>
