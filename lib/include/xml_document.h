@@ -20,7 +20,7 @@ namespace xge
 	//
 	// getFirstChild()/getNextSibling() return the first/next element
 	// regardless of its tag name (this schema's own elements aren't
-	// guaranteed to stay in a fixed order - see assets/xmlgameengine.xsd),
+	// guaranteed to stay in a fixed order - see xgedef.xsd),
 	// so game_xml.cpp's own findChild() walks siblings itself, comparing
 	// getName() against the child name it wants, rather than assuming a
 	// fixed position.
@@ -88,7 +88,7 @@ namespace xge
 	};
 
 	// How strongly a document's contents were checked against
-	// assets/xmlgameengine.xsd, for game_xml.cpp to report back through
+	// xgedef.xsd, for game_xml.cpp to report back through
 	// Game::printGame() - see game_xml.cpp for how each value gets decided,
 	// and xsd_lite.h for what "Weak" actually checks.
 	enum class SchemaValidation

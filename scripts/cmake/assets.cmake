@@ -6,10 +6,11 @@
 add_dependencies(xgelib xgedata)
 
 # The games and assets are copied into output/<config> (output.cmake), next to
-# the programs, keeping their games/ and assets/ folders. Each file is its own
+# the programs, keeping their games/ and assets/ folders and xgedef.xsd (the
+# schema, at the top of the repository, which every game names as ../xgedef.xsd). Each file is its own
 # copy step, so a build copies only the files that changed.
 set(data_xsd
-	"assets/xmlgameengine.xsd")
+	"xgedef.xsd")
 
 set(data_xml
 	"games/pong.xml"

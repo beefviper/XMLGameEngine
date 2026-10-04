@@ -6,7 +6,7 @@
 
 The vocabulary grew one game at a time ([06](06-motion-and-verbs.md): a word is added only when a real game cannot be written without it), so it was never laid out as a whole. Laying it out shows where the language is rich (collision), where it is thin (values) and what kind of word each gap needs. It also frames the arithmetic question in [01](01-vision-and-format.md#arithmetic-in-text-and-as-tags): arithmetic was the one place structure hid in strings, and writing it as tags (option E4, now built beside the text) meant adding a new category of word, not just more verbs.
 
-Read from the readme and `assets/xmlgameengine.xsd` of the `working` branch on 2026-10-04.
+Read from the readme and `xgedef.xsd` of the `working` branch on 2026-10-04.
 
 ## The words today, by grammar
 

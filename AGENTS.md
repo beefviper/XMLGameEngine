@@ -1,6 +1,6 @@
 # AGENTS.md
 
-XMLGameEngine is a video game description language in XML plus a C++ engine that runs it. A game is one `.xml` file (`games/`), checked against `assets/xmlgameengine.xsd`; behavior comes from a closed vocabulary of verb tags, never from code in the file.
+XMLGameEngine is a video game description language in XML plus a C++ engine that runs it. A game is one `.xml` file (`games/`), checked against `xgedef.xsd`; behavior comes from a closed vocabulary of verb tags, never from code in the file.
 
 ## Read in this order
 
@@ -18,7 +18,8 @@ The root [readme.md](readme.md) is the short public overview (games, build, stat
 | `cli/` | `xgecli`, the command line program |
 | `gui/` | `xgegui`, the Qt 6 application (built only when Qt is found) |
 | `tests/` | Catch2 (`xgetest`), one `test_<topic>.cpp` per area; games are played frame by frame |
-| `games/`, `assets/` | the games; the schema, font, sprite sheet |
+| `games/`, `assets/` | the games; the media they use (font, sprite sheet, image) |
+| `xgedef.xsd` | the schema: the definition of the language, at the root because everything else follows from it |
 | `scripts/cmake/`, `scripts/shell/` | CMake modules; prerequisite installers |
 
 Flow: `game_xml` (parse, validate) → `game_expr` (evaluate with exprtk) → `Object`/`State` → `Game` (frame update) + `Engine` (loop, windows, sound). Backends sit behind `XmlDocument`, `Window` and `Audio` with factories. The source map is in `docs/readme.md`.
@@ -32,7 +33,7 @@ output/Debug/xgetest            # all tests; Catch2 filters work (e.g. "[kaboom]
 output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
 ```
 
-Dependencies are found (vcpkg or system) or fetched; `FORCE_LOCAL_<NAME>` forces a fetched copy. Outputs land in `output/<Config>` (programs, `games/`, `assets/`, `libraries/`). Tests link `xgelib`.
+Dependencies are found (vcpkg or system) or fetched; `FORCE_LOCAL_<NAME>` forces a fetched copy. Outputs land in `output/<Config>` (programs, `games/`, `assets/`, `xgedef.xsd`, `libraries/`). Tests link `xgelib`.
 
 ## Conventions
 

@@ -19,7 +19,7 @@
   the class `rocks`, so the shot and the ship have one rule each for both.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Astrosmash">
     <width>800</width>
     <height>600</height>

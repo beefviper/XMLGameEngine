@@ -33,7 +33,7 @@ namespace xge
 	{
 	public:
 		// validation is an out-param reporting how filename's contents were
-		// checked against assets/xmlgameengine.xsd - Strong if backend is
+		// checked against xgedef.xsd - Strong if backend is
 		// Xerces and the file named a schema (Xerces already validated it
 		// for real as part of loading - see xml_xerces.cpp), Weak if some
 		// other backend loaded it and this project's own XsdLiteValidator

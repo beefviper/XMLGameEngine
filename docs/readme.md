@@ -23,11 +23,11 @@ A game file that is wrong (it does not match the schema, an expression will not 
 
 ## Game file layout
 
-A game file has one `<game>` root with four children, and an optional fifth (`<sounds>`), in this order, as enforced by [assets/xmlgameengine.xsd](../assets/xmlgameengine.xsd):
+A game file has one `<game>` root with four children, and an optional fifth (`<sounds>`), in this order, as enforced by [xgedef.xsd](../xgedef.xsd):
 
 ```xml
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+      xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="..."> ... </window>
   <variables> <variable name="...">...</variable> ... </variables>
   <sounds>    <sound name="..."> ... </sound> ... </sounds>   (optional)
@@ -532,7 +532,7 @@ Nothing in `xgegui` uses OpenGL through Qt, so a library's OpenGL context is the
 
 ## Building: library and programs
 
-The engine (everything in `lib/source/` and `lib/include/`) is a library, the `xgelib` CMake target. Two programs use it: `xgecli` (`cli/`) and `xgegui` (`gui/`, the Qt application, built only when Qt 6 is found), and so do the tests (`xgetest`, in `tests/`). Every project has the same layout, a folder with `source/` and `include/` in it; `xgedata` is the target that copies `games/` and `assets/` next to the programs. Programs, games and assets go in `output/<config>` at the top of the repository (`output/Debug`, `output/Release`), and the DLLs (`.so` files on Linux) and Qt's plug-ins in `output/<config>/libraries`, set up in `scripts/cmake/output.cmake` (on Windows the programs find them through a manifest, see [design 11](designs/11-backends-build-and-layout.md)); the build directory keeps only the compiler's and linker's own files. `output/` is ignored by git. The library knows nothing about the command line, so a different front end only needs its own `main()`.
+The engine (everything in `lib/source/` and `lib/include/`) is a library, the `xgelib` CMake target. Two programs use it: `xgecli` (`cli/`) and `xgegui` (`gui/`, the Qt application, built only when Qt 6 is found), and so do the tests (`xgetest`, in `tests/`). Every project has the same layout, a folder with `source/` and `include/` in it; `xgedata` is the target that copies `games/`, `assets/` and `xgedef.xsd` next to the programs. Programs, games and assets go in `output/<config>` at the top of the repository (`output/Debug`, `output/Release`), and the DLLs (`.so` files on Linux) and Qt's plug-ins in `output/<config>/libraries`, set up in `scripts/cmake/output.cmake` (on Windows the programs find them through a manifest, see [design 11](designs/11-backends-build-and-layout.md)); the build directory keeps only the compiler's and linker's own files. `output/` is ignored by git. The library knows nothing about the command line, so a different front end only needs its own `main()`.
 
 The library is static by default: each program has the engine's code copied into it, so `xgecli` is one self-contained file. `-DXGE_BUILD_SHARED=ON` builds it as a shared library instead (`libxgelib.so`, or `xgelib.dll` on Windows), which each program loads when it starts; a shared build needs the library file to be found next to the program or on the system's library path. On Windows the DLL exports every class in the headers (`WINDOWS_EXPORT_ALL_SYMBOLS`) rather than each being marked by hand. The third-party libraries are `PUBLIC` dependencies of the library, because the engine's own headers include theirs. See [design 11](designs/11-backends-build-and-layout.md).
 

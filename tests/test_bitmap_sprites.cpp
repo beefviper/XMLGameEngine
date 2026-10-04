@@ -1054,7 +1054,7 @@ namespace
 		auto weak = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 		REQUIRE(weak->load(scratch.path.string()));
 		XsdLiteValidator validator;
-		REQUIRE(validator.loadSchema("assets/xmlgameengine.xsd", XmlBackend::TinyXml2));
+		REQUIRE(validator.loadSchema("xgedef.xsd", XmlBackend::TinyXml2));
 		verdict.weakAccepts = validator.validate(*weak->getRootElement());
 		verdict.weakMessage = validator.getErrorMessage();
 

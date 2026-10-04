@@ -23,7 +23,7 @@
   scoring. Player 1 is W and S, player 2 is the up and down arrows.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Freeway">
     <width>800</width>
     <height>600</height>

@@ -487,7 +487,7 @@ namespace xge
 		}
 
 		// xs:boolean's lexical space is true/false/1/0 - every value in
-		// assets/xmlgameengine.xsd is written as true/false, but this
+		// xgedef.xsd is written as true/false, but this
 		// checks the type's actual rules rather than just this schema's
 		// current usage of it.
 		if (type_ == "boolean") { return value == "true" || value == "false" || value == "1" || value == "0"; }

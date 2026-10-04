@@ -23,7 +23,7 @@ namespace xge
 {
 	namespace
 	{
-		// What game_xml knows how to read is fixed by assets/xmlgameengine.xsd,
+		// What game_xml knows how to read is fixed by xgedef.xsd,
 		// but not every file names that schema (and only Xerces really checks
 		// against it), so every reader below also checks what it needs and
 		// says where it was when something is missing or wrong.

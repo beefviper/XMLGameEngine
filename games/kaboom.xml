@@ -28,7 +28,7 @@
     the score moves on to the next. The keys are one <keys> set the waves share.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../assets/xmlgameengine.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Kaboom!">
     <width>800</width>
     <height>600</height>

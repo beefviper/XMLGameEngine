@@ -78,7 +78,7 @@ Games are picked to *test* the vocabulary: add a verb only when the game cannot 
 
 ## Games written by another AI (Berserk, Demon Attack, Frostbite)
 
-The author asked another AI to write three games from `assets/xmlgameengine.xsd` alone. All three passed the schema and loaded, none could be played (a blank screen first). Every error was a command the schema accepts where the engine does nothing with it:
+The author asked another AI to write three games from `xgedef.xsd` alone. All three passed the schema and loaded, none could be played (a blank screen first). Every error was a command the schema accepts where the engine does nothing with it:
 
 - **Colors** like `white` or `#00ff00` (a color is a `color.` name; anything else is transparent). **Key names** the engine lacks (`button="fire"` reads as `Unknown` and never runs).
 - **`<move>` / `<fire>` in an `<input>`** (they only mean something in an object `<action>`), **`<inc>`/`<dec>` in a `<condition>`** and **`<reset object>` in a `<collision>`** (fixed later by [08](08-timers-and-enemy-behavior.md)).

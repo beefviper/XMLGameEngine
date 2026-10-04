@@ -36,7 +36,7 @@ namespace xge
 
 	// The Xerces XmlDocument backend - the only one of the four (see also
 	// xml_tinyxml2.h, xml_pugixml.h, xml_rapidxml.h) that can validate against
-	// assets/xmlgameengine.xsd by itself; the other three only check
+	// xgedef.xsd by itself; the other three only check
 	// well-formedness, and game_xml.cpp runs xsd_lite.h's validator for them.
 	// Absorbs what used to be the standalone game_xml class's own Xerces
 	// lifecycle (XMLPlatformUtils::Initialize/Terminate, the DOM parser, the

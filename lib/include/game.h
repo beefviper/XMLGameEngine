@@ -153,7 +153,7 @@ namespace xge
 		game_expr expr;
 
 		// How xml above checked this game's file against
-		// assets/xmlgameengine.xsd - set once, by xml.init() inside the
+		// xgedef.xsd - set once, by xml.init() inside the
 		// constructor, and only ever read back by printGame() (see
 		// xml_document.h for what each value means).
 		SchemaValidation xmlValidation = SchemaValidation::None;

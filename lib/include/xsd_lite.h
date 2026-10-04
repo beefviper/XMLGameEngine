@@ -13,7 +13,7 @@
 namespace xge
 {
 	// The "weak" validator (see game_xml.cpp): a hand-rolled interpreter for
-	// the subset of XSD assets/xmlgameengine.xsd actually uses, and nothing
+	// the subset of XSD xgedef.xsd actually uses, and nothing
 	// else:
 	//
 	//   * xs:element (name, type, minOccurs, maxOccurs), with either an inline
@@ -60,7 +60,7 @@ namespace xge
 		// given backend) and builds this validator's in-memory model of it.
 		// False + getErrorMessage() only if the file itself fails to parse,
 		// or doesn't look like an xs:schema with a top-level xs:element at all
-		// (assets/xmlgameengine.xsd is expected to always succeed here), or
+		// (xgedef.xsd is expected to always succeed here), or
 		// names a type or group it doesn't define.
 		bool loadSchema(const std::string& schemaFilename, XmlBackend backend);
 

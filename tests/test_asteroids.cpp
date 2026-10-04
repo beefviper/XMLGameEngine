@@ -975,7 +975,7 @@ TEST_CASE("both schema checkers turn away a turn that is not left or right", "[a
 	auto weak = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 	REQUIRE(weak->load(scratch.path.string()));
 	XsdLiteValidator validator;
-	REQUIRE(validator.loadSchema("assets/xmlgameengine.xsd", XmlBackend::TinyXml2));
+	REQUIRE(validator.loadSchema("xgedef.xsd", XmlBackend::TinyXml2));
 	CHECK_FALSE(validator.validate(*weak->getRootElement()));
 
 	auto strong = XmlDocumentFactory::create(XmlBackend::Xerces);
