@@ -118,7 +118,9 @@ TEST_CASE("generating Pong writes its program and copies its assets", "[generate
 	CHECK(main.find("(v_window_width_center - v_title_width / 2.0f)") != std::string::npos);
 	CHECK(main.find("xge::divide") == std::string::npos);
 
-	CHECK(readFile(output.path / "CMakeLists.txt").find("add_executable(pong main.cpp)") != std::string::npos);
+	const std::string cmake = readFile(output.path / "CMakeLists.txt");
+	CHECK(cmake.find("add_executable(pong main.cpp)") != std::string::npos);
+	CHECK(cmake.find("set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT pong)") != std::string::npos);
 }
 
 TEST_CASE("a generated game carries only the verbs it uses", "[generate]")
