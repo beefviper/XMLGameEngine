@@ -70,7 +70,7 @@ Collisions are swept, so fast small objects cannot skip over thin ones. States f
 * exprtk     https://github.com/ArashPartow/exprtk
 * SFML 3     https://github.com/SFML/SFML
 * lunasvg    https://github.com/sammycage/lunasvg (draws SVG sprites inside the engine; it is not a backend)
-* Optional backends, not built unless asked for ([Backends](#backends)): Raylib, SDL2 (with SDL2_image and SDL2_ttf), OpenGL (GLFW, the same one Raylib is built on), TinyXML2, PugiXML, RapidXML
+* Optional backends, not built unless asked for ([Backends](#backends)): Raylib, SDL2 (with SDL2_image and SDL2_ttf), OpenGL (GLFW, the same one Raylib is built on, and SDL2_image and SDL2_ttf for its pictures and text), TinyXML2, PugiXML, RapidXML
 * Qt 6 (Widgets) for xgegui; found, never fetched
 * Catch2 for the tests
 
@@ -102,7 +102,7 @@ cmake -B build -DXGE_ALL_BACKENDS=ON                           # every one
 cmake -B build -DBUILD_TESTING=ON                              # every one, and the tests
 ```
 
-The options are `XGE_WITH_SFML3`, `XGE_WITH_RAYLIB`, `XGE_WITH_SDL2`, `XGE_WITH_OPENGL` (windows; all but OpenGL bring their sound library) and `XGE_WITH_XERCES`, `XGE_WITH_TINYXML2`, `XGE_WITH_PUGIXML`, `XGE_WITH_RAPIDXML` (XML). At least one window and one XML backend must be on. The tests play the same games through every backend and compare them, so `BUILD_TESTING` turns them all on. `xgecli` and `xgegui` only offer what was built: asking for another says so (`the raylib window library is not built into this program (built with: sfml3)`), and a default build's Options dialog has one entry in each dropdown.
+The options are `XGE_WITH_SFML3`, `XGE_WITH_RAYLIB`, `XGE_WITH_SDL2`, `XGE_WITH_OPENGL` (windows; all but OpenGL bring their sound library, and OpenGL needs SDL2's image and font libraries, which it brings in) and `XGE_WITH_XERCES`, `XGE_WITH_TINYXML2`, `XGE_WITH_PUGIXML`, `XGE_WITH_RAPIDXML` (XML). At least one window and one XML backend must be on. The tests play the same games through every backend and compare them, so `BUILD_TESTING` turns them all on. `xgecli` and `xgegui` only offer what was built: asking for another says so (`the raylib window library is not built into this program (built with: sfml3)`), and a default build's Options dialog has one entry in each dropdown.
 
 ## Status
 

@@ -82,6 +82,15 @@ if (NOT (XGE_WITH_XERCES OR XGE_WITH_TINYXML2 OR XGE_WITH_PUGIXML OR XGE_WITH_RA
 	message(FATAL_ERROR "No XML backend is built: turn on at least one of XGE_WITH_XERCES, XGE_WITH_TINYXML2, XGE_WITH_PUGIXML and XGE_WITH_RAPIDXML (or XGE_ALL_BACKENDS).")
 endif()
 
+# The OpenGL backend draws with OpenGL but loads its pictures and draws its text
+# with SDL2_image and SDL2_ttf (window_opengl.cpp), so it needs SDL2's libraries
+# even when the SDL2 backend itself is not built.
+if (XGE_WITH_SDL2 OR XGE_WITH_OPENGL)
+	set(XGE_NEEDS_SDL2 ON)
+else()
+	set(XGE_NEEDS_SDL2 OFF)
+endif()
+
 set(XGE_BACKENDS_BUILT "")
 foreach(backend IN ITEMS SFML3 RAYLIB SDL2 OPENGL XERCES TINYXML2 PUGIXML RAPIDXML)
 	if (XGE_WITH_${backend})

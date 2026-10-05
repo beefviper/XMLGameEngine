@@ -20,8 +20,13 @@ include(FetchContent)
 #                                       that has no CMake package
 #       REPO <git url> TAG <tag or commit>
 #       [SETTINGS <VARIABLE=VALUE>...]  ON/OFF cache settings for the fetched copy
-#       [BROUGHT_BY <library>])         the fetched copy of that library builds this
+#       [BROUGHT_BY <library>]          the fetched copy of that library builds this
 #                                       one too, so it is not fetched on its own
+#       [REQUIRED] [MISSING <text>])
+#
+# With no REPO it is a system library (OpenGL, Qt): found or not, never fetched.
+# Not found, MISSING says what follows from that, and with REQUIRED the configure
+# stops there.
 #
 # <name> is what the messages call it and what is passed to FetchContent. It is
 # also how the FORCE_LOCAL_<NAME> option (options.cmake) is found: its upper
@@ -29,7 +34,7 @@ include(FetchContent)
 # project to check; one found with HEADER leaves <NAME>_INCLUDE_DIRS and
 # <NAME>_PACKAGE_FOUND. A macro, not a function, so that those stay set.
 macro(xge_dependency name)
-	cmake_parse_arguments(XD "" "WHEN;HEADER;REPO;TAG;BROUGHT_BY" "PACKAGE;SETTINGS" ${ARGN})
+	cmake_parse_arguments(XD "REQUIRED" "WHEN;HEADER;REPO;TAG;BROUGHT_BY;MISSING" "PACKAGE;SETTINGS" ${ARGN})
 	string(TOUPPER "${name}" XD_UPPER)
 
 	set(XD_ENABLED TRUE)
@@ -68,7 +73,8 @@ macro(xge_dependency name)
 			endif()
 
 			# Where it is: the folder of its CMake package, or for the few found
-			# by a module instead (Xerces) the folder of its headers.
+			# by a module instead the folder of its headers (Xerces) or its first
+			# library (OpenGL).
 			if (${XD_PACKAGE_NAME}_FOUND)
 				set(XD_FOUND TRUE)
 
@@ -76,6 +82,8 @@ macro(xge_dependency name)
 					set(XD_WHERE "${${XD_PACKAGE_NAME}_DIR}")
 				elseif (${XD_PACKAGE_NAME}_INCLUDE_DIR)
 					set(XD_WHERE "${${XD_PACKAGE_NAME}_INCLUDE_DIR}")
+				elseif (${XD_UPPER}_LIBRARIES)
+					list(GET ${XD_UPPER}_LIBRARIES 0 XD_WHERE)
 				endif()
 			endif()
 
@@ -88,6 +96,12 @@ macro(xge_dependency name)
 				message(STATUS "${name} found: ${XD_WHERE}")
 			else()
 				message(STATUS "${name} found")
+			endif()
+		elseif (NOT XD_REPO)
+			if (XD_REQUIRED)
+				message(FATAL_ERROR "${name} not found: ${XD_MISSING}")
+			else()
+				message(STATUS "${name} not found, ${XD_MISSING}")
 			endif()
 		elseif (XD_BROUGHT_BY AND "${XD_BROUGHT_BY}" IN_LIST FETCHED_LIBRARIES)
 			message(STATUS "${name} not found, and neither is ${XD_BROUGHT_BY}: the ${XD_BROUGHT_BY} built here brings its own.")
@@ -141,9 +155,10 @@ xge_dependency(raylib WHEN XGE_WITH_RAYLIB
 # It also uses GLFW for its window and keyboard (window_opengl.h), which raylib is
 # built on too: vcpkg installs it for raylib, and a raylib built from source brings
 # its own `glfw` target.
-if (XGE_WITH_OPENGL)
-	find_package(OpenGL REQUIRED)
-endif()
+xge_dependency(OpenGL WHEN XGE_WITH_OPENGL
+	PACKAGE OpenGL
+	# (No semicolon in a MISSING text: it would split the argument.)
+	REQUIRED MISSING "the OpenGL backend needs the system's OpenGL (opengl32 comes with Windows, and on Linux install libgl-dev), or leave it out with -DXGE_WITH_OPENGL=OFF.")
 
 xge_dependency(GLFW WHEN XGE_WITH_OPENGL
 	PACKAGE glfw3
@@ -153,17 +168,17 @@ xge_dependency(GLFW WHEN XGE_WITH_OPENGL
 
 # SDL2_image and SDL2_ttf are built against whichever SDL2 target ends up
 # available (found or fetched); their own CMakeLists picks it up the same way
-# this project's other fetched libraries do.
-xge_dependency(SDL2 WHEN XGE_WITH_SDL2
+# this project's other fetched libraries do. The OpenGL backend uses them too.
+xge_dependency(SDL2 WHEN XGE_NEEDS_SDL2
 	PACKAGE SDL2
 	REPO https://github.com/libsdl-org/SDL.git TAG release-2.30.9)
 
-xge_dependency(SDL2_image WHEN XGE_WITH_SDL2
+xge_dependency(SDL2_image WHEN XGE_NEEDS_SDL2
 	PACKAGE SDL2_image
 	REPO https://github.com/libsdl-org/SDL_image.git TAG release-2.8.2
 	SETTINGS SDL2IMAGE_INSTALL=OFF SDL2IMAGE_VENDORED=ON)
 
-xge_dependency(SDL2_ttf WHEN XGE_WITH_SDL2
+xge_dependency(SDL2_ttf WHEN XGE_NEEDS_SDL2
 	PACKAGE SDL2_ttf
 	REPO https://github.com/libsdl-org/SDL_ttf.git TAG release-2.22.0
 	SETTINGS SDL2TTF_INSTALL=OFF SDL2TTF_VENDORED=ON)
@@ -200,13 +215,9 @@ xge_dependency(lunasvg
 # everything above it is found, never fetched: building Qt from source is not
 # something a configure step should do. Without it xgegui is left out and the
 # rest builds as before. With vcpkg: vcpkg install qtbase[widgets]
-find_package(Qt6 COMPONENTS Widgets QUIET)
-
-if (Qt6_FOUND)
-	message(STATUS "Qt6 found: ${Qt6_DIR}")
-else()
-	message(STATUS "Qt6 not found, xgegui will not be built (install qtbase with the widgets feature).")
-endif()
+xge_dependency(Qt6
+	PACKAGE Qt6 COMPONENTS Widgets
+	MISSING "xgegui will not be built (install qtbase with the widgets feature).")
 
 # Compiles a fetched library's own sources with no warnings at all (the targets
 # of its directory and of every directory below it): they are not this
@@ -277,7 +288,7 @@ endif()
 # enough to be pinned above all define their own SDL2::SDL2-style ALIAS
 # targets from either path too; the defensive alias below only covers an
 # older/nonstandard find_package result that doesn't.
-if (XGE_WITH_SDL2 AND SDL2_FOUND AND NOT TARGET SDL2::SDL2 AND TARGET SDL2)
+if (XGE_NEEDS_SDL2 AND SDL2_FOUND AND NOT TARGET SDL2::SDL2 AND TARGET SDL2)
 	add_library(SDL2::SDL2 ALIAS SDL2)
 endif()
 

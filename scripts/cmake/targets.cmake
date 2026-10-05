@@ -51,9 +51,13 @@ if (XGE_WITH_OPENGL)
 	target_link_libraries(xgelib PUBLIC glfw OpenGL::GL)
 endif()
 
-# SDL2's window and sound - see window_sdl2.h and audio_sdl2.h.
+# SDL2's window and sound - see window_sdl2.h and audio_sdl2.h. Its libraries are
+# also the OpenGL backend's, for its pictures and text (options.cmake).
 if (XGE_WITH_SDL2)
 	xge_backend(SDL2)
+endif()
+
+if (XGE_NEEDS_SDL2)
 	target_link_libraries(xgelib PUBLIC SDL2::SDL2)
 	if (TARGET SDL2::SDL2main)
 		target_link_libraries(xgelib PUBLIC SDL2::SDL2main)
