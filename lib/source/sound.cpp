@@ -157,8 +157,8 @@ namespace xge
 			// A slide goes up or down evenly in pitch (by the same number of
 			// semitones every moment), which is how a pitch bend sounds right,
 			// rather than evenly in hertz.
-			const double startHz = note.startHz;
-			const double ratio = (note.startHz > 0.0f && note.endHz > 0.0f) ? static_cast<double>(note.endHz) / note.startHz : 1.0;
+			const double startHz = static_cast<double>(note.startHz);
+			const double ratio = (note.startHz > 0.0f && note.endHz > 0.0f) ? static_cast<double>(note.endHz) / static_cast<double>(note.startHz) : 1.0;
 
 			NoiseSource noise(0x2545f491u * noteNumber);
 			double held = noise.next();

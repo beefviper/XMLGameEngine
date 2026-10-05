@@ -1003,7 +1003,7 @@ TEST_CASE("a shot from the ship in the middle kills exactly one alien and is put
 	// A thin bullet leaves the middle of the cannon.
 	const Object& cannon = game.getObject("player");
 	const Object& shot = game.getObject("bullet");
-	CHECK(shot.position.x + 2.0 == Catch::Approx(cannon.position.x + 27.5));
+	CHECK(shot.position.x + 2.0f == Catch::Approx(cannon.position.x + 27.5f));
 
 	frames(game, 80);
 

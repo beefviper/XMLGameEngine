@@ -83,7 +83,7 @@ TEST_CASE("pressing sideways against the bottom wall still slides", "[stick]")
 	{
 		game.updateObjects();
 		CHECK(paddle2.position.y == kBottomBound);
-		CHECK(paddle2.position.x == startX - kStep * frame);
+		CHECK(paddle2.position.x == startX - kStep * static_cast<float>(frame));
 	}
 
 	// Right-down: same, the other way.
@@ -94,7 +94,7 @@ TEST_CASE("pressing sideways against the bottom wall still slides", "[stick]")
 	{
 		game.updateObjects();
 		CHECK(paddle2.position.y == kBottomBound);
-		CHECK(paddle2.position.x == turnX + kStep * frame);
+		CHECK(paddle2.position.x == turnX + kStep * static_cast<float>(frame));
 	}
 }
 
@@ -116,7 +116,7 @@ TEST_CASE("sliding along the wall after letting go of the wall-ward key", "[stic
 	for (int frame = 1; frame <= 5; ++frame)
 	{
 		game.updateObjects();
-		CHECK(paddle2.position.x == startX - kStep * frame);
+		CHECK(paddle2.position.x == startX - kStep * static_cast<float>(frame));
 		CHECK(paddle2.position.y <= kBottomBound);
 	}
 }

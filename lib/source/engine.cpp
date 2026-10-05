@@ -30,16 +30,16 @@ namespace xge
 		}
 	}
 
-	Engine::Engine(Game& game, WindowBackend backend, AudioBackend audioBackend) :
-		Engine(game, WindowFactory::create(game.getWindowDesc(), backend), makeAudioOrSilence(audioBackend))
+	Engine::Engine(Game& gameToRun, WindowBackend backend, AudioBackend audioBackend) :
+		Engine(gameToRun, WindowFactory::create(gameToRun.getWindowDesc(), backend), makeAudioOrSilence(audioBackend))
 	{
 	}
 
-	Engine::Engine(Game& game, std::unique_ptr<Window> window, std::unique_ptr<Audio> audio) :
-		game(game),
-		commandExecutor(game),
-		window(std::move(window)),
-		audio(audio ? std::move(audio) : std::make_unique<NullAudio>())
+	Engine::Engine(Game& gameToRun, std::unique_ptr<Window> newWindow, std::unique_ptr<Audio> newAudio) :
+		game(gameToRun),
+		commandExecutor(gameToRun),
+		window(std::move(newWindow)),
+		audio(newAudio ? std::move(newAudio) : std::make_unique<NullAudio>())
 	{
 		this->audio->load(game.getSounds());
 

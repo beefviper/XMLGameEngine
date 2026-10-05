@@ -16,9 +16,9 @@
 
 namespace xge
 {
-	GameView::GameView(KeyQueue& keys, QWidget* parent) :
+	GameView::GameView(KeyQueue& keyQueue, QWidget* parent) :
 		QWidget(parent),
-		keys(keys)
+		keys(keyQueue)
 	{
 		setFocusPolicy(Qt::StrongFocus);
 		setAttribute(Qt::WA_OpaquePaintEvent);

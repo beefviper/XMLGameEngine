@@ -16,7 +16,7 @@ namespace xge
 		float y{};
 
 		Vector2f() = default;
-		Vector2f(float x, float y) : x(x), y(y) {}
+		Vector2f(float xValue, float yValue) : x(xValue), y(yValue) {}
 
 		Vector2f operator+(const Vector2f& other) const { return { x + other.x, y + other.y }; }
 		Vector2f operator-(const Vector2f& other) const { return { x - other.x, y - other.y }; }

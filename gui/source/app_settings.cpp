@@ -18,8 +18,8 @@ namespace xge
 		const QString kStartKey = QStringLiteral("Game/start_game_on_load");
 	}
 
-	AppSettings::AppSettings(const QString& file) :
-		file(file)
+	AppSettings::AppSettings(const QString& settingsFile) :
+		file(settingsFile)
 	{
 		// Reading a file that is not there makes none.
 		if (QFileInfo::exists(file))

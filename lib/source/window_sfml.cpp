@@ -31,7 +31,7 @@ namespace xge
 			throw std::runtime_error("SFML could not make a window");
 		}
 
-		window.setFramerateLimit(windowDesc.framerate);
+		window.setFramerateLimit(static_cast<unsigned int>(windowDesc.framerate));
 	}
 
 	bool SFMLWindow::isOpen() const
@@ -334,7 +334,7 @@ namespace xge
 
 		sf::Text text(f);
 		text.setString(object.spriteParams.at(1));
-		text.setCharacterSize(std::stoi(object.spriteParams.at(2)));
+		text.setCharacterSize(static_cast<unsigned int>(std::stoi(object.spriteParams.at(2))));
 
 		const Color c = colorFromName(object.spriteParams.at(3));
 		text.setFillColor(sf::Color(c.r, c.g, c.b, c.a));

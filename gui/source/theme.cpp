@@ -18,10 +18,12 @@ namespace xge
 		// `from` moved `part` (0 to 1) of the way to `to`.
 		QColor mix(const QColor& from, const QColor& to, double part)
 		{
+			const float amount = static_cast<float>(part);
+
 			return QColor::fromRgbF(
-				from.redF() + (to.redF() - from.redF()) * part,
-				from.greenF() + (to.greenF() - from.greenF()) * part,
-				from.blueF() + (to.blueF() - from.blueF()) * part);
+				from.redF() + (to.redF() - from.redF()) * amount,
+				from.greenF() + (to.greenF() - from.greenF()) * amount,
+				from.blueF() + (to.blueF() - from.blueF()) * amount);
 		}
 
 		// Lighter on a dark theme, darker on a light one: the way a border or

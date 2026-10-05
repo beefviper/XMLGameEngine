@@ -36,8 +36,8 @@ namespace xge
 		}
 	}
 
-	QtWindow::QtWindow(GameView& view) :
-		view(view)
+	QtWindow::QtWindow(GameView& gameView) :
+		view(gameView)
 	{
 	}
 

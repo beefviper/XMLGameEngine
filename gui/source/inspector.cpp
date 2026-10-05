@@ -71,9 +71,9 @@ namespace xge
 		}
 	}
 
-	Inspector::Inspector(GameSession& session, QWidget* parent) :
+	Inspector::Inspector(GameSession& gameSession, QWidget* parent) :
 		QWidget(parent),
-		session(session),
+		session(gameSession),
 		playButton(new QPushButton(tr("Pause"), this)),
 		stepButton(new QPushButton(tr("Step"), this)),
 		resetButton(new QPushButton(tr("Reset"), this)),

@@ -86,7 +86,7 @@ if (XGE_WITH_RAPIDXML)
 endif()
 
 if (EXPRTK_PACKAGE_FOUND)
-	target_include_directories(xgelib PUBLIC ${EXPRTK_INCLUDE_DIRS})
+	target_include_directories(xgelib SYSTEM PUBLIC ${EXPRTK_INCLUDE_DIRS})
 else()
 	target_link_libraries(xgelib PUBLIC exprtk)
 endif()

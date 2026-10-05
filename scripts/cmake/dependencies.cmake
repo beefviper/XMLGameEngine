@@ -50,10 +50,14 @@ macro(declare_fetched_dependency)
 	else()
 		message(STATUS "${DFD_DISPLAY_NAME} not found, using FetchContent to ${DFD_FETCH_VERB}.")
 
+		# SYSTEM: what the library's targets say about their include
+		# directories are system include directories to everything that links
+		# them, so no warning is ever reported from its headers.
 		FetchContent_Declare(${DFD_NAME}
 			GIT_REPOSITORY ${DFD_REPO}
 			GIT_TAG ${DFD_TAG}
-			EXCLUDE_FROM_ALL)
+			EXCLUDE_FROM_ALL
+			SYSTEM)
 
 		list(APPEND FETCHED_LIBRARIES ${DFD_NAME})
 	endif()
@@ -302,8 +306,50 @@ if (NOT lunasvg_FOUND)
 	set(PLUTOVG_BUILD_EXAMPLES OFF CACHE BOOL "Do not build plutovg's examples" FORCE)
 endif()
 
+# Compiles a fetched library's own sources with no warnings at all (the targets
+# of its directory and of every directory below it): they are not this
+# project's code to fix, and the warning levels of xge_warnings (platform.cmake)
+# are not for them. GCC and Clang take -w after whatever else the library asks
+# for; MSVC answers a second /W level with D9025 ("overriding /W4 with /W0"),
+# so there only the targets known to set none are given /W0 (xerces-c and
+# lunasvg's two), and a library that sets its own level keeps it.
+set(XGE_MSVC_SILENCED_TARGETS xerces-c lunasvg plutovg)
+
+function(xge_silence_directory directory)
+	get_property(targets DIRECTORY "${directory}" PROPERTY BUILDSYSTEM_TARGETS)
+
+	foreach(target IN LISTS targets)
+		get_target_property(type ${target} TYPE)
+		if (NOT type MATCHES "^(STATIC_LIBRARY|SHARED_LIBRARY|MODULE_LIBRARY|OBJECT_LIBRARY|EXECUTABLE)$")
+			continue()
+		endif()
+
+		if (MSVC)
+			if (target IN_LIST XGE_MSVC_SILENCED_TARGETS)
+				target_compile_options(${target} PRIVATE /W0)
+			endif()
+		else()
+			target_compile_options(${target} PRIVATE -w)
+		endif()
+	endforeach()
+
+	get_property(subdirectories DIRECTORY "${directory}" PROPERTY SUBDIRECTORIES)
+	foreach(subdirectory IN LISTS subdirectories)
+		xge_silence_directory("${subdirectory}")
+	endforeach()
+endfunction()
+
 if (FETCHED_LIBRARIES)
 	FetchContent_MakeAvailable(${FETCHED_LIBRARIES})
+
+	foreach(library IN LISTS FETCHED_LIBRARIES)
+		FetchContent_GetProperties(${library} SOURCE_DIR library_source_dir)
+
+		# RapidXML has no CMakeLists.txt and so no directory of its own to look at.
+		if (EXISTS "${library_source_dir}/CMakeLists.txt")
+			xge_silence_directory("${library_source_dir}")
+		endif()
+	endforeach()
 endif()
 
 # RapidXML (see above) has no upstream CMakeLists.txt, so nothing above
@@ -318,9 +364,9 @@ if (XGE_WITH_RAPIDXML AND NOT TARGET rapidxml::rapidxml)
 	add_library(rapidxml::rapidxml ALIAS rapidxml)
 
 	if (RAPIDXML_PACKAGE_FOUND)
-		target_include_directories(rapidxml INTERFACE ${RAPIDXML_INCLUDE_DIRS})
+		target_include_directories(rapidxml SYSTEM INTERFACE ${RAPIDXML_INCLUDE_DIRS})
 	else()
-		target_include_directories(rapidxml INTERFACE ${rapidxml_SOURCE_DIR})
+		target_include_directories(rapidxml SYSTEM INTERFACE ${rapidxml_SOURCE_DIR})
 	endif()
 endif()
 

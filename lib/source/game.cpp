@@ -258,7 +258,7 @@ namespace xge
 
 	void Game::setCurrentState(const int& index)
 	{
-		currentState.push(states.at(index));
+		currentState.push(states.at(static_cast<std::size_t>(index)));
 		++stateChanges;
 	}
 

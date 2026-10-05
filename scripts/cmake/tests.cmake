@@ -86,14 +86,10 @@ target_include_directories(xgetest PRIVATE cli/include)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
-# Same flags platform.cmake sets on xgelib - in particular /bigobj:
+# The same warnings as the library (platform.cmake), /bigobj included:
 # several test files include game_expr.h, whose exprtk use generates enough
 # object sections to hit MSVC's C1128 without it.
-target_compile_options(xgetest PRIVATE
-	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
-
-target_compile_options(xgetest PRIVATE
-	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
+xge_warnings(xgetest)
 
 target_link_libraries(xgetest PRIVATE xgelib Catch2::Catch2WithMain)
 

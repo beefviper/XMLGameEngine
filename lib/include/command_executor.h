@@ -21,7 +21,7 @@ namespace xge
 	class CommandExecutor
 	{
 	public:
-		explicit CommandExecutor(Game& game) noexcept : game(game) {}
+		explicit CommandExecutor(Game& gameToRun) noexcept : game(gameToRun) {}
 
 		// object.collisionData.{top,bottom,left,right}, driven by
 		// CollisionDetector::touchesScreenEdge.

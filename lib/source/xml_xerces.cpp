@@ -59,8 +59,8 @@ namespace xge
 		};
 	}
 
-	XercesXmlNode::XercesXmlNode(const xc::DOMElement* element) noexcept :
-		element(element)
+	XercesXmlNode::XercesXmlNode(const xc::DOMElement* domElement) noexcept :
+		element(domElement)
 	{
 	}
 

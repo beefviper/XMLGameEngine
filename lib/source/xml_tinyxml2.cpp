@@ -9,8 +9,8 @@
 
 namespace xge
 {
-	TinyXml2Node::TinyXml2Node(const tinyxml2::XMLElement* element) noexcept :
-		element(element)
+	TinyXml2Node::TinyXml2Node(const tinyxml2::XMLElement* tinyElement) noexcept :
+		element(tinyElement)
 	{
 	}
 

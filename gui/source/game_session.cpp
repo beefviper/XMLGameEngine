@@ -23,7 +23,7 @@ namespace xge
 		class Changing
 		{
 		public:
-			explicit Changing(bool& flag) : flag(flag), was(std::exchange(flag, true)) {}
+			explicit Changing(bool& changing) : flag(changing), was(std::exchange(changing, true)) {}
 			~Changing() { flag = was; }
 
 			Changing(const Changing&) = delete;
@@ -50,9 +50,9 @@ namespace xge
 		}
 	}
 
-	GameSession::GameSession(GameStage& stage, QObject* parent) :
+	GameSession::GameSession(GameStage& gameStage, QObject* parent) :
 		QObject(parent),
-		stage(stage)
+		stage(gameStage)
 	{
 		// The timer only wakes the session up often; advance() decides from the
 		// clock whether a frame is due. A timer of the frame's own length

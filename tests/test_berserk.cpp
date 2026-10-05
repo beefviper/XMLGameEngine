@@ -103,12 +103,12 @@ namespace
 		// and down, without a walk.
 		void placeMan(int cellX, int cellY)
 		{
-			man().position = { cellX * cellSize + 8.0f + 13.0f, mazeTop + cellY * cellSize + 8.0f + 9.0f };
+			man().position = { static_cast<float>(cellX) * cellSize + 8.0f + 13.0f, mazeTop + static_cast<float>(cellY) * cellSize + 8.0f + 9.0f };
 		}
 
 		void placeRobot(const std::string& name, int cellX, int cellY)
 		{
-			object(name).position = { cellX * cellSize + 8.0f + 13.0f, mazeTop + cellY * cellSize + 8.0f + 11.0f };
+			object(name).position = { static_cast<float>(cellX) * cellSize + 8.0f + 13.0f, mazeTop + static_cast<float>(cellY) * cellSize + 8.0f + 11.0f };
 		}
 
 		// Holds every robot of the room still and keeps it from firing, so a

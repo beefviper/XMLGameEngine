@@ -9,8 +9,8 @@
 
 namespace xge
 {
-	PugiXmlNode::PugiXmlNode(pugi::xml_node node) noexcept :
-		node(node)
+	PugiXmlNode::PugiXmlNode(pugi::xml_node pugiNode) noexcept :
+		node(pugiNode)
 	{
 	}
 

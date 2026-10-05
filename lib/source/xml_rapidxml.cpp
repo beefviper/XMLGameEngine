@@ -11,8 +11,8 @@
 
 namespace xge
 {
-	RapidXmlNode::RapidXmlNode(const rapidxml::xml_node<>* node) noexcept :
-		node(node)
+	RapidXmlNode::RapidXmlNode(const rapidxml::xml_node<>* rapidNode) noexcept :
+		node(rapidNode)
 	{
 	}
 

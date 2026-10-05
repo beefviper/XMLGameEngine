@@ -86,11 +86,8 @@ foreach(program IN LISTS XGE_PROGRAMS)
 	target_link_libraries(${program} PRIVATE xgelib)
 	target_compile_features(${program} PRIVATE cxx_std_20)
 
-	# Same flags platform.cmake sets on the library.
-	target_compile_options(${program} PRIVATE
-		$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
-	target_compile_options(${program} PRIVATE
-		$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
+	# The same warnings as the library (platform.cmake).
+	xge_warnings(${program})
 
 	# The games and assets are copied next to the program, see assets.cmake.
 	add_dependencies(${program} xgedata)

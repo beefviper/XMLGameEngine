@@ -6,8 +6,8 @@
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	PROPERTY VS_STARTUP_PROJECT xgecli)
 
-# Warning levels for the engine library; xgecli, xgegui and the tests get the
-# same ones from scripts/cmake/executables.cmake and tests.cmake.
+# Warning levels for the engine library (xge_warnings below); xgecli, xgegui and the
+# tests get the same ones from scripts/cmake/executables.cmake and tests.cmake.
 if (XGE_BUILD_SHARED)
 	# A DLL has to say what it exports; rather than marking every class in the
 	# headers, export all of them. The DLL goes in output/<config>/libraries
@@ -16,11 +16,40 @@ if (XGE_BUILD_SHARED)
 		WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-target_compile_options(xgelib PRIVATE
-	$<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
+# The warnings this project's own code is compiled with: as many as can be made
+# to come out clean, on MSVC and on GCC and Clang. They are for xgelib, xgecli,
+# xgegui and xgetest only; a third-party library is never compiled with them, and
+# its headers are system headers (dependencies.cmake), so what is wrong in code
+# that is not ours is never reported.
+#
+# MSVC: level 4, then the ones /W4 leaves off that are worth having (hidden
+# virtuals, missing virtual destructors, narrowing, uninitialised members and so
+# on: the usual set from the C++ Best Practices project); headers named with <>
+# are external, with no warnings from them (and no code analysis), and /bigobj
+# because the files that include game_expr.h, whose exprtk use generates enough
+# object sections to hit MSVC's C1128 without it.
+# GCC and Clang: the "all" and "extra" sets, pedantic, shadowing (a parameter or
+# local named like a member), every implicit conversion that can lose a value or
+# a sign, C-style casts, missing virtual destructors, fall-through and a few
+# more; GCC also looks for float to double promotion in arithmetic (Clang's
+# version of that warning fires on every float handed to a double parameter,
+# which is every Catch::Approx(float) in the tests), repeated conditions and
+# branches, pointless casts and && / || on the same operand.
+function(xge_warnings target)
+	target_compile_options(${target} PRIVATE
+		$<$<CXX_COMPILER_ID:MSVC>:/W4
+			/w14242 /w14254 /w14263 /w14265 /w14287 /w14296 /w14311 /w14545 /w14546 /w14547
+			/w14549 /w14555 /w14619 /w14640 /w14826 /w14905 /w14906 /w14928
+			/external:anglebrackets /external:W0 /analyze:external- /bigobj>
+		$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall -Wextra -Wpedantic -Wshadow -Wconversion
+			-Wsign-conversion -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-align -Wunused
+			-Wnull-dereference -Wformat=2 -Wimplicit-fallthrough
+			-Wold-style-cast -Wmisleading-indentation>
+		$<$<CXX_COMPILER_ID:GNU>:-Wdouble-promotion -Wduplicated-cond -Wduplicated-branches
+			-Wlogical-op -Wuseless-cast>)
+endfunction()
 
-target_compile_options(xgelib PRIVATE
-	$<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /analyze:external- /bigobj>)
+xge_warnings(xgelib)
 
 if (WIN32 AND TARGET Freetype)
 	message(STATUS "*** sanitizing Freetype INTERFACE_LINK_LIBRARIES on Windows")
@@ -40,28 +69,14 @@ if (WIN32 AND TARGET Freetype)
 	)
 endif()
 
-# Vendored dependencies come in with their own warning levels, which have
-# nothing to do with this project's own code quality - MSVC's /W4 and
-# -Wall above are for xgelib only, so silence warnings on
-# third-party targets here instead of fixing warnings in code we don't own.
-function(silence_third_party_warnings target scope)
-	target_compile_options(${target} ${scope}
-		$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
-endfunction()
-
+# Third-party code is not ours to fix, so it is kept quiet two ways: a library
+# that is found is an imported target, whose headers are system headers, and
+# one that is fetched is declared SYSTEM and has its own build silenced
+# (dependencies.cmake), so neither its headers nor its sources report anything
+# in this project's build. Only what is specific to one of them is here.
 if (XGE_WITH_XERCES AND NOT XercesC_FOUND)
 	set_target_properties(xerces-c PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
-	silence_third_party_warnings(xerces-c PRIVATE)
 	set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${XGE_LIBRARY_DIR} LIBRARY_OUTPUT_DIRECTORY ${XGE_LIBRARY_DIR})
-endif()
-
-if (NOT EXPRTK_PACKAGE_FOUND)
-	silence_third_party_warnings(exprtk INTERFACE)
-endif()
-
-if (NOT lunasvg_FOUND)
-	silence_third_party_warnings(lunasvg PRIVATE)
-	silence_third_party_warnings(plutovg PRIVATE)
 endif()
 
 # A fetched library that sets its own output folder (SFML puts its DLLs in

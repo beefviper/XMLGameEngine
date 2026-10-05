@@ -59,7 +59,7 @@ namespace
 	class RecordingAudio : public Audio
 	{
 	public:
-		explicit RecordingAudio(AudioLog& log) : log(log) {}
+		explicit RecordingAudio(AudioLog& audioLog) : log(audioLog) {}
 
 		void load(const std::vector<SoundDesc>& sounds) override
 		{
