@@ -118,7 +118,7 @@
         <xsl:apply-templates select="$node/equation" mode="value" />
       </xsl:when>
       <xsl:when test="$node/formula">
-        <xsl:apply-templates select="$node/formula/*" mode="value" />
+        <xsl:apply-templates select="$node/formula" mode="value" />
       </xsl:when>
       <xsl:when test="$node/*">
         <xsl:message terminate="yes">windows-cpp: the value tag &lt;<xsl:value-of select="name($node/*)" />&gt; cannot be generated yet</xsl:message>
@@ -127,23 +127,25 @@
         <xsl:text>0.0f</xsl:text>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:text>(</xsl:text>
-        <xsl:call-template name="cpp-expression">
-          <xsl:with-param name="text" select="normalize-space($node)" />
+        <xsl:call-template name="attribute-value">
+          <xsl:with-param name="text" select="$node" />
         </xsl:call-template>
-        <xsl:text>)</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
-  <!-- The same for expression text held in an attribute (<random min max>). -->
+  <!-- Expression text is put in brackets, so it can stand anywhere a value
+       can, unless it is one name or number (15, -1, paddle1.score). -->
   <xsl:template name="attribute-value">
     <xsl:param name="text" />
-    <xsl:text>(</xsl:text>
+    <xsl:variable name="expression" select="normalize-space($text)" />
+    <xsl:variable name="rest" select="translate($expression, concat($letters, $digits, '.'), '')" />
+    <xsl:variable name="single" select="$rest = '' or ($rest = '-' and starts-with($expression, '-'))" />
+    <xsl:if test="not($single)">(</xsl:if>
     <xsl:call-template name="cpp-expression">
-      <xsl:with-param name="text" select="normalize-space($text)" />
+      <xsl:with-param name="text" select="$expression" />
     </xsl:call-template>
-    <xsl:text>)</xsl:text>
+    <xsl:if test="not($single)">)</xsl:if>
   </xsl:template>
 
   <xsl:template match="random" mode="value">
@@ -158,125 +160,137 @@
     <xsl:text>)</xsl:text>
   </xsl:template>
 
-  <!-- The four operations: their operands' names and C++'s symbol. A divide is
-       xge::divide, which gives 0 for a divisor of 0 as the engine does. -->
+  <!-- <equation> and <formula> come out as ordinary C++ arithmetic, written the
+       way a person would: the operators between the operands, and brackets only
+       where C++'s precedence needs them (a - (b - c), (a + b) * c). One
+       difference from the engine: a divisor of 0 gives infinity, as in the
+       expression text, where the engine's <divide> gives 0. -->
   <xsl:template name="operator">
     <xsl:param name="operation" />
     <xsl:choose>
       <xsl:when test="$operation = 'add'"> + </xsl:when>
       <xsl:when test="$operation = 'subtract'"> - </xsl:when>
       <xsl:when test="$operation = 'multiply'"> * </xsl:when>
+      <xsl:when test="$operation = 'divide'"> / </xsl:when>
       <xsl:otherwise>
         <xsl:message terminate="yes">windows-cpp: the operation &lt;<xsl:value-of select="$operation" />&gt; cannot be generated yet</xsl:message>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
-  <!-- An <equation>: its steps in a lambda called at once, each step a local
-       float (s_ and its name, or its number), the last one the answer. -->
+  <!-- Whether an operation written inside another needs brackets: when it
+       binds less tightly (a + b inside a *), or as the second operand of a
+       subtract or divide at the same level (a - (b + c), a / (b * c)). -->
+  <xsl:template name="needs-brackets">
+    <xsl:param name="inner" />
+    <xsl:param name="outer" />
+    <xsl:param name="second" />
+    <xsl:variable name="innerLevel" select="1 + number($inner = 'multiply' or $inner = 'divide')" />
+    <xsl:variable name="outerLevel" select="1 + number($outer = 'multiply' or $outer = 'divide')" />
+    <xsl:if test="$innerLevel &lt; $outerLevel or ($second and $innerLevel = $outerLevel and ($outer = 'subtract' or $outer = 'divide'))">yes</xsl:if>
+  </xsl:template>
+
+  <!-- An <equation>: one expression, each step written where it is used (the
+       steps are names for parts of it, as a person would name them while
+       working it out). The last step is the answer. -->
   <xsl:template match="equation" mode="value">
-    <xsl:text>[&amp;] { </xsl:text>
-    <xsl:for-each select="*">
-      <xsl:choose>
-        <xsl:when test="position() = last()">return </xsl:when>
-        <xsl:otherwise>
-          <xsl:text>const float </xsl:text>
-          <xsl:call-template name="step-name" />
-          <xsl:text> = </xsl:text>
-        </xsl:otherwise>
-      </xsl:choose>
-      <xsl:variable name="first" select="@augend | @minuend | @multiplicand" />
-      <xsl:variable name="second" select="@addend | @subtrahend | @multiplier" />
-      <xsl:choose>
-        <xsl:when test="local-name() = 'divide'">
-          <xsl:text>xge::divide(</xsl:text>
-          <xsl:call-template name="step-operand"><xsl:with-param name="text" select="@dividend" /></xsl:call-template>
-          <xsl:text>, </xsl:text>
-          <xsl:call-template name="step-operand"><xsl:with-param name="text" select="@divisor" /></xsl:call-template>
-          <xsl:text>)</xsl:text>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="step-operand"><xsl:with-param name="text" select="$first" /></xsl:call-template>
-          <xsl:call-template name="operator"><xsl:with-param name="operation" select="local-name()" /></xsl:call-template>
-          <xsl:call-template name="step-operand"><xsl:with-param name="text" select="$second" /></xsl:call-template>
-        </xsl:otherwise>
-      </xsl:choose>
-      <xsl:text>; </xsl:text>
-    </xsl:for-each>
-    <xsl:text>}()</xsl:text>
+    <xsl:text>(</xsl:text>
+    <xsl:apply-templates select="*[last()]" mode="step" />
+    <xsl:text>)</xsl:text>
   </xsl:template>
 
-  <xsl:template name="step-name">
-    <xsl:choose>
-      <xsl:when test="@name">
-        <xsl:call-template name="cpp-name">
-          <xsl:with-param name="prefix" select="'s_'" />
-          <xsl:with-param name="name" select="@name" />
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="concat('step', count(preceding-sibling::*) + 1)" />
-      </xsl:otherwise>
-    </xsl:choose>
+  <xsl:template match="*" mode="step">
+    <xsl:call-template name="step-operand">
+      <xsl:with-param name="text" select="@augend | @minuend | @multiplicand | @dividend" />
+      <xsl:with-param name="outer" select="local-name()" />
+      <xsl:with-param name="second" select="false()" />
+    </xsl:call-template>
+    <xsl:call-template name="operator"><xsl:with-param name="operation" select="local-name()" /></xsl:call-template>
+    <xsl:call-template name="step-operand">
+      <xsl:with-param name="text" select="@addend | @subtrahend | @multiplier | @divisor" />
+      <xsl:with-param name="outer" select="local-name()" />
+      <xsl:with-param name="second" select="true()" />
+    </xsl:call-template>
   </xsl:template>
 
-  <!-- An operand of a step: the answer of an earlier step of that name, or a
-       name or number of the game's. -->
+  <!-- An operand of a step: an earlier step of that name, written out in its
+       place, or a name or number of the game's. -->
   <xsl:template name="step-operand">
     <xsl:param name="text" />
+    <xsl:param name="outer" />
+    <xsl:param name="second" />
     <xsl:variable name="name" select="normalize-space($text)" />
+    <xsl:variable name="step" select="preceding-sibling::*[@name = $name][1]" />
     <xsl:choose>
-      <xsl:when test="preceding-sibling::*[@name = $name]">
-        <xsl:call-template name="cpp-name">
-          <xsl:with-param name="prefix" select="'s_'" />
-          <xsl:with-param name="name" select="$name" />
-        </xsl:call-template>
+      <xsl:when test="$step">
+        <xsl:variable name="brackets">
+          <xsl:call-template name="needs-brackets">
+            <xsl:with-param name="inner" select="local-name($step)" />
+            <xsl:with-param name="outer" select="$outer" />
+            <xsl:with-param name="second" select="$second" />
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:if test="$brackets = 'yes'">(</xsl:if>
+        <xsl:apply-templates select="$step" mode="step" />
+        <xsl:if test="$brackets = 'yes'">)</xsl:if>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:call-template name="cpp-expression">
+        <xsl:call-template name="attribute-value">
           <xsl:with-param name="text" select="$name" />
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
-  <!-- A <formula>'s operation: its first operand, then each second operand
-       after the operator, in brackets; precedence is the nesting. -->
-  <xsl:template match="add | subtract | multiply | divide" mode="value">
-    <xsl:variable name="first" select="augend | minuend | multiplicand | dividend" />
-    <xsl:variable name="seconds" select="addend | subtrahend | multiplier | divisor" />
-    <xsl:choose>
-      <xsl:when test="local-name() = 'divide'">
-        <!-- a chain of divisors is one divide after another -->
-        <xsl:for-each select="$seconds">xge::divide(</xsl:for-each>
-        <xsl:apply-templates select="$first" mode="operand" />
-        <xsl:for-each select="$seconds">
-          <xsl:text>, </xsl:text>
-          <xsl:apply-templates select="." mode="operand" />
-          <xsl:text>)</xsl:text>
-        </xsl:for-each>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:text>(</xsl:text>
-        <xsl:apply-templates select="$first" mode="operand" />
-        <xsl:for-each select="$seconds">
-          <xsl:call-template name="operator"><xsl:with-param name="operation" select="local-name(..)" /></xsl:call-template>
-          <xsl:apply-templates select="." mode="operand" />
-        </xsl:for-each>
-        <xsl:text>)</xsl:text>
-      </xsl:otherwise>
-    </xsl:choose>
+  <!-- A <formula>: its operation, in brackets as a whole so it can stand
+       anywhere a value can. -->
+  <xsl:template match="formula" mode="value">
+    <xsl:text>(</xsl:text>
+    <xsl:apply-templates select="*" mode="operation" />
+    <xsl:text>)</xsl:text>
   </xsl:template>
 
-  <!-- An operand of a formula: another operation, a <random>, or a name or number. -->
+  <!-- A formula's operation: its first operand, then each second operand after
+       the operator (a chain, a - b - c, is left to right as in C++). -->
+  <xsl:template match="add | subtract | multiply | divide" mode="operation">
+    <xsl:variable name="operation" select="local-name()" />
+    <xsl:apply-templates select="augend | minuend | multiplicand | dividend" mode="operand">
+      <xsl:with-param name="outer" select="$operation" />
+      <xsl:with-param name="second" select="false()" />
+    </xsl:apply-templates>
+    <xsl:for-each select="addend | subtrahend | multiplier | divisor">
+      <xsl:call-template name="operator"><xsl:with-param name="operation" select="$operation" /></xsl:call-template>
+      <xsl:apply-templates select="." mode="operand">
+        <xsl:with-param name="outer" select="$operation" />
+        <xsl:with-param name="second" select="true()" />
+      </xsl:apply-templates>
+    </xsl:for-each>
+  </xsl:template>
+
+  <!-- An operand of a formula: another operation (in brackets if it needs
+       them), a <random>, or a name or number. -->
   <xsl:template match="*" mode="operand">
+    <xsl:param name="outer" />
+    <xsl:param name="second" />
     <xsl:choose>
+      <xsl:when test="random">
+        <xsl:apply-templates select="random" mode="value" />
+      </xsl:when>
       <xsl:when test="*">
-        <xsl:apply-templates select="*" mode="value" />
+        <xsl:variable name="brackets">
+          <xsl:call-template name="needs-brackets">
+            <xsl:with-param name="inner" select="local-name(*)" />
+            <xsl:with-param name="outer" select="$outer" />
+            <xsl:with-param name="second" select="$second" />
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:if test="$brackets = 'yes'">(</xsl:if>
+        <xsl:apply-templates select="*" mode="operation" />
+        <xsl:if test="$brackets = 'yes'">)</xsl:if>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:call-template name="cpp-expression">
-          <xsl:with-param name="text" select="normalize-space(.)" />
+        <xsl:call-template name="attribute-value">
+          <xsl:with-param name="text" select="." />
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>

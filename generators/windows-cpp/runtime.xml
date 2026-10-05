@@ -100,12 +100,6 @@ namespace xge
 		return std::uniform_real_distribution<float>(min, max)(generator);
 	}
 
-	// A <divide>: a divisor of 0 gives 0, as in the engine.
-	float divide(float dividend, float divisor)
-	{
-		return divisor == 0.0f ? 0.0f : dividend / divisor;
-	}
-
 	// A number as a text shows it: no decimals when it is whole.
 	std::string displayNumber(float value)
 	{

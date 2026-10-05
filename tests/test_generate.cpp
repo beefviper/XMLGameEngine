@@ -67,8 +67,9 @@ namespace
 		return request;
 	}
 
-	// The smallest game: one rectangle on one screen.
-	void writeTinyGame(const fs::path& file, const std::string& extra)
+	// The smallest game: one rectangle on one screen, with `variables` (an
+	// object's <variable>s) and `extra` (more collision rules) put in.
+	void writeTinyGame(const fs::path& file, const std::string& extra, const std::string& variables = "")
 	{
 		fs::create_directories(file.parent_path());
 		std::ofstream(file) <<
@@ -80,6 +81,7 @@ namespace
 			"      <position><x>window.width.center</x><y>window.height.center</y></position>\n"
 			"      <velocity><x>1</x><y>0</y></velocity>\n"
 			"      <collisions><enabled>true</enabled><collision edge=\"horizontal\"><bounce /></collision>" << extra << "</collisions>\n"
+			"      <variables>" << variables << "</variables>\n"
 			"    </object>\n"
 			"  </objects>\n"
 			"  <states><state name=\"playing\"><shows><show object=\"box\" /></shows></state></states>\n"
@@ -107,13 +109,14 @@ TEST_CASE("generating Pong writes its program and copies its assets", "[generate
 
 	// The rules are plain statements about Pong's own objects.
 	const std::string main = readFile(output.path / "main.cpp");
-	CHECK(main.find("deflect(o_ball, o_paddle1, edgeOfFirst, (45.0f));") != std::string::npos);
+	CHECK(main.find("deflect(o_ball, o_paddle1, edgeOfFirst, 45.0f);") != std::string::npos);
 	CHECK(main.find("v_paddle2_score += 1.0f;") != std::string::npos);
-	CHECK(main.find("if (v_paddle1_score >= (15.0f) || v_paddle2_score >= (15.0f))") != std::string::npos);
+	CHECK(main.find("if (v_paddle1_score >= 15.0f || v_paddle2_score >= 15.0f)") != std::string::npos);
 	CHECK(main.find("case sf::Keyboard::Key::W:") != std::string::npos);
 
-	// The title's <equation> is a lambda of its steps.
-	CHECK(main.find("const float s_half = xge::divide(v_title_width, 2.0f);") != std::string::npos);
+	// The title's <equation> is plain arithmetic, its step written where it is used.
+	CHECK(main.find("(v_window_width_center - v_title_width / 2.0f)") != std::string::npos);
+	CHECK(main.find("xge::divide") == std::string::npos);
 
 	CHECK(readFile(output.path / "CMakeLists.txt").find("add_executable(pong main.cpp)") != std::string::npos);
 }
@@ -134,6 +137,30 @@ TEST_CASE("a generated game carries only the verbs it uses", "[generate]")
 	CHECK(main.find("void deflect(") == std::string::npos);
 	CHECK(main.find("void stick(") == std::string::npos);
 	CHECK(main.find("struct Voice") == std::string::npos);
+}
+
+TEST_CASE("a formula or equation is written as C++ arithmetic, bracketed only where needed", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_formulas");
+	writeTinyGame(folder.path / "tiny.xml", "",
+		"<variable name=\"inner\"><formula><subtract><minuend>10</minuend><subtrahend><subtract><minuend>4</minuend><subtrahend>3</subtrahend></subtract></subtrahend></subtract></formula></variable>"
+		"<variable name=\"sum\"><formula><multiply><multiplicand><add><augend>1</augend><addend>2</addend></add></multiplicand><multiplier>3</multiplier></multiply></formula></variable>"
+		"<variable name=\"chain\"><formula><subtract><minuend>9</minuend><subtrahend>1</subtrahend><subtrahend>2</subtrahend></subtract></formula></variable>"
+		"<variable name=\"half\"><formula><add><augend>box.width</augend><addend><divide><dividend>window.width</dividend><divisor>2</divisor></divide></addend></add></formula></variable>"
+		"<variable name=\"steps\"><equation><add name=\"both\" augend=\"1\" addend=\"2\" /><divide dividend=\"12\" divisor=\"both\" /></equation></variable>");
+	generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("v_box_inner_start = (10.0f - (4.0f - 3.0f));") != std::string::npos);
+	CHECK(main.find("v_box_sum_start = ((1.0f + 2.0f) * 3.0f);") != std::string::npos);
+	CHECK(main.find("v_box_chain_start = (9.0f - 1.0f - 2.0f);") != std::string::npos);
+	CHECK(main.find("v_box_half_start = (v_box_width + v_window_width / 2.0f);") != std::string::npos);
+	CHECK(main.find("v_box_steps_start = (12.0f / (1.0f + 2.0f));") != std::string::npos);
 }
 
 TEST_CASE("a tag the target cannot generate yet is named in the error", "[generate]")
