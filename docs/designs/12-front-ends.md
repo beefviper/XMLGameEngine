@@ -10,7 +10,7 @@ xgecli [game] [options]
   -w, --window <name>  sfml3 (default), raylib, sdl2, opengl
   -x, --xml <name>     xerces (default), tinyxml2, pugixml, rapidxml
   -a, --audio <name>   sfml3 (default), raylib, sdl2, none
-  --generate <target>  write the game out as a program (windows-cpp) instead of playing it
+  --generate <target>  write the game out as a program (windows-cpp, windows-cpp-full) instead of playing it
   -o, --output <dir>   where --generate writes (default <game>-<target>)
   -h, --help
 ```
@@ -20,7 +20,7 @@ xgecli [game] [options]
 - Start message before anything else: `file:`, `window:`, `xml:`, `audio:`, one per line.
 - **Finding the game:** add `.xml` if no extension; then as given; then its file name alone in the working directory; then in `games/` of the data folder. The **data folder** is the first of the working directory, the program's folder, and the folder above it that has both `games/` and `assets/`; then the working directory is changed to it (the engine reads `assets/` relative to it), so the program starts from anywhere. Shared with xgegui through `lib/include/data_folder.h` so they cannot drift.
 - `parseCommandLine` and `findGameFile` throw `CliError`; `main()` prints the message and usage to stderr. `cli.cpp` is compiled into `xgetest` too (the library does not contain it). Library code throws and never calls `exit()` because xgegui loads game after game.
-- **Generating** ([01](01-vision-and-format.md#generating-a-program-with-xslt)): `--generate` takes a platform-language target (only `windows-cpp`), long form only because `-g` is the game; `-o` is an error without it. It is resolved before the working directory changes, so the default folder and a relative `-o` are where the user started; the stylesheets are found in `generators/` of the data folder. It prints the files written and the assets copied, and does not start a window. `generate.cpp` is compiled into `xgetest` too.
+- **Generating** ([01](01-vision-and-format.md#generating-a-program-with-xslt)): `--generate` takes a platform-language target (`windows-cpp`, `windows-cpp-full`), long form only because `-g` is the game; `-o` is an error without it. It is resolved before the working directory changes, so the default folder and a relative `-o` are where the user started; the stylesheets are found in `generators/` of the data folder. It prints the files written and the assets copied, and does not start a window. `generate.cpp` is compiled into `xgetest` too.
 - Rejected: `-g` for generate (it is the game); `--game=pong`; last-one-wins; short backend aliases (`sfml`, `xerxes`). Open: every backend is built in, so every name is accepted; a build that leaves one out should reject its name with that reason.
 
 ## xgegui (Qt 6 Widgets)

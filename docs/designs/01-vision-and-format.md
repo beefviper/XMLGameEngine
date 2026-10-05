@@ -104,7 +104,22 @@ Processors: libxslt (XSLT 1.0 with EXSLT, C, in vcpkg and every Linux distributi
 
 **Rejected.** XSLT 3.0 (Saxon): text processing would be easier, but the C library is the one that fits a C++ program with vcpkg dependencies. The engine as a library inside the generated program: that is the engine, not a generated game. One file per object or state: the C++ is shorter as one file and nobody edits it.
 
-**Open.** Every other game: the first tag each needs is listed in [readme](../readme.md#known-limitations) (`<group>`, `<line>`, `<bitmap>`, `<grid>`, `<wrap>`, `<svg>`, then timers, looks and the rest). The runtime is a second copy of the verbs and can drift from the engine; a test that plays a generated game against the engine frame by frame would catch it, but needs a compiler in the test. Built and played only on Linux with GCC; Windows and Visual Studio not tried. Other targets (another backend, another language, an 8-bit machine) and how backends are named for them.
+### A plain target: windows-cpp and windows-cpp-full
+
+**What we looked for.** The first target worked, but generated Pong was about 1,700 lines (790 of copied engine: object type, swept collision, verbs, synthesizer; 800 of per-object code) where Pong by hand on SFML 3 is about 100. The author wanted the program to read as if written by hand, with nothing of the engine in it, laid out as: the header block, includes (local, third party, standard), global and tunable variables, the objects, forward declarations, `main`, then the definitions; and the stylesheet shaped the same way (`generate-main` calling `generate-window` and `generate-game-loop`, which calls `generate-events`, `generate-update` and `generate-render`).
+
+**What we looked at.** (a) Trimming the first target: its size comes from being faithful to the engine (the sweep, every verb's edge cases), so trimming means changing what it is. (b) A new target that starts from the smallest game and grows, refusing everything else, beside the old one. (c) Replacing the old one outright: loses full Pong until the new one catches up.
+
+**Chosen: (b).** `windows-cpp` is the new, plain target; the first one is kept as `windows-cpp-full`. `games/pong_min.xml` (two paddles and a ball, no menu, score, text or sound) is the game it is grown on, and comes out at about 260 lines. Choices:
+- *SFML types are the objects.* An object is a global `sf::CircleShape` or `sf::RectangleShape` named as in the game, plus `<name>Velocity` if it moves and `<name>StartPosition` if a rule resets it; no struct, so nothing has to be complete before `main` and the objects sit between the tunables and the declarations.
+- *A function per object.* `update<Name>()` holds its keys, its move and its rules as `if` statements in the order written; `main`'s update part calls them, its render part draws the shown objects.
+- *Names in camel case* (`ball.radius` is `ballRadius`, `window.width.center` is `windowWidthCenter`), and a constant for each of the window's names the game uses. A name the program would not have (an object's size or variable) is refused rather than guessed.
+- *Simple collision, not the engine's.* Move, then test where it landed; a touch is told apart by the smaller overlap. The engine's sweep is what makes thin walls and fast bullets safe; a game that needs it is a reason to add it, as a helper, when that game is generated.
+- *Helpers only when used,* kept as plain C++ in `functions.xml` with the standard headers they need (`uses=`); the includes are worked out from them.
+
+**Open.** Growing `windows-cpp` to all of Pong (states and Space, text, the score, conditions, images, sounds), then the others; at that point whether `windows-cpp-full` is still worth keeping. A test that builds and plays a generated game, which needs a compiler in the test.
+
+**Open (both targets).** Every other game: the first tag each needs is listed in [readme](../readme.md#known-limitations) (`<group>`, `<line>`, `<bitmap>`, `<grid>`, `<wrap>`, `<svg>`, then timers, looks and the rest). The runtime is a second copy of the verbs and can drift from the engine; a test that plays a generated game against the engine frame by frame would catch it, but needs a compiler in the test. Built and played only on Linux with GCC; Windows and Visual Studio not tried. Other targets (another backend, another language, an 8-bit machine) and how backends are named for them.
 
 ## The VGDL landscape (reference only)
 

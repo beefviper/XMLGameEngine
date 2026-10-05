@@ -65,7 +65,7 @@
   <xsl:template name="refuse">
     <xsl:param name="what" />
     <xsl:message terminate="yes">
-      <xsl:text>windows-cpp cannot generate </xsl:text>
+      <xsl:text>windows-cpp-full cannot generate </xsl:text>
       <xsl:value-of select="$what" />
       <xsl:text> yet (in </xsl:text>
       <xsl:for-each select="ancestor-or-self::*">
@@ -111,7 +111,7 @@
     <xsl:param name="name" />
     <xsl:variable name="color" select="$tables/colors/color[@name = normalize-space($name)]" />
     <xsl:if test="not($color)">
-      <xsl:message terminate="yes">windows-cpp: there is no color named "<xsl:value-of select="$name" />"</xsl:message>
+      <xsl:message terminate="yes">windows-cpp-full: there is no color named "<xsl:value-of select="$name" />"</xsl:message>
     </xsl:if>
     <xsl:value-of select="concat('sf::Color(', $color/@rgba, ')')" />
   </xsl:template>

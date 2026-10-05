@@ -28,7 +28,8 @@ set(data_xml
 	"games/berserk.xml"
 	"games/demonattack.xml"
 	"games/frostbite.xml"
-	"games/galaxian.xml")
+	"games/galaxian.xml"
+	"games/pong_min.xml")
 
 set(data_assets
 	"assets/tuffy.ttf"
@@ -38,10 +39,16 @@ set(data_assets
 # The stylesheets xgecli --generate runs, a folder per target (generate.cpp).
 set(data_generators
 	"generators/windows-cpp/generate.xsl"
-	"generators/windows-cpp/game.xsl"
+	"generators/windows-cpp/check.xsl"
+	"generators/windows-cpp/main.xsl"
 	"generators/windows-cpp/values.xsl"
-	"generators/windows-cpp/runtime.xml"
-	"generators/windows-cpp/tables.xml")
+	"generators/windows-cpp/functions.xml"
+	"generators/windows-cpp/tables.xml"
+	"generators/windows-cpp-full/generate.xsl"
+	"generators/windows-cpp-full/game.xsl"
+	"generators/windows-cpp-full/values.xsl"
+	"generators/windows-cpp-full/runtime.xml"
+	"generators/windows-cpp-full/tables.xml")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators)

@@ -222,7 +222,7 @@ TEST_CASE("generate needs a known target and output needs generate", "[cli]")
 	CHECK_THROWS_AS(parseCommandLine({ "--generate", "windows-cpp", "--generate", "windows-cpp" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "-o", "out" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--generate", "windows-cpp", "-o", "a", "-o", "b" }), CliError);
-	CHECK(generateTargets() == std::vector<std::string>{ "windows-cpp" });
+	CHECK(generateTargets() == std::vector<std::string>{ "windows-cpp", "windows-cpp-full" });
 }
 
 TEST_CASE("the help options ask for the usage", "[cli]")
