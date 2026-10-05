@@ -1,6 +1,6 @@
 # 06. Motion and the verb vocabulary
 
-**Status:** built: constant velocity, acceleration, thrust, headings, hop, straight timed jump, riding, wrapping, deflect. Ideas: arcing jump with air control, paths and formations, AI targeting.
+**Status:** built: constant velocity, acceleration, thrust, headings, hop, straight timed jump, riding, wrapping, deflect, paths of straight steps (Galaxian). Ideas: arcing jump with air control, curved paths and moving formations, AI targeting.
 
 ## Principle
 
@@ -19,6 +19,7 @@
 | `<deflect>` | Pong | [05](05-collisions.md) |
 | `<timers>`, `<facing>`, `<jump>`, `<reverse />`, looks, `<reveal>`, key sets | a read of every game for workarounds | [08](08-timers-and-enemy-behavior.md) |
 | (none) | Space Race, Kaboom v1, Freeway, Depth Charge, Astrosmash | the vocabulary was already enough ([10](10-games-as-tests.md)) |
+| `<paths>`, `<follow>` with `<stagger>` | Galaxian | below |
 
 ## Gravity, thrust and landing (Lunar Lander)
 
@@ -61,11 +62,22 @@
 - Maze-game AI decomposes into a few strategies with parameters. The Pac-Man ghosts: Blinky chases directly; Pinky targets a few tiles ahead of the player's direction; Inky uses the player's and Blinky's positions to flank; Clyde chases when far and retreats to a corner inside a threshold. Sketch: `<ai targeting="direct" />`, `"ahead" lookahead=4`, `"flank" reference="blinky"`, `"proximity_flee" threshold=8 fallback="corner"`. Pathfinding is the engine's job. Other modes: predictive, random, territorial.
 - Berserk's robots are the first need: today they patrol and fire along a facing; nothing chases or aims ([10](10-games-as-tests.md)). The smallest step is a verb that sets a velocity (or aims a `<fire>`) from another object's position.
 
-## Paths and formations (idea)
+## Paths and formations (Galaxian)
 
-- Galaxian/Galaga enemies fly curved entrances, hold a formation, then dive: scripted motion, neither constant velocity nor physics. Originals used stored tables of positions or velocity steps, math for loops, tiny command languages, and a script per entrance ending in an empty formation slot.
-- Support four representations behind one interface "position (and heading) at time t": **lookup table** (positions or velocity steps), **parametric curve** (x, y as expressions of time; fits the evaluator), **Bezier** (facing from the derivative), **command sequence** (turtle: forward, turn, repeat).
-- Sketch (not adopted): a named path element defined once; objects refer to it by name and say when to start; numbers in content. Formations are a grid of slots with a "go to slot" verb and a release rule for dives.
+**What we looked for.** Galaxian's aliens fly in, hold a formation, then break away and dive: scripted motion, neither constant velocity nor physics, and the same script flown by many objects. The originals used stored tables of positions or velocity steps, math for loops, tiny command languages, and a script per entrance ending in an empty formation slot.
+
+**What we looked at.** Four ways to write a path, all able to sit behind one interface ("where is it at time t"): a **table of steps** (move this far, then this far), a **parametric curve** (x and y as expressions of time; fits the evaluator), **Bezier** curves (facing from the derivative), and a **command sequence** (turtle: forward, turn, repeat).
+
+**Chosen: the table of steps, built first because it is the simplest.**
+- A named `<path>` in the game's `<paths>`, written once and flown by any object (`<follow path="...">`), as the sketch here had it. Its numbers are content: a `<speed>`, an optional `<start>`, then `<step>`s (an `<x>` and a `<y>`, relative to where the step began) and `<home />`.
+- **Relative steps, not points.** The same dive is flown from any place in the formation, and a `<wrap />` in the middle of a step does not upset it, because what is left of a step is a distance, not a target. Galaxian's dive uses that: its steps add up to the window's height plus an alien's, which is exactly what the wrap takes off, so a diver that misses comes back from the top to its own place.
+- **Home is the formation.** An object's `<position>` is its slot; `<home />` flies back to it from wherever the object is. A formation is then just the objects' places, and needs no grid of slots or "go to slot" verb.
+- **A step can run commands** as it sets off (the follower's own, as on its timer), which is how a diver drops bombs on the way down without a timer that fires in formation too.
+- **A path sets the velocity**, each frame, and the object moves, wraps and collides as anything else does; nothing about collisions changed.
+- **`<stagger>` on `<follow object=...>`** sends a group one behind another, each waiting at the path's start: a line of aliens flying in. An object already on a path ignores another `<follow>`, so an alien's dive timer simply does nothing while it is still flying in.
+- Rejected for now: absolute points (a dive would need a copy per slot), a `<wait>` leg, a delay before the first of a stagger (the five rows fly in at once, on five paths), aiming.
+
+**Open.** Curves (a Bezier or a parametric leg) for smooth loops; steps that ease in and out; a formation that sways (home would have to move with it); a dive that aims at the player; Galaga's capture beam. The generator does not know paths yet.
 
 ## Small value ideas
 

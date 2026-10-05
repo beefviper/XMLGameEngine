@@ -17,7 +17,7 @@
 namespace xge
 {
 	// Deserializes a game XML file into Game's raw (unevaluated) data -
-	// windowDesc, rawVariables, rawStates, rawObjects, rawSounds - the values,
+	// windowDesc, rawVariables, rawStates, rawObjects, rawSounds, rawPaths - the values,
 	// sprites, sounds and commands exactly as the file says them, none of it worked out yet (that is
 	// game_expr's job). Only ever talks to the abstract XmlNode/XmlDocument
 	// interface (xml_document.h), never a particular XML library directly - same
@@ -47,6 +47,7 @@ namespace xge
 			std::vector<RawState>& rawStates,
 			std::vector<RawObject>& rawObjects,
 			std::vector<RawSound>& rawSounds,
+			std::vector<RawPath>& rawPaths,
 			SchemaValidation& validation);
 	};
 }

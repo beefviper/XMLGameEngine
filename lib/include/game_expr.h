@@ -61,7 +61,8 @@ namespace xge
 			const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 			std::vector<RawState>& rawStates, std::vector<State>& states,
 			std::vector<RawObject>& rawObjects, std::vector<Object>& objects,
-			const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds);
+			const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds,
+			const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths);
 
 		// Every object's size, keyed by object name and bound into symbolTable as
 		// "name.width" / "name.height" (unless the object declares a <variable>

@@ -44,9 +44,20 @@ namespace xge
 		// stop the game in the middle of play (and used to read past the end of
 		// the list of states).
 		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
-			const std::vector<SoundDesc>& sounds, const std::string& where)
+			const std::vector<SoundDesc>& sounds, const std::map<std::string, Path>& paths, const std::string& where)
 		{
-			if (const auto* become = std::get_if<CmdBecome>(&command))
+			if (const auto* follow = std::get_if<CmdFollow>(&command))
+			{
+				if (!paths.count(follow->path))
+				{
+					throw std::runtime_error(where + ": <follow path=\"" + follow->path + "\" /> names no path of the game");
+				}
+				if (!follow->target.empty() && !findObject(objects, follow->target))
+				{
+					throw std::runtime_error(where + ": <follow> names '" + follow->target + "', and there is no object of that name");
+				}
+			}
+			else if (const auto* become = std::get_if<CmdBecome>(&command))
 			{
 				if (!become->target.empty())
 				{
@@ -126,15 +137,37 @@ namespace xge
 			}
 		}
 
-		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds)
+		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
+			const std::map<std::string, Path>& paths)
 		{
 			const auto checkAll = [&](const std::vector<Command>& commands, const std::string& where)
 			{
 				for (const auto& command : commands)
 				{
-					checkCommand(command, states, objects, sounds, where);
+					checkCommand(command, states, objects, sounds, paths, where);
 				}
 			};
+
+			// A <follow> with no object= is about the object running it, which a
+			// state's commands do not have.
+			const auto checkOwnFollow = [&](const std::vector<Command>& commands, const std::string& where)
+			{
+				for (const auto& command : commands)
+				{
+					const auto* follow = std::get_if<CmdFollow>(&command);
+					if (follow && follow->target.empty())
+					{
+						throw std::runtime_error(where + ": <follow path=\"" + follow->path + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
+					}
+				}
+			};
+
+			// A path's commands are run by whichever object is flying it, as on
+			// one of its own timers.
+			for (const auto& [name, path] : paths)
+			{
+				for (const auto& step : path.steps) { checkAll(step.commands, "path '" + name + "' > <step>"); }
+			}
 
 			// A <become> with no object= is about the object running it, which
 			// a state's commands do not have, and which must have that look.
@@ -158,9 +191,9 @@ namespace xge
 			for (const auto& state : states)
 			{
 				const std::string where = "state '" + state.name + "'";
-				for (const auto& [key, commands] : state.input) { checkAll(commands, where); checkOwnLooks(commands, nullptr, where); }
-				for (const auto& condition : state.conditions) { checkAll(condition.commands, where); checkOwnLooks(condition.commands, nullptr, where); }
-				for (const auto& timer : state.timers) { checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, nullptr, where + " > <timer>"); }
+				for (const auto& [key, commands] : state.input) { checkAll(commands, where); checkOwnLooks(commands, nullptr, where); checkOwnFollow(commands, where); }
+				for (const auto& condition : state.conditions) { checkAll(condition.commands, where); checkOwnLooks(condition.commands, nullptr, where); checkOwnFollow(condition.commands, where); }
+				for (const auto& timer : state.timers) { checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, nullptr, where + " > <timer>"); checkOwnFollow(timer.commands, where + " > <timer>"); }
 			}
 
 			for (const auto& object : objects)
@@ -188,6 +221,10 @@ namespace xge
 					}
 				}
 				for (const auto& rule : object.collisionData.basic) { checkAll(rule.commands, where); }
+				for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+				{
+					checkAll(*edge, where);
+				}
 			}
 		}
 	}
@@ -196,7 +233,8 @@ namespace xge
 		const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 		std::vector<RawState>& rawStates, std::vector<State>& states,
 		std::vector<RawObject>& rawObjects, std::vector<Object>& objects,
-		const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds)
+		const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds,
+		const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths)
 	{
 		generator.seed(seed());
 
@@ -609,7 +647,42 @@ namespace xge
 			sounds.push_back(processSound(rawSound));
 		}
 
-		checkReferences(states, objects, sounds);
+		// The paths, worked out last too: a step's numbers can use any variable.
+		for (const RawPath& rawPath : rawPaths)
+		{
+			const std::string where = "path '" + rawPath.name + "'";
+			if (paths.count(rawPath.name))
+			{
+				throw std::runtime_error(where + ": there is already a path of that name");
+			}
+
+			Path path;
+			path.name = rawPath.name;
+			path.speed = evaluate(rawPath.speed, where + " > <speed>");
+			if (!(path.speed > 0.0f))
+			{
+				throw std::runtime_error(where + ": the <speed> is not above 0, so it would never get anywhere");
+			}
+			path.hasStart = rawPath.hasStart;
+			if (rawPath.hasStart)
+			{
+				path.start = { evaluate(rawPath.startX, where + " > <start>"), evaluate(rawPath.startY, where + " > <start>") };
+			}
+			for (const RawPathStep& rawStep : rawPath.steps)
+			{
+				PathStep step;
+				step.home = rawStep.home;
+				if (!rawStep.home)
+				{
+					step.by = { evaluate(rawStep.x, where + " > <step>"), evaluate(rawStep.y, where + " > <step>") };
+					step.commands = processCommands(rawStep.commands, where + " > <step>");
+				}
+				path.steps.push_back(std::move(step));
+			}
+			paths[path.name] = std::move(path);
+		}
+
+		checkReferences(states, objects, sounds, paths);
 	}
 
 	SoundDesc game_expr::processSound(const RawSound& raw)

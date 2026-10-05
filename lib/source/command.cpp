@@ -115,6 +115,13 @@ namespace xge
 		}
 		if (verb == "fire")    { return CmdFire{ raw.object }; }
 		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action }; }
+		if (verb == "follow")
+		{
+			const bool none = raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty();
+			const float stagger = none ? 0.0f : evaluate(raw.seconds);
+			if (stagger < 0.0f) { throw std::runtime_error("<follow path=\"" + raw.path + "\">: the <stagger> is below 0"); }
+			return CmdFollow{ raw.path, raw.object, stagger };
+		}
 
 		throw std::runtime_error("unknown command <" + verb + ">");
 	}
@@ -274,6 +281,7 @@ namespace xge
 			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
 			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << ")"; },
 			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
+			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
 		}, command);
 
 		return o;
@@ -415,6 +423,10 @@ namespace xge
 		else if (command.verb == "trigger")
 		{
 			o << "(" << command.object << "," << command.action << ")";
+		}
+		else if (command.verb == "follow")
+		{
+			o << "(" << command.path << (command.object.empty() ? "" : ", " + command.object) << ")";
 		}
 
 		return o;

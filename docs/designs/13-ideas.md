@@ -31,7 +31,7 @@
 - **Placement and packing:** large bases on a grid; with a one-cell gap a destroyed base leaves a hole that fits one enemy base, with two cells it fits four. Footprint and spacing are game parameters worth exposing; failure modes depend non-linearly on spacing.
 - **Balance math, as value helpers:** clamp, saturate (0 to 1), floor/ceiling, hard cap, diminishing returns, smooth steps, switching a term off by multiplying with a comparison result ([02](02-values-variables-and-names.md)).
 - Observations: a successful game's new mechanics become a genre named after it; simulators keep adding fidelity (a physics layer may be asked to model a machine); some games hide a very different game under a simple opening (how much of a game should one XML file hold).
-- Candidate next games: a Galaxian step (needs paths and formations), a game that needs a real jump (Donkey Kong / Mario style).
+- Candidate next games: a Galaga step on from Galaxian (curved paths, a capture beam, a formation that breathes), a game that needs a real jump (Donkey Kong / Mario style).
 
 ## Smaller ideas
 
