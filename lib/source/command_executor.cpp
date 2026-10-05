@@ -30,6 +30,7 @@ namespace xge
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
 			[&](const CmdBecome& b) { become(&object, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
+			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
 			                      appear in a collisionData list, and carry() and
 			                      deflect() are about another object, which a screen
@@ -55,6 +56,7 @@ namespace xge
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
 			[&](const CmdBecome& b) { become(&object, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
+			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
@@ -80,6 +82,7 @@ namespace xge
 			[&](const CmdDecrement& d) { if (keyPressed) { game.decrementText(d.target, d.amount); } },
 			[&](const CmdBecome& b) { if (keyPressed) { become(nullptr, b); } },
 			[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
+			[&](const CmdFollow& f) { if (keyPressed) { follow(nullptr, f); } },
 			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
 			                      directly on a state's <input>; only reachable
 			                      via CmdTriggerAction into an object's own
@@ -99,6 +102,7 @@ namespace xge
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const CmdBecome& b) { become(owner, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
+			[&](const CmdFollow& f) { follow(owner, f); },
 			// On an object, a bare reset puts that object back; in a state, it is
 			// the whole game, as on a key.
 			[&](const CmdReset&) { if (owner) { restart(*owner); } else { game.resetAll(); } },
@@ -122,6 +126,18 @@ namespace xge
 		else if (self)
 		{
 			showLookNamed(*self, command.sprite);
+		}
+	}
+
+	void CommandExecutor::follow(Object* self, const CmdFollow& command)
+	{
+		if (!command.target.empty())
+		{
+			game.follow(command.target, command.path, command.stagger);
+		}
+		else if (self)
+		{
+			game.follow(*self, command.path);
 		}
 	}
 
@@ -174,6 +190,7 @@ namespace xge
 	{
 		object.collisionData.enabled = false;
 		object.isVisible = false;
+		object.followPath.clear();
 	}
 
 	// Comes to rest: no velocity, and nothing left to change it - neither the
@@ -190,6 +207,7 @@ namespace xge
 		object.activeTurn = {};
 		object.activeThrustAhead = 0.0f;
 		object.activeThrustAheadBurn.clear();
+		object.followPath.clear();
 	}
 
 	// Back where it started, facing the way it started. (Not its velocity:
@@ -482,6 +500,7 @@ namespace xge
 				[&](const CmdReset&) { if (keyPressed) { restart(object); } },
 				[&](const CmdBecome& b) { if (keyPressed) { become(&object, b); } },
 				[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
+				[&](const CmdFollow& f) { if (keyPressed) { follow(&object, f); } },
 				// Thrust is held like a move: on while the key is down.
 				[&](const CmdAccelerate& a) { applyActionThrust(object, a.direction, keyPressed ? a.amount : 0.0f, a.burn); },
 				// So are a turn and a thrust along the heading.

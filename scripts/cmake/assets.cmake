@@ -27,7 +27,8 @@ set(data_xml
 	"games/asteroids.xml"
 	"games/berserk.xml"
 	"games/demonattack.xml"
-	"games/frostbite.xml")
+	"games/frostbite.xml"
+	"games/galaxian.xml")
 
 set(data_assets
 	"assets/tuffy.ttf"

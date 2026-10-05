@@ -12,16 +12,17 @@ Read from the readme and `xgedef.xsd` of the `working` branch on 2026-10-04.
 
 **Nouns: things that exist**
 
-- Containers: `game`, `window`, `variables`, `sounds`, `objects`, `states`.
+- Containers: `game`, `window`, `variables`, `sounds`, `paths`, `objects`, `states`.
 - Things: `object`, `group` and its `member`s, `grid` cells, `variable`, `state`, `sound`, a named `keys` set, `timer`.
 - Sprite shapes: `circle`, `rectangle`, `text`, `image`, `line`, `bitmap`, `svg`. Several named `sprite`s on one object are its **looks** (`become`) or the frames of an `animation` (`frame`).
 - Sound parts: `note`, `rest`.
+- Path parts: `path`, its `step`s and `home`, `start`, `speed`.
 
 **Verbs: commands**
 
 | Family | Words |
 |---|---|
-| Motion | `move`, `hop`, `jump`, `accelerate`, `thrust`, `turn`, `reverse`, `stop` |
+| Motion | `move`, `hop`, `jump`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `follow` |
 | Collision responses | `bounce`, `deflect`, `stick`, `wrap`, `carry` |
 | Lifecycle | `die`, `reset`, `fire`, `release`, `reveal` |
 | Appearance | `become` |
@@ -81,7 +82,7 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 |---|---|---|
 | **Math**, beyond the four operations | `min`, `max`, `negate`, `abs`, `clamp`, `floor`, `sign`, `pick`, an integer `random`, a `count` of objects; a `<random>` step in an `<equation>` | [01](01-vision-and-format.md#arithmetic-in-text-and-as-tags), [02](02-values-variables-and-names.md), [13](13-ideas.md) (balance helpers) |
 | **Creation** | `create`, `destroy`. Nothing makes an object while a game runs; `fire`, `release` and `reveal` bring members of a hidden pool into play | [08](08-timers-and-enemy-behavior.md) |
-| **Aiming and chasing** | `aim`, `chase`, `ai targeting=...`, paths and formations | [06](06-motion-and-verbs.md), [08](08-timers-and-enemy-behavior.md) |
+| **Aiming and chasing** | `aim`, `chase`, `ai targeting=...`, curved paths and moving formations (paths of straight steps are built) | [06](06-motion-and-verbs.md), [08](08-timers-and-enemy-behavior.md) |
 | **Arcing jump** | grounded versus airborne, a jump impulse, air control | [06](06-motion-and-verbs.md) |
 | **Queries** for conditions | `count`, `distance`, `touching`, `speed`, a timer's time left. Only `remaining` and a variable threshold exist | [04](04-states-conditions-and-input.md), [08](08-timers-and-enemy-behavior.md) |
 | **Branching and events** | `if`, `and`, `or`, `goto state`, an event queue. A condition tests one threshold; this is deliberate, to keep control flow out | [01](01-vision-and-format.md), [04](04-states-conditions-and-input.md), [08](08-timers-and-enemy-behavior.md) |

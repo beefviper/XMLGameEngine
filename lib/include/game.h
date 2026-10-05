@@ -139,6 +139,20 @@ namespace xge
 		// that name or group that are out of play come back where they started.
 		void reveal(const std::string& target, int count);
 
+		// <follow path="..." />: the object sets off along that path, unless it
+		// is on one already (it finishes that first), after waiting `wait`
+		// frames. Throws std::out_of_range for a path the game does not have
+		// (a game file is checked for that when it loads).
+		void follow(Object& object, const std::string& path, int wait = 0);
+
+		// <follow path="..." object="name"><stagger>s</stagger></follow>: every
+		// object of that name or group that is in play sets off, each `stagger`
+		// seconds after the one before, in the order written.
+		void follow(const std::string& target, const std::string& path, float stagger);
+
+		// Every path the game file describes (<paths>), worked out.
+		const std::map<std::string, Path>& getPaths(void) const noexcept;
+
 	private:
 		// The one implementation behind incrementText and decrementText;
 		// `verb` is only for the warning printed when the target is not found.
@@ -167,6 +181,8 @@ namespace xge
 		std::vector<Object> objects;
 		std::vector<RawSound> rawSounds;
 		std::vector<SoundDesc> sounds;
+		std::vector<RawPath> rawPaths;
+		std::map<std::string, Path> paths;
 		std::vector<std::string> soundRequests;
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
@@ -187,6 +203,13 @@ namespace xge
 		// Whether it is in motion at all this frame: moving, being carried, or
 		// having just made a hop.
 		static bool isMoving(const Object& object) noexcept;
+
+		// Sets the velocity of every shown object that is on a path for this
+		// frame's part of it (see Path), starting its next leg when one is
+		// done and running that leg's commands; at the end of the path it
+		// comes to rest. Before the edge checks and the move, so a follower
+		// moves, wraps and collides like anything else.
+		void applyPaths(void);
 
 		// Changes every shown object's velocity by its <acceleration> and by
 		// whatever <accelerate> thrust is being held (burning its fuel), once a

@@ -356,6 +356,18 @@ namespace xge
 		int jumpFramesLeft{ 0 };
 		bool isAirborne() const noexcept { return jumpFramesLeft > 0; }
 
+		// A <follow> under way (see Path, Game::applyPaths): the path's name
+		// (empty: on none), which of its legs is being flown, what is left of
+		// that step to go, whether the leg has set off yet (its commands run
+		// once, as it does), and how many frames are left to wait before the
+		// first leg (a <stagger>). A reset, a <die /> or a <reveal> ends it.
+		std::string followPath;
+		std::size_t followLeg{};
+		Vector2f followLeft{};
+		bool followLegStarted{ false };
+		int followWait{};
+		bool isFollowing() const noexcept { return !followPath.empty(); }
+
 		// The looks <become> switches between: each named sprite as the window
 		// backends draw it (spriteParams, and the picture for a bitmap or a
 		// drawing of lines), shared by every object made from the definition.

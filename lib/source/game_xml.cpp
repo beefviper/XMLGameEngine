@@ -614,7 +614,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play"
-				|| name == "jump" || name == "reverse" || name == "become" || name == "reveal";
+				|| name == "jump" || name == "reverse" || name == "become" || name == "reveal" || name == "follow";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -632,6 +632,7 @@ namespace xge
 			command.burn = node.getAttribute("burn");
 			command.sound = node.getAttribute("sound");
 			command.sprite = node.getAttribute("sprite");
+			command.path = node.getAttribute("path");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec")
@@ -675,6 +676,16 @@ namespace xge
 				}
 				command.amount = readValueOf(node, "distance", here);
 				if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+			}
+			if (verb == "follow")
+			{
+				requireAttribute(node, "path", where);
+				const std::string here = where + " > <follow>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "stagger") { fail(here, "unknown <" + child->getName() + ">; expected <stagger>"); }
+				}
+				if (auto stagger = findChild(&node, "stagger")) { command.seconds = readValue(*stagger, here); }
 			}
 			if (verb == "release")
 			{
@@ -724,6 +735,61 @@ namespace xge
 			}
 
 			return timers;
+		}
+
+		// A <path>: its <speed>, maybe a <start>, then its <step>s and <home />s
+		// in the order flown.
+		RawPath readPath(const XmlNode& node)
+		{
+			RawPath path;
+			path.name = requireAttribute(node, "name", "<paths> > <path>");
+			const std::string where = "path '" + path.name + "'";
+
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string name = child->getName();
+				if (name == "speed")
+				{
+					path.speed = readValue(*child, where + " > <speed>");
+				}
+				else if (name == "start")
+				{
+					const RawVector2 start = readVector2(*child, where + " > <start>");
+					path.hasStart = true;
+					path.startX = start.x;
+					path.startY = start.y;
+				}
+				else if (name == "home")
+				{
+					RawPathStep step;
+					step.home = true;
+					path.steps.push_back(std::move(step));
+				}
+				else if (name == "step")
+				{
+					const std::string here = where + " > <step>";
+					RawPathStep step;
+					step.x = readValueOf(*child, "x", here);
+					step.y = readValueOf(*child, "y", here);
+
+					// The commands come after the <x> and the <y>.
+					std::unique_ptr<XmlNode> first = child->getFirstChild();
+					while (first && (first->getName() == "x" || first->getName() == "y"))
+					{
+						first = first->getNextSibling();
+					}
+					step.commands = readCommands(std::move(first), here);
+					path.steps.push_back(std::move(step));
+				}
+				else
+				{
+					fail(where, "unknown <" + name + ">; expected <speed>, <start>, <step> and <home />");
+				}
+			}
+
+			if (path.speed.kind == RawValue::Kind::Expression && path.speed.text.empty()) { fail(where, "missing <speed>"); }
+			if (path.steps.empty()) { fail(where, "has no <step> or <home />"); }
+			return path;
 		}
 
 		std::string readFacing(const XmlNode& node, const std::string& where)
@@ -1168,7 +1234,8 @@ namespace xge
 
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
-		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, SchemaValidation& validation)
+		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
+		SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
 
@@ -1244,6 +1311,15 @@ namespace xge
 			for (std::unique_ptr<XmlNode> sound = soundsNode->getFirstChild(); sound != nullptr; sound = sound->getNextSibling())
 			{
 				rawSounds.push_back(readSound(*sound));
+			}
+		}
+
+		// load paths (optional: only a game whose objects fly them has any)
+		if (std::unique_ptr<XmlNode> pathsNode = findChild(root.get(), "paths"))
+		{
+			for (std::unique_ptr<XmlNode> path = pathsNode->getFirstChild(); path != nullptr; path = path->getNextSibling())
+			{
+				rawPaths.push_back(readPath(*path));
 			}
 		}
 

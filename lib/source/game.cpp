@@ -18,8 +18,8 @@ namespace xge
 	Game::Game(const std::string& game, XmlBackend xmlBackend) :
 		filename(game)
 	{
-		xml.init(filename, xmlBackend, windowDesc, rawVariables, rawStates, rawObjects, rawSounds, xmlValidation);
-		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds);
+		xml.init(filename, xmlBackend, windowDesc, rawVariables, rawStates, rawObjects, rawSounds, rawPaths, xmlValidation);
+		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 
 		for (const auto& state : states)
@@ -103,6 +103,8 @@ namespace xge
 		// Timers go off before anything moves, so a bomb dropped this frame
 		// starts falling this frame.
 		updateTimers();
+
+		applyPaths();
 
 		applyAcceleration();
 
@@ -542,6 +544,7 @@ namespace xge
 			object.jumpStep = {};
 			object.jumpFramesLeft = 0;
 			object.facing = object.facingOriginal;
+			object.followPath.clear();
 			if (!object.looks.empty()) { object.showLook(0); }
 			for (auto& timer : object.timers)
 			{
@@ -623,7 +626,111 @@ namespace xge
 			object.velocity = object.velocityOriginal;
 			object.isVisible = true;
 			object.collisionData.enabled = object.collisionEnabledOriginal;
+			object.followPath.clear();
 			--count;
+		}
+	}
+
+	const std::map<std::string, Path>& Game::getPaths(void) const noexcept
+	{
+		return paths;
+	}
+
+	void Game::follow(Object& object, const std::string& path, int wait)
+	{
+		const Path& chosen = paths.at(path);
+		if (object.isFollowing())
+		{
+			return;
+		}
+
+		object.followPath = path;
+		object.followLeg = 0;
+		object.followLeft = {};
+		object.followLegStarted = false;
+		object.followWait = std::max(0, wait);
+		object.velocity = {};
+		if (chosen.hasStart)
+		{
+			object.position = chosen.start;
+		}
+	}
+
+	void Game::follow(const std::string& target, const std::string& path, float stagger)
+	{
+		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
+		int setOff = 0;
+		for (auto& object : objects)
+		{
+			const bool named = object.name == target || object.baseName == target || (!object.groupName.empty() && object.groupName == target);
+			if (!named || !object.isVisible || object.isFollowing()) { continue; }
+
+			follow(object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(framerate))));
+			++setOff;
+		}
+	}
+
+	void Game::applyPaths(void)
+	{
+		CommandExecutor executor(*this);
+
+		for (auto& object : objects)
+		{
+			if (!object.isFollowing() || !isShown(object))
+			{
+				continue;
+			}
+
+			if (object.followWait > 0)
+			{
+				--object.followWait;
+				object.velocity = {};
+				continue;
+			}
+
+			const Path& path = paths.at(object.followPath);
+			bool moving = false;
+			while (object.isFollowing() && object.followLeg < path.steps.size())
+			{
+				const PathStep& leg = path.steps[object.followLeg];
+				if (!object.followLegStarted)
+				{
+					object.followLegStarted = true;
+					object.followLeft = leg.by;
+
+					// A copy: a command may reset the object, which ends the path.
+					const std::vector<Command> commands = leg.commands;
+					for (const auto& command : commands)
+					{
+						executor.executeTimer(command, &object);
+					}
+					if (!object.isFollowing()) { break; }
+				}
+
+				// What is left of this leg: the rest of a step, or the way home
+				// from wherever it has got to.
+				const Vector2f left = leg.home ? object.positionOriginal - object.position : object.followLeft;
+				const float distance = std::hypot(left.x, left.y);
+				if (distance < 0.001f)
+				{
+					++object.followLeg;
+					object.followLegStarted = false;
+					continue;
+				}
+
+				const Vector2f step = distance <= path.speed ? left : left * (path.speed / distance);
+				object.velocity = step;
+				if (!leg.home) { object.followLeft -= step; }
+				moving = true;
+				break;
+			}
+
+			// The end of the path: it comes to rest where it is.
+			if (object.isFollowing() && !moving)
+			{
+				object.velocity = {};
+				object.followPath.clear();
+			}
 		}
 	}
 

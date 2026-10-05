@@ -504,8 +504,48 @@
           <xs:attribute name="sound" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="follow" type="followType" />
     </xs:choice>
   </xs:group>
+
+  <!--
+    follow: the object sets off along one of the game's <paths>. With object=
+    every object of that name or group does, each <stagger> seconds after the
+    one before (0 if left out).
+  -->
+  <xs:complexType name="followType">
+    <xs:sequence>
+      <xs:element name="stagger" type="valueType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="path" type="xs:string" use="required" />
+    <xs:attribute name="object" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!--
+    A path: how fast it is flown (pixels a frame), where it begins (left out:
+    wherever the object is), then its legs in order. A step moves the object
+    by x and y from where the step began, and runs its commands as it sets
+    off; home takes it back to where it started the game.
+  -->
+  <xs:complexType name="pathStepType">
+    <xs:sequence>
+      <xs:element name="x" type="valueType" />
+      <xs:element name="y" type="valueType" />
+      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="pathType">
+    <xs:sequence>
+      <xs:element name="speed" type="valueType" />
+      <xs:element name="start" type="vector2Type" minOccurs="0" />
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="step" type="pathStepType" />
+        <xs:element name="home" type="emptyType" />
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+  </xs:complexType>
 
   <!--
     A collision rule. With edge it is about a screen edge; without, it is about
@@ -711,6 +751,13 @@
           <xs:complexType>
             <xs:sequence>
               <xs:element name="sound" type="soundType" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="paths" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="path" type="pathType" maxOccurs="unbounded" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>

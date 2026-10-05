@@ -23,6 +23,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/berserk.xml` | Berserk, after the arcade game Berzerk: four mazes of electrified walls with robots that patrol and shoot back, a man who shoots the way he faces, Evil Otto if you linger, exits in every outer wall (see [design 10](docs/designs/10-games-as-tests.md); first written by another AI from the schema alone, see [design 10](docs/designs/10-games-as-tests.md)) |
 | `games/demonattack.xml` | Demon Attack: slide along the bottom and shoot the demons, which bounce from side to side and fire down at you (first written by another AI) |
 | `games/frostbite.xml` | Frostbite: jump Bailey between the snowy shore and four rows of drifting ice; every white row he lands on turns blue and adds a block to his igloo; the water, the cold and the snow geese are against him; finish the igloo and walk in |
+| `games/galaxian.xml` | Galaxian: a fleet flies in on curving paths and settles into formation, then one alien at a time dives at your ship, weaving and dropping bombs, and loops back to its place from the top of the screen |
 
 ## What a game file looks like
 

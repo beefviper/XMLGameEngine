@@ -244,10 +244,23 @@ namespace xge
 		std::string target;
 	};
 
+	// <follow path="dive" /> - the object sets off along one of the game's
+	// <paths> (see Path): from an object's own rule, action or timer, that
+	// object; with object="name", every object of that name or <group>, each
+	// `stagger` seconds after the one before, so a line of them flies in one
+	// behind another. An object already on a path finishes it first. See
+	// Game::follow and Game::applyPaths.
+	struct CmdFollow
+	{
+		std::string path;
+		std::string target; // empty: the object running the command
+		float stagger{};
+	};
+
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry, CmdDeflect, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdBecome, CmdReveal>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdBecome, CmdReveal, CmdFollow>;
 
 	// --- What the XML says, before any of it is evaluated.
 
@@ -352,8 +365,9 @@ namespace xge
 		std::string burn;      // accelerate, thrust
 		std::string sound;     // play
 		std::string sprite;    // become
+		std::string path;      // follow
 		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance)
-		RawValue seconds;      // jump (empty text: the default)
+		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
 	};
 
 	// A <timer> as written: <every> (again and again) or <after> (once), a
@@ -385,6 +399,54 @@ namespace xge
 		// gone off.
 		int framesLeft{ -1 };
 		bool done{ false };
+	};
+
+	// One leg of a path as written: a step of x and y (and the commands run as
+	// it sets off), or home. See Path.
+	struct RawPathStep
+	{
+		bool home{ false };
+		RawValue x;
+		RawValue y;
+		std::vector<RawCommand> commands;
+	};
+
+	// A <path> as written, in the game's <paths>. See Path.
+	struct RawPath
+	{
+		std::string name;
+		RawValue speed;
+		bool hasStart{ false };
+		RawValue startX;
+		RawValue startY;
+		std::vector<RawPathStep> steps;
+	};
+
+	struct PathStep
+	{
+		bool home{ false };
+		Vector2f by;
+		std::vector<Command> commands;
+	};
+
+	// A path: a way through the window that objects <follow>, written once
+	// and flown by any number of them (Galaxian's aliens flying in and
+	// diving). It is a list of legs flown one after the other at `speed`
+	// pixels a frame: a step moves the object by `by` from wherever the step
+	// began, and runs its commands (an object's own, as on a timer: firing,
+	// a sound) as it sets off; home takes it back to where it started the
+	// game (its <position>), however far it has come. With a start, the
+	// object is first put there; without, it sets off from where it is. The
+	// numbers are worked out once, when the game loads. A follower is moved
+	// by its velocity like anything else, so it collides, and a <wrap /> on
+	// the way carries it round without changing what is left of the step.
+	struct Path
+	{
+		std::string name;
+		float speed{};
+		bool hasStart{ false };
+		Vector2f start;
+		std::vector<PathStep> steps;
 	};
 
 	// Works out a RawValue to a number; makeCommand is given one so that it can

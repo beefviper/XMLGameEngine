@@ -73,6 +73,10 @@ namespace xge
 		// <become>: the object running it (self, which a state's commands do
 		// not have), or every object its object= names.
 		void become(Object* self, const CmdBecome& command);
+
+		// <follow>: with object=, every object of that name sets off along the
+		// path (Game::follow); without, `self` does (nothing when there is none).
+		void follow(Object* self, const CmdFollow& command);
 		void stop(Object& object);
 		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
 		void applyActionTurn(Object& object, Direction direction, float rate);
