@@ -5,6 +5,7 @@
 
 #include "cli.h"
 #include "data_folder.h"
+#include "generate.h"
 #include "game.h"
 #include "engine.h"
 
@@ -46,6 +47,44 @@ int main(int argc, char* argv[])
 	{
 		std::cerr << "Error: " << error.what() << "\n\n" << xge::usageText();
 		return EXIT_FAILURE;
+	}
+
+	// --generate writes the game out as a program instead of playing it: into
+	// the folder given, or <game>-<target> where the program was started.
+	if (!options.generate.empty())
+	{
+		const std::filesystem::path base = dataFolder.empty() ? std::filesystem::current_path() : dataFolder;
+
+		xge::GenerateRequest request;
+		request.gameFile = filename;
+		request.target = options.generate;
+		request.generators = base / "generators";
+		request.dataFolder = base;
+		request.output = std::filesystem::absolute(options.output.empty()
+			? std::filesystem::path(std::filesystem::path(filename).stem().string() + "-" + options.generate)
+			: std::filesystem::path(options.output));
+
+		try
+		{
+			const xge::GeneratedProgram program = xge::generateGame(request);
+
+			std::cout << "generated " << filename << " for " << options.generate << " in " << request.output.string() << ":\n";
+			for (const auto& file : program.files)
+			{
+				std::cout << "  " << file.generic_string() << '\n';
+			}
+			for (const auto& asset : program.assets)
+			{
+				std::cout << "  " << asset.generic_string() << " (copied)\n";
+			}
+		}
+		catch (const std::exception& error)
+		{
+			std::cerr << "Error: " << error.what() << '\n';
+			return EXIT_FAILURE;
+		}
+
+		return EXIT_SUCCESS;
 	}
 
 	// The engine reads assets/ relative to the working directory.

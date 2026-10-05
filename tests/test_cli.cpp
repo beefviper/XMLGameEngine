@@ -197,11 +197,40 @@ TEST_CASE("backend names read back the way the options take them", "[cli]")
 	CHECK(audioBackendName(AudioBackend::None) == "none");
 }
 
+TEST_CASE("generate takes a target and output a folder", "[cli]")
+{
+	const CliOptions options = parseCommandLine({ "pong", "--generate", "windows-cpp" });
+	CHECK(options.game == "pong");
+	CHECK(options.generate == "windows-cpp");
+	CHECK(options.output.empty());
+
+	CHECK(parseCommandLine({ "--generate", "Windows-CPP" }).generate == "windows-cpp");
+	CHECK(parseCommandLine({ "--generate", "windows-cpp", "-o", "out" }).output == "out");
+	CHECK(parseCommandLine({ "--generate", "windows-cpp", "-oout" }).output == "out");
+	CHECK(parseCommandLine({ "--output", "out", "--generate", "windows-cpp" }).output == "out");
+
+	// -g is still the game, not generate.
+	CHECK(parseCommandLine({ "-g", "pong" }).generate.empty());
+
+	CHECK(parseCommandLine({}).generate.empty());
+}
+
+TEST_CASE("generate needs a known target and output needs generate", "[cli]")
+{
+	CHECK_THROWS_AS(parseCommandLine({ "--generate" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--generate", "amiga-asm" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--generate", "windows-cpp", "--generate", "windows-cpp" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "-o", "out" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--generate", "windows-cpp", "-o", "a", "-o", "b" }), CliError);
+	CHECK(generateTargets() == std::vector<std::string>{ "windows-cpp" });
+}
+
 TEST_CASE("the help options ask for the usage", "[cli]")
 {
 	CHECK(parseCommandLine({ "-h" }).showHelp);
 	CHECK(parseCommandLine({ "--help" }).showHelp);
 	CHECK(usageText().find("--game") != std::string::npos);
+	CHECK(usageText().find("--generate") != std::string::npos);
 }
 
 TEST_CASE("a bare name gets .xml and is found in the working directory", "[cli]")

@@ -21,6 +21,17 @@ The XML, window and sound libraries are chosen in C++ with `Game(file, XmlBacken
 
 A game file that is wrong (it does not match the schema, an expression will not evaluate, a command names a state or object the game does not have) stops the load with a message saying where; `xgecli` prints it and exits, `xgegui` shows it and carries on.
 
+## Generating a program
+
+```
+xgecli pong --generate windows-cpp              # writes pong-windows-cpp/
+xgecli pong --generate windows-cpp -o out/pong  # or into a folder named
+```
+
+`--generate <target>` does not play the game: it turns the game file into a program of its own that plays it, with nothing of the engine in it, and exits. The only target is `windows-cpp`, a C++ program on SFML 3: `main.cpp` (the game), `CMakeLists.txt` (its build, which uses an installed SFML 3 or downloads and builds one) and `README.md`, with the font and pictures the game uses copied into `assets/` beside them. `-o` / `--output` names the folder (default `<game>-<target>` in the directory `xgecli` was started from) and is an error without `--generate`. `-g` stays the game.
+
+The work is done by XSLT stylesheets in `generators/<target>/`, run by libxslt (with EXSLT's `exsl:document` writing the files); `xgecli` only runs them and copies the assets. `generate.xsl` is the entry, `game.xsl` turns the game's objects, rules, states and keys into C++, `values.xsl` turns a value (an expression, a `<random>`, an `<equation>`, a `<formula>`) into a C++ expression, `runtime.xml` holds the C++ the engine's verbs become (a part marked `when` is written only for a game that uses that tag, so Pong carries `deflect` and a synthesizer and a game without sound does not), and `tables.xml` maps key and color names to SFML's. A tag the target cannot generate yet stops it with a message naming the tag and where it is, and a folder made for it is removed again. Only Pong's vocabulary is covered so far (see [Known limitations](#known-limitations)). `xgecli` built without libxslt says so when `--generate` is given. See [design 01](designs/01-vision-and-format.md).
+
 ## Game file layout
 
 A game file has one `<game>` root with four children, and an optional fifth (`<sounds>`), in this order, as enforced by [xgedef.xsd](../xgedef.xsd):
@@ -543,6 +554,7 @@ The library is static by default: each program has the engine's code copied into
 | File | Responsibility |
 |---|---|
 | `cli/source/main.cpp`, `cli/source/cli.cpp` | xgecli, the command line program: read the options, find the game file, build `Game` and `Engine` with the chosen backends. The only code outside the engine library |
+| `cli/source/generate.cpp`, `generators/windows-cpp/` | `--generate`: run a target's stylesheets on a game file with libxslt and copy the assets it lists ([Generating a program](#generating-a-program)) |
 | `gui/source/*.cpp` | xgegui, the Qt application ([design 12](designs/12-front-ends.md)): `main_window` (the window, the File and View menus, the question about two windows), `game_session` (a loaded game and its engine, run from a timer; play, pause, step, reset, and changing the libraries), `game_stage` (where the Qt renderer's picture is: the left pane, or a window of its own), `game_view` (the widget a picture is shown in), `key_queue` (the keyboard, read by Qt), `qt_window` (the `Window` that draws with QPainter), `options_dialog` and `session_options` (the video library, XML parser and sound library choice), `app_settings` (`xgegui.ini`, next to the program), `inspector` (the controls and the tree of game data) |
 | `game_xml.cpp` | Walk the parsed XML tags into raw window/variable/object/state data (`RawValue`, `RawCommand`, `RawSprite`); a `<group>` is read here as one raw object per member |
 | `game_expr.cpp` | exprtk symbol table and evaluation of raw values (expressions, `<random>`, `<equation>`, `<formula>`) into `Object`s and `State`s |
@@ -593,3 +605,4 @@ The library is static by default: each program has the engine's code copied into
 - `<equation>` and `<formula>` have four operations and no more: no `min`, `max`, `negate`, `abs`, `clamp`, `sign` or `pick` (the exprtk text has them). An operand is a name or a number, so a sum that is needed in two places is a named `<equation>` step; an `<equation>` has no `<random>` step (a `<formula>` operand can be one). Only Pong and Breakout use the tags; every other game still writes its arithmetic as text.
 - A `<divide>` by something not known while the game loads (another object's variable, an unmeasured text's size) works out to 0 at load, and only a position or a timer's interval is worked out again afterwards, so an object `<variable>` made from such a division keeps the 0.
 - The window's `width`, `height` and `framerate` are plain numbers, not values, and are read once, before the window opens. The size cannot be changed while a game runs, in `xgegui` either.
+- `--generate windows-cpp` covers what Pong uses and no more: circles, rectangles, text and images; edge and object rules with `bounce`, `stick`, `deflect`, `reset`, `die`, `stop`, `reverse`, `move`, `inc`, `dec`, `play`, `push`, `pop` and `trigger`; conditions, key bindings and sounds. The first tag each other game needs is `<line>` (Asteroids, Lunar Lander), `<group>` (Astrosmash, Breakout, Depth Charge, Freeway, Frostbite, Space Race), `<bitmap>` (Berserk, Kaboom, Space Invaders), `<wrap>` (Demon Attack), `<grid>` (Frogger) and `<svg>` (Space Invaders 2). The C++ in `runtime.xml` is a second copy of what the engine's verbs do, so a change to a verb in the engine has to be made there too. The generated program has been built and played on Linux with GCC, not yet on Windows with Visual Studio.
