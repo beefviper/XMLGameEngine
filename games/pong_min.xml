@@ -1,0 +1,124 @@
+<!-- pong_min.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 5, 2026 -->
+
+<!-- Pong with nothing but the game: two paddles and a ball. No title, score,
+     pause, text or sound; a point puts the ball back in the middle and play goes
+     on. The smallest game the windows-cpp generator is tried on. -->
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Pong">
+    <width>1280</width>
+    <height>720</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="margin">30</variable>
+    <variable name="ball.radius">10</variable>
+    <variable name="width">30</variable>
+    <variable name="height">150</variable>
+    <variable name="step">5</variable>
+  </variables>
+  <objects>
+    <object name="ball">
+      <sprite>
+        <circle>
+          <radius>ball.radius</radius>
+          <color>color.white</color>
+        </circle>
+      </sprite>
+      <position><x>window.width.center - ball.radius</x><y>window.height.center - ball.radius</y></position>
+      <velocity>
+        <x><random min="-7" max="7" /></x>
+        <y><random min="-3" max="3" /></y>
+      </velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="vertical">
+          <bounce />
+        </collision>
+        <collision edge="horizontal">
+          <reset />
+        </collision>
+        <collision>
+          <deflect>45</deflect>
+        </collision>
+      </collisions>
+    </object>
+    <object name="paddle1">
+      <sprite>
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position><x>window.left + margin</x><y>window.height.center - height / 2</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="vertical">
+          <stick />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="up">
+          <move direction="up">step</move>
+        </action>
+        <action name="down">
+          <move direction="down">step</move>
+        </action>
+      </actions>
+    </object>
+    <object name="paddle2">
+      <sprite>
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+          <color>color.white</color>
+        </rectangle>
+      </sprite>
+      <position><x>window.right - margin - width</x><y>window.height.center - height / 2</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="vertical">
+          <stick />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="up">
+          <move direction="up">step</move>
+        </action>
+        <action name="down">
+          <move direction="down">step</move>
+        </action>
+      </actions>
+    </object>
+  </objects>
+  <states>
+    <state name="playing">
+      <shows>
+        <show object="ball" />
+        <show object="paddle1" />
+        <show object="paddle2" />
+      </shows>
+      <inputs>
+        <input button="w">
+          <trigger object="paddle1" action="up" />
+        </input>
+        <input button="s">
+          <trigger object="paddle1" action="down" />
+        </input>
+        <input button="up">
+          <trigger object="paddle2" action="up" />
+        </input>
+        <input button="down">
+          <trigger object="paddle2" action="down" />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>

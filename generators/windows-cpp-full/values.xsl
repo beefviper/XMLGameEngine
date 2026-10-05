@@ -10,48 +10,18 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <xsl:variable name="letters" select="'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'" />
-  <xsl:variable name="lower" select="'abcdefghijklmnopqrstuvwxyz'" />
-  <xsl:variable name="upper" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
   <xsl:variable name="digits" select="'0123456789'" />
 
   <!-- The functions an expression may call (exprtk's), and their C++ names. -->
   <xsl:variable name="functions" select="' min max abs floor ceil sqrt sin cos tan pow round '" />
 
-  <!-- The window's names an expression may use; the program has a constant for
-       each one the game uses (generate.xsl). -->
-  <xsl:variable name="window-names" select="' window.width window.height window.left window.right window.top window.bottom window.width.center window.height.center '" />
-
-  <!-- A name from the game as a C++ name: camel case, its dots and dashes
-       taken out and the letter after each made a capital (ball.radius is
-       ballRadius, window.width.center is windowWidthCenter). -->
+  <!-- A name from the game as a C++ name: a prefix (v_ for a value, o_ for an
+       object, s_ for a state, snd_ for a sound) and the name with its dots and
+       dashes made underscores (paddle1.score is v_paddle1_score). -->
   <xsl:template name="cpp-name">
+    <xsl:param name="prefix" />
     <xsl:param name="name" />
-    <xsl:variable name="cut" select="translate($name, '-', '.')" />
-    <xsl:choose>
-      <xsl:when test="contains($cut, '.')">
-        <xsl:value-of select="substring-before($cut, '.')" />
-        <xsl:variable name="rest" select="substring-after($cut, '.')" />
-        <xsl:value-of select="translate(substring($rest, 1, 1), $lower, $upper)" />
-        <xsl:call-template name="cpp-name">
-          <xsl:with-param name="name" select="substring($rest, 2)" />
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="$cut" />
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
-  <!-- The name with its first letter a capital, for a function about it
-       (paddle1 is updatePaddle1). -->
-  <xsl:template name="cpp-title">
-    <xsl:param name="name" />
-    <xsl:variable name="camel">
-      <xsl:call-template name="cpp-name">
-        <xsl:with-param name="name" select="$name" />
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:value-of select="concat(translate(substring($camel, 1, 1), $lower, $upper), substring($camel, 2))" />
+    <xsl:value-of select="concat($prefix, translate($name, '.-', '__'))" />
   </xsl:template>
 
   <!-- A number as a float literal: 2 is 2.0f, .5 is 0.5f. -->
@@ -88,21 +58,17 @@
           <xsl:choose>
             <xsl:when test="starts-with(normalize-space($after), '(')">
               <xsl:if test="not(contains($functions, concat(' ', $word, ' ')))">
-                <xsl:message terminate="yes">windows-cpp: the function <xsl:value-of select="$word" />() in "<xsl:value-of select="$text" />" cannot be generated yet</xsl:message>
+                <xsl:message terminate="yes">windows-cpp-full: the function <xsl:value-of select="$word" />() in "<xsl:value-of select="$text" />" cannot be generated yet</xsl:message>
               </xsl:if>
               <xsl:value-of select="concat('std::', $word)" />
             </xsl:when>
             <xsl:when test="$word = 'and'"><xsl:text>&amp;&amp;</xsl:text></xsl:when>
             <xsl:when test="$word = 'or'"><xsl:text>||</xsl:text></xsl:when>
             <xsl:when test="$word = 'not'"><xsl:text>!</xsl:text></xsl:when>
-            <xsl:when test="$game/variables/variable[@name = $word] or contains($window-names, concat(' ', $word, ' '))">
-              <xsl:call-template name="cpp-name">
-                <xsl:with-param name="name" select="$word" />
-              </xsl:call-template>
-            </xsl:when>
             <xsl:otherwise>
-              <xsl:call-template name="refuse">
-                <xsl:with-param name="what" select="concat('the name ', $word)" />
+              <xsl:call-template name="cpp-name">
+                <xsl:with-param name="prefix" select="'v_'" />
+                <xsl:with-param name="name" select="$word" />
               </xsl:call-template>
             </xsl:otherwise>
           </xsl:choose>
@@ -127,7 +93,7 @@
           </xsl:call-template>
         </xsl:when>
         <xsl:when test="$first = '^' or $first = '%' or $first = ':' or $first = '[' or $first = '{'">
-          <xsl:message terminate="yes">windows-cpp: "<xsl:value-of select="$first" />" in an expression cannot be generated yet</xsl:message>
+          <xsl:message terminate="yes">windows-cpp-full: "<xsl:value-of select="$first" />" in an expression cannot be generated yet</xsl:message>
         </xsl:when>
         <!-- anything else, a character at a time; line breaks become spaces -->
         <xsl:otherwise>
@@ -155,7 +121,7 @@
         <xsl:apply-templates select="$node/formula" mode="value" />
       </xsl:when>
       <xsl:when test="$node/*">
-        <xsl:message terminate="yes">windows-cpp: the value tag &lt;<xsl:value-of select="name($node/*)" />&gt; cannot be generated yet</xsl:message>
+        <xsl:message terminate="yes">windows-cpp-full: the value tag &lt;<xsl:value-of select="name($node/*)" />&gt; cannot be generated yet</xsl:message>
       </xsl:when>
       <xsl:when test="normalize-space($node) = ''">
         <xsl:text>0.0f</xsl:text>
@@ -163,24 +129,6 @@
       <xsl:otherwise>
         <xsl:call-template name="attribute-value">
           <xsl:with-param name="text" select="$node" />
-        </xsl:call-template>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
-  <!-- A value that stands on its own (a whole initializer or argument), so
-       expression text needs no brackets round it. -->
-  <xsl:template name="value-bare">
-    <xsl:param name="node" select="." />
-    <xsl:choose>
-      <xsl:when test="$node/* or normalize-space($node) = ''">
-        <xsl:call-template name="value">
-          <xsl:with-param name="node" select="$node" />
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:call-template name="cpp-expression">
-          <xsl:with-param name="text" select="normalize-space($node)" />
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
@@ -201,7 +149,7 @@
   </xsl:template>
 
   <xsl:template match="random" mode="value">
-    <xsl:text>randomBetween(</xsl:text>
+    <xsl:text>xge::randomBetween(</xsl:text>
     <xsl:call-template name="attribute-value">
       <xsl:with-param name="text" select="@min" />
     </xsl:call-template>
@@ -225,7 +173,7 @@
       <xsl:when test="$operation = 'multiply'"> * </xsl:when>
       <xsl:when test="$operation = 'divide'"> / </xsl:when>
       <xsl:otherwise>
-        <xsl:message terminate="yes">windows-cpp: the operation &lt;<xsl:value-of select="$operation" />&gt; cannot be generated yet</xsl:message>
+        <xsl:message terminate="yes">windows-cpp-full: the operation &lt;<xsl:value-of select="$operation" />&gt; cannot be generated yet</xsl:message>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

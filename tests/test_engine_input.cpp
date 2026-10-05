@@ -239,7 +239,8 @@ TEST_CASE("the engine knows when its window has been closed", "[engine_input]")
 TEST_CASE("every shipped game follows the shared key conventions", "[engine_input]")
 {
 	// Space starts, pauses and plays again (never Enter), and player one is on
-	// W, A, S and D (never Q and Z).
+	// W, A, S and D (never Q and Z). A game of one screen (pong_min) has nothing
+	// for Space to do.
 	int checked = 0;
 	for (const auto& entry : std::filesystem::directory_iterator("games"))
 	{
@@ -252,7 +253,8 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 		CHECK(text.find("button=\"enter\"") == std::string::npos);
 		CHECK(text.find("button=\"q\"") == std::string::npos);
 		CHECK(text.find("button=\"z\"") == std::string::npos);
-		CHECK(text.find("button=\"space\"") != std::string::npos);
+		const bool oneScreen = text.find("<state ") == text.rfind("<state ");
+		CHECK((oneScreen || text.find("button=\"space\"") != std::string::npos));
 		++checked;
 	}
 	CHECK(checked >= 10);

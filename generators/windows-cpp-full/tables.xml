@@ -6,8 +6,8 @@
 
 <!-- What the stylesheets look names up in: the key names a game's button= can use
      (lib/source/keycode.cpp) with SFML 3's name for each, and the color names
-     (lib/source/color.cpp) with their red, green, blue and alpha, and SFML's own
-     name for the ones it has. Keep both in step with those files. -->
+     (lib/source/color.cpp) with their red, green, blue and alpha. Keep both in step
+     with those files. -->
 <tables>
   <keys>
     <key name="a" sfml="A" />
@@ -113,14 +113,14 @@
     <key name="pause" sfml="Pause" />
   </keys>
   <colors>
-    <color name="color.black" rgba="0, 0, 0, 255" sfml="Black" />
-    <color name="color.white" rgba="255, 255, 255, 255" sfml="White" />
-    <color name="color.red" rgba="255, 0, 0, 255" sfml="Red" />
-    <color name="color.green" rgba="0, 255, 0, 255" sfml="Green" />
-    <color name="color.blue" rgba="0, 0, 255, 255" sfml="Blue" />
-    <color name="color.yellow" rgba="255, 255, 0, 255" sfml="Yellow" />
-    <color name="color.magenta" rgba="255, 0, 255, 255" sfml="Magenta" />
-    <color name="color.cyan" rgba="0, 255, 255, 255" sfml="Cyan" />
+    <color name="color.black" rgba="0, 0, 0, 255" />
+    <color name="color.white" rgba="255, 255, 255, 255" />
+    <color name="color.red" rgba="255, 0, 0, 255" />
+    <color name="color.green" rgba="0, 255, 0, 255" />
+    <color name="color.blue" rgba="0, 0, 255, 255" />
+    <color name="color.yellow" rgba="255, 255, 0, 255" />
+    <color name="color.magenta" rgba="255, 0, 255, 255" />
+    <color name="color.cyan" rgba="0, 255, 255, 255" />
     <color name="color.grey" rgba="128, 128, 128, 255" />
     <color name="color.darkgrey" rgba="64, 64, 64, 255" />
     <color name="color.lightgrey" rgba="192, 192, 192, 255" />
