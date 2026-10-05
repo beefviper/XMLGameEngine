@@ -297,6 +297,17 @@ TEST_CASE("galaxian.xml loads 36 aliens in five rows, a ship and six paths", "[g
 	CHECK(down == Approx(640.0f + play.object("blues.1").size.y));
 }
 
+TEST_CASE("galaxian.xml loads with every XML library, so both schema checkers take <paths>", "[galaxian]")
+{
+	for (const XmlBackend backend : XmlDocumentFactory::availableBackends())
+	{
+		INFO(XmlDocumentFactory::name(backend));
+		Game game("games/galaxian.xml", backend);
+		CHECK(game.getPaths().size() == 6);
+		CHECK(game.getPaths().at("dive").steps.back().home);
+	}
+}
+
 TEST_CASE("the fleet flies in on its paths, one behind another, and settles into formation", "[galaxian]")
 {
 	Play play("games/galaxian.xml");
@@ -306,7 +317,8 @@ TEST_CASE("the fleet flies in on its paths, one behind another, and settles into
 	// The first frame sends every row off from where its path starts.
 	play.frames(1);
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 36);
-	CHECK(play.object("blues.10").position.x == Approx(567.0f));
+	CHECK(play.object("blues2.10").position.x == Approx(567.0f));
+	CHECK(play.object("blues.10").position.x == Approx(-40.0f));
 	CHECK(play.object("blues.10").followWait > play.object("blues.2").followWait);
 
 	play.frames(400);
