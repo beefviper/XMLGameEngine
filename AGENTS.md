@@ -33,7 +33,7 @@ output/Debug/xgetest            # all tests; Catch2 filters work (e.g. "[kaboom]
 output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
 ```
 
-Dependencies are found (vcpkg or system) or fetched; `FORCE_LOCAL_<NAME>` forces a fetched copy. Outputs land in `output/<Config>` (programs, `games/`, `assets/`, `xgedef.xsd`, `libraries/`). Tests link `xgelib`.
+A plain build has one backend of each kind (SFML 3 for window and sound, Xerces for XML); `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` all, and `BUILD_TESTING` implies all (the tests compare every backend). Backend code is compiled behind `XGE_WITH_<NAME>`, so build with no options as well as with tests when you touch the factories, `cli.cpp` or `session_options.cpp`. Dependencies are found (vcpkg or system) or fetched; `FORCE_LOCAL_<NAME>` forces a fetched copy. Outputs land in `output/<Config>` (programs, `games/`, `assets/`, `xgedef.xsd`, `libraries/`). Tests link `xgelib`.
 
 ## Conventions
 

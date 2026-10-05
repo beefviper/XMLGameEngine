@@ -28,6 +28,12 @@ else()
 	list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 endif()
 
+# The tests play the same games through every backend and compare them, so they
+# need every backend built: options.cmake turns them all on for BUILD_TESTING.
+if (NOT XGE_ALL_BACKENDS)
+	message(FATAL_ERROR "The test suite needs every backend: leave XGE_ALL_BACKENDS on (BUILD_TESTING turns it on).")
+endif()
+
 # A second executable: the test files plus the engine library itself (the
 # xgelib target), so tests call into the real command.cpp/game.cpp
 # etc., not a hand-copied reimplementation of them. The library brings the
@@ -49,6 +55,7 @@ add_executable(xgetest
 	"tests/test_deflect.cpp"
 	"tests/test_xml_format.cpp"
 	"tests/test_equations.cpp"
+	"tests/test_backends.cpp"
 	"tests/test_group.cpp"
 	"tests/test_frogger.cpp"
 	"tests/test_spacerace.cpp"

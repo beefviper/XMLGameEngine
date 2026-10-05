@@ -63,12 +63,22 @@ namespace xge
 			return text;
 		}
 
+		// Whether this program was built with the library (the factories know).
+		bool isBuilt(WindowBackend backend) { return WindowFactory::available(backend); }
+		bool isBuilt(XmlBackend backend) { return XmlDocumentFactory::available(backend); }
+		bool isBuilt(AudioBackend backend) { return AudioFactory::available(backend); }
+
+		// The names of the libraries this program was built with, in the table's order.
 		template <typename Table>
 		std::string namesOf(const Table& table)
 		{
 			std::string names;
 			for (const auto& entry : table)
 			{
+				if (!isBuilt(entry.backend))
+				{
+					continue;
+				}
 				if (!names.empty())
 				{
 					names += ", ";
@@ -86,6 +96,10 @@ namespace xge
 			{
 				if (entry.name == wanted)
 				{
+					if (!isBuilt(entry.backend))
+					{
+						throw CliError("the " + std::string(entry.name) + " " + what + " is not built into this program (built with: " + namesOf(table) + ")");
+					}
 					return entry.backend;
 				}
 			}
@@ -320,9 +334,9 @@ namespace xge
 			"\n"
 			"options:\n"
 			"  -g, --game <game>    the game, same as giving it bare\n"
-			"  -w, --window <name>  window library: " + namesOf(windowNames) + " (default sfml3)\n"
-			"  -x, --xml <name>     XML library: " + namesOf(xmlNames) + " (default xerces)\n"
-			"  -a, --audio <name>   sound library: " + namesOf(audioNames) + " (default sfml3)\n"
+			"  -w, --window <name>  window library: " + namesOf(windowNames) + " (default " + WindowFactory::name(WindowFactory::defaultBackend()) + ")\n"
+			"  -x, --xml <name>     XML library: " + namesOf(xmlNames) + " (default " + XmlDocumentFactory::name(XmlDocumentFactory::defaultBackend()) + ")\n"
+			"  -a, --audio <name>   sound library: " + namesOf(audioNames) + " (default " + AudioFactory::name(AudioFactory::defaultBackend()) + ")\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"

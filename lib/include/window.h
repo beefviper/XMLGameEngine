@@ -89,10 +89,30 @@ namespace xge
 	// need a branch added here and in WindowBackend; Engine and everything
 	// else that calls WindowFactory::create stays untouched. Every backend
 	// opens a window of its own.
+	//
+	// A program is built with some of the backends, not necessarily all of
+	// them (options.cmake: SFML 3 alone by default, every one when the tests
+	// are built). WindowBackend names all four always, so that a name on the
+	// command line or in a settings file still means something, and available()
+	// says which can be made.
 	class WindowFactory
 	{
 	public:
-		// Throws std::runtime_error if the library cannot start.
-		static std::unique_ptr<Window> create(const WindowDesc& windowDesc, WindowBackend backend = WindowBackend::SFML3);
+		// Throws std::runtime_error if the library cannot start, or was not built
+		// into this program (the message says which are).
+		static std::unique_ptr<Window> create(const WindowDesc& windowDesc, WindowBackend backend = defaultBackend());
+
+		// Whether this program was built with the backend.
+		static bool available(WindowBackend backend);
+
+		// The backends this program was built with, in WindowBackend's order.
+		static std::vector<WindowBackend> availableBackends();
+
+		// SFML 3 when it is built, otherwise the first one that is.
+		static WindowBackend defaultBackend();
+
+		// The backend's plain lower case name, as -w takes it: "sfml3", "raylib",
+		// "sdl2", "opengl".
+		static std::string name(WindowBackend backend);
 	};
 }

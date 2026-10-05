@@ -9,27 +9,32 @@
 
 namespace xge
 {
+	// Only what the program was built with is offered (options.cmake): in a
+	// default build each dropdown has the one library, and the Qt renderer for
+	// video, which is part of the application and needs none.
 	const std::vector<VideoBackend>& allVideoBackends()
 	{
-		static const std::vector<VideoBackend> all{
-			VideoBackend::Qt, VideoBackend::SFML3, VideoBackend::SDL2, VideoBackend::Raylib, VideoBackend::OpenGL
-		};
+		static const std::vector<VideoBackend> all = []
+		{
+			std::vector<VideoBackend> built{ VideoBackend::Qt };
+			for (const VideoBackend backend : { VideoBackend::SFML3, VideoBackend::SDL2, VideoBackend::Raylib, VideoBackend::OpenGL })
+			{
+				if (WindowFactory::available(libraryBackend(backend))) { built.push_back(backend); }
+			}
+			return built;
+		}();
 		return all;
 	}
 
 	const std::vector<XmlBackend>& allXmlBackends()
 	{
-		static const std::vector<XmlBackend> all{
-			XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml
-		};
+		static const std::vector<XmlBackend> all = XmlDocumentFactory::availableBackends();
 		return all;
 	}
 
 	const std::vector<AudioBackend>& allAudioBackends()
 	{
-		static const std::vector<AudioBackend> all{
-			AudioBackend::SFML3, AudioBackend::Raylib, AudioBackend::SDL2, AudioBackend::None
-		};
+		static const std::vector<AudioBackend> all = AudioFactory::availableBackends();
 		return all;
 	}
 

@@ -30,10 +30,11 @@ namespace xge
 	public:
 		// xmlBackend picks which XmlDocument implementation actually parses
 		// the file (Xerces, TinyXML2, PugiXML, or RapidXML - see
-		// xml_document.h); defaults to Xerces so existing callers (main.cpp)
-		// don't have to name one - same pattern as Engine's own
+		// xml_document.h); defaults to Xerces, or the first one built when Xerces
+		// is not (XmlDocumentFactory::defaultBackend), so existing callers
+		// (main.cpp) don't have to name one - same pattern as Engine's own
 		// WindowBackend parameter.
-		explicit Game(const std::string& game, XmlBackend xmlBackend = XmlBackend::Xerces);
+		explicit Game(const std::string& game, XmlBackend xmlBackend = XmlDocumentFactory::defaultBackend());
 
 		void updateObjects(void);
 

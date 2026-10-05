@@ -27,8 +27,8 @@ include(scripts/cmake/targets.cmake)
 include(scripts/cmake/platform.cmake)
 include(scripts/cmake/assets.cmake)
 
-# The whole engine: game loading and evaluation, collisions, and every XML,
-# Window and Audio backend. Nothing here reads the command line or has a main();
+# The whole engine: game loading and evaluation, collisions, and the XML, Window
+# and Audio backends that are built (below). Nothing here reads the command line or has a main();
 # that is cli/ (xgecli). The test suite links this same library
 # (scripts/cmake/tests.cmake), so there is one list of files to keep.
 set(ENGINE_SOURCES
@@ -44,25 +44,14 @@ set(ENGINE_SOURCES
 	"lib/source/keycode.cpp"
 	"lib/source/game_xml.cpp"
 	"lib/source/xml_document.cpp"
-	"lib/source/xml_xerces.cpp"
-	"lib/source/xml_tinyxml2.cpp"
-	"lib/source/xml_pugixml.cpp"
-	"lib/source/xml_rapidxml.cpp"
 	"lib/source/xsd_lite.cpp"
 	"lib/source/game_expr.cpp"
 	"lib/source/command.cpp"
 	"lib/source/collision_detector.cpp"
 	"lib/source/command_executor.cpp"
 	"lib/source/window.cpp"
-	"lib/source/window_sfml.cpp"
-	"lib/source/window_raylib.cpp"
-	"lib/source/window_sdl2.cpp"
-	"lib/source/window_opengl.cpp"
 	"lib/source/sound.cpp"
 	"lib/source/audio.cpp"
-	"lib/source/audio_sfml.cpp"
-	"lib/source/audio_raylib.cpp"
-	"lib/source/audio_sdl2.cpp"
 )
 
 set(ENGINE_HEADERS
@@ -79,26 +68,43 @@ set(ENGINE_HEADERS
 	"lib/include/keycode.h"
 	"lib/include/game_xml.h"
 	"lib/include/xml_document.h"
-	"lib/include/xml_xerces.h"
-	"lib/include/xml_tinyxml2.h"
-	"lib/include/xml_pugixml.h"
-	"lib/include/xml_rapidxml.h"
 	"lib/include/xsd_lite.h"
 	"lib/include/game_expr.h"
 	"lib/include/command.h"
 	"lib/include/collision_detector.h"
 	"lib/include/command_executor.h"
 	"lib/include/window.h"
-	"lib/include/window_sfml.h"
-	"lib/include/window_raylib.h"
-	"lib/include/window_sdl2.h"
-	"lib/include/window_opengl.h"
 	"lib/include/sound.h"
 	"lib/include/audio.h"
-	"lib/include/audio_sfml.h"
-	"lib/include/audio_raylib.h"
-	"lib/include/audio_sdl2.h"
 )
+
+# The backends that are built (options.cmake), each a pair of files named after
+# it. SFML 3, raylib and SDL2 give a window and a sound backend; OpenGL a
+# window only.
+foreach(backend IN ITEMS xerces tinyxml2 pugixml rapidxml)
+	string(TOUPPER ${backend} upper)
+	if (XGE_WITH_${upper})
+		list(APPEND ENGINE_SOURCES "lib/source/xml_${backend}.cpp")
+		list(APPEND ENGINE_HEADERS "lib/include/xml_${backend}.h")
+	endif()
+endforeach()
+
+foreach(backend IN ITEMS sfml raylib sdl2 opengl)
+	string(TOUPPER ${backend} upper)
+	if (backend STREQUAL "sfml")
+		set(upper SFML3)
+	endif()
+
+	if (XGE_WITH_${upper})
+		list(APPEND ENGINE_SOURCES "lib/source/window_${backend}.cpp")
+		list(APPEND ENGINE_HEADERS "lib/include/window_${backend}.h")
+
+		if (NOT backend STREQUAL "opengl")
+			list(APPEND ENGINE_SOURCES "lib/source/audio_${backend}.cpp")
+			list(APPEND ENGINE_HEADERS "lib/include/audio_${backend}.h")
+		endif()
+	endif()
+endforeach()
 
 target_sources(xgelib PRIVATE
 	${ENGINE_SOURCES}

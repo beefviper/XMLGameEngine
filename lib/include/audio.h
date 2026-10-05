@@ -69,11 +69,30 @@ namespace xge
 	// Builds the concrete Audio for the given backend - the one place that knows
 	// about all of them, as WindowFactory (window.h) is for windows. Adding
 	// another would only need a branch added here and in AudioBackend.
+	//
+	// As for windows (window.h), a program is built with some of the sound
+	// libraries (the ones whose window backend it has, options.cmake), and
+	// available() says which. None is always there.
 	class AudioFactory
 	{
 	public:
 		// Throws std::runtime_error if the library cannot start (no sound
-		// device, say).
-		static std::unique_ptr<Audio> create(AudioBackend backend = AudioBackend::SFML3);
+		// device, say), or was not built into this program (the message says
+		// which are).
+		static std::unique_ptr<Audio> create(AudioBackend backend = defaultBackend());
+
+		// Whether this program was built with the backend; None always is.
+		static bool available(AudioBackend backend);
+
+		// The backends this program was built with, in AudioBackend's order, None
+		// last.
+		static std::vector<AudioBackend> availableBackends();
+
+		// SFML 3 when it is built, otherwise the first one that is, or None.
+		static AudioBackend defaultBackend();
+
+		// The backend's plain lower case name, as -a takes it: "sfml3", "raylib",
+		// "sdl2", "none".
+		static std::string name(AudioBackend backend);
 	};
 }

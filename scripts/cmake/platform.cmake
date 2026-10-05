@@ -49,7 +49,7 @@ function(silence_third_party_warnings target scope)
 		$<$<CXX_COMPILER_ID:MSVC>:/W0> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
 endfunction()
 
-if (NOT XercesC_FOUND)
+if (XGE_WITH_XERCES AND NOT XercesC_FOUND)
 	set_target_properties(xerces-c PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 	silence_third_party_warnings(xerces-c PRIVATE)
 	set_target_properties(xerces-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${XGE_LIBRARY_DIR} LIBRARY_OUTPUT_DIRECTORY ${XGE_LIBRARY_DIR})
@@ -67,8 +67,8 @@ endif()
 # A fetched library that sets its own output folder (SFML puts its DLLs in
 # its bin/) is pointed back at output/<config>/libraries (output.cmake), where
 # the programs find it when they start.
-if (NOT SFML_FOUND)
-	foreach(sfml_target IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
+if (XGE_WITH_SFML3 AND NOT SFML_FOUND)
+	foreach(sfml_target IN ITEMS sfml-system sfml-window sfml-graphics sfml-audio)
 		set_target_properties(${sfml_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${XGE_LIBRARY_DIR} LIBRARY_OUTPUT_DIRECTORY ${XGE_LIBRARY_DIR})
 	endforeach()
 endif()

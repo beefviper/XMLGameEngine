@@ -30,12 +30,13 @@ namespace xge
 	};
 
 	// What the Options dialog chooses. The Qt renderer, Xerces and SFML 3's
-	// sound are what is used unless something else is asked for.
+	// sound are what is used unless something else is asked for, or the first
+	// of the others that the program was built with when they were left out.
 	struct SessionOptions
 	{
 		VideoBackend video{ VideoBackend::Qt };
-		XmlBackend xml{ XmlBackend::Xerces };
-		AudioBackend audio{ AudioBackend::SFML3 };
+		XmlBackend xml{ XmlDocumentFactory::defaultBackend() };
+		AudioBackend audio{ AudioFactory::defaultBackend() };
 
 		bool operator==(const SessionOptions& other) const noexcept
 		{
@@ -43,7 +44,8 @@ namespace xge
 		}
 	};
 
-	// Every choice, in the order the dropdowns list them (the default first).
+	// Every choice the program was built with, in the order the dropdowns list
+	// them (the default first).
 	const std::vector<VideoBackend>& allVideoBackends();
 	const std::vector<XmlBackend>& allXmlBackends();
 	const std::vector<AudioBackend>& allAudioBackends();

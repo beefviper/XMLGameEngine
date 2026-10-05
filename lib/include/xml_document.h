@@ -8,6 +8,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <vector>
 
 namespace xge
 {
@@ -104,9 +105,28 @@ namespace xge
 	// that knows about all four (see WindowFactory in window.h for the exact
 	// same pattern on the graphics side). Adding a fifth backend only needs a
 	// branch added here.
+	//
+	// As for windows (window.h), a program is built with some of the XML
+	// libraries, not necessarily all of them (options.cmake: Xerces alone by
+	// default, every one when the tests are built), and available() says which.
 	class XmlDocumentFactory
 	{
 	public:
-		static std::unique_ptr<XmlDocument> create(XmlBackend backend = XmlBackend::Xerces);
+		// Throws std::runtime_error for a backend that was not built into this
+		// program (the message says which are).
+		static std::unique_ptr<XmlDocument> create(XmlBackend backend = defaultBackend());
+
+		// Whether this program was built with the backend.
+		static bool available(XmlBackend backend);
+
+		// The backends this program was built with, in XmlBackend's order.
+		static std::vector<XmlBackend> availableBackends();
+
+		// Xerces when it is built, otherwise the first one that is.
+		static XmlBackend defaultBackend();
+
+		// The backend's plain lower case name, as -x takes it: "xerces",
+		// "tinyxml2", "pugixml", "rapidxml".
+		static std::string name(XmlBackend backend);
 	};
 }

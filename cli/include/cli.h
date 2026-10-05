@@ -32,9 +32,11 @@ namespace xge
 		// "pong.xml"), not yet looked for on disk - see findGameFile().
 		std::string game = "pong";
 
-		WindowBackend window = WindowBackend::SFML3;
-		XmlBackend xml = XmlBackend::Xerces;
-		AudioBackend audio = AudioBackend::SFML3;
+		// What this program was built with, the first of them (SFML 3, Xerces and
+		// SFML 3's sound unless they were left out; see options.cmake).
+		WindowBackend window = WindowFactory::defaultBackend();
+		XmlBackend xml = XmlDocumentFactory::defaultBackend();
+		AudioBackend audio = AudioFactory::defaultBackend();
 
 		bool showHelp = false;
 	};
@@ -51,6 +53,8 @@ namespace xge
 	//   --xml xerces           pugixml, rapidxml
 	//   -a sfml3 -asfml3       the sound library: sfml3 (default), raylib, sdl2,
 	//   --audio sfml3          none (silent)
+	//   Only the libraries this program was built with can be named; another is an
+	//   error that says which there are (a default build has SFML 3 and Xerces).
 	//   -h  --help             show the usage and exit
 	//
 	// A short option takes its value attached or after a space; a long option

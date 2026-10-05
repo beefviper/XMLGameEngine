@@ -28,11 +28,12 @@ namespace xge
 		// backend picks which Window implementation actually opens (SFML3,
 		// Raylib, SDL2 or OpenGL - see window.h), and audioBackend which Audio
 		// plays the game's sounds (SFML3, Raylib, SDL2 or None - see audio.h);
-		// both default to SFML3 so existing callers don't have to name one. A
+		// both default to SFML3, or the first one built when SFML 3 is not (see
+		// WindowFactory::defaultBackend), so existing callers don't have to name one. A
 		// window that cannot be made throws; sound that cannot start is not
 		// worth stopping a game for, so it prints a warning and the game plays
 		// silently (NullAudio).
-		explicit Engine(Game& game, WindowBackend backend = WindowBackend::SFML3, AudioBackend audioBackend = AudioBackend::SFML3);
+		explicit Engine(Game& game, WindowBackend backend = WindowFactory::defaultBackend(), AudioBackend audioBackend = AudioFactory::defaultBackend());
 
 		// Same, but with an already-built Window (and Audio) - what lets a test
 		// drive Engine's key handling with a fake window instead of opening a

@@ -70,11 +70,11 @@ Collisions are swept, so fast small objects cannot skip over thin ones. States f
 * exprtk     https://github.com/ArashPartow/exprtk
 * SFML 3     https://github.com/SFML/SFML
 * lunasvg    https://github.com/sammycage/lunasvg (draws SVG sprites inside the engine; it is not a backend)
-* Optional backends: Raylib, SDL2 (with SDL2_image and SDL2_ttf), OpenGL (GLFW, the same one Raylib is built on), TinyXML2, PugiXML, RapidXML
+* Optional backends, not built unless asked for ([Backends](#backends)): Raylib, SDL2 (with SDL2_image and SDL2_ttf), OpenGL (GLFW, the same one Raylib is built on), TinyXML2, PugiXML, RapidXML
 * Qt 6 (Widgets) for xgegui; found, never fetched
 * Catch2 for the tests
 
-Each dependency is found through vcpkg or the system, or fetched and built when it is missing. The `FORCE_LOCAL_<NAME>` options force a fetched copy.
+Each dependency is found through vcpkg or the system, or fetched and built when it is missing. The `FORCE_LOCAL_<NAME>` options force a fetched copy. Only the libraries of the backends that are built are looked for at all.
 
 ## Build and run
 
@@ -91,6 +91,18 @@ A bare name gets `.xml` added; the file is looked for in the current directory, 
 The build makes three things: `xgelib`, the engine as a library (static by default; `-DXGE_BUILD_SHARED=ON` for a shared one), `xgecli`, the command line program above, and `xgegui`, the Qt application (built only when Qt 6 is found: `vcpkg install qtbase[widgets]`): the game on the left, drawn by Qt, and on the right play, pause and step controls over a tree of the game's data with editors for its values. `xgegui pong` runs a game (File > Options picks the video library, the XML parser and the sound library, the Qt renderer, Xerces and SFML 3 to start, and can change the video or sound library while a game is loaded; the game waits while the dialog is open). Every video library but the Qt renderer draws in a window of its own, so picking one (or View > Game in Its Own Window) splits xgegui in two: the controls in one window and the game in the other. The question asked before that can be turned off, and the setting is kept in `xgegui.ini` next to the program. With no argument it opens a file dialog in `games/`. It finds `games/` and `assets/` the same way `xgecli` does, so it can be started from anywhere. `xgetest` is the test suite and `xgedata` copies the games and assets next to the programs, in `output/Debug` or `output/Release`. Each project has its own folder with `source/` and `include/` in it: `lib/`, `cli/` and `gui/`.
 
 Tests are opt-in: configure with `-DBUILD_TESTING=ON`.
+
+### Backends
+
+A default build has one of each: SFML 3 for the window and the sound, and Xerces for the XML. That is all a game needs, and the least to find, fetch and compile. The others are there to choose between and to compare against, and are built when asked for:
+
+```
+cmake -B build -DXGE_WITH_RAYLIB=ON -DXGE_WITH_TINYXML2=ON     # these two as well
+cmake -B build -DXGE_ALL_BACKENDS=ON                           # every one
+cmake -B build -DBUILD_TESTING=ON                              # every one, and the tests
+```
+
+The options are `XGE_WITH_SFML3`, `XGE_WITH_RAYLIB`, `XGE_WITH_SDL2`, `XGE_WITH_OPENGL` (windows; all but OpenGL bring their sound library) and `XGE_WITH_XERCES`, `XGE_WITH_TINYXML2`, `XGE_WITH_PUGIXML`, `XGE_WITH_RAPIDXML` (XML). At least one window and one XML backend must be on. The tests play the same games through every backend and compare them, so `BUILD_TESTING` turns them all on. `xgecli` and `xgegui` only offer what was built: asking for another says so (`the raylib window library is not built into this program (built with: sfml3)`), and a default build's Options dialog has one entry in each dropdown.
 
 ## Status
 
