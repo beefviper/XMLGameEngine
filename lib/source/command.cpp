@@ -359,7 +359,7 @@ namespace xge
 				{
 					for (const RawOperand& operand : operation.operands)
 					{
-						for (const std::string* text : operand.value.expressions()) { all.push_back(text); }
+						for (const std::string* expression : operand.value.expressions()) { all.push_back(expression); }
 					}
 				}
 			}
