@@ -56,6 +56,12 @@ namespace xge
 			{ "none",   AudioBackend::None },
 		};
 
+		// What --generate can write a game out as: a platform and a language,
+		// each a folder of stylesheets in generators/.
+		constexpr std::string_view generateNames[] = {
+			"windows-cpp",
+		};
+
 		std::string lowerCase(std::string text)
 		{
 			std::transform(text.begin(), text.end(), text.begin(),
@@ -110,7 +116,7 @@ namespace xge
 		// Which option an argument is, and the value stuck to it if any.
 		struct OptionMatch
 		{
-			char key = 0; // 'g', 'w', 'x', 'a' or 'h'
+			char key = 0; // 'g', 'w', 'x', 'a', 'G' (--generate), 'o' or 'h'
 			std::optional<std::string> attachedValue;
 		};
 
@@ -121,6 +127,8 @@ namespace xge
 			if (arg == "--window") return 'w';
 			if (arg == "--xml")    return 'x';
 			if (arg == "--audio")  return 'a';
+			if (arg == "--generate") return 'G';
+			if (arg == "--output") return 'o';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
@@ -138,6 +146,8 @@ namespace xge
 			case 'w': return "window";
 			case 'x': return "xml";
 			case 'a': return "audio";
+			case 'G': return "target";
+			case 'o': return "folder";
 			}
 			return "help";
 		}
@@ -151,6 +161,8 @@ namespace xge
 		bool haveWindow = false;
 		bool haveXml = false;
 		bool haveAudio = false;
+		bool haveGenerate = false;
+		bool haveOutput = false;
 
 		auto setGame = [&](const std::string& game)
 		{
@@ -193,6 +205,34 @@ namespace xge
 				options.audio = lookUp(audioNames, "sound library", value);
 				haveAudio = true;
 				break;
+			case 'G':
+			{
+				if (haveGenerate)
+				{
+					throw CliError("--generate was given more than once");
+				}
+				const std::string target = lowerCase(value);
+				if (std::find(std::begin(generateNames), std::end(generateNames), target) == std::end(generateNames))
+				{
+					std::string names;
+					for (const auto& name : generateNames)
+					{
+						names += (names.empty() ? "" : ", ") + std::string(name);
+					}
+					throw CliError("unknown target '" + value + "' to generate (choose one of: " + names + ")");
+				}
+				options.generate = target;
+				haveGenerate = true;
+				break;
+			}
+			case 'o':
+				if (haveOutput)
+				{
+					throw CliError("the output folder was given more than once");
+				}
+				options.output = value;
+				haveOutput = true;
+				break;
 			}
 		};
 
@@ -228,7 +268,7 @@ namespace xge
 			else
 			{
 				match.key = arg[1];
-				if (match.key != 'g' && match.key != 'w' && match.key != 'x' && match.key != 'a' && match.key != 'h')
+				if (match.key != 'g' && match.key != 'w' && match.key != 'x' && match.key != 'a' && match.key != 'o' && match.key != 'h')
 				{
 					throw CliError("unknown option '" + arg + "'");
 				}
@@ -268,6 +308,11 @@ namespace xge
 			}
 
 			setOption(match.key, value);
+		}
+
+		if (haveOutput && !haveGenerate)
+		{
+			throw CliError("an output folder is only for --generate");
 		}
 
 		return options;
@@ -321,6 +366,11 @@ namespace xge
 		return "unknown";
 	}
 
+	std::vector<std::string> generateTargets()
+	{
+		return { std::begin(generateNames), std::end(generateNames) };
+	}
+
 	std::string usageText()
 	{
 		return
@@ -337,6 +387,9 @@ namespace xge
 			"  -w, --window <name>  window library: " + namesOf(windowNames) + " (default " + WindowFactory::name(WindowFactory::defaultBackend()) + ")\n"
 			"  -x, --xml <name>     XML library: " + namesOf(xmlNames) + " (default " + XmlDocumentFactory::name(XmlDocumentFactory::defaultBackend()) + ")\n"
 			"  -a, --audio <name>   sound library: " + namesOf(audioNames) + " (default " + AudioFactory::name(AudioFactory::defaultBackend()) + ")\n"
+			"  --generate <target>  write the game out as a program instead of playing it:\n"
+			"                       windows-cpp (C++ on SFML 3, with a CMakeLists.txt)\n"
+			"  -o, --output <dir>   where --generate writes it (default <game>-<target>)\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"

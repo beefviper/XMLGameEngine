@@ -16,7 +16,9 @@
 add_executable(xgecli
 	"cli/source/main.cpp"
 	"cli/source/cli.cpp"
+	"cli/source/generate.cpp"
 	"cli/include/cli.h"
+	"cli/include/generate.h"
 )
 
 set(XGE_PROGRAMS xgecli)
@@ -99,3 +101,6 @@ endforeach()
 
 # cli/include is not part of the library's include directory: only xgecli uses it.
 target_include_directories(xgecli PRIVATE cli/include)
+
+# --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
+xge_link_xslt(xgecli)

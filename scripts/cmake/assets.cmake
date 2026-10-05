@@ -34,8 +34,16 @@ set(data_assets
 	"assets/paddle.jpg"
 	"assets/Space Invaders Color Sprites.svg")
 
+# The stylesheets xgecli --generate runs, a folder per target (generate.cpp).
+set(data_generators
+	"generators/windows-cpp/generate.xsl"
+	"generators/windows-cpp/game.xsl"
+	"generators/windows-cpp/values.xsl"
+	"generators/windows-cpp/runtime.xml"
+	"generators/windows-cpp/tables.xml")
+
 set(data_outputs "")
-foreach(item IN LISTS data_xsd data_xml data_assets)
+foreach(item IN LISTS data_xsd data_xml data_assets data_generators)
 	message(STATUS ${item})
 	add_custom_command(
 		OUTPUT "${XGE_OUTPUT_DIR}/${item}"
@@ -46,7 +54,7 @@ endforeach()
 
 add_custom_target(xgedata ALL
 	DEPENDS ${data_outputs}
-	SOURCES	${data_xsd} ${data_xml} ${data_assets})
+	SOURCES	${data_xsd} ${data_xml} ${data_assets} ${data_generators})
 
 function(add_data_source_group group_name)
 	source_group("${group_name}" FILES ${ARGN})
@@ -55,3 +63,4 @@ endfunction()
 add_data_source_group("XSD Files" ${data_xsd})
 add_data_source_group("XML Files" ${data_xml})
 add_data_source_group("Asset Files" ${data_assets})
+add_data_source_group("Generator Files" ${data_generators})

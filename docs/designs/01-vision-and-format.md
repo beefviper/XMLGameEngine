@@ -1,6 +1,6 @@
 # 01. Vision, file format and the VGDL landscape
 
-**Status:** built. Arithmetic can be written as text, as an `<equation>` or as a `<formula>` ([arithmetic](#arithmetic-in-text-and-as-tags)); generating code from a game is the open item.
+**Status:** built. Arithmetic can be written as text, as an `<equation>` or as a `<formula>` ([arithmetic](#arithmetic-in-text-and-as-tags)); a game can be generated as a C++ program by XSLT ([generating](#generating-a-program-with-xslt)), so far only for Pong's tags.
 
 ## What we want
 
@@ -79,7 +79,31 @@ Both use four operations named for their operands (`augend`/`addend`, `minuend`/
 
 **Schema and validators.** A formula's operands hold operations whose operands are operations, so the schema has types that contain themselves. Xerces handles that; `xsd_lite` did not, and now follows a named type that refers to itself (and frees the cycle when the model goes). A group that contains itself is still refused there.
 
-**Open.** More operations (`min`, `max`, `negate`, `abs`, `clamp`, `sign`, `pick`) are not built: add one when a game cannot be written without it, as for verbs ([06](06-motion-and-verbs.md)), until then the exprtk text has them. A `<random>` step in an `<equation>`. Moving the other games over, a game at a time. And the reason for all of it: generating code for another target (XSLT to C++ or assembly) has no generator yet ([11](11-backends-build-and-layout.md)), so the tags are ready for it, but nothing yet reads them except the engine. [14](14-vocabulary-map.md) lists every word the language has.
+**Open.** More operations (`min`, `max`, `negate`, `abs`, `clamp`, `sign`, `pick`) are not built: add one when a game cannot be written without it, as for verbs ([06](06-motion-and-verbs.md)), until then the exprtk text has them. A `<random>` step in an `<equation>`. Moving the other games over, a game at a time. The reason for all of it, generating code for another target, now has its first reader: the windows-cpp generator turns an `<equation>` into a lambda and a `<formula>` into nested C++ ([below](#generating-a-program-with-xslt)). [14](14-vocabulary-map.md) lists every word the language has.
+
+## Generating a program with XSLT
+
+**What we looked for.** The format was chosen partly so a game could be transformed (above): a way to turn a game file into a program that plays it with none of the engine in it, as a test of whether the description really is the game, and as the start of other targets (another language, another machine).
+
+**What we looked at.**
+
+| Option | Notes |
+|---|---|
+| G1. C++ in xgecli walks the loaded `Game` and prints code | Reuses the loader, but the generator is engine code: every target is more C++ in the program |
+| G2. XSLT on the game file | The format's own tool; a target is a folder of stylesheets, not a rebuild. Needs an XSLT processor |
+| G3. A separate generator program | Cleaner split, one more program to build; can come later if xgecli outgrows it |
+
+Processors: libxslt (XSLT 1.0 with EXSLT, C, in vcpkg and every Linux distribution), Xalan-C++ (XSLT 1.0, matches Xerces but barely maintained), Saxon (XSLT 3.0, Java or a C build with a different licence for the full version).
+
+**Chosen: G2 with libxslt, run by `xgecli --generate <target>`.** A target is named platform-language (`windows-cpp`); the backends are assumed (SFML 3 for now; a later option can pick them, since naming every window, sound and XML combination in the target would multiply). `-g` stays the game; the long form only, plus `-o` for the folder. One stylesheet writes several files with `exsl:document` (XSLT 1.0 has one result; 2.0's `xsl:result-document` is the same idea): `main.cpp` is the real output, `CMakeLists.txt` and `README.md` are small fixed texts with the game's name in them. A stylesheet cannot copy a binary file, so its own result is a manifest of what it wrote and of the assets to copy, and xgecli copies them. Choices inside the stylesheets:
+- *Static, not interpreted.* The program is the game's rules written out as statements (`deflect(o_ball, o_paddle1, edgeOfFirst, (45.0f));`), not the engine plus the XML as data. Collision pairs, which rules apply to which pair, edge rules and key bindings are worked out by the stylesheet.
+- *The verbs' C++ is kept as text* in `runtime.xml`, one part per verb or feature, written only when the game uses the tag (`when=`). It mirrors `command_executor.cpp`, `game.cpp`, `collision_detector.cpp` (the swept tests), `sound.cpp` and `engine.cpp`, so generated Pong plays like the engine's.
+- *Expression text is tokenised in XSLT 1.0* (no regular expressions): names become C++ variables (`window.width.center` → `v_window_width_center`), everything else is copied. That is enough because the expression syntax is C-like; it is also the weakest part, and the reason the tags exist.
+- *Refuse, never guess.* Every tag the target does not know stops it with `windows-cpp cannot generate <x> yet` and where; xgecli removes a folder it made. A program that silently lacks a rule would be worse than none.
+
+**Rejected.** XSLT 3.0 (Saxon): text processing would be easier, but the C library is the one that fits a C++ program with vcpkg dependencies. The engine as a library inside the generated program: that is the engine, not a generated game. One file per object or state: the C++ is shorter as one file and nobody edits it.
+
+**Open.** Every other game: the first tag each needs is listed in [readme](../readme.md#known-limitations) (`<group>`, `<line>`, `<bitmap>`, `<grid>`, `<wrap>`, `<svg>`, then timers, looks and the rest). The runtime is a second copy of the verbs and can drift from the engine; a test that plays a generated game against the engine frame by frame would catch it, but needs a compiler in the test. Built and played only on Linux with GCC; Windows and Visual Studio not tried. Other targets (another backend, another language, an 8-bit machine) and how backends are named for them.
 
 ## The VGDL landscape (reference only)
 
@@ -93,4 +117,4 @@ Both use four operations named for their operands (`augend`/`addend`, `minuend`/
 ## Open
 
 - Where the vocabulary boundary sits: scrolling as camera, world or verb; gravity as a world setting or a per-object force (built per object, [06](06-motion-and-verbs.md)).
-- A `generate` step (XSLT or code from the description) does not exist.
+- Generating covers Pong only ([above](#generating-a-program-with-xslt)).

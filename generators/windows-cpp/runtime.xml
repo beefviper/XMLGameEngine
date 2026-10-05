@@ -1,0 +1,960 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- runtime.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 5, 2026 -->
+
+<!-- The C++ every generated game has, whatever is in it: the parts of the engine
+     that are the same for every game (objects, drawing, collisions, the verbs,
+     sound), written once here and copied into main.cpp by main-cpp.xsl. A part
+     with when= is copied only when the game uses that tag anywhere, so a game
+     carries only the verbs it uses. The game's own code (its objects, rules and
+     states) is generated between the "top" parts and the "bottom" part.
+
+     Each part is C++ in a CDATA section, so < and & are written as they are.
+     It follows the engine (lib/source): when a verb changes there, change it
+     here too. -->
+<runtime>
+  <part place="top" name="includes"><![CDATA[#include <SFML/Audio.hpp>
+#include <SFML/Graphics.hpp>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <limits>
+#include <optional>
+#include <random>
+#include <string>
+#include <vector>
+]]></part>
+
+  <part place="top" name="objects"><![CDATA[
+// What every game is made of (lib/include/object.h, much reduced).
+namespace xge
+{
+	enum class Edge { Left, Right, Top, Bottom };
+	enum class Direction { Up, Down, Left, Right };
+	enum class Shape { Circle, Rectangle, Text, Image };
+
+	Edge opposite(Edge edge)
+	{
+		switch (edge)
+		{
+		case Edge::Left:   return Edge::Right;
+		case Edge::Right:  return Edge::Left;
+		case Edge::Top:    return Edge::Bottom;
+		case Edge::Bottom: return Edge::Top;
+		}
+		return edge;
+	}
+
+	struct Object
+	{
+		std::string name;
+		Shape shape = Shape::Rectangle;
+
+		sf::Vector2f position;
+		sf::Vector2f positionOriginal;
+		sf::Vector2f velocity;
+		sf::Vector2f velocityOriginal;
+		sf::Vector2f size;
+
+		bool visible = true;
+		bool visibleOriginal = true;
+		bool collides = false;
+		bool collidesOriginal = false;
+
+		// The step of each <move> held down: up, down, left, right.
+		std::array<float, 4> held{};
+
+		// How it is drawn: one of these, by its shape.
+		sf::CircleShape circle;
+		sf::RectangleShape rectangle;
+		std::optional<sf::Text> text;
+		std::string shownText;
+		unsigned textSize = 30;
+		sf::Color textColor;
+		std::optional<sf::Texture> texture;
+		std::optional<sf::Sprite> sprite;
+	};
+
+	// The window's size, as the game gives it.
+	float windowWidth = 0.0f;
+	float windowHeight = 0.0f;
+
+	// Where the program is: assets/ is beside it.
+	std::filesystem::path programFolder;
+
+	sf::Font font;
+	bool haveFont = false;
+
+	// A <random min max>: drawn once, when the game starts.
+	float randomBetween(float min, float max)
+	{
+		static std::mt19937 generator{ std::random_device{}() };
+		if (min > max) { std::swap(min, max); }
+		return std::uniform_real_distribution<float>(min, max)(generator);
+	}
+
+	// A <divide>: a divisor of 0 gives 0, as in the engine.
+	float divide(float dividend, float divisor)
+	{
+		return divisor == 0.0f ? 0.0f : dividend / divisor;
+	}
+
+	// A number as a text shows it: no decimals when it is whole.
+	std::string displayNumber(float value)
+	{
+		if (value == std::floor(value))
+		{
+			return std::to_string(static_cast<long long>(value));
+		}
+		return std::to_string(value);
+	}
+
+	void makeCircle(Object& object, float radius, sf::Color color)
+	{
+		object.shape = Shape::Circle;
+		object.circle.setRadius(radius);
+		object.circle.setFillColor(color);
+		object.size = { std::ceil(radius * 2.0f), std::ceil(radius * 2.0f) };
+	}
+
+	void makeRectangle(Object& object, float width, float height, sf::Color color)
+	{
+		object.shape = Shape::Rectangle;
+		object.rectangle.setSize({ width, height });
+		object.rectangle.setFillColor(color);
+		object.size = { std::ceil(width), std::ceil(height) };
+	}
+
+	// A text measures what its letters cover, as SFML draws them.
+	void setText(Object& object, const std::string& shown)
+	{
+		if (object.text && object.shownText == shown)
+		{
+			return;
+		}
+
+		object.shownText = shown;
+		if (!haveFont)
+		{
+			return;
+		}
+
+		object.text.emplace(font, shown, object.textSize);
+		object.text->setFillColor(object.textColor);
+		const sf::FloatRect bounds = object.text->getLocalBounds();
+		object.text->setOrigin(bounds.position);
+		object.size = { std::ceil(bounds.size.x), std::ceil(bounds.size.y) };
+	}
+
+	void makeText(Object& object, const std::string& shown, float size, sf::Color color)
+	{
+		object.shape = Shape::Text;
+		object.textSize = static_cast<unsigned>(size);
+		object.textColor = color;
+		setText(object, shown);
+	}
+
+	// flip is "", "horizontal" or "vertical".
+	void makeImage(Object& object, const std::string& path, const std::string& flip)
+	{
+		object.shape = Shape::Image;
+		object.texture.emplace();
+		if (!object.texture->loadFromFile(programFolder / path))
+		{
+			std::cerr << "could not load " << path << '\n';
+			return;
+		}
+
+		object.sprite.emplace(*object.texture);
+		const int width = static_cast<int>(object.texture->getSize().x);
+		const int height = static_cast<int>(object.texture->getSize().y);
+		if (flip == "horizontal")
+		{
+			object.sprite->setTextureRect(sf::IntRect({ width, 0 }, { -width, height }));
+		}
+		else if (flip == "vertical")
+		{
+			object.sprite->setTextureRect(sf::IntRect({ 0, height }, { width, -height }));
+		}
+		object.size = { static_cast<float>(width), static_cast<float>(height) };
+	}
+
+	void draw(sf::RenderWindow& window, Object& object)
+	{
+		switch (object.shape)
+		{
+		case Shape::Circle:
+			object.circle.setPosition(object.position);
+			window.draw(object.circle);
+			break;
+		case Shape::Rectangle:
+			object.rectangle.setPosition(object.position);
+			window.draw(object.rectangle);
+			break;
+		case Shape::Text:
+			if (object.text)
+			{
+				object.text->setPosition(object.position);
+				window.draw(*object.text);
+			}
+			break;
+		case Shape::Image:
+			if (object.sprite)
+			{
+				object.sprite->setPosition(object.position);
+				window.draw(*object.sprite);
+			}
+			break;
+		}
+	}
+
+	sf::Vector2f motionOf(const Object& object)
+	{
+		return object.velocity;
+	}
+
+	bool isMoving(const Object& object)
+	{
+		const sf::Vector2f motion = motionOf(object);
+		return motion.x != 0.0f || motion.y != 0.0f;
+	}
+
+	// The rules every object answers to at once (lib/source/game.cpp, resetObjectState).
+	void resetState(Object& object)
+	{
+		object.position = object.positionOriginal;
+		object.velocity = object.velocityOriginal;
+		object.visible = object.visibleOriginal;
+		object.collides = object.collidesOriginal;
+		object.held = {};
+	}
+
+	// A held <move>: the step of one direction (0 when let go), all of them
+	// added up into the velocity.
+	void setHeldMove(Object& object, Direction direction, float step)
+	{
+		object.held[static_cast<std::size_t>(direction)] = step;
+		object.velocity.x = object.held[static_cast<std::size_t>(Direction::Right)] - object.held[static_cast<std::size_t>(Direction::Left)];
+		object.velocity.y = object.held[static_cast<std::size_t>(Direction::Down)] - object.held[static_cast<std::size_t>(Direction::Up)];
+	}
+
+	// Whether an object is past an edge of the window (lib/source/collision_detector.cpp).
+	bool touchesEdge(const Object& object, Edge edge)
+	{
+		switch (edge)
+		{
+		case Edge::Left:   return object.position.x < 0.0f;
+		case Edge::Right:  return object.position.x > windowWidth - object.size.x - 1.0f;
+		case Edge::Top:    return object.position.y < 0.0f;
+		case Edge::Bottom: return object.position.y > windowHeight - object.size.y;
+		}
+		return false;
+	}
+}
+]]></part>
+
+  <part place="top" name="collisions"><![CDATA[
+// Where and when two objects touch (lib/source/collision_detector.cpp): a box
+// against a box, or a circle against a box, swept along the frame's move so
+// that nothing fast goes through anything thin.
+namespace xge
+{
+	struct Box
+	{
+		float left{};
+		float top{};
+		float right{};
+		float bottom{};
+	};
+
+	Box boxOf(const Object& object)
+	{
+		return { object.position.x, object.position.y, object.position.x + object.size.x, object.position.y + object.size.y };
+	}
+
+	sf::Vector2f centreOf(const Object& object)
+	{
+		return object.position + sf::Vector2f(object.size.x / 2, object.size.y / 2);
+	}
+
+	struct Entry
+	{
+		float time{};
+		bool acrossX{};
+	};
+
+	std::optional<Entry> pathIntoBox(sf::Vector2f origin, sf::Vector2f move, const Box& box)
+	{
+		float enter = -std::numeric_limits<float>::infinity();
+		float leave = std::numeric_limits<float>::infinity();
+		bool acrossX = true;
+
+		const auto slab = [&](float from, float step, float low, float high, bool isX)
+		{
+			if (step == 0.0f)
+			{
+				return from > low && from < high;
+			}
+
+			float t1 = (low - from) / step;
+			float t2 = (high - from) / step;
+			if (t1 > t2) { std::swap(t1, t2); }
+
+			if (t1 > enter)
+			{
+				enter = t1;
+				acrossX = isX;
+			}
+			leave = std::min(leave, t2);
+			return true;
+		};
+
+		if (!slab(origin.x, move.x, box.left, box.right, true) || !slab(origin.y, move.y, box.top, box.bottom, false))
+		{
+			return std::nullopt;
+		}
+
+		if (!std::isfinite(enter) || enter >= leave || leave <= 0.0f || enter > 1.0f)
+		{
+			return std::nullopt;
+		}
+
+		return Entry{ std::max(enter, 0.0f), acrossX };
+	}
+
+	Edge sideEntered(const Entry& entry, sf::Vector2f move)
+	{
+		if (entry.acrossX)
+		{
+			return move.x > 0 ? Edge::Left : Edge::Right;
+		}
+		return move.y > 0 ? Edge::Top : Edge::Bottom;
+	}
+
+	// When in the step two objects first touch, and the edge of the second
+	// that was touched.
+	struct Hit
+	{
+		float time{};
+		Edge edgeOfSecond{};
+	};
+
+	std::optional<Hit> sweepRectangle(const Object& mover, sf::Vector2f move, const Object& target)
+	{
+		const Box targetBox = boxOf(target);
+		const Box grown{ targetBox.left - mover.size.x, targetBox.top - mover.size.y, targetBox.right, targetBox.bottom };
+
+		const auto entry = pathIntoBox(mover.position, move, grown);
+		if (!entry)
+		{
+			return std::nullopt;
+		}
+		return Hit{ entry->time, sideEntered(*entry, move) };
+	}
+
+	std::optional<Hit> sweepCircle(const Object& circle, sf::Vector2f move, const Object& target)
+	{
+		const sf::Vector2f start = centreOf(circle);
+		const float radius = circle.size.x / 2;
+		const Box box = boxOf(target);
+
+		const Box grown{ box.left - radius, box.top - radius, box.right + radius, box.bottom + radius };
+		const auto entry = pathIntoBox(start, move, grown);
+		if (!entry)
+		{
+			return std::nullopt;
+		}
+
+		const sf::Vector2f at = start + move * entry->time;
+		const bool besideSide = (at.x >= box.left && at.x <= box.right) || (at.y >= box.top && at.y <= box.bottom);
+		if (besideSide)
+		{
+			return Hit{ entry->time, sideEntered(*entry, move) };
+		}
+
+		const sf::Vector2f corner{ at.x < box.left ? box.left : box.right, at.y < box.top ? box.top : box.bottom };
+		const sf::Vector2f offset = start - corner;
+		const float a = move.x * move.x + move.y * move.y;
+		const float b = 2 * (offset.x * move.x + offset.y * move.y);
+		const float c = offset.x * offset.x + offset.y * offset.y - radius * radius;
+		const float discriminant = b * b - 4 * a * c;
+		if (a == 0.0f || discriminant < 0.0f)
+		{
+			return std::nullopt;
+		}
+
+		const float time = (-b - std::sqrt(discriminant)) / (2 * a);
+		if (time > 1.0f || time < -0.0001f)
+		{
+			return std::nullopt;
+		}
+
+		const sf::Vector2f normal = (start + move * time) - corner;
+		Edge edge;
+		if (std::abs(normal.x) > std::abs(normal.y))
+		{
+			edge = normal.x < 0 ? Edge::Left : Edge::Right;
+		}
+		else
+		{
+			edge = normal.y < 0 ? Edge::Top : Edge::Bottom;
+		}
+		return Hit{ std::max(time, 0.0f), edge };
+	}
+
+	std::optional<Edge> rectangleRectangle(const Object& a, const Object& b)
+	{
+		const float overlapLeft = (a.position.x + a.size.x) - b.position.x;
+		const float overlapRight = (b.position.x + b.size.x) - a.position.x;
+		const float overlapTop = (a.position.y + a.size.y) - b.position.y;
+		const float overlapBottom = (b.position.y + b.size.y) - a.position.y;
+
+		if (overlapLeft <= 0 || overlapRight <= 0 || overlapTop <= 0 || overlapBottom <= 0)
+		{
+			return std::nullopt;
+		}
+
+		const float overlapX = std::min(overlapLeft, overlapRight);
+		const float overlapY = std::min(overlapTop, overlapBottom);
+		if (overlapX < overlapY)
+		{
+			return (overlapLeft < overlapRight) ? Edge::Left : Edge::Right;
+		}
+		return (overlapTop < overlapBottom) ? Edge::Top : Edge::Bottom;
+	}
+
+	std::optional<Edge> circleRectangle(const Object& circle, const Object& rect)
+	{
+		const sf::Vector2f midpoint = centreOf(circle);
+		const Box box = boxOf(rect);
+
+		const sf::Vector2f nearest{ std::clamp(midpoint.x, box.left, box.right), std::clamp(midpoint.y, box.top, box.bottom) };
+		const sf::Vector2f away = midpoint - nearest;
+
+		if (std::sqrt(away.x * away.x + away.y * away.y) >= circle.size.x / 2)
+		{
+			return std::nullopt;
+		}
+
+		if (away.x != 0.0f || away.y != 0.0f)
+		{
+			if (std::abs(away.x) > std::abs(away.y))
+			{
+				return away.x < 0 ? Edge::Left : Edge::Right;
+			}
+			return away.y < 0 ? Edge::Top : Edge::Bottom;
+		}
+
+		const float toLeft = midpoint.x - box.left;
+		const float toRight = box.right - midpoint.x;
+		const float toTop = midpoint.y - box.top;
+		const float toBottom = box.bottom - midpoint.y;
+		const float closest = std::min({ toLeft, toRight, toTop, toBottom });
+
+		if (closest == toLeft) { return Edge::Left; }
+		if (closest == toRight) { return Edge::Right; }
+		if (closest == toTop) { return Edge::Top; }
+		return Edge::Bottom;
+	}
+
+	std::optional<Edge> overlap(const Object& a, const Object& b)
+	{
+		if (a.shape == Shape::Circle)
+		{
+			return circleRectangle(a, b);
+		}
+		if (b.shape == Shape::Circle)
+		{
+			const auto edgeOfA = circleRectangle(b, a);
+			return edgeOfA ? std::optional<Edge>(opposite(*edgeOfA)) : std::nullopt;
+		}
+		return rectangleRectangle(a, b);
+	}
+
+	std::optional<Hit> sweep(const Object& a, sf::Vector2f moveA, const Object& b, sf::Vector2f moveB)
+	{
+		if (const auto edge = overlap(a, b))
+		{
+			return Hit{ 0.0f, *edge };
+		}
+
+		const sf::Vector2f relative = moveA - moveB;
+		if (relative.x == 0.0f && relative.y == 0.0f)
+		{
+			return std::nullopt;
+		}
+
+		if (a.shape == Shape::Circle)
+		{
+			return sweepCircle(a, relative, b);
+		}
+		if (b.shape == Shape::Circle)
+		{
+			const auto hit = sweepCircle(b, relative * -1.0f, a);
+			return hit ? std::optional<Hit>(Hit{ hit->time, opposite(hit->edgeOfSecond) }) : std::nullopt;
+		}
+		return sweepRectangle(a, relative, b);
+	}
+
+	// Two objects that have rules for touching each other. touch runs both
+	// sides' rules: the edge of the first that was touched, then of the second.
+	struct Pair
+	{
+		Object* first;
+		Object* second;
+		void (*touch)(Edge edgeOfFirst, Edge edgeOfSecond);
+		bool handled = false;
+	};
+
+	// One frame of movement (lib/source/game.cpp, Game::moveObjects): every
+	// object shown moves by its velocity, but each pair is swept along its own
+	// path, the earliest touch is found, everything moves up to it, that pair's
+	// rules run, and the rest of the frame goes on with whatever velocities the
+	// rules left.
+	void moveObjects(const std::vector<Object*>& all, std::vector<Pair>& pairs, bool (*shown)(const Object&))
+	{
+		std::vector<Pair*> live;
+		for (auto& pair : pairs)
+		{
+			pair.handled = false;
+			if (shown(*pair.first) && shown(*pair.second) && pair.first->collides && pair.second->collides)
+			{
+				live.push_back(&pair);
+			}
+		}
+
+		const auto advance = [&](float fraction)
+		{
+			for (Object* object : all)
+			{
+				if (shown(*object))
+				{
+					object->position += motionOf(*object) * fraction;
+				}
+			}
+		};
+
+		float played = 0.0f;
+		for (std::size_t reactions = 0; reactions <= live.size() && played < 1.0f; ++reactions)
+		{
+			const float left = 1.0f - played;
+
+			Pair* next = nullptr;
+			Hit nextHit;
+
+			for (Pair* pair : live)
+			{
+				Object& a = *pair->first;
+				Object& b = *pair->second;
+
+				if (pair->handled || !shown(a) || !shown(b) || !a.collides || !b.collides || (!isMoving(a) && !isMoving(b)))
+				{
+					continue;
+				}
+
+				const auto hit = sweep(a, motionOf(a) * left, b, motionOf(b) * left);
+				if (hit && (!next || hit->time < nextHit.time))
+				{
+					next = pair;
+					nextHit = *hit;
+				}
+			}
+
+			if (!next)
+			{
+				break;
+			}
+
+			const float step = nextHit.time * left;
+			advance(step);
+			played += step;
+			next->handled = true;
+			next->touch(opposite(nextHit.edgeOfSecond), nextHit.edgeOfSecond);
+		}
+
+		advance(1.0f - played);
+	}
+}
+]]></part>
+
+  <part place="top" name="bounce" when="bounce"><![CDATA[
+namespace xge
+{
+	// <bounce />: heads back away from the edge it touched.
+	void bounceOff(Object& object, Edge edge)
+	{
+		switch (edge)
+		{
+		case Edge::Left:   object.velocity.x = std::abs(object.velocity.x); break;
+		case Edge::Right:  object.velocity.x = -std::abs(object.velocity.x); break;
+		case Edge::Top:    object.velocity.y = std::abs(object.velocity.y); break;
+		case Edge::Bottom: object.velocity.y = -std::abs(object.velocity.y); break;
+		}
+	}
+}
+]]></part>
+
+  <part place="top" name="stick" when="stick"><![CDATA[
+namespace xge
+{
+	// <stick />: kept inside the window on the touched edge's axis, and loses
+	// only the velocity carrying it into the wall.
+	void stick(Object& object, Edge edge)
+	{
+		switch (edge)
+		{
+		case Edge::Left:
+			object.position.x = std::max(object.position.x, 0.0f);
+			object.velocity.x = std::max(object.velocity.x, 0.0f);
+			break;
+		case Edge::Right:
+			object.position.x = std::min(object.position.x, windowWidth - object.size.x);
+			object.velocity.x = std::min(object.velocity.x, 0.0f);
+			break;
+		case Edge::Top:
+			object.position.y = std::max(object.position.y, 0.0f);
+			object.velocity.y = std::max(object.velocity.y, 0.0f);
+			break;
+		case Edge::Bottom:
+			object.position.y = std::min(object.position.y, windowHeight - object.size.y);
+			object.velocity.y = std::min(object.velocity.y, 0.0f);
+			break;
+		}
+	}
+}
+]]></part>
+
+  <part place="top" name="deflect" when="deflect"><![CDATA[
+namespace xge
+{
+	// <deflect>: off the other object at an angle set by where it hit, up to
+	// maxAngle away from straight back out, at the speed it had.
+	void deflect(Object& object, const Object& other, Edge edge, float maxAngle)
+	{
+		const float speed = std::hypot(object.velocity.x, object.velocity.y);
+
+		const sf::Vector2f middle = object.position + object.size * 0.5f;
+		const sf::Vector2f otherMiddle = other.position + other.size * 0.5f;
+
+		const bool side = (edge == Edge::Left || edge == Edge::Right);
+		const float offset = side ? middle.y - otherMiddle.y : middle.x - otherMiddle.x;
+		const float half = (side ? other.size.y : other.size.x) * 0.5f;
+		const float along = (half > 0.0f) ? std::clamp(offset / half, -1.0f, 1.0f) : 0.0f;
+
+		const float radians = maxAngle * along * 3.14159265358979323846f / 180.0f;
+		const float away = speed * std::cos(radians);
+		const float across = speed * std::sin(radians);
+
+		switch (edge)
+		{
+		case Edge::Left:   object.velocity = { away, across }; break;
+		case Edge::Right:  object.velocity = { -away, across }; break;
+		case Edge::Top:    object.velocity = { across, away }; break;
+		case Edge::Bottom: object.velocity = { across, -away }; break;
+		}
+	}
+}
+]]></part>
+
+  <part place="top" name="sound" when="sound"><![CDATA[
+// Sounds written as notes, made into samples when the game starts
+// (lib/source/sound.cpp).
+namespace xge
+{
+	enum class Wave { Square, Triangle, Sawtooth, Sine, Noise };
+
+	struct Note
+	{
+		Wave wave;
+		const char* pitch; // a note name (A4, C#5) or hertz; "" for a rest
+		const char* to;    // where it slides to, or ""
+		float seconds;
+	};
+
+	struct SoundDesc
+	{
+		float volume;
+		std::vector<Note> notes;
+	};
+
+	constexpr unsigned sampleRate = 44100;
+
+	float hertzOf(const std::string& name)
+	{
+		if (name.empty())
+		{
+			return 0.0f;
+		}
+		if (std::isdigit(static_cast<unsigned char>(name[0])) || name[0] == '.')
+		{
+			return std::strtof(name.c_str(), nullptr);
+		}
+
+		static constexpr int semitoneOf[] = { 9, 11, 0, 2, 4, 5, 7 }; // A B C D E F G
+		const char letter = static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));
+		int semitone = semitoneOf[letter - 'A'];
+		std::size_t at = 1;
+		if (at < name.size() && name[at] == '#') { ++semitone; ++at; }
+		else if (at < name.size() && name[at] == 'b') { --semitone; ++at; }
+
+		const int octave = std::atoi(name.c_str() + at);
+		const int midi = (octave + 1) * 12 + semitone;
+		return static_cast<float>(440.0 * std::pow(2.0, (midi - 69) / 12.0));
+	}
+
+	double tone(Wave wave, double phase)
+	{
+		constexpr double pi = 3.14159265358979323846;
+		switch (wave)
+		{
+		case Wave::Square:   return phase < 0.5 ? 1.0 : -1.0;
+		case Wave::Sawtooth: return 2.0 * phase - 1.0;
+		case Wave::Sine:     return std::sin(2.0 * pi * phase);
+		case Wave::Triangle:
+			if (phase < 0.25) { return 4.0 * phase; }
+			if (phase < 0.75) { return 2.0 - 4.0 * phase; }
+			return 4.0 * phase - 4.0;
+		case Wave::Noise:
+			break;
+		}
+		return 0.0;
+	}
+
+	class NoiseSource
+	{
+	public:
+		explicit NoiseSource(std::uint32_t seed) : state(seed ? seed : 0x9e3779b9u) {}
+
+		double next()
+		{
+			state ^= state << 13;
+			state ^= state >> 17;
+			state ^= state << 5;
+			return static_cast<double>(state) / 2147483648.0 - 1.0;
+		}
+
+	private:
+		std::uint32_t state;
+	};
+
+	std::vector<std::int16_t> synthesize(const SoundDesc& sound)
+	{
+		std::vector<std::int16_t> samples;
+		const double volume = std::clamp(static_cast<double>(sound.volume), 0.0, 1.0);
+
+		std::uint32_t noteNumber = 0;
+		for (const Note& note : sound.notes)
+		{
+			++noteNumber;
+
+			const std::size_t count = static_cast<std::size_t>(std::max(0.0, static_cast<double>(note.seconds)) * sampleRate);
+			const bool rest = note.pitch[0] == '\0';
+			if (rest || count == 0)
+			{
+				samples.insert(samples.end(), count, 0);
+				continue;
+			}
+
+			const std::size_t fade = std::min<std::size_t>(count / 4, static_cast<std::size_t>(sampleRate * 0.002));
+
+			const double startHz = hertzOf(note.pitch);
+			const double endHz = note.to[0] ? hertzOf(note.to) : startHz;
+			const double ratio = (startHz > 0.0 && endHz > 0.0) ? endHz / startHz : 1.0;
+
+			NoiseSource noise(0x2545f491u * noteNumber);
+			double held = noise.next();
+
+			double phase = 0.0;
+			for (std::size_t i = 0; i < count; ++i)
+			{
+				const double through = static_cast<double>(i) / static_cast<double>(count);
+				const double hz = (ratio == 1.0) ? startHz : startHz * std::pow(ratio, through);
+
+				const double value = (note.wave == Wave::Noise) ? held : tone(note.wave, phase);
+
+				phase += hz / sampleRate;
+				if (note.wave == Wave::Noise && phase >= 0.5)
+				{
+					held = noise.next();
+					phase -= 0.5;
+				}
+				phase -= std::floor(phase);
+
+				double envelope = 1.0;
+				if (fade > 0 && i < fade) { envelope = static_cast<double>(i) / static_cast<double>(fade); }
+				else if (fade > 0 && i >= count - fade) { envelope = static_cast<double>(count - 1 - i) / static_cast<double>(fade); }
+
+				samples.push_back(static_cast<std::int16_t>(std::lround(value * envelope * volume * 32767.0)));
+			}
+		}
+
+		return samples;
+	}
+
+	// One sound ready to play: its samples and an SFML sound to play them.
+	struct Voice
+	{
+		sf::SoundBuffer buffer;
+		std::optional<sf::Sound> sound;
+
+		void load(const SoundDesc& desc)
+		{
+			const std::vector<std::int16_t> samples = synthesize(desc);
+			if (!samples.empty() && buffer.loadFromSamples(samples.data(), samples.size(), 1, sampleRate, { sf::SoundChannel::Mono }))
+			{
+				sound.emplace(buffer);
+			}
+		}
+
+		void play()
+		{
+			if (sound) { sound->play(); }
+		}
+	};
+}
+]]></part>
+
+  <part place="bottom" name="main"><![CDATA[
+// The program: a window, the keys, and one frame after another
+// (lib/source/engine.cpp).
+namespace
+{
+	using game::Binding;
+
+	std::array<bool, sf::Keyboard::KeyCount> keyDown{};
+
+	// What each key's press started, so that letting go stops exactly that,
+	// whatever the state is by then.
+	std::array<Binding, sf::Keyboard::KeyCount> keyHeld{};
+
+	unsigned long syncedStateChanges = 0;
+
+	// After a change of state: whatever the old state's keys were doing stops,
+	// then the new state's held moves start for the keys still down.
+	void syncHeldKeys()
+	{
+		if (game::stateChanges == syncedStateChanges)
+		{
+			return;
+		}
+		syncedStateChanges = game::stateChanges;
+
+		for (Binding& held : keyHeld)
+		{
+			const Binding binding = held;
+			held = {};
+			if (binding.run) { binding.run(false); }
+		}
+
+		for (std::size_t key = 0; key < keyDown.size(); ++key)
+		{
+			if (!keyDown[key])
+			{
+				continue;
+			}
+
+			const Binding binding = game::bindingFor(static_cast<sf::Keyboard::Key>(key));
+			if (binding.held)
+			{
+				binding.held();
+				keyHeld[key] = binding;
+			}
+		}
+	}
+
+	void keyPressed(sf::Keyboard::Key key)
+	{
+		if (key == sf::Keyboard::Key::Unknown)
+		{
+			return;
+		}
+
+		const auto index = static_cast<std::size_t>(key);
+		if (keyDown[index])
+		{
+			return;
+		}
+		keyDown[index] = true;
+
+		const Binding binding = game::bindingFor(key);
+		if (!binding.run)
+		{
+			return;
+		}
+
+		keyHeld[index] = binding;
+		binding.run(true);
+		syncHeldKeys();
+	}
+
+	void keyReleased(sf::Keyboard::Key key)
+	{
+		if (key == sf::Keyboard::Key::Unknown)
+		{
+			return;
+		}
+
+		const auto index = static_cast<std::size_t>(key);
+		keyDown[index] = false;
+
+		const Binding binding = keyHeld[index];
+		keyHeld[index] = {};
+		if (binding.run) { binding.run(false); }
+		syncHeldKeys();
+	}
+}
+
+int main(int, char* argv[])
+{
+	xge::programFolder = std::filesystem::absolute(argv[0]).parent_path();
+	xge::haveFont = xge::font.openFromFile(xge::programFolder / "assets/tuffy.ttf");
+	if (!xge::haveFont)
+	{
+		std::cerr << "could not load assets/tuffy.ttf: texts will not be shown\n";
+	}
+
+	sf::RenderWindow window(sf::VideoMode({ game::width, game::height }), game::title, sf::Style::Default,
+		game::fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
+	window.setFramerateLimit(game::framerate);
+
+	game::start();
+	syncedStateChanges = game::stateChanges;
+
+	while (window.isOpen())
+	{
+		while (const std::optional event = window.pollEvent())
+		{
+			if (event->is<sf::Event::Closed>())
+			{
+				window.close();
+			}
+			else if (const auto* pressed = event->getIf<sf::Event::KeyPressed>())
+			{
+				keyPressed(pressed->code);
+			}
+			else if (const auto* released = event->getIf<sf::Event::KeyReleased>())
+			{
+				keyReleased(released->code);
+			}
+		}
+
+		game::update();
+		syncHeldKeys();
+		game::afterUpdate();
+
+		window.clear(game::background);
+		game::draw(window);
+		window.display();
+	}
+
+	return EXIT_SUCCESS;
+}
+]]></part>
+</runtime>
