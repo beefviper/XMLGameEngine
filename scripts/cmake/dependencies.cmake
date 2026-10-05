@@ -28,9 +28,10 @@ include(FetchContent)
 # Not found, MISSING says what follows from that, and with REQUIRED the configure
 # stops there.
 #
-# <name> is what the messages call it ("Found <name>", the way CMake itself says
-# it; where it was found is not said, as that is a different variable for each
-# library) and what is passed to FetchContent. It is
+# <name> is what the messages call it ("Found <name> <version>", the way CMake
+# itself says it, with the version when the package reports one; where it was
+# found is not said, as that is a different variable for each library) and what
+# is passed to FetchContent. It is
 # also how the FORCE_LOCAL_<NAME> option (options.cmake) is found: its upper
 # case. A library found with PACKAGE leaves <package>_FOUND for the rest of the
 # project to check; one found with HEADER leaves <NAME>_INCLUDE_DIRS and
@@ -38,6 +39,7 @@ include(FetchContent)
 macro(xge_dependency name)
 	cmake_parse_arguments(XD "REQUIRED" "WHEN;HEADER;REPO;TAG;BROUGHT_BY;MISSING" "PACKAGE;SETTINGS" ${ARGN})
 	string(TOUPPER "${name}" XD_UPPER)
+	unset(XD_PACKAGE_NAME) # a macro's variables outlive the call: not the last library's
 
 	set(XD_ENABLED TRUE)
 	if (DEFINED XD_WHEN)
@@ -81,7 +83,14 @@ macro(xge_dependency name)
 
 		# Say what was found, or fetch it.
 		if (XD_FOUND)
-			message(STATUS "Found ${name}")
+			# The version, as the sanity check it is: the copy found can be older
+			# than the tag pinned below. Not every library says (a header search
+			# cannot), and then there is just the name.
+			if (XD_PACKAGE_NAME AND ${XD_PACKAGE_NAME}_VERSION)
+				message(STATUS "Found ${name} ${${XD_PACKAGE_NAME}_VERSION}")
+			else()
+				message(STATUS "Found ${name}")
+			endif()
 		elseif (NOT XD_REPO)
 			if (XD_REQUIRED)
 				message(FATAL_ERROR "${name} not found: ${XD_MISSING}")
