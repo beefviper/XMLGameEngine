@@ -5,134 +5,196 @@
 
 include(FetchContent)
 
-# Every third-party dependency below follows the same shape: try to find it
-# already installed (via find_package/find_path just below), and if that
-# fails, FetchContent_Declare it from its upstream git repo so
-# FetchContent_MakeAvailable() (further down) downloads and builds it as
-# part of this build.
-#   FOUND_VAR      the variable find_package/find_path already set, truthy
-#                  when found locally
-#   DISPLAY_NAME   name to use in the found/not-found status messages
-#   INFO_VAR       variable to print alongside "found" - usually <Name>_DIR
-#                  (the install dir CMake sets for any config-mode find,
-#                  a real location on disk); XercesC/exprtk/RapidXML use
-#                  something else since they're found via find_path() or
-#                  an old-style Module rather than a config package
-#   NAME           name passed to FetchContent_Declare/MakeAvailable
-#   REPO / TAG     upstream git repo and tag/commit to fetch
-#   SET_FOUND_VAR  only needed for exprtk/RapidXML, which have no _FOUND
-#                  variable of their own for the rest of the project to
-#                  check - this defines one when found locally
-#   FETCH_VERB     defaults to "download and build it locally"; RapidXML
-#                  overrides it since it's header-only (nothing to build)
-macro(declare_fetched_dependency)
-	cmake_parse_arguments(DFD "" "FOUND_VAR;DISPLAY_NAME;INFO_VAR;NAME;REPO;TAG;SET_FOUND_VAR;FETCH_VERB" "" ${ARGN})
+# Every third-party library follows the same shape: look for it already
+# installed (vcpkg or the system) and, if it is not there, FetchContent_Declare
+# it from its upstream git repo so FetchContent_MakeAvailable() (below)
+# downloads and builds it as part of this build. One macro does it for all of
+# them:
+#
+#   xge_dependency(<name>
+#       [WHEN <variable>]               only when it is true (default: always); a
+#                                       backend that is not built needs nothing
+#       PACKAGE <find_package args>     look for it with find_package(<args> QUIET),
+#                                       or
+#       HEADER <file>                   with find_path(), for a header-only library
+#                                       that has no CMake package
+#       REPO <git url> TAG <tag or commit>
+#       [SETTINGS <VARIABLE=VALUE>...]  ON/OFF cache settings for the fetched copy
+#       [BROUGHT_BY <library>])         the fetched copy of that library builds this
+#                                       one too, so it is not fetched on its own
+#
+# <name> is what the messages call it and what is passed to FetchContent. It is
+# also how the FORCE_LOCAL_<NAME> option (options.cmake) is found: its upper
+# case. A library found with PACKAGE leaves <package>_FOUND for the rest of the
+# project to check; one found with HEADER leaves <NAME>_INCLUDE_DIRS and
+# <NAME>_PACKAGE_FOUND. A macro, not a function, so that those stay set.
+macro(xge_dependency name)
+	cmake_parse_arguments(XD "" "WHEN;HEADER;REPO;TAG;BROUGHT_BY" "PACKAGE;SETTINGS" ${ARGN})
+	string(TOUPPER "${name}" XD_UPPER)
 
-	if (NOT DFD_FETCH_VERB)
-		set(DFD_FETCH_VERB "download and build it locally")
+	set(XD_ENABLED TRUE)
+	if (DEFINED XD_WHEN)
+		if (NOT ${XD_WHEN})
+			set(XD_ENABLED FALSE)
+		endif()
 	endif()
 
-	if (${DFD_FOUND_VAR})
-		# Not every find_package()/find_path() result populates the same
-		# kind of variable (a modern config-mode package may define only
-		# imported targets, no classic _LIBRARIES list) - so only show the
-		# ": <value>" detail when INFO_VAR actually resolved to something,
-		# rather than printing a bare trailing colon for those.
-		if (DFD_INFO_VAR AND ${DFD_INFO_VAR})
-			message(STATUS "${DFD_DISPLAY_NAME} found: ${${DFD_INFO_VAR}}")
+	if (XD_ENABLED)
+		# Look for it.
+		set(XD_FOUND FALSE)
+		set(XD_WHERE "")
+
+		if (XD_HEADER)
+			set(XD_VARIABLE ${XD_UPPER}_INCLUDE_DIRS)
+
+			if (FORCE_LOCAL_${XD_UPPER})
+				unset(${XD_VARIABLE} CACHE)
+			else()
+				find_path(${XD_VARIABLE} "${XD_HEADER}")
+			endif()
+
+			if (${XD_VARIABLE})
+				set(XD_FOUND TRUE)
+				set(XD_WHERE "${${XD_VARIABLE}}")
+				set(${XD_UPPER}_PACKAGE_FOUND TRUE)
+			endif()
+
+			set(XD_VERB "download it locally")
 		else()
-			message(STATUS "${DFD_DISPLAY_NAME} found")
+			list(GET XD_PACKAGE 0 XD_PACKAGE_NAME)
+
+			if (NOT FORCE_LOCAL_${XD_UPPER})
+				find_package(${XD_PACKAGE} QUIET)
+			endif()
+
+			# Where it is: the folder of its CMake package, or for the few found
+			# by a module instead (Xerces) the folder of its headers.
+			if (${XD_PACKAGE_NAME}_FOUND)
+				set(XD_FOUND TRUE)
+
+				if (${XD_PACKAGE_NAME}_DIR)
+					set(XD_WHERE "${${XD_PACKAGE_NAME}_DIR}")
+				elseif (${XD_PACKAGE_NAME}_INCLUDE_DIR)
+					set(XD_WHERE "${${XD_PACKAGE_NAME}_INCLUDE_DIR}")
+				endif()
+			endif()
+
+			set(XD_VERB "download and build it locally")
 		endif()
 
-		if (DEFINED DFD_SET_FOUND_VAR)
-			set(${DFD_SET_FOUND_VAR} TRUE)
+		# Say what was found, or fetch it.
+		if (XD_FOUND)
+			if (XD_WHERE)
+				message(STATUS "${name} found: ${XD_WHERE}")
+			else()
+				message(STATUS "${name} found")
+			endif()
+		elseif (XD_BROUGHT_BY AND "${XD_BROUGHT_BY}" IN_LIST FETCHED_LIBRARIES)
+			message(STATUS "${name} not found, and neither is ${XD_BROUGHT_BY}: the ${XD_BROUGHT_BY} built here brings its own.")
+		else()
+			message(STATUS "${name} not found, using FetchContent to ${XD_VERB}.")
+
+			# SYSTEM: what the library's targets say about their include
+			# directories are system include directories to everything that links
+			# them, so no warning is ever reported from its headers.
+			FetchContent_Declare(${name}
+				GIT_REPOSITORY ${XD_REPO}
+				GIT_TAG ${XD_TAG}
+				EXCLUDE_FROM_ALL
+				SYSTEM)
+
+			list(APPEND FETCHED_LIBRARIES ${name})
+
+			foreach(XD_SETTING IN LISTS XD_SETTINGS)
+				string(REPLACE "=" ";" XD_PAIR "${XD_SETTING}")
+				list(GET XD_PAIR 0 XD_SETTING_NAME)
+				list(GET XD_PAIR 1 XD_SETTING_VALUE)
+				set(${XD_SETTING_NAME} ${XD_SETTING_VALUE} CACHE BOOL "Set for the ${name} fetched by xge_dependency" FORCE)
+			endforeach()
 		endif()
-	else()
-		message(STATUS "${DFD_DISPLAY_NAME} not found, using FetchContent to ${DFD_FETCH_VERB}.")
-
-		# SYSTEM: what the library's targets say about their include
-		# directories are system include directories to everything that links
-		# them, so no warning is ever reported from its headers.
-		FetchContent_Declare(${DFD_NAME}
-			GIT_REPOSITORY ${DFD_REPO}
-			GIT_TAG ${DFD_TAG}
-			EXCLUDE_FROM_ALL
-			SYSTEM)
-
-		list(APPEND FETCHED_LIBRARIES ${DFD_NAME})
 	endif()
 endmacro()
 
 # Only the libraries of the backends that are built (options.cmake) are found
 # or fetched: the engine itself needs exprtk and lunasvg, and nothing else.
-if (XGE_WITH_XERCES AND NOT FORCE_LOCAL_XERCESC)
-	find_package(XercesC QUIET)
-endif()
+xge_dependency(XercesC WHEN XGE_WITH_XERCES
+	PACKAGE XercesC
+	REPO https://github.com/apache/xerces-c.git TAG v3.3.0)
 
-if (NOT FORCE_LOCAL_EXPRTK)
-	find_path(EXPRTK_INCLUDE_DIRS "exprtk.hpp")
-endif()
+xge_dependency(exprtk
+	HEADER exprtk.hpp
+	REPO https://github.com/ArashPartow/exprtk.git TAG 0.0.3-cmake)
 
 # SFML's network module is not asked for: nothing in the engine uses it, and it
 # is the part that needs a TLS library and libssh2 built beside it.
-if (XGE_WITH_SFML3 AND NOT FORCE_LOCAL_SFML)
-	find_package(SFML 3 COMPONENTS System Window Graphics Audio QUIET)
-endif()
+xge_dependency(SFML WHEN XGE_WITH_SFML3
+	PACKAGE SFML 3 COMPONENTS System Window Graphics Audio
+	REPO https://github.com/SFML/SFML.git TAG 3.1.0
+	SETTINGS SFML_BUILD_FROM_SOURCE=ON SFML_USE_SYSTEM_DEPS=OFF SFML_BUILD_NETWORK=OFF)
 
-if (XGE_WITH_RAYLIB AND NOT FORCE_LOCAL_RAYLIB)
-	find_package(raylib QUIET)
-endif()
+xge_dependency(raylib WHEN XGE_WITH_RAYLIB
+	PACKAGE raylib
+	REPO https://github.com/raysan5/raylib.git TAG 5.5)
 
+# The OpenGL backend (window_opengl.cpp) calls OpenGL itself: the system's
+# library, part of every platform's SDK, so it is only ever found, never fetched.
+# It also uses GLFW for its window and keyboard (window_opengl.h), which raylib is
+# built on too: vcpkg installs it for raylib, and a raylib built from source brings
+# its own `glfw` target.
 if (XGE_WITH_OPENGL)
-	# The system's OpenGL library, for the OpenGL backend (window_opengl.cpp). It
-	# is part of every platform's SDK, so it is only ever found, never fetched.
 	find_package(OpenGL REQUIRED)
-
-	# GLFW is the OpenGL backend's window and keyboard (window_opengl.h), and raylib
-	# is built on it too: vcpkg installs it for raylib, and a raylib built from
-	# source brings its own `glfw` target.
-	if (NOT FORCE_LOCAL_GLFW)
-		find_package(glfw3 QUIET)
-	endif()
 endif()
 
-if (XGE_WITH_SDL2)
-	if (NOT FORCE_LOCAL_SDL2)
-		find_package(SDL2 QUIET)
-	endif()
+xge_dependency(GLFW WHEN XGE_WITH_OPENGL
+	PACKAGE glfw3
+	REPO https://github.com/glfw/glfw.git TAG 3.4
+	BROUGHT_BY raylib
+	SETTINGS GLFW_BUILD_EXAMPLES=OFF GLFW_BUILD_TESTS=OFF GLFW_BUILD_DOCS=OFF GLFW_INSTALL=OFF)
 
-	if (NOT FORCE_LOCAL_SDL2_IMAGE)
-		find_package(SDL2_image QUIET)
-	endif()
+# SDL2_image and SDL2_ttf are built against whichever SDL2 target ends up
+# available (found or fetched); their own CMakeLists picks it up the same way
+# this project's other fetched libraries do.
+xge_dependency(SDL2 WHEN XGE_WITH_SDL2
+	PACKAGE SDL2
+	REPO https://github.com/libsdl-org/SDL.git TAG release-2.30.9)
 
-	if (NOT FORCE_LOCAL_SDL2_TTF)
-		find_package(SDL2_ttf QUIET)
-	endif()
-endif()
+xge_dependency(SDL2_image WHEN XGE_WITH_SDL2
+	PACKAGE SDL2_image
+	REPO https://github.com/libsdl-org/SDL_image.git TAG release-2.8.2
+	SETTINGS SDL2IMAGE_INSTALL=OFF SDL2IMAGE_VENDORED=ON)
 
-if (XGE_WITH_TINYXML2 AND NOT FORCE_LOCAL_TINYXML2)
-	find_package(tinyxml2 QUIET)
-endif()
+xge_dependency(SDL2_ttf WHEN XGE_WITH_SDL2
+	PACKAGE SDL2_ttf
+	REPO https://github.com/libsdl-org/SDL_ttf.git TAG release-2.22.0
+	SETTINGS SDL2TTF_INSTALL=OFF SDL2TTF_VENDORED=ON)
 
-if (XGE_WITH_PUGIXML AND NOT FORCE_LOCAL_PUGIXML)
-	find_package(pugixml QUIET)
-endif()
+xge_dependency(TinyXML2 WHEN XGE_WITH_TINYXML2
+	PACKAGE tinyxml2
+	REPO https://github.com/leethomason/tinyxml2.git TAG 11.0.0)
 
-# RapidXML has no official CMake package of its own to find_package() -
-# same situation exprtk is in below, so this probes for its header the same
-# way exprtk does (EXPRTK_INCLUDE_DIRS), rather than pretending a RapidXML
-# config package might exist.
-if (XGE_WITH_RAPIDXML AND NOT FORCE_LOCAL_RAPIDXML)
-	find_path(RAPIDXML_INCLUDE_DIRS "rapidxml.hpp")
-endif()
+xge_dependency(PugiXML WHEN XGE_WITH_PUGIXML
+	PACKAGE pugixml
+	REPO https://github.com/zeux/pugixml.git TAG v1.16)
+
+# RapidXML has no official CMake package to find, so its header is looked for the
+# way exprtk's is, and it is pinned by commit rather than a tag: upstream (the
+# discord/rapidxml mirror of the last released 1.13, the version this project's
+# own xml_rapidxml.cpp is written against) has never cut a tagged release. It is
+# header-only with no CMakeLists.txt of its own, so unlike this project's other
+# fetched libraries it is not add_subdirectory()'d by FetchContent_MakeAvailable
+# below: see the rapidxml::rapidxml target synthesized after it instead.
+xge_dependency(RapidXML WHEN XGE_WITH_RAPIDXML
+	HEADER rapidxml.hpp
+	REPO https://github.com/discord/rapidxml.git TAG 2ae4b2888165a393dfb6382168825fddf00c27b9)
 
 # lunasvg draws the SVG files an <svg> sprite names (lib/source/svg.cpp). It is
 # the engine's own tool, not a Window backend: only svg.cpp includes it, and
 # what it draws goes to every backend as an ordinary picture. The plutovg
 # library it draws with comes along inside it. With vcpkg: vcpkg install lunasvg
-if (NOT FORCE_LOCAL_LUNASVG)
-	find_package(lunasvg QUIET)
-endif()
+xge_dependency(lunasvg
+	PACKAGE lunasvg
+	REPO https://github.com/sammycage/lunasvg.git TAG v3.5.0
+	SETTINGS LUNASVG_BUILD_EXAMPLES=OFF PLUTOVG_BUILD_EXAMPLES=OFF)
 
 # Qt 6 is only for xgegui (gui/); nothing in the engine library uses it. Unlike
 # everything above it is found, never fetched: building Qt from source is not
@@ -144,166 +206,6 @@ if (Qt6_FOUND)
 	message(STATUS "Qt6 found: ${Qt6_DIR}")
 else()
 	message(STATUS "Qt6 not found, xgegui will not be built (install qtbase with the widgets feature).")
-endif()
-
-if (XGE_WITH_XERCES)
-	declare_fetched_dependency(
-		FOUND_VAR XercesC_FOUND
-		DISPLAY_NAME "XercesC"
-		INFO_VAR XercesC_LIBRARIES
-		NAME XercesC
-		REPO https://github.com/apache/xerces-c.git
-		TAG v3.3.0)
-endif()
-
-declare_fetched_dependency(
-	FOUND_VAR EXPRTK_INCLUDE_DIRS
-	DISPLAY_NAME "exprtk"
-	INFO_VAR EXPRTK_INCLUDE_DIRS
-	NAME exprtk
-	REPO https://github.com/ArashPartow/exprtk.git
-	TAG 0.0.3-cmake
-	SET_FOUND_VAR EXPRTK_PACKAGE_FOUND)
-
-if (XGE_WITH_SFML3)
-	declare_fetched_dependency(
-		FOUND_VAR SFML_FOUND
-		DISPLAY_NAME "SFML"
-		INFO_VAR SFML_DIR
-		NAME SFML
-		REPO https://github.com/SFML/SFML.git
-		TAG 3.1.0)
-
-	if (NOT SFML_FOUND)
-		set(SFML_BUILD_FROM_SOURCE ON CACHE BOOL "Force SFML to build from source" FORCE)
-		set(SFML_USE_SYSTEM_DEPS OFF CACHE BOOL "Use SFML's bundled dependencies" FORCE)
-		set(SFML_BUILD_NETWORK OFF CACHE BOOL "Nothing in the engine uses SFML's network module" FORCE)
-	endif()
-endif()
-
-if (XGE_WITH_RAYLIB)
-	declare_fetched_dependency(
-		FOUND_VAR raylib_FOUND
-		DISPLAY_NAME "raylib"
-		INFO_VAR raylib_DIR
-		NAME raylib
-		REPO https://github.com/raysan5/raylib.git
-		TAG 5.5)
-endif()
-
-# GLFW is only for the OpenGL backend. With raylib built too and neither it nor
-# GLFW found, the fetched raylib builds GLFW itself and defines the same `glfw`
-# target, so GLFW is not fetched a second time; without raylib it is.
-if (XGE_WITH_OPENGL)
-	if (glfw3_FOUND OR raylib_FOUND OR NOT XGE_WITH_RAYLIB)
-		declare_fetched_dependency(
-			FOUND_VAR glfw3_FOUND
-			DISPLAY_NAME "GLFW"
-			INFO_VAR glfw3_DIR
-			NAME glfw
-			REPO https://github.com/glfw/glfw.git
-			TAG 3.4)
-
-		if (NOT glfw3_FOUND)
-			set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build GLFW's examples" FORCE)
-			set(GLFW_BUILD_TESTS OFF CACHE BOOL "Do not build GLFW's tests" FORCE)
-			set(GLFW_BUILD_DOCS OFF CACHE BOOL "Do not build GLFW's documentation" FORCE)
-			set(GLFW_INSTALL OFF CACHE BOOL "Disable GLFW's own install rules" FORCE)
-		endif()
-	else()
-		message(STATUS "GLFW not found, and neither is raylib: the raylib built here brings its own.")
-	endif()
-endif()
-
-if (XGE_WITH_SDL2)
-	declare_fetched_dependency(
-		FOUND_VAR SDL2_FOUND
-		DISPLAY_NAME "SDL2"
-		INFO_VAR SDL2_DIR
-		NAME SDL2
-		REPO https://github.com/libsdl-org/SDL.git
-		TAG release-2.30.9)
-
-	# Built against whichever SDL2 target ends up available above (found or
-	# fetched) - SDL2_image's own CMakeLists picks it up the same way this
-	# project's other fetched libraries do.
-	declare_fetched_dependency(
-		FOUND_VAR SDL2_image_FOUND
-		DISPLAY_NAME "SDL2_image"
-		INFO_VAR SDL2_image_DIR
-		NAME SDL2_image
-		REPO https://github.com/libsdl-org/SDL_image.git
-		TAG release-2.8.2)
-
-	if (NOT SDL2_image_FOUND)
-		set(SDL2IMAGE_INSTALL OFF CACHE BOOL "Disable SDL2_image's own install rules" FORCE)
-		set(SDL2IMAGE_VENDORED ON CACHE BOOL "Build SDL2_image's bundled image libraries from source" FORCE)
-	endif()
-
-	declare_fetched_dependency(
-		FOUND_VAR SDL2_ttf_FOUND
-		DISPLAY_NAME "SDL2_ttf"
-		INFO_VAR SDL2_ttf_DIR
-		NAME SDL2_ttf
-		REPO https://github.com/libsdl-org/SDL_ttf.git
-		TAG release-2.22.0)
-
-	if (NOT SDL2_ttf_FOUND)
-		set(SDL2TTF_INSTALL OFF CACHE BOOL "Disable SDL2_ttf's own install rules" FORCE)
-		set(SDL2TTF_VENDORED ON CACHE BOOL "Build SDL2_ttf's bundled FreeType from source" FORCE)
-	endif()
-endif()
-
-if (XGE_WITH_TINYXML2)
-	declare_fetched_dependency(
-		FOUND_VAR tinyxml2_FOUND
-		DISPLAY_NAME "TinyXML2"
-		INFO_VAR tinyxml2_DIR
-		NAME tinyxml2
-		REPO https://github.com/leethomason/tinyxml2.git
-		TAG 11.0.0)
-endif()
-
-if (XGE_WITH_PUGIXML)
-	declare_fetched_dependency(
-		FOUND_VAR pugixml_FOUND
-		DISPLAY_NAME "PugiXML"
-		INFO_VAR pugixml_DIR
-		NAME pugixml
-		REPO https://github.com/zeux/pugixml.git
-		TAG v1.16)
-endif()
-
-# Pinned by commit rather than a tag - upstream (the discord/rapidxml
-# mirror of the last released 1.13, the version this project's own
-# xml_rapidxml.cpp is written against) has never cut a tagged release.
-# RapidXML is header-only with no CMakeLists.txt of its own (checked -
-# it has none), so unlike this project's other fetched libraries it's
-# not add_subdirectory()'d by FetchContent_MakeAvailable below - see the
-# rapidxml::rapidxml target synthesized further down instead.
-if (XGE_WITH_RAPIDXML)
-	declare_fetched_dependency(
-		FOUND_VAR RAPIDXML_INCLUDE_DIRS
-		DISPLAY_NAME "RapidXML"
-		INFO_VAR RAPIDXML_INCLUDE_DIRS
-		NAME rapidxml
-		REPO https://github.com/discord/rapidxml.git
-		TAG 2ae4b2888165a393dfb6382168825fddf00c27b9
-		SET_FOUND_VAR RAPIDXML_PACKAGE_FOUND
-		FETCH_VERB "download it locally")
-endif()
-
-declare_fetched_dependency(
-	FOUND_VAR lunasvg_FOUND
-	DISPLAY_NAME "lunasvg"
-	INFO_VAR lunasvg_DIR
-	NAME lunasvg
-	REPO https://github.com/sammycage/lunasvg.git
-	TAG v3.5.0)
-
-if (NOT lunasvg_FOUND)
-	set(LUNASVG_BUILD_EXAMPLES OFF CACHE BOOL "Do not build lunasvg's examples" FORCE)
-	set(PLUTOVG_BUILD_EXAMPLES OFF CACHE BOOL "Do not build plutovg's examples" FORCE)
 endif()
 
 # Compiles a fetched library's own sources with no warnings at all (the targets
