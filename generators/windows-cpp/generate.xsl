@@ -125,6 +125,11 @@ target_link_libraries(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> PRIVATE SFML::Graphics SFML::Audio)
 
+# Visual Studio starts the game when you press F5, rather than ALL_BUILD.
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT </xsl:text>
+    <xsl:value-of select="$name" />
+    <xsl:text>)
+
 # The program looks for assets/ beside itself, and on Windows needs SFML's DLLs
 # there too when SFML is a shared library.
 add_custom_command(TARGET </xsl:text>
