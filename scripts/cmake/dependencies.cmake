@@ -28,7 +28,9 @@ include(FetchContent)
 # Not found, MISSING says what follows from that, and with REQUIRED the configure
 # stops there.
 #
-# <name> is what the messages call it and what is passed to FetchContent. It is
+# <name> is what the messages call it ("Found <name>", the way CMake itself says
+# it; where it was found is not said, as that is a different variable for each
+# library) and what is passed to FetchContent. It is
 # also how the FORCE_LOCAL_<NAME> option (options.cmake) is found: its upper
 # case. A library found with PACKAGE leaves <package>_FOUND for the rest of the
 # project to check; one found with HEADER leaves <NAME>_INCLUDE_DIRS and
@@ -47,7 +49,6 @@ macro(xge_dependency name)
 	if (XD_ENABLED)
 		# Look for it.
 		set(XD_FOUND FALSE)
-		set(XD_WHERE "")
 
 		if (XD_HEADER)
 			set(XD_VARIABLE ${XD_UPPER}_INCLUDE_DIRS)
@@ -60,7 +61,6 @@ macro(xge_dependency name)
 
 			if (${XD_VARIABLE})
 				set(XD_FOUND TRUE)
-				set(XD_WHERE "${${XD_VARIABLE}}")
 				set(${XD_UPPER}_PACKAGE_FOUND TRUE)
 			endif()
 
@@ -72,19 +72,8 @@ macro(xge_dependency name)
 				find_package(${XD_PACKAGE} QUIET)
 			endif()
 
-			# Where it is: the folder of its CMake package, or for the few found
-			# by a module instead the folder of its headers (Xerces) or its first
-			# library (OpenGL).
 			if (${XD_PACKAGE_NAME}_FOUND)
 				set(XD_FOUND TRUE)
-
-				if (${XD_PACKAGE_NAME}_DIR)
-					set(XD_WHERE "${${XD_PACKAGE_NAME}_DIR}")
-				elseif (${XD_PACKAGE_NAME}_INCLUDE_DIR)
-					set(XD_WHERE "${${XD_PACKAGE_NAME}_INCLUDE_DIR}")
-				elseif (${XD_UPPER}_LIBRARIES)
-					list(GET ${XD_UPPER}_LIBRARIES 0 XD_WHERE)
-				endif()
 			endif()
 
 			set(XD_VERB "download and build it locally")
@@ -92,11 +81,7 @@ macro(xge_dependency name)
 
 		# Say what was found, or fetch it.
 		if (XD_FOUND)
-			if (XD_WHERE)
-				message(STATUS "${name} found: ${XD_WHERE}")
-			else()
-				message(STATUS "${name} found")
-			endif()
+			message(STATUS "Found ${name}")
 		elseif (NOT XD_REPO)
 			if (XD_REQUIRED)
 				message(FATAL_ERROR "${name} not found: ${XD_MISSING}")
