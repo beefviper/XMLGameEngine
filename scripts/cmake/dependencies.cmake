@@ -177,6 +177,11 @@ xge_dependency(SDL2_ttf WHEN XGE_NEEDS_SDL2
 	REPO https://github.com/libsdl-org/SDL_ttf.git TAG release-2.22.0
 	SETTINGS SDL2TTF_INSTALL=OFF SDL2TTF_VENDORED=ON)
 
+# Any 10 or 11 works: the wrapper uses a handful of calls that did not change, and
+# the suite passes against both (11 only changed internal containers). No version
+# is asked of find_package on purpose: TinyXML2's package is SameMajorVersion, so
+# `10` refuses 11, `11` refuses 10, and a range across the two (10...<12) is
+# refused by both, finding nothing at all. The pin is for the copy that is fetched.
 xge_dependency(TinyXML2 WHEN XGE_WITH_TINYXML2
 	PACKAGE tinyxml2
 	REPO https://github.com/leethomason/tinyxml2.git TAG 11.0.0)
