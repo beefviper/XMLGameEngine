@@ -4,11 +4,11 @@
 // date: Oct 7, 2026
 //
 // The physics a generated game uses, in one place of its own: where a thing
-// is, whether two things touch, and what a moving thing does at an edge of
-// the window or against another thing. A "thing" is anything SFML can bound
-// and move (a shape, a sprite, a text), and a velocity is how far it moves
-// each frame. Header only, and nothing but SFML's graphics types, so it can
-// be copied into any SFML 3 program.
+// is, whether two things touch, what a moving thing does at an edge of the
+// window (bounce, stick, wrap round) or against another thing, and a hop. A
+// "thing" is anything SFML can bound and move (a shape, a sprite, a text), and
+// a velocity is how far it moves each frame. Header only, and nothing but
+// SFML's graphics types, so it can be copied into any SFML 3 program.
 //
 // Collisions are the simple kind: move, then look at where it landed. A touch
 // is told apart by the smaller overlap, which is enough for things that move
@@ -135,6 +135,45 @@ namespace physics
 	void stick(Thing& thing, Edge edge, const sf::FloatRect& area)
 	{
 		putBack(thing, edge, area);
+	}
+
+	// Once the thing has gone right off the area through that edge, and is
+	// still heading that way, in again from the opposite side, one area and
+	// one of its own sizes along, so things spaced along a lane stay spaced.
+	// Until it has gone completely it slides out as normal.
+	template <typename Thing>
+	void wrap(Thing& thing, const sf::Vector2f& velocity, Edge edge, const sf::FloatRect& area)
+	{
+		switch (edge)
+		{
+		case Edge::Right:
+			if (velocity.x > 0.0f && left(thing) >= area.position.x + area.size.x) { thing.move({ -(area.size.x + width(thing)), 0.0f }); }
+			break;
+		case Edge::Left:
+			if (velocity.x < 0.0f && right(thing) <= area.position.x) { thing.move({ area.size.x + width(thing), 0.0f }); }
+			break;
+		case Edge::Bottom:
+			if (velocity.y > 0.0f && top(thing) >= area.position.y + area.size.y) { thing.move({ 0.0f, -(area.size.y + height(thing)) }); }
+			break;
+		case Edge::Top:
+			if (velocity.y < 0.0f && bottom(thing) <= area.position.y) { thing.move({ 0.0f, area.size.y + height(thing) }); }
+			break;
+		}
+	}
+
+	// A step at once (a frog's hop), unless it would take the thing out of
+	// the area: then it stays where it is.
+	template <typename Thing>
+	void hop(Thing& thing, const sf::Vector2f& step, const sf::FloatRect& area)
+	{
+		const sf::FloatRect bounds = thing.getGlobalBounds();
+		const sf::Vector2f from = bounds.position + step;
+		const sf::Vector2f to = from + bounds.size;
+		if (from.x >= area.position.x && from.y >= area.position.y
+			&& to.x <= area.position.x + area.size.x && to.y <= area.position.y + area.size.y)
+		{
+			thing.move(step);
+		}
 	}
 
 	// --- Against another thing.
