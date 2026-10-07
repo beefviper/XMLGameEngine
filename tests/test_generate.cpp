@@ -7,7 +7,8 @@
 // stylesheets in generators/windows-cpp): what it writes for pong_min.xml (a
 // plain SFML program in the agreed layout, with nothing of the engine in it)
 // and for all of pong.xml (screens, texts, pictures, sounds, and the physics
-// and sound modules copied beside it), that a game carries only the modules,
+// and sound modules copied beside it), groups as std::vectors (Space Race,
+// Freeway, and members of their own), that a game carries only the modules,
 // helpers and headers it uses, arithmetic as plain C++, and that what it
 // cannot generate yet stops it with a message naming the tag. And pong_min.xml
 // itself, played by the engine. Whether a written program builds and plays is
@@ -209,6 +210,81 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 	CHECK(cmake.find("/assets") != std::string::npos);
 }
 
+TEST_CASE("generating Space Race and Freeway writes each group as a std::vector, and hops", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder race("xge_test_generate_spacerace");
+	generateGame(requestFor("games/spacerace.xml", race.path));
+	const std::string main = readFile(race.path / "main.cpp");
+
+	// A lane of debris: its shapes, the velocity they share, and each one's place.
+	CHECK(main.find("std::vector<sf::RectangleShape> debris1(3);\nsf::Vector2f debris1Velocity; // every one of them") != std::string::npos);
+	CHECK(main.find("\tdebris1[1].setPosition({272.0f, 75.0f});") != std::string::npos);
+	CHECK(main.find("\tdebris1Velocity = {2.0f, 0.0f};") != std::string::npos);
+
+	// Each one moves and wraps round, in a loop; a rocket looks at each one.
+	CHECK(main.find("\tfor (sf::RectangleShape& one : debris1)\n\t{\n\t\tone.move(debris1Velocity);") != std::string::npos);
+	CHECK(main.find("\t\tphysics::wrap(one, debris1Velocity, physics::Edge::Left, windowArea);") != std::string::npos);
+	CHECK(main.find("\tfor (const sf::RectangleShape& other : debris9)\n\t{\n\t\tif (physics::touching(rocket1, other))\n\t\t{\n\t\t\tstartRocket1();") != std::string::npos);
+	CHECK(main.find("\t\t\tfor (const sf::RectangleShape& one : debris1)\n\t\t\t{\n\t\t\t\twindow.draw(one);") != std::string::npos);
+
+	// The object called "start" does not clash with start().
+	CHECK(main.find("sf::Text start_(font);") != std::string::npos);
+
+	TempFolder freeway("xge_test_generate_freeway");
+	generateGame(requestFor("games/freeway.xml", freeway.path));
+	const std::string road = readFile(freeway.path / "main.cpp");
+
+	// A hop is a key pressed, a step at once if it stays in the window.
+	CHECK(road.find("if (key == sf::Keyboard::Key::W)\n\t\t{\n\t\t\tphysics::hop(chicken1, {0.0f, -cell}, windowArea);") != std::string::npos);
+	CHECK(road.find("isKeyPressed") == std::string::npos);
+
+	// A tunable nothing uses is left out (Freeway's margin).
+	CHECK(road.find("const float margin") == std::string::npos);
+	CHECK(road.find("const float cell = 50.0f;") != std::string::npos);
+}
+
+TEST_CASE("a group whose members move and look each their own way keeps a velocity each", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_group");
+	fs::create_directories(folder.path);
+	std::ofstream(folder.path / "flock.xml") <<
+		"<game>\n"
+		"  <window name=\"Flock\"><width>320</width><height>200</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>\n"
+		"  <variables />\n"
+		"  <objects>\n"
+		"    <group name=\"birds\">\n"
+		"      <sprite><circle><radius>4</radius><color>color.yellow</color></circle></sprite>\n"
+		"      <position><y>50</y></position>\n"
+		"      <velocity><x>1</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><collision edge=\"right\"><wrap /></collision></collisions>\n"
+		"      <member><position><x>10</x></position></member>\n"
+		"      <member><position><x>60</x></position><velocity><x>2</x></velocity></member>\n"
+		"      <member><sprite><circle><radius>6</radius><color>color.red</color></circle></sprite><position><x>110</x><y>80</y></position></member>\n"
+		"    </group>\n"
+		"  </objects>\n"
+		"  <states><state name=\"flying\"><shows><show object=\"birds\" /></shows></state></states>\n"
+		"</game>\n";
+	generateGame(requestFor(folder.path / "flock.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("std::vector<sf::CircleShape> birds(3);\nstd::vector<sf::Vector2f> birdsVelocity;") != std::string::npos);
+	CHECK(main.find("\tbirdsVelocity = {{1.0f, 0.0f}, {2.0f, 0.0f}, {1.0f, 0.0f}};") != std::string::npos);
+	CHECK(main.find("\tbirds[2].setPosition({110.0f, 80.0f});") != std::string::npos);
+	CHECK(main.find("\t// birds.3, a look of its own\n\tbirds[2].setRadius(6.0f);\n\tbirds[2].setFillColor(sf::Color::Red);") != std::string::npos);
+	CHECK(main.find("\tfor (std::size_t i = 0; i < birds.size(); ++i)\n\t{\n\t\tbirds[i].move(birdsVelocity[i]);") != std::string::npos);
+	CHECK(main.find("\t\tphysics::wrap(birds[i], birdsVelocity[i], physics::Edge::Right, windowArea);") != std::string::npos);
+}
+
 TEST_CASE("a generated game carries only the modules, helper functions and headers it uses", "[generate]")
 {
 	if (!canGenerate())
@@ -235,7 +311,7 @@ TEST_CASE("a generated game carries only the modules, helper functions and heade
 	CHECK(main.find("enum class Screen") == std::string::npos);
 	CHECK(main.find("const float windowWidthCenter = windowWidth / 2.0f;") != std::string::npos);
 	CHECK(main.find("const float windowLeft") == std::string::npos);
-	CHECK(main.find("const float tinyStep = 2.0f;") != std::string::npos);
+	CHECK(main.find("const float tinyStep") == std::string::npos); // nothing uses it
 }
 
 TEST_CASE("what windows-cpp cannot generate yet is named in the error", "[generate]")
@@ -260,7 +336,8 @@ TEST_CASE("what windows-cpp cannot generate yet is named in the error", "[genera
 		return std::string("generated it");
 	};
 
-	CHECK(refusal("<collision edge=\"vertical\"><wrap /></collision>", "", "").find("cannot generate <wrap> yet (in game > objects > object box") != std::string::npos);
+	CHECK(refusal("<collision edge=\"vertical\"><die /></collision>", "", "").find("cannot generate <die> yet (in game > objects > object box") != std::string::npos);
+	CHECK(refusal("<collision edge=\"vertical\"><wrap /><play sound=\"boom\" /></collision>", "", "").find("cannot generate <wrap /> with other commands in the same <collision> yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><inc variable=\"lives\" /></collision>", "<variable name=\"lives\">3</variable>", "").find("cannot generate <inc variable=\"lives\"> (it counts an object variable, as paddle1.score) yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><play sound=\"boom\" /></collision>", "", "").find("cannot generate <play sound=\"boom\">, which is not a <sound> yet") != std::string::npos);
 	CHECK(refusal("", "", "<state name=\"paused\"><inputs><input button=\"space\"><push state=\"nowhere\" /></input></inputs></state>").find("<push state=\"nowhere\">, which is not a <state>") != std::string::npos);
