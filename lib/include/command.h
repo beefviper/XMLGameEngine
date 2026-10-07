@@ -315,6 +315,10 @@ namespace xge
 		// game_expr::sizeDependenciesOf). The operands of an equation or a
 		// formula are names and numbers, and are listed the same way.
 		std::vector<const std::string*> expressions() const;
+
+		// Whether working it out draws a <random> (itself, or one inside an
+		// equation or formula), so it comes out different each time.
+		bool drawsRandom() const;
 	};
 
 	// One operand of an operation: the number it is, and the role it plays

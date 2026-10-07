@@ -377,6 +377,20 @@ namespace xge
 		return { &text };
 	}
 
+	bool RawValue::drawsRandom() const
+	{
+		if (kind == Kind::Random) { return true; }
+		if (!operations) { return false; }
+		for (const RawOperation& operation : *operations)
+		{
+			for (const RawOperand& operand : operation.operands)
+			{
+				if (operand.value.drawsRandom()) { return true; }
+			}
+		}
+		return false;
+	}
+
 	std::ostream& operator<<(std::ostream& o, const RawValue& value)
 	{
 		return o << valueText(value);

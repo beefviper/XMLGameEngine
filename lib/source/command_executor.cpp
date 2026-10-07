@@ -210,11 +210,18 @@ namespace xge
 		object.followPath.clear();
 	}
 
-	// Back where it started, facing the way it started. (Not its velocity:
-	// that is what <stop /> is for, and a bounce off an edge keeps it.)
+	// Back where it started, facing the way it started and going the way it
+	// started, with any <random> in that start drawn again (a new serve).
+	// While a held key is moving it, that key still decides its velocity.
 	void CommandExecutor::restart(Object& object)
 	{
+		game.drawStartAgain(object);
 		object.position = object.positionOriginal;
+		const bool keyHeld = std::any_of(object.activeMoveStep.begin(), object.activeMoveStep.end(), [](float step) { return step != 0.0f; });
+		if (!keyHeld)
+		{
+			object.velocity = object.velocityOriginal;
+		}
 		object.heading = object.headingOriginal;
 		object.showHeading();
 	}

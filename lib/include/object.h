@@ -477,6 +477,10 @@ namespace xge
 		// position can be worked out again later and the offset added back.
 		Vector2f gridOffset{};
 
+		// Whether its start (position, velocity or a <variable>) draws a
+		// <random>: a reset then draws it again (Game::drawStartAgain).
+		bool startDrawsRandom{ false };
+
 		CollisionData collisionData;
 		std::vector<std::string> spriteParams;
 		ShapeKind shapeKind{ ShapeKind::Unknown };

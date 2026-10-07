@@ -435,7 +435,8 @@ namespace xge
 
 		checkColor(windowDesc.background, "<window> > <background>");
 
-		// add constants to symbol table
+		// add constants to symbol table (pi, for an angle in a value, among them)
+		symbolTable.add_constants();
 		symbolTable.add_constant("window.top", 0);
 		symbolTable.add_constant("window.bottom", windowDesc.height);
 		symbolTable.add_constant("window.left", 0);
@@ -651,6 +652,24 @@ namespace xge
 
 					object.isVisible = rawObject.isVisible;
 
+					// Its variables first, so its position and velocity can use them
+					// (a serve drawn as an angle: ball.speed * cos(ball.angle)).
+					for (auto& rawVariable : rawObject.variable)
+					{
+						const float value = evaluate(rawVariable.second, where);
+						object.variable[rawVariable.first] = value;
+						object.variableOriginal[rawVariable.first] = value;
+
+						// Keep the cross-object symbol table entry (registered above,
+						// before any expression compiled) up to date with the real
+						// value now that it's known.
+						objectVariables[rawObject.name + "." + rawVariable.first] = value;
+					}
+
+					object.startDrawsRandom = rawObject.rawPosition.x.drawsRandom() || rawObject.rawPosition.y.drawsRandom()
+						|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
+						|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
+
 					object.positionOriginal.x = evaluate(rawObject.rawPosition.x, where);
 					object.positionOriginal.y = evaluate(rawObject.rawPosition.y, where);
 
@@ -761,17 +780,6 @@ namespace xge
 						object.action[rawAction.first] = processCommands(rawAction.second, where);
 					}
 
-					for (auto& rawVariable : rawObject.variable)
-					{
-						const float value = evaluate(rawVariable.second, where);
-						object.variable[rawVariable.first] = value;
-						object.variableOriginal[rawVariable.first] = value;
-
-						// Keep the cross-object symbol table entry (registered above,
-						// before any expression compiled) up to date with the real
-						// value now that it's known.
-						objectVariables[rawObject.name + "." + rawVariable.first] = value;
-					}
 
 					// object's visual is built later by whichever Window backend is
 					// running, once one exists (see Window::init() in window.h) -

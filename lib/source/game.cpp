@@ -296,6 +296,38 @@ namespace xge
 		++stateChanges;
 	}
 
+	void Game::drawStartAgain(Object& object)
+	{
+		if (!object.startDrawsRandom)
+		{
+			return;
+		}
+
+		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& candidate) { return candidate.name == object.baseName; });
+		if (raw == rawObjects.end())
+		{
+			return;
+		}
+
+		const std::string where = "object '" + raw->name + "'";
+		for (const auto& [name, value] : raw->variable)
+		{
+			if (!value.drawsRandom()) { continue; }
+			const float drawn = expr.evaluate(value, where);
+			object.variable[name] = drawn;
+			object.variableOriginal[name] = drawn;
+			refreshBoundTexts(object.baseName, name, drawn);
+		}
+
+		object.velocityOriginal = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
+
+		// A position waiting on a size not measured yet is worked out when it is.
+		if (object.positionResolved)
+		{
+			object.positionOriginal = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.gridOffset;
+		}
+	}
+
 	void Game::popState(const std::string& name)
 	{
 		if (name.empty())
@@ -597,6 +629,7 @@ namespace xge
 		{
 			if (candidate.name == name || candidate.baseName == name || (!candidate.groupName.empty() && candidate.groupName == name))
 			{
+				drawStartAgain(candidate);
 				resetObjectState(candidate);
 			}
 		}
@@ -760,6 +793,7 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
+			drawStartAgain(object);
 			resetObjectState(object);
 		}
 

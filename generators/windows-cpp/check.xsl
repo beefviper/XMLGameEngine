@@ -31,12 +31,7 @@
           <xsl:with-param name="what" select="'a second &lt;state&gt; (one screen only, so far)'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::variables and parent::object and *">
-        <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'&lt;variables&gt; in an &lt;object&gt;'" />
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="self::variable and .//random">
+      <xsl:when test="self::variable and ../parent::game and .//random">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'a &lt;random&gt; in a &lt;variable&gt;'" />
         </xsl:call-template>
