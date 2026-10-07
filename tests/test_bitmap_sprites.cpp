@@ -118,6 +118,15 @@ namespace
 			"<collisions><enabled>false</enabled></collisions></object>";
 	}
 
+	// A group "thing" of 3 columns and 2 rows of the sprites (and animation)
+	// given, starting where objectWith's thing is.
+	std::string cellsWith(const std::string& sprites, const std::string& padding = "")
+	{
+		return "<group name=\"thing\"><columns>3</columns><rows>2</rows>" + padding + sprites +
+			"<position><x>10</x><y>20</y></position><velocity><x>0</x><y>0</y></velocity>"
+			"<collisions><enabled>false</enabled></collisions></group>";
+	}
+
 	// Two 2 by 2 pictures, 4 by 4 pixels at a scale of 2: a has its solid
 	// pixels at the top left and bottom right, b at the top right and bottom left.
 	const std::string kA =
@@ -267,18 +276,17 @@ TEST_CASE("a bitmap's size can be used in an expression like any shape's", "[bit
 	CHECK(loaded.game.getObject("flag").position.y == 4.0f);
 }
 
-TEST_CASE("a grid of a bitmap makes one object per cell, all sharing one picture", "[bitmap][xml]")
+TEST_CASE("the cells of a group of a bitmap are one object each, all sharing one picture", "[bitmap][xml]")
 {
-	Loaded loaded{ gameXml(objectWith(
-		"<sprite><grid><columns>3</columns><rows>2</rows><padding><x>4</x><y>6</y></padding>"
-		"<bitmap><row>**</row><row>*.</row><scale>5</scale></bitmap></grid></sprite>"),
+	Loaded loaded{ gameXml(cellsWith(
+		"<sprite><bitmap><row>**</row><row>*.</row><scale>5</scale></bitmap></sprite>", "<padding><x>4</x><y>6</y></padding>"),
 		"<show object=\"thing\" />") };
 
 	std::set<const Bitmap*> pictures;
 	int cells = 0;
 	for (const Object& object : loaded.game.getCurrentObjects())
 	{
-		if (object.baseName != "thing") { continue; }
+		if (object.groupName != "thing") { continue; }
 
 		++cells;
 		REQUIRE(object.bitmap);
@@ -619,13 +627,12 @@ TEST_CASE("only what is shown and in play animates, and a reset starts it over",
 	}
 }
 
-TEST_CASE("every cell of a grid animates together", "[animation]")
+TEST_CASE("every cell of a group animates together", "[animation]")
 {
-	const std::string grid = "<grid><columns>3</columns><rows>2</rows><padding><x>2</x><y>2</y></padding>";
-	const std::string a = "<sprite name=\"a\">" + grid + "<bitmap><row>*.</row><row>.*</row><scale>2</scale></bitmap></grid></sprite>";
-	const std::string b = "<sprite name=\"b\">" + grid + "<bitmap><row>.*</row><row>*.</row><scale>2</scale></bitmap></grid></sprite>";
+	const std::string a = "<sprite name=\"a\"><bitmap><row>*.</row><row>.*</row><scale>2</scale></bitmap></sprite>";
+	const std::string b = "<sprite name=\"b\"><bitmap><row>.*</row><row>*.</row><scale>2</scale></bitmap></sprite>";
 
-	Loaded loaded{ gameXml(objectWith(a + b, kTwoFrames), "<show object=\"thing\" />") };
+	Loaded loaded{ gameXml(cellsWith(a + b + kTwoFrames, "<padding><x>2</x><y>2</y></padding>"), "<show object=\"thing\" />") };
 	Game& game = loaded.game;
 	game.setCurrentState("playing");
 
@@ -634,7 +641,7 @@ TEST_CASE("every cell of a grid animates together", "[animation]")
 	int cells = 0;
 	for (const Object& cell : game.getCurrentObjects())
 	{
-		if (cell.baseName != "thing") { continue; }
+		if (cell.groupName != "thing") { continue; }
 		++cells;
 		CHECK(showing(cell) == 'b');
 	}
@@ -780,14 +787,6 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 			ContainsSubstring("object 'thing'") && ContainsSubstring("frame 2 (\"b\")") && ContainsSubstring("6 by 4") && ContainsSubstring("4 by 4"));
 	}
 
-	SECTION("frames laid out as different grids")
-	{
-		const std::string gridA = "<sprite name=\"a\"><grid><columns>2</columns><rows>1</rows><bitmap><row>*</row></bitmap></grid></sprite>";
-		const std::string gridB = "<sprite name=\"b\"><grid><columns>3</columns><rows>1</rows><bitmap><row>*</row></bitmap></grid></sprite>";
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(gridA + gridB, kTwoFrames), shows)),
-			ContainsSubstring("frame 2") && ContainsSubstring("<grid>"));
-	}
-
 	SECTION("a frame that is not a picture")
 	{
 		const std::string box = "<sprite name=\"b\"><rectangle><width>4</width><height>4</height></rectangle></sprite>";
@@ -811,7 +810,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 			ContainsSubstring("frame 2") && ContainsSubstring("same size"));
 	}
 
-	SECTION("a member whose own sprites leave the group's animation with nothing to show")
+	SECTION("a member that adds a sprite the group's animation never shows")
 	{
 		const std::string group =
 			"<group name=\"pair\">" + kA + kB + kTwoFrames +
@@ -820,7 +819,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 			"<member name=\"odd\"><position><x>10</x></position><sprite name=\"only\"><bitmap><row>*</row></bitmap></sprite></member>"
 			"</group>";
 		CHECK_THROWS_WITH(Loaded(gameXml(group, "<show object=\"pair\" />")),
-			ContainsSubstring("object 'odd'") && ContainsSubstring("no <sprite name=\"a\">"));
+			ContainsSubstring("object 'odd'") && ContainsSubstring("<sprite name=\"only\"> is never shown"));
 	}
 }
 
@@ -899,13 +898,13 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 
 	// Eleven to a row: one row of squids, two of crabs, two of octopuses.
 	CHECK(aliensOf(game).size() == 55);
-	for (const char* name : { "squids.1.1", "squids.11.1", "crabs.1.1", "crabs.11.2", "octopuses.1.1", "octopuses.11.2" })
+	for (const char* name : { "aliens.1.1", "aliens.11.1", "aliens.1.2", "aliens.11.3", "aliens.1.4", "aliens.11.5" })
 	{
 		INFO(name);
 		CHECK(game.tryGetObject(name) != nullptr);
 	}
-	CHECK(game.tryGetObject("squids.1.2") == nullptr);
-	CHECK(game.tryGetObject("crabs.1.3") == nullptr);
+	CHECK(game.tryGetObject("aliens.12.1") == nullptr);
+	CHECK(game.tryGetObject("aliens.1.6") == nullptr);
 
 	// Every alien is a picture of 11 by 8 characters at 5 pixels each, two
 	// pictures that take turns.
@@ -919,15 +918,15 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 	}
 
 	// The three kinds are laid out one under the other, a row of gap between.
-	CHECK(game.getObject("squids.1.1").position.y == 40.0f);
-	CHECK(game.getObject("crabs.1.1").position.y == 95.0f);
-	CHECK(game.getObject("crabs.1.2").position.y == 150.0f);
-	CHECK(game.getObject("octopuses.1.1").position.y == 205.0f);
-	CHECK(game.getObject("octopuses.1.2").position.y == 260.0f);
-	CHECK(game.getObject("squids.1.1").position.x == 80.0f);
-	CHECK(game.getObject("squids.2.1").position.x == 150.0f);
+	CHECK(game.getObject("aliens.1.1").position.y == 40.0f);
+	CHECK(game.getObject("aliens.1.2").position.y == 95.0f);
+	CHECK(game.getObject("aliens.1.3").position.y == 150.0f);
+	CHECK(game.getObject("aliens.1.4").position.y == 205.0f);
+	CHECK(game.getObject("aliens.1.5").position.y == 260.0f);
+	CHECK(game.getObject("aliens.1.1").position.x == 80.0f);
+	CHECK(game.getObject("aliens.2.1").position.x == 150.0f);
 
-	// All of them are one block: one lockstep number between the three grids.
+	// All of them are one block: one lockstep number.
 	std::set<int> lockstep;
 	for (const Object* alien : aliensOf(game)) { lockstep.insert(alien->collisionData.lockstep); }
 	CHECK(lockstep.size() == 1);
@@ -973,7 +972,7 @@ TEST_CASE("the aliens change picture every second, all together, and march on me
 	CHECK_FALSE(onPicture(0));
 
 	// Two pixels a frame to the right in the meantime, as before.
-	CHECK(game.getObject("squids.1.1").position.x == 80.0f + 2.0f * 60.0f);
+	CHECK(game.getObject("aliens.1.1").position.x == 80.0f + 2.0f * 60.0f);
 
 	frames(game, 60);
 	CHECK(onPicture(0));
@@ -982,7 +981,7 @@ TEST_CASE("the aliens change picture every second, all together, and march on me
 TEST_CASE("the aliens' two pictures differ, so there is something to see", "[spaceinvaders][animation]")
 {
 	Invasion invasion;
-	const Object& alien = invasion.game.getObject("crabs.4.1");
+	const Object& alien = invasion.game.getObject("aliens.4.2");
 
 	REQUIRE(alien.animationBitmaps.size() == 2);
 	CHECK(alien.animationBitmaps[0]->rgba != alien.animationBitmaps[1]->rgba);

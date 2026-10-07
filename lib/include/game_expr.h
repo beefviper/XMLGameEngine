@@ -131,12 +131,10 @@ namespace xge
 		// The spriteParams for a sprite, in the shape the window backends read:
 		// {"circle", radius, "0", color}, {"rectangle", width, height, color},
 		// {"text", label, size, color}, {"image", path, flip-or-color}, and for
-		// a grid, {"grid", columns, rows, xPadding, yPadding} after those. A
-		// drawing of lines is {"line", width, height} - the size of the picture
-		// - and the picture itself is handed back through `bitmap` when that is
-		// given (see Object::bitmap). A bitmap (a picture in rows of text) is
-		// drawn the same way and has the same params, with a grid's after them
-		// when it is repeated.
+		// a drawing of lines, {"line", width, height} - the size of the
+		// picture - and the picture itself is handed back through `bitmap` when
+		// that is given (see Object::bitmap). A bitmap (a picture in rows of
+		// text) is drawn the same way and has the same params.
 		//
 		// `turnable`, when given, is for an object that has a <heading>: what a
 		// drawing of lines or a <bitmap> is to be turned from is handed back
@@ -145,12 +143,31 @@ namespace xge
 		std::vector<std::string> buildSpriteParams(const RawSprite& sprite, const std::string& where,
 			std::shared_ptr<const Bitmap>* bitmap = nullptr,
 			std::shared_ptr<const Turnable>* turnable = nullptr);
-		xge::GridData gridDataOf(const RawSprite& sprite, const std::string& where);
+
+		// Where each cell of a group laid out in <columns> and <rows> goes,
+		// from the group's position, by its name (see RawCell). `spriteParams`
+		// is every object's sprite as it is drawn, for the size of a cell whose
+		// sprite is not its row's.
+		std::map<std::string, Vector2f> layOutCells(const std::vector<RawObject>& rawObjects,
+			const std::map<std::string, std::vector<std::string>>& spriteParams);
+
+		// A picture drawn from rows of text or an svg, by everything it is
+		// drawn from (`key`): drawn by `draw` the first time it is asked for,
+		// and shared after that, so the 55 cells of a block of aliens are one
+		// picture, drawn once.
+		template <typename Draw>
+		std::shared_ptr<const Bitmap> drawOnce(const std::string& key, Draw&& draw)
+		{
+			std::shared_ptr<const Bitmap>& picture = drawnPictures[key];
+			if (!picture) { picture = std::make_shared<const Bitmap>(draw()); }
+			return picture;
+		}
+		std::map<std::string, std::shared_ptr<const Bitmap>> drawnPictures;
 
 		// The pictures of an object's <animation>, each drawn once, in the order
 		// of its <frame>s. Throws std::runtime_error (saying whose) when a frame
 		// is not a <bitmap> or a drawing of <line>s, or when the frames are not
-		// all the same size and the same grid. `turned`, when given, is for an
+		// all the same size. `turned`, when given, is for an
 		// object with a <heading>: it gets what each frame turns from,
 		// and every frame must turn in the same size of square.
 		std::vector<std::shared_ptr<const Bitmap>> buildAnimationBitmaps(const RawObject& rawObject, const std::string& where,

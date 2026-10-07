@@ -29,7 +29,7 @@ namespace
 		int left = 0;
 		for (const auto& object : game.getCurrentObjects())
 		{
-			if (object.baseName == "aliens" && object.isVisible) { ++left; }
+			if (object.groupName == "aliens" && object.isVisible) { ++left; }
 		}
 		return left;
 	}
@@ -43,7 +43,7 @@ TEST_CASE("the game is not over while any alien is left", "[win_condition]")
 	int killed = 0;
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.baseName == "aliens" && killed < 54)
+		if (object.groupName == "aliens" && killed < 54)
 		{
 			kill(object);
 			++killed;
@@ -62,7 +62,7 @@ TEST_CASE("killing the last alien ends the game", "[win_condition]")
 
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.baseName == "aliens") { kill(object); }
+		if (object.groupName == "aliens") { kill(object); }
 	}
 
 	game.updateObjects();
@@ -79,14 +79,14 @@ TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 	// Window::init() normally measures these.
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.baseName == "aliens") { object.size = { 50.0f, 50.0f }; }
+		if (object.groupName == "aliens") { object.size = { 50.0f, 50.0f }; }
 		else if (object.name == "bullet") { object.size = { 8.0f, 8.0f }; }
 	}
 
 	Object& last = game.getObject("aliens.6.3");
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.baseName == "aliens" && &object != &last) { kill(object); }
+		if (object.groupName == "aliens" && &object != &last) { kill(object); }
 	}
 
 	Object& bullet = game.getObject("bullet");
@@ -107,7 +107,7 @@ TEST_CASE("reset() from the win screen starts a fresh game", "[win_condition]")
 
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.baseName == "aliens") { kill(object); }
+		if (object.groupName == "aliens") { kill(object); }
 	}
 	game.updateObjects();
 	REQUIRE(game.getCurrentState().name == "gameover");

@@ -63,10 +63,8 @@ namespace xge
 		const sf::Font& getFont();
 
 		// Resizes/draws visual.renderTexture from object.spriteParams alone -
-		// no position/grid math, no sprite (re)creation. Shared by init()
-		// (which still needs to do its own grid math afterward, using the
-		// size this just measured) and draw()'s on-demand rebuild path
-		// (which never repeats grid math - see the comment in draw()).
+		// no position math, no sprite (re)creation. Shared by init() and
+		// draw()'s on-demand rebuild path.
 		void buildShapeOnly(Object& object, CachedVisual& visual);
 		void buildCircle(Object& object, CachedVisual& visual);
 		void buildRectangle(Object& object, CachedVisual& visual);
@@ -75,8 +73,7 @@ namespace xge
 		void buildLines(Object& object, CachedVisual& visual);
 		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
 
-		// Finishes a visual after buildShapeOnly() (and, in init()'s case,
-		// after grid position math): measures object.size, finalizes the
+		// Finishes a visual after buildShapeOnly(): measures object.size, finalizes the
 		// render texture, (re)builds the sprite at object.position, and
 		// clears object.visualDirty.
 		void finalizeVisual(Object& object, CachedVisual& visual);

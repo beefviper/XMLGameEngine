@@ -25,7 +25,7 @@ namespace xge
 
 	// The right-hand side of the application: the play, pause and step
 	// controls over a tree of everything in the game, laid out like the XML
-	// (window, objects with their groups and grids, states). Each value that
+	// (window, objects with their groups, states). Each value that
 	// can be changed has an editor on its row - a spin box for a number, a
 	// check box for a yes/no, a text box for text - and a change takes effect
 	// in the running game at once. Values that only describe the game (a

@@ -489,7 +489,7 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 	}
 }
 
-TEST_CASE("sprites: each shape's parts, and a grid of copies", "[xml_format][sprite]")
+TEST_CASE("sprites: each shape's parts", "[xml_format][sprite]")
 {
 	std::string objects;
 
@@ -509,13 +509,6 @@ TEST_CASE("sprites: each shape's parts, and a grid of copies", "[xml_format][spr
 	image.sprite = "<image><path>assets/paddle.jpg</path><flip>horizontal</flip></image>";
 	objects += objectXml(image);
 
-	ObjectXml bricks; bricks.name = "bricks";
-	bricks.sprite = "<grid><columns>3</columns><rows>2</rows><padding><x>5</x><y>7</y></padding>"
-		"<rectangle><width>20</width><height>10</height><color>color.green</color></rectangle></grid>";
-	bricks.x = "100";
-	bricks.y = "50";
-	objects += objectXml(bricks);
-
 	Loaded loaded(gameXml("", objects));
 	Game& game = loaded.game;
 
@@ -525,16 +518,6 @@ TEST_CASE("sprites: each shape's parts, and a grid of copies", "[xml_format][spr
 	CHECK(game.getObject("image").spriteParams == std::vector<std::string>{ "image", "assets/paddle.jpg", "flip.horizontal" });
 	CHECK(game.getObject("circle").shapeKind == ShapeKind::Circle);
 	CHECK(game.getObject("image").shapeKind == ShapeKind::Image);
-
-	// 3 x 2 cells, each named for its column and row, one cell apart plus padding.
-	const Object& first = game.getObject("bricks.1.1");
-	const Object& last = game.getObject("bricks.3.2");
-	CHECK(first.baseName == "bricks");
-	CHECK(first.position.x == 100.0f);
-	CHECK(first.position.y == 50.0f);
-	CHECK(last.position.x == 100.0f + 2 * (20.0f + 5.0f));
-	CHECK(last.position.y == 50.0f + 1 * (10.0f + 7.0f));
-	CHECK(game.tryGetObject("bricks.4.1") == nullptr);
 }
 
 TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", "[xml_format][sprite]")

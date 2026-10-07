@@ -206,7 +206,7 @@ namespace xge
 
 		if (object.visualDirty || !visual.loaded)
 		{
-			// Never repeats init()'s grid math - see the matching comment in
+			// Only redraws; the position is final - see the matching comment in
 			// SFMLWindow::draw() (window_sfml.cpp).
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);

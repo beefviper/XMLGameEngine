@@ -246,7 +246,7 @@
     <xs:attribute name="wave" type="waveType" use="optional" />
   </xs:complexType>
 
-  <!-- Sprites: one shape, and optionally a grid of copies of it. -->
+  <!-- Sprites: one shape. -->
   <xs:group name="shape">
     <xs:choice>
       <xs:element name="circle">
@@ -353,16 +353,81 @@
     <xs:choice>
       <xs:group ref="shape" />
       <xs:element name="line" type="lineType" maxOccurs="unbounded" />
-      <xs:element name="grid">
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!--
+    A sprite that changes one its group has, for a member, row, column or cell:
+    the group's sprite of the same name (or the one with no name). Of the same
+    shape it gives only what changes, a color say, and keeps the rest; of
+    another shape, or as lines, it is a sprite of its own, and must be complete
+    (the engine says what is missing). A name the group has not got adds one.
+  -->
+  <xs:complexType name="spriteChangeType">
+    <xs:choice>
+      <xs:element name="circle">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="columns" type="valueType" />
-            <xs:element name="rows" type="valueType" />
-            <xs:element name="padding" type="vector2Type" minOccurs="0" />
-            <xs:group ref="shape" />
+            <xs:element name="radius" type="valueType" minOccurs="0" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="rectangle">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="width" type="valueType" minOccurs="0" />
+            <xs:element name="height" type="valueType" minOccurs="0" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="text">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:choice minOccurs="0">
+              <xs:element name="content" type="xs:string" />
+              <xs:element name="number" type="valueType" />
+            </xs:choice>
+            <xs:element name="size" type="valueType" minOccurs="0" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="image">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="path" type="xs:string" minOccurs="0" />
+            <xs:element name="flip" type="flipType" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="bitmap">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="row" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="scale" type="valueType" minOccurs="0" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+            <xs:element name="flip" type="flipType" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="svg">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="path" type="xs:string" minOccurs="0" />
+            <xs:element name="x" type="valueType" minOccurs="0" />
+            <xs:element name="y" type="valueType" minOccurs="0" />
+            <xs:element name="width" type="valueType" minOccurs="0" />
+            <xs:element name="height" type="valueType" minOccurs="0" />
+            <xs:element name="scale" type="valueType" minOccurs="0" />
+            <xs:element name="hide" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="flip" type="flipType" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="line" type="lineType" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
@@ -685,7 +750,7 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- Whether collisions are on, whether the object moves in lockstep with the others of its grid or group, how its shape is tested, then the rules. -->
+  <!-- Whether collisions are on, whether the object moves in lockstep with the others of its group, how its shape is tested, then the rules. -->
   <xs:complexType name="collisionsType">
     <xs:sequence>
       <xs:element name="enabled" type="xs:boolean" />
@@ -731,17 +796,25 @@
 
   <!--
     Objects that share a description: a lane of logs or cars, the pads at the
-    top of Frogger, a row of debris. The group says what its members have in
+    top of Frogger, a wall of bricks. The group says what its members have in
     common (all of it optional) and each member says only what is its own; what
     a member leaves out it takes from its group, and after that it must be as
-    complete as an object. A member's <position> and <velocity> can give just
-    an <x> or a <y>. The group's class is every member's. A member is called
-    name="..." if it says so, otherwise the group's name, a dot, and its number
-    counting from 1 (lane3.2), and the group's name means all of them.
+    complete as an object. The group's class is every member's, and the group's
+    name means all of them.
+
+    The members are either listed, each a <member> (called name="..." if it
+    says so, otherwise the group's name, a dot, and its number counting from 1,
+    lane3.2), or laid out in <columns> and <rows>: a cell to each place, the
+    group's <position> the top left of the first, with <padding> the gaps
+    between them. A cell is called the group's name, its column and its row
+    (bricks.5.3), counting from 1. A <row number="...">, <column number="...">
+    or <cell row="..." column="..."> then changes what the cells it picks have;
+    a row or column and a cell may both, and the cell wins, but a row and a
+    column (or two rows) that pick one cell may not change the same thing in it.
   -->
   <xs:complexType name="memberType">
     <xs:sequence>
-      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
@@ -749,8 +822,51 @@
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
 
+  <!--
+    Which rows or columns: numbers counting from 1, one or several (2, or
+    2 4 6), or odd or even.
+  -->
+  <xs:simpleType name="pickType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\s*(odd|even|[1-9][0-9]*)(\s+(odd|even|[1-9][0-9]*))*\s*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!--
+    What the rows (or columns) it picks change. Its padding is the gap before
+    it: a row's <y> the gap above it and its <x> the gaps between its cells, a
+    column's <x> the gap to its left. The first row and column have no gap
+    before them.
+  -->
+  <xs:complexType name="lineOfCellsType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="padding" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="number" type="pickType" use="required" />
+  </xs:complexType>
+
+  <!-- What one cell changes, and a name of its own. -->
+  <xs:complexType name="cellType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="row" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="column" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="name" type="xs:string" use="optional" />
+  </xs:complexType>
+
   <xs:complexType name="groupType">
     <xs:sequence>
+      <xs:element name="columns" type="xs:positiveInteger" minOccurs="0" />
+      <xs:element name="rows" type="xs:positiveInteger" minOccurs="0" />
+      <xs:element name="padding" type="partialVector2Type" minOccurs="0" />
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
@@ -762,7 +878,14 @@
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
       <xs:element name="timers" type="timersType" minOccurs="0" />
-      <xs:element name="member" type="memberType" maxOccurs="unbounded" />
+      <xs:choice>
+        <xs:element name="member" type="memberType" maxOccurs="unbounded" />
+        <xs:sequence>
+          <xs:element name="row" type="lineOfCellsType" minOccurs="0" maxOccurs="unbounded" />
+          <xs:element name="column" type="lineOfCellsType" minOccurs="0" maxOccurs="unbounded" />
+          <xs:element name="cell" type="cellType" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+      </xs:choice>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="class" type="xs:string" use="optional" />

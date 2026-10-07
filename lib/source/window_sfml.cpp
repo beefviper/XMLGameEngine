@@ -61,8 +61,8 @@ namespace xge
 
 	void SFMLWindow::init(std::vector<Object>& objects)
 	{
-		// Object::position is already final by now - including any <grid>
-		// spacing - finalized entirely within Game's own construction (see
+		// Object::position is already final by now - including a group's
+		// cells - finalized entirely within Game's own construction (see
 		// game_expr.cpp, and main.cpp for why Engine/Window no longer needs
 		// to exist first). All that's left here is building each object's
 		// actual visual and measuring its real rendered Object::size.
@@ -111,9 +111,8 @@ namespace xge
 		if (object.visualDirty || !visual.sprite)
 		{
 			// A rebuild after init() (e.g. a bound text display's number just
-			// changed - see Game::incrementText/resetObject/resetAll) never
-			// repeats the grid math init() did: object.position already holds
-			// a real, finalized screen position by now, not a grid index.
+			// changed - see Game::incrementText/resetObject/resetAll) only
+			// redraws: object.position is already final.
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);
 		}

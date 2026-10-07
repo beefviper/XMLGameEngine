@@ -106,25 +106,23 @@
         <enabled>false</enabled>
       </collisions>
     </object>
-    <object name="lines">
+    <group name="lines">
+      <columns>13</columns>
+      <rows>4</rows>
+      <padding><x>24</x><y>44</y></padding>
       <sprite>
-        <grid>
-          <columns>13</columns>
-          <rows>4</rows>
-          <padding><x>24</x><y>44</y></padding>
-          <rectangle>
-            <width>24</width>
-            <height>4</height>
-            <color>color.yellow</color>
-          </rectangle>
-        </grid>
+        <rectangle>
+          <width>24</width>
+          <height>4</height>
+          <color>color.yellow</color>
+        </rectangle>
       </sprite>
       <position><x>12</x><y>9 * cell - 2</y></position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
       </collisions>
-    </object>
+    </group>
     <object name="pavement">
       <sprite>
         <rectangle>

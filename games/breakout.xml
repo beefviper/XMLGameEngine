@@ -68,7 +68,17 @@
       </actions>
     </object>
     <group name="bricks" class="bricks">
-      <position><x>margin</x></position>
+      <columns>9</columns>
+      <rows>6</rows>
+      <padding><x>5</x><y>5</y></padding>
+      <sprite>
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+          <color>color.red</color>
+        </rectangle>
+      </sprite>
+      <position><x>margin</x><y>margin / 2</y></position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
@@ -80,96 +90,11 @@
           <die />
         </collision>
       </collisions>
-      <member name="row1">
-        <sprite>
-          <grid>
-            <columns>9</columns>
-            <rows>1</rows>
-            <padding><x>5</x><y>5</y></padding>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.red</color>
-            </rectangle>
-          </grid>
-        </sprite>
-        <position><y>margin / 2</y></position>
-      </member>
-      <member name="row2">
-        <sprite>
-          <grid>
-            <columns>9</columns>
-            <rows>1</rows>
-            <padding><x>5</x><y>5</y></padding>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.orange</color>
-            </rectangle>
-          </grid>
-        </sprite>
-        <position><y>margin / 2 + 1 * (height + 5)</y></position>
-      </member>
-      <member name="row3">
-        <sprite>
-          <grid>
-            <columns>9</columns>
-            <rows>1</rows>
-            <padding><x>5</x><y>5</y></padding>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.yellow</color>
-            </rectangle>
-          </grid>
-        </sprite>
-        <position><y>margin / 2 + 2 * (height + 5)</y></position>
-      </member>
-      <member name="row4">
-        <sprite>
-          <grid>
-            <columns>9</columns>
-            <rows>1</rows>
-            <padding><x>5</x><y>5</y></padding>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.green</color>
-            </rectangle>
-          </grid>
-        </sprite>
-        <position><y>margin / 2 + 3 * (height + 5)</y></position>
-      </member>
-      <member name="row5">
-        <sprite>
-          <grid>
-            <columns>9</columns>
-            <rows>1</rows>
-            <padding><x>5</x><y>5</y></padding>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.cyan</color>
-            </rectangle>
-          </grid>
-        </sprite>
-        <position><y>margin / 2 + 4 * (height + 5)</y></position>
-      </member>
-      <member name="row6">
-        <sprite>
-          <grid>
-            <columns>9</columns>
-            <rows>1</rows>
-            <padding><x>5</x><y>5</y></padding>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.blue</color>
-            </rectangle>
-          </grid>
-        </sprite>
-        <position><y>margin / 2 + 5 * (height + 5)</y></position>
-      </member>
+      <row number="2"><sprite><rectangle><color>color.orange</color></rectangle></sprite></row>
+      <row number="3"><sprite><rectangle><color>color.yellow</color></rectangle></sprite></row>
+      <row number="4"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>
+      <row number="5"><sprite><rectangle><color>color.cyan</color></rectangle></sprite></row>
+      <row number="6"><sprite><rectangle><color>color.blue</color></rectangle></sprite></row>
     </group>
     <object name="title">
       <sprite>

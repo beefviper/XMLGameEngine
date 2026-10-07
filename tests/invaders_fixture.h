@@ -3,14 +3,15 @@
 // author: beefviper
 // date: Oct 2, 2026
 //
-// A frozen copy of the first Space Invaders game file: one 11 by 5 <grid> of
-// 50 by 50 rectangles, a 50 by 50 player and a circle for a bullet. Several
-// tests need a real game with a grid in lockstep, a bullet and a win condition
-// to check the engine's grid naming, swept collisions, lockstep bounces and
-// win, and the sizes and names they check were those of this file. The game in
-// games/spaceinvaders.xml has moved on (pictures, three kinds of alien in a
-// group, an animation), so the tests that are about the engine and not about
-// that game load this copy instead, and do not change when the game does.
+// A frozen copy of the first Space Invaders game file (its aliens since
+// written as a group of 11 columns and 5 rows, as <grid> is gone): 50 by 50
+// rectangles, a 50 by 50 player and a circle for a bullet. Several tests need
+// a real game with a block in lockstep, a bullet and a win condition to check
+// the engine's cell naming, swept collisions, lockstep bounces and win, and
+// the sizes and names they check were those of this file. The game in
+// games/spaceinvaders.xml has moved on (pictures, three kinds of alien, an
+// animation), so the tests that are about the engine and not about that game
+// load this copy instead, and do not change when the game does.
 
 #pragma once
 
@@ -101,20 +102,18 @@ namespace invaders_fixture
         </action>
       </actions>
     </object>
-    <object name="aliens" class="aliens">
+    <group name="aliens" class="aliens">
+      <columns>11</columns>
+      <rows>5</rows>
+      <padding>
+        <x>15</x>
+        <y>15</y>
+      </padding>
       <sprite>
-        <grid>
-          <columns>11</columns>
-          <rows>5</rows>
-          <padding>
-            <x>15</x>
-            <y>15</y>
-          </padding>
-          <rectangle>
-            <width>width</width>
-            <height>height</height>
-          </rectangle>
-        </grid>
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+        </rectangle>
       </sprite>
       <position>
         <x>margin</x>
@@ -135,7 +134,7 @@ namespace invaders_fixture
           <die />
         </collision>
       </collisions>
-    </object>
+    </group>
     <object name="title">
       <sprite>
         <text>

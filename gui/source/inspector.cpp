@@ -417,8 +417,8 @@ namespace xge
 		auto& objects = game().getCurrentObjects();
 		auto* root = addNode(nullptr, tr("Objects"), tr("%1 objects").arg(objects.size()));
 
-		// A <group> and a <grid> are each written once in the file and read as
-		// one object per member; show them the way they were written.
+		// A <group> is written once in the file and read as one object per
+		// member; show it the way it was written.
 		std::map<std::string, QTreeWidgetItem*> containers;
 		std::map<QTreeWidgetItem*, int> members;
 
@@ -427,16 +427,13 @@ namespace xge
 			const Object& object = objects[i];
 			QTreeWidgetItem* parent = root;
 
-			const bool inGroup = !object.groupName.empty();
-			if (inGroup || object.baseName != object.name)
+			if (!object.groupName.empty())
 			{
-				const std::string key = (inGroup ? "group:" : "grid:") + (inGroup ? object.groupName : object.baseName);
-				auto found = containers.find(key);
+				auto found = containers.find(object.groupName);
 				if (found == containers.end())
 				{
-					const QString label = text(inGroup ? object.groupName : object.baseName);
-					found = containers.emplace(key, addNode(root, label)).first;
-					found->second->setToolTip(0, inGroup ? tr("group") : tr("grid"));
+					found = containers.emplace(object.groupName, addNode(root, text(object.groupName))).first;
+					found->second->setToolTip(0, tr("group"));
 				}
 				parent = found->second;
 				++members[parent];

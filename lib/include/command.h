@@ -536,7 +536,7 @@ namespace xge
 	// sub-pixel rounding). Text/image footprints genuinely depend on a real
 	// font/image load - there's no way to know them without a backend - so
 	// those (and ShapeKind::Unknown) come back {0,0}. Used by
-	// game_expr::init() to finalize <grid> spacing entirely within Game's
+	// game_expr::init() to lay out a group's cells entirely within Game's
 	// own construction, before any Window exists (see window.h's Window::
 	// init(), which now only measures the *real* rendered Object::size for
 	// drawing/collision, not position).

@@ -119,19 +119,6 @@ namespace xge
 		RawValue y;
 	};
 
-	struct Vector2i
-	{
-		int x = 0;
-		int y = 0;
-	};
-
-	struct GridData
-	{
-		Vector2i max{ 1,1 };
-		Vector2i padding{ 0,0 };
-		Vector2i obj{ 0,0 };
-	};
-
 	// One <line> of a sprite drawn from lines: two points, measured in pixels
 	// from the sprite's top left, and how it looks.
 	struct RawLine
@@ -143,8 +130,8 @@ namespace xge
 		bool hasThickness{ false };
 	};
 
-	// An object's <sprite>, as written: one shape, optionally repeated as a
-	// <grid>, a drawing made of <line>s, or a picture written as rows of text.
+	// An object's <sprite>, as written: one shape, a drawing made of <line>s,
+	// or a picture written as rows of text.
 	// Which of the fields are used depends on `kind` (circle, rectangle, text,
 	// image, line, bitmap or svg).
 	struct RawSprite
@@ -186,13 +173,6 @@ namespace xge
 		std::string path;            // image, svg
 		std::string flip;            // image: "", "horizontal" or "vertical"
 		std::string color;           // "" means color.white
-
-		// <grid>: this shape repeated columns x rows times.
-		bool isGrid{ false };
-		RawValue columns;
-		RawValue rows;
-		RawVector2 padding;          // only when hasPadding
-		bool hasPadding{ false };
 	};
 
 	// An object's <animation>: the sprites it shows one after the other, each
@@ -202,6 +182,20 @@ namespace xge
 	{
 		RawValue interval;
 		std::vector<RawSprite> frames;
+	};
+
+	// Where a cell of a group laid out in <columns> and <rows> goes. Its slot
+	// is as big as its row's sprite, the slots of a row follow one another
+	// left to right with a gap before each, and the rows follow one another
+	// down the same way (see game_expr::layOutCells). A cell whose own sprite
+	// is another size sits in the middle of its slot.
+	struct RawCell
+	{
+		int column{ 0 };             // from 1; 0 for anything that is not a cell
+		int row{ 0 };                // from 1
+		RawSprite slot;              // its row's sprite, as the row first shows it
+		RawValue gapBefore;          // the gap before its column, in its row (0 in column 1)
+		RawValue gapAbove;           // the gap above its row (0 in row 1)
 	};
 
 	struct RawObject
@@ -239,27 +233,23 @@ namespace xge
 		// is an ordinary object that also remembers which group it came from.
 		std::string groupName;
 
+		// Where it goes in its group's <columns> and <rows>, when it is a cell.
+		RawCell cell;
+
 		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
 	};
 
 	struct Object
 	{
-		// What this object is called. Unique: a <grid> gives each of its cells
-		// its own name, the object's name followed by the cell's column and row,
-		// counting from 1 - a <grid> called aliens has aliens.1.1, aliens.2.1,
-		// ... aliens.11.5. Anything else is just the name from the XML.
+		// What this object is called. Unique: a member of a group is the
+		// group's name and its number (logrow3.2), a cell of a group laid out
+		// in <columns> and <rows> the group's name, its column and its row,
+		// counting from 1 (aliens.3.2), unless either is given a name.
 		std::string name;
 
-		// The name in the XML this object came from: "aliens" for every cell of
-		// the grid above, and the same as `name` for an object that is not a
-		// grid. What a state's <show>, a rule's or condition's object=, and
-		// <reset object="..." /> refer to, so they can still mean the whole grid at once;
-		// a cell can also be named on its own (aliens.3.2).
-		std::string baseName;
-
 		// The <group> this object is a member of ("logrow3" for logrow3.1,
-		// logrow3.2, ...), or empty. Like baseName it can be used wherever the
-		// XML names an object (a state's <show>, object= in a rule or
+		// logrow3.2, ...), or empty. It can be used wherever the XML names an
+		// object (a state's <show>, object= in a rule or
 		// condition, <reset object="..." />) to mean every member at once.
 		std::string groupName;
 		std::string objClass;
@@ -493,9 +483,10 @@ namespace xge
 		std::vector<std::string> sizeDependencies;
 		std::vector<Vector2f> positionSizesUsed;
 
-		// A <grid> cell's offset from the grid's evaluated <position>, so that
-		// position can be worked out again later and the offset added back.
-		Vector2f gridOffset{};
+		// A cell's offset from its group's evaluated <position> (see RawCell),
+		// so that position can be worked out again later and the offset added
+		// back.
+		Vector2f cellOffset{};
 
 		// Whether its start (position, velocity or a <variable>) draws a
 		// <random>: a reset then draws it again (Game::drawStartAgain).

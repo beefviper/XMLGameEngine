@@ -39,7 +39,7 @@ namespace xge
 		{
 			if (object.sizeKnown && game_expr::sizeNeedsBackend(object.shapeKind))
 			{
-				expr.setObjectSize(object.baseName, object.size);
+				expr.setObjectSize(object.name, object.size);
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace xge
 			for (const auto& dependency : object.sizeDependencies)
 			{
 				const auto measured = std::find_if(objects.begin(), objects.end(),
-					[&](const Object& other) { return other.baseName == dependency && other.sizeKnown; });
+					[&](const Object& other) { return other.name == dependency && other.sizeKnown; });
 				if (measured == objects.end())
 				{
 					allMeasured = false;
@@ -72,7 +72,7 @@ namespace xge
 			}
 
 			const auto rawObject = std::find_if(rawObjects.begin(), rawObjects.end(),
-				[&](const RawObject& raw) { return raw.name == object.baseName; });
+				[&](const RawObject& raw) { return raw.name == object.name; });
 			if (rawObject == rawObjects.end())
 			{
 				continue;
@@ -81,7 +81,7 @@ namespace xge
 			const std::string where = "object '" + rawObject->name + "'";
 			object.positionOriginal.x = expr.evaluate(rawObject->rawPosition.x, where);
 			object.positionOriginal.y = expr.evaluate(rawObject->rawPosition.y, where);
-			object.positionOriginal = object.positionOriginal + object.gridOffset;
+			object.positionOriginal = object.positionOriginal + object.cellOffset;
 			object.position = object.positionOriginal;
 			object.positionSizesUsed = sizes;
 			object.positionResolved = true;
@@ -206,7 +206,7 @@ namespace xge
 		float nearestDistance = 0.0f;
 		for (const auto& other : objects)
 		{
-			const bool named = other.name == name || other.baseName == name || (!other.groupName.empty() && other.groupName == name);
+			const bool named = other.name == name || (!other.groupName.empty() && other.groupName == name);
 			if (&other == &from || !named || !other.isVisible || !isShown(other)) { continue; }
 
 			const Vector2f apart = middleOf(other) - here;
@@ -226,7 +226,7 @@ namespace xge
 
 		for (auto& shown : currentState.top().show)
 		{
-			if (shown == object.name || shown == object.baseName || (!object.groupName.empty() && shown == object.groupName))
+			if (shown == object.name || (!object.groupName.empty() && shown == object.groupName))
 			{
 				result = true;
 			}
@@ -244,9 +244,8 @@ namespace xge
 		return *object;
 	}
 
-	// An exact name (aliens.3.2) finds that one object; the name from the XML
-	// (aliens, or the name of a <group>) finds the first object made from it,
-	// which for anything that is not a grid or a group is the object itself.
+	// An object's own name (aliens.3.2) finds that object; the name of a
+	// <group> (aliens) finds its first member.
 	Object* Game::tryGetObject(const std::string& name) noexcept
 	{
 		const auto exact = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.name == name; });
@@ -255,7 +254,7 @@ namespace xge
 			return &(*exact);
 		}
 
-		const auto first = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.baseName == name || (!obj.groupName.empty() && obj.groupName == name); });
+		const auto first = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return !obj.groupName.empty() && obj.groupName == name; });
 		return (first == std::end(objects)) ? nullptr : &(*first);
 	}
 
@@ -328,7 +327,7 @@ namespace xge
 			return;
 		}
 
-		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& candidate) { return candidate.name == object.baseName; });
+		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& candidate) { return candidate.name == object.name; });
 		if (raw == rawObjects.end())
 		{
 			return;
@@ -341,7 +340,7 @@ namespace xge
 			const float drawn = expr.evaluate(value, where);
 			object.variable[name] = drawn;
 			object.variableOriginal[name] = drawn;
-			refreshBoundTexts(object.baseName, name, drawn);
+			refreshBoundTexts(object.name, name, drawn);
 		}
 
 		object.velocityOriginal = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
@@ -349,7 +348,7 @@ namespace xge
 		// A position waiting on a size not measured yet is worked out when it is.
 		if (object.positionResolved)
 		{
-			object.positionOriginal = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.gridOffset;
+			object.positionOriginal = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.cellOffset;
 		}
 	}
 
@@ -500,7 +499,7 @@ namespace xge
 					break;
 				}
 
-				if (tickTimer(objects[i].timers[t], "object '" + objects[i].baseName + "' > <timer>"))
+				if (tickTimer(objects[i].timers[t], "object '" + objects[i].name + "' > <timer>"))
 				{
 					// A copy: a command may reset the object, and its timers with it.
 					const std::vector<Command> commands = objects[i].timers[t].commands;
@@ -652,12 +651,11 @@ namespace xge
 			return;
 		}
 
-		// A name from the XML (aliens) means every object made from it - the
-		// whole grid, or the whole group - and an exact one (aliens.3.2) just
-		// that one.
+		// A group's name (aliens) means every member of it, and an object's
+		// own name (aliens.3.2) just that one.
 		for (auto& candidate : objects)
 		{
-			if (candidate.name == name || candidate.baseName == name || (!candidate.groupName.empty() && candidate.groupName == name))
+			if (candidate.name == name || (!candidate.groupName.empty() && candidate.groupName == name))
 			{
 				drawStartAgain(candidate);
 				resetObjectState(candidate);
@@ -691,7 +689,7 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			if (object.name == target || object.baseName == target || (!object.groupName.empty() && object.groupName == target))
+			if (object.name == target || (!object.groupName.empty() && object.groupName == target))
 			{
 				showLookNamed(object, sprite);
 			}
@@ -704,7 +702,7 @@ namespace xge
 		{
 			if (count <= 0) { break; }
 
-			const bool named = object.name == target || object.baseName == target || (!object.groupName.empty() && object.groupName == target);
+			const bool named = object.name == target || (!object.groupName.empty() && object.groupName == target);
 			if (!named || object.isVisible) { continue; }
 
 			object.position = object.positionOriginal;
@@ -747,7 +745,7 @@ namespace xge
 		int setOff = 0;
 		for (auto& object : objects)
 		{
-			const bool named = object.name == target || object.baseName == target || (!object.groupName.empty() && object.groupName == target);
+			const bool named = object.name == target || (!object.groupName.empty() && object.groupName == target);
 			if (!named || !object.isVisible || object.isFollowing()) { continue; }
 
 			follow(object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(framerate))));
@@ -881,7 +879,7 @@ namespace xge
 		// Every member gets exactly the same treatment. This used to shift the
 		// members stored before the touching one by three steps and the rest
 		// by one (and repeated that on every right-hand bounce), which pushed
-		// the last column of a <grid> further from the others each time.
+		// the last column of a block further from the others each time.
 		for (auto& obj : objects)
 		{
 			if (obj.collisionData.lockstep == lockstepNum)
@@ -918,7 +916,7 @@ namespace xge
 		bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Object& candidate)
 		{
 			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
-			if (!filterObject.empty() && filterObject != candidate.name && filterObject != candidate.baseName
+			if (!filterObject.empty() && filterObject != candidate.name
 				&& (candidate.groupName.empty() || filterObject != candidate.groupName)) { return false; }
 			return true;
 		}
