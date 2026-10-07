@@ -30,6 +30,7 @@
   <xsl:include href="values.xsl" />
   <xsl:include href="check.xsl" />
   <xsl:include href="main.xsl" />
+  <xsl:include href="groups.xsl" />
 
   <xsl:output method="xml" indent="yes" encoding="UTF-8" />
 
@@ -104,7 +105,7 @@
     <xsl:variable name="text" select="normalize-space($node)" />
     <xsl:choose>
       <xsl:when test="string(number($text)) != 'NaN'"><xsl:value-of select="$text" /></xsl:when>
-      <xsl:otherwise><xsl:value-of select="normalize-space(/game/variables/variable[@name = $text][last()])" /></xsl:otherwise>
+      <xsl:otherwise><xsl:value-of select="normalize-space($game/variables/variable[@name = $text][last()])" /></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
