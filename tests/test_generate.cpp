@@ -506,6 +506,28 @@ TEST_CASE("a rule with unless= is passed over while touching that class, through
 	CHECK(main.find("\tfor (const sf::RectangleShape& each : logs)\n\t{\n\t\tif (counts(each))\n\t\t{\n\t\t\treturn true;") != std::string::npos);
 }
 
+TEST_CASE("generating Frogger carries the frog on a log, and the river costs a life unless it is on one", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_frogger");
+	generateGame(requestFor(fs::current_path() / "games/frogger.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// what it rides is worked out again every frame, from the rules
+	CHECK(main.find("sf::Vector2f frogCarry; // the velocity of what it rides (<carry />), for its next move") != std::string::npos);
+	CHECK(main.find("void updateFrog()\n{\n\t// what it rides, worked out again this frame\n\tfrogCarry = {};") != std::string::npos);
+	CHECK(main.find("\t\tif (physics::touching(frog, other))\n\t\t{\n\t\t\tfrogCarry = logrow6Velocity;\n\t\t}") != std::string::npos);
+	// and moves it after them, for the frame it is touching, as in the engine
+	CHECK(main.find("\t// it rides along: moved as well by what it touches, this frame\n\tfrog.move(frogCarry);\n}") != std::string::npos);
+	CHECK(main.find("\tif (physics::touching(frog, water) && !touchingLogs(frog, &water))\n") != std::string::npos);
+	// a reset gets off
+	CHECK(main.find("void startFrog()\n{\n\tfrog.setPosition({6.0f * cell + inset, 13.0f * cell + inset});\n\tfrogCarry = {};\n}") != std::string::npos);
+}
+
 TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, and it dies where it hits", "[generate]")
 {
 	if (!canGenerate())

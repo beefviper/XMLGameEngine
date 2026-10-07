@@ -61,6 +61,9 @@
        the shapes; the rest of the groups that move share one. -->
   <xsl:variable name="member-velocities" select="$groups[*/velocity]" />
 
+  <!-- Those a rule lends another's velocity (<carry />: a frog on a log). -->
+  <xsl:variable name="carried" select="$objects[@name = $rules[carry]/ancestor::object/@name]" />
+
   <!-- Those that never move (no velocity of their own, no keys): they never
        meet an edge, so their edge rules are left out, as the engine only looks
        at the edges for what is moving. -->
@@ -94,7 +97,7 @@
   <xsl:variable name="update-work">
     <xsl:for-each select="$things[count(. | $moving) = count($moving) or collisions/collision[*][count(. | $rules) = count($rules)]]">
       <work name="{@name}">
-        <xsl:if test="count(. | $moving) = count($moving)">moves</xsl:if>
+        <xsl:if test="count(. | $moving | $carried) = count($moving | $carried)">moves</xsl:if>
         <xsl:call-template name="update-rules" />
       </work>
     </xsl:for-each>
@@ -357,6 +360,9 @@ sf::Texture </xsl:text>
       </xsl:if>
       <xsl:if test="self::object and count(. | $moving) = count($moving)">
         <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Velocity;')" />
+      </xsl:if>
+      <xsl:if test="count(. | $carried) = count($carried)">
+        <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Carry; // the velocity of what it rides (&lt;carry /&gt;), for its next move')" />
       </xsl:if>
       <xsl:if test="count(. | $dying) = count($dying)">
         <xsl:choose>
@@ -1106,6 +1112,9 @@ void start()
       <xsl:text>;
 </xsl:text>
     </xsl:if>
+    <xsl:if test="count(. | $carried) = count($carried)">
+      <xsl:value-of select="concat('&#9;', $name, 'Carry = {};&#10;')" />
+    </xsl:if>
     <xsl:if test="count(. | $looked) = count($looked)">
       <xsl:text>	</xsl:text>
       <xsl:call-template name="become-call">
@@ -1562,6 +1571,9 @@ void update</xsl:text>
       <xsl:if test="count(. | $moving) = count($moving) and not($block)">
         <xsl:value-of select="concat('&#10;', $indent, $one, '.move(', $velocity, ');&#10;')" />
       </xsl:if>
+      <xsl:if test="count(. | $carried) = count($carried)">
+        <xsl:value-of select="concat('&#10;', $indent, '// what it rides, worked out again this frame&#10;', $indent, $name, 'Carry = {};&#10;')" />
+      </xsl:if>
       <xsl:call-template name="update-rules">
         <xsl:with-param name="name" select="$one" />
         <xsl:with-param name="velocity" select="$velocity" />
@@ -1569,6 +1581,9 @@ void update</xsl:text>
         <xsl:with-param name="alive" select="$alive" />
         <xsl:with-param name="out" select="$out" />
       </xsl:call-template>
+      <xsl:if test="count(. | $carried) = count($carried)">
+        <xsl:value-of select="concat('&#10;', $indent, '// it rides along: moved as well by what it touches, this frame&#10;', $indent, $one, '.move(', $name, 'Carry);&#10;')" />
+      </xsl:if>
     </xsl:variable>
     <xsl:text>
 // </xsl:text>
@@ -1830,7 +1845,14 @@ void update</xsl:text>
       <!-- the other one, if it can die, only while it is in play -->
       <xsl:variable name="other-dies" select="count(. | $dying) = count($dying)" />
       <!-- a group's members counted through when each has a flag or a look of its own -->
-      <xsl:variable name="other-counted" select="$other-dies or count(. | $looked) = count($looked)" />
+      <xsl:variable name="other-counted" select="$other-dies or count(. | $looked | $member-velocities) = count($looked | $member-velocities)" />
+      <!-- the other's velocity, what a <carry /> lends this one (none when it never moves) -->
+      <xsl:variable name="others-velocity">
+        <xsl:if test="count(. | $moving) = count($moving)">
+          <xsl:value-of select="concat($other-name, 'Velocity')" />
+          <xsl:if test="count(. | $member-velocities) = count($member-velocities)">[j]</xsl:if>
+        </xsl:if>
+      </xsl:variable>
       <xsl:variable name="other">
         <xsl:choose>
           <xsl:when test="self::group and $other-counted"><xsl:value-of select="concat($other-name, '[j]')" /></xsl:when>
@@ -1914,6 +1936,7 @@ void update</xsl:text>
               <xsl:with-param name="name" select="$other" />
               <xsl:with-param name="velocity" select="$other-velocity" />
               <xsl:with-param name="other" select="$name" />
+              <xsl:with-param name="other-velocity" select="substring($velocity, 1, string-length($velocity) * number(count($self | $moving) = count($moving)))" />
               <xsl:with-param name="alive" select="$other-alive-name" />
               <xsl:with-param name="self" select="$other-thing" />
               <xsl:with-param name="indent" select="$at" />
@@ -1929,6 +1952,7 @@ void update</xsl:text>
           <xsl:with-param name="name" select="$name" />
           <xsl:with-param name="velocity" select="$velocity" />
           <xsl:with-param name="other" select="$other" />
+          <xsl:with-param name="other-velocity" select="$others-velocity" />
           <xsl:with-param name="alive" select="$alive" />
           <xsl:with-param name="self" select="$self" />
           <xsl:with-param name="indent" select="concat($in, '&#9;')" />
@@ -1952,6 +1976,7 @@ void update</xsl:text>
     <xsl:param name="name" />
     <xsl:param name="velocity" />
     <xsl:param name="other" />
+    <xsl:param name="other-velocity" select="''" />
     <xsl:param name="alive" />
     <xsl:param name="self" />
     <xsl:param name="indent" />
@@ -1969,6 +1994,17 @@ void update</xsl:text>
         <xsl:value-of select="concat($indent, 'physics::deflect(', $name, ', ', $velocity, ', ', $other, ', ')" />
         <xsl:call-template name="value-bare" />
         <xsl:text>);
+</xsl:text>
+      </xsl:when>
+      <xsl:when test="self::carry">
+        <xsl:value-of select="$indent" />
+        <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
+        <xsl:text>Carry = </xsl:text>
+        <xsl:choose>
+          <xsl:when test="$other-velocity != ''"><xsl:value-of select="$other-velocity" /></xsl:when>
+          <xsl:otherwise>{}</xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>;
 </xsl:text>
       </xsl:when>
       <xsl:when test="self::die">

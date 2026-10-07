@@ -20,7 +20,7 @@
     ' objects object group member row column cell sprite circle radius rectangle color text content number size image path flip columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity',
-    ' collisions enabled lockstep collision bounce stick reset deflect wrap die actions action move hop fire',
+    ' collisions enabled lockstep collision bounce stick reset deflect wrap die carry actions action move hop fire',
     ' states state shows show inputs input trigger conditions condition atleast atmost remaining',
     ' push pop play inc dec become sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
@@ -57,6 +57,11 @@
       <xsl:when test="self::variable and ../parent::game and .//random">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'a &lt;random&gt; in a &lt;variable&gt; of the game (give it to an object)'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::carry and ancestor::group">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;carry /&gt; in the rules of a &lt;group&gt;'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::object and /game/variables/variable[@name = current()/@name]">
