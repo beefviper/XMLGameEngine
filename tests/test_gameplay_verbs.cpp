@@ -499,6 +499,25 @@ TEST_CASE("an edge rule with sprite= runs only while the object shows that look,
 	CHECK(loaded.variable("puck", "hits") == 2);
 }
 
+TEST_CASE("an edge rule with unless= is passed over while the object touches something of that class", "[collisions]")
+{
+	// Two balls at the bottom edge, one of them over a pad: the bottom takes
+	// out the one with nothing under it, and the other only bounces.
+	const std::string rules = "<enabled>true</enabled>"
+		"<collision edge=\"bottom\" unless=\"pad\"><die /></collision>"
+		"<collision edge=\"bottom\"><bounce /></collision>";
+	Loaded loaded(gameXml(
+		box("safe", 100, 592, 10, 10, rules, {}, {}, "<x>0</x><y>1</y>")
+			+ box("lost", 400, 592, 10, 10, rules, {}, {}, "<x>0</x><y>1</y>")
+			+ box("pad", 90, 590, 40, 10, "<enabled>true</enabled>", {}, {}, "<x>0</x><y>0</y>", " class=\"pad\""),
+		state("playing", { "safe", "lost", "pad" })));
+
+	loaded.frames(3);
+	CHECK(loaded.game.getObject("safe").isVisible);
+	CHECK(loaded.game.getObject("safe").velocity.y < 0.0f);
+	CHECK_FALSE(loaded.game.getObject("lost").isVisible);
+}
+
 TEST_CASE("<reveal> brings hidden members of a pool back where they started, as many as asked", "[reveal]")
 {
 	const std::string pool = "<group name=\"blocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
@@ -578,6 +597,10 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 		"names no look of the object");
 	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"left\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
 		"<collision edge sprite=\"lit\"> names no look of the object");
+	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"left\" class=\"wall\"><die /></collision>"), state("playing", { "o" }),
+		"a rule about a screen edge is about no other object");
+	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"left\" object=\"o\"><die /></collision>"), state("playing", { "o" }),
+		"a rule about a screen edge is about no other object");
 	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, "<input button=\"space\"><reveal object=\"ghost\" /></input>"), "<reveal> names 'ghost'");
 }
 

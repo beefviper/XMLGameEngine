@@ -928,13 +928,14 @@ namespace xge
 		}
 
 		// An edge rule's commands appended to one edge's list, noting where
-		// they are when the rule holds to a look (sprite=).
-		void appendEdgeRule(std::vector<RawCommand>& existing, std::vector<EdgeLook>& looks,
-			const std::vector<RawCommand>& more, const std::string& sprite)
+		// they are when the rule holds to a look (sprite=) or is passed over
+		// while touching a class (unless=).
+		void appendEdgeRule(std::vector<RawCommand>& existing, std::vector<EdgeGuard>& guards,
+			const std::vector<RawCommand>& more, const std::string& sprite, const std::string& unlessClass)
 		{
-			if (!sprite.empty() && !more.empty())
+			if ((!sprite.empty() || !unlessClass.empty()) && !more.empty())
 			{
-				looks.push_back(EdgeLook{ existing.size(), more.size(), sprite });
+				guards.push_back(EdgeGuard{ existing.size(), more.size(), sprite, unlessClass });
 			}
 			appendCommands(existing, more);
 		}
@@ -1019,11 +1020,20 @@ namespace xge
 					// edge="..."> touching the same edge (e.g. an "all" rule plus a
 					// specific "left" rule) both run instead of the later one
 					// silently winning.
+					// class= and object= pick the other object of a touch; an
+					// edge is no object, so there is nothing for them to pick
+					if (!collision->getAttribute("class").empty() || !collision->getAttribute("object").empty())
+					{
+						fail(ruleHere, "edge= with class= or object=; a rule about a screen edge is about no other object"
+							" (unless=\"class\" passes it over while touching that class)");
+					}
+
 					const std::string sprite = collision->getAttribute("sprite");
-					if (all || vertical || edge == "top") { appendEdgeRule(collisionData.top, collisionData.topLooks, commands, sprite); }
-					if (all || vertical || edge == "bottom") { appendEdgeRule(collisionData.bottom, collisionData.bottomLooks, commands, sprite); }
-					if (all || horizontal || edge == "left") { appendEdgeRule(collisionData.left, collisionData.leftLooks, commands, sprite); }
-					if (all || horizontal || edge == "right") { appendEdgeRule(collisionData.right, collisionData.rightLooks, commands, sprite); }
+					const std::string unlessClass = collision->getAttribute("unless");
+					if (all || vertical || edge == "top") { appendEdgeRule(collisionData.top, collisionData.topGuards, commands, sprite, unlessClass); }
+					if (all || vertical || edge == "bottom") { appendEdgeRule(collisionData.bottom, collisionData.bottomGuards, commands, sprite, unlessClass); }
+					if (all || horizontal || edge == "left") { appendEdgeRule(collisionData.left, collisionData.leftGuards, commands, sprite, unlessClass); }
+					if (all || horizontal || edge == "right") { appendEdgeRule(collisionData.right, collisionData.rightGuards, commands, sprite, unlessClass); }
 				}
 				else
 				{

@@ -655,9 +655,10 @@
   </xs:complexType>
 
   <!--
-    A collision rule. With edge it is about a screen edge; without, it is about
-    another object, narrowed by class and/or object (neither: anything), and
-    passed over while the object is touching something of the unless class. A
+    A collision rule. With edge it is about a screen edge, and takes no class
+    or object; without, it is about another object, narrowed by class and/or
+    object (neither: anything). Either is passed over while the object is
+    touching something of the unless class. A
     rule about another object may also begin with slower and/or faster, which
     hold it to when the object's own speed is under (slower) or at least
     (faster) that number. With sprite, it runs only while the object shows its

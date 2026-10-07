@@ -241,6 +241,10 @@ namespace xge
 		// this class - what a collision rule's unless= asks.
 		bool isTouchingClass(const Object& object, const Object& excluding, const std::string& objClass);
 
+		// Whether an edge rule with sprite= or unless= is passed over right
+		// now: the object shows another look, or touches that class.
+		bool isEdgeRulePassedOver(const Object& object, const EdgeGuard& guard);
+
 		// Moves everything shown by its velocity for one frame, stopping at each
 		// touch that has a rule on the way to run it - see the definition.
 		void moveObjects(void);

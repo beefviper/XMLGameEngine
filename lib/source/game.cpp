@@ -910,34 +910,19 @@ namespace xge
 			return object.collisionData.top;
 		}
 
-		// The edge's rules with sprite= (see EdgeLook).
-		const std::vector<EdgeLook>& collisionLooksFor(const Object& object, Edge edge)
+		// The edge's rules with sprite= (see EdgeGuard).
+		const std::vector<EdgeGuard>& collisionGuardsFor(const Object& object, Edge edge)
 		{
 			switch (edge)
 			{
-			case Edge::Left:   return object.collisionData.leftLooks;
-			case Edge::Right:  return object.collisionData.rightLooks;
-			case Edge::Top:    return object.collisionData.topLooks;
-			case Edge::Bottom: return object.collisionData.bottomLooks;
+			case Edge::Left:   return object.collisionData.leftGuards;
+			case Edge::Right:  return object.collisionData.rightGuards;
+			case Edge::Top:    return object.collisionData.topGuards;
+			case Edge::Bottom: return object.collisionData.bottomGuards;
 			}
 
 			// Unreachable: Edge only ever has the four values above.
-			return object.collisionData.topLooks;
-		}
-
-		// How many of an edge's commands from `index` on to pass over: those
-		// of a rule with sprite= that starts there, while the object shows
-		// another look; 0 when the command runs.
-		std::size_t passedOver(const Object& object, const std::vector<EdgeLook>& looks, std::size_t index)
-		{
-			for (const EdgeLook& look : looks)
-			{
-				if (look.first == index && object.lookName() != look.sprite)
-				{
-					return look.count;
-				}
-			}
-			return 0;
+			return object.collisionData.topGuards;
 		}
 
 		// Shared by a collision rule's class/object filter and a state
@@ -966,19 +951,26 @@ namespace xge
 
 		CommandExecutor executor(*this);
 		const std::vector<Command>& commands = collisionCommandsFor(object, edge);
-		const std::vector<EdgeLook>& looks = collisionLooksFor(object, edge);
+		const std::vector<EdgeGuard>& guards = collisionGuardsFor(object, edge);
 		for (std::size_t i = 0; i < commands.size();)
 		{
-			// a rule with sprite= looks at the look as it comes, after the
-			// rules before it have run (one of them may have changed it)
-			if (const std::size_t skip = passedOver(object, looks, i); skip > 0)
+			// a rule with sprite= or unless= is looked at as it comes, after
+			// the rules before it have run (one of them may have changed it)
+			const auto guard = std::find_if(guards.begin(), guards.end(), [&](const EdgeGuard& g) { return g.first == i; });
+			if (guard != guards.end() && isEdgeRulePassedOver(object, *guard))
 			{
-				i += skip;
+				i += guard->count;
 				continue;
 			}
 			executor.executeScreenEdgeCollision(commands[i], object, edge);
 			++i;
 		}
+	}
+
+	bool Game::isEdgeRulePassedOver(const Object& object, const EdgeGuard& guard)
+	{
+		return (!guard.sprite.empty() && object.lookName() != guard.sprite)
+			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass));
 	}
 
 	// Re-applies just the stick() rules, after the frame's move, whether or not
@@ -991,14 +983,14 @@ namespace xge
 		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 		{
 			const auto& commands = collisionCommandsFor(object, edge);
-			const auto& looks = collisionLooksFor(object, edge);
+			const auto& guards = collisionGuardsFor(object, edge);
 			bool sticks = false;
 			for (std::size_t i = 0; i < commands.size(); ++i)
 			{
-				// a stick in a rule with sprite= only while it shows that look
-				const bool held = std::any_of(looks.begin(), looks.end(), [&](const EdgeLook& look)
-					{ return i >= look.first && i < look.first + look.count && object.lookName() != look.sprite; });
-				sticks = sticks || (!held && std::holds_alternative<CmdStick>(commands[i]));
+				// a stick in a rule with sprite= or unless= only while it holds
+				const bool passedOver = std::any_of(guards.begin(), guards.end(), [&](const EdgeGuard& guard)
+					{ return i >= guard.first && i < guard.first + guard.count && isEdgeRulePassedOver(object, guard); });
+				sticks = sticks || (!passedOver && std::holds_alternative<CmdStick>(commands[i]));
 			}
 
 			if (sticks && CollisionDetector::touchesScreenEdge(object, windowDesc, edge))

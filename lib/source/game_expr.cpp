@@ -771,17 +771,17 @@ namespace xge
 			object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
 			object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
 			object.collisionData.right = processCommands(rawObject.rawCollisionData.right, where);
-			object.collisionData.topLooks = rawObject.rawCollisionData.topLooks;
-			object.collisionData.bottomLooks = rawObject.rawCollisionData.bottomLooks;
-			object.collisionData.leftLooks = rawObject.rawCollisionData.leftLooks;
-			object.collisionData.rightLooks = rawObject.rawCollisionData.rightLooks;
-			for (const auto* edgeLooks : { &object.collisionData.topLooks, &object.collisionData.bottomLooks, &object.collisionData.leftLooks, &object.collisionData.rightLooks })
+			object.collisionData.topGuards = rawObject.rawCollisionData.topGuards;
+			object.collisionData.bottomGuards = rawObject.rawCollisionData.bottomGuards;
+			object.collisionData.leftGuards = rawObject.rawCollisionData.leftGuards;
+			object.collisionData.rightGuards = rawObject.rawCollisionData.rightGuards;
+			for (const auto* edgeGuards : { &object.collisionData.topGuards, &object.collisionData.bottomGuards, &object.collisionData.leftGuards, &object.collisionData.rightGuards })
 			{
-				for (const EdgeLook& edgeLook : *edgeLooks)
+				for (const EdgeGuard& edgeGuard : *edgeGuards)
 				{
-					if (std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == edgeLook.sprite; }))
+					if (!edgeGuard.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == edgeGuard.sprite; }))
 					{
-						throw std::runtime_error(where + ": a <collision edge sprite=\"" + edgeLook.sprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
+						throw std::runtime_error(where + ": a <collision edge sprite=\"" + edgeGuard.sprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
 					}
 				}
 			}
