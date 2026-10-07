@@ -381,6 +381,27 @@ TEST_CASE("generating Breakout writes its rows of bricks as grids, and wins when
 	CHECK(main.find("#include <algorithm>") != std::string::npos);
 }
 
+TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, and it dies where it hits", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_depthcharge");
+	generateGame(requestFor(fs::current_path() / "games/depthcharge.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// a projectile is out of play until it is fired
+	CHECK(main.find("bool chargeAlive = false; // in play from when it is fired until it dies") != std::string::npos);
+	CHECK(main.find("\tchargeAlive = false; // until it is fired") != std::string::npos);
+	// fired from the middle of the ship's top, at its own velocity, only when it is not out already
+	CHECK(main.find("\t\t\t// fire charge, if it is not out already\n\t\t\tif (!chargeAlive)\n\t\t\t{\n\t\t\t\tcharge.setPosition({physics::left(ship) + physics::width(ship) / 2.0f - physics::width(charge) / 2.0f, physics::top(ship)});\n\t\t\t\tchargeVelocity = {0.0f, 5.0f};\n\t\t\t\tchargeAlive = true;") != std::string::npos);
+	// a sub it hits sinks by the sub's own rule, in the same touch
+	CHECK(main.find("\t\tif (subs1Alive[j] && physics::touching(charge, subs1[j]))\n\t\t{\n\t\t\t// subs1, by its own rule: die\n\t\t\tsubs1Alive[j] = false;\n\t\t\tshipSunk += 1.0f;") != std::string::npos);
+	CHECK(main.find("\t// bottom: dec die\n\tif (physics::past(charge, physics::Edge::Bottom, windowArea))\n\t{\n\t\tshipCharges -= 1.0f;") != std::string::npos);
+}
+
 TEST_CASE("a group in lockstep moves as one block, and turns as one off a side", "[generate]")
 {
 	if (!canGenerate())
@@ -567,6 +588,7 @@ TEST_CASE("what windows-cpp cannot generate yet is named in the error", "[genera
 	CHECK(refusal("", "", "<state name=\"paused\"><inputs><input button=\"space\"><push state=\"nowhere\" /></input></inputs></state>").find("<push state=\"nowhere\">, which is not a <state>") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><reset object=\"box\" /></collision>", "", "").find("cannot generate <reset object=") != std::string::npos);
 	CHECK(refusal("", "", "<state name=\"won\"><conditions><condition object=\"box\"><remaining>half</remaining><reset /></condition></conditions></state>").find("cannot generate <remaining> that is not a whole number yet") != std::string::npos);
+	CHECK(refusal("<collision edge=\"top\"><fire object=\"box\" /></collision>", "", "").find("cannot generate <fire> outside the <action> of an object yet") != std::string::npos);
 }
 
 TEST_CASE("pong_min plays in the engine: the ball deflects off a paddle, and a point puts it back in the middle", "[generate][pong_min]")
