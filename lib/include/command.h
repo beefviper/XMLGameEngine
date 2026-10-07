@@ -209,7 +209,13 @@ namespace xge
 		std::string name;
 	};
 
-	struct CmdPopState {};
+	// <pop /> - back to the state underneath. <pop state="wave2" /> - this
+	// state goes and that one takes its place, so moving on (a wave, a room)
+	// does not grow the stack the way a <push> would.
+	struct CmdPopState
+	{
+		std::string name;
+	};
 
 	// <play sound="bounce" /> - starts one of the game's <sounds> (see sound.h
 	// and audio.h). Anywhere a command can go: a collision rule, an object's

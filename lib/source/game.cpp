@@ -296,6 +296,28 @@ namespace xge
 		++stateChanges;
 	}
 
+	void Game::popState(const std::string& name)
+	{
+		if (name.empty())
+		{
+			popState();
+			return;
+		}
+
+		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
+		if (result == std::end(states))
+		{
+			throw std::out_of_range("no state named '" + name + "'");
+		}
+
+		if (!currentState.empty())
+		{
+			currentState.pop();
+		}
+		currentState.push(*result);
+		++stateChanges;
+	}
+
 	unsigned long Game::stateChangeCount(void) const noexcept
 	{
 		return stateChanges;

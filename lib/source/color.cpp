@@ -5,30 +5,57 @@
 
 #include "color.h"
 
+#include <algorithm>
+#include <array>
+
 namespace xge
 {
+	namespace
+	{
+		struct NamedColor
+		{
+			const char* name;
+			Color color;
+		};
+
+		constexpr std::array<NamedColor, 17> namedColors{ {
+			{ "color.black",   { 0, 0, 0, 255 } },
+			{ "color.white",   { 255, 255, 255, 255 } },
+			{ "color.red",     { 255, 0, 0, 255 } },
+			{ "color.green",   { 0, 255, 0, 255 } },
+			{ "color.blue",    { 0, 0, 255, 255 } },
+			{ "color.yellow",  { 255, 255, 0, 255 } },
+			{ "color.magenta", { 255, 0, 255, 255 } },
+			{ "color.cyan",    { 0, 255, 255, 255 } },
+
+			// Muted colors for backgrounds and scenery, beside the bright ones above.
+			{ "color.grey",        { 128, 128, 128, 255 } },
+			{ "color.darkgrey",    { 64, 64, 64, 255 } },
+			{ "color.lightgrey",   { 192, 192, 192, 255 } },
+			{ "color.brown",       { 139, 69, 19, 255 } },
+			{ "color.orange",      { 255, 165, 0, 255 } },
+			{ "color.purple",      { 128, 0, 128, 255 } },
+			{ "color.darkblue",    { 0, 0, 139, 255 } },
+			{ "color.darkgreen",   { 0, 100, 0, 255 } },
+			{ "color.forestgreen", { 34, 139, 34, 255 } },
+		} };
+	}
+
 	Color colorFromName(const std::string& name) noexcept
 	{
-		if (name == "color.black")   { return { 0, 0, 0, 255 }; }
-		if (name == "color.white")   { return { 255, 255, 255, 255 }; }
-		if (name == "color.red")     { return { 255, 0, 0, 255 }; }
-		if (name == "color.green")   { return { 0, 255, 0, 255 }; }
-		if (name == "color.blue")    { return { 0, 0, 255, 255 }; }
-		if (name == "color.yellow")  { return { 255, 255, 0, 255 }; }
-		if (name == "color.magenta") { return { 255, 0, 255, 255 }; }
-		if (name == "color.cyan")    { return { 0, 255, 255, 255 }; }
+		const auto found = std::find_if(namedColors.begin(), namedColors.end(), [&](const NamedColor& named) { return name == named.name; });
+		return found == namedColors.end() ? Color{ 0, 0, 0, 0 } : found->color;
+	}
 
-		// Muted colors for backgrounds and scenery, beside the bright ones above.
-		if (name == "color.grey")        { return { 128, 128, 128, 255 }; }
-		if (name == "color.darkgrey")    { return { 64, 64, 64, 255 }; }
-		if (name == "color.lightgrey")   { return { 192, 192, 192, 255 }; }
-		if (name == "color.brown")       { return { 139, 69, 19, 255 }; }
-		if (name == "color.orange")      { return { 255, 165, 0, 255 }; }
-		if (name == "color.purple")      { return { 128, 0, 128, 255 }; }
-		if (name == "color.darkblue")    { return { 0, 0, 139, 255 }; }
-		if (name == "color.darkgreen")   { return { 0, 100, 0, 255 }; }
-		if (name == "color.forestgreen") { return { 34, 139, 34, 255 }; }
+	bool isColorName(const std::string& name) noexcept
+	{
+		return std::any_of(namedColors.begin(), namedColors.end(), [&](const NamedColor& named) { return name == named.name; });
+	}
 
-		return { 0, 0, 0, 0 };
+	std::vector<std::string> colorNames()
+	{
+		std::vector<std::string> names;
+		for (const NamedColor& named : namedColors) { names.emplace_back(named.name); }
+		return names;
 	}
 }

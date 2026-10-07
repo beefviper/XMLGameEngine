@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace xge
 {
@@ -29,4 +30,9 @@ namespace xge
 	// names come back fully transparent, same as the old sfmlColor()'s
 	// sf::Color::Transparent default.
 	Color colorFromName(const std::string& name) noexcept;
+
+	// Whether a name is one of the colors above, and all of their names, for
+	// the loader to refuse any other with a list of what there is.
+	bool isColorName(const std::string& name) noexcept;
+	std::vector<std::string> colorNames();
 }

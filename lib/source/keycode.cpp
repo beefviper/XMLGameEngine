@@ -80,6 +80,13 @@ namespace xge
 		return KeyCode::Unknown;
 	}
 
+	std::vector<std::string> keyNames()
+	{
+		std::vector<std::string> names;
+		for (const auto& entry : table) { names.emplace_back(entry.second); }
+		return names;
+	}
+
 	std::string keyCodeToString(KeyCode key) noexcept
 	{
 		for (const auto& [candidate, text] : table)

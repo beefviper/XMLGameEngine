@@ -20,7 +20,8 @@
   How it is written:
   * Four rooms, each a bitmap of its walls (a maze drawn as rows of text,
     scaled up) and its own robots. A <state> is a room, so leaving one is a
-    <push> to the next, and after the fourth it is the first again, harder.
+    <pop state="..."> into the next (this room goes, that one takes its
+    place), and after the fourth it is the first again, harder.
   * The man has four looks, one for each way he faces, and <become> in his
     actions picks it; <facing> makes <fire> leave the way he looks.
   * Robots patrol their corridors and turn at a wall (<reverse />); each has
@@ -1425,7 +1426,7 @@
           <reset object="tally1" />
           <reset object="robots1left" />
           <reset object="robots1up" />
-          <push state="room2" />
+          <pop state="room2" />
         </condition>
         <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
         <condition object="player" variable="lifepoints">
@@ -1487,7 +1488,7 @@
           <reset object="otto" />
           <reset object="tally2" />
           <reset object="robots2right" />
-          <push state="room3" />
+          <pop state="room3" />
         </condition>
         <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
         <condition object="player" variable="lifepoints">
@@ -1551,7 +1552,7 @@
           <reset object="tally3" />
           <reset object="robots3left" />
           <reset object="robots3up" />
-          <push state="room4" />
+          <pop state="room4" />
         </condition>
         <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
         <condition object="player" variable="lifepoints">
@@ -1615,7 +1616,7 @@
           <reset object="tally4" />
           <reset object="robots4right" />
           <reset object="robots4down" />
-          <push state="room1" />
+          <pop state="room1" />
         </condition>
         <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
         <condition object="player" variable="lifepoints">

@@ -631,7 +631,7 @@
         <condition object="bucket" variable="score">
           <atleast>wave2at</atleast>
           <reset object="bombs1" />
-          <push state="wave2" />
+          <pop state="wave2" />
           <play sound="wave" />
         </condition>
       </conditions>
@@ -659,7 +659,7 @@
         <condition object="bucket" variable="score">
           <atleast>wave3at</atleast>
           <reset object="bombs2" />
-          <push state="wave3" />
+          <pop state="wave3" />
           <play sound="wave" />
         </condition>
       </conditions>

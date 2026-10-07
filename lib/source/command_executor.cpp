@@ -67,7 +67,7 @@ namespace xge
 	{
 		std::visit(overload{
 			[&](const CmdPushState& s) { if (keyPressed) { game.pushState(s.name); } },
-			[&](const CmdPopState&) { if (keyPressed) { game.popState(); } },
+			[&](const CmdPopState& s) { if (keyPressed) { game.popState(s.name); } },
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed); },
 			[&](const CmdResetObject& r) { if (keyPressed) { game.resetObject(r.target); } },
 			// Bare reset() means something different here than it does inside a
@@ -94,7 +94,7 @@ namespace xge
 	{
 		std::visit(overload{
 			[&](const CmdPushState& s) { game.pushState(s.name); },
-			[&](const CmdPopState&) { game.popState(); },
+			[&](const CmdPopState& s) { game.popState(s.name); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
