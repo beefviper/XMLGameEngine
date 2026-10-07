@@ -69,11 +69,6 @@
           <xsl:with-param name="what" select="'a &lt;framerate&gt; that is not a whole number'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::collision and @unless">
-        <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;collision&gt; with unless='" />
-        </xsl:call-template>
-      </xsl:when>
 
       <!-- groups: a std::vector of one kind of shape, each member placed and
            moving on its own, with rules that do not need one member put back

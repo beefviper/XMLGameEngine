@@ -456,6 +456,56 @@ TEST_CASE("an edge rule with sprite= is an if on the look, inside the touch of t
 	CHECK(main.find("\t// top: wrap, while it shows cracked\n\tif (puckLook == PuckLook::Cracked)\n\t{\n\t\tphysics::wrap(puck, puckVelocity, physics::Edge::Top, windowArea);\n\t}") != std::string::npos);
 }
 
+TEST_CASE("a rule with unless= is passed over while touching that class, through one function for the class", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_unless");
+	fs::create_directories(folder.path);
+	std::ofstream(folder.path / "river.xml") <<
+		"<game>\n"
+		"  <window name=\"River\"><width>320</width><height>240</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>\n"
+		"  <variables />\n"
+		"  <objects>\n"
+		"    <object name=\"water\" class=\"water\">\n"
+		"      <sprite><rectangle><width>320</width><height>60</height><color>color.blue</color></rectangle></sprite>\n"
+		"      <position><x>0</x><y>80</y></position><velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled></collisions>\n"
+		"    </object>\n"
+		"    <group name=\"logs\" class=\"logs\">\n"
+		"      <sprite><rectangle><width>40</width><height>20</height><color>color.brown</color></rectangle></sprite>\n"
+		"      <velocity><x>2</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><collision edge=\"horizontal\"><wrap /></collision></collisions>\n"
+		"      <member><position><x>20</x><y>100</y></position></member>\n"
+		"      <member><position><x>200</x><y>100</y></position></member>\n"
+		"    </group>\n"
+		"    <object name=\"frog\">\n"
+		"      <sprite><rectangle><width>10</width><height>10</height><color>color.green</color></rectangle></sprite>\n"
+		"      <position><x>150</x><y>10</y></position><velocity><x>0</x><y>1</y></velocity>\n"
+		"      <collisions><enabled>true</enabled>\n"
+		"        <collision class=\"water\" unless=\"logs\"><inc variable=\"frog.wet\" /></collision>\n"
+		"        <collision edge=\"bottom\" unless=\"water\"><bounce /></collision>\n"
+		"      </collisions>\n"
+		"      <variables><variable name=\"wet\">0</variable></variables>\n"
+		"    </object>\n"
+		"  </objects>\n"
+		"  <states><state name=\"playing\"><shows><show object=\"water\" /><show object=\"logs\" /><show object=\"frog\" /></shows><inputs /><conditions /></state></states>\n"
+		"</game>\n";
+	generateGame(requestFor(folder.path / "river.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// the touch, and not on a log other than the water it touches
+	CHECK(main.find("\tif (physics::touching(frog, water) && !touchingLogs(frog, &water))\n\t{\n\t\tfrogWet += 1.0f;") != std::string::npos);
+	// an edge has no other: nothing to leave out
+	CHECK(main.find("\t\tif (!touchingWater(frog, nullptr))\n\t\t{\n\t\t\tphysics::bounce(frog, frogVelocity, physics::Edge::Bottom, windowArea);") != std::string::npos);
+	// one function for each class named, going through everything of it
+	CHECK(main.find("template <typename Shape>\nbool touchingLogs(const Shape& one, const void* other);") != std::string::npos);
+	CHECK(main.find("\tfor (const sf::RectangleShape& each : logs)\n\t{\n\t\tif (counts(each))\n\t\t{\n\t\t\treturn true;") != std::string::npos);
+}
+
 TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, and it dies where it hits", "[generate]")
 {
 	if (!canGenerate())
