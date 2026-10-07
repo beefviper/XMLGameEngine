@@ -162,7 +162,7 @@ namespace xge
 	{
 		std::string target;
 		float speed{};
-		float near{};
+		float stopWithin{}; // not "near": windows.h defines near (and far) as nothing
 	};
 
 	// <aim object="player" /> - the object turns to the nearest one in play

@@ -616,7 +616,7 @@ namespace xge
 	}
 
 	// Heads for the nearest of `chase.target` in play: straight at its middle
-	// at `chase.speed`, or, within `chase.near` of it, stops. It faces the
+	// at `chase.speed`, or, within `chase.stopWithin` of it, stops. It faces the
 	// way it goes. With none in play it carries on as it was.
 	void CommandExecutor::chase(Object& object, const CmdChase& command)
 	{
@@ -625,7 +625,7 @@ namespace xge
 
 		const Vector2f apart = middleOf(*target) - middleOf(object);
 		const float distance = std::hypot(apart.x, apart.y);
-		if (distance <= command.near || distance == 0.0f)
+		if (distance <= command.stopWithin || distance == 0.0f)
 		{
 			object.velocity = {};
 			return;

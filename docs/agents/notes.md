@@ -40,6 +40,7 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 - No OpenGL through Qt: `GameView` is an ordinary widget; do not bring back a `QOpenGLWidget` without a guard around every library call ([design 12](../designs/12-front-ends.md)).
 - Anything that can run while `GameSession` swaps the game or window (a focus signal, a timer) must check its `changing` guard: the engine has no window for part of a swap.
 - Do not style `QSpinBox` borders in the style sheet (arrows vanish). The inspector calls an engine-drawn sprite "drawn" (`ShapeKind::Line`).
+- Windows headers (pulled in by SDL, raylib and OpenGL) define `near` and `far` as nothing, and `small` as `char`: never name a variable or member after them (MSVC then fails with syntax errors far from the cause; `CmdChase::stopWithin` was `near`). Linux does not catch it; `-Dnear= -Dfar=` on a syntax-only compile does.
 
 ## Next steps (not started)
 
