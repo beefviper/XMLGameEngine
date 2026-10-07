@@ -49,6 +49,7 @@ set(data_generators
 	"generators/windows-cpp/main.xsl"
 	"generators/windows-cpp/groups.xsl"
 	"generators/windows-cpp/looks.xsl"
+	"generators/windows-cpp/guards.xsl"
 	"generators/windows-cpp/values.xsl"
 	"generators/windows-cpp/functions.xml"
 	"generators/windows-cpp/tables.xml"

@@ -435,6 +435,11 @@ sf::Texture </xsl:text>
       <xsl:text>;
 </xsl:text>
     </xsl:for-each>
+    <xsl:for-each select="$unless-classes">
+      <xsl:call-template name="touching-signature" />
+      <xsl:text>;
+</xsl:text>
+    </xsl:for-each>
     <xsl:for-each select="$numbers">
       <xsl:text>void show</xsl:text>
       <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
@@ -654,6 +659,9 @@ void start</xsl:text>
     </xsl:for-each>
     <xsl:for-each select="$looked">
       <xsl:call-template name="define-become" />
+    </xsl:for-each>
+    <xsl:for-each select="$unless-classes">
+      <xsl:call-template name="define-touching" />
     </xsl:for-each>
     <xsl:for-each select="$numbers">
       <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
@@ -1657,16 +1665,15 @@ void update</xsl:text>
       <xsl:variable name="this" select="." />
       <xsl:variable name="about" select="$others[@edge = $this/@name or @edge = $this/@in or @edge = 'all']" />
       <xsl:choose>
-        <xsl:when test="$rule/wrap and $rule/@sprite">
-          <xsl:value-of select="concat('&#10;', $indent, '// ', @name, ': wrap, while it shows ', $rule/@sprite, '&#10;', $indent, 'if (')" />
-          <xsl:call-template name="look-variable">
-            <xsl:with-param name="thing" select="$self" />
-            <xsl:with-param name="index"><xsl:call-template name="index-of"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:with-param>
-          </xsl:call-template>
-          <xsl:text> == </xsl:text>
-          <xsl:call-template name="look-value">
-            <xsl:with-param name="thing" select="$self" />
-            <xsl:with-param name="sprite" select="$rule/@sprite" />
+        <xsl:when test="$rule/wrap and ($rule/@sprite or $rule/@unless)">
+          <xsl:value-of select="concat('&#10;', $indent, '// ', @name, ': wrap')" />
+          <xsl:if test="$rule/@sprite"><xsl:value-of select="concat(', while it shows ', $rule/@sprite)" /></xsl:if>
+          <xsl:if test="$rule/@unless"><xsl:value-of select="concat(', unless on ', $rule/@unless)" /></xsl:if>
+          <xsl:value-of select="concat('&#10;', $indent, 'if (')" />
+          <xsl:call-template name="rule-guard">
+            <xsl:with-param name="rule" select="$rule" />
+            <xsl:with-param name="self" select="$self" />
+            <xsl:with-param name="name" select="$name" />
           </xsl:call-template>
           <xsl:value-of select="concat(')&#10;', $indent, '{&#10;', $indent, '&#9;physics::wrap(', $name, ', ', $velocity, ', ', $side, ', windowArea);&#10;', $indent, '}&#10;')" />
         </xsl:when>
@@ -1680,21 +1687,18 @@ void update</xsl:text>
           </xsl:for-each>
           <xsl:value-of select="concat('&#10;', $indent, 'if (physics::past(', $name, ', ', $side, ', windowArea))&#10;', $indent, '{&#10;')" />
           <xsl:for-each select="$about">
-            <!-- a rule with sprite="..." only while it shows that look,
-                 looked at as the rule comes, as the engine does -->
-            <xsl:variable name="at" select="concat($indent, '&#9;', substring('&#9;', 1, number(boolean(@sprite))))" />
-            <xsl:if test="@sprite">
-              <xsl:value-of select="concat($indent, '&#9;if (')" />
-              <xsl:call-template name="look-variable">
-                <xsl:with-param name="thing" select="$self" />
-                <xsl:with-param name="index"><xsl:call-template name="index-of"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:with-param>
+            <!-- a rule with sprite= or unless= only while it holds, looked
+                 at as the rule comes, as the engine does (guards.xsl) -->
+            <xsl:variable name="guard">
+              <xsl:call-template name="rule-guard">
+                <xsl:with-param name="rule" select="." />
+                <xsl:with-param name="self" select="$self" />
+                <xsl:with-param name="name" select="$name" />
               </xsl:call-template>
-              <xsl:text> == </xsl:text>
-              <xsl:call-template name="look-value">
-                <xsl:with-param name="thing" select="$self" />
-                <xsl:with-param name="sprite" select="@sprite" />
-              </xsl:call-template>
-              <xsl:value-of select="concat(')&#10;', $indent, '&#9;{&#10;')" />
+            </xsl:variable>
+            <xsl:variable name="at" select="concat($indent, '&#9;', substring('&#9;', 1, number($guard != '')))" />
+            <xsl:if test="$guard != ''">
+              <xsl:value-of select="concat($indent, '&#9;if (', $guard, ')&#10;', $indent, '&#9;{&#10;')" />
             </xsl:if>
             <xsl:for-each select="*">
               <xsl:choose>
@@ -1733,14 +1737,14 @@ void update</xsl:text>
                 </xsl:otherwise>
               </xsl:choose>
             </xsl:for-each>
-            <xsl:if test="@sprite">
+            <xsl:if test="$guard != ''">
               <xsl:value-of select="concat($indent, '&#9;}&#10;')" />
             </xsl:if>
           </xsl:for-each>
           <xsl:choose>
             <xsl:when test="not($about/die) or (position() = last() and $last)" />
-            <!-- a die under a look may not have happened -->
-            <xsl:when test="$about[@sprite]/die">
+            <!-- a die held back by a guard may not have happened -->
+            <xsl:when test="$about[@sprite or @unless]/die">
               <xsl:value-of select="concat($indent, '&#9;if (!', $alive, ')&#10;', $indent, '&#9;{&#10;', $indent, '&#9;&#9;', $out, ';&#10;', $indent, '&#9;}&#10;')" />
             </xsl:when>
             <xsl:otherwise>
@@ -1863,22 +1867,16 @@ void update</xsl:text>
           <xsl:value-of select="concat($indent, 'for (const ', $type, '&amp; other : ', $other-name, ')&#10;', $indent, '{&#10;')" />
         </xsl:when>
       </xsl:choose>
-      <!-- a rule with sprite="..." only while this one shows that look -->
-      <xsl:variable name="own-look">
-        <xsl:if test="$rule/@sprite">
-          <xsl:text> &amp;&amp; </xsl:text>
-          <xsl:call-template name="look-variable">
-            <xsl:with-param name="thing" select="$self" />
-            <xsl:with-param name="index"><xsl:call-template name="index-of"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:with-param>
-          </xsl:call-template>
-          <xsl:text> == </xsl:text>
-          <xsl:call-template name="look-value">
-            <xsl:with-param name="thing" select="$self" />
-            <xsl:with-param name="sprite" select="$rule/@sprite" />
-          </xsl:call-template>
-        </xsl:if>
+      <!-- a rule with sprite= or unless= only while it holds (guards.xsl) -->
+      <xsl:variable name="own-guard">
+        <xsl:call-template name="rule-guard">
+          <xsl:with-param name="rule" select="$rule" />
+          <xsl:with-param name="self" select="$self" />
+          <xsl:with-param name="name" select="$name" />
+          <xsl:with-param name="other" select="$other" />
+        </xsl:call-template>
       </xsl:variable>
-      <xsl:value-of select="concat($in, 'if (', $other-alive, 'physics::touching(', $name, ', ', $other, ')', $own-look, ')&#10;', $in, '{&#10;')" />
+      <xsl:value-of select="concat($in, 'if (', $other-alive, 'physics::touching(', $name, ', ', $other, ')', substring(' &amp;&amp; ', 1, 4 * number($own-guard != '')), $own-guard, ')&#10;', $in, '{&#10;')" />
       <xsl:if test="$back">
         <!-- the other's own rules about this one, it being the one that moves or dies -->
         <xsl:variable name="other-velocity">
@@ -1897,21 +1895,19 @@ void update</xsl:text>
         </xsl:for-each>
         <xsl:text>&#10;</xsl:text>
         <xsl:for-each select="$back">
-          <!-- a rule with sprite="..." only while the other shows that look,
-               looked at as each rule comes, as the engine does -->
-          <xsl:variable name="at" select="concat($in, '&#9;', substring('&#9;', 1, number(boolean(@sprite))))" />
-          <xsl:if test="@sprite">
-            <xsl:value-of select="concat($in, '&#9;if (')" />
-            <xsl:call-template name="look-variable">
-              <xsl:with-param name="thing" select="$other-thing" />
-              <xsl:with-param name="index" select="'j'" />
+          <!-- a rule with sprite= or unless= only while it holds for the
+               other, looked at as each rule comes, as the engine does -->
+          <xsl:variable name="guard">
+            <xsl:call-template name="rule-guard">
+              <xsl:with-param name="rule" select="." />
+              <xsl:with-param name="self" select="$other-thing" />
+              <xsl:with-param name="name" select="$other" />
+              <xsl:with-param name="other" select="$name" />
             </xsl:call-template>
-            <xsl:text> == </xsl:text>
-            <xsl:call-template name="look-value">
-              <xsl:with-param name="thing" select="$other-thing" />
-              <xsl:with-param name="sprite" select="@sprite" />
-            </xsl:call-template>
-            <xsl:value-of select="concat(')&#10;', $in, '&#9;{&#10;')" />
+          </xsl:variable>
+          <xsl:variable name="at" select="concat($in, '&#9;', substring('&#9;', 1, number($guard != '')))" />
+          <xsl:if test="$guard != ''">
+            <xsl:value-of select="concat($in, '&#9;if (', $guard, ')&#10;', $in, '&#9;{&#10;')" />
           </xsl:if>
           <xsl:for-each select="*">
             <xsl:call-template name="touch-command">
@@ -1923,7 +1919,7 @@ void update</xsl:text>
               <xsl:with-param name="indent" select="$at" />
             </xsl:call-template>
           </xsl:for-each>
-          <xsl:if test="@sprite">
+          <xsl:if test="$guard != ''">
             <xsl:value-of select="concat($in, '&#9;}&#10;')" />
           </xsl:if>
         </xsl:for-each>

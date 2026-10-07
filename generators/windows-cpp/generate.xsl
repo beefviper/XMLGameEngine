@@ -32,6 +32,7 @@
   <xsl:include href="main.xsl" />
   <xsl:include href="groups.xsl" />
   <xsl:include href="looks.xsl" />
+  <xsl:include href="guards.xsl" />
 
   <xsl:output method="xml" indent="yes" encoding="UTF-8" />
 
