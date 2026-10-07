@@ -771,6 +771,20 @@ namespace xge
 			object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
 			object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
 			object.collisionData.right = processCommands(rawObject.rawCollisionData.right, where);
+			object.collisionData.topLooks = rawObject.rawCollisionData.topLooks;
+			object.collisionData.bottomLooks = rawObject.rawCollisionData.bottomLooks;
+			object.collisionData.leftLooks = rawObject.rawCollisionData.leftLooks;
+			object.collisionData.rightLooks = rawObject.rawCollisionData.rightLooks;
+			for (const auto* edgeLooks : { &object.collisionData.topLooks, &object.collisionData.bottomLooks, &object.collisionData.leftLooks, &object.collisionData.rightLooks })
+			{
+				for (const EdgeLook& edgeLook : *edgeLooks)
+				{
+					if (std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == edgeLook.sprite; }))
+					{
+						throw std::runtime_error(where + ": a <collision edge sprite=\"" + edgeLook.sprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
+					}
+				}
+			}
 
 			for (auto& rawRule : rawObject.rawCollisionData.basic)
 			{

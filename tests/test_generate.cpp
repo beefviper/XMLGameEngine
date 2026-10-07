@@ -413,6 +413,49 @@ TEST_CASE("generating Breakout gives the top row two looks, whole and cracked, a
 	CHECK(main.find("\t// strong: 9 columns by 1 row\n") != std::string::npos);
 }
 
+TEST_CASE("an edge rule with sprite= is an if on the look, inside the touch of the edge", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_edge_looks");
+	fs::create_directories(folder.path);
+	std::ofstream(folder.path / "puck.xml") <<
+		"<game>\n"
+		"  <window name=\"Puck\"><width>320</width><height>240</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>\n"
+		"  <variables />\n"
+		"  <objects>\n"
+		"    <object name=\"puck\">\n"
+		"      <sprite name=\"whole\"><rectangle><width>10</width><height>10</height><color>color.grey</color></rectangle></sprite>\n"
+		"      <sprite name=\"cracked\"><rectangle><width>10</width><height>10</height><color>color.darkgrey</color></rectangle></sprite>\n"
+		"      <position><x>20</x><y>100</y></position>\n"
+		"      <velocity><x>-4</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled>\n"
+		"        <collision edge=\"left\" sprite=\"cracked\"><die /></collision>\n"
+		"        <collision edge=\"left\" sprite=\"whole\"><become sprite=\"cracked\" /><bounce /></collision>\n"
+		"        <collision edge=\"horizontal\"><inc variable=\"puck.hits\" /></collision>\n"
+		"        <collision edge=\"vertical\" sprite=\"cracked\"><wrap /></collision>\n"
+		"      </collisions>\n"
+		"      <variables><variable name=\"hits\">0</variable></variables>\n"
+		"    </object>\n"
+		"  </objects>\n"
+		"  <states><state name=\"playing\"><shows><show object=\"puck\" /></shows><inputs /><conditions /></state></states>\n"
+		"</game>\n";
+	generateGame(requestFor(folder.path / "puck.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// each rule in the order written, the look looked at as it comes; the
+	// die under a look may not have happened, so the way out asks
+	CHECK(main.find("\tif (physics::past(puck, physics::Edge::Left, windowArea))\n\t{\n"
+		"\t\tif (puckLook == PuckLook::Cracked)\n\t\t{\n\t\t\tpuckAlive = false;\n\t\t}\n"
+		"\t\tif (puckLook == PuckLook::Whole)\n\t\t{\n\t\t\tbecomePuck(PuckLook::Cracked);\n\t\t\tphysics::bounce(puck, puckVelocity, physics::Edge::Left, windowArea);\n\t\t}\n"
+		"\t\tpuckHits += 1.0f;\n\t\tif (!puckAlive)\n\t\t{\n\t\t\treturn;\n\t\t}\n\t}") != std::string::npos);
+	// a wrap with sprite= wraps only while it shows that look
+	CHECK(main.find("\t// top: wrap, while it shows cracked\n\tif (puckLook == PuckLook::Cracked)\n\t{\n\t\tphysics::wrap(puck, puckVelocity, physics::Edge::Top, windowArea);\n\t}") != std::string::npos);
+}
+
 TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, and it dies where it hits", "[generate]")
 {
 	if (!canGenerate())
@@ -496,7 +539,6 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 	};
 	CHECK(refused("<row number=\"even\"><sprite><circle><color>color.red</color></circle></sprite></row>", "<row number=\"even\"><variables><variable name=\"points\">2</variable></variables></row>").find("cannot generate <variables> of a <row> yet") != std::string::npos);
 	CHECK(refused("<circle><color>color.red</color></circle></sprite>", "<circle><color>color.red</color></circle></sprite><sprite name=\"hit\"><circle><radius>2</radius></circle></sprite>").find("cannot generate a <member>, <row>, <column> or <cell> with a <sprite> in a group of several looks yet") != std::string::npos);
-	CHECK(refused("<collision edge=\"top\">", "<collision edge=\"top\" sprite=\"whole\">").find("cannot generate a <collision> with both sprite= and edge= yet") != std::string::npos);
 }
 
 TEST_CASE("a group's rows, columns and cells change what they pick, and each cell is where the engine puts it", "[generate]")

@@ -927,6 +927,18 @@ namespace xge
 			existing.insert(existing.end(), more.begin(), more.end());
 		}
 
+		// An edge rule's commands appended to one edge's list, noting where
+		// they are when the rule holds to a look (sprite=).
+		void appendEdgeRule(std::vector<RawCommand>& existing, std::vector<EdgeLook>& looks,
+			const std::vector<RawCommand>& more, const std::string& sprite)
+		{
+			if (!sprite.empty() && !more.empty())
+			{
+				looks.push_back(EdgeLook{ existing.size(), more.size(), sprite });
+			}
+			appendCommands(existing, more);
+		}
+
 		// A value and its name, such as <variable name="score">0</variable>.
 		void readVariables(const XmlNode* variablesNode, const std::string& where,
 			std::vector<std::pair<std::string, RawValue>>& out)
@@ -1007,10 +1019,11 @@ namespace xge
 					// edge="..."> touching the same edge (e.g. an "all" rule plus a
 					// specific "left" rule) both run instead of the later one
 					// silently winning.
-					if (all || vertical || edge == "top") { appendCommands(collisionData.top, commands); }
-					if (all || vertical || edge == "bottom") { appendCommands(collisionData.bottom, commands); }
-					if (all || horizontal || edge == "left") { appendCommands(collisionData.left, commands); }
-					if (all || horizontal || edge == "right") { appendCommands(collisionData.right, commands); }
+					const std::string sprite = collision->getAttribute("sprite");
+					if (all || vertical || edge == "top") { appendEdgeRule(collisionData.top, collisionData.topLooks, commands, sprite); }
+					if (all || vertical || edge == "bottom") { appendEdgeRule(collisionData.bottom, collisionData.bottomLooks, commands, sprite); }
+					if (all || horizontal || edge == "left") { appendEdgeRule(collisionData.left, collisionData.leftLooks, commands, sprite); }
+					if (all || horizontal || edge == "right") { appendEdgeRule(collisionData.right, collisionData.rightLooks, commands, sprite); }
 				}
 				else
 				{
