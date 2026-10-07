@@ -85,6 +85,9 @@ namespace xge
 				[](const CmdMove&) { return std::string("<move>"); },
 				[](const CmdHop&) { return std::string("<hop>"); },
 				[](const CmdJump&) { return std::string("<jump>"); },
+				[](const CmdLand&) { return std::string("<land />"); },
+				[](const CmdLeap&) { return std::string("<leap>"); },
+				[](const CmdClimb&) { return std::string("<climb>"); },
 				[](const CmdAccelerate&) { return std::string("<accelerate>"); },
 				[](const CmdTurn&) { return std::string("<turn>"); },
 				[](const CmdThrust&) { return std::string("<thrust>"); },
@@ -125,12 +128,12 @@ namespace xge
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<release>", "<move>", "<inc>", "<dec>",
 					"<play>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>",
-					"<carry />", "<play>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
+					"<carry />", "<land />", "<play>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", ownerCommands },
-				{ "an <action>", { "<move>", "<hop>", "<jump>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<play>" } },
+				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<play>" } },
 				{ "a path's <step>", ownerCommands },
 			};
 			return rules[static_cast<std::size_t>(place)];
@@ -151,7 +154,7 @@ namespace xge
 				}
 
 				std::string hint;
-				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<accelerate>"))
+				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<leap>" || tag == "<climb>" || tag == "<accelerate>"))
 				{
 					hint = " A key moves or fires an object through one of its <action>s: <trigger object=\"...\" action=\"...\" />.";
 				}
@@ -407,6 +410,33 @@ namespace xge
 						if ((std::holds_alternative<CmdTurn>(command) || std::holds_alternative<CmdThrust>(command)) && !object.hasHeading)
 						{
 							throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");
+						}
+
+						// A leap rises against the object's own pull, and only
+						// from the ground, which a <land /> rule gives it.
+						if (std::holds_alternative<CmdLeap>(command) && !(object.acceleration.y > 0.0f))
+						{
+							throw std::runtime_error(where + ": action '" + name + "' has a <leap>, and nothing pulls the object down to come back:"
+								" give it an <acceleration> with a <y> above 0, and a <collision> with <land /> to stand on");
+						}
+						if (std::holds_alternative<CmdLeap>(command) && std::none_of(object.collisionData.basic.begin(), object.collisionData.basic.end(),
+							[](const CollisionRule& rule) { return std::any_of(rule.commands.begin(), rule.commands.end(), [](const Command& c) { return std::holds_alternative<CmdLand>(c); }); }))
+						{
+							throw std::runtime_error(where + ": action '" + name + "' has a <leap>, and the object never stands on anything to leap from:"
+								" give it a <collision> with <land /> (<collision class=\"girder\"><land /></collision>)");
+						}
+						if (const auto* climb = std::get_if<CmdClimb>(&command))
+						{
+							std::vector<std::string> classes;
+							for (const Object& other : objects)
+							{
+								if (!other.objClass.empty() && std::find(classes.begin(), classes.end(), other.objClass) == classes.end()) { classes.push_back(other.objClass); }
+							}
+							if (std::find(classes.begin(), classes.end(), climb->ladderClass) == classes.end())
+							{
+								throw std::runtime_error(where + ": action '" + name + "' climbs class=\"" + climb->ladderClass + "\", and no object has that class"
+									+ didYouMean(climb->ladderClass, classes) + (classes.empty() ? std::string{} : ". The classes are: " + listOf(classes)));
+							}
 						}
 					}
 				}

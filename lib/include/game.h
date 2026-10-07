@@ -224,6 +224,7 @@ namespace xge
 		// Changes every shown object's velocity by its <acceleration> and by
 		// whatever <accelerate> thrust is being held (burning its fuel), once a
 		// frame, before anything moves: a constant pull, or a thruster.
+		void applyClimbing(void);
 		void applyAcceleration(void);
 
 		// The start of a frame's move: makes every hop queued by a hop.*()

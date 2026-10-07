@@ -438,6 +438,30 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 		CHECK_THAT(errorOf(gameXml("", objectXml(touch))), ContainsSubstring("<stick /> does nothing in a <collision> with another object"));
 	}
 
+	SECTION("a leap with nothing to pull it down or stand on, a climb of no class")
+	{
+		ObjectXml floats;
+		floats.extra = "<actions><action name=\"jump\"><leap>40</leap></action></actions>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(floats))), ContainsSubstring("object 'o': action 'jump' has a <leap>, and nothing pulls the object down")
+			&& ContainsSubstring("<acceleration> with a <y> above 0"));
+
+		ObjectXml falls;
+		falls.velocityY = "0</y></velocity><acceleration><x>0</x><y>0.5</y></acceleration><velocity><x>0</x><y>0";
+		std::string xml = gameXml("", objectXml(falls));
+		xml.replace(xml.find("<velocity><x>0</x><y>0</y></velocity><collisions>"), std::string("<velocity><x>0</x><y>0</y></velocity>").size(), "");
+		xml.replace(xml.find("</collisions>"), 13, "</collisions><actions><action name=\"jump\"><leap>40</leap></action></actions>");
+		CHECK_THAT(errorOf(xml), ContainsSubstring("action 'jump' has a <leap>, and the object never stands on anything") && ContainsSubstring("<land />"));
+
+		ObjectXml climber;
+		climber.attributes = "class=\"ladder\"";
+		climber.extra = "<actions><action name=\"up\"><climb direction=\"up\" class=\"ladders\">2</climb></action></actions>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(climber))), ContainsSubstring("action 'up' climbs class=\"ladders\", and no object has that class (did you mean 'ladder'?)"));
+
+		ObjectXml sideways;
+		sideways.extra = "<actions><action name=\"up\"><climb direction=\"left\" class=\"x\">2</climb></action></actions>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(sideways))), ContainsSubstring("left"));
+	}
+
 	SECTION("a variable no object has")
 	{
 		ObjectXml o;

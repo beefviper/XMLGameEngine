@@ -614,7 +614,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play"
-				|| name == "jump" || name == "reverse" || name == "become" || name == "reveal" || name == "follow";
+				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "reverse" || name == "become" || name == "reveal" || name == "follow";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -633,6 +633,7 @@ namespace xge
 			command.sound = node.getAttribute("sound");
 			command.sprite = node.getAttribute("sprite");
 			command.path = node.getAttribute("path");
+			command.objClass = node.getAttribute("class");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec")
@@ -661,7 +662,13 @@ namespace xge
 				requireAttribute(node, "direction", where);
 				command.amount = readValue(node, where);
 			}
-			if (verb == "thrust" || verb == "deflect") { command.amount = readValue(node, where); }
+			if (verb == "thrust" || verb == "deflect" || verb == "leap") { command.amount = readValue(node, where); }
+			if (verb == "climb")
+			{
+				requireAttribute(node, "direction", where);
+				requireAttribute(node, "class", where);
+				command.amount = readValue(node, where);
+			}
 			if (verb == "jump")
 			{
 				// A distance and a time: two values, so two elements.
@@ -1019,6 +1026,7 @@ namespace xge
 			PartialVector2 position;
 			PartialVector2 velocity;
 			std::optional<RawCollisionData> collisions;
+			std::optional<RawVector2> acceleration;
 			bool hidden = false;
 			std::string facing;
 
@@ -1031,17 +1039,23 @@ namespace xge
 				else if (tag == "animation") { animation = readAnimation(*child, where); }
 				else if (tag == "position") { position = readPartialVector2(*child, where); }
 				else if (tag == "velocity") { velocity = readPartialVector2(*child, where); }
+				else if (tag == "acceleration") { acceleration = readVector2(*child, where); }
 				else if (tag == "collisions") { collisions = readCollisions(*child, where); }
 				else if (tag == "facing") { facing = readFacing(*child, where); }
 				else if (tag != "actions" && tag != "variables" && tag != "timers" && tag != "member")
 				{
-					fail(where, "unknown <" + tag + ">; expected <sprite>, <animation>, <position>, <velocity>, <facing>, <hidden>, <collisions>, <actions>, <variables>, <timers> or <member>");
+					fail(where, "unknown <" + tag + ">; expected <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <hidden>, <collisions>, <actions>, <variables>, <timers> or <member>");
 				}
 			}
 
 			RawObject shared;
 			shared.isVisible = !hidden;
 			shared.facing = facing;
+			if (acceleration)
+			{
+				shared.hasAcceleration = true;
+				shared.rawAcceleration = *acceleration;
+			}
 			shared.timers = readTimers(findChild(&group, "timers").get(), where);
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);

@@ -36,6 +36,7 @@ namespace xge
 		if (verb == "stop")   { return CmdStop{}; }
 		if (verb == "wrap")   { return CmdWrap{}; }
 		if (verb == "carry")  { return CmdCarry{}; }
+		if (verb == "land")   { return CmdLand{}; }
 		if (verb == "reverse") { return CmdReverse{}; }
 
 		// <reset/> puts the object in the rule (or, in a state's input or
@@ -56,6 +57,23 @@ namespace xge
 			if (!noSeconds) { jump.seconds = evaluate(raw.seconds); }
 			if (!(jump.seconds > 0.0f)) { throw std::runtime_error("<jump> has <seconds> of " + std::to_string(jump.seconds) + "; expected more than 0"); }
 			return jump;
+		}
+
+		if (verb == "leap")
+		{
+			const float height = evaluate(raw.amount);
+			if (!(height > 0.0f)) { throw std::runtime_error("<leap> has a height of " + formatDisplayNumber(height) + "; expected more than 0"); }
+			return CmdLeap{ height };
+		}
+
+		if (verb == "climb")
+		{
+			const Direction direction = directionFromName(raw.direction, verb);
+			if (direction != Direction::Up && direction != Direction::Down)
+			{
+				throw std::runtime_error("<climb> has direction=\"" + raw.direction + "\"; expected up or down");
+			}
+			return CmdClimb{ direction, evaluate(raw.amount), raw.objClass };
 		}
 
 		if (verb == "accelerate")
@@ -260,6 +278,9 @@ namespace xge
 					: "right";
 				o << "jump." << direction << "(" << j.distance << ", " << j.seconds << "s)";
 			},
+			[&](const CmdLand&) { o << "land()"; },
+			[&](const CmdLeap& l) { o << "leap(" << l.height << ")"; },
+			[&](const CmdClimb& c) { o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")"; },
 			[&](const CmdAccelerate& a)
 			{
 				const char* direction = (a.direction == Direction::Up) ? "up"
@@ -411,6 +432,14 @@ namespace xge
 		else if (command.verb == "jump")
 		{
 			o << "." << command.direction << "(" << command.amount << ", " << command.seconds << ")";
+		}
+		else if (command.verb == "leap")
+		{
+			o << "(" << command.amount << ")";
+		}
+		else if (command.verb == "climb")
+		{
+			o << "." << command.direction << "(" << command.amount << ", " << command.objClass << ")";
 		}
 		else if (command.verb == "move" || command.verb == "hop" || command.verb == "accelerate" || command.verb == "turn")
 		{

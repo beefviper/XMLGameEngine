@@ -22,8 +22,8 @@ Read from the readme and `xgedef.xsd` of the `working` branch on 2026-10-04.
 
 | Family | Words |
 |---|---|
-| Motion | `move`, `hop`, `jump`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `follow` |
-| Collision responses | `bounce`, `deflect`, `stick`, `wrap`, `carry` |
+| Motion | `move`, `hop`, `jump`, `leap`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `follow` |
+| Collision responses | `bounce`, `deflect`, `stick`, `wrap`, `carry`, `land` |
 | Lifecycle | `die`, `reset`, `fire`, `release`, `reveal` |
 | Appearance | `become` |
 | Bookkeeping | `inc`, `dec` |
@@ -66,7 +66,7 @@ A note on pictures: an `<image>` is a file loaded by whichever window backend is
 |---|---|---|
 | Data model: what exists | objects, groups, grids, variables, states | solid |
 | Appearance | seven shapes, `animation`, looks and `become`, `flip`, `heading` | solid; one color per bitmap, no palette |
-| Kinematics: how things move | velocity, acceleration, heading, facing, drag, `move`, `hop`, `jump`, `thrust`, `turn`, `reverse` | good; no arcing jump with air control |
+| Kinematics: how things move | velocity, acceleration, heading, facing, drag, `move`, `hop`, `jump`, `thrust`, `turn`, `reverse` | good; the arcing jump (`leap`) has no air control |
 | Collision: what touches what, and the response | `edge`, `class`, `object`, `unless`, `sprite`, `slower`, `faster`, `type`, and a dozen response verbs | the largest layer: it is where verbs, adjectives and prepositions meet |
 | Time | `timers` with `every` and `after`, animation `interval`, `jump` `seconds` | built; counts frames, shows no time left |
 | Sound | `sounds`, `note`, `rest`, `wave`, `pitch`, `to`, `volume`, `play` | built; no looping music, no envelope |
@@ -83,7 +83,7 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 | **Math**, beyond the four operations | `min`, `max`, `negate`, `abs`, `clamp`, `floor`, `sign`, `pick`, an integer `random`, a `count` of objects; a `<random>` step in an `<equation>` | [01](01-vision-and-format.md#arithmetic-in-text-and-as-tags), [02](02-values-variables-and-names.md), [13](13-ideas.md) (balance helpers) |
 | **Creation** | `create`, `destroy`. Nothing makes an object while a game runs; `fire`, `release` and `reveal` bring members of a hidden pool into play | [08](08-timers-and-enemy-behavior.md) |
 | **Aiming and chasing** | `aim`, `chase`, `ai targeting=...`, curved paths and moving formations (paths of straight steps are built) | [06](06-motion-and-verbs.md), [08](08-timers-and-enemy-behavior.md) |
-| **Arcing jump** | grounded versus airborne, a jump impulse, air control | [06](06-motion-and-verbs.md) |
+| **Arcing jump** | air control beyond none, a held variable-height jump (grounded and a jump impulse are built: `land`, `leap`) | [06](06-motion-and-verbs.md) |
 | **Queries** for conditions | `count`, `distance`, `touching`, `speed`, a timer's time left. Only `remaining` and a variable threshold exist | [04](04-states-conditions-and-input.md), [08](08-timers-and-enemy-behavior.md) |
 | **Branching and events** | `if`, `and`, `or`, `goto state`, an event queue. A condition tests one threshold; this is deliberate, to keep control flow out | [01](01-vision-and-format.md), [04](04-states-conditions-and-input.md), [08](08-timers-and-enemy-behavior.md) |
 | **Presentation** | a camera and scrolling, a palette for several colors in one bitmap, per-frame animation intervals, looping music | [13](13-ideas.md), [07](07-pictures-and-text.md), [09](09-sound.md) |
