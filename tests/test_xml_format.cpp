@@ -628,10 +628,10 @@ namespace
 {
 	// What is compared for one object. Anything whose position or velocity is a
 	// <random> (the ball, Kaboom's bombs, Astrosmash's rocks) comes out different on
-	// every load, so only its name is compared.
+	// every load, so only its name is compared (Missile Command's missiles too).
 	std::string comparable(const Object& object)
 	{
-		const bool drawn = object.name == "ball" || object.objClass == "bombs" || object.objClass == "rocks";
+		const bool drawn = object.name == "ball" || object.objClass == "bombs" || object.objClass == "rocks" || object.objClass == "missile";
 		return drawn ? object.name : printed(object);
 	}
 }
@@ -642,7 +642,7 @@ TEST_CASE("every shipped game loads the same through all four XML libraries", "[
 	// the file, so the text-and-element reading of each one agrees. (The ball's
 	// velocity, and the fall speeds and heights of Kaboom's bombs and Astrosmash's rocks,
 	// are <random>s, so those objects are left out of the comparison.)
-	for (const char* file : { "games/pong.xml", "games/breakout.xml", "games/spaceinvaders.xml", "games/frogger.xml", "games/spacerace.xml", "games/kaboom.xml", "games/freeway.xml", "games/depthcharge.xml", "games/astrosmash.xml", "games/asteroids.xml", "games/berserk.xml", "games/demonattack.xml", "games/frostbite.xml", "games/pong_min.xml" })
+	for (const char* file : { "games/pong.xml", "games/breakout.xml", "games/spaceinvaders.xml", "games/frogger.xml", "games/spacerace.xml", "games/kaboom.xml", "games/freeway.xml", "games/depthcharge.xml", "games/astrosmash.xml", "games/asteroids.xml", "games/berserk.xml", "games/demonattack.xml", "games/frostbite.xml", "games/pong_min.xml", "games/pitfall.xml", "games/missilecommand.xml", "games/combat.xml", "games/airseabattle.xml", "games/megamania.xml" })
 	{
 		DYNAMIC_SECTION(file)
 		{

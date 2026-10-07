@@ -1,0 +1,998 @@
+<!-- pitfall.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 7, 2026 -->
+
+<!--
+  Pitfall!, after David Crane's 1982 Atari 2600 game. Pitfall Harry runs
+  through the jungle, one screen at a time, after the treasures hidden in it,
+  with a tunnel running under every screen. Logs roll along the path (one that
+  rolls over Harry costs points while it does), a tar pit and a fire burn him,
+  the crocodiles in the pond can be stood on until they open their jaws, the
+  water drowns him, and a scorpion guards the tunnel. Four screens, a treasure
+  in each, and the jungle goes round: off the right of the fourth is the
+  first again. Take all four treasures before the clock runs out to win.
+  Three lives.
+
+  A and D (or the arrows) run, Space jumps, W and S climb the ladder, P or
+  Escape pauses.
+
+  How it is written:
+  * Each screen is a <state>, showing its own ground and hazards. Harry's own
+    edge rules carry him across: running off the right adds 1 to
+    status.screen and <move>s him back to the left side, and a condition of
+    the screen sees the number change and <pop state>s to the next screen,
+    so the stack never grows.
+  * Harry falls (an <acceleration>), stands on the ground with <land />,
+    jumps with <leap> and climbs the ladder of the fourth screen with
+    <climb>, as Jumpman does in Donkey Kong.
+  * The score, the lives, the clock and the screen number are variables of
+    `status`, an object no screen shows, so any rule can put Harry back where
+    he started with <reset object="harry" /> without losing them.
+  * The crocodiles are platforms; their jaws are three hidden hazards that the
+    pond <reveal>s every three seconds and that <die /> again on a timer of
+    their own a second later.
+  * The clock is a timer of each screen taking a second off status.time.
+  Not in it: the swinging vines, quicksand, the wall at the end of the tunnel,
+  and a tunnel that goes three screens at a time.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Pitfall!">
+    <width>640</width>
+    <height>480</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="margin">10</variable>
+    <!-- the top of the jungle path and of the tunnel floor -->
+    <variable name="surface">300</variable>
+    <variable name="tunnel">440</variable>
+    <variable name="thick">16</variable>
+    <variable name="pull">0.4</variable>
+    <variable name="run">2.5</variable>
+    <variable name="climbstep">2</variable>
+    <variable name="leapheight">48</variable>
+    <variable name="roll">1.5</variable>
+    <variable name="crawl">1</variable>
+    <!-- points a rolling log takes away every frame it is on top of Harry -->
+    <variable name="bump">5</variable>
+  </variables>
+  <sounds>
+    <sound name="jump" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="G5">0.1</note>
+    </sound>
+    <sound name="treasure" wave="square">
+      <volume>0.25</volume>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.08</note>
+      <note pitch="E6">0.2</note>
+    </sound>
+    <sound name="die" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4" to="G2">0.6</note>
+    </sound>
+    <sound name="snap" wave="noise">
+      <volume>0.2</volume>
+      <note pitch="2000" to="600">0.1</note>
+    </sound>
+  </sounds>
+  <objects>
+    <!-- what is kept from screen to screen; never shown -->
+    <object name="status">
+      <sprite>
+        <rectangle>
+          <width>1</width>
+          <height>1</height>
+          <color>color.black</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+      <variables>
+        <variable name="score">2000</variable>
+        <variable name="lives">3</variable>
+        <variable name="time">180</variable>
+        <variable name="screen">1</variable>
+      </variables>
+    </object>
+
+    <!-- the jungle behind it all: the canopy, the trunks and the earth between
+         the path and the tunnel -->
+    <object name="canopy">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>90</height>
+          <color>color.forestgreen</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>50</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <group name="trunks">
+      <sprite>
+        <rectangle>
+          <width>14</width>
+          <height>surface - 140</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position><y>140</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+      <member><position><x>70</x></position></member>
+      <member><position><x>230</x></position></member>
+      <member><position><x>410</x></position></member>
+      <member><position><x>560</x></position></member>
+    </group>
+    <object name="earth">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>24</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>surface + thick</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="bedrock">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>window.bottom - tunnel - thick</height>
+          <color>color.brown</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>tunnel + thick</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+
+    <!-- what Harry stands on. The path is whole on the first two screens; the
+         third has a pond in it and the fourth a ladder hole too narrow to fall
+         down. The tunnel floor runs under every screen. -->
+    <object name="path" class="ground">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>thick</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>surface</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+    <group name="banks" class="ground">
+      <sprite>
+        <rectangle>
+          <width>220</width>
+          <height>thick</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position><y>surface</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <member><position><x>0</x></position></member>
+      <member>
+        <sprite>
+          <rectangle>
+            <width>150</width>
+            <height>thick</height>
+            <color>color.yellow</color>
+          </rectangle>
+        </sprite>
+        <position><x>490</x></position>
+      </member>
+    </group>
+    <group name="holepath" class="ground">
+      <sprite>
+        <rectangle>
+          <width>314</width>
+          <height>thick</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position><y>surface</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <member><position><x>0</x></position></member>
+      <member><position><x>326</x></position></member>
+    </group>
+    <object name="tunnelfloor" class="ground">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>thick</height>
+          <color>color.darkgrey</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>tunnel</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+    <!-- the ladder from the path down to the tunnel, on the fourth screen -->
+    <object name="ladder" class="ladder">
+      <sprite>
+        <rectangle>
+          <width>20</width>
+          <height>tunnel - surface</height>
+          <color>color.lightgrey</color>
+        </rectangle>
+      </sprite>
+      <position><x>310</x><y>surface</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+
+    <!-- screen 1: two logs rolling along the path -->
+    <group name="logs" class="log">
+      <sprite>
+        <bitmap>
+          <row>...******...</row>
+          <row>.**********.</row>
+          <row>****.***.***</row>
+          <row>***.***.****</row>
+          <row>****.***.***</row>
+          <row>.**********.</row>
+          <row>...******...</row>
+          <scale>3</scale>
+          <color>color.orange</color>
+        </bitmap>
+      </sprite>
+      <position><y>surface - 21</y></position>
+      <velocity><x>-roll</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member><position><x>330</x></position></member>
+      <member><position><x>560</x></position></member>
+    </group>
+
+    <!-- screen 2: a tar pit on the path -->
+    <object name="tar" class="hazard">
+      <sprite>
+        <rectangle>
+          <width>48</width>
+          <height>6</height>
+          <color>color.darkgrey</color>
+        </rectangle>
+      </sprite>
+      <position><x>300</x><y>surface - 1</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+
+    <!-- screen 3: the pond, three crocodiles to cross it on, and their jaws -->
+    <object name="pond" class="water">
+      <sprite>
+        <rectangle>
+          <width>270</width>
+          <height>32</height>
+          <color>color.blue</color>
+        </rectangle>
+      </sprite>
+      <position><x>220</x><y>surface + 4</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <timers>
+        <timer>
+          <every>3</every>
+          <reveal object="jaws">3</reveal>
+          <play sound="snap" />
+        </timer>
+      </timers>
+    </object>
+    <!-- before the crocodiles, so that when Harry is on a head as the jaws
+         open, the jaws are met first, before he lands -->
+    <group name="jaws" class="hazard">
+      <sprite>
+        <rectangle>
+          <width>30</width>
+          <height>6</height>
+          <color>color.red</color>
+        </rectangle>
+      </sprite>
+      <position><y>surface - 8</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <die />
+        </timer>
+      </timers>
+      <member><position><x>260</x></position></member>
+      <member><position><x>340</x></position></member>
+      <member><position><x>420</x></position></member>
+    </group>
+    <group name="crocs" class="croc">
+      <sprite>
+        <rectangle>
+          <width>30</width>
+          <height>8</height>
+          <color>color.darkgreen</color>
+        </rectangle>
+      </sprite>
+      <position><y>surface - 2</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <member><position><x>260</x></position></member>
+      <member><position><x>340</x></position></member>
+      <member><position><x>420</x></position></member>
+    </group>
+
+    <!-- screen 4: a fire on the path -->
+    <object name="fire" class="hazard">
+      <sprite>
+        <bitmap>
+          <row>...*....</row>
+          <row>..**..*.</row>
+          <row>..***.*.</row>
+          <row>.*****..</row>
+          <row>.******.</row>
+          <row>********</row>
+          <row>********</row>
+          <row>.******.</row>
+          <scale>2</scale>
+          <color>color.orange</color>
+        </bitmap>
+      </sprite>
+      <position><x>170</x><y>surface - fire.height</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+
+    <!-- the scorpions in the tunnel under screens 2 and 4 -->
+    <group name="scorpions" class="hazard">
+      <sprite>
+        <bitmap>
+          <row>.......**.</row>
+          <row>........*.</row>
+          <row>.**.....*.</row>
+          <row>*..******.</row>
+          <row>.********.</row>
+          <row>*.*.*.*.*.</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <position><y>tunnel - 12</y></position>
+      <velocity><x>crawl</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <bounce />
+        </collision>
+      </collisions>
+      <member name="scorpion2"><position><x>200</x></position></member>
+      <member name="scorpion4"><position><x>400</x></position></member>
+    </group>
+
+    <!-- the treasures, one a screen; the fourth is in the tunnel -->
+    <object name="moneybag" class="treasure">
+      <sprite>
+        <bitmap>
+          <row>..****..</row>
+          <row>...**...</row>
+          <row>.******.</row>
+          <row>***..***</row>
+          <row>**.****.</row>
+          <row>***..***</row>
+          <row>.****.**</row>
+          <row>..****..</row>
+          <scale>2</scale>
+          <color>color.lightgrey</color>
+        </bitmap>
+      </sprite>
+      <position><x>580</x><y>surface - moneybag.height</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="harry">
+          <inc variable="status.score">2000</inc>
+          <play sound="treasure" />
+          <die />
+        </collision>
+      </collisions>
+    </object>
+    <object name="silverbar" class="treasure">
+      <sprite>
+        <bitmap>
+          <row>..********</row>
+          <row>.********.</row>
+          <row>**********</row>
+          <row>*********.</row>
+          <row>********..</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <position><x>570</x><y>surface - silverbar.height</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="harry">
+          <inc variable="status.score">3000</inc>
+          <play sound="treasure" />
+          <die />
+        </collision>
+      </collisions>
+    </object>
+    <object name="goldbar" class="treasure">
+      <sprite>
+        <bitmap>
+          <row>..********</row>
+          <row>.********.</row>
+          <row>**********</row>
+          <row>*********.</row>
+          <row>********..</row>
+          <scale>2</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <position><x>580</x><y>surface - goldbar.height</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="harry">
+          <inc variable="status.score">4000</inc>
+          <play sound="treasure" />
+          <die />
+        </collision>
+      </collisions>
+    </object>
+    <object name="ring" class="treasure">
+      <sprite>
+        <bitmap>
+          <row>...**...</row>
+          <row>..****..</row>
+          <row>...**...</row>
+          <row>.**..**.</row>
+          <row>*......*</row>
+          <row>*......*</row>
+          <row>.**..**.</row>
+          <row>...**...</row>
+          <scale>2</scale>
+          <color>color.cyan</color>
+        </bitmap>
+      </sprite>
+      <position><x>580</x><y>tunnel - ring.height</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="harry">
+          <inc variable="status.score">5000</inc>
+          <play sound="treasure" />
+          <die />
+        </collision>
+      </collisions>
+    </object>
+
+    <!-- Pitfall Harry -->
+    <object name="harry">
+      <sprite>
+        <bitmap>
+          <row>...**...</row>
+          <row>..****..</row>
+          <row>...**...</row>
+          <row>...**...</row>
+          <row>.******.</row>
+          <row>*.****.*</row>
+          <row>*.****.*</row>
+          <row>*.****.*</row>
+          <row>..****..</row>
+          <row>..****..</row>
+          <row>..*..*..</row>
+          <row>..*..*..</row>
+          <row>..*..*..</row>
+          <row>..*..*..</row>
+          <row>..*..*..</row>
+          <row>.**..**.</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <position><x>24</x><y>surface - harry.height</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <acceleration><x>0</x><y>pull</y></acceleration>
+      <collisions>
+        <enabled>true</enabled>
+        <!-- off one side of the screen and onto the next -->
+        <collision edge="right">
+          <inc variable="status.screen" />
+          <move direction="left">window.right - 2 * harry.width</move>
+        </collision>
+        <collision edge="left">
+          <dec variable="status.screen" />
+          <move direction="right">window.right - 2 * harry.width</move>
+        </collision>
+        <collision class="ground">
+          <land />
+        </collision>
+        <collision class="croc">
+          <land />
+        </collision>
+        <collision class="log">
+          <dec variable="status.score">bump</dec>
+        </collision>
+        <collision class="hazard">
+          <dec variable="status.lives" />
+          <play sound="die" />
+          <reset />
+        </collision>
+        <collision class="water">
+          <dec variable="status.lives" />
+          <play sound="die" />
+          <reset />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="left">
+          <move direction="left">run</move>
+        </action>
+        <action name="right">
+          <move direction="right">run</move>
+        </action>
+        <action name="up">
+          <climb direction="up" class="ladder">climbstep</climb>
+        </action>
+        <action name="down">
+          <climb direction="down" class="ladder">climbstep</climb>
+        </action>
+        <action name="jump">
+          <leap>leapheight</leap>
+          <play sound="jump" />
+        </action>
+      </actions>
+    </object>
+
+    <!-- what the player sees of status -->
+    <object name="score">
+      <sprite>
+        <text>
+          <number>status.score</number>
+          <size>28</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="clock">
+      <sprite>
+        <text>
+          <number>status.time</number>
+          <size>28</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - clock.width / 2</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="lives">
+      <sprite>
+        <text>
+          <number>status.lives</number>
+          <size>28</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+
+    <object name="title">
+      <sprite>
+        <text>
+          <content>PITFALL!</content>
+          <size>100</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-140)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="help">
+      <sprite>
+        <text>
+          <content>find the four treasures before time runs out</content>
+          <size>26</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-40)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="keys">
+      <sprite>
+        <text>
+          <content>a and d run, space jumps, w and s climb</content>
+          <size>22</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (10)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="start">
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>40</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (110)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>100</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="youwin">
+      <sprite>
+        <text>
+          <content>YOU WIN</content>
+          <size>100</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="gameover">
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>100</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-60)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+    <object name="again">
+      <sprite>
+        <text>
+          <content>spacebar to play again</content>
+          <size>40</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+      </collisions>
+    </object>
+  </objects>
+  <states>
+    <keys name="harry">
+      <input button="a left"><trigger object="harry" action="left" /></input>
+      <input button="d right"><trigger object="harry" action="right" /></input>
+      <input button="w up"><trigger object="harry" action="up" /></input>
+      <input button="s down"><trigger object="harry" action="down" /></input>
+      <input button="space"><trigger object="harry" action="jump" /></input>
+      <input button="p escape"><push state="paused" /></input>
+    </keys>
+
+    <state name="title">
+      <shows>
+        <show object="title" />
+        <show object="help" />
+        <show object="keys" />
+        <show object="start" />
+      </shows>
+      <inputs>
+        <input button="space"><push state="screen1" /></input>
+      </inputs>
+    </state>
+
+    <!-- screen 1: rolling logs, and the money bag -->
+    <state name="screen1">
+      <shows>
+        <show object="canopy" />
+        <show object="trunks" />
+        <show object="earth" />
+        <show object="bedrock" />
+        <show object="path" />
+        <show object="tunnelfloor" />
+        <show object="moneybag" />
+        <show object="logs" />
+        <show object="harry" />
+        <show object="score" />
+        <show object="clock" />
+        <show object="lives" />
+      </shows>
+      <inputs keys="harry" />
+      <conditions>
+        <condition object="status" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition object="status" variable="time">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition class="treasure">
+          <remaining>0</remaining>
+          <push state="youwin" />
+        </condition>
+        <condition object="status" variable="screen">
+          <atleast>2</atleast>
+          <pop state="screen2" />
+        </condition>
+        <condition object="status" variable="screen">
+          <atmost>0</atmost>
+          <inc variable="status.screen">4</inc>
+          <pop state="screen4" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <dec variable="status.time" />
+        </timer>
+      </timers>
+    </state>
+
+    <!-- screen 2: the tar pit, the silver bar, and a scorpion below -->
+    <state name="screen2">
+      <shows>
+        <show object="canopy" />
+        <show object="trunks" />
+        <show object="earth" />
+        <show object="bedrock" />
+        <show object="path" />
+        <show object="tunnelfloor" />
+        <show object="tar" />
+        <show object="silverbar" />
+        <show object="scorpion2" />
+        <show object="harry" />
+        <show object="score" />
+        <show object="clock" />
+        <show object="lives" />
+      </shows>
+      <inputs keys="harry" />
+      <conditions>
+        <condition object="status" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition object="status" variable="time">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition class="treasure">
+          <remaining>0</remaining>
+          <push state="youwin" />
+        </condition>
+        <condition object="status" variable="screen">
+          <atleast>3</atleast>
+          <pop state="screen3" />
+        </condition>
+        <condition object="status" variable="screen">
+          <atmost>1</atmost>
+          <pop state="screen1" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <dec variable="status.time" />
+        </timer>
+      </timers>
+    </state>
+
+    <!-- screen 3: the crocodile pond, and the gold bar on the far bank -->
+    <state name="screen3">
+      <shows>
+        <show object="canopy" />
+        <show object="trunks" />
+        <show object="earth" />
+        <show object="bedrock" />
+        <show object="banks" />
+        <show object="pond" />
+        <show object="tunnelfloor" />
+        <show object="crocs" />
+        <show object="jaws" />
+        <show object="goldbar" />
+        <show object="harry" />
+        <show object="score" />
+        <show object="clock" />
+        <show object="lives" />
+      </shows>
+      <inputs keys="harry" />
+      <conditions>
+        <condition object="status" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition object="status" variable="time">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition class="treasure">
+          <remaining>0</remaining>
+          <push state="youwin" />
+        </condition>
+        <condition object="status" variable="screen">
+          <atleast>4</atleast>
+          <pop state="screen4" />
+        </condition>
+        <condition object="status" variable="screen">
+          <atmost>2</atmost>
+          <pop state="screen2" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <dec variable="status.time" />
+        </timer>
+      </timers>
+    </state>
+
+    <!-- screen 4: a fire, the ladder down, and the ring in the tunnel past a
+         scorpion -->
+    <state name="screen4">
+      <shows>
+        <show object="canopy" />
+        <show object="trunks" />
+        <show object="earth" />
+        <show object="bedrock" />
+        <show object="holepath" />
+        <show object="tunnelfloor" />
+        <show object="ladder" />
+        <show object="fire" />
+        <show object="ring" />
+        <show object="scorpion4" />
+        <show object="harry" />
+        <show object="score" />
+        <show object="clock" />
+        <show object="lives" />
+      </shows>
+      <inputs keys="harry" />
+      <conditions>
+        <condition object="status" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition object="status" variable="time">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <condition class="treasure">
+          <remaining>0</remaining>
+          <push state="youwin" />
+        </condition>
+        <condition object="status" variable="screen">
+          <atleast>5</atleast>
+          <dec variable="status.screen">4</dec>
+          <pop state="screen1" />
+        </condition>
+        <condition object="status" variable="screen">
+          <atmost>3</atmost>
+          <pop state="screen3" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <dec variable="status.time" />
+        </timer>
+      </timers>
+    </state>
+
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+      </shows>
+      <inputs>
+        <input button="space p escape"><pop /></input>
+      </inputs>
+    </state>
+    <state name="youwin">
+      <shows>
+        <show object="youwin" />
+        <show object="score" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="gameover" />
+        <show object="score" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

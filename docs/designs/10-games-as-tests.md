@@ -1,6 +1,6 @@
 # 10. Games as tests of the vocabulary
 
-**Status:** all 15 games are built in `games/`. Most are played frame by frame in `tests/test_<game>.cpp`; Pong is covered by `test_sound` and `test_deflect`, Space Invaders by `test_bitmap_sprites`, Space Invaders 2 by `test_svg_sprites`, Demon Attack by `test_ai_games`, Breakout by the input and format tests.
+**Status:** every game in `games/` is built. Most are played frame by frame in `tests/test_<game>.cpp`; Pong is covered by `test_sound` and `test_deflect`, Space Invaders by `test_bitmap_sprites`, Space Invaders 2 by `test_svg_sprites`, Demon Attack by `test_ai_games`, Breakout by the input and format tests.
 
 Games are picked to *test* the vocabulary: add a verb only when the game cannot be said without it, otherwise record that the vocabulary was enough. Each game is an approximation of the arcade original (rectangles for art, no attract mode).
 
@@ -18,6 +18,7 @@ Games are picked to *test* the vocabulary: add a verb only when the game cannot 
 | Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation (headings exist now), score by fuel |
 | Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping and expiring shots, saucer, waves, a safe respawn |
 | Berserk, Demon Attack, Frostbite (written by another AI) | can the schema alone be enough for an author | (found gaps) then timers, facing, jump, looks, key sets; later chasing and aiming | |
+| Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania | five Atari 2600 games picked because today's verbs already say them | nothing | see [below](#five-atari-2600-games) |
 
 ## Frogger
 
@@ -97,3 +98,29 @@ The author asked another AI to write three games from `xgedef.xsd` alone. All th
 - The man has four looks (`<become>` in his actions) and `<facing>`, a box against pixel walls, one shot in flight (one `bullet` object). Robots patrol corridors and `<reverse />` at walls and exits; each fires on a timer from a shared pool of four, along its group's facing (a group is the robots of one axis facing one of its two ways); the wait is a `<random>` whose ends use `player.depth`, so the second lap fires faster. Otto is hidden until a room timer reveals him (14 seconds less depth, minimum 6, or at once when the room's robots are gone); one speed.
 - Every rule that costs a life is the man's own (walls, shots, Otto, robots): a rule's `<reset />` puts only that object back, while `<reset object="player" />` in someone else's rule would reset his score and lives too (**`<reset object>` resets every variable**, not just position; this cost a morning). Exits add to `player.exited`; a room condition resets what it used, adds to `player.depth` and pushes the next room. A per-room `tally` object pays the room bonus when it reaches the robot count and is reset when the man leaves. An extra man every 2000 points from `player.lifepoints`. Pause is P or Escape.
 - Differences: robots aim at the man but walk their corridors (they do not chase), Otto chases straight over the walls, four directions of walking not eight, the man always enters at the left exit, walls do not kill robots (a `class="wall"` die rule would kill every patrol at once), Otto has one speed. Speeds, sizes (a 584 by 440 window) and waits were chosen without watching the game played: **tune them first.** The author found the first Berserk "absolutely horrible". Open: robots that chase, eight directions, entering opposite the exit (a reset to one of several named places), Otto speeding up, robots dying on walls and each other, robots not firing until the score is high enough (waits that shorten with score need only an expression).
+
+## Five Atari 2600 games
+
+The author listed about thirty non-scrolling Atari 2600 games (2026-10-07) and asked for five that could be written with the engine as it is. Already built from the list: Kaboom!, Asteroids, Space Invaders, Demon Attack, Frogger, Freeway, Frostbite, Berzerk, Super Breakout (as Breakout). The five were picked for variety and because no new verb was needed; none was added.
+
+| Game | What it uses | Left out |
+|---|---|---|
+| Pitfall! | screens as `<state>`s, entered by Harry's own edge rules (`<inc>` a screen number and `<move>` him to the other side; a condition of the screen `<pop state>`s to the next); `<leap>`, `<land />`, `<climb>`; a `status` object no screen shows, holding score, lives, clock and screen, so `<reset object="harry" />` costs nothing; crocodile jaws as a hidden pool the pond `<reveal>`s and that `<die />` on their own timer | vines, quicksand, the tunnel's walls and its three-screens-a-step, the 255 screens |
+| Missile Command | the base `<aim>`s at the sight on a timer and `<fire>`s along the aim; a counter-missile meeting the sight `<release>`s a burst (a pool of circles that `<die />` on their own timer); missiles `<chase>` the nearest city still standing and turn for another when it goes; a missile done with is `<reset />` above the sky with new `<random>`s and counted; waves are states | three bases with ten missiles each, bonus for cities left, splitting missiles, bombers |
+| Combat | `<heading>`, `<turn>`, `<thrust>` (a negative one backs up) and `<drag>` for the tanks; a shell fired from the nose; pixel tanks `<bounce />` off box walls; two players, first to five | guided and bouncing shells, the plane games, invisible tanks, the spin when hit |
+| Air-Sea Battle | guns with a `<heading>` that `<turn>`, so a shell flies at any angle; lanes of planes as `<group>`s that `<wrap />`, starting off the side they fly in from, so a `<reveal>`ed plane comes back from there; a state timer as the two-minute clock | the guns' three fixed angles (they swing freely, even at the sea), the other games on the cartridge, a winner screen (most hits needs a condition comparing two variables) |
+| Megamania | waves as `<group>`s that `<wrap />` (and `<bounce />` up and down for the cookies), each member dropping bombs from a `<facing>down</facing>` on a `<random>` timer; energy as a variable of its own object, run down by a state timer and filled by `<reset object="energy" />` | steering a shot, five of the eight waves, the bonus for energy left |
+
+Found on the way:
+- **A rule can stop the touch that would have come next.** Two rules on Harry meet at the same moment when the jaws appear over the crocodile he stands on: `<land />` on the crocodile and the hazard of the jaws. Touches at the same moment are handled in the order of the objects in the file, and `<land />` stops him, and a pair where neither moves is not looked at again that frame, so the jaws were never met. The jaws are written before the crocodiles.
+- **A variable cannot be named like an exprtk function** (`floor`); see the [readme](../readme.md#variables).
+- **The tar pit is 6 pixels tall**, sitting 1 pixel into the path: a taller one was still touched by a leap that had only just left the ground beside it.
+
+Near misses from the list, each short of something the engine does not have yet (none were started; verbs are another thread's to add):
+- **Seaquest**: `<facing>` follows the last move, up and down too, so the sub's torpedo would leave upwards after rising; it needs a fire that keeps to left and right (a facing that only some moves change).
+- **Adventure**: carrying a key, a sword or the chalice needs one object attached to another (`<carry />` only lends a velocity while touching), and a dragon killed by a carried sword.
+- **Dodge 'Em**: cars turning at the corners of a track (a path could drive the computer's car; the player's needs turns at given places).
+- **Q*bert**: diagonal hops on a pyramid; `<hop>` has four directions.
+- **Warlords**: shields that slide round the corner of a castle, and computer players.
+- **Ms. Pac-Man**: walls that stop a walker without killing it, and ghosts that steer through a maze (`<chase>` goes straight). **Keystone Kapers** scrolls sideways through the store. **Starmaster** is a first-person view.
+- Could be written the same way but not picked, being close to one that was: Atlantis (Air-Sea Battle from the other side), Solar Storm (Megamania with a paddle), Dragonfire and Montezuma's Revenge (Pitfall's screens, jumps and ladders, with keys and doors), Boxing (`<aim>` a punch).
