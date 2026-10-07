@@ -4,12 +4,12 @@
 <!-- author: beefviper -->
 <!-- date: Oct 5, 2026 -->
 
-<!-- What this target can generate so far: all of Pong, Space Race and
-     Freeway, and Breakout. Screens on a stack, rectangles, circles, texts (words
+<!-- What this target can generate so far: all of Pong, Space Race,
+     Freeway, Breakout and Depth Charge. Screens on a stack, rectangles, circles, texts (words
      or a number) and pictures (from a file, rows of text, lines or an SVG); objects that move, bounce, stick, deflect, wrap
      round, start again and die; groups of them, grids among them, moving as
      one block or each its own way; keys held to move, and keys pressed to hop,
-     change screen, start again, play a sound or count; conditions on an
+     fire, change screen, start again, play a sound or count; conditions on an
      object's number or on how many are left; and sounds. Anything else stops the generator with a
      message saying what and where, rather than writing a program that plays a
      different game. -->
@@ -20,7 +20,7 @@
     ' objects object group member sprite circle radius rectangle color text content number size image path flip grid columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity',
-    ' collisions enabled lockstep collision bounce stick reset deflect wrap die actions action move hop',
+    ' collisions enabled lockstep collision bounce stick reset deflect wrap die actions action move hop fire',
     ' states state shows show inputs input trigger conditions condition atleast atmost remaining',
     ' push pop play inc dec sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
@@ -190,7 +190,7 @@
           <xsl:with-param name="what" select="'&lt;reset object=&quot;...&quot;&gt;'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="(self::reset or self::play or self::inc or self::dec) and not($in-rule or $on-key or $in-condition)">
+      <xsl:when test="(self::reset or self::play or self::inc or self::dec) and not($in-rule or $on-key or $in-condition or (parent::action and not(self::reset) and not(../move)))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; there')" />
         </xsl:call-template>
@@ -227,9 +227,24 @@
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; outside the &lt;action&gt; of an object')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::action and move and hop">
+      <xsl:when test="self::action and move and (hop or fire)">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'an &lt;action&gt; that both moves (held) and hops (pressed)'" />
+          <xsl:with-param name="what" select="'an &lt;action&gt; that both moves (held) and hops or fires (pressed)'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::fire and not(parent::action)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;fire&gt; outside the &lt;action&gt; of an object'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::fire and not(/game/objects/*[@name = current()/@object][@class = 'projectile'])">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('&lt;fire object=&quot;', @object, '&quot;&gt;, which is not an object or group of class=&quot;projectile&quot;')" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::fire and /game/objects/group[@name = current()/@object]/member/velocity">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;fire&gt; of a group whose members have velocities of their own'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::move and ancestor::*[parent::objects][(velocity | member/velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]]">

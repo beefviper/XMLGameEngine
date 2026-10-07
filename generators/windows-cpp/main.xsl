@@ -67,17 +67,23 @@
        a side, all of them turn. -->
   <xsl:variable name="lockstep" select="$groups[normalize-space(collisions/lockstep) = 'true']" />
 
-  <xsl:variable name="rules" select="$things/collisions[normalize-space(enabled) = 'true']/collision[not(@edge and count(ancestor::*[parent::objects] | $still) = count($still))]" />
+  <xsl:variable name="rules" select="$things/collisions[normalize-space(enabled) = 'true' or ../@class = 'projectile']/collision[not(@edge and count(ancestor::*[parent::objects] | $still) = count($still))]" />
   <xsl:variable name="edge-rules" select="$rules[@edge]" />
   <!-- Those that can be taken out of play by a <die />: each has a flag (one
        for each member of a group) saying it is still in play, looked at before
        it is moved, drawn, moved by a key or touched. -->
-  <xsl:variable name="dying" select="$things[@name = $rules[die]/ancestor::*[parent::objects]/@name]" />
+  <xsl:variable name="dying" select="$things[@name = $rules[die]/ancestor::*[parent::objects]/@name] | $projectiles" />
+
+  <!-- Projectiles (class="projectile"): out of play until a <fire> launches
+       one, from the middle of the shooter's top at its own velocity. Their
+       collisions are on while they fly, whatever <enabled> says, as in the
+       engine. -->
+  <xsl:variable name="projectiles" select="$things[@class = 'projectile']" />
   <xsl:variable name="object-rules" select="$rules[not(@edge)]" />
 
   <!-- Those that go back to where they started after a <reset /> (its place
        and velocity, any <random> drawn anew, as in the engine). -->
-  <xsl:variable name="resetting" select="$objects[collisions[normalize-space(enabled) = 'true']/collision/reset[not(@object)]]" />
+  <xsl:variable name="resetting" select="$objects[collisions[normalize-space(enabled) = 'true' or ../@class = 'projectile']/collision/reset[not(@object)]]" />
 
   <!-- Those with something to do each frame. -->
   <xsl:variable name="updating" select="$things[count(. | $moving) = count($moving) or collisions/collision[*][count(. | $rules) = count($rules)]]" />
@@ -88,6 +94,7 @@
   <xsl:variable name="held-inputs" select="$states/inputs/input[trigger[key('action', concat(@object, '|', @action))/move]]" />
   <xsl:variable name="pressed-inputs" select="$states/inputs/input[* and not(trigger[key('action', concat(@object, '|', @action))/move])]" />
   <xsl:variable name="hops" select="boolean($pressed-inputs/trigger[key('action', concat(@object, '|', @action))/hop])" />
+  <xsl:variable name="fires" select="boolean($pressed-inputs/trigger[key('action', concat(@object, '|', @action))/fire])" />
 
   <xsl:variable name="sounds" select="/game/sounds/sound" />
 
@@ -121,7 +128,7 @@
 
   <!-- The modules it needs: physics for the edges, touches and sizes, sound for
        its sounds. -->
-  <xsl:variable name="physics" select="boolean($rules/* or $sizes-read != '' or $hops)" />
+  <xsl:variable name="physics" select="boolean($rules/* or $sizes-read != '' or $hops or $fires)" />
   <xsl:variable name="audio" select="boolean($sounds)" />
 
   <!-- The helper functions the game needs (functions.xml). -->
@@ -341,7 +348,14 @@ sf::Texture </xsl:text>
             <xsl:value-of select="concat('&#10;std::vector&lt;bool&gt; ', $name, 'Alive; // which of them are still in play')" />
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('&#10;bool ', $name, 'Alive = true; // in play until it dies')" />
+            <xsl:choose>
+              <xsl:when test="@class = 'projectile'">
+                <xsl:value-of select="concat('&#10;bool ', $name, 'Alive = false; // in play from when it is fired until it dies')" />
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="concat('&#10;bool ', $name, 'Alive = true; // in play until it dies')" />
+              </xsl:otherwise>
+            </xsl:choose>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:if>
@@ -952,8 +966,12 @@ void start()
       <xsl:if test="self::object and count(. | $dying) = count($dying)">
         <xsl:text>	</xsl:text>
         <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template>
-        <xsl:text>Alive = true;
-</xsl:text>
+        <xsl:choose>
+          <xsl:when test="@class = 'projectile'">Alive = false; // until it is fired
+</xsl:when>
+          <xsl:otherwise>Alive = true;
+</xsl:otherwise>
+        </xsl:choose>
       </xsl:if>
     </xsl:for-each>
     <xsl:if test="$numbers">
@@ -1020,7 +1038,14 @@ void start()
       </xsl:when>
     </xsl:choose>
     <xsl:if test="count(. | $dying) = count($dying)">
-      <xsl:value-of select="concat('&#9;', $name, 'Alive.assign(', $name, '.size(), true);&#10;')" />
+      <xsl:choose>
+        <xsl:when test="@class = 'projectile'">
+          <xsl:value-of select="concat('&#9;', $name, 'Alive.assign(', $name, '.size(), false); // until they are fired&#10;')" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="concat('&#9;', $name, 'Alive.assign(', $name, '.size(), true);&#10;')" />
+        </xsl:otherwise>
+      </xsl:choose>
     </xsl:if>
   </xsl:template>
 
@@ -1219,11 +1244,24 @@ void pressed(sf::Keyboard::Key key)
             <xsl:if test="$dies">
               <xsl:value-of select="concat($indent, '&#9;if (', $name, 'Alive)&#10;', $indent, '&#9;{&#10;')" />
             </xsl:if>
-            <xsl:for-each select="key('action', concat(@object, '|', @action))/hop">
-              <xsl:value-of select="concat($in, 'physics::hop(', $name, ', ')" />
-              <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
-              <xsl:text>, windowArea);
+            <xsl:for-each select="key('action', concat(@object, '|', @action))/*">
+              <xsl:choose>
+                <xsl:when test="self::hop">
+                  <xsl:value-of select="concat($in, 'physics::hop(', $name, ', ')" />
+                  <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
+                  <xsl:text>, windowArea);
 </xsl:text>
+                </xsl:when>
+                <xsl:when test="self::fire">
+                  <xsl:call-template name="fire">
+                    <xsl:with-param name="shooter" select="$name" />
+                    <xsl:with-param name="indent" select="$in" />
+                  </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                  <xsl:call-template name="common-command"><xsl:with-param name="indent" select="$in" /></xsl:call-template>
+                </xsl:otherwise>
+              </xsl:choose>
             </xsl:for-each>
             <xsl:if test="$dies">
               <xsl:value-of select="concat($indent, '&#9;}&#10;')" />
@@ -1236,6 +1274,68 @@ void pressed(sf::Keyboard::Key key)
       </xsl:for-each>
       <xsl:value-of select="concat($indent, '}&#10;')" />
     </xsl:for-each>
+  </xsl:template>
+
+  <!-- A <fire>: the projectile (the first of a group out of play) put at the
+       middle of the shooter's top, its own middle over the shooter's, set off
+       at its own velocity; nothing if it is already out. -->
+  <xsl:template name="fire">
+    <xsl:param name="shooter" />
+    <xsl:param name="indent" />
+    <xsl:variable name="projectile" select="$things[@name = current()/@object]" />
+    <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
+    <xsl:choose>
+      <xsl:when test="$projectile/self::group">
+        <xsl:variable name="velocity">
+          <xsl:choose>
+            <xsl:when test="count($projectile | $member-velocities) = count($member-velocities)"><xsl:value-of select="concat($name, 'Velocity[i]')" /></xsl:when>
+            <xsl:otherwise><xsl:value-of select="concat($name, 'Velocity')" /></xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
+        <xsl:value-of select="concat($indent, '// fire the first of ', @object, ' that is not out already&#10;')" />
+        <xsl:value-of select="concat($indent, 'for (std::size_t i = 0; i &lt; ', $name, '.size(); ++i)&#10;', $indent, '{&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;if (!', $name, 'Alive[i])&#10;', $indent, '&#9;{&#10;')" />
+        <xsl:call-template name="launch">
+          <xsl:with-param name="shooter" select="$shooter" />
+          <xsl:with-param name="name" select="concat($name, '[i]')" />
+          <xsl:with-param name="velocity" select="$velocity" />
+          <xsl:with-param name="alive" select="concat($name, 'Alive[i]')" />
+          <xsl:with-param name="projectile" select="$projectile" />
+          <xsl:with-param name="indent" select="concat($indent, '&#9;&#9;')" />
+        </xsl:call-template>
+        <xsl:value-of select="concat($indent, '&#9;&#9;break;&#10;', $indent, '&#9;}&#10;', $indent, '}&#10;')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat($indent, '// fire ', @object, ', if it is not out already&#10;')" />
+        <xsl:value-of select="concat($indent, 'if (!', $name, 'Alive)&#10;', $indent, '{&#10;')" />
+        <xsl:call-template name="launch">
+          <xsl:with-param name="shooter" select="$shooter" />
+          <xsl:with-param name="name" select="$name" />
+          <xsl:with-param name="velocity" select="concat($name, 'Velocity')" />
+          <xsl:with-param name="alive" select="concat($name, 'Alive')" />
+          <xsl:with-param name="projectile" select="$projectile" />
+          <xsl:with-param name="indent" select="concat($indent, '&#9;')" />
+        </xsl:call-template>
+        <xsl:value-of select="concat($indent, '}&#10;')" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <xsl:template name="launch">
+    <xsl:param name="shooter" />
+    <xsl:param name="name" />
+    <xsl:param name="velocity" />
+    <xsl:param name="alive" />
+    <xsl:param name="projectile" />
+    <xsl:param name="indent" />
+    <xsl:value-of select="concat($indent, $name, '.setPosition({physics::left(', $shooter, ') + physics::width(', $shooter, ') / 2.0f - physics::width(', $name, ') / 2.0f, physics::top(', $shooter, ')});&#10;')" />
+    <xsl:if test="count($projectile | $moving) = count($moving)">
+      <xsl:value-of select="concat($indent, $velocity, ' = ')" />
+      <xsl:call-template name="vector"><xsl:with-param name="node" select="$projectile/velocity" /></xsl:call-template>
+      <xsl:text>;
+</xsl:text>
+    </xsl:if>
+    <xsl:value-of select="concat($indent, $alive, ' = true;&#10;')" />
   </xsl:template>
 
   <!-- A command about the game rather than one object (on a key, or in a
@@ -1522,7 +1622,7 @@ void update</xsl:text>
       <xsl:if test="count(. | $moving) = count($moving) and not($block)">
         <xsl:value-of select="concat('&#10;', $indent, $one, '.move(', $velocity, ');&#10;')" />
       </xsl:if>
-      <xsl:for-each select="collisions[normalize-space(enabled) = 'true']/collision[*][count(. | $rules) = count($rules)]">
+      <xsl:for-each select="collisions[normalize-space(enabled) = 'true' or ../@class = 'projectile']/collision[*][count(. | $rules) = count($rules)]">
         <xsl:choose>
           <xsl:when test="@edge">
             <xsl:call-template name="edge-rule">
@@ -1685,14 +1785,14 @@ void update</xsl:text>
     <xsl:variable name="self" select="ancestor::*[parent::objects]" />
     <xsl:variable name="together" select="$states[shows/show/@object = $self/@name]/shows/show/@object" />
     <xsl:variable name="before" select="$self/preceding-sibling::*" />
-    <xsl:for-each select="$things[collisions[normalize-space(enabled) = 'true']]
+    <xsl:for-each select="$things[collisions[normalize-space(enabled) = 'true' or ../@class = 'projectile']]
                                  [count(. | $self) != 1]
                                  [@name = $together]
                                  [not($rule/@object) or @name = $rule/@object]
                                  [not($rule/@class) or @class = $rule/@class]">
       <xsl:variable name="thing" select="." />
       <!-- the other's rules about this one -->
-      <xsl:variable name="back" select="collisions[normalize-space(enabled) = 'true']/collision[*][not(@edge)]
+      <xsl:variable name="back" select="collisions[normalize-space(enabled) = 'true' or ../@class = 'projectile']/collision[*][not(@edge)]
                                                   [not(@object) or @object = $self/@name]
                                                   [not(@class) or @class = $self/@class]" />
       <!-- written with the other's, when the other comes first in the file -->
