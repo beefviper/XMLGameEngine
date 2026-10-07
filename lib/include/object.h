@@ -64,14 +64,16 @@ namespace xge
 	// (Pixel) - see CollisionDetector.
 	enum class CollisionType { Box, Pixel };
 
-	// A <collision edge="..." sprite="name">'s commands in an edge's list:
-	// `count` of them from `first`, run only while the object shows that look,
-	// looked at once as the rule comes (as for a rule about another object).
-	struct EdgeLook
+	// A <collision edge="..."> with sprite= or unless=, as its commands in an
+	// edge's list: `count` of them from `first`, run only while the object
+	// shows that look and is not touching anything of that class, looked at
+	// once as the rule comes (as for a rule about another object).
+	struct EdgeGuard
 	{
 		std::size_t first{ 0 };
 		std::size_t count{ 0 };
 		std::string sprite;
+		std::string unlessClass;
 	};
 
 	struct RawCollisionData
@@ -83,11 +85,11 @@ namespace xge
 		std::vector<RawCommand> bottom;
 		std::vector<RawCommand> left;
 		std::vector<RawCommand> right;
-		// The rules among them with sprite= (see EdgeLook).
-		std::vector<EdgeLook> topLooks;
-		std::vector<EdgeLook> bottomLooks;
-		std::vector<EdgeLook> leftLooks;
-		std::vector<EdgeLook> rightLooks;
+		// The rules among them with sprite= or unless= (see EdgeGuard).
+		std::vector<EdgeGuard> topGuards;
+		std::vector<EdgeGuard> bottomGuards;
+		std::vector<EdgeGuard> leftGuards;
+		std::vector<EdgeGuard> rightGuards;
 		// Rules about another object: a <collision> with a class= and/or
 		// object= selector, or with no selector at all (matches anything). The
 		// name is left from when the unfiltered one was written basic="basic".
@@ -120,11 +122,11 @@ namespace xge
 		std::vector<Command> bottom;
 		std::vector<Command> left;
 		std::vector<Command> right;
-		// The rules among them with sprite= (see EdgeLook).
-		std::vector<EdgeLook> topLooks;
-		std::vector<EdgeLook> bottomLooks;
-		std::vector<EdgeLook> leftLooks;
-		std::vector<EdgeLook> rightLooks;
+		// The rules among them with sprite= or unless= (see EdgeGuard).
+		std::vector<EdgeGuard> topGuards;
+		std::vector<EdgeGuard> bottomGuards;
+		std::vector<EdgeGuard> leftGuards;
+		std::vector<EdgeGuard> rightGuards;
 		// Rules about another object (see RawCollisionData::basic).
 		std::vector<CollisionRule> basic;
 
