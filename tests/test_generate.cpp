@@ -25,6 +25,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <sstream>
 #include <string>
 
@@ -422,6 +423,90 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 	CHECK(main.find("void updateAliens()\n{\n\tfor (sf::CircleShape& one : aliens)\n\t{\n\t\tone.move(aliensVelocity);\n\t}\n\n\tfor (std::size_t i = 0; i < aliens.size(); ++i)") != std::string::npos);
 	CHECK(main.find("\t\t\taliensVelocity.x = -aliensVelocity.x;\n\t\t\tfor (sf::CircleShape& each : aliens)\n\t\t\t{\n\t\t\t\teach.move({aliensVelocity.x, 0.0f});") != std::string::npos);
 	CHECK(main.find("\t// aliens: no more than 11 left\n\tif (std::count(aliensAlive.begin(), aliensAlive.end(), true) <= 11)\n\t{\n\t\tstart();") != std::string::npos);
+}
+
+TEST_CASE("a sprite of rows, of lines or from an SVG is a picture the program has, drawn as the engine draws it", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_pictures");
+	fs::create_directories(folder.path);
+	std::ofstream(folder.path / "gallery.xml") <<
+		"<game>\n"
+		"  <window name=\"Gallery\"><width>320</width><height>240</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>\n"
+		"  <variables><variable name=\"zoom\">2</variable></variables>\n"
+		"  <objects>\n"
+		"    <object name=\"cannon\">\n"
+		"      <sprite><svg><path>assets/Space Invaders Color Sprites.svg</path><x>4</x><y>3.5</y><width>24</width><height>26</height><scale>zoom</scale><hide>backdrop</hide><flip>vertical</flip></svg></sprite>\n"
+		"      <position><x>140</x><y>4</y></position>\n"
+		"      <velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>false</enabled></collisions>\n"
+		"    </object>\n"
+		"    <group name=\"aliens\">\n"
+		"      <sprite><grid><columns>4</columns><rows>2</rows><padding><x>6</x><y>6</y></padding>\n"
+		"        <bitmap><row>..*..*..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>.*....*.</row><scale>2</scale><color>color.green</color></bitmap></grid></sprite>\n"
+		"      <position><x>20</x><y>70</y></position>\n"
+		"      <velocity><x>1</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><lockstep>true</lockstep><collision edge=\"horizontal\"><bounce /></collision></collisions>\n"
+		"      <member />\n"
+		"    </group>\n"
+		"    <object name=\"player\">\n"
+		"      <sprite><bitmap><row>...*...</row><row>.*****.</row><row>*******</row><scale>3</scale><color>color.cyan</color></bitmap></sprite>\n"
+		"      <position><x>150</x><y>170</y></position>\n"
+		"      <velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><collision edge=\"horizontal\"><stick /></collision></collisions>\n"
+		"      <actions><action name=\"left\"><move direction=\"left\">3</move></action><action name=\"right\"><move direction=\"right\">3</move></action></actions>\n"
+		"    </object>\n"
+		"    <object name=\"ground\">\n"
+		"      <sprite>\n"
+		"        <line><from><x>0</x><y>20</y></from><to><x>80</x><y>4</y></to><color>color.lightgrey</color><thickness>2</thickness></line>\n"
+		"        <line><from><x>80</x><y>4</y></from><to><x>200</x><y>30</y></to><color>color.lightgrey</color><thickness>2</thickness></line>\n"
+		"        <line><from><x>200</x><y>30</y></from><to><x>318</x><y>10</y></to></line>\n"
+		"      </sprite>\n"
+		"      <position><x>0</x><y>200</y></position>\n"
+		"      <velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>false</enabled></collisions>\n"
+		"    </object>\n"
+		"  </objects>\n"
+		"  <states><state name=\"playing\"><shows><show object=\"cannon\" /><show object=\"aliens\" /><show object=\"player\" /><show object=\"ground\" /></shows>\n"
+		"    <inputs><input button=\"left\"><trigger object=\"player\" action=\"left\" /></input><input button=\"right\"><trigger object=\"player\" action=\"right\" /></input></inputs></state></states>\n"
+		"</game>\n";
+	const GeneratedProgram program = generateGame(requestFor(folder.path / "gallery.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("#include \"pictures.h\"") != std::string::npos);
+	CHECK(fs::exists(folder.path / "out/pictures.h"));
+	// a bitmap's rows written out one under another, so it looks like itself
+	CHECK(main.find("const std::vector<std::string> playerRows = {\n\t\"...*...\",\n\t\".*****.\",\n\t\"*******\"\n};\nsf::Texture playerPicture;") != std::string::npos);
+	CHECK(main.find("!playerPicture.loadFromImage(pictures::rows(playerRows, 3, sf::Color::Cyan))") != std::string::npos);
+	// lines, white and 1 thick when they do not say
+	CHECK(main.find("\t{{200.0f, 30.0f}, {318.0f, 10.0f}, sf::Color::White, 1}\n};") != std::string::npos);
+	CHECK(main.find("!groundPicture.loadFromImage(pictures::lines(groundLines))") != std::string::npos);
+	// a grid of a bitmap: the picture's size from one cell to the next
+	CHECK(main.find("std::vector<sf::Sprite> aliens(8, sf::Sprite(aliensPicture));") != std::string::npos);
+	CHECK(main.find("static_cast<float>(column) * (static_cast<float>(aliensPicture.getSize().x) + 6.0f)") != std::string::npos);
+	// an svg drawn by xgecli into a picture, flipped as an image is
+	CHECK(main.find("!cannonPicture.loadFromFile(\"assets/drawn/cannon.png\")") != std::string::npos);
+	CHECK(main.find("cannon.setTextureRect({{0, static_cast<int>(cannonPicture.getSize().y)}") != std::string::npos);
+	CHECK(main.find("const float zoom") == std::string::npos); // only the svg used it
+	REQUIRE(program.drawn.size() == 1);
+	CHECK(program.drawn.front() == fs::path("assets/drawn/cannon.png"));
+
+	// a PNG of the part of the drawing taken, at 2 pixels a unit: 24 by 26 units
+	std::ifstream pngFile(folder.path / "out/assets/drawn/cannon.png", std::ios::binary);
+	const std::string png((std::istreambuf_iterator<char>(pngFile)), std::istreambuf_iterator<char>());
+	REQUIRE(png.size() > 24);
+	CHECK(png.compare(0, 8, "\x89PNG\r\n\x1a\n") == 0);
+	const auto bigEndian = [&](std::size_t at)
+	{
+		return (static_cast<unsigned int>(static_cast<unsigned char>(png[at])) << 24) | (static_cast<unsigned int>(static_cast<unsigned char>(png[at + 1])) << 16)
+			| (static_cast<unsigned int>(static_cast<unsigned char>(png[at + 2])) << 8) | static_cast<unsigned int>(static_cast<unsigned char>(png[at + 3]));
+	};
+	CHECK(bigEndian(16) == 48);
+	CHECK(bigEndian(20) == 52);
 }
 
 TEST_CASE("a generated game carries only the modules, helper functions and headers it uses", "[generate]")

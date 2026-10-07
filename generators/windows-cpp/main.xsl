@@ -38,6 +38,14 @@
   <xsl:variable name="texts" select="$objects[sprite/text]" />
   <xsl:variable name="numbers" select="$texts[sprite/text/number]" />
   <xsl:variable name="images" select="$objects[sprite/image] | $groups[sprite/image or member/sprite/image]" />
+  <!-- The sprites the game draws itself when it starts: rows of text (a
+       <bitmap>), <line>s, or an <svg>, drawn by xgecli into a picture of its
+       own. Each is a texture named for what shows it (shipPicture). -->
+  <xsl:variable name="drawn" select="($things/sprite | $groups/member/sprite)[line or bitmap or svg or grid/bitmap or grid/svg]" />
+  <xsl:variable name="drawn-rows" select="$drawn[bitmap or grid/bitmap]" />
+  <xsl:variable name="drawn-lines" select="$drawn[line]" />
+  <xsl:variable name="drawn-svgs" select="$drawn[svg or grid/svg]" />
+  <xsl:variable name="loads" select="boolean($texts or $images or $drawn)" />
   <!-- Each picture once, however many objects show it. -->
   <xsl:key name="image-path" match="image/path" use="normalize-space(.)" />
   <xsl:variable name="image-paths" select="$images/sprite/image/path[generate-id() = generate-id(key('image-path', normalize-space(.))[count(ancestor::*[parent::objects] | $images) = count($images)][1])]" />
@@ -94,10 +102,11 @@
   </xsl:variable>
 
   <!-- The same, without the names of the game's own variables, to see which
-       of them are used. -->
+       of them are used (an <svg>'s numbers are used when it is generated, not
+       by the program). -->
   <xsl:variable name="values-words">
     <xsl:text> </xsl:text>
-    <xsl:for-each select="$game/window//text() | $game/variables//text() | $game/sounds//text() | $things//text() | $things//@*[not(local-name() = 'name')] | $states//text() | $states//@*">
+    <xsl:for-each select="$game/window//text() | $game/variables//text() | $game/sounds//text() | $things//text()[not(ancestor::svg)] | $things//@*[not(local-name() = 'name')] | $states//text() | $states//@*">
       <xsl:value-of select="translate(., '+-*/(),&#9;&#10;&#13;', '          ')" />
       <xsl:text> </xsl:text>
     </xsl:for-each>
@@ -131,7 +140,8 @@
     </xsl:for-each>
     <xsl:if test="contains($words, ' min ') or contains($words, ' max ')"> algorithm </xsl:if>
     <xsl:if test="contains($words, ' abs ') or contains($words, ' floor ') or contains($words, ' ceil ') or contains($words, ' sqrt ') or contains($words, ' sin ') or contains($words, ' cos ') or contains($words, ' tan ') or contains($words, ' pow ') or contains($words, ' round ')"> cmath </xsl:if>
-    <xsl:if test="$numbers"> string </xsl:if>
+    <xsl:if test="$numbers or $drawn-rows"> string </xsl:if>
+    <xsl:if test="$drawn-rows or $drawn-lines"> vector </xsl:if>
     <xsl:if test="$screens or $groups"> vector </xsl:if>
     <xsl:for-each select="$states/conditions/condition[remaining]">
       <xsl:if test="$dying[self::group][(current()/@object and @name = current()/@object) or (current()/@class and @class = current()/@class)]"> algorithm </xsl:if>
@@ -177,8 +187,9 @@
     <xsl:text>
 </xsl:text>
     <xsl:if test="$physics">#include "physics.h"&#10;</xsl:if>
+    <xsl:if test="$drawn-rows or $drawn-lines">#include "pictures.h"&#10;</xsl:if>
     <xsl:if test="$audio">#include "sound.h"&#10;</xsl:if>
-    <xsl:if test="$physics or $audio">
+    <xsl:if test="$physics or $audio or $drawn-rows or $drawn-lines">
       <xsl:text>
 </xsl:text>
     </xsl:if>
@@ -277,7 +288,10 @@ sf::Texture </xsl:text>
       <xsl:call-template name="texture-name"><xsl:with-param name="path" select="." /></xsl:call-template>
       <xsl:text>;</xsl:text>
     </xsl:for-each>
-    <xsl:if test="$texts or $images">
+    <xsl:for-each select="$drawn">
+      <xsl:call-template name="declare-picture" />
+    </xsl:for-each>
+    <xsl:if test="$loads">
       <xsl:text>
 </xsl:text>
     </xsl:if>
@@ -296,7 +310,7 @@ sf::Texture </xsl:text>
           <xsl:value-of select="concat('// ', @name, ': ', $cells, ' of them&#10;std::vector&lt;', $type, '&gt; ', $name, '(', $cells)" />
           <xsl:if test="$type = 'sf::Sprite'">
             <xsl:text>, sf::Sprite(</xsl:text>
-            <xsl:call-template name="texture-name"><xsl:with-param name="path" select="(sprite | member/sprite)[1]/image/path" /></xsl:call-template>
+            <xsl:for-each select="(sprite | member/sprite)[1]"><xsl:call-template name="sprite-texture" /></xsl:for-each>
             <xsl:text>)</xsl:text>
           </xsl:if>
           <xsl:text>);</xsl:text>
@@ -314,7 +328,7 @@ sf::Texture </xsl:text>
         <xsl:when test="sprite/text"><xsl:value-of select="concat('sf::Text ', $name, '(font);')" /></xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="concat('sf::Sprite ', $name, '(')" />
-          <xsl:call-template name="texture-name"><xsl:with-param name="path" select="sprite/image/path" /></xsl:call-template>
+          <xsl:for-each select="sprite"><xsl:call-template name="sprite-texture" /></xsl:for-each>
           <xsl:text>);</xsl:text>
         </xsl:otherwise>
       </xsl:choose>
@@ -360,7 +374,7 @@ sf::Texture </xsl:text>
 // functions
 </xsl:text>
     <xsl:choose>
-      <xsl:when test="$texts or $images">bool setup();&#10;</xsl:when>
+      <xsl:when test="$loads">bool setup();&#10;</xsl:when>
       <xsl:otherwise>void setup();&#10;</xsl:otherwise>
     </xsl:choose>
     <xsl:text>void start();
@@ -412,7 +426,7 @@ int main()
 </xsl:text>
     <xsl:call-template name="generate-window" />
     <xsl:choose>
-      <xsl:when test="$texts or $images">
+      <xsl:when test="$loads">
         <xsl:text>
 	if (!setup())
 	{
@@ -634,12 +648,13 @@ void show</xsl:text>
        made; then start(). With a font or a picture to load, false if one could
        not be. -->
   <xsl:template name="generate-setup">
-    <xsl:variable name="loads" select="$texts or $images" />
     <xsl:choose>
       <xsl:when test="$loads">
         <xsl:text>
 // The font and pictures, every object's look and every sound, then the game
-// from the start; false if a file could not be loaded (SFML says which).
+// from the start; false if a file could not be loaded</xsl:text>
+        <xsl:if test="$drawn-rows or $drawn-lines"> or a picture made</xsl:if>
+        <xsl:text> (SFML says which).
 bool setup()
 {
 	if (</xsl:text>
@@ -651,6 +666,13 @@ bool setup()
           <xsl:text>.loadFromFile(</xsl:text>
           <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="normalize-space(.)" /></xsl:call-template>
           <xsl:text>)</xsl:text>
+        </xsl:for-each>
+        <xsl:for-each select="$drawn">
+          <xsl:if test="$texts or $image-paths or position() &gt; 1">
+            <xsl:text>
+		|| </xsl:text>
+          </xsl:if>
+          <xsl:call-template name="load-picture" />
         </xsl:for-each>
         <xsl:text>)
 	{
@@ -796,13 +818,14 @@ void setup()
         </xsl:if>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:variable name="texture"><xsl:call-template name="texture-name"><xsl:with-param name="path" select="image/path" /></xsl:call-template></xsl:variable>
+        <xsl:variable name="texture"><xsl:for-each select="ancestor-or-self::sprite"><xsl:call-template name="sprite-texture" /></xsl:for-each></xsl:variable>
+        <xsl:variable name="flip" select="normalize-space((image | bitmap | svg)/flip)" />
         <xsl:value-of select="concat($indent, $name, '.setTexture(', $texture, ', true);&#10;')" />
         <xsl:choose>
-          <xsl:when test="normalize-space(image/flip) = 'horizontal'">
+          <xsl:when test="$flip = 'horizontal'">
             <xsl:value-of select="concat($indent, $name, '.setTextureRect({{static_cast&lt;int&gt;(', $texture, '.getSize().x), 0}, {-static_cast&lt;int&gt;(', $texture, '.getSize().x), static_cast&lt;int&gt;(', $texture, '.getSize().y)}}); // flipped left to right&#10;')" />
           </xsl:when>
-          <xsl:when test="normalize-space(image/flip) = 'vertical'">
+          <xsl:when test="$flip = 'vertical'">
             <xsl:value-of select="concat($indent, $name, '.setTextureRect({{0, static_cast&lt;int&gt;(', $texture, '.getSize().y)}, {static_cast&lt;int&gt;(', $texture, '.getSize().x), -static_cast&lt;int&gt;(', $texture, '.getSize().y)}}); // flipped upside down&#10;')" />
           </xsl:when>
         </xsl:choose>
@@ -1014,8 +1037,10 @@ void start()
     <xsl:variable name="x"><xsl:call-template name="value-bare"><xsl:with-param name="node" select="(position/x | $group/position/x[not(current()/position/x)])[1]" /></xsl:call-template></xsl:variable>
     <xsl:variable name="y"><xsl:call-template name="value-bare"><xsl:with-param name="node" select="(position/y | $group/position/y[not(current()/position/y)])[1]" /></xsl:call-template></xsl:variable>
     <!-- a cell's size and the padding after it -->
+    <xsl:variable name="texture"><xsl:for-each select="$grid/.."><xsl:call-template name="sprite-texture" /></xsl:for-each></xsl:variable>
     <xsl:variable name="width">
       <xsl:choose>
+        <xsl:when test="$grid/bitmap or $grid/svg"><xsl:value-of select="concat('static_cast&lt;float&gt;(', $texture, '.getSize().x)')" /></xsl:when>
         <xsl:when test="$grid/circle">
           <xsl:text>2.0f * </xsl:text>
           <xsl:call-template name="value"><xsl:with-param name="node" select="$grid/circle/radius" /></xsl:call-template>
@@ -1025,6 +1050,7 @@ void start()
     </xsl:variable>
     <xsl:variable name="height">
       <xsl:choose>
+        <xsl:when test="$grid/bitmap or $grid/svg"><xsl:value-of select="concat('static_cast&lt;float&gt;(', $texture, '.getSize().y)')" /></xsl:when>
         <xsl:when test="$grid/circle">
           <xsl:text>2.0f * </xsl:text>
           <xsl:call-template name="value"><xsl:with-param name="node" select="$grid/circle/radius" /></xsl:call-template>
@@ -1915,6 +1941,135 @@ void update</xsl:text>
         <xsl:variable name="first"><xsl:for-each select="$members[1]"><xsl:call-template name="cells" /></xsl:for-each></xsl:variable>
         <xsl:variable name="rest"><xsl:call-template name="cells-total"><xsl:with-param name="members" select="$members[position() &gt; 1]" /></xsl:call-template></xsl:variable>
         <xsl:value-of select="$first + $rest" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- What a drawn sprite is named for: the object or group showing it, or
+       a group's member (aliens.2). -->
+  <xsl:template name="drawn-name">
+    <xsl:choose>
+      <xsl:when test="parent::member">
+        <xsl:call-template name="cpp-name">
+          <xsl:with-param name="name">
+            <xsl:value-of select="concat(../../@name, '.')" />
+            <xsl:choose>
+              <xsl:when test="../@name"><xsl:value-of select="../@name" /></xsl:when>
+              <xsl:otherwise><xsl:value-of select="count(../preceding-sibling::member) + 1" /></xsl:otherwise>
+            </xsl:choose>
+          </xsl:with-param>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="../@name" /></xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- The texture a <sprite> of a picture shows: its image file's, or the one
+       it draws itself. -->
+  <xsl:template name="sprite-texture">
+    <xsl:choose>
+      <xsl:when test="image or grid/image">
+        <xsl:call-template name="texture-name"><xsl:with-param name="path" select="(image | grid/image)/path" /></xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="drawn-name" />
+        <xsl:text>Picture</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- Where xgecli puts the picture it draws from an <svg>. -->
+  <xsl:template name="drawn-file">
+    <xsl:text>assets/drawn/</xsl:text>
+    <xsl:call-template name="drawn-name" />
+    <xsl:text>.png</xsl:text>
+  </xsl:template>
+
+  <!-- A drawn sprite's texture, after its rows or lines written out as they
+       are drawn: a bitmap's rows one under another, so it looks like itself. -->
+  <xsl:template name="declare-picture">
+    <xsl:variable name="name"><xsl:call-template name="drawn-name" /></xsl:variable>
+    <xsl:variable name="bitmap" select="bitmap | grid/bitmap" />
+    <xsl:text>
+</xsl:text>
+    <xsl:choose>
+      <xsl:when test="$bitmap">
+        <xsl:value-of select="concat('&#10;const std::vector&lt;std::string&gt; ', $name, 'Rows = {')" />
+        <xsl:for-each select="$bitmap/row">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text>&#10;&#9;</xsl:text>
+          <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="normalize-space(.)" /></xsl:call-template>
+        </xsl:for-each>
+        <xsl:text>
+};</xsl:text>
+      </xsl:when>
+      <xsl:when test="line">
+        <xsl:value-of select="concat('&#10;const std::vector&lt;pictures::Line&gt; ', $name, 'Lines = {')" />
+        <xsl:for-each select="line">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text>&#10;&#9;{</xsl:text>
+          <xsl:call-template name="vector"><xsl:with-param name="node" select="from" /></xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="vector"><xsl:with-param name="node" select="to" /></xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="color"><xsl:with-param name="name" select="color" /></xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:choose>
+            <xsl:when test="thickness"><xsl:call-template name="whole-int"><xsl:with-param name="node" select="thickness" /></xsl:call-template></xsl:when>
+            <xsl:otherwise>1</xsl:otherwise>
+          </xsl:choose>
+          <xsl:text>}</xsl:text>
+        </xsl:for-each>
+        <xsl:text>
+};</xsl:text>
+      </xsl:when>
+    </xsl:choose>
+    <xsl:value-of select="concat('&#10;sf::Texture ', $name, 'Picture;')" />
+  </xsl:template>
+
+  <!-- Its texture made, in setup()'s test of what could not be. -->
+  <xsl:template name="load-picture">
+    <xsl:variable name="name"><xsl:call-template name="drawn-name" /></xsl:variable>
+    <xsl:variable name="bitmap" select="bitmap | grid/bitmap" />
+    <xsl:value-of select="concat('!', $name, 'Picture.')" />
+    <xsl:choose>
+      <xsl:when test="$bitmap">
+        <xsl:value-of select="concat('loadFromImage(pictures::rows(', $name, 'Rows, ')" />
+        <xsl:choose>
+          <xsl:when test="$bitmap/scale"><xsl:call-template name="whole-number"><xsl:with-param name="node" select="$bitmap/scale" /></xsl:call-template></xsl:when>
+          <xsl:otherwise>1</xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="color"><xsl:with-param name="name" select="$bitmap/color" /></xsl:call-template>
+        <xsl:text>))</xsl:text>
+      </xsl:when>
+      <xsl:when test="line">
+        <xsl:value-of select="concat('loadFromImage(pictures::lines(', $name, 'Lines))')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>loadFromFile(</xsl:text>
+        <xsl:variable name="file"><xsl:call-template name="drawn-file" /></xsl:variable>
+        <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="$file" /></xsl:call-template>
+        <xsl:text>)</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A value C++ wants as an int (a line's thickness): a number as it is,
+       anything else worked out and rounded. -->
+  <xsl:template name="whole-int">
+    <xsl:param name="node" />
+    <xsl:variable name="text" select="normalize-space($node)" />
+    <xsl:choose>
+      <xsl:when test="not($node/*) and $text != '' and translate($text, $digits, '') = ''">
+        <xsl:value-of select="$text" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>static_cast&lt;int&gt;(std::lround(</xsl:text>
+        <xsl:call-template name="value-bare"><xsl:with-param name="node" select="$node" /></xsl:call-template>
+        <xsl:text>))</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

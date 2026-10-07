@@ -31,12 +31,14 @@ namespace xge
 	};
 
 	// What was written to the output folder: the program's files (those the
-	// stylesheet wrote and the target's modules copied beside them) and the
-	// game's assets, as paths relative to the output folder.
+	// stylesheet wrote and the target's modules copied beside them), the
+	// game's assets, and the pictures drawn from its <svg>s, as paths relative
+	// to the output folder.
 	struct GeneratedProgram
 	{
 		std::vector<std::filesystem::path> files;
 		std::vector<std::filesystem::path> assets;
+		std::vector<std::filesystem::path> drawn;
 	};
 
 	// Whether this program was built with libxslt, which --generate needs.
