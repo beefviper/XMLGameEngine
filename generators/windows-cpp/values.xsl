@@ -23,8 +23,31 @@
 
   <!-- A name from the game as a C++ name: camel case, its dots and dashes
        taken out and the letter after each made a capital (ball.radius is
-       ballRadius, window.width.center is windowWidthCenter). -->
+       ballRadius, window.width.center is windowWidthCenter). A name C++ or the
+       program already has gets an underscore after it (continue is continue_). -->
   <xsl:template name="cpp-name">
+    <xsl:param name="name" />
+    <xsl:variable name="camel">
+      <xsl:call-template name="cpp-camel">
+        <xsl:with-param name="name" select="$name" />
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:value-of select="$camel" />
+    <xsl:if test="contains($reserved, concat(' ', $camel, ' '))">_</xsl:if>
+  </xsl:template>
+
+  <!-- C++'s keywords, and the names the program itself uses. -->
+  <xsl:variable name="reserved" select="concat(
+    ' alignas alignof and and_eq asm auto bitand bitor bool break case catch char char8_t char16_t char32_t',
+    ' class compl concept const consteval constexpr constinit const_cast continue co_await co_return co_yield',
+    ' decltype default delete do double dynamic_cast else enum explicit export extern false float for friend',
+    ' goto if inline int long mutable namespace new noexcept not not_eq nullptr operator or or_eq private',
+    ' protected public register reinterpret_cast requires return short signed sizeof static static_assert',
+    ' static_cast struct switch template this thread_local throw true try typedef typeid typename union',
+    ' unsigned using virtual void volatile wchar_t while xor xor_eq',
+    ' main window font screens background framerate setup start pressed sign randomBetween physics sound sf std ')" />
+
+  <xsl:template name="cpp-camel">
     <xsl:param name="name" />
     <xsl:variable name="cut" select="translate($name, '-', '.')" />
     <xsl:choose>
@@ -32,7 +55,7 @@
         <xsl:value-of select="substring-before($cut, '.')" />
         <xsl:variable name="rest" select="substring-after($cut, '.')" />
         <xsl:value-of select="translate(substring($rest, 1, 1), $lower, $upper)" />
-        <xsl:call-template name="cpp-name">
+        <xsl:call-template name="cpp-camel">
           <xsl:with-param name="name" select="substring($rest, 2)" />
         </xsl:call-template>
       </xsl:when>
@@ -47,7 +70,7 @@
   <xsl:template name="cpp-title">
     <xsl:param name="name" />
     <xsl:variable name="camel">
-      <xsl:call-template name="cpp-name">
+      <xsl:call-template name="cpp-camel">
         <xsl:with-param name="name" select="$name" />
       </xsl:call-template>
     </xsl:variable>
@@ -104,6 +127,15 @@
               <xsl:call-template name="cpp-name">
                 <xsl:with-param name="name" select="$word" />
               </xsl:call-template>
+            </xsl:when>
+            <!-- an object's size (title.width), as it is drawn now -->
+            <xsl:when test="(substring-after($word, '.') = 'width' or substring-after($word, '.') = 'height')
+                            and $game/objects/object[@name = substring-before($word, '.')]">
+              <xsl:value-of select="concat('physics::', substring-after($word, '.'), '(')" />
+              <xsl:call-template name="cpp-name">
+                <xsl:with-param name="name" select="substring-before($word, '.')" />
+              </xsl:call-template>
+              <xsl:text>)</xsl:text>
             </xsl:when>
             <xsl:otherwise>
               <xsl:call-template name="refuse">

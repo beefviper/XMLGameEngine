@@ -4,7 +4,8 @@
 <!-- author: beefviper -->
 <!-- date: Oct 5, 2026 -->
 
-<!-- The few small functions a generated game may need, kept here as plain C++
+<!-- The few small functions a generated game may need beside its modules
+     (modules/physics.h and sound.h), kept here as plain C++
      (CDATA, so nothing in them is escaped). generate.xsl writes a function's
      declaration with the others and its definition at the bottom, only when the
      game uses it; `uses` names the standard headers it needs. -->
@@ -30,118 +31,6 @@ float randomBetween(float low, float high)
 float sign(float value)
 {
 	return value < 0.0f ? -1.0f : (value > 0.0f ? 1.0f : 0.0f);
-}
-]]></definition>
-  </function>
-
-  <function name="left">
-    <declaration>float left(const sf::Shape&amp; shape);</declaration>
-    <definition><![CDATA[
-float left(const sf::Shape& shape)
-{
-	return shape.getGlobalBounds().position.x;
-}
-]]></definition>
-  </function>
-
-  <function name="right">
-    <declaration>float right(const sf::Shape&amp; shape);</declaration>
-    <definition><![CDATA[
-float right(const sf::Shape& shape)
-{
-	const sf::FloatRect bounds = shape.getGlobalBounds();
-	return bounds.position.x + bounds.size.x;
-}
-]]></definition>
-  </function>
-
-  <function name="top">
-    <declaration>float top(const sf::Shape&amp; shape);</declaration>
-    <definition><![CDATA[
-float top(const sf::Shape& shape)
-{
-	return shape.getGlobalBounds().position.y;
-}
-]]></definition>
-  </function>
-
-  <function name="bottom">
-    <declaration>float bottom(const sf::Shape&amp; shape);</declaration>
-    <definition><![CDATA[
-float bottom(const sf::Shape& shape)
-{
-	const sf::FloatRect bounds = shape.getGlobalBounds();
-	return bounds.position.y + bounds.size.y;
-}
-]]></definition>
-  </function>
-
-  <function name="touching">
-    <declaration>bool touching(const sf::Shape&amp; first, const sf::Shape&amp; second);</declaration>
-    <definition><![CDATA[
-bool touching(const sf::Shape& first, const sf::Shape& second)
-{
-	return first.getGlobalBounds().findIntersection(second.getGlobalBounds()).has_value();
-}
-]]></definition>
-  </function>
-
-  <function name="bounceOff" uses="cmath">
-    <declaration>void bounceOff(sf::Shape&amp; mover, sf::Vector2f&amp; velocity, const sf::Shape&amp; other);</declaration>
-    <definition><![CDATA[
-// Out of the side of `other` it went into, heading away from it.
-void bounceOff(sf::Shape& mover, sf::Vector2f& velocity, const sf::Shape& other)
-{
-	const sf::FloatRect bounds = mover.getGlobalBounds();
-	const sf::FloatRect otherBounds = other.getGlobalBounds();
-	const sf::FloatRect overlap = bounds.findIntersection(otherBounds).value_or(sf::FloatRect{});
-	const sf::Vector2f offset = bounds.getCenter() - otherBounds.getCenter();
-
-	if (overlap.size.x < overlap.size.y)
-	{
-		const float side = offset.x < 0.0f ? -1.0f : 1.0f;
-		mover.move({side * overlap.size.x, 0.0f});
-		velocity.x = side * std::abs(velocity.x);
-	}
-	else
-	{
-		const float side = offset.y < 0.0f ? -1.0f : 1.0f;
-		mover.move({0.0f, side * overlap.size.y});
-		velocity.y = side * std::abs(velocity.y);
-	}
-}
-]]></definition>
-  </function>
-
-  <function name="deflect" uses="algorithm">
-    <declaration>void deflect(sf::Shape&amp; mover, sf::Vector2f&amp; velocity, const sf::Shape&amp; other, float maxDegrees);</declaration>
-    <definition><![CDATA[
-// Out of the side of `other` it went into, at the same speed: straight out
-// from the middle of that side, and up to `maxDegrees` towards either end.
-void deflect(sf::Shape& mover, sf::Vector2f& velocity, const sf::Shape& other, float maxDegrees)
-{
-	const sf::FloatRect bounds = mover.getGlobalBounds();
-	const sf::FloatRect otherBounds = other.getGlobalBounds();
-	const sf::FloatRect overlap = bounds.findIntersection(otherBounds).value_or(sf::FloatRect{});
-	const sf::Vector2f offset = bounds.getCenter() - otherBounds.getCenter();
-	const float speed = velocity.length();
-
-	if (overlap.size.x < overlap.size.y)
-	{
-		// a left or right side: angled by how far up or down it hit
-		const float angle = std::clamp(offset.y / (otherBounds.size.y / 2.0f), -1.0f, 1.0f) * maxDegrees;
-		const float side = offset.x < 0.0f ? -1.0f : 1.0f;
-		mover.move({side * overlap.size.x, 0.0f});
-		velocity = sf::Vector2f(speed, sf::degrees(side < 0.0f ? 180.0f - angle : angle));
-	}
-	else
-	{
-		// the top or bottom: angled by how far left or right it hit
-		const float angle = std::clamp(offset.x / (otherBounds.size.x / 2.0f), -1.0f, 1.0f) * maxDegrees;
-		const float side = offset.y < 0.0f ? -1.0f : 1.0f;
-		mover.move({0.0f, side * overlap.size.y});
-		velocity = sf::Vector2f(speed, sf::degrees(side < 0.0f ? angle - 90.0f : 90.0f - angle));
-	}
 }
 ]]></definition>
   </function>

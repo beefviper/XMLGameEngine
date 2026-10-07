@@ -211,13 +211,10 @@ namespace xge
 			const std::string element(reinterpret_cast<const char*>(node->name));
 			const std::filesystem::path path = attribute(node, "path");
 
-			if (element == "file")
+			// A file copied in: a game's asset from the data folder, or one of the
+			// target's modules (physics.h) from its modules/ folder.
+			const auto copyIn = [&](const std::filesystem::path& from)
 			{
-				program.files.push_back(path);
-			}
-			else if (element == "asset")
-			{
-				const std::filesystem::path from = request.dataFolder / path;
 				const std::filesystem::path to = output / path;
 				std::error_code failed;
 				std::filesystem::create_directories(to.parent_path(), failed);
@@ -226,6 +223,20 @@ namespace xge
 				{
 					throw GenerateError("could not copy " + from.string() + " to " + to.string() + ": " + failed.message());
 				}
+			};
+
+			if (element == "file")
+			{
+				program.files.push_back(path);
+			}
+			else if (element == "module")
+			{
+				copyIn(request.generators / request.target / "modules" / path);
+				program.files.push_back(path);
+			}
+			else if (element == "asset")
+			{
+				copyIn(request.dataFolder / path);
 				program.assets.push_back(path);
 			}
 		}
