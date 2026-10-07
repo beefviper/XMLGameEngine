@@ -30,7 +30,12 @@ set(data_xml
 	"games/frostbite.xml"
 	"games/donkeykong.xml"
 	"games/galaxian.xml"
-	"games/pong_min.xml")
+	"games/pong_min.xml"
+	"games/pitfall.xml"
+	"games/missilecommand.xml"
+	"games/combat.xml"
+	"games/airseabattle.xml"
+	"games/megamania.xml")
 
 set(data_assets
 	"assets/tuffy.ttf"

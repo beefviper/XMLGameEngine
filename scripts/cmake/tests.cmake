@@ -81,6 +81,11 @@ add_executable(xgetest
 	"tests/test_data_folder.cpp"
 	"tests/test_generate.cpp"
 	"tests/test_galaxian.cpp"
+	"tests/test_pitfall.cpp"
+	"tests/test_missilecommand.cpp"
+	"tests/test_combat.cpp"
+	"tests/test_airseabattle.cpp"
+	"tests/test_megamania.cpp"
 	"cli/source/cli.cpp"
 	"cli/source/generate.cpp"
 )
