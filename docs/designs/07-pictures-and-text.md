@@ -56,6 +56,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 
 - Need: Frostbite's ice turns blue when landed on and its igloo grows a block at a time; Frogger faked a filled home with a frog under each pad.
 - **Several named sprites and no animation are *looks*.** `<become sprite="name" />` (or `object=` for a name or group) switches the picture; a reset shows the first. A collision rule with `sprite="white"` runs only while its object shows that look, so a row gives one block and then no more until it turns white again.
+- **Looks count hits.** Breakout's top row takes two (`whole`, then `cracked`). A per-object variable could count them, but `<die />` has no condition, so the variable could not end the brick; a look can, and the player sees the count. Rules run in the order written and each sees the look as the rule before left it, so the rule for the last look comes first. A row cannot have rules of its own, so the row is a group of its own in the class `bricks`.
 - Chosen over class changes (`<become class>`: rules already filter by class, but the change would not be visible and colour would need its own command) and per-object state variables. **The look is the state: what the player sees is what the rule tests.**
 - A look is a spriteParams plus a bitmap swapped in and marked dirty, so no backend changed. Looks do not combine with an animation or a heading; a look cannot be a bound number text. No recoloring.
 

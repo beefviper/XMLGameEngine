@@ -58,6 +58,7 @@ add_executable(xgetest
 	"tests/test_equations.cpp"
 	"tests/test_backends.cpp"
 	"tests/test_group.cpp"
+	"tests/test_breakout.cpp"
 	"tests/test_frogger.cpp"
 	"tests/test_spacerace.cpp"
 	"tests/test_kaboom.cpp"

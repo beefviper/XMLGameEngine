@@ -375,14 +375,42 @@ TEST_CASE("generating Breakout writes its bricks as one group of columns and row
 	CHECK(main.find("\t// bricks, row 2\n\tfor (std::size_t i = 9; i < 18; ++i)\n\t{\n\t\tbricks[i].setFillColor(sf::Color(255, 165, 0, 255));\n\t}") != std::string::npos);
 	// the top row first, left to right, as the engine lays them out
 	CHECK(main.find("\t// bricks: 9 columns by 6 rows\n\tfor (std::size_t row = 0; row < 6; ++row)\n\t{\n\t\tfor (std::size_t column = 0; column < 9; ++column)\n\t\t{\n"
-		"\t\t\tbricks[row * 9 + column].setPosition({margin + static_cast<float>(column) * (width + 5.0f), margin / 2.0f + static_cast<float>(row) * (height + 5.0f)});") != std::string::npos);
+		"\t\t\tbricks[row * 9 + column].setPosition({margin + static_cast<float>(column) * (width + 5.0f), margin / 2.0f + height + 5.0f + static_cast<float>(row) * (height + 5.0f)});") != std::string::npos);
 	// the bricks never move, so their bounce off the sides is left out
 	CHECK(main.find("physics::past(bricks") == std::string::npos);
 	// every rule about the bottom in one touch of it: the ball bounces and dies
 	CHECK(main.find("\t// bottom: bounce die\n\tif (physics::past(ball, physics::Edge::Bottom, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Bottom, windowArea);\n\t\tballAlive = false;\n\t\treturn;") != std::string::npos);
-	CHECK(main.find("\t// bricks: none left\n\tif (std::count(bricksAlive.begin(), bricksAlive.end(), true) == 0)\n\t{\n\t\tscreens.push_back(Screen::Youwin);") != std::string::npos);
+	// the class counts both groups of bricks
+	CHECK(main.find("\t// bricks: none left\n\tif (std::count(strongAlive.begin(), strongAlive.end(), true) + std::count(bricksAlive.begin(), bricksAlive.end(), true) == 0)\n\t{\n\t\tscreens.push_back(Screen::Youwin);") != std::string::npos);
 	CHECK(main.find("\t// ball: none left\n\tif (!ballAlive)\n\t{\n\t\tscreens.push_back(Screen::Gameover);") != std::string::npos);
 	CHECK(main.find("#include <algorithm>") != std::string::npos);
+}
+
+TEST_CASE("generating Breakout gives the top row two looks, whole and cracked, and a rule for each", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_breakout_looks");
+	generateGame(requestFor(fs::current_path() / "games/breakout.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// an enum of its looks, and the one each brick shows
+	CHECK(main.find("enum class StrongLook { Whole, Cracked };\nstd::vector<StrongLook> strongLook(9);") != std::string::npos);
+	CHECK(main.find("void becomeStrong(std::size_t i, StrongLook look)\n{\n\tstrongLook[i] = look;\n\tswitch (look)\n\t{\n\tcase StrongLook::Whole:\n") != std::string::npos);
+	CHECK(main.find("\tcase StrongLook::Cracked:\n\t\tstrong[i].setSize({width, height});\n\t\tstrong[i].setFillColor(sf::Color(64, 64, 64, 255));\n\t\tbreak;") != std::string::npos);
+	// start() shows the first look on every brick
+	CHECK(main.find("\tfor (std::size_t i = 0; i < strong.size(); ++i)\n\t{\n\t\tbecomeStrong(i, StrongLook::Whole);\n\t}") != std::string::npos);
+	// the rules in the order written, each looking at the look as it comes:
+	// a cracked brick goes, a whole one cracks, and a hit does only one
+	CHECK(main.find("\t\t\tif (strongLook[j] == StrongLook::Cracked)\n\t\t\t{\n\t\t\t\tstrongAlive[j] = false;\n\t\t\t}\n"
+		"\t\t\tif (strongLook[j] == StrongLook::Whole)\n\t\t\t{\n\t\t\t\tbecomeStrong(j, StrongLook::Cracked);\n\t\t\t}\n"
+		"\t\t\tphysics::bounceOff(ball, ballVelocity, strong[j]);") != std::string::npos);
+	// its rules are all about the ball, written with the ball's: nothing left of its own each frame
+	CHECK(main.find("void updateStrong()") == std::string::npos);
+	CHECK(main.find("\t// strong: 9 columns by 1 row\n") != std::string::npos);
 }
 
 TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, and it dies where it hits", "[generate]")
@@ -450,7 +478,7 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 	CHECK(main.find("\t\t\taliensVelocity.x = -aliensVelocity.x;\n\t\t\tfor (sf::CircleShape& each : aliens)\n\t\t\t{\n\t\t\t\teach.move({aliensVelocity.x, 0.0f});") != std::string::npos);
 	CHECK(main.find("\t// aliens: no more than 11 left\n\tif (std::count(aliensAlive.begin(), aliensAlive.end(), true) <= 11)\n\t{\n\t\tstart();") != std::string::npos);
 
-	// a row's variables, and several looks, are not written yet
+	// a row's variables, and a row's sprite in a group of several looks, are not written yet
 	const auto refused = [&](const std::string& from, const std::string& to)
 	{
 		std::string xml = readFile(folder.path / "block.xml");
@@ -467,7 +495,8 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 		return std::string("generated it");
 	};
 	CHECK(refused("<row number=\"even\"><sprite><circle><color>color.red</color></circle></sprite></row>", "<row number=\"even\"><variables><variable name=\"points\">2</variable></variables></row>").find("cannot generate <variables> of a <row> yet") != std::string::npos);
-	CHECK(refused("<circle><color>color.red</color></circle></sprite>", "<circle><color>color.red</color></circle></sprite><sprite name=\"hit\"><circle><radius>2</radius></circle></sprite>").find("cannot generate a <group> with more than one <sprite> (looks or an animation) yet") != std::string::npos);
+	CHECK(refused("<circle><color>color.red</color></circle></sprite>", "<circle><color>color.red</color></circle></sprite><sprite name=\"hit\"><circle><radius>2</radius></circle></sprite>").find("cannot generate a <member>, <row>, <column> or <cell> with a <sprite> in a group of several looks yet") != std::string::npos);
+	CHECK(refused("<collision edge=\"top\">", "<collision edge=\"top\" sprite=\"whole\">").find("cannot generate a <collision> with both sprite= and edge= yet") != std::string::npos);
 }
 
 TEST_CASE("a group's rows, columns and cells change what they pick, and each cell is where the engine puts it", "[generate]")

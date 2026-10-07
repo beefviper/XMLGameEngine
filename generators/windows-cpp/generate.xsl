@@ -31,6 +31,7 @@
   <xsl:include href="check.xsl" />
   <xsl:include href="main.xsl" />
   <xsl:include href="groups.xsl" />
+  <xsl:include href="looks.xsl" />
 
   <xsl:output method="xml" indent="yes" encoding="UTF-8" />
 

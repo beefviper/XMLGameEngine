@@ -67,6 +67,42 @@
         </action>
       </actions>
     </object>
+    <!-- The top row takes two hits: whole, then cracked. A row cannot have
+         rules of its own (a group's rules are every cell's), so it is a group
+         of its own, in the same class. Its rules run in the order written, and
+         a look changed by one is the look the next one sees, so the cracked
+         rule comes first: a whole brick that is hit cracks, and only the next
+         hit takes it out. -->
+    <group name="strong" class="bricks">
+      <columns>9</columns>
+      <rows>1</rows>
+      <padding><x>5</x></padding>
+      <sprite name="whole">
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+          <color>color.lightgrey</color>
+        </rectangle>
+      </sprite>
+      <sprite name="cracked">
+        <rectangle>
+          <width>width</width>
+          <height>height</height>
+          <color>color.darkgrey</color>
+        </rectangle>
+      </sprite>
+      <position><x>margin</x><y>margin / 2</y></position>
+      <velocity><x>0</x><y>0</y></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="ball" sprite="cracked">
+          <die />
+        </collision>
+        <collision object="ball" sprite="whole">
+          <become sprite="cracked" />
+        </collision>
+      </collisions>
+    </group>
     <group name="bricks" class="bricks">
       <columns>9</columns>
       <rows>6</rows>
@@ -78,7 +114,7 @@
           <color>color.red</color>
         </rectangle>
       </sprite>
-      <position><x>margin</x><y>margin / 2</y></position>
+      <position><x>margin</x><y>margin / 2 + height + 5</y></position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
@@ -250,6 +286,7 @@
       <shows>
         <show object="ball" />
         <show object="player" />
+        <show object="strong" />
         <show object="bricks" />
       </shows>
       <inputs>
