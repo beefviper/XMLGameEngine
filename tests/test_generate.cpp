@@ -444,13 +444,13 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 	// 6 columns by 2 rows, the top row first as the engine lays them out; every even row red
 	CHECK(main.find("std::vector<sf::CircleShape> aliens(12);") != std::string::npos);
 	CHECK(main.find("\t\t\taliens[row * 6 + column].setPosition({20.0f + static_cast<float>(column) * (2.0f * 5.0f + 4.0f), 20.0f + static_cast<float>(row) * (2.0f * 5.0f + 4.0f)});") != std::string::npos);
-	CHECK(main.find("\t// aliens, every even row\n\tfor (std::size_t row = 1; row < 2; row += 2)\n\t{\n\t\tfor (std::size_t column = 0; column < 6; ++column)\n\t\t{\n\t\t\taliens[row * 6 + column].setFillColor(sf::Color::Red);") != std::string::npos);
+	CHECK(main.find("\t// aliens, every even row\n\tfor (std::size_t i = 6; i < 12; ++i)\n\t{\n\t\taliens[i].setFillColor(sf::Color::Red);\n\t}") != std::string::npos);
 	// all of the block moved first, then its rules
 	CHECK(main.find("void updateAliens()\n{\n\tfor (sf::CircleShape& one : aliens)\n\t{\n\t\tone.move(aliensVelocity);\n\t}\n\n\tfor (std::size_t i = 0; i < aliens.size(); ++i)") != std::string::npos);
 	CHECK(main.find("\t\t\taliensVelocity.x = -aliensVelocity.x;\n\t\t\tfor (sf::CircleShape& each : aliens)\n\t\t\t{\n\t\t\t\teach.move({aliensVelocity.x, 0.0f});") != std::string::npos);
 	CHECK(main.find("\t// aliens: no more than 11 left\n\tif (std::count(aliensAlive.begin(), aliensAlive.end(), true) <= 11)\n\t{\n\t\tstart();") != std::string::npos);
 
-	// what a row, column or cell changes, beyond a row's color, is not written yet
+	// a row's variables, and several looks, are not written yet
 	const auto refused = [&](const std::string& from, const std::string& to)
 	{
 		std::string xml = readFile(folder.path / "block.xml");
@@ -466,8 +466,96 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 		}
 		return std::string("generated it");
 	};
-	CHECK(refused("<row number=\"even\"><sprite><circle><color>color.red</color></circle></sprite></row>", "<column number=\"1\" />").find("cannot generate <column> yet") != std::string::npos);
-	CHECK(refused("<circle><color>color.red</color></circle>", "<circle><radius>8</radius></circle>").find("cannot generate a <row> that changes more than the color of a circle or rectangle yet") != std::string::npos);
+	CHECK(refused("<row number=\"even\"><sprite><circle><color>color.red</color></circle></sprite></row>", "<row number=\"even\"><variables><variable name=\"points\">2</variable></variables></row>").find("cannot generate <variables> of a <row> yet") != std::string::npos);
+	CHECK(refused("<circle><color>color.red</color></circle></sprite>", "<circle><color>color.red</color></circle></sprite><sprite name=\"hit\"><circle><radius>2</radius></circle></sprite>").find("cannot generate a <group> with more than one <sprite> (looks or an animation) yet") != std::string::npos);
+}
+
+TEST_CASE("a group's rows, columns and cells change what they pick, and each cell is where the engine puts it", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_cells");
+	fs::create_directories(folder.path);
+	std::ofstream(folder.path / "cells.xml") <<
+		"<game>\n"
+		"  <window name=\"Cells\"><width>400</width><height>300</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>\n"
+		"  <variables><variable name=\"gap\">3</variable></variables>\n"
+		"  <objects>\n"
+		"    <group name=\"dots\">\n"
+		"      <columns>5</columns><rows>4</rows><padding><x>gap</x><y>2</y></padding>\n"
+		"      <sprite><circle><radius>5</radius><color>color.green</color></circle></sprite>\n"
+		"      <position><x>10</x><y>20</y></position>\n"
+		"      <velocity><x>1</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>false</enabled></collisions>\n"
+		"      <row number=\"2\"><sprite><circle><radius>7</radius></circle></sprite><padding><y>6</y></padding></row>\n"
+		"      <row number=\"4\"><velocity><x>-1</x></velocity></row>\n"
+		"      <column number=\"odd\"><velocity><y>0.5</y></velocity></column>\n"
+		"      <column number=\"3\"><padding><x>10</x></padding></column>\n"
+		"      <cell row=\"3\" column=\"4\"><sprite><circle><radius>3</radius><color>color.yellow</color></circle></sprite><velocity><x>0</x></velocity></cell>\n"
+		"    </group>\n"
+		"    <group name=\"bars\">\n"
+		"      <columns>4</columns><rows>3</rows><padding><x>2</x><y>4</y></padding>\n"
+		"      <sprite><rectangle><width>20</width><height>10</height></rectangle></sprite>\n"
+		"      <position><x>10</x><y>150</y></position>\n"
+		"      <velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>false</enabled></collisions>\n"
+		"      <column number=\"even\"><sprite><rectangle><color>color.red</color></rectangle></sprite></column>\n"
+		"    </group>\n"
+		"    <group name=\"invaders\">\n"
+		"      <columns>3</columns><rows>2</rows><padding><x>4</x><y>4</y></padding>\n"
+		"      <sprite><bitmap><row>.**.</row><row>****</row><row>*..*</row><scale>2</scale><color>color.green</color></bitmap></sprite>\n"
+		"      <position><x>200</x><y>20</y></position>\n"
+		"      <velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>false</enabled></collisions>\n"
+		"      <row number=\"2\"><sprite><bitmap><row>*....*</row><row>.****.</row></bitmap></sprite></row>\n"
+		"      <cell row=\"1\" column=\"3\"><sprite><bitmap><color>color.red</color></bitmap></sprite></cell>\n"
+		"    </group>\n"
+		"    <group name=\"birds\">\n"
+		"      <sprite><circle><radius>4</radius><color>color.yellow</color></circle></sprite>\n"
+		"      <position><y>250</y></position>\n"
+		"      <velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>false</enabled></collisions>\n"
+		"      <member><position><x>200</x></position></member>\n"
+		"      <member><sprite><circle><radius>6</radius></circle></sprite><position><x>230</x></position></member>\n"
+		"    </group>\n"
+		"  </objects>\n"
+		"  <states><state name=\"playing\"><shows><show object=\"dots\" /><show object=\"bars\" /><show object=\"invaders\" /><show object=\"birds\" /></shows>\n"
+		"    <inputs><input button=\"space\"><reset /></input></inputs></state></states>\n"
+		"</game>\n";
+	generateGame(requestFor(folder.path / "cells.xml", folder.path / "out"));
+	const std::string main = readFile(folder.path / "out/main.cpp");
+
+	// the group's look on every one, then only what a row or cell changes
+	CHECK(main.find("\tfor (sf::CircleShape& one : dots)\n\t{\n\t\tone.setRadius(5.0f);\n\t\tone.setFillColor(sf::Color::Green);\n\t}") != std::string::npos);
+	CHECK(main.find("\t// dots, row 2\n\tfor (std::size_t i = 5; i < 10; ++i)\n\t{\n\t\tdots[i].setRadius(7.0f);\n\t}") != std::string::npos);
+	CHECK(main.find("\t// dots, column 4, row 3\n\tdots[13].setRadius(3.0f);\n\tdots[13].setFillColor(sf::Color::Yellow);") != std::string::npos);
+	// whole columns in a loop over every row
+	CHECK(main.find("\t// bars, every even column\n\tfor (std::size_t row = 0; row < 3; ++row)\n\t{\n\t\tfor (std::size_t column : {1u, 3u})\n\t\t{\n\t\t\tbars[row * 4 + column].setFillColor(sf::Color::Red);") != std::string::npos);
+	// a member's sprite changes only what it gives
+	CHECK(main.find("\t// birds.2, a look of its own\n\tbirds[1].setRadius(6.0f);\n") != std::string::npos);
+
+	// rows of other sizes, one at a time; a column's gap before it, a cell at a time
+	CHECK(main.find("\t// dots: 5 columns by 4 rows, each row as big as its look\n\tfloat dotsTop = 20.0f;\n\t// row 1\n\tfloat dotsLeft = 10.0f;\n\tdots[0].setPosition({dotsLeft, dotsTop});\n"
+		"\tdotsLeft += 2.0f * 5.0f + gap;\n\tdots[1].setPosition({dotsLeft, dotsTop});\n\tdotsLeft += 2.0f * 5.0f + 10.0f;\n\tdots[2].setPosition({dotsLeft, dotsTop});") != std::string::npos);
+	CHECK(main.find("\tdotsTop += 2.0f * 5.0f + 6.0f;\n\t// row 2\n\tdotsLeft = 10.0f;\n") != std::string::npos);
+	// a smaller cell in the middle of its place
+	CHECK(main.find("\t// dots, column 4, row 3: in the middle of its place\n\tdots[13].move({(2.0f * 5.0f - 2.0f * 3.0f) / 2.0f, (2.0f * 5.0f - 2.0f * 3.0f) / 2.0f});") != std::string::npos);
+	// rows alike: two loops, as before
+	CHECK(main.find("\t\t\tbars[row * 4 + column].setPosition({10.0f + static_cast<float>(column) * (20.0f + 2.0f), 150.0f + static_cast<float>(row) * (10.0f + 4.0f)});") != std::string::npos);
+
+	// a velocity each: the group's, then each other on the cells that have it
+	CHECK(main.find("std::vector<sf::Vector2f> dotsVelocity;") != std::string::npos);
+	CHECK(main.find("\tdotsVelocity.assign(20, {1.0f, 0.0f});\n\t// dots, every odd column\n\tfor (std::size_t i : {0u, 2u, 4u, 5u, 7u, 9u, 10u, 12u, 14u})\n\t{\n\t\tdotsVelocity[i] = {1.0f, 0.5f};") != std::string::npos);
+	CHECK(main.find("\t// dots, row 4, every odd column\n\tfor (std::size_t i : {15u, 17u, 19u})\n\t{\n\t\tdotsVelocity[i] = {-1.0f, 0.5f};") != std::string::npos);
+
+	// a picture for each look; a row's new rows, and a cell's color on the group's rows
+	CHECK(main.find("!invadersColumn3Row1Picture.loadFromImage(pictures::rows(invadersRows, 2, sf::Color::Red))") != std::string::npos);
+	CHECK(main.find("!invadersRow2Picture.loadFromImage(pictures::rows(invadersRow2Rows, 2, sf::Color::Green))") != std::string::npos);
+	CHECK(main.find("invadersColumn3Row1Rows") == std::string::npos);
+	CHECK(main.find("\tinvadersTop += static_cast<float>(invadersPicture.getSize().y) + 4.0f;") != std::string::npos);
 }
 
 TEST_CASE("a sprite of rows, of lines or from an SVG is a picture the program has, drawn as the engine draws it", "[generate]")

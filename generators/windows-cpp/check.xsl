@@ -8,7 +8,7 @@
      Freeway, Breakout and Depth Charge. Screens on a stack, rectangles, circles, texts (words
      or a number) and pictures (from a file, rows of text, lines or an SVG); objects that move, bounce, stick, deflect, wrap
      round, start again and die; groups of them, listed or in columns and rows
-     (each row a color of its own), moving as one block or each its own way; keys held to move, and keys pressed to hop,
+     (each member, row, column or cell changing what it picks), moving as one block or each its own way; keys held to move, and keys pressed to hop,
      fire, change screen, start again, play a sound or count; conditions on an
      object's number or on how many are left; and sounds. Anything else stops the generator with a
      message saying what and where, rather than writing a program that plays a
@@ -17,7 +17,7 @@
 
   <xsl:variable name="supported" select="concat(
     ' game window width height background fullscreen framerate variables variable',
-    ' objects object group member sprite circle radius rectangle color text content number size image path flip columns rows padding',
+    ' objects object group member row column cell sprite circle radius rectangle color text content number size image path flip columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity',
     ' collisions enabled lockstep collision bounce stick reset deflect wrap die actions action move hop fire',
@@ -33,7 +33,7 @@
        an edge, so its edge rules are left out. -->
   <xsl:template name="moves">
     <xsl:for-each select="ancestor-or-self::*[parent::objects]">
-      <xsl:if test="(velocity | member/velocity)[x/* or y/* or number(x) != 0 or number(y) != 0] or actions/action/*">yes</xsl:if>
+      <xsl:if test="(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0] or actions/action/*">yes</xsl:if>
     </xsl:for-each>
   </xsl:template>
 
@@ -90,13 +90,13 @@
       </xsl:when>
       <!-- one kind: circles, rectangles, texts, or pictures (sf::Sprite: an
            image, a bitmap, an svg or lines) -->
-      <xsl:when test="self::group and number(boolean((sprite | member/sprite)/descendant-or-self::*[self::circle])) + number(boolean((sprite | member/sprite)/descendant-or-self::*[self::rectangle]))
-                                      + number(boolean((sprite | member/sprite)/descendant-or-self::*[self::text])) + number(boolean((sprite | member/sprite)/descendant-or-self::*[self::image or self::bitmap or self::svg or self::line])) &gt; 1">
+      <xsl:when test="self::group and number(boolean((sprite | */sprite)/descendant-or-self::*[self::circle])) + number(boolean((sprite | */sprite)/descendant-or-self::*[self::rectangle]))
+                                      + number(boolean((sprite | */sprite)/descendant-or-self::*[self::text])) + number(boolean((sprite | */sprite)/descendant-or-self::*[self::image or self::bitmap or self::svg or self::line])) &gt; 1">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'a &lt;group&gt; whose members are not all one kind of shape'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::group and (sprite | member/sprite)/text">
+      <xsl:when test="self::group and (sprite | */sprite)/text">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'a &lt;group&gt; of texts'" />
         </xsl:call-template>
@@ -106,28 +106,25 @@
           <xsl:with-param name="what" select="'&lt;lockstep&gt; on an object (only on a &lt;group&gt;)'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::group and normalize-space(collisions/lockstep) = 'true' and member/velocity">
+      <xsl:when test="self::group and normalize-space(collisions/lockstep) = 'true' and */velocity">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;group&gt; in &lt;lockstep&gt; whose members have velocities of their own'" />
+          <xsl:with-param name="what" select="'a &lt;group&gt; in &lt;lockstep&gt; whose members or cells have velocities of their own'" />
         </xsl:call-template>
       </xsl:when>
-      <!-- a group in columns and rows: one look for every cell, a row may
-           change its color -->
-      <xsl:when test="self::group and columns and count(sprite) != 1">
+      <!-- one look each, so a part's <sprite> changes the group's -->
+      <xsl:when test="self::group and (sprite[2] or */sprite[2])">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;group&gt; in columns and rows without one &lt;sprite&gt;'" />
+          <xsl:with-param name="what" select="'a &lt;group&gt; with more than one &lt;sprite&gt; (looks or an animation)'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::row and parent::group and (*[not(self::sprite)] or count(sprite) != 1 or not(sprite/*[self::circle or self::rectangle][count(*) = 1 and color])
-                      or local-name(sprite/*) != local-name(../sprite/*))">
+      <xsl:when test="self::sprite and parent::*[parent::group] and ../../sprite and string(@name) != string(../../sprite/@name)">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;row&gt; that changes more than the color of a circle or rectangle'" />
+          <xsl:with-param name="what" select="concat('a &lt;sprite&gt; of a &lt;', local-name(..), '&gt; with another name than the sprite of its group (a look of its own)')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::sprite and parent::member and (circle[not(radius)] or rectangle[not(width and height)] or text[not((content or number) and size)]
-                      or image[not(path)] or bitmap[not(row)] or svg[not(path)])">
+      <xsl:when test="self::variables and parent::*[self::row or self::column or self::cell]">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;sprite&gt; of a member that gives only part of a sprite of its group'" />
+          <xsl:with-param name="what" select="concat('&lt;variables&gt; of a &lt;', local-name(..), '&gt;')" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="(self::columns or self::rows) and (* or translate(normalize-space(.), $digits, '') != '' or normalize-space(.) = '' or number(.) &lt; 1)">
@@ -166,7 +163,7 @@
           <xsl:with-param name="what" select="'&lt;wrap /&gt; with other commands in the same &lt;collision&gt;'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::wrap and not(ancestor::*[parent::objects][(velocity | member/velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]])">
+      <xsl:when test="self::wrap and not(ancestor::*[parent::objects][(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]])">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'&lt;wrap /&gt; on something with no &lt;velocity&gt; of its own'" />
         </xsl:call-template>
@@ -181,7 +178,7 @@
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; in that kind of &lt;collision&gt;')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="(self::bounce or self::deflect) and not(ancestor::*[parent::objects][(velocity | member/velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]])
+      <xsl:when test="(self::bounce or self::deflect) and not(ancestor::*[parent::objects][(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]])
                       and not(../@edge and not(ancestor::*[parent::objects]/actions/action/*))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; on an object with no &lt;velocity&gt; of its own')" />
@@ -246,12 +243,12 @@
           <xsl:with-param name="what" select="concat('&lt;fire object=&quot;', @object, '&quot;&gt;, which is not an object or group of class=&quot;projectile&quot;')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::fire and /game/objects/group[@name = current()/@object]/member/velocity">
+      <xsl:when test="self::fire and /game/objects/group[@name = current()/@object]/*/velocity">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'&lt;fire&gt; of a group whose members have velocities of their own'" />
+          <xsl:with-param name="what" select="'&lt;fire&gt; of a group whose members or cells have velocities of their own'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::move and ancestor::*[parent::objects][(velocity | member/velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]]">
+      <xsl:when test="self::move and ancestor::*[parent::objects][(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]]">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'a &lt;move&gt; on an object that has a &lt;velocity&gt; of its own'" />
         </xsl:call-template>
@@ -349,7 +346,7 @@
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; in an &lt;svg&gt; that is not a number')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::svg and (x or y or width or height) and not(x and y and width and height)">
+      <xsl:when test="self::svg and (x or y or width or height) and not(x and y and width and height) and not(../../parent::group and ../../../sprite/svg[x and y and width and height])">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'an &lt;svg&gt; with some of x, y, width and height but not all four'" />
         </xsl:call-template>
