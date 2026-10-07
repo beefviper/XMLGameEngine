@@ -19,6 +19,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -354,7 +355,7 @@ TEST_CASE("robots patrol their corridors and turn at the walls instead of leavin
 	CHECK(play.alive("robots1") == 3);
 }
 
-TEST_CASE("robots fire straight, and a shot that reaches the man costs a life", "[berserk]")
+TEST_CASE("robots fire at the man, and a shot that reaches the man costs a life", "[berserk]")
 {
 	Play play;
 	play.begin(false);
@@ -369,14 +370,17 @@ TEST_CASE("robots fire straight, and a shot that reaches the man costs a life", 
 	}
 	REQUIRE(fired);
 
-	// Along one axis or the other, the way the robot's group faces.
+	// Straight at him (<aim>), at any angle: towards his middle.
 	Object* shot = nullptr;
 	for (auto& object : play.game.getCurrentObjects())
 	{
 		if (object.objClass == "robotshot" && object.isVisible) { shot = &object; break; }
 	}
 	REQUIRE(shot);
-	CHECK(((shot->velocity.x == 0.0f) != (shot->velocity.y == 0.0f)));
+	const Vector2f toMan = (play.man().position + play.man().size * 0.5f) - (shot->position + shot->size * 0.5f);
+	const float along = (toMan.x * shot->velocity.x + toMan.y * shot->velocity.y)
+		/ (std::hypot(toMan.x, toMan.y) * std::hypot(shot->velocity.x, shot->velocity.y));
+	CHECK(along > 0.99f);
 
 	// Nothing else fires while this is looked at: the robots' waits are random,
 	// and another robot's shot would come out of the pool in the very slot this
@@ -542,10 +546,11 @@ TEST_CASE("Evil Otto turns up after a while, and one touch costs the man a life"
 	play.frames(2 * 60);
 	REQUIRE(otto.isVisible);
 
-	// He bounces about, and meeting the man is the end of one life.
-	const Vector2f where = otto.position;
+	// He comes for the man (<chase>), and meeting him is the end of one life.
+	const auto apart = [&] { return std::hypot(otto.position.x - play.man().position.x, otto.position.y - play.man().position.y); };
+	const float before = apart();
 	play.frames(30);
-	CHECK(otto.position.x != where.x);
+	CHECK(apart() < before - 25.0f);
 	play.placeMan(0, 3);
 	otto.position = { play.man().position.x + 20.0f, play.man().position.y - 2.0f };
 	otto.velocity = { 0.0f, 0.0f };

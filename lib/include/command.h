@@ -153,6 +153,27 @@ namespace xge
 		std::string ladderClass;
 	};
 
+	// <chase object="player"><speed>1.5</speed><near>100</near></chase> - the
+	// object heads straight for the middle of the nearest one in play of that
+	// name or <group>, at `speed` pixels a frame; within `near` pixels of it
+	// (0 when left out: never) it stops instead. Once: a timer that repeats
+	// it keeps it on the trail. See CommandExecutor::chase.
+	struct CmdChase
+	{
+		std::string target;
+		float speed{};
+		float near{};
+	};
+
+	// <aim object="player" /> - the object turns to the nearest one in play
+	// of that name or <group>: its next <fire>s go straight at where that was,
+	// at any angle, and its <facing> (or <heading>) turns that way. Kept until
+	// it aims again, is reset, or a key moves it. See CommandExecutor::aim.
+	struct CmdAim
+	{
+		std::string target;
+	};
+
 	// <become sprite="blue" /> - the object shows another of its named
 	// <sprite>s from now on (its look; a reset goes back to the first), or,
 	// with object="name", every object of that name or <group> does: a row of
@@ -295,7 +316,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry, CmdDeflect, CmdReverse,
-		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdBecome, CmdReveal, CmdFollow>;
 
 	// --- What the XML says, before any of it is evaluated.
@@ -397,7 +418,7 @@ namespace xge
 	struct RawCommand
 	{
 		std::string verb;
-		std::string object;    // reset, fire, release, trigger
+		std::string object;    // reset, fire, release, trigger, chase, aim
 		std::string variable;  // inc, dec
 		std::string state;     // push
 		std::string action;    // trigger
@@ -409,6 +430,7 @@ namespace xge
 		std::string objClass;  // climb (what it climbs)
 		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance), leap (height), climb
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
+		RawValue distance;     // chase (near; empty text: 0)
 	};
 
 	// A <timer> as written: <every> (again and again) or <after> (once), a

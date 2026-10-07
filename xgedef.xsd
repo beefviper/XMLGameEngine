@@ -467,6 +467,15 @@
     <xs:attribute name="class" type="xs:string" use="required" />
   </xs:complexType>
 
+  <!-- chase: the object to head for, how fast, and (if given) how near is near enough to stop. -->
+  <xs:complexType name="chaseType">
+    <xs:sequence>
+      <xs:element name="speed" type="valueType" />
+      <xs:element name="near" type="valueType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="object" type="xs:string" use="required" />
+  </xs:complexType>
+
   <xs:group name="command">
     <xs:choice>
       <xs:element name="bounce" type="emptyType" />
@@ -490,6 +499,13 @@
       <xs:element name="land" type="emptyType" />
       <xs:element name="leap" type="valueType" />
       <xs:element name="climb" type="climbType" />
+      <!-- chase: head for an object; aim: face it, so the next <fire> goes straight at it -->
+      <xs:element name="chase" type="chaseType" />
+      <xs:element name="aim">
+        <xs:complexType>
+          <xs:attribute name="object" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="reverse" type="emptyType" />
       <xs:element name="become">
         <xs:complexType>

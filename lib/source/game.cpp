@@ -197,6 +197,29 @@ namespace xge
 		return windowDesc;
 	}
 
+	const Object* Game::nearestInPlay(const Object& from, const std::string& name)
+	{
+		const auto middleOf = [](const Object& object) { return object.position + object.size * 0.5f; };
+		const Vector2f here = middleOf(from);
+
+		const Object* nearest = nullptr;
+		float nearestDistance = 0.0f;
+		for (const auto& other : objects)
+		{
+			const bool named = other.name == name || other.baseName == name || (!other.groupName.empty() && other.groupName == name);
+			if (&other == &from || !named || !other.isVisible || !isShown(other)) { continue; }
+
+			const Vector2f apart = middleOf(other) - here;
+			const float distance = std::hypot(apart.x, apart.y);
+			if (!nearest || distance < nearestDistance)
+			{
+				nearest = &other;
+				nearestDistance = distance;
+			}
+		}
+		return nearest;
+	}
+
 	bool Game::isShown(const Object& object) noexcept
 	{
 		bool result = false;
@@ -603,6 +626,7 @@ namespace xge
 			object.leaping = false;
 			object.climbing = false;
 			object.activeClimb = {};
+			object.hasAim = false;
 			object.facing = object.facingOriginal;
 			object.followPath.clear();
 			if (!object.looks.empty()) { object.showLook(0); }

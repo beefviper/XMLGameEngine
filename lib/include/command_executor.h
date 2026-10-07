@@ -70,6 +70,8 @@ namespace xge
 		void startJump(Object& object, const CmdJump& jump);
 		void land(Object& object, const Object& other, Edge edge);
 		void leap(Object& object, float height);
+		void chase(Object& object, const CmdChase& chase);
+		void aim(Object& object, const std::string& target);
 		void reverse(Object& object);
 
 		// <become>: the object running it (self, which a state's commands do

@@ -19,6 +19,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <set>
@@ -545,4 +546,64 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision class=\"x\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
 		"names no look of the object");
 	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, "<input button=\"space\"><reveal object=\"ghost\" /></input>"), "<reveal> names 'ghost'");
+}
+
+TEST_CASE("<chase> heads straight for the nearest one in play, and stops when near enough", "[chase]")
+{
+	const std::string chaser = box("hunter", 100, 100, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>",
+		"<timers><timer><every>0.1</every><chase object=\"prey\"><speed>2</speed><near>50</near></chase></timer></timers>");
+	Loaded loaded(gameXml(chaser + box("prey", 400, 500, 20, 20) + box("prey2", 0, 0, 20, 20, "<enabled>false</enabled>", "<hidden>true</hidden>"),
+		state("playing", { "hunter", "prey", "prey2" })));
+
+	Object& hunter = loaded.game.getObject("hunter");
+	loaded.frames(6);
+	// 300 across and 400 down: three fifths and four fifths of the speed.
+	CHECK(hunter.velocity.x == Approx(1.2f));
+	CHECK(hunter.velocity.y == Approx(1.6f));
+	CHECK(hunter.facing == Direction::Down);
+
+	// It closes in, and stops within 50 of the prey's middle.
+	loaded.frames(400);
+	const Object& prey = loaded.game.getObject("prey");
+	const float apart = std::hypot(prey.position.x - hunter.position.x, prey.position.y - hunter.position.y);
+	CHECK(apart <= 50.0f);
+	CHECK(apart > 35.0f); // a timer every 6 frames at 2 a frame: within 12 past it
+	CHECK(hunter.velocity.x == 0.0f);
+	CHECK(hunter.velocity.y == 0.0f);
+}
+
+TEST_CASE("<aim> sends the next shots straight at the target, at any angle, until a key moves the shooter", "[aim]")
+{
+	const std::string gun = box("gun", 100, 100, 20, 20, "<enabled>true</enabled>", {},
+		"<actions><action name=\"left\"><move direction=\"left\">1</move></action></actions>"
+		"<timers><timer><every>0.5</every><aim object=\"target\" /><fire object=\"shot\" /></timer></timers>");
+	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20)
+		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<hidden>true</hidden>", {}, "<x>0</x><y>-5</y>"),
+		state("playing", { "gun", "target", "shot" })));
+
+	Object& shot = loaded.game.getObject("shot");
+	loaded.frames(30);
+	REQUIRE(shot.isVisible);
+	CHECK(shot.velocity.x == Approx(3.0f));
+	CHECK(shot.velocity.y == Approx(4.0f));
+	CHECK(loaded.game.getObject("gun").facing == Direction::Down);
+
+	// It leaves from the middle of the gun, clear of it, along the aim.
+	const Vector2f middle = shot.position - shot.velocity + shot.size * 0.5f;
+	CHECK((middle.y - 110.0f) / (middle.x - 110.0f) == Approx(4.0f / 3.0f));
+
+	// A key that moves the gun drops the aim: from its top again.
+	CommandExecutor executor(loaded.game);
+	executor.executeInput(CmdTriggerAction{ "gun", "left" }, true);
+	CHECK_FALSE(loaded.game.getObject("gun").hasAim);
+}
+
+TEST_CASE("<chase> and <aim> that name nothing are turned away when the game loads", "[chase][aim][errors]")
+{
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>1</every><chase object=\"playr\"><speed>1</speed></chase></timer></timers>")
+		+ box("player", 0, 0, 1, 1), state("playing", { "o" }))), ContainsSubstring("<chase> names 'playr', and there is no object of that name (did you mean 'player'?)"));
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>1</every><aim object=\"nobody\" /></timer></timers>"),
+		state("playing", { "o" }))), ContainsSubstring("<aim> names 'nobody'"));
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><aim object=\"o\" /></input></inputs></state>")),
+		ContainsSubstring("<aim> does nothing in an <input>"));
 }

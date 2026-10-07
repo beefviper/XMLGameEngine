@@ -614,7 +614,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play"
-				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "reverse" || name == "become" || name == "reveal" || name == "follow";
+				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -683,6 +683,22 @@ namespace xge
 				}
 				command.amount = readValueOf(node, "distance", here);
 				if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+			}
+			if (verb == "aim") { requireAttribute(node, "object", where); }
+			if (verb == "chase")
+			{
+				// A speed and how near is near enough: two values, so two elements.
+				requireAttribute(node, "object", where);
+				const std::string here = where + " > <chase>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "speed" && child->getName() != "near")
+					{
+						fail(here, "unknown <" + child->getName() + ">; expected <speed> and <near>");
+					}
+				}
+				command.amount = readValueOf(node, "speed", here);
+				if (auto near = findChild(&node, "near")) { command.distance = readValue(*near, here); }
 			}
 			if (verb == "follow")
 			{
