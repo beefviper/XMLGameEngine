@@ -698,7 +698,7 @@ namespace xge
 					}
 				}
 				command.amount = readValueOf(node, "speed", here);
-				if (auto near = findChild(&node, "near")) { command.distance = readValue(*near, here); }
+				if (auto nearNode = findChild(&node, "near")) { command.distance = readValue(*nearNode, here); }
 			}
 			if (verb == "follow")
 			{
