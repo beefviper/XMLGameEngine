@@ -51,6 +51,7 @@ namespace xge
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdCarry&) { carry(object, other); },
+			[&](const CmdLand&) { land(object, other, edge); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const CmdReverse&) { reverse(object); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
@@ -166,6 +167,11 @@ namespace xge
 			{
 				applyActionVelocity(object, move->direction, move->step);
 			}
+			else if (const auto* climb = std::get_if<CmdClimb>(&actionCommand))
+			{
+				object.activeClimb[climb->direction == Direction::Up ? 0 : 1] = climb->step;
+				object.climbClass = climb->ladderClass;
+			}
 			else if (const auto* thrust = std::get_if<CmdAccelerate>(&actionCommand))
 			{
 				applyActionThrust(object, thrust->direction, thrust->amount, thrust->burn);
@@ -202,6 +208,9 @@ namespace xge
 		object.velocity = {};
 		object.acceleration = {};
 		object.activeMoveStep = {};
+		object.activeClimb = {};
+		object.climbing = false;
+		object.leaping = false;
 		object.activeThrust = {};
 		object.activeThrustBurn = {};
 		object.activeTurn = {};
@@ -217,6 +226,9 @@ namespace xge
 	{
 		game.drawStartAgain(object);
 		object.position = object.positionOriginal;
+		object.climbing = false;
+		object.leaping = false;
+		object.grounded = false;
 		const bool keyHeld = std::any_of(object.activeMoveStep.begin(), object.activeMoveStep.end(), [](float step) { return step != 0.0f; });
 		if (!keyHeld)
 		{
@@ -502,6 +514,13 @@ namespace xge
 				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); object.facing = h.direction; } },
 				// So does a jump, and one in the air waits for the landing.
 				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
+				[&](const CmdLeap& l) { if (keyPressed) { leap(object, l.height); } },
+				// A climb is held like a move; Game::applyClimbing makes it.
+				[&](const CmdClimb& c)
+				{
+					object.activeClimb[c.direction == Direction::Up ? 0 : 1] = keyPressed ? c.step : 0.0f;
+					object.climbClass = c.ladderClass;
+				},
 				// And a bare reset (the object back where it started), a change of
 				// look and a reveal.
 				[&](const CmdReset&) { if (keyPressed) { restart(object); } },
@@ -523,19 +542,70 @@ namespace xge
 	}
 
 	// Records which way `direction` is now pushing (0 = just released) and
-	// recombines every direction currently held into velocity.x/velocity.y,
-	// instead of this one key event simply overwriting the whole axis - see
+	// recombines every direction currently held on that axis into its part of
+	// the velocity, instead of this one key event simply overwriting it - see
 	// Object::activeMoveStep for why that used to lose a still-held opposite
 	// key. Left/Right and Up/Down are independent axes, so both can be held
-	// at once for an 8-way diagonal off a 4-way D-pad.
+	// at once for an 8-way diagonal off a 4-way D-pad, and a key on one axis
+	// leaves the other alone (walking does not stop a fall). In a <leap> the
+	// way across is kept until the landing, which takes up the keys held then.
 	void CommandExecutor::applyActionVelocity(Object& object, Direction direction, float step)
 	{
 		object.activeMoveStep[static_cast<std::size_t>(direction)] = step;
 
-		object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
-			- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
-		object.velocity.y = object.activeMoveStep[static_cast<std::size_t>(Direction::Down)]
-			- object.activeMoveStep[static_cast<std::size_t>(Direction::Up)];
+		if (direction == Direction::Left || direction == Direction::Right)
+		{
+			if (!object.leaping)
+			{
+				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
+					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+			}
+		}
+		else
+		{
+			object.velocity.y = object.activeMoveStep[static_cast<std::size_t>(Direction::Down)]
+				- object.activeMoveStep[static_cast<std::size_t>(Direction::Up)];
+		}
+	}
+
+	// Coming down onto the top of `other` (its own bottom edge touched, not
+	// going up): it stands there. Put on the top, its fall stopped, on the
+	// ground until the next frame's landing is worked out; a leap ends, and
+	// the keys held now decide the way across. Any other touch does nothing,
+	// so a platform can be jumped up through and walked past, and nothing
+	// lands while it climbs.
+	void CommandExecutor::land(Object& object, const Object& other, Edge edge)
+	{
+		if (edge != Edge::Bottom || object.climbing || object.velocity.y < 0.0f)
+		{
+			return;
+		}
+
+		object.position.y = other.position.y - sizeOf(object).y;
+		object.velocity.y = 0.0f;
+		object.grounded = true;
+
+		if (object.leaping)
+		{
+			object.leaping = false;
+			object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
+				- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+		}
+	}
+
+	// Up off the ground at the speed that, under the object's own pull, rises
+	// `height` pixels: v * v = 2 * pull * height. Only from the ground and not
+	// on a ladder; nothing without a pull down (the loader refuses that).
+	void CommandExecutor::leap(Object& object, float height)
+	{
+		if (!object.grounded || object.climbing || object.acceleration.y <= 0.0f)
+		{
+			return;
+		}
+
+		object.velocity.y = -std::sqrt(2.0f * object.acceleration.y * height);
+		object.grounded = false;
+		object.leaping = true;
 	}
 
 	// Records that `direction` is now being pushed by `amount` a frame (0 =

@@ -68,6 +68,8 @@ namespace xge
 		void carry(Object& object, const Object& other);
 		void queueHop(Object& object, Direction direction, float distance);
 		void startJump(Object& object, const CmdJump& jump);
+		void land(Object& object, const Object& other, Edge edge);
+		void leap(Object& object, float height);
 		void reverse(Object& object);
 
 		// <become>: the object running it (self, which a state's commands do

@@ -123,6 +123,36 @@ namespace xge
 		float seconds{ 0.3f };
 	};
 
+	// <land /> - in a collision rule about another object: coming down onto
+	// its top, the object stands on it. It is put on the top, its fall stops,
+	// and for the next frame it is on the ground, which a <leap> needs. Touching
+	// any other side, or going up, does nothing, so a platform is solid from
+	// above only. See CommandExecutor::land.
+	struct CmdLand {};
+
+	// <leap>height</leap> - only ever in an object's own <action>: a jump up
+	// under the object's own pull (its <acceleration>), rising `height`
+	// pixels before it falls again. Only from the ground (after a <land />),
+	// and the way across is fixed at the take-off: a held key does not steer
+	// it until it lands. Donkey Kong's jump. See CommandExecutor::leap.
+	struct CmdLeap
+	{
+		float height{};
+	};
+
+	// <climb direction="up" class="ladder">step</climb> (or down) - only ever
+	// in an object's own <action>, held like a <move>: while the object stands
+	// at, or is on, an object of that class, it goes up or down it `step`
+	// pixels a frame, lined up with its middle, with no pull and no <land />
+	// on the way, and no walking off it until it reaches either end. See
+	// Game::applyClimbing.
+	struct CmdClimb
+	{
+		Direction direction{};
+		float step{};
+		std::string ladderClass;
+	};
+
 	// <become sprite="blue" /> - the object shows another of its named
 	// <sprite>s from now on (its look; a reset goes back to the first), or,
 	// with object="name", every object of that name or <group> does: a row of
@@ -265,7 +295,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry, CmdDeflect, CmdReverse,
-		CmdMove, CmdHop, CmdJump, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdBecome, CmdReveal, CmdFollow>;
 
 	// --- What the XML says, before any of it is evaluated.
@@ -371,12 +401,13 @@ namespace xge
 		std::string variable;  // inc, dec
 		std::string state;     // push
 		std::string action;    // trigger
-		std::string direction; // move, hop, accelerate, turn
+		std::string direction; // move, hop, accelerate, turn, climb
 		std::string burn;      // accelerate, thrust
 		std::string sound;     // play
 		std::string sprite;    // become
 		std::string path;      // follow
-		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance)
+		std::string objClass;  // climb (what it climbs)
+		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance), leap (height), climb
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
 	};
 

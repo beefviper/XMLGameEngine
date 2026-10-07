@@ -106,6 +106,8 @@ namespace xge
 
 		applyPaths();
 
+		applyClimbing();
+
 		applyAcceleration();
 
 		// Screen-edge checks: independent per object, order doesn't matter.
@@ -597,6 +599,10 @@ namespace xge
 			object.hopped = false;
 			object.jumpStep = {};
 			object.jumpFramesLeft = 0;
+			object.grounded = false;
+			object.leaping = false;
+			object.climbing = false;
+			object.activeClimb = {};
 			object.facing = object.facingOriginal;
 			object.followPath.clear();
 			if (!object.looks.empty()) { object.showLook(0); }
@@ -983,7 +989,8 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			if (!isShown(object)) { continue; }
+			// On a ladder nothing pulls it (Game::applyClimbing moves it).
+			if (!isShown(object) || object.climbing) { continue; }
 
 			Vector2f change = object.acceleration;
 
@@ -1046,6 +1053,64 @@ namespace xge
 		}
 	}
 
+	// Climbing (a <climb> in an action, held): an object at a ladder - an
+	// object of its climbClass with the climber's middle over it and its feet
+	// between the ladder's top and bottom - that is on the ground and asked to
+	// go up or down it, and can, gets on it, lined up with its middle. On it,
+	// it goes the step held each frame (none held: it stays put), its feet
+	// kept between the two ends, with no pull and no landing, and its own
+	// velocity at 0 so no key walks it off. Reaching either end it gets off,
+	// standing there, and the keys held take it on as before.
+	void Game::applyClimbing(void)
+	{
+		for (auto& object : objects)
+		{
+			if (object.climbClass.empty() || !isShown(object)) { continue; }
+
+			const Vector2f size = object.size;
+			const float middle = object.position.x + size.x / 2.0f;
+			const float feet = object.position.y + size.y;
+
+			const auto ladder = std::find_if(objects.begin(), objects.end(), [&](const Object& other)
+				{
+					return &other != &object && other.objClass == object.climbClass && isShown(other)
+						&& middle >= other.position.x && middle <= other.position.x + other.size.x
+						&& feet >= other.position.y - 0.5f && feet <= other.position.y + other.size.y + 0.5f;
+				});
+
+			if (ladder == objects.end())
+			{
+				object.climbing = false;
+				continue;
+			}
+
+			const float top = ladder->position.y;
+			const float bottom = ladder->position.y + ladder->size.y;
+			const float step = object.activeClimb[1] - object.activeClimb[0];
+
+			if (!object.climbing)
+			{
+				const bool canGo = (step < 0.0f && feet > top + 0.5f) || (step > 0.0f && feet < bottom - 0.5f);
+				if (!canGo || !object.grounded) { continue; }
+
+				object.climbing = true;
+				object.leaping = false;
+				object.position.x = ladder->position.x + ladder->size.x / 2.0f - size.x / 2.0f;
+			}
+
+			const float newFeet = std::clamp(feet + step, top, bottom);
+			object.position.y = newFeet - size.y;
+			object.velocity = {};
+
+			if (step != 0.0f && (newFeet <= top || newFeet >= bottom))
+			{
+				object.climbing = false;
+				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
+					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+			}
+		}
+	}
+
 	// Makes the hops queued by hop.*() actions. A hop is a jump, not a slide:
 	// the object is simply somewhere else, one step away, before this frame's
 	// collisions are worked out, so it is judged by where it lands and not by
@@ -1060,8 +1125,10 @@ namespace xge
 		{
 			object.hopped = false;
 
-			// Whatever last frame's collisions said, this frame's start over.
+			// Whatever last frame's collisions said, this frame's start over:
+			// what it rides, and whether it stands on something.
 			object.carry = {};
+			object.grounded = false;
 
 			// A jump under way goes on a step; the frame it lands, it counts as
 			// having moved, so it meets whatever it landed on.

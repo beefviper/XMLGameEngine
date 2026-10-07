@@ -451,6 +451,22 @@
     <xs:attribute name="direction" type="directionType" use="required" />
   </xs:complexType>
 
+  <!-- climb: up or down, the class of what is climbed (a ladder), and the step a frame. -->
+  <xs:complexType name="climbType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="direction" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="up" />
+          <xs:enumeration value="down" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="class" type="xs:string" use="required" />
+  </xs:complexType>
+
   <xs:group name="command">
     <xs:choice>
       <xs:element name="bounce" type="emptyType" />
@@ -470,6 +486,10 @@
       <xs:element name="move" type="stepType" />
       <xs:element name="hop" type="stepType" />
       <xs:element name="jump" type="jumpType" />
+      <!-- land: stand on top of the object touched; leap: a jump of that height under the object's own pull -->
+      <xs:element name="land" type="emptyType" />
+      <xs:element name="leap" type="valueType" />
+      <xs:element name="climb" type="climbType" />
       <xs:element name="reverse" type="emptyType" />
       <xs:element name="become">
         <xs:complexType>
@@ -719,6 +739,7 @@
       <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" />

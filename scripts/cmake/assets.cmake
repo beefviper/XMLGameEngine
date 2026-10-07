@@ -28,6 +28,7 @@ set(data_xml
 	"games/berserk.xml"
 	"games/demonattack.xml"
 	"games/frostbite.xml"
+	"games/donkeykong.xml"
 	"games/galaxian.xml"
 	"games/pong_min.xml")
 

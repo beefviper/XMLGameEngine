@@ -356,6 +356,20 @@ namespace xge
 		int jumpFramesLeft{ 0 };
 		bool isAirborne() const noexcept { return jumpFramesLeft > 0; }
 
+		// Standing, leaping and climbing. `grounded` is true for the frame
+		// after a <land /> stood the object on something (Game::applyHops
+		// clears it as each frame's move starts, so it lasts exactly until the
+		// next landing is worked out); a <leap> needs it. `leaping` is a leap
+		// under way: the way across stays as it was at the take-off until the
+		// next landing. `climbing` is on a ladder (Game::applyClimbing): no
+		// pull, no landing, no walking off. `activeClimb` is the step held up
+		// (0) and down (1), and `climbClass` what it climbs.
+		bool grounded{ false };
+		bool leaping{ false };
+		bool climbing{ false };
+		std::array<float, 2> activeClimb{};
+		std::string climbClass;
+
 		// A <follow> under way (see Path, Game::applyPaths): the path's name
 		// (empty: on none), which of its legs is being flown, what is left of
 		// that step to go, whether the leg has set off yet (its commands run

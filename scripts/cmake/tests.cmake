@@ -73,6 +73,7 @@ add_executable(xgetest
 	"tests/test_sound.cpp"
 	"tests/test_gameplay_verbs.cpp"
 	"tests/test_frostbite.cpp"
+	"tests/test_donkeykong.cpp"
 	"tests/test_berserk.cpp"
 	"tests/test_pictures.cpp"
 	"tests/test_cli.cpp"
