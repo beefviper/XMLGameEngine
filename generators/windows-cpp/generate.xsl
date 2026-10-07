@@ -15,11 +15,12 @@
      (with "- -" written as two dashes). It writes three files with EXSLT's
      exsl:document, beside the output named: main.cpp (the game, main.xsl),
      CMakeLists.txt (its build) and README.md. Its own output is a list of what it
-     wrote, which xgecli reads.
+     wrote and of what xgecli copies beside them: the modules the game uses
+     (modules/: physics.h, and sound.h with sound.cpp) and the game's assets (its
+     font and pictures). xgecli reads the list.
 
-     It covers a small part of the language so far (check.xsl); anything else
-     stops it with a message saying what and where. generators/windows-cpp-full
-     covers all of Pong, by carrying the engine's parts with the game. -->
+     It covers part of the language so far, all of Pong (check.xsl); anything
+     else stops it with a message saying what and where. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:exsl="http://exslt.org/common"
@@ -58,6 +59,19 @@
       <file path="main.cpp" />
       <file path="CMakeLists.txt" />
       <file path="README.md" />
+      <xsl:if test="$physics">
+        <module path="physics.h" />
+      </xsl:if>
+      <xsl:if test="$audio">
+        <module path="sound.h" />
+        <module path="sound.cpp" />
+      </xsl:if>
+      <xsl:if test="$texts">
+        <asset path="assets/tuffy.ttf" />
+      </xsl:if>
+      <xsl:for-each select="$image-paths">
+        <asset path="{normalize-space(.)}" />
+      </xsl:for-each>
     </generated>
   </xsl:template>
 
@@ -74,12 +88,19 @@ project(</xsl:text>
     <xsl:text> LANGUAGES CXX)
 
 # SFML 3 as installed (vcpkg install sfml), or else fetched and built here.
-find_package(SFML 3 COMPONENTS Graphics QUIET)
+find_package(SFML 3 COMPONENTS Graphics</xsl:text>
+    <xsl:if test="$audio"> Audio</xsl:if>
+    <xsl:text> QUIET)
 
 if (NOT SFML_FOUND)
 	message(STATUS "SFML 3 not found, using FetchContent to download and build it.")
 	include(FetchContent)
-	set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
+	set(SFML_BUILD_AUDIO </xsl:text>
+    <xsl:choose>
+      <xsl:when test="$audio">ON</xsl:when>
+      <xsl:otherwise>OFF</xsl:otherwise>
+    </xsl:choose>
+    <xsl:text> CACHE BOOL "" FORCE)
 	set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
 	FetchContent_Declare(SFML
 		GIT_REPOSITORY https://github.com/SFML/SFML.git
@@ -91,14 +112,37 @@ endif()
 
 add_executable(</xsl:text>
     <xsl:value-of select="$name" />
-    <xsl:text> main.cpp)
+    <xsl:text> main.cpp</xsl:text>
+    <xsl:if test="$physics"> physics.h</xsl:if>
+    <xsl:if test="$audio"> sound.h sound.cpp</xsl:if>
+    <xsl:text>)
 target_compile_features(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> PRIVATE cxx_std_20)
 target_link_libraries(</xsl:text>
     <xsl:value-of select="$name" />
-    <xsl:text> PRIVATE SFML::Graphics)
-
+    <xsl:text> PRIVATE SFML::Graphics</xsl:text>
+    <xsl:if test="$audio"> SFML::Audio</xsl:if>
+    <xsl:text>)
+</xsl:text>
+    <xsl:if test="$texts or $images">
+      <xsl:text>
+# The game opens its font and pictures from assets/ beside where it runs:
+# copied beside the program, and the folder Visual Studio starts it in.
+add_custom_command(TARGET </xsl:text>
+      <xsl:value-of select="$name" />
+      <xsl:text> POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/assets" "$&lt;TARGET_FILE_DIR:</xsl:text>
+      <xsl:value-of select="$name" />
+      <xsl:text>&gt;/assets")
+set_property(TARGET </xsl:text>
+      <xsl:value-of select="$name" />
+      <xsl:text> PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$&lt;TARGET_FILE_DIR:</xsl:text>
+      <xsl:value-of select="$name" />
+      <xsl:text>&gt;")
+</xsl:text>
+    </xsl:if>
+    <xsl:text>
 # Visual Studio starts the game when you press F5, rather than ALL_BUILD.
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT </xsl:text>
     <xsl:value-of select="$name" />
@@ -127,12 +171,25 @@ endif()
 Generated from `</xsl:text>
     <xsl:value-of select="$source" />
     <xsl:text>` by `xgecli --generate windows-cpp`. It is the same game as the engine
-plays, written out as one C++ program on SFML 3, with nothing of the engine in it.
+plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
 
 | File | What |
 |---|---|
-| `main.cpp` | the game: its window, tunables and objects, then `main` and the game loop, then a function per object |
-| `CMakeLists.txt` | the build; it uses an installed SFML 3, or downloads and builds one |
+| `main.cpp` | the game: its window, tunables, screens, objects and sounds, then `main` and the game loop, then a function per screen and per object |
+</xsl:text>
+    <xsl:if test="$physics">
+      <xsl:text>| `physics.h` | where things are, whether they touch, and bouncing, sticking and deflecting; it works with any SFML shape, sprite or text |
+</xsl:text>
+    </xsl:if>
+    <xsl:if test="$audio">
+      <xsl:text>| `sound.h`, `sound.cpp` | 8-bit sounds written as notes, made into samples when the game starts |
+</xsl:text>
+    </xsl:if>
+    <xsl:if test="$texts or $images">
+      <xsl:text>| `assets/` | the font and pictures it opens, copied beside the program when it is built |
+</xsl:text>
+    </xsl:if>
+    <xsl:text>| `CMakeLists.txt` | the build; it uses an installed SFML 3, or downloads and builds one |
 
 ## Build and play
 

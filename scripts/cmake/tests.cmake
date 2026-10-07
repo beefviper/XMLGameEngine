@@ -18,7 +18,8 @@ else()
 	FetchContent_Declare(Catch2
 		GIT_REPOSITORY https://github.com/catchorg/Catch2.git
 		GIT_TAG v3.7.1
-		EXCLUDE_FROM_ALL)
+		EXCLUDE_FROM_ALL
+		SYSTEM)
 
 	FetchContent_MakeAvailable(Catch2)
 

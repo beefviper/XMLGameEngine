@@ -44,7 +44,10 @@ set(data_generators
 	"generators/windows-cpp/main.xsl"
 	"generators/windows-cpp/values.xsl"
 	"generators/windows-cpp/functions.xml"
-	"generators/windows-cpp/tables.xml")
+	"generators/windows-cpp/tables.xml"
+	"generators/windows-cpp/modules/physics.h"
+	"generators/windows-cpp/modules/sound.h"
+	"generators/windows-cpp/modules/sound.cpp")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators)
