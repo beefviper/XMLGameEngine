@@ -6,8 +6,8 @@
 
 <!-- What this target can generate so far: all of Pong, Space Race and
      Freeway. Screens on a stack, rectangles, circles, texts (words or a number)
-     and pictures; objects that move, bounce, stick, deflect, wrap round and
-     start again; groups of them; keys held to move, and keys pressed to hop,
+     and pictures; objects that move, bounce, stick, deflect, wrap round, start
+     again and die; groups of them; keys held to move, and keys pressed to hop,
      change screen, start again, play a sound or count; conditions on an
      object's number; and sounds. Anything else stops the generator with a
      message saying what and where, rather than writing a program that plays a
@@ -18,7 +18,7 @@
     ' game window width height background fullscreen framerate variables variable',
     ' objects object group member sprite circle radius rectangle color text content number size image path flip',
     ' position x y velocity',
-    ' collisions enabled collision bounce stick reset deflect wrap actions action move hop',
+    ' collisions enabled collision bounce stick reset deflect wrap die actions action move hop',
     ' states state shows show inputs input trigger conditions condition atleast atmost',
     ' push pop play inc dec sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
@@ -114,7 +114,7 @@
           <xsl:with-param name="what" select="'&lt;wrap /&gt; on something with no &lt;velocity&gt; of its own'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="(self::bounce or self::stick or self::deflect) and not($in-rule)">
+      <xsl:when test="(self::bounce or self::stick or self::deflect or self::die) and not($in-rule)">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; outside a &lt;collision&gt;')" />
         </xsl:call-template>

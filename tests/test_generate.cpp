@@ -285,6 +285,77 @@ TEST_CASE("a group whose members move and look each their own way keeps a veloci
 	CHECK(main.find("\t\tphysics::wrap(birds[i], birdsVelocity[i], physics::Edge::Right, windowArea);") != std::string::npos);
 }
 
+TEST_CASE("what can die keeps a flag for being in play, and a touch both sides have rules for is one touch", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_die");
+	fs::create_directories(folder.path);
+	std::ofstream(folder.path / "catch.xml") <<
+		"<game>\n"
+		"  <window name=\"Catch\"><width>320</width><height>240</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>\n"
+		"  <variables />\n"
+		"  <objects>\n"
+		"    <object name=\"ball\">\n"
+		"      <sprite><circle><radius>4</radius></circle></sprite>\n"
+		"      <position><x>60</x><y>150</y></position>\n"
+		"      <velocity><x>0</x><y>-3</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><collision edge=\"bottom\"><die /></collision><collision edge=\"all\"><bounce /></collision><collision class=\"bricks\"><bounce /></collision></collisions>\n"
+		"    </object>\n"
+		"    <object name=\"player\">\n"
+		"      <sprite><rectangle><width>40</width><height>8</height></rectangle></sprite>\n"
+		"      <position><x>140</x><y>220</y></position>\n"
+		"      <velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><collision object=\"drops\"><die /></collision></collisions>\n"
+		"      <actions><action name=\"left\"><move direction=\"left\">4</move></action></actions>\n"
+		"    </object>\n"
+		"    <group name=\"bricks\" class=\"bricks\">\n"
+		"      <sprite><rectangle><width>30</width><height>10</height><color>color.red</color></rectangle></sprite>\n"
+		"      <position><y>20</y></position>\n"
+		"      <velocity><x>0</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><collision><die /></collision></collisions>\n"
+		"      <member><position><x>10</x></position></member>\n"
+		"      <member><position><x>50</x></position></member>\n"
+		"    </group>\n"
+		"    <group name=\"drops\">\n"
+		"      <sprite><circle><radius>3</radius><color>color.cyan</color></circle></sprite>\n"
+		"      <position><y>0</y></position>\n"
+		"      <velocity><x>0</x><y>1</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><collision class=\"bricks\"><die /></collision><collision edge=\"bottom\"><die /></collision></collisions>\n"
+		"      <member><position><x>20</x></position></member>\n"
+		"      <member><position><x>200</x></position><velocity><y>2</y></velocity></member>\n"
+		"    </group>\n"
+		"  </objects>\n"
+		"  <states><state name=\"playing\"><shows><show object=\"ball\" /><show object=\"player\" /><show object=\"bricks\" /><show object=\"drops\" /></shows>\n"
+		"    <inputs><input button=\"a\"><trigger object=\"player\" action=\"left\" /></input><input button=\"space\"><reset /></input></inputs></state></states>\n"
+		"</game>\n";
+	generateGame(requestFor(folder.path / "catch.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// a flag each, true again from the start
+	CHECK(main.find("bool ballAlive = true; // in play until it dies") != std::string::npos);
+	CHECK(main.find("std::vector<bool> bricksAlive; // which of them are still in play") != std::string::npos);
+	CHECK(main.find("\tballAlive = true;\n") != std::string::npos);
+	CHECK(main.find("\tbricksAlive.assign(2, true);") != std::string::npos);
+	// drawn, moved by a key and updated only while in play
+	CHECK(main.find("\t\tif (ballAlive)\n\t\t{\n\t\t\twindow.draw(ball);") != std::string::npos);
+	CHECK(main.find("\t\t\tif (bricksAlive[i])\n\t\t\t{\n\t\t\t\twindow.draw(bricks[i]);") != std::string::npos);
+	CHECK(main.find("\t\tif (playerAlive)\n\t\t{\n\t\t\tplayer.move({-4.0f, 0.0f});") != std::string::npos);
+	CHECK(main.find("void updateBall()\n{\n\tif (!ballAlive)\n\t{\n\t\treturn;\n\t}") != std::string::npos);
+	CHECK(main.find("\tfor (std::size_t i = 0; i < bricks.size(); ++i)\n\t{\n\t\tif (!bricksAlive[i])\n\t\t{\n\t\t\tcontinue;") != std::string::npos);
+	// dying ends the rest of its rules this frame
+	CHECK(main.find("\t\tballAlive = false;\n\t\treturn;\n") != std::string::npos);
+	// the ball's bounce off a brick and the brick's die are one touch, in the ball's update
+	CHECK(main.find("\t\tif (bricksAlive[j] && physics::touching(ball, bricks[j]))\n\t\t{\n\t\t\t// bricks, by its own rule: die\n\t\t\tbricksAlive[j] = false;\n\t\t\tphysics::bounceOff(ball, ballVelocity, bricks[j]);") != std::string::npos);
+	CHECK(main.find("physics::touching(bricks[i], ball)") == std::string::npos);
+	// a member that dies inside a loop over another group leaves that loop
+	CHECK(main.find("\t\t\t\tdropsAlive[j] = false;\n\t\t\t\tbricksAlive[i] = false;\n\t\t\t\tbreak;") != std::string::npos);
+	CHECK(main.find("physics::touching(drops[i], bricks[j])") == std::string::npos);
+}
+
 TEST_CASE("a generated game carries only the modules, helper functions and headers it uses", "[generate]")
 {
 	if (!canGenerate())
@@ -336,7 +407,7 @@ TEST_CASE("what windows-cpp cannot generate yet is named in the error", "[genera
 		return std::string("generated it");
 	};
 
-	CHECK(refusal("<collision edge=\"vertical\"><die /></collision>", "", "").find("cannot generate <die> yet (in game > objects > object box") != std::string::npos);
+	CHECK(refusal("<collision edge=\"vertical\"><stop /></collision>", "", "").find("cannot generate <stop> yet (in game > objects > object box") != std::string::npos);
 	CHECK(refusal("<collision edge=\"vertical\"><wrap /><play sound=\"boom\" /></collision>", "", "").find("cannot generate <wrap /> with other commands in the same <collision> yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><inc variable=\"lives\" /></collision>", "<variable name=\"lives\">3</variable>", "").find("cannot generate <inc variable=\"lives\"> (it counts an object variable, as paddle1.score) yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><play sound=\"boom\" /></collision>", "", "").find("cannot generate <play sound=\"boom\">, which is not a <sound> yet") != std::string::npos);
