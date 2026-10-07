@@ -5,26 +5,36 @@
 <!-- date: Oct 5, 2026 -->
 
 <!-- What this target can generate so far: all of Pong, Space Race and
-     Freeway. Screens on a stack, rectangles, circles, texts (words or a number)
-     and pictures; objects that move, bounce, stick, deflect, wrap round, start
-     again and die; groups of them; keys held to move, and keys pressed to hop,
+     Freeway, and Breakout. Screens on a stack, rectangles, circles, texts (words
+     or a number) and pictures; objects that move, bounce, stick, deflect, wrap
+     round, start again and die; groups of them, grids among them, moving as
+     one block or each its own way; keys held to move, and keys pressed to hop,
      change screen, start again, play a sound or count; conditions on an
-     object's number; and sounds. Anything else stops the generator with a
+     object's number or on how many are left; and sounds. Anything else stops the generator with a
      message saying what and where, rather than writing a program that plays a
      different game. -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <xsl:variable name="supported" select="concat(
     ' game window width height background fullscreen framerate variables variable',
-    ' objects object group member sprite circle radius rectangle color text content number size image path flip',
+    ' objects object group member sprite circle radius rectangle color text content number size image path flip grid columns rows padding',
     ' position x y velocity',
-    ' collisions enabled collision bounce stick reset deflect wrap die actions action move hop',
-    ' states state shows show inputs input trigger conditions condition atleast atmost',
+    ' collisions enabled lockstep collision bounce stick reset deflect wrap die actions action move hop',
+    ' states state shows show inputs input trigger conditions condition atleast atmost remaining',
     ' push pop play inc dec sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
     ' augend addend minuend subtrahend multiplicand multiplier dividend divisor ')" />
 
   <xsl:variable name="waves" select="' square triangle sawtooth sine noise '" />
+
+  <!-- Whether the object or group this node is in moves: a velocity of its own
+       that is not 0, 0, or keys that move it. One that never moves never meets
+       an edge, so its edge rules are left out. -->
+  <xsl:template name="moves">
+    <xsl:for-each select="ancestor-or-self::*[parent::objects]">
+      <xsl:if test="(velocity | member/velocity)[x/* or y/* or number(x) != 0 or number(y) != 0] or actions/action/*">yes</xsl:if>
+    </xsl:for-each>
+  </xsl:template>
 
   <!-- Whether a name is an object's own variable (paddle1.score). -->
   <xsl:template name="is-object-variable">
@@ -77,7 +87,8 @@
           <xsl:with-param name="what" select="'a &lt;member&gt; with no &lt;sprite&gt;, in a group with none'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::group and (sprite | member/sprite)/*[local-name() != local-name((current()/sprite | current()/member/sprite)[1]/*)]">
+      <xsl:when test="self::group and ((sprite | member/sprite)/* | (sprite | member/sprite)/grid/*)[not(self::grid or self::columns or self::rows or self::padding)]
+                                       [local-name() != local-name(((current()/sprite | current()/member/sprite)[1]/* | (current()/sprite | current()/member/sprite)[1]/grid/*)[not(self::grid or self::columns or self::rows or self::padding)])]">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'a &lt;group&gt; whose members are not all one kind of shape'" />
         </xsl:call-template>
@@ -87,7 +98,46 @@
           <xsl:with-param name="what" select="'a &lt;group&gt; of texts'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="(self::bounce or self::stick or self::deflect or self::reset) and $in-rule and ancestor::group">
+      <xsl:when test="self::lockstep and normalize-space(.) = 'true' and not(parent::collisions/parent::group)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;lockstep&gt; on an object (only on a &lt;group&gt;)'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::group and normalize-space(collisions/lockstep) = 'true' and member/velocity">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'a &lt;group&gt; in &lt;lockstep&gt; whose members have velocities of their own'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::group and (sprite | member/sprite)/grid and member/velocity">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'a &lt;group&gt; of grids whose members have velocities of their own'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::grid and not(ancestor::group)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'a &lt;grid&gt; outside a &lt;group&gt;'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::grid and (count(circle | rectangle) != 1 or count(*[not(self::columns or self::rows or self::padding)]) != 1)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'a &lt;grid&gt; that is not of one &lt;circle&gt; or &lt;rectangle&gt;'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="(self::columns or self::rows) and (* or translate(normalize-space(.), $digits, '') != '' or normalize-space(.) = '' or number(.) &lt; 1)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; that is not a whole number')" />
+        </xsl:call-template>
+      </xsl:when>
+      <!-- a group's members bounce only off the sides, as one block -->
+      <xsl:when test="self::bounce and $in-rule and ancestor::group">
+        <xsl:variable name="moves"><xsl:call-template name="moves" /></xsl:variable>
+        <xsl:if test="$moves = 'yes' and not(normalize-space(ancestor::group/collisions/lockstep) = 'true' and (../@edge = 'left' or ../@edge = 'right' or ../@edge = 'horizontal'))">
+          <xsl:call-template name="refuse">
+            <xsl:with-param name="what" select="'&lt;bounce&gt; on the members of a &lt;group&gt; (only off the sides, in &lt;lockstep&gt;)'" />
+          </xsl:call-template>
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="(self::stick or self::deflect or self::reset) and $in-rule and ancestor::group">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; on the members of a &lt;group&gt;')" />
         </xsl:call-template>
@@ -124,7 +174,8 @@
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; in that kind of &lt;collision&gt;')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="(self::bounce or self::deflect) and not(ancestor::*[parent::objects][(velocity | member/velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]])">
+      <xsl:when test="(self::bounce or self::deflect) and not(ancestor::*[parent::objects][(velocity | member/velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]])
+                      and not(../@edge and not(ancestor::*[parent::objects]/actions/action/*))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; on an object with no &lt;velocity&gt; of its own')" />
         </xsl:call-template>
@@ -201,26 +252,46 @@
       </xsl:when>
 
       <!-- conditions -->
-      <xsl:when test="self::condition and (not(@variable) or not(@object or @class) or count(atleast | atmost) != 1)">
+      <xsl:when test="self::condition and remaining and (@variable or not(@object or @class) or atleast or atmost)">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;condition&gt; that is not an object variable (variable= with object= or class=) at least or at most a number'" />
+          <xsl:with-param name="what" select="'a &lt;condition&gt; with &lt;remaining&gt; that is not about object= or class= alone'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::condition and not(/game/objects/object[@name = current()/@object or @class = current()/@class]/variables/variable[@name = current()/@variable])">
+      <xsl:when test="self::condition and remaining and not(/game/objects/*[@name = current()/@object or (current()/@class and @class = current()/@class)])">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('a &lt;condition&gt; on what is left of ', @object, @class, ', which no object or group is')" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::condition and remaining and /game/objects/*[@name = current()/@object or (current()/@class and @class = current()/@class)][not(@name = /game/states/state/shows/show/@object)]">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('a &lt;condition&gt; on what is left of ', @object, @class, ', some of which no screen shows')" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::remaining and (* or translate(normalize-space(.), $digits, '') != '' or normalize-space(.) = '')">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;remaining&gt; that is not a whole number'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::condition and not(remaining) and (not(@variable) or not(@object or @class) or count(atleast | atmost) != 1)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'a &lt;condition&gt; that is not an object variable (variable= with object= or class=) at least or at most a number, or how many are left'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::condition and not(remaining) and not(/game/objects/object[@name = current()/@object or @class = current()/@class]/variables/variable[@name = current()/@variable])">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('a &lt;condition&gt; on ', @variable, ', which no object it names has')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="parent::condition and not(self::atleast or self::atmost or self::push or self::pop or self::reset or self::play or self::inc or self::dec)">
+      <xsl:when test="parent::condition and not(self::atleast or self::atmost or self::remaining or self::push or self::pop or self::reset or self::play or self::inc or self::dec)">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; in a &lt;condition&gt;')" />
         </xsl:call-template>
       </xsl:when>
 
       <!-- looks -->
-      <xsl:when test="self::sprite and (count(*) != 1 or not(circle or rectangle or text or image))">
+      <xsl:when test="self::sprite and (count(*) != 1 or not(circle or rectangle or text or image or grid))">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;sprite&gt; that is not one &lt;circle&gt;, &lt;rectangle&gt;, &lt;text&gt; or &lt;image&gt;'" />
+          <xsl:with-param name="what" select="'a &lt;sprite&gt; that is not one &lt;circle&gt;, &lt;rectangle&gt;, &lt;text&gt;, &lt;image&gt; or &lt;grid&gt;'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::text and count(content | number) != 1">
