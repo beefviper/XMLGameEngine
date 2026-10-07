@@ -339,21 +339,89 @@ TEST_CASE("what can die keeps a flag for being in play, and a touch both sides h
 	CHECK(main.find("bool ballAlive = true; // in play until it dies") != std::string::npos);
 	CHECK(main.find("std::vector<bool> bricksAlive; // which of them are still in play") != std::string::npos);
 	CHECK(main.find("\tballAlive = true;\n") != std::string::npos);
-	CHECK(main.find("\tbricksAlive.assign(2, true);") != std::string::npos);
+	CHECK(main.find("\tbricksAlive.assign(bricks.size(), true);") != std::string::npos);
 	// drawn, moved by a key and updated only while in play
 	CHECK(main.find("\t\tif (ballAlive)\n\t\t{\n\t\t\twindow.draw(ball);") != std::string::npos);
 	CHECK(main.find("\t\t\tif (bricksAlive[i])\n\t\t\t{\n\t\t\t\twindow.draw(bricks[i]);") != std::string::npos);
 	CHECK(main.find("\t\tif (playerAlive)\n\t\t{\n\t\t\tplayer.move({-4.0f, 0.0f});") != std::string::npos);
 	CHECK(main.find("void updateBall()\n{\n\tif (!ballAlive)\n\t{\n\t\treturn;\n\t}") != std::string::npos);
 	CHECK(main.find("\tfor (std::size_t i = 0; i < bricks.size(); ++i)\n\t{\n\t\tif (!bricksAlive[i])\n\t\t{\n\t\t\tcontinue;") != std::string::npos);
-	// dying ends the rest of its rules this frame
-	CHECK(main.find("\t\tballAlive = false;\n\t\treturn;\n") != std::string::npos);
+	// dying ends the rest of its rules this frame; every rule about the bottom
+	// is one touch of it, so the ball dies there before the bounce written later
+	CHECK(main.find("\t// bottom: die bounce\n\tif (physics::past(ball, physics::Edge::Bottom, windowArea))\n\t{\n\t\tballAlive = false;\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Bottom, windowArea);\n\t\treturn;\n") != std::string::npos);
 	// the ball's bounce off a brick and the brick's die are one touch, in the ball's update
 	CHECK(main.find("\t\tif (bricksAlive[j] && physics::touching(ball, bricks[j]))\n\t\t{\n\t\t\t// bricks, by its own rule: die\n\t\t\tbricksAlive[j] = false;\n\t\t\tphysics::bounceOff(ball, ballVelocity, bricks[j]);") != std::string::npos);
 	CHECK(main.find("physics::touching(bricks[i], ball)") == std::string::npos);
 	// a member that dies inside a loop over another group leaves that loop
 	CHECK(main.find("\t\t\t\tdropsAlive[j] = false;\n\t\t\t\tbricksAlive[i] = false;\n\t\t\t\tbreak;") != std::string::npos);
 	CHECK(main.find("physics::touching(drops[i], bricks[j])") == std::string::npos);
+}
+
+TEST_CASE("generating Breakout writes its rows of bricks as grids, and wins when none is left", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_breakout");
+	generateGame(requestFor(fs::current_path() / "games/breakout.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("// bricks: 54 of them\nstd::vector<sf::RectangleShape> bricks(54);") != std::string::npos);
+	CHECK(main.find("\t// bricks.2, a grid of 9 by 1\n\tfor (std::size_t i = 9; i < 18; ++i)\n\t{\n\t\tbricks[i].setSize({width, height});") != std::string::npos);
+	CHECK(main.find("\tfor (std::size_t column = 0; column < 9; ++column)\n\t{\n\t\tbricks[9 + column].setPosition({margin + static_cast<float>(column) * (width + 5.0f), ") != std::string::npos);
+	// the bricks never move, so their bounce off the sides is left out
+	CHECK(main.find("physics::past(bricks") == std::string::npos);
+	// every rule about the bottom in one touch of it: the ball bounces and dies
+	CHECK(main.find("\t// bottom: bounce die\n\tif (physics::past(ball, physics::Edge::Bottom, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Bottom, windowArea);\n\t\tballAlive = false;\n\t\treturn;") != std::string::npos);
+	CHECK(main.find("\t// bricks: none left\n\tif (std::count(bricksAlive.begin(), bricksAlive.end(), true) == 0)\n\t{\n\t\tscreens.push_back(Screen::Youwin);") != std::string::npos);
+	CHECK(main.find("\t// ball: none left\n\tif (!ballAlive)\n\t{\n\t\tscreens.push_back(Screen::Gameover);") != std::string::npos);
+	CHECK(main.find("#include <algorithm>") != std::string::npos);
+}
+
+TEST_CASE("a group in lockstep moves as one block, and turns as one off a side", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_lockstep");
+	fs::create_directories(folder.path);
+	std::ofstream(folder.path / "block.xml") <<
+		"<game>\n"
+		"  <window name=\"Block\"><width>320</width><height>240</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>\n"
+		"  <variables />\n"
+		"  <objects>\n"
+		"    <group name=\"aliens\" class=\"aliens\">\n"
+		"      <sprite><grid><columns>3</columns><rows>2</rows><padding><x>4</x><y>4</y></padding><circle><radius>5</radius><color>color.green</color></circle></grid></sprite>\n"
+		"      <position><x>20</x></position>\n"
+		"      <velocity><x>2</x><y>0</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><lockstep>true</lockstep><collision edge=\"horizontal\"><bounce /></collision><collision object=\"shot\"><die /></collision></collisions>\n"
+		"      <member><position><y>20</y></position></member>\n"
+		"      <member><position><x>200</x><y>20</y></position></member>\n"
+		"    </group>\n"
+		"    <object name=\"shot\">\n"
+		"      <sprite><rectangle><width>2</width><height>6</height></rectangle></sprite>\n"
+		"      <position><x>40</x><y>200</y></position>\n"
+		"      <velocity><x>0</x><y>-4</y></velocity>\n"
+		"      <collisions><enabled>true</enabled><collision class=\"aliens\"><die /></collision><collision edge=\"top\"><die /></collision></collisions>\n"
+		"    </object>\n"
+		"  </objects>\n"
+		"  <states><state name=\"playing\"><shows><show object=\"aliens\" /><show object=\"shot\" /></shows>\n"
+		"    <conditions><condition class=\"aliens\"><remaining>11</remaining><reset /></condition></conditions></state></states>\n"
+		"</game>\n";
+	generateGame(requestFor(folder.path / "block.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// two members, each a grid of 3 by 2, in column order as the engine names them
+	CHECK(main.find("std::vector<sf::CircleShape> aliens(12);") != std::string::npos);
+	CHECK(main.find("\t\t\taliens[6 + column * 2 + row].setPosition({200.0f + static_cast<float>(column) * (2.0f * 5.0f + 4.0f), 20.0f + static_cast<float>(row) * (2.0f * 5.0f + 4.0f)});") != std::string::npos);
+	// all of the block moved first, then its rules
+	CHECK(main.find("void updateAliens()\n{\n\tfor (sf::CircleShape& one : aliens)\n\t{\n\t\tone.move(aliensVelocity);\n\t}\n\n\tfor (std::size_t i = 0; i < aliens.size(); ++i)") != std::string::npos);
+	CHECK(main.find("\t\t\taliensVelocity.x = -aliensVelocity.x;\n\t\t\tfor (sf::CircleShape& each : aliens)\n\t\t\t{\n\t\t\t\teach.move({aliensVelocity.x, 0.0f});") != std::string::npos);
+	CHECK(main.find("\t// aliens: no more than 11 left\n\tif (std::count(aliensAlive.begin(), aliensAlive.end(), true) <= 11)\n\t{\n\t\tstart();") != std::string::npos);
 }
 
 TEST_CASE("a generated game carries only the modules, helper functions and headers it uses", "[generate]")
@@ -413,6 +481,7 @@ TEST_CASE("what windows-cpp cannot generate yet is named in the error", "[genera
 	CHECK(refusal("<collision edge=\"top\"><play sound=\"boom\" /></collision>", "", "").find("cannot generate <play sound=\"boom\">, which is not a <sound> yet") != std::string::npos);
 	CHECK(refusal("", "", "<state name=\"paused\"><inputs><input button=\"space\"><push state=\"nowhere\" /></input></inputs></state>").find("<push state=\"nowhere\">, which is not a <state>") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><reset object=\"box\" /></collision>", "", "").find("cannot generate <reset object=") != std::string::npos);
+	CHECK(refusal("", "", "<state name=\"won\"><conditions><condition object=\"box\"><remaining>half</remaining><reset /></condition></conditions></state>").find("cannot generate <remaining> that is not a whole number yet") != std::string::npos);
 }
 
 TEST_CASE("pong_min plays in the engine: the ball deflects off a paddle, and a point puts it back in the middle", "[generate][pong_min]")
