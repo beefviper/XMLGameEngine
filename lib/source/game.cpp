@@ -910,6 +910,36 @@ namespace xge
 			return object.collisionData.top;
 		}
 
+		// The edge's rules with sprite= (see EdgeLook).
+		const std::vector<EdgeLook>& collisionLooksFor(const Object& object, Edge edge)
+		{
+			switch (edge)
+			{
+			case Edge::Left:   return object.collisionData.leftLooks;
+			case Edge::Right:  return object.collisionData.rightLooks;
+			case Edge::Top:    return object.collisionData.topLooks;
+			case Edge::Bottom: return object.collisionData.bottomLooks;
+			}
+
+			// Unreachable: Edge only ever has the four values above.
+			return object.collisionData.topLooks;
+		}
+
+		// How many of an edge's commands from `index` on to pass over: those
+		// of a rule with sprite= that starts there, while the object shows
+		// another look; 0 when the command runs.
+		std::size_t passedOver(const Object& object, const std::vector<EdgeLook>& looks, std::size_t index)
+		{
+			for (const EdgeLook& look : looks)
+			{
+				if (look.first == index && object.lookName() != look.sprite)
+				{
+					return look.count;
+				}
+			}
+			return 0;
+		}
+
 		// Shared by a collision rule's class/object filter and a state
 		// condition's: empty filterClass/filterObject match anything; either or
 		// both narrow it to a specific class and/or one specific named object.
@@ -935,9 +965,19 @@ namespace xge
 		}
 
 		CommandExecutor executor(*this);
-		for (const auto& command : collisionCommandsFor(object, edge))
+		const std::vector<Command>& commands = collisionCommandsFor(object, edge);
+		const std::vector<EdgeLook>& looks = collisionLooksFor(object, edge);
+		for (std::size_t i = 0; i < commands.size();)
 		{
-			executor.executeScreenEdgeCollision(command, object, edge);
+			// a rule with sprite= looks at the look as it comes, after the
+			// rules before it have run (one of them may have changed it)
+			if (const std::size_t skip = passedOver(object, looks, i); skip > 0)
+			{
+				i += skip;
+				continue;
+			}
+			executor.executeScreenEdgeCollision(commands[i], object, edge);
+			++i;
 		}
 	}
 
@@ -951,8 +991,15 @@ namespace xge
 		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 		{
 			const auto& commands = collisionCommandsFor(object, edge);
-			const bool sticks = std::any_of(commands.begin(), commands.end(),
-				[](const Command& command) { return std::holds_alternative<CmdStick>(command); });
+			const auto& looks = collisionLooksFor(object, edge);
+			bool sticks = false;
+			for (std::size_t i = 0; i < commands.size(); ++i)
+			{
+				// a stick in a rule with sprite= only while it shows that look
+				const bool held = std::any_of(looks.begin(), looks.end(), [&](const EdgeLook& look)
+					{ return i >= look.first && i < look.first + look.count && object.lookName() != look.sprite; });
+				sticks = sticks || (!held && std::holds_alternative<CmdStick>(commands[i]));
+			}
 
 			if (sticks && CollisionDetector::touchesScreenEdge(object, windowDesc, edge))
 			{

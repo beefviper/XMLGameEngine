@@ -1657,6 +1657,19 @@ void update</xsl:text>
       <xsl:variable name="this" select="." />
       <xsl:variable name="about" select="$others[@edge = $this/@name or @edge = $this/@in or @edge = 'all']" />
       <xsl:choose>
+        <xsl:when test="$rule/wrap and $rule/@sprite">
+          <xsl:value-of select="concat('&#10;', $indent, '// ', @name, ': wrap, while it shows ', $rule/@sprite, '&#10;', $indent, 'if (')" />
+          <xsl:call-template name="look-variable">
+            <xsl:with-param name="thing" select="$self" />
+            <xsl:with-param name="index"><xsl:call-template name="index-of"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:with-param>
+          </xsl:call-template>
+          <xsl:text> == </xsl:text>
+          <xsl:call-template name="look-value">
+            <xsl:with-param name="thing" select="$self" />
+            <xsl:with-param name="sprite" select="$rule/@sprite" />
+          </xsl:call-template>
+          <xsl:value-of select="concat(')&#10;', $indent, '{&#10;', $indent, '&#9;physics::wrap(', $name, ', ', $velocity, ', ', $side, ', windowArea);&#10;', $indent, '}&#10;')" />
+        </xsl:when>
         <xsl:when test="$rule/wrap">
           <xsl:value-of select="concat('&#10;', $indent, '// ', @name, ': wrap&#10;', $indent, 'physics::wrap(', $name, ', ', $velocity, ', ', $side, ', windowArea);&#10;')" />
         </xsl:when>
@@ -1666,46 +1679,74 @@ void update</xsl:text>
             <xsl:value-of select="concat(' ', local-name())" />
           </xsl:for-each>
           <xsl:value-of select="concat('&#10;', $indent, 'if (physics::past(', $name, ', ', $side, ', windowArea))&#10;', $indent, '{&#10;')" />
-          <xsl:for-each select="$about/*">
-            <xsl:choose>
-              <xsl:when test="self::reset">
-                <xsl:value-of select="concat($indent, '&#9;start')" />
-                <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
-                <xsl:text>();
+          <xsl:for-each select="$about">
+            <!-- a rule with sprite="..." only while it shows that look,
+                 looked at as the rule comes, as the engine does -->
+            <xsl:variable name="at" select="concat($indent, '&#9;', substring('&#9;', 1, number(boolean(@sprite))))" />
+            <xsl:if test="@sprite">
+              <xsl:value-of select="concat($indent, '&#9;if (')" />
+              <xsl:call-template name="look-variable">
+                <xsl:with-param name="thing" select="$self" />
+                <xsl:with-param name="index"><xsl:call-template name="index-of"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:with-param>
+              </xsl:call-template>
+              <xsl:text> == </xsl:text>
+              <xsl:call-template name="look-value">
+                <xsl:with-param name="thing" select="$self" />
+                <xsl:with-param name="sprite" select="@sprite" />
+              </xsl:call-template>
+              <xsl:value-of select="concat(')&#10;', $indent, '&#9;{&#10;')" />
+            </xsl:if>
+            <xsl:for-each select="*">
+              <xsl:choose>
+                <xsl:when test="self::reset">
+                  <xsl:value-of select="concat($at, 'start')" />
+                  <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
+                  <xsl:text>();
 </xsl:text>
-              </xsl:when>
-              <xsl:when test="self::bounce and $block">
-                <xsl:variable name="group"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template></xsl:variable>
-                <xsl:variable name="type"><xsl:for-each select="$self"><xsl:call-template name="sf-type" /></xsl:for-each></xsl:variable>
-                <xsl:value-of select="concat($indent, '&#9;// the whole block turns, and every one of them steps back&#10;')" />
-                <xsl:value-of select="concat($indent, '&#9;', $group, 'Velocity.x = -', $group, 'Velocity.x;&#10;')" />
-                <xsl:value-of select="concat($indent, '&#9;for (', $type, '&amp; each : ', $group, ')&#10;', $indent, '&#9;{&#10;')" />
-                <xsl:value-of select="concat($indent, '&#9;&#9;each.move({', $group, 'Velocity.x, 0.0f});&#10;', $indent, '&#9;}&#10;')" />
-              </xsl:when>
-              <xsl:when test="self::bounce">
-                <xsl:value-of select="concat($indent, '&#9;physics::bounce(', $name, ', ', $velocity, ', ', $side, ', windowArea);&#10;')" />
-              </xsl:when>
-              <xsl:when test="self::stick and $moves">
-                <xsl:value-of select="concat($indent, '&#9;physics::stick(', $name, ', ', $velocity, ', ', $side, ', windowArea);&#10;')" />
-              </xsl:when>
-              <xsl:when test="self::stick">
-                <xsl:value-of select="concat($indent, '&#9;physics::stick(', $name, ', ', $side, ', windowArea);&#10;')" />
-              </xsl:when>
-              <xsl:when test="self::die">
-                <xsl:value-of select="concat($indent, '&#9;', $alive, ' = false;&#10;')" />
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:call-template name="common-command">
-                  <xsl:with-param name="indent" select="concat($indent, '&#9;')" />
-                  <xsl:with-param name="self" select="$self" />
-                  <xsl:with-param name="index"><xsl:call-template name="index-of"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:with-param>
-                </xsl:call-template>
-              </xsl:otherwise>
-            </xsl:choose>
+                </xsl:when>
+                <xsl:when test="self::bounce and $block">
+                  <xsl:variable name="group"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template></xsl:variable>
+                  <xsl:variable name="type"><xsl:for-each select="$self"><xsl:call-template name="sf-type" /></xsl:for-each></xsl:variable>
+                  <xsl:value-of select="concat($at, '// the whole block turns, and every one of them steps back&#10;')" />
+                  <xsl:value-of select="concat($at, $group, 'Velocity.x = -', $group, 'Velocity.x;&#10;')" />
+                  <xsl:value-of select="concat($at, 'for (', $type, '&amp; each : ', $group, ')&#10;', $at, '{&#10;')" />
+                  <xsl:value-of select="concat($at, '&#9;each.move({', $group, 'Velocity.x, 0.0f});&#10;', $at, '}&#10;')" />
+                </xsl:when>
+                <xsl:when test="self::bounce">
+                  <xsl:value-of select="concat($at, 'physics::bounce(', $name, ', ', $velocity, ', ', $side, ', windowArea);&#10;')" />
+                </xsl:when>
+                <xsl:when test="self::stick and $moves">
+                  <xsl:value-of select="concat($at, 'physics::stick(', $name, ', ', $velocity, ', ', $side, ', windowArea);&#10;')" />
+                </xsl:when>
+                <xsl:when test="self::stick">
+                  <xsl:value-of select="concat($at, 'physics::stick(', $name, ', ', $side, ', windowArea);&#10;')" />
+                </xsl:when>
+                <xsl:when test="self::die">
+                  <xsl:value-of select="concat($at, $alive, ' = false;&#10;')" />
+                </xsl:when>
+                <xsl:otherwise>
+                  <xsl:call-template name="common-command">
+                    <xsl:with-param name="indent" select="$at" />
+                    <xsl:with-param name="self" select="$self" />
+                    <xsl:with-param name="index"><xsl:call-template name="index-of"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:with-param>
+                  </xsl:call-template>
+                </xsl:otherwise>
+              </xsl:choose>
+            </xsl:for-each>
+            <xsl:if test="@sprite">
+              <xsl:value-of select="concat($indent, '&#9;}&#10;')" />
+            </xsl:if>
           </xsl:for-each>
-          <xsl:if test="$about/die and not(position() = last() and $last)">
-            <xsl:value-of select="concat($indent, '&#9;', $out, ';&#10;')" />
-          </xsl:if>
+          <xsl:choose>
+            <xsl:when test="not($about/die) or (position() = last() and $last)" />
+            <!-- a die under a look may not have happened -->
+            <xsl:when test="$about[@sprite]/die">
+              <xsl:value-of select="concat($indent, '&#9;if (!', $alive, ')&#10;', $indent, '&#9;{&#10;', $indent, '&#9;&#9;', $out, ';&#10;', $indent, '&#9;}&#10;')" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="concat($indent, '&#9;', $out, ';&#10;')" />
+            </xsl:otherwise>
+          </xsl:choose>
           <xsl:value-of select="concat($indent, '}&#10;')" />
         </xsl:when>
       </xsl:choose>

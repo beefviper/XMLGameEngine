@@ -64,6 +64,16 @@ namespace xge
 	// (Pixel) - see CollisionDetector.
 	enum class CollisionType { Box, Pixel };
 
+	// A <collision edge="..." sprite="name">'s commands in an edge's list:
+	// `count` of them from `first`, run only while the object shows that look,
+	// looked at once as the rule comes (as for a rule about another object).
+	struct EdgeLook
+	{
+		std::size_t first{ 0 };
+		std::size_t count{ 0 };
+		std::string sprite;
+	};
+
 	struct RawCollisionData
 	{
 		bool enabled{ false };
@@ -73,6 +83,11 @@ namespace xge
 		std::vector<RawCommand> bottom;
 		std::vector<RawCommand> left;
 		std::vector<RawCommand> right;
+		// The rules among them with sprite= (see EdgeLook).
+		std::vector<EdgeLook> topLooks;
+		std::vector<EdgeLook> bottomLooks;
+		std::vector<EdgeLook> leftLooks;
+		std::vector<EdgeLook> rightLooks;
 		// Rules about another object: a <collision> with a class= and/or
 		// object= selector, or with no selector at all (matches anything). The
 		// name is left from when the unfiltered one was written basic="basic".
@@ -105,6 +120,11 @@ namespace xge
 		std::vector<Command> bottom;
 		std::vector<Command> left;
 		std::vector<Command> right;
+		// The rules among them with sprite= (see EdgeLook).
+		std::vector<EdgeLook> topLooks;
+		std::vector<EdgeLook> bottomLooks;
+		std::vector<EdgeLook> leftLooks;
+		std::vector<EdgeLook> rightLooks;
 		// Rules about another object (see RawCollisionData::basic).
 		std::vector<CollisionRule> basic;
 

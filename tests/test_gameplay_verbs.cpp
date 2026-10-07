@@ -468,6 +468,37 @@ TEST_CASE("an object with several named sprites can <become> each of them, and a
 	CHECK(lamp1.lookName() == "off");
 }
 
+TEST_CASE("an edge rule with sprite= runs only while the object shows that look, looked at as the rule comes", "[looks]")
+{
+	// Two hits on the left side: the first cracks it and sends it back, the
+	// second takes it out. The cracked rule is first, so the hit that cracks
+	// it is not also the one that takes it out.
+	const std::string puck = "<object name=\"puck\">"
+		"<sprite name=\"whole\"><rectangle><width>10</width><height>10</height><color>color.grey</color></rectangle></sprite>"
+		"<sprite name=\"cracked\"><rectangle><width>10</width><height>10</height><color>color.darkgrey</color></rectangle></sprite>"
+		"<position><x>20</x><y>100</y></position><velocity><x>-4</x><y>0</y></velocity>"
+		"<collisions><enabled>true</enabled>"
+		"<collision edge=\"left\" sprite=\"cracked\"><die /></collision>"
+		"<collision edge=\"left\" sprite=\"whole\"><become sprite=\"cracked\" /><bounce /></collision>"
+		"<collision edge=\"horizontal\"><inc variable=\"puck.hits\" /></collision>"
+		"</collisions><variables><variable name=\"hits\">0</variable></variables></object>";
+
+	Loaded loaded(gameXml(puck, state("playing", { "puck" })));
+	Object& one = loaded.game.getObject("puck");
+	REQUIRE(one.lookName() == "whole");
+
+	loaded.frames(10);
+	CHECK(one.lookName() == "cracked");
+	CHECK(one.velocity.x > 0.0f);
+	CHECK(one.isVisible);
+	CHECK(loaded.variable("puck", "hits") == 1); // a rule with no sprite= runs whatever it shows
+
+	one.velocity.x = -4.0f;
+	loaded.frames(10);
+	CHECK_FALSE(one.isVisible);
+	CHECK(loaded.variable("puck", "hits") == 2);
+}
+
 TEST_CASE("<reveal> brings hidden members of a pool back where they started, as many as asked", "[reveal]")
 {
 	const std::string pool = "<group name=\"blocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
@@ -545,6 +576,8 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 		state("playing", { "o" }), "it has no look of that name");
 	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision class=\"x\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
 		"names no look of the object");
+	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"left\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
+		"<collision edge sprite=\"lit\"> names no look of the object");
 	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, "<input button=\"space\"><reveal object=\"ghost\" /></input>"), "<reveal> names 'ghost'");
 }
 

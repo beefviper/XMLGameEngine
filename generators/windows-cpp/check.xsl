@@ -74,11 +74,6 @@
           <xsl:with-param name="what" select="'a &lt;collision&gt; with unless='" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::collision and @sprite and @edge">
-        <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;collision&gt; with both sprite= and edge='" />
-        </xsl:call-template>
-      </xsl:when>
 
       <!-- groups: a std::vector of one kind of shape, each member placed and
            moving on its own, with rules that do not need one member put back
