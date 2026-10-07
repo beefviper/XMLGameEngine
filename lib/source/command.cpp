@@ -103,7 +103,7 @@ namespace xge
 		if (verb == "dec") { return CmdDecrement{ raw.variable, amountOf(raw) }; }
 
 		if (verb == "push") { return CmdPushState{ raw.state }; }
-		if (verb == "pop")  { return CmdPopState{}; }
+		if (verb == "pop")  { return CmdPopState{ raw.state }; }
 
 		if (verb == "play")    { return CmdPlay{ raw.sound }; }
 		if (verb == "become")  { return CmdBecome{ raw.sprite, raw.object }; }
@@ -274,7 +274,7 @@ namespace xge
 			[&](const CmdIncrement& c) { o << "inc(" << c.target << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdDecrement& c) { o << "dec(" << c.target << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
-			[&](const CmdPopState&) { o << "state()"; },
+			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
 			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << ")"; },
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
@@ -375,6 +375,20 @@ namespace xge
 		}
 
 		return { &text };
+	}
+
+	bool RawValue::drawsRandom() const
+	{
+		if (kind == Kind::Random) { return true; }
+		if (!operations) { return false; }
+		for (const RawOperation& operation : *operations)
+		{
+			for (const RawOperand& operand : operation.operands)
+			{
+				if (operand.value.drawsRandom()) { return true; }
+			}
+		}
+		return false;
 	}
 
 	std::ostream& operator<<(std::ostream& o, const RawValue& value)

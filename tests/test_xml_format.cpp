@@ -267,7 +267,7 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 	o.collisions = "<enabled>true</enabled>"
 		"<collision><bounce /></collision>"
 		"<collision class=\"bricks\"><die /></collision>"
-		"<collision object=\"wall\" unless=\"logs\"><stick /></collision>";
+		"<collision object=\"wall\" unless=\"logs\"><reverse /></collision>";
 	Loaded loaded(gameXml("", objectXml(o)));
 
 	const auto& basic = loaded.game.getObject("o").collisionData.basic;
@@ -282,7 +282,7 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 
 	CHECK(basic[2].filterObject == "wall");
 	CHECK(basic[2].unlessClass == "logs");
-	as<CmdStick>(basic[2].commands.at(0));
+	as<CmdReverse>(basic[2].commands.at(0));
 
 	const auto& data = loaded.game.getObject("o").collisionData;
 	CHECK(data.top.empty());
@@ -305,12 +305,12 @@ TEST_CASE("move and hop take a direction and a value", "[xml_format][commands]")
 	CHECK(as<CmdHop>(go[1]).distance == 7.0f);
 }
 
-TEST_CASE("state commands: push, pop, trigger, fire and reset with and without an object", "[xml_format][commands]")
+TEST_CASE("state commands: push, pop, trigger and reset with and without an object", "[xml_format][commands]")
 {
 	const std::string states =
 		"<states><state name=\"playing\"><shows><show object=\"o\" /></shows><inputs>"
-		"<input button=\"a\"><push state=\"paused\" /><pop /></input>"
-		"<input button=\"b\"><trigger object=\"o\" action=\"go\" /><fire object=\"o\" /></input>"
+		"<input button=\"a\"><push state=\"paused\" /><pop /><pop state=\"paused\" /></input>"
+		"<input button=\"b\"><trigger object=\"o\" action=\"go\" /></input>"
 		"<input button=\"c\"><reset /><reset object=\"o\" /></input>"
 		"</inputs></state>" + idleState("paused") + "</states>";
 	ObjectXml o;
@@ -325,14 +325,14 @@ TEST_CASE("state commands: push, pop, trigger, fire and reset with and without a
 	const auto& b = state.input.at(keyCodeFromString("b"));
 	const auto& c = state.input.at(keyCodeFromString("c"));
 
-	REQUIRE(a.size() == 2);
+	REQUIRE(a.size() == 3);
 	CHECK(as<CmdPushState>(a[0]).name == "paused");
-	as<CmdPopState>(a[1]);
+	CHECK(as<CmdPopState>(a[1]).name.empty());
+	CHECK(as<CmdPopState>(a[2]).name == "paused");
 
-	REQUIRE(b.size() == 2);
+	REQUIRE(b.size() == 1);
 	CHECK(as<CmdTriggerAction>(b[0]).object == "o");
 	CHECK(as<CmdTriggerAction>(b[0]).action == "go");
-	CHECK(as<CmdFire>(b[1]).projectileName == "o");
 
 	REQUIRE(c.size() == 2);
 	as<CmdReset>(c[0]);
@@ -357,6 +357,112 @@ TEST_CASE("an unknown command, or one missing its attribute, says where", "[xml_
 	ObjectXml badDirection;
 	badDirection.extra = "<actions><action name=\"a\"><move direction=\"sideways\">1</move></action></actions>";
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(badDirection))), ContainsSubstring("direction=\"sideways\""));
+}
+
+TEST_CASE("<pop state> puts that state in place of this one, so the stack does not grow", "[xml_format][commands]")
+{
+	const std::string states =
+		"<states><state name=\"menu\"><shows><show object=\"o\" /></shows><inputs><input button=\"space\"><push state=\"wave1\" /></input></inputs></state>"
+		"<state name=\"wave1\"><shows><show object=\"o\" /></shows><inputs><input button=\"space\"><pop state=\"wave2\" /></input></inputs></state>"
+		"<state name=\"wave2\"><shows><show object=\"o\" /></shows><inputs><input button=\"space\"><pop /></input></inputs></state>"
+		"</states>";
+	std::string xml = gameXml("", objectXml(ObjectXml{}));
+	xml.replace(xml.find("<states>"), xml.find("</states>") + 9 - xml.find("<states>"), states);
+	Loaded loaded(xml);
+	Game& game = loaded.game;
+	game.setCurrentState("menu");
+
+	game.pushState("wave1");
+	game.popState("wave2");
+	CHECK(game.getCurrentState().name == "wave2");
+
+	// wave1 is gone: a plain pop goes back to the menu, not to wave1.
+	game.popState();
+	CHECK(game.getCurrentState().name == "menu");
+}
+
+TEST_CASE("a mistake the schema lets through stops the load, saying what to write instead", "[xml_format][errors]")
+{
+	const auto errorOf = [](const std::string& xml)
+	{
+		try
+		{
+			Loaded loaded(xml);
+		}
+		catch (const std::exception& error)
+		{
+			return std::string(error.what());
+		}
+		return std::string("loaded");
+	};
+	const auto withStates = [](std::string xml, const std::string& states)
+	{
+		xml.replace(xml.find("<states>"), xml.find("</states>") + 9 - xml.find("<states>"), states);
+		return xml;
+	};
+
+	SECTION("a key the engine does not have")
+	{
+		const std::string error = errorOf(withStates(gameXml("", objectXml(ObjectXml{})),
+			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"spcae\"><pop /></input></inputs></state></states>"));
+		CHECK_THAT(error, ContainsSubstring("state 'playing' > <input button=\"spcae\">: there is no key named 'spcae' (did you mean 'space'?)"));
+		CHECK_THAT(error, ContainsSubstring("The keys are: a, b, c"));
+	}
+
+	SECTION("a color that is not a color. name")
+	{
+		ObjectXml o;
+		o.sprite = "<circle><radius>5</radius><color>white</color></circle>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(o))), ContainsSubstring("there is no color named 'white'") && ContainsSubstring("color.white"));
+
+		ObjectXml typo;
+		typo.sprite = "<circle><radius>5</radius><color>color.gren</color></circle>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(typo))), ContainsSubstring("(did you mean 'color.green'?)"));
+	}
+
+	SECTION("a command where the engine does nothing with it")
+	{
+		ObjectXml o;
+		o.extra = "<actions><action name=\"go\"><move direction=\"left\">1</move></action></actions>";
+		const std::string error = errorOf(withStates(gameXml("", objectXml(o)),
+			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><move direction=\"left\">1</move></input></inputs></state></states>"));
+		CHECK_THAT(error, ContainsSubstring("state 'playing' > <input button=\"a\">: <move> does nothing in an <input>"));
+		CHECK_THAT(error, ContainsSubstring("<trigger object=\"...\" action=\"...\" />"));
+
+		ObjectXml edge;
+		edge.collisions = "<enabled>true</enabled><collision edge=\"left\"><push state=\"playing\" /></collision>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(edge))), ContainsSubstring("object 'o' > <collision edge>: <push> does nothing in a screen-edge <collision>"));
+
+		ObjectXml touch;
+		touch.collisions = "<enabled>true</enabled><collision><stick /></collision>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(touch))), ContainsSubstring("<stick /> does nothing in a <collision> with another object"));
+	}
+
+	SECTION("a variable no object has")
+	{
+		ObjectXml o;
+		o.collisions = "<enabled>true</enabled><collision edge=\"left\"><inc variable=\"score\" /></collision>";
+		CHECK_THAT(errorOf(gameXml("<variable name=\"score\">0</variable>", objectXml(o))),
+			ContainsSubstring("<inc variable=\"score\" />: there is no object named 'score'") && ContainsSubstring("the game's own <variables> are fixed numbers"));
+
+		ObjectXml owned;
+		owned.collisions = "<enabled>true</enabled><collision edge=\"left\"><dec variable=\"o.lifes\" /></collision>";
+		owned.extra = "<variables><variable name=\"lives\">3</variable></variables>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(owned))),
+			ContainsSubstring("'o' has no variable named 'lifes' (did you mean 'lives'?); its variables are: lives"));
+	}
+
+	SECTION("a state, an object or an action spelt wrong")
+	{
+		ObjectXml o;
+		o.extra = "<actions><action name=\"left\"><move direction=\"left\">1</move></action></actions>";
+		CHECK_THAT(errorOf(withStates(gameXml("", objectXml(o)),
+			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><push state=\"playng\" /></input></inputs></state></states>")),
+			ContainsSubstring("(did you mean 'playing'?)"));
+		CHECK_THAT(errorOf(withStates(gameXml("", objectXml(o)),
+			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><trigger object=\"o\" action=\"lfet\" /></input></inputs></state></states>")),
+			ContainsSubstring("'o' has no action named 'lfet' (did you mean 'left'?); its actions are: left"));
+	}
 }
 
 TEST_CASE("sprites: each shape's parts, and a grid of copies", "[xml_format][sprite]")
@@ -622,7 +728,7 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "a window width that is not a number", "<width>1280</width>", "<width>huge</width>", "not a valid" },
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
 		{ "a condition with no test", "<atleast>15</atleast>", "", "expected one of <atleast>" },
-		{ "a <random> with no max", "<random min=\"-7\" max=\"7\" />", "<random min=\"-7\" />", "missing required attribute 'max'" },
+		{ "a <random> with no max", "<random min=\"-30\" max=\"30\" />", "<random min=\"-30\" />", "missing required attribute 'max'" },
 	};
 
 	for (const Mistake& mistake : mistakes)

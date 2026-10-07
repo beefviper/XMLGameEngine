@@ -60,7 +60,6 @@ namespace xge
 		// each a folder of stylesheets in generators/.
 		constexpr std::string_view generateNames[] = {
 			"windows-cpp",
-			"windows-cpp-full",
 		};
 
 		std::string lowerCase(std::string text)
@@ -390,8 +389,7 @@ namespace xge
 			"  -a, --audio <name>   sound library: " + namesOf(audioNames) + " (default " + AudioFactory::name(AudioFactory::defaultBackend()) + ")\n"
 			"  --generate <target>  write the game out as a program instead of playing it:\n"
 			"                       windows-cpp (plain C++ on SFML 3, with a CMakeLists.txt;\n"
-			"                       a small part of the language so far) or\n"
-			"                       windows-cpp-full (all of Pong, carrying the engine's parts)\n"
+			"                       a small part of the language so far)\n"
 			"  -o, --output <dir>   where --generate writes it (default <game>-<target>)\n"
 			"  -h, --help           show this text\n"
 			"\n"

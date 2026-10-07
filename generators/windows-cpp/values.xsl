@@ -15,7 +15,7 @@
   <xsl:variable name="digits" select="'0123456789'" />
 
   <!-- The functions an expression may call (exprtk's), and their C++ names. -->
-  <xsl:variable name="functions" select="' min max abs floor ceil sqrt sin cos tan pow round '" />
+  <xsl:variable name="functions" select="' min max abs floor ceil sqrt sin cos tan pow round sgn '" />
 
   <!-- The window's names an expression may use; the program has a constant for
        each one the game uses (generate.xsl). -->
@@ -90,12 +90,17 @@
               <xsl:if test="not(contains($functions, concat(' ', $word, ' ')))">
                 <xsl:message terminate="yes">windows-cpp: the function <xsl:value-of select="$word" />() in "<xsl:value-of select="$text" />" cannot be generated yet</xsl:message>
               </xsl:if>
-              <xsl:value-of select="concat('std::', $word)" />
+              <xsl:choose>
+                <!-- exprtk's sgn has no std:: twin: a helper (functions.xml) -->
+                <xsl:when test="$word = 'sgn'">sign</xsl:when>
+                <xsl:otherwise><xsl:value-of select="concat('std::', $word)" /></xsl:otherwise>
+              </xsl:choose>
             </xsl:when>
             <xsl:when test="$word = 'and'"><xsl:text>&amp;&amp;</xsl:text></xsl:when>
             <xsl:when test="$word = 'or'"><xsl:text>||</xsl:text></xsl:when>
             <xsl:when test="$word = 'not'"><xsl:text>!</xsl:text></xsl:when>
-            <xsl:when test="$game/variables/variable[@name = $word] or contains($window-names, concat(' ', $word, ' '))">
+            <xsl:when test="$game/variables/variable[@name = $word] or contains($window-names, concat(' ', $word, ' ')) or $word = 'pi'
+                            or $game/objects/object[@name = substring-before($word, '.')]/variables/variable[@name = substring-after($word, '.')]">
               <xsl:call-template name="cpp-name">
                 <xsl:with-param name="name" select="$word" />
               </xsl:call-template>

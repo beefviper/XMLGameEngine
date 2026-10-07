@@ -23,6 +23,17 @@ float randomBetween(float low, float high)
 ]]></definition>
   </function>
 
+  <function name="sign">
+    <declaration>float sign(float value);</declaration>
+    <definition><![CDATA[
+// -1, 0 or 1, as exprtk's sgn().
+float sign(float value)
+{
+	return value < 0.0f ? -1.0f : (value > 0.0f ? 1.0f : 0.0f);
+}
+]]></definition>
+  </function>
+
   <function name="left">
     <declaration>float left(const sf::Shape&amp; shape);</declaration>
     <definition><![CDATA[

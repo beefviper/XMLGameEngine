@@ -68,6 +68,16 @@ namespace xge
 		// Does nothing when only the state the game started in is left.
 		void popState(void) noexcept;
 
+		// For an object whose start draws a <random> (Object::startDrawsRandom):
+		// draws its random <variable>s again, then works out its starting
+		// position and velocity again from them, so a reset is a new draw (a
+		// new serve, a new fall speed). Anything else is left alone.
+		void drawStartAgain(Object& object);
+		// Pops the current state and pushes `name` in its place (the first
+		// state too: it is replaced, never left empty). An empty name is a
+		// plain pop.
+		void popState(const std::string& name);
+
 		// Goes up by one every time the state stack changes (any push or pop,
 		// including resets and condition-driven changes), so Engine can tell
 		// that held keys need re-evaluating without comparing state names.

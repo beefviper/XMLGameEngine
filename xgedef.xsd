@@ -487,7 +487,13 @@
           <xs:attribute name="state" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <xs:element name="pop" type="emptyType" />
+      <!-- <pop /> goes back to the state underneath; <pop state="..." /> puts
+           that state in place of this one. -->
+      <xs:element name="pop">
+        <xs:complexType>
+          <xs:attribute name="state" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="fire">
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="required" />

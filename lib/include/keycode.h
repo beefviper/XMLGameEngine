@@ -6,6 +6,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace xge
 {
@@ -64,4 +65,8 @@ namespace xge
 	// operator<<) so a KeyCode-keyed input map still prints the same button
 	// names the XML used.
 	std::string keyCodeToString(KeyCode key) noexcept;
+
+	// Every name keyCodeFromString() knows, for the loader to say what there
+	// is when a game names another.
+	std::vector<std::string> keyNames();
 }

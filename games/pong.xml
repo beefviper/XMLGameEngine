@@ -105,9 +105,11 @@
         </circle>
       </sprite>
       <position><x>window.width.center - ball.radius</x><y>window.height.center - ball.radius</y></position>
+      <!-- a serve: at ball.speed, within 30 degrees of straight left or right,
+           to either side; the randoms are drawn again for every serve -->
       <velocity>
-        <x><random min="-7" max="7" /></x>
-        <y><random min="-3" max="3" /></y>
+        <x>sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)</x>
+        <y>ball.speed * sin(ball.angle * pi / 180)</y>
       </velocity>
       <collisions>
         <enabled>true</enabled>
@@ -131,6 +133,11 @@
           <play sound="paddle" />
         </collision>
       </collisions>
+      <variables>
+        <variable name="speed">6</variable>
+        <variable name="angle"><random min="-30" max="30" /></variable>
+        <variable name="side"><random min="-1" max="1" /></variable>
+      </variables>
     </object>
     <!-- paddle1 -->
     <object name="paddle1" class="paddle">

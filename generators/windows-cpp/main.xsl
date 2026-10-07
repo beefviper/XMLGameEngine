@@ -54,6 +54,7 @@
   <xsl:variable name="used">
     <xsl:text> </xsl:text>
     <xsl:if test="$objects//random"> randomBetween </xsl:if>
+    <xsl:if test="contains($words, ' sgn ')"> sign </xsl:if>
     <xsl:if test="$edge-rules[* and (@edge = 'left' or @edge = 'horizontal' or @edge = 'all')]"> left </xsl:if>
     <xsl:if test="$edge-rules[* and (@edge = 'right' or @edge = 'horizontal' or @edge = 'all')]"> right </xsl:if>
     <xsl:if test="$edge-rules[* and (@edge = 'top' or @edge = 'vertical' or @edge = 'all')]"> top </xsl:if>
@@ -146,6 +147,7 @@ const float windowHeight = </xsl:text>
     <xsl:if test="contains($words, ' window.bottom ')">const float windowBottom = windowHeight;&#10;</xsl:if>
     <xsl:if test="contains($words, ' window.width.center ')">const float windowWidthCenter = windowWidth / 2.0f;&#10;</xsl:if>
     <xsl:if test="contains($words, ' window.height.center ')">const float windowHeightCenter = windowHeight / 2.0f;&#10;</xsl:if>
+    <xsl:if test="contains($words, ' pi ')">const float pi = 3.14159265f;&#10;</xsl:if>
     <xsl:text>const unsigned int framerate = </xsl:text>
     <xsl:value-of select="normalize-space($game/window/framerate)" />
     <xsl:text>;
@@ -191,9 +193,11 @@ const sf::Color background = </xsl:text>
       <xsl:if test="$moves">
         <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Velocity;')" />
       </xsl:if>
-      <xsl:if test="count(. | $resetting) = count($resetting)">
-        <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'StartPosition;')" />
-      </xsl:if>
+      <xsl:for-each select="variables/variable">
+        <xsl:text>&#10;float </xsl:text>
+        <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="concat(ancestor::object/@name, '.', @name)" /></xsl:call-template>
+        <xsl:text> = 0.0f;</xsl:text>
+      </xsl:for-each>
     </xsl:for-each>
     <xsl:text>
 </xsl:text>
@@ -206,6 +210,12 @@ void setup();
 </xsl:text>
     <xsl:for-each select="$updating">
       <xsl:text>void update</xsl:text>
+      <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+      <xsl:text>();
+</xsl:text>
+    </xsl:for-each>
+    <xsl:for-each select="$resetting">
+      <xsl:text>void start</xsl:text>
       <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
       <xsl:text>();
 </xsl:text>
@@ -303,9 +313,48 @@ int main()
     <xsl:for-each select="$updating">
       <xsl:call-template name="generate-object-update" />
     </xsl:for-each>
+    <xsl:for-each select="$resetting">
+      <xsl:text>
+// </xsl:text>
+      <xsl:value-of select="@name" />
+      <xsl:text>: where it starts, and starts again after a &lt;reset /&gt; (any &lt;random&gt; drawn anew)
+void start</xsl:text>
+      <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+      <xsl:text>()
+{
+</xsl:text>
+      <xsl:call-template name="object-start" />
+      <xsl:text>}
+</xsl:text>
+    </xsl:for-each>
     <xsl:for-each select="$used-functions">
       <xsl:value-of select="definition" />
     </xsl:for-each>
+  </xsl:template>
+
+  <!-- An object's start: its variables (first, as the engine works them out
+       first), its position and the velocity of one that moves. -->
+  <xsl:template name="object-start">
+    <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
+    <xsl:for-each select="variables/variable">
+      <xsl:sort select="@name" />
+      <xsl:text>	</xsl:text>
+      <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="concat(ancestor::object/@name, '.', @name)" /></xsl:call-template>
+      <xsl:text> = </xsl:text>
+      <xsl:call-template name="value-bare" />
+      <xsl:text>;
+</xsl:text>
+    </xsl:for-each>
+    <xsl:value-of select="concat('&#9;', $name, '.setPosition(')" />
+    <xsl:call-template name="vector"><xsl:with-param name="node" select="position" /></xsl:call-template>
+    <xsl:text>);
+</xsl:text>
+    <xsl:if test="count(. | $moving) = count($moving)">
+      <xsl:value-of select="concat('&#9;', $name, 'Velocity = ')" />
+      <xsl:call-template name="vector"><xsl:with-param name="node" select="velocity" /></xsl:call-template>
+      <xsl:text>;
+</xsl:text>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template name="generate-setup">
@@ -344,23 +393,15 @@ void setup()
 </xsl:text>
       <xsl:choose>
         <xsl:when test="$resets">
-          <xsl:value-of select="concat('&#9;', $name, 'StartPosition = ')" />
-          <xsl:call-template name="vector"><xsl:with-param name="node" select="position" /></xsl:call-template>
-          <xsl:value-of select="concat(';&#10;&#9;', $name, '.setPosition(', $name, 'StartPosition);&#10;')" />
+          <xsl:text>	start</xsl:text>
+          <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+          <xsl:text>();
+</xsl:text>
         </xsl:when>
         <xsl:otherwise>
-          <xsl:value-of select="concat('&#9;', $name, '.setPosition(')" />
-          <xsl:call-template name="vector"><xsl:with-param name="node" select="position" /></xsl:call-template>
-          <xsl:text>);
-</xsl:text>
+          <xsl:call-template name="object-start" />
         </xsl:otherwise>
       </xsl:choose>
-      <xsl:if test="$moves">
-        <xsl:value-of select="concat('&#9;', $name, 'Velocity = ')" />
-        <xsl:call-template name="vector"><xsl:with-param name="node" select="velocity" /></xsl:call-template>
-        <xsl:text>;
-</xsl:text>
-      </xsl:if>
     </xsl:for-each>
     <xsl:text>}
 </xsl:text>
@@ -434,7 +475,10 @@ void update</xsl:text>
       <xsl:for-each select="$rule/*">
         <xsl:choose>
           <xsl:when test="self::reset">
-            <xsl:value-of select="concat('&#9;&#9;', $name, '.setPosition(', $name, 'StartPosition);&#10;')" />
+            <xsl:text>		start</xsl:text>
+            <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="ancestor::object/@name" /></xsl:call-template>
+            <xsl:text>();
+</xsl:text>
           </xsl:when>
           <xsl:otherwise>
             <!-- bounce and stick: back inside the edge first -->
@@ -493,7 +537,10 @@ void update</xsl:text>
       <xsl:for-each select="$rule/*">
         <xsl:choose>
           <xsl:when test="self::reset">
-            <xsl:value-of select="concat('&#9;&#9;', $name, '.setPosition(', $name, 'StartPosition);&#10;')" />
+            <xsl:text>		start</xsl:text>
+            <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
+            <xsl:text>();
+</xsl:text>
           </xsl:when>
           <xsl:when test="self::bounce">
             <xsl:value-of select="concat('&#9;&#9;bounceOff(', $name, ', ', $name, 'Velocity, ', $other, ');&#10;')" />
