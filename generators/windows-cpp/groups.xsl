@@ -89,6 +89,7 @@
           <xsl:otherwise>0</xsl:otherwise>
         </xsl:choose>
       </xsl:attribute>
+      <xsl:if test="sprite[2]"><xsl:attribute name="looks">yes</xsl:attribute></xsl:if>
       <xsl:copy-of select="$first/base" />
       <xsl:for-each select="$first/shape">
         <xsl:if test="not(look)">
@@ -225,7 +226,8 @@
   <xsl:template name="resolve-look">
     <xsl:param name="group" />
     <xsl:param name="parts" />
-    <xsl:variable name="all" select="$group/sprite | $parts/sprite" />
+    <!-- a group of several looks starts with the first (looks.xsl) -->
+    <xsl:variable name="all" select="$group/sprite[1] | $parts/sprite" />
     <xsl:if test="$all">
       <xsl:variable name="kind" select="local-name($all[last()]/*[1])" />
       <!-- the last sprite that starts a look of its own, then those that change it -->
@@ -486,7 +488,7 @@
           <xsl:if test="$columns &gt; 1"><xsl:text>&#9;</xsl:text></xsl:if>
           <xsl:if test="$rows &gt; 1"><xsl:text>&#9;</xsl:text></xsl:if>
         </xsl:variable>
-        <xsl:value-of select="concat('&#9;// ', @name, ': ', $columns, ' columns by ', $rows, ' rows&#10;')" />
+        <xsl:value-of select="concat('&#9;// ', @name, ': ', $columns, ' column', substring('s', 1, number($columns != 1)), ' by ', $rows, ' row', substring('s', 1, number($rows != 1)), '&#10;')" />
         <xsl:if test="$rows &gt; 1">
           <xsl:value-of select="concat('&#9;for (std::size_t row = 0; row &lt; ', $rows, '; ++row)&#10;&#9;{&#10;')" />
         </xsl:if>
@@ -587,7 +589,7 @@
     <xsl:variable name="rows" select="number($data/@rows)" />
     <xsl:variable name="top" select="concat($name, 'Top')" />
     <xsl:variable name="left" select="concat($name, 'Left')" />
-    <xsl:value-of select="concat('&#9;// ', @name, ': ', $columns, ' columns by ', $rows, ' rows, each row as big as its look&#10;')" />
+    <xsl:value-of select="concat('&#9;// ', @name, ': ', $columns, ' column', substring('s', 1, number($columns != 1)), ' by ', $rows, ' row', substring('s', 1, number($rows != 1)), ', each row as big as its look&#10;')" />
     <xsl:value-of select="concat('&#9;float ', $top, ' = ', $y, ';&#10;')" />
     <!-- the rows whose gaps are not alike, written a cell at a time -->
     <xsl:variable name="uneven">
