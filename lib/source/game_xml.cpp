@@ -450,7 +450,7 @@ namespace xge
 			sprite.name = spriteNode.getAttribute("name");
 
 			std::unique_ptr<XmlNode> first = spriteNode.getFirstChild();
-			if (!first) { fail(here, "is empty; expected a shape or a <grid>"); }
+			if (!first) { fail(here, "is empty; expected a shape"); }
 
 			if (first->getName() == "line")
 			{
@@ -463,29 +463,6 @@ namespace xge
 					sprite.lines.push_back(readLine(*node, here));
 				}
 			}
-			else if (first->getName() == "grid")
-			{
-				const std::string gridHere = here + " > <grid>";
-				sprite.isGrid = true;
-				sprite.columns = readValueOf(*first, "columns", gridHere);
-				sprite.rows = readValueOf(*first, "rows", gridHere);
-
-				if (auto padding = findChild(first.get(), "padding"))
-				{
-					sprite.hasPadding = true;
-					sprite.padding = readVector2(*padding, gridHere);
-				}
-
-				std::unique_ptr<XmlNode> shape = first->getFirstChild();
-				while (shape && !isShapeTag(shape->getName()))
-				{
-					if (shape->getName() == "line") { fail(gridHere, "cannot repeat a <line>; draw the lines in one sprite instead"); }
-					shape = shape->getNextSibling();
-				}
-				if (!shape) { fail(gridHere, "needs a shape to repeat (<circle>, <rectangle>, <text>, <image>, <bitmap> or <svg>)"); }
-
-				readShape(*shape, sprite, gridHere);
-			}
 			else if (isShapeTag(first->getName()))
 			{
 				readShape(*first, sprite, here);
@@ -496,6 +473,126 @@ namespace xge
 			}
 
 			return sprite;
+		}
+
+		// A <sprite> that changes one a group already has, for a member, row,
+		// column or cell of it. Of the same shape it need give only what
+		// changes (a <color>, say) and keeps the rest; of another shape, or as
+		// a drawing of lines, it is a sprite of its own and must be complete.
+		RawSprite changeSprite(const XmlNode& spriteNode, const RawSprite& base, const std::string& where)
+		{
+			const std::unique_ptr<XmlNode> shape = spriteNode.getFirstChild();
+			if (!shape || shape->getName() != base.kind || base.kind == "line") { return readSprite(spriteNode, where); }
+
+			const std::string here = where + " > <sprite> > <" + base.kind + ">";
+			RawSprite sprite = base;
+
+			const auto change = [&](const char* tag, RawValue& value)
+			{
+				if (auto node = findChild(shape.get(), tag)) { value = readValue(*node, here); }
+			};
+
+			if (base.kind == "circle")
+			{
+				change("radius", sprite.radius);
+			}
+			else if (base.kind == "rectangle")
+			{
+				change("width", sprite.width);
+				change("height", sprite.height);
+			}
+			else if (base.kind == "text")
+			{
+				if (auto content = findChild(shape.get(), "content"))
+				{
+					sprite.content = readText(*content);
+					sprite.textIsNumber = false;
+				}
+				else if (auto number = findChild(shape.get(), "number"))
+				{
+					sprite.textIsNumber = true;
+					sprite.number = readValue(*number, here);
+				}
+				change("size", sprite.size);
+			}
+			else if (base.kind == "image")
+			{
+				if (auto path = findChild(shape.get(), "path")) { sprite.path = readText(*path); }
+				if (auto flip = findChild(shape.get(), "flip")) { sprite.flip = readText(*flip); }
+			}
+			else if (base.kind == "bitmap" || base.kind == "svg")
+			{
+				// New <row>s are a new picture, all of it; the same for <hide>s.
+				std::vector<std::string> rows;
+				std::vector<std::string> hides;
+				for (std::unique_ptr<XmlNode> node = shape->getFirstChild(); node != nullptr; node = node->getNextSibling())
+				{
+					if (node->getName() == "row") { rows.push_back(readText(*node)); }
+					else if (node->getName() == "hide") { hides.push_back(readText(*node)); }
+				}
+				if (!rows.empty()) { sprite.bitmapRows = std::move(rows); }
+				if (!hides.empty()) { sprite.svgHide = std::move(hides); }
+
+				if (auto path = findChild(shape.get(), "path")) { sprite.path = readText(*path); }
+
+				const auto x = findChild(shape.get(), "x");
+				const auto y = findChild(shape.get(), "y");
+				const auto width = findChild(shape.get(), "width");
+				const auto height = findChild(shape.get(), "height");
+				if (x || y || width || height)
+				{
+					// Changing the part taken may give only what changes; taking
+					// a part of what was the whole drawing needs all four.
+					if (!sprite.hasSvgRegion && !(x && y && width && height)) { fail(here, "takes a part of the drawing with all four of <x>, <y>, <width> and <height>, or none of them"); }
+
+					sprite.hasSvgRegion = true;
+					if (x) { sprite.svgX = readValue(*x, here); }
+					if (y) { sprite.svgY = readValue(*y, here); }
+					if (width) { sprite.svgWidth = readValue(*width, here); }
+					if (height) { sprite.svgHeight = readValue(*height, here); }
+				}
+
+				if (auto scale = findChild(shape.get(), "scale"))
+				{
+					sprite.hasScale = true;
+					sprite.scale = readValue(*scale, here);
+				}
+				if (findChild(shape.get(), "flip")) { sprite.flip = readPictureFlip(*shape, here); }
+			}
+
+			if (base.kind != "image" && base.kind != "svg")
+			{
+				if (auto color = findChild(shape.get(), "color")) { sprite.color = readText(*color); }
+			}
+
+			return sprite;
+		}
+
+		// The group's sprites as a member, row, column or cell (`node`) has
+		// them: each changed by the <sprite> of its name that node gives (one
+		// with no name changes the group's one with no name), and any sprite
+		// node names that the group has not, added. The names of those it gave
+		// go in `given`.
+		std::vector<RawSprite> changeSprites(const std::vector<RawSprite>& base, const XmlNode& node, const std::string& where,
+			std::set<std::string>* given = nullptr)
+		{
+			std::vector<RawSprite> sprites = base;
+			std::set<std::string> names;
+
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "sprite") { continue; }
+
+				const std::string name = child->getAttribute("name");
+				if (!names.insert(name).second) { fail(where, name.empty() ? "has two <sprite>s with no name" : "has two <sprite>s called \"" + name + "\""); }
+
+				const auto found = std::find_if(sprites.begin(), sprites.end(), [&](const RawSprite& sprite) { return sprite.name == name; });
+				if (found != sprites.end()) { *found = changeSprite(*child, *found, where); }
+				else { sprites.push_back(readSprite(*child, where)); }
+			}
+
+			if (given) { given->insert(names.begin(), names.end()); }
+			return sprites;
 		}
 
 		// Every <sprite> child of `parent`, in the order written.
@@ -849,7 +946,7 @@ namespace xge
 		}
 
 		// <collisions>: whether they are on, whether the objects move in lockstep
-		// with the others of their grid or group, then the rules.
+		// with the others of their group, then the rules.
 		RawCollisionData readCollisions(const XmlNode& collisions, const std::string& where)
 		{
 			const std::string collisionsHere = where + " > <collisions>";
@@ -1023,15 +1120,138 @@ namespace xge
 			fail(where, "has no " + what + ", and neither does its group");
 		}
 
-		// A <group> is read as one RawObject per <member>, in the order written.
-		// The group gives what its members share (sprite, position, velocity,
-		// collisions, actions, variables, all optional) and each member gives what
-		// is its own, taking the rest from the group: a member's <sprite>,
-		// <position> (or just its <x> or <y>) and <velocity> win over the group's.
-		// What a member has after that must be complete, as an <object> is. A member
-		// is called name="..." if it says so, otherwise the group's name, a dot and
-		// its number counting from 1 (logrow3.2); the group's name still means
-		// every member at once (see Object::groupName).
+		// A whole number of at least 1 (a group's <columns> and <rows>): they
+		// say how many cells there are and what they are called, so they are
+		// settled as the file is read, not worked out like other values.
+		int readCount(const XmlNode& node, const std::string& where)
+		{
+			const std::string text = readText(node);
+			const std::string here = where + " > <" + node.getName() + ">";
+			if (text.empty() || text.size() > 4 || !std::all_of(text.begin(), text.end(), [](unsigned char c) { return std::isdigit(c) != 0; }) || std::stoi(text) < 1)
+			{
+				fail(here, "is \"" + text + "\"; expected a whole number from 1");
+			}
+			return std::stoi(text);
+		}
+
+		// Which rows or columns a <row number="..."> or <column number="...">
+		// picks: numbers counting from 1 (number="2", number="2 4"), or every
+		// odd or even one.
+		std::vector<bool> readPick(const XmlNode& node, int count, const std::string& where)
+		{
+			const std::string text = requireAttribute(node, "number", where);
+			std::vector<bool> picked(static_cast<std::size_t>(count) + 1, false);
+
+			std::istringstream words(text);
+			std::string word;
+			bool any = false;
+			while (words >> word)
+			{
+				any = true;
+				if (word == "odd" || word == "even")
+				{
+					for (int i = word == "odd" ? 1 : 2; i <= count; i += 2) { picked[static_cast<std::size_t>(i)] = true; }
+				}
+				else if (!word.empty() && word.size() <= 4 && std::all_of(word.begin(), word.end(), [](unsigned char c) { return std::isdigit(c) != 0; })
+					&& std::stoi(word) >= 1 && std::stoi(word) <= count)
+				{
+					picked[static_cast<std::size_t>(std::stoi(word))] = true;
+				}
+				else
+				{
+					fail(where, "number=\"" + text + "\": \"" + word + "\" is not one of 1 to " + std::to_string(count) + ", odd or even");
+				}
+			}
+			if (!any) { fail(where, "number=\"\" picks nothing; give numbers from 1 to " + std::to_string(count) + ", odd or even"); }
+
+			return picked;
+		}
+
+		// What a <member>, <row>, <column> or <cell> of a group says for itself.
+		struct GroupPart
+		{
+			std::string where;
+			std::unique_ptr<XmlNode> node;
+			std::vector<bool> rows;                 // <row>: the rows it picks
+			std::vector<bool> columns;              // <column>: the columns it picks
+			int row{ 0 };                           // <cell>
+			int column{ 0 };                        // <cell>
+			std::set<std::string> sprites;          // the names of the sprites it changes
+			std::optional<AnimationSpec> animation;
+			PartialVector2 position;
+			PartialVector2 velocity;
+			PartialVector2 padding;
+			std::map<std::string, RawValue> variables;
+		};
+
+		// The parts of a member, row, column or cell, as far as they are its
+		// own; `allowed` is what it may give, said in the message for anything
+		// else. Its sprites are applied to the group's later (changeSprites).
+		GroupPart readGroupPart(std::unique_ptr<XmlNode> node, const std::string& where, const std::set<std::string>& allowed, const std::string& expected)
+		{
+			GroupPart part;
+			part.where = where;
+
+			for (std::unique_ptr<XmlNode> child = node->getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (!allowed.count(tag)) { fail(where, "unknown <" + tag + ">; " + expected); }
+
+				if (tag == "sprite") { part.sprites.insert(child->getAttribute("name")); }
+				else if (tag == "animation") { part.animation = readAnimation(*child, where); }
+				else if (tag == "position") { part.position = readPartialVector2(*child, where); }
+				else if (tag == "velocity") { part.velocity = readPartialVector2(*child, where); }
+				else if (tag == "padding") { part.padding = readPartialVector2(*child, where); }
+			}
+			readObjectVariables(*node, where, part.variables);
+
+			part.node = std::move(node);
+			return part;
+		}
+
+		// A <row> and a <column> (or two rows, or two columns) that both pick
+		// a cell must not both change the same thing in it: which would win is
+		// not something to guess. A <cell> may change anything they do.
+		void checkNoClash(const GroupPart& one, const GroupPart& other, const std::string& cell)
+		{
+			const auto clash = [&](const std::string& what)
+			{
+				fail(cell, "is picked by " + one.where + " and by " + other.where + ", and both change its " + what
+					+ "; change it in one of them, or in a <cell>");
+			};
+
+			for (const std::string& name : one.sprites)
+			{
+				if (other.sprites.count(name)) { clash(name.empty() ? std::string("<sprite>") : "<sprite name=\"" + name + "\">"); }
+			}
+			if (one.animation && other.animation) { clash("<animation>"); }
+			if (one.velocity.x && other.velocity.x) { clash("<velocity><x>"); }
+			if (one.velocity.y && other.velocity.y) { clash("<velocity><y>"); }
+			if (one.padding.x && other.padding.x) { clash("<padding><x>"); }
+			if (one.padding.y && other.padding.y) { clash("<padding><y>"); }
+			for (const auto& [name, value] : one.variables)
+			{
+				if (other.variables.count(name)) { clash("<variable name=\"" + name + "\">"); }
+			}
+		}
+
+		// A <group> is read as one RawObject per member, which from then on is
+		// an ordinary object that remembers its group (see Object::groupName).
+		// The group gives what its members share (sprites, position, velocity,
+		// collisions, actions, variables, all optional), and each member gives
+		// what is its own and takes the rest from the group; after that it must
+		// be as complete as an <object>.
+		//
+		// The members are either listed, each a <member> (logrow3.2: the
+		// group's name and its number from 1, or name="..."), with its own
+		// <sprite>s, <animation>, <position> and <velocity>; or laid out in
+		// <columns> and <rows>, a cell to each place (bricks.5.3: column, then
+		// row; or a <cell>'s name="..."), top row first and left to right. A
+		// <row number="...">, <column number="..."> and <cell row="..."
+		// column="..."> change what the cells they pick have: <sprite>s, an
+		// <animation>, a <velocity> and <variables>, and for a row or column
+		// the gap before it (<padding>). A sprite that changes one of the
+		// group's need only give what changes (changeSprite).
 		void readGroup(const XmlNode& group, std::vector<RawObject>& out)
 		{
 			const std::string name = requireAttribute(group, "name", "<group>");
@@ -1041,16 +1261,22 @@ namespace xge
 			std::optional<AnimationSpec> animation;
 			PartialVector2 position;
 			PartialVector2 velocity;
+			PartialVector2 padding;
 			std::optional<RawCollisionData> collisions;
 			std::optional<RawVector2> acceleration;
 			bool hidden = false;
 			std::string facing;
+			int columns = 0;
+			int rows = 0;
 
 			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
 
 				if (tag == "hidden") { hidden = readBool(*child, where); }
+				else if (tag == "columns") { columns = readCount(*child, where); }
+				else if (tag == "rows") { rows = readCount(*child, where); }
+				else if (tag == "padding") { padding = readPartialVector2(*child, where); }
 				else if (tag == "sprite") { sprites.push_back(readSprite(*child, where)); }
 				else if (tag == "animation") { animation = readAnimation(*child, where); }
 				else if (tag == "position") { position = readPartialVector2(*child, where); }
@@ -1058,11 +1284,14 @@ namespace xge
 				else if (tag == "acceleration") { acceleration = readVector2(*child, where); }
 				else if (tag == "collisions") { collisions = readCollisions(*child, where); }
 				else if (tag == "facing") { facing = readFacing(*child, where); }
-				else if (tag != "actions" && tag != "variables" && tag != "timers" && tag != "member")
+				else if (tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <hidden>, <collisions>, <actions>, <variables>, <timers> or <member>");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <hidden>, <collisions>, <actions>, <variables>, <timers>, then <member>s, or <row>s, <column>s and <cell>s");
 				}
 			}
+
+			if (!collisions) { fail(where, "missing <collisions>"); }
+			if ((columns > 0) != (rows > 0)) { fail(where, "has <columns> or <rows> and not the other; a group laid out in cells needs both"); }
 
 			RawObject shared;
 			shared.isVisible = !hidden;
@@ -1075,57 +1304,179 @@ namespace xge
 			shared.timers = readTimers(findChild(&group, "timers").get(), where);
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
+			shared.objClass = getAttribute(&group, "class");
+			shared.groupName = name;
+			shared.rawCollisionData = *collisions;
 
-			int count = 0;
-
-			for (std::unique_ptr<XmlNode> member = findChild(&group, "member"); member != nullptr; member = member->getNextSibling())
+			// One member or cell from the group and its own parts, the most
+			// particular last.
+			const auto make = [&](const std::string& memberName, const std::string& here, const std::vector<const GroupPart*>& parts) -> RawObject
 			{
-				if (member->getName() != "member") { continue; }
-
-				++count;
-				const std::string ownName = member->getAttribute("name");
-				const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
-				const std::string here = "object '" + memberName + "' (a member of " + where + ")";
-
-				std::vector<RawSprite> ownSprites;
-				std::optional<AnimationSpec> ownAnimation;
-				PartialVector2 ownPosition;
-				PartialVector2 ownVelocity;
-
-				for (std::unique_ptr<XmlNode> child = member->getFirstChild(); child != nullptr; child = child->getNextSibling())
-				{
-					const std::string tag = child->getName();
-
-					if (tag == "sprite") { ownSprites.push_back(readSprite(*child, here)); }
-					else if (tag == "animation") { ownAnimation = readAnimation(*child, here); }
-					else if (tag == "position") { ownPosition = readPartialVector2(*child, here); }
-					else if (tag == "velocity") { ownVelocity = readPartialVector2(*child, here); }
-					else { fail(here, "unknown <" + tag + ">; a member can give <sprite>s, an <animation>, a <position> or a <velocity>"); }
-				}
-
 				RawObject rawObject = shared;
 				rawObject.name = memberName;
-				rawObject.objClass = getAttribute(&group, "class");
-				rawObject.groupName = name;
 
-				// A member that gives sprites of its own has those instead of the
-				// group's, and its own animation instead of the group's.
-				const std::vector<RawSprite>& usedSprites = ownSprites.empty() ? sprites : ownSprites;
-				if (usedSprites.empty()) { fail(here, "has no <sprite>, and neither does its group"); }
-				chooseSprite(usedSprites, ownAnimation ? ownAnimation : animation, here, rawObject);
+				std::vector<RawSprite> used = sprites;
+				std::optional<AnimationSpec> usedAnimation = animation;
+				std::optional<RawValue> positionX = position.x;
+				std::optional<RawValue> positionY = position.y;
+				std::optional<RawValue> velocityX = velocity.x;
+				std::optional<RawValue> velocityY = velocity.y;
+				for (const GroupPart* part : parts)
+				{
+					used = changeSprites(used, *part->node, part->where);
+					if (part->animation) { usedAnimation = part->animation; }
+					if (part->position.x) { positionX = part->position.x; }
+					if (part->position.y) { positionY = part->position.y; }
+					if (part->velocity.x) { velocityX = part->velocity.x; }
+					if (part->velocity.y) { velocityY = part->velocity.y; }
+					for (const auto& [variable, value] : part->variables) { rawObject.variable[variable] = value; }
+				}
 
-				rawObject.rawPosition.x = pickValue(ownPosition.x, position.x, here, "<position><x>");
-				rawObject.rawPosition.y = pickValue(ownPosition.y, position.y, here, "<position><y>");
-				rawObject.rawVelocity.x = pickValue(ownVelocity.x, velocity.x, here, "<velocity><x>");
-				rawObject.rawVelocity.y = pickValue(ownVelocity.y, velocity.y, here, "<velocity><y>");
+				if (used.empty()) { fail(here, "has no <sprite>, and neither does its group"); }
+				chooseSprite(used, usedAnimation, here, rawObject);
 
-				if (!collisions) { fail(where, "missing <collisions>"); }
-				rawObject.rawCollisionData = *collisions;
+				rawObject.rawPosition.x = pickValue(positionX, std::nullopt, here, "<position><x>");
+				rawObject.rawPosition.y = pickValue(positionY, std::nullopt, here, "<position><y>");
+				rawObject.rawVelocity.x = pickValue(velocityX, std::nullopt, here, "<velocity><x>");
+				rawObject.rawVelocity.y = pickValue(velocityY, std::nullopt, here, "<velocity><y>");
+				return rawObject;
+			};
 
-				out.push_back(std::move(rawObject));
+			std::vector<std::unique_ptr<XmlNode>> children;
+			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr;)
+			{
+				std::unique_ptr<XmlNode> next = child->getNextSibling();
+				children.push_back(std::move(child));
+				child = std::move(next);
 			}
 
-			if (count == 0) { fail(where, "has no <member>"); }
+			if (columns == 0)
+			{
+				int count = 0;
+				for (std::unique_ptr<XmlNode>& child : children)
+				{
+					const std::string tag = child->getName();
+					if (tag == "row" || tag == "column" || tag == "cell")
+					{
+						fail(where, "has a <" + tag + ">, but no <columns> and <rows> for it to pick from");
+					}
+					if (tag != "member") { continue; }
+
+					++count;
+					const std::string ownName = child->getAttribute("name");
+					const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
+					const std::string here = "object '" + memberName + "' (a member of " + where + ")";
+
+					const GroupPart member = readGroupPart(std::move(child), here, { "sprite", "animation", "position", "velocity" },
+						"a member can give <sprite>s, an <animation>, a <position> or a <velocity>");
+					out.push_back(make(memberName, here, { &member }));
+				}
+
+				if (count == 0) { fail(where, "has no <member>s, and no <columns> and <rows> to lay out cells in"); }
+				return;
+			}
+
+			std::vector<GroupPart> lines;   // the <row>s and <column>s, in the order written
+			std::vector<GroupPart> cells;
+			for (std::unique_ptr<XmlNode>& child : children)
+			{
+				const std::string tag = child->getName();
+				if (tag == "member") { fail(where, "is laid out in <columns> and <rows>, so it has no <member>s; a <cell> changes one place"); }
+
+				if (tag == "row" || tag == "column")
+				{
+					const std::string here = where + " > <" + tag + " number=\"" + child->getAttribute("number") + "\">";
+					std::vector<bool> picked = readPick(*child, tag == "row" ? rows : columns, here);
+					GroupPart line = readGroupPart(std::move(child), here, { "sprite", "animation", "velocity", "padding", "variables" },
+						"a <" + tag + "> can give <sprite>s, an <animation>, a <velocity>, a <padding> and <variables>");
+					if (tag == "row") { line.rows = std::move(picked); }
+					else
+					{
+						if (line.padding.y) { fail(here, "<padding> of a column gives only an <x>, the gap before it"); }
+						line.columns = std::move(picked);
+					}
+					lines.push_back(std::move(line));
+				}
+				else if (tag == "cell")
+				{
+					const std::string rowText = requireAttribute(*child, "row", where + " > <cell>");
+					const std::string columnText = requireAttribute(*child, "column", where + " > <cell>");
+					const std::string here = where + " > <cell row=\"" + rowText + "\" column=\"" + columnText + "\">";
+
+					const auto place = [&](const std::string& text, int count) -> int
+					{
+						if (text.empty() || text.size() > 4 || !std::all_of(text.begin(), text.end(), [](unsigned char c) { return std::isdigit(c) != 0; })
+							|| std::stoi(text) < 1 || std::stoi(text) > count)
+						{
+							fail(here, "is not a place in the group; its rows and columns count from 1 to " + std::to_string(rows) + " and " + std::to_string(columns));
+						}
+						return std::stoi(text);
+					};
+					const int row = place(rowText, rows);
+					const int column = place(columnText, columns);
+
+					for (const GroupPart& other : cells)
+					{
+						if (other.row == row && other.column == column) { fail(here, "is the same place as an earlier <cell>; say all of it in one"); }
+					}
+
+					GroupPart cell = readGroupPart(std::move(child), here, { "sprite", "animation", "velocity", "variables" },
+						"a <cell> can give <sprite>s, an <animation>, a <velocity> and <variables>");
+					cell.row = row;
+					cell.column = column;
+					cells.push_back(std::move(cell));
+				}
+			}
+
+			const auto picks = [](const GroupPart& line, int row, int column)
+			{
+				return line.rows.empty() ? line.columns[static_cast<std::size_t>(column)] : line.rows[static_cast<std::size_t>(row)];
+			};
+
+			for (int row = 1; row <= rows; ++row)
+			{
+				for (int column = 1; column <= columns; ++column)
+				{
+					const GroupPart* cell = nullptr;
+					for (const GroupPart& candidate : cells)
+					{
+						if (candidate.row == row && candidate.column == column) { cell = &candidate; }
+					}
+
+					const std::string ownName = cell ? cell->node->getAttribute("name") : std::string{};
+					const std::string cellName = ownName.empty() ? name + "." + std::to_string(column) + "." + std::to_string(row) : ownName;
+					const std::string here = "object '" + cellName + "' (column " + std::to_string(column) + ", row " + std::to_string(row) + " of " + where + ")";
+
+					// The rows and columns that pick it, then its own <cell>; and
+					// the rows alone, which give its row's sprite and so its slot.
+					std::vector<const GroupPart*> parts;
+					std::vector<const GroupPart*> rowParts;
+					const GroupPart* gapBefore = nullptr;
+					const GroupPart* gapAbove = nullptr;
+					for (const GroupPart& line : lines)
+					{
+						if (!picks(line, row, column)) { continue; }
+						for (const GroupPart* earlier : parts) { checkNoClash(*earlier, line, here); }
+						parts.push_back(&line);
+						if (!line.rows.empty()) { rowParts.push_back(&line); }
+						if (line.padding.x) { gapBefore = &line; }
+						if (line.padding.y) { gapAbove = &line; }
+					}
+					if (cell) { parts.push_back(cell); }
+
+					RawObject rawObject = make(cellName, here, parts);
+
+					rawObject.cell.slot = make(cellName, here, rowParts).sprite;
+					rawObject.cell.column = column;
+					rawObject.cell.row = row;
+					rawObject.cell.gapBefore = column == 1 ? RawValue::expression("0")
+						: gapBefore ? *gapBefore->padding.x : padding.x ? *padding.x : RawValue::expression("0");
+					rawObject.cell.gapAbove = row == 1 ? RawValue::expression("0")
+						: gapAbove ? *gapAbove->padding.y : padding.y ? *padding.y : RawValue::expression("0");
+
+					out.push_back(std::move(rawObject));
+				}
+			}
 		}
 
 		// <sound name="..." wave="square">: an optional <volume>, then <note>s and

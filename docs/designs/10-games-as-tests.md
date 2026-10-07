@@ -8,7 +8,7 @@ Games are picked to *test* the vocabulary: add a verb only when the game cannot 
 
 | Game | Chosen to test | Forced (new) | Left out |
 |---|---|---|---|
-| Pong, Breakout, Space Invaders | the core: bounce, stick, die, fire, lockstep grids | `<deflect>` (Pong), bitmaps, animation, SVG sprites, enemy fire (Invaders 1 and 2) | |
+| Pong, Breakout, Space Invaders | the core: bounce, stick, die, fire, lockstep blocks | `<deflect>` (Pong), bitmaps, animation, SVG sprites, enemy fire (Invaders 1 and 2) | |
 | Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `carry`, `unless`, verbs in object rules, colors | diving turtles, crocodiles, a timer, speed-up (timers and looks would now allow the first three) |
 | Space Race | a second game on the same vocabulary | nothing | |
 | Kaboom | `<random>` in a `<group>`; states differing only in what they show | nothing at first; when reworked, timers, `<facing>` fire, `<reset object>` in a rule | bucket stack, speed-up inside a wave |
@@ -74,8 +74,8 @@ Games are picked to *test* the vocabulary: add a verb only when the game cannot 
 
 ## Space Invaders 1 and 2
 
-- Invaders 1 was a grid of identical rectangles; redrawn with three alien kinds (squid, two rows of crab, two of octopus) as a group of three grids of two named bitmaps animated on a one-second interval, a bitmap cannon and a thin bullet. Making the bullet thin showed `<fire>` put its left edge, not its middle, at the middle of the shooter; now centered (this moved Depth Charge's and Astrosmash's shots by half their width). Invaders 2 is the same game drawn from an SVG sprite sheet with three-frame animations a half second apart ([07](07-pictures-and-text.md)). In both, and in Demon Attack, the aliens fire back from pools on random timers, and the cannon has three lives.
-- Moving the game to three kinds broke tests that borrowed it as a grid fixture, so those load `tests/invaders_fixture.h`, a frozen copy of the first game.
+- Invaders 1 was a grid of identical rectangles; redrawn with three alien kinds (squid, two rows of crab, two of octopus) as a group of three grids of two named bitmaps animated on a one-second interval (since one group of 11 columns and 5 rows whose rows change the bitmaps, [03](03-objects-groups-and-storage.md)), a bitmap cannon and a thin bullet. Making the bullet thin showed `<fire>` put its left edge, not its middle, at the middle of the shooter; now centered (this moved Depth Charge's and Astrosmash's shots by half their width). Invaders 2 is the same game drawn from an SVG sprite sheet with three-frame animations a half second apart ([07](07-pictures-and-text.md)). In both, and in Demon Attack, the aliens fire back from pools on random timers, and the cannon has three lives.
+- Moving the game to three kinds broke tests that borrowed it as a block fixture, so those load `tests/invaders_fixture.h`, a frozen copy of the first game.
 
 ## Games written by another AI (Berserk, Demon Attack, Frostbite)
 

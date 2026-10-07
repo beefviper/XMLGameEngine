@@ -8,7 +8,7 @@
 - Where scrolling could live: **on the camera** (world fixed, a camera object follows a target; most natural, and the camera can use the motion vocabulary), **on the world** (whole world offsets; simple for auto-scroll, awkward when objects need world and screen coordinates), **on regions** (screen divided into bands each with its own scroll; how old hardware did it: a fixed HUD, parallax cheaply, no special cases).
 - Camera behaviors to name: rigid follow, dead zone, lead in the facing direction; lock to the room (screen by screen) or to a track (auto-scroll); forward-only or free.
 - Coordinates: dotted references would need a world/screen qualifier.
-- Level data options: a grid map where characters or numbers stand for object names, expanded at load (close to `<grid>`); lists of named placements; tile layers for static scenery with objects for everything that acts; a legend plus rows in XML like academic VGDL. Open: one layer or several, and a tile that fires a rule on entry (a trigger next to object collisions; suggested element names hitbox, map, tile). Routes and branches are level data (named exits leading to regions), not a verb.
+- Level data options: a grid map where characters or numbers stand for object names, expanded at load (close to a group in columns and rows); lists of named placements; tile layers for static scenery with objects for everything that acts; a legend plus rows in XML like academic VGDL. Open: one layer or several, and a tile that fires a rule on entry (a trigger next to object collisions; suggested element names hitbox, map, tile). Routes and branches are level data (named exits leading to regions), not a verb.
 
 ## Targets and capability profiles (long term)
 

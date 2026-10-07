@@ -41,10 +41,10 @@
   <!-- The sprites the game draws itself when it starts: rows of text (a
        <bitmap>), <line>s, or an <svg>, drawn by xgecli into a picture of its
        own. Each is a texture named for what shows it (shipPicture). -->
-  <xsl:variable name="drawn" select="($things/sprite | $groups/member/sprite)[line or bitmap or svg or grid/bitmap or grid/svg]" />
-  <xsl:variable name="drawn-rows" select="$drawn[bitmap or grid/bitmap]" />
+  <xsl:variable name="drawn" select="($things/sprite | $groups/member/sprite)[line or bitmap or svg]" />
+  <xsl:variable name="drawn-rows" select="$drawn[bitmap]" />
   <xsl:variable name="drawn-lines" select="$drawn[line]" />
-  <xsl:variable name="drawn-svgs" select="$drawn[svg or grid/svg]" />
+  <xsl:variable name="drawn-svgs" select="$drawn[svg]" />
   <xsl:variable name="loads" select="boolean($texts or $images or $drawn)" />
   <!-- Each picture once, however many objects show it. -->
   <xsl:key name="image-path" match="image/path" use="normalize-space(.)" />
@@ -313,7 +313,7 @@ sf::Texture </xsl:text>
       <xsl:choose>
         <xsl:when test="self::group">
           <xsl:variable name="type"><xsl:call-template name="sf-type" /></xsl:variable>
-          <xsl:variable name="cells"><xsl:call-template name="cells-total"><xsl:with-param name="members" select="member" /></xsl:call-template></xsl:variable>
+          <xsl:variable name="cells"><xsl:call-template name="group-size" /></xsl:variable>
           <xsl:value-of select="concat('// ', @name, ': ', $cells, ' of them&#10;std::vector&lt;', $type, '&gt; ', $name, '(', $cells)" />
           <xsl:if test="$type = 'sf::Sprite'">
             <xsl:text>, sf::Sprite(</xsl:text>
@@ -715,7 +715,7 @@ void setup()
           <xsl:if test="sprite">
             <xsl:variable name="type"><xsl:call-template name="sf-type" /></xsl:variable>
             <xsl:value-of select="concat('&#9;for (', $type, '&amp; one : ', $name, ')&#10;&#9;{&#10;')" />
-            <xsl:for-each select="sprite/grid | sprite[not(grid)]">
+            <xsl:for-each select="sprite">
               <xsl:call-template name="set-look">
                 <xsl:with-param name="name" select="'one'" />
                 <xsl:with-param name="indent" select="'&#9;&#9;'" />
@@ -725,33 +725,19 @@ void setup()
 </xsl:text>
           </xsl:if>
           <xsl:for-each select="member[sprite]">
-            <xsl:variable name="from"><xsl:call-template name="cells-total"><xsl:with-param name="members" select="preceding-sibling::member" /></xsl:call-template></xsl:variable>
-            <xsl:choose>
-              <xsl:when test="sprite/grid">
-                <xsl:variable name="cells"><xsl:call-template name="cells" /></xsl:variable>
-                <xsl:value-of select="concat('&#9;// ', ../@name, '.', count(preceding-sibling::member) + 1, ', a grid of ', normalize-space(sprite/grid/columns), ' by ', normalize-space(sprite/grid/rows), '&#10;')" />
-                <xsl:value-of select="concat('&#9;for (std::size_t i = ', $from, '; i &lt; ', $from + $cells, '; ++i)&#10;&#9;{&#10;')" />
-                <xsl:for-each select="sprite/grid">
-                  <xsl:call-template name="set-look">
-                    <xsl:with-param name="name" select="concat($name, '[i]')" />
-                    <xsl:with-param name="indent" select="'&#9;&#9;'" />
-                  </xsl:call-template>
-                </xsl:for-each>
-                <xsl:text>	}
-</xsl:text>
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:if test="../sprite">
-                  <xsl:value-of select="concat('&#9;// ', ../@name, '.', count(preceding-sibling::member) + 1, ', a look of its own&#10;')" />
-                </xsl:if>
-                <xsl:for-each select="sprite">
-                  <xsl:call-template name="set-look">
-                    <xsl:with-param name="name" select="concat($name, '[', $from, ']')" />
-                    <xsl:with-param name="indent" select="'&#9;'" />
-                  </xsl:call-template>
-                </xsl:for-each>
-              </xsl:otherwise>
-            </xsl:choose>
+            <xsl:variable name="from" select="count(preceding-sibling::member)" />
+            <xsl:if test="../sprite">
+              <xsl:value-of select="concat('&#9;// ', ../@name, '.', $from + 1, ', a look of its own&#10;')" />
+            </xsl:if>
+            <xsl:for-each select="sprite">
+              <xsl:call-template name="set-look">
+                <xsl:with-param name="name" select="concat($name, '[', $from, ']')" />
+                <xsl:with-param name="indent" select="'&#9;'" />
+              </xsl:call-template>
+            </xsl:for-each>
+          </xsl:for-each>
+          <xsl:for-each select="row">
+            <xsl:call-template name="row-color"><xsl:with-param name="name" select="$name" /></xsl:call-template>
           </xsl:for-each>
         </xsl:when>
         <xsl:otherwise>
@@ -989,33 +975,22 @@ void start()
 </xsl:text>
   </xsl:template>
 
-  <!-- A group's start: where each member is, and the velocity they share or
-       each one's. What a member leaves out it takes from its group. -->
+  <!-- A group's start: where each member or cell is, and the velocity they
+       share or each one's. What a member leaves out it takes from its group. -->
   <xsl:template name="group-start">
     <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
     <xsl:variable name="group" select="." />
+    <xsl:if test="columns">
+      <xsl:call-template name="cells-start"><xsl:with-param name="name" select="$name" /></xsl:call-template>
+    </xsl:if>
     <xsl:for-each select="member">
-      <xsl:variable name="from"><xsl:call-template name="cells-total"><xsl:with-param name="members" select="preceding-sibling::member" /></xsl:call-template></xsl:variable>
-      <xsl:variable name="grid" select="(sprite | $group/sprite[not(current()/sprite)])/grid" />
-      <xsl:choose>
-        <xsl:when test="$grid">
-          <xsl:call-template name="grid-start">
-            <xsl:with-param name="name" select="$name" />
-            <xsl:with-param name="from" select="$from" />
-            <xsl:with-param name="grid" select="$grid" />
-            <xsl:with-param name="group" select="$group" />
-          </xsl:call-template>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="concat('&#9;', $name, '[', $from, '].setPosition(')" />
-          <xsl:call-template name="merged-vector">
-            <xsl:with-param name="own" select="position" />
-            <xsl:with-param name="shared" select="$group/position" />
-          </xsl:call-template>
-          <xsl:text>);
+      <xsl:value-of select="concat('&#9;', $name, '[', count(preceding-sibling::member), '].setPosition(')" />
+      <xsl:call-template name="merged-vector">
+        <xsl:with-param name="own" select="position" />
+        <xsl:with-param name="shared" select="$group/position" />
+      </xsl:call-template>
+      <xsl:text>);
 </xsl:text>
-        </xsl:otherwise>
-      </xsl:choose>
     </xsl:for-each>
     <xsl:choose>
       <xsl:when test="count(. | $member-velocities) = count($member-velocities)">
@@ -1049,64 +1024,56 @@ void start()
     </xsl:if>
   </xsl:template>
 
-  <!-- A member that is a <grid>: a loop over its columns and rows, each cell
-       its shape's size and the padding on from the one before, the first
-       where the member is. -->
-  <xsl:template name="grid-start">
+  <!-- A group in columns and rows: a loop over them, the top row first and
+       left to right as the engine lays them out, each cell its shape's size
+       and the padding on from the one before, the first where the group is. -->
+  <xsl:template name="cells-start">
     <xsl:param name="name" />
-    <xsl:param name="from" />
-    <xsl:param name="grid" />
-    <xsl:param name="group" />
-    <xsl:variable name="columns" select="number(normalize-space($grid/columns))" />
-    <xsl:variable name="rows" select="number(normalize-space($grid/rows))" />
-    <xsl:variable name="x"><xsl:call-template name="value-bare"><xsl:with-param name="node" select="(position/x | $group/position/x[not(current()/position/x)])[1]" /></xsl:call-template></xsl:variable>
-    <xsl:variable name="y"><xsl:call-template name="value-bare"><xsl:with-param name="node" select="(position/y | $group/position/y[not(current()/position/y)])[1]" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="columns" select="number(normalize-space(columns))" />
+    <xsl:variable name="rows" select="number(normalize-space(rows))" />
+    <xsl:variable name="x"><xsl:call-template name="value-bare"><xsl:with-param name="node" select="position/x" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="y"><xsl:call-template name="value-bare"><xsl:with-param name="node" select="position/y" /></xsl:call-template></xsl:variable>
     <!-- a cell's size and the padding after it -->
-    <xsl:variable name="texture"><xsl:for-each select="$grid/.."><xsl:call-template name="sprite-texture" /></xsl:for-each></xsl:variable>
+    <xsl:variable name="shape" select="sprite/*" />
+    <xsl:variable name="texture"><xsl:for-each select="sprite"><xsl:call-template name="sprite-texture" /></xsl:for-each></xsl:variable>
     <xsl:variable name="width">
       <xsl:choose>
-        <xsl:when test="$grid/bitmap or $grid/svg"><xsl:value-of select="concat('static_cast&lt;float&gt;(', $texture, '.getSize().x)')" /></xsl:when>
-        <xsl:when test="$grid/circle">
+        <xsl:when test="$shape/self::bitmap or $shape/self::svg or $shape/self::image"><xsl:value-of select="concat('static_cast&lt;float&gt;(', $texture, '.getSize().x)')" /></xsl:when>
+        <xsl:when test="$shape/self::circle">
           <xsl:text>2.0f * </xsl:text>
-          <xsl:call-template name="value"><xsl:with-param name="node" select="$grid/circle/radius" /></xsl:call-template>
+          <xsl:call-template name="value"><xsl:with-param name="node" select="$shape/radius" /></xsl:call-template>
         </xsl:when>
-        <xsl:otherwise><xsl:call-template name="value"><xsl:with-param name="node" select="$grid/rectangle/width" /></xsl:call-template></xsl:otherwise>
+        <xsl:otherwise><xsl:call-template name="value"><xsl:with-param name="node" select="$shape/width" /></xsl:call-template></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="height">
       <xsl:choose>
-        <xsl:when test="$grid/bitmap or $grid/svg"><xsl:value-of select="concat('static_cast&lt;float&gt;(', $texture, '.getSize().y)')" /></xsl:when>
-        <xsl:when test="$grid/circle">
+        <xsl:when test="$shape/self::bitmap or $shape/self::svg or $shape/self::image"><xsl:value-of select="concat('static_cast&lt;float&gt;(', $texture, '.getSize().y)')" /></xsl:when>
+        <xsl:when test="$shape/self::circle">
           <xsl:text>2.0f * </xsl:text>
-          <xsl:call-template name="value"><xsl:with-param name="node" select="$grid/circle/radius" /></xsl:call-template>
+          <xsl:call-template name="value"><xsl:with-param name="node" select="$shape/radius" /></xsl:call-template>
         </xsl:when>
-        <xsl:otherwise><xsl:call-template name="value"><xsl:with-param name="node" select="$grid/rectangle/height" /></xsl:call-template></xsl:otherwise>
+        <xsl:otherwise><xsl:call-template name="value"><xsl:with-param name="node" select="$shape/height" /></xsl:call-template></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="step-x">
       <xsl:call-template name="grid-step">
         <xsl:with-param name="size" select="$width" />
-        <xsl:with-param name="padding" select="$grid/padding/x" />
+        <xsl:with-param name="padding" select="padding/x" />
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="step-y">
       <xsl:call-template name="grid-step">
         <xsl:with-param name="size" select="$height" />
-        <xsl:with-param name="padding" select="$grid/padding/y" />
+        <xsl:with-param name="padding" select="padding/y" />
       </xsl:call-template>
-    </xsl:variable>
-    <xsl:variable name="cell">
-      <xsl:choose>
-        <xsl:when test="$columns &gt; 1 and $rows &gt; 1"><xsl:value-of select="concat('column * ', $rows, ' + row')" /></xsl:when>
-        <xsl:when test="$columns &gt; 1">column</xsl:when>
-        <xsl:when test="$rows &gt; 1">row</xsl:when>
-      </xsl:choose>
     </xsl:variable>
     <xsl:variable name="index">
       <xsl:choose>
-        <xsl:when test="$from = 0 and $cell != ''"><xsl:value-of select="$cell" /></xsl:when>
-        <xsl:when test="$cell != ''"><xsl:value-of select="concat($from, ' + ', $cell)" /></xsl:when>
-        <xsl:otherwise><xsl:value-of select="$from" /></xsl:otherwise>
+        <xsl:when test="$columns &gt; 1 and $rows &gt; 1"><xsl:value-of select="concat('row * ', $columns, ' + column')" /></xsl:when>
+        <xsl:when test="$columns &gt; 1">column</xsl:when>
+        <xsl:when test="$rows &gt; 1">row</xsl:when>
+        <xsl:otherwise>0</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="at-x">
@@ -1122,21 +1089,72 @@ void start()
       <xsl:if test="$columns &gt; 1"><xsl:text>&#9;</xsl:text></xsl:if>
       <xsl:if test="$rows &gt; 1"><xsl:text>&#9;</xsl:text></xsl:if>
     </xsl:variable>
-    <xsl:value-of select="concat('&#9;// ', $group/@name, '.', count(preceding-sibling::member) + 1, ': ', $columns, ' by ', $rows, '&#10;')" />
-    <xsl:if test="$columns &gt; 1">
-      <xsl:value-of select="concat('&#9;for (std::size_t column = 0; column &lt; ', $columns, '; ++column)&#10;&#9;{&#10;')" />
-    </xsl:if>
+    <xsl:value-of select="concat('&#9;// ', @name, ': ', $columns, ' columns by ', $rows, ' rows&#10;')" />
     <xsl:if test="$rows &gt; 1">
-      <xsl:variable name="out" select="substring('&#9;&#9;', 1, 1 + number($columns &gt; 1))" />
-      <xsl:value-of select="concat($out, 'for (std::size_t row = 0; row &lt; ', $rows, '; ++row)&#10;', $out, '{&#10;')" />
+      <xsl:value-of select="concat('&#9;for (std::size_t row = 0; row &lt; ', $rows, '; ++row)&#10;&#9;{&#10;')" />
+    </xsl:if>
+    <xsl:if test="$columns &gt; 1">
+      <xsl:variable name="out" select="substring('&#9;&#9;', 1, 1 + number($rows &gt; 1))" />
+      <xsl:value-of select="concat($out, 'for (std::size_t column = 0; column &lt; ', $columns, '; ++column)&#10;', $out, '{&#10;')" />
     </xsl:if>
     <xsl:value-of select="concat($in, $name, '[', $index, '].setPosition({', $at-x, ', ', $at-y, '});&#10;')" />
-    <xsl:if test="$rows &gt; 1">
-      <xsl:value-of select="concat(substring('&#9;&#9;', 1, 1 + number($columns &gt; 1)), '}&#10;')" />
-    </xsl:if>
     <xsl:if test="$columns &gt; 1">
+      <xsl:value-of select="concat(substring('&#9;&#9;', 1, 1 + number($rows &gt; 1)), '}&#10;')" />
+    </xsl:if>
+    <xsl:if test="$rows &gt; 1">
       <xsl:text>	}
 </xsl:text>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- A <row> of a group in columns and rows: the color of every cell of
+       each row it picks. -->
+  <xsl:template name="row-color">
+    <xsl:param name="name" />
+    <xsl:variable name="columns" select="number(normalize-space(../columns))" />
+    <xsl:variable name="color"><xsl:call-template name="color"><xsl:with-param name="name" select="sprite/*/color" /></xsl:call-template></xsl:variable>
+    <xsl:call-template name="picked-rows">
+      <xsl:with-param name="words" select="concat(normalize-space(@number), ' ')" />
+      <xsl:with-param name="rows" select="number(normalize-space(../rows))" />
+      <xsl:with-param name="columns" select="$columns" />
+      <xsl:with-param name="name" select="$name" />
+      <xsl:with-param name="color" select="$color" />
+      <xsl:with-param name="group" select="../@name" />
+    </xsl:call-template>
+  </xsl:template>
+
+  <!-- Each row that `words` picks (numbers, odd, even), one word at a time. -->
+  <xsl:template name="picked-rows">
+    <xsl:param name="words" />
+    <xsl:param name="rows" />
+    <xsl:param name="columns" />
+    <xsl:param name="name" />
+    <xsl:param name="color" />
+    <xsl:param name="group" />
+    <xsl:variable name="word" select="substring-before($words, ' ')" />
+    <xsl:if test="$word != ''">
+      <xsl:choose>
+        <xsl:when test="$word = 'odd' or $word = 'even'">
+          <xsl:value-of select="concat('&#9;// ', $group, ', every ', $word, ' row&#10;')" />
+          <xsl:value-of select="concat('&#9;for (std::size_t row = ', number($word = 'even'), '; row &lt; ', $rows, '; row += 2)&#10;&#9;{&#10;')" />
+          <xsl:value-of select="concat('&#9;&#9;for (std::size_t column = 0; column &lt; ', $columns, '; ++column)&#10;&#9;&#9;{&#10;')" />
+          <xsl:value-of select="concat('&#9;&#9;&#9;', $name, '[row * ', $columns, ' + column].setFillColor(', $color, ');&#10;&#9;&#9;}&#10;&#9;}&#10;')" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:variable name="from" select="(number($word) - 1) * $columns" />
+          <xsl:value-of select="concat('&#9;// ', $group, ', row ', $word, '&#10;')" />
+          <xsl:value-of select="concat('&#9;for (std::size_t i = ', $from, '; i &lt; ', $from + $columns, '; ++i)&#10;&#9;{&#10;')" />
+          <xsl:value-of select="concat('&#9;&#9;', $name, '[i].setFillColor(', $color, ');&#10;&#9;}&#10;')" />
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:call-template name="picked-rows">
+        <xsl:with-param name="words" select="substring-after($words, ' ')" />
+        <xsl:with-param name="rows" select="$rows" />
+        <xsl:with-param name="columns" select="$columns" />
+        <xsl:with-param name="name" select="$name" />
+        <xsl:with-param name="color" select="$color" />
+        <xsl:with-param name="group" select="$group" />
+      </xsl:call-template>
     </xsl:if>
   </xsl:template>
 
@@ -1481,7 +1499,7 @@ void update</xsl:text>
     <xsl:variable name="limit" select="normalize-space(remaining)" />
     <!-- what cannot die is always there: a number -->
     <xsl:variable name="always">
-      <xsl:call-template name="cells-total"><xsl:with-param name="members" select="$about[self::group][count(. | $dying) != count($dying)]/member" /></xsl:call-template>
+      <xsl:call-template name="groups-size"><xsl:with-param name="groups" select="$about[self::group][count(. | $dying) != count($dying)]" /></xsl:call-template>
     </xsl:variable>
     <xsl:variable name="fixed" select="$always + count($about[self::object][count(. | $dying) != count($dying)])" />
     <xsl:variable name="test">
@@ -2021,25 +2039,22 @@ void update</xsl:text>
     </xsl:choose>
   </xsl:template>
 
-  <!-- How many shapes a member is in its group's std::vector: the cells of its
-       <grid>, or one. -->
-  <xsl:template name="cells">
-    <xsl:variable name="grid" select="(sprite | ../sprite[not(current()/sprite)])/grid" />
+  <!-- How many shapes a group is: its members, or its columns times its rows. -->
+  <xsl:template name="group-size">
     <xsl:choose>
-      <xsl:when test="$grid"><xsl:value-of select="number(normalize-space($grid/columns)) * number(normalize-space($grid/rows))" /></xsl:when>
-      <xsl:otherwise>1</xsl:otherwise>
+      <xsl:when test="columns"><xsl:value-of select="number(normalize-space(columns)) * number(normalize-space(rows))" /></xsl:when>
+      <xsl:otherwise><xsl:value-of select="count(member)" /></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
-  <!-- How many shapes the `members` are, all together: where the next one's
-       start in the vector. -->
-  <xsl:template name="cells-total">
-    <xsl:param name="members" />
+  <!-- How many shapes the `groups` are, all together. -->
+  <xsl:template name="groups-size">
+    <xsl:param name="groups" />
     <xsl:choose>
-      <xsl:when test="not($members)">0</xsl:when>
+      <xsl:when test="not($groups)">0</xsl:when>
       <xsl:otherwise>
-        <xsl:variable name="first"><xsl:for-each select="$members[1]"><xsl:call-template name="cells" /></xsl:for-each></xsl:variable>
-        <xsl:variable name="rest"><xsl:call-template name="cells-total"><xsl:with-param name="members" select="$members[position() &gt; 1]" /></xsl:call-template></xsl:variable>
+        <xsl:variable name="first"><xsl:for-each select="$groups[1]"><xsl:call-template name="group-size" /></xsl:for-each></xsl:variable>
+        <xsl:variable name="rest"><xsl:call-template name="groups-size"><xsl:with-param name="groups" select="$groups[position() &gt; 1]" /></xsl:call-template></xsl:variable>
         <xsl:value-of select="$first + $rest" />
       </xsl:otherwise>
     </xsl:choose>
@@ -2070,8 +2085,8 @@ void update</xsl:text>
        it draws itself. -->
   <xsl:template name="sprite-texture">
     <xsl:choose>
-      <xsl:when test="image or grid/image">
-        <xsl:call-template name="texture-name"><xsl:with-param name="path" select="(image | grid/image)/path" /></xsl:call-template>
+      <xsl:when test="image">
+        <xsl:call-template name="texture-name"><xsl:with-param name="path" select="image/path" /></xsl:call-template>
       </xsl:when>
       <xsl:otherwise>
         <xsl:call-template name="drawn-name" />
@@ -2091,7 +2106,7 @@ void update</xsl:text>
        are drawn: a bitmap's rows one under another, so it looks like itself. -->
   <xsl:template name="declare-picture">
     <xsl:variable name="name"><xsl:call-template name="drawn-name" /></xsl:variable>
-    <xsl:variable name="bitmap" select="bitmap | grid/bitmap" />
+    <xsl:variable name="bitmap" select="bitmap" />
     <xsl:text>
 </xsl:text>
     <xsl:choose>
@@ -2132,7 +2147,7 @@ void update</xsl:text>
   <!-- Its texture made, in setup()'s test of what could not be. -->
   <xsl:template name="load-picture">
     <xsl:variable name="name"><xsl:call-template name="drawn-name" /></xsl:variable>
-    <xsl:variable name="bitmap" select="bitmap | grid/bitmap" />
+    <xsl:variable name="bitmap" select="bitmap" />
     <xsl:value-of select="concat('!', $name, 'Picture.')" />
     <xsl:choose>
       <xsl:when test="$bitmap">
@@ -2176,7 +2191,7 @@ void update</xsl:text>
 
   <!-- The SFML type an object or a group's members are drawn as. -->
   <xsl:template name="sf-type">
-    <xsl:variable name="shape" select="(sprite | member/sprite)[1]/* | (sprite | member/sprite)[1]/grid/*" />
+    <xsl:variable name="shape" select="(sprite | member/sprite)[1]/*" />
     <xsl:choose>
       <xsl:when test="$shape/self::circle">sf::CircleShape</xsl:when>
       <xsl:when test="$shape/self::rectangle">sf::RectangleShape</xsl:when>

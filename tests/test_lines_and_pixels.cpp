@@ -58,7 +58,6 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.baseName = name;
 		object.shapeKind = ShapeKind::Line;
 		object.bitmap = std::make_shared<const Bitmap>(rasterizeLines(lines));
 		object.size = { static_cast<float>(object.bitmap->width), static_cast<float>(object.bitmap->height) };
@@ -72,7 +71,6 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.baseName = name;
 		object.shapeKind = ShapeKind::Rectangle;
 		object.size = { width, height };
 		object.position = { x, y };
@@ -84,7 +82,6 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.baseName = name;
 		object.shapeKind = ShapeKind::Circle;
 		object.size = { radius * 2, radius * 2 };
 		object.position = { x, y };
@@ -467,12 +464,6 @@ TEST_CASE("mistakes in a sprite of lines are reported where they are", "[lines][
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(line + "<circle><radius>4</radius></circle>"), "<show object=\"thing\" />")),
 			ContainsSubstring("a sprite of lines holds only <line>s"));
-	}
-
-	SECTION("a grid of lines")
-	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith("<grid><columns>2</columns><rows>2</rows>" + line + "</grid>"), "<show object=\"thing\" />")),
-			ContainsSubstring("cannot repeat a <line>"));
 	}
 
 	SECTION("a collision type that is not one")

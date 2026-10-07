@@ -7,8 +7,8 @@
 <!-- What this target can generate so far: all of Pong, Space Race,
      Freeway, Breakout and Depth Charge. Screens on a stack, rectangles, circles, texts (words
      or a number) and pictures (from a file, rows of text, lines or an SVG); objects that move, bounce, stick, deflect, wrap
-     round, start again and die; groups of them, grids among them, moving as
-     one block or each its own way; keys held to move, and keys pressed to hop,
+     round, start again and die; groups of them, listed or in columns and rows
+     (each row a color of its own), moving as one block or each its own way; keys held to move, and keys pressed to hop,
      fire, change screen, start again, play a sound or count; conditions on an
      object's number or on how many are left; and sounds. Anything else stops the generator with a
      message saying what and where, rather than writing a program that plays a
@@ -17,7 +17,7 @@
 
   <xsl:variable name="supported" select="concat(
     ' game window width height background fullscreen framerate variables variable',
-    ' objects object group member sprite circle radius rectangle color text content number size image path flip grid columns rows padding',
+    ' objects object group member sprite circle radius rectangle color text content number size image path flip columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity',
     ' collisions enabled lockstep collision bounce stick reset deflect wrap die actions action move hop fire',
@@ -111,19 +111,23 @@
           <xsl:with-param name="what" select="'a &lt;group&gt; in &lt;lockstep&gt; whose members have velocities of their own'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::group and (sprite | member/sprite)/grid and member/velocity">
+      <!-- a group in columns and rows: one look for every cell, a row may
+           change its color -->
+      <xsl:when test="self::group and columns and count(sprite) != 1">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;group&gt; of grids whose members have velocities of their own'" />
+          <xsl:with-param name="what" select="'a &lt;group&gt; in columns and rows without one &lt;sprite&gt;'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::grid and not(ancestor::group)">
+      <xsl:when test="self::row and parent::group and (*[not(self::sprite)] or count(sprite) != 1 or not(sprite/*[self::circle or self::rectangle][count(*) = 1 and color])
+                      or local-name(sprite/*) != local-name(../sprite/*))">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;grid&gt; outside a &lt;group&gt;'" />
+          <xsl:with-param name="what" select="'a &lt;row&gt; that changes more than the color of a circle or rectangle'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::grid and (count(circle | rectangle | bitmap | svg) != 1 or count(*[not(self::columns or self::rows or self::padding)]) != 1)">
+      <xsl:when test="self::sprite and parent::member and (circle[not(radius)] or rectangle[not(width and height)] or text[not((content or number) and size)]
+                      or image[not(path)] or bitmap[not(row)] or svg[not(path)])">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;grid&gt; that is not of one &lt;circle&gt;, &lt;rectangle&gt;, &lt;bitmap&gt; or &lt;svg&gt;'" />
+          <xsl:with-param name="what" select="'a &lt;sprite&gt; of a member that gives only part of a sprite of its group'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="(self::columns or self::rows) and (* or translate(normalize-space(.), $digits, '') != '' or normalize-space(.) = '' or number(.) &lt; 1)">
@@ -307,9 +311,9 @@
       </xsl:when>
 
       <!-- looks -->
-      <xsl:when test="self::sprite and not(line and count(*) = count(line)) and (count(*) != 1 or not(circle or rectangle or text or image or bitmap or svg or grid))">
+      <xsl:when test="self::sprite and not(line and count(*) = count(line)) and (count(*) != 1 or not(circle or rectangle or text or image or bitmap or svg))">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;sprite&gt; that is not one &lt;circle&gt;, &lt;rectangle&gt;, &lt;text&gt;, &lt;image&gt;, &lt;bitmap&gt;, &lt;svg&gt; or &lt;grid&gt;, or &lt;line&gt;s'" />
+          <xsl:with-param name="what" select="'a &lt;sprite&gt; that is not one &lt;circle&gt;, &lt;rectangle&gt;, &lt;text&gt;, &lt;image&gt;, &lt;bitmap&gt; or &lt;svg&gt;, or &lt;line&gt;s'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::text and count(content | number) != 1">

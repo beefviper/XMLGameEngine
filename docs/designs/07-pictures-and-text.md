@@ -9,14 +9,14 @@
 - no window backend, the Qt renderer or the collision detector changes when a picture kind is added, and every library shows identical pixels;
 - the object's size is known without a window (`name.width` works in tests);
 - a `<type>pixel</type>` collision tests exactly the pixels drawn ([05](05-collisions.md));
-- grid cells share one picture; the internal shape kind is still called `Line` ("a picture the engine drew itself", params `{"line", w, h}`), not renamed, to keep the change out of every backend. The xgegui inspector calls such a sprite "drawn"/"pixels".
+- cells of a group drawing the same picture share it (drawn once); the internal shape kind is still called `Line` ("a picture the engine drew itself", params `{"line", w, h}`), not renamed, to keep the change out of every backend. The xgegui inspector calls such a sprite "drawn"/"pixels".
 
 Keep new picture kinds on this path. Text and `<image>` files are the exception: only a backend can measure them, so they cannot be `pixel` and expressions see their size as 0 until measured.
 
 ## Lines
 
 - Need: Lunar Lander is drawn entirely from lines; the moon is one object of 15 lines, the lander 13, the pad one thick line.
-- `<line>` (from/to, `<color>`, `<thickness>` of at least 1) inside a `<sprite>`, in pixels from the sprite's top left. Rasterized with a square brush, no gaps, transparent elsewhere; endpoints rounded. Not repeatable by `<grid>`, not mixable with other shapes. Lines have no fill.
+- `<line>` (from/to, `<color>`, `<thickness>` of at least 1) inside a `<sprite>`, in pixels from the sprite's top left. Rasterized with a square brush, no gaps, transparent elsewhere; endpoints rounded. Not mixable with other shapes. Lines have no fill.
 - Rejected: a box with a list of parts (a second description that drifts from the picture).
 
 ## Bitmaps
@@ -25,7 +25,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - **`<bitmap>`**: `<row>`s of `.` (clear) and `*` (solid), `<scale>` (whole number of at least 1, default 1), one `<color>`. Strict: only those two characters and equal row lengths; the error names the row and character (a stray letter is likelier a typo than a design). More characters (a palette) can be added without breaking existing files.
 - One `<row>` element per line, not one text block: whitespace handling in text nodes differs among the four XML libraries.
 - Rejected: a palette now (a two-color sprite is two objects), frames as an attribute (`<sprite frames="2">`, cannot reorder or reuse).
-- A bitmap can be the shape a `<grid>` repeats.
+- A bitmap can be the sprite of a group in columns and rows, a row changing its rows of text and color.
 
 ## SVG parts
 
@@ -45,11 +45,11 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 ## Animation
 
 - Need: arcade creatures flap between two poses; nothing changed a picture over time.
-- An object with several `<sprite name="...">`s and an `<animation>`: `<interval>` seconds (a value above 0) and `<frame sprite="name" />` elements that refer to sprites by name (so a sprite can be reused in the sequence). At least two frames; every sprite must be shown; frames must be pictures of one size and one grid layout. (Several named sprites with *no* animation are looks, below.)
-- **Seconds in the file, frames in the engine:** turned into frames with `<framerate>` at load (a window with no framerate is an error); a slow machine animates slowly with everything else. One count per object, advanced by `Game::updateObjects` for objects that are shown and in play; a pause or menu holds the picture; a reset restores frame one. Cells of a grid animate together because they start together and share the pictures.
+- An object with several `<sprite name="...">`s and an `<animation>`: `<interval>` seconds (a value above 0) and `<frame sprite="name" />` elements that refer to sprites by name (so a sprite can be reused in the sequence). At least two frames; every sprite must be shown; frames must be pictures of one size. (Several named sprites with *no* animation are looks, below.)
+- **Seconds in the file, frames in the engine:** turned into frames with `<framerate>` at load (a window with no framerate is an error); a slow machine animates slowly with everything else. One count per object, advanced by `Game::updateObjects` for objects that are shown and in play; a pause or menu holds the picture; a reset restores frame one. The cells of a group animate together because they start together and share the pictures.
 - Groups: a member's own sprites replace the group's; an animation (its own, else the group's) is looked up in the sprites the member ends up with. This is what gives Space Invaders three alien kinds in one lockstep group.
 - Frames of a turned object each keep their own `Turnable`; equal-sized bitmaps turn to equal squares.
-- Rejected: a global animation clock (flips everything on one tick regardless of state; a per-object count is simpler with pause and reset, at the cost of grid cells being in step only because they start together).
+- Rejected: a global animation clock (flips everything on one tick regardless of state; a per-object count is simpler with pause and reset, at the cost of a group's cells being in step only because they start together).
 - Not done: an interval per frame, an animation that runs once or starts on a collision, pictures driven by a variable, direction or hit, a color per pixel, an image-to-rows tool.
 
 ## Looks
@@ -57,7 +57,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - Need: Frostbite's ice turns blue when landed on and its igloo grows a block at a time; Frogger faked a filled home with a frog under each pad.
 - **Several named sprites and no animation are *looks*.** `<become sprite="name" />` (or `object=` for a name or group) switches the picture; a reset shows the first. A collision rule with `sprite="white"` runs only while its object shows that look, so a row gives one block and then no more until it turns white again.
 - Chosen over class changes (`<become class>`: rules already filter by class, but the change would not be visible and colour would need its own command) and per-object state variables. **The look is the state: what the player sees is what the rule tests.**
-- A look is a spriteParams plus a bitmap swapped in and marked dirty, so no backend changed. Looks do not combine with an animation, a heading or a grid; a look cannot be a bound number text. No recoloring.
+- A look is a spriteParams plus a bitmap swapped in and marked dirty, so no backend changed. Looks do not combine with an animation or a heading; a look cannot be a bound number text. No recoloring.
 
 ## Text and the built-in font
 

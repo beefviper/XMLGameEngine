@@ -78,7 +78,7 @@
       </xsl:for-each>
       <!-- an <svg>, drawn by xgecli as the engine draws it, into a picture -->
       <xsl:for-each select="$drawn-svgs">
-        <xsl:variable name="svg" select="svg | grid/svg" />
+        <xsl:variable name="svg" select="svg" />
         <xsl:variable name="file"><xsl:call-template name="drawn-file" /></xsl:variable>
         <picture path="{$file}" svg="{normalize-space($svg/path)}">
           <xsl:if test="$svg/width">

@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 	try
 	{
 		// Game is fully evaluated the moment its constructor returns - every
-		// object's position (grid spacing included), velocity, action, and
+		// object's position (a group's cells included), velocity, action, and
 		// variable is real - none of it needs a Window/backend to exist first
 		// (see game_expr.cpp, command.cpp's measureShapeSize). The exceptions are
 		// Object::size of a text or image (the real rendered footprint, used for

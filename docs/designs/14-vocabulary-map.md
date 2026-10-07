@@ -13,7 +13,7 @@ Read from the readme and `xgedef.xsd` of the `working` branch on 2026-10-04.
 **Nouns: things that exist**
 
 - Containers: `game`, `window`, `variables`, `sounds`, `paths`, `objects`, `states`.
-- Things: `object`, `group` and its `member`s, `grid` cells, `variable`, `state`, `sound`, a named `keys` set, `timer`.
+- Things: `object`, `group` and its `member`s or cells (`columns`, `rows`, changed by `row`, `column`, `cell`), `variable`, `state`, `sound`, a named `keys` set, `timer`.
 - Sprite shapes: `circle`, `rectangle`, `text`, `image`, `line`, `bitmap`, `svg`. Several named `sprite`s on one object are its **looks** (`become`) or the frames of an `animation` (`frame`).
 - Sound parts: `note`, `rest`.
 - Path parts: `path`, its `step`s and `home`, `start`, `speed`.
@@ -64,7 +64,7 @@ A note on pictures: an `<image>` is a file loaded by whichever window backend is
 
 | Layer | Vocabulary | How complete |
 |---|---|---|
-| Data model: what exists | objects, groups, grids, variables, states | solid |
+| Data model: what exists | objects, groups (members or cells), variables, states | solid |
 | Appearance | seven shapes, `animation`, looks and `become`, `flip`, `heading` | solid; one color per bitmap, no palette |
 | Kinematics: how things move | velocity, acceleration, heading, facing, drag, `move`, `hop`, `jump`, `thrust`, `turn`, `reverse` | good; the arcing jump (`leap`) has no air control |
 | Collision: what touches what, and the response | `edge`, `class`, `object`, `unless`, `sprite`, `slower`, `faster`, `type`, and a dozen response verbs | the largest layer: it is where verbs, adjectives and prepositions meet |

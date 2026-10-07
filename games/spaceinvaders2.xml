@@ -24,10 +24,11 @@
   frames of one alien, which an animation needs. The sheet carries a backdrop of
   its own, which each sprite leaves out with <hide>.
 
-  The three kinds of alien (A, B, C) are the members of one group, so they march,
-  bounce and step down together as a single block; each member is a <grid> of
-  its own three frames, which an <animation> shows one after the other, each for
-  animation.seconds seconds. The ship is the idle picture, the bullet is the
+  The aliens are one group of 11 columns and 5 rows, so they march, bounce and
+  step down together as a single block. Each has three frames, which an
+  <animation> shows one after the other, each for animation.seconds seconds:
+  the squids' (A) are the group's, and rows 2 and 3 (B) and 4 and 5 (C) change
+  the part of the sheet each frame takes. The ship is the idle picture, the bullet is the
   player bolt, and the aliens' bombs are the enemy bolt, flipped to fly down.
   The rest of the sheet (banking, the hit flash, the charged bolt, the enemy
   bomb, the explosions, the saucer) is not used yet.
@@ -166,7 +167,49 @@
       <member />
     </group>
     <group name="aliens" class="aliens">
-      <position><x>margin</x></position>
+      <columns>11</columns>
+      <rows>5</rows>
+      <padding><x>gap</x><y>gap</y></padding>
+      <sprite name="a">
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>1.5</x>
+          <y>64.5</y>
+          <width>28</width>
+          <height>25</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <sprite name="b">
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>33.5</x>
+          <y>64.5</y>
+          <width>28</width>
+          <height>25</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <sprite name="c">
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>65.5</x>
+          <y>64.5</y>
+          <width>28</width>
+          <height>25</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <animation>
+        <interval>animation.seconds</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+      </animation>
+      <position><x>margin</x><y>margin / 2</y></position>
       <velocity><x>2</x><y>0</y></velocity>
       <facing>down</facing>
       <collisions>
@@ -187,177 +230,49 @@
           <fire object="bombs" />
         </timer>
       </timers>
-    <member name="squids">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>1</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+      <row number="2 3">
+        <sprite name="a">
           <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
-            <x>1.5</x>
-            <y>64.5</y>
-            <width>28</width>
-            <height>25</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
-          </svg>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>1</rows>
-          <padding><x>gap</x><y>gap</y></padding>
-          <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
-            <x>33.5</x>
-            <y>64.5</y>
-            <width>28</width>
-            <height>25</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
-          </svg>
-        </grid>
-      </sprite>
-      <sprite name="c">
-        <grid>
-          <columns>11</columns>
-          <rows>1</rows>
-          <padding><x>gap</x><y>gap</y></padding>
-          <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
-            <x>65.5</x>
-            <y>64.5</y>
-            <width>28</width>
-            <height>25</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
-          </svg>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-        <frame sprite="c" />
-      </animation>
-      <position><y>margin / 2</y></position>
-    </member>
-    <member name="crabs">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
-          <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
             <x>98</x>
             <y>70.5</y>
-            <width>28</width>
             <height>23</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
           </svg>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+        </sprite>
+        <sprite name="b">
           <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
             <x>130</x>
             <y>70.5</y>
-            <width>28</width>
             <height>23</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
           </svg>
-        </grid>
-      </sprite>
-      <sprite name="c">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+        </sprite>
+        <sprite name="c">
           <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
             <x>162</x>
             <y>70.5</y>
-            <width>28</width>
             <height>23</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
           </svg>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-        <frame sprite="c" />
-      </animation>
-      <position><y>margin / 2 + squids.height + gap</y></position>
-    </member>
-    <member name="octopuses">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+        </sprite>
+      </row>
+      <row number="4 5">
+        <sprite name="a">
           <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
-            <x>1.5</x>
             <y>99.5</y>
-            <width>28</width>
             <height>24.5</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
           </svg>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+        </sprite>
+        <sprite name="b">
           <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
-            <x>33.5</x>
             <y>99.5</y>
-            <width>28</width>
             <height>24.5</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
           </svg>
-        </grid>
-      </sprite>
-      <sprite name="c">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+        </sprite>
+        <sprite name="c">
           <svg>
-            <path>assets/Space Invaders Color Sprites.svg</path>
-            <x>65.5</x>
             <y>99.5</y>
-            <width>28</width>
             <height>24.5</height>
-            <scale>zoom</scale>
-            <hide>backdrop</hide>
           </svg>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-        <frame sprite="c" />
-      </animation>
-      <position><y>margin / 2 + squids.height + gap + 2 * (crabs.height + gap)</y></position>
-    </member>
+        </sprite>
+      </row>
     </group>
     <object name="title">
       <sprite>

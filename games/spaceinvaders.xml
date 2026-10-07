@@ -10,11 +10,11 @@
   across, so a few characters make a chunky sprite.
 
   Each kind of alien has two sprites (a and b) and an <animation> that shows
-  them one after the other, each for animation.seconds (1) seconds. The three
-  kinds are the members of one group, so they march, bounce and step down
-  together as a single block; each member is a <grid> of its own sprite, and
-  both of its sprites have to be laid out the same way. The bullet is a thin
-  tall rectangle.
+  them one after the other, each for animation.seconds (1) seconds. The aliens
+  are one group of 11 columns and 5 rows, so they march, bounce and step down
+  together as a single block: the squids' sprites are the group's, and rows 2
+  and 3 (crabs) and 4 and 5 (octopuses) change their rows of text and color.
+  The bullet is a thin tall rectangle.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -147,7 +147,43 @@
       <member />
     </group>
     <group name="aliens" class="aliens">
-      <position><x>margin</x></position>
+      <columns>11</columns>
+      <rows>5</rows>
+      <padding><x>gap</x><y>gap</y></padding>
+      <sprite name="a">
+        <bitmap>
+          <row>....***....</row>
+          <row>...*****...</row>
+          <row>..*******..</row>
+          <row>.**.***.**.</row>
+          <row>.*********.</row>
+          <row>...*.*.*...</row>
+          <row>..*..*..*..</row>
+          <row>...*.*.*...</row>
+          <scale>pixel</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>....***....</row>
+          <row>...*****...</row>
+          <row>..*******..</row>
+          <row>.**.***.**.</row>
+          <row>.*********.</row>
+          <row>..*..*..*..</row>
+          <row>.*...*...*.</row>
+          <row>..*.....*..</row>
+          <scale>pixel</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>animation.seconds</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>margin</x><y>margin / 2</y></position>
       <velocity><x>2</x><y>0</y></velocity>
       <facing>down</facing>
       <collisions>
@@ -168,58 +204,8 @@
           <fire object="bombs" />
         </timer>
       </timers>
-    <member name="squids">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>1</rows>
-          <padding><x>gap</x><y>gap</y></padding>
-          <bitmap>
-            <row>....***....</row>
-            <row>...*****...</row>
-            <row>..*******..</row>
-            <row>.**.***.**.</row>
-            <row>.*********.</row>
-            <row>...*.*.*...</row>
-            <row>..*..*..*..</row>
-            <row>...*.*.*...</row>
-            <scale>pixel</scale>
-            <color>color.magenta</color>
-          </bitmap>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>1</rows>
-          <padding><x>gap</x><y>gap</y></padding>
-          <bitmap>
-            <row>....***....</row>
-            <row>...*****...</row>
-            <row>..*******..</row>
-            <row>.**.***.**.</row>
-            <row>.*********.</row>
-            <row>..*..*..*..</row>
-            <row>.*...*...*.</row>
-            <row>..*.....*..</row>
-            <scale>pixel</scale>
-            <color>color.magenta</color>
-          </bitmap>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-      </animation>
-      <position><y>margin / 2</y></position>
-    </member>
-    <member name="crabs">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+      <row number="2 3">
+        <sprite name="a">
           <bitmap>
             <row>..*.....*..</row>
             <row>...*...*...</row>
@@ -229,16 +215,10 @@
             <row>*.*******.*</row>
             <row>*.*.....*.*</row>
             <row>...**.**...</row>
-            <scale>pixel</scale>
             <color>color.cyan</color>
           </bitmap>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+        </sprite>
+        <sprite name="b">
           <bitmap>
             <row>..*.....*..</row>
             <row>*..*...*..*</row>
@@ -248,24 +228,12 @@
             <row>.*********.</row>
             <row>..*.....*..</row>
             <row>.*.......*.</row>
-            <scale>pixel</scale>
             <color>color.cyan</color>
           </bitmap>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-      </animation>
-      <position><y>margin / 2 + squids.height + gap</y></position>
-    </member>
-    <member name="octopuses">
-      <sprite name="a">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+        </sprite>
+      </row>
+      <row number="4 5">
+        <sprite name="a">
           <bitmap>
             <row>...*****...</row>
             <row>.*********.</row>
@@ -275,16 +243,10 @@
             <row>...**.**...</row>
             <row>..**...**..</row>
             <row>***.....***</row>
-            <scale>pixel</scale>
             <color>color.white</color>
           </bitmap>
-        </grid>
-      </sprite>
-      <sprite name="b">
-        <grid>
-          <columns>11</columns>
-          <rows>2</rows>
-          <padding><x>gap</x><y>gap</y></padding>
+        </sprite>
+        <sprite name="b">
           <bitmap>
             <row>...*****...</row>
             <row>.*********.</row>
@@ -294,18 +256,10 @@
             <row>..***.***..</row>
             <row>.**.....**.</row>
             <row>..**...**..</row>
-            <scale>pixel</scale>
             <color>color.white</color>
           </bitmap>
-        </grid>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-      </animation>
-      <position><y>margin / 2 + squids.height + gap + 2 * (crabs.height + gap)</y></position>
-    </member>
+        </sprite>
+      </row>
     </group>
     <object name="title">
       <sprite>

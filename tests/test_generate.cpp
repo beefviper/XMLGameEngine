@@ -358,7 +358,7 @@ TEST_CASE("what can die keeps a flag for being in play, and a touch both sides h
 	CHECK(main.find("physics::touching(drops[i], bricks[j])") == std::string::npos);
 }
 
-TEST_CASE("generating Breakout writes its rows of bricks as grids, and wins when none is left", "[generate]")
+TEST_CASE("generating Breakout writes its bricks as one group of columns and rows, and wins when none is left", "[generate]")
 {
 	if (!canGenerate())
 	{
@@ -370,8 +370,12 @@ TEST_CASE("generating Breakout writes its rows of bricks as grids, and wins when
 
 	const std::string main = readFile(folder.path / "out/main.cpp");
 	CHECK(main.find("// bricks: 54 of them\nstd::vector<sf::RectangleShape> bricks(54);") != std::string::npos);
-	CHECK(main.find("\t// bricks.2, a grid of 9 by 1\n\tfor (std::size_t i = 9; i < 18; ++i)\n\t{\n\t\tbricks[i].setSize({width, height});") != std::string::npos);
-	CHECK(main.find("\tfor (std::size_t column = 0; column < 9; ++column)\n\t{\n\t\tbricks[9 + column].setPosition({margin + static_cast<float>(column) * (width + 5.0f), ") != std::string::npos);
+	// every brick the group's look, then each row its own color
+	CHECK(main.find("\tfor (sf::RectangleShape& one : bricks)\n\t{\n\t\tone.setSize({width, height});\n\t\tone.setFillColor(sf::Color::Red);\n\t}") != std::string::npos);
+	CHECK(main.find("\t// bricks, row 2\n\tfor (std::size_t i = 9; i < 18; ++i)\n\t{\n\t\tbricks[i].setFillColor(sf::Color(255, 165, 0, 255));\n\t}") != std::string::npos);
+	// the top row first, left to right, as the engine lays them out
+	CHECK(main.find("\t// bricks: 9 columns by 6 rows\n\tfor (std::size_t row = 0; row < 6; ++row)\n\t{\n\t\tfor (std::size_t column = 0; column < 9; ++column)\n\t\t{\n"
+		"\t\t\tbricks[row * 9 + column].setPosition({margin + static_cast<float>(column) * (width + 5.0f), margin / 2.0f + static_cast<float>(row) * (height + 5.0f)});") != std::string::npos);
 	// the bricks never move, so their bounce off the sides is left out
 	CHECK(main.find("physics::past(bricks") == std::string::npos);
 	// every rule about the bottom in one touch of it: the ball bounces and dies
@@ -417,12 +421,12 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 		"  <variables />\n"
 		"  <objects>\n"
 		"    <group name=\"aliens\" class=\"aliens\">\n"
-		"      <sprite><grid><columns>3</columns><rows>2</rows><padding><x>4</x><y>4</y></padding><circle><radius>5</radius><color>color.green</color></circle></grid></sprite>\n"
-		"      <position><x>20</x></position>\n"
+		"      <columns>6</columns><rows>2</rows><padding><x>4</x><y>4</y></padding>\n"
+		"      <sprite><circle><radius>5</radius><color>color.green</color></circle></sprite>\n"
+		"      <position><x>20</x><y>20</y></position>\n"
 		"      <velocity><x>2</x><y>0</y></velocity>\n"
 		"      <collisions><enabled>true</enabled><lockstep>true</lockstep><collision edge=\"horizontal\"><bounce /></collision><collision object=\"shot\"><die /></collision></collisions>\n"
-		"      <member><position><y>20</y></position></member>\n"
-		"      <member><position><x>200</x><y>20</y></position></member>\n"
+		"      <row number=\"even\"><sprite><circle><color>color.red</color></circle></sprite></row>\n"
 		"    </group>\n"
 		"    <object name=\"shot\">\n"
 		"      <sprite><rectangle><width>2</width><height>6</height></rectangle></sprite>\n"
@@ -437,13 +441,33 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 	generateGame(requestFor(folder.path / "block.xml", folder.path / "out"));
 
 	const std::string main = readFile(folder.path / "out/main.cpp");
-	// two members, each a grid of 3 by 2, in column order as the engine names them
+	// 6 columns by 2 rows, the top row first as the engine lays them out; every even row red
 	CHECK(main.find("std::vector<sf::CircleShape> aliens(12);") != std::string::npos);
-	CHECK(main.find("\t\t\taliens[6 + column * 2 + row].setPosition({200.0f + static_cast<float>(column) * (2.0f * 5.0f + 4.0f), 20.0f + static_cast<float>(row) * (2.0f * 5.0f + 4.0f)});") != std::string::npos);
+	CHECK(main.find("\t\t\taliens[row * 6 + column].setPosition({20.0f + static_cast<float>(column) * (2.0f * 5.0f + 4.0f), 20.0f + static_cast<float>(row) * (2.0f * 5.0f + 4.0f)});") != std::string::npos);
+	CHECK(main.find("\t// aliens, every even row\n\tfor (std::size_t row = 1; row < 2; row += 2)\n\t{\n\t\tfor (std::size_t column = 0; column < 6; ++column)\n\t\t{\n\t\t\taliens[row * 6 + column].setFillColor(sf::Color::Red);") != std::string::npos);
 	// all of the block moved first, then its rules
 	CHECK(main.find("void updateAliens()\n{\n\tfor (sf::CircleShape& one : aliens)\n\t{\n\t\tone.move(aliensVelocity);\n\t}\n\n\tfor (std::size_t i = 0; i < aliens.size(); ++i)") != std::string::npos);
 	CHECK(main.find("\t\t\taliensVelocity.x = -aliensVelocity.x;\n\t\t\tfor (sf::CircleShape& each : aliens)\n\t\t\t{\n\t\t\t\teach.move({aliensVelocity.x, 0.0f});") != std::string::npos);
 	CHECK(main.find("\t// aliens: no more than 11 left\n\tif (std::count(aliensAlive.begin(), aliensAlive.end(), true) <= 11)\n\t{\n\t\tstart();") != std::string::npos);
+
+	// what a row, column or cell changes, beyond a row's color, is not written yet
+	const auto refused = [&](const std::string& from, const std::string& to)
+	{
+		std::string xml = readFile(folder.path / "block.xml");
+		xml.replace(xml.find(from), from.size(), to);
+		std::ofstream(folder.path / "changed.xml") << xml;
+		try
+		{
+			generateGame(requestFor(folder.path / "changed.xml", folder.path / "out2"));
+		}
+		catch (const GenerateError& error)
+		{
+			return std::string(error.what());
+		}
+		return std::string("generated it");
+	};
+	CHECK(refused("<row number=\"even\"><sprite><circle><color>color.red</color></circle></sprite></row>", "<column number=\"1\" />").find("cannot generate <column> yet") != std::string::npos);
+	CHECK(refused("<circle><color>color.red</color></circle>", "<circle><radius>8</radius></circle>").find("cannot generate a <row> that changes more than the color of a circle or rectangle yet") != std::string::npos);
 }
 
 TEST_CASE("a sprite of rows, of lines or from an SVG is a picture the program has, drawn as the engine draws it", "[generate]")
@@ -467,12 +491,11 @@ TEST_CASE("a sprite of rows, of lines or from an SVG is a picture the program ha
 		"      <collisions><enabled>false</enabled></collisions>\n"
 		"    </object>\n"
 		"    <group name=\"aliens\">\n"
-		"      <sprite><grid><columns>4</columns><rows>2</rows><padding><x>6</x><y>6</y></padding>\n"
-		"        <bitmap><row>..*..*..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>.*....*.</row><scale>2</scale><color>color.green</color></bitmap></grid></sprite>\n"
+		"      <columns>4</columns><rows>2</rows><padding><x>6</x><y>6</y></padding>\n"
+		"      <sprite><bitmap><row>..*..*..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>.*....*.</row><scale>2</scale><color>color.green</color></bitmap></sprite>\n"
 		"      <position><x>20</x><y>70</y></position>\n"
 		"      <velocity><x>1</x><y>0</y></velocity>\n"
 		"      <collisions><enabled>true</enabled><lockstep>true</lockstep><collision edge=\"horizontal\"><bounce /></collision></collisions>\n"
-		"      <member />\n"
 		"    </group>\n"
 		"    <object name=\"player\">\n"
 		"      <sprite><bitmap><row>...*...</row><row>.*****.</row><row>*******</row><scale>3</scale><color>color.cyan</color></bitmap></sprite>\n"
@@ -506,7 +529,7 @@ TEST_CASE("a sprite of rows, of lines or from an SVG is a picture the program ha
 	// lines, white and 1 thick when they do not say
 	CHECK(main.find("\t{{200.0f, 30.0f}, {318.0f, 10.0f}, sf::Color::White, 1}\n};") != std::string::npos);
 	CHECK(main.find("!groundPicture.loadFromImage(pictures::lines(groundLines))") != std::string::npos);
-	// a grid of a bitmap: the picture's size from one cell to the next
+	// a group of cells of a bitmap: the picture's size from one cell to the next
 	CHECK(main.find("std::vector<sf::Sprite> aliens(8, sf::Sprite(aliensPicture));") != std::string::npos);
 	CHECK(main.find("static_cast<float>(column) * (static_cast<float>(aliensPicture.getSize().x) + 6.0f)") != std::string::npos);
 	// an svg drawn by xgecli into a picture, flipped as an image is

@@ -4,11 +4,12 @@
 // date: Sept 30, 2026
 //
 // Catch2 tests for the <group> tag: one description shared by several
-// objects, each <member> giving only what is its own. A group is read as one
-// ordinary object per member (named group.1, group.2, ... unless the member
-// names itself), the group's name still means every member at once, members
-// of a group with <lockstep> move as one block, and what a group or member
-// gets wrong says where. Then both schema checkers, Xerces's real validation
+// objects, each <member> giving only what is its own, or each cell of its
+// <columns> and <rows>, changed by the <row>, <column> or <cell> that picks it.
+// A group is read as one ordinary object per member (named group.1, group.2,
+// ... unless the member names itself) or cell (group.column.row), the group's
+// name still means every member at once, members of a group with <lockstep>
+// move as one block, and what a group, member or cell gets wrong says where. Then both schema checkers, Xerces's real validation
 // and this project's own XsdLiteValidator, on the shipped games written with
 // groups and on mistakes in them.
 //
@@ -134,7 +135,6 @@ TEST_CASE("a group is read as one object for each member", "[group]")
 	{
 		CHECK(object.objClass == "logs");
 		CHECK(object.groupName == "lane");
-		CHECK(object.baseName == object.name); // an ordinary object that also knows its group
 		CHECK(object.collisionData.enabled);
 		CHECK(object.collisionData.left.size() == 1);
 		CHECK(object.collisionData.right.size() == 1);
@@ -332,12 +332,189 @@ TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
 	}
 }
 
+// ---------------------------------------------------------------- cells
+namespace
+{
+	// A wall of 3 columns and 2 rows of 20 by 10 red bricks from (100, 50),
+	// 5 apart across and 7 down, and whatever rows, columns and cells change.
+	std::string wallWith(const std::string& changes, const std::string& rows = "2", const std::string& padding = "<padding><x>5</x><y>7</y></padding>")
+	{
+		return "<group name=\"wall\" class=\"bricks\"><columns>3</columns><rows>" + rows + "</rows>" + padding +
+			"<sprite><rectangle><width>20</width><height>10</height><color>color.red</color></rectangle></sprite>"
+			"<position><x>100</x><y>50</y></position><velocity><x>0</x><y>0</y></velocity>"
+			"<collisions><enabled>true</enabled></collisions>"
+			"<variables><variable name=\"points\">1</variable></variables>" + changes + "</group>";
+	}
+
+	const std::string kShowWall = "<show object=\"wall\" />";
+
+	std::string colorOf(const Object& object) { return object.spriteParams.at(3); }
+}
+
+TEST_CASE("a group in columns and rows is a cell for each place, named for its column and row", "[group][cells]")
+{
+	Loaded loaded{ gameXml(wallWith(""), kShowWall) };
+	Game& game = loaded.game;
+	const auto& objects = game.getCurrentObjects();
+
+	// The top row first, left to right.
+	REQUIRE(objects.size() == 6);
+	const std::vector<std::string> names = { "wall.1.1", "wall.2.1", "wall.3.1", "wall.1.2", "wall.2.2", "wall.3.2" };
+	for (std::size_t i = 0; i < names.size(); ++i) { CHECK(objects[i].name == names[i]); }
+	for (const Object& cell : objects)
+	{
+		CHECK(cell.groupName == "wall");
+		CHECK(cell.objClass == "bricks");
+		CHECK(cell.variable.at("points") == 1.0f);
+	}
+
+	// A cell's size apart, plus the padding.
+	CHECK(game.getObject("wall.1.1").position.x == 100.0f);
+	CHECK(game.getObject("wall.1.1").position.y == 50.0f);
+	CHECK(game.getObject("wall.3.2").position.x == 100.0f + 2 * (20.0f + 5.0f));
+	CHECK(game.getObject("wall.3.2").position.y == 50.0f + 10.0f + 7.0f);
+	CHECK(game.tryGetObject("wall.4.1") == nullptr);
+	CHECK(game.getObject("wall").name == "wall.1.1");
+}
+
+TEST_CASE("a row, a column or a cell changes only what it gives", "[group][cells]")
+{
+	Loaded loaded{ gameXml(wallWith(
+		"<row number=\"2\"><sprite><rectangle><color>color.green</color></rectangle></sprite>"
+		"<variables><variable name=\"points\">5</variable></variables></row>"
+		"<column number=\"3\"><velocity><x>2</x></velocity></column>"
+		"<cell row=\"1\" column=\"2\" name=\"boss\"><sprite><rectangle><width>30</width><height>16</height><color>color.blue</color></rectangle></sprite></cell>"),
+		kShowWall) };
+	Game& game = loaded.game;
+
+	// The row: green, worth more, the size of the group's bricks.
+	CHECK(colorOf(game.getObject("wall.1.2")) == "color.green");
+	CHECK(game.getObject("wall.1.2").spriteParams.at(1) == "20.000000");
+	CHECK(game.getObject("wall.1.2").variable.at("points") == 5.0f);
+	CHECK(colorOf(game.getObject("wall.1.1")) == "color.red");
+	CHECK(game.getObject("wall.1.1").variable.at("points") == 1.0f);
+
+	// The column moves; the rest do not.
+	CHECK(game.getObject("wall.3.1").velocity.x == 2.0f);
+	CHECK(game.getObject("wall.3.2").velocity.x == 2.0f);
+	CHECK(game.getObject("wall.1.1").velocity.x == 0.0f);
+
+	// The cell has a name of its own, and is bigger, in the middle of its place.
+	CHECK(game.tryGetObject("wall.2.1") == nullptr);
+	const Object& boss = game.getObject("boss");
+	CHECK(boss.groupName == "wall");
+	CHECK(colorOf(boss) == "color.blue");
+	CHECK(boss.position.x == 100.0f + 25.0f - 5.0f);
+	CHECK(boss.position.y == 50.0f - 3.0f);
+
+	// Its neighbours are where they would be without it.
+	CHECK(game.getObject("wall.3.1").position.x == 100.0f + 50.0f);
+}
+
+TEST_CASE("the padding of a row or column is the gap before it", "[group][cells]")
+{
+	Loaded loaded{ gameXml(wallWith(
+		"<row number=\"2\"><padding><y>20</y></padding></row>"
+		"<column number=\"3\"><padding><x>15</x></padding></column>", "3"),
+		kShowWall) };
+	Game& game = loaded.game;
+
+	CHECK(game.getObject("wall.1.2").position.y == 50.0f + 10.0f + 20.0f);
+	CHECK(game.getObject("wall.1.3").position.y == 50.0f + 10.0f + 20.0f + 10.0f + 7.0f); // the group's gap again
+	CHECK(game.getObject("wall.2.1").position.x == 100.0f + 25.0f);
+	CHECK(game.getObject("wall.3.1").position.x == 100.0f + 25.0f + 20.0f + 15.0f);
+}
+
+TEST_CASE("a row or column picks by number, several numbers, odd or even", "[group][cells]")
+{
+	Loaded loaded{ gameXml(wallWith(
+		"<row number=\"odd\"><sprite><rectangle><color>color.blue</color></rectangle></sprite></row>"
+		"<row number=\"2 4\"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>", "5"),
+		kShowWall) };
+	Game& game = loaded.game;
+
+	CHECK(colorOf(game.getObject("wall.1.1")) == "color.blue");
+	CHECK(colorOf(game.getObject("wall.2.2")) == "color.green");
+	CHECK(colorOf(game.getObject("wall.3.3")) == "color.blue");
+	CHECK(colorOf(game.getObject("wall.1.4")) == "color.green");
+	CHECK(colorOf(game.getObject("wall.1.5")) == "color.blue");
+}
+
+TEST_CASE("a member's sprite of the same shape as its group's gives only what changes", "[group]")
+{
+	Loaded loaded{ gameXml(groupWith(
+		"<sprite><rectangle><width>40</width><height>20</height><color>color.brown</color></rectangle></sprite>" + kPosition + kVelocity + kCollisions,
+		"<member name=\"short\"><sprite><rectangle><width>10</width></rectangle></sprite></member>"
+		"<member name=\"round\"><sprite><circle><radius>4</radius></circle></sprite></member>"), "<show object=\"lane\" />") };
+	Game& game = loaded.game;
+
+	CHECK(game.getObject("short").spriteParams == std::vector<std::string>{ "rectangle", "10.000000", "20.000000", "color.brown" });
+	CHECK(game.getObject("round").spriteParams == std::vector<std::string>{ "circle", "4.000000", "0", "color.white" });
+}
+
+TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where", "[group][cells][errors]")
+{
+	const auto refused = [](const std::string& group) { Loaded loaded(gameXml(group, kShowWall)); };
+
+	SECTION("a row and a column that change the same thing in one cell")
+	{
+		REQUIRE_THROWS_WITH(refused(wallWith(
+			"<row number=\"1\"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>"
+			"<column number=\"2\"><sprite><rectangle><color>color.blue</color></rectangle></sprite></column>")),
+			ContainsSubstring("object 'wall.2.1'") && ContainsSubstring("both change its <sprite>") && ContainsSubstring("<cell>"));
+	}
+
+	SECTION("two rows that change the same variable in one cell")
+	{
+		REQUIRE_THROWS_WITH(refused(wallWith(
+			"<row number=\"odd\"><variables><variable name=\"points\">2</variable></variables></row>"
+			"<row number=\"1\"><variables><variable name=\"points\">3</variable></variables></row>")),
+			ContainsSubstring("<variable name=\"points\">"));
+	}
+
+	SECTION("a row that is not there")
+	{
+		REQUIRE_THROWS_WITH(refused(wallWith("<row number=\"3\" />")), ContainsSubstring("\"3\" is not one of 1 to 2"));
+	}
+
+	SECTION("a cell that is not there")
+	{
+		REQUIRE_THROWS_WITH(refused(wallWith("<cell row=\"1\" column=\"4\" />")), ContainsSubstring("is not a place in the group"));
+	}
+
+	SECTION("two cells in one place")
+	{
+		REQUIRE_THROWS_WITH(refused(wallWith("<cell row=\"1\" column=\"1\" /><cell row=\"1\" column=\"1\" />")), ContainsSubstring("the same place"));
+	}
+
+	SECTION("a column's gap above it")
+	{
+		REQUIRE_THROWS_WITH(refused(wallWith("<column number=\"2\"><padding><y>4</y></padding></column>")), ContainsSubstring("gives only an <x>"));
+	}
+
+	SECTION("rows that are not a whole number")
+	{
+		REQUIRE_THROWS_WITH(refused(wallWith("", "two")), ContainsSubstring("<rows>") && ContainsSubstring("a whole number"));
+	}
+
+	SECTION("columns and members both")
+	{
+		REQUIRE_THROWS_WITH(refused(wallWith("<member />")), ContainsSubstring("has no <member>s"));
+	}
+
+	SECTION("a row with no columns and rows to pick from")
+	{
+		REQUIRE_THROWS_WITH(refused(groupWith(kSprite + kPosition + kVelocity + kCollisions, "<row number=\"1\" />")),
+			ContainsSubstring("no <columns> and <rows>"));
+	}
+}
+
 // ------------------------------------------------------- the shipped games
 TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups", "[group][shipped]")
 {
 	// Counted from the games as they were written with one <object> for each:
-	// Frogger's 59 objects include the lane markings, a 13 by 4 <grid>, so 58
-	// objects and 52 cells; Space Race's 37 have no grid.
+	// Frogger's 59 objects include the lane markings, then a 13 by 4 grid and
+	// now a group of 13 columns and 4 rows, so 58 objects and 52 cells.
 	const auto census = [](const char* file)
 	{
 		Game game{ file };
@@ -450,7 +627,8 @@ namespace
 
 TEST_CASE("both schema checkers accept the games written with groups", "[group][schema]")
 {
-	for (const char* file : { "games/frogger.xml", "games/spacerace.xml", "games/kaboom.xml", "games/freeway.xml", "games/depthcharge.xml", "games/astrosmash.xml" })
+	for (const char* file : { "games/frogger.xml", "games/spacerace.xml", "games/kaboom.xml", "games/freeway.xml", "games/depthcharge.xml", "games/astrosmash.xml",
+		"games/breakout.xml", "games/spaceinvaders.xml", "games/spaceinvaders2.xml" })
 	{
 		DYNAMIC_SECTION(file)
 		{
@@ -480,6 +658,8 @@ TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group
 		{ "a position that is not an x and a y", "games/spacerace.xml", "<y>75</y>", "<z>75</z>", "z" },
 		{ "a group with no name", "games/spacerace.xml", "<group name=\"debris1\" ", "<group ", "missing required attribute 'name'" },
 		{ "a lockstep flag that is not true or false", "games/spacerace.xml", "<enabled>true</enabled>", "<enabled>true</enabled><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
+		{ "a member in a group of cells", "games/breakout.xml", "<row number=\"2\">", "<member /><row number=\"2\">", "row" },
+		{ "a cell with no column", "games/breakout.xml", "<row number=\"2\">", "<cell row=\"1\" /><row number=\"2\">", "missing required attribute 'column'" },
 	};
 
 	for (const Mistake& mistake : mistakes)

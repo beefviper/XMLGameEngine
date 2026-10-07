@@ -36,19 +36,19 @@ namespace xge
 
 			const auto made = std::find_if(objects.begin(), objects.end(), [&](const Object& object)
 				{
-					return object.baseName == name || (!object.groupName.empty() && object.groupName == name);
+					return object.name == name || (!object.groupName.empty() && object.groupName == name);
 				});
 			return made == objects.end() ? nullptr : &*made;
 		}
 
-		// Every name an object can be called by (its own, the file's, its
-		// group's), for a message about one the game does not have.
+		// Every name an object can be called by (its own and its group's),
+		// for a message about one the game does not have.
 		std::vector<std::string> objectNames(const std::vector<Object>& objects)
 		{
 			std::set<std::string> names;
 			for (const Object& object : objects)
 			{
-				names.insert(object.baseName);
+				names.insert(object.name);
 				if (!object.groupName.empty()) { names.insert(object.groupName); }
 			}
 			return { names.begin(), names.end() };
@@ -203,7 +203,7 @@ namespace xge
 					bool any = false;
 					for (const Object& object : objects)
 					{
-						const bool named = object.name == become->target || object.baseName == become->target
+						const bool named = object.name == become->target
 							|| (!object.groupName.empty() && object.groupName == become->target);
 						if (!named) { continue; }
 						any = true;
@@ -408,7 +408,7 @@ namespace xge
 
 			for (const auto& object : objects)
 			{
-				const std::string where = "object '" + object.baseName + "'";
+				const std::string where = "object '" + object.name + "'";
 				for (const auto& timer : object.timers)
 				{
 					checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, &object, where + " > <timer>");
@@ -547,7 +547,7 @@ namespace xge
 		{
 			if (objectSizes.count(rawObject.name))
 			{
-				continue; // every cell of a <grid> comes from this one object
+				continue; // measured already
 			}
 
 			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name],
@@ -569,9 +569,12 @@ namespace xge
 			if (!objectVariables.count(name + ".height")) { symbolTable.add_variable(name + ".height", size.y); }
 		}
 
-		// Objects in lockstep share a number: every cell of a <grid>, and every
-		// member of a <group>, moves as one block with the others of its own
-		// grid or group. A plain object that asks for it is a block of one.
+		// Where each cell of a group laid out in <columns> and <rows> goes.
+		const std::map<std::string, Vector2f> cellOffsets = layOutCells(rawObjects, firstPassSpriteParams);
+
+		// Objects in lockstep share a number: every member of a <group> moves
+		// as one block with the others of its group. A plain object that asks
+		// for it is a block of one.
 		int lockstepNum = 1;
 		std::map<std::string, int> groupLockstep;
 
@@ -585,14 +588,7 @@ namespace xge
 			std::vector<std::string> tempSpriteParams = (rawObject.sprite.kind == "text" && rawObject.sprite.textIsNumber)
 				? buildSpriteParams(rawObject.sprite, where)
 				: firstPassSpriteParams.at(rawObject.name);
-			const GridData gridData = gridDataOf(rawObject.sprite, where);
 			const ShapeKind rawObjectShapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
-
-			// Every grid cell shares the same footprint (one <circle> or
-			// <rectangle> covers the whole <grid> - see games/breakout.xml,
-			// games/spaceinvaders.xml), so this is computed
-			// once per rawObject rather than per cell.
-			const Vector2f gridObjSize = measureShapeSize(tempSpriteParams, rawObjectShapeKind);
 
 			// A position that uses the size of a text or image (its own, or
 			// another object's) can only be finished once a backend has measured
@@ -600,29 +596,14 @@ namespace xge
 			// already (objectSizes above).
 			const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
 
-			if ((gridData.max.x > 1 || gridData.max.y > 1)
-				&& (rawObjectShapeKind == ShapeKind::Text || rawObjectShapeKind == ShapeKind::Image))
-			{
-				std::cout << "warning: <grid>: '" << rawObject.name << "' is a "
-					<< (rawObjectShapeKind == ShapeKind::Text ? "text" : "image")
-					<< " object - its real footprint can't be known without a Window "
-					<< "backend (see measureShapeSize, command.cpp), so grid spacing "
-					<< "here will collapse to just the padding\n";
-			}
-
-			const bool isGrid = gridData.max.x > 1 || gridData.max.y > 1;
-
-			// How long each picture of an animation lasts, drawn once for the
-			// object (every cell of a grid shares it).
+			// How long each picture of an animation lasts.
 			const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject, windowDesc, where) : 0;
 
-			// The object's looks, if it has several sprites and no animation:
-			// built once, shared by every cell.
+			// The object's looks, if it has several sprites and no animation.
 			std::vector<Object::Look> looks;
 			if (!rawObject.looks.empty())
 			{
 				if (rawObject.hasHeading) { throw std::runtime_error(where + ": an object with a <heading> cannot have several looks"); }
-				if (isGrid) { throw std::runtime_error(where + ": a <grid> cannot have several looks"); }
 
 				for (const RawSprite& rawLook : rawObject.looks)
 				{
@@ -658,188 +639,168 @@ namespace xge
 				}
 			}
 
-			for (auto gridX = 0; gridX < gridData.max.x; gridX++)
+			Object object{};
+
+			object.spriteParams = tempSpriteParams;
+			object.shapeKind = rawObjectShapeKind;
+			object.bitmap = firstPassBitmaps[rawObject.name];
+			if (firstPassTurned[rawObject.name]) { object.turnables = { firstPassTurned[rawObject.name] }; }
+
+			if (rawObject.hasAnimation)
 			{
-				for (auto gridY = 0; gridY < gridData.max.y; gridY++)
+				object.animationBitmaps = firstPassAnimation[rawObject.name];
+				if (!firstPassAnimationTurned[rawObject.name].empty()) { object.turnables = firstPassAnimationTurned[rawObject.name]; }
+				object.animationFrames = animationFrames;
+				object.bitmap = object.animationBitmaps.front();
+			}
+
+			if (object.shapeKind == ShapeKind::Text && rawObject.sprite.textIsNumber
+				&& rawObject.sprite.number.kind == RawValue::Kind::Expression)
+			{
+				if (auto binding = parseVariableReference(rawObject.sprite.number.text))
 				{
-					Object object{};
-
-					object.spriteParams = tempSpriteParams;
-					object.shapeKind = rawObjectShapeKind;
-					object.bitmap = firstPassBitmaps[rawObject.name];
-					if (firstPassTurned[rawObject.name]) { object.turnables = { firstPassTurned[rawObject.name] }; }
-
-					if (rawObject.hasAnimation)
-					{
-						object.animationBitmaps = firstPassAnimation[rawObject.name];
-						if (!firstPassAnimationTurned[rawObject.name].empty()) { object.turnables = firstPassAnimationTurned[rawObject.name]; }
-						object.animationFrames = animationFrames;
-						object.bitmap = object.animationBitmaps.front();
-					}
-
-					if (object.shapeKind == ShapeKind::Text && rawObject.sprite.textIsNumber
-						&& rawObject.sprite.number.kind == RawValue::Kind::Expression)
-					{
-						if (auto binding = parseVariableReference(rawObject.sprite.number.text))
-						{
-							object.boundVariableOwner = binding->first;
-							object.boundVariableName = binding->second;
-						}
-					}
-
-					// A grid gets one name per cell (aliens.3.2 - column, row,
-					// from 1) so each cell can be found, hit and removed on
-					// its own; a plain object keeps the name it was given.
-					object.baseName = rawObject.name;
-					object.groupName = rawObject.groupName;
-					object.name = isGrid
-						? rawObject.name + "." + std::to_string(gridX + 1) + "." + std::to_string(gridY + 1)
-						: rawObject.name;
-					object.objClass = rawObject.objClass;
-
-					if (rawObject.objClass == "projectile")
-					{
-						rawObject.isVisible = false;
-					}
-
-					object.isVisible = rawObject.isVisible;
-
-					// Its variables first, so its position and velocity can use them
-					// (a serve drawn as an angle: ball.speed * cos(ball.angle)).
-					for (auto& rawVariable : rawObject.variable)
-					{
-						const float value = evaluate(rawVariable.second, where);
-						object.variable[rawVariable.first] = value;
-						object.variableOriginal[rawVariable.first] = value;
-
-						// Keep the cross-object symbol table entry (registered above,
-						// before any expression compiled) up to date with the real
-						// value now that it's known.
-						objectVariables[rawObject.name + "." + rawVariable.first] = value;
-					}
-
-					object.startDrawsRandom = rawObject.rawPosition.x.drawsRandom() || rawObject.rawPosition.y.drawsRandom()
-						|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
-						|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
-
-					object.positionOriginal.x = evaluate(rawObject.rawPosition.x, where);
-					object.positionOriginal.y = evaluate(rawObject.rawPosition.y, where);
-
-					// Finalizes this grid cell's real screen position right
-					// here - Game is now done with position the moment its
-					// own constructor returns, with no Window/backend needed
-					// (see main.cpp). A non-grid object always has
-					// gridData.max == {1,1}, so gridX == gridY == 0 and this
-					// reduces to plain object.position = object.positionOriginal,
-					// same as it always has. positionOriginal is then bumped
-					// to match, exactly as before, so Game::resetObject/
-					// resetAll restores each grid cell (e.g. each brick) to
-					// its own slot, not the shared base corner.
-					object.gridOffset.x = (gridObjSize.x + static_cast<float>(gridData.padding.x)) * static_cast<float>(gridX);
-					object.gridOffset.y = (gridObjSize.y + static_cast<float>(gridData.padding.y)) * static_cast<float>(gridY);
-					object.position = object.positionOriginal + object.gridOffset;
-					object.positionOriginal = object.position;
-
-					object.sizeDependencies = positionSizeDependencies;
-					object.positionUsesSize = !positionSizeDependencies.empty();
-					object.positionResolved = !object.positionUsesSize;
-
-					object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
-					object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
-
-					object.velocityOriginal = object.velocity;
-
-					if (rawObject.hasAcceleration)
-					{
-						object.acceleration.x = evaluate(rawObject.rawAcceleration.x, where);
-						object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
-					}
-					object.accelerationOriginal = object.acceleration;
-
-					if (rawObject.hasHeading)
-					{
-						object.hasHeading = true;
-						float degrees = std::fmod(evaluate(rawObject.rawHeading, where), 360.0f);
-						if (degrees < 0.0f) { degrees += 360.0f; }
-						object.heading = degrees;
-					}
-					object.headingOriginal = object.heading;
-
-					if (rawObject.hasDrag)
-					{
-						object.drag = evaluate(rawObject.rawDrag, where);
-						if (object.drag < 0.0f || object.drag >= 1.0f)
-						{
-							throw std::runtime_error(where + ": <drag> is " + std::to_string(object.drag) + "; expected 0 up to (not including) 1");
-						}
-					}
-
-					if (!rawObject.facing.empty())
-					{
-						object.hasFacing = true;
-						object.facing = rawObject.facing == "down" ? Direction::Down
-							: rawObject.facing == "left" ? Direction::Left
-							: rawObject.facing == "right" ? Direction::Right
-							: Direction::Up;
-					}
-					object.facingOriginal = object.facing;
-					object.timers = processTimers(rawObject.timers, where);
-					object.looks = looks;
-
-					object.showHeading();
-
-					object.collisionData.enabled = rawObject.rawCollisionData.enabled;
-					object.isVisibleOriginal = object.isVisible;
-					object.collisionEnabledOriginal = object.collisionData.enabled;
-					object.collisionData.lockstep = thisLockstep;
-					object.collisionData.type = rawObject.rawCollisionData.type;
-
-					// A pixel collision tests the pixels that are drawn; a line
-					// drawing has them from the start, and a circle or rectangle
-					// is solid all over, but what a text or an image looks like
-					// is only known once a window backend has drawn it.
-					if (object.collisionData.type == CollisionType::Pixel
-						&& (object.shapeKind == ShapeKind::Text || object.shapeKind == ShapeKind::Image))
-					{
-						throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
-					}
-
-					object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
-					object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
-					object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
-					object.collisionData.right = processCommands(rawObject.rawCollisionData.right, where);
-
-					for (auto& rawRule : rawObject.rawCollisionData.basic)
-					{
-						CollisionRule rule;
-						rule.filterClass = rawRule.filterClass;
-						rule.filterObject = rawRule.filterObject;
-						rule.unlessClass = rawRule.unlessClass;
-						rule.whileSprite = rawRule.whileSprite;
-						if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
-						{
-							throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
-						}
-						if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
-						if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
-						rule.commands = processCommands(rawRule.commands, where);
-						object.collisionData.basic.push_back(std::move(rule));
-					}
-
-					//object.action = rawObject.action;
-					for (auto& rawAction : rawObject.action)
-					{
-						object.action[rawAction.first] = processCommands(rawAction.second, where);
-					}
-
-
-					// object's visual is built later by whichever Window backend is
-					// running, once one exists (see Window::init() in window.h) -
-					// visualDirty starts true (Object's own default), so nothing
-					// needs to happen here.
-					objects.push_back(std::move(object));
+					object.boundVariableOwner = binding->first;
+					object.boundVariableName = binding->second;
 				}
 			}
+
+			object.groupName = rawObject.groupName;
+			object.name = rawObject.name;
+			object.objClass = rawObject.objClass;
+
+			if (rawObject.objClass == "projectile")
+			{
+				rawObject.isVisible = false;
+			}
+
+			object.isVisible = rawObject.isVisible;
+
+			// Its variables first, so its position and velocity can use them
+			// (a serve drawn as an angle: ball.speed * cos(ball.angle)).
+			for (auto& rawVariable : rawObject.variable)
+			{
+				const float value = evaluate(rawVariable.second, where);
+				object.variable[rawVariable.first] = value;
+				object.variableOriginal[rawVariable.first] = value;
+
+				// Keep the cross-object symbol table entry (registered above,
+				// before any expression compiled) up to date with the real
+				// value now that it's known.
+				objectVariables[rawObject.name + "." + rawVariable.first] = value;
+			}
+
+			object.startDrawsRandom = rawObject.rawPosition.x.drawsRandom() || rawObject.rawPosition.y.drawsRandom()
+				|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
+				|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
+
+			object.positionOriginal.x = evaluate(rawObject.rawPosition.x, where);
+			object.positionOriginal.y = evaluate(rawObject.rawPosition.y, where);
+
+			// A cell is its group's position and its place in the
+			// group; positionOriginal keeps both, so a reset puts each
+			// cell (each brick) back in its own place.
+			if (const auto offset = cellOffsets.find(rawObject.name); offset != cellOffsets.end()) { object.cellOffset = offset->second; }
+			object.position = object.positionOriginal + object.cellOffset;
+			object.positionOriginal = object.position;
+
+			object.sizeDependencies = positionSizeDependencies;
+			object.positionUsesSize = !positionSizeDependencies.empty();
+			object.positionResolved = !object.positionUsesSize;
+
+			object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
+			object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
+
+			object.velocityOriginal = object.velocity;
+
+			if (rawObject.hasAcceleration)
+			{
+				object.acceleration.x = evaluate(rawObject.rawAcceleration.x, where);
+				object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
+			}
+			object.accelerationOriginal = object.acceleration;
+
+			if (rawObject.hasHeading)
+			{
+				object.hasHeading = true;
+				float degrees = std::fmod(evaluate(rawObject.rawHeading, where), 360.0f);
+				if (degrees < 0.0f) { degrees += 360.0f; }
+				object.heading = degrees;
+			}
+			object.headingOriginal = object.heading;
+
+			if (rawObject.hasDrag)
+			{
+				object.drag = evaluate(rawObject.rawDrag, where);
+				if (object.drag < 0.0f || object.drag >= 1.0f)
+				{
+					throw std::runtime_error(where + ": <drag> is " + std::to_string(object.drag) + "; expected 0 up to (not including) 1");
+				}
+			}
+
+			if (!rawObject.facing.empty())
+			{
+				object.hasFacing = true;
+				object.facing = rawObject.facing == "down" ? Direction::Down
+					: rawObject.facing == "left" ? Direction::Left
+					: rawObject.facing == "right" ? Direction::Right
+					: Direction::Up;
+			}
+			object.facingOriginal = object.facing;
+			object.timers = processTimers(rawObject.timers, where);
+			object.looks = looks;
+
+			object.showHeading();
+
+			object.collisionData.enabled = rawObject.rawCollisionData.enabled;
+			object.isVisibleOriginal = object.isVisible;
+			object.collisionEnabledOriginal = object.collisionData.enabled;
+			object.collisionData.lockstep = thisLockstep;
+			object.collisionData.type = rawObject.rawCollisionData.type;
+
+			// A pixel collision tests the pixels that are drawn; a line
+			// drawing has them from the start, and a circle or rectangle
+			// is solid all over, but what a text or an image looks like
+			// is only known once a window backend has drawn it.
+			if (object.collisionData.type == CollisionType::Pixel
+				&& (object.shapeKind == ShapeKind::Text || object.shapeKind == ShapeKind::Image))
+			{
+				throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
+			}
+
+			object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
+			object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
+			object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
+			object.collisionData.right = processCommands(rawObject.rawCollisionData.right, where);
+
+			for (auto& rawRule : rawObject.rawCollisionData.basic)
+			{
+				CollisionRule rule;
+				rule.filterClass = rawRule.filterClass;
+				rule.filterObject = rawRule.filterObject;
+				rule.unlessClass = rawRule.unlessClass;
+				rule.whileSprite = rawRule.whileSprite;
+				if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
+				{
+					throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
+				}
+				if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
+				if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
+				rule.commands = processCommands(rawRule.commands, where);
+				object.collisionData.basic.push_back(std::move(rule));
+			}
+
+			//object.action = rawObject.action;
+			for (auto& rawAction : rawObject.action)
+			{
+				object.action[rawAction.first] = processCommands(rawAction.second, where);
+			}
+
+
+			// object's visual is built later by whichever Window backend is
+			// running, once one exists (see Window::init() in window.h) -
+			// visualDirty starts true (Object's own default), so nothing
+			// needs to happen here.
+			objects.push_back(std::move(object));
 
 			if (rawObject.rawCollisionData.lockstep && rawObject.groupName.empty()) {
 				lockstepNum++;
@@ -883,7 +844,7 @@ namespace xge
 				if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)
 					{
 						return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
-							&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name || rawCondition.filterObject == object.baseName
+							&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name
 								|| (!object.groupName.empty() && rawCondition.filterObject == object.groupName));
 					}))
 				{
@@ -1180,7 +1141,8 @@ namespace xge
 		//   1. read what the file describes (line ends, rows, a part of a drawing);
 		//   2. draw it into a Bitmap, the pixels every window backend shows and a
 		//      pixel collision tests, so no backend ever draws one itself;
-		//   3. flip it, if the sprite says so (a <bitmap> or an <svg>);
+		//   3. flip it, if the sprite says so (a <bitmap> or an <svg>), the two
+		//      steps done once for all the sprites that are the same picture;
 		//   4. for an object with a <heading>, keep it (a Turnable) to be turned
 		//      to whatever heading it faces, and start it at heading 0.
 		// The params carry only the picture's size. The one difference is in the
@@ -1190,6 +1152,12 @@ namespace xge
 		{
 			auto kept = std::make_shared<Turnable>();
 			std::shared_ptr<const Bitmap> drawn;
+
+			// 3. Flipped.
+			const auto flipped = [&](Bitmap picture)
+			{
+				return sprite.flip.empty() ? picture : flipBitmap(picture, sprite.flip == "horizontal", sprite.flip == "vertical");
+			};
 
 			try
 			{
@@ -1226,23 +1194,25 @@ namespace xge
 					}
 					if (sprite.hasScale) { svgScale = evaluate(sprite.scale, where); }
 
-					// 2. Drawn by lunasvg (svg.cpp).
-					drawn = std::make_shared<const Bitmap>(rasterizeSvg(sprite.path, region, svgScale, sprite.svgHide));
+					// 2. Drawn by lunasvg (svg.cpp), once for every sprite that
+					// takes the same part at the same scale (a group's cells).
+					std::string key = "svg|" + sprite.path + "|" + std::to_string(region.x) + "," + std::to_string(region.y) + ","
+						+ std::to_string(region.width) + "," + std::to_string(region.height) + "|" + std::to_string(svgScale) + "|" + sprite.flip;
+					for (const std::string& hide : sprite.svgHide) { key += "|" + hide; }
+					drawn = drawOnce(key, [&] { return flipped(rasterizeSvg(sprite.path, region, svgScale, sprite.svgHide)); });
 				}
 				else
 				{
 					// 1. The rows, and how many pixels to a character.
 					const int rowsScale = sprite.hasScale ? static_cast<int>(std::lround(evaluate(sprite.scale, where))) : 1;
 
-					// 2. Drawn.
-					drawn = std::make_shared<const Bitmap>(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color)));
+					// 2. Drawn, once for every sprite of the same rows, scale and
+					// color (a group's cells).
+					std::string key = "rows|" + std::to_string(rowsScale) + "|" + color + "|" + sprite.flip;
+					for (const std::string& row : sprite.bitmapRows) { key += "|" + row; }
+					drawn = drawOnce(key, [&] { return flipped(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color))); });
 				}
 
-				// 3. Flipped.
-				if (!sprite.flip.empty() && sprite.kind != "line")
-				{
-					drawn = std::make_shared<const Bitmap>(flipBitmap(*drawn, sprite.flip == "horizontal", sprite.flip == "vertical"));
-				}
 
 				// 4. Kept to be turned, for an object that faces somewhere; heading 0
 				// is what it starts as, and the square it turns in is its size.
@@ -1291,15 +1261,6 @@ namespace xge
 			throw std::runtime_error(where + ": unknown shape '" + sprite.kind + "'");
 		}
 
-		if (sprite.isGrid)
-		{
-			params.push_back("grid");
-			params.push_back(std::to_string(evaluate(sprite.columns, where)));
-			params.push_back(std::to_string(evaluate(sprite.rows, where)));
-			params.push_back(sprite.hasPadding ? std::to_string(evaluate(sprite.padding.x, where)) : std::to_string(0));
-			params.push_back(sprite.hasPadding ? std::to_string(evaluate(sprite.padding.y, where)) : std::to_string(0));
-		}
-
 		return params;
 	}
 
@@ -1307,7 +1268,6 @@ namespace xge
 		std::vector<std::shared_ptr<const Turnable>>* turnables)
 	{
 		std::vector<std::shared_ptr<const Bitmap>> pictures;
-		GridData firstGrid;
 
 		for (std::size_t i = 0; i < rawObject.animation.frames.size(); ++i)
 		{
@@ -1324,24 +1284,13 @@ namespace xge
 			std::shared_ptr<const Turnable> turnable;
 			buildSpriteParams(frame, here, &picture, turnables ? &turnable : nullptr);
 
-			const GridData grid = gridDataOf(frame, here);
-			if (i == 0)
-			{
-				firstGrid = grid;
-			}
-			else
+			if (i > 0)
 			{
 				if (picture->width != pictures.front()->width || picture->height != pictures.front()->height)
 				{
 					throw std::runtime_error(here + ": is " + std::to_string(picture->width) + " by " + std::to_string(picture->height)
 						+ " pixels, but frame 1 is " + std::to_string(pictures.front()->width) + " by " + std::to_string(pictures.front()->height)
 						+ "; the frames of an animation must all be the same size");
-				}
-
-				if (grid.max.x != firstGrid.max.x || grid.max.y != firstGrid.max.y
-					|| grid.padding.x != firstGrid.padding.x || grid.padding.y != firstGrid.padding.y)
-				{
-					throw std::runtime_error(here + ": is not repeated as a <grid> the same way as frame 1; the frames of an animation must share one layout");
 				}
 			}
 
@@ -1368,23 +1317,57 @@ namespace xge
 		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(windowDesc.framerate))));
 	}
 
-	xge::GridData game_expr::gridDataOf(const RawSprite& sprite, const std::string& where)
+	std::map<std::string, Vector2f> game_expr::layOutCells(const std::vector<RawObject>& rawObjects,
+		const std::map<std::string, std::vector<std::string>>& spriteParams)
 	{
-		GridData gridData;
-
-		if (sprite.isGrid)
+		// Each group's cells by row, in the order they were read: a row's
+		// columns left to right.
+		std::map<std::string, std::map<int, std::vector<const RawObject*>>> groups;
+		for (const RawObject& rawObject : rawObjects)
 		{
-			gridData.max.x = static_cast<int>(evaluate(sprite.columns, where));
-			gridData.max.y = static_cast<int>(evaluate(sprite.rows, where));
+			if (rawObject.cell.column > 0) { groups[rawObject.groupName][rawObject.cell.row].push_back(&rawObject); }
+		}
 
-			if (sprite.hasPadding)
+		std::map<std::string, Vector2f> offsets;
+		for (const auto& [group, rows] : groups)
+		{
+			float top = 0.0f;
+			float above = 0.0f; // the height of the row above
+			for (const auto& [row, cells] : rows)
 			{
-				gridData.padding.x = static_cast<int>(evaluate(sprite.padding.x, where));
-				gridData.padding.y = static_cast<int>(evaluate(sprite.padding.y, where));
+				const RawObject& first = *cells.front();
+				const std::string where = "object '" + first.name + "'";
+
+				// The slot is the row's sprite, so a cell with a sprite of its
+				// own of another size sits in the middle of the place its row
+				// gives it.
+				const std::vector<std::string> slotParams = buildSpriteParams(first.cell.slot, where);
+				const ShapeKind slotKind = shapeKindFromTag(slotParams.empty() ? std::string{} : slotParams.at(0));
+				const Vector2f slot = measureShapeSize(slotParams, slotKind);
+				if (slotKind == ShapeKind::Text || slotKind == ShapeKind::Image)
+				{
+					std::cout << "warning: group '" << group << "': row " << row << " is "
+						<< (slotKind == ShapeKind::Text ? "text" : "an image")
+						<< ", whose size is only known to a window backend (see measureShapeSize), so its cells are spaced by the <padding> alone\n";
+				}
+
+				if (row > rows.begin()->first) { top += above + evaluate(first.cell.gapAbove, where); }
+				above = slot.y;
+
+				float left = 0.0f;
+				for (const RawObject* cell : cells)
+				{
+					const std::string here = "object '" + cell->name + "'";
+					if (cell->cell.column > 1) { left += slot.x + evaluate(cell->cell.gapBefore, here); }
+
+					const std::vector<std::string>& params = spriteParams.at(cell->name);
+					const Vector2f own = measureShapeSize(params, shapeKindFromTag(params.empty() ? std::string{} : params.at(0)));
+					offsets[cell->name] = { left + (slot.x - own.x) / 2.0f, top + (slot.y - own.y) / 2.0f };
+				}
 			}
 		}
 
-		return gridData;
+		return offsets;
 	}
 
 	void game_expr::setObjectSize(const std::string& name, const Vector2f& size)

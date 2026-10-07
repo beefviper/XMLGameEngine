@@ -247,7 +247,7 @@ namespace xge
 	{
 		bool isNamed(const Object& object, const std::string& name)
 		{
-			return object.name == name || object.baseName == name || (!object.groupName.empty() && object.groupName == name);
+			return object.name == name || (!object.groupName.empty() && object.groupName == name);
 		}
 
 		// What an object measures: what the window measured, or, before there

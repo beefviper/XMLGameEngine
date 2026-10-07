@@ -5,7 +5,7 @@
 //
 // Catch2 tests for moving and colliding inside a real xge::Game: a fast, small
 // object no longer jumps over a thin one between frames, only the object that
-// was hit reacts (each cell of a <grid> is its own object), and the rest of a
+// was hit reacts (each cell of a group is its own object), and the rest of a
 // step is played out after a bounce.
 
 #include "command_executor.h"
@@ -28,13 +28,13 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			if (object.baseName == "aliens" || object.name == "player") { object.size = { 50.0f, 50.0f }; }
+			if (object.groupName == "aliens" || object.name == "player") { object.size = { 50.0f, 50.0f }; }
 			else if (object.name == "bullet") { object.size = { 8.0f, 8.0f }; }
 		}
 	}
 }
 
-TEST_CASE("every cell of a grid has its own name", "[swept_collision]")
+TEST_CASE("every cell of a group has its own name", "[swept_collision]")
 {
 	Game game{ invaders_fixture::path() };
 
@@ -42,7 +42,7 @@ TEST_CASE("every cell of a grid has its own name", "[swept_collision]")
 	int cells = 0;
 	for (const auto& object : game.getCurrentObjects())
 	{
-		if (object.baseName == "aliens")
+		if (object.groupName == "aliens")
 		{
 			names.insert(object.name);
 			++cells;
@@ -65,17 +65,16 @@ TEST_CASE("every cell of a grid has its own name", "[swept_collision]")
 	CHECK(lastRow.position.x == first.position.x);
 }
 
-TEST_CASE("a plain object keeps its name, and the XML name still finds a grid", "[swept_collision]")
+TEST_CASE("a plain object keeps its name, and the group's name finds its first cell", "[swept_collision]")
 {
 	Game game{ invaders_fixture::path() };
 
 	CHECK(game.getObject("player").name == "player");
-	CHECK(game.getObject("player").baseName == "player");
-	CHECK(game.getObject("aliens").baseName == "aliens"); // the first cell
+	CHECK(game.getObject("aliens").name == "aliens.1.1"); // the first cell
 	CHECK(game.tryGetObject("nothing.1.1") == nullptr);
 }
 
-TEST_CASE("a state that shows a grid shows every cell of it", "[swept_collision]")
+TEST_CASE("a state that shows a group shows every cell of it", "[swept_collision]")
 {
 	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
@@ -115,14 +114,14 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 	int alive = 0;
 	for (const auto& object : game.getCurrentObjects())
 	{
-		if (object.baseName == "aliens" && object.collisionData.enabled) { ++alive; }
+		if (object.groupName == "aliens" && object.collisionData.enabled) { ++alive; }
 	}
 	CHECK(alive == 54);
 	CHECK(bullet.position.y > target.position.y);
 	CHECK(bullet.position.y < bulletStartY);
 }
 
-TEST_CASE("the bullet also hits a cell in the middle of the grid, not just the front row", "[swept_collision]")
+TEST_CASE("the bullet also hits a cell in the middle of the block, not just the front row", "[swept_collision]")
 {
 	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");

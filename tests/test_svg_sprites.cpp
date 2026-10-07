@@ -6,7 +6,7 @@
 // Catch2 tests for pictures drawn from an SVG file (<svg>): the rasterizer on
 // its own (rasterizeSvg: the part of the drawing taken, the scale, the
 // elements left out, antialiased transparency, the mistakes), an <svg> sprite
-// in a game (its size, grids of it, animations of it, mistakes reported where
+// in a game (its size, a group's cells of it, animations of it, mistakes reported where
 // they are), and then Space Invaders 2, which is drawn from a sheet of SVG
 // sprites, with both schema checkers on it.
 //
@@ -381,12 +381,13 @@ TEST_CASE("an svg object's picture has solid pixels only where something was dra
 	CHECK_FALSE(thing.bitmap->solidAt(-1, 0));
 }
 
-TEST_CASE("a grid of an svg makes one object per cell, all sharing one picture", "[svg][xml]")
+TEST_CASE("the cells of a group of an svg are one object each, all sharing one picture", "[svg][xml]")
 {
-	const ScratchFile drawing = writeScratch("xge_test_game_grid.svg", kDrawing);
-	Loaded loaded{ gameXml(objectWith(
-		"<sprite><grid><columns>3</columns><rows>2</rows><padding><x>2</x><y>2</y></padding>"
-		+ svgTag(drawing, "<x>0</x><y>0</y><width>4</width><height>4</height><scale>2</scale>") + "</grid></sprite>"),
+	const ScratchFile drawing = writeScratch("xge_test_game_cells.svg", kDrawing);
+	Loaded loaded{ gameXml("<group name=\"thing\"><columns>3</columns><rows>2</rows><padding><x>2</x><y>2</y></padding><sprite>"
+		+ svgTag(drawing, "<x>0</x><y>0</y><width>4</width><height>4</height><scale>2</scale>") + "</sprite>"
+		"<position><x>10</x><y>20</y></position><velocity><x>0</x><y>0</y></velocity>"
+		"<collisions><enabled>false</enabled></collisions></group>",
 		"<show object=\"thing\" />") };
 	Game& game = loaded.game;
 	measure(game);
@@ -522,7 +523,7 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 		int width;
 		int height;
 	};
-	for (const Kind& kind : { Kind{ "squids.1.1", 56, 50 }, Kind{ "crabs.1.1", 56, 46 }, Kind{ "octopuses.1.1", 56, 49 } })
+	for (const Kind& kind : { Kind{ "aliens.1.1", 56, 50 }, Kind{ "aliens.1.2", 56, 46 }, Kind{ "aliens.1.4", 56, 49 } })
 	{
 		INFO(kind.name);
 		const Object& alien = game.getObject(kind.name);
@@ -564,9 +565,9 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 		}
 		return std::make_tuple(red, green, blue);
 	};
-	const auto [squidRed, squidGreen, squidBlue] = dominant("squids.1.1");
-	const auto [crabRed, crabGreen, crabBlue] = dominant("crabs.1.1");
-	const auto [octopusRed, octopusGreen, octopusBlue] = dominant("octopuses.1.1");
+	const auto [squidRed, squidGreen, squidBlue] = dominant("aliens.1.1");
+	const auto [crabRed, crabGreen, crabBlue] = dominant("aliens.1.2");
+	const auto [octopusRed, octopusGreen, octopusBlue] = dominant("aliens.1.4");
 	CHECK(squidRed > squidGreen);
 	CHECK(crabRed > crabBlue);
 	CHECK(octopusGreen > octopusRed);
@@ -576,18 +577,18 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 
 	// Laid out one kind under the other, a gap between, and one column pitch
 	// (56 and a gap of 15) the same for all of them.
-	CHECK(game.getObject("squids.1.1").position.y == 40.0f);
-	CHECK(game.getObject("crabs.1.1").position.y == 105.0f);
-	CHECK(game.getObject("crabs.1.2").position.y == 166.0f);
-	CHECK(game.getObject("octopuses.1.1").position.y == 227.0f);
-	CHECK(game.getObject("octopuses.1.2").position.y == 291.0f);
-	for (const char* name : { "squids.2.1", "crabs.2.1", "octopuses.2.1" })
+	CHECK(game.getObject("aliens.1.1").position.y == 40.0f);
+	CHECK(game.getObject("aliens.1.2").position.y == 105.0f);
+	CHECK(game.getObject("aliens.1.3").position.y == 166.0f);
+	CHECK(game.getObject("aliens.1.4").position.y == 227.0f);
+	CHECK(game.getObject("aliens.1.5").position.y == 291.0f);
+	for (const char* name : { "aliens.2.1", "aliens.2.2", "aliens.2.4" })
 	{
 		INFO(name);
 		CHECK(game.getObject(name).position.x == 80.0f + 71.0f);
 	}
 
-	// One block: one lockstep number for all three grids.
+	// One block: one lockstep number.
 	std::set<int> lockstep;
 	for (const Object* alien : aliensOf(game)) { lockstep.insert(alien->collisionData.lockstep); }
 	CHECK(lockstep.size() == 1);
@@ -629,7 +630,7 @@ TEST_CASE("the aliens of Space Invaders 2 step through three pictures, all toget
 	CHECK(onPicture(1));
 
 	// Two pixels a frame to the right in the meantime, as before.
-	CHECK(game.getObject("squids.1.1").position.x == 80.0f + 2.0f * 30.0f);
+	CHECK(game.getObject("aliens.1.1").position.x == 80.0f + 2.0f * 30.0f);
 
 	frames(game, 30);
 	CHECK(onPicture(2));

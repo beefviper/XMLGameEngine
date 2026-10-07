@@ -42,5 +42,5 @@
 
 - Objects have a unique `name` and an optional `class`, borrowed from HTML `id` and `class`: target one thing or all things of a kind. One condition on `class="paddle"` covers both paddles.
 - Used by `<condition class object>` and `<collision class object>` (both combine with AND; a `<collision>` with neither is "anything"); `class="projectile"` starts an object invisible.
-- Every `<grid>` cell and `<group>` member is its own object with a unique name (`aliens.3.2`, `logrow3.2`); the grid or group name still means all of them ([03](03-objects-groups-and-storage.md)).
+- Every `<group>` member or cell is its own object with a unique name (`logrow3.2`, `aliens.3.2`); the group name still means all of them ([03](03-objects-groups-and-storage.md)).
 - Ideas, not built: compound CSS-style selectors (a two-player win vs either-player win), class inheritance (`platform` extends `solid`), wildcard queries over variables (`player1.*`, a map scan), several tags per object, formation names (`group1[x]`).

@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Sept 29, 2026
 //
-// Catch2 test for a <grid> in lockstep bouncing off the screen edges
+// Catch2 test for a group in lockstep bouncing off the screen edges
 // (Game::updateLockstepObjects), using the invader block of the first Space
 // Invaders game (a copy of it kept in invaders_fixture.h) in a real xge::Game.
 //
@@ -33,7 +33,7 @@ namespace
 		std::set<float> xs;
 		for (const auto& object : game.getCurrentObjects())
 		{
-			if (object.baseName == "aliens")
+			if (object.groupName == "aliens")
 			{
 				xs.insert(object.position.x);
 			}
@@ -60,7 +60,7 @@ TEST_CASE("the invader block keeps its column spacing through every bounce", "[l
 	// Window::init() normally measures these; a Game built on its own has {0, 0}.
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.baseName == "aliens") { object.size = { kAlienWidth, 50.0f }; }
+		if (object.groupName == "aliens") { object.size = { kAlienWidth, 50.0f }; }
 		else if (object.name == "player") { object.size = { 50.0f, 50.0f }; }
 	}
 
