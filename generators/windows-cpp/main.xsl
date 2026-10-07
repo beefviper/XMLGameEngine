@@ -52,6 +52,10 @@
 
   <xsl:variable name="rules" select="$things/collisions[normalize-space(enabled) = 'true']/collision" />
   <xsl:variable name="edge-rules" select="$rules[@edge]" />
+  <!-- Those that can be taken out of play by a <die />: each has a flag (one
+       for each member of a group) saying it is still in play, looked at before
+       it is moved, drawn, moved by a key or touched. -->
+  <xsl:variable name="dying" select="$things[collisions[normalize-space(enabled) = 'true']/collision/die]" />
   <xsl:variable name="object-rules" select="$rules[not(@edge)]" />
 
   <!-- Those that go back to where they started after a <reset /> (its place
@@ -304,6 +308,16 @@ sf::Texture </xsl:text>
       <xsl:if test="self::object and count(. | $moving) = count($moving)">
         <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Velocity;')" />
       </xsl:if>
+      <xsl:if test="count(. | $dying) = count($dying)">
+        <xsl:choose>
+          <xsl:when test="self::group">
+            <xsl:value-of select="concat('&#10;std::vector&lt;bool&gt; ', $name, 'Alive; // which of them are still in play')" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat('&#10;bool ', $name, 'Alive = true; // in play until it dies')" />
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:if>
       <xsl:for-each select="variables/variable">
         <xsl:text>&#10;float </xsl:text>
         <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="concat(ancestor::object/@name, '.', @name)" /></xsl:call-template>
@@ -525,7 +539,15 @@ int main()
     <xsl:param name="indent" />
     <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
     <xsl:variable name="group" select="$groups[@name = current()/@object]" />
+    <xsl:variable name="dies" select="count($game/objects/*[@name = current()/@object] | $dying) = count($dying)" />
     <xsl:choose>
+      <xsl:when test="$group and $dies">
+        <xsl:value-of select="concat($indent, 'for (std::size_t i = 0; i &lt; ', $name, '.size(); ++i)&#10;', $indent, '{&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;if (', $name, 'Alive[i])&#10;', $indent, '&#9;{&#10;', $indent, '&#9;&#9;window.draw(', $name, '[i]);&#10;', $indent, '&#9;}&#10;', $indent, '}&#10;')" />
+      </xsl:when>
+      <xsl:when test="$dies">
+        <xsl:value-of select="concat($indent, 'if (', $name, 'Alive)&#10;', $indent, '{&#10;', $indent, '&#9;window.draw(', $name, ');&#10;', $indent, '}&#10;')" />
+      </xsl:when>
       <xsl:when test="$group">
         <xsl:variable name="type"><xsl:for-each select="$group"><xsl:call-template name="sf-type" /></xsl:for-each></xsl:variable>
         <xsl:value-of select="concat($indent, 'for (const ', $type, '&amp; one : ', $name, ')&#10;', $indent, '{&#10;', $indent, '&#9;window.draw(one);&#10;', $indent, '}&#10;')" />
@@ -873,6 +895,12 @@ void start()
           </xsl:call-template>
         </xsl:otherwise>
       </xsl:choose>
+      <xsl:if test="self::object and count(. | $dying) = count($dying)">
+        <xsl:text>	</xsl:text>
+        <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+        <xsl:text>Alive = true;
+</xsl:text>
+      </xsl:if>
     </xsl:for-each>
     <xsl:if test="$numbers">
       <xsl:text>
@@ -923,6 +951,9 @@ void start()
 </xsl:text>
       </xsl:when>
     </xsl:choose>
+    <xsl:if test="count(. | $dying) = count($dying)">
+      <xsl:value-of select="concat('&#9;', $name, 'Alive.assign(', count(member), ', true);&#10;')" />
+    </xsl:if>
   </xsl:template>
 
   <xsl:template name="set-variable">
@@ -1008,12 +1039,20 @@ void pressed(sf::Keyboard::Key key)
           <xsl:when test="self::trigger">
             <!-- an action of <hop>s: a step at once, if it stays in the window -->
             <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
+            <xsl:variable name="dies" select="count($game/objects/object[@name = current()/@object] | $dying) = count($dying)" />
+            <xsl:variable name="in" select="concat($indent, '&#9;', substring('&#9;', 1, number($dies)))" />
+            <xsl:if test="$dies">
+              <xsl:value-of select="concat($indent, '&#9;if (', $name, 'Alive)&#10;', $indent, '&#9;{&#10;')" />
+            </xsl:if>
             <xsl:for-each select="key('action', concat(@object, '|', @action))/hop">
-              <xsl:value-of select="concat($indent, '&#9;physics::hop(', $name, ', ')" />
+              <xsl:value-of select="concat($in, 'physics::hop(', $name, ', ')" />
               <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
               <xsl:text>, windowArea);
 </xsl:text>
             </xsl:for-each>
+            <xsl:if test="$dies">
+              <xsl:value-of select="concat($indent, '&#9;}&#10;')" />
+            </xsl:if>
           </xsl:when>
           <xsl:otherwise>
             <xsl:call-template name="game-command"><xsl:with-param name="indent" select="concat($indent, '&#9;')" /></xsl:call-template>
@@ -1103,12 +1142,20 @@ void pressed(sf::Keyboard::Key key)
         <xsl:for-each select="trigger">
           <xsl:variable name="object" select="/game/objects/object[@name = current()/@object]" />
           <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
+          <xsl:variable name="dies" select="count($object | $dying) = count($dying)" />
+          <xsl:if test="$dies">
+            <xsl:value-of select="concat('&#9;&#9;if (', $name, 'Alive)&#10;&#9;&#9;{&#10;')" />
+          </xsl:if>
           <xsl:for-each select="$object/actions/action[@name = current()/@action]/move">
-            <xsl:value-of select="concat('&#9;&#9;', $name, '.move(')" />
+            <xsl:value-of select="concat('&#9;&#9;', substring('&#9;', 1, number($dies)), $name, '.move(')" />
             <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
             <xsl:text>);
 </xsl:text>
           </xsl:for-each>
+          <xsl:if test="$dies">
+            <xsl:text>		}
+</xsl:text>
+          </xsl:if>
         </xsl:for-each>
         <xsl:text>	}
 </xsl:text>
@@ -1183,10 +1230,14 @@ void update</xsl:text>
     <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
     <xsl:variable name="group" select="boolean(self::group)" />
     <xsl:variable name="each-own" select="count(. | $member-velocities) = count($member-velocities)" />
+    <xsl:variable name="dies" select="count(. | $dying) = count($dying)" />
+    <!-- a group's members counted through when each has a velocity or a flag
+         of its own, gone through one by one otherwise -->
+    <xsl:variable name="counted" select="$each-own or ($group and $dies)" />
     <!-- what the rules are written about: the object, or one member -->
     <xsl:variable name="one">
       <xsl:choose>
-        <xsl:when test="$each-own"><xsl:value-of select="concat($name, '[i]')" /></xsl:when>
+        <xsl:when test="$counted"><xsl:value-of select="concat($name, '[i]')" /></xsl:when>
         <xsl:when test="$group">one</xsl:when>
         <xsl:otherwise><xsl:value-of select="$name" /></xsl:otherwise>
       </xsl:choose>
@@ -1199,7 +1250,23 @@ void update</xsl:text>
       <xsl:text>&#9;</xsl:text>
       <xsl:if test="$group"><xsl:text>&#9;</xsl:text></xsl:if>
     </xsl:variable>
+    <!-- whether it is still in play, and how to leave it be when it is not -->
+    <xsl:variable name="alive">
+      <xsl:if test="$dies">
+        <xsl:value-of select="concat($name, 'Alive')" />
+        <xsl:if test="$group">[i]</xsl:if>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:variable name="out">
+      <xsl:choose>
+        <xsl:when test="$group">continue</xsl:when>
+        <xsl:otherwise>return</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:variable name="blocks">
+      <xsl:if test="$dies">
+        <xsl:value-of select="concat('&#10;', $indent, 'if (!', $alive, ')&#10;', $indent, '{&#10;', $indent, '&#9;', $out, ';&#10;', $indent, '}&#10;')" />
+      </xsl:if>
       <xsl:if test="count(. | $moving) = count($moving)">
         <xsl:value-of select="concat('&#10;', $indent, $one, '.move(', $velocity, ');&#10;')" />
       </xsl:if>
@@ -1210,6 +1277,8 @@ void update</xsl:text>
               <xsl:with-param name="name" select="$one" />
               <xsl:with-param name="velocity" select="$velocity" />
               <xsl:with-param name="indent" select="$indent" />
+              <xsl:with-param name="alive" select="$alive" />
+              <xsl:with-param name="out" select="$out" />
             </xsl:call-template>
           </xsl:when>
           <xsl:otherwise>
@@ -1217,6 +1286,8 @@ void update</xsl:text>
               <xsl:with-param name="name" select="$one" />
               <xsl:with-param name="velocity" select="$velocity" />
               <xsl:with-param name="indent" select="$indent" />
+              <xsl:with-param name="alive" select="$alive" />
+              <xsl:with-param name="out" select="$out" />
             </xsl:call-template>
           </xsl:otherwise>
         </xsl:choose>
@@ -1233,7 +1304,7 @@ void update</xsl:text>
 {
 </xsl:text>
     <xsl:choose>
-      <xsl:when test="$each-own">
+      <xsl:when test="$counted">
         <xsl:value-of select="concat('&#9;for (std::size_t i = 0; i &lt; ', $name, '.size(); ++i)&#10;&#9;{&#10;')" />
         <xsl:value-of select="substring($blocks, 2)" />
         <xsl:text>	}
@@ -1261,8 +1332,12 @@ void update</xsl:text>
     <xsl:param name="name" />
     <xsl:param name="velocity" />
     <xsl:param name="indent" />
+    <xsl:param name="alive" />
+    <xsl:param name="out" />
     <xsl:variable name="edge" select="@edge" />
     <xsl:variable name="rule" select="." />
+    <!-- the last rule: nothing after it to leave out once it has died -->
+    <xsl:variable name="last" select="not(following-sibling::collision[*])" />
     <xsl:variable name="self" select="ancestor::*[parent::objects]" />
     <xsl:variable name="moves" select="count($self | $moving) = count($moving)" />
     <xsl:for-each select="document('')//xsl:variable[@name = 'edges']/edge[@name = $edge or @in = $edge or $edge = 'all']">
@@ -1294,11 +1369,17 @@ void update</xsl:text>
               <xsl:when test="self::stick">
                 <xsl:value-of select="concat($indent, '&#9;physics::stick(', $name, ', ', $side, ', windowArea);&#10;')" />
               </xsl:when>
+              <xsl:when test="self::die">
+                <xsl:value-of select="concat($indent, '&#9;', $alive, ' = false;&#10;')" />
+              </xsl:when>
               <xsl:otherwise>
                 <xsl:call-template name="common-command"><xsl:with-param name="indent" select="concat($indent, '&#9;')" /></xsl:call-template>
               </xsl:otherwise>
             </xsl:choose>
           </xsl:for-each>
+          <xsl:if test="$rule/die and not(position() = last() and $last)">
+            <xsl:value-of select="concat($indent, '&#9;', $out, ';&#10;')" />
+          </xsl:if>
           <xsl:value-of select="concat($indent, '}&#10;')" />
         </xsl:otherwise>
       </xsl:choose>
@@ -1315,25 +1396,88 @@ void update</xsl:text>
 
   <!-- A rule about other objects: an if statement for each it can touch (that
        is in play, and shown on a screen with it); for a group, in a loop over
-       its members. -->
+       its members. When the other has rules about this one too, both happen in
+       one touch, as in the engine, written where the one first in the file is
+       updated: the other's first, before this one's bounce can take it out of
+       the touch or its die out of play. -->
   <xsl:template name="object-rule">
     <xsl:param name="name" />
     <xsl:param name="velocity" />
     <xsl:param name="indent" />
+    <xsl:param name="alive" />
+    <xsl:param name="out" />
     <xsl:variable name="rule" select="." />
+    <!-- the last rule: nothing after it to leave out once it has died -->
+    <xsl:variable name="last" select="not(following-sibling::collision[*])" />
     <xsl:variable name="self" select="ancestor::*[parent::objects]" />
     <xsl:variable name="together" select="$states[shows/show/@object = $self/@name]/shows/show/@object" />
+    <xsl:variable name="before" select="$self/preceding-sibling::*" />
     <xsl:for-each select="$things[collisions[normalize-space(enabled) = 'true']]
                                  [count(. | $self) != 1]
                                  [@name = $together]
                                  [not($rule/@object) or @name = $rule/@object]
                                  [not($rule/@class) or @class = $rule/@class]">
+      <xsl:variable name="thing" select="." />
+      <!-- the other's rules about this one -->
+      <xsl:variable name="back" select="collisions[normalize-space(enabled) = 'true']/collision[*][not(@edge)]
+                                                  [not(@object) or @object = $self/@name]
+                                                  [not(@class) or @class = $self/@class]" />
+      <!-- written with the other's, when the other comes first in the file -->
+      <xsl:if test="not($back and count(. | $before) = count($before))">
+        <xsl:call-template name="touch">
+          <xsl:with-param name="name" select="$name" />
+          <xsl:with-param name="velocity" select="$velocity" />
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="alive" select="$alive" />
+          <xsl:with-param name="out" select="$out" />
+          <xsl:with-param name="rule" select="$rule" />
+          <xsl:with-param name="self" select="$self" />
+          <!-- the other's rules, once: with this one's first rule about it -->
+          <xsl:with-param name="back" select="$back[not($rule/preceding-sibling::collision[*][not(@edge)]
+                                                         [not(@object) or @object = $thing/@name]
+                                                         [not(@class) or @class = $thing/@class])]" />
+          <xsl:with-param name="final" select="position() = last() and $last" />
+        </xsl:call-template>
+      </xsl:if>
+    </xsl:for-each>
+  </xsl:template>
+
+  <!-- One touch of a rule about other objects, the context node the other. -->
+  <xsl:template name="touch">
+    <xsl:param name="name" />
+    <xsl:param name="velocity" />
+    <xsl:param name="indent" />
+    <xsl:param name="alive" />
+    <xsl:param name="out" />
+    <xsl:param name="rule" />
+    <xsl:param name="self" />
+    <xsl:param name="back" />
+    <xsl:param name="final" />
+      <xsl:variable name="other-thing" select="." />
       <xsl:variable name="other-name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
       <xsl:variable name="in" select="concat($indent, substring('&#9;', 1, number(boolean(self::group))))" />
+      <!-- the other one, if it can die, only while it is in play -->
+      <xsl:variable name="other-dies" select="count(. | $dying) = count($dying)" />
       <xsl:variable name="other">
         <xsl:choose>
+          <xsl:when test="self::group and $other-dies"><xsl:value-of select="concat($other-name, '[j]')" /></xsl:when>
           <xsl:when test="self::group">other</xsl:when>
           <xsl:otherwise><xsl:value-of select="$other-name" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="other-alive">
+        <xsl:if test="$other-dies">
+          <xsl:value-of select="concat($other-name, 'Alive')" />
+          <xsl:if test="self::group">[j]</xsl:if>
+          <xsl:text> &amp;&amp; </xsl:text>
+        </xsl:if>
+      </xsl:variable>
+      <!-- out of the loop over the other group's members when this one dies
+           in it (a member of a group: then on to the next member) -->
+      <xsl:variable name="leave">
+        <xsl:choose>
+          <xsl:when test="self::group and $out = 'continue'">break</xsl:when>
+          <xsl:otherwise><xsl:value-of select="$out" /></xsl:otherwise>
         </xsl:choose>
       </xsl:variable>
       <xsl:value-of select="concat('&#10;', $indent, '// ', @name, ':')" />
@@ -1341,38 +1485,98 @@ void update</xsl:text>
         <xsl:value-of select="concat(' ', local-name())" />
       </xsl:for-each>
       <xsl:text>&#10;</xsl:text>
-      <xsl:if test="self::group">
-        <xsl:variable name="type"><xsl:call-template name="sf-type" /></xsl:variable>
-        <xsl:value-of select="concat($indent, 'for (const ', $type, '&amp; other : ', $other-name, ')&#10;', $indent, '{&#10;')" />
+      <xsl:choose>
+        <xsl:when test="self::group and $other-dies">
+          <xsl:value-of select="concat($indent, 'for (std::size_t j = 0; j &lt; ', $other-name, '.size(); ++j)&#10;', $indent, '{&#10;')" />
+        </xsl:when>
+        <xsl:when test="self::group">
+          <xsl:variable name="type"><xsl:call-template name="sf-type" /></xsl:variable>
+          <xsl:value-of select="concat($indent, 'for (const ', $type, '&amp; other : ', $other-name, ')&#10;', $indent, '{&#10;')" />
+        </xsl:when>
+      </xsl:choose>
+      <xsl:value-of select="concat($in, 'if (', $other-alive, 'physics::touching(', $name, ', ', $other, '))&#10;', $in, '{&#10;')" />
+      <xsl:if test="$back">
+        <!-- the other's own rules about this one, it being the one that moves or dies -->
+        <xsl:variable name="other-velocity">
+          <xsl:value-of select="concat($other-name, 'Velocity')" />
+          <xsl:if test="count(. | $member-velocities) = count($member-velocities)">[j]</xsl:if>
+        </xsl:variable>
+        <xsl:variable name="other-alive-name">
+          <xsl:if test="$other-dies">
+            <xsl:value-of select="concat($other-name, 'Alive')" />
+            <xsl:if test="self::group">[j]</xsl:if>
+          </xsl:if>
+        </xsl:variable>
+        <xsl:value-of select="concat($in, '&#9;// ', @name, ', by its own rule:')" />
+        <xsl:for-each select="$back/*">
+          <xsl:value-of select="concat(' ', local-name())" />
+        </xsl:for-each>
+        <xsl:text>&#10;</xsl:text>
+        <xsl:for-each select="$back/*">
+          <xsl:call-template name="touch-command">
+            <xsl:with-param name="name" select="$other" />
+            <xsl:with-param name="velocity" select="$other-velocity" />
+            <xsl:with-param name="other" select="$name" />
+            <xsl:with-param name="alive" select="$other-alive-name" />
+            <xsl:with-param name="self" select="$other-thing" />
+            <xsl:with-param name="indent" select="concat($in, '&#9;')" />
+          </xsl:call-template>
+        </xsl:for-each>
       </xsl:if>
-      <xsl:value-of select="concat($in, 'if (physics::touching(', $name, ', ', $other, '))&#10;', $in, '{&#10;')" />
       <xsl:for-each select="$rule/*">
-        <xsl:choose>
-          <xsl:when test="self::reset">
-            <xsl:value-of select="concat($in, '&#9;start')" />
-            <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
-            <xsl:text>();
-</xsl:text>
-          </xsl:when>
-          <xsl:when test="self::bounce">
-            <xsl:value-of select="concat($in, '&#9;physics::bounceOff(', $name, ', ', $velocity, ', ', $other, ');&#10;')" />
-          </xsl:when>
-          <xsl:when test="self::deflect">
-            <xsl:value-of select="concat($in, '&#9;physics::deflect(', $name, ', ', $velocity, ', ', $other, ', ')" />
-            <xsl:call-template name="value-bare" />
-            <xsl:text>);
-</xsl:text>
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:call-template name="common-command"><xsl:with-param name="indent" select="concat($in, '&#9;')" /></xsl:call-template>
-          </xsl:otherwise>
-        </xsl:choose>
+        <xsl:call-template name="touch-command">
+          <xsl:with-param name="name" select="$name" />
+          <xsl:with-param name="velocity" select="$velocity" />
+          <xsl:with-param name="other" select="$other" />
+          <xsl:with-param name="alive" select="$alive" />
+          <xsl:with-param name="self" select="$self" />
+          <xsl:with-param name="indent" select="concat($in, '&#9;')" />
+        </xsl:call-template>
       </xsl:for-each>
+      <xsl:if test="$rule/die and not($final and not(self::group))">
+        <xsl:value-of select="concat($in, '&#9;', $leave, ';&#10;')" />
+      </xsl:if>
       <xsl:value-of select="concat($in, '}&#10;')" />
       <xsl:if test="self::group">
         <xsl:value-of select="concat($indent, '}&#10;')" />
+        <xsl:if test="$rule/die and $leave = 'break' and not($final)">
+          <xsl:value-of select="concat($indent, 'if (!', $alive, ')&#10;', $indent, '{&#10;', $indent, '&#9;continue;&#10;', $indent, '}&#10;')" />
+        </xsl:if>
       </xsl:if>
-    </xsl:for-each>
+  </xsl:template>
+
+  <!-- What one does when it touches another: `name` (its velocity, its flag
+       for being in play) against `other`; `self` is the object or group. -->
+  <xsl:template name="touch-command">
+    <xsl:param name="name" />
+    <xsl:param name="velocity" />
+    <xsl:param name="other" />
+    <xsl:param name="alive" />
+    <xsl:param name="self" />
+    <xsl:param name="indent" />
+    <xsl:choose>
+      <xsl:when test="self::reset">
+        <xsl:value-of select="concat($indent, 'start')" />
+        <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
+        <xsl:text>();
+</xsl:text>
+      </xsl:when>
+      <xsl:when test="self::bounce">
+        <xsl:value-of select="concat($indent, 'physics::bounceOff(', $name, ', ', $velocity, ', ', $other, ');&#10;')" />
+      </xsl:when>
+      <xsl:when test="self::deflect">
+        <xsl:value-of select="concat($indent, 'physics::deflect(', $name, ', ', $velocity, ', ', $other, ', ')" />
+        <xsl:call-template name="value-bare" />
+        <xsl:text>);
+</xsl:text>
+      </xsl:when>
+      <xsl:when test="self::die">
+        <xsl:value-of select="concat($indent, $alive, ' = false;&#10;')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="common-command"><xsl:with-param name="indent" select="$indent" /></xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- ===================================================================== -->
