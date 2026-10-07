@@ -51,6 +51,7 @@ set(data_generators
 	"generators/windows-cpp/functions.xml"
 	"generators/windows-cpp/tables.xml"
 	"generators/windows-cpp/modules/physics.h"
+	"generators/windows-cpp/modules/pictures.h"
 	"generators/windows-cpp/modules/sound.h"
 	"generators/windows-cpp/modules/sound.cpp")
 

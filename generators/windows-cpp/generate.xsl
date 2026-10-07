@@ -16,8 +16,9 @@
      exsl:document, beside the output named: main.cpp (the game, main.xsl),
      CMakeLists.txt (its build) and README.md. Its own output is a list of what it
      wrote and of what xgecli copies beside them: the modules the game uses
-     (modules/: physics.h, and sound.h with sound.cpp) and the game's assets (its
-     font and pictures). xgecli reads the list.
+     (modules/: physics.h, pictures.h, and sound.h with sound.cpp), the game's
+     assets (its font and pictures), and each <svg> for xgecli to draw into a
+     picture as the engine draws it. xgecli reads the list.
 
      It covers part of the language so far, all of Pong (check.xsl); anything
      else stops it with a message saying what and where. -->
@@ -62,6 +63,9 @@
       <xsl:if test="$physics">
         <module path="physics.h" />
       </xsl:if>
+      <xsl:if test="$drawn-rows or $drawn-lines">
+        <module path="pictures.h" />
+      </xsl:if>
       <xsl:if test="$audio">
         <module path="sound.h" />
         <module path="sound.cpp" />
@@ -72,7 +76,36 @@
       <xsl:for-each select="$image-paths">
         <asset path="{normalize-space(.)}" />
       </xsl:for-each>
+      <!-- an <svg>, drawn by xgecli as the engine draws it, into a picture -->
+      <xsl:for-each select="$drawn-svgs">
+        <xsl:variable name="svg" select="svg | grid/svg" />
+        <xsl:variable name="file"><xsl:call-template name="drawn-file" /></xsl:variable>
+        <picture path="{$file}" svg="{normalize-space($svg/path)}">
+          <xsl:if test="$svg/width">
+            <xsl:attribute name="x"><xsl:call-template name="svg-number"><xsl:with-param name="node" select="$svg/x" /></xsl:call-template></xsl:attribute>
+            <xsl:attribute name="y"><xsl:call-template name="svg-number"><xsl:with-param name="node" select="$svg/y" /></xsl:call-template></xsl:attribute>
+            <xsl:attribute name="width"><xsl:call-template name="svg-number"><xsl:with-param name="node" select="$svg/width" /></xsl:call-template></xsl:attribute>
+            <xsl:attribute name="height"><xsl:call-template name="svg-number"><xsl:with-param name="node" select="$svg/height" /></xsl:call-template></xsl:attribute>
+          </xsl:if>
+          <xsl:if test="$svg/scale">
+            <xsl:attribute name="scale"><xsl:call-template name="svg-number"><xsl:with-param name="node" select="$svg/scale" /></xsl:call-template></xsl:attribute>
+          </xsl:if>
+          <xsl:for-each select="$svg/hide">
+            <hide id="{normalize-space(.)}" />
+          </xsl:for-each>
+        </picture>
+      </xsl:for-each>
     </generated>
+  </xsl:template>
+
+  <!-- A number an <svg> takes, as it is or as the game variable it names. -->
+  <xsl:template name="svg-number">
+    <xsl:param name="node" />
+    <xsl:variable name="text" select="normalize-space($node)" />
+    <xsl:choose>
+      <xsl:when test="string(number($text)) != 'NaN'"><xsl:value-of select="$text" /></xsl:when>
+      <xsl:otherwise><xsl:value-of select="normalize-space(/game/variables/variable[@name = $text][last()])" /></xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template name="cmake">
@@ -125,7 +158,7 @@ target_link_libraries(</xsl:text>
     <xsl:if test="$audio"> SFML::Audio</xsl:if>
     <xsl:text>)
 </xsl:text>
-    <xsl:if test="$texts or $images">
+    <xsl:if test="$texts or $images or $drawn-svgs">
       <xsl:text>
 # The game opens its font and pictures from assets/ beside where it runs:
 # copied beside the program, and the folder Visual Studio starts it in.
@@ -181,12 +214,18 @@ plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
       <xsl:text>| `physics.h` | where things are, whether they touch, and bouncing, sticking and deflecting; it works with any SFML shape, sprite or text |
 </xsl:text>
     </xsl:if>
+    <xsl:if test="$drawn-rows or $drawn-lines">
+      <xsl:text>| `pictures.h` | the pictures it draws itself when it starts: rows of text, and straight lines |
+</xsl:text>
+    </xsl:if>
     <xsl:if test="$audio">
       <xsl:text>| `sound.h`, `sound.cpp` | 8-bit sounds written as notes, made into samples when the game starts |
 </xsl:text>
     </xsl:if>
-    <xsl:if test="$texts or $images">
-      <xsl:text>| `assets/` | the font and pictures it opens, copied beside the program when it is built |
+    <xsl:if test="$texts or $images or $drawn-svgs">
+      <xsl:text>| `assets/` | the font and pictures it opens</xsl:text>
+      <xsl:if test="$drawn-svgs"> (`assets/drawn/` holds its SVG drawings, drawn as the engine draws them)</xsl:if>
+      <xsl:text>, copied beside the program when it is built |
 </xsl:text>
     </xsl:if>
     <xsl:text>| `CMakeLists.txt` | the build; it uses an installed SFML 3, or downloads and builds one |

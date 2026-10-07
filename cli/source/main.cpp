@@ -77,6 +77,10 @@ int main(int argc, char* argv[])
 			{
 				std::cout << "  " << asset.generic_string() << " (copied)\n";
 			}
+			for (const auto& picture : program.drawn)
+			{
+				std::cout << "  " << picture.generic_string() << " (drawn from its svg)\n";
+			}
 		}
 		catch (const std::exception& error)
 		{

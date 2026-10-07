@@ -6,6 +6,8 @@
 #include "generate.h"
 
 #if XGE_WITH_XSLT
+#include "svg.h"
+
 #include <libexslt/exslt.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -16,9 +18,16 @@
 #include <libxslt/xsltutils.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdarg>
+#include <cstdint>
 #include <cstdio>
+#include <fstream>
+#include <locale>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
 #endif
 
 #include <system_error>
@@ -48,6 +57,108 @@ namespace xge
 			{
 				messages->append(buffer, std::min(static_cast<std::size_t>(length), sizeof buffer - 1));
 			}
+		}
+
+		// A picture as a PNG file, the plainest kind: 8 bits a channel with
+		// alpha, and its pixels stored, not compressed (a generated game's
+		// drawings are small). What an <svg> sprite is drawn into, so the
+		// generated program loads it like any picture.
+		void writePng(const Bitmap& picture, const std::filesystem::path& file)
+		{
+			std::array<std::uint32_t, 256> crcTable{};
+			for (std::uint32_t n = 0; n < 256; ++n)
+			{
+				std::uint32_t c = n;
+				for (int k = 0; k < 8; ++k)
+				{
+					c = (c & 1u) ? 0xEDB88320u ^ (c >> 1) : c >> 1;
+				}
+				crcTable[n] = c;
+			}
+
+			std::vector<std::uint8_t> out{ 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n' };
+			const auto put32 = [](std::vector<std::uint8_t>& bytes, std::uint32_t value)
+			{
+				for (int shift = 24; shift >= 0; shift -= 8)
+				{
+					bytes.push_back(static_cast<std::uint8_t>(value >> shift));
+				}
+			};
+			const auto chunk = [&](const char* type, const std::vector<std::uint8_t>& data)
+			{
+				put32(out, static_cast<std::uint32_t>(data.size()));
+				std::vector<std::uint8_t> body(type, type + 4);
+				body.insert(body.end(), data.begin(), data.end());
+				std::uint32_t crc = 0xFFFFFFFFu;
+				for (const std::uint8_t byte : body)
+				{
+					crc = crcTable[(crc ^ byte) & 0xFFu] ^ (crc >> 8);
+				}
+				out.insert(out.end(), body.begin(), body.end());
+				put32(out, crc ^ 0xFFFFFFFFu);
+			};
+
+			std::vector<std::uint8_t> header;
+			put32(header, static_cast<std::uint32_t>(picture.width));
+			put32(header, static_cast<std::uint32_t>(picture.height));
+			header.insert(header.end(), { 8, 6, 0, 0, 0 });
+			chunk("IHDR", header);
+
+			// Each row starts with its filter (0, none), then its pixels.
+			std::vector<std::uint8_t> raw;
+			const std::size_t rowBytes = static_cast<std::size_t>(picture.width) * 4;
+			for (std::size_t row = 0; row < static_cast<std::size_t>(picture.height); ++row)
+			{
+				raw.push_back(0);
+				raw.insert(raw.end(), picture.rgba.begin() + static_cast<std::ptrdiff_t>(row * rowBytes),
+					picture.rgba.begin() + static_cast<std::ptrdiff_t>((row + 1) * rowBytes));
+			}
+
+			// A zlib stream of stored deflate blocks, then its Adler-32.
+			std::vector<std::uint8_t> zlib{ 0x78, 0x01 };
+			std::size_t at = 0;
+			do
+			{
+				const std::size_t length = std::min<std::size_t>(raw.size() - at, 65535);
+				const bool last = at + length == raw.size();
+				zlib.push_back(last ? 1 : 0);
+				zlib.push_back(static_cast<std::uint8_t>(length & 0xFFu));
+				zlib.push_back(static_cast<std::uint8_t>(length >> 8));
+				zlib.push_back(static_cast<std::uint8_t>(~length & 0xFFu));
+				zlib.push_back(static_cast<std::uint8_t>((~length >> 8) & 0xFFu));
+				zlib.insert(zlib.end(), raw.begin() + static_cast<std::ptrdiff_t>(at), raw.begin() + static_cast<std::ptrdiff_t>(at + length));
+				at += length;
+			} while (at < raw.size());
+			std::uint32_t a = 1;
+			std::uint32_t b = 0;
+			for (const std::uint8_t byte : raw)
+			{
+				a = (a + byte) % 65521u;
+				b = (b + a) % 65521u;
+			}
+			put32(zlib, (b << 16) | a);
+			chunk("IDAT", zlib);
+			chunk("IEND", {});
+
+			std::ofstream stream(file, std::ios::binary);
+			stream.write(reinterpret_cast<const char*>(out.data()), static_cast<std::streamsize>(out.size()));
+			if (!stream)
+			{
+				throw GenerateError("could not write " + file.string());
+			}
+		}
+
+		// A number written in the manifest, read the same whatever the locale.
+		float number(const std::string& text)
+		{
+			std::istringstream in(text);
+			in.imbue(std::locale::classic());
+			float value{};
+			if (!(in >> value))
+			{
+				throw GenerateError("the generator wrote \"" + text + "\" where a number belongs");
+			}
+			return value;
 		}
 
 		// Sends the libraries' messages to `messages` for as long as it lives.
@@ -238,6 +349,40 @@ namespace xge
 			{
 				copyIn(request.dataFolder / path);
 				program.assets.push_back(path);
+			}
+			else if (element == "picture")
+			{
+				// An <svg> sprite, drawn now as the engine draws it when a game
+				// loads, so the program has a plain picture to open.
+				SvgRegion region;
+				if (!attribute(node, "width").empty())
+				{
+					region = { number(attribute(node, "x")), number(attribute(node, "y")),
+						number(attribute(node, "width")), number(attribute(node, "height")) };
+				}
+				const std::string scale = attribute(node, "scale");
+				std::vector<std::string> hide;
+				for (xmlNode* child = node->children; child; child = child->next)
+				{
+					if (child->type == XML_ELEMENT_NODE)
+					{
+						hide.push_back(attribute(child, "id"));
+					}
+				}
+
+				const std::filesystem::path to = output / path;
+				std::error_code failed;
+				std::filesystem::create_directories(to.parent_path(), failed);
+				try
+				{
+					const std::filesystem::path svg = request.dataFolder / attribute(node, "svg");
+					writePng(rasterizeSvg(svg.string(), region, scale.empty() ? 1.0f : number(scale), hide), to);
+				}
+				catch (const std::exception& error)
+				{
+					throw GenerateError("could not draw " + attribute(node, "svg") + " for " + path.string() + ": " + error.what());
+				}
+				program.drawn.push_back(path);
 			}
 		}
 
