@@ -1,6 +1,6 @@
 # 08. Timers, pools, enemies and key sets
 
-**Status:** built (timers, facing fire, pools, `<reveal>`, key sets, commands that work in every context). Aiming and chasing, an event queue and `<goto state>` are open.
+**Status:** built (timers, facing fire, pools, `<reveal>`, key sets, commands that work in every context). Aiming and chasing are built (`<aim>`, `<chase>`, [06](06-motion-and-verbs.md#chasing-and-aiming-berserk)); an event queue and `<goto state>` are open.
 
 ## Why (a read of every shipped game, 2026-10-03)
 
@@ -36,8 +36,8 @@ Conditions and keys run `<inc>`, `<dec>`, `<become>`, `<reveal>`; collisions run
 
 ## Enemies fire back
 
-- Enemies use the same `<fire>` with pools: an enemy is a shooter with a facing and a timer; its shots are a pool. No aiming. Space Invaders (both), Demon Attack and Berserk's robots fire this way; the aliens' catch-all rule (`<collision><die /></collision>`) had to name the cannon's bullet so their own bombs do not kill them.
-- Limits: an invader behind others fires through them (the arcade fires only the bottom one of a column); a Berserk robot fires along its group's facing whether or not the man is that way; nothing aims or chases. Needs a verb that sets a velocity or aims a `<fire>` from another object's position ([06](06-motion-and-verbs.md)).
+- Enemies use the same `<fire>` with pools: an enemy is a shooter with a facing and a timer; its shots are a pool. No aiming. Space Invaders (both) and Demon Attack fire this way (Berserk's robots now `<aim>` first); the aliens' catch-all rule (`<collision><die /></collision>`) had to name the cannon's bullet so their own bombs do not kill them.
+- Limits: an invader behind others fires through them (the arcade fires only the bottom one of a column); a Berserk robot aims at the man through walls (its shot dies on the wall). Aiming and chasing: [06](06-motion-and-verbs.md#chasing-and-aiming-berserk).
 
 ## Key sets
 
@@ -45,4 +45,4 @@ Conditions and keys run `<inc>`, `<dec>`, `<become>`, `<reveal>`; collisions run
 
 ## Open
 
-Aiming (fire toward the player), only the front invader of a column firing, an event queue, `<goto state>`, mutable game-wide variables (object variables did the job in every game), a timer's time left on screen, timers whose numbers follow variables beyond the interval.
+Only the front invader of a column firing, an event queue, `<goto state>`, mutable game-wide variables (object variables did the job in every game), a timer's time left on screen, timers whose numbers follow variables beyond the interval.

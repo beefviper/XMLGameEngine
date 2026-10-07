@@ -76,6 +76,17 @@ namespace xge
 			return CmdClimb{ direction, evaluate(raw.amount), raw.objClass };
 		}
 
+		if (verb == "chase")
+		{
+			const float speed = evaluate(raw.amount);
+			const bool noNear = raw.distance.kind == RawValue::Kind::Expression && raw.distance.text.empty();
+			const float near = noNear ? 0.0f : evaluate(raw.distance);
+			if (speed < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: the <speed> is below 0"); }
+			if (near < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: the <near> is below 0"); }
+			return CmdChase{ raw.object, speed, near };
+		}
+		if (verb == "aim") { return CmdAim{ raw.object }; }
+
 		if (verb == "accelerate")
 		{
 			return CmdAccelerate{ directionFromName(raw.direction, verb), evaluate(raw.amount), raw.burn };
@@ -281,6 +292,8 @@ namespace xge
 			[&](const CmdLand&) { o << "land()"; },
 			[&](const CmdLeap& l) { o << "leap(" << l.height << ")"; },
 			[&](const CmdClimb& c) { o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")"; },
+			[&](const CmdChase& c) { o << "chase(" << c.target << ", " << c.speed << (c.near > 0.0f ? ", near " + formatDisplayNumber(c.near) : std::string{}) << ")"; },
+			[&](const CmdAim& a) { o << "aim(" << a.target << ")"; },
 			[&](const CmdAccelerate& a)
 			{
 				const char* direction = (a.direction == Direction::Up) ? "up"
@@ -455,7 +468,11 @@ namespace xge
 		{
 			o << "(" << command.state << ")";
 		}
-		else if (command.verb == "fire" || (command.verb == "reset" && !command.object.empty()))
+		else if (command.verb == "chase")
+		{
+			o << "(" << command.object << ", " << command.amount << ", " << command.distance << ")";
+		}
+		else if (command.verb == "fire" || command.verb == "aim" || (command.verb == "reset" && !command.object.empty()))
 		{
 			o << "(" << command.object << ")";
 		}

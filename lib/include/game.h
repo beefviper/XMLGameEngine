@@ -48,6 +48,11 @@ namespace xge
 
 		WindowDesc& getWindowDesc(void) noexcept;
 		bool isShown(const Object& object) noexcept;
+
+		// The object of that name or <group> in play (shown, not hidden or
+		// dead) whose middle is nearest `from`'s, leaving `from` out; null if
+		// there is none. What <chase> and <aim> look for.
+		const Object* nearestInPlay(const Object& from, const std::string& name);
 		Object& getObject(const std::string& name);
 		Object* tryGetObject(const std::string& name) noexcept;
 		float getVariable(const std::string& name);

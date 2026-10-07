@@ -88,6 +88,8 @@ namespace xge
 				[](const CmdLand&) { return std::string("<land />"); },
 				[](const CmdLeap&) { return std::string("<leap>"); },
 				[](const CmdClimb&) { return std::string("<climb>"); },
+				[](const CmdChase&) { return std::string("<chase>"); },
+				[](const CmdAim&) { return std::string("<aim>"); },
 				[](const CmdAccelerate&) { return std::string("<accelerate>"); },
 				[](const CmdTurn&) { return std::string("<turn>"); },
 				[](const CmdThrust&) { return std::string("<thrust>"); },
@@ -124,15 +126,21 @@ namespace xge
 			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<become>", "<reveal>", "<follow>" };
 			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<become>", "<reveal>", "<follow>",
 				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>" };
+			static std::vector<std::string> objectTimerCommands = [] {
+				std::vector<std::string> tags{ ownerCommands };
+				tags.push_back("<chase>");
+				tags.push_back("<aim>");
+				return tags;
+			}();
 			static const PlaceRule rules[] = {
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<release>", "<move>", "<inc>", "<dec>",
 					"<play>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>",
-					"<carry />", "<land />", "<play>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
+					"<carry />", "<land />", "<chase>", "<aim>", "<play>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
-				{ "an object's <timer>", ownerCommands },
+				{ "an object's <timer>", objectTimerCommands },
 				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<play>" } },
 				{ "a path's <step>", ownerCommands },
 			};
@@ -208,6 +216,20 @@ namespace xge
 					{
 						throw std::runtime_error(where + ": <become> names '" + become->target + "', and there is no object of that name" + didYouMean(become->target, objectNames(objects)));
 					}
+				}
+			}
+			else if (const auto* chase = std::get_if<CmdChase>(&command))
+			{
+				if (!findObject(objects, chase->target))
+				{
+					throw std::runtime_error(where + ": <chase> names '" + chase->target + "', and there is no object of that name" + didYouMean(chase->target, objectNames(objects)));
+				}
+			}
+			else if (const auto* aim = std::get_if<CmdAim>(&command))
+			{
+				if (!findObject(objects, aim->target))
+				{
+					throw std::runtime_error(where + ": <aim> names '" + aim->target + "', and there is no object of that name" + didYouMean(aim->target, objectNames(objects)));
 				}
 			}
 			else if (const auto* reveal = std::get_if<CmdReveal>(&command))

@@ -52,6 +52,8 @@ namespace xge
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdCarry&) { carry(object, other); },
 			[&](const CmdLand&) { land(object, other, edge); },
+			[&](const CmdChase& c) { chase(object, c); },
+			[&](const CmdAim& a) { aim(object, a.target); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const CmdReverse&) { reverse(object); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
@@ -113,6 +115,8 @@ namespace xge
 			[&](const CmdStop&) { if (owner) { stop(*owner); } },
 			[&](const CmdMove& m) { if (owner) { moveByStep(*owner, m.direction, m.step); } },
 			[&](const CmdRelease& r) { if (owner) { release(*owner, r.target, r.count); } },
+			[&](const CmdChase& c) { if (owner) { chase(*owner, c); } },
+			[&](const CmdAim& a) { if (owner) { aim(*owner, a.target); } },
 			[&](const auto&) { /* the rest are about a key held, an edge or another
 			                      object touched, none of which a timer has */ }
 		}, command);
@@ -229,6 +233,7 @@ namespace xge
 		object.climbing = false;
 		object.leaping = false;
 		object.grounded = false;
+		object.hasAim = false;
 		const bool keyHeld = std::any_of(object.activeMoveStep.begin(), object.activeMoveStep.end(), [](float step) { return step != 0.0f; });
 		if (!keyHeld)
 		{
@@ -435,6 +440,7 @@ namespace xge
 
 		object.jumpFramesLeft = frames;
 		object.facing = jump.direction;
+		object.hasAim = false;
 	}
 
 	void CommandExecutor::queueHop(Object& object, Direction direction, float distance)
@@ -507,11 +513,11 @@ namespace xge
 				[&](const CmdMove& m)
 				{
 					applyActionVelocity(object, m.direction, keyPressed ? m.step : 0.0f);
-					if (keyPressed && m.step != 0.0f) { object.facing = m.direction; }
+					if (keyPressed && m.step != 0.0f) { object.facing = m.direction; object.hasAim = false; }
 				},
 				// A hop belongs to the press alone: letting go of the key does
 				// nothing, and it is not among what executeHeldInput resumes.
-				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); object.facing = h.direction; } },
+				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); object.facing = h.direction; object.hasAim = false; } },
 				// So does a jump, and one in the air waits for the landing.
 				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
 				[&](const CmdLeap& l) { if (keyPressed) { leap(object, l.height); } },
@@ -593,6 +599,66 @@ namespace xge
 		}
 	}
 
+	namespace
+	{
+		// The way of the four that is nearest to `way`: the axis it goes
+		// further along.
+		Direction directionOf(const Vector2f& way)
+		{
+			if (std::abs(way.x) >= std::abs(way.y)) { return way.x < 0.0f ? Direction::Left : Direction::Right; }
+			return way.y < 0.0f ? Direction::Up : Direction::Down;
+		}
+
+		Vector2f middleOf(const Object& object)
+		{
+			return object.position + sizeOf(object) * 0.5f;
+		}
+	}
+
+	// Heads for the nearest of `chase.target` in play: straight at its middle
+	// at `chase.speed`, or, within `chase.near` of it, stops. It faces the
+	// way it goes. With none in play it carries on as it was.
+	void CommandExecutor::chase(Object& object, const CmdChase& command)
+	{
+		const Object* target = game.nearestInPlay(object, command.target);
+		if (!target) { return; }
+
+		const Vector2f apart = middleOf(*target) - middleOf(object);
+		const float distance = std::hypot(apart.x, apart.y);
+		if (distance <= command.near || distance == 0.0f)
+		{
+			object.velocity = {};
+			return;
+		}
+
+		const Vector2f way = apart * (1.0f / distance);
+		object.velocity = way * command.speed;
+		object.facing = directionOf(way);
+	}
+
+	// Turns to the nearest of `target` in play: the next shots go straight at
+	// where its middle is now, and the object faces that way (to the nearest
+	// of the four, or exactly, if it has a heading).
+	void CommandExecutor::aim(Object& object, const std::string& target)
+	{
+		const Object* other = game.nearestInPlay(object, target);
+		if (!other) { return; }
+
+		const Vector2f apart = middleOf(*other) - middleOf(object);
+		const float distance = std::hypot(apart.x, apart.y);
+		if (distance == 0.0f) { return; }
+
+		object.aim = apart * (1.0f / distance);
+		object.hasAim = true;
+		object.facing = directionOf(object.aim);
+		if (object.hasHeading)
+		{
+			object.heading = std::atan2(object.aim.x, -object.aim.y) * 180.0f / 3.14159265358979323846f;
+			if (object.heading < 0.0f) { object.heading += 360.0f; }
+			object.showHeading();
+		}
+	}
+
 	// Up off the ground at the speed that, under the object's own pull, rises
 	// `height` pixels: v * v = 2 * pull * height. Only from the ground and not
 	// on a ladder; nothing without a pull down (the loader refuses that).
@@ -653,7 +719,20 @@ namespace xge
 		}
 		if (!projectile) { return; }
 
-		if (shooter.hasHeading)
+		if (shooter.hasAim)
+		{
+			// Straight along the aim, from the middle of the shooter, just clear
+			// of it, at the projectile's own speed.
+			const Vector2f size = sizeOf(shooter);
+			const Vector2f centre = shooter.position + size * 0.5f;
+			const float speed = std::hypot(projectile->velocityOriginal.x, projectile->velocityOriginal.y);
+			const Vector2f shot = sizeOf(*projectile);
+			const float clear = std::max(std::abs(shooter.aim.x) * (size.x + shot.x), std::abs(shooter.aim.y) * (size.y + shot.y)) / 2.0f;
+
+			projectile->position = centre + shooter.aim * clear - shot * 0.5f;
+			projectile->velocity = shooter.aim * speed;
+		}
+		else if (shooter.hasHeading)
 		{
 			const float radians = shooter.heading * 3.14159265358979323846f / 180.0f;
 			const Vector2f ahead{ std::sin(radians), -std::cos(radians) };

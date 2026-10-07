@@ -43,7 +43,7 @@ Gotchas, untested areas and next steps. The engine itself is in [../readme.md](.
 
 ## Next steps (not started)
 
-1. Chasing/aiming verb (Berserk's robots, invaders aimed at the player); only the front invader of a column firing ([08](../designs/08-timers-and-enemy-behavior.md), [06](../designs/06-motion-and-verbs.md)).
+1. More of chasing and aiming ([06](../designs/06-motion-and-verbs.md#chasing-and-aiming-berserk)): aim in 8 ways, lead a target, chase round walls, a condition on distance; Galaxian's divers and bombs could `<aim>`. Only the front invader of a column firing ([08](../designs/08-timers-and-enemy-behavior.md)).
 2. Donkey Kong's open items ([06](../designs/06-motion-and-verbs.md#standing-leaping-and-climbing-donkey-kong)): sloped girders, barrels down ladders, points for a jumped barrel, the hammer; the rest of the air-control ladder.
 3. Sort `lib/` into folders; rename `collisionData.basic` ([design 11](../designs/11-backends-build-and-layout.md)).
 4. Sound for the eight silent games (Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander, Asteroids); looping music; an envelope. Breakout could use `<deflect>`; Pong serve at a set speed and random angle; speed-up per hit.

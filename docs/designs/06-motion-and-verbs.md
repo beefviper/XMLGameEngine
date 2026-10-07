@@ -1,6 +1,6 @@
 # 06. Motion and the verb vocabulary
 
-**Status:** built: constant velocity, acceleration, thrust, headings, hop, straight timed jump, riding, wrapping, deflect, paths of straight steps (Galaxian), standing on platforms, a fixed-arc leap and ladders (Donkey Kong). Ideas: air control beyond none, curved paths and moving formations, AI targeting.
+**Status:** built: constant velocity, acceleration, thrust, headings, hop, straight timed jump, riding, wrapping, deflect, paths of straight steps (Galaxian), standing on platforms, a fixed-arc leap and ladders (Donkey Kong). chasing and aiming (`<chase>`, `<aim>`). Ideas: air control beyond none, curved paths and moving formations, AI targeting beyond straight at a target.
 
 ## Principle
 
@@ -21,6 +21,7 @@
 | (none) | Space Race, Kaboom v1, Freeway, Depth Charge, Astrosmash | the vocabulary was already enough ([10](10-games-as-tests.md)) |
 | `<paths>`, `<follow>` with `<stagger>` | Galaxian | below |
 | `<land />`, `<leap>`, `<climb>`, `<acceleration>` in a group | Donkey Kong | below |
+| `<chase>`, `<aim>` | Berserk's Otto and robots | below |
 
 ## Gravity, thrust and landing (Lunar Lander)
 
@@ -73,10 +74,24 @@
 - **Movement as capabilities:** describe the ground (how input becomes speed: instant, or acceleration with friction) and the air (horizontal control from the ladder, vertical control fixed or variable, reversal allowed) rather than naming a jump type. A fixed-arc game says the air has no control; a free game says full.
 - Open: are height, distance and duration separate inputs or consequences of a profile (start speed and pull: better for fixed, unavoidable for variable); jump as a verb or part of a movement component ([03](03-objects-groups-and-storage.md)); how an animation-locked jump interacts with states. Grounded vs airborne and a jump impulse now exist (`<land />`, `<leap>`); the rest of the ladder does not.
 
+## Chasing and aiming (Berserk)
+
+**What we looked for.** The author's ask: "chase to get close, then aim to target, then fire". Berserk's Evil Otto should come for the man, and its robots should shoot at him, not along the way their group faces.
+
+**What we looked at.** (a) A behavior property on the object (`<ai targeting="direct" />`, below): it runs every frame and needs a frame order of its own. (b) Verbs that act once, run by a timer or a rule: the timer says how often the chaser looks again, which is also how sluggish it is. (c) Aiming as a `<fire at="...">` attribute: one verb, but a shooter could not face its target without firing.
+
+**Chosen: (b).**
+- *`<chase object><speed/><near/></chase>`* sets the velocity straight at the middle of the nearest one in play of that name or group, at the speed, or 0 within `near`; it faces that way. Two numbers, so two elements, as `<jump>`. In an object's timer or a collision with another object.
+- *`<aim object />`* stores the way to the target's middle; the next `<fire>`s go along it from the shooter's middle, at any angle, at the projectile's own speed; facing (or a heading, exactly) turns too. A key that moves, hops or jumps the shooter, a reset, or another aim replaces it. Same places as `<chase>`.
+- The target is the nearest one of a name or group in play, so a pool of players, or one of several, works the same.
+- Berserk: Otto chases the man ten times a second at 1.1 over the walls; every robot aims before it fires.
+
+**Open.** Chasing round walls (pathfinding), leading a moving target, aiming only in 8 or 4 ways (Berzerk's robots fire along 8), a condition on distance ("when near, fire"), the Pac-Man strategies below.
+
 ## AI targeting (idea)
 
 - Maze-game AI decomposes into a few strategies with parameters. The Pac-Man ghosts: Blinky chases directly; Pinky targets a few tiles ahead of the player's direction; Inky uses the player's and Blinky's positions to flank; Clyde chases when far and retreats to a corner inside a threshold. Sketch: `<ai targeting="direct" />`, `"ahead" lookahead=4`, `"flank" reference="blinky"`, `"proximity_flee" threshold=8 fallback="corner"`. Pathfinding is the engine's job. Other modes: predictive, random, territorial.
-- Berserk's robots are the first need: today they patrol and fire along a facing; nothing chases or aims ([10](10-games-as-tests.md)). The smallest step is a verb that sets a velocity (or aims a `<fire>`) from another object's position.
+- Berserk's robots were the first need; the smallest step, a verb that sets a velocity (`<chase>`) or aims a `<fire>` (`<aim>`) from another object's position, is built (above).
 
 ## Paths and formations (Galaxian)
 

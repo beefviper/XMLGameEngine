@@ -25,7 +25,7 @@
   * The man has four looks, one for each way he faces, and <become> in his
     actions picks it; <facing> makes <fire> leave the way he looks.
   * Robots patrol their corridors and turn at a wall (<reverse />); each has
-    two animated frames. A robot fires the way its group faces, from a timer
+    two animated frames. A robot <aim>s at the man and fires at him, from a timer
     whose wait is drawn again after every shot, between ends that shrink as
     player.depth grows.
   * Every rule that costs the man a life is his own (class="wall",
@@ -41,8 +41,8 @@
     player.lifepoints is the score since the last extra man.
   * Evil Otto is revealed by a timer of the room whose wait is an expression
     of player.depth (the number of rooms the man has left), so the second lap
-    brings him sooner, and at once if every robot is gone; he bounces about
-    over the walls.
+    brings him sooner, and at once if every robot is gone; he <chase>s the
+    man over the walls.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -329,8 +329,9 @@
       <member />
     </group>
 
-    <!-- Evil Otto: bounces about over the walls, cannot be shot, and one touch
-         is the end of a man. A timer of each room brings him in, and he comes
+    <!-- Evil Otto: comes straight for the man over the walls (<chase>, kept on
+         his trail ten times a second), cannot be shot, and one touch is the
+         end of a man. A timer of each room brings him in, and he comes
          at once when every robot in the room is gone. -->
     <object name="otto" class="otto">
       <sprite>
@@ -356,6 +357,12 @@
         <collision edge="all"><bounce /></collision>
         <collision object="player"><die /></collision>
       </collisions>
+      <timers>
+        <timer>
+          <every>0.1</every>
+          <chase object="player"><speed>1.1</speed></chase>
+        </timer>
+      </timers>
     </object>
 
     <!-- ======================================================== room 1 -->
@@ -516,6 +523,7 @@
       <timers>
         <timer>
           <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <aim object="player" />
           <fire object="robotshots" />
           <play sound="robotshoot" />
         </timer>
@@ -578,6 +586,7 @@
       <timers>
         <timer>
           <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <aim object="player" />
           <fire object="robotshots" />
           <play sound="robotshoot" />
         </timer>
@@ -744,6 +753,7 @@
       <timers>
         <timer>
           <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <aim object="player" />
           <fire object="robotshots" />
           <play sound="robotshoot" />
         </timer>
@@ -912,6 +922,7 @@
       <timers>
         <timer>
           <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <aim object="player" />
           <fire object="robotshots" />
           <play sound="robotshoot" />
         </timer>
@@ -977,6 +988,7 @@
       <timers>
         <timer>
           <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <aim object="player" />
           <fire object="robotshots" />
           <play sound="robotshoot" />
         </timer>
@@ -1142,6 +1154,7 @@
       <timers>
         <timer>
           <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <aim object="player" />
           <fire object="robotshots" />
           <play sound="robotshoot" />
         </timer>
@@ -1207,6 +1220,7 @@
       <timers>
         <timer>
           <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+          <aim object="player" />
           <fire object="robotshots" />
           <play sound="robotshoot" />
         </timer>
