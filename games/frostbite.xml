@@ -21,7 +21,7 @@
   How it is written:
   * <jump>: a jump between rows takes a moment and passes over the water; he
     only meets what he lands on. Water drowns him unless he is on a floe
-    (unless="floe"), and a floe carries him (<carry />).
+    (unless="floe"), and he rides a floe (<ride />).
   * Each row is a <group> with two looks, a white <sprite> and a blue one. Its
     rule sprite="white" runs only while it is white, and does
     <become object="rowN" sprite="blue" />, so the whole row turns blue at once.
@@ -407,10 +407,10 @@
           <stick />
         </collision>
         <collision class="floe">
-          <carry />
+          <ride />
         </collision>
         <collision class="goose">
-          <carry />
+          <ride />
         </collision>
         <collision class="water" unless="floe">
           <dec variable="bailey.lives" />

@@ -212,10 +212,10 @@ namespace xge
 		static bool canCollide(const Object& a, const Object& b) noexcept;
 
 		// How far an object moves in one frame: its own velocity, plus the
-		// velocity of whatever it is riding (see Object::carry).
+		// velocity of whatever it is riding (see Object::riding).
 		static Vector2f motionOf(const Object& object) noexcept;
 
-		// Whether it is in motion at all this frame: moving, being carried, or
+		// Whether it is in motion at all this frame: moving, riding something, or
 		// having just made a hop.
 		static bool isMoving(const Object& object) noexcept;
 
@@ -234,7 +234,7 @@ namespace xge
 
 		// The start of a frame's move: makes every hop queued by a hop.*()
 		// action, unless it would leave the window, and forgets last frame's
-		// carrying (this frame's collisions work it out again).
+		// riding (this frame's collisions work it out again).
 		void applyHops(void);
 
 		// Whether `object` is right now touching any other object in play of

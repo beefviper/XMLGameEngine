@@ -35,7 +35,7 @@ namespace xge
 		if (verb == "die")    { return CmdDie{}; }
 		if (verb == "stop")   { return CmdStop{}; }
 		if (verb == "wrap")   { return CmdWrap{}; }
-		if (verb == "carry")  { return CmdCarry{}; }
+		if (verb == "ride")   { return CmdRide{}; }
 		if (verb == "land")   { return CmdLand{}; }
 		if (verb == "reverse") { return CmdReverse{}; }
 
@@ -262,7 +262,7 @@ namespace xge
 			[&](const CmdDie&) { o << "die"; },
 			[&](const CmdStop&) { o << "stop"; },
 			[&](const CmdWrap&) { o << "wrap"; },
-			[&](const CmdCarry&) { o << "carry"; },
+			[&](const CmdRide&) { o << "ride"; },
 			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
 			[&](const CmdReverse&) { o << "reverse"; },
 			[&](const CmdMove& m)

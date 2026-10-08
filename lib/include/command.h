@@ -56,10 +56,10 @@ namespace xge
 	// it comes back in from the opposite one (see CommandExecutor::wrap).
 	struct CmdWrap {};
 
-	// <carry /> - in a collision rule about an object it is touching: the
+	// <ride /> - in a collision rule about an object it is touching: the
 	// object rides along with that other one, at its velocity, for as long
-	// as they keep touching (see CommandExecutor::carry).
-	struct CmdCarry {};
+	// as they keep touching (see CommandExecutor::ride).
+	struct CmdRide {};
 
 	// <deflect>45</deflect> - in a collision rule about another object: a
 	// bounce whose angle depends on where along the touched side of the other
@@ -315,7 +315,7 @@ namespace xge
 	};
 
 	using Command = std::variant<
-		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdCarry, CmdDeflect, CmdReverse,
+		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdDeflect, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdBecome, CmdReveal, CmdFollow>;
 

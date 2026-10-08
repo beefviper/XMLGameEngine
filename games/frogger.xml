@@ -28,7 +28,7 @@
   a key and it hops once. It is lost, and put back at the start, when it
   - is hit by a car or truck, or runs into a hedge,
   - is in the river and not on a log (a collision with unless="logs"),
-  - is carried off the side of the screen by a log.
+  - is ridden off the side of the screen by a log.
   Reaching a pad scores and sends the frog back; a bright green frog waits
   under every pad and shows once the pad is gone. All five pads is a win, no
   lives left is game over.
@@ -521,7 +521,7 @@
           <reset />
         </collision>
         <collision class="logs">
-          <carry />
+          <ride />
         </collision>
         <collision class="pads">
           <inc variable="frog.score" />

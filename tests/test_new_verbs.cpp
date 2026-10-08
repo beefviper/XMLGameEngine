@@ -4,8 +4,8 @@
 // date: Sept 30, 2026
 //
 // Catch2 tests for the verbs Frogger added, on their own: how dec, hop, wrap
-// and carry parse and print, what a collision rule about another object can do
-// now (reset, inc, dec, move, carry), and the new named colors. The verbs at
+// and ride parse and print, what a collision rule about another object can do
+// now (reset, inc, dec, move, ride), and the new named colors. The verbs at
 // work in a whole game are in test_frogger.cpp. Also here: an amount on inc
 // and dec.
 
@@ -81,13 +81,13 @@ TEST_CASE("<move> and <hop> need a direction they know", "[new_verbs][command_pa
 		"<move> has direction=\"sideways\"; expected up, down, left or right");
 }
 
-TEST_CASE("<wrap /> and <carry /> are collision verbs", "[new_verbs][command_parsing]")
+TEST_CASE("<wrap /> and <ride /> are collision verbs", "[new_verbs][command_parsing]")
 {
-	const auto commands = makeCommands({ tag("wrap"), tag("carry") }, evaluatePlainNumber);
+	const auto commands = makeCommands({ tag("wrap"), tag("ride") }, evaluatePlainNumber);
 
 	REQUIRE(commands.size() == 2);
 	CHECK(std::holds_alternative<CmdWrap>(commands[0]));
-	CHECK(std::holds_alternative<CmdCarry>(commands[1]));
+	CHECK(std::holds_alternative<CmdRide>(commands[1]));
 }
 
 TEST_CASE("the new commands print the way they are written", "[new_verbs][command_parsing]")
@@ -96,9 +96,9 @@ TEST_CASE("the new commands print the way they are written", "[new_verbs][comman
 	out << Command{ CmdDecrement{ "frog.lives" } } << ' '
 		<< Command{ CmdHop{ Direction::Left, 48.0f } } << ' '
 		<< Command{ CmdWrap{} } << ' '
-		<< Command{ CmdCarry{} };
+		<< Command{ CmdRide{} };
 
-	CHECK(out.str() == "dec(frog.lives) hop.left(48) wrap carry");
+	CHECK(out.str() == "dec(frog.lives) hop.left(48) wrap ride");
 }
 
 TEST_CASE("the new colors are named, opaque, and different from each other", "[new_verbs][colors]")
@@ -143,7 +143,7 @@ namespace
 	};
 }
 
-TEST_CASE("a rule about another object can reset, move, count and carry", "[new_verbs][collision_rules]")
+TEST_CASE("a rule about another object can reset, move, count and ride", "[new_verbs][collision_rules]")
 {
 	Pair pair;
 
@@ -162,12 +162,12 @@ TEST_CASE("a rule about another object can reset, move, count and carry", "[new_
 	CHECK(pair.frog.variable["lives"] == 2.0f);
 
 	pair.hedge.velocity = { 2.5f, 0.0f };
-	pair.executor.executeObjectCollision(Command{ CmdCarry{} }, pair.frog, pair.hedge, Edge::Top);
-	CHECK(pair.frog.carry.x == 2.5f);
+	pair.executor.executeObjectCollision(Command{ CmdRide{} }, pair.frog, pair.hedge, Edge::Top);
+	CHECK(pair.frog.riding.x == 2.5f);
 	CHECK(pair.frog.velocity.x == 0.0f); // its own velocity is not touched
 }
 
-TEST_CASE("a hop and a carry are only for the frame they were asked for", "[new_verbs][carry][hop]")
+TEST_CASE("a hop and a ride are only for the frame they were asked for", "[new_verbs][ride][hop]")
 {
 	Pair pair;
 

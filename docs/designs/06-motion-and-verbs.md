@@ -13,7 +13,7 @@
 | Verbs and tags | Forced by | Decision |
 |---|---|---|
 | `bounce`, `stick`, `die`, `reset`, `inc` | Pong, Breakout, Invaders | |
-| `dec`, `atmost`, `hop`, `wrap`, `carry`, `unless`, more verbs in object rules, more colors | Frogger | lives count down; hop is one instant step per press; wrap puts an object back only once fully off screen; riding and exceptions in [05](05-collisions.md) |
+| `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, more verbs in object rules, more colors | Frogger | lives count down; hop is one instant step per press; wrap puts an object back only once fully off screen; riding and exceptions in [05](05-collisions.md) |
 | `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, `slower`/`faster` | Lunar Lander | below |
 | `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<hidden>`, `<release>`, `<fire>` along a heading, amount on `inc`/`dec` | Asteroids | below |
 | `<deflect>` | Pong | [05](05-collisions.md) |

@@ -4,7 +4,7 @@
 // date: Sept 30, 2026
 //
 // Catch2 tests for games/frogger.xml, played frame by frame by a real
-// xge::Game with no window: the verbs it needed (hop, carry, wrap, dec, the
+// xge::Game with no window: the verbs it needed (hop, ride, wrap, dec, the
 // atmost condition, collision rules with unless=, and inc/dec/reset in a rule
 // about another object) and the game they make up.
 //
@@ -264,7 +264,7 @@ TEST_CASE("hopping into the river with no log there costs a life", "[frogger][ri
 	CHECK(table.atStart());
 }
 
-TEST_CASE("hopping onto a log is safe, and the log carries the frog", "[frogger][river][carry]")
+TEST_CASE("hopping onto a log is safe, and the frog rides it", "[frogger][river][ride]")
 {
 	Table table;
 	const Object& log = table.game.getObject("logrow6.1"); // 4 cells long, +1 a frame
@@ -282,7 +282,7 @@ TEST_CASE("hopping onto a log is safe, and the log carries the frog", "[frogger]
 	CHECK(table.frog().position.y == cellPosition(0, 6).y);
 }
 
-TEST_CASE("a log carrying the frog off the side of the screen costs a life", "[frogger][river][carry]")
+TEST_CASE("riding a log off the side of the screen costs a life", "[frogger][river][ride]")
 {
 	Table table;
 	const Object& log = table.game.getObject("logrow6.3"); // from 576, heading right
@@ -294,7 +294,7 @@ TEST_CASE("a log carrying the frog off the side of the screen costs a life", "[f
 	REQUIRE(table.lives() == 3.0f);
 	REQUIRE(table.frog().position.x > log.position.x);
 
-	// Carried right until the frog's side crosses the edge of the screen.
+	// Ridden right until the frog's side crosses the edge of the screen.
 	for (int i = 0; i < 40 && table.lives() == 3.0f; ++i) { table.frames(1); }
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.atStart());

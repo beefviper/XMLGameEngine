@@ -23,7 +23,7 @@ Read from the readme and `xgedef.xsd` of the `working` branch on 2026-10-04.
 | Family | Words |
 |---|---|
 | Motion | `move`, `hop`, `jump`, `leap`, `climb`, `chase`, `aim`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `follow` |
-| Collision responses | `bounce`, `deflect`, `stick`, `wrap`, `carry`, `land` |
+| Collision responses | `bounce`, `deflect`, `stick`, `wrap`, `ride`, `land` |
 | Lifecycle | `die`, `reset`, `fire`, `release`, `reveal` |
 | Appearance | `become` |
 | Bookkeeping | `inc`, `dec` |

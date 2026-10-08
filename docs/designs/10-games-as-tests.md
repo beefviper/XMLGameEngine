@@ -9,7 +9,7 @@ Games are picked to *test* the vocabulary: add a verb only when the game cannot 
 | Game | Chosen to test | Forced (new) | Left out |
 |---|---|---|---|
 | Pong, Breakout, Space Invaders | the core: bounce, stick, die, fire, lockstep blocks | `<deflect>` (Pong), bitmaps, animation, SVG sprites, enemy fire (Invaders 1 and 2) | |
-| Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `carry`, `unless`, verbs in object rules, colors | diving turtles, crocodiles, a timer, speed-up (timers and looks would now allow the first three) |
+| Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, verbs in object rules, colors | diving turtles, crocodiles, a timer, speed-up (timers and looks would now allow the first three) |
 | Space Race | a second game on the same vocabulary | nothing | |
 | Kaboom | `<random>` in a `<group>`; states differing only in what they show | nothing at first; when reworked, timers, `<facing>` fire, `<reset object>` in a rule | bucket stack, speed-up inside a wave |
 | Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | timed round (timers exist now, but "most crossings wins" needs a condition comparing two variables) |
@@ -30,12 +30,12 @@ Games are picked to *test* the vocabulary: add a verb only when the game cannot 
 | Lives that end the game at zero | `dec` and condition `atmost` | counting deaths up to 3 (hides the number of lives in the condition); comparison operators; a lives object |
 | One step per press, however long held or paused | `hop` queued by the press, made at the start of the next move | a held `move` stopped by a timer; a flag on `<input>`; a one-frame velocity (swept along the way) |
 | Looping lanes | `wrap`: acts only once fully off screen and still heading that way, keeps overshoot | `reset` at the far edge (pops in whole, snaps to the start); teleport on touching an edge; duplicates at both ends |
-| Riding a log | `carry` ([05](05-collisions.md)) | |
+| Riding a log | `ride` ([05](05-collisions.md)) | |
 | River kills unless on a log | `unless="logs"` on the rule ([05](05-collisions.md)) | |
 | Scenery colors | more named colors | `#rrggbb` literals (probably where it ends up) |
 | A frog sitting in a home | a green frog under each pad; the pad `<die />`s | show/hide verbs, swapping a sprite (looks later, [07](07-pictures-and-text.md)) |
 
-- A frog carried off the side dies at the edge by an ordinary `edge="horizontal"` rule. The river is one wide static object. One point per frog home (an amount on `inc` came with Asteroids); a filled home can be entered again.
+- A frog ridden off the side dies at the edge by an ordinary `edge="horizontal"` rule. The river is one wide static object. One point per frog home (an amount on `inc` came with Asteroids); a filled home can be entered again.
 
 ## Kaboom
 
@@ -89,7 +89,7 @@ The author asked another AI to write three games from `xgedef.xsd` alone. All th
 
 ### Frostbite
 
-- Rewritten from scratch: a snowy shore and igloo along the top, four rows of drifting floes in alternating directions, Bailey jumping between rows with `<jump>`. Landing on a white row turns it blue (`<become>`) and adds an igloo block (`<reveal>`); four blue rows turn white again (a counting condition); water drowns unless on a floe; cold takes a degree a second (a state timer); geese push him along (`<carry />`); a fish is a bonus on a timer; the finished igloo opens, and walking in wins.
+- Rewritten from scratch: a snowy shore and igloo along the top, four rows of drifting floes in alternating directions, Bailey jumping between rows with `<jump>`. Landing on a white row turns it blue (`<become>`) and adds an igloo block (`<reveal>`); four blue rows turn white again (a counting condition); water drowns unless on a floe; cold takes a degree a second (a state timer); geese push him along (`<ride />`); a fish is a bonus on a timer; the finished igloo opens, and walking in wins.
 
 ### Berserk (rewritten after Stern's Berzerk, 1980)
 
@@ -118,7 +118,7 @@ Found on the way:
 
 Near misses from the list, each short of something the engine does not have yet (none were started; verbs are another thread's to add):
 - **Seaquest**: `<facing>` follows the last move, up and down too, so the sub's torpedo would leave upwards after rising; it needs a fire that keeps to left and right (a facing that only some moves change).
-- **Adventure**: carrying a key, a sword or the chalice needs one object attached to another (`<carry />` only lends a velocity while touching), and a dragon killed by a carried sword.
+- **Adventure**: carrying a key, a sword or the chalice needs one object attached to another (`<ride />` only lends a velocity while touching; the name `carry` is kept for that), and a dragon killed by a carried sword.
 - **Dodge 'Em**: cars turning at the corners of a track (a path could drive the computer's car; the player's needs turns at given places).
 - **Q*bert**: diagonal hops on a pyramid; `<hop>` has four directions.
 - **Warlords**: shields that slide round the corner of a castle, and computer players.
