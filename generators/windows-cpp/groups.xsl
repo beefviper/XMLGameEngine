@@ -50,6 +50,10 @@
           <xsl:with-param name="group" select="$group" />
           <xsl:with-param name="parts" select="/.." />
         </xsl:call-template>
+        <xsl:call-template name="variants">
+          <xsl:with-param name="group" select="$group" />
+          <xsl:with-param name="parts" select="/.." />
+        </xsl:call-template>
         <xsl:call-template name="resolve-vector">
           <xsl:with-param name="group" select="$group" />
           <xsl:with-param name="parts" select="/.." />
@@ -118,8 +122,17 @@
       <xsl:copy-of select="$first/line" />
       <xsl:for-each select="($first/base | $first/shape | $first/line)/look">
         <xsl:variable name="key" select="@key" />
-        <xsl:if test="not(preceding::look[@key = $key])">
+        <xsl:if test="not(preceding::look[parent::base or parent::shape or parent::line][@key = $key])">
           <xsl:copy-of select="." />
+        </xsl:if>
+      </xsl:for-each>
+      <!-- each look's own pictures, once, those not the group's own -->
+      <xsl:for-each select="$first/shape/variant/look">
+        <xsl:variable name="key" select="@key" />
+        <xsl:if test="not(preceding::look[parent::variant][@key = $key]) and not($first/base/variant/look[@key = $key])">
+          <variant-look look="{../@look}">
+            <xsl:copy-of select="." />
+          </variant-look>
         </xsl:if>
       </xsl:for-each>
     </group>
@@ -216,7 +229,31 @@
       <xsl:copy-of select="$look-tree" />
       <xsl:copy-of select="$velocity-tree" />
       <xsl:if test="$gap"><gap><xsl:copy-of select="$gap" /></gap></xsl:if>
+      <xsl:call-template name="variants">
+        <xsl:with-param name="group" select="$group" />
+        <xsl:with-param name="parts" select="$parts" />
+      </xsl:call-template>
     </shape>
+  </xsl:template>
+
+  <!-- In a group of several looks, what each look is for one member or cell
+       (or, with no parts, for the group): the group's sprite of that name
+       changed by the parts' sprites of that name (Space Invaders' crabs' a
+       and b). One <variant look="a"> each, holding the <look>. -->
+  <xsl:template name="variants">
+    <xsl:param name="group" />
+    <xsl:param name="parts" />
+    <xsl:if test="$group/sprite[2]">
+      <xsl:for-each select="$group/sprite">
+        <variant look="{@name}">
+          <xsl:call-template name="resolve-look">
+            <xsl:with-param name="group" select="$group" />
+            <xsl:with-param name="parts" select="$parts" />
+            <xsl:with-param name="look" select="@name" />
+          </xsl:call-template>
+        </variant>
+      </xsl:for-each>
+    </xsl:if>
   </xsl:template>
 
   <!-- The look the group's sprite becomes with the sprites of `parts`, each
@@ -226,8 +263,17 @@
   <xsl:template name="resolve-look">
     <xsl:param name="group" />
     <xsl:param name="parts" />
-    <!-- a group of several looks starts with the first (looks.xsl) -->
-    <xsl:variable name="all" select="$group/sprite[1] | $parts/sprite" />
+    <xsl:param name="look" select="''" />
+    <!-- a group of several looks starts with the first (looks.xsl); one look
+         of them is that look's sprites alone -->
+    <xsl:variable name="which">
+      <xsl:choose>
+        <xsl:when test="$look != ''"><xsl:value-of select="$look" /></xsl:when>
+        <xsl:when test="$group/sprite[2]"><xsl:value-of select="$group/sprite[1]/@name" /></xsl:when>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="all" select="($group/sprite[1] | $parts/sprite)[$which = '']
+        | ($group/sprite | $parts/sprite)[$which != ''][@name = $which]" />
     <xsl:if test="$all">
       <xsl:variable name="kind" select="local-name($all[last()]/*[1])" />
       <!-- the last sprite that starts a look of its own, then those that change it -->
@@ -294,6 +340,7 @@
             <xsl:text>.</xsl:text>
             <xsl:call-template name="part-name" />
           </xsl:for-each>
+          <xsl:if test="$which != ''"><xsl:value-of select="concat('.', $which)" /></xsl:if>
         </xsl:attribute>
         <xsl:attribute name="comment">
           <xsl:choose>

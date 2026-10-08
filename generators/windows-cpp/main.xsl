@@ -43,8 +43,10 @@
        <bitmap>), <line>s, or an <svg>, drawn by xgecli into a picture of its
        own. Each is a texture named for what shows it (shipPicture), and a
        group's for each look its members or cells have (groups.xsl). -->
-  <xsl:variable name="drawn" select="($objects/sprite | $groups[sprite[2]]/sprite | $group-data[not(@looks)]/look/sprite)[line or bitmap or svg]" />
+  <xsl:variable name="drawn" select="($objects/sprite | $groups[sprite[2]]/sprite | $group-data[not(@looks)]/look/sprite | $group-data/variant-look/look/sprite)[line or bitmap or svg]" />
   <xsl:variable name="drawn-rows" select="$drawn[bitmap]" />
+  <!-- the groups' looks that are drawn, which share rows that are the same -->
+  <xsl:variable name="drawn-looks" select="$group-data[not(@looks)]/look | $group-data/variant-look/look" />
   <xsl:variable name="drawn-lines" select="$drawn[line]" />
   <xsl:variable name="drawn-svgs" select="$drawn[svg]" />
   <xsl:variable name="loads" select="boolean($texts or $images or $drawn)" />
@@ -247,7 +249,7 @@
     <xsl:text> </xsl:text>
     <xsl:if test="$things//random"> randomBetween </xsl:if>
     <xsl:if test="contains($words, ' sgn ')"> sign </xsl:if>
-    <xsl:if test="$timed or $timed-states or $jumpers"> framesFor </xsl:if>
+    <xsl:if test="$timed or $timed-states or $jumpers or $animated"> framesFor </xsl:if>
   </xsl:variable>
   <xsl:variable name="used-functions" select="$helpers/function[contains($used, concat(' ', @name, ' '))]" />
 
@@ -642,6 +644,12 @@ sf::Texture </xsl:text>
       <xsl:text>;
 </xsl:text>
     </xsl:for-each>
+    <xsl:for-each select="$animated">
+      <xsl:text>void </xsl:text>
+      <xsl:call-template name="animate-name" />
+      <xsl:text>();
+</xsl:text>
+    </xsl:for-each>
     <xsl:for-each select="$unless-classes">
       <xsl:call-template name="touching-signature" />
       <xsl:text>;
@@ -884,6 +892,9 @@ void start</xsl:text>
     </xsl:for-each>
     <xsl:for-each select="$looked">
       <xsl:call-template name="define-become" />
+    </xsl:for-each>
+    <xsl:for-each select="$animated">
+      <xsl:call-template name="define-animate" />
     </xsl:for-each>
     <xsl:for-each select="$unless-classes">
       <xsl:call-template name="define-touching" />
@@ -1377,11 +1388,14 @@ void reset</xsl:text>
         </xsl:choose>
       </xsl:otherwise>
     </xsl:choose>
+    <xsl:if test="count(. | $animated) = count($animated)">
+      <xsl:call-template name="start-animation"><xsl:with-param name="indent" select="'&#9;'" /></xsl:call-template>
+    </xsl:if>
     <xsl:if test="count(. | $looked) = count($looked)">
       <xsl:value-of select="concat('&#9;for (std::size_t i = 0; i &lt; ', $name, '.size(); ++i)&#10;&#9;{&#10;&#9;&#9;')" />
       <xsl:call-template name="become-call">
         <xsl:with-param name="thing" select="." />
-        <xsl:with-param name="sprite" select="sprite[1]/@name" />
+        <xsl:with-param name="sprite"><xsl:call-template name="first-look" /></xsl:with-param>
         <xsl:with-param name="index" select="'i'" />
       </xsl:call-template>
       <xsl:text>
@@ -1560,11 +1574,14 @@ void start</xsl:text>
       <xsl:text>();
 </xsl:text>
     </xsl:if>
+    <xsl:if test="count(. | $animated) = count($animated)">
+      <xsl:call-template name="start-animation"><xsl:with-param name="indent" select="'&#9;'" /></xsl:call-template>
+    </xsl:if>
     <xsl:if test="count(. | $looked) = count($looked)">
       <xsl:text>	</xsl:text>
       <xsl:call-template name="become-call">
         <xsl:with-param name="thing" select="." />
-        <xsl:with-param name="sprite" select="sprite[1]/@name" />
+        <xsl:with-param name="sprite"><xsl:call-template name="first-look" /></xsl:with-param>
       </xsl:call-template>
       <xsl:text>
 </xsl:text>
@@ -2140,6 +2157,13 @@ void pressed(sf::Keyboard::Key key)
           <xsl:with-param name="indent" select="$indent" />
         </xsl:call-template>
       </xsl:when>
+      <xsl:when test="self::move and count($self | $lockstep) = count($lockstep)">
+        <xsl:variable name="group"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template></xsl:variable>
+        <xsl:variable name="type"><xsl:for-each select="$self"><xsl:call-template name="sf-type" /></xsl:for-each></xsl:variable>
+        <xsl:value-of select="concat($indent, '// the whole block moves&#10;', $indent, 'for (', $type, '&amp; each : ', $group, ')&#10;', $indent, '{&#10;', $indent, '&#9;each.move(')" />
+        <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
+        <xsl:value-of select="concat(');&#10;', $indent, '}&#10;')" />
+      </xsl:when>
       <xsl:when test="self::move">
         <xsl:value-of select="concat($indent, $name, '.move(')" />
         <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
@@ -2388,6 +2412,18 @@ void tick</xsl:text>
         <xsl:text>	}
 </xsl:text>
         </xsl:if>
+      </xsl:for-each>
+      <xsl:variable name="animating" select="$animated[@name = $state/shows/show/@object]" />
+      <xsl:if test="$animating">
+        <xsl:text>
+	// the animations a frame on
+</xsl:text>
+      </xsl:if>
+      <xsl:for-each select="$animating">
+        <xsl:text>	</xsl:text>
+        <xsl:call-template name="animate-name" />
+        <xsl:text>();
+</xsl:text>
       </xsl:for-each>
       <xsl:variable name="ticking" select="$timed[@name = $state/shows/show/@object]" />
       <xsl:if test="$ticking">
@@ -3449,7 +3485,7 @@ std::optional&lt;sf::FloatRect&gt; </xsl:text>
 </xsl:text>
     <xsl:choose>
       <!-- the rows of a group's look that another look has already -->
-      <xsl:when test="$bitmap and ../@rows and generate-id(..) != generate-id($group-data/look[@rows = current()/../@rows][1])" />
+      <xsl:when test="$bitmap and ../@rows and generate-id(..) != generate-id($drawn-looks[@rows = current()/../@rows][1])" />
       <xsl:when test="$bitmap">
         <xsl:value-of select="concat('&#10;const std::vector&lt;std::string&gt; ', $name, 'Rows = {')" />
         <xsl:for-each select="$bitmap/row">
@@ -3511,7 +3547,7 @@ std::optional&lt;sf::FloatRect&gt; </xsl:text>
       <xsl:when test="$bitmap">
         <xsl:variable name="rows">
           <xsl:choose>
-            <xsl:when test="../@rows"><xsl:for-each select="$group-data/look[@rows = current()/../@rows][1]/sprite"><xsl:call-template name="drawn-name" /></xsl:for-each></xsl:when>
+            <xsl:when test="../@rows"><xsl:for-each select="$drawn-looks[@rows = current()/../@rows][1]/sprite"><xsl:call-template name="drawn-name" /></xsl:for-each></xsl:when>
             <xsl:otherwise><xsl:value-of select="$name" /></xsl:otherwise>
           </xsl:choose>
         </xsl:variable>
