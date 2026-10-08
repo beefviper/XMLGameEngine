@@ -5,10 +5,11 @@
 //
 // The physics a generated game uses, in one place of its own: where a thing
 // is, whether two things touch, what a moving thing does at an edge of the
-// window (bounce, stick, wrap round) or against another thing, and a hop. A
-// "thing" is anything SFML can bound and move (a shape, a sprite, a text), and
-// a velocity is how far it moves each frame. Header only, and nothing but
-// SFML's graphics types, so it can be copied into any SFML 3 program.
+// window (bounce, stick, wrap round) or against another thing, a hop, and a
+// shot leaving the side a thing faces. A "thing" is anything SFML can bound
+// and move (a shape, a sprite, a text), and a velocity is how far it moves
+// each frame. Header only, and nothing but SFML's graphics types, so it can
+// be copied into any SFML 3 program.
 //
 // Collisions are the simple kind: move, then look at where it landed. A touch
 // is told apart by the smaller overlap, which is enough for things that move
@@ -161,6 +162,28 @@ namespace physics
 		}
 	}
 
+	// The same, for a thing moved by keys alone (no velocity of its own): once
+	// it has gone right off through that edge, in again from the opposite side.
+	template <typename Thing>
+	void wrap(Thing& thing, Edge edge, const sf::FloatRect& area)
+	{
+		switch (edge)
+		{
+		case Edge::Right:
+			if (left(thing) >= area.position.x + area.size.x) { thing.move({ -(area.size.x + width(thing)), 0.0f }); }
+			break;
+		case Edge::Left:
+			if (right(thing) <= area.position.x) { thing.move({ area.size.x + width(thing), 0.0f }); }
+			break;
+		case Edge::Bottom:
+			if (top(thing) >= area.position.y + area.size.y) { thing.move({ 0.0f, -(area.size.y + height(thing)) }); }
+			break;
+		case Edge::Top:
+			if (bottom(thing) <= area.position.y) { thing.move({ 0.0f, area.size.y + height(thing) }); }
+			break;
+		}
+	}
+
 	// A step at once (a frog's hop), unless it would take the thing out of
 	// the area: then it stays where it is.
 	template <typename Thing>
@@ -173,6 +196,40 @@ namespace physics
 			&& to.x <= area.position.x + area.size.x && to.y <= area.position.y + area.size.y)
 		{
 			thing.move(step);
+		}
+	}
+
+	// --- Shots.
+
+	// The way a thing faces (<facing>).
+	enum class Facing { Up, Down, Left, Right };
+
+	// A shot leaving a shooter that faces that way: from the middle of that
+	// side, just clear of it, moving that way at `speed`.
+	template <typename Shooter, typename Shot>
+	void fireFrom(const Shooter& shooter, Shot& shot, sf::Vector2f& velocity, Facing facing, float speed)
+	{
+		const sf::FloatRect from = shooter.getGlobalBounds();
+		const sf::Vector2f size = shot.getGlobalBounds().size;
+		const sf::Vector2f middle = from.getCenter() - size / 2.0f;
+		switch (facing)
+		{
+		case Facing::Up:
+			shot.setPosition({ middle.x, from.position.y - size.y });
+			velocity = { 0.0f, -speed };
+			break;
+		case Facing::Down:
+			shot.setPosition({ middle.x, from.position.y + from.size.y });
+			velocity = { 0.0f, speed };
+			break;
+		case Facing::Left:
+			shot.setPosition({ from.position.x - size.x, middle.y });
+			velocity = { -speed, 0.0f };
+			break;
+		case Facing::Right:
+			shot.setPosition({ from.position.x + from.size.x, middle.y });
+			velocity = { speed, 0.0f };
+			break;
 		}
 	}
 
