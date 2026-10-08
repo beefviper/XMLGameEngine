@@ -549,6 +549,93 @@ TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, 
 	CHECK(main.find("\t// bottom: dec die\n\tif (physics::past(charge, physics::Edge::Bottom, windowArea))\n\t{\n\t\tshipCharges -= 1.0f;") != std::string::npos);
 }
 
+TEST_CASE("generating Astrosmash puts one rock back at a time, its fall drawn anew", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_astrosmash");
+	generateGame(requestFor(fs::current_path() / "games/astrosmash.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// each rock falls at a speed of its own, drawn for it, as in the engine
+	CHECK(main.find("std::vector<sf::Vector2f> bouldersVelocity(4);") != std::string::npos);
+	// one member starts again on its own: what they share written once, the rest a list
+	CHECK(main.find("void startBoulders(std::size_t i)\n{\n\tconst float xs[] = {50.0f, 230.0f, 410.0f, 590.0f};\n\tboulders[i].setPosition({xs[i], randomBetween(-500.0f, -40.0f)});\n\tbouldersVelocity[i] = {0.0f, randomBetween(1.0f, 2.0f)};\n}") != std::string::npos);
+	CHECK(main.find("\tfor (std::size_t i = 0; i < boulders.size(); ++i)\n\t{\n\t\tstartBoulders(i);\n\t}") != std::string::npos);
+	CHECK(main.find("\t\t// bottom: dec reset\n\t\tif (physics::past(boulders[i], physics::Edge::Bottom, windowArea))\n\t\t{\n\t\t\tshipLives -= 1.0f;\n\t\t\tshowLives();\n\t\t\tstartBoulders(i);") != std::string::npos);
+}
+
+TEST_CASE("generating Kaboom counts the bomber's timers down, and a missed bomb puts every bomb back", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_kaboom");
+	generateGame(requestFor(fs::current_path() / "games/kaboom.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// a timer is the frames until it goes off, worked out again (a <random> drawn anew) when it gets there
+	CHECK(main.find("int bomber1Timer1 = 0; // the frames until its timer goes off") != std::string::npos);
+	CHECK(main.find("\t// timer 1: reverse\n\tif (bomber1Timer1 == 0)\n\t{\n\t\tbomber1Timer1 = framesFor(randomBetween(0.3f, 1.4f));\n\t}\n\tif (--bomber1Timer1 == 0)\n\t{\n\t\tbomber1Velocity = -bomber1Velocity;\n\t}") != std::string::npos);
+	CHECK(main.find("int framesFor(float seconds)") != std::string::npos);
+	// the timers go off before anything moves, on the screens that show the bomber
+	CHECK(main.find("\t// the timers first, before anything moves\n\ttickBomber1();\n\n\tupdateBomber1();") != std::string::npos);
+	// he faces down: a bomb leaves from under him, at its own speed
+	CHECK(main.find("physics::fireFrom(bomber1, bombs1[i], bombs1Velocity[i], physics::Facing::Down, sf::Vector2f{0.0f, fall1}.length());") != std::string::npos);
+	// the bombs are hidden until he drops one, and <reset object> puts every one back
+	CHECK(main.find("\tbombs1Alive.assign(bombs1.size(), false); // hidden until they are brought in") != std::string::npos);
+	CHECK(main.find("\t\t// bottom: dec play reset\n\t\tif (physics::past(bombs1[i], physics::Edge::Bottom, windowArea))\n\t\t{\n\t\t\tbucketBuckets -= 1.0f;\n\t\t\tshowBucketsvalue();\n\t\t\tboomSound.play();\n\t\t\tresetBombs1();") != std::string::npos);
+	CHECK(main.find("void resetBombs1()\n{") != std::string::npos);
+	// the waves share one set of keys
+	CHECK(main.find("\tcase Screen::Wave3:\n\t\tif (key == sf::Keyboard::Key::Space || key == sf::Keyboard::Key::P)") != std::string::npos);
+}
+
+TEST_CASE("generating Demon Attack gives each demon a timer of its own, firing from the pool", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_demonattack");
+	generateGame(requestFor(fs::current_path() / "games/demonattack.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("std::vector<int> aliensTimer1; // for each of them, the frames until its timer goes off") != std::string::npos);
+	CHECK(main.find("\t\tif (--aliensTimer1[i] == 0)\n\t\t{\n\t\t\t// fire the first of demonshots that is not out already\n\t\t\tfor (std::size_t k = 0; k < demonshots.size(); ++k)") != std::string::npos);
+	// each demon bounces off the sides on its own
+	CHECK(main.find("physics::bounce(aliens[i], aliensVelocity[i], physics::Edge::Left, windowArea);") != std::string::npos);
+	// the cannon, moved by keys alone, wraps round once it is right off
+	CHECK(main.find("\tphysics::wrap(player, physics::Edge::Left, windowArea);") != std::string::npos);
+	// none left: all of them back, their timers too
+	CHECK(main.find("void resetAliens()") != std::string::npos);
+	CHECK(main.find("\taliensTimer1.assign(aliens.size(), 0);") != std::string::npos);
+}
+
+TEST_CASE("generating Megamania keeps the energy no screen shows, run down by a timer of each wave", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_megamania");
+	generateGame(requestFor(fs::current_path() / "games/megamania.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("// energy: never shown, its variables kept\nfloat energyLevel = 0.0f;") != std::string::npos);
+	CHECK(main.find("int wave1Timer1 = 0;") != std::string::npos);
+	CHECK(main.find("\t// this screen's timer 1: dec\n\tif (wave1Timer1 == 0)\n\t{\n\t\twave1Timer1 = framesFor(1.0f);\n\t}\n\tif (--wave1Timer1 == 0)\n\t{\n\t\tenergyLevel -= 1.0f;\n\t\tshowEnergybar();\n\t}") != std::string::npos);
+	CHECK(main.find("void resetEnergy()\n{\n\tenergyLevel = 45.0f;\n\tshowEnergybar();\n}") != std::string::npos);
+	// the laser, shown on every wave, only touches the wave showing
+	CHECK(main.find("\tif (screens.back() == Screen::Wave2)\n\t{\n\t\t// cookies: die") != std::string::npos);
+}
+
 TEST_CASE("a group in lockstep moves as one block, and turns as one off a side", "[generate]")
 {
 	if (!canGenerate())
@@ -835,14 +922,14 @@ TEST_CASE("what windows-cpp cannot generate yet is named in the error", "[genera
 		return std::string("generated it");
 	};
 
-	CHECK(refusal("<collision edge=\"vertical\"><stop /></collision>", "", "").find("cannot generate <stop> yet (in game > objects > object box") != std::string::npos);
+	CHECK(refusal("<collision edge=\"vertical\"><land /></collision>", "", "").find("cannot generate <land> yet (in game > objects > object box") != std::string::npos);
 	CHECK(refusal("<collision edge=\"vertical\"><wrap /><play sound=\"boom\" /></collision>", "", "").find("cannot generate <wrap /> with other commands in the same <collision> yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><inc variable=\"lives\" /></collision>", "<variable name=\"lives\">3</variable>", "").find("cannot generate <inc variable=\"lives\"> (it counts an object variable, as paddle1.score) yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><play sound=\"boom\" /></collision>", "", "").find("cannot generate <play sound=\"boom\">, which is not a <sound> yet") != std::string::npos);
 	CHECK(refusal("", "", "<state name=\"paused\"><inputs><input button=\"space\"><push state=\"nowhere\" /></input></inputs></state>").find("<push state=\"nowhere\">, which is not a <state>") != std::string::npos);
-	CHECK(refusal("<collision edge=\"top\"><reset object=\"box\" /></collision>", "", "").find("cannot generate <reset object=") != std::string::npos);
+	CHECK(refusal("<collision edge=\"top\"><reset object=\"nothing\" /></collision>", "", "").find("cannot generate <reset object=\"nothing\">, which is not an object or group a screen shows yet") != std::string::npos);
 	CHECK(refusal("", "", "<state name=\"won\"><conditions><condition object=\"box\"><remaining>half</remaining><reset /></condition></conditions></state>").find("cannot generate <remaining> that is not a whole number yet") != std::string::npos);
-	CHECK(refusal("<collision edge=\"top\"><fire object=\"box\" /></collision>", "", "").find("cannot generate <fire> outside the <action> of an object yet") != std::string::npos);
+	CHECK(refusal("<collision edge=\"top\"><fire object=\"box\" /></collision>", "", "").find("cannot generate <fire> outside the <action> or <timer> of an object yet") != std::string::npos);
 }
 
 TEST_CASE("pong_min plays in the engine: the ball deflects off a paddle, and a point puts it back in the middle", "[generate][pong_min]")

@@ -79,7 +79,7 @@ bool </xsl:text>
     <xsl:text>")
 </xsl:text>
     <xsl:call-template name="touching-signature" />
-    <xsl:variable name="touchable" select="$things[@class = $class][collisions[normalize-space(enabled) = 'true' or ../@class = 'projectile']][@name = $together]" />
+    <xsl:variable name="touchable" select="$colliding[@class = $class][@name = $together]" />
     <xsl:if test="not($touchable)">
       <xsl:text>
 {

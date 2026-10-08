@@ -35,4 +35,15 @@ float sign(float value)
 ]]></definition>
   </function>
 
+  <function name="framesFor" uses="algorithm cmath">
+    <declaration>int framesFor(float seconds);</declaration>
+    <definition><![CDATA[
+// The frames a timer waits for `seconds`, as the engine counts them: at least one.
+int framesFor(float seconds)
+{
+	return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framerate))));
+}
+]]></definition>
+  </function>
+
 </functions>
