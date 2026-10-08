@@ -6,10 +6,11 @@
 // The physics a generated game uses, in one place of its own: where a thing
 // is, whether two things touch, what a moving thing does at an edge of the
 // window (bounce, stick, wrap round) or against another thing, a hop, a jump,
-// and a shot leaving the side a thing faces or the way it heads. A "thing" is
-// anything SFML can bound and move (a shape, a sprite, a text), and a
-// velocity is how far it moves each frame. Header only, and nothing but
-// SFML's graphics types, so it can be copied into any SFML 3 program.
+// standing on a platform and climbing a ladder, and a shot leaving the side a
+// thing faces or the way it heads. A "thing" is anything SFML can bound and
+// move (a shape, a sprite, a text), and a velocity is how far it moves each
+// frame. Header only, and nothing but SFML's graphics types, so it can be
+// copied into any SFML 3 program.
 //
 // Collisions are the simple kind: move, then look at where it landed. A touch
 // is told apart by the smaller overlap, which is enough for things that move
@@ -67,10 +68,35 @@ namespace physics
 		return thing.getGlobalBounds().size.y;
 	}
 
+	// Whether two things overlap: two boxes by more than an edge, and a
+	// circle (an sf::CircleShape) by its round shape, as the engine tests
+	// them, so a ball can pass the corner of a box its own box would clip.
 	template <typename First, typename Second>
 	bool touching(const First& first, const Second& second)
 	{
-		return first.getGlobalBounds().findIntersection(second.getGlobalBounds()).has_value();
+		const sf::FloatRect a = first.getGlobalBounds();
+		const sf::FloatRect b = second.getGlobalBounds();
+		constexpr bool firstRound = std::is_same_v<First, sf::CircleShape>;
+		constexpr bool secondRound = std::is_same_v<Second, sf::CircleShape>;
+		if constexpr (firstRound && secondRound)
+		{
+			const float reach = a.size.x / 2.0f + b.size.x / 2.0f;
+			return (a.getCenter() - b.getCenter()).lengthSquared() < reach * reach;
+		}
+		else if constexpr (firstRound || secondRound)
+		{
+			const sf::FloatRect& circle = firstRound ? a : b;
+			const sf::FloatRect& box = firstRound ? b : a;
+			const sf::Vector2f middle = circle.getCenter();
+			const sf::Vector2f nearest{std::clamp(middle.x, box.position.x, box.position.x + box.size.x),
+				std::clamp(middle.y, box.position.y, box.position.y + box.size.y)};
+			const float radius = circle.size.x / 2.0f;
+			return (middle - nearest).lengthSquared() < radius * radius;
+		}
+		else
+		{
+			return a.findIntersection(b).has_value();
+		}
 	}
 
 	// Whether the middle of the screen's pixel at `point` is solid in the
@@ -314,6 +340,78 @@ namespace physics
 		}
 		hop(thing, step, area);
 		--framesLeft;
+	}
+
+	// --- Standing and climbing.
+
+	// Coming down onto the top of `other` (<land />): not going up, and its
+	// feet no lower than that top before this frame's step. It is put on the
+	// top, its fall stopped, and the answer is yes. Any other touch does
+	// nothing, so a platform can be walked past and jumped up through.
+	template <typename Thing, typename Other>
+	bool land(Thing& thing, sf::Vector2f& velocity, const Other& other)
+	{
+		const float feetBefore = bottom(thing) - velocity.y;
+		if (velocity.y < 0.0f || feetBefore > top(other) + 0.5f)
+		{
+			return false;
+		}
+		thing.move({0.0f, top(other) - bottom(thing)});
+		velocity.y = 0.0f;
+		return true;
+	}
+
+	// Whether a climber is at a ladder: its middle over it, and its feet
+	// between the ladder's top and bottom (half a pixel either way).
+	template <typename Climber, typename Ladder>
+	bool atLadder(const Climber& climber, const Ladder& ladder)
+	{
+		const sf::FloatRect bounds = climber.getGlobalBounds();
+		const sf::FloatRect rungs = ladder.getGlobalBounds();
+		const float middle = bounds.position.x + bounds.size.x / 2.0f;
+		const float feet = bounds.position.y + bounds.size.y;
+		return middle >= rungs.position.x && middle <= rungs.position.x + rungs.size.x
+			&& feet >= rungs.position.y - 0.5f && feet <= rungs.position.y + rungs.size.y + 0.5f;
+	}
+
+	// One frame at a ladder (<climb>), `step` the way the keys held climb (up
+	// below 0). Off it, it gets on only from the ground and when it can go
+	// that way, lined up with the ladder's middle. On it, it goes the step,
+	// its feet kept between the ladder's ends, and its velocity is 0, so
+	// nothing walks it off; at an end it gets off, standing there, the way
+	// across left to the keys. With no ladder it is off.
+	template <typename Thing>
+	void climb(Thing& thing, sf::Vector2f& velocity, float step, bool& climbing, bool grounded, const std::optional<sf::FloatRect>& ladder)
+	{
+		if (!ladder)
+		{
+			climbing = false;
+			return;
+		}
+		const float ladderTop = ladder->position.y;
+		const float ladderBottom = ladder->position.y + ladder->size.y;
+		const float feet = bottom(thing);
+		if (!climbing)
+		{
+			const bool canGo = (step < 0.0f && feet > ladderTop + 0.5f) || (step > 0.0f && feet < ladderBottom - 0.5f);
+			if (!canGo || !grounded)
+			{
+				return;
+			}
+			climbing = true;
+			thing.move({ladder->getCenter().x - (left(thing) + width(thing) / 2.0f), 0.0f});
+		}
+		const float newFeet = std::clamp(feet + step, ladderTop, ladderBottom);
+		thing.move({0.0f, newFeet - feet});
+		if (step != 0.0f && (newFeet <= ladderTop || newFeet >= ladderBottom))
+		{
+			climbing = false;
+			velocity.y = 0.0f;
+		}
+		else
+		{
+			velocity = {};
+		}
 	}
 
 	// --- Shots.

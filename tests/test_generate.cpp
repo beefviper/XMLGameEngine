@@ -739,6 +739,50 @@ TEST_CASE("generating Air-Sea Battle swings each gun with keys, and fires along 
 	CHECK(main.find("const float sea_ = 420.0f; // named like the object sea") != std::string::npos);
 }
 
+TEST_CASE("generating Donkey Kong walks Jumpman by the keys, lands him on girders, leaps and climbs", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_donkeykong");
+	generateGame(requestFor(fs::current_path() / "games/donkeykong.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// the keys held give the way across, kept in a leap
+	CHECK(main.find("\tmanWalk = 0.0f; // and the keys held below\n\tmanClimb = 0.0f;") != std::string::npos);
+	CHECK(main.find("\t\tmanWalk -= walk;") != std::string::npos);
+	CHECK(main.find("\tif (!manLeaping)\n\t{\n\t\tmanVelocity.x = manWalk;\n\t}") != std::string::npos);
+	// on a ladder nothing pulls him; what he stands on is found again every frame
+	CHECK(main.find("\tphysics::climb(man, manVelocity, manClimb, manClimbing, manGrounded, ladderAt(man));\n\tif (!manClimbing)\n\t{\n\t\tmanVelocity += manAcceleration; // on a ladder nothing pulls it\n\t}\n\tmanGrounded = false; // until it lands again, this frame\n\tman.move(manVelocity);") != std::string::npos);
+	CHECK(main.find("\t\t\tif (!manClimbing && physics::land(man, manVelocity, other))\n\t\t\t{\n\t\t\t\tmanGrounded = true;\n\t\t\t\tmanLeaping = false;") != std::string::npos);
+	CHECK(main.find("\t\t\tif (manGrounded && !manClimbing)\n\t\t\t{\n\t\t\t\tmanVelocity.y = -std::sqrt(2.0f * manAcceleration.y * leapheight);") != std::string::npos);
+	CHECK(main.find("std::optional<sf::FloatRect> ladderAt(const Shape& one)\n{\n\tfor (const sf::RectangleShape& each : ladders)") != std::string::npos);
+	// the barrels share one pull, each with a velocity of its own, and land too
+	CHECK(main.find("\t\tbarrelsVelocity[i] += barrelsAcceleration;") != std::string::npos);
+	CHECK(main.find("\t\t\t\tphysics::land(barrels[i], barrelsVelocity[i], other);") != std::string::npos);
+}
+
+TEST_CASE("generating Pitfall! makes each scorpion an object of its screen, and a ladder only where it is shown", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_pitfall");
+	generateGame(requestFor(fs::current_path() / "games/pitfall.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// a member shown by its own name on a screen of its own is an object
+	CHECK(main.find("sf::Sprite scorpion2(") != std::string::npos);
+	CHECK(main.find("std::vector<sf::Sprite> scorpions") == std::string::npos);
+	CHECK(main.find("\tif (screens.back() == Screen::Screen4 && physics::atLadder(one, ladder))") != std::string::npos);
+	// running off a side moves him round to the other
+	CHECK(main.find("\t\tstatusScreen += 1.0f;\n\t\tharry.move({-(windowRight - 2.0f * physics::width(harry)), 0.0f});") != std::string::npos);
+}
+
 TEST_CASE("a group in lockstep moves as one block, and turns as one off a side", "[generate]")
 {
 	if (!canGenerate())
@@ -1025,7 +1069,8 @@ TEST_CASE("what windows-cpp cannot generate yet is named in the error", "[genera
 		return std::string("generated it");
 	};
 
-	CHECK(refusal("<collision edge=\"vertical\"><land /></collision>", "", "").find("cannot generate <land> yet (in game > objects > object box") != std::string::npos);
+	CHECK(refusal("<collision edge=\"vertical\"><aim target=\"box\" /></collision>", "", "").find("cannot generate <aim> yet (in game > objects > object box") != std::string::npos);
+	CHECK(refusal("<collision edge=\"vertical\"><land /></collision>", "", "").find("cannot generate <land /> outside a <collision> with other objects") != std::string::npos);
 	CHECK(refusal("<collision edge=\"vertical\"><wrap /><play sound=\"boom\" /></collision>", "", "").find("cannot generate <wrap /> with other commands in the same <collision> yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><inc variable=\"lives\" /></collision>", "<variable name=\"lives\">3</variable>", "").find("cannot generate <inc variable=\"lives\"> (it counts an object variable, as paddle1.score) yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><play sound=\"boom\" /></collision>", "", "").find("cannot generate <play sound=\"boom\">, which is not a <sound> yet") != std::string::npos);

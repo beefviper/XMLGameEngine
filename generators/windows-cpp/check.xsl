@@ -5,21 +5,22 @@
 <!-- date: Oct 5, 2026 -->
 
 <!-- What this target can generate so far: all of Pong, Space Race,
-     Freeway, Breakout, Depth Charge, Frogger, Astrosmash, Kaboom, Demon Attack,
-     Megamania, Asteroids, Combat, Lunar Lander, Frostbite and Air-Sea Battle. Screens on a stack, rectangles, circles, texts (words or a
-     number) and pictures (from a file, rows of text, lines or an SVG);
-     objects that move, bounce, stick, deflect, wrap round, ride, turn back,
-     stop, start again and die; groups of them, listed or in columns and rows
-     (each member, row, column or cell changing what it picks), moving as one
-     block or each its own way; headings that turn a picture, thrust, a pull
-     and drag; touches pixel by pixel, and by speed; things hidden until fired,
-     revealed or released; timers
-     of objects, groups and screens; keys held to move, and keys pressed to
-     hop, fire, change screen, start again, play a sound or count, in sets the
-     screens share; conditions on an object's number or on how many are left;
-     and sounds. Anything else stops the generator with a
-     message saying what and where, rather than writing a program that plays a
-     different game. -->
+     Freeway, Breakout, Depth Charge, Frogger, Astrosmash, Kaboom, Demon
+     Attack, Megamania, Asteroids, Combat, Lunar Lander, Frostbite, Air-Sea
+     Battle, Donkey Kong and Pitfall!. Screens on a stack, rectangles,
+     circles, texts (words or a number) and pictures (from a file, rows of
+     text, lines or an SVG); objects that move, bounce, stick, deflect, wrap
+     round, ride, turn back, stop, start again and die; groups of them,
+     listed or in columns and rows (each member, row, column or cell changing
+     what it picks), moving as one block or each its own way; headings that
+     turn a picture, thrust, a pull and drag; walking, falling, landing,
+     leaping and climbing; touches pixel by pixel, and by speed; things
+     hidden until fired, revealed or released; timers of objects, groups and
+     screens; keys held to move, and keys pressed to hop, jump, fire, change
+     screen, start again, play a sound or count, in sets the screens share;
+     conditions on an object's number or on how many are left; and sounds.
+     Anything else stops the generator with a message saying what and where,
+     rather than writing a program that plays a different game. -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <xsl:variable name="supported" select="concat(
@@ -27,7 +28,7 @@
     ' objects object group member row column cell sprite circle radius rectangle color text content number size image path flip columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity acceleration heading drag facing hidden timers timer every after',
-    ' collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride reverse stop reveal release actions action move hop jump distance seconds fire turn thrust accelerate',
+    ' collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride land reverse stop reveal release actions action move hop jump distance seconds leap climb fire turn thrust accelerate',
     ' states keys state shows show inputs input trigger conditions condition atleast atmost remaining',
     ' push pop play inc dec become sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
@@ -94,9 +95,9 @@
           <xsl:with-param name="what" select="'a &lt;heading&gt; on something that is not one sprite of lines or rows'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::acceleration and parent::group">
+      <xsl:when test="self::acceleration and parent::group and (normalize-space(../collisions/lockstep) = 'true' or ..//stop)">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'an &lt;acceleration&gt; on a &lt;group&gt;'" />
+          <xsl:with-param name="what" select="'an &lt;acceleration&gt; on a &lt;group&gt; in &lt;lockstep&gt;, or that a &lt;stop /&gt; stops'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="(self::turn or self::thrust) and not(ancestor::object/heading)">
@@ -296,13 +297,38 @@
         </xsl:if>
       </xsl:when>
 
+      <!-- standing and climbing -->
+      <xsl:when test="self::land and not($in-rule and not(../@edge) and not(ancestor::group[normalize-space(collisions/lockstep) = 'true']))">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;land /&gt; outside a &lt;collision&gt; with other objects, or in a group in &lt;lockstep&gt;'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::leap and not(parent::action and ../../../acceleration[not(y//random) and normalize-space(y) != '' and normalize-space(y) != '0'])">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;leap&gt; outside the &lt;action&gt; of an object pulled down by a fixed &lt;acceleration&gt;'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::climb and not(parent::action and /game/objects/*[@class = current()/@class] and (@direction = 'up' or @direction = 'down'))">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;climb&gt; outside an &lt;action&gt;, not up or down, or of a class nothing is'" />
+        </xsl:call-template>
+      </xsl:when>
+      <!-- something keys walk while it falls, leaps or climbs: a velocity
+           across that the keys set -->
+      <xsl:when test="self::move and parent::action and ../../../self::object[acceleration or actions/action/leap or actions/action/climb]
+                      and (@direction = 'up' or @direction = 'down' or ../../../acceleration[x/* or number(x) != 0])">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'a &lt;move&gt; up or down, or across against a pull across, on something that falls, leaps or climbs'" />
+        </xsl:call-template>
+      </xsl:when>
+
       <!-- keys -->
-      <xsl:when test="(self::move and not(parent::action or $in-own-timer)) or ((self::hop or self::jump) and not(parent::action))">
+      <xsl:when test="(self::move and not(parent::action or $in-own-timer or ($in-rule and not(ancestor::group)))) or ((self::hop or self::jump) and not(parent::action))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; outside the &lt;action&gt; of an object')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::action and (move or turn or thrust or accelerate) and *[not(self::move or self::turn or self::thrust or self::accelerate)]">
+      <xsl:when test="self::action and (move or turn or thrust or accelerate or climb) and *[not(self::move or self::turn or self::thrust or self::accelerate or self::climb)]">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'an &lt;action&gt; that both moves (held) and does something else (pressed)'" />
         </xsl:call-template>
@@ -327,18 +353,18 @@
           <xsl:with-param name="what" select="'&lt;fire&gt; of a group whose members or cells have velocities of their own'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::move and ancestor::*[parent::objects][(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]]">
+      <xsl:when test="self::move and parent::action and ancestor::*[parent::objects][(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]]">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'a &lt;move&gt; on an object that has a &lt;velocity&gt; of its own'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::trigger and (not($on-key or (($in-condition or $in-timer) and not(key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]))) or @class or not(/game/objects/object[@name = current()/@object]/actions/action[@name = current()/@action]))">
+      <xsl:when test="self::trigger and (not($on-key or (($in-condition or $in-timer) and not(key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate or climb]))) or @class or not(/game/objects/object[@name = current()/@object]/actions/action[@name = current()/@action]))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'a &lt;trigger&gt; that is not in an &lt;input&gt; (or, of an action not held, a condition or a timer) or does not name an action of an object'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::input and trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]]
-                      and *[not(self::trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]])]">
+      <xsl:when test="self::input and trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate or climb]]
+                      and *[not(self::trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate or climb]])]">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'an &lt;input&gt; that both moves something (held) and does something else (pressed)'" />
         </xsl:call-template>

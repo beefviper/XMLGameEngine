@@ -27,6 +27,7 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 #endif
 
@@ -270,10 +271,29 @@ namespace xge
 
 		exsltRegisterAll();
 
-		const Document game(xmlReadFile(gameFile.string().c_str(), nullptr, XML_PARSE_NONET));
+		Document game(xmlReadFile(gameFile.string().c_str(), nullptr, XML_PARSE_NONET));
 		if (!game)
 		{
 			throw GenerateError(withMessages("could not read " + gameFile.string(), messages));
+		}
+
+		// A target may first put the game in a form it writes more simply
+		// (windows-cpp: a member of a group shown on a screen of its own
+		// becomes an object), with prepare.xsl beside generate.xsl.
+		const std::filesystem::path prepareFile = std::filesystem::absolute(request.generators / request.target / "prepare.xsl");
+		if (std::filesystem::exists(prepareFile))
+		{
+			const Stylesheet prepare(xsltParseStylesheetFile(xml(prepareFile.string())));
+			if (!prepare)
+			{
+				throw GenerateError(withMessages("could not read the stylesheet " + prepareFile.string(), messages));
+			}
+			Document prepared(xsltApplyStylesheet(prepare.get(), game.get(), nullptr));
+			if (!prepared)
+			{
+				throw GenerateError(withMessages("could not prepare " + gameFile.filename().string() + " for " + request.target, messages));
+			}
+			game = std::move(prepared);
 		}
 
 		const Stylesheet style(xsltParseStylesheetFile(xml(stylesheetFile.string())));

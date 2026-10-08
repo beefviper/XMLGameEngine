@@ -45,6 +45,7 @@ set(data_assets
 # The stylesheets xgecli --generate runs, a folder per target (generate.cpp).
 set(data_generators
 	"generators/windows-cpp/generate.xsl"
+	"generators/windows-cpp/prepare.xsl"
 	"generators/windows-cpp/check.xsl"
 	"generators/windows-cpp/main.xsl"
 	"generators/windows-cpp/groups.xsl"
