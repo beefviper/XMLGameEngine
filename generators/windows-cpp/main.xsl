@@ -59,7 +59,7 @@
   <!-- Those pulled every frame (<acceleration>: gravity), and those keys push
        (<thrust> along the heading, <accelerate> one way): they have a velocity
        that changes, whatever it starts at. -->
-  <xsl:variable name="pulled" select="$objects[acceleration[x/* or y/* or number(x) != 0 or number(y) != 0]]" />
+  <xsl:variable name="pulled" select="$things[acceleration[x/* or y/* or number(x) != 0 or number(y) != 0]]" />
   <xsl:variable name="pushed" select="$objects[actions/action[thrust or accelerate]]" />
 
   <!-- Those with a <heading>: turned by keys, their picture drawn again at
@@ -83,6 +83,18 @@
   <xsl:variable name="riders" select="$objects[@name = $rules[ride]/ancestor::object/@name]" />
   <!-- Those that <jump>: in the air a while, touching nothing. -->
   <xsl:variable name="jumpers" select="$objects[actions/action/jump]" />
+  <!-- Those keys walk while they fall, leap or climb: the keys set the way
+       across of a velocity of their own (<move>), as the engine's keys do,
+       rather than moving them a step. -->
+  <xsl:variable name="walkers" select="$objects[actions/action/move][count(. | $pulled) = count($pulled) or actions/action/leap or actions/action/climb]" />
+  <!-- Those that <leap> up under their own pull, from the ground. -->
+  <xsl:variable name="leapers" select="$objects[actions/action/leap]" />
+  <!-- Those that <climb> a ladder (a thing of a class) while at one. -->
+  <xsl:variable name="climbers" select="$objects[actions/action/climb]" />
+  <xsl:variable name="climbs" select="$climbers/actions/action/climb" />
+  <xsl:variable name="ladder-classes" select="$climbs[not(@class = preceding::climb[count(. | $climbs) = count($climbs)]/@class)]" />
+  <!-- Those that know whether they stand on something this frame (<land />). -->
+  <xsl:variable name="standers" select="$leapers | $climbers" />
 
   <!-- Those that never move (no velocity of their own, no keys): they never
        meet an edge, so their edge rules are left out, as the engine only looks
@@ -156,8 +168,8 @@
        else (a <hop> too), once for each press. -->
   <xsl:key name="action" match="object/actions/action" use="concat(../../@name, '|', @name)" />
   <xsl:variable name="all-inputs" select="/game/states/keys/input | $states/inputs/input" />
-  <xsl:variable name="held-inputs" select="$all-inputs[trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]]]" />
-  <xsl:variable name="pressed-inputs" select="$all-inputs[* and not(trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]])]" />
+  <xsl:variable name="held-inputs" select="$all-inputs[trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate or climb]]]" />
+  <xsl:variable name="pressed-inputs" select="$all-inputs[* and not(trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate or climb]])]" />
 
   <!-- Each screen's keys: the <input>s it takes, from the <keys> sets its
        <inputs keys="..."> names (each over the one before) and then its own
@@ -227,7 +239,7 @@
 
   <!-- The modules it needs: physics for the edges, touches and sizes, sound for
        its sounds. -->
-  <xsl:variable name="physics" select="boolean($rules/* or $sizes-read != '' or $hops or $jumpers or $fires)" />
+  <xsl:variable name="physics" select="boolean($rules/* or $sizes-read != '' or $hops or $jumpers or $climbers or $fires)" />
   <xsl:variable name="audio" select="boolean($sounds)" />
 
   <!-- The helper functions the game needs (functions.xml). -->
@@ -246,7 +258,7 @@
       <xsl:value-of select="concat(' ', @uses, ' ')" />
     </xsl:for-each>
     <xsl:if test="contains($words, ' min ') or contains($words, ' max ')"> algorithm </xsl:if>
-    <xsl:if test="$headed or (//release | //reveal)[* or (normalize-space(.) != '' and string(number(.)) != normalize-space(.))]"> cmath </xsl:if>
+    <xsl:if test="$headed or $leapers or (//release | //reveal)[* or (normalize-space(.) != '' and string(number(.)) != normalize-space(.))]"> cmath </xsl:if>
     <xsl:if test="contains($words, ' abs ') or contains($words, ' floor ') or contains($words, ' ceil ') or contains($words, ' sqrt ') or contains($words, ' sin ') or contains($words, ' cos ') or contains($words, ' tan ') or contains($words, ' pow ') or contains($words, ' round ')"> cmath </xsl:if>
     <xsl:if test="$numbers or $drawn-rows"> string </xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines"> vector </xsl:if>
@@ -497,7 +509,27 @@ sf::Texture </xsl:text>
         <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'JumpStep; // how far it goes in each of them')" />
       </xsl:if>
       <xsl:if test="count(. | $pulled) = count($pulled)">
-        <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Acceleration; // its pull, every frame (until a &lt;stop /&gt;)')" />
+        <xsl:choose>
+          <xsl:when test="self::group">
+            <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Acceleration; // their pull, one for them all, every frame')" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Acceleration; // its pull, every frame (until a &lt;stop /&gt;)')" />
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:if>
+      <xsl:if test="count(. | $walkers) = count($walkers)">
+        <xsl:value-of select="concat('&#10;float ', $name, 'Walk = 0.0f; // the way across the keys held give it (&lt;move&gt;), worked out every frame')" />
+      </xsl:if>
+      <xsl:if test="count(. | $climbers) = count($climbers)">
+        <xsl:value-of select="concat('&#10;float ', $name, 'Climb = 0.0f; // up (below 0) or down the keys held climb it, worked out every frame')" />
+        <xsl:value-of select="concat('&#10;bool ', $name, 'Climbing = false; // on a ladder: nothing pulls it, nor walks it')" />
+      </xsl:if>
+      <xsl:if test="count(. | $leapers) = count($leapers)">
+        <xsl:value-of select="concat('&#10;bool ', $name, 'Leaping = false; // in a leap: the way across kept until it lands')" />
+      </xsl:if>
+      <xsl:if test="count(. | $standers) = count($standers)">
+        <xsl:value-of select="concat('&#10;bool ', $name, 'Grounded = false; // standing on something, as this frame found')" />
       </xsl:if>
       <xsl:if test="count(. | $headed) = count($headed)">
         <xsl:value-of select="concat('&#10;float ', $name, 'Heading = 0.0f; // degrees clockwise from straight up')" />
@@ -612,6 +644,11 @@ sf::Texture </xsl:text>
     </xsl:for-each>
     <xsl:for-each select="$unless-classes">
       <xsl:call-template name="touching-signature" />
+      <xsl:text>;
+</xsl:text>
+    </xsl:for-each>
+    <xsl:for-each select="$ladder-classes">
+      <xsl:call-template name="ladder-signature" />
       <xsl:text>;
 </xsl:text>
     </xsl:for-each>
@@ -850,6 +887,9 @@ void start</xsl:text>
     </xsl:for-each>
     <xsl:for-each select="$unless-classes">
       <xsl:call-template name="define-touching" />
+    </xsl:for-each>
+    <xsl:for-each select="$ladder-classes">
+      <xsl:call-template name="define-ladder" />
     </xsl:for-each>
     <xsl:for-each select="$numbers">
       <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
@@ -1502,6 +1542,15 @@ void start</xsl:text>
     <xsl:if test="count(. | $jumpers) = count($jumpers)">
       <xsl:value-of select="concat('&#9;', $name, 'JumpFrames = 0;&#10;')" />
     </xsl:if>
+    <xsl:if test="count(. | $climbers) = count($climbers)">
+      <xsl:value-of select="concat('&#9;', $name, 'Climbing = false;&#10;')" />
+    </xsl:if>
+    <xsl:if test="count(. | $leapers) = count($leapers)">
+      <xsl:value-of select="concat('&#9;', $name, 'Leaping = false;&#10;')" />
+    </xsl:if>
+    <xsl:if test="count(. | $standers) = count($standers)">
+      <xsl:value-of select="concat('&#9;', $name, 'Grounded = false;&#10;')" />
+    </xsl:if>
     <xsl:if test="count(. | $headed) = count($headed)">
       <xsl:value-of select="concat('&#9;', $name, 'Heading = ')" />
       <xsl:call-template name="value-bare"><xsl:with-param name="node" select="heading" /></xsl:call-template>
@@ -1678,6 +1727,16 @@ void pressed(sf::Keyboard::Key key)
             <xsl:otherwise>0.3f</xsl:otherwise>
           </xsl:choose>
           <xsl:value-of select="concat('), ', $name, 'JumpStep, ', $name, 'JumpFrames, windowArea);&#10;')" />
+        </xsl:when>
+        <xsl:when test="self::leap">
+          <xsl:variable name="climbs" select="count(ancestor::object[1] | $climbers) = count($climbers)" />
+          <xsl:value-of select="concat($in, '// up off the ground, as fast as its pull takes ', normalize-space(.), ' to stop&#10;')" />
+          <xsl:value-of select="concat($in, 'if (', $name, 'Grounded')" />
+          <xsl:if test="$climbs"><xsl:value-of select="concat(' &amp;&amp; !', $name, 'Climbing')" /></xsl:if>
+          <xsl:value-of select="concat(')&#10;', $in, '{&#10;')" />
+          <xsl:value-of select="concat($in, '&#9;', $name, 'Velocity.y = -std::sqrt(2.0f * ', $name, 'Acceleration.y * ')" />
+          <xsl:call-template name="value" />
+          <xsl:value-of select="concat(');&#10;', $in, '&#9;', $name, 'Grounded = false;&#10;', $in, '&#9;', $name, 'Leaping = true;&#10;', $in, '}&#10;')" />
         </xsl:when>
         <xsl:when test="self::fire">
           <xsl:call-template name="fire">
@@ -1888,10 +1947,28 @@ void pressed(sf::Keyboard::Key key)
     <xsl:param name="indent" />
     <xsl:variable name="change">
       <xsl:choose>
+        <xsl:when test="self::move and count(../../.. | $walkers) = count($walkers)">
+          <xsl:value-of select="concat($name, 'Walk')" />
+          <xsl:choose>
+            <xsl:when test="@direction = 'left'"> -= </xsl:when>
+            <xsl:otherwise> += </xsl:otherwise>
+          </xsl:choose>
+          <xsl:call-template name="value-bare" />
+          <xsl:text>;</xsl:text>
+        </xsl:when>
         <xsl:when test="self::move">
           <xsl:value-of select="concat($name, '.move(')" />
           <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
           <xsl:text>);</xsl:text>
+        </xsl:when>
+        <xsl:when test="self::climb">
+          <xsl:value-of select="concat($name, 'Climb')" />
+          <xsl:choose>
+            <xsl:when test="@direction = 'up'"> -= </xsl:when>
+            <xsl:otherwise> += </xsl:otherwise>
+          </xsl:choose>
+          <xsl:call-template name="value-bare" />
+          <xsl:text>;</xsl:text>
         </xsl:when>
         <xsl:when test="self::turn">
           <xsl:value-of select="concat($name, 'Heading')" />
@@ -2263,6 +2340,19 @@ void tick</xsl:text>
       <!-- each action once a frame, however many of its keys are held, as
            the engine holds an action rather than a key -->
       <xsl:variable name="held-here" select="$held-inputs[generate-id() = $screen-keys[@name = $state/@name]/input/@id]" />
+      <xsl:variable name="walking" select="($walkers | $climbers)[@name = $held-here/trigger/@object]" />
+      <xsl:if test="$walking">
+        <xsl:text>&#10;</xsl:text>
+      </xsl:if>
+      <xsl:for-each select="$walking">
+        <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
+        <xsl:if test="count(. | $walkers) = count($walkers)">
+          <xsl:value-of select="concat('&#9;', $name, 'Walk = 0.0f; // and the keys held below&#10;')" />
+        </xsl:if>
+        <xsl:if test="count(. | $climbers) = count($climbers)">
+          <xsl:value-of select="concat('&#9;', $name, 'Climb = 0.0f;&#10;')" />
+        </xsl:if>
+      </xsl:for-each>
       <xsl:for-each select="$held-here/trigger">
         <xsl:variable name="trigger" select="." />
         <xsl:variable name="keyed" select="$held-here[trigger[@object = $trigger/@object][@action = $trigger/@action]]" />
@@ -2514,8 +2604,36 @@ void update</xsl:text>
       </xsl:if>
       <xsl:if test="count(. | $moving) = count($moving) and not($block)">
         <xsl:text>&#10;</xsl:text>
+        <xsl:variable name="climber" select="count(. | $climbers) = count($climbers)" />
+        <xsl:if test="count(. | $walkers) = count($walkers)">
+          <xsl:choose>
+            <xsl:when test="count(. | $leapers) = count($leapers)">
+              <xsl:value-of select="concat($indent, '// the keys held walk it, but not in a leap: that keeps its way across&#10;')" />
+              <xsl:value-of select="concat($indent, 'if (!', $name, 'Leaping)&#10;', $indent, '{&#10;', $indent, '&#9;', $velocity, '.x = ', $name, 'Walk;&#10;', $indent, '}&#10;')" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="concat($indent, $velocity, '.x = ', $name, 'Walk; // the way the keys held walk it&#10;')" />
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:if>
+        <xsl:if test="$climber">
+          <xsl:value-of select="concat($indent, '// at a ladder: on to it from the ground, up or down it, or off it at an end&#10;')" />
+          <xsl:value-of select="concat($indent, 'physics::climb(', $one, ', ', $velocity, ', ', $name, 'Climb, ', $name, 'Climbing, ', $name, 'Grounded, ')" />
+          <xsl:call-template name="ladder-name"><xsl:with-param name="class" select="actions/action/climb/@class" /></xsl:call-template>
+          <xsl:value-of select="concat('(', $one, '));&#10;')" />
+        </xsl:if>
         <xsl:if test="count(. | $pulled) = count($pulled)">
-          <xsl:value-of select="concat($indent, $velocity, ' += ', $name, 'Acceleration;&#10;')" />
+          <xsl:choose>
+            <xsl:when test="$climber">
+              <xsl:value-of select="concat($indent, 'if (!', $name, 'Climbing)&#10;', $indent, '{&#10;', $indent, '&#9;', $velocity, ' += ', $name, 'Acceleration; // on a ladder nothing pulls it&#10;', $indent, '}&#10;')" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="concat($indent, $velocity, ' += ', $name, 'Acceleration;&#10;')" />
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:if>
+        <xsl:if test="count(. | $standers) = count($standers)">
+          <xsl:value-of select="concat($indent, $name, 'Grounded = false; // until it lands again, this frame&#10;')" />
         </xsl:if>
         <xsl:if test="drag">
           <xsl:value-of select="concat($indent, '// drag: what is left of its speed after this frame&#10;', $indent, $velocity, ' *= 1.0f - ')" />
@@ -3061,6 +3179,27 @@ void update</xsl:text>
         <xsl:text>);
 </xsl:text>
       </xsl:when>
+      <xsl:when test="self::land">
+        <xsl:variable name="stands" select="count($self | $standers) = count($standers)" />
+        <xsl:variable name="test">
+          <xsl:if test="count($self | $climbers) = count($climbers)">
+            <xsl:value-of select="concat('!', $name, 'Climbing &amp;&amp; ')" />
+          </xsl:if>
+          <xsl:value-of select="concat('physics::land(', $name, ', ', $velocity, ', ', $other, ')')" />
+        </xsl:variable>
+        <xsl:choose>
+          <xsl:when test="$stands">
+            <xsl:value-of select="concat($indent, 'if (', $test, ')&#10;', $indent, '{&#10;', $indent, '&#9;', $name, 'Grounded = true;&#10;')" />
+            <xsl:if test="count($self | $leapers) = count($leapers)">
+              <xsl:value-of select="concat($indent, '&#9;', $name, 'Leaping = false;&#10;')" />
+            </xsl:if>
+            <xsl:value-of select="concat($indent, '}&#10;')" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat($indent, $test, ';&#10;')" />
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
       <xsl:when test="self::ride">
         <xsl:value-of select="$indent" />
         <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
@@ -3082,6 +3221,86 @@ void update</xsl:text>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- ===================================================================== -->
+  <!-- Ladders                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- The function that finds the ladder of a class a climber is at
+       (ladderAt). -->
+  <xsl:template name="ladder-name">
+    <xsl:param name="class" />
+    <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$class" /></xsl:call-template>
+    <xsl:text>At</xsl:text>
+  </xsl:template>
+
+  <xsl:template name="ladder-signature">
+    <xsl:text>template &lt;typename Shape&gt;
+std::optional&lt;sf::FloatRect&gt; </xsl:text>
+    <xsl:call-template name="ladder-name"><xsl:with-param name="class" select="@class" /></xsl:call-template>
+    <xsl:text>(const Shape&amp; one)</xsl:text>
+  </xsl:template>
+
+  <!-- It goes through everything of the class that is in play and shown
+       where `one` is, as the engine's applyClimbing looks only at what the
+       screen shows, and gives the first that `one` is at. -->
+  <xsl:template name="define-ladder">
+    <xsl:variable name="class" select="@class" />
+    <xsl:variable name="askers" select="$climbers[actions/action/climb/@class = $class]" />
+    <xsl:variable name="with" select="$states[shows/show/@object = $askers/@name]" />
+    <xsl:variable name="ladders" select="$things[@class = $class][@name = $with/shows/show/@object]" />
+    <xsl:text>
+// the ladder of class </xsl:text>
+    <xsl:value-of select="$class" />
+    <xsl:text> that `one` is at, if any (&lt;climb&gt;): its middle over it, its feet between the ends
+</xsl:text>
+    <xsl:call-template name="ladder-signature" />
+    <xsl:text>
+{
+</xsl:text>
+    <xsl:if test="not($ladders)">
+      <xsl:text>	// nothing of that class is shown with it
+	static_cast&lt;void&gt;(one);
+</xsl:text>
+    </xsl:if>
+    <xsl:for-each select="$ladders">
+      <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
+      <xsl:variable name="dies" select="count(. | $dying) = count($dying)" />
+      <!-- the screens showing a climber but not this -->
+      <xsl:variable name="screen-test">
+        <xsl:if test="$with[not(shows/show/@object = current()/@name)]">
+          <xsl:variable name="on" select="$with[shows/show/@object = current()/@name]" />
+          <xsl:if test="count($on) &gt; 1">(</xsl:if>
+          <xsl:for-each select="$on">
+            <xsl:if test="position() &gt; 1"> || </xsl:if>
+            <xsl:text>screens.back() == Screen::</xsl:text>
+            <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+          </xsl:for-each>
+          <xsl:if test="count($on) &gt; 1">)</xsl:if>
+          <xsl:text> &amp;&amp; </xsl:text>
+        </xsl:if>
+      </xsl:variable>
+      <xsl:choose>
+        <xsl:when test="self::group and $dies">
+          <xsl:value-of select="concat('&#9;for (std::size_t i = 0; i &lt; ', $name, '.size(); ++i)&#10;&#9;{&#10;&#9;&#9;if (', $screen-test, $name, 'Alive[i] &amp;&amp; ')" />
+          <xsl:value-of select="concat('physics::atLadder(one, ', $name, '[i]))&#10;&#9;&#9;{&#10;&#9;&#9;&#9;return ', $name, '[i].getGlobalBounds();&#10;&#9;&#9;}&#10;&#9;}&#10;')" />
+        </xsl:when>
+        <xsl:when test="self::group">
+          <xsl:variable name="type"><xsl:call-template name="sf-type" /></xsl:variable>
+          <xsl:value-of select="concat('&#9;for (const ', $type, '&amp; each : ', $name, ')&#10;&#9;{&#10;&#9;&#9;if (', $screen-test)" />
+          <xsl:value-of select="'physics::atLadder(one, each))&#10;&#9;&#9;{&#10;&#9;&#9;&#9;return each.getGlobalBounds();&#10;&#9;&#9;}&#10;&#9;}&#10;'" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="concat('&#9;if (', $screen-test)" />
+          <xsl:if test="$dies"><xsl:value-of select="concat($name, 'Alive &amp;&amp; ')" /></xsl:if>
+          <xsl:value-of select="concat('physics::atLadder(one, ', $name, '))&#10;&#9;{&#10;&#9;&#9;return ', $name, '.getGlobalBounds();&#10;&#9;}&#10;')" />
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:text>	return std::nullopt;
+}
+</xsl:text>
   </xsl:template>
 
   <!-- ===================================================================== -->
