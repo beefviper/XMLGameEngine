@@ -32,7 +32,7 @@ namespace xge
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
-			                      appear in a collisionData list, and carry() and
+			                      appear in a collisionData list, and ride() and
 			                      deflect() are about another object, which a screen
 			                      edge is not; ignore defensively. */ }
 		}, command);
@@ -50,7 +50,7 @@ namespace xge
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
-			[&](const CmdCarry&) { carry(object, other); },
+			[&](const CmdRide&) { ride(object, other); },
 			[&](const CmdLand&) { land(object, other, edge); },
 			[&](const CmdChase& c) { chase(object, c); },
 			[&](const CmdAim& a) { aim(object, a.target); },
@@ -275,7 +275,7 @@ namespace xge
 
 			candidate.position = middle - sizeOf(candidate) * 0.5f;
 			candidate.velocity = candidate.velocityOriginal;
-			candidate.carry = {};
+			candidate.riding = {};
 			candidate.isVisible = true;
 			candidate.collisionData.enabled = true;
 			++released;
@@ -463,7 +463,7 @@ namespace xge
 	void CommandExecutor::wrap(Object& object, Edge edge)
 	{
 		const auto& windowDesc = game.getWindowDesc();
-		const Vector2f heading = object.velocity + object.carry;
+		const Vector2f heading = object.velocity + object.riding;
 
 		switch (edge)
 		{
@@ -498,9 +498,9 @@ namespace xge
 	// with the other one's velocity as well as its own. Not kept - it is
 	// worked out again every frame from whatever is still being touched, so
 	// the moment the object is no longer on the other one, it is at rest.
-	void CommandExecutor::carry(Object& object, const Object& other)
+	void CommandExecutor::ride(Object& object, const Object& other)
 	{
-		object.carry = other.velocity;
+		object.riding = other.velocity;
 	}
 
 	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed)

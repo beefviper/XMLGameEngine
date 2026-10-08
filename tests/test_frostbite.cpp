@@ -224,7 +224,7 @@ TEST_CASE("up from the shore goes nowhere", "[frostbite]")
 	CHECK(play.variable("lives") == 4);
 }
 
-TEST_CASE("a floe carries Bailey along, and a goose pushes him", "[frostbite]")
+TEST_CASE("Bailey rides a floe, and a goose pushes him", "[frostbite]")
 {
 	Frostbite play;
 	play.tap(KeyCode::Space);
@@ -237,7 +237,7 @@ TEST_CASE("a floe carries Bailey along, and a goose pushes him", "[frostbite]")
 	play.frames(30);
 	CHECK(play.bailey().position.x == Approx(x + 30 * 1.2f).margin(2));
 
-	// A goose catching him carries him along at its own speed.
+	// A goose catching him takes him along at its own speed (he rides it).
 	Object& goose = play.game.getObject("geese.1");
 	goose.position = { play.bailey().position.x - 30.0f, play.bailey().position.y + 10.0f };
 	const float before = play.bailey().position.x;

@@ -61,8 +61,8 @@
        the shapes; the rest of the groups that move share one. -->
   <xsl:variable name="member-velocities" select="$groups[*/velocity]" />
 
-  <!-- Those a rule lends another's velocity (<carry />: a frog on a log). -->
-  <xsl:variable name="carried" select="$objects[@name = $rules[carry]/ancestor::object/@name]" />
+  <!-- Those a rule lends another's velocity (<ride />: a frog on a log). -->
+  <xsl:variable name="riders" select="$objects[@name = $rules[ride]/ancestor::object/@name]" />
 
   <!-- Those that never move (no velocity of their own, no keys): they never
        meet an edge, so their edge rules are left out, as the engine only looks
@@ -97,7 +97,7 @@
   <xsl:variable name="update-work">
     <xsl:for-each select="$things[count(. | $moving) = count($moving) or collisions/collision[*][count(. | $rules) = count($rules)]]">
       <work name="{@name}">
-        <xsl:if test="count(. | $moving | $carried) = count($moving | $carried)">moves</xsl:if>
+        <xsl:if test="count(. | $moving | $riders) = count($moving | $riders)">moves</xsl:if>
         <xsl:call-template name="update-rules" />
       </work>
     </xsl:for-each>
@@ -361,8 +361,8 @@ sf::Texture </xsl:text>
       <xsl:if test="self::object and count(. | $moving) = count($moving)">
         <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Velocity;')" />
       </xsl:if>
-      <xsl:if test="count(. | $carried) = count($carried)">
-        <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Carry; // the velocity of what it rides (&lt;carry /&gt;), for its next move')" />
+      <xsl:if test="count(. | $riders) = count($riders)">
+        <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Riding; // the velocity of what it rides (&lt;ride /&gt;), worked out every frame')" />
       </xsl:if>
       <xsl:if test="count(. | $dying) = count($dying)">
         <xsl:choose>
@@ -1112,8 +1112,8 @@ void start()
       <xsl:text>;
 </xsl:text>
     </xsl:if>
-    <xsl:if test="count(. | $carried) = count($carried)">
-      <xsl:value-of select="concat('&#9;', $name, 'Carry = {};&#10;')" />
+    <xsl:if test="count(. | $riders) = count($riders)">
+      <xsl:value-of select="concat('&#9;', $name, 'Riding = {};&#10;')" />
     </xsl:if>
     <xsl:if test="count(. | $looked) = count($looked)">
       <xsl:text>	</xsl:text>
@@ -1571,8 +1571,8 @@ void update</xsl:text>
       <xsl:if test="count(. | $moving) = count($moving) and not($block)">
         <xsl:value-of select="concat('&#10;', $indent, $one, '.move(', $velocity, ');&#10;')" />
       </xsl:if>
-      <xsl:if test="count(. | $carried) = count($carried)">
-        <xsl:value-of select="concat('&#10;', $indent, '// what it rides, worked out again this frame&#10;', $indent, $name, 'Carry = {};&#10;')" />
+      <xsl:if test="count(. | $riders) = count($riders)">
+        <xsl:value-of select="concat('&#10;', $indent, '// what it rides, worked out again this frame&#10;', $indent, $name, 'Riding = {};&#10;')" />
       </xsl:if>
       <xsl:call-template name="update-rules">
         <xsl:with-param name="name" select="$one" />
@@ -1581,8 +1581,8 @@ void update</xsl:text>
         <xsl:with-param name="alive" select="$alive" />
         <xsl:with-param name="out" select="$out" />
       </xsl:call-template>
-      <xsl:if test="count(. | $carried) = count($carried)">
-        <xsl:value-of select="concat('&#10;', $indent, '// it rides along: moved as well by what it touches, this frame&#10;', $indent, $one, '.move(', $name, 'Carry);&#10;')" />
+      <xsl:if test="count(. | $riders) = count($riders)">
+        <xsl:value-of select="concat('&#10;', $indent, '// it rides along: moved as well by what it touches, this frame&#10;', $indent, $one, '.move(', $name, 'Riding);&#10;')" />
       </xsl:if>
     </xsl:variable>
     <xsl:text>
@@ -1846,7 +1846,7 @@ void update</xsl:text>
       <xsl:variable name="other-dies" select="count(. | $dying) = count($dying)" />
       <!-- a group's members counted through when each has a flag or a look of its own -->
       <xsl:variable name="other-counted" select="$other-dies or count(. | $looked | $member-velocities) = count($looked | $member-velocities)" />
-      <!-- the other's velocity, what a <carry /> lends this one (none when it never moves) -->
+      <!-- the other's velocity, what a <ride /> lends this one (none when it never moves) -->
       <xsl:variable name="others-velocity">
         <xsl:if test="count(. | $moving) = count($moving)">
           <xsl:value-of select="concat($other-name, 'Velocity')" />
@@ -1996,10 +1996,10 @@ void update</xsl:text>
         <xsl:text>);
 </xsl:text>
       </xsl:when>
-      <xsl:when test="self::carry">
+      <xsl:when test="self::ride">
         <xsl:value-of select="$indent" />
         <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
-        <xsl:text>Carry = </xsl:text>
+        <xsl:text>Riding = </xsl:text>
         <xsl:choose>
           <xsl:when test="$other-velocity != ''"><xsl:value-of select="$other-velocity" /></xsl:when>
           <xsl:otherwise>{}</xsl:otherwise>

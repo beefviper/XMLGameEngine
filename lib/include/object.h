@@ -457,15 +457,15 @@ namespace xge
 		std::array<float, 4> activeMoveStep{};
 
 		// Motion this object is given for one frame besides its own velocity.
-		// `carry` is the velocity of whatever it is riding (a collision rule
-		// with carry(), e.g. a frog on a log): worked out again every frame,
+		// `riding` is the velocity of whatever it is riding (a collision rule
+		// with <ride />, e.g. a frog on a log): worked out again every frame,
 		// it counts for movement and for edge checks like velocity does, but
 		// is not the object's own, so an object that steps off is at rest.
 		// `hopPending` is a jump queued by a hop.*() action, made at the start
 		// of the next frame's move (Game::moveObjects); `hopped` is true for
 		// the rest of that frame, so an object that has just landed somewhere
 		// still counts as moving for the collisions it is now part of.
-		Vector2f carry{};
+		Vector2f riding{};
 		Vector2f hopPending{};
 		bool hopped{ false };
 

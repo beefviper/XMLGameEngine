@@ -18,10 +18,10 @@
 - **Frame loop (`Game::moveObjects`).** Candidate pairs: one has a rule answering to the other, they are not in lockstep with each other, neither is in the air mid-`<jump>`, one is moving. (Members of a group without lockstep do collide with each other if a rule answers.) Each round every pair is swept for the time left; the earliest hit anywhere wins; all shown objects advance to that moment; that pair's rules run; the rest of the frame plays with whatever velocities they left. A pair reacts at most once per frame (bounds the loop and stops a bounce re-triggering).
 - Each object is swept alone ([03](03-objects-groups-and-storage.md) lockstep).
 - **Hops and jumps land before collisions.** A queued hop is made at the start of the move and judged where it lands, not swept: swept, a frog hopping onto a log would first touch the *water*. A jump in the air is in no pair; the landing frame counts as moving.
-- **Riding (`<carry />`).** Lends the other's velocity for the frame (`Object::carry`), added in movement, the sweep and edge checks; cleared each frame and recomputed from current touches, so stepping off needs no undo. Alternatives rejected: copy the velocity into the object's own (must be undone, fights hop and keys), attach as a child (an ownership model the language lacks), a position offset (bypasses the sweep).
+- **Riding (`<ride />`).** Lends the other's velocity for the frame (`Object::riding`), added in movement, the sweep and edge checks; cleared each frame and recomputed from current touches, so stepping off needs no undo. Alternatives rejected: copy the velocity into the object's own (must be undone, fights hop and keys), attach as a child (an ownership model the language lacks), a position offset (bypasses the sweep). It was first called `<carry />`; it was renamed so the frog *rides* the log, and `carry` is kept for the other thing, one object taking another along (Adventure's key), which is not built.
 - **`unless="class"`.** A rule is passed over while the object touches something of that class right now (`Game::isTouchingClass`, plain overlap), so it does not depend on pair order. Frogger's river: the water rule, unless on a log. Rejected: rule order (separate pairs do not compose), a "safe" class overriding a "hazard", water only in the gaps between logs, an overlap-counting condition. An edge rule takes it too (and `sprite=`), kept beside the edge's flat list of commands as an `EdgeGuard`. `class=` and `object=` pick the other of a touch, and an edge is no object, so on an edge rule they stop the load; before, the engine read all three on an edge rule and dropped them.
 - **`<stick />`** is axis-aware (position and velocity corrected on the touched axis only, so a pushed-into-wall object still slides) and re-applied after the move so a stopped object never ends a frame past the wall.
-- **Verbs in object rules.** `reset`, `move`, `inc`, `dec`, `carry`, `stop`, `reverse`, `become`, `reveal`, `release`, `play` and `reset object` all work in rules about another object (they used to be ignored); `executeObjectCollision` is given the other object.
+- **Verbs in object rules.** `reset`, `move`, `inc`, `dec`, `ride`, `stop`, `reverse`, `become`, `reveal`, `release`, `play` and `reset object` all work in rules about another object (they used to be ignored); `executeObjectCollision` is given the other object.
 - A dead object means the same everywhere: not drawn, moved or collided with (an older special case parked a dead circle at -100, -100).
 
 ## Pixel collisions (Lunar Lander)
@@ -33,7 +33,7 @@
 
 ## Speed filters
 
-- `<slower>N</slower>` / `<faster>N</faster>` before a rule's commands: run only while the object's speed (its velocity plus what it is carried at) is under N / at least N. The speed is read once per touch, so two rules for the pad (landing and crash) can never both run or both be skipped. Not allowed on screen-edge rules. Chosen over a rule on the key or a world variable.
+- `<slower>N</slower>` / `<faster>N</faster>` before a rule's commands: run only while the object's speed (its velocity plus what it rides) is under N / at least N. The speed is read once per touch, so two rules for the pad (landing and crash) can never both run or both be skipped. Not allowed on screen-edge rules. Chosen over a rule on the key or a world variable.
 
 ## Deflect (Pong)
 
@@ -46,7 +46,7 @@
 
 - Only the four edges of a rectangle are reported; no penetration depth or contact normal (`bounce` flips one component).
 - No broad phase: a double loop over shown objects. A game with thousands would want a spatial grid, or sorted swept boxes (wrap each path in a box, keep sorted along an axis, stop at the first that cannot overlap).
-- A pair where nothing moves is not looked at, so a rule against something standing still runs only when the object moves, is carried or hops. A `watch` flag on a rule that must be checked every frame is one way out.
+- A pair where nothing moves is not looked at, so a rule against something standing still runs only when the object moves, rides something or hops. A `watch` flag on a rule that must be checked every frame is one way out.
 - Only the first hit of a pair per frame is handled.
 - Hidden objects do not move or collide; there is no invisible trigger zone or off-screen enemy still moving. Visibility and "in play" would have to become separate flags.
 - Other directions looked at: smaller time steps than the frame (the swept test avoids them), deferred handling (detect, then resolve, then update sprites), the world bounds as invisible collidable objects so a rule reads "touching the left bound", separate attributes for "what was hit" and "what to do".

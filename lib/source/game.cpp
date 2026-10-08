@@ -614,9 +614,9 @@ namespace xge
 			// An animation starts again from its first picture.
 			object.restartAnimation();
 
-			// Nor should a reset object carry on being carried, or jump; it
+			// Nor should a reset object go on riding, or jump; it
 			// faces the way it started, and its timers start over.
-			object.carry = {};
+			object.riding = {};
 			object.hopPending = {};
 			object.hopped = false;
 			object.jumpStep = {};
@@ -1032,7 +1032,7 @@ namespace xge
 
 	Vector2f Game::motionOf(const Object& object) noexcept
 	{
-		return object.velocity + object.carry;
+		return object.velocity + object.riding;
 	}
 
 	bool Game::isMoving(const Object& object) noexcept
@@ -1188,7 +1188,7 @@ namespace xge
 
 			// Whatever last frame's collisions said, this frame's start over:
 			// what it rides, and whether it stands on something.
-			object.carry = {};
+			object.riding = {};
 			object.grounded = false;
 
 			// A jump under way goes on a step; the frame it lands, it counts as
@@ -1230,7 +1230,7 @@ namespace xge
 	}
 
 	// Plays one frame of movement. Every object that is shown moves by its
-	// velocity (and by whatever it is carried at, see Object::carry), but not
+	// velocity (and by whatever it is riding, see Object::riding), but not
 	// in one jump: each pair of objects that has a rule for touching is swept
 	// along its own path (CollisionDetector::sweep), the earliest touch
 	// anywhere is found, everything is moved up to that moment, that pair's

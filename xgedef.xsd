@@ -547,7 +547,7 @@
       <xs:element name="deflect" type="deflectType" />
       <xs:element name="stick" type="emptyType" />
       <xs:element name="wrap" type="emptyType" />
-      <xs:element name="carry" type="emptyType" />
+      <xs:element name="ride" type="emptyType" />
       <xs:element name="die" type="emptyType" />
       <xs:element name="stop" type="emptyType" />
       <xs:element name="reset">

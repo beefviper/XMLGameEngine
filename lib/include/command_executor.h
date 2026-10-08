@@ -65,7 +65,7 @@ namespace xge
 		void stick(Object& object, Edge edge);
 		void moveByStep(Object& object, Direction direction, float step);
 		void wrap(Object& object, Edge edge);
-		void carry(Object& object, const Object& other);
+		void ride(Object& object, const Object& other);
 		void queueHop(Object& object, Direction direction, float distance);
 		void startJump(Object& object, const CmdJump& jump);
 		void land(Object& object, const Object& other, Edge edge);
