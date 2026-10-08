@@ -7,13 +7,14 @@
 <!-- What this target can generate so far: all of Pong, Space Race,
      Freeway, Breakout, Depth Charge, Frogger, Astrosmash, Kaboom, Demon
      Attack, Megamania, Asteroids, Combat, Lunar Lander, Frostbite, Air-Sea
-     Battle, Donkey Kong and Pitfall!. Screens on a stack, rectangles,
+     Battle, Donkey Kong, Pitfall! and Space Invaders (both). Screens on a stack, rectangles,
      circles, texts (words or a number) and pictures (from a file, rows of
      text, lines or an SVG); objects that move, bounce, stick, deflect, wrap
      round, ride, turn back, stop, start again and die; groups of them,
      listed or in columns and rows (each member, row, column or cell changing
      what it picks), moving as one block or each its own way; headings that
-     turn a picture, thrust, a pull and drag; walking, falling, landing,
+     turn a picture, thrust, a pull and drag; looks, animated or
+     become, a row's own among them; walking, falling, landing,
      leaping and climbing; touches pixel by pixel, and by speed; things
      hidden until fired, revealed or released; timers of objects, groups and
      screens; keys held to move, and keys pressed to hop, jump, fire, change
@@ -28,7 +29,7 @@
     ' objects object group member row column cell sprite circle radius rectangle color text content number size image path flip columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity acceleration heading drag facing hidden timers timer every after',
-    ' collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride land reverse stop reveal release actions action move hop jump distance seconds leap climb fire turn thrust accelerate',
+    ' animation interval frame collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride land reverse stop reveal release actions action move hop jump distance seconds leap climb fire turn thrust accelerate',
     ' states keys state shows show inputs input trigger conditions condition atleast atmost remaining',
     ' push pop play inc dec become sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
@@ -169,12 +170,17 @@
       </xsl:when>
       <!-- several sprites are looks (<become>), the group's alone: a part's
            <sprite> changes the group's one look -->
-      <xsl:when test="self::group and (*/sprite[2] or (sprite[2] and */sprite))">
+      <xsl:when test="self::group and (*[not(self::sprite)]/sprite[2] and not(sprite[2]))">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;member&gt;, &lt;row&gt;, &lt;column&gt; or &lt;cell&gt; with a &lt;sprite&gt; in a group of several looks'" />
+          <xsl:with-param name="what" select="'a &lt;member&gt;, &lt;row&gt;, &lt;column&gt; or &lt;cell&gt; with several sprites in a group of one'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::sprite and parent::*[parent::group] and ../../sprite and string(@name) != string(../../sprite/@name)">
+      <xsl:when test="self::animation and not(parent::object or parent::group)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('an &lt;animation&gt; of a &lt;', local-name(..), '&gt;')" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::sprite and parent::*[parent::group] and ../../sprite and not(@name = ../../sprite/@name or (not(@name) and not(../../sprite[2]) and not(../../sprite/@name)))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('a &lt;sprite&gt; of a &lt;', local-name(..), '&gt; with another name than the sprite of its group (a look of its own)')" />
         </xsl:call-template>
@@ -323,7 +329,7 @@
       </xsl:when>
 
       <!-- keys -->
-      <xsl:when test="(self::move and not(parent::action or $in-own-timer or ($in-rule and not(ancestor::group)))) or ((self::hop or self::jump) and not(parent::action))">
+      <xsl:when test="(self::move and not(parent::action or $in-own-timer or $in-rule)) or ((self::hop or self::jump) and not(parent::action))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; outside the &lt;action&gt; of an object')" />
         </xsl:call-template>

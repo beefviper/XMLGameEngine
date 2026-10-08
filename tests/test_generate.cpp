@@ -783,6 +783,27 @@ TEST_CASE("generating Pitfall! makes each scorpion an object of its screen, and 
 	CHECK(main.find("\t\tstatusScreen += 1.0f;\n\t\tharry.move({-(windowRight - 2.0f * physics::width(harry)), 0.0f});") != std::string::npos);
 }
 
+TEST_CASE("generating Space Invaders animates the block, each row its own pictures, through one become", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_spaceinvaders");
+	generateGame(requestFor(fs::current_path() / "games/spaceinvaders.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// a look is the group's picture, or the rows' that change it
+	CHECK(main.find("\tcase AliensLook::B:\n\t\tif (i >= 11 && i <= 32) // aliens, rows 2, 3\n\t\t{\n\t\t\taliens[i].setTexture(aliensRow23BPicture, true);\n\t\t}\n\t\telse if (i >= 33) // aliens, rows 4, 5") != std::string::npos);
+	CHECK(main.find("\t\telse\n\t\t{\n\t\t\taliens[i].setTexture(aliensBPicture, true);") != std::string::npos);
+	// the animation goes through the looks, each alien in play on its own count
+	CHECK(main.find("const std::vector<AliensLook> aliensFrames = {AliensLook::A, AliensLook::B};") != std::string::npos);
+	CHECK(main.find("\t\tif (++aliensShown[i] < framesFor(animationSeconds))\n\t\t{\n\t\t\tcontinue;\n\t\t}\n\t\taliensShown[i] = 0;\n\t\taliensFrame[i] = (aliensFrame[i] + 1) % aliensFrames.size();\n\t\tbecomeAliens(i, aliensFrames[aliensFrame[i]]);") != std::string::npos);
+	CHECK(main.find("\t// the animations a frame on\n\tanimateAliens();\n\n\t// the timers first") != std::string::npos);
+	CHECK(main.find("\taliensFrame.assign(aliens.size(), 0);\n\taliensShown.assign(aliens.size(), 0);") != std::string::npos);
+}
+
 TEST_CASE("a group in lockstep moves as one block, and turns as one off a side", "[generate]")
 {
 	if (!canGenerate())
@@ -827,7 +848,7 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 	CHECK(main.find("\t\t\taliensVelocity.x = -aliensVelocity.x;\n\t\t\tfor (sf::CircleShape& each : aliens)\n\t\t\t{\n\t\t\t\teach.move({aliensVelocity.x, 0.0f});") != std::string::npos);
 	CHECK(main.find("\t// aliens: no more than 11 left\n\tif (std::count(aliensAlive.begin(), aliensAlive.end(), true) <= 11)\n\t{\n\t\tstart();") != std::string::npos);
 
-	// a row's variables, and a row's sprite in a group of several looks, are not written yet
+	// a row's variables, and looks of a row's own in a group of one look, are not written yet
 	const auto refused = [&](const std::string& from, const std::string& to)
 	{
 		std::string xml = readFile(folder.path / "block.xml");
@@ -844,7 +865,7 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 		return std::string("generated it");
 	};
 	CHECK(refused("<row number=\"even\"><sprite><circle><color>color.red</color></circle></sprite></row>", "<row number=\"even\"><variables><variable name=\"points\">2</variable></variables></row>").find("cannot generate <variables> of a <row> yet") != std::string::npos);
-	CHECK(refused("<circle><color>color.red</color></circle></sprite>", "<circle><color>color.red</color></circle></sprite><sprite name=\"hit\"><circle><radius>2</radius></circle></sprite>").find("cannot generate a <member>, <row>, <column> or <cell> with a <sprite> in a group of several looks yet") != std::string::npos);
+	CHECK(refused("<circle><color>color.red</color></circle></sprite>", "<circle><color>color.red</color></circle></sprite><sprite name=\"hit\"><circle><radius>2</radius></circle></sprite>").find("cannot generate a <member>, <row>, <column> or <cell> with several sprites in a group of one yet") != std::string::npos);
 }
 
 TEST_CASE("a group's rows, columns and cells change what they pick, and each cell is where the engine puts it", "[generate]")
