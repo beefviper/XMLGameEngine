@@ -128,6 +128,7 @@ bool </xsl:text>
         <xsl:otherwise>
           <xsl:value-of select="'&#9;if ('" />
           <xsl:if test="$dies"><xsl:value-of select="concat($name, 'Alive &amp;&amp; ')" /></xsl:if>
+          <xsl:if test="count(. | $jumpers) = count($jumpers)"><xsl:value-of select="concat($name, 'JumpFrames == 0 &amp;&amp; ')" /></xsl:if>
           <xsl:value-of select="concat('counts(', $name, '))&#10;&#9;{&#10;&#9;&#9;return true;&#10;&#9;}&#10;')" />
         </xsl:otherwise>
       </xsl:choose>

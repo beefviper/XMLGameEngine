@@ -36,6 +36,15 @@
     <xsl:if test="contains($reserved, concat(' ', $camel, ' '))">_</xsl:if>
   </xsl:template>
 
+  <!-- A game variable's name: as any other, with an underscore after it when
+       an object or group has the same name (Frostbite's row1, a height, and
+       its row of ice), as C++ cannot have both. -->
+  <xsl:template name="variable-name">
+    <xsl:param name="name" />
+    <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$name" /></xsl:call-template>
+    <xsl:if test="$game/objects/*[@name = $name]">_</xsl:if>
+  </xsl:template>
+
   <!-- C++'s keywords, and the names the program itself uses. -->
   <xsl:variable name="reserved" select="concat(
     ' alignas alignof and and_eq asm auto bitand bitor bool break case catch char char8_t char16_t char32_t',
@@ -45,7 +54,8 @@
     ' protected public register reinterpret_cast requires return short signed sizeof static static_assert',
     ' static_cast struct switch template this thread_local throw true try typedef typeid typename union',
     ' unsigned using virtual void volatile wchar_t while xor xor_eq',
-    ' main window font screens background framerate setup start pressed sign randomBetween physics sound sf std ')" />
+    ' main window font screens background framerate setup start pressed sign randomBetween physics sound sf std',
+    ' clock time exit abort rand srand ')" />
 
   <xsl:template name="cpp-camel">
     <xsl:param name="name" />
@@ -122,7 +132,12 @@
             <xsl:when test="$word = 'and'"><xsl:text>&amp;&amp;</xsl:text></xsl:when>
             <xsl:when test="$word = 'or'"><xsl:text>||</xsl:text></xsl:when>
             <xsl:when test="$word = 'not'"><xsl:text>!</xsl:text></xsl:when>
-            <xsl:when test="$game/variables/variable[@name = $word] or contains($window-names, concat(' ', $word, ' ')) or $word = 'pi'
+            <xsl:when test="$game/variables/variable[@name = $word]">
+              <xsl:call-template name="variable-name">
+                <xsl:with-param name="name" select="$word" />
+              </xsl:call-template>
+            </xsl:when>
+            <xsl:when test="contains($window-names, concat(' ', $word, ' ')) or $word = 'pi'
                             or $game/objects/object[@name = substring-before($word, '.')]/variables/variable[@name = substring-after($word, '.')]">
               <xsl:call-template name="cpp-name">
                 <xsl:with-param name="name" select="$word" />

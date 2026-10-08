@@ -519,7 +519,8 @@ TEST_CASE("generating Frogger lets the frog ride a log, and the river costs a li
 	const std::string main = readFile(folder.path / "out/main.cpp");
 	// what it rides is worked out again every frame, from the rules
 	CHECK(main.find("sf::Vector2f frogRiding; // the velocity of what it rides (<ride />), worked out every frame") != std::string::npos);
-	CHECK(main.find("void updateFrog()\n{\n\t// what it rides, worked out again this frame\n\tfrogRiding = {};") != std::string::npos);
+	// before anything on the screen moves, so a log updated before the frog counts
+	CHECK(main.find("void updatePlaying()\n{\n\tfrogRiding = {}; // what it rides, worked out again this frame\n\tupdatePads();") != std::string::npos);
 	CHECK(main.find("\t\tif (physics::touching(frog, other))\n\t\t{\n\t\t\tfrogRiding = logrow6Velocity;\n\t\t}") != std::string::npos);
 	// and moves it after them, for the frame it is touching, as in the engine
 	CHECK(main.find("\t// it rides along: moved as well by what it touches, this frame\n\tfrog.move(frogRiding);\n}") != std::string::npos);
@@ -697,6 +698,45 @@ TEST_CASE("generating Lunar Lander pulls the lander down, burns fuel while a thr
 	CHECK(main.find("\tconst float landerSpeedAtPad = landerVelocity.length();") != std::string::npos);
 	CHECK(main.find("physics::touchingPixels(lander, &landerPixels, pad, &padPixels, landerVelocity) && landerSpeedAtPad < safespeed)") != std::string::npos);
 	CHECK(main.find("\t\tlanderVelocity = {};\n\t\tlanderAcceleration = {}; // and its pull, until it is reset") != std::string::npos);
+}
+
+TEST_CASE("generating Frostbite jumps Bailey a row at a time, touching nothing in the air", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_frostbite");
+	generateGame(requestFor(fs::current_path() / "games/frostbite.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// a key starts a jump, if none is under way and it lands on the screen
+	CHECK(main.find("\t\t\tphysics::jump(bailey, {0.0f, -rowgap}, framesFor(leap), baileyJumpStep, baileyJumpFrames, windowArea);") != std::string::npos);
+	CHECK(main.find("\tphysics::jumping(bailey, baileyJumpStep, baileyJumpFrames, windowArea);") != std::string::npos);
+	// in the air it touches nothing
+	CHECK(main.find("if (baileyJumpFrames == 0 && physics::touching(row1[i], bailey))") != std::string::npos);
+	// a game variable named like a group keeps a name of its own
+	CHECK(main.find("const float row1_ = 172.0f; // named like the group row1") != std::string::npos);
+	CHECK(main.find("\tbaileyJumpFrames = 0;") != std::string::npos);
+}
+
+TEST_CASE("generating Air-Sea Battle swings each gun with keys, and fires along its heading", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_airseabattle");
+	generateGame(requestFor(fs::current_path() / "games/airseabattle.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("physics::fireAhead(gun1, shots1[i], shots1Velocity[i], gun1Heading, sf::Vector2f{0.0f, -shellspeed}.length());") != std::string::npos);
+	CHECK(main.find("\t\tgun1Heading -= swing;") != std::string::npos);
+	// a name C++ or its library has already is kept apart
+	CHECK(main.find("sf::Text clock_(font);") != std::string::npos);
+	CHECK(main.find("const float sea_ = 420.0f; // named like the object sea") != std::string::npos);
 }
 
 TEST_CASE("a group in lockstep moves as one block, and turns as one off a side", "[generate]")

@@ -5,8 +5,8 @@
 //
 // The physics a generated game uses, in one place of its own: where a thing
 // is, whether two things touch, what a moving thing does at an edge of the
-// window (bounce, stick, wrap round) or against another thing, a hop, and a
-// shot leaving the side a thing faces or the way it heads. A "thing" is
+// window (bounce, stick, wrap round) or against another thing, a hop, a jump,
+// and a shot leaving the side a thing faces or the way it heads. A "thing" is
 // anything SFML can bound and move (a shape, a sprite, a text), and a
 // velocity is how far it moves each frame. Header only, and nothing but
 // SFML's graphics types, so it can be copied into any SFML 3 program.
@@ -280,6 +280,40 @@ namespace physics
 		{
 			thing.move(step);
 		}
+	}
+
+	// A jump that takes time (<jump>): `distance` over `frames` frames, a step
+	// each (`jumping`), begun only if it lands inside the area and the thing
+	// is not in the air already.
+	template <typename Thing>
+	void jump(const Thing& thing, const sf::Vector2f& distance, int frames, sf::Vector2f& step, int& framesLeft, const sf::FloatRect& area)
+	{
+		if (framesLeft > 0)
+		{
+			return;
+		}
+		const sf::FloatRect bounds = thing.getGlobalBounds();
+		const sf::Vector2f from = bounds.position + distance;
+		const sf::Vector2f to = from + bounds.size;
+		if (from.x >= area.position.x && from.y >= area.position.y
+			&& to.x <= area.position.x + area.size.x && to.y <= area.position.y + area.size.y)
+		{
+			step = distance / static_cast<float>(frames);
+			framesLeft = frames;
+		}
+	}
+
+	// One frame of a jump under way: the next step, if it stays inside the
+	// area, and a frame fewer left.
+	template <typename Thing>
+	void jumping(Thing& thing, const sf::Vector2f& step, int& framesLeft, const sf::FloatRect& area)
+	{
+		if (framesLeft == 0)
+		{
+			return;
+		}
+		hop(thing, step, area);
+		--framesLeft;
 	}
 
 	// --- Shots.

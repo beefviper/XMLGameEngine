@@ -6,7 +6,7 @@
 
 <!-- What this target can generate so far: all of Pong, Space Race,
      Freeway, Breakout, Depth Charge, Frogger, Astrosmash, Kaboom, Demon Attack,
-     Megamania, Asteroids, Combat and Lunar Lander. Screens on a stack, rectangles, circles, texts (words or a
+     Megamania, Asteroids, Combat, Lunar Lander, Frostbite and Air-Sea Battle. Screens on a stack, rectangles, circles, texts (words or a
      number) and pictures (from a file, rows of text, lines or an SVG);
      objects that move, bounce, stick, deflect, wrap round, ride, turn back,
      stop, start again and die; groups of them, listed or in columns and rows
@@ -27,7 +27,7 @@
     ' objects object group member row column cell sprite circle radius rectangle color text content number size image path flip columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity acceleration heading drag facing hidden timers timer every after',
-    ' collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride reverse stop reveal release actions action move hop fire turn thrust accelerate',
+    ' collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride reverse stop reveal release actions action move hop jump distance seconds fire turn thrust accelerate',
     ' states keys state shows show inputs input trigger conditions condition atleast atmost remaining',
     ' push pop play inc dec become sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
@@ -72,11 +72,6 @@
       <xsl:when test="self::ride and ancestor::group">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'&lt;ride /&gt; in the rules of a &lt;group&gt;'" />
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="self::object and /game/variables/variable[@name = current()/@name]">
-        <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="concat('an object named like the game variable ', @name)" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::type and normalize-space(.) != 'pixel' and normalize-space(.) != 'box'">
@@ -258,7 +253,7 @@
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; in a &lt;timer&gt; of a state')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::facing and ../actions/action[move or hop]">
+      <xsl:when test="self::facing and ../actions/action[move or hop or jump]">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="'&lt;facing&gt; on something keys move (the way it faces changes with them)'" />
         </xsl:call-template>
@@ -270,7 +265,7 @@
           <xsl:with-param name="what" select="concat('&lt;', $tag, ' object=&quot;', @object, '&quot;&gt;, which is not an object or group a screen shows')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="(self::reset or self::reveal or self::play or self::inc or self::dec) and not($in-rule or $on-key or $in-condition or $in-timer or (parent::action and not(self::reset or self::reveal) and not(../move)))">
+      <xsl:when test="(self::reset or self::reveal or self::play or self::inc or self::dec) and not($in-rule or $on-key or $in-condition or $in-timer or (parent::action and not(self::reveal or self::inc or self::dec or self::reset[@object]) and not(../move)))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; there')" />
         </xsl:call-template>
@@ -302,7 +297,7 @@
       </xsl:when>
 
       <!-- keys -->
-      <xsl:when test="(self::move and not(parent::action or $in-own-timer)) or (self::hop and not(parent::action))">
+      <xsl:when test="(self::move and not(parent::action or $in-own-timer)) or ((self::hop or self::jump) and not(parent::action))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; outside the &lt;action&gt; of an object')" />
         </xsl:call-template>
@@ -337,9 +332,9 @@
           <xsl:with-param name="what" select="'a &lt;move&gt; on an object that has a &lt;velocity&gt; of its own'" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::trigger and (not($on-key) or @class or not(/game/objects/object[@name = current()/@object]/actions/action[@name = current()/@action]))">
+      <xsl:when test="self::trigger and (not($on-key or (($in-condition or $in-timer) and not(key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]))) or @class or not(/game/objects/object[@name = current()/@object]/actions/action[@name = current()/@action]))">
         <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'a &lt;trigger&gt; that is not in an &lt;input&gt; or does not name an action of an object'" />
+          <xsl:with-param name="what" select="'a &lt;trigger&gt; that is not in an &lt;input&gt; (or, of an action not held, a condition or a timer) or does not name an action of an object'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::input and trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]]
@@ -383,7 +378,7 @@
           <xsl:with-param name="what" select="concat('a &lt;condition&gt; on ', @variable, ', which no object it names has')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="parent::condition and not(self::atleast or self::atmost or self::remaining or self::push or self::pop or self::reset or self::reveal or self::play or self::inc or self::dec)">
+      <xsl:when test="parent::condition and not(self::atleast or self::atmost or self::remaining or self::push or self::pop or self::reset or self::reveal or self::play or self::inc or self::dec or self::become or self::trigger)">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; in a &lt;condition&gt;')" />
         </xsl:call-template>
