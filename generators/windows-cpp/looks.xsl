@@ -74,11 +74,13 @@
     <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$target/@name" /></xsl:call-template></xsl:variable>
     <xsl:choose>
       <xsl:when test="$target/self::group and @object">
-        <xsl:value-of select="concat($indent, 'for (std::size_t i = 0; i &lt; ', $name, '.size(); ++i)&#10;', $indent, '{&#10;', $indent, '&#9;')" />
+        <!-- counted with k when it is said by a member, i already -->
+        <xsl:variable name="each" select="substring('ik', 1 + number(string($index) != ''), 1)" />
+        <xsl:value-of select="concat($indent, 'for (std::size_t ', $each, ' = 0; ', $each, ' &lt; ', $name, '.size(); ++', $each, ')&#10;', $indent, '{&#10;', $indent, '&#9;')" />
         <xsl:call-template name="become-call">
           <xsl:with-param name="thing" select="$target" />
           <xsl:with-param name="sprite" select="@sprite" />
-          <xsl:with-param name="index" select="'i'" />
+          <xsl:with-param name="index" select="$each" />
         </xsl:call-template>
         <xsl:value-of select="concat('&#10;', $indent, '}&#10;')" />
       </xsl:when>
