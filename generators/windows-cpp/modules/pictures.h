@@ -7,8 +7,9 @@
 // loading them from a file: one written as rows of text (a '.' is a clear
 // pixel and a '*' a solid one) and one made of straight lines. Each comes out
 // as an sf::Image, pixel for pixel what the engine draws (lib/source/bitmap.cpp),
-// to be loaded into a texture. Header only, and nothing but SFML's graphics
-// types, so it can be copied into any SFML 3 program.
+// to be loaded into a texture; and either one turned to a heading, drawn again
+// for each whole degree as the engine does. Header only, and nothing but
+// SFML's graphics types, so it can be copied into any SFML 3 program.
 
 #pragma once
 
@@ -69,8 +70,9 @@ namespace pictures
 	}
 
 	// The lines, in order (a later one covers an earlier one), each end
-	// rounded to a whole pixel, on a picture just big enough to hold them.
-	inline sf::Image lines(const std::vector<Line>& drawing)
+	// rounded to a whole pixel, on a picture just big enough to hold them (and
+	// at least `least` big).
+	inline sf::Image lines(const std::vector<Line>& drawing, sf::Vector2u least = {})
 	{
 		const auto rounded = [](sf::Vector2f point)
 		{
@@ -89,7 +91,7 @@ namespace pictures
 			}
 		}
 
-		sf::Image picture({static_cast<unsigned int>(right), static_cast<unsigned int>(bottom)}, sf::Color::Transparent);
+		sf::Image picture({std::max(static_cast<unsigned int>(right), least.x), std::max(static_cast<unsigned int>(bottom), least.y)}, sf::Color::Transparent);
 		for (const Line& line : drawing)
 		{
 			const int thickness = std::max(line.thickness, 1);
@@ -126,5 +128,108 @@ namespace pictures
 			}
 		}
 		return picture;
+	}
+
+	// A heading as the whole degrees, from 0 up to 359, it is drawn at.
+	inline int wholeDegrees(float degrees)
+	{
+		long whole = std::lround(degrees) % 360;
+		if (whole < 0)
+		{
+			whole += 360;
+		}
+		return static_cast<int>(whole);
+	}
+
+	// The lines turned clockwise by `degrees` about the middle of the box their
+	// ends lie in, on a square big enough for them at any heading, the middle
+	// of the drawing at the middle of the square: so a thing that turns stays
+	// where it is and keeps its size.
+	inline sf::Image turnedLines(const std::vector<Line>& drawing, float degrees)
+	{
+		float left = drawing.front().from.x;
+		float right = left;
+		float top = drawing.front().from.y;
+		float bottom = top;
+		int thickest = 1;
+		for (const Line& line : drawing)
+		{
+			for (const sf::Vector2f end : {line.from, line.to})
+			{
+				left = std::min(left, end.x);
+				right = std::max(right, end.x);
+				top = std::min(top, end.y);
+				bottom = std::max(bottom, end.y);
+			}
+			thickest = std::max(thickest, line.thickness);
+		}
+		const sf::Vector2f middle((left + right) / 2.0f, (top + bottom) / 2.0f);
+
+		// the furthest an end lies from the middle, and a line's thickness more
+		float reach = 0.0f;
+		for (const Line& line : drawing)
+		{
+			reach = std::max({reach, (line.from - middle).length(), (line.to - middle).length()});
+		}
+		const int half = static_cast<int>(std::ceil(reach)) + thickest;
+		const unsigned int side = static_cast<unsigned int>(2 * half + 1);
+
+		const float angle = 2.0f * 3.14159265358979323846f * static_cast<float>(wholeDegrees(degrees)) / 360.0f;
+		const float c = std::cos(angle);
+		const float s = std::sin(angle);
+		const auto place = [&](sf::Vector2f point)
+		{
+			const sf::Vector2f d = point - middle;
+			return sf::Vector2f(static_cast<float>(half) + d.x * c - d.y * s, static_cast<float>(half) + d.x * s + d.y * c);
+		};
+
+		std::vector<Line> turned = drawing;
+		for (Line& line : turned)
+		{
+			line.from = place(line.from);
+			line.to = place(line.to);
+		}
+		return lines(turned, {side, side});
+	}
+
+	// A picture turned clockwise by `degrees`, each pixel the one of the
+	// picture that lies under it (no blending), on a square big enough for it
+	// at any heading, the middle of the picture at the middle of the square.
+	inline sf::Image turned(const sf::Image& picture, float degrees)
+	{
+		const sf::Vector2u size = picture.getSize();
+		const float width = static_cast<float>(size.x);
+		const float height = static_cast<float>(size.y);
+		const unsigned int side = std::max({static_cast<unsigned int>(std::ceil(std::hypot(width, height))), size.x, size.y});
+		const float middle = static_cast<float>(side) / 2.0f;
+
+		const int whole = wholeDegrees(degrees);
+		const float angle = 2.0f * 3.14159265358979323846f * static_cast<float>(whole) / 360.0f;
+		// 90, 180 and 270 degrees exact, not a hair off
+		const float c = whole == 90 || whole == 270 ? 0.0f : std::cos(angle);
+		const float s = whole == 0 || whole == 180 ? 0.0f : std::sin(angle);
+
+		sf::Image result({side, side}, sf::Color::Transparent);
+		for (unsigned int y = 0; y < side; ++y)
+		{
+			for (unsigned int x = 0; x < side; ++x)
+			{
+				// the pixel's middle turned back the other way, to what lies under it
+				const float dx = static_cast<float>(x) + 0.5f - middle;
+				const float dy = static_cast<float>(y) + 0.5f - middle;
+				const float fromX = std::floor(dx * c + dy * s + width / 2.0f + 0.0001f);
+				const float fromY = std::floor(-dx * s + dy * c + height / 2.0f + 0.0001f);
+				if (fromX < 0.0f || fromY < 0.0f || fromX >= width || fromY >= height)
+				{
+					continue;
+				}
+				const sf::Color color = picture.getPixel({static_cast<unsigned int>(fromX), static_cast<unsigned int>(fromY)});
+				if (color.a != 0)
+				{
+					result.setPixel({x, y}, color);
+				}
+			}
+		}
+		return result;
 	}
 }

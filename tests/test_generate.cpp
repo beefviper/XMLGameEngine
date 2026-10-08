@@ -636,6 +636,69 @@ TEST_CASE("generating Megamania keeps the energy no screen shows, run down by a 
 	CHECK(main.find("\tif (screens.back() == Screen::Wave2)\n\t{\n\t\t// cookies: die") != std::string::npos);
 }
 
+TEST_CASE("generating Asteroids turns the ship's picture with its heading, and a broken rock releases two smaller ones", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_asteroids");
+	generateGame(requestFor(fs::current_path() / "games/asteroids.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// a key held turns it, and thrust pushes it the way it faces; either key of an action, once a frame
+	CHECK(main.find("\tif (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))\n\t{\n\t\tshipHeading -= turnrate;\n\t\tturnShip();\n\t}") != std::string::npos);
+	CHECK(main.find("\t\tshipVelocity += physics::ahead(shipHeading) * thrustpower;") != std::string::npos);
+	// its picture is drawn again when the whole degree changes, and that is what its touches test
+	CHECK(main.find("\t\tconst sf::Image picture = pictures::turnedLines(shipLines, static_cast<float>(degrees));\n\t\tshipPicture.update(picture);\n\t\tshipPixels = picture;") != std::string::npos);
+	CHECK(main.find("\tshipVelocity *= 1.0f - drag;\n\tship.move(shipVelocity);") != std::string::npos);
+	CHECK(main.find("physics::fireAhead(ship, shots[i], shotsVelocity[i], shipHeading, sf::Vector2f{0.0f, -shotspeed}.length());") != std::string::npos);
+	// rocks of several looks find their pixels by their picture; a touch is swept along the step
+	CHECK(main.find("physics::touchingPixels(shots[i], nullptr, bigrocks[j], &pixelsOf(bigrocks[j].getTexture()), shotsVelocity[i] - bigrocksVelocity[j])") != std::string::npos);
+	CHECK(main.find("const sf::Image& pixelsOf(const sf::Texture& picture)") != std::string::npos);
+	CHECK(main.find("for (std::size_t k = 0, released = 0; k < mediumrocks.size() && released < 2; ++k)") != std::string::npos);
+	CHECK(main.find("mediumrocks[k].setPosition(bigrocks[j].getGlobalBounds().getCenter() - mediumrocks[k].getGlobalBounds().size / 2.0f);") != std::string::npos);
+	CHECK(main.find("\tphysics::wrap(ship, shipVelocity, physics::Edge::Left, windowArea);") != std::string::npos);
+}
+
+TEST_CASE("generating Combat drives each tank along its heading, a turned picture of rows", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_combat");
+	generateGame(requestFor(fs::current_path() / "games/combat.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("\t\ttank1Velocity += physics::ahead(tank1Heading) * back;") != std::string::npos);
+	CHECK(main.find("pictures::turned(pictures::rows(tank1Rows, 3, sf::Color::Yellow), static_cast<float>(degrees))") != std::string::npos);
+	CHECK(main.find("\tif (shell2Alive && physics::touchingPixels(tank1, &tank1Pixels, shell2, nullptr, tank1Velocity - shell2Velocity))") != std::string::npos);
+	CHECK(main.find("\t\tif (physics::touchingPixels(tank1, &tank1Pixels, other, nullptr, tank1Velocity))\n\t\t{\n\t\t\tphysics::bounceOff(tank1, tank1Velocity, other);") != std::string::npos);
+}
+
+TEST_CASE("generating Lunar Lander pulls the lander down, burns fuel while a thruster is held, and lands by speed", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_lunarlander");
+	generateGame(requestFor(fs::current_path() / "games/lunarlander.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	CHECK(main.find("\tlanderAcceleration = {0.0f, gravity};") != std::string::npos);
+	CHECK(main.find("\tlanderVelocity += landerAcceleration;\n\tlander.move(landerVelocity);") != std::string::npos);
+	CHECK(main.find("\tif (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))\n\t{\n\t\t// burning fuel, while there is any\n\t\tif (landerFuel > 0.0f)\n\t\t{\n\t\t\tlanderFuel -= 1.0f;\n\t\t\tshowFuelvalue();\n\t\t\tlanderVelocity.y -= thrust;\n\t\t}\n\t}") != std::string::npos);
+	// its speed is taken once, before the first rule about the pad, as the engine takes it
+	CHECK(main.find("\tconst float landerSpeedAtPad = landerVelocity.length();") != std::string::npos);
+	CHECK(main.find("physics::touchingPixels(lander, &landerPixels, pad, &padPixels, landerVelocity) && landerSpeedAtPad < safespeed)") != std::string::npos);
+	CHECK(main.find("\t\tlanderVelocity = {};\n\t\tlanderAcceleration = {}; // and its pull, until it is reset") != std::string::npos);
+}
+
 TEST_CASE("a group in lockstep moves as one block, and turns as one off a side", "[generate]")
 {
 	if (!canGenerate())

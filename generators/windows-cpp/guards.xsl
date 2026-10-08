@@ -26,13 +26,17 @@
   </xsl:template>
 
   <!-- What holds `rule` back, as a condition on `name` (the object, or one
-       member) touching `other` (empty for an edge), or nothing: the look it
-       must show, and the class it must not be touching. -->
+       member, with its `velocity`) touching `other` (empty for an edge), or
+       nothing: the look it must show, the class it must not be touching, and
+       how fast it must be going (<slower>, <faster>; `speed` when it was taken
+       before an earlier rule could change it). -->
   <xsl:template name="rule-guard">
     <xsl:param name="rule" />
     <xsl:param name="self" />
     <xsl:param name="name" />
     <xsl:param name="other" select="''" />
+    <xsl:param name="velocity" select="''" />
+    <xsl:param name="speed" select="''" />
     <xsl:if test="$rule/@sprite">
       <xsl:call-template name="look-variable">
         <xsl:with-param name="thing" select="$self" />
@@ -55,6 +59,19 @@
       </xsl:choose>
       <xsl:text>)</xsl:text>
     </xsl:if>
+    <xsl:for-each select="$rule/slower | $rule/faster">
+      <xsl:if test="$rule/@sprite or $rule/@unless or position() &gt; 1"> &amp;&amp; </xsl:if>
+      <xsl:choose>
+        <xsl:when test="$speed != ''"><xsl:value-of select="$speed" /></xsl:when>
+        <xsl:when test="$velocity != ''"><xsl:value-of select="concat($velocity, '.length()')" /></xsl:when>
+        <xsl:otherwise>0.0f</xsl:otherwise>
+      </xsl:choose>
+      <xsl:choose>
+        <xsl:when test="self::slower"> &lt; </xsl:when>
+        <xsl:otherwise> &gt;= </xsl:otherwise>
+      </xsl:choose>
+      <xsl:call-template name="value" />
+    </xsl:for-each>
   </xsl:template>
 
   <!-- Its first line, for the declarations. -->

@@ -54,7 +54,23 @@
 
   <!-- Those that move on their own: a velocity that is not 0, 0 (a group's,
        or any of its members'). -->
-  <xsl:variable name="moving" select="$things[(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]]" />
+  <xsl:variable name="moving" select="$things[(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]] | $pulled | $pushed" />
+
+  <!-- Those pulled every frame (<acceleration>: gravity), and those keys push
+       (<thrust> along the heading, <accelerate> one way): they have a velocity
+       that changes, whatever it starts at. -->
+  <xsl:variable name="pulled" select="$objects[acceleration[x/* or y/* or number(x) != 0 or number(y) != 0]]" />
+  <xsl:variable name="pushed" select="$objects[actions/action[thrust or accelerate]]" />
+
+  <!-- Those with a <heading>: turned by keys, their picture drawn again at
+       each whole degree, as the engine does. -->
+  <xsl:variable name="headed" select="$objects[heading]" />
+
+  <!-- Those whose touches are tested pixel by pixel (<type>pixel</type>). -->
+  <xsl:variable name="pixel-things" select="$things[normalize-space(collisions/type) = 'pixel']" />
+  <!-- The pictures of groups of them with more than one, which pixelsOf()
+       tells apart by texture. -->
+  <xsl:variable name="pixel-looks" select="$group-data[@name = $pixel-things/@name][count(look) &gt; 1]/look/sprite[bitmap or line or svg]" />
 
   <!-- The groups whose members or cells each have a velocity of their own
        (a member, row, column or cell gives one), kept in a std::vector beside
@@ -104,7 +120,7 @@
   <!-- Those that go back to where they started after a <reset /> (its place
        and velocity, any <random> drawn anew, as in the engine); for a group,
        one member at a time. -->
-  <xsl:variable name="resetting" select="$things[count(. | $colliding) = count($colliding)][collisions/collision/reset[not(@object)]] | $things[timers/timer/reset[not(@object)]] | $things[@name = /game//reveal/@object]" />
+  <xsl:variable name="resetting" select="$things[count(. | $colliding) = count($colliding)][collisions/collision/reset[not(@object)]] | $things[timers/timer/reset[not(@object)]] | $things[@name = /game//reveal/@object or @name = /game//release/@object]" />
 
   <!-- Those with <timers>, counted down every frame they are shown and in
        play, and the screens with timers of their own. -->
@@ -133,12 +149,13 @@
   </xsl:variable>
   <xsl:variable name="updating" select="$things[@name = exsl:node-set($update-work)/work[string(.) != '']/@name]" />
 
-  <!-- What the keys do: held, a <trigger> of an action of <move>s, looked at
-       every frame; pressed, everything else (a <hop> too), once for each press. -->
+  <!-- What the keys do: held, a <trigger> of an action of <move>s, <turn>s,
+       <thrust>s or <accelerate>s, looked at every frame; pressed, everything
+       else (a <hop> too), once for each press. -->
   <xsl:key name="action" match="object/actions/action" use="concat(../../@name, '|', @name)" />
   <xsl:variable name="all-inputs" select="/game/states/keys/input | $states/inputs/input" />
-  <xsl:variable name="held-inputs" select="$all-inputs[trigger[key('action', concat(@object, '|', @action))/move]]" />
-  <xsl:variable name="pressed-inputs" select="$all-inputs[* and not(trigger[key('action', concat(@object, '|', @action))/move])]" />
+  <xsl:variable name="held-inputs" select="$all-inputs[trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]]]" />
+  <xsl:variable name="pressed-inputs" select="$all-inputs[* and not(trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate]])]" />
 
   <!-- Each screen's keys: the <input>s it takes, from the <keys> sets its
        <inputs keys="..."> names (each over the one before) and then its own
@@ -227,6 +244,7 @@
       <xsl:value-of select="concat(' ', @uses, ' ')" />
     </xsl:for-each>
     <xsl:if test="contains($words, ' min ') or contains($words, ' max ')"> algorithm </xsl:if>
+    <xsl:if test="$headed or (//release | //reveal)[* or (normalize-space(.) != '' and string(number(.)) != normalize-space(.))]"> cmath </xsl:if>
     <xsl:if test="contains($words, ' abs ') or contains($words, ' floor ') or contains($words, ' ceil ') or contains($words, ' sqrt ') or contains($words, ' sin ') or contains($words, ' cos ') or contains($words, ' tan ') or contains($words, ' pow ') or contains($words, ' round ')"> cmath </xsl:if>
     <xsl:if test="$numbers or $drawn-rows"> string </xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines"> vector </xsl:if>
@@ -469,6 +487,13 @@ sf::Texture </xsl:text>
       <xsl:if test="count(. | $riders) = count($riders)">
         <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Riding; // the velocity of what it rides (&lt;ride /&gt;), worked out every frame')" />
       </xsl:if>
+      <xsl:if test="count(. | $pulled) = count($pulled)">
+        <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Acceleration; // its pull, every frame (until a &lt;stop /&gt;)')" />
+      </xsl:if>
+      <xsl:if test="count(. | $headed) = count($headed)">
+        <xsl:value-of select="concat('&#10;float ', $name, 'Heading = 0.0f; // degrees clockwise from straight up')" />
+        <xsl:value-of select="concat('&#10;int ', $name, 'DrawnAt = -1; // the whole degree its picture is drawn at')" />
+      </xsl:if>
       <xsl:if test="count(. | $dying) = count($dying)">
         <xsl:choose>
           <xsl:when test="self::group">
@@ -547,6 +572,12 @@ sf::Texture </xsl:text>
       <xsl:text>();
 </xsl:text>
     </xsl:for-each>
+    <xsl:for-each select="$headed">
+      <xsl:text>void turn</xsl:text>
+      <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+      <xsl:text>();
+</xsl:text>
+    </xsl:for-each>
     <xsl:for-each select="$timed">
       <xsl:text>void tick</xsl:text>
       <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
@@ -581,6 +612,7 @@ sf::Texture </xsl:text>
       <xsl:text>();
 </xsl:text>
     </xsl:for-each>
+    <xsl:if test="$pixel-looks">const sf::Image&amp; pixelsOf(const sf::Texture&amp; picture);&#10;</xsl:if>
     <xsl:for-each select="$used-functions">
       <xsl:value-of select="concat(normalize-space(declaration), '&#10;')" />
     </xsl:for-each>
@@ -776,6 +808,9 @@ int main()
     <xsl:for-each select="$updating">
       <xsl:call-template name="generate-object-update" />
     </xsl:for-each>
+    <xsl:for-each select="$headed">
+      <xsl:call-template name="define-turn" />
+    </xsl:for-each>
     <xsl:for-each select="$timed">
       <xsl:call-template name="define-tick" />
     </xsl:for-each>
@@ -829,6 +864,26 @@ void show</xsl:text>
 }
 </xsl:text>
     </xsl:for-each>
+    <xsl:if test="$pixel-looks">
+      <xsl:text>
+// The pixels of a picture, for the touches tested pixel by pixel.
+const sf::Image&amp; pixelsOf(const sf::Texture&amp; picture)
+{
+</xsl:text>
+      <xsl:for-each select="$pixel-looks">
+        <xsl:variable name="name"><xsl:call-template name="drawn-name" /></xsl:variable>
+        <xsl:choose>
+          <xsl:when test="position() = last()">
+            <xsl:value-of select="concat('&#9;return ', $name, 'Pixels;&#10;')" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat('&#9;if (&amp;picture == &amp;', $name, 'Picture)&#10;&#9;{&#10;&#9;&#9;return ', $name, 'Pixels;&#10;&#9;}&#10;')" />
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+      <xsl:text>}
+</xsl:text>
+    </xsl:if>
     <xsl:for-each select="$used-functions">
       <xsl:value-of select="definition" />
     </xsl:for-each>
@@ -869,6 +924,13 @@ bool setup()
 		return false;
 	}
 </xsl:text>
+        <xsl:for-each select="$drawn">
+          <xsl:variable name="pixels"><xsl:call-template name="tested-pixels" /></xsl:variable>
+          <xsl:if test="$pixels = 'yes'">
+            <xsl:variable name="name"><xsl:call-template name="drawn-name" /></xsl:variable>
+            <xsl:value-of select="concat('&#9;', $name, 'Pixels = ', $name, 'Picture.copyToImage();&#10;')" />
+          </xsl:if>
+        </xsl:for-each>
       </xsl:when>
       <xsl:otherwise>
         <xsl:text>
@@ -1164,6 +1226,12 @@ void start()
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
+    <xsl:if test="count(. | $pulled) = count($pulled)">
+      <xsl:value-of select="concat('&#9;', $name, 'Acceleration = ')" />
+      <xsl:call-template name="vector"><xsl:with-param name="node" select="acceleration" /></xsl:call-template>
+      <xsl:text>;
+</xsl:text>
+    </xsl:if>
     <xsl:if test="self::object and count(. | $dying) = count($dying)">
       <xsl:value-of select="concat('&#9;', $name)" />
       <xsl:choose>
@@ -1422,6 +1490,15 @@ void start</xsl:text>
     <xsl:if test="count(. | $riders) = count($riders)">
       <xsl:value-of select="concat('&#9;', $name, 'Riding = {};&#10;')" />
     </xsl:if>
+    <xsl:if test="count(. | $headed) = count($headed)">
+      <xsl:value-of select="concat('&#9;', $name, 'Heading = ')" />
+      <xsl:call-template name="value-bare"><xsl:with-param name="node" select="heading" /></xsl:call-template>
+      <xsl:text>;
+	turn</xsl:text>
+      <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+      <xsl:text>();
+</xsl:text>
+    </xsl:if>
     <xsl:if test="count(. | $looked) = count($looked)">
       <xsl:text>	</xsl:text>
       <xsl:call-template name="become-call">
@@ -1652,6 +1729,12 @@ void pressed(sf::Keyboard::Key key)
     <xsl:param name="indent" />
     <xsl:variable name="facing" select="normalize-space($from/facing)" />
     <xsl:choose>
+      <xsl:when test="$from/heading">
+        <xsl:value-of select="concat($indent, 'physics::fireAhead(', $shooter, ', ', $name, ', ', $velocity, ', ', $shooter, 'Heading, sf::Vector2f')" />
+        <xsl:call-template name="vector"><xsl:with-param name="node" select="$projectile/velocity" /></xsl:call-template>
+        <xsl:text>.length());
+</xsl:text>
+      </xsl:when>
       <xsl:when test="$facing != ''">
         <xsl:value-of select="concat($indent, 'physics::fireFrom(', $shooter, ', ', $name, ', ', $velocity, ', physics::Facing::')" />
         <xsl:value-of select="concat(translate(substring($facing, 1, 1), 'udlr', 'UDLR'), substring($facing, 2))" />
@@ -1755,6 +1838,82 @@ void pressed(sf::Keyboard::Key key)
     </xsl:choose>
   </xsl:template>
 
+  <!-- What a key held does each frame to the object `name`: a <move> a step,
+       a <turn> its heading, a <thrust> along its heading and an <accelerate>
+       one way, both into its velocity, burning a unit of its variable burn=
+       if it says one, and doing nothing with none left. -->
+  <xsl:template name="held-command">
+    <xsl:param name="name" />
+    <xsl:param name="indent" />
+    <xsl:variable name="change">
+      <xsl:choose>
+        <xsl:when test="self::move">
+          <xsl:value-of select="concat($name, '.move(')" />
+          <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
+          <xsl:text>);</xsl:text>
+        </xsl:when>
+        <xsl:when test="self::turn">
+          <xsl:value-of select="concat($name, 'Heading')" />
+          <xsl:choose>
+            <xsl:when test="@direction = 'left'"> -= </xsl:when>
+            <xsl:otherwise> += </xsl:otherwise>
+          </xsl:choose>
+          <xsl:call-template name="value-bare" />
+          <xsl:value-of select="concat(';&#10;', $indent, 'turn')" />
+          <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="../../../@name" /></xsl:call-template>
+          <xsl:text>();</xsl:text>
+        </xsl:when>
+        <xsl:when test="self::thrust">
+          <xsl:value-of select="concat($name, 'Velocity += physics::ahead(', $name, 'Heading) * ')" />
+          <xsl:call-template name="value" />
+          <xsl:text>;</xsl:text>
+        </xsl:when>
+        <xsl:when test="self::accelerate">
+          <xsl:value-of select="concat($name, 'Velocity.')" />
+          <xsl:choose>
+            <xsl:when test="@direction = 'up' or @direction = 'down'">y</xsl:when>
+            <xsl:otherwise>x</xsl:otherwise>
+          </xsl:choose>
+          <xsl:choose>
+            <xsl:when test="@direction = 'up' or @direction = 'left'"> -= </xsl:when>
+            <xsl:otherwise> += </xsl:otherwise>
+          </xsl:choose>
+          <xsl:call-template name="value-bare" />
+          <xsl:text>;</xsl:text>
+        </xsl:when>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:choose>
+      <xsl:when test="normalize-space(@burn) != ''">
+        <xsl:variable name="fuel">
+          <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="concat(../../../@name, '.', normalize-space(@burn))" /></xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="concat($indent, '// burning ', normalize-space(@burn), ', while there is any&#10;')" />
+        <xsl:value-of select="concat($indent, 'if (', $fuel, ' &gt; 0.0f)&#10;', $indent, '{&#10;', $indent, '&#9;', $fuel, ' -= 1.0f;&#10;')" />
+        <xsl:call-template name="show-numbers">
+          <xsl:with-param name="variable" select="concat(../../../@name, '.', normalize-space(@burn))" />
+          <xsl:with-param name="indent" select="concat($indent, '&#9;')" />
+        </xsl:call-template>
+        <xsl:value-of select="concat($indent, '&#9;', $change, '&#10;', $indent, '}&#10;')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat($indent, $change, '&#10;')" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- The numbers that show `variable` (paddle1.score), shown again. -->
+  <xsl:template name="show-numbers">
+    <xsl:param name="variable" />
+    <xsl:param name="indent" />
+    <xsl:for-each select="$numbers[normalize-space(sprite/text/number) = $variable]">
+      <xsl:value-of select="concat($indent, 'show')" />
+      <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+      <xsl:text>();
+</xsl:text>
+    </xsl:for-each>
+  </xsl:template>
+
   <!-- A <reveal>: the first of those it names that are out of play (as many
        as it says, one if it does not) back in, where they started and at
        their own velocity. -->
@@ -1767,8 +1926,13 @@ void pressed(sf::Keyboard::Key key)
       <xsl:when test="$target/self::group">
         <xsl:variable name="count">
           <xsl:choose>
-            <xsl:when test="* or normalize-space(.) != ''"><xsl:call-template name="value-bare" /></xsl:when>
-            <xsl:otherwise>1</xsl:otherwise>
+            <xsl:when test="not(*) and normalize-space(.) = ''">1</xsl:when>
+            <xsl:when test="not(*) and string(number(.)) = normalize-space(.) and floor(number(.)) = number(.)"><xsl:value-of select="number(.)" /></xsl:when>
+            <xsl:otherwise>
+              <xsl:text>static_cast&lt;std::size_t&gt;(std::lround(</xsl:text>
+              <xsl:call-template name="value-bare" />
+              <xsl:text>))</xsl:text>
+            </xsl:otherwise>
           </xsl:choose>
         </xsl:variable>
         <xsl:value-of select="concat($indent, '// bring back ', $count, ' of ', @object, ' out of play&#10;')" />
@@ -1781,6 +1945,46 @@ void pressed(sf::Keyboard::Key key)
         <xsl:value-of select="concat($indent, '// bring back ', @object, ', if it is out of play&#10;')" />
         <xsl:value-of select="concat($indent, 'if (!', $name, 'Alive)&#10;', $indent, '{&#10;')" />
         <xsl:value-of select="concat($indent, '&#9;start', $title, '();&#10;', $indent, '&#9;', $name, 'Alive = true;&#10;', $indent, '}&#10;')" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A <release>: the first of those it names that are out of play (as many
+       as it says, one if it does not) brought back in at their own start's
+       velocity, each centred on `from`. -->
+  <xsl:template name="release">
+    <xsl:param name="from" />
+    <xsl:param name="indent" />
+    <xsl:variable name="target" select="$things[@name = current()/@object]" />
+    <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="title"><xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
+    <xsl:choose>
+      <xsl:when test="$target/self::group">
+        <xsl:variable name="count">
+          <xsl:choose>
+            <xsl:when test="not(*) and normalize-space(.) = ''">1</xsl:when>
+            <xsl:when test="not(*) and string(number(.)) = normalize-space(.) and floor(number(.)) = number(.)"><xsl:value-of select="number(.)" /></xsl:when>
+            <xsl:otherwise>
+              <xsl:text>static_cast&lt;std::size_t&gt;(std::lround(</xsl:text>
+              <xsl:call-template name="value-bare" />
+              <xsl:text>))</xsl:text>
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
+        <xsl:value-of select="concat($indent, '// release ', $count, ' of ', @object, ' from where it is&#10;')" />
+        <xsl:value-of select="concat($indent, 'for (std::size_t k = 0, released = 0; k &lt; ', $name, '.size() &amp;&amp; released &lt; ', $count, '; ++k)&#10;', $indent, '{&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;if (!', $name, 'Alive[k])&#10;', $indent, '&#9;{&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;&#9;start', $title, '(k);&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;&#9;', $name, '[k].setPosition(', $from, '.getGlobalBounds().getCenter() - ', $name, '[k].getGlobalBounds().size / 2.0f);&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;&#9;', $name, 'Alive[k] = true;&#10;', $indent, '&#9;&#9;++released;&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;}&#10;', $indent, '}&#10;')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat($indent, '// release ', @object, ' from where it is, if it is out of play&#10;')" />
+        <xsl:value-of select="concat($indent, 'if (!', $name, 'Alive)&#10;', $indent, '{&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;start', $title, '();&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;', $name, '.setPosition(', $from, '.getGlobalBounds().getCenter() - ', $name, '.getGlobalBounds().size / 2.0f);&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;', $name, 'Alive = true;&#10;', $indent, '}&#10;')" />
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -1808,6 +2012,15 @@ void pressed(sf::Keyboard::Key key)
       </xsl:when>
       <xsl:when test="self::stop">
         <xsl:value-of select="concat($indent, $velocity, ' = {};&#10;')" />
+        <xsl:if test="count($self | $pulled) = count($pulled)">
+          <xsl:value-of select="concat($indent, substring-before(concat($velocity, '['), 'Velocity'), 'Acceleration = {}; // and its pull, until it is reset&#10;')" />
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="self::release">
+        <xsl:call-template name="release">
+          <xsl:with-param name="from" select="$name" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::move">
         <xsl:value-of select="concat($indent, $name, '.move(')" />
@@ -1890,6 +2103,47 @@ void pressed(sf::Keyboard::Key key)
     <xsl:value-of select="concat($indent, '}&#10;')" />
   </xsl:template>
 
+  <!-- An object with a heading: the heading kept from 0 up to 360, and its
+       picture drawn again at it when the whole degree changes. -->
+  <xsl:template name="define-turn">
+    <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="heading" select="concat($name, 'Heading')" />
+    <xsl:text>
+// </xsl:text>
+    <xsl:value-of select="@name" />
+    <xsl:text>: its heading kept from 0 up to 360, and its picture drawn again at it
+// when the whole degree changes, as the engine draws it
+void turn</xsl:text>
+    <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+    <xsl:text>()
+{
+</xsl:text>
+    <xsl:value-of select="concat('&#9;', $heading, ' = std::fmod(', $heading, ', 360.0f);&#10;')" />
+    <xsl:value-of select="concat('&#9;if (', $heading, ' &lt; 0.0f)&#10;&#9;{&#10;&#9;&#9;', $heading, ' += 360.0f;&#10;&#9;}&#10;')" />
+    <xsl:value-of select="concat('&#9;const int degrees = pictures::wholeDegrees(', $heading, ');&#10;')" />
+    <xsl:value-of select="concat('&#9;if (degrees != ', $name, 'DrawnAt)&#10;&#9;{&#10;&#9;&#9;', $name, 'DrawnAt = degrees;&#10;')" />
+    <xsl:text>		const sf::Image picture = </xsl:text>
+    <xsl:for-each select="sprite">
+      <xsl:choose>
+        <xsl:when test="line">
+          <xsl:value-of select="concat('pictures::turnedLines(', $name, 'Lines, static_cast&lt;float&gt;(degrees));&#10;')" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>pictures::turned(</xsl:text>
+          <xsl:call-template name="rows-picture"><xsl:with-param name="rows" select="$name" /></xsl:call-template>
+          <xsl:text>, static_cast&lt;float&gt;(degrees));&#10;</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:value-of select="concat('&#9;&#9;', $name, 'Picture.update(picture);&#10;')" />
+    <xsl:if test="count(. | $pixel-things) = count($pixel-things)">
+      <xsl:value-of select="concat('&#9;&#9;', $name, 'Pixels = picture;&#10;')" />
+    </xsl:if>
+    <xsl:text>	}
+}
+</xsl:text>
+  </xsl:template>
+
   <!-- An object's timers, each frame it is shown and in play; a group's, for
        each of them. -->
   <xsl:template name="define-tick">
@@ -1965,36 +2219,44 @@ void tick</xsl:text>
   <xsl:template name="generate-screen-update">
     <xsl:variable name="state" select="." />
     <xsl:variable name="blocks">
-      <xsl:for-each select="$held-inputs[generate-id() = $screen-keys[@name = $state/@name]/input/@id]">
+      <!-- each action once a frame, however many of its keys are held, as
+           the engine holds an action rather than a key -->
+      <xsl:variable name="held-here" select="$held-inputs[generate-id() = $screen-keys[@name = $state/@name]/input/@id]" />
+      <xsl:for-each select="$held-here/trigger">
+        <xsl:variable name="trigger" select="." />
+        <xsl:variable name="keyed" select="$held-here[trigger[@object = $trigger/@object][@action = $trigger/@action]]" />
+        <xsl:if test="count($keyed[1] | ..) = 1 and not(preceding-sibling::trigger[@object = $trigger/@object][@action = $trigger/@action])">
         <xsl:text>
 	if (</xsl:text>
-        <xsl:call-template name="key-test">
-          <xsl:with-param name="state" select="$state" />
-          <xsl:with-param name="held" select="true()" />
-        </xsl:call-template>
+        <xsl:for-each select="$keyed">
+          <xsl:if test="position() &gt; 1"> || </xsl:if>
+          <xsl:call-template name="key-test">
+            <xsl:with-param name="state" select="$state" />
+            <xsl:with-param name="held" select="true()" />
+          </xsl:call-template>
+        </xsl:for-each>
         <xsl:text>)
 	{
 </xsl:text>
-        <xsl:for-each select="trigger">
           <xsl:variable name="object" select="/game/objects/object[@name = current()/@object]" />
           <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
           <xsl:variable name="dies" select="count($object | $dying) = count($dying)" />
           <xsl:if test="$dies">
             <xsl:value-of select="concat('&#9;&#9;if (', $name, 'Alive)&#10;&#9;&#9;{&#10;')" />
           </xsl:if>
-          <xsl:for-each select="$object/actions/action[@name = current()/@action]/move">
-            <xsl:value-of select="concat('&#9;&#9;', substring('&#9;', 1, number($dies)), $name, '.move(')" />
-            <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
-            <xsl:text>);
-</xsl:text>
+          <xsl:for-each select="$object/actions/action[@name = current()/@action]/*">
+            <xsl:call-template name="held-command">
+              <xsl:with-param name="name" select="$name" />
+              <xsl:with-param name="indent" select="concat('&#9;&#9;', substring('&#9;', 1, number($dies)))" />
+            </xsl:call-template>
           </xsl:for-each>
           <xsl:if test="$dies">
             <xsl:text>		}
 </xsl:text>
           </xsl:if>
-        </xsl:for-each>
         <xsl:text>	}
 </xsl:text>
+        </xsl:if>
       </xsl:for-each>
       <xsl:variable name="ticking" select="$timed[@name = $state/shows/show/@object]" />
       <xsl:if test="$ticking">
@@ -2201,7 +2463,16 @@ void update</xsl:text>
         <xsl:value-of select="concat('&#10;', $indent, 'if (!', $alive, ')&#10;', $indent, '{&#10;', $indent, '&#9;', $out, ';&#10;', $indent, '}&#10;')" />
       </xsl:if>
       <xsl:if test="count(. | $moving) = count($moving) and not($block)">
-        <xsl:value-of select="concat('&#10;', $indent, $one, '.move(', $velocity, ');&#10;')" />
+        <xsl:text>&#10;</xsl:text>
+        <xsl:if test="count(. | $pulled) = count($pulled)">
+          <xsl:value-of select="concat($indent, $velocity, ' += ', $name, 'Acceleration;&#10;')" />
+        </xsl:if>
+        <xsl:if test="drag">
+          <xsl:value-of select="concat($indent, '// drag: what is left of its speed after this frame&#10;', $indent, $velocity, ' *= 1.0f - ')" />
+          <xsl:call-template name="value"><xsl:with-param name="node" select="drag" /></xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:if>
+        <xsl:value-of select="concat($indent, $one, '.move(', $velocity, ');&#10;')" />
       </xsl:if>
       <xsl:if test="count(. | $riders) = count($riders)">
         <xsl:value-of select="concat('&#10;', $indent, '// what it rides, worked out again this frame&#10;', $indent, $name, 'Riding = {};&#10;')" />
@@ -2445,6 +2716,22 @@ void update</xsl:text>
         <!-- shown on a screen without the other: only on the screens with both,
              as the engine touches only what the screen showing shows -->
         <xsl:variable name="apart" select="$states[shows/show/@object = $self/@name][not(shows/show/@object = $thing/@name)]" />
+        <!-- how fast it is going as it touches the other, taken once, before
+             its first rule about it, when a later one has <slower> or
+             <faster>: a rule that stops it does not change which run after it,
+             as in the engine -->
+        <xsl:variable name="about" select="$rule/../collision[*][not(@edge)][not(@object) or @object = $thing/@name][not(@class) or @class = $thing/@class]" />
+        <xsl:variable name="speed">
+          <xsl:if test="$about[slower or faster] and count($about) &gt; 1 and count($self | $moving) = count($moving)">
+            <xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
+            <xsl:text>SpeedAt</xsl:text>
+            <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$thing/@name" /></xsl:call-template>
+          </xsl:if>
+        </xsl:variable>
+        <xsl:if test="count($about[1] | $rule) = 1 and string($speed) != ''">
+          <xsl:value-of select="concat('&#10;', $indent, '// how fast it is going as it touches ', $thing/@name, ', for its rules with slower or faster&#10;')" />
+          <xsl:value-of select="concat($indent, 'const float ', $speed, ' = ', $velocity, '.length();&#10;')" />
+        </xsl:if>
         <xsl:variable name="touch">
           <xsl:call-template name="touch">
             <xsl:with-param name="name" select="$name" />
@@ -2459,6 +2746,7 @@ void update</xsl:text>
                                                            [not(@object) or @object = $thing/@name]
                                                            [not(@class) or @class = $thing/@class])]" />
             <xsl:with-param name="final" select="position() = last() and $last" />
+            <xsl:with-param name="speed" select="string($speed)" />
           </xsl:call-template>
         </xsl:variable>
         <xsl:choose>
@@ -2490,6 +2778,7 @@ void update</xsl:text>
     <xsl:param name="self" />
     <xsl:param name="back" />
     <xsl:param name="final" />
+    <xsl:param name="speed" select="''" />
       <xsl:variable name="other-thing" select="." />
       <xsl:variable name="other-name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
       <xsl:variable name="in" select="concat($indent, substring('&#9;', 1, number(boolean(self::group))))" />
@@ -2527,7 +2816,7 @@ void update</xsl:text>
         </xsl:choose>
       </xsl:variable>
       <xsl:value-of select="concat('&#10;', $indent, '// ', @name, ':')" />
-      <xsl:for-each select="$rule/*">
+      <xsl:for-each select="$rule/*[not(self::slower or self::faster)]">
         <xsl:value-of select="concat(' ', local-name())" />
       </xsl:for-each>
       <xsl:text>&#10;</xsl:text>
@@ -2547,9 +2836,20 @@ void update</xsl:text>
           <xsl:with-param name="self" select="$self" />
           <xsl:with-param name="name" select="$name" />
           <xsl:with-param name="other" select="$other" />
+          <xsl:with-param name="velocity" select="substring($velocity, 1, string-length($velocity) * number(count($self | $moving) = count($moving)))" />
+          <xsl:with-param name="speed" select="$speed" />
         </xsl:call-template>
       </xsl:variable>
-      <xsl:value-of select="concat($in, 'if (', $other-alive, 'physics::touching(', $name, ', ', $other, ')', substring(' &amp;&amp; ', 1, 4 * number($own-guard != '')), $own-guard, ')&#10;', $in, '{&#10;')" />
+      <xsl:variable name="test">
+        <xsl:call-template name="touch-test">
+          <xsl:with-param name="self" select="$self" />
+          <xsl:with-param name="name" select="$name" />
+          <xsl:with-param name="other" select="$other" />
+          <xsl:with-param name="velocity" select="substring($velocity, 1, string-length($velocity) * number(count($self | $moving) = count($moving)))" />
+          <xsl:with-param name="others-velocity" select="string($others-velocity)" />
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:value-of select="concat($in, 'if (', $other-alive, $test, substring(' &amp;&amp; ', 1, 4 * number($own-guard != '')), $own-guard, ')&#10;', $in, '{&#10;')" />
       <xsl:if test="$back">
         <!-- the other's own rules about this one, it being the one that moves or dies -->
         <xsl:variable name="other-velocity">
@@ -2563,7 +2863,7 @@ void update</xsl:text>
           </xsl:if>
         </xsl:variable>
         <xsl:value-of select="concat($in, '&#9;// ', @name, ', by its own rule:')" />
-        <xsl:for-each select="$back/*">
+        <xsl:for-each select="$back/*[not(self::slower or self::faster)]">
           <xsl:value-of select="concat(' ', local-name())" />
         </xsl:for-each>
         <xsl:text>&#10;</xsl:text>
@@ -2576,13 +2876,14 @@ void update</xsl:text>
               <xsl:with-param name="self" select="$other-thing" />
               <xsl:with-param name="name" select="$other" />
               <xsl:with-param name="other" select="$name" />
+              <xsl:with-param name="velocity" select="substring($other-velocity, 1, string-length($other-velocity) * number(count($other-thing | $moving) = count($moving)))" />
             </xsl:call-template>
           </xsl:variable>
           <xsl:variable name="at" select="concat($in, '&#9;', substring('&#9;', 1, number($guard != '')))" />
           <xsl:if test="$guard != ''">
             <xsl:value-of select="concat($in, '&#9;if (', $guard, ')&#10;', $in, '&#9;{&#10;')" />
           </xsl:if>
-          <xsl:for-each select="*">
+          <xsl:for-each select="*[not(self::slower or self::faster)]">
             <xsl:call-template name="touch-command">
               <xsl:with-param name="name" select="$other" />
               <xsl:with-param name="velocity" select="$other-velocity" />
@@ -2598,7 +2899,7 @@ void update</xsl:text>
           </xsl:if>
         </xsl:for-each>
       </xsl:if>
-      <xsl:for-each select="$rule/*">
+      <xsl:for-each select="$rule/*[not(self::slower or self::faster)]">
         <xsl:call-template name="touch-command">
           <xsl:with-param name="name" select="$name" />
           <xsl:with-param name="velocity" select="$velocity" />
@@ -2619,6 +2920,64 @@ void update</xsl:text>
           <xsl:value-of select="concat($indent, 'if (!', $alive, ')&#10;', $indent, '{&#10;', $indent, '&#9;continue;&#10;', $indent, '}&#10;')" />
         </xsl:if>
       </xsl:if>
+  </xsl:template>
+
+  <!-- Whether `name` (of `self`) touches `other` (of the context thing): their
+       boxes overlap, or, when either is tested pixel by pixel, their pixels,
+       anywhere along the step one took against the other this frame (their
+       velocities, of those that move), so that a fast shot does not pass
+       through a thin line. -->
+  <xsl:template name="touch-test">
+    <xsl:param name="self" />
+    <xsl:param name="name" />
+    <xsl:param name="other" />
+    <xsl:param name="velocity" select="''" />
+    <xsl:param name="others-velocity" select="''" />
+    <xsl:choose>
+      <xsl:when test="count($self | $pixel-things) != count($pixel-things) and count(. | $pixel-things) != count($pixel-things)">
+        <xsl:value-of select="concat('physics::touching(', $name, ', ', $other, ')')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat('physics::touchingPixels(', $name, ', ')" />
+        <xsl:for-each select="$self"><xsl:call-template name="pixels"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:for-each>
+        <xsl:value-of select="concat(', ', $other, ', ')" />
+        <xsl:call-template name="pixels"><xsl:with-param name="shape" select="$other" /></xsl:call-template>
+        <xsl:choose>
+          <xsl:when test="$velocity != '' and $others-velocity != ''"><xsl:value-of select="concat(', ', $velocity, ' - ', $others-velocity)" /></xsl:when>
+          <xsl:when test="$velocity != ''"><xsl:value-of select="concat(', ', $velocity)" /></xsl:when>
+          <xsl:when test="$others-velocity != ''"><xsl:value-of select="concat(', -', $others-velocity)" /></xsl:when>
+        </xsl:choose>
+        <xsl:text>)</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- The pixels a touch tests for `shape`, of the context thing: its
+       picture's, or nullptr for its whole box (or circle). -->
+  <xsl:template name="pixels">
+    <xsl:param name="shape" />
+    <xsl:variable name="type"><xsl:call-template name="sf-type" /></xsl:variable>
+    <xsl:variable name="looks" select="$group-data[@name = current()/@name]/look" />
+    <xsl:choose>
+      <xsl:when test="count(. | $pixel-things) != count($pixel-things) or $type != 'sf::Sprite'">nullptr</xsl:when>
+      <xsl:when test="self::object">
+        <xsl:for-each select="sprite[1]">
+          <xsl:text>&amp;</xsl:text>
+          <xsl:call-template name="drawn-name" />
+          <xsl:text>Pixels</xsl:text>
+        </xsl:for-each>
+      </xsl:when>
+      <xsl:when test="count($looks) = 1">
+        <xsl:for-each select="$looks/sprite">
+          <xsl:text>&amp;</xsl:text>
+          <xsl:call-template name="drawn-name" />
+          <xsl:text>Pixels</xsl:text>
+        </xsl:for-each>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat('&amp;pixelsOf(', $shape, '.getTexture())')" />
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- What one does when it touches another: `name` (its velocity, its flag
@@ -2842,12 +3201,30 @@ void update</xsl:text>
       </xsl:when>
     </xsl:choose>
     <xsl:value-of select="concat('&#10;sf::Texture ', $name, 'Picture;')" />
+    <xsl:variable name="pixels"><xsl:call-template name="tested-pixels" /></xsl:variable>
+    <xsl:if test="$pixels = 'yes'">
+      <xsl:value-of select="concat('&#10;sf::Image ', $name, 'Pixels; // what its touches test, pixel by pixel')" />
+    </xsl:if>
+  </xsl:template>
+
+  <!-- yes when a drawn sprite (or a group's look) is the picture of something
+       whose touches are tested pixel by pixel. -->
+  <xsl:template name="tested-pixels">
+    <xsl:variable name="owner">
+      <xsl:choose>
+        <xsl:when test="parent::look"><xsl:value-of select="../../@name" /></xsl:when>
+        <xsl:otherwise><xsl:value-of select="ancestor::*[parent::objects]/@name" /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:if test="$pixel-things[@name = $owner]">yes</xsl:if>
   </xsl:template>
 
   <!-- Its texture made, in setup()'s test of what could not be. -->
   <xsl:template name="load-picture">
     <xsl:variable name="name"><xsl:call-template name="drawn-name" /></xsl:variable>
     <xsl:variable name="bitmap" select="bitmap" />
+    <!-- the picture of something with a heading: a square it turns in -->
+    <xsl:variable name="turns" select="boolean(parent::object[count(. | $headed) = count($headed)])" />
     <xsl:value-of select="concat('!', $name, 'Picture.')" />
     <xsl:choose>
       <xsl:when test="$bitmap">
@@ -2857,14 +3234,14 @@ void update</xsl:text>
             <xsl:otherwise><xsl:value-of select="$name" /></xsl:otherwise>
           </xsl:choose>
         </xsl:variable>
-        <xsl:value-of select="concat('loadFromImage(pictures::rows(', $rows, 'Rows, ')" />
-        <xsl:choose>
-          <xsl:when test="$bitmap/scale"><xsl:call-template name="whole-number"><xsl:with-param name="node" select="$bitmap/scale" /></xsl:call-template></xsl:when>
-          <xsl:otherwise>1</xsl:otherwise>
-        </xsl:choose>
-        <xsl:text>, </xsl:text>
-        <xsl:call-template name="color"><xsl:with-param name="name" select="$bitmap/color" /></xsl:call-template>
-        <xsl:text>))</xsl:text>
+        <xsl:text>loadFromImage(</xsl:text>
+        <xsl:if test="$turns">pictures::turned(</xsl:if>
+        <xsl:call-template name="rows-picture"><xsl:with-param name="rows" select="$rows" /></xsl:call-template>
+        <xsl:if test="$turns">, 0.0f)</xsl:if>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="line and $turns">
+        <xsl:value-of select="concat('loadFromImage(pictures::turnedLines(', $name, 'Lines, 0.0f))')" />
       </xsl:when>
       <xsl:when test="line">
         <xsl:value-of select="concat('loadFromImage(pictures::lines(', $name, 'Lines))')" />
@@ -2876,6 +3253,19 @@ void update</xsl:text>
         <xsl:text>)</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- A <bitmap>'s picture: pictures::rows(playerRows, 3, sf::Color::White). -->
+  <xsl:template name="rows-picture">
+    <xsl:param name="rows" />
+    <xsl:value-of select="concat('pictures::rows(', $rows, 'Rows, ')" />
+    <xsl:choose>
+      <xsl:when test="bitmap/scale"><xsl:call-template name="whole-number"><xsl:with-param name="node" select="bitmap/scale" /></xsl:call-template></xsl:when>
+      <xsl:otherwise>1</xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>, </xsl:text>
+    <xsl:call-template name="color"><xsl:with-param name="name" select="bitmap/color" /></xsl:call-template>
+    <xsl:text>)</xsl:text>
   </xsl:template>
 
   <!-- A value C++ wants as an int (a line's thickness): a number as it is,
