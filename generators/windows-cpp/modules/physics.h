@@ -6,14 +6,15 @@
 // The physics a generated game uses, in one place of its own: where a thing
 // is, whether two things touch, what a moving thing does at an edge of the
 // window (bounce, stick, wrap round) or against another thing, a hop, and a
-// shot leaving the side a thing faces. A "thing" is anything SFML can bound
-// and move (a shape, a sprite, a text), and a velocity is how far it moves
-// each frame. Header only, and nothing but SFML's graphics types, so it can
-// be copied into any SFML 3 program.
+// shot leaving the side a thing faces or the way it heads. A "thing" is
+// anything SFML can bound and move (a shape, a sprite, a text), and a
+// velocity is how far it moves each frame. Header only, and nothing but
+// SFML's graphics types, so it can be copied into any SFML 3 program.
 //
 // Collisions are the simple kind: move, then look at where it landed. A touch
 // is told apart by the smaller overlap, which is enough for things that move
-// less than their own size in a frame.
+// less than their own size in a frame. Touches pixel by pixel are looked for
+// all along the step, as thin lines are what they are for.
 
 #pragma once
 
@@ -21,6 +22,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
+#include <type_traits>
 
 namespace physics
 {
@@ -68,6 +71,86 @@ namespace physics
 	bool touching(const First& first, const Second& second)
 	{
 		return first.getGlobalBounds().findIntersection(second.getGlobalBounds()).has_value();
+	}
+
+	// Whether the middle of the screen's pixel at `point` is solid in the
+	// thing: in a picture (a sprite, with its `pixels`), a pixel that is not
+	// clear; in a circle, inside it; in anything else, inside its box.
+	template <typename Thing>
+	bool solidAt(const Thing& thing, const sf::Image* pixels, sf::Vector2f point)
+	{
+		const sf::FloatRect bounds = thing.getGlobalBounds();
+		if (!bounds.contains(point))
+		{
+			return false;
+		}
+		if constexpr (std::is_same_v<Thing, sf::CircleShape>)
+		{
+			const float radius = bounds.size.x / 2.0f;
+			return (point - bounds.getCenter()).lengthSquared() <= radius * radius;
+		}
+		else if constexpr (std::is_same_v<Thing, sf::Sprite>)
+		{
+			if (pixels == nullptr)
+			{
+				return true;
+			}
+			// where it is in the picture, a flipped one read the other way
+			const sf::Vector2f local = thing.getInverseTransform().transformPoint(point);
+			const sf::IntRect rect = thing.getTextureRect();
+			const float x = static_cast<float>(rect.position.x) + (rect.size.x < 0 ? -local.x : local.x);
+			const float y = static_cast<float>(rect.position.y) + (rect.size.y < 0 ? -local.y : local.y);
+			const sf::Vector2u size = pixels->getSize();
+			if (x < 0.0f || y < 0.0f || x >= static_cast<float>(size.x) || y >= static_cast<float>(size.y))
+			{
+				return false;
+			}
+			return pixels->getPixel({static_cast<unsigned int>(x), static_cast<unsigned int>(y)}).a != 0;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	// Whether two things touch pixel by pixel (<type>pixel</type>): some
+	// pixel of the screen both cover is solid in both. `pixels` is the picture
+	// a sprite shows, or nullptr for its whole box. `step` is how far the first
+	// moved this frame against the second: it is looked at all along the way,
+	// half a pixel at a time, as the engine sweeps it, so that a fast shot does
+	// not jump over a line two pixels thick.
+	template <typename First, typename Second>
+	bool touchingPixels(const First& first, const sf::Image* firstPixels, const Second& second, const sf::Image* secondPixels, sf::Vector2f step = {})
+	{
+		const sf::FloatRect now = first.getGlobalBounds();
+		const sf::FloatRect target = second.getGlobalBounds();
+		const int steps = std::max(1, static_cast<int>(std::ceil(step.length() * 2.0f)));
+		for (int at = 0; at <= steps; ++at)
+		{
+			// where it was, that far through the step (the last is where it is)
+			const sf::Vector2f back = step * (static_cast<float>(at) / static_cast<float>(steps) - 1.0f);
+			const std::optional<sf::FloatRect> both = sf::FloatRect(now.position + back, now.size).findIntersection(target);
+			if (!both)
+			{
+				continue;
+			}
+			const int left = static_cast<int>(std::floor(both->position.x));
+			const int top = static_cast<int>(std::floor(both->position.y));
+			const int right = static_cast<int>(std::ceil(both->position.x + both->size.x));
+			const int bottom = static_cast<int>(std::ceil(both->position.y + both->size.y));
+			for (int y = top; y < bottom; ++y)
+			{
+				for (int x = left; x < right; ++x)
+				{
+					const sf::Vector2f point(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+					if (solidAt(first, firstPixels, point - back) && solidAt(second, secondPixels, point))
+					{
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	// --- The edges of an area (the window).
@@ -231,6 +314,24 @@ namespace physics
 			velocity = { speed, 0.0f };
 			break;
 		}
+	}
+
+	// The way a heading points (<heading>: degrees clockwise from straight
+	// up), one pixel long.
+	inline sf::Vector2f ahead(float heading)
+	{
+		return sf::Vector2f(1.0f, sf::degrees(heading - 90.0f));
+	}
+
+	// A shot leaving a shooter with a heading: from its middle, out by half
+	// its longer side along the heading, at `speed`.
+	template <typename Shooter, typename Shot>
+	void fireAhead(const Shooter& shooter, Shot& shot, sf::Vector2f& velocity, float heading, float speed)
+	{
+		const sf::FloatRect from = shooter.getGlobalBounds();
+		const sf::Vector2f way = ahead(heading);
+		shot.setPosition(from.getCenter() + way * (std::max(from.size.x, from.size.y) / 2.0f) - shot.getGlobalBounds().size / 2.0f);
+		velocity = way * speed;
 	}
 
 	// --- Against another thing.
