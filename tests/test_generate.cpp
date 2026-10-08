@@ -549,6 +549,25 @@ TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, 
 	CHECK(main.find("\t// bottom: dec die\n\tif (physics::past(charge, physics::Edge::Bottom, windowArea))\n\t{\n\t\tshipCharges -= 1.0f;") != std::string::npos);
 }
 
+TEST_CASE("generating Astrosmash puts one rock back at a time, its fall drawn anew", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_astrosmash");
+	generateGame(requestFor(fs::current_path() / "games/astrosmash.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// each rock falls at a speed of its own, drawn for it, as in the engine
+	CHECK(main.find("std::vector<sf::Vector2f> bouldersVelocity(4);") != std::string::npos);
+	// one member starts again on its own: what they share written once, the rest a list
+	CHECK(main.find("void startBoulders(std::size_t i)\n{\n\tconst float xs[] = {50.0f, 230.0f, 410.0f, 590.0f};\n\tboulders[i].setPosition({xs[i], randomBetween(-500.0f, -40.0f)});\n\tbouldersVelocity[i] = {0.0f, randomBetween(1.0f, 2.0f)};\n}") != std::string::npos);
+	CHECK(main.find("\tfor (std::size_t i = 0; i < boulders.size(); ++i)\n\t{\n\t\tstartBoulders(i);\n\t}") != std::string::npos);
+	CHECK(main.find("\t\t// bottom: dec reset\n\t\tif (physics::past(boulders[i], physics::Edge::Bottom, windowArea))\n\t\t{\n\t\t\tshipLives -= 1.0f;\n\t\t\tshowLives();\n\t\t\tstartBoulders(i);") != std::string::npos);
+}
+
 TEST_CASE("a group in lockstep moves as one block, and turns as one off a side", "[generate]")
 {
 	if (!canGenerate())

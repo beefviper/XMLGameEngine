@@ -59,7 +59,7 @@
   <!-- The groups whose members or cells each have a velocity of their own
        (a member, row, column or cell gives one), kept in a std::vector beside
        the shapes; the rest of the groups that move share one. -->
-  <xsl:variable name="member-velocities" select="$groups[*/velocity]" />
+  <xsl:variable name="member-velocities" select="$groups[*/velocity or velocity//random or (count(. | $resetting) = count($resetting) and count(. | $moving) = count($moving))]" />
 
   <!-- Those a rule lends another's velocity (<ride />: a frog on a log). -->
   <xsl:variable name="riders" select="$objects[@name = $rules[ride]/ancestor::object/@name]" />
@@ -88,8 +88,9 @@
   <xsl:variable name="object-rules" select="$rules[not(@edge)]" />
 
   <!-- Those that go back to where they started after a <reset /> (its place
-       and velocity, any <random> drawn anew, as in the engine). -->
-  <xsl:variable name="resetting" select="$objects[collisions[normalize-space(enabled) = 'true' or ../@class = 'projectile']/collision/reset[not(@object)]]" />
+       and velocity, any <random> drawn anew, as in the engine); for a group,
+       one member at a time. -->
+  <xsl:variable name="resetting" select="$things[collisions[normalize-space(enabled) = 'true' or ../@class = 'projectile']/collision/reset[not(@object)]]" />
 
   <!-- Those with something to do each frame: a move, or a rule written in
        their own update (one about another that comes first in the file and
@@ -339,7 +340,9 @@ sf::Texture </xsl:text>
           <xsl:text>);</xsl:text>
           <xsl:choose>
             <xsl:when test="count(. | $member-velocities) = count($member-velocities)">
-              <xsl:value-of select="concat('&#10;std::vector&lt;sf::Vector2f&gt; ', $name, 'Velocity;')" />
+              <xsl:value-of select="concat('&#10;std::vector&lt;sf::Vector2f&gt; ', $name, 'Velocity')" />
+              <xsl:if test="count(. | $resetting) = count($resetting)"><xsl:value-of select="concat('(', $cells, ')')" /></xsl:if>
+              <xsl:text>;</xsl:text>
             </xsl:when>
             <xsl:when test="count(. | $moving) = count($moving)">
               <xsl:value-of select="concat('&#10;sf::Vector2f ', $name, 'Velocity; // every one of them')" />
@@ -433,8 +436,8 @@ sf::Texture </xsl:text>
     <xsl:for-each select="$resetting">
       <xsl:text>void start</xsl:text>
       <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
-      <xsl:text>();
-</xsl:text>
+      <xsl:if test="self::group">(std::size_t i);&#10;</xsl:if>
+      <xsl:if test="self::object">();&#10;</xsl:if>
     </xsl:for-each>
     <xsl:for-each select="$looked">
       <xsl:call-template name="become-signature" />
@@ -647,7 +650,10 @@ int main()
     <xsl:for-each select="$updating">
       <xsl:call-template name="generate-object-update" />
     </xsl:for-each>
-    <xsl:for-each select="$resetting">
+    <xsl:for-each select="$resetting[self::group]">
+      <xsl:call-template name="define-member-start" />
+    </xsl:for-each>
+    <xsl:for-each select="$resetting[self::object]">
       <xsl:text>
 // </xsl:text>
       <xsl:value-of select="@name" />
@@ -1013,6 +1019,13 @@ void start()
       <xsl:when test="columns">
         <xsl:call-template name="cells-start"><xsl:with-param name="name" select="$name" /></xsl:call-template>
       </xsl:when>
+      <xsl:when test="count(. | $resetting) = count($resetting)">
+        <xsl:value-of select="concat('&#9;for (std::size_t i = 0; i &lt; ', $name, '.size(); ++i)&#10;&#9;{&#10;&#9;&#9;start')" />
+        <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+        <xsl:text>(i);
+	}
+</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:for-each select="member">
           <xsl:value-of select="concat('&#9;', $name, '[', count(preceding-sibling::member), '].setPosition(')" />
@@ -1066,6 +1079,95 @@ void start()
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
+  </xsl:template>
+
+  <!-- A <reset /> of `self`: startBall(); or, for the member `name` of a
+       group (boulders[i]), startBoulders(i); -->
+  <xsl:template name="start-call">
+    <xsl:param name="self" />
+    <xsl:param name="name" />
+    <xsl:text>start</xsl:text>
+    <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
+    <xsl:text>(</xsl:text>
+    <xsl:if test="$self/self::group"><xsl:call-template name="index-of"><xsl:with-param name="shape" select="$name" /></xsl:call-template></xsl:if>
+    <xsl:text>);
+</xsl:text>
+  </xsl:template>
+
+  <!-- A group's start of one member, which a <reset /> calls again: its place
+       and its velocity, any <random> drawn anew. What is the same for every
+       member is written once; what is not, as a list with one for each. -->
+  <xsl:template name="define-member-start">
+    <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="group" select="." />
+    <xsl:variable name="moves" select="count(. | $moving) = count($moving)" />
+    <xsl:variable name="body">
+      <xsl:call-template name="member-axis">
+        <xsl:with-param name="list" select="'xs'" />
+        <xsl:with-param name="own" select="member/position/x" />
+        <xsl:with-param name="shared" select="position/x" />
+      </xsl:call-template>
+      <xsl:call-template name="member-axis">
+        <xsl:with-param name="list" select="'ys'" />
+        <xsl:with-param name="own" select="member/position/y" />
+        <xsl:with-param name="shared" select="position/y" />
+      </xsl:call-template>
+      <xsl:if test="$moves">
+        <xsl:call-template name="member-axis">
+          <xsl:with-param name="list" select="'speedsX'" />
+          <xsl:with-param name="own" select="member/velocity/x" />
+          <xsl:with-param name="shared" select="velocity/x" />
+        </xsl:call-template>
+        <xsl:call-template name="member-axis">
+          <xsl:with-param name="list" select="'speedsY'" />
+          <xsl:with-param name="own" select="member/velocity/y" />
+          <xsl:with-param name="shared" select="velocity/y" />
+        </xsl:call-template>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:text>
+// </xsl:text>
+    <xsl:value-of select="@name" />
+    <xsl:text>, one of them: where it starts, and starts again after a &lt;reset /&gt; (any &lt;random&gt; drawn anew)
+void start</xsl:text>
+    <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+    <xsl:text>(std::size_t i)
+{
+</xsl:text>
+    <xsl:for-each select="exsl:node-set($body)/list">
+      <xsl:value-of select="concat('&#9;const float ', @name, '[] = {', ., '};&#10;')" />
+    </xsl:for-each>
+    <xsl:variable name="axes" select="exsl:node-set($body)/axis" />
+    <xsl:value-of select="concat('&#9;', $name, '[i].setPosition({', $axes[1], ', ', $axes[2], '});&#10;')" />
+    <xsl:if test="$moves">
+      <xsl:value-of select="concat('&#9;', $name, 'Velocity[i] = {', $axes[3], ', ', $axes[4], '};&#10;')" />
+    </xsl:if>
+    <xsl:text>}
+</xsl:text>
+  </xsl:template>
+
+  <!-- One axis of a member's start: <axis> the value (the group's, the same
+       for all of them), or, when a member gives its own, <list> the value of
+       each and <axis> the one for member i. -->
+  <xsl:template name="member-axis">
+    <xsl:param name="list" />
+    <xsl:param name="own" />
+    <xsl:param name="shared" />
+    <xsl:choose>
+      <xsl:when test="$own">
+        <list name="{$list}">
+          <xsl:for-each select="member">
+            <xsl:if test="position() &gt; 1">, </xsl:if>
+            <xsl:variable name="axis" select="local-name($shared | $own[1])" />
+            <xsl:call-template name="value-bare"><xsl:with-param name="node" select="(*[local-name() = local-name($own[1]/..)]/*[local-name() = $axis] | $shared[not(current()/*[local-name() = local-name($own[1]/..)]/*[local-name() = $axis])])[1]" /></xsl:call-template>
+          </xsl:for-each>
+        </list>
+        <axis><xsl:value-of select="concat($list, '[i]')" /></axis>
+      </xsl:when>
+      <xsl:otherwise>
+        <axis><xsl:call-template name="value-bare"><xsl:with-param name="node" select="$shared" /></xsl:call-template></axis>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- From one cell to the next: its size, and the padding when there is one. -->
@@ -1718,10 +1820,8 @@ void update</xsl:text>
             <xsl:for-each select="*">
               <xsl:choose>
                 <xsl:when test="self::reset">
-                  <xsl:value-of select="concat($at, 'start')" />
-                  <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
-                  <xsl:text>();
-</xsl:text>
+                  <xsl:value-of select="$at" />
+                  <xsl:call-template name="start-call"><xsl:with-param name="self" select="$self" /><xsl:with-param name="name" select="$name" /></xsl:call-template>
                 </xsl:when>
                 <xsl:when test="self::bounce and $block">
                   <xsl:variable name="group"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template></xsl:variable>
@@ -1982,10 +2082,8 @@ void update</xsl:text>
     <xsl:param name="indent" />
     <xsl:choose>
       <xsl:when test="self::reset">
-        <xsl:value-of select="concat($indent, 'start')" />
-        <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template>
-        <xsl:text>();
-</xsl:text>
+        <xsl:value-of select="$indent" />
+        <xsl:call-template name="start-call"><xsl:with-param name="self" select="$self" /><xsl:with-param name="name" select="$name" /></xsl:call-template>
       </xsl:when>
       <xsl:when test="self::bounce">
         <xsl:value-of select="concat($indent, 'physics::bounceOff(', $name, ', ', $velocity, ', ', $other, ');&#10;')" />

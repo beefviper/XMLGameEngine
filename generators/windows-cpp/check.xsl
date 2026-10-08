@@ -142,7 +142,12 @@
           </xsl:call-template>
         </xsl:if>
       </xsl:when>
-      <xsl:when test="(self::stick or self::deflect or self::reset) and $in-rule and ancestor::group">
+      <xsl:when test="self::reset and not(@object) and $in-rule and ancestor::group[columns or normalize-space(collisions/lockstep) = 'true']">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;reset /&gt; on the cells of a group in columns and rows, or of a group in &lt;lockstep&gt;'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="(self::stick or self::deflect) and $in-rule and ancestor::group">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; on the members of a &lt;group&gt;')" />
         </xsl:call-template>
