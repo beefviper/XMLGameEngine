@@ -7,15 +7,16 @@
 <!-- What this target can generate so far: all of Pong, Space Race,
      Freeway, Breakout, Depth Charge, Frogger, Astrosmash, Kaboom, Demon
      Attack, Megamania, Asteroids, Combat, Lunar Lander, Frostbite, Air-Sea
-     Battle, Donkey Kong, Pitfall! and Space Invaders (both). Screens on a stack, rectangles,
-     circles, texts (words or a number) and pictures (from a file, rows of
-     text, lines or an SVG); objects that move, bounce, stick, deflect, wrap
-     round, ride, turn back, stop, start again and die; groups of them,
-     listed or in columns and rows (each member, row, column or cell changing
-     what it picks), moving as one block or each its own way; headings that
-     turn a picture, thrust, a pull and drag; looks, animated or
-     become, a row's own among them; walking, falling, landing,
-     leaping and climbing; touches pixel by pixel, and by speed; things
+     Battle, Donkey Kong, Pitfall!, Space Invaders (both) and Missile
+     Command. Screens on a stack, rectangles, circles, texts (words or a
+     number) and pictures (from a file, rows of text, lines or an SVG);
+     objects that move, bounce, stick, deflect, wrap round, ride, turn back,
+     stop, start again and die; groups of them, listed or in columns and rows
+     (each member, row, column or cell changing what it picks), moving as one
+     block or each its own way; headings that turn a picture, thrust, a pull
+     and drag; looks, animated or become, a row's own among them; walking,
+     falling, landing, leaping and climbing; aiming at and chasing the
+     nearest of something; touches pixel by pixel, and by speed; things
      hidden until fired, revealed or released; timers of objects, groups and
      screens; keys held to move, and keys pressed to hop, jump, fire, change
      screen, start again, play a sound or count, in sets the screens share;
@@ -29,7 +30,7 @@
     ' objects object group member row column cell sprite circle radius rectangle color text content number size image path flip columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity acceleration heading drag facing hidden timers timer every after',
-    ' animation interval frame collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride land reverse stop reveal release actions action move hop jump distance seconds leap climb fire turn thrust accelerate',
+    ' animation interval frame collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride land reverse stop reveal release actions action move hop jump distance seconds leap climb aim chase speed near fire turn thrust accelerate',
     ' states keys state shows show inputs input trigger conditions condition atleast atmost remaining',
     ' push pop play inc dec become sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
@@ -303,6 +304,27 @@
         </xsl:if>
       </xsl:when>
 
+      <!-- looking for the nearest of something -->
+      <xsl:when test="(self::aim or self::chase) and not((parent::timer and ../../../self::*[parent::objects]) or $in-rule)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; outside a &lt;timer&gt; or &lt;collision&gt; of an object or group')" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="(self::aim or self::chase) and not(/game/objects/*[@name = current()/@object]) or ((self::aim or self::chase) and ancestor::*[parent::objects]/@name = @object)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('&lt;', $tag, ' object=&quot;', @object, '&quot;&gt; of something not an object or group, or of itself')" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::aim and ancestor::*[parent::objects]/heading">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;aim&gt; by something with a &lt;heading&gt; (the aim turns it)'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::chase and ancestor::group[normalize-space(collisions/lockstep) = 'true']">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;chase&gt; by a group in &lt;lockstep&gt;'" />
+        </xsl:call-template>
+      </xsl:when>
       <!-- standing and climbing -->
       <xsl:when test="self::land and not($in-rule and not(../@edge) and not(ancestor::group[normalize-space(collisions/lockstep) = 'true']))">
         <xsl:call-template name="refuse">

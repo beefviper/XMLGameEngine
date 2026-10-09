@@ -6,11 +6,12 @@
 // The physics a generated game uses, in one place of its own: where a thing
 // is, whether two things touch, what a moving thing does at an edge of the
 // window (bounce, stick, wrap round) or against another thing, a hop, a jump,
-// standing on a platform and climbing a ladder, and a shot leaving the side a
-// thing faces or the way it heads. A "thing" is anything SFML can bound and
-// move (a shape, a sprite, a text), and a velocity is how far it moves each
-// frame. Header only, and nothing but SFML's graphics types, so it can be
-// copied into any SFML 3 program.
+// standing on a platform and climbing a ladder, heading for another thing,
+// and a shot leaving the side a thing faces, the way it heads or the way it
+// has aimed. A "thing" is anything SFML can bound and move (a shape, a
+// sprite, a text), and a velocity is how far it moves each frame. Header
+// only, and nothing but SFML's graphics types, so it can be copied into any
+// SFML 3 program.
 //
 // Collisions are the simple kind: move, then look at where it landed. A touch
 // is told apart by the smaller overlap, which is enough for things that move
@@ -464,6 +465,54 @@ namespace physics
 		const sf::Vector2f way = ahead(heading);
 		shot.setPosition(from.getCenter() + way * (std::max(from.size.x, from.size.y) / 2.0f) - shot.getGlobalBounds().size / 2.0f);
 		velocity = way * speed;
+	}
+
+	// The way from the middle of a thing to a place, one pixel long (<aim>);
+	// none with no place, or at it.
+	template <typename Thing>
+	std::optional<sf::Vector2f> aimAt(const Thing& thing, std::optional<sf::Vector2f> there)
+	{
+		if (!there)
+		{
+			return std::nullopt;
+		}
+		const sf::Vector2f apart = *there - thing.getGlobalBounds().getCenter();
+		if (apart == sf::Vector2f{})
+		{
+			return std::nullopt;
+		}
+		return apart * (1.0f / apart.length());
+	}
+
+	// A shot leaving a shooter that has aimed: from its middle, just clear of
+	// it along the aim, at `speed`.
+	template <typename Shooter, typename Shot>
+	void fireAlong(const Shooter& shooter, Shot& shot, sf::Vector2f& velocity, sf::Vector2f aim, float speed)
+	{
+		const sf::FloatRect from = shooter.getGlobalBounds();
+		const sf::Vector2f size = shot.getGlobalBounds().size;
+		const float clear = std::max(std::abs(aim.x) * (from.size.x + size.x), std::abs(aim.y) * (from.size.y + size.y)) / 2.0f;
+		shot.setPosition(from.getCenter() + aim * clear - size / 2.0f);
+		velocity = aim * speed;
+	}
+
+	// Straight at a place at `speed`, or still within `near` of it
+	// (<chase>); with no place it goes on as it was.
+	template <typename Thing>
+	void chase(const Thing& thing, sf::Vector2f& velocity, std::optional<sf::Vector2f> there, float speed, float near)
+	{
+		if (!there)
+		{
+			return;
+		}
+		const sf::Vector2f apart = *there - thing.getGlobalBounds().getCenter();
+		const float distance = apart.length();
+		if (distance <= near || distance == 0.0f)
+		{
+			velocity = {};
+			return;
+		}
+		velocity = apart * (1.0f / distance) * speed;
 	}
 
 	// --- Against another thing.
