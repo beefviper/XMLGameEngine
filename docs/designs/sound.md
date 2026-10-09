@@ -1,6 +1,6 @@
-# 09. Sound
+# Sound
 
-**Status:** built (`sound.h`, `audio.h`, `audio_*.cpp`); seven games have sounds.
+**Status:** Built (`sound.h`, `audio.h`, `audio_*.cpp`).
 
 ## What we wanted
 
@@ -8,7 +8,7 @@ The 8-bit machines these games come from played bleeps, bloops and little tunes 
 
 ## The language
 
-A game has an optional `<sounds>` after `<variables>`. Each `<sound name wave>` has an optional `<volume>` (0 to 1, a value, default 0.3), then `<note>`s and `<rest>`s in order. `<note pitch to wave>seconds</note>`: `pitch` is a note name with octave (`C4` is middle C, `A4` 440 Hz, `F#3`, `Bb5`) or hertz; `to` slides evenly in semitones; `wave` is `square` (default), `triangle`, `sawtooth`, `sine`, `noise`. `<play sound="name" />` is an ordinary command (collision, action, key, condition, timer). Length and volume are values (a variable can set the tempo); `pitch`, `to` and `wave` pick something, so they are attributes ([01](01-vision-and-format.md)).
+A game has an optional `<sounds>` after `<variables>`. Each `<sound name wave>` has an optional `<volume>` (0 to 1, a value, default 0.3), then `<note>`s and `<rest>`s in order. `<note pitch to wave>seconds</note>`: `pitch` is a note name with octave (`C4` is middle C, `A4` 440 Hz, `F#3`, `Bb5`) or hertz; `to` slides evenly in semitones; `wave` is `square` (default), `triangle`, `sawtooth`, `sine`, `noise`. `<play sound="name" />` is an ordinary command (collision, action, key, condition, timer). Length and volume are values (a variable can set the tempo); `pitch`, `to` and `wave` pick something, so they are attributes ([vision](vision.md)).
 
 ## Decisions
 
@@ -22,12 +22,12 @@ A game has an optional `<sounds>` after `<variables>`. Each `<sound name wave>` 
 - **Checked at load,** with messages that say where: unusable wave, pitch or length, volume outside 0 to 1, a sound with no notes, duplicate names, `<play>` naming no sound. A note or rest is at most 10 seconds.
 - **The sound library is its own choice** (`AudioBackend`: SFML3, Raylib, SDL2, None; `-a`/`--audio`, an Options entry), not tied to the window, so an OpenGL window (GLFW has no sound) can have sound, and `-a none` plays silently. Default SFML 3.
 - **No sound is not an error:** a window that will not open stops the game; a sound device that will not open prints a warning and uses `NullAudio` (xgegui says so and sets the choice to None).
-- **SDL is shared** by `SDL2Window` and `SDL2Audio`: each starts and stops only its own subsystem (`SDL_InitSubSystem`/`QuitSubSystem`), the last one out calls `SDL_Quit()`. raylib opens its sound device apart from its window. SFML 3 and raylib both carry miniaudio and `stb_image` (link clashes when both are built static from source; [11](11-backends-build-and-layout.md)).
+- **SDL is shared** by `SDL2Window` and `SDL2Audio`: each starts and stops only its own subsystem (`SDL_InitSubSystem`/`QuitSubSystem`), the last one out calls `SDL_Quit()`. raylib opens its sound device apart from its window. SFML 3 and raylib both carry miniaudio and `stb_image` (link clashes when both are built static from source; [backends](backends.md)).
 - **Pong was the test:** low square blip (A3) off walls, higher (A4) off a paddle, a falling triangle bloop for a point, a rising arpeggio on start, a falling four-note tune with a hiss of noise when someone reaches 15. Since then Space Invaders (both), Kaboom, Demon Attack, Frostbite and Berserk have sounds too (shots, hits, explosions, jumps, waves, game over). Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids are still silent.
 
 ## Rejected
 
-Sound files as the only form; a tracker or MML string (`"t120 o4 c8 e8 g8"`: a little language inside a string, which [01](01-vision-and-format.md) took out); each library's own synthesis; a voice pool; sound tied to the window library.
+Sound files as the only form; a tracker or MML string (`"t120 o4 c8 e8 g8"`: a little language inside a string, which [vision](vision.md) took out); each library's own synthesis; a voice pool; sound tied to the window library.
 
 ## Not done
 

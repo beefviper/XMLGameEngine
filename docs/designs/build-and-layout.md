@@ -1,36 +1,6 @@
-# 11. Backends, library, build system and code layout
+# Build system and code layout
 
-**Status:** built: 4 XML, 4 window and 3 audio backends (plus silent), library + two programs, CMake modules, `output/` layout. The source tree is flat and wants folders.
-
-## Backends
-
-- Why: the prototype was hard-wired to Xerces and SFML. Each library sits behind an interface so the core never names one, licensing or weight problems can be dodged per backend, and a library can be swapped without touching game logic. A compiling two-backend example (pugixml and Xerces through the same `main.cpp`) proved it before adoption.
-- **XML: `XmlDocument` / `XmlNode`** (read-only):
-
-| Decision | Alternative | Why |
-|---|---|---|
-| Node is an **interface** | One concrete struct everything converts into | Libraries store data very differently (Xerces DOM, pugixml pool, RapidXML in place); a struct copies on every access |
-| `getFirstChild()` / `getNextSibling()` return a fresh `unique_ptr` | Raw pointers into a cache; value handles | Several nodes alive while a subtree is walked; allocation is irrelevant at load |
-| Unfiltered traversal, callers filter by name | Name-filtered or positional | Element order is not guaranteed |
-| Read-only | Mutable | RapidXML non-owning cannot mutate; writing would be a separate interface |
-| UTF-8 `std::string` | `wstring`, `XMLCh*` | Library-agnostic; Xerces transcodes at load |
-
-- Interface hygiene: abstract base gets only `virtual ~X() = default;`. Ideas: a range-for iterator over children, a node pool per backend.
-- **Validation follows the backend:** only Xerces does real XSD validation ("Strong"). The other three use `xsd_lite`, which reads the same `.xsd` through the same interface and checks only the subset the schema uses (sequence, element, complexType, attribute); deliberately permissive (unknown attribute types pass). `printGame()` says which ran. `tests/test_xml_format.cpp` pins what both must reject. Alternative: put validation in the engine layer so a new parser only has to parse.
-- **Window: `Window`:** lifecycle, `init()` (build and measure each object's visual), `pollEvents()` (`{key, pressed}`), `clear`, `draw`, `display`, `setTitle`, `position`/`setPosition`. Everything in engine terms (`WindowDesc`, `Object`, `KeyCode`, `Color`, `Vector2f`); no library type leaks. `Object::size` is the one thing only a backend can measure (text and image). Backends: SFML3, Raylib, SDL2, OpenGL (GLFW), plus xgegui's Qt renderer. Every backend opens a window of its own and throws `std::runtime_error` if the library cannot start.
-- **Audio: `Audio`:** `load()`, `play(name)`, `stopAll()`; SFML3, Raylib, SDL2, `NullAudio` ([09](09-sound.md)).
-- **Factories** (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) are the only places that know every implementation; a new library is one branch and one pair of files. Selection is a run-time factory; CMake options only decide which libraries get built.
-- The word "backend" stayed over implementation/module/service/provider/adapter: it says "interchangeable lower layer" and still fits as subsystems grow (window, graphics, input, audio, network, XML, expressions, filesystem). The engine owns the loop and knows only interfaces; the game is plain data.
-- Not an interface: lunasvg draws SVG inside the engine ([07](07-pictures-and-text.md)).
-- Ideas: a software renderer and null implementations of every subsystem so the engine never checks for absence ([13](13-ideas.md)); forward declarations to keep third-party types out of headers (they are `PUBLIC` today, so programs including `engine.h` need them).
-
-## Library and programs
-
-- The engine is a library, `xgelib` (`lib/`). `xgecli` ([12](12-front-ends.md)) and `xgegui` are programs; `xgetest` links the library. `xgedata` copies `games/` and `assets/`. A new front end is a `main()` and a few lines in `executables.cmake`.
-- Layout: one folder per project each with `source/` and `include/` (`lib/`, `cli/`, `gui/`); `tests/`, `games/`, `assets/` and `xgedef.xsd` stay at the top. The schema is the definition of the language, not media a game consumes, so it sits at the root and not in `assets/`; games name it as `../xgedef.xsd`. (Before, the engine's `source/`/`include/` sat at the top so the programs looked like extras.)
-- **Static by default, shared with `-DXGE_BUILD_SHARED=ON`.** Static: `xgecli` is one file that runs anywhere beside its games and assets; nothing to mismatch. Shared: one copy, replaceable without relinking, but the library must be found at run time and on Windows every crossing class needs exporting (`WINDOWS_EXPORT_ALL_SYMBOLS`). With two small programs always built together, nothing is gained from sharing. Tests were run both ways.
-- Rejected: one executable with a `--gui` switch; a `CMakeLists.txt` in every folder; third-party libraries `PRIVATE` (the engine's headers include exprtk, Xerces, SFML and others; hiding them behind interfaces is a separate change).
-- Targets are all `XGE`-named; the CMake project is `XMLGameEngine`.
+**Status:** Built. The source tree is flat and wants folders (open).
 
 ## Build system
 
@@ -46,9 +16,10 @@
   - vcpkg's raylib 6.0 is configured with `CUSTOMIZE_BUILD=ON`, which turns on every optional feature (`SUPPORT_CUSTOM_FRAME_CONTROL`, JPEG for `assets/paddle.jpg`). A raylib built another way may not load Pong's paddles; the backend then throws.
   - A CMake target named `m` collides with plutovg's `-lm`.
 
+
 ## Code layout and pipeline
 
-- The description is treated like a program with a front end: **parse, validate, evaluate, (generate)**. An explicit validation stage makes it easy to see a bug in one stage leaking into another. The code has this shape: `game_xml` parses and validates, `game_expr` evaluates into `Object`s and `State`s; generating is a separate path, XSLT on the game file run by `xgecli --generate` ([01](01-vision-and-format.md#generating-a-program-with-xslt)), and does not go through the loader.
+- The description is treated like a program with a front end: **parse, validate, evaluate, (generate)**. An explicit validation stage makes it easy to see a bug in one stage leaking into another. The code has this shape: `game_xml` parses and validates, `game_expr` evaluates into `Object`s and `State`s; generating is a separate path, XSLT on the game file run by `xgecli --generate` ([generator](generator.md#generating-a-program-with-xslt)), and does not go through the loader.
 - A July 2026 skeleton (empty files, branch `rewrite`, retired 2026-09-30) layered `core/engine` (loop phases input/update/render, a `system_*` tier under a `service_*` tier), `core/game` (`compile_*`, `model_*`), `window`, `xml`. Too layered for the code that existed; the tree was flattened into `lib/source` and `lib/include` with the same responsibilities. Keep its good ideas: three loop phases so update can run without a window; `model_object` and `model_states` are parallel definitions; what is genuinely runtime is the current state and live objects.
 - **Open:** `lib/` is flat and growing (31 source and 32 header files). Group by responsibility: game loading and evaluation, engine loop, collision and commands, window backends, audio backends, XML backends. Visual Studio filters are built from directories, so this is only the layout on disk. Also open: a configuration service, whether a "live snapshot" (current state plus live objects) is its own type, rename `collisionData.basic` (a leftover of the old `basic="basic"` spelling).
-- Second-batch ideas: construct the game in one step (parse, validate, evaluate; no object on failure; keep the constructor small by delegating to a builder); resolve verb names to handlers once at load so the running game never looks up strings ([13](13-ideas.md)); phase order input, update, collisions, render.
+- Second-batch ideas: construct the game in one step (parse, validate, evaluate; no object on failure; keep the constructor small by delegating to a builder); resolve verb names to handlers once at load so the running game never looks up strings ([ideas](ideas.md)); phase order input, update, collisions, render.

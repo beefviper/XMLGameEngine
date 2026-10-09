@@ -13,7 +13,7 @@
 // cannot generate yet stops it with a message naming the tag. And pong_min.xml
 // itself, played by the engine. Whether a written program builds and plays is
 // not tested here (it needs a compiler and a window): see
-// docs/designs/01-vision-and-format.md.
+// docs/designs/generator.md.
 
 #include "command.h"
 #include "game.h"

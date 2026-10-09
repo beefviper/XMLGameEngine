@@ -1,27 +1,6 @@
-# 12. Front ends: command line and xgegui
+# xgegui
 
-**Status:** built.
-
-## xgecli
-
-```
-xgecli [game] [options]
-  -g, --game <game>    the game, same as giving it bare
-  -w, --window <name>  sfml3 (default), raylib, sdl2, opengl
-  -x, --xml <name>     xerces (default), tinyxml2, pugixml, rapidxml
-  -a, --audio <name>   sfml3 (default), raylib, sdl2, none
-  --generate <target>  write the game out as a program (windows-cpp) instead of playing it
-  -o, --output <dir>   where --generate writes (default <game>-<target>)
-  -h, --help
-```
-
-- The simplest use stays the simplest: `xgecli pong`, `xgecli pong.xml`, or nothing (runs `pong`). Every option is optional; defaults match the C++ defaults.
-- A short option takes its value attached or spaced (`-gpong`, `-g pong`); a long one needs the space (`--game pong`; `--game=pong` is an error that says so, the author prefers the spaced form). Names are not case sensitive. A repeated option or game is an error (not "last wins": a quiet way to run the wrong backend); unknown option or backend errors list the valid names. A value starting with `-` is never taken as the previous option's value. Bare and `-g` are the same game, so giving both is an error.
-- Start message before anything else: `file:`, `window:`, `xml:`, `audio:`, one per line.
-- **Finding the game:** add `.xml` if no extension; then as given; then its file name alone in the working directory; then in `games/` of the data folder. The **data folder** is the first of the working directory, the program's folder, and the folder above it that has both `games/` and `assets/`; then the working directory is changed to it (the engine reads `assets/` relative to it), so the program starts from anywhere. Shared with xgegui through `lib/include/data_folder.h` so they cannot drift.
-- `parseCommandLine` and `findGameFile` throw `CliError`; `main()` prints the message and usage to stderr. `cli.cpp` is compiled into `xgetest` too (the library does not contain it). Library code throws and never calls `exit()` because xgegui loads game after game.
-- **Generating** ([01](01-vision-and-format.md#generating-a-program-with-xslt)): `--generate` takes a platform-language target (`windows-cpp`), long form only because `-g` is the game; `-o` is an error without it. It is resolved before the working directory changes, so the default folder and a relative `-o` are where the user started; the stylesheets are found in `generators/` of the data folder. It prints the files written and the assets copied, and does not start a window. `generate.cpp` is compiled into `xgetest` too.
-- Rejected: `-g` for generate (it is the game); `--game=pong`; last-one-wins; short backend aliases (`sfml`, `xerxes`). Open: every backend is built in, so every name is accepted; a build that leaves one out should reject its name with that reason.
+**Status:** Built.
 
 ## xgegui (Qt 6 Widgets)
 
@@ -30,7 +9,7 @@ xgecli [game] [options]
 - **Keys:** go to the game only while the view has focus; buttons do not take it; keys held when focus leaves are released.
 - **The tree** mirrors the XML: Window, Objects (a group shown once with its members or cells under it), States (shown, not editable). A value that can change has an editor on its own row (spin box, check box, text box) and acts on the running object at once; the picture redraws if frozen. Editable: class, visible, sprite size/color/text, position, velocity, acceleration, collision on/off, every object variable (through `Game::setVariable()` so bound text follows), window background. Values refresh every 0.1 s; a box being typed in is left alone. Editors are made only when a parent row opens (Frogger has thousands of values). Not done: editing states (a stack state is a copy), saving edits to XML, editing a bound text.
 - **Look:** `gui/source/theme.cpp` sets the Fusion style plus a palette-derived style sheet (neutral grey accent, shaded buttons and headings, tinted alternating rows, bold sections). Do not style `QSpinBox` borders in the sheet: the arrows disappear.
-- **Options dialog (File menu; no toolbar):** Video (Qt renderer, SFML 3, SDL2, raylib, OpenGL), XML parser, sound library (each dropdown lists only what the program was built with, [11](11-backends-build-and-layout.md): a default build has the Qt renderer and SFML 3, Xerces, and SFML 3's sound with silence, and a saved choice of a library that is not built is ignored), the two-window question switch, "Start game on load". The game waits while it is open; a new video library is given the running game (`Engine::replaceWindow`: old window destroyed first because raylib and GLFW allow only one, new made, every picture rebuilt, state untouched); a new XML parser rereads the file and restarts; a library that will not start falls back to the Qt renderer with a message. Sound can change live (`Engine::replaceAudio`) and pausing silences (`Engine::silence`).
+- **Options dialog (File menu; no toolbar):** Video (Qt renderer, SFML 3, SDL2, raylib, OpenGL), XML parser, sound library (each dropdown lists only what the program was built with, [backends](backends.md): a default build has the Qt renderer and SFML 3, Xerces, and SFML 3's sound with silence, and a saved choice of a library that is not built is ignored), the two-window question switch, "Start game on load". The game waits while it is open; a new video library is given the running game (`Engine::replaceWindow`: old window destroyed first because raylib and GLFW allow only one, new made, every picture rebuilt, state untouched); a new XML parser rereads the file and restarts; a library that will not start falls back to the Qt renderer with a message. Sound can change live (`Engine::replaceAudio`) and pausing silences (`Engine::silence`).
 - **The OpenGL backend (GLFW, plain OpenGL 1.1):** no loader library (the system's `opengl32`/`libGL` through `OpenGL::GL`); a projection in pixels and one textured rectangle per object, rebuilt on `visualDirty`; pictures made on the CPU (text and images by SDL2_ttf/SDL2_image); waits out the frame itself (so it can tear); straight alpha, so text edges differ by a shade. GLFW is the same one raylib uses; one `glfw` target either way.
 - **One window or two** (the embedding of every library in the main window was built first and **removed**): SFML 3 and SDL2 adopted a Qt platform window; raylib and GLFW drew to a hidden window and a buffer that Qt read back. Two users of OpenGL on one thread went wrong: Qt trusts its own record of the current context, so a library making its own leaves Qt drawing into the library's context and the reverse (noise, blank frames, a crash on Windows after switching). A guard around every call fixed it at the cost of most of the front end's complexity.
   - **Chosen:** one window by default, drawn by the Qt renderer, controls and tree on the right. Or two: the main window holds the controls and tree and the game has its own window, opened by the chosen library exactly as `xgecli` does (or by the Qt renderer in a plain window).
@@ -40,4 +19,4 @@ xgecli [game] [options]
   - A swap in progress must tolerate edits: text boxes report a finished edit on losing focus and showing a stage page moved focus, so the inspector redrew a game with no window. `GameSession` ignores step/reset/redraw while `load()`/`applyOptions()` runs (`changing` guard), and text boxes count only real changes. Anything else in xgegui that can run during a swap must check it.
 - **Title:** every window shows the same title, `Space Invaders (Playing: 59.9fps) (SFML3, Xerces)` or `(Paused) (Qt, Xerces)`, worked out by `GameSession` when state or the half-second frame rate changes (`Window::setTitle`). The status line colors Playing green and Paused red. Games start paused unless `start_game_on_load` is set.
 - **Remembered in `xgegui.ini`** (next to the program, written only when something changes): `[Window] warn_before_two_windows`, `[Game] start_game_on_load`, `[Windows]` `one_window`, `controls`, `game` (window places; ignored if off screen) and `two_windows`; `[Session]` `video`, `xml`, `audio` and `game` (the last game, reopened when started with no game; a library other than Qt always starts in two windows). Game window size is not kept. Pacing: a library's window waits its own frame, so the controls can lag by up to a frame; a backend would need "do not wait".
-- **Windows deployment:** see [11](11-backends-build-and-layout.md).
+- **Windows deployment:** see [backends](backends.md).

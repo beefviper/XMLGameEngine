@@ -21,7 +21,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/astrosmash.xml` | Astrosmash: shoot falling rocks before they land; fall speeds and starting heights are `<random>` |
 | `games/lunarlander.xml` | Lunar Lander: land gently on the pad with fuel to spare; every picture is drawn from `<line>`s and collisions follow the drawn pixels |
 | `games/asteroids.xml` | Asteroids: turn, thrust along the way you face and coast, shoot rocks that break into smaller rocks; the screen wraps on every side |
-| `games/berserk.xml` | Berserk, after the arcade game Berzerk: four mazes of electrified walls with robots that patrol and shoot at you, a man who shoots the way he faces, Evil Otto coming for you if you linger, exits in every outer wall (see [design 10](docs/designs/10-games-as-tests.md); first written by another AI from the schema alone, see [design 10](docs/designs/10-games-as-tests.md)) |
+| `games/berserk.xml` | Berserk, after the arcade game Berzerk: four mazes of electrified walls with robots that patrol and shoot at you, a man who shoots the way he faces, Evil Otto coming for you if you linger, exits in every outer wall (see [games-classic](docs/designs/games-classic.md); first written by another AI from the schema alone, see [games-classic](docs/designs/games-classic.md)) |
 | `games/demonattack.xml` | Demon Attack: slide along the bottom and shoot the demons, which bounce from side to side and fire down at you (first written by another AI) |
 | `games/frostbite.xml` | Frostbite: jump Bailey between the snowy shore and four rows of drifting ice; every white row he lands on turns blue and adds a block to his igloo; the water, the cold and the snow geese are against him; finish the igloo and walk in |
 | `games/donkeykong.xml` | Donkey Kong: climb six girders past the barrels Kong throws, jumping them or dodging up the ladders, to save Pauline; each rescue Kong throws faster, three rescues win |
@@ -118,4 +118,4 @@ The engine is still growing. It has no arcing jump (`hop` is a single step and `
 
 * [docs/readme.md](docs/readme.md): how the engine works today, verb by verb.
 * [docs/designs/00-designs.md](docs/designs/00-designs.md): the design decisions, the options considered, and ideas not built yet.
-* [AGENTS.md](AGENTS.md) and [docs/agents/notes.md](docs/agents/notes.md): notes for AI coding agents and new contributors.
+* [AGENTS.md](AGENTS.md) and [docs/agents/notes.md](docs/agents/notes.md): gotchas for AI coding agents and new contributors.

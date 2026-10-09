@@ -1,30 +1,65 @@
 # XMLGameEngine design index
 
-These files record **why**: what we were looking for, what we looked at, what we chose, and what is still only an idea. How the engine works **today** is [../readme.md](../readme.md); when the two disagree, the code and the readme win and the design file should be fixed.
+These files record **why**: what we looked for, what we looked at, what we chose, and what is still only an idea. How the engine works **today** is [../readme.md](../readme.md); when the two disagree, the code and the readme win and the design file should be fixed. Verbs are written `bounce()` for short; in a game file they are always tags.
 
-Verbs are sometimes written `bounce()` for short; in a game file they are always tags.
+Status: **Built** = in the code. **Decided** = chosen, not built. **Open** = undecided. **Idea** = floated, not adopted. **Reference** = a map, nothing to decide.
 
-Status key: **Reference** = a map or summary, nothing to decide. **Built** = in the code. **Decided** = chosen, not built. **Leaning** = a direction, not final. **Open** = undecided. **Idea** = floated, not adopted.
+Each file is one topic, so scan this table and open only the one you need. The backlog is [open-work](open-work.md).
 
-| # | Topic | Chosen / status |
+## Language
+
+| File | Topic | Status |
 |---|---|---|
-| [01](01-vision-and-format.md) | Vision, file format, the VGDL landscape, attributes vs content, arithmetic as text or tags | Declarative + `condition` triggers; XML + XSD, one file; function syntax removed; arithmetic written as text, or as `<equation>` / `<formula>` tags beside it. **Built.** XSLT code generation: **built**, plain, for Pong, Space Race, Freeway, Breakout and Depth Charge (`--generate windows-cpp`), groups as `std::vector`, physics and sound as modules beside the game; the other games **open** |
-| [02](02-values-variables-and-names.md) | Values (`<random>`), evaluation order, variables, an object's size in expressions, names and classes | Two-pass registration; polling floats by `owner.variable`; `name.width`; `name` + `class`. **Built.** `Value` variant **Decided**; selectors, inheritance **Idea** |
-| [03](03-objects-groups-and-storage.md) | What an object is, storage and handles, lockstep, groups | `vector<Object>` and name search; `<group>` with members that take what they leave out, or cells in columns and rows changed by row, column and cell (`<grid>` folded into it). **Built.** Handles **Decided**; opt-in parts, shapes **Idea** |
-| [04](04-states-conditions-and-input.md) | States, conditions, input and held keys | State stack; `atleast`/`atmost`/`remaining`; objects name actions, states bind keys; live held keys. **Built.** Per-state behavior, `goto`, data between states **Open** |
-| [05](05-collisions.md) | Detection/dispatch/execution, swept collision, pixel tests, riding, `unless`, speed filters, `<deflect>`, escalation, reference Pong | **Built.** Escalation (verb protocol) **Idea** |
-| [06](06-motion-and-verbs.md) | The verb principle, what each game forced, gravity and thrust, headings, hop/jump/facing, motion models, arcing jump, AI, paths | **Built** (constant velocity, acceleration, thrust, headings, straight jump; standing, a fixed-arc leap and ladders for Donkey Kong). Paths of straight steps **built** (Galaxian). `<chase>` and `<aim>` **built** (Berserk). Air control, AI strategies, curved paths **Idea** |
-| [07](07-pictures-and-text.md) | Engine-drawn pictures: lines, bitmaps, SVG parts, flip, turning, animation, looks, built-in font | One `Bitmap` path for every picture the engine draws. **Built** |
-| [08](08-timers-and-enemy-behavior.md) | Timers, commands in every context, pools instead of spawning, enemies firing back, key sets | Timers on objects and states, pools, key sets. **Built.** Event queue **Open** |
-| [09](09-sound.md) | Sound as notes made into samples by the engine | `<sounds>`, `<play>`, an `Audio` backend. **Built** |
-| [10](10-games-as-tests.md) | What each shipped game tested and forced; the games another AI wrote; Berserk | **Built** |
-| [11](11-backends-build-and-layout.md) | Backend interfaces and factories, library + programs, CMake modules, `output/`, code layout | **Built.** Folder layout of `lib/` **Open** |
-| [12](12-front-ends.md) | `xgecli` options, `xgegui` (Qt renderer, tree, Options, one or two windows, OpenGL backend) | **Built** |
-| [13](13-ideas.md) | Scrolling, targets and capability profiles, state export, game ideas, small ideas | **Idea** |
-| [14](14-vocabulary-map.md) | Every word the language knows by grammar (noun, verb, adjective, adverb, preposition) and by engine layer; the categories still missing | A reference, not a decision: collision is the richest layer, values the thinnest; frames the math words of the open arithmetic question in 01. **Reference** |
+| [vision](vision.md) | What we want, declarative with triggers, the VGDL landscape | Built |
+| [file-format](file-format.md) | Why XML + XSD, one file; attributes name, content computes | Built |
+| [arithmetic](arithmetic.md) | Math as text, `<equation>`, `<formula>` | Built |
+| [values-and-names](values-and-names.md) | `<random>`, evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided |
+| [objects](objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
+| [groups](groups.md) | `<group>`: listed members, cells in columns and rows | Built |
+| [states-and-conditions](states-and-conditions.md) | State stack, `atleast`/`atmost`/`remaining` | Built; per-state behavior, `goto` Open |
+| [input](input.md) | Actions, held keys, key sets across states | Built |
+| [timers](timers.md) | Timers, commands in every context | Built; event queue Open |
+| [pools-and-enemies](pools-and-enemies.md) | Pools instead of spawning, enemies firing back, key sets | Built |
+| [vocabulary-map](vocabulary-map.md) | Every word by grammar and by layer; missing categories | Reference |
 
-## Reading order
+## Behavior
 
-New to the project: [readme](../readme.md), then 01, 04, 05. Working on the language: 14, 01, 02, 06, 08. Working on pictures or sound: 07, 09. Working on the C++: 03, 11, 12.
+| File | Topic | Status |
+|---|---|---|
+| [collisions](collisions.md) | Detection, dispatch, swept and pixel collision, speed filters, `<deflect>` | Built |
+| [collisions-open](collisions-open.md) | Weaknesses, response alternatives, escalation, reference Pong | Open / Idea |
+| [motion](motion.md) | Verb principle, gravity, thrust, headings, hop, jump, facing | Built |
+| [platforming](platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump | Built; air control Idea |
+| [chase-and-paths](chase-and-paths.md) | `<chase>`, `<aim>`, paths and formations (Galaxian), AI targeting | Built; curved paths Idea |
 
-Add a new topic to the closest existing file before creating a new one; keep this table and the files in step.
+## Pictures and sound
+
+| File | Topic | Status |
+|---|---|---|
+| [pictures](pictures.md) | One `Bitmap` path for lines, bitmaps, SVG parts, flip, turning | Built |
+| [animation-and-looks](animation-and-looks.md) | Animation, named looks | Built |
+| [text](text.md) | Text and the built-in font | Built |
+| [sound](sound.md) | Notes made into samples; `<sounds>`, `<play>` | Built |
+
+## Code generation
+
+| File | Topic | Status |
+|---|---|---|
+| [generator](generator.md) | XSLT approach, options, the plain `windows-cpp` target, open questions | Built |
+| [generator-structure](generator-structure.md) | Program layout: objects, screens, groups, pictures, names, modules | Built |
+| [generator-rules](generator-rules.md) | Edges, touches, timers, jumps, aim, chase, paths | Built |
+
+## Engine, tools and games
+
+| File | Topic | Status |
+|---|---|---|
+| [backends](backends.md) | Backend interfaces and factories, library and programs | Built |
+| [build-and-layout](build-and-layout.md) | CMake modules, `output/`, source layout, pipeline | Built; `lib/` folders Open |
+| [cli](cli.md), [gui](gui.md) | `xgecli` options; `xgegui` (Qt renderer, tree, Options, windows) | Built |
+| [games-classic](games-classic.md) | What each early game tested and forced | Built |
+| [games-written-by-ai](games-written-by-ai.md) | Berserk, Demon Attack, Frostbite from the schema alone | Built |
+| [games-atari](games-atari.md) | Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania | Built |
+| [ideas](ideas.md) | Scrolling, capability profiles, state export, game ideas | Idea |
+| [open-work](open-work.md) | Backlog and known untested areas | Open |
+
+Add a topic to the closest existing file before creating a new one; keep this table in step. Keep files to: what we looked for, what we looked at, what we chose and why, what is open. No progress diaries or test-run logs.

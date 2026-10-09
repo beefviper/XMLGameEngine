@@ -1,6 +1,6 @@
-# 07. Pictures, animation and text
+# Pictures
 
-**Status:** built: lines, bitmaps, SVG parts, named sprites with an animation or looks, flipping, turning, built-in font.
+**Status:** Built: lines, bitmaps, SVG parts, flipping, turning.
 
 ## The one decision behind all of it
 
@@ -8,16 +8,18 @@
 
 - no window backend, the Qt renderer or the collision detector changes when a picture kind is added, and every library shows identical pixels;
 - the object's size is known without a window (`name.width` works in tests);
-- a `<type>pixel</type>` collision tests exactly the pixels drawn ([05](05-collisions.md));
+- a `<type>pixel</type>` collision tests exactly the pixels drawn ([collisions](collisions.md));
 - cells of a group drawing the same picture share it (drawn once); the internal shape kind is still called `Line` ("a picture the engine drew itself", params `{"line", w, h}`), not renamed, to keep the change out of every backend. The xgegui inspector calls such a sprite "drawn"/"pixels".
 
 Keep new picture kinds on this path. Text and `<image>` files are the exception: only a backend can measure them, so they cannot be `pixel` and expressions see their size as 0 until measured.
+
 
 ## Lines
 
 - Need: Lunar Lander is drawn entirely from lines; the moon is one object of 15 lines, the lander 13, the pad one thick line.
 - `<line>` (from/to, `<color>`, `<thickness>` of at least 1) inside a `<sprite>`, in pixels from the sprite's top left. Rasterized with a square brush, no gaps, transparent elsewhere; endpoints rounded. Not mixable with other shapes. Lines have no fill.
 - Rejected: a box with a list of parts (a second description that drifts from the picture).
+
 
 ## Bitmaps
 
@@ -26,6 +28,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - One `<row>` element per line, not one text block: whitespace handling in text nodes differs among the four XML libraries.
 - Rejected: a palette now (a two-color sprite is two objects), frames as an attribute (`<sprite frames="2">`, cannot reorder or reuse).
 - A bitmap can be the sprite of a group in columns and rows, a row changing its rows of text and color.
+
 
 ## SVG parts
 
@@ -36,34 +39,9 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - Rejected: SDL_image in backends (pictures differ per library), converting to PNG at build time (a tool, a second file to keep in step, no part or scale in the game file), rasterizing at window size (resize redraws; `<scale>` already says what a unit is), a palette/recolor, caching the drawing by file (cheap if loading the sheet per sprite is ever slow).
 - Mistakes stop the load naming object and file. Space Invaders 2 uses the aliens, the idle ship, the player bolt and the enemy bolt (flipped). The banking ship, hit flash, charged bolt, explosions and saucer are unused; they could now be written with looks (`<become>` from the ship's actions and rules), a pool released where an alien died, and a timer for the saucer, but the game has not been.
 
+
 ## Flip and turning
 
 - `<flip>` (`horizontal`/`vertical`) on a bitmap or svg is applied to the pixels right after drawing, before they are kept for turning, so the size is exact and pixel tests see flipped pixels. Turning half a round with a heading would also flip, but every heading's picture is a square big enough for any angle (a thin falling bolt would get a box about 38 pixels square).
 - **Turning by heading**, done by the engine, on demand: an object keeps a shared `Turnable` (the lines, or the original bitmap; one per animation frame) and its one current `bitmap`, redrawn by `Object::showHeading` only when the heading rounded to a whole degree changes (360 headings, `turnBitmap`, `rasterizeTurned`). Each result pixel takes the one original pixel under it (nearest sample): flat colors, hard edges, a pixel of art stays a block of `<scale>` pixels. Lines are re-drawn turned, not rotated, to stay sharp. Every heading is the same square, which is the object's size. The first version pre-made 72 pictures at load; on demand costs two pictures per object and gave 360 headings free.
 - Not done: smooth/anti-aliased turned edges, turning by a fraction of a degree.
-
-## Animation
-
-- Need: arcade creatures flap between two poses; nothing changed a picture over time.
-- An object with several `<sprite name="...">`s and an `<animation>`: `<interval>` seconds (a value above 0) and `<frame sprite="name" />` elements that refer to sprites by name (so a sprite can be reused in the sequence). At least two frames; every sprite must be shown; frames must be pictures of one size. (Several named sprites with *no* animation are looks, below.)
-- **Seconds in the file, frames in the engine:** turned into frames with `<framerate>` at load (a window with no framerate is an error); a slow machine animates slowly with everything else. One count per object, advanced by `Game::updateObjects` for objects that are shown and in play; a pause or menu holds the picture; a reset restores frame one. The cells of a group animate together because they start together and share the pictures.
-- Groups: a member's own sprites replace the group's; an animation (its own, else the group's) is looked up in the sprites the member ends up with. This is what gives Space Invaders three alien kinds in one lockstep group.
-- Frames of a turned object each keep their own `Turnable`; equal-sized bitmaps turn to equal squares.
-- Rejected: a global animation clock (flips everything on one tick regardless of state; a per-object count is simpler with pause and reset, at the cost of a group's cells being in step only because they start together).
-- Not done: an interval per frame, an animation that runs once or starts on a collision, pictures driven by a variable, direction or hit, a color per pixel, an image-to-rows tool.
-
-## Looks
-
-- Need: Frostbite's ice turns blue when landed on and its igloo grows a block at a time; Frogger faked a filled home with a frog under each pad.
-- **Several named sprites and no animation are *looks*.** `<become sprite="name" />` (or `object=` for a name or group) switches the picture; a reset shows the first. A collision rule with `sprite="white"` runs only while its object shows that look, so a row gives one block and then no more until it turns white again.
-- **Looks count hits.** Breakout's top row takes two (`whole`, then `cracked`). A per-object variable could count them, but `<die />` has no condition, so the variable could not end the brick; a look can, and the player sees the count. Rules run in the order written and each sees the look as the rule before left it, so the rule for the last look comes first. A row cannot have rules of its own, so the row is a group of its own in the class `bricks`.
-- **Edge rules too.** An edge's rules are kept as one flat list of commands per edge (an `edge="all"` rule is copied into four), so a `sprite=` edge rule is noted beside its edge's list as where its commands start and how many there are (`EdgeGuard`), and the look is checked when the run reaches them. A list of rules per edge was the other way; it would have changed every reader of the lists (the checks at load, the inspector, the tests) for one attribute. Before this the engine read `sprite=` on an edge rule and dropped it, so the rule ran whatever the object showed.
-- Chosen over class changes (`<become class>`: rules already filter by class, but the change would not be visible and colour would need its own command) and per-object state variables. **The look is the state: what the player sees is what the rule tests.**
-- A look is a spriteParams plus a bitmap swapped in and marked dirty, so no backend changed. Looks do not combine with an animation or a heading; a look cannot be a bound number text. No recoloring.
-
-## Text and the built-in font
-
-- Text is drawn by each backend from `assets/tuffy.ttf`, relative to the working directory. Running from the wrong folder used to draw nothing, silently.
-- **Fallback:** an 8x8 glyph per printable ASCII (32 to 126), 760 bytes in `builtin_font.cpp` (public-domain `font8x8`, credit kept), drawn into a `Bitmap` by `rasterizeText`. When a font load fails each backend prints one error line and draws all text from that bitmap. Size: height scale `size / 16` (min 1), cell 8x that tall, half as wide but never under 8 (size 48 gives 12 by 24). Non-ASCII is `?`; newline starts a line; tab is a space. Text is chunky and monospaced, so width differs from the real font; centering with `title.width` still works. The first version used one scale for both axes and ran off the screen.
-- Rejected: embedding `tuffy.ttf` (about 600 KB of source, a generation step since C++20 has no `#embed`), an embedded PNG atlas (needs a decoder in a fallback), each library's default font (only raylib has one).
-- The fix for the cause rather than the symptom: the data-folder search that puts `assets/` in the working directory ([12](12-front-ends.md)).
