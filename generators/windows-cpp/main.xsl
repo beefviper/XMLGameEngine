@@ -102,6 +102,9 @@
   <xsl:variable name="aimers" select="$things[timers/timer/aim or collisions/collision/aim]" />
   <!-- Those that <chase> the nearest of something: a velocity straight at it. -->
   <xsl:variable name="chasers" select="$things[timers/timer/chase or collisions/collision/chase]" />
+  <!-- Those whose <facing> changes: with a key that moves, hops or jumps them,
+       and as they aim or chase. A fire leaves the way they face now. -->
+  <xsl:variable name="facers" select="$things[facing][actions/action[move or hop or jump] or timers/timer/*[self::aim or self::chase] or collisions/collision/*[self::aim or self::chase]]" />
   <!-- What they look for, the nearest one in play found by a function. -->
   <xsl:variable name="sought" select="$things[@name = $things/timers/timer/*[self::aim or self::chase]/@object or @name = $things/collisions/collision/*[self::aim or self::chase]/@object]" />
 
@@ -178,7 +181,8 @@
   <xsl:key name="action" match="object/actions/action" use="concat(../../@name, '|', @name)" />
   <xsl:variable name="all-inputs" select="/game/states/keys/input | $states/inputs/input" />
   <xsl:variable name="held-inputs" select="$all-inputs[trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate or climb]]]" />
-  <xsl:variable name="pressed-inputs" select="$all-inputs[* and not(trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate or climb]])]" />
+  <xsl:variable name="pressed-inputs" select="$all-inputs[* and (not(trigger[key('action', concat(@object, '|', @action))[move or turn or thrust or accelerate or climb]])
+      or trigger[key('action', concat(@object, '|', @action))[*[not(self::move or self::turn or self::thrust or self::accelerate or self::climb)] or move[../../../facing]]])]" />
 
   <!-- Each screen's keys: the <input>s it takes, from the <keys> sets its
        <inputs keys="..."> names (each over the one before) and then its own
@@ -200,6 +204,12 @@
           </xsl:variable>
           <xsl:if test="normalize-space($keys) != ''">
             <input id="{generate-id()}" keys="{normalize-space($keys)}">
+              <xsl:attribute name="pressed">
+                <xsl:choose>
+                  <xsl:when test="count(. | $pressed-inputs) = count($pressed-inputs)">yes</xsl:when>
+                  <xsl:otherwise>no</xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
               <xsl:attribute name="held">
                 <xsl:choose>
                   <xsl:when test="count(. | $held-inputs) = count($held-inputs)">yes</xsl:when>
@@ -539,6 +549,18 @@ sf::Texture </xsl:text>
       </xsl:if>
       <xsl:if test="count(. | $standers) = count($standers)">
         <xsl:value-of select="concat('&#10;bool ', $name, 'Grounded = false; // standing on something, as this frame found')" />
+      </xsl:if>
+      <xsl:if test="count(. | $facers) = count($facers)">
+        <xsl:variable name="facing"><xsl:call-template name="facing-value" /></xsl:variable>
+        <xsl:choose>
+          <xsl:when test="self::group">
+            <xsl:variable name="cells"><xsl:call-template name="group-size" /></xsl:variable>
+            <xsl:value-of select="concat('&#10;std::vector&lt;physics::Facing&gt; ', $name, 'Facing(', $cells, ', ', $facing, '); // the way each faces (&lt;facing&gt;), which a &lt;fire&gt; leaves')" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat('&#10;physics::Facing ', $name, 'Facing = ', $facing, '; // the way it faces (&lt;facing&gt;), which a &lt;fire&gt; leaves')" />
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:if>
       <xsl:if test="count(. | $aimers) = count($aimers)">
         <xsl:choose>
@@ -1320,6 +1342,13 @@ void start()
       <xsl:text>;
 </xsl:text>
     </xsl:if>
+    <xsl:if test="count(. | $facers) = count($facers)">
+      <xsl:variable name="facing"><xsl:call-template name="facing-value" /></xsl:variable>
+      <xsl:choose>
+        <xsl:when test="self::group"><xsl:value-of select="concat('&#9;', $name, 'Facing.assign(', $name, '.size(), ', $facing, ');&#10;')" /></xsl:when>
+        <xsl:otherwise><xsl:value-of select="concat('&#9;', $name, 'Facing = ', $facing, ';&#10;')" /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
     <xsl:if test="self::object and count(. | $dying) = count($dying)">
       <xsl:value-of select="concat('&#9;', $name)" />
       <xsl:choose>
@@ -1697,7 +1726,7 @@ void pressed(sf::Keyboard::Key key)
         <xsl:text>	switch (screens.back())
 	{
 </xsl:text>
-        <xsl:for-each select="$states[@name = $screen-keys[input[@held = 'no']]/@name]">
+        <xsl:for-each select="$states[@name = $screen-keys[input[@pressed = 'yes']]/@name]">
           <xsl:text>	case Screen::</xsl:text>
           <xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@name" /></xsl:call-template>
           <xsl:text>:
@@ -1706,7 +1735,7 @@ void pressed(sf::Keyboard::Key key)
           <xsl:text>		break;
 </xsl:text>
         </xsl:for-each>
-        <xsl:if test="$states[not(@name = $screen-keys[input[@held = 'no']]/@name)]">
+        <xsl:if test="$states[not(@name = $screen-keys[input[@pressed = 'yes']]/@name)]">
           <xsl:text>	default:
 		break;
 </xsl:text>
@@ -1762,12 +1791,20 @@ void pressed(sf::Keyboard::Key key)
       <xsl:value-of select="concat($indent, '&#9;if (', $name, 'Alive)&#10;', $indent, '&#9;{&#10;')" />
     </xsl:if>
     <xsl:for-each select="key('action', concat(@object, '|', @action))/*">
+      <xsl:variable name="owner" select="ancestor::object[1]" />
       <xsl:choose>
+        <xsl:when test="self::move or self::turn or self::thrust or self::accelerate or self::climb">
+          <!-- held, in the screen's update; a move pressed turns it -->
+          <xsl:if test="self::move">
+            <xsl:call-template name="turned-by-key"><xsl:with-param name="owner" select="$owner" /><xsl:with-param name="name" select="$name" /><xsl:with-param name="indent" select="$in" /></xsl:call-template>
+          </xsl:if>
+        </xsl:when>
         <xsl:when test="self::hop">
           <xsl:value-of select="concat($in, 'physics::hop(', $name, ', ')" />
           <xsl:call-template name="direction"><xsl:with-param name="node" select="." /></xsl:call-template>
           <xsl:text>, windowArea);
 </xsl:text>
+          <xsl:call-template name="turned-by-key"><xsl:with-param name="owner" select="$owner" /><xsl:with-param name="name" select="$name" /><xsl:with-param name="indent" select="$in" /></xsl:call-template>
         </xsl:when>
         <xsl:when test="self::jump">
           <xsl:value-of select="concat($in, 'physics::jump(', $name, ', ')" />
@@ -1781,6 +1818,7 @@ void pressed(sf::Keyboard::Key key)
             <xsl:otherwise>0.3f</xsl:otherwise>
           </xsl:choose>
           <xsl:value-of select="concat('), ', $name, 'JumpStep, ', $name, 'JumpFrames, windowArea);&#10;')" />
+          <xsl:call-template name="turned-by-key"><xsl:with-param name="owner" select="$owner" /><xsl:with-param name="name" select="$name" /><xsl:with-param name="indent" select="$in" /></xsl:call-template>
         </xsl:when>
         <xsl:when test="self::leap">
           <xsl:variable name="climbs" select="count(ancestor::object[1] | $climbers) = count($climbers)" />
@@ -1804,13 +1842,36 @@ void pressed(sf::Keyboard::Key key)
           <xsl:call-template name="start-call"><xsl:with-param name="self" select="ancestor::object[1]" /><xsl:with-param name="name" select="$name" /></xsl:call-template>
         </xsl:when>
         <xsl:otherwise>
-          <xsl:call-template name="common-command"><xsl:with-param name="indent" select="$in" /></xsl:call-template>
+          <xsl:call-template name="common-command">
+            <xsl:with-param name="indent" select="$in" />
+            <xsl:with-param name="self" select="$owner" />
+          </xsl:call-template>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
     <xsl:if test="$dies">
       <xsl:value-of select="concat($indent, '&#9;}&#10;')" />
     </xsl:if>
+  </xsl:template>
+
+  <!-- A key that moves, hops or jumps something: it faces that way, and an
+       aim it had is forgotten. -->
+  <xsl:template name="turned-by-key">
+    <xsl:param name="owner" />
+    <xsl:param name="name" />
+    <xsl:param name="indent" />
+    <xsl:if test="count($owner | $facers) = count($facers)">
+      <xsl:value-of select="concat($indent, $name, 'Facing = physics::Facing::', translate(substring(@direction, 1, 1), 'udlr', 'UDLR'), substring(@direction, 2), ';&#10;')" />
+    </xsl:if>
+    <xsl:if test="count($owner | $aimers) = count($aimers)">
+      <xsl:value-of select="concat($indent, $name, 'Aimed = false;&#10;')" />
+    </xsl:if>
+  </xsl:template>
+
+  <!-- The way something faces at the start, as C++ (physics::Facing::Left). -->
+  <xsl:template name="facing-value">
+    <xsl:variable name="facing" select="normalize-space(facing)" />
+    <xsl:value-of select="concat('physics::Facing::', translate(substring($facing, 1, 1), 'udlr', 'UDLR'), substring($facing, 2))" />
   </xsl:template>
 
   <!-- A <fire>: the projectile (the first of a group out of play) put at the
@@ -1897,8 +1958,16 @@ void pressed(sf::Keyboard::Key key)
 </xsl:text>
       </xsl:when>
       <xsl:when test="$facing != ''">
-        <xsl:value-of select="concat($in, 'physics::fireFrom(', $shooter, ', ', $name, ', ', $velocity, ', physics::Facing::')" />
-        <xsl:value-of select="concat(translate(substring($facing, 1, 1), 'udlr', 'UDLR'), substring($facing, 2))" />
+        <xsl:value-of select="concat($in, 'physics::fireFrom(', $shooter, ', ', $name, ', ', $velocity, ', ')" />
+        <xsl:choose>
+          <xsl:when test="count($from | $facers) = count($facers)">
+            <xsl:variable name="bare" select="substring-before(concat($shooter, '['), '[')" />
+            <xsl:value-of select="concat($bare, 'Facing', substring($shooter, string-length($bare) + 1))" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat('physics::Facing::', translate(substring($facing, 1, 1), 'udlr', 'UDLR'), substring($facing, 2))" />
+          </xsl:otherwise>
+        </xsl:choose>
         <xsl:text>, sf::Vector2f</xsl:text>
         <xsl:call-template name="vector"><xsl:with-param name="node" select="$projectile/velocity" /></xsl:call-template>
         <xsl:text>.length());
@@ -2214,10 +2283,17 @@ void pressed(sf::Keyboard::Key key)
         <xsl:value-of select="concat($indent, 'if (const std::optional&lt;sf::Vector2f&gt; way = physics::aimAt(', $name, ', ')" />
         <xsl:call-template name="nearest-call"><xsl:with-param name="from" select="$name" /></xsl:call-template>
         <xsl:value-of select="concat('))&#10;', $indent, '{&#10;')" />
-        <xsl:value-of select="concat($indent, '&#9;', $bare, 'Aim', $at, ' = *way;&#10;', $indent, '&#9;', $bare, 'Aimed', $at, ' = true;&#10;', $indent, '}&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;', $bare, 'Aim', $at, ' = *way;&#10;', $indent, '&#9;', $bare, 'Aimed', $at, ' = true;&#10;')" />
+        <xsl:if test="count($self | $facers) = count($facers)">
+          <xsl:value-of select="concat($indent, '&#9;', $bare, 'Facing', $at, ' = physics::facingOf(*way);&#10;')" />
+        </xsl:if>
+        <xsl:value-of select="concat($indent, '}&#10;')" />
       </xsl:when>
       <xsl:when test="self::chase">
-        <xsl:value-of select="concat($indent, 'physics::chase(', $name, ', ', $velocity, ', ')" />
+        <xsl:variable name="faces" select="count($self | $facers) = count($facers)" />
+        <xsl:value-of select="$indent" />
+        <xsl:if test="$faces">if (const std::optional&lt;sf::Vector2f&gt; way = </xsl:if>
+        <xsl:value-of select="concat('physics::chase(', $name, ', ', $velocity, ', ')" />
         <xsl:call-template name="nearest-call"><xsl:with-param name="from" select="$name" /></xsl:call-template>
         <xsl:text>, </xsl:text>
         <xsl:call-template name="value"><xsl:with-param name="node" select="speed" /></xsl:call-template>
@@ -2226,7 +2302,15 @@ void pressed(sf::Keyboard::Key key)
           <xsl:when test="near"><xsl:call-template name="value"><xsl:with-param name="node" select="near" /></xsl:call-template></xsl:when>
           <xsl:otherwise>0.0f</xsl:otherwise>
         </xsl:choose>
-        <xsl:value-of select="concat('); // the nearest ', @object, ' in play&#10;')" />
+        <xsl:choose>
+          <xsl:when test="$faces">
+            <xsl:variable name="bare" select="substring-before(concat($name, '['), '[')" />
+            <xsl:value-of select="concat(')) // the nearest ', @object, ' in play&#10;', $indent, '{&#10;', $indent, '&#9;', $bare, 'Facing', substring($name, string-length($bare) + 1), ' = physics::facingOf(*way);&#10;', $indent, '}&#10;')" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat('); // the nearest ', @object, ' in play&#10;')" />
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:when>
       <xsl:when test="self::move and count($self | $lockstep) = count($lockstep)">
         <xsl:variable name="group"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="$self/@name" /></xsl:call-template></xsl:variable>
