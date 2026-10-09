@@ -783,6 +783,26 @@ TEST_CASE("generating Pitfall! makes each scorpion an object of its screen, and 
 	CHECK(main.find("\t\tstatusScreen += 1.0f;\n\t\tharry.move({-(windowRight - 2.0f * physics::width(harry)), 0.0f});") != std::string::npos);
 }
 
+TEST_CASE("generating Missile Command aims the base at the sight, and each missile chases the nearest city", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_missilecommand");
+	generateGame(requestFor(fs::current_path() / "games/missilecommand.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// an aim is kept, and the shots go along it
+	CHECK(main.find("\t\tif (const std::optional<sf::Vector2f> way = physics::aimAt(base, nearestSight()))\n\t\t{\n\t\t\tbaseAim = *way;\n\t\t\tbaseAimed = true;") != std::string::npos);
+	CHECK(main.find("if (baseAimed)\n\t\t\t\t\t{\n\t\t\t\t\t\tphysics::fireAlong(base, abms[i], abmsVelocity[i], baseAim, sf::Vector2f{0.0f, -abmspeed}.length());") != std::string::npos);
+	// each missile looks for the nearest city still standing
+	CHECK(main.find("physics::chase(missiles1[i], missiles1Velocity[i], nearestCities(missiles1[i]), speed1, 0.0f);") != std::string::npos);
+	CHECK(main.find("std::optional<sf::Vector2f> nearestCities(const Shape& one)\n{\n\tconst sf::Vector2f here = one.getGlobalBounds().getCenter();") != std::string::npos);
+	CHECK(main.find("\t\tif (!citiesAlive[i])\n\t\t{\n\t\t\tcontinue;") != std::string::npos);
+}
+
 TEST_CASE("generating Space Invaders animates the block, each row its own pictures, through one become", "[generate]")
 {
 	if (!canGenerate())
@@ -1090,7 +1110,7 @@ TEST_CASE("what windows-cpp cannot generate yet is named in the error", "[genera
 		return std::string("generated it");
 	};
 
-	CHECK(refusal("<collision edge=\"vertical\"><aim target=\"box\" /></collision>", "", "").find("cannot generate <aim> yet (in game > objects > object box") != std::string::npos);
+	CHECK(refusal("<collision edge=\"vertical\"><aim object=\"box\" /></collision>", "", "").find("cannot generate <aim object=\"box\"> of something not an object or group, or of itself yet (in game > objects > object box") != std::string::npos);
 	CHECK(refusal("<collision edge=\"vertical\"><land /></collision>", "", "").find("cannot generate <land /> outside a <collision> with other objects") != std::string::npos);
 	CHECK(refusal("<collision edge=\"vertical\"><wrap /><play sound=\"boom\" /></collision>", "", "").find("cannot generate <wrap /> with other commands in the same <collision> yet") != std::string::npos);
 	CHECK(refusal("<collision edge=\"top\"><inc variable=\"lives\" /></collision>", "<variable name=\"lives\">3</variable>", "").find("cannot generate <inc variable=\"lives\"> (it counts an object variable, as paddle1.score) yet") != std::string::npos);
