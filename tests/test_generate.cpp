@@ -823,6 +823,31 @@ TEST_CASE("generating Berserk turns the man with the keys he walks by, and fires
 	CHECK(main.find("physics::chase(otto, ottoVelocity, nearestPlayer(), 1.1f, 0.0f);") != std::string::npos);
 }
 
+TEST_CASE("generating Galaxian flies the fleet in on its paths, one behind another, and each alien on its dive", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_galaxian");
+	generateGame(requestFor(fs::current_path() / "games/galaxian.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// the paths are a table, a leg of a step or home
+	CHECK(main.find("enum class Path { Fromtop, Fromtopleft, Fromtopright, Fromleft, Fromright, Dive };") != std::string::npos);
+	CHECK(main.find("\t{divespeed, std::nullopt, {\n\t\t{{-24.0f, -24.0f}}, // and play") != std::string::npos);
+	CHECK(main.find("\t\t{{0.0f, windowBottom + alienheight - 496.0f}},\n\t\t{{}, true}}}\n};") != std::string::npos);
+	// a follower keeps its flight and its home, and flies before anything moves
+	CHECK(main.find("std::vector<physics::Flight<Path>> flagshipsFlight(2);") != std::string::npos);
+	CHECK(main.find("\t// the paths, a frame on, before anything moves\n\tflyFlagships();") != std::string::npos);
+	CHECK(main.find("physics::fly(flagships[i], flagshipsVelocity[i], flagshipsFlight[i], flagshipsHome[i], routes, [&](Path path, std::size_t leg)") != std::string::npos);
+	CHECK(main.find("\t\t\t\telse if (path == Path::Dive && leg == 2)\n\t\t\t\t{\n\t\t\t\t\t// fire the first of bombs") != std::string::npos);
+	// sent off one every stagger, or its own dive
+	CHECK(main.find("physics::follow(flagships[i], flagshipsVelocity[i], flagshipsFlight[i], Path::Fromtop, static_cast<int>(std::lround(static_cast<float>(setOff) * spacing * static_cast<float>(framerate))), routes);") != std::string::npos);
+	CHECK(main.find("physics::follow(escorts[i], escortsVelocity[i], escortsFlight[i], Path::Dive, 0, routes);") != std::string::npos);
+}
+
 TEST_CASE("generating Space Invaders animates the block, each row its own pictures, through one become", "[generate]")
 {
 	if (!canGenerate())
