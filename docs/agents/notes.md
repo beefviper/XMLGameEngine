@@ -9,12 +9,12 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 ## Engine
 
-- Numbers are evaluated **once at load**, except a timer's `<every>`/`<after>` and positions using a measured text or image size. A condition's `<atleast>`/`<atmost>`/`<remaining>` and an `<inc>`/`<dec>` amount cannot follow a variable. `<random>` is drawn once, so `<reset />` repeats it ([values-and-names](../designs/values-and-names.md)).
+- Numbers are evaluated **once at load**, except a timer's `<every>`/`<after>` and positions using a measured text or image size. A condition's `<atleast>`/`<atmost>`/`<remaining>` and an `<inc>`/`<dec>` amount cannot follow a variable. `<random>` is drawn once, so `<reset />` repeats it ([values-and-names](../designs/04-values-and-names.md)).
 - `<reset object="x" />` resets **every variable** of x. A rule's bare `<reset />` resets only its own object. Never put `<reset object="player" />` in someone else's rule; keep score, lives and clock on an object no state shows (Pitfall's `status`).
 - Variables are `float`; there is no handle system or `Value` variant. `collisionData.basic` is the old name of the object-against-object rule list.
-- Every engine-drawn picture (`<line>`, `<bitmap>`, `<svg>`) is `ShapeKind::Line`, built in `game_expr::buildSpriteParams`. Add new kinds there; never rotate or draw in a backend ([pictures](../designs/pictures.md)).
+- Every engine-drawn picture (`<line>`, `<bitmap>`, `<svg>`) is `ShapeKind::Line`, built in `game_expr::buildSpriteParams`. Add new kinds there; never rotate or draw in a backend ([pictures](../designs/30-pictures.md)).
 - Timers count frames (`Game::framesFor`); object timers run only while `isShown`; state timers live in `Game::stateTimers`. Anything that changes a variable goes through `Game::refreshBoundTexts`.
-- An object mid-`<jump>` (`isAirborne()`) is in no collision pair and ignored by `unless=`. `Object::grounded` is set by `CommandExecutor::land` and cleared in `Game::applyHops`; a resting object stays touching its platform only because its pull moves it every frame, so `<stop />` ends that ([platforming](../designs/platforming.md)).
+- An object mid-`<jump>` (`isAirborne()`) is in no collision pair and ignored by `unless=`. `Object::grounded` is set by `CommandExecutor::land` and cleared in `Game::applyHops`; a resting object stays touching its platform only because its pull moves it every frame, so `<stop />` ends that ([platforming](../designs/23-platforming.md)).
 - Edge rules: `sprite=`/`unless=` are an `EdgeGuard`; `class=` or `object=` on an edge rule is a load error.
 - Touches in one moment run in file order and a pair where neither moves is skipped: a `<land />` or `<stop />` that runs first can hide a hazard met at the same moment (Pitfall's jaws come before the crocodiles). A variable named like an exprtk function (`floor`, `min`) stops the load.
 - `Game` never touches audio: `<play>` queues a name and `Engine::step()` plays it. Tests that build a `Game` without an `Engine` must call `setCurrentState(0)` and `measureShapeSize`, or nothing is shown and every size is 0.
@@ -32,12 +32,12 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 - SDL is shared by `SDL2Window` and `SDL2Audio`: each starts only its subsystem, the last out calls `SDL_Quit()`.
 - Backend `.cpp` files compile only behind `XGE_WITH_<NAME>`; factories expose `available()`, `availableBackends()`, `defaultBackend()`, `name()`. Build with no options as well as with tests when touching factories, `cli.cpp` or `session_options.cpp`.
 - Windows headers define `near`, `far` and `small`: never use them as names (MSVC fails far from the cause; `-Dnear= -Dfar=` on a syntax-only compile catches it).
-- SFML and raylib both static from source fail to link on Linux (duplicate `stbi_*`, miniaudio); a CMake target named `m` collides with plutovg's `-lm` ([build-and-layout](../designs/build-and-layout.md)).
+- SFML and raylib both static from source fail to link on Linux (duplicate `stbi_*`, miniaudio); a CMake target named `m` collides with plutovg's `-lm` ([build-and-layout](../designs/51-build-and-layout.md)).
 - `-Wdouble-promotion` is GCC only on purpose.
 
 ## Generator (`xgecli --generate windows-cpp`)
 
-Reasons and details: [generator](../designs/generator.md), [structure](../designs/generator-structure.md), [rules](../designs/generator-rules.md).
+Reasons and details: [generator](../designs/40-generator.md), [structure](../designs/41-generator-structure.md), [rules](../designs/42-generator-rules.md).
 
 - The generated rules are a simpler copy of the engine's: a game that plays differently from the engine is a bug in `main.xsl` or `functions.xml`. `check.xsl` lists what is accepted (`$supported`); a tag missing there is refused, so widen it and the writing together.
 - Keep in step: `modules/pictures.h` with `rasterizeRows`/`rasterizeLines`/`rasterizeTurned`/`turnBitmap` (`lib/source/bitmap.cpp`); `modules/sound.cpp` with `lib/source/sound.cpp`; `groups.xsl` with `readGroup`/`layOutCells`; `tables.xml` with `keycode.cpp`, `window_sfml.cpp`, `color.cpp`.
@@ -47,7 +47,7 @@ Reasons and details: [generator](../designs/generator.md), [structure](../design
 
 ## xgegui
 
-- No OpenGL through Qt: do not bring back a `QOpenGLWidget` without a guard around every library call ([gui](../designs/gui.md)).
+- No OpenGL through Qt: do not bring back a `QOpenGLWidget` without a guard around every library call ([gui](../designs/53-gui.md)).
 - Anything running while `GameSession` swaps game or window must check its `changing` guard.
 - Do not style `QSpinBox` borders (arrows vanish).
 

@@ -16,12 +16,12 @@
 | Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation (headings exist now), score by fuel |
 | Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping and expiring shots, saucer, waves, a safe respawn |
 | Berserk, Demon Attack, Frostbite (written by another AI) | can the schema alone be enough for an author | (found gaps) then timers, facing, jump, looks, key sets; later chasing and aiming | |
-| Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania | five Atari 2600 games picked because today's verbs already say them | nothing | see [below](games-atari.md#five-atari-2600-games) |
+| Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania | five Atari 2600 games picked because today's verbs already say them | nothing | see [below](56-games-atari.md#five-atari-2600-games) |
 
 
 ## Frogger
 
-- A 48-pixel grid (13 by 14): score row, home pads between hedges, five river lanes, grass, five road lanes, pavement. Everything is a rectangle drawn 6 pixels in from its cell, so positions are small sums of `cell` and `inset`. Drawn in file order (scenery first, frog last). Lanes are `<group>`s ([objects](objects.md)).
+- A 48-pixel grid (13 by 14): score row, home pads between hedges, five river lanes, grass, five road lanes, pavement. Everything is a rectangle drawn 6 pixels in from its cell, so positions are small sums of `cell` and `inset`. Drawn in file order (scenery first, frog last). Lanes are `<group>`s ([objects](05-objects.md)).
 - Needs and what was chosen:
 
 | Need | Chosen | Rejected |
@@ -29,10 +29,10 @@
 | Lives that end the game at zero | `dec` and condition `atmost` | counting deaths up to 3 (hides the number of lives in the condition); comparison operators; a lives object |
 | One step per press, however long held or paused | `hop` queued by the press, made at the start of the next move | a held `move` stopped by a timer; a flag on `<input>`; a one-frame velocity (swept along the way) |
 | Looping lanes | `wrap`: acts only once fully off screen and still heading that way, keeps overshoot | `reset` at the far edge (pops in whole, snaps to the start); teleport on touching an edge; duplicates at both ends |
-| Riding a log | `ride` ([collisions](collisions.md)) | |
-| River kills unless on a log | `unless="logs"` on the rule ([collisions](collisions.md)) | |
+| Riding a log | `ride` ([collisions](20-collisions.md)) | |
+| River kills unless on a log | `unless="logs"` on the rule ([collisions](20-collisions.md)) | |
 | Scenery colors | more named colors | `#rrggbb` literals (probably where it ends up) |
-| A frog sitting in a home | a green frog under each pad; the pad `<die />`s | show/hide verbs, swapping a sprite (looks later, [pictures](pictures.md)) |
+| A frog sitting in a home | a green frog under each pad; the pad `<die />`s | show/hide verbs, swapping a sprite (looks later, [pictures](30-pictures.md)) |
 
 - A frog ridden off the side dies at the edge by an ordinary `edge="horizontal"` rule. The river is one wide static object. One point per frog home (an amount on `inc` came with Asteroids); a filled home can be entered again.
 
@@ -70,15 +70,15 @@
 
 ## Lunar Lander
 
-- An 800 by 600 window; a moon of 15 `<line>`s with a gap for a short thick green pad; a lander of 13; gravity from its `<acceleration>`; three thrusters burn `fuel`; touching the ground or pad at or above `safespeed` wrecks it, slower sets it down; both end the game through `lander.crashed` / `lander.landed`. Decisions are in [collisions](collisions.md), [motion](motion.md), [pictures](pictures.md). Only the lines are solid, not the space under them (the bottom edge ends the game). Not done: rotation (the original spins), zoom, score by fuel left, several pads or terrains.
+- An 800 by 600 window; a moon of 15 `<line>`s with a gap for a short thick green pad; a lander of 13; gravity from its `<acceleration>`; three thrusters burn `fuel`; touching the ground or pad at or above `safespeed` wrecks it, slower sets it down; both end the game through `lander.crashed` / `lander.landed`. Decisions are in [collisions](20-collisions.md), [motion](22-motion.md), [pictures](30-pictures.md). Only the lines are solid, not the space under them (the bottom edge ends the game). Not done: rotation (the original spins), zoom, score by fuel left, several pads or terrains.
 
 
 ## Asteroids
 
-- A four-line triangle ship (turn, thrust, fire), four big rocks that break into two mediums, then two smalls, then nothing (2, 5, 10 points), three ships, wrapping on all four edges, win when none remain. Rocks are pools released where the shot hit; shots are a pool fired along the heading. Decisions in [motion](motion.md), [timers](timers.md). The ship returns at once at the centre.
+- A four-line triangle ship (turn, thrust, fire), four big rocks that break into two mediums, then two smalls, then nothing (2, 5, 10 points), three ships, wrapping on all four edges, win when none remain. Rocks are pools released where the shot hit; shots are a pool fired along the heading. Decisions in [motion](22-motion.md), [timers](09-timers.md). The ship returns at once at the centre.
 
 
 ## Space Invaders 1 and 2
 
-- Invaders 1 was a grid of identical rectangles; redrawn with three alien kinds (squid, two rows of crab, two of octopus) as a group of three grids of two named bitmaps animated on a one-second interval (since one group of 11 columns and 5 rows whose rows change the bitmaps, [objects](objects.md)), a bitmap cannon and a thin bullet. Making the bullet thin showed `<fire>` put its left edge, not its middle, at the middle of the shooter; now centered (this moved Depth Charge's and Astrosmash's shots by half their width). Invaders 2 is the same game drawn from an SVG sprite sheet with three-frame animations a half second apart ([pictures](pictures.md)). In both, and in Demon Attack, the aliens fire back from pools on random timers, and the cannon has three lives.
+- Invaders 1 was a grid of identical rectangles; redrawn with three alien kinds (squid, two rows of crab, two of octopus) as a group of three grids of two named bitmaps animated on a one-second interval (since one group of 11 columns and 5 rows whose rows change the bitmaps, [objects](05-objects.md)), a bitmap cannon and a thin bullet. Making the bullet thin showed `<fire>` put its left edge, not its middle, at the middle of the shooter; now centered (this moved Depth Charge's and Astrosmash's shots by half their width). Invaders 2 is the same game drawn from an SVG sprite sheet with three-frame animations a half second apart ([pictures](30-pictures.md)). In both, and in Demon Attack, the aliens fire back from pools on random timers, and the cannon has three lives.
 - Moving the game to three kinds broke tests that borrowed it as a block fixture, so those load `tests/invaders_fixture.h`, a frozen copy of the first game.

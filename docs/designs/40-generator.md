@@ -1,10 +1,10 @@
 # Generating a program with XSLT
 
-**Status:** Built: `--generate windows-cpp` covers every game. Details of the target: [structure](generator-structure.md), [rules](generator-rules.md).
+**Status:** Built: `--generate windows-cpp` covers every game. Details of the target: [structure](41-generator-structure.md), [rules](42-generator-rules.md).
 
 ## Approach
 
-**What we looked for.** The format was chosen partly so a game could be transformed ([file-format](file-format.md)): a way to turn a game file into a program that plays it with none of the engine in it, as a test of whether the description really is the game, and as the start of other targets (another language, another machine).
+**What we looked for.** The format was chosen partly so a game could be transformed ([file-format](02-file-format.md)): a way to turn a game file into a program that plays it with none of the engine in it, as a test of whether the description really is the game, and as the start of other targets (another language, another machine).
 
 **What we looked at.**
 

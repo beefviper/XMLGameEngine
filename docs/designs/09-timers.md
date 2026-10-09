@@ -23,4 +23,4 @@ The same workarounds kept appearing, each standing in for something the language
 
 ## Commands work where they make sense
 
-Conditions and keys run `<inc>`, `<dec>`, `<become>`, `<reveal>`; collisions run `<reset object>`, `<reverse />`, `<become>`, `<reveal>`; an action can do a bare `<reset />` (object back to start), so a condition can send the player home through a `<trigger>`. Kaboom's `tally` and Frostbite's clock object are gone. The loader checks the names they use. The schema still does not say which context may hold which command ([vision](vision.md)).
+Conditions and keys run `<inc>`, `<dec>`, `<become>`, `<reveal>`; collisions run `<reset object>`, `<reverse />`, `<become>`, `<reveal>`; an action can do a bare `<reset />` (object back to start), so a condition can send the player home through a `<trigger>`. Kaboom's `tally` and Frostbite's clock object are gone. The loader checks the names they use. The schema still does not say which context may hold which command ([vision](01-vision.md)).

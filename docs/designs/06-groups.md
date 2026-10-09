@@ -8,7 +8,7 @@
 - **A `<group>` sits beside `<object>`.** It says what its members share, then lists `<member>`s. One rule: **whatever a member leaves out it takes from its group**, then it must be complete like an `<object>` (else a load error naming the member). `<position>` and `<velocity>` can be given in halves (the group gives `<y>`, each member `<x>`).
 - A member can give its own `<sprite>`s, `<animation>`, `<position>`, `<velocity>`. It **cannot** give `<collisions>`, `<actions>`, `<variables>` or timers: those are the group's, so members act the same way. A member that acts differently is an `<object>` beside the group.
 - **Members are ordinary objects.** `game_xml.cpp` reads a group as one raw object per member; the engine only remembers `Object::groupName`. Each log wraps by itself, each pad dies by itself. Names are `group.N` from 1 (or `name=`); the group's name means all members wherever a name is taken (`<show>`, rules, conditions, `<reset object>`, `<fire>`, `<release>`, `<reveal>`). Drawn in file order where the group stands. `class` is the group's.
-- A hidden group is a **pool** ([timers](timers.md)); a group with lockstep is a block (Space Invaders: one group of 11 columns and 5 rows).
+- A hidden group is a **pool** ([timers](09-timers.md)); a group with lockstep is a block (Space Invaders: one group of 11 columns and 5 rows).
 - **Measured:** Frogger and Space Race got about 30% smaller (lines, bytes, tags). Still 5 lines per member and a repeated 7-line `wrap` block per lane.
 
 | Option | Verdict |

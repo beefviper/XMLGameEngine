@@ -17,7 +17,7 @@
 ## Enemies fire back
 
 - Enemies use the same `<fire>` with pools: an enemy is a shooter with a facing and a timer; its shots are a pool. No aiming. Space Invaders (both) and Demon Attack fire this way (Berserk's robots now `<aim>` first); the aliens' catch-all rule (`<collision><die /></collision>`) had to name the cannon's bullet so their own bombs do not kill them.
-- Limits: an invader behind others fires through them (the arcade fires only the bottom one of a column); a Berserk robot aims at the man through walls (its shot dies on the wall). Aiming and chasing: [chase-and-paths](chase-and-paths.md#chasing-and-aiming-berserk).
+- Limits: an invader behind others fires through them (the arcade fires only the bottom one of a column); a Berserk robot aims at the man through walls (its shot dies on the wall). Aiming and chasing: [chase-and-paths](24-chase-and-paths.md#chasing-and-aiming-berserk).
 
 
 ## Key sets

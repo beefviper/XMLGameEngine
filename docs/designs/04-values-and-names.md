@@ -1,13 +1,13 @@
 # Values, variables and names
 
-**Status:** Built. Handle references and a `Value` variant are decided, not built ([objects](objects.md)).
+**Status:** Built. Handle references and a `Value` variant are decided, not built ([objects](05-objects.md)).
 
 ## Values
 
 - A **value** is any number in a game file (position, velocity, size, threshold, step, interval). It is **expression text** (exprtk arithmetic over named values) or **one value tag**.
-- Built value tags: `<equation>` and `<formula>`, arithmetic as tags over four operations, so no string is left to parse ([arithmetic](arithmetic.md#arithmetic-in-text-and-as-tags)); and `<random min max />`, drawn at load and again when its object is reset (`Game::drawStartAgain`: the object's random variables, then its velocity and position worked out again), so every Pong serve is new. Ideas, each one new tag in the XSD and one case in the evaluator: `<pick>` (one of a list), an integer `<random>`, `<clamp>`, `<count>` of a class,; a random magnitude with a random sign is written with `sgn()` of a random (Pong: `sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)`, so the serve is never near-vertical or slow). Other balance helpers (saturate, floor, cap, diminishing returns, multiply by a comparison) are candidates too ([ideas](ideas.md)).
+- Built value tags: `<equation>` and `<formula>`, arithmetic as tags over four operations, so no string is left to parse ([arithmetic](03-arithmetic.md#arithmetic-in-text-and-as-tags)); and `<random min max />`, drawn at load and again when its object is reset (`Game::drawStartAgain`: the object's random variables, then its velocity and position worked out again), so every Pong serve is new. Ideas, each one new tag in the XSD and one case in the evaluator: `<pick>` (one of a list), an integer `<random>`, `<clamp>`, `<count>` of a class,; a random magnitude with a random sign is written with `sgn()` of a random (Pong: `sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)`, so the serve is never near-vertical or slow). Other balance helpers (saturate, floor, cap, diminishing returns, multiply by a comparison) are candidates too ([ideas](57-ideas.md)).
 - A value holds text or a tag, not both.
-- **What is worked out when.** Everything is evaluated once at load, except a timer's `<every>`/`<after>` (worked out again each round) and positions that depend on a text's or image's measured size. A condition's `<atleast>`/`<atmost>`/`<remaining>` and an `<inc>`/`<dec>` amount are load-time constants, so they cannot follow a variable (Berserk's "extra man every 2000" needed a variable of its own; [games-classic](games-classic.md)). An object's variables are worked out before its position and velocity, so those can use them; `pi` is a constant.
+- **What is worked out when.** Everything is evaluated once at load, except a timer's `<every>`/`<after>` (worked out again each round) and positions that depend on a text's or image's measured size. A condition's `<atleast>`/`<atmost>`/`<remaining>` and an `<inc>`/`<dec>` amount are load-time constants, so they cannot follow a variable (Berserk's "extra man every 2000" needed a variable of its own; [games-classic](54-games-classic.md)). An object's variables are worked out before its position and velocity, so those can use them; `pi` is a constant.
 
 ## Evaluation order and dotted names
 
@@ -42,5 +42,5 @@
 
 - Objects have a unique `name` and an optional `class`, borrowed from HTML `id` and `class`: target one thing or all things of a kind. One condition on `class="paddle"` covers both paddles.
 - Used by `<condition class object>` and `<collision class object>` (both combine with AND; a `<collision>` with neither is "anything"); `class="projectile"` starts an object invisible.
-- Every `<group>` member or cell is its own object with a unique name (`logrow3.2`, `aliens.3.2`); the group name still means all of them ([objects](objects.md)).
+- Every `<group>` member or cell is its own object with a unique name (`logrow3.2`, `aliens.3.2`); the group name still means all of them ([objects](05-objects.md)).
 - Ideas, not built: compound CSS-style selectors (a two-player win vs either-player win), class inheritance (`platform` extends `solid`), wildcard queries over variables (`player1.*`, a map scan), several tags per object, formation names (`group1[x]`).

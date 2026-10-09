@@ -23,7 +23,7 @@
   * Kong <fire>s a barrel from his right side (he has <facing>right) every
     `kong.wait` seconds, a variable that each rescue takes some off.
   Flat girders where the arcade's slope, and no hammer, no fireballs and no
-  points for jumping a barrel: see the notes in docs/designs/platforming.md.
+  points for jumping a barrel: see the notes in docs/designs/23-platforming.md.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">

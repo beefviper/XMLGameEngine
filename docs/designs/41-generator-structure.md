@@ -1,6 +1,6 @@
 # windows-cpp: program structure, groups and pictures
 
-**Status:** Built. How the plain target lays out objects, screens, groups, pictures and names; approach and open questions in [generator](generator.md).
+**Status:** Built. How the plain target lays out objects, screens, groups, pictures and names; approach and open questions in [generator](40-generator.md).
 
 - *SFML types are the objects.* An object is a global `sf::CircleShape`, `sf::RectangleShape`, `sf::Text` or `sf::Sprite` named as in the game, plus `<name>Velocity` if it moves, and a `start<Name>()` function if a rule resets it (sets its variables, drawing any `<random>` again, then its position and velocity); no struct, so nothing has to be complete before `main` and the objects sit between the tunables and the declarations. A text showing a `<number>` has a `show<Name>()` that sets its string and puts it in place by its new size, called wherever that number changes.
 - *Screens are an enum and a stack.* With more than one `<state>`, `enum class Screen` and `std::vector<Screen> screens`, the one on top showing; `<push>`, `<pop>` and `<pop state>` are `push_back`, `pop_back` and assigning `back()`, and `<reset />` on a key or in a condition calls `start()`, which is the whole game from the start. One screen has neither.

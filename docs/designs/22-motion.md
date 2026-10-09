@@ -14,12 +14,12 @@
 | Verbs and tags | Forced by | Decision |
 |---|---|---|
 | `bounce`, `stick`, `die`, `reset`, `inc` | Pong, Breakout, Invaders | |
-| `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, more verbs in object rules, more colors | Frogger | lives count down; hop is one instant step per press; wrap puts an object back only once fully off screen; riding and exceptions in [collisions](collisions.md) |
+| `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, more verbs in object rules, more colors | Frogger | lives count down; hop is one instant step per press; wrap puts an object back only once fully off screen; riding and exceptions in [collisions](20-collisions.md) |
 | `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, `slower`/`faster` | Lunar Lander | below |
 | `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<hidden>`, `<release>`, `<fire>` along a heading, amount on `inc`/`dec` | Asteroids | below |
-| `<deflect>` | Pong | [collisions](collisions.md) |
-| `<timers>`, `<facing>`, `<jump>`, `<reverse />`, looks, `<reveal>`, key sets | a read of every game for workarounds | [timers](timers.md) |
-| (none) | Space Race, Kaboom v1, Freeway, Depth Charge, Astrosmash | the vocabulary was already enough ([games-classic](games-classic.md)) |
+| `<deflect>` | Pong | [collisions](20-collisions.md) |
+| `<timers>`, `<facing>`, `<jump>`, `<reverse />`, looks, `<reveal>`, key sets | a read of every game for workarounds | [timers](09-timers.md) |
+| (none) | Space Race, Kaboom v1, Freeway, Depth Charge, Astrosmash | the vocabulary was already enough ([games-classic](54-games-classic.md)) |
 | `<paths>`, `<follow>` with `<stagger>` | Galaxian | below |
 | `<land />`, `<leap>`, `<climb>`, `<acceleration>` in a group | Donkey Kong | below |
 | `<chase>`, `<aim>` | Berserk's Otto and robots | below |
@@ -30,15 +30,15 @@
 - **Gravity is a property of the object**, not a world setting: `<acceleration>` added to velocity each frame before anything moves. A `gravity` world variable would pull everything; most games want some things to float. `<stop />` removes it, a reset gives it back.
 - **Thrust is a held verb that names a variable to burn:** `<accelerate direction burn="fuel">` adds to velocity (not sets it) every frame the key is down, takes 1 off the variable, and does nothing at 0. Opposite thrusters cancel. Rejected: thrust as a plain rule on the key (needs "while held" and "until empty" spelled out).
 - `<stop />` zeroes velocity, acceleration and held thrust so a landed lander stays landed.
-- Landing vs crash: `slower`/`faster` ([collisions](collisions.md)).
+- Landing vs crash: `slower`/`faster` ([collisions](20-collisions.md)).
 - No world-space rotation in Lunar Lander: it has side thrusters; rotation came with Asteroids.
 
 
 ## Headings and turning (Asteroids)
 
 - **Heading** is degrees clockwise from straight up (0 up, 90 right); direction is (sin h, -cos h). No `<heading>` leaves an object unchanged. `<turn>` and `<thrust>` are held like `<move>` and `<accelerate>` and are a load error without a heading. `<drag>` (0 up to, not including, 1) is the fraction of speed lost per frame after thrust, so thrust has a top speed.
-- **Pictures are turned by the engine, once per whole-degree change, not by backends** (details in [pictures](pictures.md)). Rejected: rotating in each backend (four backends to change, and the pixel test would still need the turned picture; filtering would make drawn and tested pixels differ per library).
-- **Pools, not spawning.** See [timers](timers.md). `<release object>N</release>` puts pool members in the middle of the object running the rule (a rock breaking); `<reveal>` puts them back where they started.
+- **Pictures are turned by the engine, once per whole-degree change, not by backends** (details in [pictures](30-pictures.md)). Rejected: rotating in each backend (four backends to change, and the pixel test would still need the turned picture; filtering would make drawn and tested pixels differ per library).
+- **Pools, not spawning.** See [timers](09-timers.md). `<release object>N</release>` puts pool members in the middle of the object running the rule (a rock breaking); `<reveal>` puts them back where they started.
 - `<inc>`/`<dec>` take an amount (scoring first repeated `<inc />`); a hidden object does not count toward `remaining`; a collision `<reset />` restores the heading; `<stop />` clears turn and thrust.
 - Not done: shots that wrap and expire, a safe wait before the ship returns, a saucer, more than one wave.
 
@@ -60,5 +60,5 @@
 
 ## Small value ideas
 
-- Random speed with a dead zone: see [values-and-names](values-and-names.md) (`<sign>`).
-- Sound is covered in [sound](sound.md).
+- Random speed with a dead zone: see [values-and-names](04-values-and-names.md) (`<sign>`).
+- Sound is covered in [sound](33-sound.md).

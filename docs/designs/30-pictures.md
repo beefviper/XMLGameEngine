@@ -8,7 +8,7 @@
 
 - no window backend, the Qt renderer or the collision detector changes when a picture kind is added, and every library shows identical pixels;
 - the object's size is known without a window (`name.width` works in tests);
-- a `<type>pixel</type>` collision tests exactly the pixels drawn ([collisions](collisions.md));
+- a `<type>pixel</type>` collision tests exactly the pixels drawn ([collisions](20-collisions.md));
 - cells of a group drawing the same picture share it (drawn once); the internal shape kind is still called `Line` ("a picture the engine drew itself", params `{"line", w, h}`), not renamed, to keep the change out of every backend. The xgegui inspector calls such a sprite "drawn"/"pixels".
 
 Keep new picture kinds on this path. Text and `<image>` files are the exception: only a backend can measure them, so they cannot be `pixel` and expressions see their size as 0 until measured.

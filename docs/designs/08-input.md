@@ -6,7 +6,7 @@
 
 - An **object** names what it can do: `<action name="up"><move direction="up">step</move></action>`. A **state** binds a key to a name: `<input button="w"><trigger object="paddle1" action="up" /></input>`. The **key** is only a label.
 - Consequences: remapping is one attribute in one state; the same key can do different things in different states; changing what `up` does is one edit on the object; the same action name can mean different things on different objects (polymorphism with no class hierarchy).
-- Built on top: one `button` can name several keys (`"a left"`); named `<keys>` sets at the top of `<states>` that a state takes with `<inputs keys="name">` and overrides key by key ([timers](timers.md) for why).
+- Built on top: one `button` can name several keys (`"a left"`); named `<keys>` sets at the top of `<states>` that a state takes with `<inputs keys="name">` and overrides key by key ([timers](09-timers.md) for why).
 - Held `<move>`s record each direction's step; velocity is recomputed from all four on every key change (replacing an earlier last-key-wins), so Down plus tapping Up cancels, and two keys make a diagonal.
 - One-shot verbs (`<hop>`, `<jump>`, `<fire>`) belong to the press.
 

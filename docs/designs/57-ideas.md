@@ -21,21 +21,21 @@
 ## Machine-readable view of a running game
 
 - Export a compact state (positions, velocities, score, brick grid) each frame or step so an AI agent or test reads structured text instead of pixels. Pieces: frame-step the game, or split a fast reflex controller from a slow decision loop; render to a texture and dump a PNG per step for vision; for existing commercial games, emulators with frame stepping, save states, RAM search and scripting (BizHawk, RetroArch). The author's larger goal: an AI that reverse-engineers a game the way a person does (find the lives counter by losing a life) and describes the scene in plain English.
-- Relevance: an engine whose whole state is declared in XML is easy to export from. A null input driven by a scripted or learned player through the same command queue as a human ([states-and-conditions](states-and-conditions.md)).
+- Relevance: an engine whose whole state is declared in XML is easy to export from. A null input driven by a scripted or learned player through the same command queue as a human ([states-and-conditions](07-states-and-conditions.md)).
 
 ## Game and mechanic ideas
 
-- **Pong variants.** Contact-point angle with velocity transfer (partly built as `<deflect>`, [collisions](collisions.md)); energy Pong (paddles that move a little toward or away from the ball, absorbing or adding speed, small horizontal range); a third paddle driven by both players (many-to-one bindings; fairness: shorter, or solid only for the defender).
+- **Pong variants.** Contact-point angle with velocity transfer (partly built as `<deflect>`, [collisions](20-collisions.md)); energy Pong (paddles that move a little toward or away from the ball, absorbing or adding speed, small horizontal range); a third paddle driven by both players (many-to-one bindings; fairness: shorter, or solid only for the defender).
 - **A game that mocks bad play:** doing badly earns power-ups with sarcastic messages, doing well takes things away (dynamic difficulty made visible); needs conditions that read performance and change stats. **Unwinnable starts:** guarantee a solvable setup or flag one that is not.
 - **Combat resolution styles** (candidates for a battle verb): pairwise (matched one to one, the weaker dies), aggregate/attrition (each side loses a share by strength ratio; the stronger loses less but never nothing), dominance (the stronger wins with near-zero loss). RPG variants: using the target's stat against it, damage as a fraction of max health, reflecting a share of damage.
 - **Placement and packing:** large bases on a grid; with a one-cell gap a destroyed base leaves a hole that fits one enemy base, with two cells it fits four. Footprint and spacing are game parameters worth exposing; failure modes depend non-linearly on spacing.
-- **Balance math, as value helpers:** clamp, saturate (0 to 1), floor/ceiling, hard cap, diminishing returns, smooth steps, switching a term off by multiplying with a comparison result ([values-and-names](values-and-names.md)).
+- **Balance math, as value helpers:** clamp, saturate (0 to 1), floor/ceiling, hard cap, diminishing returns, smooth steps, switching a term off by multiplying with a comparison result ([values-and-names](04-values-and-names.md)).
 - Observations: a successful game's new mechanics become a genre named after it; simulators keep adding fidelity (a physics layer may be asked to model a machine); some games hide a very different game under a simple opening (how much of a game should one XML file hold).
 - Candidate next games: a Galaga step on from Galaxian (curved paths, a capture beam, a formation that breathes), a game that needs a real jump (Donkey Kong / Mario style).
 
 ## Smaller ideas
 
-- A rule that must be looked at every frame even when nothing moves (show and hide exist: `<reveal>` and `<die />`); a general way to say where in a sequence of rules a touch falls if `unless` is not enough ([collisions](collisions.md)).
+- A rule that must be looked at every frame even when nothing moves (show and hide exist: `<reveal>` and `<die />`); a general way to say where in a sequence of rules a touch falls if `unless` is not enough ([collisions](20-collisions.md)).
 - An `<inc>` amount, or a condition threshold, that follows a variable at runtime (both are worked out at load); evenly spaced group members (`count`, `gap`).
 - Polish: a per-glyph or per-value offset in the text vocabulary (a score "1" looks too close to the center line).
 - Performance-driven conditions, state predicates (no moves left, a timer).
