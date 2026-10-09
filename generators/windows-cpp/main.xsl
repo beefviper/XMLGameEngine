@@ -56,7 +56,7 @@
 
   <!-- Those that move on their own: a velocity that is not 0, 0 (a group's,
        or any of its members'). -->
-  <xsl:variable name="moving" select="$things[(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]] | $pulled | $pushed | $things[timers/timer/chase or collisions/collision/chase]" />
+  <xsl:variable name="moving" select="$things[(velocity | */velocity)[x/* or y/* or number(x) != 0 or number(y) != 0]] | $pulled | $pushed | $things[timers/timer/chase or collisions/collision/chase] | $followers" />
 
   <!-- Those pulled every frame (<acceleration>: gravity), and those keys push
        (<thrust> along the heading, <accelerate> one way): they have a velocity
@@ -77,7 +77,7 @@
   <!-- The groups whose members or cells each have a velocity of their own
        (a member, row, column or cell gives one), kept in a std::vector beside
        the shapes; the rest of the groups that move share one. -->
-  <xsl:variable name="member-velocities" select="$groups[*/velocity or velocity//random or timers/timer/chase or collisions/collision/chase]
+  <xsl:variable name="member-velocities" select="$groups[*/velocity or velocity//random or timers/timer/chase or collisions/collision/chase] | $groups[count(. | $followers) = count($followers)]
       | $groups[count(. | $moving) = count($moving)][count(. | $resetting | $launched) = count($resetting | $launched)
           or .//reverse or .//stop or collisions/collision[bounce][not(normalize-space(../lockstep) = 'true' and (@edge = 'left' or @edge = 'right' or @edge = 'horizontal'))]]" />
 
@@ -232,7 +232,7 @@
        spaces, to see which names and functions it uses. -->
   <xsl:variable name="words">
     <xsl:text> </xsl:text>
-    <xsl:for-each select="$game/window//text() | $game/variables//text() | $game/variables//@* | $things//text() | $things//@* | $states//text() | $states//@*">
+    <xsl:for-each select="$game/window//text() | $game/variables//text() | $game/variables//@* | $things//text() | $things//@* | $states//text() | $states//@* | $game/paths//text()">
       <xsl:value-of select="translate(., '+-*/(),&#9;&#10;&#13;', '          ')" />
       <xsl:text> </xsl:text>
     </xsl:for-each>
@@ -243,7 +243,7 @@
        by the program). -->
   <xsl:variable name="values-words">
     <xsl:text> </xsl:text>
-    <xsl:for-each select="$game/window//text() | $game/variables//text() | $game/sounds//text() | $things//text()[not(ancestor::svg)] | $things//@*[not(local-name() = 'name')] | $states//text() | $states//@*">
+    <xsl:for-each select="$game/window//text() | $game/variables//text() | $game/sounds//text() | $things//text()[not(ancestor::svg)] | $things//@*[not(local-name() = 'name')] | $states//text() | $states//@* | $game/paths//text()">
       <xsl:value-of select="translate(., '+-*/(),&#9;&#10;&#13;', '          ')" />
       <xsl:text> </xsl:text>
     </xsl:for-each>
@@ -299,6 +299,7 @@
     <xsl:call-template name="generate-includes" />
     <xsl:call-template name="generate-globals" />
     <xsl:call-template name="generate-screens" />
+    <xsl:call-template name="generate-paths" />
     <xsl:call-template name="generate-objects" />
     <xsl:call-template name="generate-sounds" />
     <xsl:call-template name="generate-declarations" />
@@ -575,6 +576,9 @@ sf::Texture </xsl:text>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:if>
+      <xsl:if test="count(. | $followers) = count($followers)">
+        <xsl:call-template name="declare-flight"><xsl:with-param name="name" select="$name" /></xsl:call-template>
+      </xsl:if>
       <xsl:if test="count(. | $headed) = count($headed)">
         <xsl:value-of select="concat('&#10;float ', $name, 'Heading = 0.0f; // degrees clockwise from straight up')" />
         <xsl:value-of select="concat('&#10;int ', $name, 'DrawnAt = -1; // the whole degree its picture is drawn at')" />
@@ -695,6 +699,12 @@ sf::Texture </xsl:text>
     <xsl:for-each select="$sought">
       <xsl:call-template name="nearest-signature" />
       <xsl:text>;
+</xsl:text>
+    </xsl:for-each>
+    <xsl:for-each select="$followers">
+      <xsl:text>void </xsl:text>
+      <xsl:call-template name="fly-name" />
+      <xsl:text>();
 </xsl:text>
     </xsl:for-each>
     <xsl:for-each select="$unless-classes">
@@ -945,6 +955,9 @@ void start</xsl:text>
     </xsl:for-each>
     <xsl:for-each select="$sought">
       <xsl:call-template name="define-nearest" />
+    </xsl:for-each>
+    <xsl:for-each select="$followers">
+      <xsl:call-template name="define-fly" />
     </xsl:for-each>
     <xsl:for-each select="$unless-classes">
       <xsl:call-template name="define-touching" />
@@ -1341,6 +1354,9 @@ void start()
       <xsl:call-template name="vector"><xsl:with-param name="node" select="acceleration" /></xsl:call-template>
       <xsl:text>;
 </xsl:text>
+    </xsl:if>
+    <xsl:if test="count(. | $followers) = count($followers)">
+      <xsl:call-template name="start-flight"><xsl:with-param name="name" select="$name" /></xsl:call-template>
     </xsl:if>
     <xsl:if test="count(. | $facers) = count($facers)">
       <xsl:variable name="facing"><xsl:call-template name="facing-value" /></xsl:variable>
@@ -2260,12 +2276,25 @@ void pressed(sf::Keyboard::Key key)
       </xsl:when>
       <xsl:when test="self::die">
         <xsl:value-of select="concat($indent, $alive, ' = false;&#10;')" />
+        <xsl:if test="count($self | $followers) = count($followers)">
+          <xsl:value-of select="concat($indent, substring-before($alive, 'Alive'), 'Flight', substring-after($alive, 'Alive'), ' = {}; // and off its path&#10;')" />
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="self::follow">
+        <xsl:call-template name="follow-command">
+          <xsl:with-param name="name" select="$name" />
+          <xsl:with-param name="velocity" select="$velocity" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::reverse">
         <xsl:value-of select="concat($indent, $velocity, ' = -', $velocity, ';&#10;')" />
       </xsl:when>
       <xsl:when test="self::stop">
         <xsl:value-of select="concat($indent, $velocity, ' = {};&#10;')" />
+        <xsl:if test="count($self | $followers) = count($followers)">
+          <xsl:value-of select="concat($indent, substring-before(concat($velocity, '['), 'Velocity'), 'Flight', substring-after($velocity, 'Velocity'), ' = {}; // and off its path&#10;')" />
+        </xsl:if>
         <xsl:if test="count($self | $pulled) = count($pulled)">
           <xsl:value-of select="concat($indent, substring-before(concat($velocity, '['), 'Velocity'), 'Acceleration = {}; // and its pull, until it is reset&#10;')" />
         </xsl:if>
@@ -2599,6 +2628,18 @@ void tick</xsl:text>
           <xsl:with-param name="indent" select="'&#9;'" />
           <xsl:with-param name="out" select="substring('return', 1, 6 * number(boolean(push or pop or reset[not(@object)])))" />
         </xsl:call-template>
+      </xsl:for-each>
+      <xsl:variable name="flying" select="$followers[@name = $state/shows/show/@object]" />
+      <xsl:if test="$flying">
+        <xsl:text>
+	// the paths, a frame on, before anything moves
+</xsl:text>
+      </xsl:if>
+      <xsl:for-each select="$flying">
+        <xsl:text>	</xsl:text>
+        <xsl:call-template name="fly-name" />
+        <xsl:text>();
+</xsl:text>
       </xsl:for-each>
       <xsl:variable name="shown" select="$updating[@name = $state/shows/show/@object]" />
       <xsl:if test="$shown">

@@ -7,8 +7,8 @@
 // is, whether two things touch, what a moving thing does at an edge of the
 // window (bounce, stick, wrap round) or against another thing, a hop, a jump,
 // standing on a platform and climbing a ladder, heading for another thing,
-// and a shot leaving the side a thing faces, the way it heads or the way it
-// has aimed. A "thing" is anything SFML can bound and move (a shape, a
+// a shot leaving the side a thing faces, the way it heads or the way it has
+// aimed, and flying a path. A "thing" is anything SFML can bound and move (a shape, a
 // sprite, a text), and a velocity is how far it moves each frame. Header
 // only, and nothing but SFML's graphics types, so it can be copied into any
 // SFML 3 program.
@@ -26,6 +26,7 @@
 #include <cmath>
 #include <optional>
 #include <type_traits>
+#include <vector>
 
 namespace physics
 {
@@ -581,5 +582,105 @@ namespace physics
 			mover.move({ 0.0f, side * overlap.size.y });
 			velocity = sf::Vector2f(speed, sf::degrees(side < 0.0f ? angle - 90.0f : 90.0f - angle));
 		}
+	}
+
+	// --- Paths (<paths>, <follow>).
+
+	// One leg of a path: a step by so far from where it began, or home to
+	// where the thing started the game.
+	struct Leg
+	{
+		sf::Vector2f by;
+		bool home = false;
+	};
+
+	// A path: flown at `speed` pixels a frame, from `start` if it has one.
+	struct Route
+	{
+		float speed;
+		std::optional<sf::Vector2f> start;
+		std::vector<Leg> legs;
+	};
+
+	// A thing on its way along one of the game's paths (Path, its enum):
+	// which (none: on no path), the leg it is flying, what is left of that
+	// leg's step, whether the leg has begun (what it does is done once), and
+	// the frames to wait before the first leg (a <stagger>).
+	template <typename Path>
+	struct Flight
+	{
+		std::optional<Path> path;
+		std::size_t leg = 0;
+		sf::Vector2f left;
+		bool begun = false;
+		int wait = 0;
+	};
+
+	// Sets off along a path after `wait` frames, unless it is on one already:
+	// put at the path's start, if it has one, and still until the first leg.
+	// `routes` is every path, in the order of Path.
+	template <typename Thing, typename Path>
+	void follow(Thing& thing, sf::Vector2f& velocity, Flight<Path>& flight, Path path, int wait, const std::vector<Route>& routes)
+	{
+		if (flight.path)
+		{
+			return;
+		}
+		flight = Flight<Path>{path, 0, {}, false, std::max(0, wait)};
+		velocity = {};
+		if (const std::optional<sf::Vector2f> start = routes[static_cast<std::size_t>(path)].start)
+		{
+			thing.setPosition(*start);
+		}
+	}
+
+	// A frame along its path: the velocity that takes it on, a leg at a time,
+	// `begin(path, leg)` doing what a leg does as it begins. At the end it
+	// comes to rest where it is.
+	template <typename Thing, typename Path, typename Begin>
+	void fly(const Thing& thing, sf::Vector2f& velocity, Flight<Path>& flight, sf::Vector2f home, const std::vector<Route>& routes, Begin begin)
+	{
+		if (!flight.path)
+		{
+			return;
+		}
+		if (flight.wait > 0)
+		{
+			--flight.wait;
+			velocity = {};
+			return;
+		}
+		const Route& route = routes[static_cast<std::size_t>(*flight.path)];
+		while (flight.path && flight.leg < route.legs.size())
+		{
+			const Leg& leg = route.legs[flight.leg];
+			if (!flight.begun)
+			{
+				flight.begun = true;
+				flight.left = leg.by;
+				begin(*flight.path, flight.leg);
+				if (!flight.path)
+				{
+					return; // what it did ended the path
+				}
+			}
+			const sf::Vector2f rest = leg.home ? home - thing.getPosition() : flight.left;
+			const float distance = std::hypot(rest.x, rest.y);
+			if (distance < 0.001f)
+			{
+				++flight.leg;
+				flight.begun = false;
+				continue;
+			}
+			const sf::Vector2f now = distance <= route.speed ? rest : rest * (route.speed / distance);
+			velocity = now;
+			if (!leg.home)
+			{
+				flight.left -= now;
+			}
+			return;
+		}
+		velocity = {};
+		flight.path.reset();
 	}
 }

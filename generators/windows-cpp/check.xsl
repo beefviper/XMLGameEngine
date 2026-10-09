@@ -4,25 +4,26 @@
 <!-- author: beefviper -->
 <!-- date: Oct 5, 2026 -->
 
-<!-- What this target can generate so far: all of Pong, Space Race,
+<!-- What this target can generate: every game in games/ (Pong, Space Race,
      Freeway, Breakout, Depth Charge, Frogger, Astrosmash, Kaboom, Demon
      Attack, Megamania, Asteroids, Combat, Lunar Lander, Frostbite, Air-Sea
-     Battle, Donkey Kong, Pitfall!, Space Invaders (both), Missile Command
-     and Berserk. Screens on a stack, rectangles, circles, texts (words or a
-     number) and pictures (from a file, rows of text, lines or an SVG);
-     objects that move, bounce, stick, deflect, wrap round, ride, turn back,
-     stop, start again and die; groups of them, listed or in columns and rows
-     (each member, row, column or cell changing what it picks), moving as one
-     block or each its own way; headings that turn a picture, thrust, a pull
-     and drag; looks, animated or become, a row's own among them; walking,
-     falling, landing, leaping and climbing; aiming at and chasing the
-     nearest of something; touches pixel by pixel, and by speed; things
-     hidden until fired, revealed or released; timers of objects, groups and
-     screens; keys held to move, and keys pressed to hop, jump, fire, change
-     screen, start again, play a sound or count, in sets the screens share;
-     conditions on an object's number or on how many are left; and sounds.
-     Anything else stops the generator with a message saying what and where,
-     rather than writing a program that plays a different game. -->
+     Battle, Donkey Kong, Pitfall!, Space Invaders (both), Missile Command,
+     Berserk and Galaxian). Screens on a stack, rectangles, circles, texts
+     (words or a number) and pictures (from a file, rows of text, lines or an
+     SVG); objects that move, bounce, stick, deflect, wrap round, ride, turn
+     back, stop, start again and die; groups of them, listed or in columns
+     and rows (each member, row, column or cell changing what it picks),
+     moving as one block or each its own way; headings that turn a picture,
+     thrust, a pull and drag; looks, animated or become, a row's own among
+     them; walking, falling, landing, leaping and climbing; aiming at and
+     chasing the nearest of something; flying paths; touches pixel by pixel,
+     and by speed; things hidden until fired, revealed or released; timers of
+     objects, groups and screens; keys held to move, and keys pressed to hop,
+     jump, fire, change screen, start again, play a sound or count, in sets
+     the screens share; conditions on an object's number or on how many are
+     left; and sounds. Anything else stops the generator with a message
+     saying what and where, rather than writing a program that plays a
+     different game. -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <xsl:variable name="supported" select="concat(
@@ -30,8 +31,8 @@
     ' objects object group member row column cell sprite circle radius rectangle color text content number size image path flip columns rows padding',
     ' line from to thickness bitmap row scale svg hide',
     ' position x y velocity acceleration heading drag facing hidden timers timer every after',
-    ' animation interval frame collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride land reverse stop reveal release actions action move hop jump distance seconds leap climb aim chase speed near fire turn thrust accelerate',
-    ' states keys state shows show inputs input trigger conditions condition atleast atmost remaining',
+    ' animation interval frame collisions enabled type lockstep collision slower faster bounce stick reset deflect wrap die ride land reverse stop reveal release actions action move hop jump distance seconds leap climb aim chase speed near follow stagger fire turn thrust accelerate',
+    ' paths path start step home states keys state shows show inputs input trigger conditions condition atleast atmost remaining',
     ' push pop play inc dec become sounds sound volume note rest',
     ' random equation formula add subtract multiply divide',
     ' augend addend minuend subtrahend multiplicand multiplier dividend divisor ')" />
@@ -58,9 +59,10 @@
     <xsl:variable name="in-rule" select="boolean(parent::collision)" />
     <xsl:variable name="on-key" select="boolean(parent::input)" />
     <xsl:variable name="in-condition" select="boolean(parent::condition)" />
-    <xsl:variable name="in-timer" select="boolean(parent::timer)" />
-    <!-- an object's or group's timer: one that has something to do it to -->
-    <xsl:variable name="in-own-timer" select="boolean(parent::timer/parent::timers/parent::*[parent::objects])" />
+    <xsl:variable name="in-timer" select="boolean(parent::timer or parent::step/parent::path)" />
+    <!-- an object's or group's timer, or a step of a path (done by the one
+         flying it, as its own timer is): one that has something to do it to -->
+    <xsl:variable name="in-own-timer" select="boolean(parent::timer/parent::timers/parent::*[parent::objects] or parent::step/parent::path)" />
     <xsl:choose>
       <xsl:when test="not(contains($supported, concat(' ', $tag, ' ')))">
         <xsl:call-template name="refuse">
@@ -299,6 +301,22 @@
         </xsl:if>
       </xsl:when>
 
+      <!-- paths -->
+      <xsl:when test="self::follow and not((parent::timer and ../../../self::*[parent::objects]) or $in-rule)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="'&lt;follow&gt; outside a &lt;timer&gt; or &lt;collision&gt; of an object or group'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="self::follow and @object and not(/game/objects/*[@name = current()/@object])">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('&lt;follow object=&quot;', @object, '&quot;&gt; of something not an object or group')" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="parent::step and not(self::x or self::y or self::play or self::fire or self::inc or self::dec)">
+        <xsl:call-template name="refuse">
+          <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; in a &lt;step&gt; of a path')" />
+        </xsl:call-template>
+      </xsl:when>
       <!-- looking for the nearest of something -->
       <xsl:when test="(self::aim or self::chase) and not((parent::timer and ../../../self::*[parent::objects]) or $in-rule)">
         <xsl:call-template name="refuse">
