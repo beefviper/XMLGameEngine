@@ -803,6 +803,26 @@ TEST_CASE("generating Missile Command aims the base at the sight, and each missi
 	CHECK(main.find("\t\tif (!citiesAlive[i])\n\t\t{\n\t\t\tcontinue;") != std::string::npos);
 }
 
+TEST_CASE("generating Berserk turns the man with the keys he walks by, and fires the way he faces", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder folder("xge_test_generate_berserk");
+	generateGame(requestFor(fs::current_path() / "games/berserk.xml", folder.path / "out"));
+
+	const std::string main = readFile(folder.path / "out/main.cpp");
+	// a key that walks him, pressed, turns him and his look; held, it walks him
+	CHECK(main.find("physics::Facing playerFacing = physics::Facing::Right;") != std::string::npos);
+	CHECK(main.find("\t\tif (key == sf::Keyboard::Key::Up || key == sf::Keyboard::Key::W)\n\t\t{\n\t\t\tplayerFacing = physics::Facing::Up;\n\t\t\tbecomePlayer(PlayerLook::Up);") != std::string::npos);
+	CHECK(main.find("physics::fireFrom(player, bullet, bulletVelocity, playerFacing, sf::Vector2f{0.0f, -8.0f}.length());") != std::string::npos);
+	// a robot faces the way it aims; Otto chases the man
+	CHECK(main.find("\t\t\t\trobots1leftAimed[i] = true;\n\t\t\t\trobots1leftFacing[i] = physics::facingOf(*way);") != std::string::npos);
+	CHECK(main.find("physics::chase(otto, ottoVelocity, nearestPlayer(), 1.1f, 0.0f);") != std::string::npos);
+}
+
 TEST_CASE("generating Space Invaders animates the block, each row its own pictures, through one become", "[generate]")
 {
 	if (!canGenerate())

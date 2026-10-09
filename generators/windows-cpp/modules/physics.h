@@ -420,6 +420,16 @@ namespace physics
 	// The way a thing faces (<facing>).
 	enum class Facing { Up, Down, Left, Right };
 
+	// The way of the four nearest to `way`: the axis it goes further along.
+	inline Facing facingOf(sf::Vector2f way)
+	{
+		if (std::abs(way.x) >= std::abs(way.y))
+		{
+			return way.x < 0.0f ? Facing::Left : Facing::Right;
+		}
+		return way.y < 0.0f ? Facing::Up : Facing::Down;
+	}
+
 	// A shot leaving a shooter that faces that way: from the middle of that
 	// side, just clear of it, moving that way at `speed`.
 	template <typename Shooter, typename Shot>
@@ -497,22 +507,25 @@ namespace physics
 	}
 
 	// Straight at a place at `speed`, or still within `near` of it
-	// (<chase>); with no place it goes on as it was.
+	// (<chase>); with no place it goes on as it was. The way it set off, one
+	// pixel long, if it did.
 	template <typename Thing>
-	void chase(const Thing& thing, sf::Vector2f& velocity, std::optional<sf::Vector2f> there, float speed, float near)
+	std::optional<sf::Vector2f> chase(const Thing& thing, sf::Vector2f& velocity, std::optional<sf::Vector2f> there, float speed, float near)
 	{
 		if (!there)
 		{
-			return;
+			return std::nullopt;
 		}
 		const sf::Vector2f apart = *there - thing.getGlobalBounds().getCenter();
 		const float distance = apart.length();
 		if (distance <= near || distance == 0.0f)
 		{
 			velocity = {};
-			return;
+			return std::nullopt;
 		}
-		velocity = apart * (1.0f / distance) * speed;
+		const sf::Vector2f way = apart * (1.0f / distance);
+		velocity = way * speed;
+		return way;
 	}
 
 	// --- Against another thing.

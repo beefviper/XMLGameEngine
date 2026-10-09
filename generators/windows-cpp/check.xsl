@@ -7,8 +7,8 @@
 <!-- What this target can generate so far: all of Pong, Space Race,
      Freeway, Breakout, Depth Charge, Frogger, Astrosmash, Kaboom, Demon
      Attack, Megamania, Asteroids, Combat, Lunar Lander, Frostbite, Air-Sea
-     Battle, Donkey Kong, Pitfall!, Space Invaders (both) and Missile
-     Command. Screens on a stack, rectangles, circles, texts (words or a
+     Battle, Donkey Kong, Pitfall!, Space Invaders (both), Missile Command
+     and Berserk. Screens on a stack, rectangles, circles, texts (words or a
      number) and pictures (from a file, rows of text, lines or an SVG);
      objects that move, bounce, stick, deflect, wrap round, ride, turn back,
      stop, start again and die; groups of them, listed or in columns and rows
@@ -261,11 +261,6 @@
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; in a &lt;timer&gt; of a state')" />
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="self::facing and ../actions/action[move or hop or jump]">
-        <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'&lt;facing&gt; on something keys move (the way it faces changes with them)'" />
-        </xsl:call-template>
-      </xsl:when>
 
       <!-- what the game does: in a collision, on a key, in a condition or a timer -->
       <xsl:when test="(self::reset or self::reveal) and @object and not(/game/objects/*[@name = current()/@object][@name = /game/states/state/shows/show/@object or variables/variable])">
@@ -354,11 +349,6 @@
       <xsl:when test="(self::move and not(parent::action or $in-own-timer or $in-rule)) or ((self::hop or self::jump) and not(parent::action))">
         <xsl:call-template name="refuse">
           <xsl:with-param name="what" select="concat('&lt;', $tag, '&gt; outside the &lt;action&gt; of an object')" />
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="self::action and (move or turn or thrust or accelerate or climb) and *[not(self::move or self::turn or self::thrust or self::accelerate or self::climb)]">
-        <xsl:call-template name="refuse">
-          <xsl:with-param name="what" select="'an &lt;action&gt; that both moves (held) and does something else (pressed)'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::fire and not(parent::action or $in-own-timer)">
