@@ -48,6 +48,55 @@
     <variable name="body">36</variable>
     <variable name="step">48</variable>
   </variables>
+  <sounds>
+    <!-- a hop: a short chirp -->
+    <sound name="hop" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5" to="G5">0.05</note>
+    </sound>
+    <!-- run over, or ridden off the screen: a crunch -->
+    <sound name="squash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="1200" to="150">0.3</note>
+    </sound>
+    <!-- into the river: a splash -->
+    <sound name="splash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="5000" to="300">0.5</note>
+    </sound>
+    <!-- a pad reached -->
+    <sound name="pad" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C6">0.05</note>
+      <note pitch="E6">0.05</note>
+      <note pitch="G6">0.1</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- all five pads -->
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <!-- out of lives -->
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
   <objects>
     <!-- scenery: the river (home row and the five lanes), grass, road, road markings, pavement -->
     <object name="bayswater">
@@ -515,10 +564,12 @@
         <collision class="hazard">
           <dec variable="frog.lives" />
           <reset />
+          <play sound="squash" />
         </collision>
         <collision class="water" unless="logs">
           <dec variable="frog.lives" />
           <reset />
+          <play sound="splash" />
         </collision>
         <collision class="logs">
           <ride />
@@ -526,24 +577,30 @@
         <collision class="pads">
           <inc variable="frog.score" />
           <reset />
+          <play sound="pad" />
         </collision>
         <collision edge="horizontal">
           <dec variable="frog.lives" />
           <reset />
+          <play sound="squash" />
         </collision>
       </collisions>
       <actions>
         <action name="up">
           <hop direction="up">step</hop>
+          <play sound="hop" />
         </action>
         <action name="down">
           <hop direction="down">step</hop>
+          <play sound="hop" />
         </action>
         <action name="left">
           <hop direction="left">step</hop>
+          <play sound="hop" />
         </action>
         <action name="right">
           <hop direction="right">step</hop>
+          <play sound="hop" />
         </action>
       </actions>
       <variables>
@@ -705,6 +762,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
       </inputs>
     </state>
@@ -774,10 +832,12 @@
         <condition object="frog" variable="lives">
           <atmost>0</atmost>
           <push state="gameover" />
+          <play sound="gameover" />
         </condition>
         <condition class="pads">
           <remaining>0</remaining>
           <push state="youwin" />
+          <play sound="win" />
         </condition>
       </conditions>
     </state>

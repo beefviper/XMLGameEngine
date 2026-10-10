@@ -379,7 +379,7 @@ TEST_CASE("generating Breakout writes its bricks as one group of columns and row
 	// the bricks never move, so their bounce off the sides is left out
 	CHECK(main.find("physics::past(bricks") == std::string::npos);
 	// every rule about the bottom in one touch of it: the ball bounces and dies
-	CHECK(main.find("\t// bottom: bounce die\n\tif (physics::past(ball, physics::Edge::Bottom, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Bottom, windowArea);\n\t\tballAlive = false;\n\t\treturn;") != std::string::npos);
+	CHECK(main.find("\t// bottom: bounce play die\n\tif (physics::past(ball, physics::Edge::Bottom, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Bottom, windowArea);\n\t\twallSound.play();\n\t\tballAlive = false;\n\t\treturn;") != std::string::npos);
 	// the class counts both groups of bricks
 	CHECK(main.find("\t// bricks: none left\n\tif (std::count(strongAlive.begin(), strongAlive.end(), true) + std::count(bricksAlive.begin(), bricksAlive.end(), true) == 0)\n\t{\n\t\tscreens.push_back(Screen::Youwin);") != std::string::npos);
 	CHECK(main.find("\t// ball: none left\n\tif (!ballAlive)\n\t{\n\t\tscreens.push_back(Screen::Gameover);") != std::string::npos);
@@ -405,8 +405,8 @@ TEST_CASE("generating Breakout gives the top row two looks, whole and cracked, a
 	CHECK(main.find("\tfor (std::size_t i = 0; i < strong.size(); ++i)\n\t{\n\t\tbecomeStrong(i, StrongLook::Whole);\n\t}") != std::string::npos);
 	// the rules in the order written, each looking at the look as it comes:
 	// a cracked brick goes, a whole one cracks, and a hit does only one
-	CHECK(main.find("\t\t\tif (strongLook[j] == StrongLook::Cracked)\n\t\t\t{\n\t\t\t\tstrongAlive[j] = false;\n\t\t\t}\n"
-		"\t\t\tif (strongLook[j] == StrongLook::Whole)\n\t\t\t{\n\t\t\t\tbecomeStrong(j, StrongLook::Cracked);\n\t\t\t}\n"
+	CHECK(main.find("\t\t\tif (strongLook[j] == StrongLook::Cracked)\n\t\t\t{\n\t\t\t\tstrongAlive[j] = false;\n\t\t\t\tbrickSound.play();\n\t\t\t}\n"
+		"\t\t\tif (strongLook[j] == StrongLook::Whole)\n\t\t\t{\n\t\t\t\tbecomeStrong(j, StrongLook::Cracked);\n\t\t\t\tcrackSound.play();\n\t\t\t}\n"
 		"\t\t\tphysics::bounceOff(ball, ballVelocity, strong[j]);") != std::string::npos);
 	// its rules are all about the ball, written with the ball's: nothing left of its own each frame
 	CHECK(main.find("void updateStrong()") == std::string::npos);
@@ -547,7 +547,7 @@ TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, 
 	CHECK(main.find("\t\t\t// fire charge, if it is not out already\n\t\t\tif (!chargeAlive)\n\t\t\t{\n\t\t\t\tcharge.setPosition({physics::left(ship) + physics::width(ship) / 2.0f - physics::width(charge) / 2.0f, physics::top(ship)});\n\t\t\t\tchargeVelocity = {0.0f, 5.0f};\n\t\t\t\tchargeAlive = true;") != std::string::npos);
 	// a sub it hits sinks by the sub's own rule, in the same touch
 	CHECK(main.find("\t\tif (subs1Alive[j] && physics::touching(charge, subs1[j]))\n\t\t{\n\t\t\t// subs1, by its own rule: die\n\t\t\tsubs1Alive[j] = false;\n\t\t\tshipSunk += 1.0f;") != std::string::npos);
-	CHECK(main.find("\t// bottom: dec die\n\tif (physics::past(charge, physics::Edge::Bottom, windowArea))\n\t{\n\t\tshipCharges -= 1.0f;") != std::string::npos);
+	CHECK(main.find("\t// bottom: dec die play\n\tif (physics::past(charge, physics::Edge::Bottom, windowArea))\n\t{\n\t\tshipCharges -= 1.0f;") != std::string::npos);
 }
 
 TEST_CASE("generating Astrosmash puts one rock back at a time, its fall drawn anew", "[generate]")
@@ -566,7 +566,7 @@ TEST_CASE("generating Astrosmash puts one rock back at a time, its fall drawn an
 	// one member starts again on its own: what they share written once, the rest a list
 	CHECK(main.find("void startBoulders(std::size_t i)\n{\n\tconst float xs[] = {50.0f, 230.0f, 410.0f, 590.0f};\n\tboulders[i].setPosition({xs[i], randomBetween(-500.0f, -40.0f)});\n\tbouldersVelocity[i] = {0.0f, randomBetween(1.0f, 2.0f)};\n}") != std::string::npos);
 	CHECK(main.find("\tfor (std::size_t i = 0; i < boulders.size(); ++i)\n\t{\n\t\tstartBoulders(i);\n\t}") != std::string::npos);
-	CHECK(main.find("\t\t// bottom: dec reset\n\t\tif (physics::past(boulders[i], physics::Edge::Bottom, windowArea))\n\t\t{\n\t\t\tshipLives -= 1.0f;\n\t\t\tshowLives();\n\t\t\tstartBoulders(i);") != std::string::npos);
+	CHECK(main.find("\t\t// bottom: dec reset play\n\t\tif (physics::past(boulders[i], physics::Edge::Bottom, windowArea))\n\t\t{\n\t\t\tshipLives -= 1.0f;\n\t\t\tshowLives();\n\t\t\tstartBoulders(i);") != std::string::npos);
 }
 
 TEST_CASE("generating Kaboom counts the bomber's timers down, and a missed bomb puts every bomb back", "[generate]")

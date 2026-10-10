@@ -5,11 +5,15 @@
 //
 // Catch2 tests for Breakout played frame by frame: the top row of bricks
 // (group strong) takes two hits, a whole brick cracking at the first and
-// going out of play at the second, and a reset makes it whole again.
+// going out of play at the second, and a reset makes it whole again; and the
+// sounds the ball asks for off a wall, the paddle and the bricks.
 
 #include "game.h"
 
 #include <catch2/catch_test_macros.hpp>
+
+#include <string>
+#include <vector>
 
 using namespace xge;
 
@@ -80,4 +84,38 @@ TEST_CASE("starting Breakout again makes a cracked brick whole", "[breakout]")
 
 	game.resetAll();
 	CHECK(game.getObject("strong.1.1").lookName() == "whole");
+}
+
+TEST_CASE("Breakout's ball asks for a sound off a wall, the paddle, a cracking brick and a brick", "[breakout][sound]")
+{
+	Game game{ "games/breakout.xml" };
+	play(game);
+	game.getObject("player").size = { 120.0f, 30.0f };
+
+	// off the top wall
+	Object& ball = game.getObject("ball");
+	ball.position = { 600.0f, 4.0f };
+	ball.velocity = { 0.0f, -3.0f };
+	for (int frame = 0; frame < 5; ++frame) { game.updateObjects(); }
+	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "wall" });
+
+	// onto the paddle
+	const Object& player = game.getObject("player");
+	ball.position = { player.position.x + 50.0f, player.position.y - 24.0f };
+	ball.velocity = { 0.0f, 4.0f };
+	playUntilBounced(game);
+	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "paddle" });
+
+	// the top row cracks at the first hit and goes at the second
+	dropOnto(game, game.getObject("strong.5.1"));
+	playUntilBounced(game);
+	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "crack" });
+	dropOnto(game, game.getObject("strong.5.1"));
+	playUntilBounced(game);
+	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "brick" });
+
+	// any other brick goes at the first
+	dropOnto(game, game.getObject("bricks.5.1"));
+	playUntilBounced(game);
+	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "brick" });
 }

@@ -37,6 +37,48 @@
     <variable name="goal">20</variable>
     <variable name="startlives">5</variable>
   </variables>
+  <sounds>
+    <!-- a rock shot: a pop -->
+    <sound name="pop" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="3000" to="800">0.1</note>
+    </sound>
+    <!-- a rock on the ground, or on the ship -->
+    <sound name="thud" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="1500" to="100">0.4</note>
+    </sound>
+    <!-- a shot fired: a quick falling zap -->
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C6" to="C4">0.1</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- twenty rocks shot -->
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <!-- out of ships -->
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
   <objects>
     <group name="boulders" class="rocks">
       <sprite>
@@ -58,14 +100,17 @@
         <collision edge="bottom">
           <dec variable="ship.lives" />
           <reset />
+          <play sound="thud" />
         </collision>
         <collision object="ship">
           <dec variable="ship.lives" />
           <reset />
+          <play sound="thud" />
         </collision>
         <collision object="shot">
           <inc variable="ship.score" />
           <reset />
+          <play sound="pop" />
         </collision>
       </collisions>
       <member>
@@ -101,14 +146,17 @@
         <collision edge="bottom">
           <dec variable="ship.lives" />
           <reset />
+          <play sound="thud" />
         </collision>
         <collision object="ship">
           <dec variable="ship.lives" />
           <reset />
+          <play sound="thud" />
         </collision>
         <collision object="shot">
           <inc variable="ship.score" />
           <reset />
+          <play sound="pop" />
         </collision>
       </collisions>
       <member>
@@ -169,6 +217,7 @@
         </action>
         <action name="gun">
           <fire object="shot" />
+          <play sound="shoot" />
         </action>
       </actions>
       <variables>
@@ -328,6 +377,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
       </inputs>
     </state>
@@ -367,10 +417,12 @@
         <condition object="ship" variable="score">
           <atleast>goal</atleast>
           <push state="youwin" />
+          <play sound="win" />
         </condition>
         <condition object="ship" variable="lives">
           <atmost>0</atmost>
           <push state="gameover" />
+          <play sound="gameover" />
         </condition>
       </conditions>
     </state>

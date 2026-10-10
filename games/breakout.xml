@@ -18,6 +18,52 @@
     <variable name="height">30</variable>
     <variable name="step">8</variable>
   </variables>
+  <sounds>
+    <!-- the ball off a wall: a low blip -->
+    <sound name="wall" wave="square">
+      <note pitch="A3">0.04</note>
+    </sound>
+    <!-- the ball off the paddle: a higher blip -->
+    <sound name="paddle" wave="square">
+      <note pitch="A4">0.05</note>
+    </sound>
+    <!-- a brick gone: a bright blip -->
+    <sound name="brick" wave="square">
+      <volume>0.2</volume>
+      <note pitch="E5">0.06</note>
+    </sound>
+    <!-- the top row cracks: a dull tick, as it takes two hits -->
+    <sound name="crack" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="1500" to="600">0.06</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- every brick gone -->
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <!-- the ball lost -->
+    <sound name="gameover" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G4">0.2</note>
+      <note pitch="F#4">0.2</note>
+      <note pitch="F4">0.2</note>
+      <note pitch="E4" to="D#4">0.5</note>
+    </sound>
+  </sounds>
   <objects>
     <object name="ball">
       <sprite>
@@ -34,6 +80,7 @@
         <enabled>true</enabled>
         <collision edge="all">
           <bounce />
+          <play sound="wall" />
         </collision>
         <collision edge="bottom">
           <die />
@@ -56,6 +103,9 @@
         <enabled>true</enabled>
         <collision edge="horizontal">
           <stick />
+        </collision>
+        <collision object="ball">
+          <play sound="paddle" />
         </collision>
       </collisions>
       <actions>
@@ -97,9 +147,11 @@
         <enabled>true</enabled>
         <collision object="ball" sprite="cracked">
           <die />
+          <play sound="brick" />
         </collision>
         <collision object="ball" sprite="whole">
           <become sprite="cracked" />
+          <play sound="crack" />
         </collision>
       </collisions>
     </group>
@@ -124,6 +176,7 @@
         </collision>
         <collision>
           <die />
+          <play sound="brick" />
         </collision>
       </collisions>
       <row number="2"><sprite><rectangle><color>color.orange</color></rectangle></sprite></row>
@@ -279,6 +332,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
       </inputs>
     </state>
@@ -313,10 +367,12 @@
         <condition class="bricks">
           <remaining>0</remaining>
           <push state="youwin" />
+          <play sound="win" />
         </condition>
         <condition object="ball">
           <remaining>0</remaining>
           <push state="gameover" />
+          <play sound="gameover" />
         </condition>
       </conditions>
     </state>

@@ -36,6 +36,48 @@
     <variable name="misses">8</variable>
     <variable name="margin">20</variable>
   </variables>
+  <sounds>
+    <!-- a charge dropped: a low thunk -->
+    <sound name="drop" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G3" to="C3">0.1</note>
+    </sound>
+    <!-- a submarine sunk: a rumbling burst -->
+    <sound name="sink" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="2500" to="150">0.5</note>
+    </sound>
+    <!-- a charge lost on the sea floor: a dull splash -->
+    <sound name="miss" wave="noise">
+      <volume>0.2</volume>
+      <note pitch="800" to="200">0.15</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- every submarine sunk -->
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <!-- out of charges -->
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
   <objects>
     <object name="sea">
       <sprite>
@@ -66,10 +108,12 @@
         <collision edge="bottom">
           <dec variable="ship.charges" />
           <die />
+          <play sound="miss" />
         </collision>
         <collision class="subs">
           <inc variable="ship.sunk" />
           <die />
+          <play sound="sink" />
         </collision>
       </collisions>
     </object>
@@ -185,6 +229,7 @@
         </action>
         <action name="drop">
           <fire object="charge" />
+          <play sound="drop" />
         </action>
       </actions>
       <variables>
@@ -372,6 +417,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
       </inputs>
     </state>
@@ -415,10 +461,12 @@
         <condition class="subs">
           <remaining>0</remaining>
           <push state="youwin" />
+          <play sound="win" />
         </condition>
         <condition object="ship" variable="charges">
           <atmost>0</atmost>
           <push state="gameover" />
+          <play sound="gameover" />
         </condition>
       </conditions>
     </state>

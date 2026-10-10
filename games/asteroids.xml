@@ -46,6 +46,56 @@
     <variable name="shotspeed">8</variable>
     <variable name="margin">20</variable>
   </variables>
+  <sounds>
+    <!-- a shot fired: a quick falling zap -->
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C6" to="C4">0.1</note>
+    </sound>
+    <!-- a rock broken: the bigger the rock, the lower the rumble -->
+    <sound name="bangbig" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="1200" to="100">0.45</note>
+    </sound>
+    <sound name="bangmedium" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="2000" to="200">0.3</note>
+    </sound>
+    <sound name="bangsmall" wave="noise">
+      <volume>0.35</volume>
+      <note pitch="3500" to="400">0.2</note>
+    </sound>
+    <!-- the ship hit -->
+    <sound name="boom" wave="noise">
+      <volume>0.5</volume>
+      <note pitch="3000" to="100">0.8</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- every rock broken -->
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <!-- out of ships -->
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
   <objects>
     <!-- The ship: a triangle of four lines, drawn again at its heading (to the whole degree) when that changes. It has a <heading>, so the left and right keys <turn> it, thrust pushes it along the way it faces, and a shot leaves its nose. Pixel collisions look at the picture for the heading it has now. -->
     <object name="ship" class="ship">
@@ -72,6 +122,7 @@
           <dec variable="ship.lives" />
           <stop />
           <reset />
+          <play sound="boom" />
         </collision>
       </collisions>
       <actions>
@@ -86,6 +137,7 @@
         </action>
         <action name="fire">
           <fire object="shots" />
+          <play sound="shoot" />
         </action>
       </actions>
       <variables>
@@ -150,6 +202,7 @@
           <die />
           <inc variable="ship.score">2</inc>
           <release object="mediumrocks">2</release>
+          <play sound="bangbig" />
         </collision>
       </collisions>
     <member>
@@ -226,6 +279,7 @@
           <die />
           <inc variable="ship.score">5</inc>
           <release object="smallrocks">2</release>
+          <play sound="bangmedium" />
         </collision>
       </collisions>
     <member>
@@ -339,6 +393,7 @@
         <collision class="shots">
           <die />
           <inc variable="ship.score">10</inc>
+          <play sound="bangsmall" />
         </collision>
       </collisions>
     <member>
@@ -670,6 +725,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
       </inputs>
     </state>
@@ -718,10 +774,12 @@
         <condition object="ship" variable="lives">
           <atmost>0</atmost>
           <push state="gameover" />
+          <play sound="gameover" />
         </condition>
         <condition class="rocks">
           <remaining>0</remaining>
           <push state="won" />
+          <play sound="win" />
         </condition>
       </conditions>
     </state>

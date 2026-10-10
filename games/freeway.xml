@@ -38,6 +38,43 @@
     <variable name="crossings">5</variable>
     <variable name="margin">20</variable>
   </variables>
+  <sounds>
+    <!-- a hop: a short chirp -->
+    <sound name="hop" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5" to="G5">0.05</note>
+    </sound>
+    <!-- a chicken hit by traffic: a squawk that falls -->
+    <sound name="hit" wave="sawtooth">
+      <volume>0.3</volume>
+      <note pitch="A4" to="A2">0.4</note>
+    </sound>
+    <!-- a chicken across -->
+    <sound name="cross" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C6">0.05</note>
+      <note pitch="E6">0.05</note>
+      <note pitch="G6">0.1</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- a player has won -->
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
   <objects>
     <object name="verge" class="farside">
       <sprite>
@@ -343,18 +380,22 @@
         <enabled>true</enabled>
         <collision class="traffic">
           <reset />
+          <play sound="hit" />
         </collision>
         <collision class="farside">
           <inc variable="chicken1.score" />
           <reset />
+          <play sound="cross" />
         </collision>
       </collisions>
       <actions>
         <action name="up">
           <hop direction="up">cell</hop>
+          <play sound="hop" />
         </action>
         <action name="down">
           <hop direction="down">cell</hop>
+          <play sound="hop" />
         </action>
       </actions>
       <variables>
@@ -375,18 +416,22 @@
         <enabled>true</enabled>
         <collision class="traffic">
           <reset />
+          <play sound="hit" />
         </collision>
         <collision class="farside">
           <inc variable="chicken2.score" />
           <reset />
+          <play sound="cross" />
         </collision>
       </collisions>
       <actions>
         <action name="up">
           <hop direction="up">cell</hop>
+          <play sound="hop" />
         </action>
         <action name="down">
           <hop direction="down">cell</hop>
+          <play sound="hop" />
         </action>
       </actions>
       <variables>
@@ -560,6 +605,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
       </inputs>
     </state>
@@ -610,10 +656,12 @@
         <condition object="chicken1" variable="score">
           <atleast>crossings</atleast>
           <push state="p1wins" />
+          <play sound="win" />
         </condition>
         <condition object="chicken2" variable="score">
           <atleast>crossings</atleast>
           <push state="p2wins" />
+          <play sound="win" />
         </condition>
       </conditions>
     </state>

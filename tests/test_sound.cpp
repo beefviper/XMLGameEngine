@@ -6,7 +6,8 @@
 // Catch2 tests for the sound system: pitch names, the synthesizer
 // (sound.h), reading <sounds> and <play> from a game file, the checks made
 // when it loads, Pong asking for its sounds when the ball bounces and
-// scores, and Engine handing what was asked for to its Audio (audio.h). No
+// scores, the eight games that were silent now having sounds, and Engine
+// handing what was asked for to its Audio (audio.h). No
 // test opens a sound device: Engine is given a recording Audio instead.
 
 #include "engine.h"
@@ -22,6 +23,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -452,4 +454,41 @@ TEST_CASE("the silent backend needs no sound device", "[sound][engine]")
 	audio->play("wall");
 	audio->stopAll();
 	CHECK(dynamic_cast<NullAudio*>(audio.get()) != nullptr);
+}
+
+TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids have their sounds, and each is played somewhere", "[sound][games]")
+{
+	const std::vector<std::pair<std::string, std::vector<std::string>>> games = {
+		{ "breakout", { "wall", "paddle", "brick", "crack", "start", "win", "gameover" } },
+		{ "frogger", { "hop", "squash", "splash", "pad", "start", "win", "gameover" } },
+		{ "spacerace", { "score", "crash", "start", "win" } },
+		{ "freeway", { "hop", "hit", "cross", "start", "win" } },
+		{ "depthcharge", { "drop", "sink", "miss", "start", "win", "gameover" } },
+		{ "astrosmash", { "pop", "thud", "shoot", "start", "win", "gameover" } },
+		{ "lunarlander", { "land", "crash", "start" } },
+		{ "asteroids", { "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "start", "win", "gameover" } },
+	};
+
+	for (const auto& [name, expected] : games)
+	{
+		INFO(name);
+		const std::string path = "games/" + name + ".xml";
+
+		for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
+		{
+			Game game{ path, backend };
+			std::vector<std::string> names;
+			for (const auto& sound : game.getSounds()) { names.push_back(sound.name); }
+			CHECK(names == expected);
+		}
+
+		// A sound nothing plays is a sound that was forgotten.
+		std::ifstream file(path);
+		const std::string text{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
+		for (const std::string& sound : expected)
+		{
+			INFO(sound);
+			CHECK(text.find("<play sound=\"" + sound + "\" />") != std::string::npos);
+		}
+	}
 }

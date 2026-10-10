@@ -39,6 +39,29 @@
     <variable name="safespeed">1.2</variable>
     <variable name="margin">20</variable>
   </variables>
+  <sounds>
+    <!-- a good landing: a rising arpeggio -->
+    <sound name="land" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C4">0.1</note>
+      <note pitch="E4">0.1</note>
+      <note pitch="G4">0.1</note>
+      <note pitch="C5">0.3</note>
+    </sound>
+    <!-- a crash: a burst of noise that sinks -->
+    <sound name="crash" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="3000" to="100">0.8</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+  </sounds>
   <objects>
     <!-- The moon's surface, in two runs of lines with the pad's gap between them: peaks, slopes and a ledge. A line's coordinates are measured from the object's top left. -->
     <object name="terrain" class="ground">
@@ -293,6 +316,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
       </inputs>
     </state>
@@ -337,10 +361,12 @@
         <condition object="lander" variable="crashed">
           <atleast>1</atleast>
           <push state="crashed" />
+          <play sound="crash" />
         </condition>
         <condition object="lander" variable="landed">
           <atleast>1</atleast>
           <push state="landed" />
+          <play sound="land" />
         </condition>
       </conditions>
     </state>

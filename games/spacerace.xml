@@ -31,6 +31,36 @@
     <variable name="step">3</variable>
     <variable name="margin">10</variable>
   </variables>
+  <sounds>
+    <!-- a rocket gets across: a rising bloop -->
+    <sound name="score" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E4" to="E5">0.3</note>
+    </sound>
+    <!-- a rocket hit by debris: a crunch -->
+    <sound name="crash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="2500" to="200">0.35</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- a player has won -->
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
   <objects>
     <group name="debris1" class="debris">
       <sprite>
@@ -275,9 +305,11 @@
         <collision edge="top">
           <inc variable="rocket1.score" />
           <reset />
+          <play sound="score" />
         </collision>
         <collision class="debris">
           <reset />
+          <play sound="crash" />
         </collision>
       </collisions>
       <actions>
@@ -310,9 +342,11 @@
         <collision edge="top">
           <inc variable="rocket2.score" />
           <reset />
+          <play sound="score" />
         </collision>
         <collision class="debris">
           <reset />
+          <play sound="crash" />
         </collision>
       </collisions>
       <actions>
@@ -449,6 +483,7 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+          <play sound="start" />
         </input>
       </inputs>
     </state>
@@ -492,10 +527,12 @@
         <condition object="rocket1" variable="score">
           <atleast>2</atleast>
           <push state="player1wins" />
+          <play sound="win" />
         </condition>
         <condition object="rocket2" variable="score">
           <atleast>2</atleast>
           <push state="player2wins" />
+          <play sound="win" />
         </condition>
       </conditions>
     </state>
