@@ -984,7 +984,26 @@ void show</xsl:text>
       <xsl:value-of select="concat('&#9;', $name, '.setPosition(')" />
       <xsl:call-template name="vector"><xsl:with-param name="node" select="position" /></xsl:call-template>
       <xsl:text>);
-}
+</xsl:text>
+      <!-- an object placed by this number's size (a label beside it) moves with it -->
+      <xsl:variable name="number" select="@name" />
+      <xsl:for-each select="$objects[@name != $number][position]">
+        <xsl:variable name="placed">
+          <xsl:for-each select="position//text()">
+            <xsl:text> </xsl:text>
+            <xsl:value-of select="translate(., '+-*/(),&#9;&#10;&#13;', '          ')" />
+            <xsl:text> </xsl:text>
+          </xsl:for-each>
+        </xsl:variable>
+        <xsl:if test="contains($placed, concat(' ', $number, '.width ')) or contains($placed, concat(' ', $number, '.height '))">
+          <xsl:variable name="other"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:variable>
+          <xsl:value-of select="concat('&#9;', $other, '.setPosition(')" />
+          <xsl:call-template name="vector"><xsl:with-param name="node" select="position" /></xsl:call-template>
+          <xsl:text>);
+</xsl:text>
+        </xsl:if>
+      </xsl:for-each>
+      <xsl:text>}
 </xsl:text>
     </xsl:for-each>
     <xsl:if test="$pixel-looks">
