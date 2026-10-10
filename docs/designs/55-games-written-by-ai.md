@@ -10,7 +10,11 @@ The author asked another AI to write three games from `xgedef.xsd` alone. All th
 - **`<move>` / `<fire>` in an `<input>`** (they only mean something in an object `<action>`), **`<inc>`/`<dec>` in a `<condition>`** and **`<reset object>` in a `<collision>`** (fixed later by [timers](09-timers.md)).
 - **A variable with no owner** (`<inc variable="score">` does nothing; score and lives live on the player), **a spare projectile that starts enabled** (never fired; it flew off with nothing to put it away).
 - Lesson: the vocabulary was enough (no tag was added), but the schema cannot tell an author a command is in the wrong place. Making the loader refuse unknown buttons and misplaced commands, and warn about unowned variables, would turn each mistake into a load error naming the line. **Done (2026-10-07)** at the author's request, as errors rather than warnings: unknown keys and colors, a command where it does nothing, and an `<inc>`/`<dec>` of a variable no object has each stop the load with what to write instead, and a misspelt name gets a "did you mean". Every shipped game still loads. Where a command works is a table in `game_expr.cpp` beside the dispatchers in `command_executor.cpp`; they must agree.
-- `tests/test_ai_games.cpp` plays Demon Attack from title to end screen; unknown colors are checked by a test that reads every `<color>` and `<background>`.
+- Unknown colors are checked by a test that reads every `<color>` and `<background>`.
+
+### Demon Attack (rewritten, 2026-10-10)
+
+- The first one was seven rectangles bouncing in a 160 by 210 window. Rewritten from scratch like the other Atari games (640 by 480): a bitmap cannon, a pool of eight bombs, and three waves as states: six flapping demons (two named bitmaps and an `<animation>`, each at a speed of its own, turning round and dropping bombs on random timers); four demons that `<release>` two small ones from a hidden pool where they were shot, the wave ending when neither is left (they share a class); three big demons with two looks, `whole` and `hurt`, as Breakout's bricks have. `tests/test_demonattack.cpp` plays it. Not in it: demons that dive at the cannon from the start, spare cannons for points, a colour for each wave.
 
 ### Frostbite
 

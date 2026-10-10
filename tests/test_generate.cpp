@@ -605,7 +605,7 @@ TEST_CASE("generating Kaboom counts the bomber's timers down, and a missed bomb 
 	CHECK(main.find("\tcase Screen::Wave3:\n\t\tif (key == sf::Keyboard::Key::Space || key == sf::Keyboard::Key::P)") != std::string::npos);
 }
 
-TEST_CASE("generating Demon Attack gives each demon a timer of its own, firing from the pool", "[generate]")
+TEST_CASE("generating Demon Attack gives each demon two timers, releases the small ones from a pool and counts them in the wave", "[generate]")
 {
 	if (!canGenerate())
 	{
@@ -616,15 +616,18 @@ TEST_CASE("generating Demon Attack gives each demon a timer of its own, firing f
 	generateGame(requestFor(fs::current_path() / "games/demonattack.xml", folder.path / "out"));
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
-	CHECK(main.find("std::vector<int> aliensTimer1; // for each of them, the frames until its timer goes off") != std::string::npos);
-	CHECK(main.find("\t\tif (--aliensTimer1[i] == 0)\n\t\t{\n\t\t\t// fire the first of demonshots that is not out already\n\t\t\tfor (std::size_t k = 0; k < demonshots.size(); ++k)") != std::string::npos);
-	// each demon bounces off the sides on its own
-	CHECK(main.find("physics::bounce(aliens[i], aliensVelocity[i], physics::Edge::Left, windowArea);") != std::string::npos);
-	// the cannon, moved by keys alone, wraps round once it is right off
-	CHECK(main.find("\tphysics::wrap(player, physics::Edge::Left, windowArea);") != std::string::npos);
-	// none left: all of them back, their timers too
-	CHECK(main.find("void resetAliens()") != std::string::npos);
-	CHECK(main.find("\taliensTimer1.assign(aliens.size(), 0);") != std::string::npos);
+	// a turn and a bomb, each on a wait of its own for every demon
+	CHECK(main.find("std::vector<int> demons1Timer1; // for each of them, the frames until its timer goes off") != std::string::npos);
+	CHECK(main.find("std::vector<int> demons1Timer2; // for each of them, the frames until its timer goes off") != std::string::npos);
+	// a split demon lets two small ones out where it was
+	CHECK(main.find("// release 2 of halves from where it is") != std::string::npos);
+	CHECK(main.find("halvesAlive.assign(halves.size(), false); // hidden until they are brought in") != std::string::npos);
+	// the big demons have two looks
+	CHECK(main.find("enum class Demons3Look { Full, Hurt };") != std::string::npos);
+	// the second wave is over when neither the demons nor the small ones are left
+	CHECK(main.find("std::count(demons2Alive.begin(), demons2Alive.end(), true) + std::count(halvesAlive.begin(), halvesAlive.end(), true) == 0") != std::string::npos);
+	// the cannon is held in by the sides
+	CHECK(main.find("physics::stick(player, physics::Edge::Left, windowArea);") != std::string::npos);
 }
 
 TEST_CASE("generating Megamania keeps the energy no screen shows, run down by a timer of each wave", "[generate]")

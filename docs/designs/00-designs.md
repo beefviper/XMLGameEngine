@@ -57,7 +57,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [build-and-layout](51-build-and-layout.md) | CMake modules, `output/`, source layout, pipeline | Built; `lib/` folders Open |
 | [cli](52-cli.md), [gui](53-gui.md) | `xgecli` options; `xgegui` (Qt renderer, tree, Options, windows) | Built |
 | [games-classic](54-games-classic.md) | What each early game tested and forced | Built |
-| [games-written-by-ai](55-games-written-by-ai.md) | Berserk, Demon Attack, Frostbite from the schema alone | Built |
+| [games-written-by-ai](55-games-written-by-ai.md) | Berserk, Demon Attack, Frostbite from the schema alone, then rewritten | Built |
 | [games-atari](56-games-atari.md) | Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania | Built |
 | [ideas](57-ideas.md) | Scrolling, capability profiles, state export, game ideas | Idea |
 | [open-work](58-open-work.md) | Backlog and known untested areas | Open |

@@ -611,10 +611,10 @@ namespace
 {
 	// What is compared for one object. Anything whose position or velocity is a
 	// <random> (the ball, Kaboom's bombs, Astrosmash's rocks) comes out different on
-	// every load, so only its name is compared (Missile Command's missiles too).
+	// every load, so only its name is compared (Missile Command's missiles, and Demon Attack's small demons, too).
 	std::string comparable(const Object& object)
 	{
-		const bool drawn = object.name == "ball" || object.objClass == "bombs" || object.objClass == "rocks" || object.objClass == "missile";
+		const bool drawn = object.name == "ball" || object.objClass == "bombs" || object.objClass == "rocks" || object.objClass == "missile" || object.name.rfind("halves.", 0) == 0;
 		return drawn ? object.name : printed(object);
 	}
 }
