@@ -59,10 +59,11 @@ namespace xge
 		void finishLoading() { loading = false; }
 
 		// Starts every <random> from the same place, so a run can be played
-		// again exactly (xgecli --seed, the frame trace; see trace.h): for the
-		// games loaded from now on, as init() would otherwise seed from the
-		// random device.
+		// again exactly (the frame trace, see trace.h): for the games loaded
+		// until unseedRandom(), as init() would otherwise seed from the random
+		// device.
 		static void seedRandom(unsigned value) { fixedSeed = value; }
+		static void unseedRandom() { fixedSeed.reset(); }
 
 		void init(const WindowDesc& windowDesc,
 			const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,

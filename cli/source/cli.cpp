@@ -5,11 +5,9 @@
 
 #include "cli.h"
 #include "data_folder.h"
-#include "trace.h"
 
 #include <algorithm>
 #include <cctype>
-#include <functional>
 #include <optional>
 #include <string_view>
 
@@ -131,14 +129,6 @@ namespace xge
 			if (arg == "--audio")  return 'a';
 			if (arg == "--generate") return 'G';
 			if (arg == "--output") return 'o';
-			if (arg == "--trace")  return 'T';
-			if (arg == "--compare") return 'C';
-			if (arg == "--frames") return 'F';
-			if (arg == "--keys")   return 'K';
-			if (arg == "--seed")   return 'S';
-			if (arg == "--tolerance") return 'L';
-			if (arg == "--allow")  return 'A';
-			if (arg == "--slack")  return 'D';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
@@ -158,14 +148,6 @@ namespace xge
 			case 'a': return "audio";
 			case 'G': return "target";
 			case 'o': return "folder";
-			case 'T': return "folder";
-			case 'C': return "folder";
-			case 'F': return "list of frames";
-			case 'K': return "list of keys";
-			case 'S': return "number";
-			case 'L': return "number";
-			case 'A': return "number";
-			case 'D': return "number";
 			}
 			return "help";
 		}
@@ -181,14 +163,6 @@ namespace xge
 		bool haveAudio = false;
 		bool haveGenerate = false;
 		bool haveOutput = false;
-		bool haveTrace = false;
-		bool haveCompare = false;
-		bool haveFrames = false;
-		bool haveKeys = false;
-		bool haveSeed = false;
-		bool haveTolerance = false;
-		bool haveAllow = false;
-		bool haveSlack = false;
 
 		auto setGame = [&](const std::string& game)
 		{
@@ -198,20 +172,6 @@ namespace xge
 			}
 			options.game = game;
 			haveGame = true;
-		};
-
-		// A value of the trace options, checked as it is read: what goes wrong
-		// in it is said as a mistake in the command line.
-		auto traceValue = [](const std::string& option, const std::function<void()>& check)
-		{
-			try
-			{
-				check();
-			}
-			catch (const std::exception& error)
-			{
-				throw CliError(option + ": " + error.what());
-			}
 		};
 
 		auto setOption = [&](char key, const std::string& value)
@@ -272,60 +232,6 @@ namespace xge
 				}
 				options.output = value;
 				haveOutput = true;
-				break;
-			case 'T':
-				if (haveTrace) { throw CliError("--trace was given more than once"); }
-				options.trace = value;
-				haveTrace = true;
-				break;
-			case 'C':
-				if (haveCompare) { throw CliError("--compare was given more than once"); }
-				options.compare = value;
-				haveCompare = true;
-				break;
-			case 'F':
-				if (haveFrames) { throw CliError("--frames was given more than once"); }
-				traceValue("--frames", [&] { trace::parseFrames(value); });
-				options.frames = value;
-				haveFrames = true;
-				break;
-			case 'K':
-				if (haveKeys) { throw CliError("--keys was given more than once"); }
-				traceValue("--keys", [&] { trace::parseKeys(value); });
-				options.keys = value;
-				haveKeys = true;
-				break;
-			case 'S':
-				if (haveSeed) { throw CliError("--seed was given more than once"); }
-				traceValue("--seed", [&] { options.seed = static_cast<unsigned>(std::stoul(value)); });
-				haveSeed = true;
-				break;
-			case 'L':
-				if (haveTolerance) { throw CliError("--tolerance was given more than once"); }
-				traceValue("--tolerance", [&] { options.tolerance = std::stoi(value); });
-				if (options.tolerance < 0 || options.tolerance > 255)
-				{
-					throw CliError("--tolerance is from 0 to 255");
-				}
-				haveTolerance = true;
-				break;
-			case 'A':
-				if (haveAllow) { throw CliError("--allow was given more than once"); }
-				traceValue("--allow", [&] { options.allow = std::stoi(value); });
-				if (options.allow < 0)
-				{
-					throw CliError("--allow is a number of pixels, 0 or more");
-				}
-				haveAllow = true;
-				break;
-			case 'D':
-				if (haveSlack) { throw CliError("--slack was given more than once"); }
-				traceValue("--slack", [&] { options.slack = std::stoi(value); });
-				if (options.slack < 0)
-				{
-					throw CliError("--slack is a number of frames, 0 or more");
-				}
-				haveSlack = true;
 				break;
 			}
 		};
@@ -409,21 +315,6 @@ namespace xge
 			throw CliError("an output folder is only for --generate");
 		}
 
-		if ((haveTrace || haveCompare) && haveGenerate)
-		{
-			throw CliError("--trace and --compare play the game; they cannot be used with --generate");
-		}
-
-		if ((haveTrace || haveCompare) && !haveFrames)
-		{
-			throw CliError("--trace and --compare need --frames, the frames to keep (like --frames 10,60)");
-		}
-
-		if ((haveFrames || haveKeys || haveSeed || haveTolerance || haveAllow || haveSlack) && !haveTrace && !haveCompare)
-		{
-			throw CliError("--frames, --keys, --seed, --tolerance, --allow and --slack are for --trace or --compare");
-		}
-
 		return options;
 	}
 
@@ -500,16 +391,6 @@ namespace xge
 			"                       windows-cpp (plain C++ on SFML 3, with a CMakeLists.txt;\n"
 			"                       a small part of the language so far)\n"
 			"  -o, --output <dir>   where --generate writes it (default <game>-<target>)\n"
-			"  --trace <dir>        play with no window and write the frames kept to <dir>\n"
-			"  --compare <dir>      play with no window and compare the frames kept with those\n"
-			"                       a generated program wrote to <dir> (--trace as well to keep them)\n"
-			"  --frames <list>      the frames to keep, counted from 1 (--frames 10,60,120)\n"
-			"  --keys <list>        keys to press (+) and release (-) before a frame, named as a\n"
-			"                       game names them (--keys 5+space,40+d,90-d)\n"
-			"  --seed <n>           start every random number from <n> (default 1 when tracing)\n"
-			"  --tolerance <n>      how far apart a colour may be, 0 to 255, and still be the same\n"
-			"  --allow <n>          how many pixels may be further apart than that (default 0)\n"
-			"  --slack <n>          how many frames apart the same sound may be heard (default 0)\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"

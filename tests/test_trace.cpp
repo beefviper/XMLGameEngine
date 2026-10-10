@@ -11,7 +11,6 @@
 // Test names must not start with "-" or contain a comma: ctest hands the name to
 // Catch2 on its command line, which reads them as an option or a list.
 
-#include "cli.h"
 #include "engine.h"
 #include "game.h"
 #include "trace.h"
@@ -226,34 +225,6 @@ TEST_CASE("playing a game keeps the frames asked for and compares them", "[trace
 	std::ostringstream missing;
 	CHECK(play(again, missing) == 2);
 	CHECK(missing.str().find("frame 3: DIFFERENT") != std::string::npos);
-}
-
-TEST_CASE("the trace options of the command line", "[trace][cli]")
-{
-	const CliOptions options = parseCommandLine({ "pong", "--trace", "out", "--frames", "10,60", "--keys", "5+space,40-d",
-		"--seed", "3", "--tolerance", "64", "--allow", "100" });
-
-	CHECK(options.tracing());
-	CHECK(options.trace == "out");
-	CHECK(options.frames == "10,60");
-	CHECK(options.keys == "5+space,40-d");
-	CHECK(options.seed == 3u);
-	CHECK(options.tolerance == 64);
-	CHECK(options.allow == 100);
-
-	CHECK(parseCommandLine({ "--compare", "other", "--frames", "5" }).tracing());
-	CHECK_FALSE(parseCommandLine({ "pong" }).tracing());
-
-	// frames are needed, and mean nothing without something to do with them
-	CHECK_THROWS_AS(parseCommandLine({ "--trace", "out" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--frames", "5" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--keys", "5+space" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--trace", "out", "--frames", "0" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--trace", "out", "--frames", "5", "--keys", "5+nokey" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--trace", "out", "--frames", "5", "--tolerance", "300" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--trace", "out", "--frames", "5", "--seed", "x" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--trace", "a", "--trace", "b", "--frames", "5" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--trace", "out", "--frames", "5", "--generate", "windows-cpp" }), CliError);
 }
 
 TEST_CASE("the sounds heard are listed in order of frame and name", "[trace]")
