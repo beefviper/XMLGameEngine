@@ -266,6 +266,11 @@ namespace xge
 		const bool outputWasThere = std::filesystem::exists(output);
 		std::filesystem::create_directories(output);
 
+		// A program is laid out source/ and include/, which exsl:document does
+		// not make for the files it writes there.
+		std::filesystem::create_directories(output / "source");
+		std::filesystem::create_directories(output / "include");
+
 		std::string messages;
 		const MessageCollector collector(messages);
 
@@ -343,7 +348,9 @@ namespace xge
 			const std::filesystem::path path = attribute(node, "path");
 
 			// A file copied in: a game's asset from the data folder, or one of the
-			// target's modules (physics.h) from its modules/ folder.
+			// target's modules (physics.h) from its modules/ folder, where it may
+			// be named otherwise than where it goes (from="physics.h" to
+			// include/physics.h).
 			const auto copyIn = [&](const std::filesystem::path& from)
 			{
 				const std::filesystem::path to = output / path;
@@ -362,7 +369,8 @@ namespace xge
 			}
 			else if (element == "module")
 			{
-				copyIn(request.generators / request.target / "modules" / path);
+				const std::string from = attribute(node, "from");
+				copyIn(request.generators / request.target / "modules" / (from.empty() ? path : std::filesystem::path(from)));
 				program.files.push_back(path);
 			}
 			else if (element == "asset")

@@ -50,6 +50,6 @@ namespace xge
 	// which is made if it is not there, and its own result is a list of them,
 	// of the target's modules to copy (from generators/<target>/modules) and of
 	// the asset files to copy (from the data folder):
-	// <generated><file path /><module path /><asset path />. Throws GenerateError.
+	// <generated><file path /><module path from /><asset path />. Throws GenerateError.
 	GeneratedProgram generateGame(const GenerateRequest& request);
 }

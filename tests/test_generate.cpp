@@ -113,14 +113,14 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	TempFolder output("xge_test_generate_pong_min");
 	const GeneratedProgram program = generateGame(requestFor("games/pong_min.xml", output.path));
 
-	// main.cpp, CMakeLists.txt, README.md and the physics module; no sound.
-	CHECK(program.files.size() == 4);
+	// source/main.cpp, CMakeLists.txt, README.md, .gitignore and the physics module; no sound.
+	CHECK(program.files.size() == 5);
 	CHECK(program.assets.empty());
-	CHECK(fs::exists(output.path / "physics.h"));
-	CHECK_FALSE(fs::exists(output.path / "sound.h"));
+	CHECK(fs::exists(output.path / "include/physics.h"));
+	CHECK_FALSE(fs::exists(output.path / "include/sound.h"));
 	CHECK_FALSE(fs::exists(output.path / "manifest.xml"));
 
-	const std::string main = readFile(output.path / "main.cpp");
+	const std::string main = readFile(output.path / "source/main.cpp");
 
 	// The header, then includes, globals, objects, declarations, main and the
 	// definitions, in that order.
@@ -157,7 +157,7 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	CHECK(main.find("namespace") == std::string::npos);
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
-	CHECK(cmake.find("add_executable(pong_min main.cpp physics.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong_min source/main.cpp include/physics.h)") != std::string::npos);
 	CHECK(cmake.find("set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT pong_min)") != std::string::npos);
 	CHECK(cmake.find("Audio") == std::string::npos);
 }
@@ -172,15 +172,15 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 	TempFolder output("xge_test_generate_pong");
 	const GeneratedProgram program = generateGame(requestFor("games/pong.xml", output.path));
 
-	// main.cpp, CMakeLists.txt, README.md, physics.h, sound.h and sound.cpp,
+	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/physics.h, include/sound.h and source/sound.cpp,
 	// and the font and the paddle's picture.
-	CHECK(program.files.size() == 6);
+	CHECK(program.files.size() == 7);
 	CHECK(program.assets.size() == 2);
-	CHECK(fs::exists(output.path / "sound.cpp"));
+	CHECK(fs::exists(output.path / "source/sound.cpp"));
 	CHECK(fs::exists(output.path / "assets/tuffy.ttf"));
 	CHECK(fs::exists(output.path / "assets/paddle.jpg"));
 
-	const std::string main = readFile(output.path / "main.cpp");
+	const std::string main = readFile(output.path / "source/main.cpp");
 
 	// The screens, a stack of them, and what each does.
 	CHECK(main.find("enum class Screen { Mainmenu, Settings, Playing, Paused, Gameover };") != std::string::npos);
@@ -206,9 +206,18 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
 	CHECK(cmake.find("find_package(SFML 3 COMPONENTS Graphics Audio QUIET)") != std::string::npos);
-	CHECK(cmake.find("add_executable(pong main.cpp physics.h sound.h sound.cpp)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp include/physics.h include/sound.h)") != std::string::npos);
 	CHECK(cmake.find("PRIVATE SFML::Graphics SFML::Audio)") != std::string::npos);
 	CHECK(cmake.find("/assets") != std::string::npos);
+
+	// headers in include/, which the compiler is told of; the built game goes
+	// to output/; and neither it nor build/ is for a repository
+	CHECK(cmake.find("target_include_directories(pong PRIVATE include)") != std::string::npos);
+	CHECK(cmake.find("set(CMAKE_RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/output\")") != std::string::npos);
+	CHECK(readFile(output.path / ".gitignore") == "# where the game is built, and the built game\nbuild/\noutput/\n");
+	CHECK_FALSE(fs::exists(output.path / "main.cpp"));
+	CHECK_FALSE(fs::exists(output.path / "physics.h"));
+	CHECK(readFile(output.path / "README.md").find("output\\Release\\pong.exe") != std::string::npos);
 }
 
 TEST_CASE("generating Space Race and Freeway writes each group as a std::vector, and hops", "[generate]")
@@ -220,7 +229,7 @@ TEST_CASE("generating Space Race and Freeway writes each group as a std::vector,
 
 	TempFolder race("xge_test_generate_spacerace");
 	generateGame(requestFor("games/spacerace.xml", race.path));
-	const std::string main = readFile(race.path / "main.cpp");
+	const std::string main = readFile(race.path / "source/main.cpp");
 
 	// A lane of debris: its shapes, the velocity they share, and each one's place.
 	CHECK(main.find("std::vector<sf::RectangleShape> debris1(3);\nsf::Vector2f debris1Velocity; // every one of them") != std::string::npos);
@@ -238,7 +247,7 @@ TEST_CASE("generating Space Race and Freeway writes each group as a std::vector,
 
 	TempFolder freeway("xge_test_generate_freeway");
 	generateGame(requestFor("games/freeway.xml", freeway.path));
-	const std::string road = readFile(freeway.path / "main.cpp");
+	const std::string road = readFile(freeway.path / "source/main.cpp");
 
 	// A hop is a key pressed, a step at once if it stays in the window.
 	CHECK(road.find("if (key == sf::Keyboard::Key::W)\n\t\t{\n\t\t\tphysics::hop(chicken1, {0.0f, -cell}, windowArea);") != std::string::npos);
@@ -277,7 +286,7 @@ TEST_CASE("a group whose members move and look each their own way keeps a veloci
 		"</game>\n";
 	generateGame(requestFor(folder.path / "flock.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("std::vector<sf::CircleShape> birds(3);\nstd::vector<sf::Vector2f> birdsVelocity;") != std::string::npos);
 	CHECK(main.find("\tbirdsVelocity = {{1.0f, 0.0f}, {2.0f, 0.0f}, {1.0f, 0.0f}};") != std::string::npos);
 	CHECK(main.find("\tbirds[2].setPosition({110.0f, 80.0f});") != std::string::npos);
@@ -335,7 +344,7 @@ TEST_CASE("what can die keeps a flag for being in play, and a touch both sides h
 		"</game>\n";
 	generateGame(requestFor(folder.path / "catch.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a flag each, true again from the start
 	CHECK(main.find("bool ballAlive = true; // in play until it dies") != std::string::npos);
 	CHECK(main.find("std::vector<bool> bricksAlive; // which of them are still in play") != std::string::npos);
@@ -368,7 +377,7 @@ TEST_CASE("generating Breakout writes its bricks as one group of columns and row
 	TempFolder folder("xge_test_generate_breakout");
 	generateGame(requestFor(fs::current_path() / "games/breakout.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("// bricks: 54 of them\nstd::vector<sf::RectangleShape> bricks(54);") != std::string::npos);
 	// every brick the group's look, then each row its own color
 	CHECK(main.find("\tfor (sf::RectangleShape& one : bricks)\n\t{\n\t\tone.setSize({width, height});\n\t\tone.setFillColor(sf::Color::Red);\n\t}") != std::string::npos);
@@ -396,7 +405,7 @@ TEST_CASE("generating Breakout gives the top row two looks, whole and cracked, a
 	TempFolder folder("xge_test_generate_breakout_looks");
 	generateGame(requestFor(fs::current_path() / "games/breakout.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// an enum of its looks, and the one each brick shows
 	CHECK(main.find("enum class StrongLook { Whole, Cracked };\nstd::vector<StrongLook> strongLook(9);") != std::string::npos);
 	CHECK(main.find("void becomeStrong(std::size_t i, StrongLook look)\n{\n\tstrongLook[i] = look;\n\tswitch (look)\n\t{\n\tcase StrongLook::Whole:\n") != std::string::npos);
@@ -445,7 +454,7 @@ TEST_CASE("an edge rule with sprite= is an if on the look, inside the touch of t
 		"</game>\n";
 	generateGame(requestFor(folder.path / "puck.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// each rule in the order written, the look looked at as it comes; the
 	// die under a look may not have happened, so the way out asks
 	CHECK(main.find("\tif (physics::past(puck, physics::Edge::Left, windowArea))\n\t{\n"
@@ -496,7 +505,7 @@ TEST_CASE("a rule with unless= is passed over while touching that class, through
 		"</game>\n";
 	generateGame(requestFor(folder.path / "river.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// the touch, and not on a log other than the water it touches
 	CHECK(main.find("\tif (physics::touching(frog, water) && !touchingLogs(frog, &water))\n\t{\n\t\tfrogWet += 1.0f;") != std::string::npos);
 	// an edge has no other: nothing to leave out
@@ -516,7 +525,7 @@ TEST_CASE("generating Frogger lets the frog ride a log, and the river costs a li
 	TempFolder folder("xge_test_generate_frogger");
 	generateGame(requestFor(fs::current_path() / "games/frogger.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// what it rides is worked out again every frame, from the rules
 	CHECK(main.find("sf::Vector2f frogRiding; // the velocity of what it rides (<ride />), worked out every frame") != std::string::npos);
 	// before anything on the screen moves, so a log updated before the frog counts
@@ -539,7 +548,7 @@ TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, 
 	TempFolder folder("xge_test_generate_depthcharge");
 	generateGame(requestFor(fs::current_path() / "games/depthcharge.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a projectile is out of play until it is fired
 	CHECK(main.find("bool chargeAlive = false; // in play from when it is fired until it dies") != std::string::npos);
 	CHECK(main.find("\tchargeAlive = false; // until it is fired") != std::string::npos);
@@ -560,7 +569,7 @@ TEST_CASE("generating Astrosmash puts one rock back at a time, its fall drawn an
 	TempFolder folder("xge_test_generate_astrosmash");
 	generateGame(requestFor(fs::current_path() / "games/astrosmash.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// each rock falls at a speed of its own, drawn for it, as in the engine
 	CHECK(main.find("std::vector<sf::Vector2f> bouldersVelocity(4);") != std::string::npos);
 	// one member starts again on its own: what they share written once, the rest a list
@@ -579,7 +588,7 @@ TEST_CASE("generating Kaboom counts the bomber's timers down, and a missed bomb 
 	TempFolder folder("xge_test_generate_kaboom");
 	generateGame(requestFor(fs::current_path() / "games/kaboom.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a timer is the frames until it goes off, worked out again (a <random> drawn anew) when it gets there
 	CHECK(main.find("int bomber1Timer1 = 0; // the frames until its timer goes off") != std::string::npos);
 	CHECK(main.find("\t// timer 1: reverse\n\tif (bomber1Timer1 == 0)\n\t{\n\t\tbomber1Timer1 = framesFor(randomBetween(0.3f, 1.4f));\n\t}\n\tif (--bomber1Timer1 == 0)\n\t{\n\t\tbomber1Velocity = -bomber1Velocity;\n\t}") != std::string::npos);
@@ -606,7 +615,7 @@ TEST_CASE("generating Demon Attack gives each demon a timer of its own, firing f
 	TempFolder folder("xge_test_generate_demonattack");
 	generateGame(requestFor(fs::current_path() / "games/demonattack.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("std::vector<int> aliensTimer1; // for each of them, the frames until its timer goes off") != std::string::npos);
 	CHECK(main.find("\t\tif (--aliensTimer1[i] == 0)\n\t\t{\n\t\t\t// fire the first of demonshots that is not out already\n\t\t\tfor (std::size_t k = 0; k < demonshots.size(); ++k)") != std::string::npos);
 	// each demon bounces off the sides on its own
@@ -628,7 +637,7 @@ TEST_CASE("generating Megamania keeps the energy no screen shows, run down by a 
 	TempFolder folder("xge_test_generate_megamania");
 	generateGame(requestFor(fs::current_path() / "games/megamania.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("// energy: never shown, its variables kept\nfloat energyLevel = 0.0f;") != std::string::npos);
 	CHECK(main.find("int wave1Timer1 = 0;") != std::string::npos);
 	CHECK(main.find("\t// this screen's timer 1: dec\n\tif (wave1Timer1 == 0)\n\t{\n\t\twave1Timer1 = framesFor(1.0f);\n\t}\n\tif (--wave1Timer1 == 0)\n\t{\n\t\tenergyLevel -= 1.0f;\n\t\tshowEnergybar();\n\t}") != std::string::npos);
@@ -647,7 +656,7 @@ TEST_CASE("generating Asteroids turns the ship's picture with its heading, and a
 	TempFolder folder("xge_test_generate_asteroids");
 	generateGame(requestFor(fs::current_path() / "games/asteroids.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a key held turns it, and thrust pushes it the way it faces; either key of an action, once a frame
 	CHECK(main.find("\tif (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))\n\t{\n\t\tshipHeading -= turnrate;\n\t\tturnShip();\n\t}") != std::string::npos);
 	CHECK(main.find("\t\tshipVelocity += physics::ahead(shipHeading) * thrustpower;") != std::string::npos);
@@ -673,7 +682,7 @@ TEST_CASE("generating Combat drives each tank along its heading, a turned pictur
 	TempFolder folder("xge_test_generate_combat");
 	generateGame(requestFor(fs::current_path() / "games/combat.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("\t\ttank1Velocity += physics::ahead(tank1Heading) * back;") != std::string::npos);
 	CHECK(main.find("pictures::turned(pictures::rows(tank1Rows, 3, sf::Color::Yellow), static_cast<float>(degrees))") != std::string::npos);
 	CHECK(main.find("\tif (shell2Alive && physics::touchingPixels(tank1, &tank1Pixels, shell2, nullptr, tank1Velocity - shell2Velocity))") != std::string::npos);
@@ -690,7 +699,7 @@ TEST_CASE("generating Lunar Lander pulls the lander down, burns fuel while a thr
 	TempFolder folder("xge_test_generate_lunarlander");
 	generateGame(requestFor(fs::current_path() / "games/lunarlander.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("\tlanderAcceleration = {0.0f, gravity};") != std::string::npos);
 	CHECK(main.find("\tlanderVelocity += landerAcceleration;\n\tlander.move(landerVelocity);") != std::string::npos);
 	CHECK(main.find("\tif (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))\n\t{\n\t\t// burning fuel, while there is any\n\t\tif (landerFuel > 0.0f)\n\t\t{\n\t\t\tlanderFuel -= 1.0f;\n\t\t\tshowFuelvalue();\n\t\t\tlanderVelocity.y -= thrust;\n\t\t}\n\t}") != std::string::npos);
@@ -710,7 +719,7 @@ TEST_CASE("generating Frostbite jumps Bailey a row at a time, touching nothing i
 	TempFolder folder("xge_test_generate_frostbite");
 	generateGame(requestFor(fs::current_path() / "games/frostbite.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a key starts a jump, if none is under way and it lands on the screen
 	CHECK(main.find("\t\t\tphysics::jump(bailey, {0.0f, -rowgap}, framesFor(leap), baileyJumpStep, baileyJumpFrames, windowArea);") != std::string::npos);
 	CHECK(main.find("\tphysics::jumping(bailey, baileyJumpStep, baileyJumpFrames, windowArea);") != std::string::npos);
@@ -731,7 +740,7 @@ TEST_CASE("generating Air-Sea Battle swings each gun with keys, and fires along 
 	TempFolder folder("xge_test_generate_airseabattle");
 	generateGame(requestFor(fs::current_path() / "games/airseabattle.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("physics::fireAhead(gun1, shots1[i], shots1Velocity[i], gun1Heading, sf::Vector2f{0.0f, -shellspeed}.length());") != std::string::npos);
 	CHECK(main.find("\t\tgun1Heading -= swing;") != std::string::npos);
 	// a name C++ or its library has already is kept apart
@@ -749,7 +758,7 @@ TEST_CASE("generating Donkey Kong walks Jumpman by the keys, lands him on girder
 	TempFolder folder("xge_test_generate_donkeykong");
 	generateGame(requestFor(fs::current_path() / "games/donkeykong.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// the keys held give the way across, kept in a leap
 	CHECK(main.find("\tmanWalk = 0.0f; // and the keys held below\n\tmanClimb = 0.0f;") != std::string::npos);
 	CHECK(main.find("\t\tmanWalk -= walk;") != std::string::npos);
@@ -774,7 +783,7 @@ TEST_CASE("generating Pitfall! makes each scorpion an object of its screen, and 
 	TempFolder folder("xge_test_generate_pitfall");
 	generateGame(requestFor(fs::current_path() / "games/pitfall.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a member shown by its own name on a screen of its own is an object
 	CHECK(main.find("sf::Sprite scorpion2(") != std::string::npos);
 	CHECK(main.find("std::vector<sf::Sprite> scorpions") == std::string::npos);
@@ -793,7 +802,7 @@ TEST_CASE("generating Missile Command aims the base at the sight, and each missi
 	TempFolder folder("xge_test_generate_missilecommand");
 	generateGame(requestFor(fs::current_path() / "games/missilecommand.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// an aim is kept, and the shots go along it
 	CHECK(main.find("\t\tif (const std::optional<sf::Vector2f> way = physics::aimAt(base, nearestSight()))\n\t\t{\n\t\t\tbaseAim = *way;\n\t\t\tbaseAimed = true;") != std::string::npos);
 	CHECK(main.find("if (baseAimed)\n\t\t\t\t\t{\n\t\t\t\t\t\tphysics::fireAlong(base, abms[i], abmsVelocity[i], baseAim, sf::Vector2f{0.0f, -abmspeed}.length());") != std::string::npos);
@@ -813,7 +822,7 @@ TEST_CASE("generating Berserk turns the man with the keys he walks by, and fires
 	TempFolder folder("xge_test_generate_berserk");
 	generateGame(requestFor(fs::current_path() / "games/berserk.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a key that walks him, pressed, turns him and his look; held, it walks him
 	CHECK(main.find("physics::Facing playerFacing = physics::Facing::Right;") != std::string::npos);
 	CHECK(main.find("\t\tif (key == sf::Keyboard::Key::Up || key == sf::Keyboard::Key::W)\n\t\t{\n\t\t\tplayerFacing = physics::Facing::Up;\n\t\t\tbecomePlayer(PlayerLook::Up);") != std::string::npos);
@@ -833,7 +842,7 @@ TEST_CASE("generating Galaxian flies the fleet in on its paths, one behind anoth
 	TempFolder folder("xge_test_generate_galaxian");
 	generateGame(requestFor(fs::current_path() / "games/galaxian.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// the paths are a table, a leg of a step or home
 	CHECK(main.find("enum class Path { Fromtop, Fromtopleft, Fromtopright, Fromleft, Fromright, Dive };") != std::string::npos);
 	CHECK(main.find("\t{divespeed, std::nullopt, {\n\t\t{{-24.0f, -24.0f}}, // and play") != std::string::npos);
@@ -858,7 +867,7 @@ TEST_CASE("generating Space Invaders animates the block, each row its own pictur
 	TempFolder folder("xge_test_generate_spaceinvaders");
 	generateGame(requestFor(fs::current_path() / "games/spaceinvaders.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a look is the group's picture, or the rows' that change it
 	CHECK(main.find("\tcase AliensLook::B:\n\t\tif (i >= 11 && i <= 32) // aliens, rows 2, 3\n\t\t{\n\t\t\taliens[i].setTexture(aliensRow23BPicture, true);\n\t\t}\n\t\telse if (i >= 33) // aliens, rows 4, 5") != std::string::npos);
 	CHECK(main.find("\t\telse\n\t\t{\n\t\t\taliens[i].setTexture(aliensBPicture, true);") != std::string::npos);
@@ -903,7 +912,7 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 		"</game>\n";
 	generateGame(requestFor(folder.path / "block.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// 6 columns by 2 rows, the top row first as the engine lays them out; every even row red
 	CHECK(main.find("std::vector<sf::CircleShape> aliens(12);") != std::string::npos);
 	CHECK(main.find("\t\t\taliens[row * 6 + column].setPosition({20.0f + static_cast<float>(column) * (2.0f * 5.0f + 4.0f), 20.0f + static_cast<float>(row) * (2.0f * 5.0f + 4.0f)});") != std::string::npos);
@@ -989,7 +998,7 @@ TEST_CASE("a group's rows, columns and cells change what they pick, and each cel
 		"    <inputs><input button=\"space\"><reset /></input></inputs></state></states>\n"
 		"</game>\n";
 	generateGame(requestFor(folder.path / "cells.xml", folder.path / "out"));
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 
 	// the group's look on every one, then only what a row or cell changes
 	CHECK(main.find("\tfor (sf::CircleShape& one : dots)\n\t{\n\t\tone.setRadius(5.0f);\n\t\tone.setFillColor(sf::Color::Green);\n\t}") != std::string::npos);
@@ -1071,9 +1080,9 @@ TEST_CASE("a sprite of rows, of lines or from an SVG is a picture the program ha
 		"</game>\n";
 	const GeneratedProgram program = generateGame(requestFor(folder.path / "gallery.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("#include \"pictures.h\"") != std::string::npos);
-	CHECK(fs::exists(folder.path / "out/pictures.h"));
+	CHECK(fs::exists(folder.path / "out/include/pictures.h"));
 	// a bitmap's rows written out one under another, so it looks like itself
 	CHECK(main.find("const std::vector<std::string> playerRows = {\n\t\"...*...\",\n\t\".*****.\",\n\t\"*******\"\n};\nsf::Texture playerPicture;") != std::string::npos);
 	CHECK(main.find("!playerPicture.loadFromImage(pictures::rows(playerRows, 3, sf::Color::Cyan))") != std::string::npos);
@@ -1116,10 +1125,10 @@ TEST_CASE("a generated game carries only the modules, helper functions and heade
 	generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out"));
 
 	const GeneratedProgram program = generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out2"));
-	CHECK(program.files.size() == 4);
-	CHECK_FALSE(fs::exists(folder.path / "out2/sound.h"));
+	CHECK(program.files.size() == 5);
+	CHECK_FALSE(fs::exists(folder.path / "out2/include/sound.h"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("#include \"physics.h\"") != std::string::npos);
 	CHECK(main.find("#include \"sound.h\"") == std::string::npos);
 	CHECK(main.find("physics::past(box, physics::Edge::Left, windowArea)") != std::string::npos);
@@ -1237,7 +1246,7 @@ TEST_CASE("a formula or equation is written as C++ arithmetic, bracketed only wh
 		"<variable name=\"steps\"><equation><add name=\"both\" augend=\"1\" addend=\"2\" /><divide dividend=\"12\" divisor=\"both\" /></equation></variable>");
 	generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out"));
 
-	const std::string main = readFile(folder.path / "out/main.cpp");
+	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("boxInner = (10.0f - (4.0f - 3.0f));") != std::string::npos);
 	CHECK(main.find("boxSum = ((1.0f + 2.0f) * 3.0f);") != std::string::npos);
 	CHECK(main.find("boxChain = (9.0f - 1.0f - 2.0f);") != std::string::npos);

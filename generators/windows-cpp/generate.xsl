@@ -13,12 +13,14 @@
          - -stringparam source pong_min.xml generators/windows-cpp/generate.xsl games/pong_min.xml
 
      (with "- -" written as two dashes). It writes three files with EXSLT's
-     exsl:document, beside the output named: main.cpp (the game, main.xsl),
-     CMakeLists.txt (its build) and README.md. Its own output is a list of what it
-     wrote and of what xgecli copies beside them: the modules the game uses
-     (modules/: physics.h, pictures.h, and sound.h with sound.cpp), the game's
-     assets (its font and pictures), and each <svg> for xgecli to draw into a
-     picture as the engine draws it. xgecli reads the list.
+     exsl:document, in the output named: source/main.cpp (the game, main.xsl),
+     CMakeLists.txt (its build), README.md and .gitignore (build/ and output/,
+     where it is built and where the built program goes). Its own output is a
+     list of what it wrote and of what xgecli copies in: the modules the game uses
+     (modules/: physics.h, pictures.h to include/, and sound.cpp to source/ with
+     sound.h to include/), the game's assets (its font and pictures), and each
+     <svg> for xgecli to draw into a picture as the engine draws it. xgecli makes
+     source/ and include/ first, and reads the list.
 
      It covers part of the language so far, all of Pong (check.xsl); anything
      else stops it with a message saying what and where. -->
@@ -48,7 +50,7 @@
 
     <xsl:apply-templates select="game" mode="check" />
 
-    <exsl:document href="main.cpp" method="text" encoding="UTF-8">
+    <exsl:document href="source/main.cpp" method="text" encoding="UTF-8">
       <xsl:call-template name="generate-file" />
     </exsl:document>
 
@@ -60,19 +62,27 @@
       <xsl:call-template name="readme" />
     </exsl:document>
 
+    <exsl:document href=".gitignore" method="text" encoding="UTF-8">
+      <xsl:text># where the game is built, and the built game
+build/
+output/
+</xsl:text>
+    </exsl:document>
+
     <generated target="windows-cpp" name="{$name}">
-      <file path="main.cpp" />
+      <file path="source/main.cpp" />
       <file path="CMakeLists.txt" />
       <file path="README.md" />
+      <file path=".gitignore" />
       <xsl:if test="$physics">
-        <module path="physics.h" />
+        <module path="include/physics.h" from="physics.h" />
       </xsl:if>
       <xsl:if test="$drawn-rows or $drawn-lines">
-        <module path="pictures.h" />
+        <module path="include/pictures.h" from="pictures.h" />
       </xsl:if>
       <xsl:if test="$audio">
-        <module path="sound.h" />
-        <module path="sound.cpp" />
+        <module path="include/sound.h" from="sound.h" />
+        <module path="source/sound.cpp" from="sound.cpp" />
       </xsl:if>
       <xsl:if test="$texts">
         <asset path="assets/tuffy.ttf" />
@@ -124,6 +134,10 @@ project(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> LANGUAGES CXX)
 
+# The built game, and any DLLs it needs, go to output/ (with a folder for the
+# configuration, Debug or Release, under Visual Studio).
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/output")
+
 # SFML 3 as installed (vcpkg install sfml), or else fetched and built here.
 find_package(SFML 3 COMPONENTS Graphics</xsl:text>
     <xsl:if test="$audio"> Audio</xsl:if>
@@ -149,10 +163,15 @@ endif()
 
 add_executable(</xsl:text>
     <xsl:value-of select="$name" />
-    <xsl:text> main.cpp</xsl:text>
-    <xsl:if test="$physics"> physics.h</xsl:if>
-    <xsl:if test="$audio"> sound.h sound.cpp</xsl:if>
+    <xsl:text> source/main.cpp</xsl:text>
+    <xsl:if test="$audio"> source/sound.cpp</xsl:if>
+    <xsl:if test="$physics"> include/physics.h</xsl:if>
+    <xsl:if test="$drawn-rows or $drawn-lines"> include/pictures.h</xsl:if>
+    <xsl:if test="$audio"> include/sound.h</xsl:if>
     <xsl:text>)
+target_include_directories(</xsl:text>
+    <xsl:value-of select="$name" />
+    <xsl:text> PRIVATE include)
 target_compile_features(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> PRIVATE cxx_std_20)
@@ -212,18 +231,18 @@ plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
 
 | File | What |
 |---|---|
-| `main.cpp` | the game: its window, tunables, screens, objects and sounds, then `main` and the game loop, then a function per screen and per object |
+| `source/main.cpp` | the game: its window, tunables, screens, objects and sounds, then `main` and the game loop, then a function per screen and per object |
 </xsl:text>
     <xsl:if test="$physics">
-      <xsl:text>| `physics.h` | where things are, whether they touch, and bouncing, sticking and deflecting; it works with any SFML shape, sprite or text |
+      <xsl:text>| `include/physics.h` | where things are, whether they touch, and bouncing, sticking and deflecting; it works with any SFML shape, sprite or text |
 </xsl:text>
     </xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines">
-      <xsl:text>| `pictures.h` | the pictures it draws itself when it starts: rows of text, and straight lines |
+      <xsl:text>| `include/pictures.h` | the pictures it draws itself when it starts: rows of text, and straight lines |
 </xsl:text>
     </xsl:if>
     <xsl:if test="$audio">
-      <xsl:text>| `sound.h`, `sound.cpp` | 8-bit sounds written as notes, made into samples when the game starts |
+      <xsl:text>| `include/sound.h`, `source/sound.cpp` | 8-bit sounds written as notes, made into samples when the game starts |
 </xsl:text>
     </xsl:if>
     <xsl:if test="$texts or $images or $drawn-svgs">
@@ -233,6 +252,7 @@ plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
 </xsl:text>
     </xsl:if>
     <xsl:text>| `CMakeLists.txt` | the build; it uses an installed SFML 3, or downloads and builds one |
+| `.gitignore` | leaves out `build/` and `output/` |
 
 ## Build and play
 
@@ -241,14 +261,15 @@ On Windows with Visual Studio and vcpkg (`vcpkg install sfml`), from this folder
 ```
 cmake -B build -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
 cmake --build build --config Release
-build\Release\</xsl:text>
+output\Release\</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>.exe
 ```
 
 Without vcpkg, leave out the toolchain file: SFML is downloaded and built with the game.
+The built game, its DLLs and its `assets/` are in `output/`; `build/` holds the rest.
 
-Change the game in its XML file and generate it again, rather than editing `main.cpp`.
+Change the game in its XML file and generate it again, rather than editing `source/main.cpp`.
 </xsl:text>
   </xsl:template>
 
