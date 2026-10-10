@@ -30,6 +30,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <random>
 #include <set>
 #include <string>
@@ -56,6 +57,12 @@ namespace xge
 		// once a text is measured) never throws for a division by 0: see
 		// evaluateOperation.
 		void finishLoading() { loading = false; }
+
+		// Starts every <random> from the same place, so a run can be played
+		// again exactly (xgecli --seed, the frame trace; see trace.h): for the
+		// games loaded from now on, as init() would otherwise seed from the
+		// random device.
+		static void seedRandom(unsigned value) { fixedSeed = value; }
 
 		void init(const WindowDesc& windowDesc,
 			const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
@@ -200,6 +207,7 @@ namespace xge
 
 		static inline std::random_device seed;
 		static inline std::mt19937 generator;
+		static inline std::optional<unsigned> fixedSeed;
 
 		// A random number from min to max (either order), for <random>.
 		template <typename T>

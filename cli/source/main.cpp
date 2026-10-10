@@ -8,11 +8,13 @@
 #include "generate.h"
 #include "game.h"
 #include "engine.h"
+#include "trace.h"
 
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -42,6 +44,11 @@ int main(int argc, char* argv[])
 
 		const std::filesystem::path gamesDirectory = dataFolder.empty() ? std::filesystem::path("games") : dataFolder / "games";
 		filename = std::filesystem::absolute(xge::findGameFile(options.game, gamesDirectory)).string();
+
+		// Like the game file, relative to where the program was started: the
+		// working directory is changed below.
+		if (!options.trace.empty()) { options.trace = std::filesystem::absolute(options.trace).string(); }
+		if (!options.compare.empty()) { options.compare = std::filesystem::absolute(options.compare).string(); }
 	}
 	catch (const xge::CliError& error)
 	{
@@ -96,6 +103,39 @@ int main(int argc, char* argv[])
 	{
 		std::error_code ignored;
 		std::filesystem::current_path(dataFolder, ignored);
+	}
+
+	if (options.tracing())
+	{
+		// Played with no window, no sound and no player: the frames kept, and
+		// compared with a generated program's if asked. Nothing else is printed
+		// but a line for each frame, for the script that runs this to read.
+		try
+		{
+			xge::game_expr::seedRandom(options.seed.value_or(1));
+
+			xge::Game game{ filename, options.xml };
+			auto sounds = std::make_unique<xge::trace::SoundLog>();
+			xge::trace::SoundLog* log = sounds.get();
+			xge::Engine engine(game, xge::WindowFactory::createOffscreen(game.getWindowDesc(), options.window), std::move(sounds));
+
+			xge::trace::Request request;
+			request.frames = xge::trace::parseFrames(options.frames);
+			if (!options.keys.empty()) { request.keys = xge::trace::parseKeys(options.keys); }
+			request.write = options.trace;
+			request.against = options.compare;
+			request.tolerance = options.tolerance;
+			request.sounds = log;
+			request.soundSlack = options.slack;
+			request.allow = static_cast<std::size_t>(options.allow);
+
+			return xge::trace::run(engine, request, std::cout) == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+		}
+		catch (const std::exception& error)
+		{
+			std::cout << "Error: " << error.what() << '\n';
+			return EXIT_FAILURE;
+		}
 	}
 
 	std::cout << "file: " << filename << '\n'

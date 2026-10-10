@@ -53,6 +53,7 @@ set(ENGINE_SOURCES
 	"lib/source/window.cpp"
 	"lib/source/sound.cpp"
 	"lib/source/audio.cpp"
+	"lib/source/trace.cpp"
 )
 
 set(ENGINE_HEADERS
@@ -78,6 +79,7 @@ set(ENGINE_HEADERS
 	"lib/include/window.h"
 	"lib/include/sound.h"
 	"lib/include/audio.h"
+	"lib/include/trace.h"
 )
 
 # The backends that are built (options.cmake), each a pair of files named after

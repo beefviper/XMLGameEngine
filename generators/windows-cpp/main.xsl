@@ -329,11 +329,9 @@
     <xsl:if test="$physics">#include "physics.h"&#10;</xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines">#include "pictures.h"&#10;</xsl:if>
     <xsl:if test="$audio">#include "sound.h"&#10;</xsl:if>
-    <xsl:if test="$physics or $audio or $drawn-rows or $drawn-lines">
-      <xsl:text>
-</xsl:text>
-    </xsl:if>
-    <xsl:text>#include &lt;SFML/Graphics.hpp&gt;
+    <xsl:text>#include "trace.h"
+
+#include &lt;SFML/Graphics.hpp&gt;
 
 </xsl:text>
     <xsl:for-each select="document('')//xsl:variable[@name = 'standard-headers']/header">
@@ -739,8 +737,10 @@ sf::Texture </xsl:text>
 
   <xsl:template name="generate-main">
     <xsl:text>
-int main()
+int main(int argc, char* argv[])
 {
+	trace::start(argc, argv);
+
 </xsl:text>
     <xsl:call-template name="generate-window" />
     <xsl:choose>
@@ -763,13 +763,21 @@ int main()
 </xsl:text>
   </xsl:template>
 
+  <!-- The window; built for BUILD_TESTING (XGE_TRACE) it is trace.h's, which
+       draws in memory when asked to keep frames and in a window otherwise. -->
   <xsl:template name="generate-window">
-    <xsl:text>	sf::RenderWindow window(sf::VideoMode({static_cast&lt;unsigned int&gt;(windowWidth), static_cast&lt;unsigned int&gt;(windowHeight)}), </xsl:text>
+    <xsl:text>#ifdef XGE_TRACE
+	trace::Window window(windowWidth, windowHeight, </xsl:text>
+    <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="$game/window/@name" /></xsl:call-template>
+    <xsl:text>);
+#else
+	sf::RenderWindow window(sf::VideoMode({static_cast&lt;unsigned int&gt;(windowWidth), static_cast&lt;unsigned int&gt;(windowHeight)}), </xsl:text>
     <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="$game/window/@name" /></xsl:call-template>
     <xsl:if test="normalize-space($game/window/fullscreen) = 'true'">
       <xsl:text>, sf::Style::Default, sf::State::Fullscreen</xsl:text>
     </xsl:if>
     <xsl:text>);
+#endif
 	window.setFramerateLimit(framerate);
 </xsl:text>
   </xsl:template>
@@ -1209,6 +1217,8 @@ void setup()
     <xsl:text>	</xsl:text>
     <xsl:call-template name="sound-name"><xsl:with-param name="name" select="@name" /></xsl:call-template>
     <xsl:text>.make(</xsl:text>
+    <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
+    <xsl:text>, </xsl:text>
     <xsl:choose>
       <xsl:when test="volume"><xsl:call-template name="value-bare"><xsl:with-param name="node" select="volume" /></xsl:call-template></xsl:when>
       <xsl:otherwise>0.3f</xsl:otherwise>
@@ -1720,7 +1730,7 @@ void start</xsl:text>
   </xsl:template>
 
   <!-- The test for an input's keys on `state`: key == sf::Keyboard::Key::A
-       || ..., or, held, sf::Keyboard::isKeyPressed(...) || .... -->
+       || ..., or, held, trace::keyHeld(...) || .... -->
   <xsl:template name="key-test">
     <xsl:param name="state" />
     <xsl:param name="held" select="false()" />
@@ -1738,7 +1748,7 @@ void start</xsl:text>
     <xsl:if test="$key != ''">
       <xsl:variable name="sfml" select="$tables/keys/key[@name = $key]/@sfml" />
       <xsl:choose>
-        <xsl:when test="$held"><xsl:value-of select="concat('sf::Keyboard::isKeyPressed(sf::Keyboard::Key::', $sfml, ')')" /></xsl:when>
+        <xsl:when test="$held"><xsl:value-of select="concat('trace::keyHeld(sf::Keyboard::Key::', $sfml, ')')" /></xsl:when>
         <xsl:otherwise><xsl:value-of select="concat('key == sf::Keyboard::Key::', $sfml)" /></xsl:otherwise>
       </xsl:choose>
       <xsl:if test="normalize-space(substring-after($rest, ' ')) != ''"> || </xsl:if>

@@ -9,7 +9,7 @@
 // SFML's audio types, so it can be copied into any SFML 3 program.
 //
 //   sound::Sound blip;
-//   blip.make(0.3f, { { sound::Wave::Square, sound::pitch("A4"), 0.0f, 0.05f } });
+//   blip.make("blip", 0.3f, { { sound::Wave::Square, sound::pitch("A4"), 0.0f, 0.05f } });
 //   blip.play();
 
 #pragma once
@@ -55,12 +55,14 @@ namespace sound
 
 		// Makes the samples; false if there was nothing to make or SFML could
 		// not take them.
-		bool make(float volume, const std::vector<Note>& notes);
+		// `name` is what the game calls it: the frame trace lists the sounds heard by it.
+		bool make(const std::string& name, float volume, const std::vector<Note>& notes);
 
 		// Plays it from the start (again, if it is already playing).
 		void play();
 
 	private:
+		std::string name;
 		sf::SoundBuffer buffer;
 		std::optional<sf::Sound> voice;
 	};

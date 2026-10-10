@@ -74,6 +74,11 @@ namespace xge
 		virtual void draw(Object& object) = 0;
 
 		virtual void display() = 0;
+
+		// The picture last displayed, as pixels: what the frame trace compares
+		// (trace.h). Only a window made by WindowFactory::createOffscreen can
+		// say; any other throws std::logic_error.
+		virtual Bitmap capture() const;
 	};
 
 	enum class WindowBackend
@@ -101,6 +106,12 @@ namespace xge
 		// Throws std::runtime_error if the library cannot start, or was not built
 		// into this program (the message says which are).
 		static std::unique_ptr<Window> create(const WindowDesc& windowDesc, WindowBackend backend = defaultBackend());
+
+		// A window that is only a picture in memory, with no window on the screen
+		// and no keys from anyone: what the frame trace plays a game in (trace.h).
+		// Frames are not paced, so a game runs as fast as it can be drawn. Only
+		// the SFML 3 backend has one; the others throw std::runtime_error.
+		static std::unique_ptr<Window> createOffscreen(const WindowDesc& windowDesc, WindowBackend backend = defaultBackend());
 
 		// Whether this program was built with the backend.
 		static bool available(WindowBackend backend);

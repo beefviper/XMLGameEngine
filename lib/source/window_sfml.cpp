@@ -16,10 +16,17 @@
 
 namespace xge
 {
-	SFMLWindow::SFMLWindow(const WindowDesc& windowDesc)
+	SFMLWindow::SFMLWindow(const WindowDesc& windowDesc, bool wantOffscreen)
 	{
 		const auto width = static_cast<unsigned int>(windowDesc.width);
 		const auto height = static_cast<unsigned int>(windowDesc.height);
+
+		if (wantOffscreen)
+		{
+			offscreen.emplace(sf::Vector2u(width, height));
+			return;
+		}
+
 		const sf::VideoMode videoMode({ width, height });
 
 		const auto windowState = (windowDesc.fullscreen == "true") ? sf::State::Fullscreen : sf::State::Windowed;
@@ -34,13 +41,20 @@ namespace xge
 		window.setFramerateLimit(static_cast<unsigned int>(windowDesc.framerate));
 	}
 
+	sf::RenderTarget& SFMLWindow::target()
+	{
+		if (offscreen) { return *offscreen; }
+		return window;
+	}
+
 	bool SFMLWindow::isOpen() const
 	{
-		return window.isOpen();
+		return offscreen ? !offscreenClosed : window.isOpen();
 	}
 
 	void SFMLWindow::close()
 	{
+		offscreenClosed = true;
 		window.close();
 	}
 
@@ -79,6 +93,8 @@ namespace xge
 	{
 		std::vector<std::pair<KeyCode, bool>> events;
 
+		if (offscreen) { return events; }
+
 		while (const std::optional event = window.pollEvent())
 		{
 			if (event->is<sf::Event::Closed>())
@@ -101,7 +117,7 @@ namespace xge
 	void SFMLWindow::clear(const std::string& colorName)
 	{
 		const Color c = colorFromName(colorName);
-		window.clear(sf::Color(c.r, c.g, c.b, c.a));
+		target().clear(sf::Color(c.r, c.g, c.b, c.a));
 	}
 
 	void SFMLWindow::draw(Object& object)
@@ -127,12 +143,29 @@ namespace xge
 		// scoring) kept moving underneath it.
 		visual.sprite->setPosition({ object.position.x, object.position.y });
 
-		window.draw(*visual.sprite);
+		target().draw(*visual.sprite);
 	}
 
 	void SFMLWindow::display()
 	{
-		window.display();
+		if (offscreen) { offscreen->display(); }
+		else { window.display(); }
+	}
+
+	Bitmap SFMLWindow::capture() const
+	{
+		if (!offscreen)
+		{
+			return Window::capture();
+		}
+
+		const sf::Image image = offscreen->getTexture().copyToImage();
+
+		Bitmap picture;
+		picture.width = static_cast<int>(image.getSize().x);
+		picture.height = static_cast<int>(image.getSize().y);
+		picture.rgba.assign(image.getPixelsPtr(), image.getPixelsPtr() + static_cast<std::size_t>(picture.width) * static_cast<std::size_t>(picture.height) * 4);
+		return picture;
 	}
 
 	KeyCode SFMLWindow::sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept

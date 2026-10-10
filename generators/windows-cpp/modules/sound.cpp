@@ -4,6 +4,7 @@
 // date: Oct 7, 2026
 
 #include "sound.h"
+#include "trace.h"
 
 #include <algorithm>
 #include <cctype>
@@ -139,8 +140,9 @@ namespace sound
 		return samples;
 	}
 
-	bool Sound::make(float volume, const std::vector<Note>& notes)
+	bool Sound::make(const std::string& soundName, float volume, const std::vector<Note>& notes)
 	{
+		name = soundName;
 		const std::vector<std::int16_t> samples = synthesize(volume, notes);
 		if (samples.empty() || !buffer.loadFromSamples(samples.data(), samples.size(), 1, sampleRate, { sf::SoundChannel::Mono }))
 		{
@@ -153,6 +155,15 @@ namespace sound
 
 	void Sound::play()
 	{
+#ifdef XGE_TRACE
+		// A game played for the frame trace is silent (and quick), and says which
+		// sound it would have played: see trace.h.
+		if (trace::state().tracing)
+		{
+			trace::heard(name);
+			return;
+		}
+#endif
 		if (voice) { voice->play(); }
 	}
 }

@@ -12,6 +12,7 @@
 #include <SFML/Graphics.hpp>
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 namespace xge
@@ -27,8 +28,10 @@ namespace xge
 	class SFMLWindow : public Window
 	{
 	public:
-		// Throws std::runtime_error if the window cannot be made.
-		explicit SFMLWindow(const WindowDesc& windowDesc);
+		// Throws std::runtime_error if the window cannot be made. With
+		// offscreen, nothing is shown: the game is drawn to a picture in memory
+		// that capture() gives back, at whatever speed it can be drawn.
+		explicit SFMLWindow(const WindowDesc& windowDesc, bool offscreen = false);
 
 		bool isOpen() const override;
 		void close() override;
@@ -40,6 +43,7 @@ namespace xge
 		void clear(const std::string& colorName) override;
 		void draw(Object& object) override;
 		void display() override;
+		Bitmap capture() const override;
 
 	private:
 		// What Object used to own directly (renderTexture + sprite) - now
@@ -52,6 +56,13 @@ namespace xge
 		};
 
 		sf::RenderWindow window;
+
+		// Set instead of the window when offscreen: what is drawn on, and whether
+		// close() has been called.
+		std::optional<sf::RenderTexture> offscreen;
+		bool offscreenClosed{ false };
+
+		sf::RenderTarget& target();
 		sf::Font font;
 		bool fontLoaded{ false };
 		// Set when the font file could not be loaded: text is then drawn from

@@ -1,12 +1,12 @@
 @echo off
-rem generate-all.bat
+rem games-generate-all.bat
 rem XML Game Engine
 rem author: beefviper
 rem
 rem Generates every game in games\ as a windows-cpp program, into
 rem output\<config>\generated\<game>\ . Run it from the repo root:
 rem
-rem     scripts\shell\windows\generate-all.bat [config]
+rem     scripts\shell\windows\games-generate-all.bat [config]
 rem
 rem config is the build configuration whose xgecli.exe is used: Debug (the
 rem default), Release, RelWithDebInfo or MinSizeRel. Build it first with

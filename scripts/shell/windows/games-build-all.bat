@@ -1,16 +1,18 @@
 @echo off
-rem build-all.bat
+rem games-build-all.bat
 rem XML Game Engine
 rem author: beefviper
 rem
-rem Builds every program that generate-all.bat wrote to
+rem Builds every program that games-generate-all.bat wrote to
 rem output\<config>\generated\<game>\ , each in its own build\ folder, with
-rem Visual Studio at /W4. Run it from the repo root:
+rem Visual Studio at /W4, for the frame trace (BUILD_TESTING on, which
+rem games-test-all.bat needs; run without --trace the game still plays in a
+rem window). Run it from the repo root:
 rem
-rem     scripts\shell\windows\build-all.bat [config]
+rem     scripts\shell\windows\games-build-all.bat [config]
 rem
 rem config is Debug (the default), Release, RelWithDebInfo or MinSizeRel, the
-rem same as for generate-all.bat. The vcpkg toolchain is the one the main
+rem same as for games-generate-all.bat. The vcpkg toolchain is the one the main
 rem build\ folder was configured with, else %VCPKG_ROOT%. Each game's compiler
 rem output is kept in <game>\build\build.log.
 
@@ -25,7 +27,7 @@ set "ROOT=%CD%"
 set "GENERATED=%ROOT%\output\%CONFIG%\generated"
 
 if not exist "%GENERATED%" (
-    echo error: %GENERATED% not found. Run generate-all.bat %CONFIG% first.
+    echo error: %GENERATED% not found. Run games-generate-all.bat %CONFIG% first.
     popd
     exit /b 1
 )
@@ -52,7 +54,7 @@ for /d %%D in ("%GENERATED%\*") do (
     set "LOG=%%D\build\build.log"
     if not exist "%%D\build" mkdir "%%D\build"
     set "STAGE=configure"
-    cmake -S "%%D" -B "%%D\build" -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="%TOOLCHAIN%" -DCMAKE_CXX_FLAGS="/W4 /EHsc" > "!LOG!" 2>&1
+    cmake -S "%%D" -B "%%D\build" -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="%TOOLCHAIN%" -DBUILD_TESTING=ON -DCMAKE_CXX_FLAGS="/W4 /EHsc" > "!LOG!" 2>&1
     if not errorlevel 1 (
         set "STAGE=build"
         cmake --build "%%D\build" --config %CONFIG% --parallel >> "!LOG!" 2>&1

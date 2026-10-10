@@ -59,6 +59,11 @@ namespace xge
 		};
 	}
 
+	Bitmap Window::capture() const
+	{
+		throw std::logic_error("this window cannot be captured; only an offscreen window can (WindowFactory::createOffscreen)");
+	}
+
 	std::string WindowFactory::name(WindowBackend backend)
 	{
 		for (const Entry& entry : entries)
@@ -91,6 +96,14 @@ namespace xge
 	{
 		const std::vector<WindowBackend> built = availableBackends();
 		return built.empty() ? WindowBackend::SFML3 : built.front();
+	}
+
+	std::unique_ptr<Window> WindowFactory::createOffscreen(const WindowDesc& windowDesc, WindowBackend backend)
+	{
+#ifdef XGE_WITH_SFML3
+		if (backend == WindowBackend::SFML3) { return std::make_unique<SFMLWindow>(windowDesc, true); }
+#endif
+		throw std::runtime_error("the " + name(backend) + " window library cannot draw offscreen (only sfml3 can)");
 	}
 
 	std::unique_ptr<Window> WindowFactory::create(const WindowDesc& windowDesc, WindowBackend backend)

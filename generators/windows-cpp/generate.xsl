@@ -74,6 +74,7 @@ output/
       <file path="CMakeLists.txt" />
       <file path="README.md" />
       <file path=".gitignore" />
+      <module path="include/trace.h" from="trace.h" />
       <xsl:if test="$physics">
         <module path="include/physics.h" from="physics.h" />
       </xsl:if>
@@ -165,6 +166,7 @@ add_executable(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> source/main.cpp</xsl:text>
     <xsl:if test="$audio"> source/sound.cpp</xsl:if>
+    <xsl:text> include/trace.h</xsl:text>
     <xsl:if test="$physics"> include/physics.h</xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines"> include/pictures.h</xsl:if>
     <xsl:if test="$audio"> include/sound.h</xsl:if>
@@ -180,6 +182,16 @@ target_link_libraries(</xsl:text>
     <xsl:text> PRIVATE SFML::Graphics</xsl:text>
     <xsl:if test="$audio"> SFML::Audio</xsl:if>
     <xsl:text>)
+
+# -DBUILD_TESTING=ON builds the game for the frame trace (include/trace.h): it
+# can play with no window and keep its picture at the frames asked for, to be
+# compared with the engine's (xgecli --compare).
+option(BUILD_TESTING "Build for the frame trace: --trace, --frames, --keys, --seed" OFF)
+if (BUILD_TESTING)
+	target_compile_definitions(</xsl:text>
+    <xsl:value-of select="$name" />
+    <xsl:text> PRIVATE XGE_TRACE)
+endif()
 </xsl:text>
     <xsl:if test="$texts or $images or $drawn-svgs">
       <xsl:text>
@@ -245,6 +257,8 @@ plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
       <xsl:text>| `include/sound.h`, `source/sound.cpp` | 8-bit sounds written as notes, made into samples when the game starts |
 </xsl:text>
     </xsl:if>
+    <xsl:text>| `include/trace.h` | only for testing: built with `-DBUILD_TESTING=ON` the game can play with no window and keep its picture at chosen frames (`--trace folder --frames 10,60`), to be compared with the engine's |
+</xsl:text>
     <xsl:if test="$texts or $images or $drawn-svgs">
       <xsl:text>| `assets/` | the font and pictures it opens</xsl:text>
       <xsl:if test="$drawn-svgs"> (`assets/drawn/` holds its SVG drawings, drawn as the engine draws them)</xsl:if>

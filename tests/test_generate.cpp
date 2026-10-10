@@ -113,8 +113,8 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	TempFolder output("xge_test_generate_pong_min");
 	const GeneratedProgram program = generateGame(requestFor("games/pong_min.xml", output.path));
 
-	// source/main.cpp, CMakeLists.txt, README.md, .gitignore and the physics module; no sound.
-	CHECK(program.files.size() == 5);
+	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, the trace and physics modules; no sound.
+	CHECK(program.files.size() == 6);
 	CHECK(program.assets.empty());
 	CHECK(fs::exists(output.path / "include/physics.h"));
 	CHECK_FALSE(fs::exists(output.path / "include/sound.h"));
@@ -131,7 +131,7 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	const std::size_t tunables = main.find("const float ballRadius = 10.0f;");
 	const std::size_t objects = main.find("sf::CircleShape ball;");
 	const std::size_t declarations = main.find("void updateBall();");
-	const std::size_t mainFunction = main.find("int main()");
+	const std::size_t mainFunction = main.find("int main(int argc, char* argv[])");
 	const std::size_t loop = main.find("while (window.isOpen())");
 	const std::size_t definition = main.find("void updateBall()\n{");
 	CHECK(header == 0);
@@ -148,7 +148,7 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	// The rules are statements about the game's own objects, by their names.
 	// The physics is the module's, called by name.
 	CHECK(main.find("physics::deflect(ball, ballVelocity, paddle1, 45.0f);") != std::string::npos);
-	CHECK(main.find("if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))\n\t{\n\t\tpaddle1.move({0.0f, -step});") != std::string::npos);
+	CHECK(main.find("if (trace::keyHeld(sf::Keyboard::Key::W))\n\t{\n\t\tpaddle1.move({0.0f, -step});") != std::string::npos);
 	CHECK(main.find("if (physics::past(ball, physics::Edge::Top, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Top, windowArea);") != std::string::npos);
 	CHECK(main.find("paddle1.setPosition({windowLeft + margin, windowHeightCenter - height / 2.0f});") != std::string::npos);
 
@@ -157,7 +157,7 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	CHECK(main.find("namespace") == std::string::npos);
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
-	CHECK(cmake.find("add_executable(pong_min source/main.cpp include/physics.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong_min source/main.cpp include/trace.h include/physics.h)") != std::string::npos);
 	CHECK(cmake.find("set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT pong_min)") != std::string::npos);
 	CHECK(cmake.find("Audio") == std::string::npos);
 }
@@ -172,9 +172,9 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 	TempFolder output("xge_test_generate_pong");
 	const GeneratedProgram program = generateGame(requestFor("games/pong.xml", output.path));
 
-	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/physics.h, include/sound.h and source/sound.cpp,
+	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/trace.h, include/physics.h, include/sound.h and source/sound.cpp,
 	// and the font and the paddle's picture.
-	CHECK(program.files.size() == 7);
+	CHECK(program.files.size() == 8);
 	CHECK(program.assets.size() == 2);
 	CHECK(fs::exists(output.path / "source/sound.cpp"));
 	CHECK(fs::exists(output.path / "assets/tuffy.ttf"));
@@ -206,7 +206,7 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
 	CHECK(cmake.find("find_package(SFML 3 COMPONENTS Graphics Audio QUIET)") != std::string::npos);
-	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp include/physics.h include/sound.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp include/trace.h include/physics.h include/sound.h)") != std::string::npos);
 	CHECK(cmake.find("PRIVATE SFML::Graphics SFML::Audio)") != std::string::npos);
 	CHECK(cmake.find("/assets") != std::string::npos);
 
@@ -658,7 +658,7 @@ TEST_CASE("generating Asteroids turns the ship's picture with its heading, and a
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// a key held turns it, and thrust pushes it the way it faces; either key of an action, once a frame
-	CHECK(main.find("\tif (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))\n\t{\n\t\tshipHeading -= turnrate;\n\t\tturnShip();\n\t}") != std::string::npos);
+	CHECK(main.find("\tif (trace::keyHeld(sf::Keyboard::Key::A) || trace::keyHeld(sf::Keyboard::Key::Left))\n\t{\n\t\tshipHeading -= turnrate;\n\t\tturnShip();\n\t}") != std::string::npos);
 	CHECK(main.find("\t\tshipVelocity += physics::ahead(shipHeading) * thrustpower;") != std::string::npos);
 	// its picture is drawn again when the whole degree changes, and that is what its touches test
 	CHECK(main.find("\t\tconst sf::Image picture = pictures::turnedLines(shipLines, static_cast<float>(degrees));\n\t\tshipPicture.update(picture);\n\t\tshipPixels = picture;") != std::string::npos);
@@ -702,7 +702,7 @@ TEST_CASE("generating Lunar Lander pulls the lander down, burns fuel while a thr
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("\tlanderAcceleration = {0.0f, gravity};") != std::string::npos);
 	CHECK(main.find("\tlanderVelocity += landerAcceleration;\n\tlander.move(landerVelocity);") != std::string::npos);
-	CHECK(main.find("\tif (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))\n\t{\n\t\t// burning fuel, while there is any\n\t\tif (landerFuel > 0.0f)\n\t\t{\n\t\t\tlanderFuel -= 1.0f;\n\t\t\tshowFuelvalue();\n\t\t\tlanderVelocity.y -= thrust;\n\t\t}\n\t}") != std::string::npos);
+	CHECK(main.find("\tif (trace::keyHeld(sf::Keyboard::Key::Up) || trace::keyHeld(sf::Keyboard::Key::W))\n\t{\n\t\t// burning fuel, while there is any\n\t\tif (landerFuel > 0.0f)\n\t\t{\n\t\t\tlanderFuel -= 1.0f;\n\t\t\tshowFuelvalue();\n\t\t\tlanderVelocity.y -= thrust;\n\t\t}\n\t}") != std::string::npos);
 	// its speed is taken once, before the first rule about the pad, as the engine takes it
 	CHECK(main.find("\tconst float landerSpeedAtPad = landerVelocity.length();") != std::string::npos);
 	CHECK(main.find("physics::touchingPixels(lander, &landerPixels, pad, &padPixels, landerVelocity) && landerSpeedAtPad < safespeed)") != std::string::npos);
@@ -1125,7 +1125,7 @@ TEST_CASE("a generated game carries only the modules, helper functions and heade
 	generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out"));
 
 	const GeneratedProgram program = generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out2"));
-	CHECK(program.files.size() == 5);
+	CHECK(program.files.size() == 6);
 	CHECK_FALSE(fs::exists(folder.path / "out2/include/sound.h"));
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");

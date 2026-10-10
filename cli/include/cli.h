@@ -10,6 +10,7 @@
 #include "xml_document.h"
 
 #include <filesystem>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -44,6 +45,25 @@ namespace xge
 		std::string generate;
 		std::string output;
 
+		// The frame trace (lib/include/trace.h): play the game with no window and
+		// keep the picture at some frames. --trace is the folder to write them to,
+		// --compare a folder a generated program wrote to compare them with (either
+		// or both), --frames which ones ("10,60"), --keys what to press and when
+		// ("5+space,40+d,90-d"), --seed to start <random> from the same place, and
+		// --tolerance how far apart a colour may be and still be the same, and
+		// --allow how many pixels may be further apart than that (a shape's edge is
+		// drawn a pixel differently when it is a little differently placed).
+		std::string trace;
+		std::string compare;
+		std::string frames;
+		std::string keys;
+		std::optional<unsigned> seed;
+		int tolerance = 0;
+		int allow = 0;
+		int slack = 0;
+
+		bool tracing() const { return !trace.empty() || !compare.empty(); }
+
 		bool showHelp = false;
 	};
 
@@ -65,6 +85,14 @@ namespace xge
 	//                          instead of playing it (no short form: -g is the game)
 	//   -o out -oout           the folder --generate writes to
 	//   --output out
+	//   --trace dir            play with no window and write the frames to dir
+	//   --compare dir          ...and compare them with those in dir
+	//   --frames 10,60         which frames (counted from 1) to keep
+	//   --keys 5+space,40-d    keys to press (+) and release (-), before a frame
+	//   --seed 1               start every <random> from this number
+	//   --tolerance 8          how far apart a colour may be, 0 to 255 (default 0)
+	//   --allow 100            how many pixels may differ more than that (default 0)
+	//   --slack 1              how many frames apart a sound may be heard (default 0)
 	//   -h  --help             show the usage and exit
 	//
 	// A short option takes its value attached or after a space; a long option

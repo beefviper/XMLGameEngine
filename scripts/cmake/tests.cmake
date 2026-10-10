@@ -79,6 +79,7 @@ add_executable(xgetest
 	"tests/test_berserk.cpp"
 	"tests/test_pictures.cpp"
 	"tests/test_cli.cpp"
+	"tests/test_trace.cpp"
 	"tests/test_data_folder.cpp"
 	"tests/test_generate.cpp"
 	"tests/test_galaxian.cpp"

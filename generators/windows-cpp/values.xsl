@@ -54,7 +54,7 @@
     ' protected public register reinterpret_cast requires return short signed sizeof static static_assert',
     ' static_cast struct switch template this thread_local throw true try typedef typeid typename union',
     ' unsigned using virtual void volatile wchar_t while xor xor_eq',
-    ' main window font screens background framerate setup start pressed sign randomBetween physics sound sf std',
+    ' main window font screens background framerate setup start pressed sign randomBetween physics sound trace argc argv sf std',
     ' clock time exit abort rand srand ')" />
 
   <xsl:template name="cpp-camel">
