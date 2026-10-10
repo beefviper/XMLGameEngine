@@ -62,9 +62,9 @@ for /d %%D in ("%GENERATED%\*") do (
         set /a FAILED+=1
         set "FAILS=!FAILS! !GAME!"
     ) else (
-        set "W=0"
-        for /f %%N in ('findstr /c:"warning C" "!LOG!" ^| find /c /v ""') do set "W=%%N"
-        if "!W!"=="0" (
+        set /a W=0
+        for /f "delims=" %%L in ('findstr /c:"warning C" "!LOG!"') do set /a W+=1
+        if !W!==0 (
             echo !GAME!: ok
         ) else (
             echo !GAME!: ok, !W! warning^(s^), see !LOG!
