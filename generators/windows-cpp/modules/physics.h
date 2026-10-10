@@ -156,8 +156,8 @@ namespace physics
 		for (int at = 0; at <= steps; ++at)
 		{
 			// where it was, that far through the step (the last is where it is)
-			const sf::Vector2f back = step * (static_cast<float>(at) / static_cast<float>(steps) - 1.0f);
-			const std::optional<sf::FloatRect> both = sf::FloatRect(now.position + back, now.size).findIntersection(target);
+			const sf::Vector2f earlier = step * (static_cast<float>(at) / static_cast<float>(steps) - 1.0f);
+			const std::optional<sf::FloatRect> both = sf::FloatRect(now.position + earlier, now.size).findIntersection(target);
 			if (!both)
 			{
 				continue;
@@ -171,7 +171,7 @@ namespace physics
 				for (int x = left; x < right; ++x)
 				{
 					const sf::Vector2f point(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
-					if (solidAt(first, firstPixels, point - back) && solidAt(second, secondPixels, point))
+					if (solidAt(first, firstPixels, point - earlier) && solidAt(second, secondPixels, point))
 					{
 						return true;
 					}

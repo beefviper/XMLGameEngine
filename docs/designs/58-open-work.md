@@ -17,10 +17,10 @@
 ## Code
 
 - Sort `lib/` into folders; rename `collisionData.basic` ([build-and-layout](51-build-and-layout.md)).
-- `xgecli --generate`: gaps and drift risks are listed under Open in [generator](40-generator.md). Verified only with GCC and Clang on Linux; a generated game has never been built on Windows with Visual Studio.
+- `xgecli --generate`: gaps and drift risks are listed under Open in [generator](40-generator.md). Every generated game builds on GCC and Clang on Linux and on MSVC 19.44 (Visual Studio 2022, `/W4`) with no warnings; nothing checks that automatically, so it is a script to run by hand when the generator changes. A generated game's behavior against the engine's has not been compared on Windows.
 
 ## Known untested
 
-- MSVC warnings: the `/W4` set and system-header handling were written from the documentation and never built there, so a new MSVC warning is likely ours.
+- MSVC: the engine, `xgegui` and the tests build clean on MSVC 19.44 with every backend, and all tests pass; checked by hand, not automatically. Older MSVC versions are untested.
 - A default build (`cmake -B build`, no options) and a build with only `-DXGE_WITH_OPENGL=ON` are covered by no automatic check ([backends](50-backends.md)).
 - Agents build in a Linux sandbox and cannot watch or listen, so anything about how a game feels is unchecked.
