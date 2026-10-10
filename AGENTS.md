@@ -19,7 +19,7 @@ The root [readme.md](readme.md) is the short public overview.
 | `tests/` | Catch2 (`xgetest`), one `test_<topic>.cpp` per area; games are played frame by frame |
 | `games/`, `assets/` | the games; their media |
 | `xgedef.xsd` | the schema, the definition of the language |
-| `scripts/cmake/`, `scripts/shell/` | CMake modules; prerequisite installers |
+| `scripts/cmake/`, `scripts/shell/` | CMake modules; `shell/linux/` prerequisite installers, `shell/windows/generate-all.bat [config]` generates every game into `output/<config>/generated/<game>/`, `build-all.bat [config]` builds them with MSVC at `/W4` |
 
 Flow: `game_xml` (parse, validate) → `game_expr` (evaluate with exprtk) → `Object`/`State` → `Game` (frame update) + `Engine` (loop, windows, sound). Backends sit behind `XmlDocument`, `Window` and `Audio` factories.
 
