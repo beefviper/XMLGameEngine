@@ -172,7 +172,7 @@
           <color>color.orange</color>
         </text>
       </sprite>
-      <position><x>window.right - fuelvalue.width - margin</x><y>margin</y></position>
+      <position><x>window.right - margin - 150 + fuellabel.width + 12</x><y>margin</y></position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
@@ -186,7 +186,7 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position><x>window.right - fuelvalue.width - fuellabel.width - margin - 12</x><y>margin</y></position>
+      <position><x>window.right - margin - 150</x><y>margin</y></position>
       <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>false</enabled>
