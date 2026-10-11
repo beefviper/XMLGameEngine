@@ -508,6 +508,8 @@ A state is one screen: a menu, the playfield, a pause screen, a game-over screen
 | `<conditions>` | no | A list of `<condition>`, checked every frame. See [Conditions](#conditions) |
 | `<timers>` | no | Timers that count while this is the current state. See [Timers](#timers) |
 
+What a state shows is drawn in the order the objects are written in the file, a later one over an earlier, whatever order its `<show>`s are in (the generated programs draw in that order too).
+
 The first state in the file is the starting state. States form a **stack**: `<push state="name" />` pushes a state, and `<pop />` pops back to the previous one. The starting state is never popped: a `<pop />` with only it left does nothing. `<pop state="name" />` puts that state in place of the current one (the starting state too), for a game that moves from one screen to the next.
 
 ## Input

@@ -454,6 +454,18 @@ namespace physics
 		return xge::collide::sweep(begun, fromSfml(velocity), bodyOf(other), xge::Vector2f());
 	}
 
+	// The middle of a thing at the moment it touched `other`, in the step it has
+	// just taken: where the engine has it when the rules about the touch run
+	// (a burst that comes out of a missile comes out there, not where the rest of
+	// the step took the missile).
+	template <typename Mover, typename Other>
+	sf::Vector2f middleAtTouch(const Mover& mover, sf::Vector2f velocity, const Other& other)
+	{
+		const sf::Vector2f middle = mover.getGlobalBounds().getCenter();
+		const std::optional<xge::collide::SweepHit> hit = meeting(mover, velocity, other);
+		return hit ? middle - velocity * (1.0f - hit->time) : middle;
+	}
+
 	// What a thing that bounces or deflects does at a touch, in the engine's
 	// order: back along its step to the moment of the touch, the rule (which says
 	// how its velocity changes there), and then the rest of the step, the new

@@ -671,7 +671,7 @@ TEST_CASE("generating Asteroids turns the ship's picture with its heading, and a
 	CHECK(main.find("physics::touchingPixels(shots[i], nullptr, bigrocks[j], &pixelsOf(bigrocks[j].getTexture()), shotsVelocity[i] - bigrocksVelocity[j])") != std::string::npos);
 	CHECK(main.find("const sf::Image& pixelsOf(const sf::Texture& picture)") != std::string::npos);
 	CHECK(main.find("for (std::size_t k = 0, released = 0; k < mediumrocks.size() && released < 2; ++k)") != std::string::npos);
-	CHECK(main.find("mediumrocks[k].setPosition(bigrocks[j].getGlobalBounds().getCenter() - mediumrocks[k].getGlobalBounds().size / 2.0f);") != std::string::npos);
+	CHECK(main.find("mediumrocks[k].setPosition(physics::middleAtTouch(bigrocks[j], bigrocksVelocity[j], shots[i]) - mediumrocks[k].getGlobalBounds().size / 2.0f);") != std::string::npos);
 	CHECK(main.find("\tphysics::wrap(ship, shipVelocity, physics::Edge::Left, windowArea);") != std::string::npos);
 }
 

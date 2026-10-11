@@ -854,6 +854,9 @@ int main(int argc, char* argv[])
     </xsl:choose>
   </xsl:template>
 
+  <!-- What is drawn, in the order the objects are written in the game file, which
+       is the order the engine draws them in (a later one over an earlier), not
+       the order a screen lists them in its <shows>. -->
   <xsl:template name="generate-render">
     <xsl:text>
 		window.clear(background);
@@ -869,6 +872,7 @@ int main(int argc, char* argv[])
           <xsl:text>:
 </xsl:text>
           <xsl:for-each select="shows/show">
+            <xsl:sort select="count($game/objects/*[@name = current()/@object or starts-with(current()/@object, concat(@name, '.'))][1]/preceding-sibling::*)" data-type="number" />
             <xsl:call-template name="draw"><xsl:with-param name="indent" select="'&#9;&#9;&#9;'" /></xsl:call-template>
           </xsl:for-each>
           <xsl:text>			break;
@@ -879,6 +883,7 @@ int main(int argc, char* argv[])
       </xsl:when>
       <xsl:otherwise>
         <xsl:for-each select="$first/shows/show">
+          <xsl:sort select="count($game/objects/*[@name = current()/@object or starts-with(current()/@object, concat(@name, '.'))][1]/preceding-sibling::*)" data-type="number" />
           <xsl:call-template name="draw"><xsl:with-param name="indent" select="'&#9;&#9;'" /></xsl:call-template>
         </xsl:for-each>
       </xsl:otherwise>
@@ -2254,6 +2259,17 @@ void pressed(sf::Keyboard::Key key)
   <xsl:template name="release">
     <xsl:param name="from" />
     <xsl:param name="indent" />
+    <xsl:param name="velocity" select="''" />
+    <xsl:param name="touching" select="''" />
+    <!-- the middle it comes out at: where the one that releases it is, or, in a
+         rule about a touch, where it was at the moment of the touch, as the
+         engine moves to the touch before the rule runs -->
+    <xsl:variable name="middle">
+      <xsl:choose>
+        <xsl:when test="$touching != '' and $velocity != ''"><xsl:value-of select="concat('physics::middleAtTouch(', $from, ', ', $velocity, ', ', $touching, ')')" /></xsl:when>
+        <xsl:otherwise><xsl:value-of select="concat($from, '.getGlobalBounds().getCenter()')" /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:variable name="target" select="$things[@name = current()/@object]" />
     <xsl:variable name="name"><xsl:call-template name="cpp-name"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
     <xsl:variable name="title"><xsl:call-template name="cpp-title"><xsl:with-param name="name" select="@object" /></xsl:call-template></xsl:variable>
@@ -2274,7 +2290,7 @@ void pressed(sf::Keyboard::Key key)
         <xsl:value-of select="concat($indent, 'for (std::size_t k = 0, released = 0; k &lt; ', $name, '.size() &amp;&amp; released &lt; ', $count, '; ++k)&#10;', $indent, '{&#10;')" />
         <xsl:value-of select="concat($indent, '&#9;if (!', $name, 'Alive[k])&#10;', $indent, '&#9;{&#10;')" />
         <xsl:value-of select="concat($indent, '&#9;&#9;start', $title, '(k);&#10;')" />
-        <xsl:value-of select="concat($indent, '&#9;&#9;', $name, '[k].setPosition(', $from, '.getGlobalBounds().getCenter() - ', $name, '[k].getGlobalBounds().size / 2.0f);&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;&#9;', $name, '[k].setPosition(', $middle, ' - ', $name, '[k].getGlobalBounds().size / 2.0f);&#10;')" />
         <xsl:value-of select="concat($indent, '&#9;&#9;', $name, 'Alive[k] = true;&#10;', $indent, '&#9;&#9;++released;&#10;')" />
         <xsl:value-of select="concat($indent, '&#9;}&#10;', $indent, '}&#10;')" />
       </xsl:when>
@@ -2282,7 +2298,7 @@ void pressed(sf::Keyboard::Key key)
         <xsl:value-of select="concat($indent, '// release ', @object, ' from where it is, if it is out of play&#10;')" />
         <xsl:value-of select="concat($indent, 'if (!', $name, 'Alive)&#10;', $indent, '{&#10;')" />
         <xsl:value-of select="concat($indent, '&#9;start', $title, '();&#10;')" />
-        <xsl:value-of select="concat($indent, '&#9;', $name, '.setPosition(', $from, '.getGlobalBounds().getCenter() - ', $name, '.getGlobalBounds().size / 2.0f);&#10;')" />
+        <xsl:value-of select="concat($indent, '&#9;', $name, '.setPosition(', $middle, ' - ', $name, '.getGlobalBounds().size / 2.0f);&#10;')" />
         <xsl:value-of select="concat($indent, '&#9;', $name, 'Alive = true;&#10;', $indent, '}&#10;')" />
       </xsl:otherwise>
     </xsl:choose>
@@ -2298,6 +2314,8 @@ void pressed(sf::Keyboard::Key key)
     <xsl:param name="alive" />
     <xsl:param name="self" />
     <xsl:param name="indent" />
+    <!-- what it touches, when this is a rule about touching it -->
+    <xsl:param name="touching" select="''" />
     <xsl:choose>
       <xsl:when test="self::reset[not(@object)]">
         <xsl:value-of select="$indent" />
@@ -2332,6 +2350,8 @@ void pressed(sf::Keyboard::Key key)
         <xsl:call-template name="release">
           <xsl:with-param name="from" select="$name" />
           <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="velocity" select="$velocity" />
+          <xsl:with-param name="touching" select="$touching" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="self::aim">
@@ -3479,6 +3499,7 @@ void update</xsl:text>
           <xsl:with-param name="alive" select="$alive" />
           <xsl:with-param name="self" select="$self" />
           <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="touching" select="$other" />
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
