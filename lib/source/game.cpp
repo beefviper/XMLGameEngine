@@ -343,13 +343,17 @@ namespace xge
 			refreshBoundTexts(object.name, name, drawn);
 		}
 
-		object.velocityOriginal = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
-
-		// A position waiting on a size not measured yet is worked out when it is.
+		// The position, then the velocity, the order they are drawn in when the game
+		// loads (game_expr::init), so a start drawn again takes the same numbers as
+		// the first did and a generated program, which draws them in that order, can
+		// draw the same ones. A position waiting on a size not measured yet is worked
+		// out when it is.
 		if (object.positionResolved)
 		{
 			object.positionOriginal = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.cellOffset;
 		}
+
+		object.velocityOriginal = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
 	}
 
 	void Game::popState(const std::string& name)

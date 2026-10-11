@@ -19,6 +19,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -277,4 +278,39 @@ TEST_CASE("the sounds of a run are compared with the other program's", "[trace]"
 	const auto extra = compareWith("frame 0001 wall\n", 5);
 	CHECK(extra.first == 1);
 	CHECK(extra.second.find("sounds: DIFFERENT") != std::string::npos);
+}
+
+TEST_CASE("a start drawn again takes its random numbers in the order the first one did", "[trace][random]")
+{
+	// Astrosmash's rocks draw a height and a fall speed, in that order, when the
+	// game loads (four boulders, then four pebbles) and again when one is reset;
+	// a generated program draws them in that order, so the numbers can be the same
+	std::mt19937 generator(7);
+	const auto draw = [&](float low, float high)
+	{
+		std::uniform_real_distribution<float> number(low, high);
+		return number(generator);
+	};
+
+	game_expr::seedRandom(7);
+	Game game{ "games/astrosmash.xml" };
+	game_expr::unseedRandom();
+
+	for (int member = 1; member <= 4; ++member)
+	{
+		const Object& boulder = game.getObject("boulders." + std::to_string(member));
+		CHECK(boulder.position.y == draw(-500.0f, -40.0f));
+		CHECK(boulder.velocity.y == draw(1.0f, 2.0f));
+	}
+	for (int member = 1; member <= 4; ++member)
+	{
+		const Object& pebble = game.getObject("pebbles." + std::to_string(member));
+		CHECK(pebble.position.y == draw(-700.0f, -40.0f));
+		CHECK(pebble.velocity.y == draw(2.0f, 3.5f));
+	}
+
+	game.resetObject("boulders.1");
+	const Object& again = game.getObject("boulders.1");
+	CHECK(again.position.y == draw(-500.0f, -40.0f));
+	CHECK(again.velocity.y == draw(1.0f, 2.0f));
 }
