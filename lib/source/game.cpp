@@ -6,6 +6,7 @@
 #include "game.h"
 
 #include "command_executor.h"
+#include "geometry.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -793,17 +794,16 @@ namespace xge
 				// What is left of this leg: the rest of a step, or the way home
 				// from wherever it has got to.
 				const Vector2f left = leg.home ? object.positionOriginal - object.position : object.followLeft;
-				const float distance = std::hypot(left.x, left.y);
-				if (distance < 0.001f)
+				const std::optional<Vector2f> step = pathStep(left, path.speed);
+				if (!step)
 				{
 					++object.followLeg;
 					object.followLegStarted = false;
 					continue;
 				}
 
-				const Vector2f step = distance <= path.speed ? left : left * (path.speed / distance);
-				object.velocity = step;
-				if (!leg.home) { object.followLeft -= step; }
+				object.velocity = *step;
+				if (!leg.home) { object.followLeft -= *step; }
 				moving = true;
 				break;
 			}
@@ -1098,9 +1098,7 @@ namespace xge
 
 				if (object.activeThrustAhead != 0.0f && burnFuel(object.activeThrustAheadBurn, "thrust"))
 				{
-					const float radians = object.heading * 3.14159265358979323846f / 180.0f;
-					change.x += std::sin(radians) * object.activeThrustAhead;
-					change.y -= std::cos(radians) * object.activeThrustAhead;
+					change += ahead(object.heading) * object.activeThrustAhead;
 				}
 			}
 
@@ -1128,15 +1126,11 @@ namespace xge
 		{
 			if (object.climbClass.empty() || !isShown(object)) { continue; }
 
-			const Vector2f size = object.size;
-			const float middle = object.position.x + size.x / 2.0f;
-			const float feet = object.position.y + size.y;
-
+			const Box climber{ object.position, object.size };
 			const auto ladder = std::find_if(objects.begin(), objects.end(), [&](const Object& other)
 				{
 					return &other != &object && other.objClass == object.climbClass && isShown(other)
-						&& middle >= other.position.x && middle <= other.position.x + other.size.x
-						&& feet >= other.position.y - 0.5f && feet <= other.position.y + other.size.y + 0.5f;
+						&& atLadder(climber, { other.position, other.size });
 				});
 
 			if (ladder == objects.end())
@@ -1145,27 +1139,18 @@ namespace xge
 				continue;
 			}
 
-			const float top = ladder->position.y;
-			const float bottom = ladder->position.y + ladder->size.y;
 			const float step = object.activeClimb[1] - object.activeClimb[0];
+			const bool wasClimbing = object.climbing;
+			if (!climbLadder(object.position, object.size, step, object.climbing, object.grounded, { ladder->position, ladder->size }))
+			{
+				continue;
+			}
+
+			if (!wasClimbing) { object.leaping = false; }
+			object.velocity = {};
 
 			if (!object.climbing)
 			{
-				const bool canGo = (step < 0.0f && feet > top + 0.5f) || (step > 0.0f && feet < bottom - 0.5f);
-				if (!canGo || !object.grounded) { continue; }
-
-				object.climbing = true;
-				object.leaping = false;
-				object.position.x = ladder->position.x + ladder->size.x / 2.0f - size.x / 2.0f;
-			}
-
-			const float newFeet = std::clamp(feet + step, top, bottom);
-			object.position.y = newFeet - size.y;
-			object.velocity = {};
-
-			if (step != 0.0f && (newFeet <= top || newFeet >= bottom))
-			{
-				object.climbing = false;
 				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
 					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
 			}
@@ -1198,10 +1183,7 @@ namespace xge
 				if (isShown(object))
 				{
 					const Vector2f target = object.position + object.jumpStep;
-					const bool inside = target.x >= 0 && target.y >= 0
-						&& target.x + object.size.x <= windowDesc.width
-						&& target.y + object.size.y <= windowDesc.height;
-					if (inside) { object.position = target; }
+					if (insideWindow({ target, object.size }, { windowDesc.width, windowDesc.height })) { object.position = target; }
 				}
 				--object.jumpFramesLeft;
 				object.hopped = true;
@@ -1217,11 +1199,7 @@ namespace xge
 
 			if (!isShown(object)) { continue; }
 
-			const bool inside = target.x >= 0 && target.y >= 0
-				&& target.x + object.size.x <= windowDesc.width
-				&& target.y + object.size.y <= windowDesc.height;
-
-			if (inside)
+			if (insideWindow({ target, object.size }, { windowDesc.width, windowDesc.height }))
 			{
 				object.position = target;
 			}

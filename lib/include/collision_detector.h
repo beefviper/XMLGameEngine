@@ -6,13 +6,16 @@
 #pragma once
 
 #include "command.h"
+#include "geometry.h"
 #include "object.h"
 
 #include <optional>
 
 namespace xge
 {
-	// Pure geometry: has anything happened, and where? No side effects, no
+	// Pure geometry: has anything happened, and where? The arithmetic is
+	// geometry.h's, shared with generated programs; this answers it for
+	// Objects (their shape, their picture). No side effects, no
 	// knowledge of Commands - CommandExecutor is what decides what to *do* about
 	// a touched edge. Splitting this out of Game is what lets every check share
 	// one response path.
@@ -24,16 +27,8 @@ namespace xge
 	class CollisionDetector
 	{
 	public:
-		// When, within one step of motion, two objects first touch.
-		struct SweepHit
-		{
-			// How far through the step it happens: 0 is the start (they were
-			// already touching), 1 is the end of the move.
-			float time{};
-
-			// The edge of the second object that was hit.
-			Edge edgeOfSecond{ Edge::Top };
-		};
+		// When, within one step of motion, two objects first touch (geometry.h).
+		using SweepHit = xge::SweepHit;
 
 		// Has `object` crossed the given screen edge?
 		static bool touchesScreenEdge(const Object& object, const WindowDesc& windowDesc, Edge edge);

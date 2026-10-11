@@ -29,15 +29,6 @@ namespace xge
 	template <typename... Ts>
 	overload(Ts...) -> overload<Ts...>;
 
-	enum class Direction { Up, Down, Left, Right };
-
-	// Which side of a screen or of another object's bounding box was touched.
-	enum class Edge { Top, Bottom, Left, Right };
-
-	// The edge you'd see the same contact from, standing on the other object:
-	// if you hit something's Left edge, you were hit on your own Right.
-	Edge opposite(Edge edge) noexcept;
-
 	// What kind of sprite an Object was built from. Set once in game_expr::init()
 	// from the object's spriteParams tag, so collision code no longer has to
 	// re-derive it by searching the object's raw XML src string.
@@ -410,6 +401,31 @@ namespace xge
 	// A value as one line of text, the way a game is printed: an expression as
 	// written, an operation tree in infix with its brackets.
 	std::string valueText(const RawValue& value);
+
+	// A <sound> as written (game_xml.cpp reads it, and game_expr.cpp turns it
+	// into a SoundDesc, sound.h).
+
+	// One <note> or <rest> as written: <note pitch="C5" to="C6" wave="noise">0.1</note>.
+	// wave, pitch and to are left as the words in the file; length is a value
+	// (an expression or a value tag), in seconds.
+	struct RawNote
+	{
+		bool rest{ false };
+		std::string wave;   // "" means the sound's own
+		std::string pitch;
+		std::string to;     // "" means no slide
+		RawValue length;
+	};
+
+	// One <sound name="..." wave="square"> as written; volume is empty text
+	// when the sound gives no <volume>.
+	struct RawSound
+	{
+		std::string name;
+		std::string wave;   // "" means square
+		RawValue volume;
+		std::vector<RawNote> notes;
+	};
 
 	// One command tag from the XML - <bounce/>, <inc variable="a.b"/>,
 	// <move direction="up">step</move>, ... - before its number is worked out.

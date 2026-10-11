@@ -50,13 +50,12 @@ namespace xge
 		// pictures; the one that is showing is the one to turn.
 		const std::size_t frame = turnables.size() > 1 && animationIndex < turnables.size() ? animationIndex : 0;
 
-		long degrees = std::lround(heading) % 360;
-		if (degrees < 0) { degrees += 360; }
+		const int degrees = wholeDegrees(heading);
 
 		if (bitmap && turnedDegrees == degrees && turnedFrame == frame) { return; }
 
 		bitmap = std::make_shared<const Bitmap>(turnables[frame]->at(static_cast<float>(degrees)));
-		turnedDegrees = static_cast<int>(degrees);
+		turnedDegrees = degrees;
 		turnedFrame = frame;
 		visualDirty = true;
 	}

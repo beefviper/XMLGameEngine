@@ -148,15 +148,11 @@ namespace xge
 		return bitmap;
 	}
 
-	namespace
+	int wholeDegrees(float degrees) noexcept
 	{
-		// A heading as the whole degrees, from 0 up to 359, that it is drawn at.
-		int wholeDegrees(float degrees)
-		{
-			long whole = std::lround(degrees) % 360;
-			if (whole < 0) { whole += 360; }
-			return static_cast<int>(whole);
-		}
+		long whole = std::lround(degrees) % 360;
+		if (whole < 0) { whole += 360; }
+		return static_cast<int>(whole);
 	}
 
 	Bitmap flipBitmap(const Bitmap& picture, bool horizontal, bool vertical)

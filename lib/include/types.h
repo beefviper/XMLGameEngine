@@ -29,4 +29,23 @@ namespace xge
 		friend bool operator==(const Vector2f& a, const Vector2f& b) noexcept { return a.x == b.x && a.y == b.y; }
 		friend bool operator!=(const Vector2f& a, const Vector2f& b) noexcept { return !(a == b); }
 	};
+
+	enum class Direction { Up, Down, Left, Right };
+
+	// Which side of a screen or of another object's bounding box was touched.
+	enum class Edge { Top, Bottom, Left, Right };
+
+	// The edge you'd see the same contact from, standing on the other object:
+	// if you hit something's Left edge, you were hit on your own Right.
+	constexpr Edge opposite(Edge edge) noexcept
+	{
+		switch (edge)
+		{
+		case Edge::Left:   return Edge::Right;
+		case Edge::Right:  return Edge::Left;
+		case Edge::Top:    return Edge::Bottom;
+		case Edge::Bottom: return Edge::Top;
+		}
+		return edge;
+	}
 }

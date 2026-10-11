@@ -82,7 +82,8 @@ namespace xge
 	// from 0 up to (not including) 360, clockwise: 0 is the drawing as written
 	// (its "up"), 90 has it turned a quarter of the way round, and so on. Any
 	// number of degrees is taken round to the nearest whole one and wrapped
-	// into that range. See Turnable.
+	// into that range (wholeDegrees). See Turnable.
+	int wholeDegrees(float degrees) noexcept;
 
 	// The drawing of lines turned about the middle of the box its line ends lie
 	// in. Every heading comes out the same square size, big enough for the
