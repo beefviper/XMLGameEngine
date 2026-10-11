@@ -242,7 +242,7 @@ namespace xge
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
-	void OpenGLWindow::draw(Object& object)
+	void OpenGLWindow::prepare(Object& object)
 	{
 		CachedVisual& visual = visuals[object.name];
 
@@ -253,6 +253,12 @@ namespace xge
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);
 		}
+	}
+
+	void OpenGLWindow::draw(Object& object)
+	{
+		prepare(object);
+		CachedVisual& visual = visuals[object.name];
 
 		if (!visual.texture)
 		{

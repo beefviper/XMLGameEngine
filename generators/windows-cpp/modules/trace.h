@@ -207,6 +207,37 @@ namespace trace
 		if (!out) { fail("could not write sounds.txt"); }
 	}
 
+	// Where one thing is, for state0030.txt: its name and where its top left is.
+	struct Place
+	{
+		std::string name;
+		float x;
+		float y;
+	};
+
+	// Every thing that is shown and in play, in the order of the game file: the
+	// game sets this (tracePlaces in main.cpp), and the trace writes it with each
+	// frame it keeps, to be compared with the engine's.
+	inline std::vector<Place> (*placesOf)() = nullptr;
+
+	inline void writeState(int frame)
+	{
+		if (placesOf == nullptr)
+		{
+			return;
+		}
+
+		char name[32];
+		std::snprintf(name, sizeof name, "state%04d.txt", frame);
+		std::ofstream out(state().folder / name, std::ios::binary);
+		for (const Place& place : placesOf())
+		{
+			char line[256];
+			std::snprintf(line, sizeof line, "%s %.3f %.3f\n", place.name.c_str(), static_cast<double>(place.x), static_cast<double>(place.y));
+			out << line;
+		}
+	}
+
 	// Reads --trace, --frames, --keys and --seed.
 	inline void start(int count, char* arguments[])
 	{
@@ -325,6 +356,12 @@ namespace trace
 			if (real) { real->setFramerateLimit(limit); }
 		}
 
+		// A key held down is not pressed again and again, as in the engine.
+		void setKeyRepeatEnabled(bool enabled)
+		{
+			if (real) { real->setKeyRepeatEnabled(enabled); }
+		}
+
 		bool isOpen() const
 		{
 			return real ? real->isOpen() : !finished;
@@ -341,6 +378,12 @@ namespace trace
 			if (real) { return real->pollEvent(); }
 
 			State& now = state();
+			while (now.nextKey < now.keys.size() && now.keys[now.nextKey].frame == now.frame + 1
+				&& now.keys[now.nextKey].down && now.held.count(now.keys[now.nextKey].key) > 0)
+			{
+				// a key that is down is not pressed again (no key repeat, as in the engine)
+				++now.nextKey;
+			}
 			if (now.nextKey >= now.keys.size() || now.keys[now.nextKey].frame != now.frame + 1)
 			{
 				return std::nullopt;
@@ -378,6 +421,7 @@ namespace trace
 			if (now.nextFrame < now.frames.size() && now.frames[now.nextFrame] == now.frame)
 			{
 				writeFrame(getTexture().copyToImage(), now.frame);
+				writeState(now.frame);
 				++now.nextFrame;
 			}
 			finished = now.nextFrame >= now.frames.size();

@@ -19,7 +19,9 @@
 // (games-run-all.bat does all of that.) A game that is not built is skipped,
 // saying so. The frames of one that differs are kept in the temporary folder, in
 // xge-trace/<game>: frameNNNN.bmp is the generated program's and
-// frameNNNN.engine.bmp the engine's.
+// frameNNNN.engine.bmp the engine's, stateNNNN.txt and stateNNNN.engine.txt where
+// each object is. XGE_GAME=<game> plays one game, XGE_FRAMES=100,101 keeps those
+// frames.
 
 #include "engine.h"
 #include "game.h"
@@ -33,8 +35,11 @@
 #include <cstdlib>
 #include <filesystem>
 #include <memory>
+#include <optional>
+#include <random>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace xge;
@@ -43,11 +48,80 @@ namespace
 {
 	namespace fs = std::filesystem;
 
-	// What every game is played with. The games share their keys (Space starts,
-	// then W A S D, the arrows and Space to fire), so one script does for them all.
-	const std::string frames = "10,30,60,100,150,200,250,300,350,400";
-	const std::string keys = "3+space,5-space,20+d,60-d,60+a,100-a,100+w,140-w,140+s,180-s,180+left,220-left,"
-		"220+right,260-right,260+up,300-up,300+down,340-down,340+space,342-space,360+space,362-space,380+space,382-space";
+	// A setting from the environment, if there is one.
+	std::optional<std::string> environment(const char* name)
+	{
+#ifdef _WIN32
+		char* value = nullptr;
+		std::size_t size = 0;
+		if (_dupenv_s(&value, &size, name) != 0 || value == nullptr)
+		{
+			return std::nullopt;
+		}
+		std::string text(value);
+		std::free(value);
+		return text;
+#else
+		const char* value = std::getenv(name);
+		return value ? std::optional<std::string>(value) : std::nullopt;
+#endif
+	}
+
+	// How long every game is played, in frames.
+	constexpr int lastFrame = 2000;
+
+	// What every game is played with: Space to start, then keys pressed and let go
+	// of at random, for a long time, so that things meet in every way a game has.
+	// The games share their keys (Space starts, then W A S D, the arrows and Space
+	// to fire), so one script does for them all. It is worked out from a fixed
+	// seed with plain arithmetic, so that it is the same everywhere.
+	std::string playedKeys()
+	{
+		std::mt19937 numbers(11);
+		const auto below = [&](unsigned count) { return static_cast<unsigned>(numbers() % count); };
+
+		const char* const names[] = { "space", "a", "d", "w", "s", "left", "right", "up", "down" };
+		std::vector<std::pair<int, std::string>> events;
+		events.emplace_back(3, "+space");
+		events.emplace_back(5, "-space");
+
+		int frame = 20;
+		while (frame < lastFrame - 100)
+		{
+			const std::string key = names[below(9)];
+			events.emplace_back(frame, "+" + key);
+			events.emplace_back(frame + 1 + static_cast<int>(below(40)), "-" + key);
+			frame += 1 + static_cast<int>(below(25));
+		}
+		std::stable_sort(events.begin(), events.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+
+		std::string script;
+		for (const auto& [at, change] : events)
+		{
+			script += (script.empty() ? "" : ",") + std::to_string(at) + change;
+		}
+		return script;
+	}
+
+	// The frames that are kept and compared: every hundredth, or the ones named in
+	// the environment (XGE_FRAMES=100,101,102), to look at a game closely.
+	std::string playedFrames()
+	{
+		if (const auto named = environment("XGE_FRAMES"))
+		{
+			return *named;
+		}
+
+		std::string list;
+		for (int frame = 100; frame <= lastFrame; frame += 100)
+		{
+			list += (list.empty() ? "" : ",") + std::to_string(frame);
+		}
+		return list;
+	}
+
+	const std::string frames = playedFrames();
+	const std::string keys = playedKeys();
 
 	// How far apart a colour may be (the edge of a text is not drawn the same by a
 	// picture kept and a text drawn), how many pixels may be further apart than
@@ -57,9 +131,15 @@ namespace
 	constexpr std::size_t allow = 100;
 	constexpr int slack = 1;
 
-	// The games there are, by name.
+	// The games there are, by name, or the one named in the environment
+	// (XGE_GAME=pong).
 	std::vector<std::string> gameNames()
 	{
+		if (const auto named = environment("XGE_GAME"))
+		{
+			return { *named };
+		}
+
 		std::vector<std::string> names;
 		for (const auto& entry : fs::directory_iterator("games"))
 		{

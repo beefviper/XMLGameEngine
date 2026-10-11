@@ -84,7 +84,7 @@ namespace xge
 		void stop(Object& object);
 		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
 		void applyActionTurn(Object& object, Direction direction, float rate);
-		void applyActionThrustAhead(Object& object, float amount, const std::string& burn);
+		void applyActionThrustAhead(Object& object, const std::string& action, float amount, const std::string& burn);
 		void release(const Object& from, const std::string& target, int count);
 		void restart(Object& object);
 

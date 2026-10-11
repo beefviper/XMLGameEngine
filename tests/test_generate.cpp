@@ -148,7 +148,7 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	// The rules are statements about the game's own objects, by their names.
 	// The physics is the module's, called by name.
 	CHECK(main.find("physics::deflect(ball, ballVelocity, paddle1, 45.0f);") != std::string::npos);
-	CHECK(main.find("if (trace::keyHeld(sf::Keyboard::Key::W))\n\t{\n\t\tpaddle1.move({0.0f, -step});") != std::string::npos);
+	CHECK(main.find("if (trace::keyHeld(sf::Keyboard::Key::W))\n\t{\n\t\tpaddle1Velocity += {0.0f, -step};") != std::string::npos);
 	CHECK(main.find("if (physics::past(ball, physics::Edge::Top, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Top, windowArea);") != std::string::npos);
 	CHECK(main.find("paddle1.setPosition({windowLeft + margin, windowHeightCenter - height / 2.0f});") != std::string::npos);
 
@@ -237,9 +237,9 @@ TEST_CASE("generating Space Race and Freeway writes each group as a std::vector,
 	CHECK(main.find("\tdebris1Velocity = {2.0f, 0.0f};") != std::string::npos);
 
 	// Each one moves and wraps round, in a loop; a rocket looks at each one.
-	CHECK(main.find("\tfor (sf::RectangleShape& one : debris1)\n\t{\n\t\tone.move(debris1Velocity);") != std::string::npos);
+	CHECK(main.find("\t\tphysics::begin(one); // where it begins its move, after the edges\n\t\tone.move(debris1Velocity);") != std::string::npos);
 	CHECK(main.find("\t\tphysics::wrap(one, debris1Velocity, physics::Edge::Left, windowArea);") != std::string::npos);
-	CHECK(main.find("\tfor (const sf::RectangleShape& other : debris9)\n\t{\n\t\tif (physics::touching(rocket1, other))\n\t\t{\n\t\t\tstartRocket1();") != std::string::npos);
+	CHECK(main.find("\tfor (const sf::RectangleShape& other : debris9)\n\t{\n\t\tif (physics::touching(rocket1, other))\n\t\t{\n\t\t\tconst float left = physics::rest(rocket1, rocket1Velocity, other);\n\t\t\tstartRocket1();\n\t\t\tphysics::carryOn(rocket1, sf::Vector2f{} + rocket1Velocity, left);") != std::string::npos);
 	CHECK(main.find("\t\t\tfor (const sf::RectangleShape& one : debris1)\n\t\t\t{\n\t\t\t\twindow.draw(one);") != std::string::npos);
 
 	// The object called "start" does not clash with start().
@@ -291,7 +291,7 @@ TEST_CASE("a group whose members move and look each their own way keeps a veloci
 	CHECK(main.find("\tbirdsVelocity = {{1.0f, 0.0f}, {2.0f, 0.0f}, {1.0f, 0.0f}};") != std::string::npos);
 	CHECK(main.find("\tbirds[2].setPosition({110.0f, 80.0f});") != std::string::npos);
 	CHECK(main.find("\t// birds.3, a look of its own\n\tbirds[2].setRadius(6.0f);\n\tbirds[2].setFillColor(sf::Color::Red);") != std::string::npos);
-	CHECK(main.find("\tfor (std::size_t i = 0; i < birds.size(); ++i)\n\t{\n\t\tbirds[i].move(birdsVelocity[i]);") != std::string::npos);
+	CHECK(main.find("\t\tphysics::begin(birds[i]); // where it begins its move, after the edges\n\t\tbirds[i].move(birdsVelocity[i]);") != std::string::npos);
 	CHECK(main.find("\t\tphysics::wrap(birds[i], birdsVelocity[i], physics::Edge::Right, windowArea);") != std::string::npos);
 }
 
@@ -353,7 +353,7 @@ TEST_CASE("what can die keeps a flag for being in play, and a touch both sides h
 	// drawn, moved by a key and updated only while in play
 	CHECK(main.find("\t\tif (ballAlive)\n\t\t{\n\t\t\twindow.draw(ball);") != std::string::npos);
 	CHECK(main.find("\t\t\tif (bricksAlive[i])\n\t\t\t{\n\t\t\t\twindow.draw(bricks[i]);") != std::string::npos);
-	CHECK(main.find("\t\tif (playerAlive)\n\t\t{\n\t\t\tplayer.move({-4.0f, 0.0f});") != std::string::npos);
+	CHECK(main.find("\t\tif (playerAlive)\n\t\t{\n\t\t\tplayerVelocity += {-4.0f, 0.0f};") != std::string::npos);
 	CHECK(main.find("void updateBall()\n{\n\tif (!ballAlive)\n\t{\n\t\treturn;\n\t}") != std::string::npos);
 	CHECK(main.find("\tfor (std::size_t i = 0; i < bricks.size(); ++i)\n\t{\n\t\tif (!bricksAlive[i])\n\t\t{\n\t\t\tcontinue;") != std::string::npos);
 	// dying ends the rest of its rules this frame; every rule about the bottom
@@ -507,11 +507,11 @@ TEST_CASE("a rule with unless= is passed over while touching that class, through
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	// the touch, and not on a log other than the water it touches
-	CHECK(main.find("\tif (physics::touching(frog, water) && !touchingLogs(frog, &water))\n\t{\n\t\tfrogWet += 1.0f;") != std::string::npos);
+	CHECK(main.find("\tif (physics::touching(frog, water) && !touchingLogs(frog, &water, physics::timeOf(frog, frogVelocity, water)))\n\t{\n\t\tfrogWet += 1.0f;") != std::string::npos);
 	// an edge has no other: nothing to leave out
-	CHECK(main.find("\t\tif (!touchingWater(frog, nullptr))\n\t\t{\n\t\t\tphysics::bounce(frog, frogVelocity, physics::Edge::Bottom, windowArea);") != std::string::npos);
+	CHECK(main.find("\t\tif (!touchingWater(frog, nullptr, 1.0f))\n\t\t{\n\t\t\tphysics::bounce(frog, frogVelocity, physics::Edge::Bottom, windowArea);") != std::string::npos);
 	// one function for each class named, going through everything of it
-	CHECK(main.find("template <typename Shape>\nbool touchingLogs(const Shape& one, const void* other);") != std::string::npos);
+	CHECK(main.find("template <typename Shape>\nbool touchingLogs(const Shape& one, const void* other, float when);") != std::string::npos);
 	CHECK(main.find("\tfor (const sf::RectangleShape& each : logs)\n\t{\n\t\tif (counts(each))\n\t\t{\n\t\t\treturn true;") != std::string::npos);
 }
 
@@ -529,13 +529,13 @@ TEST_CASE("generating Frogger lets the frog ride a log, and the river costs a li
 	// what it rides is worked out again every frame, from the rules
 	CHECK(main.find("sf::Vector2f frogRiding; // the velocity of what it rides (<ride />), worked out every frame") != std::string::npos);
 	// before anything on the screen moves, so a log updated before the frog counts
-	CHECK(main.find("void updatePlaying()\n{\n\tfrogRiding = {}; // what it rides, worked out again this frame\n\tupdatePads();") != std::string::npos);
+	CHECK(main.find("\tfrogRiding = {}; // what it rides, worked out again this frame\n\tmoveLogrow2();") != std::string::npos);
 	CHECK(main.find("\t\tif (physics::touching(frog, other))\n\t\t{\n\t\t\tfrogRiding = logrow6Velocity;\n\t\t}") != std::string::npos);
 	// and moves it after them, for the frame it is touching, as in the engine
 	CHECK(main.find("\t// it rides along: moved as well by what it touches, this frame\n\tfrog.move(frogRiding);\n}") != std::string::npos);
-	CHECK(main.find("\tif (physics::touching(frog, water) && !touchingLogs(frog, &water))\n") != std::string::npos);
+	CHECK(main.find("\tif (physics::touching(frog, water) && !touchingLogs(frog, &water, physics::timeOf(frog, sf::Vector2f{}, water)))\n") != std::string::npos);
 	// a reset gets off
-	CHECK(main.find("void startFrog()\n{\n\tfrog.setPosition({6.0f * cell + inset, 13.0f * cell + inset});\n\tfrogRiding = {};\n}") != std::string::npos);
+	CHECK(main.find("void startFrog()\n{\n\tfrog.setPosition({6.0f * cell + inset, 13.0f * cell + inset});\n\tphysics::begin(frog);\n\tfrogRiding = {};\n}") != std::string::npos);
 }
 
 TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, and it dies where it hits", "[generate]")
@@ -573,7 +573,7 @@ TEST_CASE("generating Astrosmash puts one rock back at a time, its fall drawn an
 	// each rock falls at a speed of its own, drawn for it, as in the engine
 	CHECK(main.find("std::vector<sf::Vector2f> bouldersVelocity(4);") != std::string::npos);
 	// one member starts again on its own: what they share written once, the rest a list
-	CHECK(main.find("void startBoulders(std::size_t i)\n{\n\tconst float xs[] = {50.0f, 230.0f, 410.0f, 590.0f};\n\tboulders[i].setPosition({xs[i], randomBetween(-500.0f, -40.0f)});\n\tbouldersVelocity[i] = {0.0f, randomBetween(1.0f, 2.0f)};\n}") != std::string::npos);
+	CHECK(main.find("void startBoulders(std::size_t i)\n{\n\tconst float xs[] = {50.0f, 230.0f, 410.0f, 590.0f};\n\tboulders[i].setPosition({xs[i], randomBetween(-500.0f, -40.0f)});\n\tphysics::begin(boulders[i]);\n\tbouldersVelocity[i] = {0.0f, randomBetween(1.0f, 2.0f)};\n}") != std::string::npos);
 	CHECK(main.find("\tfor (std::size_t i = 0; i < boulders.size(); ++i)\n\t{\n\t\tstartBoulders(i);\n\t}") != std::string::npos);
 	CHECK(main.find("\t\t// bottom: dec reset play\n\t\tif (physics::past(boulders[i], physics::Edge::Bottom, windowArea))\n\t\t{\n\t\t\tshipLives -= 1.0f;\n\t\t\tshowLives();\n\t\t\tstartBoulders(i);") != std::string::npos);
 }
@@ -594,7 +594,7 @@ TEST_CASE("generating Kaboom counts the bomber's timers down, and a missed bomb 
 	CHECK(main.find("\t// timer 1: reverse\n\tif (bomber1Timer1 == 0)\n\t{\n\t\tbomber1Timer1 = framesFor(randomBetween(0.3f, 1.4f));\n\t}\n\tif (--bomber1Timer1 == 0)\n\t{\n\t\tbomber1Velocity = -bomber1Velocity;\n\t}") != std::string::npos);
 	CHECK(main.find("int framesFor(float seconds)") != std::string::npos);
 	// the timers go off before anything moves, on the screens that show the bomber
-	CHECK(main.find("\t// the timers first, before anything moves\n\ttickBomber1();\n\n\tupdateBomber1();") != std::string::npos);
+	CHECK(main.find("\t// the timers first, before anything moves\n\ttickBomber1();\n\n\tmoveBomber1();\n\tmoveBombs1();\n\tmoveBucket();\n\n\t// everything has moved: what each touched, from where both began\n\tupdateBombs1();") != std::string::npos);
 	// he faces down: a bomb leaves from under him, at its own speed
 	CHECK(main.find("physics::fireFrom(bomber1, bombs1[i], bombs1Velocity[i], physics::Facing::Down, sf::Vector2f{0.0f, fall1}.length());") != std::string::npos);
 	// the bombs are hidden until he drops one, and <reset object> puts every one back
@@ -627,7 +627,7 @@ TEST_CASE("generating Demon Attack gives each demon two timers, releases the sma
 	// the second wave is over when neither the demons nor the small ones are left
 	CHECK(main.find("std::count(demons2Alive.begin(), demons2Alive.end(), true) + std::count(halvesAlive.begin(), halvesAlive.end(), true) == 0") != std::string::npos);
 	// the cannon is held in by the sides
-	CHECK(main.find("physics::stick(player, physics::Edge::Left, windowArea);") != std::string::npos);
+	CHECK(main.find("physics::stick(player, playerVelocity, physics::Edge::Left, windowArea);") != std::string::npos);
 }
 
 TEST_CASE("generating Megamania keeps the energy no screen shows, run down by a timer of each wave", "[generate]")
@@ -665,13 +665,14 @@ TEST_CASE("generating Asteroids turns the ship's picture with its heading, and a
 	CHECK(main.find("\t\tshipVelocity += physics::ahead(shipHeading) * thrustpower;") != std::string::npos);
 	// its picture is drawn again when the whole degree changes, and that is what its touches test
 	CHECK(main.find("\t\tconst sf::Image picture = pictures::turnedLines(shipLines, static_cast<float>(degrees));\n\t\tshipPicture.update(picture);\n\t\tshipPixels = picture;") != std::string::npos);
-	CHECK(main.find("\tshipVelocity *= 1.0f - drag;\n\tship.move(shipVelocity);") != std::string::npos);
+	CHECK(main.find("\tshipVelocity *= 1.0f - drag;\n") != std::string::npos);
+	CHECK(main.find("\tphysics::begin(ship); // where it begins its move, after the edges\n\tship.move(shipVelocity);") != std::string::npos);
 	CHECK(main.find("physics::fireAhead(ship, shots[i], shotsVelocity[i], shipHeading, sf::Vector2f{0.0f, -shotspeed}.length());") != std::string::npos);
 	// rocks of several looks find their pixels by their picture; a touch is swept along the step
-	CHECK(main.find("physics::touchingPixels(shots[i], nullptr, bigrocks[j], &pixelsOf(bigrocks[j].getTexture()), shotsVelocity[i] - bigrocksVelocity[j])") != std::string::npos);
+	CHECK(main.find("physics::touchingPixels(shots[i], nullptr, bigrocks[j], &pixelsOf(bigrocks[j].getTexture()), shotsVelocity[i], bigrocksVelocity[j])") != std::string::npos);
 	CHECK(main.find("const sf::Image& pixelsOf(const sf::Texture& picture)") != std::string::npos);
 	CHECK(main.find("for (std::size_t k = 0, released = 0; k < mediumrocks.size() && released < 2; ++k)") != std::string::npos);
-	CHECK(main.find("mediumrocks[k].setPosition(physics::middleAtTouch(bigrocks[j], bigrocksVelocity[j], shots[i]) - mediumrocks[k].getGlobalBounds().size / 2.0f);") != std::string::npos);
+	CHECK(main.find("mediumrocks[k].setPosition(physics::middleAtTouch(bigrocks[j], bigrocksVelocity[j], shots[i]) - physics::bounds(mediumrocks[k]).size / 2.0f);") != std::string::npos);
 	CHECK(main.find("\tphysics::wrap(ship, shipVelocity, physics::Edge::Left, windowArea);") != std::string::npos);
 }
 
@@ -688,7 +689,7 @@ TEST_CASE("generating Combat drives each tank along its heading, a turned pictur
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("\t\ttank1Velocity += physics::ahead(tank1Heading) * back;") != std::string::npos);
 	CHECK(main.find("pictures::turned(pictures::rows(tank1Rows, 3, sf::Color::Yellow), static_cast<float>(degrees))") != std::string::npos);
-	CHECK(main.find("\tif (shell2Alive && physics::touchingPixels(tank1, &tank1Pixels, shell2, nullptr, tank1Velocity - shell2Velocity))") != std::string::npos);
+	CHECK(main.find("\tif (shell2Alive && physics::touchingPixels(tank1, &tank1Pixels, shell2, nullptr, tank1Velocity, shell2Velocity))") != std::string::npos);
 	CHECK(main.find("\t\tif (physics::touchingPixels(tank1, &tank1Pixels, other, nullptr, tank1Velocity))\n\t\t{\n\t\t\tphysics::bounceOff(tank1, tank1Velocity, other);") != std::string::npos);
 }
 
@@ -704,7 +705,8 @@ TEST_CASE("generating Lunar Lander pulls the lander down, burns fuel while a thr
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("\tlanderAcceleration = {0.0f, gravity};") != std::string::npos);
-	CHECK(main.find("\tlanderVelocity += landerAcceleration;\n\tlander.move(landerVelocity);") != std::string::npos);
+	CHECK(main.find("\tlanderVelocity += landerAcceleration;\n") != std::string::npos);
+	CHECK(main.find("\tphysics::begin(lander); // where it begins its move, after the edges\n\tlander.move(landerVelocity);") != std::string::npos);
 	CHECK(main.find("\tif (trace::keyHeld(sf::Keyboard::Key::Up) || trace::keyHeld(sf::Keyboard::Key::W))\n\t{\n\t\t// burning fuel, while there is any\n\t\tif (landerFuel > 0.0f)\n\t\t{\n\t\t\tlanderFuel -= 1.0f;\n\t\t\tshowFuelvalue();\n\t\t\tlanderVelocity.y -= thrust;\n\t\t}\n\t}") != std::string::npos);
 	// its speed is taken once, before the first rule about the pad, as the engine takes it
 	CHECK(main.find("\tconst float landerSpeedAtPad = landerVelocity.length();") != std::string::npos);
@@ -767,8 +769,9 @@ TEST_CASE("generating Donkey Kong walks Jumpman by the keys, lands him on girder
 	CHECK(main.find("\t\tmanWalk -= walk;") != std::string::npos);
 	CHECK(main.find("\tif (!manLeaping)\n\t{\n\t\tmanVelocity.x = manWalk;\n\t}") != std::string::npos);
 	// on a ladder nothing pulls him; what he stands on is found again every frame
-	CHECK(main.find("\tphysics::climb(man, manVelocity, manClimb, manClimbing, manGrounded, ladderAt(man));\n\tif (!manClimbing)\n\t{\n\t\tmanVelocity += manAcceleration; // on a ladder nothing pulls it\n\t}\n\tmanGrounded = false; // until it lands again, this frame\n\tman.move(manVelocity);") != std::string::npos);
-	CHECK(main.find("\t\t\tif (!manClimbing && physics::land(man, manVelocity, other))\n\t\t\t{\n\t\t\t\tmanGrounded = true;\n\t\t\t\tmanLeaping = false;") != std::string::npos);
+	CHECK(main.find("\tphysics::climb(man, manVelocity, manClimb, manClimbing, manGrounded, ladderAt(man));\n\tif (!manClimbing)\n\t{\n\t\tmanVelocity += manAcceleration; // on a ladder nothing pulls it\n\t}\n\tmanGrounded = false; // until it lands again, this frame\n") != std::string::npos);
+	CHECK(main.find("\tphysics::begin(man); // where it begins its move, after the edges\n\tman.move(manVelocity);") != std::string::npos);
+	CHECK(main.find("\t\t\tif (!manClimbing && physics::land(man, manVelocity, other, manLeaping ? std::optional<float>(manWalk) : std::nullopt))\n\t\t\t{\n\t\t\t\tmanGrounded = true;\n\t\t\t\tmanLeaping = false;") != std::string::npos);
 	CHECK(main.find("\t\t\tif (manGrounded && !manClimbing)\n\t\t\t{\n\t\t\t\tmanVelocity.y = physics::leapSpeed(manAcceleration.y, leapheight);") != std::string::npos);
 	CHECK(main.find("std::optional<sf::FloatRect> ladderAt(const Shape& one)\n{\n\tfor (const sf::RectangleShape& each : ladders)") != std::string::npos);
 	// the barrels share one pull, each with a velocity of its own, and land too
@@ -811,7 +814,7 @@ TEST_CASE("generating Missile Command aims the base at the sight, and each missi
 	CHECK(main.find("if (baseAimed)\n\t\t\t\t\t{\n\t\t\t\t\t\tphysics::fireAlong(base, abms[i], abmsVelocity[i], baseAim, sf::Vector2f{0.0f, -abmspeed}.length());") != std::string::npos);
 	// each missile looks for the nearest city still standing
 	CHECK(main.find("physics::chase(missiles1[i], missiles1Velocity[i], nearestCities(missiles1[i]), speed1, 0.0f);") != std::string::npos);
-	CHECK(main.find("std::optional<sf::Vector2f> nearestCities(const Shape& one)\n{\n\tconst sf::Vector2f here = one.getGlobalBounds().getCenter();") != std::string::npos);
+	CHECK(main.find("std::optional<sf::Vector2f> nearestCities(const Shape& one)\n{\n\tconst sf::Vector2f here = physics::bounds(one).getCenter();") != std::string::npos);
 	CHECK(main.find("\t\tif (!citiesAlive[i])\n\t\t{\n\t\t\tcontinue;") != std::string::npos);
 }
 
@@ -921,7 +924,8 @@ TEST_CASE("a group in lockstep moves as one block, and turns as one off a side",
 	CHECK(main.find("\t\t\taliens[row * 6 + column].setPosition({20.0f + static_cast<float>(column) * (2.0f * 5.0f + 4.0f), 20.0f + static_cast<float>(row) * (2.0f * 5.0f + 4.0f)});") != std::string::npos);
 	CHECK(main.find("\t// aliens, every even row\n\tfor (std::size_t i = 6; i < 12; ++i)\n\t{\n\t\taliens[i].setFillColor(sf::Color::Red);\n\t}") != std::string::npos);
 	// all of the block moved first, then its rules
-	CHECK(main.find("void updateAliens()\n{\n\tfor (sf::CircleShape& one : aliens)\n\t{\n\t\tone.move(aliensVelocity);\n\t}\n\n\tfor (std::size_t i = 0; i < aliens.size(); ++i)") != std::string::npos);
+	CHECK(main.find("\tphysics::begin(aliens); // where each begins its move, after the edges\n\tfor (sf::CircleShape& one : aliens)\n\t{\n\t\tone.move(aliensVelocity);\n\t}\n}") != std::string::npos);
+	CHECK(main.find("void updateAliens()\n{\n\tfor (std::size_t i = 0; i < aliens.size(); ++i)") != std::string::npos);
 	CHECK(main.find("\t\t\taliensVelocity.x = -aliensVelocity.x;\n\t\t\tfor (sf::CircleShape& each : aliens)\n\t\t\t{\n\t\t\t\teach.move({aliensVelocity.x, 0.0f});") != std::string::npos);
 	CHECK(main.find("\t// aliens: no more than 11 left\n\tif (std::count(aliensAlive.begin(), aliensAlive.end(), true) <= 11)\n\t{\n\t\tstart();") != std::string::npos);
 

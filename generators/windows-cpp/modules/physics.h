@@ -27,50 +27,76 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
+#include <set>
 #include <optional>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 namespace physics
 {
 	// --- Where a thing is.
 
+	// What a thing covers: its bounds, but a circle's is the square it is drawn
+	// in, as the engine has it (an sf::CircleShape's own bounds are those of the
+	// polygon that draws it, a little inside the circle).
+	template <typename Thing>
+	sf::FloatRect bounds(const Thing& thing)
+	{
+		if constexpr (std::is_same_v<Thing, sf::CircleShape>)
+		{
+			const float side = thing.getRadius() * 2.0f;
+			return sf::FloatRect(thing.getPosition(), sf::Vector2f(side, side));
+		}
+		else if constexpr (std::is_same_v<Thing, sf::Text>)
+		{
+			// the engine measures a text to whole pixels, up
+			const sf::FloatRect shown = thing.getGlobalBounds();
+			return sf::FloatRect(shown.position, sf::Vector2f(std::ceil(shown.size.x), std::ceil(shown.size.y)));
+		}
+		else
+		{
+			return thing.getGlobalBounds();
+		}
+	}
+
 	template <typename Thing>
 	float left(const Thing& thing)
 	{
-		return thing.getGlobalBounds().position.x;
+		return bounds(thing).position.x;
 	}
 
 	template <typename Thing>
 	float right(const Thing& thing)
 	{
-		const sf::FloatRect bounds = thing.getGlobalBounds();
-		return bounds.position.x + bounds.size.x;
+		const sf::FloatRect box = bounds(thing);
+		return box.position.x + box.size.x;
 	}
 
 	template <typename Thing>
 	float top(const Thing& thing)
 	{
-		return thing.getGlobalBounds().position.y;
+		return bounds(thing).position.y;
 	}
 
 	template <typename Thing>
 	float bottom(const Thing& thing)
 	{
-		const sf::FloatRect bounds = thing.getGlobalBounds();
-		return bounds.position.y + bounds.size.y;
+		const sf::FloatRect box = bounds(thing);
+		return box.position.y + box.size.y;
 	}
 
 	template <typename Thing>
 	float width(const Thing& thing)
 	{
-		return thing.getGlobalBounds().size.x;
+		return bounds(thing).size.x;
 	}
 
 	template <typename Thing>
 	float height(const Thing& thing)
 	{
-		return thing.getGlobalBounds().size.y;
+		return bounds(thing).size.y;
 	}
 
 	// A thing as the engine's geometry sees it (collide.h, copied in beside this
@@ -78,10 +104,10 @@ namespace physics
 	template <typename Thing>
 	xge::collide::Body bodyOf(const Thing& thing)
 	{
-		const sf::FloatRect bounds = thing.getGlobalBounds();
+		const sf::FloatRect box = bounds(thing);
 		xge::collide::Body seen;
-		seen.position = xge::Vector2f(bounds.position.x, bounds.position.y);
-		seen.size = xge::Vector2f(bounds.size.x, bounds.size.y);
+		seen.position = xge::Vector2f(box.position.x, box.position.y);
+		seen.size = xge::Vector2f(box.size.x, box.size.y);
 		seen.circle = std::is_same_v<Thing, sf::CircleShape>;
 		return seen;
 	}
@@ -101,7 +127,7 @@ namespace physics
 	// the other's box, so a ball can pass the corner of a box its own box would
 	// clip.
 	template <typename First, typename Second>
-	bool touching(const First& first, const Second& second)
+	bool overlapping(const First& first, const Second& second)
 	{
 		return xge::collide::overlap(bodyOf(first), bodyOf(second)).has_value();
 	}
@@ -147,14 +173,32 @@ namespace physics
 		return view;
 	}
 
+	// Where the last pixel touch was, for the thing that touched: toContact
+	// takes it back there if it stops (a pixel touch is not the boxes').
+	struct PixelContact
+	{
+		const void* mover = nullptr;
+		const void* other = nullptr;
+		xge::Vector2f position;
+		xge::Vector2f otherPosition;
+		xge::collide::SweepHit hit;
+		float time = 1.0f;
+	};
+
+	inline PixelContact& pixelContact()
+	{
+		static PixelContact contact;
+		return contact;
+	}
+
 	// Whether two things touch pixel by pixel (<type>pixel</type>): some
 	// pixel of the screen both cover is solid in both, as the engine tests it
 	// (collide::sweep). `pixels` is the picture a sprite shows, or nullptr for
-	// its whole box (or circle). `step` is how far the first moved this frame
-	// against the second: it is looked at all along the way, half a pixel at a
+	// its whole box (or circle). `step` and `otherStep` are how far each
+	// moved this frame: they are looked at all along the way, half a pixel at a
 	// time, so that a fast shot does not jump over a line two pixels thick.
 	template <typename First, typename Second>
-	bool touchingPixels(const First& first, const sf::Image* firstPixels, const Second& second, const sf::Image* secondPixels, sf::Vector2f step = {})
+	bool touchingPixels(const First& first, const sf::Image* firstPixels, const Second& second, const sf::Image* secondPixels, sf::Vector2f step = {}, sf::Vector2f otherStep = {})
 	{
 		const PixelView firstView = viewOf(first, firstPixels);
 		const PixelView secondView = viewOf(second, secondPixels);
@@ -169,8 +213,15 @@ namespace physics
 		target.pixels = secondPixels != nullptr;
 		target.picture = &secondView;
 		target.solidAt = pixelSolid;
+		target.position = target.position - fromSfml(otherStep);
 
-		return xge::collide::sweep(mover, fromSfml(step), target, xge::Vector2f()).has_value();
+		const auto hit = xge::collide::sweep(mover, fromSfml(step), target, fromSfml(otherStep));
+		if (hit)
+		{
+			pixelContact() = PixelContact{ &first, &second, mover.position + fromSfml(step) * hit->time,
+				target.position + fromSfml(otherStep) * hit->time, *hit, hit->time };
+		}
+		return hit.has_value();
 	}
 
 	// --- The edges of an area (the window).
@@ -182,20 +233,20 @@ namespace physics
 	template <typename Thing>
 	xge::Vector2f positionOf(const Thing& thing)
 	{
-		return fromSfml(thing.getGlobalBounds().position);
+		return fromSfml(bounds(thing).position);
 	}
 
 	template <typename Thing>
 	xge::Vector2f sizeOf(const Thing& thing)
 	{
-		return fromSfml(thing.getGlobalBounds().size);
+		return fromSfml(bounds(thing).size);
 	}
 
 	// Moves a thing to the place the engine's code worked out for it.
 	template <typename Thing>
 	void put(Thing& thing, xge::Vector2f where)
 	{
-		thing.move(toSfml(where) - thing.getGlobalBounds().position);
+		thing.move(toSfml(where) - bounds(thing).position);
 	}
 
 	// Whether the thing has gone past that edge of the area, as the engine
@@ -404,7 +455,7 @@ namespace physics
 		{
 			return std::nullopt;
 		}
-		const std::optional<xge::Vector2f> way = xge::motion::aimed(fromSfml(thing.getGlobalBounds().getCenter()), fromSfml(*there));
+		const std::optional<xge::Vector2f> way = xge::motion::aimed(fromSfml(bounds(thing).getCenter()), fromSfml(*there));
 		if (!way)
 		{
 			return std::nullopt;
@@ -430,7 +481,7 @@ namespace physics
 		{
 			return std::nullopt;
 		}
-		const xge::motion::Chase chased = xge::motion::chased(fromSfml(thing.getGlobalBounds().getCenter()), fromSfml(*there), speed, near);
+		const xge::motion::Chase chased = xge::motion::chased(fromSfml(bounds(thing).getCenter()), fromSfml(*there), speed, near);
 		velocity = toSfml(chased.velocity);
 		if (!chased.way)
 		{
@@ -441,56 +492,270 @@ namespace physics
 
 	// --- Against another thing.
 
-	// When, in the step a thing has just taken (by `velocity`, ending where it
-	// is), it first met `other`, which is taken to be where it is: the engine's
-	// sweep (collide.h), so a thing that moves more than its own size in a frame
-	// is not missed, and the touch is where it began and not where the step
-	// ended up.
-	template <typename Mover, typename Other>
-	std::optional<xge::collide::SweepHit> meeting(const Mover& mover, sf::Vector2f velocity, const Other& other)
+	// Where each thing began the frame it is in (`begin`, called for everything
+	// that can touch as the frame starts), so that a touch is worked out as the
+	// engine works it out: from where both things were and where they are now,
+	// the one move each made in the frame, found where the two first meet. A thing
+	// that was not asked about is taken to have stood still where it is.
+	inline std::unordered_map<const void*, sf::Vector2f>& began()
 	{
-		xge::collide::Body begun = bodyOf(mover);
-		begun.position = begun.position - fromSfml(velocity);
-		return xge::collide::sweep(begun, fromSfml(velocity), bodyOf(other), xge::Vector2f());
+		static std::unordered_map<const void*, sf::Vector2f> things;
+		return things;
 	}
 
-	// The middle of a thing at the moment it touched `other`, in the step it has
-	// just taken: where the engine has it when the rules about the touch run
-	// (a burst that comes out of a missile comes out there, not where the rest of
-	// the step took the missile).
+	template <typename Thing>
+	void begin(const Thing& thing)
+	{
+		began()[&thing] = bounds(thing).position;
+	}
+
+	template <typename Thing>
+	void begin(const std::vector<Thing>& things)
+	{
+		for (const Thing& thing : things)
+		{
+			begin(thing);
+		}
+	}
+
+	// Where a thing began the frame: when it was asked about, else where it is.
+	template <typename Thing>
+	sf::Vector2f startOf(const Thing& thing)
+	{
+		const auto at = began().find(&thing);
+		return at != began().end() ? at->second : bounds(thing).position;
+	}
+
+	// A touch: when in the frame it happened, on which edge, and where each of
+	// the two things was at that moment.
+	struct Touch
+	{
+		xge::collide::SweepHit hit;
+		xge::collide::Body mover;
+		xge::collide::Body other;
+	};
+
+	// When, in the frame, a thing first met `other`, by the engine's sweep
+	// (collide.h): so a thing that moves more than its own size in a frame is not
+	// missed, a thing that moves into it counts, and the touch is where they were
+	// then and not where the frame left them. `velocity` is the step the mover
+	// took, if it was not asked about when the frame began.
+	template <typename Mover, typename Other>
+	std::optional<Touch> meetingNow(const Mover& mover, sf::Vector2f velocity, const Other& other)
+	{
+		const PixelContact& pixels = pixelContact();
+		if (pixels.mover == &mover && pixels.other == &other)
+		{
+			// touched pixel by pixel just now: where the pixels first met
+			Touch touch;
+			touch.hit = pixels.hit;
+			touch.mover = bodyOf(mover);
+			touch.mover.position = pixels.position;
+			touch.other = bodyOf(other);
+			touch.other.position = pixels.otherPosition;
+			return touch;
+		}
+		xge::collide::Body a = bodyOf(mover);
+		xge::collide::Body b = bodyOf(other);
+		const xge::Vector2f endA = a.position;
+		const xge::Vector2f endB = b.position;
+
+		const auto began_a = began().find(&mover);
+		a.position = began_a != began().end() ? fromSfml(began_a->second) : endA - fromSfml(velocity);
+		b.position = fromSfml(startOf(other));
+
+		const xge::Vector2f moveA = endA - a.position;
+		const xge::Vector2f moveB = endB - b.position;
+
+		Touch touch;
+		touch.mover = a;
+		touch.other = b;
+		if (const auto hit = xge::collide::sweep(a, moveA, b, moveB))
+		{
+			touch.hit = *hit;
+			touch.mover.position = a.position + moveA * hit->time;
+			touch.other.position = b.position + moveB * hit->time;
+			return touch;
+		}
+
+		// Not by the moves they made (one was put there, or carried): where they
+		// are is where they touched.
+		a.position = endA;
+		b.position = endB;
+		const std::optional<xge::Edge> edge = xge::collide::overlap(a, b);
+		if (!edge)
+		{
+			return std::nullopt;
+		}
+		touch.hit = xge::collide::SweepHit{ 1.0f, *edge };
+		touch.mover = a;
+		touch.other = b;
+		return touch;
+	}
+
+	// The touches found this frame, so that a pair is asked about once, as the
+	// engine sweeps each pair once: what an earlier rule in the frame did (put
+	// the other back where it started) does not change what the later ones are
+	// told about the touch. newFrame forgets them.
+	inline std::map<std::pair<const void*, const void*>, std::optional<Touch>>& touchesThisFrame()
+	{
+		static std::map<std::pair<const void*, const void*>, std::optional<Touch>> touches;
+		return touches;
+	}
+
+	// What came into play during the frame (a burst out of a missile): the engine
+	// found its pairs as the frame began, so these touch nothing until the next.
+	inline std::set<const void*>& cameInThisFrame()
+	{
+		static std::set<const void*> these;
+		return these;
+	}
+
+	template <typename Thing>
+	void cameIn(const Thing& thing)
+	{
+		cameInThisFrame().insert(&thing);
+	}
+
+	inline void newFrame()
+	{
+		touchesThisFrame().clear();
+		cameInThisFrame().clear();
+		pixelContact() = PixelContact{};
+	}
+
+	template <typename Mover, typename Other>
+	std::optional<Touch> meeting(const Mover& mover, sf::Vector2f velocity, const Other& other)
+	{
+		const std::pair<const void*, const void*> pair(&mover, &other);
+		const auto found = touchesThisFrame().find(pair);
+		if (found != touchesThisFrame().end())
+		{
+			return found->second;
+		}
+		return touchesThisFrame()[pair] = meetingNow(mover, velocity, other);
+	}
+
+	// Whether two things touch this frame, as the engine decides it: they
+	// overlap (overlapping), or, from where each began the frame to where it is,
+	// they met on the way (meeting), so a thing that moves into another, or past
+	// it, touches it.
+	template <typename First, typename Second>
+	bool touching(const First& first, const Second& second)
+	{
+		if (cameInThisFrame().count(&first) > 0 || cameInThisFrame().count(&second) > 0)
+		{
+			return false;
+		}
+		return meeting(first, sf::Vector2f{}, second).has_value();
+	}
+
+	// The middle of a thing at the moment it touched `other`: where the engine
+	// has it when the rules about the touch run (a burst that comes out of a
+	// missile comes out there, not where the rest of the frame took the missile).
 	template <typename Mover, typename Other>
 	sf::Vector2f middleAtTouch(const Mover& mover, sf::Vector2f velocity, const Other& other)
 	{
-		const sf::Vector2f middle = mover.getGlobalBounds().getCenter();
-		const std::optional<xge::collide::SweepHit> hit = meeting(mover, velocity, other);
-		return hit ? middle - velocity * (1.0f - hit->time) : middle;
+		if (pixelContact().mover == &other && pixelContact().other == &mover)
+		{
+			// touched pixel by pixel: where the two had come to then
+			return toSfml(pixelContact().otherPosition) + bounds(mover).size / 2.0f;
+		}
+		const std::optional<Touch> touch = meeting(mover, velocity, other);
+		if (!touch)
+		{
+			return bounds(mover).getCenter();
+		}
+		return toSfml(touch->mover.position + touch->mover.size * 0.5f);
 	}
 
 	// What a thing that bounces or deflects does at a touch, in the engine's
-	// order: back along its step to the moment of the touch, the rule (which says
-	// how its velocity changes there), and then the rest of the step, the new
-	// way. `rule` is called with the edge of the mover that touched, and gives
-	// the velocity it leaves with.
+	// order: back along its move to the moment of the touch, the rule (which says
+	// how its velocity changes there), and then the rest of the frame, the new
+	// way. `rule` is called with the edge of the mover that touched and where the
+	// two were then, and gives the velocity it leaves with. What is left of its
+	// frame afterwards is the move from there, for a touch later in the frame.
 	template <typename Mover, typename Other, typename Rule>
 	void atTouch(Mover& mover, sf::Vector2f& velocity, const Other& other, Rule rule)
 	{
-		std::optional<xge::collide::SweepHit> hit = meeting(mover, velocity, other);
-		if (!hit)
+		const std::optional<Touch> touch = meeting(mover, velocity, other);
+		if (!touch)
 		{
-			// Not by a step it took (it was put there, or carried): where it is
-			// is where it touched.
-			const std::optional<xge::Edge> edge = xge::collide::overlap(bodyOf(mover), bodyOf(other));
-			if (!edge)
-			{
-				return;
-			}
-			hit = xge::collide::SweepHit{ 1.0f, *edge };
+			return;
 		}
 
-		const float rest = 1.0f - hit->time;
-		mover.move(-velocity * rest);
-		velocity = toSfml(rule(xge::opposite(hit->edgeOfSecond)));
+		const sf::Vector2f contact = toSfml(touch->mover.position);
+		const float rest = 1.0f - touch->hit.time;
+		mover.move(contact - bounds(mover).position);
+		velocity = toSfml(rule(xge::opposite(touch->hit.edgeOfSecond), touch->mover, touch->other));
 		mover.move(velocity * rest);
+		began()[&mover] = contact;
+	}
+
+	// Back along its move to where it first touched `other`, for a thing that
+	// stops there (<stop />): what was left of its move is not made.
+	template <typename Mover, typename Other>
+	void toContact(Mover& mover, sf::Vector2f velocity, const Other& other)
+	{
+		if (pixelContact().mover == &mover)
+		{
+			// touched pixel by pixel: where the pixels first met
+			mover.move(toSfml(pixelContact().position) - bounds(mover).position);
+			pixelContact().mover = nullptr;
+			return;
+		}
+		const std::optional<Touch> touch = meeting(mover, velocity, other);
+		if (!touch)
+		{
+			return;
+		}
+		mover.move(toSfml(touch->mover.position) - bounds(mover).position);
+	}
+
+	// When, in the frame, `mover` first met `other`, from 0 to 1 (1: it did not).
+	template <typename Mover, typename Other>
+	float timeOf(const Mover& mover, sf::Vector2f velocity, const Other& other)
+	{
+		const std::optional<Touch> touch = meeting(mover, velocity, other);
+		return touch ? touch->hit.time : 1.0f;
+	}
+
+	// Whether two things overlap `when` of the way through the frame, from where
+	// each began it to where it is: what a rule about a touch asks about the rest
+	// of the field (an unless=) at the moment of the touch.
+	template <typename First, typename Second>
+	bool overlappingAt(const First& first, const Second& second, float when)
+	{
+		xge::collide::Body a = bodyOf(first);
+		xge::collide::Body b = bodyOf(second);
+		const xge::Vector2f startA = fromSfml(startOf(first));
+		const xge::Vector2f startB = fromSfml(startOf(second));
+		a.position = startA + (a.position - startA) * when;
+		b.position = startB + (b.position - startB) * when;
+		return xge::collide::overlap(a, b).has_value();
+	}
+
+	// What is left of the frame once `mover` has touched `other`: the part of its
+	// move after the touch, from 0 to 1.
+	template <typename Mover, typename Other>
+	float rest(const Mover& mover, sf::Vector2f velocity, const Other& other)
+	{
+		const PixelContact& pixels = pixelContact();
+		if ((pixels.mover == &mover && pixels.other == &other) || (pixels.mover == &other && pixels.other == &mover))
+		{
+			return 1.0f - pixels.time;
+		}
+		const std::optional<Touch> touch = meeting(mover, velocity, other);
+		return touch ? 1.0f - touch->hit.time : 0.0f;
+	}
+
+	// A thing put back where it started at a touch goes on with what is left of
+	// its move (`motion` the whole of it, `left` the part after the touch), from
+	// there.
+	template <typename Thing>
+	void carryOn(Thing& thing, sf::Vector2f motion, float left)
+	{
+		thing.move(motion * left);
 	}
 
 	// Out of the side of `other` it went into, heading away from it, as the
@@ -499,51 +764,71 @@ namespace physics
 	void bounceOff(Mover& mover, sf::Vector2f& velocity, const Other& other)
 	{
 		const sf::Vector2f before = velocity;
-		atTouch(mover, velocity, other, [&](xge::Edge edge)
+		atTouch(mover, velocity, other, [&](xge::Edge edge, const xge::collide::Body&, const xge::collide::Body&)
 			{
 				return xge::collide::bounced(fromSfml(before), edge);
 			});
 	}
 
+	// Turned round at the touch: back along its move to where it touched `other`,
+	// the other way, and the rest of its frame that way (<reverse /> in a rule
+	// about a touch).
+	template <typename Mover, typename Other>
+	void reverseOff(Mover& mover, sf::Vector2f& velocity, const Other& other)
+	{
+		if (!meeting(mover, velocity, other))
+		{
+			velocity = -velocity;
+			return;
+		}
+		const sf::Vector2f before = velocity;
+		atTouch(mover, velocity, other, [&](xge::Edge, const xge::collide::Body&, const xge::collide::Body&)
+			{
+				return fromSfml(-before);
+			});
+	}
+
 	// Out of the side of `other` it went into, at the same speed: straight out
 	// from the middle of that side, and up to `maxDegrees` towards either end,
-	// as the engine does it (collide::deflected), the angle worked out where it
-	// touched, and the rest of the step played the new way. A Pong paddle.
+	// as the engine does it (collide::deflected), the angle worked out where the
+	// two were when they touched, and the rest of the frame played the new way. A
+	// Pong paddle.
 	template <typename Mover, typename Other>
 	void deflect(Mover& mover, sf::Vector2f& velocity, const Other& other, float maxDegrees)
 	{
 		const sf::Vector2f before = velocity;
-		const xge::collide::Body wall = bodyOf(other);
-		atTouch(mover, velocity, other, [&](xge::Edge edge)
+		atTouch(mover, velocity, other, [&](xge::Edge edge, const xge::collide::Body& then, const xge::collide::Body& wall)
 			{
-				return xge::collide::deflected(fromSfml(before), bodyOf(mover), wall, edge, maxDegrees);
+				return xge::collide::deflected(fromSfml(before), then, wall, edge, maxDegrees);
 			});
 	}
 
 	// Coming down onto the top of `other` (<land />), as the engine does it
 	// (motion::land, with the side of the thing that touched worked out by the
-	// sweep of the step it just took): it is put on the top, its fall stopped,
+	// sweep): it is put on the top of it as it was at the touch, its fall stopped,
 	// and the answer is yes. Any other touch does nothing, so a platform can be
 	// walked past and jumped up through.
 	template <typename Thing, typename Other>
-	bool land(Thing& thing, sf::Vector2f& velocity, const Other& other)
+	bool land(Thing& thing, sf::Vector2f& velocity, const Other& other, std::optional<float> across = std::nullopt)
 	{
-		std::optional<xge::collide::SweepHit> hit = meeting(thing, velocity, other);
-		if (!hit)
+		const std::optional<Touch> touch = meeting(thing, velocity, other);
+		if (!touch)
 		{
-			const std::optional<xge::Edge> edge = xge::collide::overlap(bodyOf(thing), bodyOf(other));
-			if (!edge)
-			{
-				return false;
-			}
-			hit = xge::collide::SweepHit{ 1.0f, *edge };
+			return false;
 		}
 
 		xge::Vector2f where = positionOf(thing);
 		xge::Vector2f going = fromSfml(velocity);
-		if (!xge::motion::land(where, going, sizeOf(thing), positionOf(other).y, xge::opposite(hit->edgeOfSecond), false))
+		if (!xge::motion::land(where, going, sizeOf(thing), touch->other.position.y, xge::opposite(touch->hit.edgeOfSecond), false))
 		{
 			return false;
+		}
+		if (across)
+		{
+			// from a leap: the way across the keys held give it takes up at the
+			// landing, and the rest of the frame goes that way
+			where.x += (*across - going.x) * (1.0f - touch->hit.time);
+			going.x = *across;
 		}
 		put(thing, where);
 		velocity = toSfml(going);

@@ -120,7 +120,7 @@ namespace xge
 		target().clear(sf::Color(c.r, c.g, c.b, c.a));
 	}
 
-	void SFMLWindow::draw(Object& object)
+	void SFMLWindow::prepare(Object& object)
 	{
 		CachedVisual& visual = visuals[object.name];
 
@@ -132,6 +132,12 @@ namespace xge
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);
 		}
+	}
+
+	void SFMLWindow::draw(Object& object)
+	{
+		prepare(object);
+		CachedVisual& visual = visuals[object.name];
 
 		// The cached sprite's position has to be refreshed every frame, not
 		// just on rebuild: Object::position changes constantly from plain

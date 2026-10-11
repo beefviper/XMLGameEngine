@@ -187,7 +187,7 @@ namespace xge
 			}
 			else if (const auto* ahead = std::get_if<CmdThrust>(&actionCommand))
 			{
-				applyActionThrustAhead(object, ahead->amount, ahead->burn);
+				applyActionThrustAhead(object, trigger->action, ahead->amount, ahead->burn);
 			}
 		}
 
@@ -219,8 +219,7 @@ namespace xge
 		object.activeThrust = {};
 		object.activeThrustBurn = {};
 		object.activeTurn = {};
-		object.activeThrustAhead = 0.0f;
-		object.activeThrustAheadBurn.clear();
+		object.activeThrustAheadBy.clear();
 		object.followPath.clear();
 	}
 
@@ -447,7 +446,7 @@ namespace xge
 				[&](const CmdAccelerate& a) { applyActionThrust(object, a.direction, keyPressed ? a.amount : 0.0f, a.burn); },
 				// So are a turn and a thrust along the heading.
 				[&](const CmdTurn& t) { applyActionTurn(object, t.direction, keyPressed ? t.rate : 0.0f); },
-				[&](const CmdThrust& t) { applyActionThrustAhead(object, keyPressed ? t.amount : 0.0f, t.burn); },
+				[&](const CmdThrust& t) { applyActionThrustAhead(object, actionName, keyPressed ? t.amount : 0.0f, t.burn); },
 				[&](const CmdFire& f) { if (keyPressed) { spawnProjectile(object, f.projectileName); } },
 				// A sound belongs to the press, like a hop: letting go is silent.
 				[&](const CmdPlay& p) { if (keyPressed) { game.requestSound(p.sound); } },
@@ -587,10 +586,14 @@ namespace xge
 
 	// Records that thrust along the heading is now held (amount 0 = just
 	// released), and the variable it burns.
-	void CommandExecutor::applyActionThrustAhead(Object& object, float amount, const std::string& burn)
+	void CommandExecutor::applyActionThrustAhead(Object& object, const std::string& action, float amount, const std::string& burn)
 	{
-		object.activeThrustAhead = amount;
-		object.activeThrustAheadBurn = amount == 0.0f ? std::string{} : burn;
+		if (amount == 0.0f)
+		{
+			object.activeThrustAheadBy.erase(action);
+			return;
+		}
+		object.activeThrustAheadBy[action] = { amount, burn };
 	}
 
 	// Launches a projectile that is not already in flight. The name can be a

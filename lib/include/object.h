@@ -343,10 +343,11 @@ namespace xge
 
 		// Held turning, by Direction (only Left and Right are used): degrees a
 		// frame, as activeThrust holds a thruster; and thrust held along the
-		// heading, with the variable it burns. See Game::applyAcceleration.
+		// heading, for each action that thrusts (a key held for it), with the
+		// variable it burns, so that forward and back held together add up. See
+		// Game::applyAcceleration.
 		std::array<float, 4> activeTurn{};
-		float activeThrustAhead{};
-		std::string activeThrustAheadBurn;
+		std::map<std::string, std::pair<float, std::string>> activeThrustAheadBy;
 
 		// Which way an object with a <facing> is facing, one of the four
 		// directions, without turning its picture (a <heading> turns it). It

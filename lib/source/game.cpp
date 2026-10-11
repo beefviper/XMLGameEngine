@@ -611,8 +611,7 @@ namespace xge
 			// Facing the way it started, and no turn or thrust along it still held.
 			object.heading = object.headingOriginal;
 			object.activeTurn = {};
-			object.activeThrustAhead = 0.0f;
-			object.activeThrustAheadBurn.clear();
+			object.activeThrustAheadBy.clear();
 			object.showHeading();
 
 			// An animation starts again from its first picture.
@@ -1099,9 +1098,12 @@ namespace xge
 					object.showHeading();
 				}
 
-				if (object.activeThrustAhead != 0.0f && burnFuel(object.activeThrustAheadBurn, "thrust"))
+				for (const auto& [action, thrust] : object.activeThrustAheadBy)
 				{
-					change += motion::ahead(object.heading) * object.activeThrustAhead;
+					if (burnFuel(thrust.second, "thrust"))
+					{
+						change += motion::ahead(object.heading) * thrust.first;
+					}
 				}
 			}
 
@@ -1250,13 +1252,25 @@ namespace xge
 			}
 		}
 
-		const auto advance = [&](float fraction)
+		// Where each object is worked out from where it last was set (the start of
+		// the frame, or the moment a reaction changed it), and how much of the
+		// frame it has been going since, not by adding up the pieces: so an object
+		// that no reaction touched ends the frame exactly one whole step on, as
+		// if nothing had met anything, however many reactions the others had.
+		std::vector<Vector2f> origin(all.size());
+		std::vector<float> since(all.size(), 0.0f);
+		for (std::size_t i = 0; i < all.size(); ++i)
 		{
-			for (auto& object : all)
+			origin[i] = all[i].position;
+		}
+
+		const auto advanceTo = [&](float total)
+		{
+			for (std::size_t i = 0; i < all.size(); ++i)
 			{
-				if (isShown(object)) // TODO: at some point you might wanna collide with invisible objects
+				if (isShown(all[i])) // TODO: at some point you might wanna collide with invisible objects
 				{
-					object.position += motionOf(object) * fraction;
+					all[i].position = origin[i] + motionOf(all[i]) * (total - since[i]);
 				}
 			}
 		};
@@ -1297,13 +1311,37 @@ namespace xge
 			}
 
 			const float step = nextHit.time * left;
-			advance(step);
 			played += step;
+			advanceTo(played);
 			next->handled = true;
+
+			struct Before
+			{
+				Vector2f position;
+				Vector2f motion;
+				bool shown;
+			};
+			std::vector<Before> before;
+			before.reserve(all.size());
+			for (const auto& object : all)
+			{
+				before.push_back({ object.position, motionOf(object), isShown(object) });
+			}
+
 			applyObjectCollision(*next->first, *next->second, nextHit.edgeOfSecond);
+
+			for (std::size_t i = 0; i < all.size(); ++i)
+			{
+				const Vector2f motion = motionOf(all[i]);
+				if (all[i].position != before[i].position || motion != before[i].motion || isShown(all[i]) != before[i].shown)
+				{
+					origin[i] = all[i].position;
+					since[i] = played;
+				}
+			}
 		}
 
-		advance(1.0f - played);
+		advanceTo(1.0f);
 
 		for (auto& object : all)
 		{

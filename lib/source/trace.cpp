@@ -6,6 +6,7 @@
 #include "trace.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
@@ -272,6 +273,98 @@ namespace xge::trace
 		return difference;
 	}
 
+	std::vector<Place> placesOf(Game& game)
+	{
+		std::vector<Place> places;
+		for (const Object& object : game.getCurrentObjects())
+		{
+			if (game.isShown(object) && object.isVisible)
+			{
+				places.push_back({ object.name, object.position.x, object.position.y });
+			}
+		}
+		return places;
+	}
+
+	std::string stateFile(int frame)
+	{
+		std::ostringstream name;
+		name << "state" << std::setfill('0') << std::setw(4) << frame << ".txt";
+		return name.str();
+	}
+
+	void writePlaces(const std::filesystem::path& file, const std::vector<Place>& places)
+	{
+		std::ofstream out(file, std::ios::binary);
+		for (const Place& place : places)
+		{
+			out << place.name << ' ' << std::setprecision(9) << place.x << ' ' << place.y << '\n';
+		}
+		if (!out)
+		{
+			throw std::runtime_error("could not write " + file.string());
+		}
+	}
+
+	std::vector<Place> readPlaces(const std::filesystem::path& file)
+	{
+		std::ifstream in(file);
+		if (!in)
+		{
+			throw std::runtime_error("could not read " + file.string());
+		}
+
+		std::vector<Place> places;
+		std::string line;
+		while (std::getline(in, line))
+		{
+			std::istringstream words(line);
+			Place place;
+			if (words >> place.name >> place.x >> place.y)
+			{
+				places.push_back(place);
+			}
+		}
+		return places;
+	}
+
+	std::string comparePlaces(const std::vector<Place>& engine, const std::vector<Place>& program, float within)
+	{
+		std::ostringstream said;
+		std::size_t different = 0;
+		std::string first;
+
+		const std::size_t both = std::min(engine.size(), program.size());
+		for (std::size_t at = 0; at < both; ++at)
+		{
+			const bool apart = std::abs(engine[at].x - program[at].x) > within || std::abs(engine[at].y - program[at].y) > within;
+			if (!apart)
+			{
+				continue;
+			}
+
+			if (different == 0)
+			{
+				std::ostringstream one;
+				one << engine[at].name << " is at " << engine[at].x << ", " << engine[at].y << " in the engine and "
+					<< program[at].x << ", " << program[at].y << " in the program (thing " << at + 1 << ", which it calls " << program[at].name << ")";
+				first = one.str();
+			}
+			++different;
+		}
+
+		if (engine.size() != program.size())
+		{
+			said << "the engine has " << engine.size() << " shown objects in play and the program " << program.size();
+			if (different > 0) { said << "; "; }
+		}
+		if (different > 0)
+		{
+			said << different << " of them are further apart than " << within << ": the first, " << first;
+		}
+		return said.str();
+	}
+
 	void SoundLog::play(const std::string& name)
 	{
 		std::ostringstream line;
@@ -434,9 +527,12 @@ namespace xge::trace
 			const Bitmap picture = window->capture();
 			const std::string file = frameFile(frame);
 
+			const std::vector<Place> places = placesOf(engine.currentGame());
+
 			if (!request.write.empty())
 			{
 				writeBitmap(request.write / file, picture);
+				writePlaces(request.write / stateFile(frame), places);
 			}
 
 			if (request.against.empty())
@@ -448,7 +544,21 @@ namespace xge::trace
 			try
 			{
 				const Difference difference = compare(picture, readBitmap(request.against / file), request.tolerance);
-				if (difference.pixels <= request.allow)
+
+				// Where each thing is, which a picture can hide (under another, off the
+				// screen), when the program wrote it.
+				std::string apart;
+				if (std::filesystem::exists(request.against / stateFile(frame)))
+				{
+					apart = comparePlaces(places, readPlaces(request.against / stateFile(frame)), 0.05f);
+				}
+
+				// Where the engine has everything, to read beside the program's.
+				std::filesystem::path theirs = request.against / stateFile(frame);
+				theirs.replace_extension(".engine.txt");
+				writePlaces(theirs, places);
+
+				if (difference.pixels <= request.allow && apart.empty())
 				{
 					out << "frame " << frame << ": same";
 					if (difference.pixels > 0) { out << " (" << difference.pixels << " pixels differ a little)"; }
@@ -456,11 +566,20 @@ namespace xge::trace
 					continue;
 				}
 
-				std::filesystem::path mine = request.against / file;
-				mine.replace_extension(".engine.bmp");
-				writeBitmap(mine, picture);
-				out << "frame " << frame << ": DIFFERENT, " << difference.pixels << " pixels, by up to " << difference.largest
-					<< " (the engine's is " << mine.string() << ")\n";
+				if (difference.pixels <= request.allow)
+				{
+					out << "frame " << frame << ": DIFFERENT, though the pictures are the same: " << apart << '\n';
+				}
+				else
+				{
+					std::filesystem::path mine = request.against / file;
+					mine.replace_extension(".engine.bmp");
+					writeBitmap(mine, picture);
+					out << "frame " << frame << ": DIFFERENT, " << difference.pixels << " pixels, by up to " << difference.largest
+						<< " (the engine's is " << mine.string() << ")";
+					if (!apart.empty()) { out << "; " << apart; }
+					out << '\n';
+				}
 			}
 			catch (const std::runtime_error& error)
 			{

@@ -233,7 +233,7 @@ namespace xge
 		SDL_RenderClear(renderer);
 	}
 
-	void SDL2Window::draw(Object& object)
+	void SDL2Window::prepare(Object& object)
 	{
 		CachedVisual& visual = visuals[object.name];
 
@@ -244,6 +244,12 @@ namespace xge
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);
 		}
+	}
+
+	void SDL2Window::draw(Object& object)
+	{
+		prepare(object);
+		CachedVisual& visual = visuals[object.name];
 
 		if (!visual.texture)
 		{

@@ -50,6 +50,9 @@ namespace xge
 		// Null while there is no window.
 		Window* currentWindow(void) noexcept { return window.get(); }
 
+		// The game it plays (the frame trace looks at its objects).
+		Game& currentGame(void) noexcept { return game; }
+
 		// Never null: NullAudio when there is no sound.
 		Audio* currentAudio(void) noexcept { return audio.get(); }
 

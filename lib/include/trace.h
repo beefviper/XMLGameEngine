@@ -84,6 +84,30 @@ namespace xge::trace
 		std::vector<std::string> heard;
 	};
 
+	// Where one object is, as the trace keeps it: the engine's and a generated
+	// program's are written and compared by name and place.
+	struct Place
+	{
+		std::string name;
+		float x{};
+		float y{};
+	};
+
+	// The shown objects in play, in the order of the game file, with where each is.
+	std::vector<Place> placesOf(Game& game);
+
+	// The file the places of a frame are kept in: state0030.txt, a line to an
+	// object (its name, x and y).
+	std::string stateFile(int frame);
+
+	void writePlaces(const std::filesystem::path& file, const std::vector<Place>& places);
+	std::vector<Place> readPlaces(const std::filesystem::path& file);
+
+	// What is different between two lists of places, in words: how many objects
+	// differ by more than `within` pixels, and the first of them (by the engine's
+	// name for it); empty when there is no difference.
+	std::string comparePlaces(const std::vector<Place>& engine, const std::vector<Place>& program, float within);
+
 	struct Request
 	{
 		std::vector<int> frames;

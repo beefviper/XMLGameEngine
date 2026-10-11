@@ -5,6 +5,7 @@
 
 #include "object.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace xge
@@ -59,6 +60,12 @@ namespace xge
 		turnedDegrees = static_cast<int>(degrees);
 		turnedFrame = frame;
 		visualDirty = true;
+		// The turned picture is the size it is now, not at the next draw: what
+		// the edges and the touches of this frame look at.
+		if (sizeKnown)
+		{
+			size = Vector2f{ static_cast<float>(std::max(bitmap->width, 1)), static_cast<float>(std::max(bitmap->height, 1)) };
+		}
 	}
 
 	void Object::advanceAnimation()

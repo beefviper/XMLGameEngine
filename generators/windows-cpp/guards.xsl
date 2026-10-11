@@ -54,8 +54,11 @@
       <xsl:call-template name="touching-name"><xsl:with-param name="class" select="$rule/@unless" /></xsl:call-template>
       <xsl:value-of select="concat('(', $name, ', ')" />
       <xsl:choose>
-        <xsl:when test="$other = ''">nullptr</xsl:when>
-        <xsl:otherwise><xsl:value-of select="concat('&amp;', $other)" /></xsl:otherwise>
+        <xsl:when test="$other = ''">nullptr, 1.0f</xsl:when>
+        <xsl:otherwise>
+          <!-- looked at at the moment of the touch, where each of them was then -->
+          <xsl:value-of select="concat('&amp;', $other, ', physics::timeOf(', $name, ', ', substring('sf::Vector2f{}', 1, 14 * number($velocity = '')), $velocity, ', ', $other, ')')" />
+        </xsl:otherwise>
       </xsl:choose>
       <xsl:text>)</xsl:text>
     </xsl:if>
@@ -79,7 +82,7 @@
     <xsl:text>template &lt;typename Shape&gt;
 bool </xsl:text>
     <xsl:call-template name="touching-name"><xsl:with-param name="class" select="@unless" /></xsl:call-template>
-    <xsl:text>(const Shape&amp; one, const void* other)</xsl:text>
+    <xsl:text>(const Shape&amp; one, const void* other, float when)</xsl:text>
   </xsl:template>
 
   <!-- The function for the class of this rule's unless=: everything of that
@@ -110,7 +113,7 @@ bool </xsl:text>
 {
 	const auto counts = [&amp;](const auto&amp; each)
 	{
-		return static_cast&lt;const void*&gt;(&amp;each) != static_cast&lt;const void*&gt;(&amp;one) &amp;&amp; static_cast&lt;const void*&gt;(&amp;each) != other &amp;&amp; physics::touching(one, each);
+		return static_cast&lt;const void*&gt;(&amp;each) != static_cast&lt;const void*&gt;(&amp;one) &amp;&amp; static_cast&lt;const void*&gt;(&amp;each) != other &amp;&amp; physics::overlappingAt(one, each, when);
 	};
 </xsl:text>
     </xsl:if>
