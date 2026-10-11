@@ -5,11 +5,11 @@
 //
 // Catch2 tests for xgecli --generate (cli/source/generate.cpp and the
 // stylesheets in generators/windows-cpp): what it writes for pong_min.xml (a
-// plain SFML program in the agreed layout, with nothing of the engine in it)
-// and for all of pong.xml (screens, texts, pictures, sounds, and the physics
-// and sound modules copied beside it), groups as std::vectors (Space Race,
-// Freeway, and members of their own), that a game carries only the modules,
-// helpers and headers it uses, arithmetic as plain C++, and that what it
+// plain SFML program in the agreed layout, its physics the engine's own
+// geometry.cpp copied beside it) and for all of pong.xml (screens, texts,
+// pictures, sounds, and the engine's synthesizer and SFML sound player copied
+// beside it), groups as std::vectors (Space Race, Freeway, and members of their
+// own), that a game carries only the engine's files, helpers and headers it uses, arithmetic as plain C++, and that what it
 // cannot generate yet stops it with a message naming the tag. And pong_min.xml
 // itself, played by the engine. Whether a written program builds and plays is
 // not tested here (it needs a compiler and a window): see
@@ -113,11 +113,16 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	TempFolder output("xge_test_generate_pong_min");
 	const GeneratedProgram program = generateGame(requestFor("games/pong_min.xml", output.path));
 
-	// source/main.cpp, CMakeLists.txt, README.md, .gitignore and the physics module; no sound.
-	CHECK(program.files.size() == 5);
+	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, physics.h and the
+	// engine's physics (engine/types.h, geometry.h, geometry.cpp); no sound.
+	CHECK(program.files.size() == 8);
 	CHECK(program.assets.empty());
 	CHECK(fs::exists(output.path / "include/physics.h"));
-	CHECK_FALSE(fs::exists(output.path / "include/sound.h"));
+	CHECK(fs::exists(output.path / "engine/geometry.cpp"));
+	CHECK_FALSE(fs::exists(output.path / "engine/sound.h"));
+
+	// The engine's files are copied as they are, not rewritten.
+	CHECK(readFile(output.path / "engine/geometry.cpp") == readFile("lib/source/geometry.cpp"));
 	CHECK_FALSE(fs::exists(output.path / "manifest.xml"));
 
 	const std::string main = readFile(output.path / "source/main.cpp");
@@ -152,17 +157,17 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	CHECK(main.find("if (physics::past(ball, physics::Edge::Top, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Top, windowArea);") != std::string::npos);
 	CHECK(main.find("paddle1.setPosition({windowLeft + margin, windowHeightCenter - height / 2.0f});") != std::string::npos);
 
-	// Nothing of the engine.
+	// The game's rules alone: the engine's physics is behind physics.h.
 	CHECK(main.find("xge::") == std::string::npos);
 	CHECK(main.find("namespace") == std::string::npos);
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
-	CHECK(cmake.find("add_executable(pong_min source/main.cpp include/physics.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong_min source/main.cpp include/physics.h\n\t# the engine's own code, as it is in lib/\n\tengine/types.h engine/geometry.h engine/geometry.cpp)") != std::string::npos);
 	CHECK(cmake.find("set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT pong_min)") != std::string::npos);
 	CHECK(cmake.find("Audio") == std::string::npos);
 }
 
-TEST_CASE("generating pong writes every screen, text, picture and sound, with the modules beside it", "[generate]")
+TEST_CASE("generating pong writes every screen, text, picture and sound, with the engine's code beside it", "[generate]")
 {
 	if (!canGenerate())
 	{
@@ -172,11 +177,13 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 	TempFolder output("xge_test_generate_pong");
 	const GeneratedProgram program = generateGame(requestFor("games/pong.xml", output.path));
 
-	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/physics.h, include/sound.h and source/sound.cpp,
+	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/physics.h,
+	// the engine's physics (3 files), synthesizer (2) and SFML sound player (3),
 	// and the font and the paddle's picture.
-	CHECK(program.files.size() == 7);
+	CHECK(program.files.size() == 13);
 	CHECK(program.assets.size() == 2);
-	CHECK(fs::exists(output.path / "source/sound.cpp"));
+	CHECK(fs::exists(output.path / "engine/sound.cpp"));
+	CHECK(fs::exists(output.path / "engine/audio_sfml.cpp"));
 	CHECK(fs::exists(output.path / "assets/tuffy.ttf"));
 	CHECK(fs::exists(output.path / "assets/paddle.jpg"));
 
@@ -185,7 +192,7 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 	// The screens, a stack of them, and what each does.
 	CHECK(main.find("enum class Screen { Mainmenu, Settings, Playing, Paused, Gameover };") != std::string::npos);
 	CHECK(main.find("screens.assign(1, Screen::Mainmenu);") != std::string::npos);
-	CHECK(main.find("case Screen::Mainmenu:\n\t\tif (key == sf::Keyboard::Key::Space)\n\t\t{\n\t\t\tscreens.push_back(Screen::Playing);\n\t\t\tstartSound.play();") != std::string::npos);
+	CHECK(main.find("case Screen::Mainmenu:\n\t\tif (key == sf::Keyboard::Key::Space)\n\t\t{\n\t\t\tscreens.push_back(Screen::Playing);\n\t\t\taudio.play(\"start\");") != std::string::npos);
 	CHECK(main.find("if (paddle1Score >= 15.0f || paddle2Score >= 15.0f)\n\t{\n\t\tscreens.push_back(Screen::Gameover);") != std::string::npos);
 
 	// Texts, a number kept up to date, and a picture flipped.
@@ -195,24 +202,23 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 	CHECK(main.find("sf::Sprite paddle2(paddleTexture);") != std::string::npos);
 	CHECK(main.find("// flipped left to right") != std::string::npos);
 
-	// A name C++ has already (the object "continue") gets an underscore; a
-	// sound's or picture's name does not need one.
+	// A name C++ has already (the object "continue") gets an underscore.
 	CHECK(main.find("sf::Text continue_(font);") != std::string::npos);
-	CHECK(main.find("sound::Sound startSound;") != std::string::npos);
 
-	// Sounds by their notes.
-	CHECK(main.find("{sound::Wave::Triangle, sound::pitch(\"E5\"), sound::pitch(\"E3\"), 0.35f}") != std::string::npos);
-	CHECK(main.find("sound::rest(0.1f),") != std::string::npos);
+	// Sounds by their notes, made and played by the engine's own player.
+	CHECK(main.find("xge::SFMLAudio audio;") != std::string::npos);
+	CHECK(main.find("{\"score\", 0.4f, {\n\t\t\t{.wave = xge::Waveform::Triangle, .startHz = hertz(\"E5\"), .endHz = hertz(\"E3\"), .seconds = 0.35f}") != std::string::npos);
+	CHECK(main.find("{.rest = true, .seconds = 0.1f},") != std::string::npos);
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
 	CHECK(cmake.find("find_package(SFML 3 COMPONENTS Graphics Audio QUIET)") != std::string::npos);
-	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp include/physics.h include/sound.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong source/main.cpp include/physics.h\n\t# the engine's own code, as it is in lib/\n\tengine/types.h engine/geometry.h engine/geometry.cpp\n\tengine/sound.h engine/sound.cpp engine/audio.h engine/audio_sfml.h engine/audio_sfml.cpp)") != std::string::npos);
 	CHECK(cmake.find("PRIVATE SFML::Graphics SFML::Audio)") != std::string::npos);
 	CHECK(cmake.find("/assets") != std::string::npos);
 
-	// headers in include/, which the compiler is told of; the built game goes
+	// headers in include/ and engine/, which the compiler is told of; the built game goes
 	// to output/; and neither it nor build/ is for a repository
-	CHECK(cmake.find("target_include_directories(pong PRIVATE include)") != std::string::npos);
+	CHECK(cmake.find("target_include_directories(pong PRIVATE include engine)") != std::string::npos);
 	CHECK(cmake.find("set(CMAKE_RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/output\")") != std::string::npos);
 	CHECK(readFile(output.path / ".gitignore") == "# where the game is built, and the built game\nbuild/\noutput/\n");
 	CHECK_FALSE(fs::exists(output.path / "main.cpp"));
@@ -388,7 +394,7 @@ TEST_CASE("generating Breakout writes its bricks as one group of columns and row
 	// the bricks never move, so their bounce off the sides is left out
 	CHECK(main.find("physics::past(bricks") == std::string::npos);
 	// every rule about the bottom in one touch of it: the ball bounces and dies
-	CHECK(main.find("\t// bottom: bounce play die\n\tif (physics::past(ball, physics::Edge::Bottom, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Bottom, windowArea);\n\t\twallSound.play();\n\t\tballAlive = false;\n\t\treturn;") != std::string::npos);
+	CHECK(main.find("\t// bottom: bounce play die\n\tif (physics::past(ball, physics::Edge::Bottom, windowArea))\n\t{\n\t\tphysics::bounce(ball, ballVelocity, physics::Edge::Bottom, windowArea);\n\t\taudio.play(\"wall\");\n\t\tballAlive = false;\n\t\treturn;") != std::string::npos);
 	// the class counts both groups of bricks
 	CHECK(main.find("\t// bricks: none left\n\tif (std::count(strongAlive.begin(), strongAlive.end(), true) + std::count(bricksAlive.begin(), bricksAlive.end(), true) == 0)\n\t{\n\t\tscreens.push_back(Screen::Youwin);") != std::string::npos);
 	CHECK(main.find("\t// ball: none left\n\tif (!ballAlive)\n\t{\n\t\tscreens.push_back(Screen::Gameover);") != std::string::npos);
@@ -414,8 +420,8 @@ TEST_CASE("generating Breakout gives the top row two looks, whole and cracked, a
 	CHECK(main.find("\tfor (std::size_t i = 0; i < strong.size(); ++i)\n\t{\n\t\tbecomeStrong(i, StrongLook::Whole);\n\t}") != std::string::npos);
 	// the rules in the order written, each looking at the look as it comes:
 	// a cracked brick goes, a whole one cracks, and a hit does only one
-	CHECK(main.find("\t\t\tif (strongLook[j] == StrongLook::Cracked)\n\t\t\t{\n\t\t\t\tstrongAlive[j] = false;\n\t\t\t\tbrickSound.play();\n\t\t\t}\n"
-		"\t\t\tif (strongLook[j] == StrongLook::Whole)\n\t\t\t{\n\t\t\t\tbecomeStrong(j, StrongLook::Cracked);\n\t\t\t\tcrackSound.play();\n\t\t\t}\n"
+	CHECK(main.find("\t\t\tif (strongLook[j] == StrongLook::Cracked)\n\t\t\t{\n\t\t\t\tstrongAlive[j] = false;\n\t\t\t\taudio.play(\"brick\");\n\t\t\t}\n"
+		"\t\t\tif (strongLook[j] == StrongLook::Whole)\n\t\t\t{\n\t\t\t\tbecomeStrong(j, StrongLook::Cracked);\n\t\t\t\taudio.play(\"crack\");\n\t\t\t}\n"
 		"\t\t\tphysics::bounceOff(ball, ballVelocity, strong[j]);") != std::string::npos);
 	// its rules are all about the ball, written with the ball's: nothing left of its own each frame
 	CHECK(main.find("void updateStrong()") == std::string::npos);
@@ -599,7 +605,7 @@ TEST_CASE("generating Kaboom counts the bomber's timers down, and a missed bomb 
 	CHECK(main.find("physics::fireFrom(bomber1, bombs1[i], bombs1Velocity[i], physics::Facing::Down, sf::Vector2f{0.0f, fall1}.length());") != std::string::npos);
 	// the bombs are hidden until he drops one, and <reset object> puts every one back
 	CHECK(main.find("\tbombs1Alive.assign(bombs1.size(), false); // hidden until they are brought in") != std::string::npos);
-	CHECK(main.find("\t\t// bottom: dec play reset\n\t\tif (physics::past(bombs1[i], physics::Edge::Bottom, windowArea))\n\t\t{\n\t\t\tbucketBuckets -= 1.0f;\n\t\t\tshowBucketsvalue();\n\t\t\tboomSound.play();\n\t\t\tresetBombs1();") != std::string::npos);
+	CHECK(main.find("\t\t// bottom: dec play reset\n\t\tif (physics::past(bombs1[i], physics::Edge::Bottom, windowArea))\n\t\t{\n\t\t\tbucketBuckets -= 1.0f;\n\t\t\tshowBucketsvalue();\n\t\t\taudio.play(\"boom\");\n\t\t\tresetBombs1();") != std::string::npos);
 	CHECK(main.find("void resetBombs1()\n{") != std::string::npos);
 	// the waves share one set of keys
 	CHECK(main.find("\tcase Screen::Wave3:\n\t\tif (key == sf::Keyboard::Key::Space || key == sf::Keyboard::Key::P)") != std::string::npos);
@@ -661,7 +667,7 @@ TEST_CASE("generating Asteroids turns the ship's picture with its heading, and a
 	CHECK(main.find("\tif (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))\n\t{\n\t\tshipHeading -= turnrate;\n\t\tturnShip();\n\t}") != std::string::npos);
 	CHECK(main.find("\t\tshipVelocity += physics::ahead(shipHeading) * thrustpower;") != std::string::npos);
 	// its picture is drawn again when the whole degree changes, and that is what its touches test
-	CHECK(main.find("\t\tconst sf::Image picture = pictures::turnedLines(shipLines, static_cast<float>(degrees));\n\t\tshipPicture.update(picture);\n\t\tshipPixels = picture;") != std::string::npos);
+	CHECK(main.find("\t\tconst sf::Image picture = imageOf(xge::rasterizeTurned(shipLines, static_cast<float>(degrees)));\n\t\tshipPicture.update(picture);\n\t\tshipPixels = picture;") != std::string::npos);
 	CHECK(main.find("\tshipVelocity *= 1.0f - drag;\n\tship.move(shipVelocity);") != std::string::npos);
 	CHECK(main.find("physics::fireAhead(ship, shots[i], shotsVelocity[i], shipHeading, sf::Vector2f{0.0f, -shotspeed}.length());") != std::string::npos);
 	// rocks of several looks find their pixels by their picture; a touch is swept along the step
@@ -684,7 +690,7 @@ TEST_CASE("generating Combat drives each tank along its heading, a turned pictur
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("\t\ttank1Velocity += physics::ahead(tank1Heading) * back;") != std::string::npos);
-	CHECK(main.find("pictures::turned(pictures::rows(tank1Rows, 3, sf::Color::Yellow), static_cast<float>(degrees))") != std::string::npos);
+	CHECK(main.find("imageOf(xge::turnBitmap(xge::rasterizeRows(tank1Rows, 3, {255, 255, 0, 255}), static_cast<float>(degrees)))") != std::string::npos);
 	CHECK(main.find("\tif (shell2Alive && physics::touchingPixels(tank1, &tank1Pixels, shell2, nullptr, tank1Velocity - shell2Velocity))") != std::string::npos);
 	CHECK(main.find("\t\tif (physics::touchingPixels(tank1, &tank1Pixels, other, nullptr, tank1Velocity))\n\t\t{\n\t\t\tphysics::bounceOff(tank1, tank1Velocity, other);") != std::string::npos);
 }
@@ -1024,8 +1030,8 @@ TEST_CASE("a group's rows, columns and cells change what they pick, and each cel
 	CHECK(main.find("\t// dots, row 4, every odd column\n\tfor (std::size_t i : {15u, 17u, 19u})\n\t{\n\t\tdotsVelocity[i] = {-1.0f, 0.5f};") != std::string::npos);
 
 	// a picture for each look; a row's new rows, and a cell's color on the group's rows
-	CHECK(main.find("!invadersColumn3Row1Picture.loadFromImage(pictures::rows(invadersRows, 2, sf::Color::Red))") != std::string::npos);
-	CHECK(main.find("!invadersRow2Picture.loadFromImage(pictures::rows(invadersRow2Rows, 2, sf::Color::Green))") != std::string::npos);
+	CHECK(main.find("!invadersColumn3Row1Picture.loadFromImage(imageOf(xge::rasterizeRows(invadersRows, 2, {255, 0, 0, 255})))") != std::string::npos);
+	CHECK(main.find("!invadersRow2Picture.loadFromImage(imageOf(xge::rasterizeRows(invadersRow2Rows, 2, {0, 255, 0, 255})))") != std::string::npos);
 	CHECK(main.find("invadersColumn3Row1Rows") == std::string::npos);
 	CHECK(main.find("\tinvadersTop += static_cast<float>(invadersPicture.getSize().y) + 4.0f;") != std::string::npos);
 }
@@ -1081,14 +1087,16 @@ TEST_CASE("a sprite of rows, of lines or from an SVG is a picture the program ha
 	const GeneratedProgram program = generateGame(requestFor(folder.path / "gallery.xml", folder.path / "out"));
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
-	CHECK(main.find("#include \"pictures.h\"") != std::string::npos);
-	CHECK(fs::exists(folder.path / "out/include/pictures.h"));
+	// drawn by the engine's own code (bitmap.cpp), copied beside it
+	CHECK(main.find("#include \"bitmap.h\"") != std::string::npos);
+	CHECK(fs::exists(folder.path / "out/engine/bitmap.cpp"));
+	CHECK_FALSE(fs::exists(folder.path / "out/include/pictures.h"));
 	// a bitmap's rows written out one under another, so it looks like itself
 	CHECK(main.find("const std::vector<std::string> playerRows = {\n\t\"...*...\",\n\t\".*****.\",\n\t\"*******\"\n};\nsf::Texture playerPicture;") != std::string::npos);
-	CHECK(main.find("!playerPicture.loadFromImage(pictures::rows(playerRows, 3, sf::Color::Cyan))") != std::string::npos);
+	CHECK(main.find("!playerPicture.loadFromImage(imageOf(xge::rasterizeRows(playerRows, 3, {0, 255, 255, 255})))") != std::string::npos);
 	// lines, white and 1 thick when they do not say
-	CHECK(main.find("\t{{200.0f, 30.0f}, {318.0f, 10.0f}, sf::Color::White, 1}\n};") != std::string::npos);
-	CHECK(main.find("!groundPicture.loadFromImage(pictures::lines(groundLines))") != std::string::npos);
+	CHECK(main.find("\t{200.0f, 30.0f, 318.0f, 10.0f, {255, 255, 255, 255}, 1}\n};") != std::string::npos);
+	CHECK(main.find("!groundPicture.loadFromImage(imageOf(xge::rasterizeLines(groundLines)))") != std::string::npos);
 	// a group of cells of a bitmap: the picture's size from one cell to the next
 	CHECK(main.find("std::vector<sf::Sprite> aliens(8, sf::Sprite(aliensPicture));") != std::string::npos);
 	CHECK(main.find("static_cast<float>(column) * (static_cast<float>(aliensPicture.getSize().x) + 6.0f)") != std::string::npos);
@@ -1113,7 +1121,7 @@ TEST_CASE("a sprite of rows, of lines or from an SVG is a picture the program ha
 	CHECK(bigEndian(20) == 52);
 }
 
-TEST_CASE("a generated game carries only the modules, helper functions and headers it uses", "[generate]")
+TEST_CASE("a generated game carries only the engine's files, helper functions and headers it uses", "[generate]")
 {
 	if (!canGenerate())
 	{
@@ -1125,12 +1133,14 @@ TEST_CASE("a generated game carries only the modules, helper functions and heade
 	generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out"));
 
 	const GeneratedProgram program = generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out2"));
-	CHECK(program.files.size() == 5);
-	CHECK_FALSE(fs::exists(folder.path / "out2/include/sound.h"));
+	// its four files, physics.h and the engine's physics: no sound, no pictures
+	CHECK(program.files.size() == 8);
+	CHECK_FALSE(fs::exists(folder.path / "out2/engine/sound.h"));
+	CHECK_FALSE(fs::exists(folder.path / "out2/engine/bitmap.h"));
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
 	CHECK(main.find("#include \"physics.h\"") != std::string::npos);
-	CHECK(main.find("#include \"sound.h\"") == std::string::npos);
+	CHECK(main.find("#include \"audio_sfml.h\"") == std::string::npos);
 	CHECK(main.find("physics::past(box, physics::Edge::Left, windowArea)") != std::string::npos);
 	CHECK(main.find("physics::touching(") == std::string::npos);
 	CHECK(main.find("randomBetween(") == std::string::npos);

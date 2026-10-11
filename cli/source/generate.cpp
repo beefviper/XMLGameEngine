@@ -347,10 +347,12 @@ namespace xge
 			const std::string element(reinterpret_cast<const char*>(node->name));
 			const std::filesystem::path path = attribute(node, "path");
 
-			// A file copied in: a game's asset from the data folder, or one of the
+			// A file copied in: a game's asset from the data folder, one of the
 			// target's modules (physics.h) from its modules/ folder, where it may
 			// be named otherwise than where it goes (from="physics.h" to
-			// include/physics.h).
+			// include/physics.h), or one of the engine's own files from lib/ in
+			// the data folder (from="lib/source/geometry.cpp" to
+			// engine/geometry.cpp), unchanged, so the program runs the engine's code.
 			const auto copyIn = [&](const std::filesystem::path& from)
 			{
 				const std::filesystem::path to = output / path;
@@ -371,6 +373,11 @@ namespace xge
 			{
 				const std::string from = attribute(node, "from");
 				copyIn(request.generators / request.target / "modules" / (from.empty() ? path : std::filesystem::path(from)));
+				program.files.push_back(path);
+			}
+			else if (element == "engine")
+			{
+				copyIn(request.dataFolder / attribute(node, "from"));
 				program.files.push_back(path);
 			}
 			else if (element == "asset")

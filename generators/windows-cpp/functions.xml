@@ -4,8 +4,8 @@
 <!-- author: beefviper -->
 <!-- date: Oct 5, 2026 -->
 
-<!-- The few small functions a generated game may need beside its modules
-     (modules/physics.h and sound.h), kept here as plain C++
+<!-- The few small functions a generated game may need beside the engine's
+     code (engine/) and physics.h, kept here as plain C++
      (CDATA, so nothing in them is escaped). generate.xsl writes a function's
      declaration with the others and its definition at the bottom, only when the
      game uses it; `uses` names the standard headers it needs. -->
@@ -42,6 +42,28 @@ float sign(float value)
 int framesFor(float seconds)
 {
 	return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framerate))));
+}
+]]></definition>
+  </function>
+
+  <function name="imageOf">
+    <declaration>sf::Image imageOf(const xge::Bitmap&amp; picture);</declaration>
+    <definition><![CDATA[
+// A picture the engine drew, pixel for pixel, as an SFML image.
+sf::Image imageOf(const xge::Bitmap& picture)
+{
+	return sf::Image({static_cast<unsigned int>(picture.width), static_cast<unsigned int>(picture.height)}, picture.rgba.data());
+}
+]]></definition>
+  </function>
+
+  <function name="hertz" uses="string">
+    <declaration>float hertz(const std::string&amp; note);</declaration>
+    <definition><![CDATA[
+// A note's pitch (A4, C#5, Eb3) in hertz, as the engine reads it.
+float hertz(const std::string& note)
+{
+	return xge::pitchFromName(note).value_or(0.0f);
 }
 ]]></definition>
   </function>

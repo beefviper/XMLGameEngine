@@ -5,7 +5,8 @@
 <!-- date: Oct 5, 2026 -->
 
 <!-- The windows-cpp target: a game file in, a C++ program that plays it on SFML 3
-     out, written as a person would write it, with nothing of the engine in it.
+     out: the game's rules written as a person would write them, worked out
+     with the engine's own code, so it plays as the engine does.
 
      Run by xgecli (generate.cpp) with libxslt, or by hand:
 
@@ -16,11 +17,12 @@
      exsl:document, in the output named: source/main.cpp (the game, main.xsl),
      CMakeLists.txt (its build), README.md and .gitignore (build/ and output/,
      where it is built and where the built program goes). Its own output is a
-     list of what it wrote and of what xgecli copies in: the modules the game uses
-     (modules/: physics.h, pictures.h to include/, and sound.cpp to source/ with
-     sound.h to include/), the game's assets (its font and pictures), and each
-     <svg> for xgecli to draw into a picture as the engine draws it. xgecli makes
-     source/ and include/ first, and reads the list.
+     list of what it wrote and of what xgecli copies in: physics.h (modules/,
+     to include/), the engine's files the game uses (lib/, unchanged, to
+     engine/: geometry for its physics, bitmap for the pictures it draws, sound
+     and the SFML sound player for its sounds), the game's assets (its font and
+     pictures), and each <svg> for xgecli to draw into a picture as the engine
+     draws it. xgecli makes source/ and include/ first, and reads the list.
 
      It covers part of the language so far, all of Pong (check.xsl); anything
      else stops it with a message saying what and where. -->
@@ -76,13 +78,21 @@ output/
       <file path=".gitignore" />
       <xsl:if test="$physics">
         <module path="include/physics.h" from="physics.h" />
+        <engine path="engine/types.h" from="lib/include/types.h" />
+        <engine path="engine/geometry.h" from="lib/include/geometry.h" />
+        <engine path="engine/geometry.cpp" from="lib/source/geometry.cpp" />
       </xsl:if>
-      <xsl:if test="$drawn-rows or $drawn-lines">
-        <module path="include/pictures.h" from="pictures.h" />
+      <xsl:if test="$pictures">
+        <engine path="engine/color.h" from="lib/include/color.h" />
+        <engine path="engine/bitmap.h" from="lib/include/bitmap.h" />
+        <engine path="engine/bitmap.cpp" from="lib/source/bitmap.cpp" />
       </xsl:if>
       <xsl:if test="$audio">
-        <module path="include/sound.h" from="sound.h" />
-        <module path="source/sound.cpp" from="sound.cpp" />
+        <engine path="engine/sound.h" from="lib/include/sound.h" />
+        <engine path="engine/sound.cpp" from="lib/source/sound.cpp" />
+        <engine path="engine/audio.h" from="lib/include/audio.h" />
+        <engine path="engine/audio_sfml.h" from="lib/include/audio_sfml.h" />
+        <engine path="engine/audio_sfml.cpp" from="lib/source/audio_sfml.cpp" />
       </xsl:if>
       <xsl:if test="$texts">
         <asset path="assets/tuffy.ttf" />
@@ -164,14 +174,25 @@ endif()
 add_executable(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> source/main.cpp</xsl:text>
-    <xsl:if test="$audio"> source/sound.cpp</xsl:if>
     <xsl:if test="$physics"> include/physics.h</xsl:if>
-    <xsl:if test="$drawn-rows or $drawn-lines"> include/pictures.h</xsl:if>
-    <xsl:if test="$audio"> include/sound.h</xsl:if>
+    <xsl:if test="$physics or $pictures or $audio">
+      <xsl:text>
+	# the engine's own code, as it is in lib/
+	</xsl:text>
+      <xsl:if test="$physics">engine/types.h engine/geometry.h engine/geometry.cpp</xsl:if>
+      <xsl:if test="$physics and ($pictures or $audio)"><xsl:text>
+	</xsl:text></xsl:if>
+      <xsl:if test="$pictures">engine/color.h engine/bitmap.h engine/bitmap.cpp</xsl:if>
+      <xsl:if test="$pictures and $audio"><xsl:text>
+	</xsl:text></xsl:if>
+      <xsl:if test="$audio">engine/sound.h engine/sound.cpp engine/audio.h engine/audio_sfml.h engine/audio_sfml.cpp</xsl:if>
+    </xsl:if>
     <xsl:text>)
 target_include_directories(</xsl:text>
     <xsl:value-of select="$name" />
-    <xsl:text> PRIVATE include)
+    <xsl:text> PRIVATE include</xsl:text>
+    <xsl:if test="$physics or $pictures or $audio"> engine</xsl:if>
+    <xsl:text>)
 target_compile_features(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> PRIVATE cxx_std_20)
@@ -227,22 +248,25 @@ endif()
 Generated from `</xsl:text>
     <xsl:value-of select="$source" />
     <xsl:text>` by `xgecli --generate windows-cpp`. It is the same game as the engine
-plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
+plays, written out as a C++ program on SFML 3: its rules are in `source/main.cpp`,
+and what they do (the physics, the pictures it draws, its sounds) is the engine's
+own code, so it plays as the engine does.
 
 | File | What |
 |---|---|
 | `source/main.cpp` | the game: its window, tunables, screens, objects and sounds, then `main` and the game loop, then a function per screen and per object |
 </xsl:text>
     <xsl:if test="$physics">
-      <xsl:text>| `include/physics.h` | where things are, whether they touch, and bouncing, sticking and deflecting; it works with any SFML shape, sprite or text |
+      <xsl:text>| `include/physics.h` | hands the engine's physics SFML's shapes, sprites and texts: where things are, whether they touch, bouncing, sticking, deflecting and the rest |
+| `engine/geometry.h`, `engine/geometry.cpp`, `engine/types.h` | the engine's physics, as it is in the engine |
 </xsl:text>
     </xsl:if>
-    <xsl:if test="$drawn-rows or $drawn-lines">
-      <xsl:text>| `include/pictures.h` | the pictures it draws itself when it starts: rows of text, and straight lines |
+    <xsl:if test="$pictures">
+      <xsl:text>| `engine/bitmap.h`, `engine/bitmap.cpp`, `engine/color.h` | the engine's drawing of pictures made of rows of text and of straight lines, and their turning |
 </xsl:text>
     </xsl:if>
     <xsl:if test="$audio">
-      <xsl:text>| `include/sound.h`, `source/sound.cpp` | 8-bit sounds written as notes, made into samples when the game starts |
+      <xsl:text>| `engine/sound.h`, `engine/sound.cpp`, `engine/audio.h`, `engine/audio_sfml.h`, `engine/audio_sfml.cpp` | the engine's 8-bit synthesizer, and its SFML sound player |
 </xsl:text>
     </xsl:if>
     <xsl:if test="$texts or $images or $drawn-svgs">

@@ -55,13 +55,28 @@ set(data_generators
 	"generators/windows-cpp/values.xsl"
 	"generators/windows-cpp/functions.xml"
 	"generators/windows-cpp/tables.xml"
-	"generators/windows-cpp/modules/physics.h"
-	"generators/windows-cpp/modules/pictures.h"
-	"generators/windows-cpp/modules/sound.h"
-	"generators/windows-cpp/modules/sound.cpp")
+	"generators/windows-cpp/modules/physics.h")
+
+# The engine's own files a generated program compiles unchanged (the engine
+# element of a target's manifest, generate.cpp): the physics, the pictures it
+# draws and the sounds it makes and plays, so it plays as the engine does.
+# Copied under lib/ as they are here; they are already the engine's sources,
+# so they are not listed again beside the data.
+set(data_engine
+	"lib/include/types.h"
+	"lib/include/geometry.h"
+	"lib/source/geometry.cpp"
+	"lib/include/color.h"
+	"lib/include/bitmap.h"
+	"lib/source/bitmap.cpp"
+	"lib/include/sound.h"
+	"lib/source/sound.cpp"
+	"lib/include/audio.h"
+	"lib/include/audio_sfml.h"
+	"lib/source/audio_sfml.cpp")
 
 set(data_outputs "")
-foreach(item IN LISTS data_xsd data_xml data_assets data_generators)
+foreach(item IN LISTS data_xsd data_xml data_assets data_generators data_engine)
 	message(STATUS ${item})
 	add_custom_command(
 		OUTPUT "${XGE_OUTPUT_DIR}/${item}"

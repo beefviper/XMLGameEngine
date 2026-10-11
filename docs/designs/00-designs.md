@@ -46,7 +46,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | File | Topic | Status |
 |---|---|---|
 | [generator](40-generator.md) | XSLT approach, options, the plain `windows-cpp` target, open questions | Built |
-| [generator-structure](41-generator-structure.md) | Program layout: objects, screens, groups, pictures, names, modules | Built |
+| [generator-structure](41-generator-structure.md) | Program layout: objects, screens, groups, pictures, names, the engine's files it carries | Built |
 | [generator-rules](42-generator-rules.md) | Edges, touches, timers, jumps, aim, chase, paths | Built |
 
 ## Engine, tools and games

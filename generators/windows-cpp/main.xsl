@@ -12,9 +12,11 @@
      render), and the functions defined below it. Each object is a global named
      as in the game (paddle1), each rule an if statement in that object's
      update function, each screen's keys and conditions in that screen's update
-     function. The physics and the sound are modules of their own beside it
-     (modules/physics.h, modules/sound.h and sound.cpp), copied only when the
-     game uses them; the few other helpers it needs are in functions.xml. -->
+     function. The physics, the pictures it draws and its sound are the
+     engine's own code (lib/: geometry, bitmap, sound and the SFML sound
+     player), copied unchanged into engine/ only when the game uses them, so it
+     plays as the engine does; physics.h beside it (modules/) hands the engine
+     SFML's shapes. The few other helpers it needs are in functions.xml. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:date="http://exslt.org/dates-and-times"
@@ -256,10 +258,11 @@
     </xsl:for-each>
   </xsl:variable>
 
-  <!-- The modules it needs: physics for the edges, touches and sizes, sound for
-       its sounds. -->
+  <!-- The engine's code it needs: physics for the edges, touches and sizes,
+       pictures for what it draws, sound for its sounds. -->
   <xsl:variable name="physics" select="boolean($rules/* or $sizes-read != '' or $hops or $jumpers or $climbers or $fires or $aimers or $chasers)" />
   <xsl:variable name="audio" select="boolean($sounds)" />
+  <xsl:variable name="pictures" select="boolean($drawn-rows or $drawn-lines)" />
 
   <!-- The helper functions the game needs (functions.xml). -->
   <xsl:variable name="used">
@@ -267,6 +270,8 @@
     <xsl:if test="$things//random"> randomBetween </xsl:if>
     <xsl:if test="contains($words, ' sgn ')"> sign </xsl:if>
     <xsl:if test="$timed or $timed-states or $jumpers or $animated"> framesFor </xsl:if>
+    <xsl:if test="$pictures"> imageOf </xsl:if>
+    <xsl:if test="$sounds//@pitch[not(contains($digits, substring(normalize-space(.), 1, 1)) or starts-with(normalize-space(.), '.'))] or $sounds//@to[not(contains($digits, substring(normalize-space(.), 1, 1)) or starts-with(normalize-space(.), '.'))]"> hertz </xsl:if>
   </xsl:variable>
   <xsl:variable name="used-functions" select="$helpers/function[contains($used, concat(' ', @name, ' '))]" />
 
@@ -280,7 +285,7 @@
     <xsl:if test="$headed or $leapers or (//release | //reveal)[* or (normalize-space(.) != '' and string(number(.)) != normalize-space(.))]"> cmath </xsl:if>
     <xsl:if test="contains($words, ' abs ') or contains($words, ' floor ') or contains($words, ' ceil ') or contains($words, ' sqrt ') or contains($words, ' sin ') or contains($words, ' cos ') or contains($words, ' tan ') or contains($words, ' pow ') or contains($words, ' round ')"> cmath </xsl:if>
     <xsl:if test="$numbers or $drawn-rows"> string </xsl:if>
-    <xsl:if test="$drawn-rows or $drawn-lines"> vector </xsl:if>
+    <xsl:if test="$pictures"> vector </xsl:if>
     <xsl:if test="$screens or $groups"> vector </xsl:if>
     <xsl:for-each select="$states/conditions/condition[remaining]">
       <xsl:if test="$dying[self::group][(current()/@object and @name = current()/@object) or (current()/@class and @class = current()/@class)]"> algorithm </xsl:if>
@@ -322,14 +327,14 @@
 </xsl:text>
   </xsl:template>
 
-  <!-- The modules beside it, then SFML, then the standard library. -->
+  <!-- The engine's code (physics.h and engine/), then SFML, then the standard library. -->
   <xsl:template name="generate-includes">
     <xsl:text>
 </xsl:text>
+    <xsl:if test="$audio">#include "audio_sfml.h"&#10;</xsl:if>
+    <xsl:if test="$pictures">#include "bitmap.h"&#10;</xsl:if>
     <xsl:if test="$physics">#include "physics.h"&#10;</xsl:if>
-    <xsl:if test="$drawn-rows or $drawn-lines">#include "pictures.h"&#10;</xsl:if>
-    <xsl:if test="$audio">#include "sound.h"&#10;</xsl:if>
-    <xsl:if test="$physics or $audio or $drawn-rows or $drawn-lines">
+    <xsl:if test="$physics or $audio or $pictures">
       <xsl:text>
 </xsl:text>
     </xsl:if>
@@ -625,14 +630,9 @@ sf::Texture </xsl:text>
   <xsl:template name="generate-sounds">
     <xsl:if test="$audio">
       <xsl:text>
-// sounds
+// sounds: made from their notes and played by the engine's own player
+xge::SFMLAudio audio;
 </xsl:text>
-      <xsl:for-each select="$sounds">
-        <xsl:text>sound::Sound </xsl:text>
-        <xsl:call-template name="sound-name"><xsl:with-param name="name" select="@name" /></xsl:call-template>
-        <xsl:text>;
-</xsl:text>
-      </xsl:for-each>
     </xsl:if>
   </xsl:template>
 
@@ -1109,10 +1109,14 @@ void setup()
     </xsl:for-each>
     <xsl:if test="$audio">
       <xsl:text>
-</xsl:text>
+	audio.load({</xsl:text>
       <xsl:for-each select="$sounds">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
         <xsl:call-template name="make-sound" />
       </xsl:for-each>
+      <xsl:text>
+	});
+</xsl:text>
     </xsl:if>
     <xsl:text>
 	start();
@@ -1203,12 +1207,14 @@ void setup()
     </xsl:choose>
   </xsl:template>
 
-  <!-- A sound made from its notes: wave, pitch, slide and length each. -->
+  <!-- A sound as the engine has it (xge::SoundDesc): its name, how loud, and
+       its notes, each a wave, a pitch it slides from and to, and a length. -->
   <xsl:template name="make-sound">
     <xsl:variable name="wave" select="@wave" />
-    <xsl:text>	</xsl:text>
-    <xsl:call-template name="sound-name"><xsl:with-param name="name" select="@name" /></xsl:call-template>
-    <xsl:text>.make(</xsl:text>
+    <xsl:text>
+		{</xsl:text>
+    <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
+    <xsl:text>, </xsl:text>
     <xsl:choose>
       <xsl:when test="volume"><xsl:call-template name="value-bare"><xsl:with-param name="node" select="volume" /></xsl:call-template></xsl:when>
       <xsl:otherwise>0.3f</xsl:otherwise>
@@ -1217,41 +1223,41 @@ void setup()
     <xsl:for-each select="note | rest">
       <xsl:if test="position() &gt; 1">,</xsl:if>
       <xsl:text>
-		</xsl:text>
+			</xsl:text>
       <xsl:choose>
         <xsl:when test="self::rest">
-          <xsl:text>sound::rest(</xsl:text>
+          <xsl:text>{.rest = true, .seconds = </xsl:text>
           <xsl:call-template name="value-bare" />
-          <xsl:text>)</xsl:text>
+          <xsl:text>}</xsl:text>
         </xsl:when>
         <xsl:otherwise>
           <xsl:variable name="noteWave">
             <xsl:choose>
               <xsl:when test="@wave"><xsl:value-of select="@wave" /></xsl:when>
-              <xsl:otherwise><xsl:value-of select="$wave" /></xsl:otherwise>
+              <xsl:when test="$wave"><xsl:value-of select="$wave" /></xsl:when>
+              <xsl:otherwise>square</xsl:otherwise>
             </xsl:choose>
           </xsl:variable>
-          <xsl:text>{sound::Wave::</xsl:text>
+          <xsl:text>{.wave = xge::Waveform::</xsl:text>
           <xsl:value-of select="concat(translate(substring($noteWave, 1, 1), $lower, $upper), substring($noteWave, 2))" />
-          <xsl:text>, </xsl:text>
+          <xsl:text>, .startHz = </xsl:text>
           <xsl:call-template name="pitch"><xsl:with-param name="name" select="@pitch" /></xsl:call-template>
-          <xsl:text>, </xsl:text>
+          <xsl:text>, .endHz = </xsl:text>
           <xsl:choose>
             <xsl:when test="@to"><xsl:call-template name="pitch"><xsl:with-param name="name" select="@to" /></xsl:call-template></xsl:when>
-            <xsl:otherwise>0.0f</xsl:otherwise>
+            <xsl:otherwise><xsl:call-template name="pitch"><xsl:with-param name="name" select="@pitch" /></xsl:call-template></xsl:otherwise>
           </xsl:choose>
-          <xsl:text>, </xsl:text>
+          <xsl:text>, .seconds = </xsl:text>
           <xsl:call-template name="value-bare" />
           <xsl:text>}</xsl:text>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
     <xsl:text>
-	});
-</xsl:text>
+		}}</xsl:text>
   </xsl:template>
 
-  <!-- A pitch: hertz as a number, or a note's name (A4) worked out by the module. -->
+  <!-- A pitch: hertz as a number, or a note's name (A4) worked out as the engine reads it. -->
   <xsl:template name="pitch">
     <xsl:param name="name" />
     <xsl:choose>
@@ -1259,7 +1265,7 @@ void setup()
         <xsl:call-template name="cpp-number"><xsl:with-param name="text" select="normalize-space($name)" /></xsl:call-template>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:text>sound::pitch(</xsl:text>
+        <xsl:text>hertz(</xsl:text>
         <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="normalize-space($name)" /></xsl:call-template>
         <xsl:text>)</xsl:text>
       </xsl:otherwise>
@@ -2080,9 +2086,9 @@ void pressed(sf::Keyboard::Key key)
         <xsl:call-template name="reveal"><xsl:with-param name="indent" select="$indent" /></xsl:call-template>
       </xsl:when>
       <xsl:when test="self::play">
-        <xsl:value-of select="$indent" />
-        <xsl:call-template name="sound-name"><xsl:with-param name="name" select="@sound" /></xsl:call-template>
-        <xsl:text>.play();
+        <xsl:value-of select="concat($indent, 'audio.play(')" />
+        <xsl:call-template name="cpp-string"><xsl:with-param name="text" select="@sound" /></xsl:call-template>
+        <xsl:text>);
 </xsl:text>
       </xsl:when>
       <xsl:when test="self::inc or self::dec">
@@ -2465,18 +2471,18 @@ void turn</xsl:text>
 </xsl:text>
     <xsl:value-of select="concat('&#9;', $heading, ' = std::fmod(', $heading, ', 360.0f);&#10;')" />
     <xsl:value-of select="concat('&#9;if (', $heading, ' &lt; 0.0f)&#10;&#9;{&#10;&#9;&#9;', $heading, ' += 360.0f;&#10;&#9;}&#10;')" />
-    <xsl:value-of select="concat('&#9;const int degrees = pictures::wholeDegrees(', $heading, ');&#10;')" />
+    <xsl:value-of select="concat('&#9;const int degrees = xge::wholeDegrees(', $heading, ');&#10;')" />
     <xsl:value-of select="concat('&#9;if (degrees != ', $name, 'DrawnAt)&#10;&#9;{&#10;&#9;&#9;', $name, 'DrawnAt = degrees;&#10;')" />
     <xsl:text>		const sf::Image picture = </xsl:text>
     <xsl:for-each select="sprite">
       <xsl:choose>
         <xsl:when test="line">
-          <xsl:value-of select="concat('pictures::turnedLines(', $name, 'Lines, static_cast&lt;float&gt;(degrees));&#10;')" />
+          <xsl:value-of select="concat('imageOf(xge::rasterizeTurned(', $name, 'Lines, static_cast&lt;float&gt;(degrees)));&#10;')" />
         </xsl:when>
         <xsl:otherwise>
-          <xsl:text>pictures::turned(</xsl:text>
+          <xsl:text>imageOf(xge::turnBitmap(</xsl:text>
           <xsl:call-template name="rows-picture"><xsl:with-param name="rows" select="$name" /></xsl:call-template>
-          <xsl:text>, static_cast&lt;float&gt;(degrees));&#10;</xsl:text>
+          <xsl:text>, static_cast&lt;float&gt;(degrees)));&#10;</xsl:text>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
@@ -3798,15 +3804,19 @@ std::optional&lt;sf::FloatRect&gt; </xsl:text>
 };</xsl:text>
       </xsl:when>
       <xsl:when test="line">
-        <xsl:value-of select="concat('&#10;const std::vector&lt;pictures::Line&gt; ', $name, 'Lines = {')" />
+        <xsl:value-of select="concat('&#10;const std::vector&lt;xge::LineSegment&gt; ', $name, 'Lines = {')" />
         <xsl:for-each select="line">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:text>&#10;&#9;{</xsl:text>
-          <xsl:call-template name="vector"><xsl:with-param name="node" select="from" /></xsl:call-template>
+          <xsl:call-template name="value-bare"><xsl:with-param name="node" select="from/x" /></xsl:call-template>
           <xsl:text>, </xsl:text>
-          <xsl:call-template name="vector"><xsl:with-param name="node" select="to" /></xsl:call-template>
+          <xsl:call-template name="value-bare"><xsl:with-param name="node" select="from/y" /></xsl:call-template>
           <xsl:text>, </xsl:text>
-          <xsl:call-template name="color"><xsl:with-param name="name" select="color" /></xsl:call-template>
+          <xsl:call-template name="value-bare"><xsl:with-param name="node" select="to/x" /></xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="value-bare"><xsl:with-param name="node" select="to/y" /></xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="engine-color"><xsl:with-param name="name" select="color" /></xsl:call-template>
           <xsl:text>, </xsl:text>
           <xsl:choose>
             <xsl:when test="thickness"><xsl:call-template name="whole-int"><xsl:with-param name="node" select="thickness" /></xsl:call-template></xsl:when>
@@ -3852,17 +3862,17 @@ std::optional&lt;sf::FloatRect&gt; </xsl:text>
             <xsl:otherwise><xsl:value-of select="$name" /></xsl:otherwise>
           </xsl:choose>
         </xsl:variable>
-        <xsl:text>loadFromImage(</xsl:text>
-        <xsl:if test="$turns">pictures::turned(</xsl:if>
+        <xsl:text>loadFromImage(imageOf(</xsl:text>
+        <xsl:if test="$turns">xge::turnBitmap(</xsl:if>
         <xsl:call-template name="rows-picture"><xsl:with-param name="rows" select="$rows" /></xsl:call-template>
         <xsl:if test="$turns">, 0.0f)</xsl:if>
-        <xsl:text>)</xsl:text>
+        <xsl:text>))</xsl:text>
       </xsl:when>
       <xsl:when test="line and $turns">
-        <xsl:value-of select="concat('loadFromImage(pictures::turnedLines(', $name, 'Lines, 0.0f))')" />
+        <xsl:value-of select="concat('loadFromImage(imageOf(xge::rasterizeTurned(', $name, 'Lines, 0.0f)))')" />
       </xsl:when>
       <xsl:when test="line">
-        <xsl:value-of select="concat('loadFromImage(pictures::lines(', $name, 'Lines))')" />
+        <xsl:value-of select="concat('loadFromImage(imageOf(xge::rasterizeLines(', $name, 'Lines)))')" />
       </xsl:when>
       <xsl:otherwise>
         <xsl:text>loadFromFile(</xsl:text>
@@ -3873,16 +3883,16 @@ std::optional&lt;sf::FloatRect&gt; </xsl:text>
     </xsl:choose>
   </xsl:template>
 
-  <!-- A <bitmap>'s picture: pictures::rows(playerRows, 3, sf::Color::White). -->
+  <!-- A <bitmap>'s picture: xge::rasterizeRows(playerRows, 3, {255, 255, 255, 255}). -->
   <xsl:template name="rows-picture">
     <xsl:param name="rows" />
-    <xsl:value-of select="concat('pictures::rows(', $rows, 'Rows, ')" />
+    <xsl:value-of select="concat('xge::rasterizeRows(', $rows, 'Rows, ')" />
     <xsl:choose>
       <xsl:when test="bitmap/scale"><xsl:call-template name="whole-number"><xsl:with-param name="node" select="bitmap/scale" /></xsl:call-template></xsl:when>
       <xsl:otherwise>1</xsl:otherwise>
     </xsl:choose>
     <xsl:text>, </xsl:text>
-    <xsl:call-template name="color"><xsl:with-param name="name" select="bitmap/color" /></xsl:call-template>
+    <xsl:call-template name="engine-color"><xsl:with-param name="name" select="bitmap/color" /></xsl:call-template>
     <xsl:text>)</xsl:text>
   </xsl:template>
 
@@ -3936,11 +3946,20 @@ std::optional&lt;sf::FloatRect&gt; </xsl:text>
     </xsl:choose>
   </xsl:template>
 
-  <!-- A sound, named for what it is: <sound name="wall"> is wallSound. -->
-  <xsl:template name="sound-name">
+  <!-- A color name as the engine's xge::Color, by its numbers: {255, 0, 0, 255}. -->
+  <xsl:template name="engine-color">
     <xsl:param name="name" />
-    <xsl:call-template name="cpp-camel"><xsl:with-param name="name" select="$name" /></xsl:call-template>
-    <xsl:text>Sound</xsl:text>
+    <xsl:variable name="color" select="$tables/colors/color[@name = normalize-space($name)]" />
+    <xsl:choose>
+      <!-- none given: white, as the engine draws it -->
+      <xsl:when test="normalize-space($name) = ''">{255, 255, 255, 255}</xsl:when>
+      <xsl:when test="$color">
+        <xsl:value-of select="concat('{', $color/@rgba, '}')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:message terminate="yes">windows-cpp: there is no color named "<xsl:value-of select="normalize-space($name)" />"</xsl:message>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- A color name as SFML's own (sf::Color::Red) or by its numbers. -->

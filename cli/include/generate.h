@@ -31,7 +31,8 @@ namespace xge
 	};
 
 	// What was written to the output folder: the program's files (those the
-	// stylesheet wrote and the target's modules copied beside them), the
+	// stylesheet wrote, and the target's modules and the engine's files
+	// copied beside them), the
 	// game's assets, and the pictures drawn from its <svg>s, as paths relative
 	// to the output folder.
 	struct GeneratedProgram
@@ -48,8 +49,10 @@ namespace xge
 	// (generators/<target>/generate.xsl), run by libxslt. The stylesheet writes
 	// the program's files with exsl:document, relative to the output folder,
 	// which is made if it is not there, and its own result is a list of them,
-	// of the target's modules to copy (from generators/<target>/modules) and of
-	// the asset files to copy (from the data folder):
-	// <generated><file path /><module path from /><asset path />. Throws GenerateError.
+	// of the target's modules to copy (from generators/<target>/modules), of
+	// the engine's own files to copy unchanged (from lib/ in the data folder)
+	// and of the asset files to copy (from the data folder):
+	// <generated><file path /><module path from /><engine path from /><asset path />.
+	// Throws GenerateError.
 	GeneratedProgram generateGame(const GenerateRequest& request);
 }
