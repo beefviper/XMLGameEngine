@@ -172,9 +172,9 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 	TempFolder output("xge_test_generate_pong");
 	const GeneratedProgram program = generateGame(requestFor("games/pong.xml", output.path));
 
-	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/trace.h, include/physics.h, include/sound.h and source/sound.cpp,
+	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/trace.h, include/physics.h, include/sound.h, include/synth.h, source/sound.cpp and source/synth.cpp,
 	// and the font and the paddle's picture.
-	CHECK(program.files.size() == 8);
+	CHECK(program.files.size() == 10);
 	CHECK(program.assets.size() == 2);
 	CHECK(fs::exists(output.path / "source/sound.cpp"));
 	CHECK(fs::exists(output.path / "assets/tuffy.ttf"));
@@ -206,7 +206,7 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
 	CHECK(cmake.find("find_package(SFML 3 COMPONENTS Graphics Audio QUIET)") != std::string::npos);
-	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp include/trace.h include/physics.h include/sound.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp source/synth.cpp include/trace.h include/physics.h include/sound.h include/synth.h)") != std::string::npos);
 	CHECK(cmake.find("PRIVATE SFML::Graphics SFML::Audio)") != std::string::npos);
 	CHECK(cmake.find("/assets") != std::string::npos);
 
@@ -1273,4 +1273,26 @@ TEST_CASE("an unknown target or a missing game is an error", "[generate]")
 	CHECK_THROWS_AS(generateGame(unknown), GenerateError);
 
 	CHECK_THROWS_AS(generateGame(requestFor("games/nosuchgame.xml", output.path)), GenerateError);
+}
+
+TEST_CASE("a generated game gets the engine's own synthesizer, file for file", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder output("xge_test_generate_synth");
+	generateGame(requestFor("games/pong.xml", output.path));
+
+	// the samples a generated game makes are the engine's because the code is
+	// the engine's, not a copy kept in step by hand
+	CHECK(readFile(output.path / "include/synth.h") == readFile(fs::current_path() / "lib/include/synth.h"));
+	CHECK(readFile(output.path / "source/synth.cpp") == readFile(fs::current_path() / "lib/source/synth.cpp"));
+	CHECK(readFile(output.path / "include/sound.h").find("#include \"synth.h\"") != std::string::npos);
+
+	// and a game with no sound has none of it
+	TempFolder silent("xge_test_generate_synth_none");
+	generateGame(requestFor("games/pong_min.xml", silent.path));
+	CHECK_FALSE(fs::exists(silent.path / "include/synth.h"));
 }

@@ -212,11 +212,11 @@ namespace physics
 		}
 	}
 
-	// Back inside, and heading away from the edge.
+	// Heading away from the edge, from where it is: it stays as far over as the
+	// step took it, and the next step brings it back, as in the engine.
 	template <typename Thing>
-	void bounce(Thing& thing, sf::Vector2f& velocity, Edge edge, const sf::FloatRect& area)
+	void bounce(Thing&, sf::Vector2f& velocity, Edge edge, const sf::FloatRect&)
 	{
-		putBack(thing, edge, area);
 		switch (edge)
 		{
 		case Edge::Top:    velocity.y = std::abs(velocity.y); break;
@@ -556,32 +556,58 @@ namespace physics
 
 	// Out of the side of `other` it went into, at the same speed: straight out
 	// from the middle of that side, and up to `maxDegrees` towards either end.
-	// A Pong paddle.
+	// It leaves from where it touched, and goes on for the rest of the step it
+	// was in the middle of, as the engine does (which moves to the touch, then
+	// plays the rest of the frame with the new velocity). A Pong paddle.
 	template <typename Mover, typename Other>
 	void deflect(Mover& mover, sf::Vector2f& velocity, const Other& other, float maxDegrees)
 	{
+		const sf::Vector2f before = velocity;
 		const sf::FloatRect bounds = mover.getGlobalBounds();
 		const sf::FloatRect otherBounds = other.getGlobalBounds();
 		const sf::FloatRect overlap = bounds.findIntersection(otherBounds).value_or(sf::FloatRect{});
-		const sf::Vector2f offset = bounds.getCenter() - otherBounds.getCenter();
+		const sf::Vector2f offsetNow = bounds.getCenter() - otherBounds.getCenter();
 		const float speed = velocity.length();
+		const bool sideways = overlap.size.x < overlap.size.y;
 
-		if (overlap.size.x < overlap.size.y)
+		// How much of the step was past the touch: the way in, over the speed in it.
+		const float way = sideways ? overlap.size.x : overlap.size.y;
+		const float pace = sideways ? std::abs(before.x) : std::abs(before.y);
+		const float rest = pace != 0.0f ? std::min(way / pace, 1.0f) : 0.0f;
+
+		// Back to where it touched, which is where the angle is worked out. (Held
+		// against the other thing and not moving into it: pushed out of it.)
+		if (pace != 0.0f)
+		{
+			mover.move(-before * rest);
+		}
+		else if (sideways)
+		{
+			mover.move({ (offsetNow.x < 0.0f ? -1.0f : 1.0f) * way, 0.0f });
+		}
+		else
+		{
+			mover.move({ 0.0f, (offsetNow.y < 0.0f ? -1.0f : 1.0f) * way });
+		}
+		const sf::Vector2f offset = mover.getGlobalBounds().getCenter() - otherBounds.getCenter();
+
+		if (sideways)
 		{
 			// a left or right side: angled by how far up or down it hit
 			const float angle = std::clamp(offset.y / (otherBounds.size.y / 2.0f), -1.0f, 1.0f) * maxDegrees;
-			const float side = offset.x < 0.0f ? -1.0f : 1.0f;
-			mover.move({ side * overlap.size.x, 0.0f });
+			const float side = offsetNow.x < 0.0f ? -1.0f : 1.0f;
 			velocity = sf::Vector2f(speed, sf::degrees(side < 0.0f ? 180.0f - angle : angle));
 		}
 		else
 		{
 			// the top or bottom: angled by how far left or right it hit
 			const float angle = std::clamp(offset.x / (otherBounds.size.x / 2.0f), -1.0f, 1.0f) * maxDegrees;
-			const float side = offset.y < 0.0f ? -1.0f : 1.0f;
-			mover.move({ 0.0f, side * overlap.size.y });
+			const float side = offsetNow.y < 0.0f ? -1.0f : 1.0f;
 			velocity = sf::Vector2f(speed, sf::degrees(side < 0.0f ? angle - 90.0f : 90.0f - angle));
 		}
+
+		// and on for the rest of the step, the new way
+		mover.move(velocity * rest);
 	}
 
 	// --- Paths (<paths>, <follow>).

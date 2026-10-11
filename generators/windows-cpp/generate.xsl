@@ -18,7 +18,8 @@
      where it is built and where the built program goes). Its own output is a
      list of what it wrote and of what xgecli copies in: the modules the game uses
      (modules/: physics.h, pictures.h to include/, and sound.cpp to source/ with
-     sound.h to include/), the game's assets (its font and pictures), and each
+     sound.h to include/; and the engine's own synth.h and synth.cpp, copied from
+     lib/), the game's assets (its font and pictures), and each
      <svg> for xgecli to draw into a picture as the engine draws it. xgecli makes
      source/ and include/ first, and reads the list.
 
@@ -84,6 +85,9 @@ output/
       <xsl:if test="$audio">
         <module path="include/sound.h" from="sound.h" />
         <module path="source/sound.cpp" from="sound.cpp" />
+        <!-- the engine's own synthesizer, as it is -->
+        <module path="include/synth.h" shared="lib/include/synth.h" />
+        <module path="source/synth.cpp" shared="lib/source/synth.cpp" />
       </xsl:if>
       <xsl:if test="$texts">
         <asset path="assets/tuffy.ttf" />
@@ -165,11 +169,11 @@ endif()
 add_executable(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> source/main.cpp</xsl:text>
-    <xsl:if test="$audio"> source/sound.cpp</xsl:if>
+    <xsl:if test="$audio"> source/sound.cpp source/synth.cpp</xsl:if>
     <xsl:text> include/trace.h</xsl:text>
     <xsl:if test="$physics"> include/physics.h</xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines"> include/pictures.h</xsl:if>
-    <xsl:if test="$audio"> include/sound.h</xsl:if>
+    <xsl:if test="$audio"> include/sound.h include/synth.h</xsl:if>
     <xsl:text>)
 target_include_directories(</xsl:text>
     <xsl:value-of select="$name" />
@@ -254,7 +258,8 @@ plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
 </xsl:text>
     </xsl:if>
     <xsl:if test="$audio">
-      <xsl:text>| `include/sound.h`, `source/sound.cpp` | 8-bit sounds written as notes, made into samples when the game starts |
+      <xsl:text>| `include/sound.h`, `source/sound.cpp` | 8-bit sounds written as notes, handed to SFML when the game starts |
+| `include/synth.h`, `source/synth.cpp` | the engine's own synthesizer, copied as it is, which makes the samples from the notes |
 </xsl:text>
     </xsl:if>
     <xsl:text>| `include/trace.h` | only for testing: built with `-DBUILD_TESTING=ON` the game can play with no window and keep its picture at chosen frames (`--trace folder --frames 10,60`), to be compared with the engine's |

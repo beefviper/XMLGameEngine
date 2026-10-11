@@ -59,7 +59,11 @@ set(data_generators
 	"generators/windows-cpp/modules/trace.h"
 	"generators/windows-cpp/modules/pictures.h"
 	"generators/windows-cpp/modules/sound.h"
-	"generators/windows-cpp/modules/sound.cpp")
+	"generators/windows-cpp/modules/sound.cpp"
+	# the engine's own files that a generated game gets a copy of, found by their
+	# path in lib/ wherever the data folder is (the repository, or output/<config>)
+	"lib/include/synth.h"
+	"lib/source/synth.cpp")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators)

@@ -636,7 +636,7 @@ The library is static by default: each program has the engine's code copied into
 | `bitmap.cpp` | Draws a sprite's `<line>`s (`rasterizeLines`) or `<bitmap>` rows (`rasterizeRows`) into an RGBA bitmap, the pixels both the window backends and pixel collisions use, and flips (`flipBitmap`) and turns (`turnBitmap`, `rasterizeTurned`) them |
 | `svg.cpp` | Draws a part of an SVG file (`rasterizeSvg`) into an RGBA bitmap, with lunasvg; the only file that includes it |
 | `command_executor.cpp` | What each command does |
-| `sound.cpp` | Pitch names, wave names, and `synthesize()`: a sound's notes made into 16-bit samples, the same for every audio backend |
+| `synth.cpp` | Pitch names, wave names, and `synthesize()`: a sound's notes made into 16-bit samples, the same for every audio backend and for the generated games, which get this file and `synth.h` copied in as they are. Nothing but the standard library |
 | `audio.cpp`, `audio_*.cpp` | `AudioFactory` and the sound backends (SFML 3, raylib, SDL2; `NullAudio` is in `audio.h`) |
 | `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop), key handling, and playing the sounds each frame asks for |
 | `trace.cpp` | The frame trace, used by the tests: lists of frames and keys, the BMP a frame is kept in, comparing two pictures and two lists of sounds, `SoundLog`, and `run()`, which plays an engine in an offscreen window ([Checking a generated game against the engine](#checking-a-generated-game-against-the-engine)) |

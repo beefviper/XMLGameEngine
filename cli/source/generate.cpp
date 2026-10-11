@@ -347,10 +347,10 @@ namespace xge
 			const std::string element(reinterpret_cast<const char*>(node->name));
 			const std::filesystem::path path = attribute(node, "path");
 
-			// A file copied in: a game's asset from the data folder, or one of the
+			// A file copied in: a game's asset from the data folder, one of the
 			// target's modules (physics.h) from its modules/ folder, where it may
 			// be named otherwise than where it goes (from="physics.h" to
-			// include/physics.h).
+			// include/physics.h), or a file the engine has too (shared=).
 			const auto copyIn = [&](const std::filesystem::path& from)
 			{
 				const std::filesystem::path to = output / path;
@@ -369,8 +369,19 @@ namespace xge
 			}
 			else if (element == "module")
 			{
+				// A module of the target's own (modules/), or, with shared=, a file
+				// of the engine's, from the data folder, so that the program has
+				// the very code the engine has (lib/include/synth.h).
 				const std::string from = attribute(node, "from");
-				copyIn(request.generators / request.target / "modules" / (from.empty() ? path : std::filesystem::path(from)));
+				const std::string shared = attribute(node, "shared");
+				if (!shared.empty())
+				{
+					copyIn(request.dataFolder / shared);
+				}
+				else
+				{
+					copyIn(request.generators / request.target / "modules" / (from.empty() ? path : std::filesystem::path(from)));
+				}
 				program.files.push_back(path);
 			}
 			else if (element == "asset")

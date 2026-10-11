@@ -1,12 +1,13 @@
 // sound.h
 // XML Game Engine
 // author: beefviper
-// date: Oct 7, 2026
+// date: Oct 11, 2026
 //
-// The sound a generated game uses, in one place of its own: 8-bit sounds
-// written as notes (a wave, a pitch, a slide, a length) and made into samples
-// when the game starts, as the engine's synthesizer makes them. Nothing but
-// SFML's audio types, so it can be copied into any SFML 3 program.
+// The sound a generated game uses: 8-bit sounds written as notes (a wave, a
+// pitch, a slide, a length) and made into samples when the game starts. The
+// samples are made by synth.h, the engine's own synthesizer, copied in as it is,
+// so the game sounds as the engine does; all that is here is handing them to
+// SFML. Nothing but SFML's audio types and synth.h.
 //
 //   sound::Sound blip;
 //   blip.make("blip", 0.3f, { { sound::Wave::Square, sound::pitch("A4"), 0.0f, 0.05f } });
@@ -14,16 +15,17 @@
 
 #pragma once
 
+#include "synth.h"
+
 #include <SFML/Audio.hpp>
 
-#include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace sound
 {
-	enum class Wave { Square, Triangle, Sawtooth, Sine, Noise };
+	using Wave = xge::Waveform;
 
 	// One note: its wave, its pitch in hertz (0 is a rest), the pitch it
 	// slides to by the end (0: none), and how many seconds it lasts.
@@ -41,9 +43,6 @@ namespace sound
 
 	// A silence that long.
 	Note rest(float seconds);
-
-	// The samples of the notes one after another, at `volume` (0 to 1).
-	std::vector<std::int16_t> synthesize(float volume, const std::vector<Note>& notes);
 
 	// A sound ready to play.
 	class Sound

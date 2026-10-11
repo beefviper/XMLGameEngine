@@ -51,7 +51,7 @@ set(ENGINE_SOURCES
 	"lib/source/collision_detector.cpp"
 	"lib/source/command_executor.cpp"
 	"lib/source/window.cpp"
-	"lib/source/sound.cpp"
+	"lib/source/synth.cpp"
 	"lib/source/audio.cpp"
 	"lib/source/trace.cpp"
 )
@@ -78,6 +78,7 @@ set(ENGINE_HEADERS
 	"lib/include/command_executor.h"
 	"lib/include/window.h"
 	"lib/include/sound.h"
+	"lib/include/synth.h"
 	"lib/include/audio.h"
 	"lib/include/trace.h"
 )

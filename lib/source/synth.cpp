@@ -1,9 +1,11 @@
-// sound.cpp
+// synth.cpp
 // XML Game Engine
 // author: beefviper
-// date: Oct 3, 2026
+// date: Oct 11, 2026
+//
+// The synthesizer (synth.h). Copied into a generated game as it is.
 
-#include "sound.h"
+#include "synth.h"
 
 #include <algorithm>
 #include <cctype>
