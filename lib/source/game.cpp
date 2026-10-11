@@ -1213,7 +1213,8 @@ namespace xge
 	// along its own path (CollisionDetector::sweep), the earliest touch
 	// anywhere is found, everything is moved up to that moment, that pair's
 	// rules run, and the rest of the frame carries on from there with
-	// whatever velocities the rules left behind - so a ball that hits a
+	// whatever velocities the rules left behind (xge::playFrame, which a
+	// generated game plays its frames with too) - so a ball that hits a
 	// brick a third of the way through its move spends the other two thirds
 	// heading back the way it came. Each object is swept by itself; a lockstep set
 	// has no bounding box of its own, so when most of the invaders are gone
@@ -1228,7 +1229,6 @@ namespace xge
 		{
 			Object* first;
 			Object* second;
-			bool handled;
 		};
 
 		std::vector<Pair> pairs;
@@ -1243,7 +1243,7 @@ namespace xge
 			{
 				if (isShown(all[j]) && canCollide(all[i], all[j]))
 				{
-					pairs.push_back({ &all[i], &all[j], false });
+					pairs.push_back({ &all[i], &all[j] });
 				}
 			}
 		}
@@ -1259,49 +1259,23 @@ namespace xge
 			}
 		};
 
-		// Each pair reacts at most once a frame, which also bounds the loop;
-		// the count is a second guard.
-		float played = 0.0f;
-		for (std::size_t reactions = 0; reactions <= pairs.size() && played < 1.0f; ++reactions)
+		// Anything taken out of play by an earlier reaction this frame (a
+		// bullet that just died), or that is not moving, sits out.
+		const auto sweep = [&](const Pair& pair, float left) -> std::optional<SweepHit>
 		{
-			const float left = 1.0f - played;
-
-			Pair* next = nullptr;
-			CollisionDetector::SweepHit nextHit;
-
-			for (auto& pair : pairs)
+			Object& a = *pair.first;
+			Object& b = *pair.second;
+			if (!isShown(a) || !isShown(b) || !canCollide(a, b) || (!isMoving(a) && !isMoving(b)))
 			{
-				Object& a = *pair.first;
-				Object& b = *pair.second;
-
-				// Anything already handled, or taken out of play by an earlier
-				// reaction this frame (a bullet that just died), sits out.
-				if (pair.handled || !isShown(a) || !isShown(b) || !canCollide(a, b) || (!isMoving(a) && !isMoving(b)))
-				{
-					continue;
-				}
-
-				const auto hit = CollisionDetector::sweep(a, motionOf(a) * left, b, motionOf(b) * left);
-				if (hit && (!next || hit->time < nextHit.time))
-				{
-					next = &pair;
-					nextHit = *hit;
-				}
+				return std::nullopt;
 			}
+			return CollisionDetector::sweep(a, motionOf(a) * left, b, motionOf(b) * left);
+		};
 
-			if (!next)
+		playFrame(pairs, sweep, advance, [&](const Pair& pair, Edge edgeOfSecond)
 			{
-				break;
-			}
-
-			const float step = nextHit.time * left;
-			advance(step);
-			played += step;
-			next->handled = true;
-			applyObjectCollision(*next->first, *next->second, nextHit.edgeOfSecond);
-		}
-
-		advance(1.0f - played);
+				applyObjectCollision(*pair.first, *pair.second, edgeOfSecond);
+			});
 
 		for (auto& object : all)
 		{

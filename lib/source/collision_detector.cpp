@@ -81,23 +81,7 @@ namespace xge
 
 	std::optional<CollisionDetector::SweepHit> CollisionDetector::sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)
 	{
-		if (const auto edge = overlap(a, b))
-		{
-			return SweepHit{ 0.0f, *edge };
-		}
-
-		const std::optional<SweepHit> boxHit = sweepShapes(boxOf(a), isRound(a), moveA, boxOf(b), isRound(b), moveB);
-
-		// The boxes never touched: nor did any pixels. They did, and pixels are
-		// what counts: they may yet not, or only later in the step.
-		if (!boxHit || !usesPixels(a, b))
-		{
-			return boxHit;
-		}
-
-		return firstPixelHit(moveA - moveB, boxHit->time, [&](float time)
-			{
-				return pixelsOverlapAt(a, a.position + moveA * time, b, b.position + moveB * time);
-			});
+		return sweepThings(boxOf(a), isRound(a), [&](const Vector2f& local) { return solidAt(a, local); }, moveA,
+			boxOf(b), isRound(b), [&](const Vector2f& local) { return solidAt(b, local); }, moveB, usesPixels(a, b));
 	}
 }

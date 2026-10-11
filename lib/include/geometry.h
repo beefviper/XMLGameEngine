@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <optional>
+#include <vector>
 
 namespace xge
 {
@@ -137,6 +138,91 @@ namespace xge
 		}
 
 		return std::nullopt;
+	}
+
+	// When, within one step, two things first touch, whatever they are tested
+	// by: two already touching are a hit at 0, by their shapes, and, when
+	// `pixels` (either is tested pixel by pixel), by their pixels too, solidA
+	// and solidB saying which are solid (see pixelsOverlapAt); otherwise the
+	// sweep of their shapes, and, with pixels, the walk on from where their
+	// boxes first meet to where pixels of both do (firstPixelHit).
+	template <typename SolidA, typename SolidB>
+	std::optional<SweepHit> sweepThings(const Box& a, bool aRound, SolidA solidA, const Vector2f& moveA,
+		const Box& b, bool bRound, SolidB solidB, const Vector2f& moveB, bool pixels)
+	{
+		if (const std::optional<Edge> edge = shapesOverlap(a, aRound, b, bRound))
+		{
+			if (!pixels || pixelsOverlapAt(a, solidA, b, solidB))
+			{
+				return SweepHit{ 0.0f, *edge };
+			}
+		}
+
+		const std::optional<SweepHit> boxHit = sweepShapes(a, aRound, moveA, b, bRound, moveB);
+
+		// The boxes never touched: nor did any pixels. They did, and pixels are
+		// what counts: they may yet not, or only later in the step.
+		if (!boxHit || !pixels)
+		{
+			return boxHit;
+		}
+
+		return firstPixelHit(moveA - moveB, boxHit->time, [&](float time)
+			{
+				return pixelsOverlapAt(Box{ a.position + moveA * time, a.size }, solidA, Box{ b.position + moveB * time, b.size }, solidB);
+			});
+	}
+
+	// One frame's move, as the engine plays it (Game::moveObjects): not in one
+	// jump, but from touch to touch. Of `pairs`, the two things in each that
+	// may touch, in order, sweep(pair, left) says when, through what is left
+	// of the frame, they would first touch (none: they would not, or sit this
+	// out); the earliest anywhere is found, advance(fraction) moves everything
+	// that far through the frame, react(pair, edgeOfSecond) runs that pair's
+	// rules, and the rest of the frame carries on from there with whatever
+	// velocities the rules left behind. A ball that hits a brick a third of the
+	// way through its move spends the other two thirds heading back. Each pair
+	// reacts at most once a frame, which also bounds the loop; on a tie the
+	// pair first in `pairs` goes first.
+	template <typename Pair, typename Sweep, typename Advance, typename React>
+	void playFrame(const std::vector<Pair>& pairs, Sweep sweep, Advance advance, React react)
+	{
+		std::vector<bool> handled(pairs.size(), false);
+		float played = 0.0f;
+		for (std::size_t reactions = 0; reactions <= pairs.size() && played < 1.0f; ++reactions)
+		{
+			const float left = 1.0f - played;
+
+			std::optional<std::size_t> next;
+			SweepHit nextHit;
+			for (std::size_t i = 0; i < pairs.size(); ++i)
+			{
+				if (handled[i])
+				{
+					continue;
+				}
+
+				const std::optional<SweepHit> hit = sweep(pairs[i], left);
+				if (hit && (!next || hit->time < nextHit.time))
+				{
+					next = i;
+					nextHit = *hit;
+				}
+			}
+
+			if (!next)
+			{
+				break;
+			}
+
+			const float step = nextHit.time * left;
+			advance(step);
+			played += step;
+			handled[*next] = true;
+			react(pairs[*next], nextHit.edgeOfSecond);
+		}
+
+		advance(1.0f - played);
 	}
 
 	// --- The window's edges.
