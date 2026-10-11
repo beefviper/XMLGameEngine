@@ -45,9 +45,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 
 | File | Topic | Status |
 |---|---|---|
-| [generator](40-generator.md) | XSLT approach, options, the plain `windows-cpp` target, the engine's code and frame order in it, open questions | Built |
-| [generator-structure](41-generator-structure.md) | Program layout: objects, screens, groups, pictures, names, the engine's files it carries | Built |
-| [generator-rules](42-generator-rules.md) | Edges before the move, touches met in time order, timers, jumps, aim, chase, paths | Built |
+| [generator](40-generator.md) | `windows-cpp`: the game as the engine's data, played by the engine's own code; the XSLT target it replaced | Built |
 
 ## Engine, tools and games
 

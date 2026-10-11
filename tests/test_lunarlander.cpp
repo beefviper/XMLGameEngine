@@ -16,6 +16,7 @@
 
 #include "command_executor.h"
 #include "game.h"
+#include "game_xml.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -123,7 +124,7 @@ TEST_CASE("lunarlander.xml loads under every XML backend, checked against the sc
 {
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
-		Game game{ "games/lunarlander.xml", backend };
+		Game game{ readGame("games/lunarlander.xml", backend) };
 		const Object& lander = game.getObject("lander");
 
 		CHECK(lander.collisionData.type == CollisionType::Pixel);

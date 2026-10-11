@@ -6,6 +6,7 @@
 #include "game_session.h"
 
 #include "game_stage.h"
+#include "game_xml.h"
 #include "qt_window.h"
 
 #include <QPoint>
@@ -94,7 +95,7 @@ namespace xge
 
 		try
 		{
-			game = std::make_unique<Game>(file.toStdString(), currentOptions.xml);
+			game = std::make_unique<Game>(readGame(file.toStdString(), currentOptions.xml));
 
 			const WindowDesc& desc = game->getWindowDesc();
 

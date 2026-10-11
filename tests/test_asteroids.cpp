@@ -19,6 +19,7 @@
 #include "bitmap.h"
 #include "command_executor.h"
 #include "game.h"
+#include "game_xml.h"
 #include "xml_document.h"
 #include "xsd_lite.h"
 
@@ -269,7 +270,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 {
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
-		Game game{ "games/asteroids.xml", backend };
+		Game game{ readGame("games/asteroids.xml", backend) };
 
 		const Object& ship = game.getObject("ship");
 		CHECK(ship.hasHeading);

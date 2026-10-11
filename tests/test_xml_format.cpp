@@ -14,6 +14,7 @@
 // none of it needs a window.
 
 #include "game.h"
+#include "game_xml.h"
 #include "xml_document.h"
 #include "xsd_lite.h"
 
@@ -631,13 +632,13 @@ TEST_CASE("every shipped game loads the same through all four XML libraries", "[
 		{
 			std::vector<std::string> expected;
 			{
-				Game xerces{ file, XmlBackend::Xerces };
+				Game xerces{ readGame(file, XmlBackend::Xerces) };
 				for (const auto& object : xerces.getCurrentObjects()) { expected.push_back(comparable(object)); }
 			}
 
 			for (const XmlBackend backend : { XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 			{
-				Game game{ file, backend };
+				Game game{ readGame(file, backend) };
 				REQUIRE(game.getCurrentObjects().size() == expected.size());
 
 				for (std::size_t i = 0; i < expected.size(); ++i)

@@ -7,6 +7,7 @@
 #include "data_folder.h"
 #include "generate.h"
 #include "game.h"
+#include "game_xml.h"
 #include "engine.h"
 
 #include <cstdlib>
@@ -58,7 +59,6 @@ int main(int argc, char* argv[])
 		xge::GenerateRequest request;
 		request.gameFile = filename;
 		request.target = options.generate;
-		request.generators = base / "generators";
 		request.dataFolder = base;
 		request.output = std::filesystem::absolute(options.output.empty()
 			? std::filesystem::path(std::filesystem::path(filename).stem().string() + "-" + options.generate)
@@ -76,10 +76,6 @@ int main(int argc, char* argv[])
 			for (const auto& asset : program.assets)
 			{
 				std::cout << "  " << asset.generic_string() << " (copied)\n";
-			}
-			for (const auto& picture : program.drawn)
-			{
-				std::cout << "  " << picture.generic_string() << " (drawn from its svg)\n";
 			}
 		}
 		catch (const std::exception& error)
@@ -120,7 +116,7 @@ int main(int argc, char* argv[])
 		// difference and prints both as "unknown" instead of a misleading {0,0}
 		// if called before Engine exists, so it is called twice: once here to
 		// show what is known without a window, and once after Engine.
-		xge::Game game{ filename, options.xml };
+		xge::Game game{ xge::readGame(filename, options.xml) };
 
 		std::cout << "=== before Engine: sizes and size-dependent positions not yet known ===\n\n";
 		game.printGame();

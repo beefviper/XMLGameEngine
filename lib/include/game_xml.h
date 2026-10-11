@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "game_data.h"
 #include "object.h"
 #include "sound.h"
 #include "states.h"
@@ -50,4 +51,8 @@ namespace xge
 			std::vector<RawPath>& rawPaths,
 			SchemaValidation& validation);
 	};
+
+	// The game in that file, read with that XML library and checked against
+	// the schema it names (game_xml::init), as Game is made from it.
+	GameData readGame(const std::string& filename, XmlBackend backend = XmlDocumentFactory::defaultBackend());
 }

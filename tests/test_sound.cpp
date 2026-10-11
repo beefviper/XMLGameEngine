@@ -12,6 +12,7 @@
 
 #include "engine.h"
 #include "game.h"
+#include "game_xml.h"
 #include "sound.h"
 
 #include <catch2/catch_approx.hpp>
@@ -342,7 +343,7 @@ TEST_CASE("Pong's sounds load with every XML library, checked against the schema
 {
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
-		Game game{ "games/pong.xml", backend };
+		Game game{ readGame("games/pong.xml", backend) };
 
 		std::vector<std::string> names;
 		for (const auto& sound : game.getSounds()) { names.push_back(sound.name); }
@@ -476,7 +477,7 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 
 		for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 		{
-			Game game{ path, backend };
+			Game game{ readGame(path, backend) };
 			std::vector<std::string> names;
 			for (const auto& sound : game.getSounds()) { names.push_back(sound.name); }
 			CHECK(names == expected);

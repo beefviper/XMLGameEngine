@@ -14,6 +14,7 @@
 
 #include "command_executor.h"
 #include "game.h"
+#include "game_xml.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -87,7 +88,7 @@ namespace
 
 		explicit Loaded(const std::string& xml, XmlBackend backend = XmlBackend::Xerces) :
 			file(write(xml)),
-			game(file.path.string(), backend)
+			game(readGame(file.path.string(), backend))
 		{
 			// What Engine's constructor does: the first state is the one shown,
 			// and every shape measured (as a window backend would).

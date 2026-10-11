@@ -15,6 +15,7 @@
 #include "command_executor.h"
 #include "engine.h"
 #include "game.h"
+#include "game_xml.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -125,7 +126,7 @@ TEST_CASE("frogger.xml loads under every XML backend, checked against the schema
 	// validator the other three backends use has to accept them as well.
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
-		Game game{ "games/frogger.xml", backend };
+		Game game{ readGame("games/frogger.xml", backend) };
 		const Object& frog = game.getObject("frog");
 		CHECK(frog.variableOriginal.at("lives") == 3.0f);
 

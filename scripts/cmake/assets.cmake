@@ -42,41 +42,55 @@ set(data_assets
 	"assets/paddle.jpg"
 	"assets/Space Invaders Color Sprites.svg")
 
-# The stylesheets xgecli --generate runs, a folder per target (generate.cpp).
-set(data_generators
-	"generators/windows-cpp/generate.xsl"
-	"generators/windows-cpp/prepare.xsl"
-	"generators/windows-cpp/check.xsl"
-	"generators/windows-cpp/main.xsl"
-	"generators/windows-cpp/groups.xsl"
-	"generators/windows-cpp/looks.xsl"
-	"generators/windows-cpp/guards.xsl"
-	"generators/windows-cpp/paths.xsl"
-	"generators/windows-cpp/values.xsl"
-	"generators/windows-cpp/functions.xml"
-	"generators/windows-cpp/tables.xml"
-	"generators/windows-cpp/modules/physics.h")
-
-# The engine's own files a generated program compiles unchanged (the engine
-# element of a target's manifest, generate.cpp): the physics, the pictures it
-# draws and the sounds it makes and plays, so it plays as the engine does.
-# Copied under lib/ as they are here; they are already the engine's sources,
-# so they are not listed again beside the data.
+# The engine's own files a generated program compiles unchanged
+# (xge::engineFiles in cli/source/generate.cpp, which this list must match):
+# the whole engine but for reading XML and choosing among libraries. Copied
+# under lib/ as they are here; they are already the engine's sources, so they
+# are not listed again beside the data.
 set(data_engine
 	"lib/include/types.h"
 	"lib/include/geometry.h"
 	"lib/source/geometry.cpp"
 	"lib/include/color.h"
+	"lib/source/color.cpp"
 	"lib/include/bitmap.h"
 	"lib/source/bitmap.cpp"
+	"lib/include/svg.h"
+	"lib/source/svg.cpp"
+	"lib/include/spelling.h"
+	"lib/source/spelling.cpp"
+	"lib/include/keycode.h"
+	"lib/source/keycode.cpp"
+	"lib/include/command.h"
+	"lib/source/command.cpp"
+	"lib/include/object.h"
+	"lib/source/object.cpp"
+	"lib/include/states.h"
+	"lib/source/states.cpp"
 	"lib/include/sound.h"
 	"lib/source/sound.cpp"
+	"lib/include/game_data.h"
+	"lib/include/game_expr.h"
+	"lib/source/game_expr.cpp"
+	"lib/include/collision_detector.h"
+	"lib/source/collision_detector.cpp"
+	"lib/include/command_executor.h"
+	"lib/source/command_executor.cpp"
+	"lib/include/game.h"
+	"lib/source/game.cpp"
 	"lib/include/audio.h"
 	"lib/include/audio_sfml.h"
-	"lib/source/audio_sfml.cpp")
+	"lib/source/audio_sfml.cpp"
+	"lib/include/builtin_font.h"
+	"lib/source/builtin_font.cpp"
+	"lib/include/window.h"
+	"lib/include/window_sfml.h"
+	"lib/source/window_sfml.cpp"
+	"lib/include/engine.h"
+	"lib/source/engine.cpp")
 
 set(data_outputs "")
-foreach(item IN LISTS data_xsd data_xml data_assets data_generators data_engine)
+foreach(item IN LISTS data_xsd data_xml data_assets data_engine)
 	message(STATUS ${item})
 	add_custom_command(
 		OUTPUT "${XGE_OUTPUT_DIR}/${item}"
@@ -87,7 +101,7 @@ endforeach()
 
 add_custom_target(xgedata ALL
 	DEPENDS ${data_outputs}
-	SOURCES	${data_xsd} ${data_xml} ${data_assets} ${data_generators})
+	SOURCES	${data_xsd} ${data_xml} ${data_assets})
 
 function(add_data_source_group group_name)
 	source_group("${group_name}" FILES ${ARGN})
@@ -96,4 +110,3 @@ endfunction()
 add_data_source_group("XSD Files" ${data_xsd})
 add_data_source_group("XML Files" ${data_xml})
 add_data_source_group("Asset Files" ${data_assets})
-add_data_source_group("Generator Files" ${data_generators})

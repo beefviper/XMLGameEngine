@@ -483,7 +483,7 @@ namespace xge
 		const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds,
 		const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths)
 	{
-		generator.seed(seed());
+		generator.seed(fixedSeed ? *fixedSeed : seed());
 
 		checkColor(windowDesc.background, "<window> > <background>");
 

@@ -30,6 +30,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <random>
 #include <set>
 #include <string>
@@ -200,6 +201,13 @@ namespace xge
 
 		static inline std::random_device seed;
 		static inline std::mt19937 generator;
+
+		// Every game loaded after this draws its <random>s starting from
+		// `value`, the same way each time, so two copies of a game play alike
+		// (a test of a generated game against its file); nullopt goes back to
+		// a new start each load, from std::random_device.
+		static void fixRandomSeed(std::optional<unsigned int> value) noexcept { fixedSeed = value; }
+		static inline std::optional<unsigned int> fixedSeed;
 
 		// A random number from min to max (either order), for <random>.
 		template <typename T>

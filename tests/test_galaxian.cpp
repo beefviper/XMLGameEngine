@@ -13,6 +13,7 @@
 
 #include "engine.h"
 #include "game.h"
+#include "game_xml.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -302,7 +303,7 @@ TEST_CASE("galaxian.xml loads with every XML library, so both schema checkers ta
 	for (const XmlBackend backend : XmlDocumentFactory::availableBackends())
 	{
 		INFO(XmlDocumentFactory::name(backend));
-		Game game("games/galaxian.xml", backend);
+		Game game(readGame("games/galaxian.xml", backend));
 		CHECK(game.getPaths().size() == 6);
 		CHECK(game.getPaths().at("dive").steps.back().home);
 	}

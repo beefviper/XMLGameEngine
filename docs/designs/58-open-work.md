@@ -17,7 +17,7 @@
 ## Code
 
 - Sort `lib/` into folders; rename `collisionData.basic` ([build-and-layout](51-build-and-layout.md)).
-- `xgecli --generate`: gaps and drift risks are listed under Open in [generator](40-generator.md). Every generated game builds on GCC and Clang on Linux and on MSVC 19.44 (Visual Studio 2022, `/W4`) with no warnings; nothing checks that automatically, so it is a script to run by hand when the generator changes. A generated game's behavior against the engine's has not been compared on Windows.
+- `xgecli --generate`: what is open is under Open in [generator](40-generator.md). `test_generated_games.cpp` plays every generated game against its file; building the generated programs themselves (GCC and Clang on Linux, no warnings) is still a script to run by hand, and MSVC has not been tried with the current target.
 
 ## Known untested
 

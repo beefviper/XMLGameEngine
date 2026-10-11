@@ -16,10 +16,15 @@
 
 namespace xge
 {
-	Game::Game(const std::string& game, XmlBackend xmlBackend) :
-		filename(game)
+	Game::Game(GameData data) :
+		windowDesc(std::move(data.window)),
+		validation(std::move(data.validation)),
+		rawVariables(std::move(data.variables)),
+		rawStates(std::move(data.states)),
+		rawObjects(std::move(data.objects)),
+		rawSounds(std::move(data.sounds)),
+		rawPaths(std::move(data.paths))
 	{
-		xml.init(filename, xmlBackend, windowDesc, rawVariables, rawStates, rawObjects, rawSounds, rawPaths, xmlValidation);
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 
@@ -144,7 +149,7 @@ namespace xge
 
 	void Game::printGame(void)
 	{
-		std::cout << "schema validation: " << xmlValidation << "\n\n";
+		std::cout << "schema validation: " << validation << "\n\n";
 
 		std::cout << windowDesc << '\n';
 

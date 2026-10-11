@@ -5,6 +5,7 @@
 
 #include "game_xml.h"
 
+#include "game.h"
 #include "xsd_lite.h"
 
 #include <algorithm>
@@ -1749,5 +1750,22 @@ namespace xge
 			if (state->getName() == "keys") { continue; }
 			rawStates.push_back(readState(*state, keySets));
 		}
+	}
+
+	GameData readGame(const std::string& filename, XmlBackend backend)
+	{
+		GameData data;
+		SchemaValidation validation = SchemaValidation::None;
+		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, validation);
+
+		std::ostringstream said;
+		said << validation;
+		data.validation = said.str();
+		return data;
+	}
+
+	Game::Game(const std::string& file) :
+		Game(readGame(file))
+	{
 	}
 }

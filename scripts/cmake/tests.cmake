@@ -81,6 +81,7 @@ add_executable(xgetest
 	"tests/test_cli.cpp"
 	"tests/test_data_folder.cpp"
 	"tests/test_generate.cpp"
+	"tests/test_generated_games.cpp"
 	"tests/test_galaxian.cpp"
 	"tests/test_pitfall.cpp"
 	"tests/test_missilecommand.cpp"
@@ -95,7 +96,6 @@ add_executable(xgetest
 # test_cli.cpp and test_generate.cpp can call it; the library does not contain
 # it (see executables.cmake).
 target_include_directories(xgetest PRIVATE cli/include)
-xge_link_xslt(xgetest)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
@@ -105,6 +105,62 @@ target_compile_features(xgetest PRIVATE cxx_std_20)
 xge_warnings(xgetest)
 
 target_link_libraries(xgetest PRIVATE xgelib Catch2::Catch2WithMain)
+
+# Every game, generated (xgecli --generate windows-cpp) into the build folder
+# as the build runs, and its data (source/<game>.cpp) compiled into the tests:
+# test_generated_games.cpp plays each one against its file, frame by frame.
+# generated_games.h names them; the function for a game is its file's name in
+# camel case and "Game", as gameFunctionName in cli/source/generate.cpp.
+set(XGE_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
+set(generated_declarations "")
+set(generated_entries "")
+foreach(game_file IN LISTS data_xml)
+	get_filename_component(game "${game_file}" NAME_WE)
+
+	string(REGEX MATCHALL "[A-Za-z0-9]+" words "${game}")
+	set(function "")
+	foreach(word IN LISTS words)
+		if (function STREQUAL "")
+			set(function "${word}")
+		else()
+			string(SUBSTRING "${word}" 0 1 first)
+			string(SUBSTRING "${word}" 1 -1 rest)
+			string(TOUPPER "${first}" first)
+			string(APPEND function "${first}${rest}")
+		endif()
+	endforeach()
+	if (function MATCHES "^[0-9]")
+		set(function "n${function}")
+	endif()
+	string(APPEND function "Game")
+
+	set(data "${XGE_GENERATED_DIR}/${game}/source/${game}.cpp")
+	add_custom_command(
+		OUTPUT "${data}"
+		COMMAND xgecli "${game}" --generate windows-cpp -o "${XGE_GENERATED_DIR}/${game}"
+		WORKING_DIRECTORY "${XGE_OUTPUT_DIR}"
+		DEPENDS xgecli xgedata "${CMAKE_CURRENT_SOURCE_DIR}/${game_file}"
+		COMMENT "Generating ${game_file} for the tests")
+	target_sources(xgetest PRIVATE "${data}")
+
+	string(APPEND generated_declarations "xge::GameData ${function}();\n")
+	string(APPEND generated_entries "\t{ \"${game_file}\", ${function} },\n")
+endforeach()
+
+file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
+	"// generated_games.h\n"
+	"// XML Game Engine\n"
+	"// author: beefviper\n"
+	"// date: Oct 11, 2026\n"
+	"//\n"
+	"// Written by scripts/cmake/tests.cmake: every game's generated data.\n\n"
+	"#pragma once\n\n"
+	"#include \"game_data.h\"\n\n"
+	"${generated_declarations}\n"
+	"struct GeneratedGame\n{\n\tconst char* file;\n\txge::GameData (*describe)();\n};\n\n"
+	"inline const GeneratedGame generatedGames[] = {\n${generated_entries}};\n")
+configure_file("${XGE_GENERATED_DIR}/generated_games.h.in" "${XGE_GENERATED_DIR}/generated_games.h" COPYONLY)
+target_include_directories(xgetest PRIVATE "${XGE_GENERATED_DIR}")
 
 # games/ and assets/ end up next to the test binary, in output/<config> (same
 # as they do for the programs - see output.cmake and assets.cmake), because

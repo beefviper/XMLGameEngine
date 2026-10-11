@@ -12,29 +12,6 @@
 
 namespace xge
 {
-	namespace
-	{
-		// The audio library asked for, or silence if it will not start (no
-		// sound device, say): a game is still worth playing without sound.
-		std::unique_ptr<Audio> makeAudioOrSilence(AudioBackend backend)
-		{
-			try
-			{
-				return AudioFactory::create(backend);
-			}
-			catch (const std::exception& error)
-			{
-				std::cerr << "warning: no sound: " << error.what() << '\n';
-				return std::make_unique<NullAudio>();
-			}
-		}
-	}
-
-	Engine::Engine(Game& gameToRun, WindowBackend backend, AudioBackend audioBackend) :
-		Engine(gameToRun, WindowFactory::create(gameToRun.getWindowDesc(), backend), makeAudioOrSilence(audioBackend))
-	{
-	}
-
 	Engine::Engine(Game& gameToRun, std::unique_ptr<Window> newWindow, std::unique_ptr<Audio> newAudio) :
 		game(gameToRun),
 		commandExecutor(gameToRun),

@@ -7,12 +7,11 @@
 
 #include "collision_detector.h"
 #include "command.h"
-#include "game_xml.h"
+#include "game_data.h"
 #include "game_expr.h"
 #include "object.h"
 #include "sound.h"
 #include "states.h"
-#include "xml_document.h"
 
 #include <iostream>
 #include <string>
@@ -28,13 +27,14 @@ namespace xge
 	class Game
 	{
 	public:
-		// xmlBackend picks which XmlDocument implementation actually parses
-		// the file (Xerces, TinyXML2, PugiXML, or RapidXML - see
-		// xml_document.h); defaults to Xerces, or the first one built when Xerces
-		// is not (XmlDocumentFactory::defaultBackend), so existing callers
-		// (main.cpp) don't have to name one - same pattern as Engine's own
-		// WindowBackend parameter.
-		explicit Game(const std::string& game, XmlBackend xmlBackend = XmlDocumentFactory::defaultBackend());
+		// The game as written (see GameData), worked out and ready to run.
+		explicit Game(GameData data);
+
+		// The game in that file, read with the default XML library: the same
+		// as Game(readGame(file)), see game_xml.h, which also picks another.
+		// Defined in game_xml.cpp, so a program that has its game written
+		// out as C++ (a generated one) builds without any XML library.
+		explicit Game(const std::string& file);
 
 		void updateObjects(void);
 
@@ -176,17 +176,13 @@ namespace xge
 		// Shows `value` in every text object bound to ownerName.variableName.
 		void refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value);
 
-		std::string filename;
 		WindowDesc windowDesc;
 
-		game_xml xml;
 		game_expr expr;
 
-		// How xml above checked this game's file against
-		// xgedef.xsd - set once, by xml.init() inside the
-		// constructor, and only ever read back by printGame() (see
-		// xml_document.h for what each value means).
-		SchemaValidation xmlValidation = SchemaValidation::None;
+		// How the game file was checked against xgedef.xsd (GameData),
+		// only ever read back by printGame().
+		std::string validation;
 
 		std::vector<std::pair<std::string, RawValue>> rawVariables;
 		std::map<std::string, float> variables;
