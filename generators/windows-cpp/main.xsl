@@ -1871,7 +1871,7 @@ void pressed(sf::Keyboard::Key key)
           <xsl:value-of select="concat($in, 'if (', $name, 'Grounded')" />
           <xsl:if test="$climbs"><xsl:value-of select="concat(' &amp;&amp; !', $name, 'Climbing')" /></xsl:if>
           <xsl:value-of select="concat(')&#10;', $in, '{&#10;')" />
-          <xsl:value-of select="concat($in, '&#9;', $name, 'Velocity.y = -std::sqrt(2.0f * ', $name, 'Acceleration.y * ')" />
+          <xsl:value-of select="concat($in, '&#9;', $name, 'Velocity.y = physics::leapSpeed(', $name, 'Acceleration.y, ')" />
           <xsl:call-template name="value" />
           <xsl:value-of select="concat(');&#10;', $in, '&#9;', $name, 'Grounded = false;&#10;', $in, '&#9;', $name, 'Leaping = true;&#10;', $in, '}&#10;')" />
         </xsl:when>
@@ -2019,7 +2019,7 @@ void pressed(sf::Keyboard::Key key)
 </xsl:text>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:value-of select="concat($in, $name, '.setPosition({physics::left(', $shooter, ') + physics::width(', $shooter, ') / 2.0f - physics::width(', $name, ') / 2.0f, physics::top(', $shooter, ')});&#10;')" />
+        <xsl:value-of select="concat($in, 'physics::fireUp(', $shooter, ', ', $name, ');&#10;')" />
         <xsl:if test="count($projectile | $moving) = count($moving)">
           <xsl:value-of select="concat($in, $velocity, ' = ')" />
           <xsl:call-template name="vector"><xsl:with-param name="node" select="$projectile/velocity" /></xsl:call-template>

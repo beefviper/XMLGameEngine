@@ -14,7 +14,7 @@ The root [readme.md](readme.md) is the short public overview.
 
 | Path | What |
 |---|---|
-| `lib/` | `xgelib`, the engine (`source/`, `include/`; flat). Throws, never `exit()`s |
+| `lib/` | `xgelib`, the engine (`source/`, `include/`; flat). Throws, never `exit()`s. `synth`, `collide`, `motion`, `bitmap` (with `color.h`, `types.h`) are plain files with nothing but the standard library in them, shared with every program `--generate` writes: keep them free of engine headers |
 | `cli/`, `gui/` | `xgecli`; `xgegui` (Qt 6, built only when Qt is found) |
 | `tests/` | Catch2 (`xgetest`), one `test_<topic>.cpp` per area; games are played frame by frame |
 | `games/`, `assets/` | the games; their media |

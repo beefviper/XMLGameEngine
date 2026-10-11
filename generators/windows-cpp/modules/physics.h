@@ -21,6 +21,7 @@
 #pragma once
 
 #include "collide.h"
+#include "motion.h"
 
 #include <SFML/Graphics.hpp>
 
@@ -176,31 +177,33 @@ namespace physics
 
 	using Edge = xge::Edge;
 
-	// Whether the thing has gone past that edge of the area.
+	// A thing's size and where it is, as the engine's movement code
+	// (motion.h) takes them.
+	template <typename Thing>
+	xge::Vector2f positionOf(const Thing& thing)
+	{
+		return fromSfml(thing.getGlobalBounds().position);
+	}
+
+	template <typename Thing>
+	xge::Vector2f sizeOf(const Thing& thing)
+	{
+		return fromSfml(thing.getGlobalBounds().size);
+	}
+
+	// Moves a thing to the place the engine's code worked out for it.
+	template <typename Thing>
+	void put(Thing& thing, xge::Vector2f where)
+	{
+		thing.move(toSfml(where) - thing.getGlobalBounds().position);
+	}
+
+	// Whether the thing has gone past that edge of the area, as the engine
+	// decides it (collide::touchesScreenEdge), which looks at the window.
 	template <typename Thing>
 	bool past(const Thing& thing, Edge edge, const sf::FloatRect& area)
 	{
-		switch (edge)
-		{
-		case Edge::Top:    return top(thing) < area.position.y;
-		case Edge::Bottom: return bottom(thing) > area.position.y + area.size.y;
-		case Edge::Left:   return left(thing) < area.position.x;
-		case Edge::Right:  return right(thing) > area.position.x + area.size.x;
-		}
-		return false;
-	}
-
-	// Back inside the area at that edge.
-	template <typename Thing>
-	void putBack(Thing& thing, Edge edge, const sf::FloatRect& area)
-	{
-		switch (edge)
-		{
-		case Edge::Top:    thing.move({ 0.0f, area.position.y - top(thing) }); break;
-		case Edge::Bottom: thing.move({ 0.0f, area.position.y + area.size.y - bottom(thing) }); break;
-		case Edge::Left:   thing.move({ area.position.x - left(thing), 0.0f }); break;
-		case Edge::Right:  thing.move({ area.position.x + area.size.x - right(thing), 0.0f }); break;
-		}
+		return xge::collide::touchesScreenEdge(bodyOf(thing), area.size.x, area.size.y, edge);
 	}
 
 	// Heading away from the edge, from where it is: it stays as far over as the
@@ -208,28 +211,20 @@ namespace physics
 	template <typename Thing>
 	void bounce(Thing&, sf::Vector2f& velocity, Edge edge, const sf::FloatRect&)
 	{
-		switch (edge)
-		{
-		case Edge::Top:    velocity.y = std::abs(velocity.y); break;
-		case Edge::Bottom: velocity.y = -std::abs(velocity.y); break;
-		case Edge::Left:   velocity.x = std::abs(velocity.x); break;
-		case Edge::Right:  velocity.x = -std::abs(velocity.x); break;
-		}
+		velocity = toSfml(xge::collide::bounced(fromSfml(velocity), edge));
 	}
 
 	// Back inside, and no longer heading into the edge; the other way it
-	// keeps going, so a thing pressed against the floor still slides.
+	// keeps going, so a thing pressed against the floor still slides
+	// (motion::stick).
 	template <typename Thing>
 	void stick(Thing& thing, sf::Vector2f& velocity, Edge edge, const sf::FloatRect& area)
 	{
-		putBack(thing, edge, area);
-		switch (edge)
-		{
-		case Edge::Top:    velocity.y = std::max(velocity.y, 0.0f); break;
-		case Edge::Bottom: velocity.y = std::min(velocity.y, 0.0f); break;
-		case Edge::Left:   velocity.x = std::max(velocity.x, 0.0f); break;
-		case Edge::Right:  velocity.x = std::min(velocity.x, 0.0f); break;
-		}
+		xge::Vector2f where = positionOf(thing);
+		xge::Vector2f going = fromSfml(velocity);
+		xge::motion::stick(where, going, sizeOf(thing), area.size.x, area.size.y, edge);
+		put(thing, where);
+		velocity = toSfml(going);
 	}
 
 	// The same, for a thing that has no velocity of its own (a paddle moved by
@@ -237,30 +232,21 @@ namespace physics
 	template <typename Thing>
 	void stick(Thing& thing, Edge edge, const sf::FloatRect& area)
 	{
-		putBack(thing, edge, area);
+		sf::Vector2f none;
+		stick(thing, none, edge, area);
 	}
 
 	// Once the thing has gone right off the area through that edge, and is
 	// still heading that way, in again from the opposite side, one area and
 	// one of its own sizes along, so things spaced along a lane stay spaced.
-	// Until it has gone completely it slides out as normal.
+	// Until it has gone completely it slides out as normal (motion::wrap).
 	template <typename Thing>
 	void wrap(Thing& thing, const sf::Vector2f& velocity, Edge edge, const sf::FloatRect& area)
 	{
-		switch (edge)
+		xge::Vector2f where = positionOf(thing);
+		if (xge::motion::wrap(where, sizeOf(thing), fromSfml(velocity), area.size.x, area.size.y, edge))
 		{
-		case Edge::Right:
-			if (velocity.x > 0.0f && left(thing) >= area.position.x + area.size.x) { thing.move({ -(area.size.x + width(thing)), 0.0f }); }
-			break;
-		case Edge::Left:
-			if (velocity.x < 0.0f && right(thing) <= area.position.x) { thing.move({ area.size.x + width(thing), 0.0f }); }
-			break;
-		case Edge::Bottom:
-			if (velocity.y > 0.0f && top(thing) >= area.position.y + area.size.y) { thing.move({ 0.0f, -(area.size.y + height(thing)) }); }
-			break;
-		case Edge::Top:
-			if (velocity.y < 0.0f && bottom(thing) <= area.position.y) { thing.move({ 0.0f, area.size.y + height(thing) }); }
-			break;
+			put(thing, where);
 		}
 	}
 
@@ -269,21 +255,7 @@ namespace physics
 	template <typename Thing>
 	void wrap(Thing& thing, Edge edge, const sf::FloatRect& area)
 	{
-		switch (edge)
-		{
-		case Edge::Right:
-			if (left(thing) >= area.position.x + area.size.x) { thing.move({ -(area.size.x + width(thing)), 0.0f }); }
-			break;
-		case Edge::Left:
-			if (right(thing) <= area.position.x) { thing.move({ area.size.x + width(thing), 0.0f }); }
-			break;
-		case Edge::Bottom:
-			if (top(thing) >= area.position.y + area.size.y) { thing.move({ 0.0f, -(area.size.y + height(thing)) }); }
-			break;
-		case Edge::Top:
-			if (bottom(thing) <= area.position.y) { thing.move({ 0.0f, area.size.y + height(thing) }); }
-			break;
-		}
+		wrap(thing, toSfml(xge::motion::outward(edge)), edge, area);
 	}
 
 	// A step at once (a frog's hop), unless it would take the thing out of
@@ -291,11 +263,7 @@ namespace physics
 	template <typename Thing>
 	void hop(Thing& thing, const sf::Vector2f& step, const sf::FloatRect& area)
 	{
-		const sf::FloatRect bounds = thing.getGlobalBounds();
-		const sf::Vector2f from = bounds.position + step;
-		const sf::Vector2f to = from + bounds.size;
-		if (from.x >= area.position.x && from.y >= area.position.y
-			&& to.x <= area.position.x + area.size.x && to.y <= area.position.y + area.size.y)
+		if (xge::motion::fits(positionOf(thing) + fromSfml(step), sizeOf(thing), area.size.x, area.size.y))
 		{
 			thing.move(step);
 		}
@@ -311,11 +279,7 @@ namespace physics
 		{
 			return;
 		}
-		const sf::FloatRect bounds = thing.getGlobalBounds();
-		const sf::Vector2f from = bounds.position + distance;
-		const sf::Vector2f to = from + bounds.size;
-		if (from.x >= area.position.x && from.y >= area.position.y
-			&& to.x <= area.position.x + area.size.x && to.y <= area.position.y + area.size.y)
+		if (xge::motion::fits(positionOf(thing) + fromSfml(distance), sizeOf(thing), area.size.x, area.size.y))
 		{
 			step = distance / static_cast<float>(frames);
 			framesLeft = frames;
@@ -337,42 +301,16 @@ namespace physics
 
 	// --- Standing and climbing.
 
-	// Coming down onto the top of `other` (<land />): not going up, and its
-	// feet no lower than that top before this frame's step. It is put on the
-	// top, its fall stopped, and the answer is yes. Any other touch does
-	// nothing, so a platform can be walked past and jumped up through.
-	template <typename Thing, typename Other>
-	bool land(Thing& thing, sf::Vector2f& velocity, const Other& other)
-	{
-		const float feetBefore = bottom(thing) - velocity.y;
-		if (velocity.y < 0.0f || feetBefore > top(other) + 0.5f)
-		{
-			return false;
-		}
-		thing.move({0.0f, top(other) - bottom(thing)});
-		velocity.y = 0.0f;
-		return true;
-	}
-
 	// Whether a climber is at a ladder: its middle over it, and its feet
 	// between the ladder's top and bottom (half a pixel either way).
 	template <typename Climber, typename Ladder>
 	bool atLadder(const Climber& climber, const Ladder& ladder)
 	{
-		const sf::FloatRect bounds = climber.getGlobalBounds();
-		const sf::FloatRect rungs = ladder.getGlobalBounds();
-		const float middle = bounds.position.x + bounds.size.x / 2.0f;
-		const float feet = bounds.position.y + bounds.size.y;
-		return middle >= rungs.position.x && middle <= rungs.position.x + rungs.size.x
-			&& feet >= rungs.position.y - 0.5f && feet <= rungs.position.y + rungs.size.y + 0.5f;
+		return xge::motion::atLadder(positionOf(climber), sizeOf(climber), positionOf(ladder), sizeOf(ladder));
 	}
 
 	// One frame at a ladder (<climb>), `step` the way the keys held climb (up
-	// below 0). Off it, it gets on only from the ground and when it can go
-	// that way, lined up with the ladder's middle. On it, it goes the step,
-	// its feet kept between the ladder's ends, and its velocity is 0, so
-	// nothing walks it off; at an end it gets off, standing there, the way
-	// across left to the keys. With no ladder it is off.
+	// below 0), as the engine does it (motion::climb). With no ladder it is off.
 	template <typename Thing>
 	void climb(Thing& thing, sf::Vector2f& velocity, float step, bool& climbing, bool grounded, const std::optional<sf::FloatRect>& ladder)
 	{
@@ -381,45 +319,41 @@ namespace physics
 			climbing = false;
 			return;
 		}
-		const float ladderTop = ladder->position.y;
-		const float ladderBottom = ladder->position.y + ladder->size.y;
-		const float feet = bottom(thing);
-		if (!climbing)
+		xge::Vector2f where = positionOf(thing);
+		xge::Vector2f going = fromSfml(velocity);
+		const float across = velocity.x;
+		const xge::motion::Climbed climbed = xge::motion::climb(where, going, sizeOf(thing), climbing, grounded, step,
+			fromSfml(ladder->position), fromSfml(ladder->size));
+		if (!climbed.moved)
 		{
-			const bool canGo = (step < 0.0f && feet > ladderTop + 0.5f) || (step > 0.0f && feet < ladderBottom - 0.5f);
-			if (!canGo || !grounded)
-			{
-				return;
-			}
-			climbing = true;
-			thing.move({ladder->getCenter().x - (left(thing) + width(thing) / 2.0f), 0.0f});
+			return;
 		}
-		const float newFeet = std::clamp(feet + step, ladderTop, ladderBottom);
-		thing.move({0.0f, newFeet - feet});
-		if (step != 0.0f && (newFeet <= ladderTop || newFeet >= ladderBottom))
+		put(thing, where);
+		velocity = toSfml(going);
+		if (climbed.gotOff)
 		{
-			climbing = false;
-			velocity.y = 0.0f;
-		}
-		else
-		{
-			velocity = {};
+			// standing at the end, the way across left to the keys
+			velocity.x = across;
 		}
 	}
 
 	// --- Shots.
 
 	// The way a thing faces (<facing>).
-	enum class Facing { Up, Down, Left, Right };
+	using Facing = xge::Direction;
 
 	// The way of the four nearest to `way`: the axis it goes further along.
 	inline Facing facingOf(sf::Vector2f way)
 	{
-		if (std::abs(way.x) >= std::abs(way.y))
-		{
-			return way.x < 0.0f ? Facing::Left : Facing::Right;
-		}
-		return way.y < 0.0f ? Facing::Up : Facing::Down;
+		return xge::motion::directionOf(fromSfml(way));
+	}
+
+	// Puts a shot where the engine's code worked out and gives it its velocity.
+	template <typename Shot>
+	void launch(Shot& shot, sf::Vector2f& velocity, const xge::motion::Launch& from)
+	{
+		put(shot, from.position);
+		velocity = toSfml(from.velocity);
 	}
 
 	// A shot leaving a shooter that faces that way: from the middle of that
@@ -427,35 +361,30 @@ namespace physics
 	template <typename Shooter, typename Shot>
 	void fireFrom(const Shooter& shooter, Shot& shot, sf::Vector2f& velocity, Facing facing, float speed)
 	{
-		const sf::FloatRect from = shooter.getGlobalBounds();
-		const sf::Vector2f size = shot.getGlobalBounds().size;
-		const sf::Vector2f middle = from.getCenter() - size / 2.0f;
-		switch (facing)
-		{
-		case Facing::Up:
-			shot.setPosition({ middle.x, from.position.y - size.y });
-			velocity = { 0.0f, -speed };
-			break;
-		case Facing::Down:
-			shot.setPosition({ middle.x, from.position.y + from.size.y });
-			velocity = { 0.0f, speed };
-			break;
-		case Facing::Left:
-			shot.setPosition({ from.position.x - size.x, middle.y });
-			velocity = { -speed, 0.0f };
-			break;
-		case Facing::Right:
-			shot.setPosition({ from.position.x + from.size.x, middle.y });
-			velocity = { speed, 0.0f };
-			break;
-		}
+		launch(shot, velocity, xge::motion::shotFacing(positionOf(shooter), sizeOf(shooter), sizeOf(shot), facing, speed));
+	}
+
+	// A shot leaving the top centre of a shooter that has no way it faces: the
+	// shot's own middle over the shooter's, so a thin shot leaves the middle of
+	// the gun. Where it goes is the shot's own velocity.
+	template <typename Shooter, typename Shot>
+	void fireUp(const Shooter& shooter, Shot& shot)
+	{
+		put(shot, xge::motion::shotUp(positionOf(shooter), sizeOf(shooter), sizeOf(shot), xge::Vector2f()).position);
+	}
+
+	// The speed up, a negative number, at which a thing leaves the ground to
+	// rise `height` pixels against a pull of `pull` a frame.
+	inline float leapSpeed(float pull, float height)
+	{
+		return xge::motion::leapSpeed(pull, height);
 	}
 
 	// The way a heading points (<heading>: degrees clockwise from straight
 	// up), one pixel long.
 	inline sf::Vector2f ahead(float heading)
 	{
-		return sf::Vector2f(1.0f, sf::degrees(heading - 90.0f));
+		return toSfml(xge::motion::ahead(heading));
 	}
 
 	// A shot leaving a shooter with a heading: from its middle, out by half
@@ -463,10 +392,7 @@ namespace physics
 	template <typename Shooter, typename Shot>
 	void fireAhead(const Shooter& shooter, Shot& shot, sf::Vector2f& velocity, float heading, float speed)
 	{
-		const sf::FloatRect from = shooter.getGlobalBounds();
-		const sf::Vector2f way = ahead(heading);
-		shot.setPosition(from.getCenter() + way * (std::max(from.size.x, from.size.y) / 2.0f) - shot.getGlobalBounds().size / 2.0f);
-		velocity = way * speed;
+		launch(shot, velocity, xge::motion::shotAhead(positionOf(shooter), sizeOf(shooter), sizeOf(shot), heading, speed));
 	}
 
 	// The way from the middle of a thing to a place, one pixel long (<aim>);
@@ -478,12 +404,12 @@ namespace physics
 		{
 			return std::nullopt;
 		}
-		const sf::Vector2f apart = *there - thing.getGlobalBounds().getCenter();
-		if (apart == sf::Vector2f{})
+		const std::optional<xge::Vector2f> way = xge::motion::aimed(fromSfml(thing.getGlobalBounds().getCenter()), fromSfml(*there));
+		if (!way)
 		{
 			return std::nullopt;
 		}
-		return apart * (1.0f / apart.length());
+		return toSfml(*way);
 	}
 
 	// A shot leaving a shooter that has aimed: from its middle, just clear of
@@ -491,11 +417,7 @@ namespace physics
 	template <typename Shooter, typename Shot>
 	void fireAlong(const Shooter& shooter, Shot& shot, sf::Vector2f& velocity, sf::Vector2f aim, float speed)
 	{
-		const sf::FloatRect from = shooter.getGlobalBounds();
-		const sf::Vector2f size = shot.getGlobalBounds().size;
-		const float clear = std::max(std::abs(aim.x) * (from.size.x + size.x), std::abs(aim.y) * (from.size.y + size.y)) / 2.0f;
-		shot.setPosition(from.getCenter() + aim * clear - size / 2.0f);
-		velocity = aim * speed;
+		launch(shot, velocity, xge::motion::shotAlong(positionOf(shooter), sizeOf(shooter), sizeOf(shot), fromSfml(aim), speed));
 	}
 
 	// Straight at a place at `speed`, or still within `near` of it
@@ -508,16 +430,13 @@ namespace physics
 		{
 			return std::nullopt;
 		}
-		const sf::Vector2f apart = *there - thing.getGlobalBounds().getCenter();
-		const float distance = apart.length();
-		if (distance <= near || distance == 0.0f)
+		const xge::motion::Chase chased = xge::motion::chased(fromSfml(thing.getGlobalBounds().getCenter()), fromSfml(*there), speed, near);
+		velocity = toSfml(chased.velocity);
+		if (!chased.way)
 		{
-			velocity = {};
 			return std::nullopt;
 		}
-		const sf::Vector2f way = apart * (1.0f / distance);
-		velocity = way * speed;
-		return way;
+		return toSfml(*chased.way);
 	}
 
 	// --- Against another thing.
@@ -587,6 +506,36 @@ namespace physics
 			{
 				return xge::collide::deflected(fromSfml(before), bodyOf(mover), wall, edge, maxDegrees);
 			});
+	}
+
+	// Coming down onto the top of `other` (<land />), as the engine does it
+	// (motion::land, with the side of the thing that touched worked out by the
+	// sweep of the step it just took): it is put on the top, its fall stopped,
+	// and the answer is yes. Any other touch does nothing, so a platform can be
+	// walked past and jumped up through.
+	template <typename Thing, typename Other>
+	bool land(Thing& thing, sf::Vector2f& velocity, const Other& other)
+	{
+		std::optional<xge::collide::SweepHit> hit = meeting(thing, velocity, other);
+		if (!hit)
+		{
+			const std::optional<xge::Edge> edge = xge::collide::overlap(bodyOf(thing), bodyOf(other));
+			if (!edge)
+			{
+				return false;
+			}
+			hit = xge::collide::SweepHit{ 1.0f, *edge };
+		}
+
+		xge::Vector2f where = positionOf(thing);
+		xge::Vector2f going = fromSfml(velocity);
+		if (!xge::motion::land(where, going, sizeOf(thing), positionOf(other).y, xge::opposite(hit->edgeOfSecond), false))
+		{
+			return false;
+		}
+		put(thing, where);
+		velocity = toSfml(going);
+		return true;
 	}
 
 	// --- Paths (<paths>, <follow>).
@@ -670,18 +619,17 @@ namespace physics
 				}
 			}
 			const sf::Vector2f rest = leg.home ? home - thing.getPosition() : flight.left;
-			const float distance = std::hypot(rest.x, rest.y);
-			if (distance < 0.001f)
+			const xge::motion::Flight flown = xge::motion::fly(fromSfml(rest), route.speed);
+			if (flown.done)
 			{
 				++flight.leg;
 				flight.begun = false;
 				continue;
 			}
-			const sf::Vector2f now = distance <= route.speed ? rest : rest * (route.speed / distance);
-			velocity = now;
+			velocity = toSfml(flown.velocity);
 			if (!leg.home)
 			{
-				flight.left -= now;
+				flight.left -= velocity;
 			}
 			return;
 		}

@@ -66,6 +66,8 @@ set(data_generators
 	"lib/source/synth.cpp"
 	"lib/include/collide.h"
 	"lib/source/collide.cpp"
+	"lib/include/motion.h"
+	"lib/source/motion.cpp"
 	"lib/source/bitmap.cpp"
 	"lib/include/types.h"
 	"lib/include/bitmap.h"

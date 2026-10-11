@@ -5,7 +5,8 @@
 <!-- date: Oct 5, 2026 -->
 
 <!-- The windows-cpp target: a game file in, a C++ program that plays it on SFML 3
-     out, written as a person would write it, with nothing of the engine in it.
+     out, written as a person would write it, on the engine's own plain files (synth,
+     collide, motion, bitmap) copied in beside it.
 
      Run by xgecli (generate.cpp) with libxslt, or by hand:
 
@@ -81,6 +82,8 @@ output/
         <!-- the engine's own geometry of touching, as it is -->
         <module path="include/collide.h" shared="lib/include/collide.h" />
         <module path="source/collide.cpp" shared="lib/source/collide.cpp" />
+        <module path="include/motion.h" shared="lib/include/motion.h" />
+        <module path="source/motion.cpp" shared="lib/source/motion.cpp" />
         <module path="include/types.h" shared="lib/include/types.h" />
       </xsl:if>
       <xsl:if test="$drawn-rows or $drawn-lines">
@@ -178,10 +181,10 @@ add_executable(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> source/main.cpp</xsl:text>
     <xsl:if test="$audio"> source/sound.cpp source/synth.cpp</xsl:if>
-    <xsl:if test="$physics"> source/collide.cpp</xsl:if>
+    <xsl:if test="$physics"> source/collide.cpp source/motion.cpp</xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines"> source/bitmap.cpp</xsl:if>
     <xsl:text> include/trace.h</xsl:text>
-    <xsl:if test="$physics"> include/physics.h include/collide.h include/types.h</xsl:if>
+    <xsl:if test="$physics"> include/physics.h include/collide.h include/motion.h include/types.h</xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines"> include/pictures.h include/bitmap.h include/color.h</xsl:if>
     <xsl:if test="$audio"> include/sound.h include/synth.h</xsl:if>
     <xsl:text>)
@@ -253,7 +256,8 @@ endif()
 Generated from `</xsl:text>
     <xsl:value-of select="$source" />
     <xsl:text>` by `xgecli --generate windows-cpp`. It is the same game as the engine
-plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
+plays, written out as a C++ program on SFML 3, on the engine's own plain files
+(synth, collide, motion, bitmap), copied in as they are.
 
 | File | What |
 |---|---|
@@ -261,7 +265,7 @@ plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
 </xsl:text>
     <xsl:if test="$physics">
       <xsl:text>| `include/physics.h` | where things are, whether they touch, and bouncing, sticking and deflecting; it works with any SFML shape, sprite or text |
-| `include/collide.h`, `source/collide.cpp` (and `types.h`, which they use) | the engine's own geometry of touching, copied as it is: which side two things touch on, when in a step (pixel by pixel too), and where a thing goes after it hits one |
+| `include/collide.h`, `source/collide.cpp`, `include/motion.h`, `source/motion.cpp` (and `types.h`, which they use) | the engine's own geometry of touching, copied as it is: which side two things touch on, when in a step (pixel by pixel too), where a thing goes after it hits one, and the arithmetic of the movement verbs: sticking, wrapping, hops and jumps, shots, aim, chase, landing, climbing and flying a path |
 </xsl:text>
     </xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines">

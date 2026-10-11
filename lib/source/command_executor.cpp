@@ -324,28 +324,10 @@ namespace xge
 
 		// Only the touched edge's own axis is affected: the object is pushed
 		// back inside on that axis and loses only the velocity that was
-		// carrying it into the wall. The other axis is left alone, so an
-		// object pressed against the bottom wall still slides left or right
-		// (and one moving away from the wall is not held back either).
-		switch (edge)
-		{
-		case Edge::Left:
-			object.position.x = std::max(object.position.x, 0.0f);
-			object.velocity.x = std::max(object.velocity.x, 0.0f);
-			break;
-		case Edge::Right:
-			object.position.x = std::min(object.position.x, windowDesc.width - object.size.x);
-			object.velocity.x = std::min(object.velocity.x, 0.0f);
-			break;
-		case Edge::Top:
-			object.position.y = std::max(object.position.y, 0.0f);
-			object.velocity.y = std::max(object.velocity.y, 0.0f);
-			break;
-		case Edge::Bottom:
-			object.position.y = std::min(object.position.y, windowDesc.height - object.size.y);
-			object.velocity.y = std::min(object.velocity.y, 0.0f);
-			break;
-		}
+		// carrying it into the wall (motion::stick). The other axis is left
+		// alone, so an object pressed against the bottom wall still slides left
+		// or right (and one moving away from the wall is not held back either).
+		motion::stick(object.position, object.velocity, object.size, windowDesc.width, windowDesc.height, edge);
 	}
 
 	void CommandExecutor::moveByStep(Object& object, Direction direction, float step)
@@ -390,31 +372,15 @@ namespace xge
 
 		// A jump that would land off the screen is not made at all (up from the
 		// top row stays where it is), rather than going part of the way.
-		Vector2f landing = object.position;
-		switch (jump.direction)
-		{
-		case Direction::Up:    landing.y -= jump.distance; break;
-		case Direction::Down:  landing.y += jump.distance; break;
-		case Direction::Left:  landing.x -= jump.distance; break;
-		case Direction::Right: landing.x += jump.distance; break;
-		}
 		const WindowDesc& window = game.getWindowDesc();
-		const Vector2f size = sizeOf(object);
-		if (landing.x < 0 || landing.y < 0 || landing.x + size.x > window.width || landing.y + size.y > window.height)
+		const int frames = game.framesFor(jump.seconds);
+		const std::optional<Vector2f> step = motion::jumpStep(object.position, sizeOf(object), jump.direction, jump.distance, frames, window.width, window.height);
+		if (!step)
 		{
 			return;
 		}
 
-		const int frames = game.framesFor(jump.seconds);
-		const float step = jump.distance / static_cast<float>(frames);
-
-		switch (jump.direction)
-		{
-		case Direction::Up:    object.jumpStep = { 0.0f, -step }; break;
-		case Direction::Down:  object.jumpStep = { 0.0f, step }; break;
-		case Direction::Left:  object.jumpStep = { -step, 0.0f }; break;
-		case Direction::Right: object.jumpStep = { step, 0.0f }; break;
-		}
+		object.jumpStep = *step;
 
 		object.jumpFramesLeft = frames;
 		object.facing = jump.direction;
@@ -423,13 +389,7 @@ namespace xge
 
 	void CommandExecutor::queueHop(Object& object, Direction direction, float distance)
 	{
-		switch (direction)
-		{
-		case Direction::Up:    object.hopPending = { 0.0f, -distance }; break;
-		case Direction::Down:  object.hopPending = { 0.0f, distance }; break;
-		case Direction::Left:  object.hopPending = { -distance, 0.0f }; break;
-		case Direction::Right: object.hopPending = { distance, 0.0f }; break;
-		}
+		object.hopPending = motion::along(direction, distance);
 	}
 
 	// Once an object has gone right off the screen through `edge` - and is
@@ -441,35 +401,7 @@ namespace xge
 	void CommandExecutor::wrap(Object& object, Edge edge)
 	{
 		const auto& windowDesc = game.getWindowDesc();
-		const Vector2f heading = object.velocity + object.riding;
-
-		switch (edge)
-		{
-		case Edge::Right:
-			if (heading.x > 0.0f && object.position.x >= windowDesc.width)
-			{
-				object.position.x -= windowDesc.width + object.size.x;
-			}
-			break;
-		case Edge::Left:
-			if (heading.x < 0.0f && object.position.x + object.size.x <= 0.0f)
-			{
-				object.position.x += windowDesc.width + object.size.x;
-			}
-			break;
-		case Edge::Bottom:
-			if (heading.y > 0.0f && object.position.y >= windowDesc.height)
-			{
-				object.position.y -= windowDesc.height + object.size.y;
-			}
-			break;
-		case Edge::Top:
-			if (heading.y < 0.0f && object.position.y + object.size.y <= 0.0f)
-			{
-				object.position.y += windowDesc.height + object.size.y;
-			}
-			break;
-		}
+		motion::wrap(object.position, object.size, object.velocity + object.riding, windowDesc.width, windowDesc.height, edge);
 	}
 
 	// Rides along with what it is touching: for this frame the object moves
@@ -560,13 +492,11 @@ namespace xge
 	// lands while it climbs.
 	void CommandExecutor::land(Object& object, const Object& other, Edge edge)
 	{
-		if (edge != Edge::Bottom || object.climbing || object.velocity.y < 0.0f)
+		if (!motion::land(object.position, object.velocity, sizeOf(object), other.position.y, edge, object.climbing))
 		{
 			return;
 		}
 
-		object.position.y = other.position.y - sizeOf(object).y;
-		object.velocity.y = 0.0f;
 		object.grounded = true;
 
 		if (object.leaping)
@@ -579,14 +509,6 @@ namespace xge
 
 	namespace
 	{
-		// The way of the four that is nearest to `way`: the axis it goes
-		// further along.
-		Direction directionOf(const Vector2f& way)
-		{
-			if (std::abs(way.x) >= std::abs(way.y)) { return way.x < 0.0f ? Direction::Left : Direction::Right; }
-			return way.y < 0.0f ? Direction::Up : Direction::Down;
-		}
-
 		Vector2f middleOf(const Object& object)
 		{
 			return object.position + sizeOf(object) * 0.5f;
@@ -601,17 +523,12 @@ namespace xge
 		const Object* target = game.nearestInPlay(object, command.target);
 		if (!target) { return; }
 
-		const Vector2f apart = middleOf(*target) - middleOf(object);
-		const float distance = std::hypot(apart.x, apart.y);
-		if (distance <= command.stopWithin || distance == 0.0f)
+		const motion::Chase chased = motion::chased(middleOf(object), middleOf(*target), command.speed, command.stopWithin);
+		object.velocity = chased.velocity;
+		if (chased.way)
 		{
-			object.velocity = {};
-			return;
+			object.facing = motion::directionOf(*chased.way);
 		}
-
-		const Vector2f way = apart * (1.0f / distance);
-		object.velocity = way * command.speed;
-		object.facing = directionOf(way);
 	}
 
 	// Turns to the nearest of `target` in play: the next shots go straight at
@@ -622,17 +539,15 @@ namespace xge
 		const Object* other = game.nearestInPlay(object, target);
 		if (!other) { return; }
 
-		const Vector2f apart = middleOf(*other) - middleOf(object);
-		const float distance = std::hypot(apart.x, apart.y);
-		if (distance == 0.0f) { return; }
+		const std::optional<Vector2f> way = motion::aimed(middleOf(object), middleOf(*other));
+		if (!way) { return; }
 
-		object.aim = apart * (1.0f / distance);
+		object.aim = *way;
 		object.hasAim = true;
-		object.facing = directionOf(object.aim);
+		object.facing = motion::directionOf(object.aim);
 		if (object.hasHeading)
 		{
-			object.heading = std::atan2(object.aim.x, -object.aim.y) * 180.0f / 3.14159265358979323846f;
-			if (object.heading < 0.0f) { object.heading += 360.0f; }
+			object.heading = motion::headingOf(object.aim);
 			object.showHeading();
 		}
 	}
@@ -647,7 +562,7 @@ namespace xge
 			return;
 		}
 
-		object.velocity.y = -std::sqrt(2.0f * object.acceleration.y * height);
+		object.velocity.y = motion::leapSpeed(object.acceleration.y, height);
 		object.grounded = false;
 		object.leaping = true;
 	}
@@ -697,68 +612,32 @@ namespace xge
 		}
 		if (!projectile) { return; }
 
+		const Vector2f shooterSize = sizeOf(shooter);
+		const Vector2f shotSize = sizeOf(*projectile);
+		const float speed = std::hypot(projectile->velocityOriginal.x, projectile->velocityOriginal.y);
+
+		// Where the shot starts and which way it goes is motion.h's, from the
+		// aim, the heading or the facing the shooter has, else its top centre.
+		motion::Launch launch;
 		if (shooter.hasAim)
 		{
-			// Straight along the aim, from the middle of the shooter, just clear
-			// of it, at the projectile's own speed.
-			const Vector2f size = sizeOf(shooter);
-			const Vector2f centre = shooter.position + size * 0.5f;
-			const float speed = std::hypot(projectile->velocityOriginal.x, projectile->velocityOriginal.y);
-			const Vector2f shot = sizeOf(*projectile);
-			const float clear = std::max(std::abs(shooter.aim.x) * (size.x + shot.x), std::abs(shooter.aim.y) * (size.y + shot.y)) / 2.0f;
-
-			projectile->position = centre + shooter.aim * clear - shot * 0.5f;
-			projectile->velocity = shooter.aim * speed;
+			launch = motion::shotAlong(shooter.position, shooterSize, shotSize, shooter.aim, speed);
 		}
 		else if (shooter.hasHeading)
 		{
-			const float radians = shooter.heading * 3.14159265358979323846f / 180.0f;
-			const Vector2f ahead{ std::sin(radians), -std::cos(radians) };
-			const Vector2f size = sizeOf(shooter);
-			const Vector2f centre = shooter.position + size * 0.5f;
-			const float speed = std::hypot(projectile->velocityOriginal.x, projectile->velocityOriginal.y);
-
-			projectile->position = centre + ahead * (std::max(size.x, size.y) / 2.0f) - sizeOf(*projectile) * 0.5f;
-			projectile->velocity = ahead * speed;
+			launch = motion::shotAhead(shooter.position, shooterSize, shotSize, shooter.heading, speed);
 		}
 		else if (shooter.hasFacing)
 		{
-			// From the middle of the side it faces, just clear of it, moving that
-			// way at the projectile's own speed.
-			const Vector2f size = sizeOf(shooter);
-			const Vector2f shot = sizeOf(*projectile);
-			const float speed = std::hypot(projectile->velocityOriginal.x, projectile->velocityOriginal.y);
-			const float middleX = shooter.position.x + size.x / 2 - shot.x / 2;
-			const float middleY = shooter.position.y + size.y / 2 - shot.y / 2;
-
-			switch (shooter.facing)
-			{
-			case Direction::Up:
-				projectile->position = { middleX, shooter.position.y - shot.y };
-				projectile->velocity = { 0.0f, -speed };
-				break;
-			case Direction::Down:
-				projectile->position = { middleX, shooter.position.y + size.y };
-				projectile->velocity = { 0.0f, speed };
-				break;
-			case Direction::Left:
-				projectile->position = { shooter.position.x - shot.x, middleY };
-				projectile->velocity = { -speed, 0.0f };
-				break;
-			case Direction::Right:
-				projectile->position = { shooter.position.x + size.x, middleY };
-				projectile->velocity = { speed, 0.0f };
-				break;
-			}
+			launch = motion::shotFacing(shooter.position, shooterSize, shotSize, shooter.facing, speed);
 		}
 		else
 		{
-			// From the shooter's top-centre: the projectile's own middle over
-			// the shooter's, so a thin shot leaves the middle of the gun.
-			projectile->position.x = shooter.position.x + sizeOf(shooter).x / 2 - sizeOf(*projectile).x / 2;
-			projectile->position.y = shooter.position.y;
-			projectile->velocity = projectile->velocityOriginal;
+			launch = motion::shotUp(shooter.position, shooterSize, shotSize, projectile->velocityOriginal);
 		}
+
+		projectile->position = launch.position;
+		projectile->velocity = launch.velocity;
 
 		projectile->isVisible = true;
 		projectile->collisionData.enabled = true;

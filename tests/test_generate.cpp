@@ -114,7 +114,7 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	const GeneratedProgram program = generateGame(requestFor("games/pong_min.xml", output.path));
 
 	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, the trace and physics modules (and the engine's geometry they use); no sound.
-	CHECK(program.files.size() == 9);
+	CHECK(program.files.size() == 11);
 	CHECK(program.assets.empty());
 	CHECK(fs::exists(output.path / "include/physics.h"));
 	CHECK_FALSE(fs::exists(output.path / "include/sound.h"));
@@ -157,7 +157,7 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	CHECK(main.find("namespace") == std::string::npos);
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
-	CHECK(cmake.find("add_executable(pong_min source/main.cpp source/collide.cpp include/trace.h include/physics.h include/collide.h include/types.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong_min source/main.cpp source/collide.cpp source/motion.cpp include/trace.h include/physics.h include/collide.h include/motion.h include/types.h)") != std::string::npos);
 	CHECK(cmake.find("set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT pong_min)") != std::string::npos);
 	CHECK(cmake.find("Audio") == std::string::npos);
 }
@@ -174,7 +174,7 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 
 	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/trace.h, include/physics.h, include/sound.h, include/synth.h, source/sound.cpp and source/synth.cpp,
 	// and the font and the paddle's picture.
-	CHECK(program.files.size() == 13);
+	CHECK(program.files.size() == 15);
 	CHECK(program.assets.size() == 2);
 	CHECK(fs::exists(output.path / "source/sound.cpp"));
 	CHECK(fs::exists(output.path / "assets/tuffy.ttf"));
@@ -206,7 +206,7 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
 	CHECK(cmake.find("find_package(SFML 3 COMPONENTS Graphics Audio QUIET)") != std::string::npos);
-	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp source/synth.cpp source/collide.cpp include/trace.h include/physics.h include/collide.h include/types.h include/sound.h include/synth.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp source/synth.cpp source/collide.cpp source/motion.cpp include/trace.h include/physics.h include/collide.h include/motion.h include/types.h include/sound.h include/synth.h)") != std::string::npos);
 	CHECK(cmake.find("PRIVATE SFML::Graphics SFML::Audio)") != std::string::npos);
 	CHECK(cmake.find("/assets") != std::string::npos);
 
@@ -553,7 +553,7 @@ TEST_CASE("generating Depth Charge fires a charge from the ship, one at a time, 
 	CHECK(main.find("bool chargeAlive = false; // in play from when it is fired until it dies") != std::string::npos);
 	CHECK(main.find("\tchargeAlive = false; // until it is fired") != std::string::npos);
 	// fired from the middle of the ship's top, at its own velocity, only when it is not out already
-	CHECK(main.find("\t\t\t// fire charge, if it is not out already\n\t\t\tif (!chargeAlive)\n\t\t\t{\n\t\t\t\tcharge.setPosition({physics::left(ship) + physics::width(ship) / 2.0f - physics::width(charge) / 2.0f, physics::top(ship)});\n\t\t\t\tchargeVelocity = {0.0f, 5.0f};\n\t\t\t\tchargeAlive = true;") != std::string::npos);
+	CHECK(main.find("\t\t\t// fire charge, if it is not out already\n\t\t\tif (!chargeAlive)\n\t\t\t{\n\t\t\t\tphysics::fireUp(ship, charge);\n\t\t\t\tchargeVelocity = {0.0f, 5.0f};\n\t\t\t\tchargeAlive = true;") != std::string::npos);
 	// a sub it hits sinks by the sub's own rule, in the same touch
 	CHECK(main.find("\t\tif (subs1Alive[j] && physics::touching(charge, subs1[j]))\n\t\t{\n\t\t\t// subs1, by its own rule: die\n\t\t\tsubs1Alive[j] = false;\n\t\t\tshipSunk += 1.0f;") != std::string::npos);
 	CHECK(main.find("\t// bottom: dec die play\n\tif (physics::past(charge, physics::Edge::Bottom, windowArea))\n\t{\n\t\tshipCharges -= 1.0f;") != std::string::npos);
@@ -769,7 +769,7 @@ TEST_CASE("generating Donkey Kong walks Jumpman by the keys, lands him on girder
 	// on a ladder nothing pulls him; what he stands on is found again every frame
 	CHECK(main.find("\tphysics::climb(man, manVelocity, manClimb, manClimbing, manGrounded, ladderAt(man));\n\tif (!manClimbing)\n\t{\n\t\tmanVelocity += manAcceleration; // on a ladder nothing pulls it\n\t}\n\tmanGrounded = false; // until it lands again, this frame\n\tman.move(manVelocity);") != std::string::npos);
 	CHECK(main.find("\t\t\tif (!manClimbing && physics::land(man, manVelocity, other))\n\t\t\t{\n\t\t\t\tmanGrounded = true;\n\t\t\t\tmanLeaping = false;") != std::string::npos);
-	CHECK(main.find("\t\t\tif (manGrounded && !manClimbing)\n\t\t\t{\n\t\t\t\tmanVelocity.y = -std::sqrt(2.0f * manAcceleration.y * leapheight);") != std::string::npos);
+	CHECK(main.find("\t\t\tif (manGrounded && !manClimbing)\n\t\t\t{\n\t\t\t\tmanVelocity.y = physics::leapSpeed(manAcceleration.y, leapheight);") != std::string::npos);
 	CHECK(main.find("std::optional<sf::FloatRect> ladderAt(const Shape& one)\n{\n\tfor (const sf::RectangleShape& each : ladders)") != std::string::npos);
 	// the barrels share one pull, each with a velocity of its own, and land too
 	CHECK(main.find("\t\tbarrelsVelocity[i] += barrelsAcceleration;") != std::string::npos);
@@ -1128,7 +1128,7 @@ TEST_CASE("a generated game carries only the modules, helper functions and heade
 	generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out"));
 
 	const GeneratedProgram program = generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out2"));
-	CHECK(program.files.size() == 9);
+	CHECK(program.files.size() == 11);
 	CHECK_FALSE(fs::exists(folder.path / "out2/include/sound.h"));
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
@@ -1309,11 +1309,12 @@ TEST_CASE("a generated game gets the engine's own geometry of touching, file for
 
 	// what the program uses to decide a touch is the code the engine decides it
 	// with, not a copy written again
-	for (const char* file : { "include/collide.h", "include/types.h" })
+	for (const char* file : { "include/collide.h", "include/motion.h", "include/types.h" })
 	{
 		CHECK(readFile(output.path / file) == readFile(fs::current_path() / "lib" / file));
 	}
 	CHECK(readFile(output.path / "source/collide.cpp") == readFile(fs::current_path() / "lib/source/collide.cpp"));
+	CHECK(readFile(output.path / "source/motion.cpp") == readFile(fs::current_path() / "lib/source/motion.cpp"));
 
 	// physics.h is what turns an SFML shape into what that code takes
 	CHECK(readFile(output.path / "include/physics.h").find("xge::collide::overlap(bodyOf(first), bodyOf(second))") != std::string::npos);

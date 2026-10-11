@@ -6,6 +6,7 @@
 #pragma once
 
 #include "collide.h"
+#include "motion.h"
 #include "types.h"
 
 #include <functional>
@@ -29,8 +30,6 @@ namespace xge
 
 	template <typename... Ts>
 	overload(Ts...) -> overload<Ts...>;
-
-	enum class Direction { Up, Down, Left, Right };
 
 	// What kind of sprite an Object was built from. Set once in game_expr::init()
 	// from the object's spriteParams tag, so collision code no longer has to
