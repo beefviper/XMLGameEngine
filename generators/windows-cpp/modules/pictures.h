@@ -1,17 +1,20 @@
 // pictures.h
 // XML Game Engine
 // author: beefviper
-// date: Oct 7, 2026
+// date: Oct 11, 2026
 //
 // The pictures a generated game draws itself when it starts, rather than
 // loading them from a file: one written as rows of text (a '.' is a clear
-// pixel and a '*' a solid one) and one made of straight lines. Each comes out
-// as an sf::Image, pixel for pixel what the engine draws (lib/source/bitmap.cpp),
-// to be loaded into a texture; and either one turned to a heading, drawn again
-// for each whole degree as the engine does. Header only, and nothing but
-// SFML's graphics types, so it can be copied into any SFML 3 program.
+// pixel and a '*' a solid one) and one made of straight lines, and either one
+// turned to a heading, drawn again for each whole degree as the engine does.
+// They are drawn by bitmap.h and bitmap.cpp, the engine's own, copied in as
+// they are, so a generated game's pictures are pixel for pixel the engine's;
+// all that is here is handing a picture over as an sf::Image, to be loaded into
+// a texture. Header only, and nothing but SFML's graphics types and bitmap.h.
 
 #pragma once
+
+#include "bitmap.h"
 
 #include <SFML/Graphics.hpp>
 
@@ -33,40 +36,49 @@ namespace pictures
 		int thickness;
 	};
 
-	// A size by size square of the color, its top left at x, y, as far as it
-	// is inside the picture.
-	inline void stamp(sf::Image& picture, int x, int y, int size, sf::Color color)
+	// A picture the engine drew, as an sf::Image (a clear one pixel image when
+	// there is nothing drawn).
+	inline sf::Image imageOf(const xge::Bitmap& picture)
 	{
-		const sf::Vector2u extent = picture.getSize();
-		for (int row = y; row < y + size; ++row)
+		if (picture.rgba.empty() || picture.width < 1 || picture.height < 1)
 		{
-			for (int column = x; column < x + size; ++column)
-			{
-				if (column >= 0 && row >= 0 && static_cast<unsigned int>(column) < extent.x && static_cast<unsigned int>(row) < extent.y)
-				{
-					picture.setPixel({static_cast<unsigned int>(column), static_cast<unsigned int>(row)}, color);
-				}
-			}
+			return sf::Image({1, 1}, sf::Color::Transparent);
 		}
+		return sf::Image(sf::Vector2u(static_cast<unsigned int>(picture.width), static_cast<unsigned int>(picture.height)), picture.rgba.data());
+	}
+
+	// An sf::Image as a picture the engine can turn.
+	inline xge::Bitmap bitmapOf(const sf::Image& image)
+	{
+		xge::Bitmap picture;
+		picture.width = static_cast<int>(image.getSize().x);
+		picture.height = static_cast<int>(image.getSize().y);
+		picture.rgba.assign(image.getPixelsPtr(), image.getPixelsPtr() + static_cast<std::size_t>(picture.width) * static_cast<std::size_t>(picture.height) * 4);
+		return picture;
+	}
+
+	inline std::vector<xge::LineSegment> segmentsOf(const std::vector<Line>& drawing)
+	{
+		std::vector<xge::LineSegment> segments;
+		for (const Line& line : drawing)
+		{
+			xge::LineSegment segment;
+			segment.x1 = line.from.x;
+			segment.y1 = line.from.y;
+			segment.x2 = line.to.x;
+			segment.y2 = line.to.y;
+			segment.color = xge::Color{ line.color.r, line.color.g, line.color.b, line.color.a };
+			segment.thickness = line.thickness;
+			segments.push_back(segment);
+		}
+		return segments;
 	}
 
 	// Rows of text, one character to a pixel, every character a scale by scale
 	// block. All the rows are the same width.
 	inline sf::Image rows(const std::vector<std::string>& text, unsigned int scale, sf::Color color)
 	{
-		const unsigned int columns = static_cast<unsigned int>(text.front().size());
-		sf::Image picture({columns * scale, static_cast<unsigned int>(text.size()) * scale}, sf::Color::Transparent);
-		for (std::size_t row = 0; row < text.size(); ++row)
-		{
-			for (std::size_t column = 0; column < text[row].size(); ++column)
-			{
-				if (text[row][column] == '*')
-				{
-					stamp(picture, static_cast<int>(column * scale), static_cast<int>(row * scale), static_cast<int>(scale), color);
-				}
-			}
-		}
-		return picture;
+		return imageOf(xge::rasterizeRows(text, static_cast<int>(scale), xge::Color{ color.r, color.g, color.b, color.a }));
 	}
 
 	// The lines, in order (a later one covers an earlier one), each end
@@ -74,60 +86,7 @@ namespace pictures
 	// at least `least` big).
 	inline sf::Image lines(const std::vector<Line>& drawing, sf::Vector2u least = {})
 	{
-		const auto rounded = [](sf::Vector2f point)
-		{
-			return sf::Vector2i(static_cast<int>(std::lround(point.x)), static_cast<int>(std::lround(point.y)));
-		};
-
-		int right = 0;
-		int bottom = 0;
-		for (const Line& line : drawing)
-		{
-			const int thickness = std::max(line.thickness, 1);
-			for (const sf::Vector2i end : {rounded(line.from), rounded(line.to)})
-			{
-				right = std::max(right, end.x + thickness);
-				bottom = std::max(bottom, end.y + thickness);
-			}
-		}
-
-		sf::Image picture({std::max(static_cast<unsigned int>(right), least.x), std::max(static_cast<unsigned int>(bottom), least.y)}, sf::Color::Transparent);
-		for (const Line& line : drawing)
-		{
-			const int thickness = std::max(line.thickness, 1);
-			const sf::Vector2i from = rounded(line.from);
-			const sf::Vector2i to = rounded(line.to);
-
-			// Bresenham: every pixel from one end to the other, with no gaps.
-			const int dx = std::abs(to.x - from.x);
-			const int dy = -std::abs(to.y - from.y);
-			const int stepX = from.x < to.x ? 1 : -1;
-			const int stepY = from.y < to.y ? 1 : -1;
-			int error = dx + dy;
-			sf::Vector2i at = from;
-
-			while (true)
-			{
-				stamp(picture, at.x, at.y, thickness, line.color);
-				if (at == to)
-				{
-					break;
-				}
-
-				const int doubled = 2 * error;
-				if (doubled >= dy)
-				{
-					error += dy;
-					at.x += stepX;
-				}
-				if (doubled <= dx)
-				{
-					error += dx;
-					at.y += stepY;
-				}
-			}
-		}
-		return picture;
+		return imageOf(xge::rasterizeLines(segmentsOf(drawing), static_cast<int>(least.x), static_cast<int>(least.y)));
 	}
 
 	// A heading as the whole degrees, from 0 up to 359, it is drawn at.
@@ -147,49 +106,7 @@ namespace pictures
 	// where it is and keeps its size.
 	inline sf::Image turnedLines(const std::vector<Line>& drawing, float degrees)
 	{
-		float left = drawing.front().from.x;
-		float right = left;
-		float top = drawing.front().from.y;
-		float bottom = top;
-		int thickest = 1;
-		for (const Line& line : drawing)
-		{
-			for (const sf::Vector2f end : {line.from, line.to})
-			{
-				left = std::min(left, end.x);
-				right = std::max(right, end.x);
-				top = std::min(top, end.y);
-				bottom = std::max(bottom, end.y);
-			}
-			thickest = std::max(thickest, line.thickness);
-		}
-		const sf::Vector2f middle((left + right) / 2.0f, (top + bottom) / 2.0f);
-
-		// the furthest an end lies from the middle, and a line's thickness more
-		float reach = 0.0f;
-		for (const Line& line : drawing)
-		{
-			reach = std::max({reach, (line.from - middle).length(), (line.to - middle).length()});
-		}
-		const int half = static_cast<int>(std::ceil(reach)) + thickest;
-		const unsigned int side = static_cast<unsigned int>(2 * half + 1);
-
-		const float angle = 2.0f * 3.14159265358979323846f * static_cast<float>(wholeDegrees(degrees)) / 360.0f;
-		const float c = std::cos(angle);
-		const float s = std::sin(angle);
-		const auto place = [&](sf::Vector2f point)
-		{
-			const sf::Vector2f d = point - middle;
-			return sf::Vector2f(static_cast<float>(half) + d.x * c - d.y * s, static_cast<float>(half) + d.x * s + d.y * c);
-		};
-
-		std::vector<Line> turned = drawing;
-		for (Line& line : turned)
-		{
-			line.from = place(line.from);
-			line.to = place(line.to);
-		}
-		return lines(turned, {side, side});
+		return imageOf(xge::rasterizeTurned(segmentsOf(drawing), degrees));
 	}
 
 	// A picture turned clockwise by `degrees`, each pixel the one of the
@@ -197,39 +114,6 @@ namespace pictures
 	// at any heading, the middle of the picture at the middle of the square.
 	inline sf::Image turned(const sf::Image& picture, float degrees)
 	{
-		const sf::Vector2u size = picture.getSize();
-		const float width = static_cast<float>(size.x);
-		const float height = static_cast<float>(size.y);
-		const unsigned int side = std::max({static_cast<unsigned int>(std::ceil(std::hypot(width, height))), size.x, size.y});
-		const float middle = static_cast<float>(side) / 2.0f;
-
-		const int whole = wholeDegrees(degrees);
-		const float angle = 2.0f * 3.14159265358979323846f * static_cast<float>(whole) / 360.0f;
-		// 90, 180 and 270 degrees exact, not a hair off
-		const float c = whole == 90 || whole == 270 ? 0.0f : std::cos(angle);
-		const float s = whole == 0 || whole == 180 ? 0.0f : std::sin(angle);
-
-		sf::Image result({side, side}, sf::Color::Transparent);
-		for (unsigned int y = 0; y < side; ++y)
-		{
-			for (unsigned int x = 0; x < side; ++x)
-			{
-				// the pixel's middle turned back the other way, to what lies under it
-				const float dx = static_cast<float>(x) + 0.5f - middle;
-				const float dy = static_cast<float>(y) + 0.5f - middle;
-				const float fromX = std::floor(dx * c + dy * s + width / 2.0f + 0.0001f);
-				const float fromY = std::floor(-dx * s + dy * c + height / 2.0f + 0.0001f);
-				if (fromX < 0.0f || fromY < 0.0f || fromX >= width || fromY >= height)
-				{
-					continue;
-				}
-				const sf::Color color = picture.getPixel({static_cast<unsigned int>(fromX), static_cast<unsigned int>(fromY)});
-				if (color.a != 0)
-				{
-					result.setPixel({x, y}, color);
-				}
-			}
-		}
-		return result;
+		return imageOf(xge::turnBitmap(bitmapOf(picture), degrees));
 	}
 }

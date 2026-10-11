@@ -184,14 +184,14 @@ namespace xge
 
 			// Whether the pixel of the screen at (x, y) - taken at its centre - is
 			// drawn on by `body` when it is at `position`.
-			bool solidAt(const Body& body, const Vector2f& position, int x, int y)
+			bool solidIn(const Body& body, const Vector2f& position, int x, int y)
 			{
 				const float localX = static_cast<float>(x) + 0.5f - position.x;
 				const float localY = static_cast<float>(y) + 0.5f - position.y;
 
-				if (body.pixels && body.picture)
+				if (body.pixels && body.picture && body.solidAt)
 				{
-					return body.picture->solidAt(static_cast<int>(std::floor(localX)), static_cast<int>(std::floor(localY)));
+					return body.solidAt(body.picture, static_cast<int>(std::floor(localX)), static_cast<int>(std::floor(localY)));
 				}
 
 				if (localX < 0 || localY < 0 || localX >= body.size.x || localY >= body.size.y)
@@ -222,7 +222,7 @@ namespace xge
 				{
 					for (int x = left; x < right; ++x)
 					{
-						if (solidAt(a, atA, x, y) && solidAt(b, atB, x, y))
+						if (solidIn(a, atA, x, y) && solidIn(b, atB, x, y))
 						{
 							return true;
 						}

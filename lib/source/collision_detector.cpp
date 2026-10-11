@@ -10,6 +10,16 @@ namespace xge
 	// What Objects are to the geometry. The geometry itself, and all of the
 	// arithmetic, is collide.cpp.
 
+	namespace
+	{
+		// How collide.h asks an Object's picture, which is a Bitmap, whether a
+		// pixel is solid.
+		bool bitmapSolidAt(const void* picture, int x, int y)
+		{
+			return static_cast<const Bitmap*>(picture)->solidAt(x, y);
+		}
+	}
+
 	collide::Body CollisionDetector::bodyOf(const Object& object)
 	{
 		collide::Body body;
@@ -18,6 +28,7 @@ namespace xge
 		body.circle = object.shapeKind == ShapeKind::Circle;
 		body.pixels = object.collisionData.type == CollisionType::Pixel;
 		body.picture = object.bitmap.get();
+		body.solidAt = bitmapSolidAt;
 		return body;
 	}
 

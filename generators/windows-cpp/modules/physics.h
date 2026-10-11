@@ -105,84 +105,71 @@ namespace physics
 		return xge::collide::overlap(bodyOf(first), bodyOf(second)).has_value();
 	}
 
-	// Whether the middle of the screen's pixel at `point` is solid in the
-	// thing: in a picture (a sprite, with its `pixels`), a pixel that is not
-	// clear; in a circle, inside it; in anything else, inside its box.
-	template <typename Thing>
-	bool solidAt(const Thing& thing, const sf::Image* pixels, sf::Vector2f point)
+	// A picture that is asked whether one of its pixels is solid, for the
+	// engine's geometry (collide.h): an sf::Image, read the way the sprite that
+	// shows it is cut from its texture (a flipped sprite is cut with a negative
+	// size, and reads its picture the other way round).
+	struct PixelView
 	{
-		const sf::FloatRect bounds = thing.getGlobalBounds();
-		if (!bounds.contains(point))
+		const sf::Image* image = nullptr;
+		sf::IntRect cut;
+	};
+
+	inline bool pixelSolid(const void* picture, int x, int y)
+	{
+		const PixelView& view = *static_cast<const PixelView*>(picture);
+		const int column = view.cut.size.x < 0 ? view.cut.position.x - 1 - x : view.cut.position.x + x;
+		const int row = view.cut.size.y < 0 ? view.cut.position.y - 1 - y : view.cut.position.y + y;
+		const sf::Vector2u size = view.image->getSize();
+		if (column < 0 || row < 0 || column >= static_cast<int>(size.x) || row >= static_cast<int>(size.y))
 		{
 			return false;
 		}
-		if constexpr (std::is_same_v<Thing, sf::CircleShape>)
+		return view.image->getPixel({static_cast<unsigned int>(column), static_cast<unsigned int>(row)}).a != 0;
+	}
+
+	// What a thing shows of its picture: all of it, unless it is a sprite cut
+	// from a texture.
+	template <typename Thing>
+	PixelView viewOf(const Thing& thing, const sf::Image* pixels)
+	{
+		PixelView view;
+		view.image = pixels;
+		if (pixels != nullptr)
 		{
-			const float radius = bounds.size.x / 2.0f;
-			return (point - bounds.getCenter()).lengthSquared() <= radius * radius;
-		}
-		else if constexpr (std::is_same_v<Thing, sf::Sprite>)
-		{
-			if (pixels == nullptr)
+			view.cut = sf::IntRect({0, 0}, sf::Vector2i(pixels->getSize()));
+			if constexpr (std::is_same_v<Thing, sf::Sprite>)
 			{
-				return true;
+				view.cut = thing.getTextureRect();
 			}
-			// where it is in the picture, a flipped one read the other way
-			const sf::Vector2f local = thing.getInverseTransform().transformPoint(point);
-			const sf::IntRect rect = thing.getTextureRect();
-			const float x = static_cast<float>(rect.position.x) + (rect.size.x < 0 ? -local.x : local.x);
-			const float y = static_cast<float>(rect.position.y) + (rect.size.y < 0 ? -local.y : local.y);
-			const sf::Vector2u size = pixels->getSize();
-			if (x < 0.0f || y < 0.0f || x >= static_cast<float>(size.x) || y >= static_cast<float>(size.y))
-			{
-				return false;
-			}
-			return pixels->getPixel({static_cast<unsigned int>(x), static_cast<unsigned int>(y)}).a != 0;
 		}
-		else
-		{
-			return true;
-		}
+		return view;
 	}
 
 	// Whether two things touch pixel by pixel (<type>pixel</type>): some
-	// pixel of the screen both cover is solid in both. `pixels` is the picture
-	// a sprite shows, or nullptr for its whole box. `step` is how far the first
-	// moved this frame against the second: it is looked at all along the way,
-	// half a pixel at a time, as the engine sweeps it, so that a fast shot does
-	// not jump over a line two pixels thick.
+	// pixel of the screen both cover is solid in both, as the engine tests it
+	// (collide::sweep). `pixels` is the picture a sprite shows, or nullptr for
+	// its whole box (or circle). `step` is how far the first moved this frame
+	// against the second: it is looked at all along the way, half a pixel at a
+	// time, so that a fast shot does not jump over a line two pixels thick.
 	template <typename First, typename Second>
 	bool touchingPixels(const First& first, const sf::Image* firstPixels, const Second& second, const sf::Image* secondPixels, sf::Vector2f step = {})
 	{
-		const sf::FloatRect now = first.getGlobalBounds();
-		const sf::FloatRect target = second.getGlobalBounds();
-		const int steps = std::max(1, static_cast<int>(std::ceil(step.length() * 2.0f)));
-		for (int at = 0; at <= steps; ++at)
-		{
-			// where it was, that far through the step (the last is where it is)
-			const sf::Vector2f earlier = step * (static_cast<float>(at) / static_cast<float>(steps) - 1.0f);
-			const std::optional<sf::FloatRect> both = sf::FloatRect(now.position + earlier, now.size).findIntersection(target);
-			if (!both)
-			{
-				continue;
-			}
-			const int left = static_cast<int>(std::floor(both->position.x));
-			const int top = static_cast<int>(std::floor(both->position.y));
-			const int right = static_cast<int>(std::ceil(both->position.x + both->size.x));
-			const int bottom = static_cast<int>(std::ceil(both->position.y + both->size.y));
-			for (int y = top; y < bottom; ++y)
-			{
-				for (int x = left; x < right; ++x)
-				{
-					const sf::Vector2f point(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
-					if (solidAt(first, firstPixels, point - earlier) && solidAt(second, secondPixels, point))
-					{
-						return true;
-					}
-				}
-			}
-		}
-		return false;
+		const PixelView firstView = viewOf(first, firstPixels);
+		const PixelView secondView = viewOf(second, secondPixels);
+
+		xge::collide::Body mover = bodyOf(first);
+		mover.pixels = firstPixels != nullptr;
+		mover.picture = &firstView;
+		mover.solidAt = pixelSolid;
+		mover.position = mover.position - fromSfml(step);
+
+		xge::collide::Body target = bodyOf(second);
+		target.pixels = secondPixels != nullptr;
+		target.picture = &secondView;
+		target.solidAt = pixelSolid;
+
+		return xge::collide::sweep(mover, fromSfml(step), target, xge::Vector2f()).has_value();
 	}
 
 	// --- The edges of an area (the window).

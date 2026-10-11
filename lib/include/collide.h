@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "bitmap.h"
 #include "types.h"
 
 #include <optional>
@@ -28,6 +27,11 @@ namespace xge
 	// generated game decides a touch as the engine does.
 	namespace collide
 	{
+		// Whether the pixel at (x, y) of a picture, counted from its top left, is
+		// solid. What a picture is does not matter here: the engine's is a Bitmap
+		// and a generated game's an sf::Image, and each says how to ask it.
+		using SolidAt = bool (*)(const void* picture, int x, int y);
+
 		// A thing as the geometry sees it: a box, or a circle that fits in its
 		// size, at a position, and, when it is touched by its pixels, its picture.
 		struct Body
@@ -38,12 +42,13 @@ namespace xge
 			// A circle (as wide as size.x) instead of a box.
 			bool circle{ false };
 
-			// Touched by its drawn pixels, which are `picture` (a `Bitmap` whose
-			// clear pixels are not part of it). A thing of this kind with no
+			// Touched by its drawn pixels, which are `picture`, asked with `solidAt`
+			// (a clear pixel is not part of it). A thing of this kind with no
 			// picture, or any thing in a pair with one that has, is solid all over
 			// its shape.
 			bool pixels{ false };
-			const Bitmap* picture{ nullptr };
+			const void* picture{ nullptr };
+			SolidAt solidAt{ nullptr };
 		};
 
 		// When, within one step of motion, two things first touch.

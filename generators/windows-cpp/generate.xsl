@@ -82,11 +82,13 @@ output/
         <module path="include/collide.h" shared="lib/include/collide.h" />
         <module path="source/collide.cpp" shared="lib/source/collide.cpp" />
         <module path="include/types.h" shared="lib/include/types.h" />
-        <module path="include/bitmap.h" shared="lib/include/bitmap.h" />
-        <module path="include/color.h" shared="lib/include/color.h" />
       </xsl:if>
       <xsl:if test="$drawn-rows or $drawn-lines">
         <module path="include/pictures.h" from="pictures.h" />
+        <!-- the engine's own rasterizer, as it is -->
+        <module path="include/bitmap.h" shared="lib/include/bitmap.h" />
+        <module path="source/bitmap.cpp" shared="lib/source/bitmap.cpp" />
+        <module path="include/color.h" shared="lib/include/color.h" />
       </xsl:if>
       <xsl:if test="$audio">
         <module path="include/sound.h" from="sound.h" />
@@ -177,9 +179,10 @@ add_executable(</xsl:text>
     <xsl:text> source/main.cpp</xsl:text>
     <xsl:if test="$audio"> source/sound.cpp source/synth.cpp</xsl:if>
     <xsl:if test="$physics"> source/collide.cpp</xsl:if>
+    <xsl:if test="$drawn-rows or $drawn-lines"> source/bitmap.cpp</xsl:if>
     <xsl:text> include/trace.h</xsl:text>
-    <xsl:if test="$physics"> include/physics.h include/collide.h include/types.h include/bitmap.h include/color.h</xsl:if>
-    <xsl:if test="$drawn-rows or $drawn-lines"> include/pictures.h</xsl:if>
+    <xsl:if test="$physics"> include/physics.h include/collide.h include/types.h</xsl:if>
+    <xsl:if test="$drawn-rows or $drawn-lines"> include/pictures.h include/bitmap.h include/color.h</xsl:if>
     <xsl:if test="$audio"> include/sound.h include/synth.h</xsl:if>
     <xsl:text>)
 target_include_directories(</xsl:text>
@@ -258,11 +261,11 @@ plays, written out as a C++ program on SFML 3, with nothing of the engine in it.
 </xsl:text>
     <xsl:if test="$physics">
       <xsl:text>| `include/physics.h` | where things are, whether they touch, and bouncing, sticking and deflecting; it works with any SFML shape, sprite or text |
-| `include/collide.h`, `source/collide.cpp` (and `types.h`, `bitmap.h`, `color.h`, which they use) | the engine's own geometry of touching, copied as it is: which side two things touch on, when in a step, and where a thing goes after it hits one |
+| `include/collide.h`, `source/collide.cpp` (and `types.h`, which they use) | the engine's own geometry of touching, copied as it is: which side two things touch on, when in a step (pixel by pixel too), and where a thing goes after it hits one |
 </xsl:text>
     </xsl:if>
     <xsl:if test="$drawn-rows or $drawn-lines">
-      <xsl:text>| `include/pictures.h` | the pictures it draws itself when it starts: rows of text, and straight lines |
+      <xsl:text>| `include/pictures.h`, `include/bitmap.h`, `source/bitmap.cpp`, `include/color.h` | the pictures it draws itself when it starts, rows of text and straight lines, turned to a heading as it turns: drawn by the engine's own `bitmap.cpp`, copied as it is, and handed over by `pictures.h` |
 </xsl:text>
     </xsl:if>
     <xsl:if test="$audio">
