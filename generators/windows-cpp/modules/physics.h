@@ -10,10 +10,9 @@
 // (engine/geometry.h, copied unchanged from lib/), so a generated game
 // bounces, deflects, wraps, lands and fires exactly as the engine does.
 //
-// Collisions are the simple kind: move, then look at where it landed, and put
-// a thing that went into another back against the side it touched, where the
-// engine's sweep would have stopped it. Touches pixel by pixel are swept all
-// along the step, as the engine sweeps them, as thin lines are what they are for.
+// A frame is played as the engine plays it: the edges looked at before the
+// move, then the move from touch to touch (xge::playFrame, with sweep() here
+// saying when two things touch), and a stuck thing kept in after it.
 
 #pragma once
 
@@ -29,6 +28,9 @@ namespace physics
 {
 	using Edge = xge::Edge;
 	using Facing = xge::Direction;
+	using SweepHit = xge::SweepHit;
+	using xge::opposite;
+	using xge::playFrame;
 
 	// --- Between SFML and the engine.
 
@@ -103,19 +105,13 @@ namespace physics
 		return boxOf(thing).size.y;
 	}
 
-	// The edge of `other` the thing touches, if it does (xge::shapesOverlap):
-	// a circle by its round shape, so a ball can pass the corner of a box its
-	// own box would clip.
-	template <typename First, typename Second>
-	std::optional<Edge> touchedEdge(const First& first, const Second& second)
-	{
-		return xge::shapesOverlap(boxOf(first), isRound<First>, boxOf(second), isRound<Second>);
-	}
-
+	// Whether two things touch, by their shapes (xge::shapesOverlap): a circle
+	// by its round shape, so a ball can pass the corner of a box its own box
+	// would clip.
 	template <typename First, typename Second>
 	bool touching(const First& first, const Second& second)
 	{
-		return touchedEdge(first, second).has_value();
+		return xge::shapesOverlap(boxOf(first), isRound<First>, boxOf(second), isRound<Second>).has_value();
 	}
 
 	// Whether the point `local` (from the thing's top left) is solid in it: in
@@ -145,29 +141,46 @@ namespace physics
 		return xge::solidShapeAt(boxOf(thing).size, isRound<Thing>, local);
 	}
 
-	// Whether two things touch pixel by pixel (<type>pixel</type>) anywhere
-	// along the step the first moved this frame against the second: the
-	// engine's sweep of their boxes, then its walk half a pixel at a time
-	// until pixels of both meet, so a fast shot does not jump over a line two
-	// pixels thick. `pixels` is the picture a sprite shows, or nullptr for its
-	// whole box.
-	template <typename First, typename Second>
-	bool touchingPixels(const First& first, const sf::Image* firstPixels, const Second& second, const sf::Image* secondPixels, sf::Vector2f step = {})
+	// --- The frame's move (xge::playFrame).
+
+	// Whether a velocity moves a thing at all.
+	inline bool moving(sf::Vector2f velocity)
 	{
-		const xge::Box now = boxOf(first);
-		const xge::Box before{ now.position - toXge(step), now.size };
-		const xge::Box target = boxOf(second);
-		const std::optional<xge::SweepHit> boxes = xge::sweepShapes(before, isRound<First>, toXge(step), target, isRound<Second>, {});
-		if (!boxes)
+		return velocity.x != 0.0f || velocity.y != 0.0f;
+	}
+
+	// When, through what is left of the frame (`left`), two things moving by
+	// these velocities a frame first touch, as the engine's
+	// CollisionDetector::sweep (xge::sweepThings): none when neither is moving
+	// (nor `hopped`: one of them has just hopped or jumped), as two at rest
+	// already touching do nothing about it. `pixels` are the pictures of a
+	// pair tested pixel by pixel (<type>pixel</type>), nullptr for a thing's
+	// whole shape.
+	template <typename First, typename Second>
+	std::optional<SweepHit> sweepPixels(const First& first, const sf::Image* firstPixels, sf::Vector2f firstVelocity,
+		const Second& second, const sf::Image* secondPixels, sf::Vector2f secondVelocity, float left, bool hopped = false)
+	{
+		if (!moving(firstVelocity) && !moving(secondVelocity) && !hopped)
 		{
-			return false;
+			return std::nullopt;
 		}
 		const auto solidFirst = [&](xge::Vector2f local) { return solidAt(first, firstPixels, local); };
 		const auto solidSecond = [&](xge::Vector2f local) { return solidAt(second, secondPixels, local); };
-		return xge::firstPixelHit(toXge(step), boxes->time, [&](float time)
-			{
-				return xge::pixelsOverlapAt(xge::Box{ before.position + toXge(step) * time, now.size }, solidFirst, target, solidSecond);
-			}).has_value();
+		return xge::sweepThings(boxOf(first), isRound<First>, solidFirst, toXge(firstVelocity * left),
+			boxOf(second), isRound<Second>, solidSecond, toXge(secondVelocity * left), true);
+	}
+
+	// The same, by their shapes alone.
+	template <typename First, typename Second>
+	std::optional<SweepHit> sweep(const First& first, sf::Vector2f firstVelocity, const Second& second, sf::Vector2f secondVelocity, float left, bool hopped = false)
+	{
+		if (!moving(firstVelocity) && !moving(secondVelocity) && !hopped)
+		{
+			return std::nullopt;
+		}
+		const auto whole = [](xge::Vector2f) { return true; };
+		return xge::sweepThings(boxOf(first), isRound<First>, whole, toXge(firstVelocity * left),
+			boxOf(second), isRound<Second>, whole, toXge(secondVelocity * left), false);
 	}
 
 	// --- The edges of an area (the window).
@@ -181,26 +194,10 @@ namespace physics
 		return xge::pastWindowEdge({ box.position - toXge(area.position), box.size }, toXge(area.size), edge);
 	}
 
-	// Back inside the area at that edge.
-	template <typename Thing>
-	void putBack(Thing& thing, Edge edge, const sf::FloatRect& area)
+	// <bounce />: heading away from the edge it touched, its own (of the
+	// area, or against another thing), at the same speed (xge::bounced).
+	inline void bounce(sf::Vector2f& velocity, Edge edge)
 	{
-		const xge::Box box = boxOf(thing);
-		const xge::Box inside = boxOf(area);
-		switch (edge)
-		{
-		case Edge::Top:    thing.move({ 0.0f, inside.top() - box.top() }); break;
-		case Edge::Bottom: thing.move({ 0.0f, inside.bottom() - box.bottom() }); break;
-		case Edge::Left:   thing.move({ inside.left() - box.left(), 0.0f }); break;
-		case Edge::Right:  thing.move({ inside.right() - box.right(), 0.0f }); break;
-		}
-	}
-
-	// Back inside, and heading away from the edge (xge::bounced).
-	template <typename Thing>
-	void bounce(Thing& thing, sf::Vector2f& velocity, Edge edge, const sf::FloatRect& area)
-	{
-		putBack(thing, edge, area);
 		velocity = toSf(xge::bounced(toXge(velocity), edge));
 	}
 
@@ -295,22 +292,17 @@ namespace physics
 
 	// --- Standing and climbing.
 
-	// Coming down onto the top of `other` (<land />, xge::landOn): its own
-	// bottom edge touched and not going up. It is put on the top, its fall
-	// stopped, and the answer is yes. Any other touch does nothing, so a
-	// platform can be walked past and jumped up through.
+	// Coming down onto the top of `other` (<land />, xge::landOn), `edge` the
+	// thing's own edge that touched: its bottom, and not going up. It is put
+	// on the top, its fall stopped, and the answer is yes. Any other touch
+	// does nothing, so a platform can be walked past and jumped up through.
 	template <typename Thing, typename Other>
-	bool land(Thing& thing, sf::Vector2f& velocity, const Other& other)
+	bool land(Thing& thing, sf::Vector2f& velocity, const Other& other, Edge edge)
 	{
-		const std::optional<Edge> edgeOfOther = touchedEdge(thing, other);
-		if (!edgeOfOther)
-		{
-			return false;
-		}
 		const xge::Box box = boxOf(thing);
 		xge::Vector2f position = box.position;
 		xge::Vector2f moving = toXge(velocity);
-		if (!xge::landOn(position, moving, box.size, boxOf(other), xge::opposite(*edgeOfOther), false))
+		if (!xge::landOn(position, moving, box.size, boxOf(other), edge, false))
 		{
 			return false;
 		}
@@ -332,30 +324,50 @@ namespace physics
 	// and when it can go that way, lined up with the ladder's middle. On it,
 	// it goes the step, its feet kept between the ladder's ends, and its
 	// velocity is 0, so nothing walks it off; at an end it gets off, standing
-	// there, the way across left to the keys. With no ladder it is off.
+	// there, `across` (the way the keys held walk it) its velocity. With no
+	// ladder it is off. The answer is whether it got on this frame.
 	template <typename Thing>
-	void climb(Thing& thing, sf::Vector2f& velocity, float step, bool& climbing, bool grounded, const std::optional<sf::FloatRect>& ladder)
+	bool climb(Thing& thing, sf::Vector2f& velocity, float step, bool& climbing, bool grounded, float across, const std::optional<sf::FloatRect>& ladder)
 	{
 		if (!ladder)
 		{
 			climbing = false;
-			return;
+			return false;
 		}
+		const bool wasClimbing = climbing;
 		const xge::Box box = boxOf(thing);
 		xge::Vector2f position = box.position;
 		if (!xge::climbLadder(position, box.size, step, climbing, grounded, boxOf(*ladder)))
 		{
-			return;
+			return false;
 		}
 		place(thing, box, position);
-		if (climbing)
+		velocity = {};
+		if (!climbing)
 		{
-			velocity = {};
+			velocity.x = across;
 		}
-		else
+		return !wasClimbing;
+	}
+
+	// --- Keys.
+
+	// The keys held this frame (`steps`, the way they move it on each axis)
+	// set that axis of the velocity when they change, as the engine sets it
+	// when a key is pressed or let go: so whatever else changed the velocity
+	// since (a <stick /> against a wall) holds until they change again.
+	// `across` is false while the way across is kept (a leap).
+	inline void steer(sf::Vector2f& velocity, sf::Vector2f steps, sf::Vector2f& stepped, bool across = true)
+	{
+		if (steps.x != stepped.x && across)
 		{
-			velocity.y = 0.0f;
+			velocity.x = steps.x;
 		}
+		if (steps.y != stepped.y)
+		{
+			velocity.y = steps.y;
+		}
+		stepped = steps;
 	}
 
 	// --- Shots.
@@ -444,52 +456,13 @@ namespace physics
 
 	// --- Against another thing.
 
-	// Back against the side of `other` it touched with its own edge, where the
-	// engine's sweep would have stopped it.
+	// Off `other` at the same speed, `edge` its own edge that touched: straight
+	// out from the middle of that side of `other`, and up to `maxDegrees`
+	// towards either end (<deflect>, xge::deflected). A Pong paddle.
 	template <typename Mover, typename Other>
-	void putAgainst(Mover& mover, const Other& other, Edge edge)
+	void deflect(const Mover& mover, sf::Vector2f& velocity, const Other& other, Edge edge, float maxDegrees)
 	{
-		const xge::Box box = boxOf(mover);
-		const xge::Box against = boxOf(other);
-		xge::Vector2f position = box.position;
-		switch (edge)
-		{
-		case Edge::Left:   position.x = against.right(); break;
-		case Edge::Right:  position.x = against.left() - box.size.x; break;
-		case Edge::Top:    position.y = against.bottom(); break;
-		case Edge::Bottom: position.y = against.top() - box.size.y; break;
-		}
-		place(mover, box, position);
-	}
-
-	// Out of the side of `other` it went into, heading away from it (xge::bounced).
-	template <typename Mover, typename Other>
-	void bounceOff(Mover& mover, sf::Vector2f& velocity, const Other& other)
-	{
-		const std::optional<Edge> edgeOfOther = touchedEdge(mover, other);
-		if (!edgeOfOther)
-		{
-			return;
-		}
-		const Edge edge = xge::opposite(*edgeOfOther);
-		putAgainst(mover, other, edge);
-		velocity = toSf(xge::bounced(toXge(velocity), edge));
-	}
-
-	// Out of the side of `other` it went into, at the same speed: straight out
-	// from the middle of that side, and up to `maxDegrees` towards either end
-	// (xge::deflected). A Pong paddle.
-	template <typename Mover, typename Other>
-	void deflect(Mover& mover, sf::Vector2f& velocity, const Other& other, float maxDegrees)
-	{
-		const std::optional<Edge> edgeOfOther = touchedEdge(mover, other);
-		if (!edgeOfOther)
-		{
-			return;
-		}
-		const Edge edge = xge::opposite(*edgeOfOther);
 		velocity = toSf(xge::deflected(toXge(velocity), boxOf(mover), boxOf(other), edge, maxDegrees));
-		putAgainst(mover, other, edge);
 	}
 
 	// --- Paths (<paths>, <follow>).

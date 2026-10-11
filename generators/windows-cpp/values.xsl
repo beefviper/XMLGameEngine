@@ -55,7 +55,7 @@
     ' static_cast struct switch template this thread_local throw true try typedef typeid typename union',
     ' unsigned using virtual void volatile wchar_t while xor xor_eq',
     ' main window font screens background framerate setup start pressed sign randomBetween physics sound sf std',
-    ' clock time exit abort rand srand ')" />
+    ' clock time exit abort rand srand touch sweepPair Pair Touch pair pairs left fraction edge hop xge ')" />
 
   <xsl:template name="cpp-camel">
     <xsl:param name="name" />
