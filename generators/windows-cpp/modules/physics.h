@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "collide.h"
+
 #include <SFML/Graphics.hpp>
 
 #include <algorithm>
@@ -70,35 +72,37 @@ namespace physics
 		return thing.getGlobalBounds().size.y;
 	}
 
-	// Whether two things overlap: two boxes by more than an edge, and a
-	// circle (an sf::CircleShape) by its round shape, as the engine tests
-	// them, so a ball can pass the corner of a box its own box would clip.
+	// A thing as the engine's geometry sees it (collide.h, copied in beside this
+	// file as it is): where it is, how big, and whether it is a circle.
+	template <typename Thing>
+	xge::collide::Body bodyOf(const Thing& thing)
+	{
+		const sf::FloatRect bounds = thing.getGlobalBounds();
+		xge::collide::Body seen;
+		seen.position = xge::Vector2f(bounds.position.x, bounds.position.y);
+		seen.size = xge::Vector2f(bounds.size.x, bounds.size.y);
+		seen.circle = std::is_same_v<Thing, sf::CircleShape>;
+		return seen;
+	}
+
+	inline xge::Vector2f fromSfml(sf::Vector2f vector)
+	{
+		return xge::Vector2f(vector.x, vector.y);
+	}
+
+	inline sf::Vector2f toSfml(xge::Vector2f vector)
+	{
+		return sf::Vector2f(vector.x, vector.y);
+	}
+
+	// Whether two things overlap, as the engine decides it: two boxes by more
+	// than an edge, and a circle (an sf::CircleShape) by its round shape against
+	// the other's box, so a ball can pass the corner of a box its own box would
+	// clip.
 	template <typename First, typename Second>
 	bool touching(const First& first, const Second& second)
 	{
-		const sf::FloatRect a = first.getGlobalBounds();
-		const sf::FloatRect b = second.getGlobalBounds();
-		constexpr bool firstRound = std::is_same_v<First, sf::CircleShape>;
-		constexpr bool secondRound = std::is_same_v<Second, sf::CircleShape>;
-		if constexpr (firstRound && secondRound)
-		{
-			const float reach = a.size.x / 2.0f + b.size.x / 2.0f;
-			return (a.getCenter() - b.getCenter()).lengthSquared() < reach * reach;
-		}
-		else if constexpr (firstRound || secondRound)
-		{
-			const sf::FloatRect& circle = firstRound ? a : b;
-			const sf::FloatRect& box = firstRound ? b : a;
-			const sf::Vector2f middle = circle.getCenter();
-			const sf::Vector2f nearest{std::clamp(middle.x, box.position.x, box.position.x + box.size.x),
-				std::clamp(middle.y, box.position.y, box.position.y + box.size.y)};
-			const float radius = circle.size.x / 2.0f;
-			return (middle - nearest).lengthSquared() < radius * radius;
-		}
-		else
-		{
-			return a.findIntersection(b).has_value();
-		}
+		return xge::collide::overlap(bodyOf(first), bodyOf(second)).has_value();
 	}
 
 	// Whether the middle of the screen's pixel at `point` is solid in the
@@ -183,7 +187,7 @@ namespace physics
 
 	// --- The edges of an area (the window).
 
-	enum class Edge { Top, Bottom, Left, Right };
+	using Edge = xge::Edge;
 
 	// Whether the thing has gone past that edge of the area.
 	template <typename Thing>
@@ -531,83 +535,71 @@ namespace physics
 
 	// --- Against another thing.
 
-	// Out of the side of `other` it went into, heading away from it.
+	// When, in the step a thing has just taken (by `velocity`, ending where it
+	// is), it first met `other`, which is taken to be where it is: the engine's
+	// sweep (collide.h), so a thing that moves more than its own size in a frame
+	// is not missed, and the touch is where it began and not where the step
+	// ended up.
+	template <typename Mover, typename Other>
+	std::optional<xge::collide::SweepHit> meeting(const Mover& mover, sf::Vector2f velocity, const Other& other)
+	{
+		xge::collide::Body begun = bodyOf(mover);
+		begun.position = begun.position - fromSfml(velocity);
+		return xge::collide::sweep(begun, fromSfml(velocity), bodyOf(other), xge::Vector2f());
+	}
+
+	// What a thing that bounces or deflects does at a touch, in the engine's
+	// order: back along its step to the moment of the touch, the rule (which says
+	// how its velocity changes there), and then the rest of the step, the new
+	// way. `rule` is called with the edge of the mover that touched, and gives
+	// the velocity it leaves with.
+	template <typename Mover, typename Other, typename Rule>
+	void atTouch(Mover& mover, sf::Vector2f& velocity, const Other& other, Rule rule)
+	{
+		std::optional<xge::collide::SweepHit> hit = meeting(mover, velocity, other);
+		if (!hit)
+		{
+			// Not by a step it took (it was put there, or carried): where it is
+			// is where it touched.
+			const std::optional<xge::Edge> edge = xge::collide::overlap(bodyOf(mover), bodyOf(other));
+			if (!edge)
+			{
+				return;
+			}
+			hit = xge::collide::SweepHit{ 1.0f, *edge };
+		}
+
+		const float rest = 1.0f - hit->time;
+		mover.move(-velocity * rest);
+		velocity = toSfml(rule(xge::opposite(hit->edgeOfSecond)));
+		mover.move(velocity * rest);
+	}
+
+	// Out of the side of `other` it went into, heading away from it, as the
+	// engine does it (collide::bounced), from where it touched.
 	template <typename Mover, typename Other>
 	void bounceOff(Mover& mover, sf::Vector2f& velocity, const Other& other)
 	{
-		const sf::FloatRect bounds = mover.getGlobalBounds();
-		const sf::FloatRect otherBounds = other.getGlobalBounds();
-		const sf::FloatRect overlap = bounds.findIntersection(otherBounds).value_or(sf::FloatRect{});
-		const sf::Vector2f offset = bounds.getCenter() - otherBounds.getCenter();
-
-		if (overlap.size.x < overlap.size.y)
-		{
-			const float side = offset.x < 0.0f ? -1.0f : 1.0f;
-			mover.move({ side * overlap.size.x, 0.0f });
-			velocity.x = side * std::abs(velocity.x);
-		}
-		else
-		{
-			const float side = offset.y < 0.0f ? -1.0f : 1.0f;
-			mover.move({ 0.0f, side * overlap.size.y });
-			velocity.y = side * std::abs(velocity.y);
-		}
+		const sf::Vector2f before = velocity;
+		atTouch(mover, velocity, other, [&](xge::Edge edge)
+			{
+				return xge::collide::bounced(fromSfml(before), edge);
+			});
 	}
 
 	// Out of the side of `other` it went into, at the same speed: straight out
-	// from the middle of that side, and up to `maxDegrees` towards either end.
-	// It leaves from where it touched, and goes on for the rest of the step it
-	// was in the middle of, as the engine does (which moves to the touch, then
-	// plays the rest of the frame with the new velocity). A Pong paddle.
+	// from the middle of that side, and up to `maxDegrees` towards either end,
+	// as the engine does it (collide::deflected), the angle worked out where it
+	// touched, and the rest of the step played the new way. A Pong paddle.
 	template <typename Mover, typename Other>
 	void deflect(Mover& mover, sf::Vector2f& velocity, const Other& other, float maxDegrees)
 	{
 		const sf::Vector2f before = velocity;
-		const sf::FloatRect bounds = mover.getGlobalBounds();
-		const sf::FloatRect otherBounds = other.getGlobalBounds();
-		const sf::FloatRect overlap = bounds.findIntersection(otherBounds).value_or(sf::FloatRect{});
-		const sf::Vector2f offsetNow = bounds.getCenter() - otherBounds.getCenter();
-		const float speed = velocity.length();
-		const bool sideways = overlap.size.x < overlap.size.y;
-
-		// How much of the step was past the touch: the way in, over the speed in it.
-		const float way = sideways ? overlap.size.x : overlap.size.y;
-		const float pace = sideways ? std::abs(before.x) : std::abs(before.y);
-		const float rest = pace != 0.0f ? std::min(way / pace, 1.0f) : 0.0f;
-
-		// Back to where it touched, which is where the angle is worked out. (Held
-		// against the other thing and not moving into it: pushed out of it.)
-		if (pace != 0.0f)
-		{
-			mover.move(-before * rest);
-		}
-		else if (sideways)
-		{
-			mover.move({ (offsetNow.x < 0.0f ? -1.0f : 1.0f) * way, 0.0f });
-		}
-		else
-		{
-			mover.move({ 0.0f, (offsetNow.y < 0.0f ? -1.0f : 1.0f) * way });
-		}
-		const sf::Vector2f offset = mover.getGlobalBounds().getCenter() - otherBounds.getCenter();
-
-		if (sideways)
-		{
-			// a left or right side: angled by how far up or down it hit
-			const float angle = std::clamp(offset.y / (otherBounds.size.y / 2.0f), -1.0f, 1.0f) * maxDegrees;
-			const float side = offsetNow.x < 0.0f ? -1.0f : 1.0f;
-			velocity = sf::Vector2f(speed, sf::degrees(side < 0.0f ? 180.0f - angle : angle));
-		}
-		else
-		{
-			// the top or bottom: angled by how far left or right it hit
-			const float angle = std::clamp(offset.x / (otherBounds.size.x / 2.0f), -1.0f, 1.0f) * maxDegrees;
-			const float side = offsetNow.y < 0.0f ? -1.0f : 1.0f;
-			velocity = sf::Vector2f(speed, sf::degrees(side < 0.0f ? angle - 90.0f : 90.0f - angle));
-		}
-
-		// and on for the rest of the step, the new way
-		mover.move(velocity * rest);
+		const xge::collide::Body wall = bodyOf(other);
+		atTouch(mover, velocity, other, [&](xge::Edge edge)
+			{
+				return xge::collide::deflected(fromSfml(before), bodyOf(mover), wall, edge, maxDegrees);
+			});
 	}
 
 	// --- Paths (<paths>, <follow>).

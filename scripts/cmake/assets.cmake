@@ -63,7 +63,12 @@ set(data_generators
 	# the engine's own files that a generated game gets a copy of, found by their
 	# path in lib/ wherever the data folder is (the repository, or output/<config>)
 	"lib/include/synth.h"
-	"lib/source/synth.cpp")
+	"lib/source/synth.cpp"
+	"lib/include/collide.h"
+	"lib/source/collide.cpp"
+	"lib/include/types.h"
+	"lib/include/bitmap.h"
+	"lib/include/color.h")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators)

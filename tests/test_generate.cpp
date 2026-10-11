@@ -113,8 +113,8 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	TempFolder output("xge_test_generate_pong_min");
 	const GeneratedProgram program = generateGame(requestFor("games/pong_min.xml", output.path));
 
-	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, the trace and physics modules; no sound.
-	CHECK(program.files.size() == 6);
+	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, the trace and physics modules (and the engine's geometry they use); no sound.
+	CHECK(program.files.size() == 11);
 	CHECK(program.assets.empty());
 	CHECK(fs::exists(output.path / "include/physics.h"));
 	CHECK_FALSE(fs::exists(output.path / "include/sound.h"));
@@ -157,7 +157,7 @@ TEST_CASE("generating pong_min writes a plain SFML program, laid out as by hand"
 	CHECK(main.find("namespace") == std::string::npos);
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
-	CHECK(cmake.find("add_executable(pong_min source/main.cpp include/trace.h include/physics.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong_min source/main.cpp source/collide.cpp include/trace.h include/physics.h include/collide.h include/types.h include/bitmap.h include/color.h)") != std::string::npos);
 	CHECK(cmake.find("set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT pong_min)") != std::string::npos);
 	CHECK(cmake.find("Audio") == std::string::npos);
 }
@@ -174,7 +174,7 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 
 	// source/main.cpp, CMakeLists.txt, README.md, .gitignore, include/trace.h, include/physics.h, include/sound.h, include/synth.h, source/sound.cpp and source/synth.cpp,
 	// and the font and the paddle's picture.
-	CHECK(program.files.size() == 10);
+	CHECK(program.files.size() == 15);
 	CHECK(program.assets.size() == 2);
 	CHECK(fs::exists(output.path / "source/sound.cpp"));
 	CHECK(fs::exists(output.path / "assets/tuffy.ttf"));
@@ -206,7 +206,7 @@ TEST_CASE("generating pong writes every screen, text, picture and sound, with th
 
 	const std::string cmake = readFile(output.path / "CMakeLists.txt");
 	CHECK(cmake.find("find_package(SFML 3 COMPONENTS Graphics Audio QUIET)") != std::string::npos);
-	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp source/synth.cpp include/trace.h include/physics.h include/sound.h include/synth.h)") != std::string::npos);
+	CHECK(cmake.find("add_executable(pong source/main.cpp source/sound.cpp source/synth.cpp source/collide.cpp include/trace.h include/physics.h include/collide.h include/types.h include/bitmap.h include/color.h include/sound.h include/synth.h)") != std::string::npos);
 	CHECK(cmake.find("PRIVATE SFML::Graphics SFML::Audio)") != std::string::npos);
 	CHECK(cmake.find("/assets") != std::string::npos);
 
@@ -1128,7 +1128,7 @@ TEST_CASE("a generated game carries only the modules, helper functions and heade
 	generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out"));
 
 	const GeneratedProgram program = generateGame(requestFor(folder.path / "tiny.xml", folder.path / "out2"));
-	CHECK(program.files.size() == 6);
+	CHECK(program.files.size() == 11);
 	CHECK_FALSE(fs::exists(folder.path / "out2/include/sound.h"));
 
 	const std::string main = readFile(folder.path / "out/source/main.cpp");
@@ -1295,4 +1295,26 @@ TEST_CASE("a generated game gets the engine's own synthesizer, file for file", "
 	TempFolder silent("xge_test_generate_synth_none");
 	generateGame(requestFor("games/pong_min.xml", silent.path));
 	CHECK_FALSE(fs::exists(silent.path / "include/synth.h"));
+}
+
+TEST_CASE("a generated game gets the engine's own geometry of touching, file for file", "[generate]")
+{
+	if (!canGenerate())
+	{
+		SKIP("built without libxslt");
+	}
+
+	TempFolder output("xge_test_generate_collide");
+	generateGame(requestFor("games/pong_min.xml", output.path));
+
+	// what the program uses to decide a touch is the code the engine decides it
+	// with, not a copy written again
+	for (const char* file : { "include/collide.h", "include/types.h", "include/bitmap.h", "include/color.h" })
+	{
+		CHECK(readFile(output.path / file) == readFile(fs::current_path() / "lib" / file));
+	}
+	CHECK(readFile(output.path / "source/collide.cpp") == readFile(fs::current_path() / "lib/source/collide.cpp"));
+
+	// physics.h is what turns an SFML shape into what that code takes
+	CHECK(readFile(output.path / "include/physics.h").find("xge::collide::overlap(bodyOf(first), bodyOf(second))") != std::string::npos);
 }

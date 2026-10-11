@@ -5,6 +5,7 @@
 
 #include "command_executor.h"
 
+#include "collision_detector.h"
 #include "game.h"
 
 #include <algorithm>
@@ -299,45 +300,22 @@ namespace xge
 
 	void CommandExecutor::bounceOffEdge(Object& object, Edge edge)
 	{
-		switch (edge)
-		{
-		case Edge::Left:   object.velocity.x = std::abs(object.velocity.x); break;
-		case Edge::Right:  object.velocity.x = -std::abs(object.velocity.x); break;
-		case Edge::Top:    object.velocity.y = std::abs(object.velocity.y); break;
-		case Edge::Bottom: object.velocity.y = -std::abs(object.velocity.y); break;
-		}
+		object.velocity = collide::bounced(object.velocity, edge);
 	}
 
-	// A bounce off `other` that leaves at an angle set by where it hit. How far
-	// the object's middle is from the middle of the touched side, as a share of
-	// half that side's length (-1 at one end, 1 at the other, held there past
-	// the ends), times maxAngle, is the angle away from straight back out,
-	// towards the end it hit nearer to: off a Pong paddle's top half the ball
-	// goes back up, off its bottom half down. The speed is what it was.
+	// A bounce off `other` that leaves at an angle set by where it hit, worked
+	// out by collide::deflected (the one copy of it, which a generated game uses
+	// too): how far the object's middle is from the middle of the touched side,
+	// as a share of half that side's length, times maxAngle, away from straight
+	// back out, towards the end it hit nearer to. The speed is what it was.
 	void CommandExecutor::deflect(Object& object, const Object& other, Edge edge, float maxAngle)
 	{
-		const float speed = std::hypot(object.velocity.x, object.velocity.y);
+		collide::Body mover = CollisionDetector::bodyOf(object);
+		mover.size = sizeOf(object);
+		collide::Body target = CollisionDetector::bodyOf(other);
+		target.size = sizeOf(other);
 
-		const Vector2f middle = object.position + sizeOf(object) * 0.5f;
-		const Vector2f otherSize = sizeOf(other);
-		const Vector2f otherMiddle = other.position + otherSize * 0.5f;
-
-		const bool side = (edge == Edge::Left || edge == Edge::Right);
-		const float offset = side ? middle.y - otherMiddle.y : middle.x - otherMiddle.x;
-		const float half = (side ? otherSize.y : otherSize.x) * 0.5f;
-		const float along = (half > 0.0f) ? std::clamp(offset / half, -1.0f, 1.0f) : 0.0f;
-
-		const float radians = maxAngle * along * 3.14159265358979323846f / 180.0f;
-		const float away = speed * std::cos(radians);
-		const float across = speed * std::sin(radians);
-
-		switch (edge)
-		{
-		case Edge::Left:   object.velocity = { away, across }; break;
-		case Edge::Right:  object.velocity = { -away, across }; break;
-		case Edge::Top:    object.velocity = { across, away }; break;
-		case Edge::Bottom: object.velocity = { across, -away }; break;
-		}
+		object.velocity = collide::deflected(object.velocity, mover, target, edge, maxAngle);
 	}
 
 	void CommandExecutor::stick(Object& object, Edge edge)

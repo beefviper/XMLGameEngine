@@ -15,7 +15,9 @@ namespace xge
 	// Pure geometry: has anything happened, and where? No side effects, no
 	// knowledge of Commands - CommandExecutor is what decides what to *do* about
 	// a touched edge. Splitting this out of Game is what lets every check share
-	// one response path.
+	// one response path. The geometry itself is collide.h, which has nothing of
+	// the engine in it and is what a generated game uses too; this class gives it
+	// Objects (bodyOf below says how an Object is seen).
 	//
 	// The object-against-object functions all answer with which edge of their
 	// *second* argument was touched (e.g. overlap(a, b) answers "which edge of
@@ -25,15 +27,7 @@ namespace xge
 	{
 	public:
 		// When, within one step of motion, two objects first touch.
-		struct SweepHit
-		{
-			// How far through the step it happens: 0 is the start (they were
-			// already touching), 1 is the end of the move.
-			float time{};
-
-			// The edge of the second object that was hit.
-			Edge edgeOfSecond{ Edge::Top };
-		};
+		using SweepHit = collide::SweepHit;
 
 		// Has `object` crossed the given screen edge?
 		static bool touchesScreenEdge(const Object& object, const WindowDesc& windowDesc, Edge edge);
@@ -82,5 +76,9 @@ namespace xge
 		// first do, found to a fraction of that), and the edge reported is the
 		// one the motion came in through.
 		static std::optional<SweepHit> sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB);
+
+		// An Object as collide.h sees it: where it is, how big, a circle or a
+		// box, and, when its collisions are of type pixel, its picture.
+		static collide::Body bodyOf(const Object& object);
 	};
 }
