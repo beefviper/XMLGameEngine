@@ -103,12 +103,8 @@ namespace xge
 		// Key changes pump() took from the window that step() has not handled yet.
 		std::vector<std::pair<KeyCode, bool>> pumpedKeys;
 
-		// Engine's own per-frame record of which keys are currently held -
-		// built entirely from Window::pollEvents()'s press/release deltas
-		// (see window.h), never asked of the window itself, since Engine is
-		// what needs this for the whole frame (state input lookups) and
-		// there's exactly one of it regardless of which backend is running.
-		std::array<bool, static_cast<std::size_t>(KeyCode::Count)> isKeyPressed{};
+		// Which keys are down; a repeated press of a held key is not a new one.
+		HeldKeys heldKeys;
 
 		// The commands each held key is currently driving: what its press ran,
 		// or, after a state change, what the new state's binding for it

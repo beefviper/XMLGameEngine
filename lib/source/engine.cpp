@@ -149,17 +149,7 @@ namespace xge
 	{
 		requireWindow();
 
-		window->clear(game.getWindowDesc().background);
-
-		for (auto& object : game.getCurrentObjects())
-		{
-			if (game.isShown(object))
-			{
-				window->draw(object);
-			}
-		}
-
-		window->display();
+		drawFrame(*window, game.getCurrentObjects(), game.getWindowDesc().background, [&](const Object& object) { return game.isShown(object); });
 	}
 
 	void Engine::handleKeyPressed(KeyCode key)
@@ -168,12 +158,10 @@ namespace xge
 
 		// Held keys repeat as press events on some backends; only the first
 		// one counts.
-		if (isKeyPressed[index])
+		if (!heldKeys.press(key))
 		{
 			return;
 		}
-
-		isKeyPressed[index] = true;
 
 		// A copy of the State, not a reference into it: a command run below
 		// (<push state="paused" />, <pop />) pushes or pops the state stack.
@@ -197,7 +185,7 @@ namespace xge
 	{
 		const auto index = static_cast<std::size_t>(key);
 
-		isKeyPressed[index] = false;
+		heldKeys.release(key);
 
 		// Release exactly what this key's press started, even if the state has
 		// changed since (see heldCommands in engine.h). A key that ran nothing
@@ -239,12 +227,12 @@ namespace xge
 		const State state = game.getCurrentState();
 		for (const auto& [key, commands] : state.input)
 		{
-			const auto index = static_cast<std::size_t>(key);
-			if (!isKeyPressed[index])
+			if (!heldKeys.isDown(key))
 			{
 				continue;
 			}
 
+			const auto index = static_cast<std::size_t>(key);
 			for (const auto& command : commands)
 			{
 				if (commandExecutor.executeHeldInput(command))

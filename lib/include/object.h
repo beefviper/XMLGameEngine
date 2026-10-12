@@ -289,7 +289,7 @@ namespace xge
 		Vector2f velocityOriginal;
 
 		// A constant pull on the velocity, added to it every frame (gravity is
-		// an acceleration with only a y) - see Game::applyAcceleration.
+		// an acceleration with only a y) - see playOneFrame.
 		// `accelerationOriginal` is how it started: <stop /> takes the
 		// acceleration away and a reset brings it back.
 		Vector2f acceleration;
@@ -343,7 +343,7 @@ namespace xge
 
 		// Held turning, by Direction (only Left and Right are used): degrees a
 		// frame, as activeThrust holds a thruster; and thrust held along the
-		// heading, with the variable it burns. See Game::applyAcceleration.
+		// heading, with the variable it burns. See playOneFrame.
 		std::array<float, 4> activeTurn{};
 		float activeThrustAhead{};
 		std::string activeThrustAheadBurn;
@@ -362,18 +362,18 @@ namespace xge
 
 		// A <jump> under way: how far the object travels each frame, and how
 		// many frames are left. While framesLeft is above 0 the object is in
-		// the air: it touches no other object (Game::canCollide). A reset
+		// the air: it touches no other object (playOneFrame). A reset
 		// lands it where it starts.
 		Vector2f jumpStep{};
 		int jumpFramesLeft{ 0 };
 		bool isAirborne() const noexcept { return jumpFramesLeft > 0; }
 
 		// Standing, leaping and climbing. `grounded` is true for the frame
-		// after a <land /> stood the object on something (Game::applyHops
+		// after a <land /> stood the object on something (playOneFrame
 		// clears it as each frame's move starts, so it lasts exactly until the
 		// next landing is worked out); a <leap> needs it. `leaping` is a leap
 		// under way: the way across stays as it was at the take-off until the
-		// next landing. `climbing` is on a ladder (Game::applyClimbing): no
+		// next landing. `climbing` is on a ladder (playOneFrame): no
 		// pull, no landing, no walking off. `activeClimb` is the step held up
 		// (0) and down (1), and `climbClass` what it climbs.
 		bool grounded{ false };
@@ -462,7 +462,7 @@ namespace xge
 		// it counts for movement and for edge checks like velocity does, but
 		// is not the object's own, so an object that steps off is at rest.
 		// `hopPending` is a jump queued by a hop.*() action, made at the start
-		// of the next frame's move (Game::moveObjects); `hopped` is true for
+		// of the next frame's move (playOneFrame); `hopped` is true for
 		// the rest of that frame, so an object that has just landed somewhere
 		// still counts as moving for the collisions it is now part of.
 		Vector2f riding{};

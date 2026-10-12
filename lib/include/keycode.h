@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -69,4 +71,28 @@ namespace xge
 	// Every name keyCodeFromString() knows, for the loader to say what there
 	// is when a game names another.
 	std::vector<std::string> keyNames();
+
+	// Which keys are down. A held key repeats as press events on some window
+	// libraries; only the first counts, so a game hears each key go down
+	// once and come up once. The engine and a generated game both listen
+	// through one.
+	class HeldKeys
+	{
+	public:
+		// The key went down: true when it was up, so this press is a real one.
+		bool press(KeyCode key) noexcept
+		{
+			bool& down = keys[static_cast<std::size_t>(key)];
+			if (down) { return false; }
+			down = true;
+			return true;
+		}
+
+		void release(KeyCode key) noexcept { keys[static_cast<std::size_t>(key)] = false; }
+
+		bool isDown(KeyCode key) const noexcept { return keys[static_cast<std::size_t>(key)]; }
+
+	private:
+		std::array<bool, static_cast<std::size_t>(KeyCode::Count)> keys{};
+	};
 }

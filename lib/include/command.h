@@ -91,7 +91,7 @@ namespace xge
 	// <hop direction="up">distance</hop> (also down, left, right) - only ever in an
 	// object's own <action>: a one-shot
 	// jump of `distance` pixels, made once for each press of the key (see
-	// CommandExecutor::triggerObjectAction and Game::moveObjects). Unlike
+	// CommandExecutor::triggerObjectAction and playOneFrame). Unlike
 	// <move>, holding the key does nothing more, and a state change never
 	// resumes it.
 	struct CmdHop
@@ -106,7 +106,7 @@ namespace xge
 	// (0.3 when left out), through the air: while it is in the air it touches
 	// no other object, so it cannot be hit, ride or drown until it lands, and a
 	// second jump waits for the landing. Unlike <hop> (an instant step) it
-	// takes time and passes over what is between. See Game::applyHops.
+	// takes time and passes over what is between. See playOneFrame.
 	struct CmdJump
 	{
 		Direction direction{};
@@ -136,7 +136,7 @@ namespace xge
 	// at, or is on, an object of that class, it goes up or down it `step`
 	// pixels a frame, lined up with its middle, with no pull and no <land />
 	// on the way, and no walking off it until it reaches either end. See
-	// Game::applyClimbing.
+	// playOneFrame.
 	struct CmdClimb
 	{
 		Direction direction{};
@@ -200,7 +200,7 @@ namespace xge
 	// <move> would set the velocity itself. burn names one of the object's own
 	// <variable>s that one is taken off every frame the thrust is on, and the
 	// thrust does nothing while it is at 0 or below (fuel); empty means free
-	// (see Game::applyAcceleration).
+	// (see playOneFrame).
 	struct CmdAccelerate
 	{
 		Direction direction{};
@@ -211,7 +211,7 @@ namespace xge
 	// <turn direction="left">3</turn> (or right) - only ever in an object's own
 	// <action>: while the key is held the object's heading changes by `rate`
 	// degrees every frame, counterclockwise for left and clockwise for right
-	// (see Object::heading, Game::applyAcceleration). Held like a <move>.
+	// (see Object::heading, playOneFrame). Held like a <move>.
 	struct CmdTurn
 	{
 		Direction direction{};
@@ -557,6 +557,12 @@ namespace xge
 	// init(), which now only measures the *real* rendered Object::size for
 	// drawing/collision, not position).
 	Vector2f measureShapeSize(const std::vector<std::string>& spriteParams, ShapeKind shapeKind) noexcept;
+
+	// A <circle> or a <rectangle> sprite as the window backends draw it and
+	// measureShapeSize measures it: the tag, the size, and the color's name.
+	// The engine makes one from the file; a generated game calls these.
+	std::vector<std::string> circleSprite(float radius, const std::string& color);
+	std::vector<std::string> rectangleSprite(float width, float height, const std::string& color);
 
 	// If `expression` is nothing but an "owner.variable" reference (for
 	// example paddle1.score), returns {owner, variable}. Returns nullopt for

@@ -7,6 +7,7 @@
 
 #include "command_executor.h"
 #include "geometry.h"
+#include "verbs.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -96,55 +97,7 @@ namespace xge
 
 	void Game::updateObjects(void)
 	{
-		auto& currentObjects = getCurrentObjects();
-
-		// A picture that changes with time (an <animation>) counts this frame
-		// whether or not the object is moving; only what is shown and in play
-		// does, so a pause or a menu holds it where it was.
-		for (auto& object : currentObjects)
-		{
-			if (isShown(object)) { object.advanceAnimation(); }
-		}
-
-		// Timers go off before anything moves, so a bomb dropped this frame
-		// starts falling this frame.
-		updateTimers();
-
-		applyPaths();
-
-		applyClimbing();
-
-		applyAcceleration();
-
-		// Screen-edge checks: independent per object, order doesn't matter.
-		for (auto& object : currentObjects)
-		{
-			if (isShown(object) && object.collisionData.enabled && isMoving(object))
-			{
-				checkEdge(object, Edge::Top);
-				checkEdge(object, Edge::Bottom);
-				checkEdge(object, Edge::Left);
-				checkEdge(object, Edge::Right);
-			}
-		}
-
-		// Movement and object-against-object collisions are one job, so that
-		// a fast or small object cannot jump over a thin one between frames.
-		moveObjects();
-
-		for (auto& object : currentObjects)
-		{
-			// The edge checks above run before the move, and only for an object
-			// that is moving, so on their own they let a stick()ed object end the
-			// frame poking out past the wall (and stay there once it stopped
-			// moving).
-			if (isShown(object) && object.collisionData.enabled)
-			{
-				keepStuckObjectInBounds(object);
-			}
-		}
-
-		checkConditions();
+		playOneFrame(getCurrentObjects(), windowDesc, *this);
 	}
 
 	void Game::printGame(void)
@@ -901,7 +854,7 @@ namespace xge
 		// this out of the same "what if the switch fell through" trap as the
 		// raw-pointer version this replaced (VS flagged that one, C6011,
 		// even though Edge's four enumerators are all handled below).
-		std::vector<Command>& collisionCommandsFor(Object& object, Edge edge)
+		const std::vector<Command>& collisionCommandsFor(const Object& object, Edge edge)
 		{
 			switch (edge)
 			{
@@ -947,13 +900,10 @@ namespace xge
 		}
 	}
 
-	void Game::checkEdge(Object& object, Edge edge)
+	// The object is at or past this edge (playOneFrame looked): the edge's
+	// rules, in the order written.
+	void Game::atEdge(Object& object, Edge edge)
 	{
-		if (!CollisionDetector::touchesScreenEdge(object, windowDesc, edge))
-		{
-			return;
-		}
-
 		CommandExecutor executor(*this);
 		const std::vector<Command>& commands = collisionCommandsFor(object, edge);
 		const std::vector<EdgeGuard>& guards = collisionGuardsFor(object, edge);
@@ -978,54 +928,31 @@ namespace xge
 			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass));
 	}
 
-	// Re-applies just the stick() rules, after the frame's move, whether or not
-	// the object is still moving - see the call in updateObjects. Other verbs
-	// (bounce, reset, inc, ...) stay where checkEdge runs them, before the
-	// move, so their timing is unchanged.
-	void Game::keepStuckObjectInBounds(Object& object)
+	// Whether the edge has a stick() rule that holds right now (one in a rule
+	// with sprite= or unless= only while it holds): playOneFrame puts the
+	// object back inside after the frame's move, whether or not it is still
+	// moving. Other verbs (bounce, reset, inc, ...) run only from atEdge,
+	// before the move.
+	bool Game::sticksAt(const Object& object, Edge edge)
 	{
-		CommandExecutor executor(*this);
-		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		const auto& commands = collisionCommandsFor(object, edge);
+		const auto& guards = collisionGuardsFor(object, edge);
+		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
-			const auto& commands = collisionCommandsFor(object, edge);
-			const auto& guards = collisionGuardsFor(object, edge);
-			bool sticks = false;
-			for (std::size_t i = 0; i < commands.size(); ++i)
+			const bool passedOver = std::any_of(guards.begin(), guards.end(), [&](const EdgeGuard& guard)
+				{ return i >= guard.first && i < guard.first + guard.count && isEdgeRulePassedOver(object, guard); });
+			if (!passedOver && std::holds_alternative<CmdStick>(commands[i]))
 			{
-				// a stick in a rule with sprite= or unless= only while it holds
-				const bool passedOver = std::any_of(guards.begin(), guards.end(), [&](const EdgeGuard& guard)
-					{ return i >= guard.first && i < guard.first + guard.count && isEdgeRulePassedOver(object, guard); });
-				sticks = sticks || (!passedOver && std::holds_alternative<CmdStick>(commands[i]));
-			}
-
-			if (sticks && CollisionDetector::touchesScreenEdge(object, windowDesc, edge))
-			{
-				executor.executeScreenEdgeCollision(Command{ CmdStick{} }, object, edge);
+				return true;
 			}
 		}
+		return false;
 	}
 
-	// Whether a and b could do anything about touching: both are in play, they
-	// are not in lockstep with each other (the invader block never collides with
-	// itself), and at least one has a rule that answers to the other.
-	bool Game::canCollide(const Object& a, const Object& b) noexcept
+	// Whether a rule of either answers to the other (playOneFrame has checked
+	// they can touch at all).
+	bool Game::canCollide(const Object& a, const Object& b)
 	{
-		if (!a.collisionData.enabled || !b.collisionData.enabled)
-		{
-			return false;
-		}
-
-		// Something in the middle of a jump is over everything.
-		if (a.isAirborne() || b.isAirborne())
-		{
-			return false;
-		}
-
-		if (a.collisionData.lockstep != 0 && a.collisionData.lockstep == b.collisionData.lockstep)
-		{
-			return false;
-		}
-
 		const auto answers = [](const Object& self, const Object& other)
 		{
 			return std::any_of(self.collisionData.basic.begin(), self.collisionData.basic.end(),
@@ -1035,257 +962,14 @@ namespace xge
 		return answers(a, b) || answers(b, a);
 	}
 
-	Vector2f Game::motionOf(const Object& object) noexcept
+	// A thruster burns one unit of the object's own `variable`, if it has any
+	// left.
+	bool Game::burn(Object& object, const std::string& variable, const char* verb)
 	{
-		return object.velocity + object.riding;
-	}
-
-	bool Game::isMoving(const Object& object) noexcept
-	{
-		const Vector2f motion = motionOf(object);
-		return motion.x != 0 || motion.y != 0 || object.hopped;
-	}
-
-	// A constant pull (<acceleration>, gravity being one with only a y) and
-	// held thrust (<accelerate>) both change an object's velocity, once a
-	// frame, before it is moved. Thrust that burns a variable takes 1 off it
-	// every frame it is on, and does nothing while the variable is at 0 or
-	// below: a ship out of fuel still falls.
-	void Game::applyAcceleration(void)
-	{
-		for (auto& object : objects)
-		{
-			// On a ladder nothing pulls it (Game::applyClimbing moves it).
-			if (!isShown(object) || object.climbing) { continue; }
-
-			Vector2f change = object.acceleration;
-
-			// Burns one unit of `burn` (an object's own variable), if it names
-			// one, and says whether there was any left to burn. A thruster with
-			// no fuel does nothing.
-			const auto burnFuel = [&](const std::string& burn, const char* verb)
-			{
-				if (burn.empty()) { return true; }
-				const auto fuel = object.variable.find(burn);
-				if (fuel == object.variable.end() || fuel->second <= 0.0f) { return false; }
-				changeVariable(object.name + "." + burn, -1.0f, verb);
-				return true;
-			};
-
-			for (std::size_t i = 0; i < object.activeThrust.size(); ++i)
-			{
-				const float amount = object.activeThrust[i];
-				if (amount == 0.0f) { continue; }
-
-				if (!burnFuel(object.activeThrustBurn[i], "accelerate")) { continue; }
-
-				switch (static_cast<Direction>(i))
-				{
-				case Direction::Up:    change.y -= amount; break;
-				case Direction::Down:  change.y += amount; break;
-				case Direction::Left:  change.x -= amount; break;
-				case Direction::Right: change.x += amount; break;
-				}
-			}
-
-			// Turning, and thrust along the way the object then faces. A heading
-			// is degrees clockwise from straight up.
-			if (object.hasHeading)
-			{
-				const float turn = object.activeTurn[static_cast<std::size_t>(Direction::Right)]
-					- object.activeTurn[static_cast<std::size_t>(Direction::Left)];
-				if (turn != 0.0f)
-				{
-					object.heading = std::fmod(object.heading + turn, 360.0f);
-					if (object.heading < 0.0f) { object.heading += 360.0f; }
-					object.showHeading();
-				}
-
-				if (object.activeThrustAhead != 0.0f && burnFuel(object.activeThrustAheadBurn, "thrust"))
-				{
-					change += ahead(object.heading) * object.activeThrustAhead;
-				}
-			}
-
-			object.velocity += change;
-
-			// Drag: what is left of the speed after this frame.
-			if (object.drag != 0.0f)
-			{
-				object.velocity *= 1.0f - object.drag;
-			}
-		}
-	}
-
-	// Climbing (a <climb> in an action, held): an object at a ladder - an
-	// object of its climbClass with the climber's middle over it and its feet
-	// between the ladder's top and bottom - that is on the ground and asked to
-	// go up or down it, and can, gets on it, lined up with its middle. On it,
-	// it goes the step held each frame (none held: it stays put), its feet
-	// kept between the two ends, with no pull and no landing, and its own
-	// velocity at 0 so no key walks it off. Reaching either end it gets off,
-	// standing there, and the keys held take it on as before.
-	void Game::applyClimbing(void)
-	{
-		for (auto& object : objects)
-		{
-			if (object.climbClass.empty() || !isShown(object)) { continue; }
-
-			const Box climber{ object.position, object.size };
-			const auto ladder = std::find_if(objects.begin(), objects.end(), [&](const Object& other)
-				{
-					return &other != &object && other.objClass == object.climbClass && isShown(other)
-						&& atLadder(climber, { other.position, other.size });
-				});
-
-			if (ladder == objects.end())
-			{
-				object.climbing = false;
-				continue;
-			}
-
-			const float step = object.activeClimb[1] - object.activeClimb[0];
-			const bool wasClimbing = object.climbing;
-			if (!climbLadder(object.position, object.size, step, object.climbing, object.grounded, { ladder->position, ladder->size }))
-			{
-				continue;
-			}
-
-			if (!wasClimbing) { object.leaping = false; }
-			object.velocity = {};
-
-			if (!object.climbing)
-			{
-				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
-					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
-			}
-		}
-	}
-
-	// Makes the hops queued by hop.*() actions. A hop is a jump, not a slide:
-	// the object is simply somewhere else, one step away, before this frame's
-	// collisions are worked out, so it is judged by where it lands and not by
-	// what it would have brushed past on the way (a step is never more than
-	// the object's own lane). A hop that would take it out of the window is
-	// refused. Whether or not it went, an object that asked to hop counts as
-	// moving for the rest of the frame - it is what makes the collisions at
-	// its new spot run even when nothing else there is moving.
-	void Game::applyHops(void)
-	{
-		for (auto& object : objects)
-		{
-			object.hopped = false;
-
-			// Whatever last frame's collisions said, this frame's start over:
-			// what it rides, and whether it stands on something.
-			object.riding = {};
-			object.grounded = false;
-
-			// A jump under way goes on a step; the frame it lands, it counts as
-			// having moved, so it meets whatever it landed on.
-			if (object.isAirborne())
-			{
-				if (isShown(object))
-				{
-					const Vector2f target = object.position + object.jumpStep;
-					if (insideWindow({ target, object.size }, { windowDesc.width, windowDesc.height })) { object.position = target; }
-				}
-				--object.jumpFramesLeft;
-				object.hopped = true;
-			}
-
-			if (object.hopPending.x == 0 && object.hopPending.y == 0)
-			{
-				continue;
-			}
-
-			const Vector2f target = object.position + object.hopPending;
-			object.hopPending = {};
-
-			if (!isShown(object)) { continue; }
-
-			if (insideWindow({ target, object.size }, { windowDesc.width, windowDesc.height }))
-			{
-				object.position = target;
-			}
-			object.hopped = true;
-		}
-	}
-
-	// Plays one frame of movement. Every object that is shown moves by its
-	// velocity (and by whatever it is riding, see Object::riding), but not
-	// in one jump: each pair of objects that has a rule for touching is swept
-	// along its own path (CollisionDetector::sweep), the earliest touch
-	// anywhere is found, everything is moved up to that moment, that pair's
-	// rules run, and the rest of the frame carries on from there with
-	// whatever velocities the rules left behind (xge::playFrame, which a
-	// generated game plays its frames with too) - so a ball that hits a
-	// brick a third of the way through its move spends the other two thirds
-	// heading back the way it came. Each object is swept by itself; a lockstep set
-	// has no bounding box of its own, so when most of the invaders are gone
-	// only the ones left are tested.
-	void Game::moveObjects(void)
-	{
-		auto& all = getCurrentObjects();
-
-		applyHops();
-
-		struct Pair
-		{
-			Object* first;
-			Object* second;
-		};
-
-		std::vector<Pair> pairs;
-		for (std::size_t i = 0; i < all.size(); ++i)
-		{
-			if (!isShown(all[i]))
-			{
-				continue;
-			}
-
-			for (std::size_t j = i + 1; j < all.size(); ++j)
-			{
-				if (isShown(all[j]) && canCollide(all[i], all[j]))
-				{
-					pairs.push_back({ &all[i], &all[j] });
-				}
-			}
-		}
-
-		const auto advance = [&](float fraction)
-		{
-			for (auto& object : all)
-			{
-				if (isShown(object)) // TODO: at some point you might wanna collide with invisible objects
-				{
-					object.position += motionOf(object) * fraction;
-				}
-			}
-		};
-
-		// Anything taken out of play by an earlier reaction this frame (a
-		// bullet that just died), or that is not moving, sits out.
-		const auto sweep = [&](const Pair& pair, float left) -> std::optional<SweepHit>
-		{
-			Object& a = *pair.first;
-			Object& b = *pair.second;
-			if (!isShown(a) || !isShown(b) || !canCollide(a, b) || (!isMoving(a) && !isMoving(b)))
-			{
-				return std::nullopt;
-			}
-			return CollisionDetector::sweep(a, motionOf(a) * left, b, motionOf(b) * left);
-		};
-
-		playFrame(pairs, sweep, advance, [&](const Pair& pair, Edge edgeOfSecond)
-			{
-				applyObjectCollision(*pair.first, *pair.second, edgeOfSecond);
-			});
-
-		for (auto& object : all)
-		{
-			object.hopped = false;
-		}
+		const auto fuel = object.variable.find(variable);
+		if (fuel == object.variable.end() || fuel->second <= 0.0f) { return false; }
+		changeVariable(object.name + "." + variable, -1.0f, verb);
+		return true;
 	}
 
 	// Whether `object` is touching, right now, any other object in play that is
@@ -1305,7 +989,7 @@ namespace xge
 
 	// edgeOfB is the edge of b that was touched, which is already b's own side
 	// of it; a's own touched edge is the opposite one.
-	void Game::applyObjectCollision(Object& a, Object& b, Edge edgeOfB)
+	void Game::touched(Object& a, Object& b, Edge edgeOfB)
 	{
 		CommandExecutor executor(*this);
 

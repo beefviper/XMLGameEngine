@@ -619,16 +619,19 @@ The library is static by default: each program has the engine's code copied into
 | `game_xml.cpp` | Walk the parsed XML tags into a `GameData` (`game_data.h`: raw window/variable/object/state data, `RawValue`, `RawCommand`, `RawSprite`), `readGame()`; a `<group>` is read here as one raw object per member. `Game(GameData)` works one out, so `game.cpp` reads no XML |
 | `game_expr.cpp` | exprtk symbol table and evaluation of raw values (expressions, `<random>`, `<equation>`, `<formula>`) into `Object`s and `State`s |
 | `command.cpp` | Turn raw command tags into typed `Command`s; the table of arithmetic operations (`operationShape`) and a value printed as text (`valueText`) |
-| `game.cpp` | Objects, state stack, per-frame update, collision pairs, conditions, resets, paths (`follow`, `applyPaths`) |
+| `game.cpp` | The interpreter: objects, state stack, conditions, resets, paths (`follow`, `applyPaths`), and the answers to `FrameRules` (what the file says happens at an edge, on a touch, which rules hold), which it carries out through `CommandExecutor`. It does none of the frame's work itself |
+| `frame.cpp` | `playOneFrame`: the order every frame runs in (animations, timers, paths, climbing, pull and thrust, the window edges, the move with its sweep, sticks, conditions) and the moving, asking a `FrameRules` (`frame.h`) what the game says at each moment. The engine's `Game` answers from the file; a generated game ([prototype](designs/40-generator.md#prototype-the-game-as-decisions-on-the-engines-modules)) answers in code |
+| `verbs.cpp` | What a verb does to an `Object` once something has decided it happens (`bounce`, `deflect`, `stick`, `wrap`, `ride`, `die`, `stop`, `restart`, `holdMove`), and making an object (`makeObject`, `startAt`); `CommandExecutor` and generated games both call them |
+| `random.cpp` | The one random number source (`seedRandom`, `randomBetween`, `fixRandomSeed`), drawn from by a `<random>` and by generated games alike |
 | `geometry.cpp` | The arithmetic of touching and of the verbs, on boxes and velocities with no `Object` in it: box, circle and swept tests, the pixel walk, the sweep of two things and the loop that plays a frame from touch to touch (`sweepThings`, `playFrame`, templates in `geometry.h`), the window's edges, and what bounce, deflect, stick, wrap, land, climb, chase, aim, fire and a path's step do. A generated program compiles it unchanged |
 | `collision_detector.cpp` | `geometry.cpp`'s tests for `Object`s: their shapes, and the pixel pass for type `pixel` |
 | `builtin_font.cpp` | The 8x8 font stored in the program (`rasterizeText`), which draws text into a bitmap when a backend cannot load its font file |
 | `bitmap.cpp` | Draws a sprite's `<line>`s (`rasterizeLines`) or `<bitmap>` rows (`rasterizeRows`) into an RGBA bitmap, the pixels both the window backends and pixel collisions use, and flips (`flipBitmap`) and turns (`turnBitmap`, `rasterizeTurned`) them |
 | `svg.cpp` | Draws a part of an SVG file (`rasterizeSvg`) into an RGBA bitmap, with lunasvg; the only file that includes it |
-| `command_executor.cpp` | What each command does |
+| `command_executor.cpp` | Carries out a typed command: picks the verb and its target, then calls `verbs.cpp` (or `geometry.cpp`) for what it does |
 | `sound.cpp` | Pitch names, wave names, and `synthesize()`: a sound's notes made into 16-bit samples, the same for every audio backend |
 | `audio.cpp`, `audio_*.cpp` | `AudioFactory` and the sound backends (SFML 3, raylib, SDL2; `NullAudio` is in `audio.h`) |
-| `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop), key handling, and playing the sounds each frame asks for |
+| `engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop), key handling (`HeldKeys`, `keycode.h`), drawing (`drawFrame`, `window.h`), and playing the sounds each frame asks for |
 | `engine_backends.cpp` | Engine's constructor that picks the window and sound libraries by name, through the factories; apart so a program built for one library leaves the factories out |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |

@@ -178,6 +178,16 @@ namespace xge
 		return ShapeKind::Unknown;
 	}
 
+	std::vector<std::string> circleSprite(float radius, const std::string& color)
+	{
+		return { "circle", std::to_string(radius), std::to_string(0), color };
+	}
+
+	std::vector<std::string> rectangleSprite(float width, float height, const std::string& color)
+	{
+		return { "rectangle", std::to_string(width), std::to_string(height), color };
+	}
+
 	Vector2f measureShapeSize(const std::vector<std::string>& spriteParams, ShapeKind shapeKind) noexcept
 	{
 		// spriteParams is always well-formed here - it was built moments

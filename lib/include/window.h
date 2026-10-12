@@ -76,6 +76,25 @@ namespace xge
 		virtual void display() = 0;
 	};
 
+	// One picture of a game: the background, then every object in play, in
+	// the order they are listed. What the engine draws each frame, and a
+	// generated game too.
+	template <typename InPlay>
+	void drawFrame(Window& window, std::vector<Object>& objects, const std::string& background, InPlay inPlay)
+	{
+		window.clear(background);
+
+		for (auto& object : objects)
+		{
+			if (inPlay(object))
+			{
+				window.draw(object);
+			}
+		}
+
+		window.display();
+	}
+
 	enum class WindowBackend
 	{
 		SFML3,

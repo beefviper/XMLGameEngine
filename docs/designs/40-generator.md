@@ -1,6 +1,6 @@
 # Generating a program
 
-**Status:** Built: `--generate windows-cpp` covers every game. XSLT stylesheets write the game file out as the engine's own data, and the generated program plays it with the engine's own code on SFML; a test checks each game's data against what the engine reads, field by field, and plays it against its file, frame by frame.
+**Status:** Built: `--generate windows-cpp` covers every game. A prototype of a readable generated game on the engine's shared frame is below ([Prototype](#prototype-the-game-as-decisions-on-the-engines-modules)). XSLT stylesheets write the game file out as the engine's own data, and the generated program plays it with the engine's own code on SFML; a test checks each game's data against what the engine reads, field by field, and plays it against its file, frame by frame.
 
 ## Approach
 
@@ -31,5 +31,24 @@ Why it plays the same: the data is checked, and after the data everything is the
 ### The first target: rules as statements in XSLT (replaced 2026-10-11)
 
 XSLT 1.0 stylesheets wrote each game as a program a person might write on SFML: tunables, objects as SFML shapes, a function per screen and per object, each rule an `if` (generated Pong about 480 lines). It was grown from `games/pong_min.xml` to every game. Its verbs were first copies of the engine's; they were moved into the engine's `geometry.cpp` (shared by both), and the frame was rewritten in the engine's order with the sweep loop shared as `xge::playFrame`. Differences remained (thrust and turn applied as the key was read, a group's members never touching each other, `unless=` by shapes, key presses found by comparing frames), each a second copy of something the engine does. What it taught: a copy of the engine's behavior, however carefully kept, drifts; sharing arithmetic is not enough when the order, the input and the rules around it are written again. So the stylesheets now write only what the file says, and a test holds them to the engine's reading of it.
+
+### Prototype: the game as decisions on the engine's modules
+
+**Status:** Prototype (by hand, `prototypes/pong_min/`); not yet written by XSLT.
+
+**What we looked for.** What the author had in mind from the start: a generated game that reads like a program written for that game, and plays exactly as the engine does because it calls the same code for the real work. The engine, an interpreter, works out from the file what to call; the generated game has it written down; both then call the same modules.
+
+**Why G1 drifted and G3/G4 gave up readability.** Three layers were mixed in `game.cpp`: the work (the arithmetic, already shared in `geometry.cpp`), the order a frame runs in, and the dispatch (what the file says happens at an edge or a touch). `checkEdge`, `moveObjects` and `applyObjectCollision` each did all three, so G1 could share only the arithmetic and had to write the order a second time, which is where it drifted; G4 shares everything by making the game data again.
+
+**What the prototype does.**
+- `frame.h`: `playOneFrame(objects, window, rules)` is the order and the moving, moved out of `Game::updateObjects`, `applyClimbing`, `applyAcceleration`, `applyHops` and `moveObjects`. At each moment it asks a `FrameRules` what the game says: which objects are in play, the timers, the paths, a thruster's fuel, an object at an edge, whether a stick holds, whether a rule answers between two objects, what a touch does, the conditions. Whether two objects can touch at all (both colliding, neither in the air, not one lockstep block) is the frame's own.
+- `verbs.h`: what a verb does to an `Object` (`bounce`, `deflect`, `stick`, `wrap`, `ride`, `die`, `stop`, `restart`, `holdMove`), moved out of `CommandExecutor`, which now only picks the verb and its target. `random.h` is the one random source, `circleSprite`/`rectangleSprite` (`command.h`) the shapes, `HeldKeys` (`keycode.h`) the keys, `drawFrame` (`window.h`) the picture.
+- `Game` is the interpreter: it implements `FrameRules` by looking in the file and runs the commands it finds through `CommandExecutor`.
+- `prototypes/pong_min/source/pong_min.cpp` is `pong_min.xml` written as that game's `FrameRules`: the objects made in file order, `atEdge` bouncing the ball off the top and bottom and serving again at the sides, `touched` deflecting it off a paddle, `key` holding a paddle's move. About 150 lines, no game data, and it is built (`pong_min_prototype`) from only the frame, verbs, geometry, collisions, object, pictures, random and SFML window files: no `game.cpp`, `game_expr` or exprtk, `CommandExecutor` or XML library.
+- `tests/test_prototype_pong.cpp` plays it beside the engine playing the file, ten seeds of 3600 frames with the paddles moving, both measured as a window would measure them, and compares every object every frame. They match; changing the deflect angle by one degree fails at frame 433.
+
+**What it taught.** Expressions are the hard part. `ball.angle * pi / 180` written as C++ differed in the last bit from the engine on about a third of serves, because exprtk folds the constants first (`angle * (pi / 180)`); the prototype writes it the way exprtk works it out. A generator writing expressions as C++ has to follow exprtk's rewrites, or the program has to evaluate them with the engine's evaluator. Also the order of a random draw follows the engine's `std::map` of variables, so alphabetical, not the file's order.
+
+**Open.** Writing it with XSLT (the rules are a direct transform of the tags, much like G1's, but now with nothing of the frame in them); state stacks, conditions, timers and paths as `FrameRules` answers; whether expressions become C++ or stay exprtk's; and whether `Engine`'s loop (keys, frame, sounds, picture) becomes shared too, as `HeldKeys` and `drawFrame` already are.
 
 **Open.** `data.xsl` reads the file a second time: a new tag or field in `game_xml.cpp` needs the same in `data.xsl` (and perhaps `game_parts.h`), and the data test fails until it has it. Other targets (another backend, another language, an 8-bit machine) would need the engine's runtime in that language, which is a port, not a generator. Built with GCC and Clang on Linux; MSVC not yet tried with this target.

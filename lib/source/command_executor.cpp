@@ -7,6 +7,7 @@
 
 #include "game.h"
 #include "geometry.h"
+#include "verbs.h"
 
 #include <algorithm>
 #include <cmath>
@@ -18,11 +19,11 @@ namespace xge
 	{
 		std::visit(overload{
 			[&](const CmdBounce&) { bounceScreenEdge(object, edge); },
-			[&](const CmdStick&) { stick(object, edge); },
+			[&](const CmdStick&) { xge::stick(object, game.getWindowDesc(), edge); },
 			[&](const CmdReset&) { restart(object); },
-			[&](const CmdDie&) { die(object); },
-			[&](const CmdStop&) { stop(object); },
-			[&](const CmdWrap&) { wrap(object, edge); },
+			[&](const CmdDie&) { xge::die(object); },
+			[&](const CmdStop&) { xge::stop(object); },
+			[&](const CmdWrap&) { xge::wrap(object, game.getWindowDesc(), edge); },
 			[&](const CmdRelease& r) { release(object, r.target, r.count); },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
@@ -43,16 +44,16 @@ namespace xge
 	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, const Object& other, Edge edge)
 	{
 		std::visit(overload{
-			[&](const CmdBounce&) { bounceOffEdge(object, edge); },
-			[&](const CmdDeflect& d) { deflect(object, other, edge, d.maxAngle); },
-			[&](const CmdDie&) { die(object); },
-			[&](const CmdStop&) { stop(object); },
+			[&](const CmdBounce&) { xge::bounce(object, edge); },
+			[&](const CmdDeflect& d) { xge::deflect(object, other, edge, d.maxAngle); },
+			[&](const CmdDie&) { xge::die(object); },
+			[&](const CmdStop&) { xge::stop(object); },
 			[&](const CmdReset&) { restart(object); },
 			[&](const CmdRelease& r) { release(object, r.target, r.count); },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
-			[&](const CmdRide&) { ride(object, other); },
+			[&](const CmdRide&) { xge::ride(object, other); },
 			[&](const CmdLand&) { land(object, other, edge); },
 			[&](const CmdChase& c) { chase(object, c); },
 			[&](const CmdAim& a) { aim(object, a.target); },
@@ -113,8 +114,8 @@ namespace xge
 			[&](const CmdReset&) { if (owner) { restart(*owner); } else { game.resetAll(); } },
 			[&](const CmdFire& f) { if (owner) { spawnProjectile(*owner, f.projectileName); } },
 			[&](const CmdReverse&) { if (owner) { reverse(*owner); } },
-			[&](const CmdDie&) { if (owner) { die(*owner); } },
-			[&](const CmdStop&) { if (owner) { stop(*owner); } },
+			[&](const CmdDie&) { if (owner) { xge::die(*owner); } },
+			[&](const CmdStop&) { if (owner) { xge::stop(*owner); } },
 			[&](const CmdMove& m) { if (owner) { moveByStep(*owner, m.direction, m.step); } },
 			[&](const CmdRelease& r) { if (owner) { release(*owner, r.target, r.count); } },
 			[&](const CmdChase& c) { if (owner) { chase(*owner, c); } },
@@ -171,7 +172,7 @@ namespace xge
 		{
 			if (const auto* move = std::get_if<CmdMove>(&actionCommand))
 			{
-				applyActionVelocity(object, move->direction, move->step);
+				holdStep(object, move->direction, move->step);
 			}
 			else if (const auto* climb = std::get_if<CmdClimb>(&actionCommand))
 			{
@@ -195,54 +196,13 @@ namespace xge
 		return true;
 	}
 
-	// Out of play: it stops being drawn, moved and collided with. Everything
-	// else about it is left as it was, so whatever brings it back (fire()
-	// re-launching a bullet, reset()) starts from a known place.
-	void CommandExecutor::die(Object& object)
-	{
-		object.collisionData.enabled = false;
-		object.isVisible = false;
-		object.followPath.clear();
-	}
-
-	// Comes to rest: no velocity, and nothing left to change it - neither the
-	// object's own pull nor a thruster still held. (A reset gives them back.)
-	// Being in motion is what makes collisions run, so an object that has
-	// stopped is no longer asked about what it is resting on.
-	void CommandExecutor::stop(Object& object)
-	{
-		object.velocity = {};
-		object.acceleration = {};
-		object.activeMoveStep = {};
-		object.activeClimb = {};
-		object.climbing = false;
-		object.leaping = false;
-		object.activeThrust = {};
-		object.activeThrustBurn = {};
-		object.activeTurn = {};
-		object.activeThrustAhead = 0.0f;
-		object.activeThrustAheadBurn.clear();
-		object.followPath.clear();
-	}
-
 	// Back where it started, facing the way it started and going the way it
 	// started, with any <random> in that start drawn again (a new serve).
 	// While a held key is moving it, that key still decides its velocity.
 	void CommandExecutor::restart(Object& object)
 	{
 		game.drawStartAgain(object);
-		object.position = object.positionOriginal;
-		object.climbing = false;
-		object.leaping = false;
-		object.grounded = false;
-		object.hasAim = false;
-		const bool keyHeld = std::any_of(object.activeMoveStep.begin(), object.activeMoveStep.end(), [](float step) { return step != 0.0f; });
-		if (!keyHeld)
-		{
-			object.velocity = object.velocityOriginal;
-		}
-		object.heading = object.headingOriginal;
-		object.showHeading();
+		xge::restart(object);
 	}
 
 	namespace
@@ -252,13 +212,6 @@ namespace xge
 			return object.name == name || (!object.groupName.empty() && object.groupName == name);
 		}
 
-		// What an object measures: what the window measured, or, before there
-		// is one, what its sprite implies.
-		Vector2f sizeOf(const Object& object)
-		{
-			if (object.size.x != 0.0f || object.size.y != 0.0f) { return object.size; }
-			return measureShapeSize(object.spriteParams, object.shapeKind);
-		}
 	}
 
 	// Puts `count` of the objects called `target` that are out of play back in,
@@ -296,34 +249,7 @@ namespace xge
 			return;
 		}
 
-		bounceOffEdge(object, edge);
-	}
-
-	void CommandExecutor::bounceOffEdge(Object& object, Edge edge)
-	{
-		object.velocity = bounced(object.velocity, edge);
-	}
-
-	// A bounce off `other` that leaves at an angle set by where it hit. How far
-	// the object's middle is from the middle of the touched side, as a share of
-	// half that side's length (-1 at one end, 1 at the other, held there past
-	// the ends), times maxAngle, is the angle away from straight back out,
-	// towards the end it hit nearer to: off a Pong paddle's top half the ball
-	// goes back up, off its bottom half down. The speed is what it was.
-	void CommandExecutor::deflect(Object& object, const Object& other, Edge edge, float maxAngle)
-	{
-		object.velocity = deflected(object.velocity, { object.position, sizeOf(object) }, { other.position, sizeOf(other) }, edge, maxAngle);
-	}
-
-	void CommandExecutor::stick(Object& object, Edge edge)
-	{
-		// Only the touched edge's own axis is affected: the object is pushed
-		// back inside on that axis and loses only the velocity that was
-		// carrying it into the wall. The other axis is left alone, so an
-		// object pressed against the bottom wall still slides left or right
-		// (and one moving away from the wall is not held back either).
-		const auto& windowDesc = game.getWindowDesc();
-		stickInside(object.position, object.velocity, object.size, { windowDesc.width, windowDesc.height }, edge);
+		xge::bounce(object, edge);
 	}
 
 	void CommandExecutor::moveByStep(Object& object, Direction direction, float step)
@@ -355,8 +281,8 @@ namespace xge
 		}
 	}
 
-	// A jump asked for by a hop.*() action. It is only queued here: Game::
-	// moveObjects makes it at the start of the frame's move, where it can be
+	// A jump asked for by a hop.*() action. It is only queued here:
+	// playOneFrame makes it at the start of the frame's move, where it can be
 	// refused if it would leave the window. Asking twice in one frame keeps
 	// the later one, so a hop is always a single step in one direction.
 	void CommandExecutor::startJump(Object& object, const CmdJump& jump)
@@ -388,27 +314,6 @@ namespace xge
 		object.hopPending = stepToward(direction, distance);
 	}
 
-	// Once an object has gone right off the screen through `edge` - and is
-	// still heading that way - it comes back in from the opposite side, one
-	// screen and one object's width along, so anything spaced along a lane
-	// keeps its spacing. Until it has gone completely, nothing happens: the
-	// rule is asked every frame the object is touching the edge, and an
-	// object that is still partly in view slides out as normal.
-	void CommandExecutor::wrap(Object& object, Edge edge)
-	{
-		const auto& windowDesc = game.getWindowDesc();
-		wrapAround(object.position, object.size, object.velocity + object.riding, { windowDesc.width, windowDesc.height }, edge);
-	}
-
-	// Rides along with what it is touching: for this frame the object moves
-	// with the other one's velocity as well as its own. Not kept - it is
-	// worked out again every frame from whatever is still being touched, so
-	// the moment the object is no longer on the other one, it is at rest.
-	void CommandExecutor::ride(Object& object, const Object& other)
-	{
-		object.riding = other.velocity;
-	}
-
 	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed)
 	{
 		Object& object = game.getObject(objectName);
@@ -418,8 +323,7 @@ namespace xge
 			std::visit(overload{
 				[&](const CmdMove& m)
 				{
-					applyActionVelocity(object, m.direction, keyPressed ? m.step : 0.0f);
-					if (keyPressed && m.step != 0.0f) { object.facing = m.direction; object.hasAim = false; }
+					holdMove(object, m.direction, m.step, keyPressed);
 				},
 				// A hop belongs to the press alone: letting go of the key does
 				// nothing, and it is not among what executeHeldInput resumes.
@@ -427,7 +331,7 @@ namespace xge
 				// So does a jump, and one in the air waits for the landing.
 				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
 				[&](const CmdLeap& l) { if (keyPressed) { leap(object, l.height); } },
-				// A climb is held like a move; Game::applyClimbing makes it.
+				// A climb is held like a move; playOneFrame makes it.
 				[&](const CmdClimb& c)
 				{
 					object.activeClimb[c.direction == Direction::Up ? 0 : 1] = keyPressed ? c.step : 0.0f;
@@ -450,33 +354,6 @@ namespace xge
 				[&](const auto&) { /* an object's own <action> list only ever produces
 				                      move/hop/accelerate/turn/thrust/fire/play commands today; ignore anything else. */ }
 			}, command);
-		}
-	}
-
-	// Records which way `direction` is now pushing (0 = just released) and
-	// recombines every direction currently held on that axis into its part of
-	// the velocity, instead of this one key event simply overwriting it - see
-	// Object::activeMoveStep for why that used to lose a still-held opposite
-	// key. Left/Right and Up/Down are independent axes, so both can be held
-	// at once for an 8-way diagonal off a 4-way D-pad, and a key on one axis
-	// leaves the other alone (walking does not stop a fall). In a <leap> the
-	// way across is kept until the landing, which takes up the keys held then.
-	void CommandExecutor::applyActionVelocity(Object& object, Direction direction, float step)
-	{
-		object.activeMoveStep[static_cast<std::size_t>(direction)] = step;
-
-		if (direction == Direction::Left || direction == Direction::Right)
-		{
-			if (!object.leaping)
-			{
-				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
-					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
-			}
-		}
-		else
-		{
-			object.velocity.y = object.activeMoveStep[static_cast<std::size_t>(Direction::Down)]
-				- object.activeMoveStep[static_cast<std::size_t>(Direction::Up)];
 		}
 	}
 
@@ -562,7 +439,7 @@ namespace xge
 	}
 
 	// Records that `direction` is now being pushed by `amount` a frame (0 =
-	// just released), and the variable it burns; Game::applyAcceleration
+	// just released), and the variable it burns; playOneFrame
 	// applies every direction being held once a frame. Unlike a move's velocity
 	// there is nothing to recombine: each direction adds its own amount.
 	void CommandExecutor::applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn)
@@ -572,8 +449,8 @@ namespace xge
 		object.activeThrustBurn[index] = amount == 0.0f ? std::string{} : burn;
 	}
 
-	// Records that a turn is now held (rate 0 = just released); Game::
-	// applyAcceleration turns the object once a frame while it is.
+	// Records that a turn is now held (rate 0 = just released);
+	// playOneFrame turns the object once a frame while it is.
 	void CommandExecutor::applyActionTurn(Object& object, Direction direction, float rate)
 	{
 		object.activeTurn[static_cast<std::size_t>(direction)] = rate;

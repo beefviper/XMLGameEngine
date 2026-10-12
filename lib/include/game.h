@@ -7,6 +7,7 @@
 
 #include "collision_detector.h"
 #include "command.h"
+#include "frame.h"
 #include "game_data.h"
 #include "game_expr.h"
 #include "object.h"
@@ -24,7 +25,12 @@
 
 namespace xge
 {
-	class Game
+	// The interpreter: it reads the game file into objects and states, and
+	// answers what the file says should happen (FrameRules), running the
+	// verbs it names through CommandExecutor. It plays no part in how a
+	// frame runs or what a verb does: playOneFrame (frame.h) and the verbs
+	// (verbs.h, geometry.h) are shared with generated games.
+	class Game : private FrameRules
 	{
 	public:
 		// The game as written (see GameData), worked out and ready to run.
@@ -198,22 +204,16 @@ namespace xge
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
 
-		void checkEdge(Object& object, Edge edge);
-
-		// After the frame's move: pushes an object back inside any screen edge
-		// it has a stick() rule for, even if it has stopped moving.
-		void keepStuckObjectInBounds(Object& object);
-
-		// Whether a and b have anything to do about touching each other.
-		static bool canCollide(const Object& a, const Object& b) noexcept;
-
-		// How far an object moves in one frame: its own velocity, plus the
-		// velocity of whatever it is riding (see Object::riding).
-		static Vector2f motionOf(const Object& object) noexcept;
-
-		// Whether it is in motion at all this frame: moving, riding something, or
-		// having just made a hop.
-		static bool isMoving(const Object& object) noexcept;
+		// FrameRules: what the game file says, asked by playOneFrame.
+		bool inPlay(const Object& object) override { return isShown(object); }
+		void timers() override { updateTimers(); }
+		void followPaths() override { applyPaths(); }
+		bool burn(Object& object, const std::string& variable, const char* verb) override;
+		void atEdge(Object& object, Edge edge) override;
+		bool sticksAt(const Object& object, Edge edge) override;
+		bool canCollide(const Object& a, const Object& b) override;
+		void touched(Object& a, Object& b, Edge edgeOfB) override;
+		void conditions() override { checkConditions(); }
 
 		// Sets the velocity of every shown object that is on a path for this
 		// frame's part of it (see Path), starting its next leg when one is
@@ -222,17 +222,6 @@ namespace xge
 		// moves, wraps and collides like anything else.
 		void applyPaths(void);
 
-		// Changes every shown object's velocity by its <acceleration> and by
-		// whatever <accelerate> thrust is being held (burning its fuel), once a
-		// frame, before anything moves: a constant pull, or a thruster.
-		void applyClimbing(void);
-		void applyAcceleration(void);
-
-		// The start of a frame's move: makes every hop queued by a hop.*()
-		// action, unless it would leave the window, and forgets last frame's
-		// riding (this frame's collisions work it out again).
-		void applyHops(void);
-
 		// Whether `object` is right now touching any other object in play of
 		// this class - what a collision rule's unless= asks.
 		bool isTouchingClass(const Object& object, const Object& excluding, const std::string& objClass);
@@ -240,14 +229,6 @@ namespace xge
 		// Whether an edge rule with sprite= or unless= is passed over right
 		// now: the object shows another look, or touches that class.
 		bool isEdgeRulePassedOver(const Object& object, const EdgeGuard& guard);
-
-		// Moves everything shown by its velocity for one frame, stopping at each
-		// touch that has a rule on the way to run it - see the definition.
-		void moveObjects(void);
-
-		// Runs both objects' rules for touching each other; edgeOfB is the edge
-		// of b that was hit.
-		void applyObjectCollision(Object& a, Object& b, Edge edgeOfB);
 
 		// Checked once per frame against the current state's <conditions>; the
 		// first one whose target variable has reached its threshold fires its

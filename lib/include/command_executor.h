@@ -58,14 +58,8 @@ namespace xge
 	private:
 		Game& game;
 
-		void die(Object& object);
 		void bounceScreenEdge(Object& object, Edge edge);
-		void bounceOffEdge(Object& object, Edge edge);
-		void deflect(Object& object, const Object& other, Edge edge, float maxAngle);
-		void stick(Object& object, Edge edge);
 		void moveByStep(Object& object, Direction direction, float step);
-		void wrap(Object& object, Edge edge);
-		void ride(Object& object, const Object& other);
 		void queueHop(Object& object, Direction direction, float distance);
 		void startJump(Object& object, const CmdJump& jump);
 		void land(Object& object, const Object& other, Edge edge);
@@ -81,7 +75,6 @@ namespace xge
 		// <follow>: with object=, every object of that name sets off along the
 		// path (Game::follow); without, `self` does (nothing when there is none).
 		void follow(Object* self, const CmdFollow& command);
-		void stop(Object& object);
 		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
 		void applyActionTurn(Object& object, Direction direction, float rate);
 		void applyActionThrustAhead(Object& object, float amount, const std::string& burn);
@@ -89,7 +82,6 @@ namespace xge
 		void restart(Object& object);
 
 		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed);
-		void applyActionVelocity(Object& object, Direction direction, float step);
 		void spawnProjectile(Object& shooter, const std::string& projectileName);
 	};
 }

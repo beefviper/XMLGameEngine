@@ -14,6 +14,12 @@
   <file>lib/include/types.h</file>
   <file>lib/include/geometry.h</file>
   <file>lib/source/geometry.cpp</file>
+  <file>lib/include/random.h</file>
+  <file>lib/source/random.cpp</file>
+  <file>lib/include/verbs.h</file>
+  <file>lib/source/verbs.cpp</file>
+  <file>lib/include/frame.h</file>
+  <file>lib/source/frame.cpp</file>
   <file>lib/include/color.h</file>
   <file>lib/source/color.cpp</file>
   <file>lib/include/bitmap.h</file>

@@ -173,7 +173,7 @@ namespace xge
 			});
 	}
 
-	// One frame's move, as the engine plays it (Game::moveObjects): not in one
+	// One frame's move, as the engine plays it (playOneFrame): not in one
 	// jump, but from touch to touch. Of `pairs`, the two things in each that
 	// may touch, in order, sweep(pair, left) says when, through what is left
 	// of the frame, they would first touch (none: they would not, or sit this

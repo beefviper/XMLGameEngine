@@ -483,7 +483,7 @@ namespace xge
 		const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds,
 		const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths)
 	{
-		generator.seed(fixedSeed ? *fixedSeed : seed());
+		seedRandom();
 
 		checkColor(windowDesc.background, "<window> > <background>");
 
@@ -998,7 +998,7 @@ namespace xge
 		{
 			const float min = evaluateExpression(value.min, where);
 			const float max = evaluateExpression(value.max, where);
-			return randomNumberRange(min, max);
+			return randomBetween(min, max);
 		}
 
 		case RawValue::Kind::Equation:
@@ -1253,11 +1253,12 @@ namespace xge
 		}
 		else if (sprite.kind == "circle")
 		{
-			params = { "circle", std::to_string(evaluate(sprite.radius, where)), std::to_string(0), color };
+			params = circleSprite(evaluate(sprite.radius, where), color);
 		}
 		else if (sprite.kind == "rectangle")
 		{
-			params = { "rectangle", std::to_string(evaluate(sprite.width, where)), std::to_string(evaluate(sprite.height, where)), color };
+			const float rectangleWidth = evaluate(sprite.width, where);
+			params = rectangleSprite(rectangleWidth, evaluate(sprite.height, where), color);
 		}
 		else if (sprite.kind == "text")
 		{
