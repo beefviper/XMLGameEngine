@@ -71,6 +71,11 @@ namespace xge
 		// rebuilt here, on demand, and its size/visualDirty brought back up
 		// to date - the same one-time-build-then-cache pattern as init()
 		// above, just for a single object instead of all of them at once.
+		// Builds an object's visual now if it is out of date, so that its size
+		// is true before anything is drawn: a text whose number just changed
+		// can then be placed by the size it has, not the one it had.
+		virtual void prepare(Object& object) { (void)object; }
+
 		virtual void draw(Object& object) = 0;
 
 		virtual void display() = 0;

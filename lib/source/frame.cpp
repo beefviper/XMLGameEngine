@@ -134,9 +134,12 @@ namespace xge
 						object.showHeading();
 					}
 
-					if (object.activeThrustAhead != 0.0f && burnFuel(object.activeThrustAheadBurn, "thrust"))
+					for (const auto& [action, thrust] : object.activeThrustAheadBy)
 					{
-						change += ahead(object.heading) * object.activeThrustAhead;
+						if (burnFuel(thrust.second, "thrust"))
+						{
+							change += ahead(object.heading) * thrust.first;
+						}
 					}
 				}
 
@@ -240,13 +243,27 @@ namespace xge
 				}
 			}
 
-			const auto advance = [&](float fraction)
+			// Where each object is worked out from where it last was set (the start
+			// of the frame, or the moment a reaction changed it) and how much of the
+			// frame it has been going since, not by adding up the pieces: so an
+			// object no reaction touched ends the frame exactly one whole step on,
+			// however many reactions the others had.
+			std::vector<Vector2f> origin(all.size());
+			std::vector<float> since(all.size(), 0.0f);
+			for (std::size_t i = 0; i < all.size(); ++i)
 			{
-				for (auto& object : all)
+				origin[i] = all[i].position;
+			}
+			float played = 0.0f;
+
+			const auto advanceTo = [&](float total)
+			{
+				played = total;
+				for (std::size_t i = 0; i < all.size(); ++i)
 				{
-					if (rules.inPlay(object)) // TODO: at some point you might wanna collide with invisible objects
+					if (rules.inPlay(all[i])) // TODO: at some point you might wanna collide with invisible objects
 					{
-						object.position += motionOf(object) * fraction;
+						all[i].position = origin[i] + motionOf(all[i]) * (total - since[i]);
 					}
 				}
 			};
@@ -264,9 +281,33 @@ namespace xge
 				return CollisionDetector::sweep(a, motionOf(a) * left, b, motionOf(b) * left);
 			};
 
-			playFrame(pairs, sweep, advance, [&](const Pair& pair, Edge edgeOfSecond)
+			// A reaction that moved, turned, showed or hid anything starts that
+			// object again from where it is now.
+			struct Before
+			{
+				Vector2f position;
+				Vector2f motion;
+				bool inPlay;
+			};
+			std::vector<Before> before(all.size());
+
+			playFrame(pairs, sweep, advanceTo, [&](const Pair& pair, Edge edgeOfSecond)
 				{
+					for (std::size_t i = 0; i < all.size(); ++i)
+					{
+						before[i] = { all[i].position, motionOf(all[i]), rules.inPlay(all[i]) };
+					}
+
 					rules.touched(*pair.first, *pair.second, edgeOfSecond);
+
+					for (std::size_t i = 0; i < all.size(); ++i)
+					{
+						if (all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || rules.inPlay(all[i]) != before[i].inPlay)
+						{
+							origin[i] = all[i].position;
+							since[i] = played;
+						}
+					}
 				});
 
 			for (auto& object : all)

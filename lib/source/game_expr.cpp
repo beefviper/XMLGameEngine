@@ -1115,7 +1115,11 @@ namespace xge
 			// number can be held to being above 0 now: an expression may read a
 			// variable that has no value yet (and at run time a timer never
 			// waits less than one frame).
+			// (A <random> in it is checked with the generator put back after, so that
+			// checking does not use up the numbers the game will draw.)
+			const std::mt19937 drawn = randomState();
 			const float seconds = evaluate(rawTimer.interval, here);
+			setRandomState(drawn);
 			char* end = nullptr;
 			const std::string& text = rawTimer.interval.text;
 			const bool plainNumber = rawTimer.interval.kind == RawValue::Kind::Expression && !text.empty()

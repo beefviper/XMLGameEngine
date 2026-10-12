@@ -127,8 +127,15 @@ namespace xge
 		// A <condition> can change the state during updateObjects.
 		syncHeldKeysToState();
 
-		// A text that grew or shrank when last drawn (a score) needs its
-		// position worked out again for the new size.
+		// A text that grew or shrank (a score) needs its position worked out
+		// again for the new size, measured now rather than at the next draw.
+		for (auto& object : game.getCurrentObjects())
+		{
+			if (object.visualDirty && game_expr::sizeNeedsBackend(object.shapeKind))
+			{
+				window->prepare(object);
+			}
+		}
 		game.resolveSizeDependentPositions();
 
 		// Keys, collisions and conditions have all had their say.
@@ -196,6 +203,22 @@ namespace xge
 		for (const auto& command : commands)
 		{
 			commandExecutor.executeInput(command, false);
+		}
+
+		// An action is held for as long as any one of its keys is down:
+		// letting go of A while Left is still held (both move left) must not
+		// stop it.
+		for (std::size_t other = 0; other < heldCommands.size(); ++other)
+		{
+			if (other == index || !heldKeys.isDown(static_cast<KeyCode>(other)))
+			{
+				continue;
+			}
+
+			for (const auto& command : heldCommands[other])
+			{
+				commandExecutor.executeHeldInput(command);
+			}
 		}
 
 		syncHeldKeysToState();

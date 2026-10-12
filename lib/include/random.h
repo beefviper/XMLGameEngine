@@ -6,6 +6,7 @@
 #pragma once
 
 #include <optional>
+#include <random>
 
 namespace xge
 {
@@ -24,4 +25,11 @@ namespace xge
 
 	// A number from min to max (either order).
 	float randomBetween(float min, float max);
+
+	// Where the numbers are, and putting them back there: a number drawn
+	// only to check it (a timer's <random> when the game loads) is then not
+	// used up, and the game draws the same numbers as a program that never
+	// checked it.
+	std::mt19937 randomState();
+	void setRandomState(const std::mt19937& state);
 }

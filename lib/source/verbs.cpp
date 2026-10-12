@@ -106,8 +106,7 @@ namespace xge
 		object.activeThrust = {};
 		object.activeThrustBurn = {};
 		object.activeTurn = {};
-		object.activeThrustAhead = 0.0f;
-		object.activeThrustAheadBurn.clear();
+		object.activeThrustAheadBy.clear();
 		object.followPath.clear();
 	}
 

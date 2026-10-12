@@ -177,15 +177,15 @@ namespace xge
 	// jump, but from touch to touch. Of `pairs`, the two things in each that
 	// may touch, in order, sweep(pair, left) says when, through what is left
 	// of the frame, they would first touch (none: they would not, or sit this
-	// out); the earliest anywhere is found, advance(fraction) moves everything
-	// that far through the frame, react(pair, edgeOfSecond) runs that pair's
+	// out); the earliest anywhere is found, advanceTo(played) moves everything
+	// to that far through the frame (0 its start, 1 its end), react(pair, edgeOfSecond) runs that pair's
 	// rules, and the rest of the frame carries on from there with whatever
 	// velocities the rules left behind. A ball that hits a brick a third of the
 	// way through its move spends the other two thirds heading back. Each pair
 	// reacts at most once a frame, which also bounds the loop; on a tie the
 	// pair first in `pairs` goes first.
 	template <typename Pair, typename Sweep, typename Advance, typename React>
-	void playFrame(const std::vector<Pair>& pairs, Sweep sweep, Advance advance, React react)
+	void playFrame(const std::vector<Pair>& pairs, Sweep sweep, Advance advanceTo, React react)
 	{
 		std::vector<bool> handled(pairs.size(), false);
 		float played = 0.0f;
@@ -216,13 +216,13 @@ namespace xge
 			}
 
 			const float step = nextHit.time * left;
-			advance(step);
 			played += step;
+			advanceTo(played);
 			handled[*next] = true;
 			react(pairs[*next], nextHit.edgeOfSecond);
 		}
 
-		advance(1.0f - played);
+		advanceTo(1.0f);
 	}
 
 	// --- The window's edges.

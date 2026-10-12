@@ -42,4 +42,14 @@ namespace xge
 		std::uniform_real_distribution<float> distribution(min, max);
 		return distribution(generator());
 	}
+
+	std::mt19937 randomState()
+	{
+		return generator();
+	}
+
+	void setRandomState(const std::mt19937& state)
+	{
+		generator() = state;
+	}
 }

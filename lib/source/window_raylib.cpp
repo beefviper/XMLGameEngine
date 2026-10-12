@@ -200,7 +200,7 @@ namespace xge
 		ClearBackground(toRaylibColor(colorFromName(colorName)));
 	}
 
-	void RaylibWindow::draw(Object& object)
+	void RaylibWindow::prepare(Object& object)
 	{
 		CachedVisual& visual = visuals[object.name];
 
@@ -211,6 +211,12 @@ namespace xge
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);
 		}
+	}
+
+	void RaylibWindow::draw(Object& object)
+	{
+		prepare(object);
+		CachedVisual& visual = visuals[object.name];
 
 		const Texture2D& texture = visual.renderTexture.texture;
 
