@@ -106,6 +106,9 @@ xge_warnings(xgetest)
 
 target_link_libraries(xgetest PRIVATE xgelib Catch2::Catch2WithMain)
 
+# test_generate.cpp runs --generate, which needs libxslt.
+xge_link_xslt(xgetest)
+
 # Every game, generated (xgecli --generate windows-cpp) into the build folder
 # as the build runs, and its data (source/<game>.cpp) compiled into the tests:
 # test_generated_games.cpp plays each one against its file, frame by frame.

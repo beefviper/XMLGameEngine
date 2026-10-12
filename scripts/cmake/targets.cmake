@@ -94,3 +94,15 @@ if (EXPRTK_PACKAGE_FOUND)
 else()
 	target_link_libraries(xgelib PUBLIC exprtk)
 endif()
+
+# libxslt for xgecli's --generate (cli/source/generate.cpp), and for the tests
+# that compile that file in again. XGE_WITH_XSLT is 1 when it was found, so the
+# file can say, when it was not, that this program cannot generate.
+function(xge_link_xslt target)
+	if (LibXslt_FOUND AND LibXml2_FOUND)
+		target_compile_definitions(${target} PRIVATE XGE_WITH_XSLT=1)
+		target_link_libraries(${target} PRIVATE LibXslt::LibXslt LibXslt::LibExslt LibXml2::LibXml2)
+	else()
+		target_compile_definitions(${target} PRIVATE XGE_WITH_XSLT=0)
+	endif()
+endfunction()

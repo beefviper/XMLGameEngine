@@ -39,9 +39,10 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 Reasons and details: [generator](../designs/40-generator.md).
 
-- A generated program is the engine with the game built in: `generate.cpp` writes the `GameData` that `readGame` read as C++ (`writeGameData`), and copies `engineFiles()` from `lib/` unchanged. A new field in a `Raw*` struct, `GameData` or `WindowDesc` needs a line in `DataWriter` (`generate.cpp`), or generated games silently lose it; `test_generated_games.cpp` catches it only if it changes how a game plays in its 900 frames.
-- `engineFiles()` and `data_engine` in `assets.cmake` must list the same files; `test_generate.cpp` checks every copied file's includes are copied too. A new engine source a generated program needs goes in both; one that reads XML or chooses among libraries must stay out (keep `game.cpp`, `engine.cpp` free of `game_xml.h`, `xml_document.h` and the factories).
-- The tests generate every game as the build runs (`tests.cmake`, into `build/generated/`) and compile the data in; the function name rule there must match `gameFunctionName`.
+- A generated program is the engine with the game built in: `generators/windows-cpp/data.xsl` writes the `GameData` the engine would read from the file as C++, and xgecli copies the files `engine.xml` lists from `lib/` unchanged. `data.xsl` is a second reader of the file: a new tag, or a new field in a `Raw*` struct, `GameData` or `WindowDesc`, needs the same in `data.xsl` (and the describer in `test_generated_games.cpp`), and maybe a helper in `modules/game_parts.h`. The data test there compares every field with `readGame`'s for every game.
+- XSLT comments cannot hold `--` (so no `--generate` in them); libxml2 refuses the stylesheet.
+- `engine.xml` and `data_engine` in `assets.cmake` must list the same files, and `data_generators` every stylesheet; `test_generate.cpp` checks every copied file's includes are copied too. A new engine source a generated program needs goes in both; one that reads XML or chooses among libraries must stay out (keep `game.cpp`, `engine.cpp` free of `game_xml.h`, `xml_document.h` and the factories).
+- The tests generate every game as the build runs (`tests.cmake`, into `build/generated/`) and compile the data in; the function name rule there must match `gameFunctionName` and `camel` in `text.xsl`.
 - Galaxian: `Game::applyPaths` runs after timers, before acceleration, and a path ignores pushes on the way. Anything ending a path clears `Object::followPath`. Its dive relies on `<wrap />` taking exactly window height plus the object's height.
 
 ## xgegui

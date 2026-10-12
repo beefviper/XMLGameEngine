@@ -56,8 +56,8 @@ namespace xge
 			{ "none",   AudioBackend::None },
 		};
 
-		// What --generate can write a game out as: a platform and a language
-		// (generate.cpp).
+		// What --generate can write a game out as: a platform and a language,
+		// each a folder of stylesheets in generators/.
 		constexpr std::string_view generateNames[] = {
 			"windows-cpp",
 		};

@@ -3,11 +3,12 @@
 // author: beefviper
 // date: Oct 5, 2026
 //
-// Catch2 tests for xgecli --generate (cli/source/generate.cpp): the program
-// it writes is the game as the engine's own data, a main() that plays it with
-// the engine's Game and Engine on SFML, and the engine's files copied in
-// unchanged, nothing of XML or of the other libraries among them. That the
-// data is the same game as the file, frame by frame, is in
+// Catch2 tests for xgecli --generate (cli/source/generate.cpp, running the
+// stylesheets in generators/windows-cpp): the program it writes is the game
+// as the engine's own data, a main() that plays it with the engine's Game and
+// Engine on SFML, and the engine's files copied in unchanged, nothing of XML
+// or of the other libraries among them. That the data is the same game as
+// the file, field by field and frame by frame, is in
 // test_generated_games.cpp, which compiles it.
 
 #include "game.h"
@@ -65,6 +66,7 @@ namespace
 		GenerateRequest request;
 		request.gameFile = game;
 		request.target = target;
+		request.generators = fs::current_path() / "generators";
 		request.dataFolder = fs::current_path();
 		request.output = output;
 		return request;
@@ -87,7 +89,7 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "games/pong_min.xml", folder.path / "out"));
 	const fs::path out = folder.path / "out";
 
-	for (const char* file : { "source/pong_min.cpp", "source/main.cpp", "CMakeLists.txt", "README.md", ".gitignore" })
+	for (const char* file : { "source/pong_min.cpp", "source/main.cpp", "source/game_parts.h", "CMakeLists.txt", "README.md", ".gitignore" })
 	{
 		INFO(file);
 		CHECK(fs::exists(out / file));
@@ -103,20 +105,20 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	CHECK(main.find("audio = std::make_unique<xge::SFMLAudio>();") != std::string::npos);
 	CHECK(main.find("engine.loop();") != std::string::npos);
 
-	// the game is what the engine reads from the file, field by field
+	// the game is what the engine reads from the file, a line for each tag
 	const std::string data = readFile(out / "source/pong_min.cpp");
 	CHECK(data.rfind("// pong_min.cpp\n// XML Game Engine\n", 0) == 0);
-	CHECK(data.find("#include \"game_data.h\"") != std::string::npos);
+	CHECK(data.find("#include \"game_parts.h\"") != std::string::npos);
 	CHECK(data.find("xge::GameData pongMinGame()\n{") != std::string::npos);
 	CHECK(data.find("\t// <object name=\"ball\">\n\tRawObject ballObject()\n\t{\n\t\tRawObject object;\n\t\tobject.name = \"ball\";") != std::string::npos);
-	CHECK(data.find("\t\tobject.sprite.kind = \"circle\";") != std::string::npos);
-	CHECK(data.find("object.rawCollisionData.enabled = true;") != std::string::npos);
-	CHECK(data.find("verb(\"bounce\")") != std::string::npos);
+	CHECK(data.find("\t\tobject.sprite = sprite(\"circle\", \"\", [](RawSprite& look)") != std::string::npos);
+	CHECK(data.find("\t\tobject.rawCollisionData.enabled = true;") != std::string::npos);
+	CHECK(data.find("edge(object.rawCollisionData, \"vertical\", { verb(\"bounce\") });") != std::string::npos);
 	CHECK(data.find("\tgame.objects = objects();") != std::string::npos);
-	// only the helpers it uses: pong_min has no <random>, <equation> or <sound>
-	CHECK(data.find("RawValue value(std::string text)") != std::string::npos);
-	CHECK(data.find("RawValue arithmetic(") == std::string::npos);
 	CHECK(data.find("std::vector<RawSound> sounds()") == std::string::npos);
+
+	// game_parts.h is the target's own, copied unchanged
+	CHECK(readFile(out / "source/game_parts.h") == readFile(fs::current_path() / "generators/windows-cpp/modules/game_parts.h"));
 
 	// the build compiles the engine's files beside them, with the engine's warnings
 	const std::string cmake = readFile(out / "CMakeLists.txt");
@@ -129,16 +131,25 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 TEST_CASE("a generated program carries the engine's files unchanged, and none of its XML or library choosing", "[generate]")
 {
 	TempFolder folder("xge_test_generate_engine_files");
-	generateGame(requestFor(fs::current_path() / "games/pong.xml", folder.path / "out"));
+	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "games/pong.xml", folder.path / "out"));
 	const fs::path engine = folder.path / "out/engine";
 
 	std::set<std::string> copied;
-	for (const fs::path& file : engineFiles())
+	for (const fs::path& file : program.files)
 	{
+		if (file.parent_path() != "engine")
+		{
+			continue;
+		}
 		INFO(file.generic_string());
-		CHECK(readFile(engine / file.filename()) == readFile(fs::current_path() / file));
-		copied.insert(file.filename().string());
+		const std::string name = file.filename().string();
+		const fs::path original = fs::current_path() / "lib" / (name.ends_with(".cpp") ? "source" : "include") / name;
+		CHECK(readFile(engine / name) == readFile(original));
+		copied.insert(name);
 	}
+	REQUIRE(copied.count("engine.cpp") == 1);
+	REQUIRE(copied.count("game.cpp") == 1);
+	copied.insert("game_parts.h");
 	for (const char* left : { "game_xml.h", "game_xml.cpp", "xml_document.h", "xsd_lite.h", "window.cpp", "audio.cpp", "engine_backends.cpp",
 		"window_raylib.h", "window_sdl2.h", "window_opengl.h", "audio_raylib.h", "audio_sdl2.h", "data_folder.h" })
 	{
@@ -151,7 +162,7 @@ TEST_CASE("a generated program carries the engine's files unchanged, and none of
 	// from them alone.
 	for (const std::string& name : copied)
 	{
-		std::istringstream lines(readFile(engine / name));
+		std::istringstream lines(readFile(name == "game_parts.h" ? folder.path / "out/source" / name : engine / name));
 		for (std::string line; std::getline(lines, line);)
 		{
 			if (line.rfind("#include \"", 0) != 0)
@@ -175,7 +186,7 @@ TEST_CASE("a generated program copies the font and pictures its game uses", "[ge
 	CHECK(fs::exists(folder.path / "out/assets/paddle.jpg"));
 }
 
-TEST_CASE("a group is written as its members, each as what it changes of the one before", "[generate]")
+TEST_CASE("a group is written as what it gives its members, then a line for each member or cell", "[generate]")
 {
 	TempFolder folder("xge_test_generate_group");
 	generateGame(requestFor(fs::current_path() / "games/spaceinvaders.xml", folder.path / "out"));
@@ -191,9 +202,9 @@ TEST_CASE("a group is written as its members, each as what it changes of the one
 		}
 	}
 	REQUIRE(members > 55);
-	CHECK(data.find("std::vector<RawObject> aliensGroup()") != std::string::npos);
-	CHECK(count(data, "\t\tmember.name = ") == members);
-	CHECK(count(data, "\t\tmembers.push_back(member);\n") >= members);
+	CHECK(data.find("\tvoid aliensGroup(std::vector<RawObject>& all)") != std::string::npos);
+	CHECK(data.find("\t\tMember group;\n") != std::string::npos);
+	CHECK(count(data, "\t\tall.push_back(place(made(group, ") + count(data, "\t\tall.push_back(finish(made(group, ") == members);
 }
 
 TEST_CASE("a game the engine will not load is not generated, and the folder made for it goes", "[generate]")
@@ -207,6 +218,16 @@ TEST_CASE("a game the engine will not load is not generated, and the folder made
 
 	CHECK_THROWS_AS(generateGame(requestFor(fs::current_path() / "games/pong.xml", folder.path / "other", "amiga-asm")), GenerateError);
 	CHECK_FALSE(fs::exists(folder.path / "other"));
+
+	// a stylesheet that stops leaves no half a program behind
+	fs::create_directories(folder.path / "generators/stops");
+	std::ofstream(folder.path / "generators/stops/generate.xsl")
+		<< "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">"
+		   "<xsl:template match=\"/\"><xsl:message terminate=\"yes\">cannot</xsl:message></xsl:template></xsl:stylesheet>";
+	GenerateRequest stops = requestFor(fs::current_path() / "games/pong.xml", folder.path / "stopped", "stops");
+	stops.generators = folder.path / "generators";
+	CHECK_THROWS_AS(generateGame(stops), GenerateError);
+	CHECK_FALSE(fs::exists(folder.path / "stopped"));
 }
 
 TEST_CASE("the function a game is written as is named for its file", "[generate]")

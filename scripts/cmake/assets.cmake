@@ -42,8 +42,18 @@ set(data_assets
 	"assets/paddle.jpg"
 	"assets/Space Invaders Color Sprites.svg")
 
+# The stylesheets xgecli --generate runs, a folder per target (generate.cpp),
+# and the target's modules, copied into a program unchanged.
+set(data_generators
+	"generators/windows-cpp/generate.xsl"
+	"generators/windows-cpp/text.xsl"
+	"generators/windows-cpp/data.xsl"
+	"generators/windows-cpp/program.xsl"
+	"generators/windows-cpp/engine.xml"
+	"generators/windows-cpp/modules/game_parts.h")
+
 # The engine's own files a generated program compiles unchanged
-# (xge::engineFiles in cli/source/generate.cpp, which this list must match):
+# (generators/windows-cpp/engine.xml, which this list must match):
 # the whole engine but for reading XML and choosing among libraries. Copied
 # under lib/ as they are here; they are already the engine's sources, so they
 # are not listed again beside the data.
@@ -90,7 +100,7 @@ set(data_engine
 	"lib/source/engine.cpp")
 
 set(data_outputs "")
-foreach(item IN LISTS data_xsd data_xml data_assets data_engine)
+foreach(item IN LISTS data_xsd data_xml data_assets data_generators data_engine)
 	message(STATUS ${item})
 	add_custom_command(
 		OUTPUT "${XGE_OUTPUT_DIR}/${item}"
@@ -101,7 +111,7 @@ endforeach()
 
 add_custom_target(xgedata ALL
 	DEPENDS ${data_outputs}
-	SOURCES	${data_xsd} ${data_xml} ${data_assets})
+	SOURCES	${data_xsd} ${data_xml} ${data_assets} ${data_generators})
 
 function(add_data_source_group group_name)
 	source_group("${group_name}" FILES ${ARGN})
@@ -110,3 +120,4 @@ endfunction()
 add_data_source_group("XSD Files" ${data_xsd})
 add_data_source_group("XML Files" ${data_xml})
 add_data_source_group("Asset Files" ${data_assets})
+add_data_source_group("Generator Files" ${data_generators})

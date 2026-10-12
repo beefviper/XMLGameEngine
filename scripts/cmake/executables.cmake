@@ -101,3 +101,6 @@ endforeach()
 
 # cli/include is not part of the library's include directory: only xgecli uses it.
 target_include_directories(xgecli PRIVATE cli/include)
+
+# --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
+xge_link_xslt(xgecli)

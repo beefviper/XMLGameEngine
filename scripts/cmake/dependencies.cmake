@@ -218,6 +218,19 @@ xge_dependency(Qt6
 	PACKAGE Qt6 COMPONENTS Widgets
 	MISSING "xgegui will not be built (install qtbase with the widgets feature).")
 
+# libxslt runs the stylesheets that turn a game into a program (xgecli
+# --generate, cli/source/generate.cpp); it is built on libxml2, and EXSLT (part
+# of it) lets one stylesheet write several files. Only xgecli uses it, and it is
+# found, never fetched: without it xgecli is built without --generate. With
+# vcpkg: vcpkg install libxslt (Linux: libxslt1-dev).
+xge_dependency(LibXml2
+	PACKAGE LibXml2
+	MISSING "xgecli will be built without --generate (install libxml2 and libxslt).")
+
+xge_dependency(LibXslt
+	PACKAGE LibXslt
+	MISSING "xgecli will be built without --generate (install libxslt).")
+
 # Compiles a fetched library's own sources with no warnings at all (the targets
 # of its directory and of every directory below it): they are not this
 # project's code to fix, and the warning levels of xge_warnings (platform.cmake)

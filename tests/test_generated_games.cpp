@@ -4,19 +4,23 @@
 // date: Oct 11, 2026
 //
 // Catch2 tests that a generated program plays its game as xgecli does: each
-// game in games/ is generated as the build runs (tests.cmake), its data
-// compiled in here, and played beside the game read from its file, the same
-// keys pressed at the same frames and the same random numbers drawn, every
-// object compared every frame.
+// game in games/ is generated as the build runs (tests.cmake), by the
+// stylesheets in generators/windows-cpp, and its data compiled in here. The
+// data must be what the engine reads from the file, every field of it; and
+// played beside the game read from its file, the same keys pressed at the
+// same frames and the same random numbers drawn, every object is compared
+// every frame.
 
 #include "engine.h"
 #include "game.h"
 #include "game_expr.h"
+#include "game_xml.h"
 #include "generated_games.h"
 #include "window.h"
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -89,10 +93,245 @@ namespace
 		return shots;
 	}
 
+	// Every field of a game's data, a line each, so two can be compared and
+	// the first place they differ shown.
+	class Describe
+	{
+	public:
+		std::ostringstream out;
+
+		void value(const std::string& at, const RawValue& v)
+		{
+			out << at << " = " << static_cast<int>(v.kind) << " [" << v.text << "] [" << v.min << "] [" << v.max << "]\n";
+			if (v.operations)
+			{
+				for (std::size_t i = 0; i < v.operations->size(); ++i)
+				{
+					const RawOperation& op = (*v.operations)[i];
+					const std::string here = at + ".op" + std::to_string(i);
+					out << here << " " << op.op << " [" << op.name << "]\n";
+					for (std::size_t j = 0; j < op.operands.size(); ++j)
+					{
+						value(here + "." + op.operands[j].role + std::to_string(j), op.operands[j].value);
+					}
+				}
+			}
+		}
+
+		void text(const std::string& at, const std::string& t) { out << at << " = [" << t << "]\n"; }
+		void flag(const std::string& at, bool b) { out << at << " = " << b << "\n"; }
+
+		void vector2(const std::string& at, const RawVector2& v)
+		{
+			value(at + ".x", v.x);
+			value(at + ".y", v.y);
+		}
+
+		void command(const std::string& at, const RawCommand& c)
+		{
+			out << at << " " << c.verb << " [" << c.object << "|" << c.variable << "|" << c.state << "|" << c.action << "|" << c.direction
+				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "]\n";
+			value(at + ".amount", c.amount);
+			value(at + ".seconds", c.seconds);
+			value(at + ".distance", c.distance);
+		}
+
+		void commands(const std::string& at, const std::vector<RawCommand>& list)
+		{
+			out << at << " count " << list.size() << "\n";
+			for (std::size_t i = 0; i < list.size(); ++i) { command(at + "[" + std::to_string(i) + "]", list[i]); }
+		}
+
+		void timers(const std::string& at, const std::vector<RawTimer>& list)
+		{
+			out << at << " count " << list.size() << "\n";
+			for (std::size_t i = 0; i < list.size(); ++i)
+			{
+				const std::string here = at + "[" + std::to_string(i) + "]";
+				flag(here + ".repeat", list[i].repeat);
+				value(here + ".interval", list[i].interval);
+				commands(here + ".commands", list[i].commands);
+			}
+		}
+
+		void sprite(const std::string& at, const RawSprite& s)
+		{
+			text(at + ".kind", s.kind);
+			text(at + ".name", s.name);
+			out << at << ".lines count " << s.lines.size() << "\n";
+			for (std::size_t i = 0; i < s.lines.size(); ++i)
+			{
+				const std::string here = at + ".line" + std::to_string(i);
+				vector2(here + ".from", s.lines[i].from);
+				vector2(here + ".to", s.lines[i].to);
+				text(here + ".color", s.lines[i].color);
+				value(here + ".thickness", s.lines[i].thickness);
+				flag(here + ".hasThickness", s.lines[i].hasThickness);
+			}
+			for (const std::string& row : s.bitmapRows) { text(at + ".row", row); }
+			value(at + ".scale", s.scale);
+			flag(at + ".hasScale", s.hasScale);
+			value(at + ".svgX", s.svgX);
+			value(at + ".svgY", s.svgY);
+			value(at + ".svgWidth", s.svgWidth);
+			value(at + ".svgHeight", s.svgHeight);
+			flag(at + ".hasSvgRegion", s.hasSvgRegion);
+			for (const std::string& hide : s.svgHide) { text(at + ".hide", hide); }
+			value(at + ".radius", s.radius);
+			value(at + ".width", s.width);
+			value(at + ".height", s.height);
+			value(at + ".size", s.size);
+			text(at + ".content", s.content);
+			flag(at + ".textIsNumber", s.textIsNumber);
+			value(at + ".number", s.number);
+			text(at + ".path", s.path);
+			text(at + ".flip", s.flip);
+			text(at + ".color", s.color);
+		}
+
+		void guards(const std::string& at, const std::vector<EdgeGuard>& list)
+		{
+			for (const EdgeGuard& g : list) { out << at << " " << g.first << " " << g.count << " [" << g.sprite << "] [" << g.unlessClass << "]\n"; }
+		}
+
+		void object(const std::string& at, const RawObject& o)
+		{
+			text(at + ".name", o.name);
+			text(at + ".class", o.objClass);
+			sprite(at + ".sprite", o.sprite);
+			flag(at + ".hasAnimation", o.hasAnimation);
+			value(at + ".animation.interval", o.animation.interval);
+			for (std::size_t i = 0; i < o.animation.frames.size(); ++i) { sprite(at + ".frame" + std::to_string(i), o.animation.frames[i]); }
+			for (std::size_t i = 0; i < o.looks.size(); ++i) { sprite(at + ".look" + std::to_string(i), o.looks[i]); }
+			flag(at + ".isVisible", o.isVisible);
+			vector2(at + ".position", o.rawPosition);
+			vector2(at + ".velocity", o.rawVelocity);
+			vector2(at + ".acceleration", o.rawAcceleration);
+			flag(at + ".hasAcceleration", o.hasAcceleration);
+			value(at + ".heading", o.rawHeading);
+			flag(at + ".hasHeading", o.hasHeading);
+			value(at + ".drag", o.rawDrag);
+			flag(at + ".hasDrag", o.hasDrag);
+			text(at + ".facing", o.facing);
+			timers(at + ".timers", o.timers);
+			const RawCollisionData& c = o.rawCollisionData;
+			flag(at + ".collisions.enabled", c.enabled);
+			flag(at + ".collisions.lockstep", c.lockstep);
+			out << at << ".collisions.type " << static_cast<int>(c.type) << "\n";
+			commands(at + ".top", c.top);
+			commands(at + ".bottom", c.bottom);
+			commands(at + ".left", c.left);
+			commands(at + ".right", c.right);
+			guards(at + ".topGuards", c.topGuards);
+			guards(at + ".bottomGuards", c.bottomGuards);
+			guards(at + ".leftGuards", c.leftGuards);
+			guards(at + ".rightGuards", c.rightGuards);
+			for (std::size_t i = 0; i < c.basic.size(); ++i)
+			{
+				const RawCollisionRule& r = c.basic[i];
+				const std::string here = at + ".rule" + std::to_string(i);
+				out << here << " [" << r.filterClass << "|" << r.filterObject << "|" << r.unlessClass << "|" << r.whileSprite << "]\n";
+				if (r.slower) { value(here + ".slower", *r.slower); }
+				if (r.faster) { value(here + ".faster", *r.faster); }
+				commands(here + ".commands", r.commands);
+			}
+			for (const auto& [name, list] : o.action) { commands(at + ".action." + name, list); }
+			for (const auto& [name, v] : o.variable) { value(at + ".variable." + name, v); }
+			text(at + ".group", o.groupName);
+			out << at << ".cell " << o.cell.column << " " << o.cell.row << "\n";
+			sprite(at + ".cell.slot", o.cell.slot);
+			value(at + ".cell.gapBefore", o.cell.gapBefore);
+			value(at + ".cell.gapAbove", o.cell.gapAbove);
+		}
+
+		void game(const GameData& g)
+		{
+			out << "window [" << g.window.name << "] " << g.window.width << " " << g.window.height << " [" << g.window.background << "] ["
+				<< g.window.fullscreen << "] " << g.window.framerate << "\n";
+			for (const auto& [name, v] : g.variables) { value("variable " + name, v); }
+			for (const RawObject& o : g.objects) { object("object " + o.name, o); }
+			for (const RawState& s : g.states)
+			{
+				const std::string at = "state " + s.name;
+				for (const std::string& shown : s.show) { text(at + ".show", shown); }
+				for (const auto& [button, list] : s.input) { commands(at + ".input." + button, list); }
+				for (std::size_t i = 0; i < s.conditions.size(); ++i)
+				{
+					const RawCondition& c = s.conditions[i];
+					const std::string here = at + ".condition" + std::to_string(i);
+					out << here << " [" << c.filterClass << "|" << c.filterObject << "|" << c.variableName << "] " << static_cast<int>(c.test) << "\n";
+					value(here + ".threshold", c.threshold);
+					commands(here + ".commands", c.commands);
+				}
+				timers(at + ".timers", s.timers);
+			}
+			for (const RawSound& s : g.sounds)
+			{
+				const std::string at = "sound " + s.name;
+				text(at + ".wave", s.wave);
+				value(at + ".volume", s.volume);
+				for (std::size_t i = 0; i < s.notes.size(); ++i)
+				{
+					const RawNote& n = s.notes[i];
+					const std::string here = at + ".note" + std::to_string(i);
+					out << here << " " << n.rest << " [" << n.wave << "|" << n.pitch << "|" << n.to << "]\n";
+					value(here + ".length", n.length);
+				}
+			}
+			for (const RawPath& p : g.paths)
+			{
+				const std::string at = "path " + p.name;
+				value(at + ".speed", p.speed);
+				flag(at + ".hasStart", p.hasStart);
+				value(at + ".startX", p.startX);
+				value(at + ".startY", p.startY);
+				for (std::size_t i = 0; i < p.steps.size(); ++i)
+				{
+					const std::string here = at + ".step" + std::to_string(i);
+					flag(here + ".home", p.steps[i].home);
+					value(here + ".x", p.steps[i].x);
+					value(here + ".y", p.steps[i].y);
+					commands(here + ".commands", p.steps[i].commands);
+				}
+			}
+		}
+	};
+
+	std::vector<std::string> describe(const GameData& game)
+	{
+		Describe d;
+		d.game(game);
+		std::vector<std::string> lines;
+		std::istringstream in(d.out.str());
+		for (std::string line; std::getline(in, line);) { lines.push_back(line); }
+		return lines;
+	}
+
 	struct SeedReset
 	{
 		~SeedReset() { game_expr::fixRandomSeed(std::nullopt); }
 	};
+}
+
+TEST_CASE("every generated game's data is what the engine reads from its file, field for field", "[generate][generated_games]")
+{
+	for (const GeneratedGame& each : generatedGames)
+	{
+		INFO(each.file);
+		const std::vector<std::string> expected = describe(readGame(each.file));
+		const std::vector<std::string> written = describe(each.describe());
+
+		for (std::size_t line = 0; line < std::max(expected.size(), written.size()); ++line)
+		{
+			const std::string want = line < expected.size() ? expected[line] : "(nothing)";
+			const std::string got = line < written.size() ? written[line] : "(nothing)";
+			if (want != got)
+			{
+				INFO("line " << line << "\nfrom the file: " << want << "\ngenerated:     " << got);
+				FAIL("the generated data differs from the file");
+			}
+		}
+	}
 }
 
 TEST_CASE("every generated game plays frame for frame as the engine plays its file", "[generate][generated_games]")

@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
 		xge::GenerateRequest request;
 		request.gameFile = filename;
 		request.target = options.generate;
+		request.generators = base / "generators";
 		request.dataFolder = base;
 		request.output = std::filesystem::absolute(options.output.empty()
 			? std::filesystem::path(std::filesystem::path(filename).stem().string() + "-" + options.generate)

@@ -45,7 +45,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 
 | File | Topic | Status |
 |---|---|---|
-| [generator](40-generator.md) | `windows-cpp`: the game as the engine's data, played by the engine's own code; the XSLT target it replaced | Built |
+| [generator](40-generator.md) | `windows-cpp`: XSLT writes the game as the engine's data, played by the engine's own code | Built |
 
 ## Engine, tools and games
 
