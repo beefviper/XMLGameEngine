@@ -32,7 +32,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 - SDL is shared by `SDL2Window` and `SDL2Audio`: each starts only its subsystem, the last out calls `SDL_Quit()`.
 - Backend `.cpp` files compile only behind `XGE_WITH_<NAME>`; factories expose `available()`, `availableBackends()`, `defaultBackend()`, `name()`. Build with no options as well as with tests when touching factories, `cli.cpp` or `session_options.cpp`.
 - Windows headers define `near`, `far` and `small`: never use them as names (MSVC fails far from the cause; `-Dnear= -Dfar=` on a syntax-only compile catches it).
-- SFML and raylib both static from source fail to link on Linux (duplicate `stbi_*`, miniaudio); a CMake target named `m` collides with plutovg's `-lm` ([build-and-layout](../designs/51-build-and-layout.md)).
+- SFML and raylib both static from source fail to link on Linux (duplicate `stbi_*`, miniaudio; `-DBUILD_SHARED_LIBS=ON` builds the fetched libraries shared and links); a CMake target named `m` collides with plutovg's `-lm` ([build-and-layout](../designs/51-build-and-layout.md)).
 - `-Wdouble-promotion` is GCC only on purpose.
 
 ## Generator (`xgecli --generate windows-cpp`)
@@ -40,6 +40,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 Reasons and details: [generator](../designs/40-generator.md).
 
 - A generated program is the engine with the game built in: `generators/windows-cpp/data.xsl` writes the `GameData` the engine would read from the file as C++, and xgecli copies the files `engine.xml` lists from `lib/` unchanged. `data.xsl` is a second reader of the file: a new tag, or a new field in a `Raw*` struct, `GameData` or `WindowDesc`, needs the same in `data.xsl` (and the describer in `test_generated_games.cpp`), and maybe a helper in `modules/game_parts.h`. The data test there compares every field with `readGame`'s for every game.
+- Keep generated functions short in statements that make big temporaries: a Debug build (MSVC, GCC -O0) gives every statement its own stack slots, and a long run of `RawObject`s in one function overflowed a 1 MB stack (Breakout's bricks); put such a line in a helper (`addCell`, `addMember` in `game_parts.h`). Check with a Debug build under `ulimit -s 1024`.
 - XSLT comments cannot hold `--` (so no `--generate` in them); libxml2 refuses the stylesheet.
 - `engine.xml` and `data_engine` in `assets.cmake` must list the same files, and `data_generators` every stylesheet; `test_generate.cpp` checks every copied file's includes are copied too. A new engine source a generated program needs goes in both; one that reads XML or chooses among libraries must stay out (keep `game.cpp`, `engine.cpp` free of `game_xml.h`, `xml_document.h` and the factories).
 - The tests generate every game as the build runs (`tests.cmake`, into `build/generated/`) and compile the data in; the function name rule there must match `gameFunctionName` and `camel` in `text.xsl`.
