@@ -537,6 +537,15 @@
       <show object="bucketsvalue" />
     </shows>
 
+    <!-- out of buckets -->
+    <conditions name="dead">
+      <condition object="bucket" variable="buckets">
+        <atmost>0</atmost>
+        <push state="gameover" />
+        <play sound="gameover" />
+      </condition>
+    </conditions>
+
     <state name="mainmenu">
       <shows>
         <show object="title" />
@@ -560,11 +569,7 @@
       </shows>
       <inputs keys="bucket" />
       <conditions>
-        <condition object="bucket" variable="buckets">
-          <atmost>0</atmost>
-          <push state="gameover" />
-          <play sound="gameover" />
-        </condition>
+        <condition set="dead" />
         <condition object="bucket" variable="score">
           <atleast>wave2at</atleast>
           <reset object="bombs1" />
@@ -582,11 +587,7 @@
       </shows>
       <inputs keys="bucket" />
       <conditions>
-        <condition object="bucket" variable="buckets">
-          <atmost>0</atmost>
-          <push state="gameover" />
-          <play sound="gameover" />
-        </condition>
+        <condition set="dead" />
         <condition object="bucket" variable="score">
           <atleast>wave3at</atleast>
           <reset object="bombs2" />
@@ -604,11 +605,7 @@
       </shows>
       <inputs keys="bucket" />
       <conditions>
-        <condition object="bucket" variable="buckets">
-          <atmost>0</atmost>
-          <push state="gameover" />
-          <play sound="gameover" />
-        </condition>
+        <condition set="dead" />
         <condition object="bucket" variable="score">
           <atleast>goal</atleast>
           <reset object="bombs3" />

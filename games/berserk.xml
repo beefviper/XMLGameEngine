@@ -1364,6 +1364,24 @@
       <show set="hud" />
     </shows>
 
+    <!-- out of lives -->
+    <conditions name="dead">
+      <condition object="player" variable="lives">
+        <atmost>0</atmost>
+        <push state="gameover" />
+      </condition>
+    </conditions>
+
+    <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
+    <conditions name="extralife">
+      <condition object="player" variable="lifepoints">
+        <atleast>2000</atleast>
+        <inc variable="player.lives">1</inc>
+        <dec variable="player.lifepoints">2000</dec>
+        <play sound="extralife" />
+      </condition>
+    </conditions>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -1388,10 +1406,7 @@
       </shows>
       <inputs keys="man" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <!-- through an exit: tidy this room and go on to the next -->
         <condition object="player" variable="exited">
           <atleast>1</atleast>
@@ -1405,13 +1420,7 @@
           <reset object="robots1up" />
           <pop state="room2" />
         </condition>
-        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
-        <condition object="player" variable="lifepoints">
-          <atleast>2000</atleast>
-          <inc variable="player.lives">1</inc>
-          <dec variable="player.lifepoints">2000</dec>
-          <play sound="extralife" />
-        </condition>
+        <condition set="extralife" />
         <!-- every robot of the room shot: ten more for each of them -->
         <condition object="tally1" variable="kills">
           <atleast>3</atleast>
@@ -1445,10 +1454,7 @@
       </shows>
       <inputs keys="man" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <!-- through an exit: tidy this room and go on to the next -->
         <condition object="player" variable="exited">
           <atleast>1</atleast>
@@ -1461,13 +1467,7 @@
           <reset object="robots2right" />
           <pop state="room3" />
         </condition>
-        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
-        <condition object="player" variable="lifepoints">
-          <atleast>2000</atleast>
-          <inc variable="player.lives">1</inc>
-          <dec variable="player.lifepoints">2000</dec>
-          <play sound="extralife" />
-        </condition>
+        <condition set="extralife" />
         <!-- every robot of the room shot: ten more for each of them -->
         <condition object="tally2" variable="kills">
           <atleast>4</atleast>
@@ -1502,10 +1502,7 @@
       </shows>
       <inputs keys="man" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <!-- through an exit: tidy this room and go on to the next -->
         <condition object="player" variable="exited">
           <atleast>1</atleast>
@@ -1519,13 +1516,7 @@
           <reset object="robots3up" />
           <pop state="room4" />
         </condition>
-        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
-        <condition object="player" variable="lifepoints">
-          <atleast>2000</atleast>
-          <inc variable="player.lives">1</inc>
-          <dec variable="player.lifepoints">2000</dec>
-          <play sound="extralife" />
-        </condition>
+        <condition set="extralife" />
         <!-- every robot of the room shot: ten more for each of them -->
         <condition object="tally3" variable="kills">
           <atleast>5</atleast>
@@ -1560,10 +1551,7 @@
       </shows>
       <inputs keys="man" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <!-- through an exit: tidy this room and go on to the next -->
         <condition object="player" variable="exited">
           <atleast>1</atleast>
@@ -1577,13 +1565,7 @@
           <reset object="robots4down" />
           <pop state="room1" />
         </condition>
-        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
-        <condition object="player" variable="lifepoints">
-          <atleast>2000</atleast>
-          <inc variable="player.lives">1</inc>
-          <dec variable="player.lifepoints">2000</dec>
-          <play sound="extralife" />
-        </condition>
+        <condition set="extralife" />
         <!-- every robot of the room shot: ten more for each of them -->
         <condition object="tally4" variable="kills">
           <atleast>6</atleast>

@@ -548,6 +548,14 @@
       <show object="score" />
     </shows>
 
+    <!-- every city gone -->
+    <conditions name="ending">
+      <condition class="city">
+        <remaining>0</remaining>
+        <push state="theend" />
+      </condition>
+    </conditions>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -568,10 +576,7 @@
       </shows>
       <inputs keys="command" />
       <conditions>
-        <condition class="city">
-          <remaining>0</remaining>
-          <push state="theend" />
-        </condition>
+        <condition set="ending" />
         <condition object="status" variable="spent">
           <atleast>wave1</atleast>
           <dec variable="status.spent">wave1</dec>
@@ -588,10 +593,7 @@
       </shows>
       <inputs keys="command" />
       <conditions>
-        <condition class="city">
-          <remaining>0</remaining>
-          <push state="theend" />
-        </condition>
+        <condition set="ending" />
         <condition object="status" variable="spent">
           <atleast>wave2</atleast>
           <dec variable="status.spent">wave2</dec>
@@ -608,10 +610,7 @@
       </shows>
       <inputs keys="command" />
       <conditions>
-        <condition class="city">
-          <remaining>0</remaining>
-          <push state="theend" />
-        </condition>
+        <condition set="ending" />
         <condition object="status" variable="spent">
           <atleast>wave3</atleast>
           <play sound="wave" />

@@ -735,7 +735,7 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "a command that does not exist", "<bounce />", "<explode />", "explode" },
 		{ "a window width that is not a number", "<width>1280</width>", "<width>huge</width>", "not a valid" },
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
-		{ "a condition with no test", "<atleast>15</atleast>", "", "expected one of <atleast>" },
+		{ "a condition with no test (only a set=\"...\" condition has none)", "<atleast>15</atleast>", "", "unexpected element <push>" },
 		{ "a <random> with no max", "<random min=\"-30\" max=\"30\" />", "<random min=\"-30\" />", "missing required attribute 'max'" },
 	};
 

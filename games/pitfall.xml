@@ -689,6 +689,22 @@
       <show object="lives" />
     </shows>
 
+    <!-- how a screen ends: out of lives or time, or every treasure taken -->
+    <conditions name="ending">
+      <condition object="status" variable="lives">
+        <atmost>0</atmost>
+        <push state="gameover" />
+      </condition>
+      <condition object="status" variable="time">
+        <atmost>0</atmost>
+        <push state="gameover" />
+      </condition>
+      <condition class="treasure">
+        <remaining>0</remaining>
+        <push state="youwin" />
+      </condition>
+    </conditions>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -711,18 +727,7 @@
       </shows>
       <inputs keys="harry" />
       <conditions>
-        <condition object="status" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <condition object="status" variable="time">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <condition class="treasure">
-          <remaining>0</remaining>
-          <push state="youwin" />
-        </condition>
+        <condition set="ending" />
         <condition object="status" variable="screen">
           <atleast>2</atleast>
           <pop state="screen2" />
@@ -752,18 +757,7 @@
       </shows>
       <inputs keys="harry" />
       <conditions>
-        <condition object="status" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <condition object="status" variable="time">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <condition class="treasure">
-          <remaining>0</remaining>
-          <push state="youwin" />
-        </condition>
+        <condition set="ending" />
         <condition object="status" variable="screen">
           <atleast>3</atleast>
           <pop state="screen3" />
@@ -793,18 +787,7 @@
       </shows>
       <inputs keys="harry" />
       <conditions>
-        <condition object="status" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <condition object="status" variable="time">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <condition class="treasure">
-          <remaining>0</remaining>
-          <push state="youwin" />
-        </condition>
+        <condition set="ending" />
         <condition object="status" variable="screen">
           <atleast>4</atleast>
           <pop state="screen4" />
@@ -835,18 +818,7 @@
       </shows>
       <inputs keys="harry" />
       <conditions>
-        <condition object="status" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <condition object="status" variable="time">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <condition class="treasure">
-          <remaining>0</remaining>
-          <push state="youwin" />
-        </condition>
+        <condition set="ending" />
         <condition object="status" variable="screen">
           <atleast>5</atleast>
           <dec variable="status.screen">4</dec>

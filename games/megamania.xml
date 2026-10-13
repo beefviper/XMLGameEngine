@@ -469,6 +469,25 @@
       <show object="lives" />
     </shows>
 
+    <!-- out of lives -->
+    <conditions name="dead">
+      <condition object="player" variable="lives">
+        <atmost>0</atmost>
+        <push state="gameover" />
+      </condition>
+    </conditions>
+
+    <!-- out of energy: a ship lost, and the energy filled again -->
+    <conditions name="energy">
+      <condition object="energy" variable="level">
+        <atmost>0</atmost>
+        <dec variable="player.lives" />
+        <play sound="lost" />
+        <reset object="energy" />
+        <reset object="bombs" />
+      </condition>
+    </conditions>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -487,10 +506,7 @@
       </shows>
       <inputs keys="ship" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <condition class="burgers">
           <remaining>0</remaining>
           <play sound="wave" />
@@ -499,14 +515,7 @@
           <reset object="laser" />
           <pop state="wave2" />
         </condition>
-        <!-- out of energy: a ship lost, and the energy filled again -->
-        <condition object="energy" variable="level">
-          <atmost>0</atmost>
-          <dec variable="player.lives" />
-          <play sound="lost" />
-          <reset object="energy" />
-          <reset object="bombs" />
-        </condition>
+        <condition set="energy" />
       </conditions>
       <timers>
         <timer>
@@ -522,10 +531,7 @@
       </shows>
       <inputs keys="ship" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <condition class="cookies">
           <remaining>0</remaining>
           <play sound="wave" />
@@ -534,14 +540,7 @@
           <reset object="laser" />
           <pop state="wave3" />
         </condition>
-        <!-- out of energy: a ship lost, and the energy filled again -->
-        <condition object="energy" variable="level">
-          <atmost>0</atmost>
-          <dec variable="player.lives" />
-          <play sound="lost" />
-          <reset object="energy" />
-          <reset object="bombs" />
-        </condition>
+        <condition set="energy" />
       </conditions>
       <timers>
         <timer>
@@ -557,23 +556,13 @@
       </shows>
       <inputs keys="ship" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <condition class="bugs">
           <remaining>0</remaining>
           <play sound="wave" />
           <push state="youwin" />
         </condition>
-        <!-- out of energy: a ship lost, and the energy filled again -->
-        <condition object="energy" variable="level">
-          <atmost>0</atmost>
-          <dec variable="player.lives" />
-          <play sound="lost" />
-          <reset object="energy" />
-          <reset object="bombs" />
-        </condition>
+        <condition set="energy" />
       </conditions>
       <timers>
         <timer>

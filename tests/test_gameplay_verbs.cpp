@@ -424,6 +424,31 @@ TEST_CASE("a <shows> set is shared by states, can take an earlier set, and a sta
 	CHECK(states.at(1).show == std::vector<std::string>{ "paused", "score" });
 }
 
+TEST_CASE("a <conditions> set is checked where a state takes it, in order, and can take an earlier set", "[conditions]")
+{
+	const std::string sets = "<conditions name=\"dead\"><condition object=\"man\" variable=\"lives\"><atmost>0</atmost><push state=\"over\" /></condition></conditions>"
+		"<conditions name=\"ending\"><condition set=\"dead\" />"
+		"<condition object=\"man\" variable=\"gold\"><atleast>3</atleast><push state=\"won\" /></condition></conditions>";
+	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
+	const std::string man = "<object name=\"man\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position><variables><variable name=\"lives\">1</variable><variable name=\"gold\">0</variable>"
+		"<variable name=\"steps\">0</variable></variables></object>";
+
+	Loaded loaded(gameXml(man,
+		"<state name=\"playing\"><shows><show object=\"man\" /></shows>" + inputs
+		+ "<conditions><condition object=\"man\" variable=\"steps\"><atleast>5</atleast><push state=\"won\" /></condition>"
+		"<condition set=\"ending\" /></conditions></state>"
+		"<state name=\"won\"><shows><show object=\"man\" /></shows>" + inputs + "</state>"
+		"<state name=\"over\"><shows><show object=\"man\" /></shows>" + inputs + "</state>"
+		, sets), XmlBackend::TinyXml2);
+
+	const auto& conditions = loaded.game.getStates().at(0).conditions;
+	REQUIRE(conditions.size() == 3);
+	CHECK(conditions.at(0).variableName == "steps");
+	CHECK(conditions.at(1).variableName == "lives");
+	CHECK(conditions.at(2).variableName == "gold");
+}
+
 TEST_CASE("mistakes in the new tags are turned away when the game loads, saying where", "[timers][facing][jump][keys][errors]")
 {
 	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
@@ -461,6 +486,16 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 		"set=\"b\" names no <shows> set before it");
 	fails(box("o", 0, 0, 1, 1), "<shows name=\"a\"><show object=\"o\" /></shows><shows name=\"a\"><show object=\"o\" /></shows>" + plain,
 		"two <shows> sets are called 'a'");
+	const std::string checked = "<state name=\"playing\"><shows><show object=\"o\" /></shows>" + inputs + "<conditions><condition set=\"%\" /></conditions></state>";
+	const auto takes = [&](const std::string& set) { std::string xml = checked; return xml.replace(xml.find('%'), 1, set); };
+	fails(box("o", 0, 0, 1, 1), takes("nothing"), "set=\"nothing\" names no <conditions> set before it");
+	fails(box("o", 0, 0, 1, 1), "<conditions name=\"a\"><condition set=\"b\" /></conditions><conditions name=\"b\"><condition class=\"o\"><remaining>0</remaining></condition></conditions>"
+		+ takes("a"), "set=\"b\" names no <conditions> set before it");
+	fails(box("o", 0, 0, 1, 1), "<conditions name=\"a\"><condition class=\"o\"><remaining>0</remaining></condition></conditions>"
+		"<conditions name=\"a\"><condition class=\"o\"><remaining>0</remaining></condition></conditions>" + takes("a"), "two <conditions> sets are called 'a'");
+	fails(box("o", 0, 0, 1, 1), "<conditions name=\"a\"><condition class=\"o\"><remaining>0</remaining></condition></conditions>"
+		"<state name=\"playing\"><shows><show object=\"o\" /></shows>" + inputs
+		+ "<conditions><condition set=\"a\" class=\"o\" /></conditions></state>", "takes a <conditions> set whole, so it has nothing else");
 }
 
 TEST_CASE("an object with several named sprites can <become> each of them, and a reset brings back the first", "[looks]")

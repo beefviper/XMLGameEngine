@@ -524,12 +524,12 @@ A state is one screen: a menu, the playfield, a pause screen, a game-over screen
 |---|---|---|
 | `<shows>` | yes | A list of `<show object="name" />`. Only these objects are drawn and updated while the state is current. `<show set="name" />` shows a shared [show set](#show-sets) |
 | `<inputs>` | yes | A list of `<input button="key">`, each holding the commands that key runs, e.g. `<push state="playing" />` or `<trigger object="paddle1" action="up" />`. `keys="name"` takes a shared [key set](#input) first; the state's own `<input>`s go over it |
-| `<conditions>` | no | A list of `<condition>`, checked every frame. See [Conditions](#conditions) |
+| `<conditions>` | no | A list of `<condition>`, checked every frame. `<condition set="name" />` checks a shared set there. See [Conditions](#conditions) |
 | `<timers>` | no | Timers that count while this is the current state. See [Timers](#timers) |
 
 ### Show sets
 
-Objects several states show are written once, as a named `<shows>` set at the top of `<states>` (with the `<keys>` sets, before the first `<state>`), holding `<show>`s like a state's. A state takes a set with `<show set="name" />` among its own `<show>`s, one set to a `<show>`, and adds whatever else it shows. A set can take a set written before it. Pitfall's four screens share the jungle, Harry and the score; Berserk's rooms share the player and Otto, and take the score from a `hud` set that the pause and game-over screens use too:
+Objects several states show are written once, as a named `<shows>` set at the top of `<states>` (with the `<keys>` and [`<conditions>`](#conditions) sets, before the first `<state>`), holding `<show>`s like a state's. A state takes a set with `<show set="name" />` among its own `<show>`s, one set to a `<show>`, and adds whatever else it shows. A set can take a set written before it. Pitfall's four screens share the jungle, Harry and the score; Berserk's rooms share the player and Otto, and take the score from a `hud` set that the pause and game-over screens use too:
 
 ```xml
 <states>
@@ -639,6 +639,32 @@ The other forms:
 `<remaining>` counts objects instead of reading a variable. It fires when no more than that many of the matching objects are still in play, that is still visible (`<die />` hides an object). `0` means they are all gone, which is how Space Invaders is won: `class="aliens"` covers every cell of the group, and `object="aliens.3.2"` would watch a single one. `<atmost>` reads a variable from above: `<condition object="frog" variable="lives"><atmost>0</atmost>...</condition>` fires when the variable has fallen to that value or below, which is how a lives counter that goes down with `<dec>` ends the game (Frogger). A condition uses exactly one of `<atleast>`, `<atmost>` or `<remaining>` (the schema enforces this). If the filter matches no object at all, the game warns when it loads, since the condition would fire at once. Ending the game with a `gameover` state and starting over with a bare `<reset />` on that screen works as in Pong; `<reset />` also brings the dead aliens back.
 
 Besides changing the state, a condition can `<inc>` and `<dec>` a variable, `<become>`, `<reveal>`, `<play>` and `<trigger>`. A condition that changes the variable it reads can count and start over: Frostbite's `<condition object="bailey" variable="blue"><atleast>4</atleast>` turns the four rows of ice white again and takes 4 off the count.
+
+**Condition sets.** Conditions several states check are written once, as a named `<conditions>` set at the top of `<states>` (with the `<keys>` and `<shows>` sets, before the first `<state>`), holding `<condition>`s like a state's. A state takes a set with `<condition set="name" />` among its own conditions, and the set's conditions are checked right there, in order, as if written in its place; since the first condition that holds is the only one run in a frame, where the `<condition set>` stands matters. A set can take a set written before it. A `<condition set>` has nothing else, no test, no filter and no commands. Pitfall's four screens share how a screen ends:
+
+```xml
+<states>
+  <conditions name="ending">
+    <condition object="status" variable="lives">
+      <atmost>0</atmost>
+      <push state="gameover" />
+    </condition>
+    <condition class="treasure">
+      <remaining>0</remaining>
+      <push state="youwin" />
+    </condition>
+  </conditions>
+  <state name="screen1">
+    ...
+    <conditions>
+      <condition set="ending" />
+      <condition object="status" variable="screen">
+        <atleast>2</atleast>
+        <pop state="screen2" />
+      </condition>
+    </conditions>
+  </state>
+```
 
 ## What happens when a game runs
 

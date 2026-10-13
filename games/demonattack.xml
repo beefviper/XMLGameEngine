@@ -562,6 +562,14 @@
       <show object="lives" />
     </shows>
 
+    <!-- out of lives -->
+    <conditions name="dead">
+      <condition object="player" variable="lives">
+        <atmost>0</atmost>
+        <push state="gameover" />
+      </condition>
+    </conditions>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -580,10 +588,7 @@
       </shows>
       <inputs keys="cannon" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <condition class="demon1">
           <remaining>0</remaining>
           <play sound="wave" />
@@ -601,10 +606,7 @@
       </shows>
       <inputs keys="cannon" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <!-- the demons and the small ones they leave are one class -->
         <condition class="demon2">
           <remaining>0</remaining>
@@ -622,10 +624,7 @@
       </shows>
       <inputs keys="cannon" />
       <conditions>
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
+        <condition set="dead" />
         <condition class="demon3">
           <remaining>0</remaining>
           <play sound="wave" />

@@ -697,10 +697,11 @@
     Checked every frame. One test, then the commands to run when it holds:
     atleast / atmost read the variable named by the variable attribute off
     every object that matches class and/or object; remaining counts the
-    matching objects still in play.
+    matching objects still in play. Or, with set="name" and nothing else, a
+    named <conditions> set's conditions in its place.
   -->
   <xs:complexType name="conditionType">
-    <xs:sequence>
+    <xs:sequence minOccurs="0">
       <xs:choice>
         <xs:element name="atleast" type="valueType" />
         <xs:element name="atmost" type="valueType" />
@@ -711,6 +712,7 @@
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="variable" type="xs:string" use="optional" />
+    <xs:attribute name="set" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!--
@@ -1005,6 +1007,19 @@
                   <xs:complexType>
                     <xs:sequence>
                       <xs:element name="show" type="showType" maxOccurs="unbounded" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string" use="required" />
+                  </xs:complexType>
+                </xs:element>
+                <!--
+                  A named set of conditions that states can share: a state's
+                  <condition set="name" /> checks them, in order, where it
+                  stands. A set can take a set written before it.
+                -->
+                <xs:element name="conditions">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="condition" type="conditionType" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="required" />
                   </xs:complexType>

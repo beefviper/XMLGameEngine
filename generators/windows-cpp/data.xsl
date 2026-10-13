@@ -1399,6 +1399,60 @@
     </xsl:choose>
   </xsl:template>
 
+  <!-- A state's <condition> (readConditions): one pushed onto the state's
+       list, or a <conditions> set's in its place, in order. -->
+  <xsl:template match="condition" mode="condition">
+    <xsl:param name="in" />
+    <xsl:param name="inner" />
+    <xsl:choose>
+      <xsl:when test="@set">
+        <xsl:variable name="set" select="@set" />
+        <xsl:apply-templates select="ancestor::states/conditions[@name = $set][1]/condition" mode="condition">
+          <xsl:with-param name="in" select="$in" />
+          <xsl:with-param name="inner" select="$inner" />
+        </xsl:apply-templates>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="test" select="*[1]" />
+        <xsl:value-of select="concat($in, 'state.conditions.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; condition)&#10;', $in, '{&#10;')" />
+        <xsl:for-each select="@class | @object | @variable">
+          <xsl:if test=". != ''">
+            <xsl:value-of select="$inner" />
+            <xsl:choose>
+              <xsl:when test="local-name() = 'class'">condition.filterClass</xsl:when>
+              <xsl:when test="local-name() = 'object'">condition.filterObject</xsl:when>
+              <xsl:otherwise>condition.variableName</xsl:otherwise>
+            </xsl:choose>
+            <xsl:text> = </xsl:text>
+            <xsl:call-template name="string">
+              <xsl:with-param name="text" select="." />
+            </xsl:call-template>
+            <xsl:text>;&#10;</xsl:text>
+          </xsl:if>
+        </xsl:for-each>
+        <xsl:if test="not($test[self::atleast])">
+          <xsl:value-of select="concat($inner, 'condition.test = RawCondition::Test::')" />
+          <xsl:choose>
+            <xsl:when test="$test[self::atmost]">AtMost</xsl:when>
+            <xsl:otherwise>Remaining</xsl:otherwise>
+          </xsl:choose>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:if>
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$inner" />
+          <xsl:with-param name="to" select="'condition.threshold'" />
+          <xsl:with-param name="node" select="$test" />
+        </xsl:call-template>
+        <xsl:value-of select="concat($inner, 'condition.commands = ')" />
+        <xsl:call-template name="commands">
+          <xsl:with-param name="nodes" select="*[position() &gt; 1]" />
+          <xsl:with-param name="indent" select="$inner" />
+        </xsl:call-template>
+        <xsl:value-of select="concat(';&#10;', $in, '}));&#10;')" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
   <!-- <state name="..."> (readState): a function that makes it. -->
   <xsl:template match="state">
     <xsl:variable name="in" select="concat($tab, $tab)" />
@@ -1430,44 +1484,10 @@
         <xsl:with-param name="indent" select="$in" />
       </xsl:call-template>
     </xsl:for-each>
-    <xsl:for-each select="conditions/condition">
-      <xsl:variable name="test" select="*[1]" />
-      <xsl:value-of select="concat($in, 'state.conditions.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; condition)&#10;', $in, '{&#10;')" />
-      <xsl:for-each select="@class | @object | @variable">
-        <xsl:if test=". != ''">
-          <xsl:value-of select="$inner" />
-          <xsl:choose>
-            <xsl:when test="local-name() = 'class'">condition.filterClass</xsl:when>
-            <xsl:when test="local-name() = 'object'">condition.filterObject</xsl:when>
-            <xsl:otherwise>condition.variableName</xsl:otherwise>
-          </xsl:choose>
-          <xsl:text> = </xsl:text>
-          <xsl:call-template name="string">
-            <xsl:with-param name="text" select="." />
-          </xsl:call-template>
-          <xsl:text>;&#10;</xsl:text>
-        </xsl:if>
-      </xsl:for-each>
-      <xsl:if test="not($test[self::atleast])">
-        <xsl:value-of select="concat($inner, 'condition.test = RawCondition::Test::')" />
-        <xsl:choose>
-          <xsl:when test="$test[self::atmost]">AtMost</xsl:when>
-          <xsl:otherwise>Remaining</xsl:otherwise>
-        </xsl:choose>
-        <xsl:text>;&#10;</xsl:text>
-      </xsl:if>
-      <xsl:call-template name="assign-value">
-        <xsl:with-param name="indent" select="$inner" />
-        <xsl:with-param name="to" select="'condition.threshold'" />
-        <xsl:with-param name="node" select="$test" />
-      </xsl:call-template>
-      <xsl:value-of select="concat($inner, 'condition.commands = ')" />
-      <xsl:call-template name="commands">
-        <xsl:with-param name="nodes" select="*[position() &gt; 1]" />
-        <xsl:with-param name="indent" select="$inner" />
-      </xsl:call-template>
-      <xsl:value-of select="concat(';&#10;', $in, '}));&#10;')" />
-    </xsl:for-each>
+    <xsl:apply-templates select="conditions/condition" mode="condition">
+      <xsl:with-param name="in" select="$in" />
+      <xsl:with-param name="inner" select="$inner" />
+    </xsl:apply-templates>
     <xsl:call-template name="timers">
       <xsl:with-param name="node" select="timers" />
       <xsl:with-param name="list" select="'state.timers'" />

@@ -1662,7 +1662,57 @@ namespace xge
 			}
 		}
 
-		RawState readState(const XmlNode& state, const std::map<std::string, KeyBindings>& keySets, const ShowSets& showSets)
+		using ConditionSets = std::map<std::string, std::vector<RawCondition>>;
+
+		// The <condition>s under a node (a state's <conditions>, or a
+		// <conditions> set), in order: a test, then the commands to run when it
+		// holds; or <condition set="..."> for a named set's, in its place.
+		void readConditions(const XmlNode& node, const std::string& where, const ConditionSets& conditionSets, std::vector<RawCondition>& out)
+		{
+			for (std::unique_ptr<XmlNode> condition = node.getFirstChild(); condition != nullptr; condition = condition->getNextSibling())
+			{
+				const std::string conditionHere = where + " > <condition>";
+
+				// <condition set="..."> takes a named <conditions> set's in its place
+				if (!condition->getAttribute("set").empty())
+				{
+					const std::string setName = condition->getAttribute("set");
+					if (condition->getFirstChild() || !condition->getAttribute("class").empty() || !condition->getAttribute("object").empty() || !condition->getAttribute("variable").empty())
+					{
+						fail(conditionHere, "set=\"" + setName + "\" takes a <conditions> set whole, so it has nothing else");
+					}
+					const auto set = conditionSets.find(setName);
+					if (set == conditionSets.end()) { fail(conditionHere, "set=\"" + setName + "\" names no <conditions> set before it"); }
+					out.insert(out.end(), set->second.begin(), set->second.end());
+					continue;
+				}
+
+				RawCondition raw;
+				raw.filterClass = condition->getAttribute("class");
+				raw.filterObject = condition->getAttribute("object");
+				raw.variableName = condition->getAttribute("variable");
+
+				std::unique_ptr<XmlNode> test = condition->getFirstChild();
+				if (!test) { fail(conditionHere, "needs an <atleast>, <atmost> or <remaining>"); }
+
+				const std::string testName = test->getName();
+				if (testName == "atleast") { raw.test = RawCondition::Test::AtLeast; }
+				else if (testName == "atmost") { raw.test = RawCondition::Test::AtMost; }
+				else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
+				else { fail(conditionHere, "starts with <" + testName + ">; expected <atleast>, <atmost> or <remaining>"); }
+
+				if (raw.test != RawCondition::Test::Remaining && raw.variableName.empty())
+				{
+					fail(conditionHere, "<" + testName + "> reads a variable, so the condition needs variable=\"...\"");
+				}
+
+				raw.threshold = readValue(*test, conditionHere);
+				raw.commands = readCommands(test->getNextSibling(), conditionHere);
+				out.push_back(std::move(raw));
+			}
+		}
+
+		RawState readState(const XmlNode& state, const std::map<std::string, KeyBindings>& keySets, const ShowSets& showSets, const ConditionSets& conditionSets)
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");
@@ -1686,37 +1736,10 @@ namespace xge
 			}
 			readInputs(*inputs, where + " > <inputs>", rawState.input);
 
-			// <conditions> (optional - the schema allows a state with none): a
-			// test, then the commands to run when it holds.
+			// <conditions> (optional - the schema allows a state with none)
 			if (std::unique_ptr<XmlNode> conditions = findChild(&state, "conditions"))
 			{
-				for (std::unique_ptr<XmlNode> condition = conditions->getFirstChild(); condition != nullptr; condition = condition->getNextSibling())
-				{
-					const std::string conditionHere = where + " > <condition>";
-
-					RawCondition raw;
-					raw.filterClass = condition->getAttribute("class");
-					raw.filterObject = condition->getAttribute("object");
-					raw.variableName = condition->getAttribute("variable");
-
-					std::unique_ptr<XmlNode> test = condition->getFirstChild();
-					if (!test) { fail(conditionHere, "needs an <atleast>, <atmost> or <remaining>"); }
-
-					const std::string testName = test->getName();
-					if (testName == "atleast") { raw.test = RawCondition::Test::AtLeast; }
-					else if (testName == "atmost") { raw.test = RawCondition::Test::AtMost; }
-					else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
-					else { fail(conditionHere, "starts with <" + testName + ">; expected <atleast>, <atmost> or <remaining>"); }
-
-					if (raw.test != RawCondition::Test::Remaining && raw.variableName.empty())
-					{
-						fail(conditionHere, "<" + testName + "> reads a variable, so the condition needs variable=\"...\"");
-					}
-
-					raw.threshold = readValue(*test, conditionHere);
-					raw.commands = readCommands(test->getNextSibling(), conditionHere);
-					rawState.conditions.push_back(std::move(raw));
-				}
+				readConditions(*conditions, where, conditionSets, rawState.conditions);
 			}
 
 			// <timers> (optional): counted while this is the current state.
@@ -1824,10 +1847,12 @@ namespace xge
 			else { rawObjects.push_back(readObject(*object)); }
 		}
 
-		// load states: the named <keys> and <shows> sets first, so any state
-		// can use any of them (a <shows> set can take a set written before it)
+		// load states: the named <keys>, <shows> and <conditions> sets first, so
+		// any state can use any of them (a <shows> or <conditions> set can take
+		// a set written before it)
 		std::map<std::string, KeyBindings> keySets;
 		ShowSets showSets;
+		ConditionSets conditionSets;
 		for (std::unique_ptr<XmlNode> node = states->getFirstChild(); node != nullptr; node = node->getNextSibling())
 		{
 			if (node->getName() == "keys")
@@ -1844,12 +1869,20 @@ namespace xge
 				readShows(*node, "<shows name=\"" + name + "\">", showSets, objects);
 				showSets[name] = std::move(objects);
 			}
+			else if (node->getName() == "conditions")
+			{
+				const std::string name = requireAttribute(*node, "name", "<states> > <conditions>");
+				if (conditionSets.count(name)) { fail("<states>", "two <conditions> sets are called '" + name + "'"); }
+				std::vector<RawCondition> conditions;
+				readConditions(*node, "<conditions name=\"" + name + "\">", conditionSets, conditions);
+				conditionSets[name] = std::move(conditions);
+			}
 		}
 
 		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
 		{
 			if (state->getName() != "state") { continue; }
-			rawStates.push_back(readState(*state, keySets, showSets));
+			rawStates.push_back(readState(*state, keySets, showSets, conditionSets));
 		}
 	}
 
