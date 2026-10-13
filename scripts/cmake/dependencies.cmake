@@ -201,7 +201,7 @@ xge_dependency(RapidXML WHEN XGE_WITH_RAPIDXML
 	HEADER rapidxml.hpp
 	REPO https://github.com/discord/rapidxml.git TAG 2ae4b2888165a393dfb6382168825fddf00c27b9)
 
-# lunasvg draws the SVG files an <svg> sprite names (lib/source/svg.cpp). It is
+# lunasvg draws the SVG files an <svg> sprite names (xge/lib/source/svg.cpp). It is
 # the engine's own tool, not a Window backend: only svg.cpp includes it, and
 # what it draws goes to every backend as an ordinary picture. The plutovg
 # library it draws with comes along inside it. With vcpkg: vcpkg install lunasvg
@@ -210,7 +210,7 @@ xge_dependency(lunasvg
 	REPO https://github.com/sammycage/lunasvg.git TAG v3.5.0
 	SETTINGS LUNASVG_BUILD_EXAMPLES=OFF PLUTOVG_BUILD_EXAMPLES=OFF)
 
-# Qt 6 is only for xgegui (gui/); nothing in the engine library uses it. Unlike
+# Qt 6 is only for xgegui (xge/gui/); nothing in the engine library uses it. Unlike
 # everything above it is found, never fetched: building Qt from source is not
 # something a configure step should do. Without it xgegui is left out and the
 # rest builds as before. With vcpkg: vcpkg install qtbase[widgets]
@@ -219,7 +219,7 @@ xge_dependency(Qt6
 	MISSING "xgegui will not be built (install qtbase with the widgets feature).")
 
 # libxslt runs the stylesheets that turn a game into a program (xgecli
-# --generate, cli/source/generate.cpp); it is built on libxml2, and EXSLT (part
+# --generate, xge/cli/source/generate.cpp); it is built on libxml2, and EXSLT (part
 # of it) lets one stylesheet write several files. Only xgecli uses it, and it is
 # found, never fetched: without it xgecli is built without --generate. With
 # vcpkg: vcpkg install libxslt (Linux: libxslt1-dev).

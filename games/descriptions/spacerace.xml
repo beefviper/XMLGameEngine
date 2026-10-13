@@ -1,0 +1,395 @@
+<!-- spacerace.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Sept 30, 2026 -->
+
+<!--
+  Space Race (1973): two rockets start at the bottom and fly up through lanes of
+  debris drifting sideways. A hit sends a rocket back to the bottom; getting off
+  the top of the screen scores a point and sends it back for another go. The
+  original played to a two minute clock; this plays to two points, to be quick.
+
+  It uses held <move> for the rockets, and for the debris a <group> per lane
+  (the speed and row written once, each <member> saying where it starts;
+  debris5.2 is the second piece in the fifth lane, and debris5 means the whole
+  lane), all nine inside one group, debris, which gives the size and <wrap />
+  every lane shares and means every piece, with the pieces spaced by hand (a lane of objects `size` wide
+  repeats every window width plus `size`), <reset /> when a rocket is hit, <inc>
+  and <reset /> on the top edge, and a variable condition to end it.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+  <window name="Space Race">
+    <width>800</width>
+    <height>600</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="ship.width">20</variable>
+    <variable name="ship.height">44</variable>
+    <variable name="step">3</variable>
+    <variable name="margin">10</variable>
+  </variables>
+  <sounds>
+    <!-- a rocket gets across: a rising bloop -->
+    <sound name="score" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E4" to="E5">0.3</note>
+    </sound>
+    <!-- a rocket hit by debris: a crunch -->
+    <sound name="crash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="2500" to="200">0.35</note>
+    </sound>
+    <!-- a game started: a rising arpeggio -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- a player has won -->
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
+  <objects>
+    <!-- the debris: nine lanes inside one group, which gives what every piece
+         has (a square, wrapping round at the sides); each lane says its row,
+         its speed and, when it is not 16, its size -->
+    <group name="debris" class="debris">
+      <sprite>
+        <rectangle>
+          <width>16</width>
+          <height>16</height>
+        </rectangle>
+      </sprite>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <group name="debris1">
+        <position><y>75</y></position>
+        <velocity><x>2.0</x></velocity>
+        <member><position><x>0</x></position></member>
+        <member><position><x>272</x></position></member>
+        <member><position><x>544</x></position></member>
+      </group>
+      <group name="debris2">
+        <sprite><rectangle><width>14</width><height>14</height></rectangle></sprite>
+        <position><y>122</y></position>
+        <velocity><x>-3.0</x></velocity>
+        <member><position><x>97</x></position></member>
+        <member><position><x>368</x></position></member>
+        <member><position><x>639</x></position></member>
+      </group>
+      <group name="debris3">
+        <sprite><rectangle><width>18</width><height>18</height></rectangle></sprite>
+        <position><y>166</y></position>
+        <velocity><x>1.5</x></velocity>
+        <member><position><x>194</x></position></member>
+        <member><position><x>466</x></position></member>
+        <member><position><x>739</x></position></member>
+      </group>
+      <group name="debris4">
+        <sprite><rectangle><width>12</width><height>12</height></rectangle></sprite>
+        <position><y>215</y></position>
+        <velocity><x>-2.5</x></velocity>
+        <member><position><x>21</x></position></member>
+        <member><position><x>291</x></position></member>
+        <member><position><x>562</x></position></member>
+      </group>
+      <group name="debris5">
+        <position><y>259</y></position>
+        <velocity><x>3.5</x></velocity>
+        <member><position><x>116</x></position></member>
+        <member><position><x>388</x></position></member>
+        <member><position><x>660</x></position></member>
+      </group>
+      <group name="debris6">
+        <sprite><rectangle><width>14</width><height>14</height></rectangle></sprite>
+        <position><y>306</y></position>
+        <velocity><x>-1.5</x></velocity>
+        <member><position><x>214</x></position></member>
+        <member><position><x>485</x></position></member>
+        <member><position><x>756</x></position></member>
+      </group>
+      <group name="debris7">
+        <sprite><rectangle><width>18</width><height>18</height></rectangle></sprite>
+        <position><y>350</y></position>
+        <velocity><x>2.5</x></velocity>
+        <member><position><x>38</x></position></member>
+        <member><position><x>310</x></position></member>
+        <member><position><x>583</x></position></member>
+      </group>
+      <group name="debris8">
+        <sprite><rectangle><width>12</width><height>12</height></rectangle></sprite>
+        <position><y>399</y></position>
+        <velocity><x>-3.5</x></velocity>
+        <member><position><x>139</x></position></member>
+        <member><position><x>409</x></position></member>
+        <member><position><x>680</x></position></member>
+      </group>
+      <group name="debris9">
+        <position><y>443</y></position>
+        <velocity><x>1.0</x></velocity>
+        <member><position><x>232</x></position></member>
+        <member><position><x>504</x></position></member>
+        <member><position><x>776</x></position></member>
+      </group>
+    </group>
+    <object name="rocket1" class="rocket">
+      <sprite>
+        <rectangle>
+          <width>ship.width</width>
+          <height>ship.height</height>
+          <color>color.cyan</color>
+        </rectangle>
+      </sprite>
+      <position><x>window.width.center / 2 - rocket1.width / 2</x><y>window.bottom - rocket1.height - margin</y></position>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom">
+          <stick />
+        </collision>
+        <collision edge="top">
+          <inc variable="rocket1.score" />
+          <reset />
+          <play sound="score" />
+        </collision>
+        <collision class="debris">
+          <reset />
+          <play sound="crash" />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="up">
+          <move direction="up">step</move>
+        </action>
+        <action name="down">
+          <move direction="down">step</move>
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
+    <object name="rocket2" class="rocket">
+      <sprite>
+        <rectangle>
+          <width>ship.width</width>
+          <height>ship.height</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position><x>window.width.center * 1.5 - rocket2.width / 2</x><y>window.bottom - rocket2.height - margin</y></position>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom">
+          <stick />
+        </collision>
+        <collision edge="top">
+          <inc variable="rocket2.score" />
+          <reset />
+          <play sound="score" />
+        </collision>
+        <collision class="debris">
+          <reset />
+          <play sound="crash" />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="up">
+          <move direction="up">step</move>
+        </action>
+        <action name="down">
+          <move direction="down">step</move>
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
+    <object name="score1">
+      <sprite>
+        <text>
+          <number>rocket1.score</number>
+          <size>64</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - 60 - score1.width</x><y>window.bottom - score1.height - margin</y></position>
+    </object>
+    <object name="score2">
+      <sprite>
+        <text>
+          <number>rocket2.score</number>
+          <size>64</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center + 60</x><y>window.bottom - score2.height - margin</y></position>
+    </object>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>SPACE RACE</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-60)</y></position>
+    </object>
+    <object name="start">
+      <sprite>
+        <text>
+          <content>spacebar to start</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (70)</y></position>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>PAUSED</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+    </object>
+    <object name="player1wins">
+      <sprite>
+        <text>
+          <content>PLAYER 1 WINS</content>
+          <size>96</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - player1wins.width / 2</x><y>window.height.center - player1wins.height / 2 + (-60)</y></position>
+    </object>
+    <object name="player2wins">
+      <sprite>
+        <text>
+          <content>PLAYER 2 WINS</content>
+          <size>96</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - player2wins.width / 2</x><y>window.height.center - player2wins.height / 2 + (-60)</y></position>
+    </object>
+    <object name="continue">
+      <sprite>
+        <text>
+          <content>spacebar to continue</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - continue.width / 2</x><y>window.height.center - continue.height / 2 + (70)</y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="start" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+          <play sound="start" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <shows>
+        <show object="debris" />
+        <show object="rocket1" />
+        <show object="rocket2" />
+        <show object="score1" />
+        <show object="score2" />
+      </shows>
+      <inputs>
+        <input button="w">
+          <trigger object="rocket1" action="up" />
+        </input>
+        <input button="s">
+          <trigger object="rocket1" action="down" />
+        </input>
+        <input button="up">
+          <trigger object="rocket2" action="up" />
+        </input>
+        <input button="down">
+          <trigger object="rocket2" action="down" />
+        </input>
+        <input button="space">
+          <push state="paused" />
+        </input>
+        <input button="p">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="rocket1" variable="score">
+          <atleast>2</atleast>
+          <push state="player1wins" />
+          <play sound="win" />
+        </condition>
+        <condition object="rocket2" variable="score">
+          <atleast>2</atleast>
+          <push state="player2wins" />
+          <play sound="win" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="player1wins">
+      <shows>
+        <show object="player1wins" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="player2wins">
+      <shows>
+        <show object="player2wins" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>

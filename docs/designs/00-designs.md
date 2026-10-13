@@ -52,7 +52,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | File | Topic | Status |
 |---|---|---|
 | [backends](50-backends.md) | Backend interfaces and factories, library and programs | Built |
-| [build-and-layout](51-build-and-layout.md) | CMake modules, `output/`, source layout, pipeline | Built; `lib/` folders Open |
+| [build-and-layout](51-build-and-layout.md) | CMake modules, `output/`, source layout, pipeline | Built; `xge/lib/` folders Open |
 | [cli](52-cli.md), [gui](53-gui.md) | `xgecli` options; `xgegui` (Qt renderer, tree, Options, windows) | Built |
 | [games-classic](54-games-classic.md) | What each early game tested and forced | Built |
 | [games-written-by-ai](55-games-written-by-ai.md) | Berserk, Demon Attack, Frostbite from the schema alone, then rewritten | Built |

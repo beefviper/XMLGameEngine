@@ -40,64 +40,65 @@ endif()
 # etc., not a hand-copied reimplementation of them. The library brings the
 # include directory and every third-party library it needs along with it.
 add_executable(xgetest
-	"tests/test_command_parsing.cpp"
-	"tests/test_object_variables.cpp"
-	"tests/test_conditions.cpp"
-	"tests/test_win_condition.cpp"
-	"tests/test_collision_geometry.cpp"
-	"tests/test_swept_collision.cpp"
-	"tests/test_input_resolution.cpp"
-	"tests/test_stick.cpp"
-	"tests/test_collision_rules.cpp"
-	"tests/test_lockstep_bounce.cpp"
-	"tests/test_size_expressions.cpp"
-	"tests/test_engine_input.cpp"
-	"tests/test_new_verbs.cpp"
-	"tests/test_deflect.cpp"
-	"tests/test_xml_format.cpp"
-	"tests/test_equations.cpp"
-	"tests/test_backends.cpp"
-	"tests/test_group.cpp"
-	"tests/test_breakout.cpp"
-	"tests/test_frogger.cpp"
-	"tests/test_spacerace.cpp"
-	"tests/test_kaboom.cpp"
-	"tests/test_freeway.cpp"
-	"tests/test_depthcharge.cpp"
-	"tests/test_astrosmash.cpp"
-	"tests/test_lines_and_pixels.cpp"
-	"tests/test_bitmap_sprites.cpp"
-	"tests/test_svg_sprites.cpp"
-	"tests/test_lunarlander.cpp"
-	"tests/test_asteroids.cpp"
-	"tests/test_demonattack.cpp"
-	"tests/test_builtin_font.cpp"
-	"tests/test_sound.cpp"
-	"tests/test_gameplay_verbs.cpp"
-	"tests/test_frostbite.cpp"
-	"tests/test_donkeykong.cpp"
-	"tests/test_berserk.cpp"
-	"tests/test_pictures.cpp"
-	"tests/test_cli.cpp"
-	"tests/test_data_folder.cpp"
-	"tests/test_generate.cpp"
-	"tests/test_generated_games.cpp"
-	"tests/test_prototype_pong.cpp"
-	"prototypes/pong_min/source/pong_min.cpp"
-	"tests/test_galaxian.cpp"
-	"tests/test_pitfall.cpp"
-	"tests/test_missilecommand.cpp"
-	"tests/test_combat.cpp"
-	"tests/test_airseabattle.cpp"
-	"tests/test_megamania.cpp"
-	"cli/source/cli.cpp"
-	"cli/source/generate.cpp"
+	"xge/tests/test_main.cpp"
+	"xge/tests/test_command_parsing.cpp"
+	"xge/tests/test_object_variables.cpp"
+	"xge/tests/test_conditions.cpp"
+	"xge/tests/test_win_condition.cpp"
+	"xge/tests/test_collision_geometry.cpp"
+	"xge/tests/test_swept_collision.cpp"
+	"xge/tests/test_input_resolution.cpp"
+	"xge/tests/test_stick.cpp"
+	"xge/tests/test_collision_rules.cpp"
+	"xge/tests/test_lockstep_bounce.cpp"
+	"xge/tests/test_size_expressions.cpp"
+	"xge/tests/test_engine_input.cpp"
+	"xge/tests/test_new_verbs.cpp"
+	"xge/tests/test_deflect.cpp"
+	"xge/tests/test_xml_format.cpp"
+	"xge/tests/test_equations.cpp"
+	"xge/tests/test_backends.cpp"
+	"xge/tests/test_group.cpp"
+	"xge/tests/test_breakout.cpp"
+	"xge/tests/test_frogger.cpp"
+	"xge/tests/test_spacerace.cpp"
+	"xge/tests/test_kaboom.cpp"
+	"xge/tests/test_freeway.cpp"
+	"xge/tests/test_depthcharge.cpp"
+	"xge/tests/test_astrosmash.cpp"
+	"xge/tests/test_lines_and_pixels.cpp"
+	"xge/tests/test_bitmap_sprites.cpp"
+	"xge/tests/test_svg_sprites.cpp"
+	"xge/tests/test_lunarlander.cpp"
+	"xge/tests/test_asteroids.cpp"
+	"xge/tests/test_demonattack.cpp"
+	"xge/tests/test_builtin_font.cpp"
+	"xge/tests/test_sound.cpp"
+	"xge/tests/test_gameplay_verbs.cpp"
+	"xge/tests/test_frostbite.cpp"
+	"xge/tests/test_donkeykong.cpp"
+	"xge/tests/test_berserk.cpp"
+	"xge/tests/test_pictures.cpp"
+	"xge/tests/test_cli.cpp"
+	"xge/tests/test_data_folder.cpp"
+	"xge/tests/test_generate.cpp"
+	"xge/tests/test_generated_games.cpp"
+	"xge/tests/test_prototype_pong.cpp"
+	"games/prototypes/pong_min/source/pong_min.cpp"
+	"xge/tests/test_galaxian.cpp"
+	"xge/tests/test_pitfall.cpp"
+	"xge/tests/test_missilecommand.cpp"
+	"xge/tests/test_combat.cpp"
+	"xge/tests/test_airseabattle.cpp"
+	"xge/tests/test_megamania.cpp"
+	"xge/cli/source/cli.cpp"
+	"xge/cli/source/generate.cpp"
 )
 
 # cli.cpp and generate.cpp are xgecli's own code, compiled in again here so
 # test_cli.cpp and test_generate.cpp can call it; the library does not contain
 # it (see executables.cmake).
-target_include_directories(xgetest PRIVATE cli/include prototypes/pong_min/source)
+target_include_directories(xgetest PRIVATE xge/cli/include games/prototypes/pong_min/source)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
@@ -115,7 +116,7 @@ xge_link_xslt(xgetest)
 # as the build runs, and its data (source/<game>.cpp) compiled into the tests:
 # test_generated_games.cpp plays each one against its file, frame by frame.
 # generated_games.h names them; the function for a game is its file's name in
-# camel case and "Game", as gameFunctionName in cli/source/generate.cpp.
+# camel case and "Game", as gameFunctionName in xge/cli/source/generate.cpp.
 set(XGE_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
 set(generated_declarations "")
 set(generated_entries "")
@@ -152,7 +153,8 @@ foreach(game_file IN LISTS data_xml)
 	target_sources(xgetest PRIVATE "${data}")
 
 	string(APPEND generated_declarations "xge::GameData ${function}();\n")
-	string(APPEND generated_entries "\t{ \"${game_file}\", ${function} },\n")
+	# The tests run in the games folder, so a game is descriptions/<game>.xml.
+	string(APPEND generated_entries "\t{ \"descriptions/${game}.xml\", ${function} },\n")
 endforeach()
 
 file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
@@ -170,9 +172,12 @@ file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
 configure_file("${XGE_GENERATED_DIR}/generated_games.h.in" "${XGE_GENERATED_DIR}/generated_games.h" COPYONLY)
 target_include_directories(xgetest PRIVATE "${XGE_GENERATED_DIR}")
 
-# games/ and assets/ end up next to the test binary, in output/<config> (same
-# as they do for the programs - see output.cmake and assets.cmake), because
-# several tests load the shipped games; the tests run from that folder.
+# games/ (the games, their assets and the generators) and xge/ (the schema and
+# the engine files the generator copies) end up next to the test binary, in
+# output/<config> (same as they do for the programs - see output.cmake and
+# assets.cmake), because several tests load the shipped games; the tests run
+# in games/ there, as xgecli and xgegui do (test_main.cpp makes sure of it when
+# xgetest is started from anywhere else).
 add_dependencies(xgetest xgedata)
 
 # In output/<config>, with its DLLs in libraries/ (output.cmake). Before
@@ -182,4 +187,4 @@ xge_place_program(xgetest)
 include(CTest)
 include(Catch)
 catch_discover_tests(xgetest
-	WORKING_DIRECTORY "$<TARGET_FILE_DIR:xgetest>")
+	WORKING_DIRECTORY "$<TARGET_FILE_DIR:xgetest>/games")

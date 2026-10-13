@@ -4,7 +4,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 ## State
 
-- 23 games in `games/`, one test file per area in `tests/`. Newer work lands on `working` ahead of `master`: check `git branch -r` and `git log` first.
+- 23 games in `games/descriptions/`, one test file per area in `xge/tests/`. Newer work lands on `working` ahead of `master`: check `git branch -r` and `git log` first.
 - The author builds on Windows (Visual Studio, vcpkg). Agents usually build on Linux, often without Qt or window and sound backends, and cannot watch or listen.
 
 ## Engine
@@ -18,12 +18,12 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 - Edge rules: `sprite=`/`unless=` are an `EdgeGuard`; `class=` or `object=` on an edge rule is a load error.
 - Touches in one moment run in file order and a pair where neither moves is skipped: a `<land />` or `<stop />` that runs first can hide a hazard met at the same moment (Pitfall's jaws come before the crocodiles). A variable named like an exprtk function (`floor`, `min`) stops the load.
 - `Game` never touches audio: `<play>` queues a name and `Engine::step()` plays it. Tests that build a `Game` without an `Engine` must call `setCurrentState(0)` and `measureShapeSize`, or nothing is shown and every size is 0.
-- Frogger and Space Race are groups of lanes addressed as `logrow3.2`, `pads.1`. `tests/invaders_fixture.h` is a frozen copy of the first Space Invaders.
+- Frogger and Space Race are groups of lanes addressed as `logrow3.2`, `pads.1`. `xge/tests/invaders_fixture.h` is a frozen copy of the first Space Invaders.
 - Before touching `CollisionDetector::circleRectangle`, add a test to `test_collision_geometry.cpp`. `test_xml_format.cpp` pins what both validators must reject; `xsd_lite` covers only the XSD subset the schema uses.
 - Arithmetic: a new operation is a row in `operationShape` (`command.cpp`), a case in `game_expr::evaluateOperation` and the schema types. A divisor of 0 is a load error before `finishLoading()` and a warning after; each `Answer` has a `late` flag for values not final while loading. Keep both.
 - Load checks: `ruleFor` in `game_expr.cpp` mirrors the dispatchers in `command_executor.cpp`; a new verb needs a line in both. Use `didYouMean` and `listOf` (`spelling.cpp`) in any name error.
 - The schema checks shape, not meaning; the loader checks names once everything is built.
-- Text falls back to the built-in 8x8 font when `assets/tuffy.ttf` is missing; programs set the folder holding `games/` and `assets/` as working directory (`data_folder.cpp`).
+- Text falls back to the built-in 8x8 font when `assets/tuffy.ttf` is missing; programs make the games folder (`games/`, holding `descriptions/` and `assets/`) the working directory (`data_folder.cpp`), and so does `xgetest` (ctest starts it there; `test_main.cpp` moves in otherwise). A test names a game `descriptions/<game>.xml` and the schema `../xge/xgedef.xsd`.
 
 ## Backends and build
 
@@ -39,7 +39,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 Reasons and details: [generator](../designs/40-generator.md).
 
-- A generated program is the engine with the game built in: `generators/windows-cpp/data.xsl` writes the `GameData` the engine would read from the file as C++, and xgecli copies the files `engine.xml` lists from `lib/` unchanged. `data.xsl` is a second reader of the file: a new tag, or a new field in a `Raw*` struct, `GameData` or `WindowDesc`, needs the same in `data.xsl` (and the describer in `test_generated_games.cpp`), and maybe a helper in `modules/game_parts.h`. The data test there compares every field with `readGame`'s for every game.
+- A generated program is the engine with the game built in: `games/generators/windows-cpp/data.xsl` writes the `GameData` the engine would read from the file as C++, and xgecli copies the files `engine.xml` lists from `xge/lib/` unchanged. `data.xsl` is a second reader of the file: a new tag, or a new field in a `Raw*` struct, `GameData` or `WindowDesc`, needs the same in `data.xsl` (and the describer in `test_generated_games.cpp`), and maybe a helper in `modules/game_parts.h`. The data test there compares every field with `readGame`'s for every game.
 - Keep generated functions short in statements that make big temporaries: a Debug build (MSVC, GCC -O0) gives every statement its own stack slots, and a long run of `RawObject`s in one function overflowed a 1 MB stack (Breakout's bricks); put such a line in a helper (`addCell`, `addMember` in `game_parts.h`). Check with a Debug build under `ulimit -s 1024`.
 - XSLT comments cannot hold `--` (so no `--generate` in them); libxml2 refuses the stylesheet.
 - `engine.xml` and `data_engine` in `assets.cmake` must list the same files, and `data_generators` every stylesheet; `test_generate.cpp` checks every copied file's includes are copied too. A new engine source a generated program needs goes in both; one that reads XML or chooses among libraries must stay out (keep `game.cpp`, `engine.cpp` free of `game_xml.h`, `xml_document.h` and the factories).

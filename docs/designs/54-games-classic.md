@@ -1,6 +1,6 @@
 # Games as tests: the first games
 
-**Status:** Every game in `games/` is built; most are played frame by frame in `tests/test_<game>.cpp`.
+**Status:** Every game in `games/descriptions/` is built; most are played frame by frame in `xge/tests/test_<game>.cpp`.
 
 ## At a glance
 
@@ -81,4 +81,4 @@
 ## Space Invaders 1 and 2
 
 - Invaders 1 was a grid of identical rectangles; redrawn with three alien kinds (squid, two rows of crab, two of octopus) as a group of three grids of two named bitmaps animated on a one-second interval (since one group of 11 columns and 5 rows whose rows change the bitmaps, [objects](05-objects.md)), a bitmap cannon and a thin bullet. Making the bullet thin showed `<fire>` put its left edge, not its middle, at the middle of the shooter; now centered (this moved Depth Charge's and Astrosmash's shots by half their width). Invaders 2 is the same game drawn from an SVG sprite sheet with three-frame animations a half second apart ([pictures](30-pictures.md)). In both, and in Demon Attack, the aliens fire back from pools on random timers, and the cannon has three lives.
-- Moving the game to three kinds broke tests that borrowed it as a block fixture, so those load `tests/invaders_fixture.h`, a frozen copy of the first game.
+- Moving the game to three kinds broke tests that borrowed it as a block fixture, so those load `xge/tests/invaders_fixture.h`, a frozen copy of the first game.

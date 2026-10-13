@@ -14,7 +14,7 @@ The author asked another AI to write three games from `xgedef.xsd` alone. All th
 
 ### Demon Attack (rewritten, 2026-10-10)
 
-- The first one was seven rectangles bouncing in a 160 by 210 window. Rewritten from scratch like the other Atari games (640 by 480): a bitmap cannon, a pool of eight bombs, and three waves as states: six flapping demons (two named bitmaps and an `<animation>`, each at a speed of its own, turning round and dropping bombs on random timers); four demons that `<release>` two small ones from a hidden pool where they were shot, the wave ending when neither is left (they share a class); three big demons with two looks, `whole` and `hurt`, as Breakout's bricks have. `tests/test_demonattack.cpp` plays it. Not in it: demons that dive at the cannon from the start, spare cannons for points, a colour for each wave.
+- The first one was seven rectangles bouncing in a 160 by 210 window. Rewritten from scratch like the other Atari games (640 by 480): a bitmap cannon, a pool of eight bombs, and three waves as states: six flapping demons (two named bitmaps and an `<animation>`, each at a speed of its own, turning round and dropping bombs on random timers); four demons that `<release>` two small ones from a hidden pool where they were shot, the wave ending when neither is left (they share a class); three big demons with two looks, `whole` and `hurt`, as Breakout's bricks have. `xge/tests/test_demonattack.cpp` plays it. Not in it: demons that dive at the cannon from the start, spare cannons for points, a colour for each wave.
 
 ### Frostbite
 

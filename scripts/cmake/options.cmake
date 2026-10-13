@@ -29,7 +29,7 @@ force_local_option(CATCH2 "Catch2")
 # sees it already set and leaves our default alone: the test suite pulls in
 # Catch2 (found via vcpkg/find_package, or fetched and built from source if
 # not installed), so it's opt-in rather than part of an ordinary build.
-option(BUILD_TESTING "Build the Catch2-based test suite in tests/" OFF)
+option(BUILD_TESTING "Build the Catch2-based test suite in xge/tests/" OFF)
 
 # How the engine library (the xgelib target) is built, and so how
 # xgecli, xgegui and the tests link to it. OFF (the default) is a static

@@ -9,7 +9,7 @@
 # and so on), so anything that includes the engine's headers needs them too.
 target_compile_features(xgelib PUBLIC cxx_std_20)
 
-target_include_directories(xgelib PUBLIC lib/include)
+target_include_directories(xgelib PUBLIC xge/lib/include)
 
 # Only the backends that are built (options.cmake) are linked, and each one
 # defines XGE_WITH_<NAME> for the engine and its users: the factories (window.cpp,
@@ -95,7 +95,7 @@ else()
 	target_link_libraries(xgelib PUBLIC exprtk)
 endif()
 
-# libxslt for xgecli's --generate (cli/source/generate.cpp), and for the tests
+# libxslt for xgecli's --generate (xge/cli/source/generate.cpp), and for the tests
 # that compile that file in again. XGE_WITH_XSLT is 1 when it was found, so the
 # file can say, when it was not, that this program cannot generate.
 function(xge_link_xslt target)

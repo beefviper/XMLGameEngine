@@ -1,0 +1,439 @@
+<!-- spaceinvaders.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Sept 18, 2020 -->
+
+<!--
+  Space Invaders. The ship and the aliens are not rectangles but pictures
+  written as text: a <bitmap> is rows of characters, a period for a clear pixel
+  and an asterisk for a solid one, each character drawn `pixel` (5) real pixels
+  across, so a few characters make a chunky sprite.
+
+  Each kind of alien has two sprites (a and b) and an <animation> that shows
+  them one after the other, each for animation.seconds (1) seconds. The aliens
+  are one group of 11 columns and 5 rows, so they march, bounce and step down
+  together as a single block: the squids' sprites are the group's, and rows 2
+  and 3 (crabs) and 4 and 5 (octopuses) change their rows of text and color.
+  The bullet is a thin tall rectangle.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+  <window name="Space Invaders">
+    <width>1024</width>
+    <height>768</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="margin">80</variable>
+    <variable name="pixel">5</variable>
+    <variable name="gap">15</variable>
+    <variable name="animation.seconds">1</variable>
+    <variable name="bulletwidth">4</variable>
+    <variable name="bulletheight">24</variable>
+    <variable name="step">2</variable>
+  </variables>
+  <sounds>
+    <!-- the cannon firing -->
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C6" to="C5">0.08</note>
+    </sound>
+    <!-- an alien hit -->
+    <sound name="alienhit" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="6000" to="1500">0.15</note>
+    </sound>
+    <!-- the cannon hit by a bomb -->
+    <sound name="playerhit" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="2000" to="100">0.7</note>
+    </sound>
+  </sounds>
+  <objects>
+    <object name="bullet" class="projectile">
+      <sprite>
+        <rectangle>
+          <width>bulletwidth</width>
+          <height>bulletheight</height>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><y>-12</y></velocity>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all">
+          <die />
+        </collision>
+        <collision class="aliens">
+          <die />
+        </collision>
+      </collisions>
+    </object>
+    <object name="player">
+      <sprite>
+        <bitmap>
+          <row>.....*.....</row>
+          <row>....***....</row>
+          <row>....***....</row>
+          <row>.*********.</row>
+          <row>***********</row>
+          <row>***********</row>
+          <row>***********</row>
+          <scale>pixel</scale>
+          <color>color.green</color>
+        </bitmap>
+      </sprite>
+      <position><x>window.width.center - player.width / 2</x><y>window.bottom - player.height * 2</y></position>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <stick />
+        </collision>
+        <collision class="bomb">
+          <dec variable="player.lives" />
+          <play sound="playerhit" />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="left">
+          <move direction="left">step</move>
+        </action>
+        <action name="right">
+          <move direction="right">step</move>
+        </action>
+        <action name="gun">
+          <fire object="bullet" />
+          <play sound="shoot" />
+        </action>
+      </actions>
+      <variables>
+        <variable name="lives">3</variable>
+      </variables>
+    </object>
+    <!--
+      The aliens' bombs: a pool of three, so no more than three are ever
+      falling. Every alien faces down and has a timer with a random wait that
+      drops one from the pool, so the bombs come from all over the block.
+    -->
+    <group name="bombs" class="bomb">
+      <sprite>
+        <bitmap>
+          <row>.*</row>
+          <row>*.</row>
+          <row>.*</row>
+          <row>*.</row>
+          <row>.*</row>
+          <scale>3</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <velocity><y>5</y></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>false</enabled>
+        <collision edge="all">
+          <die />
+        </collision>
+        <collision object="player">
+          <die />
+        </collision>
+      </collisions>
+      <member />
+      <member />
+      <member />
+    </group>
+    <group name="aliens" class="aliens">
+      <columns>11</columns>
+      <rows>5</rows>
+      <padding><x>gap</x><y>gap</y></padding>
+      <sprite name="a">
+        <bitmap>
+          <row>....***....</row>
+          <row>...*****...</row>
+          <row>..*******..</row>
+          <row>.**.***.**.</row>
+          <row>.*********.</row>
+          <row>...*.*.*...</row>
+          <row>..*..*..*..</row>
+          <row>...*.*.*...</row>
+          <scale>pixel</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>....***....</row>
+          <row>...*****...</row>
+          <row>..*******..</row>
+          <row>.**.***.**.</row>
+          <row>.*********.</row>
+          <row>..*..*..*..</row>
+          <row>.*...*...*.</row>
+          <row>..*.....*..</row>
+          <scale>pixel</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>animation.seconds</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>margin</x><y>margin / 2</y></position>
+      <velocity><x>2</x></velocity>
+      <facing>down</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <lockstep>true</lockstep>
+        <collision edge="horizontal">
+          <bounce />
+          <move direction="down">10</move>
+        </collision>
+        <collision object="bullet">
+          <play sound="alienhit" />
+          <die />
+        </collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every><random min="2" max="25" /></every>
+          <fire object="bombs" />
+        </timer>
+      </timers>
+      <row number="2 3">
+        <sprite name="a">
+          <bitmap>
+            <row>..*.....*..</row>
+            <row>...*...*...</row>
+            <row>..*******..</row>
+            <row>.**.***.**.</row>
+            <row>***********</row>
+            <row>*.*******.*</row>
+            <row>*.*.....*.*</row>
+            <row>...**.**...</row>
+            <color>color.cyan</color>
+          </bitmap>
+        </sprite>
+        <sprite name="b">
+          <bitmap>
+            <row>..*.....*..</row>
+            <row>*..*...*..*</row>
+            <row>*.*******.*</row>
+            <row>***.***.***</row>
+            <row>***********</row>
+            <row>.*********.</row>
+            <row>..*.....*..</row>
+            <row>.*.......*.</row>
+            <color>color.cyan</color>
+          </bitmap>
+        </sprite>
+      </row>
+      <row number="4 5">
+        <sprite name="a">
+          <bitmap>
+            <row>...*****...</row>
+            <row>.*********.</row>
+            <row>***********</row>
+            <row>***..*..***</row>
+            <row>***********</row>
+            <row>...**.**...</row>
+            <row>..**...**..</row>
+            <row>***.....***</row>
+            <color>color.white</color>
+          </bitmap>
+        </sprite>
+        <sprite name="b">
+          <bitmap>
+            <row>...*****...</row>
+            <row>.*********.</row>
+            <row>***********</row>
+            <row>***..*..***</row>
+            <row>***********</row>
+            <row>..***.***..</row>
+            <row>.**.....**.</row>
+            <row>..**...**..</row>
+            <color>color.white</color>
+          </bitmap>
+        </sprite>
+      </row>
+    </group>
+    <object name="title">
+      <sprite>
+        <text>
+          <content>SPACE INVADERS</content>
+          <size>110</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 - 100</y></position>
+    </object>
+    <object name="youwin">
+      <sprite>
+        <text>
+          <content>YOU WIN</content>
+          <size>128</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - 150</y></position>
+    </object>
+    <object name="continue">
+      <sprite>
+        <text>
+          <content>spacebar to continue</content>
+          <size>48</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - continue.width / 2</x><y>window.height.center + 60</y></position>
+    </object>
+    <object name="settings">
+      <sprite>
+        <text>
+          <content>settings</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - settings.width / 2</x><y>window.height.center - settings.height / 2</y></position>
+    </object>
+    <object name="paused">
+      <sprite>
+        <text>
+          <content>paused</content>
+          <size>128</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+    </object>
+    <object name="lives">
+      <sprite>
+        <text>
+          <number>player.lives</number>
+          <size>40</size>
+          <color>color.green</color>
+        </text>
+      </sprite>
+      <position><x>20</x><y>window.bottom - 50</y></position>
+    </object>
+    <object name="youlose">
+      <sprite>
+        <text>
+          <content>GAME OVER</content>
+          <size>128</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - youlose.width / 2</x><y>window.height.center - 150</y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <shows>
+        <show object="title" />
+        <show object="player" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+        <input button="s">
+          <push state="settings" />
+        </input>
+      </inputs>
+    </state>
+    <state name="settings">
+      <shows>
+        <show object="settings" />
+        <show object="player" />
+      </shows>
+      <inputs>
+        <input button="escape">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <shows>
+        <show object="bullet" />
+        <show object="bombs" />
+        <show object="player" />
+        <show object="aliens" />
+        <show object="lives" />
+      </shows>
+      <inputs>
+        <input button="p">
+          <push state="paused" />
+        </input>
+        <input button="a">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="player" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="player" action="right" />
+        </input>
+        <input button="space">
+          <trigger object="player" action="gun" />
+        </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition class="aliens">
+          <remaining>0</remaining>
+          <push state="gameover" />
+        </condition>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="lost" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <shows>
+        <show object="paused" />
+        <show object="player" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="lost">
+      <shows>
+        <show object="youlose" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <shows>
+        <show object="youwin" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>

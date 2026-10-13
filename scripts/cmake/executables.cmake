@@ -5,8 +5,8 @@
 #
 # The programs built on the engine library (the xgelib target):
 #   xgecli  the command line front end: picks a game file from the arguments,
-#           loads it, and runs it in a window (cli/)
-#   xgegui  the Qt front end (gui/): the game in a window, with play, pause and
+#           loads it, and runs it in a window (xge/cli/)
+#   xgegui  the Qt front end (xge/gui/): the game in a window, with play, pause and
 #           step controls and a tree of the game's data that can be edited
 #           while it runs. Built only when Qt 6 is found (dependencies.cmake)
 # They are defined here, in the top-level directory's scope, so they land in
@@ -14,11 +14,11 @@
 # assets.cmake makes.
 
 add_executable(xgecli
-	"cli/source/main.cpp"
-	"cli/source/cli.cpp"
-	"cli/source/generate.cpp"
-	"cli/include/cli.h"
-	"cli/include/generate.h"
+	"xge/cli/source/main.cpp"
+	"xge/cli/source/cli.cpp"
+	"xge/cli/source/generate.cpp"
+	"xge/cli/include/cli.h"
+	"xge/cli/include/generate.h"
 )
 
 set(XGE_PROGRAMS xgecli)
@@ -26,33 +26,33 @@ set(XGE_PROGRAMS xgecli)
 if (Qt6_FOUND)
 	# The headers are listed so that AUTOMOC finds the Q_OBJECT classes in them.
 	add_executable(xgegui
-		"gui/source/main.cpp"
-		"gui/source/main_window.cpp"
-		"gui/source/game_session.cpp"
-		"gui/source/game_view.cpp"
-		"gui/source/qt_window.cpp"
-		"gui/source/inspector.cpp"
-		"gui/source/key_queue.cpp"
-		"gui/source/game_stage.cpp"
-		"gui/source/app_settings.cpp"
-		"gui/source/session_options.cpp"
-		"gui/source/options_dialog.cpp"
-		"gui/source/theme.cpp"
-		"gui/include/main_window.h"
-		"gui/include/game_session.h"
-		"gui/include/game_view.h"
-		"gui/include/qt_window.h"
-		"gui/include/inspector.h"
-		"gui/include/key_queue.h"
-		"gui/include/game_stage.h"
-		"gui/include/app_settings.h"
-		"gui/include/session_options.h"
-		"gui/include/options_dialog.h"
-		"gui/include/theme.h"
+		"xge/gui/source/main.cpp"
+		"xge/gui/source/main_window.cpp"
+		"xge/gui/source/game_session.cpp"
+		"xge/gui/source/game_view.cpp"
+		"xge/gui/source/qt_window.cpp"
+		"xge/gui/source/inspector.cpp"
+		"xge/gui/source/key_queue.cpp"
+		"xge/gui/source/game_stage.cpp"
+		"xge/gui/source/app_settings.cpp"
+		"xge/gui/source/session_options.cpp"
+		"xge/gui/source/options_dialog.cpp"
+		"xge/gui/source/theme.cpp"
+		"xge/gui/include/main_window.h"
+		"xge/gui/include/game_session.h"
+		"xge/gui/include/game_view.h"
+		"xge/gui/include/qt_window.h"
+		"xge/gui/include/inspector.h"
+		"xge/gui/include/key_queue.h"
+		"xge/gui/include/game_stage.h"
+		"xge/gui/include/app_settings.h"
+		"xge/gui/include/session_options.h"
+		"xge/gui/include/options_dialog.h"
+		"xge/gui/include/theme.h"
 	)
 
 	set_target_properties(xgegui PROPERTIES AUTOMOC ON)
-	target_include_directories(xgegui PRIVATE gui/include)
+	target_include_directories(xgegui PRIVATE xge/gui/include)
 	target_link_libraries(xgegui PRIVATE Qt6::Widgets)
 
 	# Qt loads its platform plug-in (platforms/qwindows.dll) from a folder next
@@ -99,36 +99,36 @@ foreach(program IN LISTS XGE_PROGRAMS)
 	xge_place_program(${program})
 endforeach()
 
-# cli/include is not part of the library's include directory: only xgecli uses it.
-target_include_directories(xgecli PRIVATE cli/include)
+# xge/cli/include is not part of the library's include directory: only xgecli uses it.
+target_include_directories(xgecli PRIVATE xge/cli/include)
 
 # --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
 xge_link_xslt(xgecli)
 
-# A prototype of what the windows-cpp generator should write (prototypes/):
+# A prototype of what the windows-cpp generator should write (games/prototypes/):
 # pong_min.xml as code that decides what happens, built from only the engine
 # modules that do it (the frame, the verbs, the collisions, the shapes, the
 # random numbers, SFML's window). No game.cpp, no game_expr or exprtk, no XML
 # library, no CommandExecutor: the list below is the whole engine it needs.
 if (XGE_WITH_SFML3)
 	add_executable(pong_min_prototype
-		"prototypes/pong_min/source/main.cpp"
-		"prototypes/pong_min/source/pong_min.cpp"
-		"prototypes/pong_min/source/pong_min.h"
-		"lib/source/frame.cpp"
-		"lib/source/verbs.cpp"
-		"lib/source/geometry.cpp"
-		"lib/source/collision_detector.cpp"
-		"lib/source/object.cpp"
-		"lib/source/bitmap.cpp"
-		"lib/source/command.cpp"
-		"lib/source/random.cpp"
-		"lib/source/color.cpp"
-		"lib/source/builtin_font.cpp"
-		"lib/source/window_sfml.cpp"
+		"games/prototypes/pong_min/source/main.cpp"
+		"games/prototypes/pong_min/source/pong_min.cpp"
+		"games/prototypes/pong_min/source/pong_min.h"
+		"xge/lib/source/frame.cpp"
+		"xge/lib/source/verbs.cpp"
+		"xge/lib/source/geometry.cpp"
+		"xge/lib/source/collision_detector.cpp"
+		"xge/lib/source/object.cpp"
+		"xge/lib/source/bitmap.cpp"
+		"xge/lib/source/command.cpp"
+		"xge/lib/source/random.cpp"
+		"xge/lib/source/color.cpp"
+		"xge/lib/source/builtin_font.cpp"
+		"xge/lib/source/window_sfml.cpp"
 	)
 	target_compile_features(pong_min_prototype PRIVATE cxx_std_20)
-	target_include_directories(pong_min_prototype PRIVATE lib/include prototypes/pong_min/source)
+	target_include_directories(pong_min_prototype PRIVATE xge/lib/include games/prototypes/pong_min/source)
 	target_link_libraries(pong_min_prototype PRIVATE SFML::System SFML::Window SFML::Graphics)
 	xge_warnings(pong_min_prototype)
 	xge_place_program(pong_min_prototype)

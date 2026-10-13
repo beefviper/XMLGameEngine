@@ -6,104 +6,106 @@
 add_dependencies(xgelib xgedata)
 
 # The games and assets are copied into output/<config> (output.cmake), next to
-# the programs, keeping their games/ and assets/ folders and xgedef.xsd (the
-# schema, at the top of the repository, which every game names as ../xgedef.xsd). Each file is its own
-# copy step, so a build copies only the files that changed.
+# the programs, in the same folders as in the repository: games/descriptions/,
+# games/assets/ and games/generators/, and xge/xgedef.xsd (the schema, which
+# every game names as ../../xge/xgedef.xsd) and the engine files the generator
+# copies in xge/lib/. Each file is its own copy step, so a build copies only the
+# files that changed.
 set(data_xsd
-	"xgedef.xsd")
+	"xge/xgedef.xsd")
 
 set(data_xml
-	"games/pong.xml"
-	"games/breakout.xml"
-	"games/spaceinvaders.xml"
-	"games/spaceinvaders2.xml"
-	"games/frogger.xml"
-	"games/spacerace.xml"
-	"games/kaboom.xml"
-	"games/freeway.xml"
-	"games/depthcharge.xml"
-	"games/astrosmash.xml"
-	"games/lunarlander.xml"
-	"games/asteroids.xml"
-	"games/berserk.xml"
-	"games/demonattack.xml"
-	"games/frostbite.xml"
-	"games/donkeykong.xml"
-	"games/galaxian.xml"
-	"games/pong_min.xml"
-	"games/pitfall.xml"
-	"games/missilecommand.xml"
-	"games/combat.xml"
-	"games/airseabattle.xml"
-	"games/megamania.xml")
+	"games/descriptions/pong.xml"
+	"games/descriptions/breakout.xml"
+	"games/descriptions/spaceinvaders.xml"
+	"games/descriptions/spaceinvaders2.xml"
+	"games/descriptions/frogger.xml"
+	"games/descriptions/spacerace.xml"
+	"games/descriptions/kaboom.xml"
+	"games/descriptions/freeway.xml"
+	"games/descriptions/depthcharge.xml"
+	"games/descriptions/astrosmash.xml"
+	"games/descriptions/lunarlander.xml"
+	"games/descriptions/asteroids.xml"
+	"games/descriptions/berserk.xml"
+	"games/descriptions/demonattack.xml"
+	"games/descriptions/frostbite.xml"
+	"games/descriptions/donkeykong.xml"
+	"games/descriptions/galaxian.xml"
+	"games/descriptions/pong_min.xml"
+	"games/descriptions/pitfall.xml"
+	"games/descriptions/missilecommand.xml"
+	"games/descriptions/combat.xml"
+	"games/descriptions/airseabattle.xml"
+	"games/descriptions/megamania.xml")
 
 set(data_assets
-	"assets/tuffy.ttf"
-	"assets/paddle.jpg"
-	"assets/Space Invaders Color Sprites.svg")
+	"games/assets/tuffy.ttf"
+	"games/assets/paddle.jpg"
+	"games/assets/Space Invaders Color Sprites.svg")
 
 # The stylesheets xgecli --generate runs, a folder per target (generate.cpp),
 # and the target's modules, copied into a program unchanged.
 set(data_generators
-	"generators/windows-cpp/generate.xsl"
-	"generators/windows-cpp/text.xsl"
-	"generators/windows-cpp/data.xsl"
-	"generators/windows-cpp/program.xsl"
-	"generators/windows-cpp/engine.xml"
-	"generators/windows-cpp/modules/game_parts.h")
+	"games/generators/windows-cpp/generate.xsl"
+	"games/generators/windows-cpp/text.xsl"
+	"games/generators/windows-cpp/data.xsl"
+	"games/generators/windows-cpp/program.xsl"
+	"games/generators/windows-cpp/engine.xml"
+	"games/generators/windows-cpp/modules/game_parts.h")
 
 # The engine's own files a generated program compiles unchanged
-# (generators/windows-cpp/engine.xml, which this list must match):
+# (games/generators/windows-cpp/engine.xml, which this list must match):
 # the whole engine but for reading XML and choosing among libraries. Copied
-# under lib/ as they are here; they are already the engine's sources, so they
+# under xge/lib/ as they are here; they are already the engine's sources, so they
 # are not listed again beside the data.
 set(data_engine
-	"lib/include/types.h"
-	"lib/include/geometry.h"
-	"lib/source/geometry.cpp"
-	"lib/include/random.h"
-	"lib/source/random.cpp"
-	"lib/include/verbs.h"
-	"lib/source/verbs.cpp"
-	"lib/include/frame.h"
-	"lib/source/frame.cpp"
-	"lib/include/color.h"
-	"lib/source/color.cpp"
-	"lib/include/bitmap.h"
-	"lib/source/bitmap.cpp"
-	"lib/include/svg.h"
-	"lib/source/svg.cpp"
-	"lib/include/spelling.h"
-	"lib/source/spelling.cpp"
-	"lib/include/keycode.h"
-	"lib/source/keycode.cpp"
-	"lib/include/command.h"
-	"lib/source/command.cpp"
-	"lib/include/object.h"
-	"lib/source/object.cpp"
-	"lib/include/states.h"
-	"lib/source/states.cpp"
-	"lib/include/sound.h"
-	"lib/source/sound.cpp"
-	"lib/include/game_data.h"
-	"lib/include/game_expr.h"
-	"lib/source/game_expr.cpp"
-	"lib/include/collision_detector.h"
-	"lib/source/collision_detector.cpp"
-	"lib/include/command_executor.h"
-	"lib/source/command_executor.cpp"
-	"lib/include/game.h"
-	"lib/source/game.cpp"
-	"lib/include/audio.h"
-	"lib/include/audio_sfml.h"
-	"lib/source/audio_sfml.cpp"
-	"lib/include/builtin_font.h"
-	"lib/source/builtin_font.cpp"
-	"lib/include/window.h"
-	"lib/include/window_sfml.h"
-	"lib/source/window_sfml.cpp"
-	"lib/include/engine.h"
-	"lib/source/engine.cpp")
+	"xge/lib/include/types.h"
+	"xge/lib/include/geometry.h"
+	"xge/lib/source/geometry.cpp"
+	"xge/lib/include/random.h"
+	"xge/lib/source/random.cpp"
+	"xge/lib/include/verbs.h"
+	"xge/lib/source/verbs.cpp"
+	"xge/lib/include/frame.h"
+	"xge/lib/source/frame.cpp"
+	"xge/lib/include/color.h"
+	"xge/lib/source/color.cpp"
+	"xge/lib/include/bitmap.h"
+	"xge/lib/source/bitmap.cpp"
+	"xge/lib/include/svg.h"
+	"xge/lib/source/svg.cpp"
+	"xge/lib/include/spelling.h"
+	"xge/lib/source/spelling.cpp"
+	"xge/lib/include/keycode.h"
+	"xge/lib/source/keycode.cpp"
+	"xge/lib/include/command.h"
+	"xge/lib/source/command.cpp"
+	"xge/lib/include/object.h"
+	"xge/lib/source/object.cpp"
+	"xge/lib/include/states.h"
+	"xge/lib/source/states.cpp"
+	"xge/lib/include/sound.h"
+	"xge/lib/source/sound.cpp"
+	"xge/lib/include/game_data.h"
+	"xge/lib/include/game_expr.h"
+	"xge/lib/source/game_expr.cpp"
+	"xge/lib/include/collision_detector.h"
+	"xge/lib/source/collision_detector.cpp"
+	"xge/lib/include/command_executor.h"
+	"xge/lib/source/command_executor.cpp"
+	"xge/lib/include/game.h"
+	"xge/lib/source/game.cpp"
+	"xge/lib/include/audio.h"
+	"xge/lib/include/audio_sfml.h"
+	"xge/lib/source/audio_sfml.cpp"
+	"xge/lib/include/builtin_font.h"
+	"xge/lib/source/builtin_font.cpp"
+	"xge/lib/include/window.h"
+	"xge/lib/include/window_sfml.h"
+	"xge/lib/source/window_sfml.cpp"
+	"xge/lib/include/engine.h"
+	"xge/lib/source/engine.cpp")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators data_engine)
