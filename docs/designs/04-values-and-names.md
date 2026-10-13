@@ -38,6 +38,19 @@
 - **Wart:** an object's own `<variable name="width">` shadows its size. Precedence (variable wins) keeps old games working. Alternatives, none built: a reserved spelling (`title.size.width`, `title.@width`), a separate namespace, rejecting the clash at load, a load warning.
 - Alternatives to arithmetic for placing by size, none built: an alignment attribute (`align="center"`), an origin at the center, a per-axis anchor.
 
+## Reference points and axes
+
+**Status:** Idea, to come back to later (2026-10-13). Nothing decided.
+
+- Measured on 2026-10-13: `window.width.center - name.width / 2` (or the height form) is written 330 times in the 23 games, and is 330 of the 396 places an object names its own size inside itself (Kaboom 23, Combat 20, Missile Command 19, Asteroids 18, Freeway 18). Every one exists because positions name an object's top-left corner.
+- The idea is broader than centring: let a game say **which point of an object its position and math name** (top-left, as now, or centre, or another of the nine), and perhaps **where the screen's origin is and which way its axes run** (y up, as in maths, or down, as now).
+- Possible forms, none chosen:
+  - an attribute on `<position>`, `anchor="center"`, borrowing the edge words (`top`, `bottom-right`); an attribute because it picks a point, it does not compute;
+  - one setting for the whole game in `<window>`, so every position, size and collision edge is read the same way;
+  - both: a game-wide default that a `<position>` can change, the same "say only what differs" rule as groups.
+- Beef's view (2026-10-13): open to alternate ways of describing this, as long as it stays an element or attribute and not something parsed out of a string.
+- Open: whether velocity and the `<move>` directions follow a flipped y axis; whether a size-dependent position still needs re-placing when text is measured (with a centre anchor the centre stays put and only the corner moves); what the windows-cpp generator writes.
+
 ## Names and classes
 
 - Objects have a unique `name` and an optional `class`, borrowed from HTML `id` and `class`: target one thing or all things of a kind. One condition on `class="paddle"` covers both paddles.
