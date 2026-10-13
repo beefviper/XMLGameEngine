@@ -106,7 +106,6 @@
         <line><from><x>1</x><y>28</y></from><to><x>12</x><y>0</y></to><thickness>2</thickness></line>
       </sprite>
       <position><x>window.width.center - ship.width / 2</x><y>window.height.center - ship.height / 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <heading>0</heading>
       <drag>drag</drag>
       <collisions>
@@ -155,7 +154,7 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>-shotspeed</y></velocity>
+      <velocity><y>-shotspeed</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
@@ -188,7 +187,6 @@
         <line><from><x>50</x><y>21</y></from><to><x>60</x><y>33</y></to><thickness>2</thickness></line>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
@@ -264,7 +262,6 @@
         <line><from><x>35</x><y>23</y></from><to><x>27</x><y>28</y></to><thickness>2</thickness></line>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>true</enabled>
@@ -379,7 +376,6 @@
         <line><from><x>18</x><y>5</y></from><to><x>16</x><y>11</y></to><thickness>2</thickness></line>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>true</enabled>
@@ -554,10 +550,6 @@
         </text>
       </sprite>
       <position><x>margin</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="scorevalue">
       <sprite>
@@ -568,10 +560,6 @@
         </text>
       </sprite>
       <position><x>margin + scorelabel.width + 12</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="liveslabel">
       <sprite>
@@ -582,10 +570,6 @@
         </text>
       </sprite>
       <position><x>window.right - livesvalue.width - liveslabel.width - margin - 12</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="livesvalue">
       <sprite>
@@ -596,10 +580,6 @@
         </text>
       </sprite>
       <position><x>window.right - livesvalue.width - margin</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="title">
       <sprite>
@@ -610,10 +590,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="help">
       <sprite>
@@ -624,10 +600,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="keys">
       <sprite>
@@ -638,10 +610,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (30)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="start">
       <sprite>
@@ -652,10 +620,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (110)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="paused">
       <sprite>
@@ -666,10 +630,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="wonmsg">
       <sprite>
@@ -680,10 +640,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - wonmsg.width / 2</x><y>window.height.center - wonmsg.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="overmsg">
       <sprite>
@@ -694,10 +650,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - overmsg.width / 2</x><y>window.height.center - overmsg.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="again">
       <sprite>
@@ -708,10 +660,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
   </objects>
   <states>

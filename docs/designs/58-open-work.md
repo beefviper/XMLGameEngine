@@ -12,6 +12,7 @@
 - **Pictures** ([animation-and-looks](31-animation-and-looks.md)): the rest of the Space Invaders 2 sheet (banking ship and hit flash as looks, explosions as a released pool, the saucer on a timer); looks on animated objects; a palette; per-frame intervals; animation that runs once.
 - **Groups** ([groups](06-groups.md)): nested groups, a bare `<x>` in a member, evenly spaced members.
 - **Arithmetic** ([arithmetic](03-arithmetic.md), [vocabulary-map](11-vocabulary-map.md)): move the other games' arithmetic to `<equation>`/`<formula>` if wanted; add `min`, `max`, `negate`, `abs`, `clamp` and a `<random>` step.
+- **Repetition** (counted 2026-10-13, before defaults: about 940 lines of the games repeat exactly and 2,200 with only a number or name changed). Left after [objects](05-objects.md)' defaults: the same collision rules on unrelated objects (Frogger's lanes ×10, Space Race ×9; nested groups or rules on a `class`); the same shows and conditions in every state (Kaboom's waves; `<keys>` stretched to them, or a state that takes another and changes parts); a numbered bundle of objects and a state copied whole (Berserk's rooms ×4, Kaboom's waves ×3; the one case that needs parameters, perhaps expanded by XSLT before load). One rule throughout: take the shared thing, say only what differs.
 - **Games the vocabulary cannot say yet**: see [games-atari](56-games-atari.md).
 
 ## Code

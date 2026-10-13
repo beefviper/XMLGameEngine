@@ -154,7 +154,6 @@
       <position>
         <y>row1</y>
       </position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="bottom">
@@ -197,7 +196,6 @@
       <position>
         <y>row2</y>
       </position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="bottom">
@@ -244,7 +242,6 @@
       <position>
         <y>row3</y>
       </position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="bottom">
@@ -293,7 +290,6 @@
       <position>
         <y>row4</y>
       </position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="bottom">
@@ -344,7 +340,6 @@
       <position>
         <y>row5</y>
       </position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="bottom">
@@ -386,10 +381,6 @@
         </rectangle>
       </sprite>
       <position><x>-10</x><y>-10</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
       <timers>
         <timer>
           <after>0.01</after>
@@ -411,7 +402,7 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>6</y></velocity>
+      <velocity><y>6</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
@@ -438,7 +429,7 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>-10</y></velocity>
+      <velocity><y>-10</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
@@ -465,7 +456,6 @@
         </bitmap>
       </sprite>
       <position><x>window.width.center - ship.width / 2</x><y>window.bottom - ship.height - margin * 3</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -506,10 +496,6 @@
         </text>
       </sprite>
       <position><x>margin</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="lives">
       <sprite>
@@ -520,10 +506,6 @@
         </text>
       </sprite>
       <position><x>window.right - lives.width - margin</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="title">
       <sprite>
@@ -534,10 +516,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-120)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="help">
       <sprite>
@@ -548,10 +526,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="keys">
       <sprite>
@@ -562,10 +536,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (20)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="start">
       <sprite>
@@ -576,10 +546,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (110)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="paused">
       <sprite>
@@ -590,10 +556,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="gameover">
       <sprite>
@@ -604,10 +566,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="again">
       <sprite>
@@ -618,10 +576,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
   </objects>
   <states>

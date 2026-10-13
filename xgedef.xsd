@@ -735,7 +735,7 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- Some of two numbers: a group's or a member's <position> and <velocity>. -->
+  <!-- Some of two numbers: a group's or a member's <position> and <velocity>, and an object's <velocity> (a half left out is 0). -->
   <xs:complexType name="partialVector2Type">
     <xs:sequence>
       <xs:element name="x" type="valueType" minOccurs="0" />
@@ -780,13 +780,13 @@
       <xs:element name="sprite" type="spriteType" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="vector2Type" />
-      <xs:element name="velocity" type="vector2Type" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
-      <xs:element name="collisions" type="collisionsType" />
+      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
       <xs:element name="timers" type="timersType" minOccurs="0" />
@@ -875,7 +875,7 @@
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
-      <xs:element name="collisions" type="collisionsType" />
+      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
       <xs:element name="timers" type="timersType" minOccurs="0" />

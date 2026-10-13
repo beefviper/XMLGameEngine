@@ -61,9 +61,15 @@
   <xsl:template name="value-of">
     <xsl:param name="node" />
     <xsl:param name="name" />
-    <xsl:call-template name="value">
-      <xsl:with-param name="node" select="$node/*[local-name() = $name][1]" />
-    </xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="$node/*[local-name() = $name]">
+        <xsl:call-template name="value">
+          <xsl:with-param name="node" select="$node/*[local-name() = $name][1]" />
+        </xsl:call-template>
+      </xsl:when>
+      <!-- left out, as an object's <velocity> or a half of it may be: 0 -->
+      <xsl:otherwise>value("0")</xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- An <x>/<y> pair: { x, y }. -->
@@ -934,6 +940,13 @@
       <xsl:with-param name="to" select="'group'" />
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
+    <!-- a velocity half nobody gives is 0 -->
+    <xsl:if test="not(velocity/x)">
+      <xsl:value-of select="concat($in, 'group.object.rawVelocity.x = value(&quot;0&quot;);&#10;')" />
+    </xsl:if>
+    <xsl:if test="not(velocity/y)">
+      <xsl:value-of select="concat($in, 'group.object.rawVelocity.y = value(&quot;0&quot;);&#10;')" />
+    </xsl:if>
     <xsl:if test="acceleration">
       <xsl:value-of select="concat($in, 'group.object.hasAcceleration = true;&#10;', $in, 'group.object.rawAcceleration = ')" />
       <xsl:call-template name="vector">

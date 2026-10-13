@@ -142,6 +142,29 @@ TEST_CASE("a group is read as one object for each member", "[group]")
 	}
 }
 
+TEST_CASE("what a game leaves out is nothing: still, and touching nothing", "[group]")
+{
+	// No <velocity> and no <collisions>, in a group and in an object; a
+	// member gives one half of a velocity, an object the other.
+	Loaded loaded{ gameXml(groupWith(kSprite + kPosition, "<member /><member><velocity><x>2</x></velocity></member>") +
+		"<object name=\"still\">" + kSprite + kPosition + "</object>"
+		"<object name=\"falling\">" + kSprite + kPosition + "<velocity><y>3</y></velocity></object>",
+		"<show object=\"lane\" /><show object=\"still\" /><show object=\"falling\" />") };
+
+	for (const char* name : { "lane.1", "still" })
+	{
+		const Object& object = loaded.game.getObject(name);
+		CHECK(object.velocity.x == 0.0f);
+		CHECK(object.velocity.y == 0.0f);
+		CHECK_FALSE(object.collisionData.enabled);
+	}
+	CHECK(loaded.game.getObject("lane.2").velocity.x == 2.0f);
+	CHECK(loaded.game.getObject("lane.2").velocity.y == 0.0f);
+	CHECK(loaded.game.getObject("falling").velocity.x == 0.0f);
+	CHECK(loaded.game.getObject("falling").velocity.y == 3.0f);
+	CHECK_FALSE(loaded.game.getObject("falling").collisionData.enabled);
+}
+
 TEST_CASE("a member takes what it leaves out from its group", "[group]")
 {
 	Loaded loaded{ gameXml(kLane) };
@@ -297,18 +320,6 @@ TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
 		REQUIRE_THROWS_WITH(Loaded(gameXml(groupWith(kSprite + "<position><y>0</y></position>" + kVelocity + kCollisions,
 			"<member /><member><position><x>4</x></position></member>"))),
 			ContainsSubstring("object 'lane.1'") && ContainsSubstring("<position><x>"));
-	}
-
-	SECTION("nothing gives the velocity")
-	{
-		REQUIRE_THROWS_WITH(Loaded(gameXml(groupWith(kSprite + kPosition + kCollisions, kMember))),
-			ContainsSubstring("has no <velocity><x>"));
-	}
-
-	SECTION("a group with no collisions")
-	{
-		REQUIRE_THROWS_WITH(Loaded(gameXml(groupWith(kSprite + kPosition + kVelocity, kMember))),
-			ContainsSubstring("group 'lane'") && ContainsSubstring("missing <collisions>"));
 	}
 
 	SECTION("something a member cannot say")

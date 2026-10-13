@@ -169,7 +169,6 @@
         </bitmap>
       </sprite>
       <position><x>21</x><y>209</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <facing>right</facing>
       <collisions>
         <enabled>true</enabled>
@@ -294,7 +293,7 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>-8</y></velocity>
+      <velocity><y>-8</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
@@ -315,7 +314,7 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>3</y></velocity>
+      <velocity><y>3</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
@@ -423,7 +422,6 @@
         </bitmap>
       </sprite>
       <position><x>0</x><y>48</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
@@ -434,7 +432,6 @@
          into one is leaving (the man's rule for class exit1); the robots turn at them. -->
     <group name="exits1" class="exit1">
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -461,8 +458,6 @@
     <object name="tally1">
       <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
       <variables>
         <variable name="kills">0</variable>
       </variables>
@@ -505,7 +500,6 @@
         <frame sprite="b" />
       </animation>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <facing>left</facing>
       <collisions>
         <enabled>true</enabled>
@@ -568,7 +562,6 @@
         <frame sprite="b" />
       </animation>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <facing>up</facing>
       <collisions>
         <enabled>true</enabled>
@@ -653,7 +646,6 @@
         </bitmap>
       </sprite>
       <position><x>0</x><y>48</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
@@ -664,7 +656,6 @@
          into one is leaving (the man's rule for class exit2); the robots turn at them. -->
     <group name="exits2" class="exit2">
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -691,8 +682,6 @@
     <object name="tally2">
       <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
       <variables>
         <variable name="kills">0</variable>
       </variables>
@@ -735,7 +724,6 @@
         <frame sprite="b" />
       </animation>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <facing>right</facing>
       <collisions>
         <enabled>true</enabled>
@@ -822,7 +810,6 @@
         </bitmap>
       </sprite>
       <position><x>0</x><y>48</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
@@ -833,7 +820,6 @@
          into one is leaving (the man's rule for class exit3); the robots turn at them. -->
     <group name="exits3" class="exit3">
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -860,8 +846,6 @@
     <object name="tally3">
       <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
       <variables>
         <variable name="kills">0</variable>
       </variables>
@@ -904,7 +888,6 @@
         <frame sprite="b" />
       </animation>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <facing>left</facing>
       <collisions>
         <enabled>true</enabled>
@@ -970,7 +953,6 @@
         <frame sprite="b" />
       </animation>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <facing>up</facing>
       <collisions>
         <enabled>true</enabled>
@@ -1054,7 +1036,6 @@
         </bitmap>
       </sprite>
       <position><x>0</x><y>48</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <type>pixel</type>
@@ -1065,7 +1046,6 @@
          into one is leaving (the man's rule for class exit4); the robots turn at them. -->
     <group name="exits4" class="exit4">
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -1092,8 +1072,6 @@
     <object name="tally4">
       <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
       <variables>
         <variable name="kills">0</variable>
       </variables>
@@ -1136,7 +1114,6 @@
         <frame sprite="b" />
       </animation>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <facing>right</facing>
       <collisions>
         <enabled>true</enabled>
@@ -1202,7 +1179,6 @@
         <frame sprite="b" />
       </animation>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <facing>down</facing>
       <collisions>
         <enabled>true</enabled>
@@ -1239,8 +1215,6 @@
         </text>
       </sprite>
       <position><x>margin</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="lives">
@@ -1252,8 +1226,6 @@
         </text>
       </sprite>
       <position><x>window.right - lives.width - margin</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="liveicon">
@@ -1275,8 +1247,6 @@
         </bitmap>
       </sprite>
       <position><x>window.right - lives.width - margin * 2 - 14</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="title">
@@ -1288,8 +1258,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - title.width / 2</x><y>70</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="taunt">
@@ -1301,8 +1269,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - taunt.width / 2</x><y>205</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="help1">
@@ -1314,8 +1280,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - help1.width / 2</x><y>270</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="help2">
@@ -1327,8 +1291,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - help2.width / 2</x><y>305</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="start">
@@ -1340,8 +1302,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - start.width / 2</x><y>380</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="paused">
@@ -1353,8 +1313,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - paused.width / 2</x><y>150</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="gameover">
@@ -1366,8 +1324,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - gameover.width / 2</x><y>120</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
 
     <object name="again">
@@ -1379,8 +1335,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - again.width / 2</x><y>300</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions><enabled>false</enabled></collisions>
     </object>
   </objects>
 

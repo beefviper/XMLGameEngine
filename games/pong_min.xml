@@ -63,7 +63,6 @@
         </rectangle>
       </sprite>
       <position><x>window.left + margin</x><y>window.height.center - height / 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="vertical">
@@ -88,7 +87,6 @@
         </rectangle>
       </sprite>
       <position><x>window.right - margin - width</x><y>window.height.center - height / 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="vertical">

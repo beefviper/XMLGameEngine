@@ -92,10 +92,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
       <variables>
         <variable name="score">2000</variable>
         <variable name="lives">3</variable>
@@ -115,10 +111,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>50</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <group name="trunks">
       <sprite>
@@ -129,10 +121,6 @@
         </rectangle>
       </sprite>
       <position><y>140</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
       <member><position><x>70</x></position></member>
       <member><position><x>230</x></position></member>
       <member><position><x>410</x></position></member>
@@ -147,10 +135,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>surface + thick</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="bedrock">
       <sprite>
@@ -161,10 +145,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>tunnel + thick</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
 
     <!-- what Harry stands on. The path is whole on the first two screens; the
@@ -179,7 +159,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>surface</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -193,7 +172,6 @@
         </rectangle>
       </sprite>
       <position><y>surface</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -218,7 +196,6 @@
         </rectangle>
       </sprite>
       <position><y>surface</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -234,7 +211,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>tunnel</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -249,10 +225,6 @@
         </rectangle>
       </sprite>
       <position><x>310</x><y>surface</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
 
     <!-- screen 1: two logs rolling along the path -->
@@ -271,7 +243,7 @@
         </bitmap>
       </sprite>
       <position><y>surface - 21</y></position>
-      <velocity><x>-roll</x><y>0</y></velocity>
+      <velocity><x>-roll</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -292,7 +264,6 @@
         </rectangle>
       </sprite>
       <position><x>300</x><y>surface - 1</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -308,7 +279,6 @@
         </rectangle>
       </sprite>
       <position><x>220</x><y>surface + 4</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -331,7 +301,6 @@
         </rectangle>
       </sprite>
       <position><y>surface - 8</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>true</enabled>
@@ -355,7 +324,6 @@
         </rectangle>
       </sprite>
       <position><y>surface - 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -381,7 +349,6 @@
         </bitmap>
       </sprite>
       <position><x>170</x><y>surface - fire.height</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -402,7 +369,7 @@
         </bitmap>
       </sprite>
       <position><y>tunnel - 12</y></position>
-      <velocity><x>crawl</x><y>0</y></velocity>
+      <velocity><x>crawl</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -430,7 +397,6 @@
         </bitmap>
       </sprite>
       <position><x>580</x><y>surface - moneybag.height</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision object="harry">
@@ -453,7 +419,6 @@
         </bitmap>
       </sprite>
       <position><x>570</x><y>surface - silverbar.height</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision object="harry">
@@ -476,7 +441,6 @@
         </bitmap>
       </sprite>
       <position><x>580</x><y>surface - goldbar.height</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision object="harry">
@@ -502,7 +466,6 @@
         </bitmap>
       </sprite>
       <position><x>580</x><y>tunnel - ring.height</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision object="harry">
@@ -538,7 +501,6 @@
         </bitmap>
       </sprite>
       <position><x>24</x><y>surface - harry.height</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <acceleration><x>0</x><y>pull</y></acceleration>
       <collisions>
         <enabled>true</enabled>
@@ -601,10 +563,6 @@
         </text>
       </sprite>
       <position><x>margin</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="clock">
       <sprite>
@@ -615,10 +573,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - clock.width / 2</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="lives">
       <sprite>
@@ -629,10 +583,6 @@
         </text>
       </sprite>
       <position><x>window.right - lives.width - margin</x><y>margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
 
     <object name="title">
@@ -644,10 +594,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-140)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="help">
       <sprite>
@@ -658,10 +604,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-40)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="keys">
       <sprite>
@@ -672,10 +614,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (10)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="start">
       <sprite>
@@ -686,10 +624,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (110)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="paused">
       <sprite>
@@ -700,10 +634,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="youwin">
       <sprite>
@@ -714,10 +644,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="gameover">
       <sprite>
@@ -728,10 +654,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="again">
       <sprite>
@@ -742,10 +664,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
   </objects>
   <states>

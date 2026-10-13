@@ -1077,6 +1077,32 @@ namespace xge
 			for (auto& [name, value] : variables) { out[name] = std::move(value); }
 		}
 
+		// Some of an <x>/<y> pair. A <group> gives what its members share and a
+		// <member> only what differs, so either half may be left out of either;
+		// an object's <velocity> may leave out a half that is 0.
+		struct PartialVector2
+		{
+			std::optional<RawValue> x;
+			std::optional<RawValue> y;
+		};
+
+		PartialVector2 readPartialVector2(const XmlNode& node, const std::string& where)
+		{
+			const std::string here = where + " > <" + node.getName() + ">";
+			PartialVector2 vector;
+			if (auto x = findChild(&node, "x")) { vector.x = readValue(*x, here); }
+			if (auto y = findChild(&node, "y")) { vector.y = readValue(*y, here); }
+			return vector;
+		}
+
+		// The value of what a game leaves out: 0.
+		RawValue zeroValue()
+		{
+			RawValue value;
+			value.text = "0";
+			return value;
+		}
+
 		RawObject readObject(const XmlNode& object)
 		{
 			RawObject rawObject;
@@ -1089,7 +1115,18 @@ namespace xge
 			if (auto node = findChild(&object, "animation")) { animation = readAnimation(*node, where); }
 			chooseSprite(readSprites(object, where), animation, where, rawObject);
 			rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
-			rawObject.rawVelocity = readVector2(*requireChild(object, "velocity", where), where);
+			// What a game leaves out is nothing: no <velocity> (or no half of
+			// one) stands still, and no <collisions> touches nothing.
+			if (auto velocity = findChild(&object, "velocity"))
+			{
+				const PartialVector2 given = readPartialVector2(*velocity, where);
+				rawObject.rawVelocity.x = given.x.value_or(zeroValue());
+				rawObject.rawVelocity.y = given.y.value_or(zeroValue());
+			}
+			else
+			{
+				rawObject.rawVelocity = { zeroValue(), zeroValue() };
+			}
 			if (auto acceleration = findChild(&object, "acceleration"))
 			{
 				rawObject.hasAcceleration = true;
@@ -1111,28 +1148,11 @@ namespace xge
 			{
 				if (readBool(*hidden, where)) { rawObject.isVisible = false; }
 			}
-			rawObject.rawCollisionData = readCollisions(*requireChild(object, "collisions", where), where);
+			if (auto collisions = findChild(&object, "collisions")) { rawObject.rawCollisionData = readCollisions(*collisions, where); }
 			readActions(object, where, rawObject.action);
 			readObjectVariables(object, where, rawObject.variable);
 
 			return rawObject;
-		}
-
-		// Some of an <x>/<y> pair. A <group> gives what its members share and a
-		// <member> only what differs, so either half may be left out of either.
-		struct PartialVector2
-		{
-			std::optional<RawValue> x;
-			std::optional<RawValue> y;
-		};
-
-		PartialVector2 readPartialVector2(const XmlNode& node, const std::string& where)
-		{
-			const std::string here = where + " > <" + node.getName() + ">";
-			PartialVector2 vector;
-			if (auto x = findChild(&node, "x")) { vector.x = readValue(*x, here); }
-			if (auto y = findChild(&node, "y")) { vector.y = readValue(*y, here); }
-			return vector;
 		}
 
 		// What a member says for one thing, else what its group says, else an error.
@@ -1314,7 +1334,6 @@ namespace xge
 				}
 			}
 
-			if (!collisions) { fail(where, "missing <collisions>"); }
 			if ((columns > 0) != (rows > 0)) { fail(where, "has <columns> or <rows> and not the other; a group laid out in cells needs both"); }
 
 			RawObject shared;
@@ -1330,7 +1349,7 @@ namespace xge
 			readObjectVariables(group, where, shared.variable);
 			shared.objClass = getAttribute(&group, "class");
 			shared.groupName = name;
-			shared.rawCollisionData = *collisions;
+			if (collisions) { shared.rawCollisionData = *collisions; }
 
 			// One member or cell from the group and its own parts, the most
 			// particular last.
@@ -1361,8 +1380,8 @@ namespace xge
 
 				rawObject.rawPosition.x = pickValue(positionX, std::nullopt, here, "<position><x>");
 				rawObject.rawPosition.y = pickValue(positionY, std::nullopt, here, "<position><y>");
-				rawObject.rawVelocity.x = pickValue(velocityX, std::nullopt, here, "<velocity><x>");
-				rawObject.rawVelocity.y = pickValue(velocityY, std::nullopt, here, "<velocity><y>");
+				rawObject.rawVelocity.x = velocityX.value_or(zeroValue());
+				rawObject.rawVelocity.y = velocityY.value_or(zeroValue());
 				return rawObject;
 			};
 

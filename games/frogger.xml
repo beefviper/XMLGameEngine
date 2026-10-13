@@ -108,10 +108,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>1 * cell</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="water" class="water">
       <sprite>
@@ -122,7 +118,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>2 * cell</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -136,10 +131,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>7 * cell</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="road">
       <sprite>
@@ -150,10 +141,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>8 * cell</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <group name="lines">
       <columns>13</columns>
@@ -167,10 +154,6 @@
         </rectangle>
       </sprite>
       <position><x>12</x><y>9 * cell - 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </group>
     <object name="pavement">
       <sprite>
@@ -181,10 +164,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>13 * cell</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
 
     <!-- home: a frog under each pad, then the pads, then the hedges between them -->
@@ -197,10 +176,6 @@
         </rectangle>
       </sprite>
       <position><y>1 * cell + inset</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
       <member>
         <position><x>2 * cell + inset</x></position>
       </member>
@@ -226,7 +201,6 @@
         </rectangle>
       </sprite>
       <position><y>1 * cell + inset</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision class="frog">
@@ -258,7 +232,6 @@
         </rectangle>
       </sprite>
       <position><y>1 * cell</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
       </collisions>
@@ -306,7 +279,7 @@
         </rectangle>
       </sprite>
       <position><y>2 * cell + inset</y></position>
-      <velocity><x>1.5</x><y>0</y></velocity>
+      <velocity><x>1.5</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -329,7 +302,7 @@
         </rectangle>
       </sprite>
       <position><y>3 * cell + inset</y></position>
-      <velocity><x>-1</x><y>0</y></velocity>
+      <velocity><x>-1</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -355,7 +328,7 @@
         </rectangle>
       </sprite>
       <position><y>4 * cell + inset</y></position>
-      <velocity><x>2</x><y>0</y></velocity>
+      <velocity><x>2</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -378,7 +351,7 @@
         </rectangle>
       </sprite>
       <position><y>5 * cell + inset</y></position>
-      <velocity><x>-1.5</x><y>0</y></velocity>
+      <velocity><x>-1.5</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -404,7 +377,7 @@
         </rectangle>
       </sprite>
       <position><y>6 * cell + inset</y></position>
-      <velocity><x>1</x><y>0</y></velocity>
+      <velocity><x>1</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -432,7 +405,7 @@
         </rectangle>
       </sprite>
       <position><y>8 * cell + inset</y></position>
-      <velocity><x>-1</x><y>0</y></velocity>
+      <velocity><x>-1</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -455,7 +428,7 @@
         </rectangle>
       </sprite>
       <position><y>9 * cell + inset</y></position>
-      <velocity><x>3</x><y>0</y></velocity>
+      <velocity><x>3</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -478,7 +451,7 @@
         </rectangle>
       </sprite>
       <position><y>10 * cell + inset</y></position>
-      <velocity><x>-1.5</x><y>0</y></velocity>
+      <velocity><x>-1.5</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -504,7 +477,7 @@
         </rectangle>
       </sprite>
       <position><y>11 * cell + inset</y></position>
-      <velocity><x>2</x><y>0</y></velocity>
+      <velocity><x>2</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -530,7 +503,7 @@
         </rectangle>
       </sprite>
       <position><y>12 * cell + inset</y></position>
-      <velocity><x>-1</x><y>0</y></velocity>
+      <velocity><x>-1</x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -558,7 +531,6 @@
         </rectangle>
       </sprite>
       <position><x>6 * cell + inset</x><y>13 * cell + inset</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision class="hazard">
@@ -619,10 +591,6 @@
         </text>
       </sprite>
       <position><x>12</x><y>cell / 2 - scorelabel.height / 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="scorevalue">
       <sprite>
@@ -633,10 +601,6 @@
         </text>
       </sprite>
       <position><x>12 + scorelabel.width + 12</x><y>cell / 2 - scorevalue.height / 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="liveslabel">
       <sprite>
@@ -647,10 +611,6 @@
         </text>
       </sprite>
       <position><x>window.right - 12 - livesvalue.width - 12 - liveslabel.width</x><y>cell / 2 - liveslabel.height / 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="livesvalue">
       <sprite>
@@ -661,10 +621,6 @@
         </text>
       </sprite>
       <position><x>window.right - 12 - livesvalue.width</x><y>cell / 2 - livesvalue.height / 2</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
 
     <!-- the screens -->
@@ -677,10 +633,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="start">
       <sprite>
@@ -691,10 +643,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (40)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="gameovertext">
       <sprite>
@@ -705,10 +653,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - gameovertext.width / 2</x><y>window.height.center - gameovertext.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="youwin">
       <sprite>
@@ -719,10 +663,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="continue">
       <sprite>
@@ -733,10 +673,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - continue.width / 2</x><y>window.height.center - continue.height / 2 + (40)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="paused">
       <sprite>
@@ -747,10 +683,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
   </objects>
   <states>

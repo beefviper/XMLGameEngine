@@ -96,10 +96,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="ledge">
       <sprite>
@@ -110,10 +106,6 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>roof</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <!-- the wave 1 bomber: the same man, quicker, and dropping faster -->
     <object name="bomber1" class="bomber">
@@ -136,7 +128,7 @@
         </bitmap>
       </sprite>
       <position><x>window.width.center - bomber1.width / 2</x><y>roof - bomber1.height</y></position>
-      <velocity><x>pace1</x><y>0</y></velocity>
+      <velocity><x>pace1</x></velocity>
       <facing>down</facing>
       <collisions>
         <enabled>true</enabled>
@@ -176,7 +168,7 @@
         </bitmap>
       </sprite>
       <position><x>window.width.center - bomber2.width / 2</x><y>roof - bomber2.height</y></position>
-      <velocity><x>pace2</x><y>0</y></velocity>
+      <velocity><x>pace2</x></velocity>
       <facing>down</facing>
       <collisions>
         <enabled>true</enabled>
@@ -216,7 +208,7 @@
         </bitmap>
       </sprite>
       <position><x>window.width.center - bomber3.width / 2</x><y>roof - bomber3.height</y></position>
-      <velocity><x>pace3</x><y>0</y></velocity>
+      <velocity><x>pace3</x></velocity>
       <facing>down</facing>
       <collisions>
         <enabled>true</enabled>
@@ -244,7 +236,7 @@
         </circle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>fall1</y></velocity>
+      <velocity><y>fall1</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
@@ -279,7 +271,7 @@
         </circle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>fall2</y></velocity>
+      <velocity><y>fall2</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
@@ -314,7 +306,7 @@
         </circle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <velocity><x>0</x><y>fall3</y></velocity>
+      <velocity><y>fall3</y></velocity>
       <hidden>true</hidden>
       <collisions>
         <enabled>false</enabled>
@@ -350,7 +342,6 @@
         </rectangle>
       </sprite>
       <position><x>window.width.center - bucket.width / 2</x><y>window.bottom - bucket.height - margin</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -379,10 +370,6 @@
         </text>
       </sprite>
       <position><x>margin</x><y>12</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="scorevalue">
       <sprite>
@@ -393,10 +380,6 @@
         </text>
       </sprite>
       <position><x>margin + scorelabel.width + 12</x><y>12</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="bucketsvalue">
       <sprite>
@@ -407,10 +390,6 @@
         </text>
       </sprite>
       <position><x>window.right - bucketsvalue.width - margin</x><y>12</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="bucketslabel">
       <sprite>
@@ -421,10 +400,6 @@
         </text>
       </sprite>
       <position><x>window.right - bucketsvalue.width - bucketslabel.width - margin - 12</x><y>12</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="wave1label">
       <sprite>
@@ -435,10 +410,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - wave1label.width / 2</x><y>12</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="wave2label">
       <sprite>
@@ -449,10 +420,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - wave2label.width / 2</x><y>12</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="wave3label">
       <sprite>
@@ -463,10 +430,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - wave3label.width / 2</x><y>12</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="title">
       <sprite>
@@ -477,10 +440,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-110)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="help">
       <sprite>
@@ -491,10 +450,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-10)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="keys">
       <sprite>
@@ -505,10 +460,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (40)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="start">
       <sprite>
@@ -519,10 +470,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (130)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="paused">
       <sprite>
@@ -533,10 +480,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="youwin">
       <sprite>
@@ -547,10 +490,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="gameover">
       <sprite>
@@ -561,10 +500,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-60)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
     <object name="again">
       <sprite>
@@ -575,10 +510,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
-      <velocity><x>0</x><y>0</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-      </collisions>
     </object>
   </objects>
   <states>
