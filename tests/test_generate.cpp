@@ -204,7 +204,7 @@ TEST_CASE("a group is written as what it gives its members, then a line for each
 	REQUIRE(members > 55);
 	CHECK(data.find("\tvoid aliensGroup(std::vector<RawObject>& all)") != std::string::npos);
 	CHECK(data.find("\t\tMember group;\n") != std::string::npos);
-	CHECK(count(data, "\t\tall.push_back(place(made(group, ") + count(data, "\t\tall.push_back(finish(made(group, ") == members);
+	CHECK(count(data, "\t\taddCell(all, group, ") + count(data, "\t\taddMember(all, group, ") == members);
 }
 
 TEST_CASE("a game the engine will not load is not generated, and the folder made for it goes", "[generate]")

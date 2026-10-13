@@ -1077,7 +1077,7 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:for-each select="member">
-          <xsl:value-of select="concat($in, 'all.push_back(finish(made(group, ')" />
+          <xsl:value-of select="concat($in, 'addMember(all, group, ')" />
           <xsl:call-template name="string">
             <xsl:with-param name="text">
               <xsl:choose>
@@ -1092,7 +1092,7 @@
             <xsl:call-template name="part-name" />
             <xsl:text> </xsl:text>
           </xsl:if>
-          <xsl:text>})));&#10;</xsl:text>
+          <xsl:text>});&#10;</xsl:text>
         </xsl:for-each>
       </xsl:otherwise>
     </xsl:choose>
@@ -1264,7 +1264,7 @@
     <xsl:param name="indent" />
     <xsl:if test="$row &lt;= $rows">
       <xsl:variable name="cell" select="$group/cell[number(@row) = $row and number(@column) = $column][1]" />
-      <xsl:value-of select="concat($indent, 'all.push_back(place(made(group, ')" />
+      <xsl:value-of select="concat($indent, 'addCell(all, group, ')" />
       <xsl:call-template name="string">
         <xsl:with-param name="text">
           <xsl:choose>
@@ -1292,11 +1292,11 @@
       <xsl:call-template name="part-list">
         <xsl:with-param name="names" select="$parts" />
       </xsl:call-template>
-      <xsl:text>), made(group, "", </xsl:text>
+      <xsl:text>, </xsl:text>
       <xsl:call-template name="part-list">
         <xsl:with-param name="names" select="$rowParts" />
       </xsl:call-template>
-      <xsl:value-of select="concat('), ', $column, ', ', $row, '));&#10;')" />
+      <xsl:value-of select="concat(', ', $column, ', ', $row, ');&#10;')" />
       <xsl:choose>
         <xsl:when test="$column &lt; $columns">
           <xsl:call-template name="cells">

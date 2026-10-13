@@ -241,6 +241,23 @@ namespace xge::parts
 		return object;
 	}
 
+	// One member of a <group>, made and added, and one cell of a group in
+	// <columns> and <rows>, made, placed and added. Each is a function of its
+	// own so that a group of many members or cells does not hold all their
+	// temporaries in one stack frame: a Debug build (MSVC, or GCC at -O0)
+	// gives every statement's temporaries a slot of their own, and Breakout's
+	// wall of bricks overflowed a 1 MB stack that way.
+	inline void addMember(std::vector<RawObject>& all, const Member& group, std::string name, std::initializer_list<Part> changes)
+	{
+		all.push_back(finish(made(group, std::move(name), changes)));
+	}
+
+	inline void addCell(std::vector<RawObject>& all, const Member& group, std::string name, std::initializer_list<Part> changes,
+		std::initializer_list<Part> rowChanges, int column, int row)
+	{
+		all.push_back(place(made(group, std::move(name), changes), made(group, "", rowChanges), column, row));
+	}
+
 	// The keys a state's <inputs> or a <keys> set gives, and what each runs.
 	using Keys = std::map<std::string, std::vector<RawCommand>>;
 

@@ -119,6 +119,9 @@ xge_link_xslt(xgetest)
 set(XGE_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
 set(generated_declarations "")
 set(generated_entries "")
+# The stylesheets and modules, file by file, so a change to the generator
+# generates every game again (depending on xgedata alone only orders the steps).
+list(TRANSFORM data_generators PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/" OUTPUT_VARIABLE generator_files)
 foreach(game_file IN LISTS data_xml)
 	get_filename_component(game "${game_file}" NAME_WE)
 
@@ -144,7 +147,7 @@ foreach(game_file IN LISTS data_xml)
 		OUTPUT "${data}"
 		COMMAND xgecli "${game}" --generate windows-cpp -o "${XGE_GENERATED_DIR}/${game}"
 		WORKING_DIRECTORY "${XGE_OUTPUT_DIR}"
-		DEPENDS xgecli xgedata "${CMAKE_CURRENT_SOURCE_DIR}/${game_file}"
+		DEPENDS xgecli xgedata "${CMAKE_CURRENT_SOURCE_DIR}/${game_file}" ${generator_files}
 		COMMENT "Generating ${game_file} for the tests")
 	target_sources(xgetest PRIVATE "${data}")
 
