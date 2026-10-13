@@ -521,6 +521,119 @@ TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where
 }
 
 // ------------------------------------------------------- the shipped games
+namespace
+{
+	// Two lanes inside one group: the outer gives the shape, a wrap at the
+	// sides and a class; the first lane changes the sprite's color, the
+	// second adds a rule of its own and another class.
+	const std::string kNested =
+		"<group name=\"lanes\" class=\"logs\">"
+		"<sprite><rectangle><width>30</width><height>10</height><color>color.brown</color></rectangle></sprite>"
+		"<collisions><enabled>true</enabled><collision edge=\"horizontal\"><wrap /></collision></collisions>"
+		"<variables><variable name=\"weight\">3</variable></variables>"
+		"<group name=\"slow\">"
+		"<sprite><rectangle><color>color.red</color></rectangle></sprite>"
+		"<position><y>20</y></position><velocity><x>1</x></velocity>"
+		"<member><position><x>10</x></position></member>"
+		"<member><position><x>200</x></position></member>"
+		"</group>"
+		"<group name=\"fast\" class=\"hazard\">"
+		"<position><y>40</y></position><velocity><x>-3</x></velocity>"
+		"<collisions><enabled>true</enabled><collision class=\"frog\"><die /></collision></collisions>"
+		"<variables><variable name=\"weight\">5</variable></variables>"
+		"<member><position><x>50</x></position></member>"
+		"</group>"
+		"</group>";
+}
+
+TEST_CASE("a group inside a group takes what it leaves out from the one around it", "[group][nested]")
+{
+	Loaded loaded{ gameXml(kNested, "<show object=\"lanes\" />") };
+	Game& game = loaded.game;
+	game.setCurrentState("playing");
+	const auto& objects = game.getCurrentObjects();
+
+	// Members are named after their own group, in the order written.
+	REQUIRE(objects.size() == 3);
+	CHECK(objects[0].name == "slow.1");
+	CHECK(objects[1].name == "slow.2");
+	CHECK(objects[2].name == "fast.1");
+
+	const Object& slow = game.getObject("slow.2");
+	CHECK(slow.groupName == "slow");
+	CHECK(slow.outerGroups == std::vector<std::string>{ "lanes" });
+	CHECK(slow.objClass == "logs");
+	CHECK(slow.position.x == 200.0f);
+	CHECK(slow.position.y == 20.0f);
+	CHECK(slow.velocity.x == 1.0f);
+	CHECK(measureShapeSize(slow.spriteParams, slow.shapeKind).x == 30.0f);
+	CHECK(std::find(slow.spriteParams.begin(), slow.spriteParams.end(), "color.red") != slow.spriteParams.end());
+	CHECK(slow.collisionData.enabled);
+	CHECK(slow.collisionData.left.size() == 1);
+	CHECK(slow.collisionData.basic.empty());
+	CHECK(slow.variable.at("weight") == 3.0f);
+
+	// The inner group's rules and variables add to the outer's, its class replaces it.
+	const Object& fast = game.getObject("fast.1");
+	CHECK(fast.objClass == "hazard");
+	CHECK(fast.collisionData.left.size() == 1);
+	CHECK(fast.collisionData.basic.size() == 1);
+	CHECK(fast.variable.at("weight") == 5.0f);
+	CHECK(fast.velocity.x == -3.0f);
+
+	// The outer name means every member of every group inside it; each inner name, its own.
+	for (const Object& object : objects) { CHECK(game.isShown(object)); }
+	CHECK(&game.getObject("lanes") == &game.getObject("slow.1"));
+	CHECK(&game.getObject("fast") == &game.getObject("fast.1"));
+	game.getObject("slow.1").position.x = 99.0f;
+	game.getObject("fast.1").position.x = 99.0f;
+	game.resetObject("lanes");
+	CHECK(game.getObject("slow.1").position.x == 10.0f);
+	CHECK(game.getObject("fast.1").position.x == 50.0f);
+}
+
+TEST_CASE("groups inside a group can each be laid out in cells from the outer's columns", "[group][nested][cells]")
+{
+	// The outer gives the columns, the gap across and the brick; each inner
+	// group its rows and where it starts.
+	const std::string wall =
+		"<group name=\"wall\" class=\"bricks\">"
+		"<columns>3</columns><padding><x>5</x></padding>"
+		"<sprite name=\"whole\"><rectangle><width>20</width><height>10</height><color>color.red</color></rectangle></sprite>"
+		"<position><x>100</x></position>"
+		"<group name=\"top\"><rows>1</rows>"
+		"<sprite name=\"whole\"><rectangle><color>color.grey</color></rectangle></sprite>"
+		"<position><y>10</y></position></group>"
+		"<group name=\"block\"><rows>2</rows><padding><y>7</y></padding>"
+		"<position><y>50</y></position>"
+		"<collisions><enabled>true</enabled><lockstep>true</lockstep></collisions></group>"
+		"</group>";
+	Loaded loaded{ gameXml(wall, "<show object=\"wall\" />") };
+	Game& game = loaded.game;
+
+	REQUIRE(game.getCurrentObjects().size() == 3 + 6);
+	CHECK(game.getObject("top.3.1").position.x == 100.0f + 2 * (20.0f + 5.0f));
+	CHECK(game.getObject("top.3.1").position.y == 10.0f);
+	CHECK(game.getObject("block.2.2").position.x == 100.0f + 20.0f + 5.0f);
+	CHECK(game.getObject("block.2.2").position.y == 50.0f + 10.0f + 7.0f);
+	CHECK(game.getObject("top.1.1").objClass == "bricks");
+	CHECK_FALSE(game.getObject("top.1.1").collisionData.enabled);
+	CHECK(game.getObject("block.1.1").collisionData.enabled);
+
+	// Only the inner group with lockstep moves as one block.
+	CHECK(game.getObject("block.1.1").collisionData.lockstep != 0);
+	CHECK(game.getObject("block.1.1").collisionData.lockstep == game.getObject("block.3.2").collisionData.lockstep);
+	CHECK(game.getObject("top.1.1").collisionData.lockstep == 0);
+}
+
+TEST_CASE("a group with groups inside it has no members of its own", "[group][nested][errors]")
+{
+	REQUIRE_THROWS_WITH(Loaded(gameXml(
+		"<group name=\"lanes\">" + kSprite + kPosition + "<member /><group name=\"inner\"><member /></group></group>",
+		"<show object=\"lanes\" />")),
+		ContainsSubstring("group 'lanes'") && ContainsSubstring("has <group>s inside it, so it has no <member>s"));
+}
+
 TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups", "[group][shipped]")
 {
 	// Counted from the games as they were written with one <object> for each:
@@ -663,13 +776,14 @@ TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group
 	};
 
 	const Mistake mistakes[] = {
-		{ "a member that gives collisions", "games/spacerace.xml", "<member>\n", "<member><collisions><enabled>true</enabled></collisions>\n", "collisions" },
+		{ "a member that gives collisions", "games/spacerace.xml", "<member><position>", "<member><collisions><enabled>true</enabled></collisions><position>", "collisions" },
 		{ "a group with something it cannot hold", "games/spacerace.xml", "<velocity>", "<speed /><velocity>", "speed" },
-		{ "a member with something it cannot hold", "games/spacerace.xml", "<member>\n", "<member><speed />\n", "speed" },
+		{ "a member with something it cannot hold", "games/spacerace.xml", "<member><position>", "<member><speed /><position>", "speed" },
 		{ "a position that is not an x and a y", "games/spacerace.xml", "<y>75</y>", "<z>75</z>", "z" },
-		{ "a group with no name", "games/spacerace.xml", "<group name=\"debris1\" ", "<group ", "missing required attribute 'name'" },
+		{ "a group with no name", "games/spacerace.xml", "<group name=\"debris1\">", "<group>", "missing required attribute 'name'" },
 		{ "a lockstep flag that is not true or false", "games/spacerace.xml", "<enabled>true</enabled>", "<enabled>true</enabled><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
 		{ "a member in a group of cells", "games/breakout.xml", "<row number=\"2\">", "<member /><row number=\"2\">", "row" },
+		{ "a member beside a group inside a group", "games/spacerace.xml", "<group name=\"debris1\">", "<member /><group name=\"debris1\">", "group" },
 		{ "a cell with no column", "games/breakout.xml", "<row number=\"2\">", "<cell row=\"1\" /><row number=\"2\">", "missing required attribute 'column'" },
 	};
 

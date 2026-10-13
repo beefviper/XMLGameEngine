@@ -15,10 +15,14 @@
 
   Everything on the board is a square (or a few squares laid end to end) drawn
   6 pixels in from its cell, so the frog fits a lane with room to spare. Each
-  lane of logs, trucks or cars is a <group>: the lane's shape, speed, row and
-  <wrap /> are written once and each <member> only says where it starts. A
+  lane of logs, trucks or cars is a <group>: the lane's speed and row are
+  written once and each <member> only says where it starts. The lanes sit
+  inside the group of the river's or the road's, which gives their shape, and
+  those two inside one group of all ten, which gives the <wrap /> they all
+  share; a lane says only what differs (a log three cells long, a red car). A
   member is still its own object (logrow3.2 is the second log of the third
-  river lane), and the group's name (logrow3) means all of them. A lane loops
+  river lane), and each group's name (logrow3, river, lanes) means all the
+  members inside it. A lane loops
   with <wrap />, so members are spaced by hand (a lane of objects that are
   `size` wide repeats every `window.width + size` pixels). The pads, the frogs
   waiting under them and the hedges are groups too; the two end hedges give
@@ -269,256 +273,111 @@
       </member>
     </group>
 
-    <!-- the river: logs, one lane to a row, each lane its own speed and direction -->
-    <group name="logrow2" class="logs">
-      <sprite>
-        <rectangle>
-          <width>4 * cell - 2 * inset</width>
-          <height>body</height>
-          <color>color.brown</color>
-        </rectangle>
-      </sprite>
-      <position><y>2 * cell + inset</y></position>
-      <velocity><x>1.5</x></velocity>
+    <!-- every lane of the river and the road: what each has in common is
+         that it wraps round at the sides -->
+    <group name="lanes">
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
           <wrap />
         </collision>
       </collisions>
-      <member>
-        <position><x>100</x></position>
-      </member>
-      <member>
-        <position><x>502</x></position>
-      </member>
-    </group>
-    <group name="logrow3" class="logs">
-      <sprite>
-        <rectangle>
-          <width>3 * cell - 2 * inset</width>
-          <height>body</height>
-          <color>color.brown</color>
-        </rectangle>
-      </sprite>
-      <position><y>3 * cell + inset</y></position>
-      <velocity><x>-1</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>20</x></position>
-      </member>
-      <member>
-        <position><x>272</x></position>
-      </member>
-      <member>
-        <position><x>524</x></position>
-      </member>
-    </group>
-    <group name="logrow4" class="logs">
-      <sprite>
-        <rectangle>
-          <width>5 * cell - 2 * inset</width>
-          <height>body</height>
-          <color>color.brown</color>
-        </rectangle>
-      </sprite>
-      <position><y>4 * cell + inset</y></position>
-      <velocity><x>2</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>60</x></position>
-      </member>
-      <member>
-        <position><x>486</x></position>
-      </member>
-    </group>
-    <group name="logrow5" class="logs">
-      <sprite>
-        <rectangle>
-          <width>3 * cell - 2 * inset</width>
-          <height>body</height>
-          <color>color.brown</color>
-        </rectangle>
-      </sprite>
-      <position><y>5 * cell + inset</y></position>
-      <velocity><x>-1.5</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>150</x></position>
-      </member>
-      <member>
-        <position><x>402</x></position>
-      </member>
-      <member>
-        <position><x>-102</x></position>
-      </member>
-    </group>
-    <group name="logrow6" class="logs">
-      <sprite>
-        <rectangle>
-          <width>4 * cell - 2 * inset</width>
-          <height>body</height>
-          <color>color.brown</color>
-        </rectangle>
-      </sprite>
-      <position><y>6 * cell + inset</y></position>
-      <velocity><x>1</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>40</x></position>
-      </member>
-      <member>
-        <position><x>308</x></position>
-      </member>
-      <member>
-        <position><x>576</x></position>
-      </member>
-    </group>
 
-    <!-- the road: trucks are two cells long, cars one -->
-    <group name="truckrow8" class="hazard">
-      <sprite>
-        <rectangle>
-          <width>2 * cell - 2 * inset</width>
-          <height>body</height>
-          <color>color.white</color>
-        </rectangle>
-      </sprite>
-      <position><y>8 * cell + inset</y></position>
-      <velocity><x>-1</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>100</x></position>
-      </member>
-      <member>
-        <position><x>454</x></position>
-      </member>
-    </group>
-    <group name="carrow9" class="hazard">
-      <sprite>
-        <rectangle>
-          <width>body</width>
-          <height>body</height>
-          <color>color.red</color>
-        </rectangle>
-      </sprite>
-      <position><y>9 * cell + inset</y></position>
-      <velocity><x>3</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>60</x></position>
-      </member>
-      <member>
-        <position><x>390</x></position>
-      </member>
-    </group>
-    <group name="carrow10" class="hazard">
-      <sprite>
-        <rectangle>
-          <width>body</width>
-          <height>body</height>
-          <color>color.yellow</color>
-        </rectangle>
-      </sprite>
-      <position><y>10 * cell + inset</y></position>
-      <velocity><x>-1.5</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>40</x></position>
-      </member>
-      <member>
-        <position><x>240</x></position>
-      </member>
-      <member>
-        <position><x>460</x></position>
-      </member>
-    </group>
-    <group name="carrow11" class="hazard">
-      <sprite>
-        <rectangle>
-          <width>body</width>
-          <height>body</height>
-          <color>color.cyan</color>
-        </rectangle>
-      </sprite>
-      <position><y>11 * cell + inset</y></position>
-      <velocity><x>2</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>100</x></position>
-      </member>
-      <member>
-        <position><x>310</x></position>
-      </member>
-      <member>
-        <position><x>520</x></position>
-      </member>
-    </group>
-    <group name="carrow12" class="hazard">
-      <sprite>
-        <rectangle>
-          <width>body</width>
-          <height>body</height>
-          <color>color.orange</color>
-        </rectangle>
-      </sprite>
-      <position><y>12 * cell + inset</y></position>
-      <velocity><x>-1</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-      </collisions>
-      <member>
-        <position><x>30</x></position>
-      </member>
-      <member>
-        <position><x>250</x></position>
-      </member>
-      <member>
-        <position><x>470</x></position>
-      </member>
+      <!-- the river: logs, one lane to a row, each lane its own length, speed and direction -->
+      <group name="river" class="logs">
+        <sprite>
+          <rectangle>
+            <width>4 * cell - 2 * inset</width>
+            <height>body</height>
+            <color>color.brown</color>
+          </rectangle>
+        </sprite>
+        <group name="logrow2">
+          <position><y>2 * cell + inset</y></position>
+          <velocity><x>1.5</x></velocity>
+          <member><position><x>100</x></position></member>
+          <member><position><x>502</x></position></member>
+        </group>
+        <group name="logrow3">
+          <sprite><rectangle><width>3 * cell - 2 * inset</width></rectangle></sprite>
+          <position><y>3 * cell + inset</y></position>
+          <velocity><x>-1</x></velocity>
+          <member><position><x>20</x></position></member>
+          <member><position><x>272</x></position></member>
+          <member><position><x>524</x></position></member>
+        </group>
+        <group name="logrow4">
+          <sprite><rectangle><width>5 * cell - 2 * inset</width></rectangle></sprite>
+          <position><y>4 * cell + inset</y></position>
+          <velocity><x>2</x></velocity>
+          <member><position><x>60</x></position></member>
+          <member><position><x>486</x></position></member>
+        </group>
+        <group name="logrow5">
+          <sprite><rectangle><width>3 * cell - 2 * inset</width></rectangle></sprite>
+          <position><y>5 * cell + inset</y></position>
+          <velocity><x>-1.5</x></velocity>
+          <member><position><x>150</x></position></member>
+          <member><position><x>402</x></position></member>
+          <member><position><x>-102</x></position></member>
+        </group>
+        <group name="logrow6">
+          <position><y>6 * cell + inset</y></position>
+          <velocity><x>1</x></velocity>
+          <member><position><x>40</x></position></member>
+          <member><position><x>308</x></position></member>
+          <member><position><x>576</x></position></member>
+        </group>
+      </group>
+
+      <!-- the road: cars are one cell long, each row its own colour; the trucks two -->
+      <group name="traffic" class="hazard">
+        <sprite>
+          <rectangle>
+            <width>body</width>
+            <height>body</height>
+            <color>color.white</color>
+          </rectangle>
+        </sprite>
+        <group name="truckrow8">
+          <sprite><rectangle><width>2 * cell - 2 * inset</width></rectangle></sprite>
+          <position><y>8 * cell + inset</y></position>
+          <velocity><x>-1</x></velocity>
+          <member><position><x>100</x></position></member>
+          <member><position><x>454</x></position></member>
+        </group>
+        <group name="carrow9">
+          <sprite><rectangle><color>color.red</color></rectangle></sprite>
+          <position><y>9 * cell + inset</y></position>
+          <velocity><x>3</x></velocity>
+          <member><position><x>60</x></position></member>
+          <member><position><x>390</x></position></member>
+        </group>
+        <group name="carrow10">
+          <sprite><rectangle><color>color.yellow</color></rectangle></sprite>
+          <position><y>10 * cell + inset</y></position>
+          <velocity><x>-1.5</x></velocity>
+          <member><position><x>40</x></position></member>
+          <member><position><x>240</x></position></member>
+          <member><position><x>460</x></position></member>
+        </group>
+        <group name="carrow11">
+          <sprite><rectangle><color>color.cyan</color></rectangle></sprite>
+          <position><y>11 * cell + inset</y></position>
+          <velocity><x>2</x></velocity>
+          <member><position><x>100</x></position></member>
+          <member><position><x>310</x></position></member>
+          <member><position><x>520</x></position></member>
+        </group>
+        <group name="carrow12">
+          <sprite><rectangle><color>color.orange</color></rectangle></sprite>
+          <position><y>12 * cell + inset</y></position>
+          <velocity><x>-1</x></velocity>
+          <member><position><x>30</x></position></member>
+          <member><position><x>250</x></position></member>
+          <member><position><x>470</x></position></member>
+        </group>
+      </group>
     </group>
 
     <!-- the frog. Lives count down from 3; score is how many are home. -->
@@ -709,16 +568,7 @@
         <show object="homes" />
         <show object="pads" />
         <show object="hedges" />
-        <show object="logrow2" />
-        <show object="logrow3" />
-        <show object="logrow4" />
-        <show object="logrow5" />
-        <show object="logrow6" />
-        <show object="truckrow8" />
-        <show object="carrow9" />
-        <show object="carrow10" />
-        <show object="carrow11" />
-        <show object="carrow12" />
+        <show object="lanes" />
         <show object="frog" />
         <show object="scorelabel" />
         <show object="scorevalue" />

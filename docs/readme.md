@@ -206,7 +206,7 @@ An object with `class="projectile"` starts invisible (used for bullets).
 
 ### `<group>`
 
-A `<group>` is several objects that share a description, written once: a lane of logs, a row of debris, the pads along the top of Frogger, a wall of bricks. It sits beside `<object>` under `<objects>`. It holds the parts its members have in common, in the same order as an object (`<sprite>`s, an `<animation>`, `<position>`, `<velocity>`, `<acceleration>`, `<facing>`, `<hidden>`, `<collisions>`, `<actions>`, `<variables>`, `<timers>`, each optional), then one or more `<member>`s, or, laid out in [columns and rows](#columns-and-rows), the `<row>`s, `<column>`s and `<cell>`s that change them. `<heading>` and `<drag>` are for objects only. Attributes: `name` (required) and `class` (optional, and every member's class).
+A `<group>` is several objects that share a description, written once: a lane of logs, a row of debris, the pads along the top of Frogger, a wall of bricks. It sits beside `<object>` under `<objects>`. It holds the parts its members have in common, in the same order as an object (`<sprite>`s, an `<animation>`, `<position>`, `<velocity>`, `<acceleration>`, `<facing>`, `<hidden>`, `<collisions>`, `<actions>`, `<variables>`, `<timers>`, each optional), then one or more `<member>`s, or, laid out in [columns and rows](#columns-and-rows), the `<row>`s, `<column>`s and `<cell>`s that change them, or one or more [groups inside it](#groups-inside-a-group). `<heading>` and `<drag>` are for objects only. Attributes: `name` (required) and `class` (optional, and every member's class).
 
 A `<member>` says only what is its own: its `<sprite>`s and `<animation>`, a `<position>` and a `<velocity>`, and an optional `name`. **Whatever a member leaves out it takes from its group**, and after that it must be as complete as an `<object>` (a missing part is a load error that names the member). A `<position>` or `<velocity>` can give just an `<x>` or just a `<y>`, so a lane gives its row once and each member gives where along it it starts:
 
@@ -224,7 +224,6 @@ A `<member>` says only what is its own: its `<sprite>`s and `<animation>`, a `<p
   </position>
   <velocity>
     <x>-1</x>
-    <y>0</y>
   </velocity>
   <collisions>
     <enabled>true</enabled>
@@ -241,6 +240,37 @@ A `<member>` says only what is its own: its `<sprite>`s and `<animation>`, a `<p
 A member is an ordinary object: it is loaded as one object of its own (`logrow3.1`, `logrow3.2`, `logrow3.3`: the group's name, a dot, and its number counting from 1 in the order written, unless the member says `name="..."`), it is drawn, moved and collided with on its own, and each `<wrap />` or `<die />` happens to that one member. A group only shares what is written. Members are drawn in the order written, at the place in the file where the group stands. The group's name means every member wherever the file names an object (`<show object="logrow3" />`, `object="pads"` in a rule or condition, `<reset object="pads" />`), and a member can be named on its own (`object="logrow3.2"`). A group with `<lockstep>true</lockstep>` in its `<collisions>` moves as one block (the invaders).
 
 A `<sprite>` a member gives changes the group's sprite of the same `name` (or, with no name, the group's with none). Of the same shape it need give only what changes, and keeps the rest: `<sprite><rectangle><width>10</width></rectangle></sprite>` is the group's rectangle, 10 wide. Of another shape, or as `<line>`s, it is a sprite of its own and must be complete. A name the group has not got adds a sprite.
+
+#### Groups inside a group
+
+A group can hold `<group>`s instead of members or cells, and they take from it the same way a member takes from its group: **whatever an inner group leaves out it takes from the one around it**. Frogger's ten lanes all wrap round at the sides, so the `<wrap />` is written once, in a group of all ten; the river's lanes share a log and the road's a car, each said once in a group between:
+
+```xml
+<group name="lanes">
+  <collisions>
+    <enabled>true</enabled>
+    <collision edge="horizontal"><wrap /></collision>
+  </collisions>
+  <group name="river" class="logs">
+    <sprite><rectangle><width>4 * cell - 2 * inset</width><height>body</height><color>color.brown</color></rectangle></sprite>
+    <group name="logrow2">
+      <position><y>2 * cell + inset</y></position>
+      <velocity><x>1.5</x></velocity>
+      <member><position><x>100</x></position></member>
+      <member><position><x>502</x></position></member>
+    </group>
+    <group name="logrow3">
+      <sprite><rectangle><width>3 * cell - 2 * inset</width></rectangle></sprite>
+      ...
+    </group>
+  </group>
+  <group name="traffic" class="hazard"> ... </group>
+</group>
+```
+
+- **What replaces, what adds.** One thing (a half of the `<position>`, `<velocity>` or `<padding>`, `<columns>`, `<rows>`, the `<animation>`, `<acceleration>`, `<facing>`, `<hidden>`, the `class`) is replaced by the inner group's. A `<sprite>` changes the outer's of its name, as a member's does, so `logrow3` above gives only a width. A list adds: the inner group's collision rules run after the outer's, and its `<actions>`, `<variables>` and `<timers>` join the outer's (an action or variable of the same name replaces it). An inner `<collisions>` says its own `<enabled>`, and `<lockstep>` and `<type>` when it changes them.
+- **Names.** The members are named after their own group (`logrow3.2`, or `top.3.1` for a cell), and every group's name means all the members inside it: `<show object="lanes" />` shows all ten lanes, `object="river"` in a rule is every log. A group with `<lockstep>` makes a block of the members of each innermost group: in Breakout the wall gives the bricks' columns, gap, size and colour, the grey row above is one inner group and the marching block another.
+- A group that holds groups has no `<member>`s, `<row>`s, `<column>`s or `<cell>`s of its own (a load error otherwise). Groups nest as deep as is wanted.
 
 #### Columns and rows
 

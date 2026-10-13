@@ -1,6 +1,6 @@
 # Groups
 
-**Status:** Built: listed members, or cells in columns and rows. `<grid>` was folded into `<group>` and removed.
+**Status:** Built: listed members, cells in columns and rows, and groups inside a group. `<grid>` was folded into `<group>` and removed.
 
 ## Groups
 
@@ -16,12 +16,12 @@
 | **One group per lane, members override what differs** | Chosen: one rule |
 | Members give full x and y | Repeats the row in every member |
 | Group position as an origin | Reads worse, hides off-screen starts |
-| Nested groups, inner inherits outer | Bigger saving (the shared `wrap` block) but needs merge rules for partly given sprites |
+| Nested groups, inner inherits outer | Built later (below), once sprites could be changed in part |
 | A grid with per-row velocity and a position list | Fixed lanes only, one shape per grid at the time; rows that change sprites (below) took away the objection |
 | Reusable named templates | A different idea (opt-in parts) |
 | Members overriding collisions/actions | Not allowed |
 
-- Open: nested groups; a bare `<x>` in a member (3 lines instead of 5, about 35% total saving). Evenly spaced members are now a group of one row in columns with a `<padding>`. The flag that makes a block move as one was once also called `<group>`; it is `<lockstep>` now.
+- Open: a bare `<x>` in a member (3 lines instead of 5, about 35% total saving). Evenly spaced members are now a group of one row in columns with a `<padding>`. The flag that makes a block move as one was once also called `<group>`; it is `<lockstep>` now.
 
 
 ## Columns and rows: `<grid>` folded into `<group>`
@@ -44,3 +44,14 @@
 | `<x><inc>3</inc></x>` for a nudge | A verb inside a value |
 
 - Open: a row or column with a `name` (to say `object="squids"`), a pick by range (`2-4`), a cell changing its collisions.
+
+
+## Groups inside a group
+
+- Problem (2026-10-13, counting repetition across the games): one rule repeated over groups that are otherwise unrelated. Frogger's ten lanes each wrote the same `<wrap />` block, Space Race's nine debris lanes the same, and Breakout's two-hit row and its marching block repeated the bricks' columns, gap and size.
+- Looked at: **a group inside a group** (the group rule one level up), and **rules on a class** (`<class name="logs">` holding collisions every object of that class gets). A class does not fit Frogger: its lanes are two classes (logs and hazard) that share the wrap, so the rule would still be written twice; and it is a second place an object's behavior comes from, which the author did not want. Chosen: groups inside a group.
+- **Rules, from the general to the particular.** Whatever an inner group leaves out it takes from the outer. A single thing (a half of position, velocity or padding, columns, rows, animation, acceleration, facing, hidden, class) is replaced. A sprite changes the outer's sprite of its name, as a member's does: this is the merge rule that held nesting back, built for cells. A list adds: collision rules run after the outer's (every matching rule runs, so adding is the only reading that keeps the outer's), and actions, variables and timers join the outer's, a name given again replacing it. An inner `<collisions>` gives its own `<enabled>`.
+- **Names.** Members are named after their innermost group (`logrow3.2`); every enclosing group's name means them too (`Object::outerGroups`, `inGroup`), so `<show object="lanes" />` replaces ten shows and `<show object="debris" />` nine. Lockstep blocks are the innermost groups.
+- A group holds members, cells, or groups, never two of these. The schema has `innerGroupType`, which differs from `groupType` only in that its sprites may be partial; the recursion goes through the type, not an `xs:group`, because `xsd_lite` builds groups by value.
+- Generated games: each group is a function; an inner one takes the outer's `Member` by value and changes it, so the C++ reads like the file (`lanesGroup` calls `riverGroup` calls `logrow3Group`).
+- Measured: Frogger's lanes and Space Race's debris each lost about 150 lines (also by writing a member on one line); Breakout's wall about the same length, its two groups now sharing the brick. Open: none known; whether a deeper chain (a wave inside a level) wants a name for what it changes is for [open work](58-open-work.md)'s numbered bundles.

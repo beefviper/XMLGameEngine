@@ -116,71 +116,69 @@
         </action>
       </actions>
     </object>
-    <!-- The top row takes two hits: whole, then cracked. A row cannot have
-         rules of its own (a group's rules are every cell's), so it is a group
-         of its own, in the same class. Its rules run in the order written, and
-         a look changed by one is the look the next one sees, so the cracked
-         rule comes first: a whole brick that is hit cracks, and only the next
-         hit takes it out. -->
-    <group name="strong" class="bricks">
+    <!-- The wall: what every brick shares (nine across, the gap between them,
+         its size, the left edge) is said once, in a group around two. The top
+         row takes two hits: whole, then cracked. A row cannot have rules of
+         its own (a group's rules are every cell's), so it is a group of its
+         own inside the wall. Its rules run in the order written, and a look
+         changed by one is the look the next one sees, so the cracked rule
+         comes first: a whole brick that is hit cracks, and only the next hit
+         takes it out. The block under it marches as one (lockstep). -->
+    <group name="wall" class="bricks">
       <columns>9</columns>
-      <rows>1</rows>
       <padding><x>5</x></padding>
       <sprite name="whole">
-        <rectangle>
-          <width>width</width>
-          <height>height</height>
-          <color>color.lightgrey</color>
-        </rectangle>
-      </sprite>
-      <sprite name="cracked">
-        <rectangle>
-          <width>width</width>
-          <height>height</height>
-          <color>color.darkgrey</color>
-        </rectangle>
-      </sprite>
-      <position><x>margin</x><y>margin / 2</y></position>
-      <collisions>
-        <enabled>true</enabled>
-        <collision object="ball" sprite="cracked">
-          <die />
-          <play sound="brick" />
-        </collision>
-        <collision object="ball" sprite="whole">
-          <become sprite="cracked" />
-          <play sound="crack" />
-        </collision>
-      </collisions>
-    </group>
-    <group name="bricks" class="bricks">
-      <columns>9</columns>
-      <rows>6</rows>
-      <padding><x>5</x><y>5</y></padding>
-      <sprite>
         <rectangle>
           <width>width</width>
           <height>height</height>
           <color>color.red</color>
         </rectangle>
       </sprite>
-      <position><x>margin</x><y>margin / 2 + height + 5</y></position>
-      <collisions>
-        <enabled>true</enabled>
-        <lockstep>true</lockstep>
-        <collision edge="horizontal">
-          <bounce />
-        </collision>
-        <collision>
-          <die />
-          <play sound="brick" />
-        </collision>
-      </collisions>
-      <row number="2"><sprite><rectangle><color>color.orange</color></rectangle></sprite></row>
-      <row number="3"><sprite><rectangle><color>color.yellow</color></rectangle></sprite></row>
-      <row number="4"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>
-      <row number="5"><sprite><rectangle><color>color.cyan</color></rectangle></sprite></row>
-      <row number="6"><sprite><rectangle><color>color.blue</color></rectangle></sprite></row>
+      <position><x>margin</x></position>
+      <group name="strong">
+        <rows>1</rows>
+        <sprite name="whole"><rectangle><color>color.lightgrey</color></rectangle></sprite>
+        <sprite name="cracked">
+          <rectangle>
+            <width>width</width>
+            <height>height</height>
+            <color>color.darkgrey</color>
+          </rectangle>
+        </sprite>
+        <position><y>margin / 2</y></position>
+        <collisions>
+          <enabled>true</enabled>
+          <collision object="ball" sprite="cracked">
+            <die />
+            <play sound="brick" />
+          </collision>
+          <collision object="ball" sprite="whole">
+            <become sprite="cracked" />
+            <play sound="crack" />
+          </collision>
+        </collisions>
+      </group>
+      <group name="bricks">
+        <rows>6</rows>
+        <padding><y>5</y></padding>
+        <position><y>margin / 2 + height + 5</y></position>
+        <collisions>
+          <enabled>true</enabled>
+          <lockstep>true</lockstep>
+          <collision edge="horizontal">
+            <bounce />
+          </collision>
+          <collision>
+            <die />
+            <play sound="brick" />
+          </collision>
+        </collisions>
+        <row number="2"><sprite name="whole"><rectangle><color>color.orange</color></rectangle></sprite></row>
+        <row number="3"><sprite name="whole"><rectangle><color>color.yellow</color></rectangle></sprite></row>
+        <row number="4"><sprite name="whole"><rectangle><color>color.green</color></rectangle></sprite></row>
+        <row number="5"><sprite name="whole"><rectangle><color>color.cyan</color></rectangle></sprite></row>
+        <row number="6"><sprite name="whole"><rectangle><color>color.blue</color></rectangle></sprite></row>
+      </group>
     </group>
     <object name="title">
       <sprite>
@@ -305,8 +303,7 @@
       <shows>
         <show object="ball" />
         <show object="player" />
-        <show object="strong" />
-        <show object="bricks" />
+        <show object="wall" />
       </shows>
       <inputs>
         <input button="a">

@@ -863,12 +863,18 @@
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <xs:complexType name="groupType">
+  <!-- How a group lays out cells: before its sprites. -->
+  <xs:group name="groupLayout">
     <xs:sequence>
       <xs:element name="columns" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="rows" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="padding" type="partialVector2Type" minOccurs="0" />
-      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:group>
+
+  <!-- What a group gives after its sprites. -->
+  <xs:group name="groupParts">
+    <xs:sequence>
       <xs:element name="animation" type="animationType" minOccurs="0" />
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
@@ -879,13 +885,44 @@
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
       <xs:element name="timers" type="timersType" minOccurs="0" />
+    </xs:sequence>
+  </xs:group>
+
+  <!-- A group's members, or what changes its cells. -->
+  <xs:group name="groupMembers">
+    <xs:choice>
+      <xs:element name="member" type="memberType" maxOccurs="unbounded" />
+      <xs:sequence>
+        <xs:element name="row" type="lineOfCellsType" minOccurs="0" maxOccurs="unbounded" />
+        <xs:element name="column" type="lineOfCellsType" minOccurs="0" maxOccurs="unbounded" />
+        <xs:element name="cell" type="cellType" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="groupType">
+    <xs:sequence>
+      <xs:group ref="groupLayout" />
+      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:group ref="groupParts" />
       <xs:choice>
-        <xs:element name="member" type="memberType" maxOccurs="unbounded" />
-        <xs:sequence>
-          <xs:element name="row" type="lineOfCellsType" minOccurs="0" maxOccurs="unbounded" />
-          <xs:element name="column" type="lineOfCellsType" minOccurs="0" maxOccurs="unbounded" />
-          <xs:element name="cell" type="cellType" minOccurs="0" maxOccurs="unbounded" />
-        </xs:sequence>
+        <xs:group ref="groupMembers" />
+        <xs:element name="group" type="innerGroupType" maxOccurs="unbounded" />
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="class" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!-- A group inside another: the same, except that a sprite of the outer group's (by name) need only give what changes. -->
+  <xs:complexType name="innerGroupType">
+    <xs:sequence>
+      <xs:group ref="groupLayout" />
+      <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:group ref="groupParts" />
+      <xs:choice>
+        <xs:group ref="groupMembers" />
+        <xs:element name="group" type="innerGroupType" maxOccurs="unbounded" />
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />

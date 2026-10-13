@@ -15,7 +15,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [arithmetic](03-arithmetic.md) | Math as text, `<equation>`, `<formula>` | Built |
 | [values-and-names](04-values-and-names.md) | `<random>`, evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
-| [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows | Built |
+| [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, groups inside a group | Built |
 | [states-and-conditions](07-states-and-conditions.md) | State stack, `atleast`/`atmost`/`remaining` | Built; per-state behavior, `goto` Open |
 | [input](08-input.md) | Actions, held keys, key sets across states | Built |
 | [timers](09-timers.md) | Timers, commands in every context | Built; event queue Open |

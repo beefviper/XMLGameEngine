@@ -598,15 +598,33 @@
         <xsl:with-param name="node" select="$node/lockstep" />
       </xsl:call-template>
     </xsl:variable>
-    <xsl:if test="$enabled != ''">
-      <xsl:value-of select="concat($indent, $data, '.enabled = true;&#10;')" />
-    </xsl:if>
-    <xsl:if test="$lockstep != ''">
-      <xsl:value-of select="concat($indent, $data, '.lockstep = true;&#10;')" />
-    </xsl:if>
-    <xsl:if test="normalize-space($node/type) = 'pixel'">
-      <xsl:value-of select="concat($indent, $data, '.type = CollisionType::Pixel;&#10;')" />
-    </xsl:if>
+    <!-- an inner group's <collisions> changes what the outer's set, so it
+         says false and box too -->
+    <xsl:variable name="nested" select="boolean($node/../parent::group)" />
+    <xsl:choose>
+      <xsl:when test="$enabled != ''">
+        <xsl:value-of select="concat($indent, $data, '.enabled = true;&#10;')" />
+      </xsl:when>
+      <xsl:when test="$nested">
+        <xsl:value-of select="concat($indent, $data, '.enabled = false;&#10;')" />
+      </xsl:when>
+    </xsl:choose>
+    <xsl:choose>
+      <xsl:when test="$lockstep != ''">
+        <xsl:value-of select="concat($indent, $data, '.lockstep = true;&#10;')" />
+      </xsl:when>
+      <xsl:when test="$nested and $node/lockstep">
+        <xsl:value-of select="concat($indent, $data, '.lockstep = false;&#10;')" />
+      </xsl:when>
+    </xsl:choose>
+    <xsl:choose>
+      <xsl:when test="normalize-space($node/type) = 'pixel'">
+        <xsl:value-of select="concat($indent, $data, '.type = CollisionType::Pixel;&#10;')" />
+      </xsl:when>
+      <xsl:when test="$nested and $node/type">
+        <xsl:value-of select="concat($indent, $data, '.type = CollisionType::Box;&#10;')" />
+      </xsl:when>
+    </xsl:choose>
     <xsl:for-each select="$node/collision">
       <xsl:variable name="commands" select="*[not(self::slower or self::faster)]" />
       <xsl:choose>
@@ -869,9 +887,15 @@
         <xsl:with-param name="node" select="$node/hidden[last()]" />
       </xsl:call-template>
     </xsl:variable>
-    <xsl:if test="$hidden != ''">
-      <xsl:value-of select="concat($indent, $to, '.isVisible = false;&#10;')" />
-    </xsl:if>
+    <xsl:choose>
+      <xsl:when test="$hidden != ''">
+        <xsl:value-of select="concat($indent, $to, '.isVisible = false;&#10;')" />
+      </xsl:when>
+      <!-- an inner group that says it is not hidden, inside one that is -->
+      <xsl:when test="$node/parent::group and $node/hidden">
+        <xsl:value-of select="concat($indent, $to, '.isVisible = true;&#10;')" />
+      </xsl:when>
+    </xsl:choose>
     <xsl:call-template name="collisions">
       <xsl:with-param name="node" select="$node/collisions" />
       <xsl:with-param name="to" select="$to" />
@@ -896,20 +920,31 @@
   <!-- <group name="..."> (readGroup): a function that adds its members to
        the game's objects, each made from what the group gives (a Member)
        and changed by its own parts: its <member>, or the <row>s and
-       <column>s that pick its cell and the <cell> itself. -->
+       <column>s that pick its cell and the <cell> itself. A group with
+       <group>s inside it hands what it gives to a function for each of
+       them, which starts from that and changes it; those come first in the
+       file, so that the outer group's function can call them. -->
   <xsl:template match="group">
+    <xsl:apply-templates select="group" />
     <xsl:variable name="function">
-      <xsl:call-template name="function-name">
-        <xsl:with-param name="earlier" select="preceding-sibling::group" />
-        <xsl:with-param name="suffix" select="'Group'" />
-      </xsl:call-template>
+      <xsl:call-template name="group-function" />
     </xsl:variable>
     <xsl:variable name="in" select="concat($tab, $tab)" />
-    <xsl:variable name="cells" select="boolean(columns)" />
+    <xsl:variable name="top" select="boolean(parent::objects)" />
+    <xsl:variable name="leaf" select="not(group)" />
+    <xsl:variable name="cells" select="boolean(ancestor-or-self::group/columns)" />
     <xsl:text>&#9;// &lt;group name="</xsl:text>
     <xsl:value-of select="@name" />
-    <xsl:value-of select="concat('&quot;&gt;&#10;&#9;void ', $function, '(std::vector&lt;RawObject&gt;&amp; all)&#10;&#9;{&#10;')" />
-    <xsl:value-of select="concat($in, '// what every member has, unless it says otherwise&#10;', $in, 'Member group;&#10;')" />
+    <xsl:choose>
+      <xsl:when test="$top">
+        <xsl:value-of select="concat('&quot;&gt;&#10;&#9;void ', $function, '(std::vector&lt;RawObject&gt;&amp; all)&#10;&#9;{&#10;')" />
+        <xsl:value-of select="concat($in, '// what every member has, unless it says otherwise&#10;', $in, 'Member group;&#10;')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat('&quot;&gt;, inside &lt;group name=&quot;', ../@name, '&quot;&gt;&#10;&#9;void ', $function, '(std::vector&lt;RawObject&gt;&amp; all, Member group)&#10;&#9;{&#10;')" />
+        <xsl:value-of select="concat($in, '// what the group around it gives, changed by what this one says&#10;')" />
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:if test="@class != ''">
       <xsl:value-of select="concat($in, 'group.object.objClass = ')" />
       <xsl:call-template name="string">
@@ -917,19 +952,41 @@
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
-    <xsl:value-of select="concat($in, 'group.object.groupName = ')" />
+    <xsl:choose>
+      <xsl:when test="$leaf">
+        <xsl:value-of select="concat($in, 'group.object.groupName = ')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat($in, 'group.object.outerGroups.push_back(')" />
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:call-template name="string">
       <xsl:with-param name="text" select="@name" />
     </xsl:call-template>
+    <xsl:if test="not($leaf)">)</xsl:if>
     <xsl:text>;&#10;</xsl:text>
-    <xsl:if test="sprite">
-      <xsl:value-of select="concat($in, 'group.sprites = ')" />
-      <xsl:call-template name="sprites">
-        <xsl:with-param name="nodes" select="sprite" />
-        <xsl:with-param name="indent" select="$in" />
-      </xsl:call-template>
-      <xsl:text>;&#10;</xsl:text>
-    </xsl:if>
+    <xsl:choose>
+      <xsl:when test="$top and sprite">
+        <xsl:value-of select="concat($in, 'group.sprites = ')" />
+        <xsl:call-template name="sprites">
+          <xsl:with-param name="nodes" select="sprite" />
+          <xsl:with-param name="indent" select="$in" />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <!-- an inner group's sprites change the outer's of their name -->
+        <xsl:for-each select="sprite">
+          <xsl:value-of select="concat($in, 'change(group, ')" />
+          <xsl:call-template name="sprite-arguments">
+            <xsl:with-param name="node" select="." />
+            <xsl:with-param name="indent" select="$in" />
+            <xsl:with-param name="change" select="true()" />
+          </xsl:call-template>
+          <xsl:text>);&#10;</xsl:text>
+        </xsl:for-each>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:call-template name="part-animation">
       <xsl:with-param name="node" select="animation[last()]" />
       <xsl:with-param name="to" select="'group'" />
@@ -941,10 +998,10 @@
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
     <!-- a velocity half nobody gives is 0 -->
-    <xsl:if test="not(velocity/x)">
+    <xsl:if test="$top and not(velocity/x)">
       <xsl:value-of select="concat($in, 'group.object.rawVelocity.x = value(&quot;0&quot;);&#10;')" />
     </xsl:if>
-    <xsl:if test="not(velocity/y)">
+    <xsl:if test="$top and not(velocity/y)">
       <xsl:value-of select="concat($in, 'group.object.rawVelocity.y = value(&quot;0&quot;);&#10;')" />
     </xsl:if>
     <xsl:if test="acceleration">
@@ -959,21 +1016,22 @@
       <xsl:with-param name="to" select="'group.object'" />
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
-    <xsl:if test="$cells">
+    <!-- the gaps a cell takes from the innermost group that gives them -->
+    <xsl:if test="$cells and $leaf">
       <xsl:value-of select="concat($in, 'group.object.cell.gapBefore = ')" />
       <xsl:choose>
-        <xsl:when test="padding[last()]/x">
+        <xsl:when test="ancestor-or-self::group/padding/x">
           <xsl:call-template name="value">
-            <xsl:with-param name="node" select="padding[last()]/x" />
+            <xsl:with-param name="node" select="(ancestor-or-self::group/padding/x)[last()]" />
           </xsl:call-template>
         </xsl:when>
         <xsl:otherwise>value("0")</xsl:otherwise>
       </xsl:choose>
       <xsl:value-of select="concat(';&#10;', $in, 'group.object.cell.gapAbove = ')" />
       <xsl:choose>
-        <xsl:when test="padding[last()]/y">
+        <xsl:when test="ancestor-or-self::group/padding/y">
           <xsl:call-template name="value">
-            <xsl:with-param name="node" select="padding[last()]/y" />
+            <xsl:with-param name="node" select="(ancestor-or-self::group/padding/y)[last()]" />
           </xsl:call-template>
         </xsl:when>
         <xsl:otherwise>value("0")</xsl:otherwise>
@@ -1001,11 +1059,18 @@
     <xsl:text>&#10;</xsl:text>
 
     <xsl:choose>
+      <xsl:when test="not($leaf)">
+        <xsl:for-each select="group">
+          <xsl:value-of select="$in" />
+          <xsl:call-template name="group-function" />
+          <xsl:text>(all, group);&#10;</xsl:text>
+        </xsl:for-each>
+      </xsl:when>
       <xsl:when test="$cells">
         <xsl:call-template name="cells">
           <xsl:with-param name="group" select="." />
-          <xsl:with-param name="columns" select="number(normalize-space(columns))" />
-          <xsl:with-param name="rows" select="number(normalize-space(rows))" />
+          <xsl:with-param name="columns" select="number(normalize-space((ancestor-or-self::group/columns)[last()]))" />
+          <xsl:with-param name="rows" select="number(normalize-space((ancestor-or-self::group/rows)[last()]))" />
           <xsl:with-param name="row" select="1" />
           <xsl:with-param name="indent" select="$in" />
         </xsl:call-template>
@@ -1032,6 +1097,15 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text>&#9;}&#10;&#10;</xsl:text>
+  </xsl:template>
+
+  <!-- The function a <group> is written as: its name in camel case and
+       Group, told apart from every group before it or around it. -->
+  <xsl:template name="group-function">
+    <xsl:call-template name="function-name">
+      <xsl:with-param name="earlier" select="preceding::group | ancestor::group" />
+      <xsl:with-param name="suffix" select="'Group'" />
+    </xsl:call-template>
   </xsl:template>
 
   <!-- What a part of a group is called in the C++: member3, row1, column2, cell1. -->
@@ -1581,10 +1655,7 @@
         <xsl:text>&#9;&#9;</xsl:text>
         <xsl:choose>
           <xsl:when test="self::group">
-            <xsl:call-template name="function-name">
-              <xsl:with-param name="earlier" select="preceding-sibling::group" />
-              <xsl:with-param name="suffix" select="'Group'" />
-            </xsl:call-template>
+            <xsl:call-template name="group-function" />
             <xsl:text>(all);&#10;</xsl:text>
           </xsl:when>
           <xsl:otherwise>

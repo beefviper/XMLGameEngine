@@ -209,7 +209,7 @@ namespace xge
 	{
 		bool isNamed(const Object& object, const std::string& name)
 		{
-			return object.name == name || (!object.groupName.empty() && object.groupName == name);
+			return object.name == name || object.inGroup(name);
 		}
 
 	}

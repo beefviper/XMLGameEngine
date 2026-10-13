@@ -9,6 +9,7 @@
 #include "command.h"
 #include "types.h"
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <optional>
@@ -255,6 +256,15 @@ namespace xge
 		// RawObject per member (see game_xml.cpp), so from here on a member
 		// is an ordinary object that also remembers which group it came from.
 		std::string groupName;
+		// The groups around that group, outermost first, when groups are
+		// written inside one another; each of their names means this object too.
+		std::vector<std::string> outerGroups;
+
+		// Whether `group` is this object's group or one around it.
+		bool inGroup(const std::string& group) const
+		{
+			return !group.empty() && (groupName == group || std::find(outerGroups.begin(), outerGroups.end(), group) != outerGroups.end());
+		}
 
 		// Where it goes in its group's <columns> and <rows>, when it is a cell.
 		RawCell cell;
@@ -275,6 +285,14 @@ namespace xge
 		// object (a state's <show>, object= in a rule or
 		// condition, <reset object="..." />) to mean every member at once.
 		std::string groupName;
+		// The groups around that one, outermost first (see RawObject).
+		std::vector<std::string> outerGroups;
+
+		// Whether `group` is this object's group or one around it.
+		bool inGroup(const std::string& group) const
+		{
+			return !group.empty() && (groupName == group || std::find(outerGroups.begin(), outerGroups.end(), group) != outerGroups.end());
+		}
 		std::string objClass;
 		bool isVisible{ true };
 

@@ -36,7 +36,7 @@ namespace xge
 
 			const auto made = std::find_if(objects.begin(), objects.end(), [&](const Object& object)
 				{
-					return object.name == name || (!object.groupName.empty() && object.groupName == name);
+					return object.name == name || object.inGroup(name);
 				});
 			return made == objects.end() ? nullptr : &*made;
 		}
@@ -50,6 +50,7 @@ namespace xge
 			{
 				names.insert(object.name);
 				if (!object.groupName.empty()) { names.insert(object.groupName); }
+				names.insert(object.outerGroups.begin(), object.outerGroups.end());
 			}
 			return { names.begin(), names.end() };
 		}
@@ -204,7 +205,7 @@ namespace xge
 					for (const Object& object : objects)
 					{
 						const bool named = object.name == become->target
-							|| (!object.groupName.empty() && object.groupName == become->target);
+							|| object.inGroup(become->target);
 						if (!named) { continue; }
 						any = true;
 						if (std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
@@ -665,6 +666,7 @@ namespace xge
 			}
 
 			object.groupName = rawObject.groupName;
+			object.outerGroups = rawObject.outerGroups;
 			object.name = rawObject.name;
 			object.objClass = rawObject.objClass;
 
@@ -859,7 +861,7 @@ namespace xge
 					{
 						return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
 							&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name
-								|| (!object.groupName.empty() && rawCondition.filterObject == object.groupName));
+								|| object.inGroup(rawCondition.filterObject));
 					}))
 				{
 					std::cout << "warning: state '" << rawState.name << "': a condition with remaining= matches no object at all, so it would fire at once\n";

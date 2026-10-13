@@ -165,7 +165,7 @@ namespace xge
 		float nearestDistance = 0.0f;
 		for (const auto& other : objects)
 		{
-			const bool named = other.name == name || (!other.groupName.empty() && other.groupName == name);
+			const bool named = other.name == name || other.inGroup(name);
 			if (&other == &from || !named || !other.isVisible || !isShown(other)) { continue; }
 
 			const Vector2f apart = middleOf(other) - here;
@@ -185,7 +185,7 @@ namespace xge
 
 		for (auto& shown : currentState.top().show)
 		{
-			if (shown == object.name || (!object.groupName.empty() && shown == object.groupName))
+			if (shown == object.name || object.inGroup(shown))
 			{
 				result = true;
 			}
@@ -213,7 +213,7 @@ namespace xge
 			return &(*exact);
 		}
 
-		const auto first = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return !obj.groupName.empty() && obj.groupName == name; });
+		const auto first = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.inGroup(name); });
 		return (first == std::end(objects)) ? nullptr : &(*first);
 	}
 
@@ -617,7 +617,7 @@ namespace xge
 		// own name (aliens.3.2) just that one.
 		for (auto& candidate : objects)
 		{
-			if (candidate.name == name || (!candidate.groupName.empty() && candidate.groupName == name))
+			if (candidate.name == name || candidate.inGroup(name))
 			{
 				drawStartAgain(candidate);
 				resetObjectState(candidate);
@@ -651,7 +651,7 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			if (object.name == target || (!object.groupName.empty() && object.groupName == target))
+			if (object.name == target || object.inGroup(target))
 			{
 				showLookNamed(object, sprite);
 			}
@@ -664,7 +664,7 @@ namespace xge
 		{
 			if (count <= 0) { break; }
 
-			const bool named = object.name == target || (!object.groupName.empty() && object.groupName == target);
+			const bool named = object.name == target || object.inGroup(target);
 			if (!named || object.isVisible) { continue; }
 
 			object.position = object.positionOriginal;
@@ -707,7 +707,7 @@ namespace xge
 		int setOff = 0;
 		for (auto& object : objects)
 		{
-			const bool named = object.name == target || (!object.groupName.empty() && object.groupName == target);
+			const bool named = object.name == target || object.inGroup(target);
 			if (!named || !object.isVisible || object.isFollowing()) { continue; }
 
 			follow(object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(framerate))));
@@ -892,8 +892,7 @@ namespace xge
 		bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Object& candidate)
 		{
 			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
-			if (!filterObject.empty() && filterObject != candidate.name
-				&& (candidate.groupName.empty() || filterObject != candidate.groupName)) { return false; }
+			if (!filterObject.empty() && filterObject != candidate.name && !candidate.inGroup(filterObject)) { return false; }
 			return true;
 		}
 

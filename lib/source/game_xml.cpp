@@ -961,10 +961,12 @@ namespace xge
 
 		// <collisions>: whether they are on, whether the objects move in lockstep
 		// with the others of their group, then the rules.
-		RawCollisionData readCollisions(const XmlNode& collisions, const std::string& where)
+		// A <collisions>, added to what `base` already has: a group inside
+		// another keeps the outer group's rules and adds its own after them.
+		RawCollisionData readCollisions(const XmlNode& collisions, const std::string& where, RawCollisionData base = {})
 		{
 			const std::string collisionsHere = where + " > <collisions>";
-			RawCollisionData collisionData;
+			RawCollisionData collisionData = std::move(base);
 
 			collisionData.enabled = readBool(*requireChild(collisions, "enabled", collisionsHere), collisionsHere);
 			if (auto lockstep = findChild(&collisions, "lockstep"))
@@ -1279,6 +1281,22 @@ namespace xge
 			}
 		}
 
+		// What a <group> gives what is inside it, already merged with what the
+		// groups around it give: a group inside another starts from all of this.
+		struct GroupShared
+		{
+			std::vector<RawSprite> sprites;
+			std::optional<AnimationSpec> animation;
+			PartialVector2 position;
+			PartialVector2 velocity;
+			PartialVector2 padding;
+			int columns = 0;
+			int rows = 0;
+			// Visibility, facing, acceleration, collisions, actions, variables,
+			// timers, class and the names of the groups around it.
+			RawObject object;
+		};
+
 		// A <group> is read as one RawObject per member, which from then on is
 		// an ordinary object that remembers its group (see Object::groupName).
 		// The group gives what its members share (sprites, position, velocity,
@@ -1296,60 +1314,89 @@ namespace xge
 		// <animation>, a <velocity> and <variables>, and for a row or column
 		// the gap before it (<padding>). A sprite that changes one of the
 		// group's need only give what changes (changeSprite).
-		void readGroup(const XmlNode& group, std::vector<RawObject>& out)
+		//
+		// Or a group holds <group>s, which take from it the same way a member
+		// does from its group: whatever an inner group leaves out it takes from
+		// the outer, its sprites change the outer's by name, and its collision
+		// rules, actions, variables and timers add to the outer's (an action or
+		// variable of the same name replaces it). Its members are named after
+		// it, and the outer group's name means all of them.
+		void readGroup(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& outer = {})
 		{
 			const std::string name = requireAttribute(group, "name", "<group>");
 			const std::string where = "group '" + name + "'";
 
-			std::vector<RawSprite> sprites;
-			std::optional<AnimationSpec> animation;
-			PartialVector2 position;
-			PartialVector2 velocity;
-			PartialVector2 padding;
-			std::optional<RawCollisionData> collisions;
-			std::optional<RawVector2> acceleration;
-			bool hidden = false;
-			std::string facing;
-			int columns = 0;
-			int rows = 0;
+			GroupShared own = outer;
+			RawObject& shared = own.object;
+			bool inner = false;
 
 			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
 
-				if (tag == "hidden") { hidden = readBool(*child, where); }
-				else if (tag == "columns") { columns = readCount(*child, where); }
-				else if (tag == "rows") { rows = readCount(*child, where); }
-				else if (tag == "padding") { padding = readPartialVector2(*child, where); }
-				else if (tag == "sprite") { sprites.push_back(readSprite(*child, where)); }
-				else if (tag == "animation") { animation = readAnimation(*child, where); }
-				else if (tag == "position") { position = readPartialVector2(*child, where); }
-				else if (tag == "velocity") { velocity = readPartialVector2(*child, where); }
-				else if (tag == "acceleration") { acceleration = readVector2(*child, where); }
-				else if (tag == "collisions") { collisions = readCollisions(*child, where); }
-				else if (tag == "facing") { facing = readFacing(*child, where); }
-				else if (tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
+				if (tag == "hidden") { shared.isVisible = !readBool(*child, where); }
+				else if (tag == "columns") { own.columns = readCount(*child, where); }
+				else if (tag == "rows") { own.rows = readCount(*child, where); }
+				else if (tag == "padding")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <hidden>, <collisions>, <actions>, <variables>, <timers>, then <member>s, or <row>s, <column>s and <cell>s");
+					const PartialVector2 given = readPartialVector2(*child, where);
+					if (given.x) { own.padding.x = given.x; }
+					if (given.y) { own.padding.y = given.y; }
+				}
+				else if (tag == "animation") { own.animation = readAnimation(*child, where); }
+				else if (tag == "position" || tag == "velocity")
+				{
+					PartialVector2& into = tag == "position" ? own.position : own.velocity;
+					const PartialVector2 given = readPartialVector2(*child, where);
+					if (given.x) { into.x = given.x; }
+					if (given.y) { into.y = given.y; }
+				}
+				else if (tag == "acceleration")
+				{
+					shared.hasAcceleration = true;
+					shared.rawAcceleration = readVector2(*child, where);
+				}
+				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
+				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
+				else if (tag == "group") { inner = true; }
+				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
+				{
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <hidden>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
-			if ((columns > 0) != (rows > 0)) { fail(where, "has <columns> or <rows> and not the other; a group laid out in cells needs both"); }
-
-			RawObject shared;
-			shared.isVisible = !hidden;
-			shared.facing = facing;
-			if (acceleration)
-			{
-				shared.hasAcceleration = true;
-				shared.rawAcceleration = *acceleration;
-			}
-			shared.timers = readTimers(findChild(&group, "timers").get(), where);
+			own.sprites = changeSprites(own.sprites, group, where);
+			for (RawTimer& timer : readTimers(findChild(&group, "timers").get(), where)) { shared.timers.push_back(std::move(timer)); }
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
-			shared.objClass = getAttribute(&group, "class");
+			if (const std::string objClass = getAttribute(&group, "class"); !objClass.empty()) { shared.objClass = objClass; }
+
+			if (inner)
+			{
+				own.object.outerGroups.push_back(name);
+				for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					const std::string tag = child->getName();
+					if (tag == "member" || tag == "row" || tag == "column" || tag == "cell")
+					{
+						fail(where, "has <group>s inside it, so it has no <" + tag + ">s of its own; give them to the groups inside");
+					}
+					if (tag == "group") { readGroup(*child, out, own); }
+				}
+				return;
+			}
+
+			const std::vector<RawSprite>& sprites = own.sprites;
+			const std::optional<AnimationSpec>& animation = own.animation;
+			const PartialVector2& position = own.position;
+			const PartialVector2& velocity = own.velocity;
+			const PartialVector2& padding = own.padding;
+			const int columns = own.columns;
+			const int rows = own.rows;
+
+			if ((columns > 0) != (rows > 0)) { fail(where, "has <columns> or <rows> and not the other; a group laid out in cells needs both"); }
+
 			shared.groupName = name;
-			if (collisions) { shared.rawCollisionData = *collisions; }
 
 			// One member or cell from the group and its own parts, the most
 			// particular last.
