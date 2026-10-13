@@ -9,7 +9,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | File | Game |
 |---|---|
 | `games/pong.xml` | Pong, with a menu, pause and game-over screens, 8-bit sounds for the walls, the paddles, a point, the start and the end, and a ball that comes off a paddle at an angle set by where it hit |
-| `games/pong_min.xml` | Pong with nothing but the game: two paddles and a ball, no menu, score, text or sound; a point puts the ball back in the middle and serves it again, to either side within 30 degrees of level. The smallest game, the one `--generate windows-cpp` was grown on |
+| `games/pong_min.xml` | Pong with nothing but the game: two paddles and a ball, no menu, score, text or sound; a point puts the ball back in the middle and serves it again, to either side within 30 degrees of level. The smallest game, the one `--generate windows-cpp` was grown on, and the one `prototypes/pong_min/` writes out by hand as plain code on the engine's frame |
 | `games/breakout.xml` | Breakout (a grey top row of bricks that takes two hits, cracking at the first, then six rows, one color a row, as one group of 9 columns and 6 rows, each row changing the color; the game is won when no brick is left and lost when the ball falls) |
 | `games/spaceinvaders.xml` | Space Invaders (three kinds of alien drawn from ASCII bitmaps, two animation frames a second apart, as one group of 11 columns and 5 rows of individually named objects, the rows changing the picture; the game is won when none are left; the aliens drop bombs back, three hits and the game is lost) |
 | `games/spaceinvaders2.xml` | Space Invaders again, drawn from an SVG sprite sheet (`assets/Space Invaders Color Sprites.svg`): the same game and group of columns and rows, with three-frame animations for the three kinds of alien, a ship and a bolt cut out of the sheet by `<svg>` sprites, and the aliens firing the sheet's plasma bolts back |
@@ -26,6 +26,11 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/frostbite.xml` | Frostbite: jump Bailey between the snowy shore and four rows of drifting ice; every white row he lands on turns blue and adds a block to his igloo; the water, the cold and the snow geese are against him; finish the igloo and walk in |
 | `games/donkeykong.xml` | Donkey Kong: climb six girders past the barrels Kong throws, jumping them or dodging up the ladders, to save Pauline; each rescue Kong throws faster, three rescues win |
 | `games/galaxian.xml` | Galaxian: a fleet flies in on curving paths and settles into formation, then one alien at a time dives at your ship, weaving and dropping bombs, and loops back to its place from the top of the screen |
+| `games/pitfall.xml` | Pitfall!: run Harry through four jungle screens, each a state, past rolling logs, a tar pit, a crocodile pond, a fire and the scorpions in the tunnel, after a treasure on each, in three minutes with three lives |
+| `games/missilecommand.xml` | Missile Command: missiles chase the nearest of six cities; steer a sight, and the base aims a counter-missile that bursts there and takes every missile flying into it; three waves |
+| `games/combat.xml` | Combat, two players: tanks that drive along the way they point and turn on the spot, among walls, one shell in the air each; first to five hits |
+| `games/airseabattle.xml` | Air-Sea Battle, two players: swing a gun and fire at four lanes of planes going round the sky; most hits in two minutes wins |
+| `games/megamania.xml` | Megamania: three waves of hamburgers, cookies and bugs wrap round the sides and drop bombs while your energy runs down; shoot each wave before it is gone, three ships |
 
 ## What a game file looks like
 
@@ -58,12 +63,22 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 
 The one rule of the format: an attribute names or picks something (`name`, `class`, `edge`, `button`, `state`, ...); everything else is element content. Numbers may be plain arithmetic over named values such as `window.width.center` or `ball.radius`, evaluated by exprtk, or the same arithmetic written as `<equation>` (steps) or `<formula>` (nested) tags, which leave nothing in a string for a tool to parse.
 
+## Saying a thing once
+
+What many objects or states share is written once, under a name, higher up in the file, and each place below takes it and says only what is different about it. It keeps a game file short without making it look like a program.
+
+* **Leave out what is nothing.** An object that never moves has no `<velocity>`, and one that never collides has no `<collisions>`.
+* **Groups.** A `<group>` writes the shared parts of its members once: a list of members, or a block of columns and rows where a row, a column or a single cell changes what it needs to (Breakout's rows of colors, Space Invaders' rows of aliens). A group can hold groups (Frogger's lanes), and a group's name means every member in it.
+* **Named sets in `<states>`.** At the top of `<states>`, before the first `<state>`, named `<keys>`, `<shows>` and `<conditions>` sets hold what several states bind, show and check. A state takes one with `set="name"` and adds its own; a set can take a set written before it. Pitfall's four screens share the jungle, Harry, the score and how a screen ends; Berserk's rooms share the player, Otto and the score.
+
+See [docs/readme.md](docs/readme.md#group) for the details.
+
 ## How it works
 
 1. An XML library parses and validates the file (Xerces by default, with full XSD validation; TinyXML2, PugiXML or RapidXML with a built-in validator for the subset of XSD used here).
 2. exprtk evaluates every value once. Objects, variables and states are built.
 3. A window library draws and reads the keyboard (SFML 3 by default; Raylib, SDL2 or OpenGL), and a sound library plays the game's sounds (SFML 3 by default; Raylib, SDL2, or none). The sounds are written in the game file as notes and made into samples by the engine, like the beeps of an old 8-bit machine: `<sound name="wall" wave="square"><note pitch="A3">0.04</note></sound>`, played by `<play sound="wall" />`.
-4. Each frame: keys run the current state's bindings, objects move, collisions are swept and their rules run, conditions are checked, the sounds asked for are played, and the frame is drawn.
+4. Each frame: keys run the current state's bindings, objects move, collisions are swept and their rules run, conditions are checked, the sounds asked for are played, and the frame is drawn. The order of a frame and the moving live in one place (`lib/source/frame.cpp`), and what each verb does in another (`lib/source/verbs.cpp`); the engine only decides from the file which of them to call, so a generated game can make the same calls as plain code.
 
 Collisions are swept, so fast small objects cannot skip over thin ones. States form a stack (menu, playing, paused, game over). Keys are bound to named actions on objects, not to movement, so remapping one key is one edit.
 
@@ -112,7 +127,7 @@ The options are `XGE_WITH_SFML3`, `XGE_WITH_RAYLIB`, `XGE_WITH_SDL2`, `XGE_WITH_
 
 ## Status
 
-The engine is still growing. It has no arcing jump (`hop` is a single step and `<jump>` a straight, timed one), no aiming, and no scrolling; all movement is pixels per frame, and timers count frames. Objects can act on their own on timers (enemies fire back), face a way, change their look, and states share named key sets. Sound is short effects and little tunes made from notes, not music or sound files. The full list of known limits is in [docs/readme.md](docs/readme.md).
+The engine is still growing; version 1 is non-scrolling games, and a camera for scrolling ones is planned for version 2. Jumps are a single step (`hop`), a straight, timed line (`<jump>`) and a fixed arc with no steering in the air (`<leap>`); enemies can `<chase>` and `<aim>`, straight at their target, with no lead; all movement is pixels per frame, and timers count frames. Objects can act on their own on timers (enemies fire back), face a way, change their look, and states share named sets of keys, shows and conditions. Sound is short effects and little tunes made from notes, not music or sound files. The full list of known limits is in [docs/readme.md](docs/readme.md).
 
 ## Documentation
 
