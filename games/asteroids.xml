@@ -663,6 +663,17 @@
     </object>
   </objects>
   <states>
+    <!-- the rocks and the score, shown while playing and after -->
+    <shows name="field">
+      <show object="bigrocks" />
+      <show object="mediumrocks" />
+      <show object="smallrocks" />
+      <show object="scorelabel" />
+      <show object="scorevalue" />
+      <show object="liveslabel" />
+      <show object="livesvalue" />
+    </shows>
+
     <state name="mainmenu">
       <shows>
         <show object="title" />
@@ -681,13 +692,7 @@
       <shows>
         <show object="ship" />
         <show object="shots" />
-        <show object="bigrocks" />
-        <show object="mediumrocks" />
-        <show object="smallrocks" />
-        <show object="scorelabel" />
-        <show object="scorevalue" />
-        <show object="liveslabel" />
-        <show object="livesvalue" />
+        <show set="field" />
       </shows>
       <inputs>
         <input button="a">
@@ -751,13 +756,7 @@
       <shows>
         <show object="ship" />
         <show object="shots" />
-        <show object="bigrocks" />
-        <show object="mediumrocks" />
-        <show object="smallrocks" />
-        <show object="scorelabel" />
-        <show object="scorevalue" />
-        <show object="liveslabel" />
-        <show object="livesvalue" />
+        <show set="field" />
         <show object="wonmsg" />
         <show object="again" />
       </shows>
@@ -769,13 +768,7 @@
     </state>
     <state name="gameover">
       <shows>
-        <show object="bigrocks" />
-        <show object="mediumrocks" />
-        <show object="smallrocks" />
-        <show object="scorelabel" />
-        <show object="scorevalue" />
-        <show object="liveslabel" />
-        <show object="livesvalue" />
+        <show set="field" />
         <show object="overmsg" />
         <show object="again" />
       </shows>

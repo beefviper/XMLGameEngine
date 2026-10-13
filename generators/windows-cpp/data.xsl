@@ -1382,6 +1382,23 @@
     <xsl:value-of select="concat($in, 'return keys;&#10;&#9;}&#10;&#10;')" />
   </xsl:template>
 
+  <!-- A <show> (readShows): its object's name, or a <shows> set's names in
+       its place, each followed by ", ". -->
+  <xsl:template match="show" mode="shown">
+    <xsl:choose>
+      <xsl:when test="@set">
+        <xsl:variable name="set" select="@set" />
+        <xsl:apply-templates select="ancestor::states/shows[@name = $set][1]/show" mode="shown" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@object" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
   <!-- <state name="..."> (readState): a function that makes it. -->
   <xsl:template match="state">
     <xsl:variable name="in" select="concat($tab, $tab)" />
@@ -1398,12 +1415,10 @@
       <xsl:with-param name="text" select="@name" />
     </xsl:call-template>
     <xsl:value-of select="concat(';&#10;', $in, 'state.show = { ')" />
-    <xsl:for-each select="shows/*">
-      <xsl:if test="position() &gt; 1">, </xsl:if>
-      <xsl:call-template name="string">
-        <xsl:with-param name="text" select="@object" />
-      </xsl:call-template>
-    </xsl:for-each>
+    <xsl:variable name="shown">
+      <xsl:apply-templates select="shows/show" mode="shown" />
+    </xsl:variable>
+    <xsl:value-of select="substring($shown, 1, string-length($shown) - 2)" />
     <xsl:text> };&#10;</xsl:text>
     <xsl:call-template name="use-keys">
       <xsl:with-param name="words" select="normalize-space(inputs/@keys)" />

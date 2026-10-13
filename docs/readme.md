@@ -522,10 +522,42 @@ A state is one screen: a menu, the playfield, a pause screen, a game-over screen
 
 | Element | Required | What it does |
 |---|---|---|
-| `<shows>` | yes | A list of `<show object="name" />`. Only these objects are drawn and updated while the state is current |
+| `<shows>` | yes | A list of `<show object="name" />`. Only these objects are drawn and updated while the state is current. `<show set="name" />` shows a shared [show set](#show-sets) |
 | `<inputs>` | yes | A list of `<input button="key">`, each holding the commands that key runs, e.g. `<push state="playing" />` or `<trigger object="paddle1" action="up" />`. `keys="name"` takes a shared [key set](#input) first; the state's own `<input>`s go over it |
 | `<conditions>` | no | A list of `<condition>`, checked every frame. See [Conditions](#conditions) |
 | `<timers>` | no | Timers that count while this is the current state. See [Timers](#timers) |
+
+### Show sets
+
+Objects several states show are written once, as a named `<shows>` set at the top of `<states>` (with the `<keys>` sets, before the first `<state>`), holding `<show>`s like a state's. A state takes a set with `<show set="name" />` among its own `<show>`s, one set to a `<show>`, and adds whatever else it shows. A set can take a set written before it. Pitfall's four screens share the jungle, Harry and the score; Berserk's rooms share the player and Otto, and take the score from a `hud` set that the pause and game-over screens use too:
+
+```xml
+<states>
+  <shows name="hud">
+    <show object="score" />
+    <show object="lives" />
+  </shows>
+  <shows name="room">
+    <show object="player" />
+    <show object="otto" />
+    <show set="hud" />
+  </shows>
+  <state name="room1">
+    <shows>
+      <show object="walls1" />
+      <show set="room" />
+    </shows>
+    ...
+  </state>
+  <state name="paused">
+    <shows>
+      <show object="paused" />
+      <show set="hud" />
+    </shows>
+    ...
+```
+
+A `<show>` names an `object` or a `set`, not both; a set named before it is written, or two sets with one name, are turned away when the game loads.
 
 What a state shows is drawn in the order the objects are written in the file, a later one over an earlier, whatever order its `<show>`s are in (`drawFrame` in `window.h`, which a generated game calls too).
 

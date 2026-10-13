@@ -11,12 +11,12 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | File | Topic | Status |
 |---|---|---|
 | [vision](01-vision.md) | What we want, declarative with triggers, the VGDL landscape | Built |
-| [file-format](02-file-format.md) | Why XML + XSD, one file; attributes name, content computes | Built |
+| [file-format](02-file-format.md) | Why XML + XSD, one file; attributes name, content computes; lists packed in strings | Built; lists in strings Open |
 | [arithmetic](03-arithmetic.md) | Math as text, `<equation>`, `<formula>` | Built |
 | [values-and-names](04-values-and-names.md) | `<random>`, evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
 | [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, groups inside a group | Built |
-| [states-and-conditions](07-states-and-conditions.md) | State stack, `atleast`/`atmost`/`remaining` | Built; per-state behavior, `goto` Open |
+| [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` sets, `atleast`/`atmost`/`remaining` | Built; per-state behavior Open |
 | [input](08-input.md) | Actions, held keys, key sets across states | Built |
 | [timers](09-timers.md) | Timers, commands in every context | Built; event queue Open |
 | [pools-and-enemies](10-pools-and-enemies.md) | Pools instead of spawning, enemies firing back, key sets | Built |

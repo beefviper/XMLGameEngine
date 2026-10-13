@@ -406,6 +406,24 @@ TEST_CASE("a <keys> set is shared by states, one <input> can name several keys, 
 	CHECK(std::holds_alternative<CmdPushState>(special.input.at(KeyCode::A).at(0)));
 }
 
+TEST_CASE("a <shows> set is shared by states, can take an earlier set, and a state adds its own objects", "[shows]")
+{
+	const std::string sets = "<shows name=\"hud\"><show object=\"score\" /></shows>"
+		"<shows name=\"field\"><show object=\"man\" /><show set=\"hud\" /></shows>";
+	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
+
+	Loaded loaded(gameXml(
+		box("man", 100, 100, 20, 20) + box("score", 0, 0, 20, 20) + box("paused", 50, 50, 20, 20),
+		"<state name=\"playing\"><shows><show set=\"field\" /></shows>" + inputs + "</state>"
+		"<state name=\"paused\"><shows><show object=\"paused\" /><show set=\"hud\" /></shows>" + inputs + "</state>"
+		, sets), XmlBackend::TinyXml2);
+
+	const auto& states = loaded.game.getStates();
+	CHECK(states.size() == 2);
+	CHECK(states.at(0).show == std::vector<std::string>{ "man", "score" });
+	CHECK(states.at(1).show == std::vector<std::string>{ "paused", "score" });
+}
+
 TEST_CASE("mistakes in the new tags are turned away when the game loads, saying where", "[timers][facing][jump][keys][errors]")
 {
 	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
@@ -434,6 +452,15 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\"><distance>5</distance><seconds>0</seconds></jump></action></actions>"),
 		plain, "<jump> has <seconds> of 0");
 	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, {}, {}, " keys=\"nothing\""), "keys=\"nothing\" names no <keys> set");
+	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
+	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show set=\"nothing\" /></shows>" + inputs + "</state>",
+		"set=\"nothing\" names no <shows> set before it");
+	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" set=\"o\" /></shows>" + inputs + "</state>",
+		"names an object=\"...\" or a set=\"...\", one of them");
+	fails(box("o", 0, 0, 1, 1), "<shows name=\"a\"><show set=\"b\" /></shows><shows name=\"b\"><show object=\"o\" /></shows>" + plain,
+		"set=\"b\" names no <shows> set before it");
+	fails(box("o", 0, 0, 1, 1), "<shows name=\"a\"><show object=\"o\" /></shows><shows name=\"a\"><show object=\"o\" /></shows>" + plain,
+		"two <shows> sets are called 'a'");
 }
 
 TEST_CASE("an object with several named sprites can <become> each of them, and a reset brings back the first", "[looks]")

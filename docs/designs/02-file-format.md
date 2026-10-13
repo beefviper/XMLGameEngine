@@ -28,3 +28,14 @@ The rule, reached by removing a small scripting language that had grown inside a
 - Named actions stay (`<action name="up">` bound by a state): the indirection is good design regardless of syntax ([states-and-conditions](07-states-and-conditions.md)).
 - A list of commands is accepted because it is sequential with no control flow. The line to hold: no conditionals, loops, variables or dynamic dispatch inside a command list.
 - Rejected elsewhere: statements as a mini language (MML strings for sound, [sound](33-sound.md)), one multi-line text block for bitmap rows ([pictures](30-pictures.md)).
+
+### Lists and parts still packed into attribute strings
+
+**Status:** Open (noted 2026-10-13). Beef: several values in one string break the rule above, even though each value is only a name; the schema sees one string and the reader splits it.
+
+- `<input button="space p escape">`: several keys in one attribute (56 inputs in the games repeat another's commands and could use it, which is why it came up).
+- `<inputs keys="player menu">`: several `<keys>` sets.
+- `number="2 4 6"` (and `odd`, `even`) on a group's `<row>` and `<column>`: several rows or columns.
+- `pitch="F#4"` and `to=`: a letter, a sharp or flat and an octave in one word, or a number of hertz ([sound](33-sound.md)).
+- The XSD can check these only with a pattern; XSLT has to split them (the windows-cpp generator walks the words one by one).
+- Possible forms, none chosen: one element per value (`<input><button>space</button><button>p</button>...`), an attribute per part for notes (`<note letter="F" sharp="true" octave="4">`, or `<note><pitch>...</pitch>`), or keep a single name per attribute and repeat the element. Shared `<shows>` sets (2026-10-13) avoid the problem: a state takes one set per `<show set="..."/>`.

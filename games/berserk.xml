@@ -1349,6 +1349,21 @@
       <input button="p escape"><push state="paused" /></input>
     </keys>
 
+    <!-- the score and lives, shown in the rooms and over them -->
+    <shows name="hud">
+      <show object="score" />
+      <show object="lives" />
+      <show object="liveicon" />
+    </shows>
+    <!-- what every room shows besides its own walls and robots -->
+    <shows name="room">
+      <show object="player" />
+      <show object="bullet" />
+      <show object="robotshots" />
+      <show object="otto" />
+      <show set="hud" />
+    </shows>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -1369,13 +1384,7 @@
         <show object="tally1" />
         <show object="robots1left" />
         <show object="robots1up" />
-        <show object="player" />
-        <show object="bullet" />
-        <show object="robotshots" />
-        <show object="otto" />
-        <show object="score" />
-        <show object="lives" />
-        <show object="liveicon" />
+        <show set="room" />
       </shows>
       <inputs keys="man" />
       <conditions>
@@ -1432,13 +1441,7 @@
         <show object="exits2" />
         <show object="tally2" />
         <show object="robots2right" />
-        <show object="player" />
-        <show object="bullet" />
-        <show object="robotshots" />
-        <show object="otto" />
-        <show object="score" />
-        <show object="lives" />
-        <show object="liveicon" />
+        <show set="room" />
       </shows>
       <inputs keys="man" />
       <conditions>
@@ -1495,13 +1498,7 @@
         <show object="tally3" />
         <show object="robots3left" />
         <show object="robots3up" />
-        <show object="player" />
-        <show object="bullet" />
-        <show object="robotshots" />
-        <show object="otto" />
-        <show object="score" />
-        <show object="lives" />
-        <show object="liveicon" />
+        <show set="room" />
       </shows>
       <inputs keys="man" />
       <conditions>
@@ -1559,13 +1556,7 @@
         <show object="tally4" />
         <show object="robots4right" />
         <show object="robots4down" />
-        <show object="player" />
-        <show object="bullet" />
-        <show object="robotshots" />
-        <show object="otto" />
-        <show object="score" />
-        <show object="lives" />
-        <show object="liveicon" />
+        <show set="room" />
       </shows>
       <inputs keys="man" />
       <conditions>
@@ -1619,9 +1610,7 @@
     <state name="paused">
       <shows>
         <show object="paused" />
-        <show object="score" />
-        <show object="lives" />
-        <show object="liveicon" />
+        <show set="hud" />
       </shows>
       <inputs>
         <input button="space p escape"><pop /></input>
@@ -1631,9 +1620,7 @@
     <state name="gameover">
       <shows>
         <show object="gameover" />
-        <show object="score" />
-        <show object="lives" />
-        <show object="liveicon" />
+        <show set="hud" />
         <show object="again" />
       </shows>
       <inputs>

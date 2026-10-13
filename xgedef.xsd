@@ -823,6 +823,12 @@
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
 
+  <!-- One thing a state shows: an object (or a group) by name, or a named <shows> set. One of the two. -->
+  <xs:complexType name="showType">
+    <xs:attribute name="object" type="xs:string" use="optional" />
+    <xs:attribute name="set" type="xs:string" use="optional" />
+  </xs:complexType>
+
   <!--
     Which rows or columns: numbers counting from 1, one or several (2, or
     2 4 6), or odd or even.
@@ -981,25 +987,36 @@
                 <inputs keys="name"> takes them, and its own <input>s go over
                 them, key by key.
               -->
-              <xs:element name="keys" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="input" type="inputType" maxOccurs="unbounded" />
-                  </xs:sequence>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                </xs:complexType>
-              </xs:element>
+              <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="keys">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="input" type="inputType" maxOccurs="unbounded" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string" use="required" />
+                  </xs:complexType>
+                </xs:element>
+                <!--
+                  A named set of objects that states can share: a state's
+                  <show set="name" /> shows them, in order, where it stands.
+                  A set can take a set written before it.
+                -->
+                <xs:element name="shows">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="show" type="showType" maxOccurs="unbounded" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string" use="required" />
+                  </xs:complexType>
+                </xs:element>
+              </xs:choice>
               <xs:element name="state" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:sequence>
                     <xs:element name="shows">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element name="show" maxOccurs="unbounded">
-                            <xs:complexType>
-                              <xs:attribute name="object" type="xs:string" use="required" />
-                            </xs:complexType>
-                          </xs:element>
+                          <xs:element name="show" type="showType" maxOccurs="unbounded" />
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>

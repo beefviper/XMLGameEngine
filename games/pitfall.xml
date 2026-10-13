@@ -676,6 +676,19 @@
       <input button="p escape"><push state="paused" /></input>
     </keys>
 
+    <!-- what every screen shows: the jungle, Harry and the score -->
+    <shows name="jungle">
+      <show object="canopy" />
+      <show object="trunks" />
+      <show object="earth" />
+      <show object="bedrock" />
+      <show object="tunnelfloor" />
+      <show object="harry" />
+      <show object="score" />
+      <show object="clock" />
+      <show object="lives" />
+    </shows>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -691,18 +704,10 @@
     <!-- screen 1: rolling logs, and the money bag -->
     <state name="screen1">
       <shows>
-        <show object="canopy" />
-        <show object="trunks" />
-        <show object="earth" />
-        <show object="bedrock" />
+        <show set="jungle" />
         <show object="path" />
-        <show object="tunnelfloor" />
         <show object="moneybag" />
         <show object="logs" />
-        <show object="harry" />
-        <show object="score" />
-        <show object="clock" />
-        <show object="lives" />
       </shows>
       <inputs keys="harry" />
       <conditions>
@@ -739,19 +744,11 @@
     <!-- screen 2: the tar pit, the silver bar, and a scorpion below -->
     <state name="screen2">
       <shows>
-        <show object="canopy" />
-        <show object="trunks" />
-        <show object="earth" />
-        <show object="bedrock" />
+        <show set="jungle" />
         <show object="path" />
-        <show object="tunnelfloor" />
         <show object="tar" />
         <show object="silverbar" />
         <show object="scorpion2" />
-        <show object="harry" />
-        <show object="score" />
-        <show object="clock" />
-        <show object="lives" />
       </shows>
       <inputs keys="harry" />
       <conditions>
@@ -787,20 +784,12 @@
     <!-- screen 3: the crocodile pond, and the gold bar on the far bank -->
     <state name="screen3">
       <shows>
-        <show object="canopy" />
-        <show object="trunks" />
-        <show object="earth" />
-        <show object="bedrock" />
+        <show set="jungle" />
         <show object="banks" />
         <show object="pond" />
-        <show object="tunnelfloor" />
         <show object="crocs" />
         <show object="jaws" />
         <show object="goldbar" />
-        <show object="harry" />
-        <show object="score" />
-        <show object="clock" />
-        <show object="lives" />
       </shows>
       <inputs keys="harry" />
       <conditions>
@@ -837,20 +826,12 @@
          scorpion -->
     <state name="screen4">
       <shows>
-        <show object="canopy" />
-        <show object="trunks" />
-        <show object="earth" />
-        <show object="bedrock" />
+        <show set="jungle" />
         <show object="holepath" />
-        <show object="tunnelfloor" />
         <show object="ladder" />
         <show object="fire" />
         <show object="ring" />
         <show object="scorpion4" />
-        <show object="harry" />
-        <show object="score" />
-        <show object="clock" />
-        <show object="lives" />
       </shows>
       <inputs keys="harry" />
       <conditions>

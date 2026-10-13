@@ -1636,19 +1636,42 @@ namespace xge
 			}
 		}
 
-		RawState readState(const XmlNode& state, const std::map<std::string, KeyBindings>& keySets)
+		using ShowSets = std::map<std::string, std::vector<std::string>>;
+
+		// The <show>s under a node (a state's <shows>, or a <shows> set), in
+		// order: <show object="..."> names one object (or group), <show
+		// set="..."> takes a named <shows> set's objects in its place.
+		void readShows(const XmlNode& node, const std::string& where, const ShowSets& showSets, std::vector<std::string>& out)
+		{
+			for (std::unique_ptr<XmlNode> show = node.getFirstChild(); show != nullptr; show = show->getNextSibling())
+			{
+				const std::string object = show->getAttribute("object");
+				const std::string setName = show->getAttribute("set");
+				if (object.empty() == setName.empty())
+				{
+					fail(where, "a <show> names an object=\"...\" or a set=\"...\", one of them");
+				}
+				if (!object.empty())
+				{
+					out.push_back(object);
+					continue;
+				}
+				const auto set = showSets.find(setName);
+				if (set == showSets.end()) { fail(where, "set=\"" + setName + "\" names no <shows> set before it"); }
+				out.insert(out.end(), set->second.begin(), set->second.end());
+			}
+		}
+
+		RawState readState(const XmlNode& state, const std::map<std::string, KeyBindings>& keySets, const ShowSets& showSets)
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");
 
 			const std::string where = "state '" + rawState.name + "'";
 
-			// <shows>
+			// <shows>: objects, and named <shows> sets taken whole
 			std::unique_ptr<XmlNode> shows = requireChild(state, "shows", where);
-			for (std::unique_ptr<XmlNode> show = shows->getFirstChild(); show != nullptr; show = show->getNextSibling())
-			{
-				rawState.show.push_back(requireAttribute(*show, "object", where + " > <shows>"));
-			}
+			readShows(*shows, where + " > <shows>", showSets, rawState.show);
 
 			// <inputs>: the named <keys> sets it uses (keys="player menu"), in
 			// order, each over the one before, then its own <input>s over those: a
@@ -1801,20 +1824,32 @@ namespace xge
 			else { rawObjects.push_back(readObject(*object)); }
 		}
 
-		// load states: the named <keys> sets first, so any state can use any of them
+		// load states: the named <keys> and <shows> sets first, so any state
+		// can use any of them (a <shows> set can take a set written before it)
 		std::map<std::string, KeyBindings> keySets;
+		ShowSets showSets;
 		for (std::unique_ptr<XmlNode> node = states->getFirstChild(); node != nullptr; node = node->getNextSibling())
 		{
-			if (node->getName() != "keys") { continue; }
-			const std::string name = requireAttribute(*node, "name", "<states> > <keys>");
-			if (keySets.count(name)) { fail("<states>", "two <keys> sets are called '" + name + "'"); }
-			readInputs(*node, "<keys name=\"" + name + "\">", keySets[name]);
+			if (node->getName() == "keys")
+			{
+				const std::string name = requireAttribute(*node, "name", "<states> > <keys>");
+				if (keySets.count(name)) { fail("<states>", "two <keys> sets are called '" + name + "'"); }
+				readInputs(*node, "<keys name=\"" + name + "\">", keySets[name]);
+			}
+			else if (node->getName() == "shows")
+			{
+				const std::string name = requireAttribute(*node, "name", "<states> > <shows>");
+				if (showSets.count(name)) { fail("<states>", "two <shows> sets are called '" + name + "'"); }
+				std::vector<std::string> objects;
+				readShows(*node, "<shows name=\"" + name + "\">", showSets, objects);
+				showSets[name] = std::move(objects);
+			}
 		}
 
 		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
 		{
-			if (state->getName() == "keys") { continue; }
-			rawStates.push_back(readState(*state, keySets));
+			if (state->getName() != "state") { continue; }
+			rawStates.push_back(readState(*state, keySets, showSets));
 		}
 	}
 

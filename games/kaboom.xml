@@ -25,7 +25,8 @@
   * A bomb that hits the ground runs <reset object="bombsN" />, which puts
     every bomb of the wave back in the pool at once: the explosion.
   * Each wave is a <state> with its own bomber and pool, and a <condition> on
-    the score moves on to the next. The keys are one <keys> set the waves share.
+    the score moves on to the next. The keys are one <keys> set the waves share,
+    and what every wave shows besides its own bomber is one <shows> set.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -525,6 +526,17 @@
         <push state="paused" />
       </input>
     </keys>
+    <!-- what every wave shows besides its own bomber, bombs and label -->
+    <shows name="wave">
+      <show object="rooftop" />
+      <show object="ledge" />
+      <show object="bucket" />
+      <show object="scorelabel" />
+      <show object="scorevalue" />
+      <show object="bucketslabel" />
+      <show object="bucketsvalue" />
+    </shows>
+
     <state name="mainmenu">
       <shows>
         <show object="title" />
@@ -541,15 +553,9 @@
     </state>
     <state name="wave1">
       <shows>
-        <show object="rooftop" />
-        <show object="ledge" />
+        <show set="wave" />
         <show object="bomber1" />
         <show object="bombs1" />
-        <show object="bucket" />
-        <show object="scorelabel" />
-        <show object="scorevalue" />
-        <show object="bucketslabel" />
-        <show object="bucketsvalue" />
         <show object="wave1label" />
       </shows>
       <inputs keys="bucket" />
@@ -569,15 +575,9 @@
     </state>
     <state name="wave2">
       <shows>
-        <show object="rooftop" />
-        <show object="ledge" />
+        <show set="wave" />
         <show object="bomber2" />
         <show object="bombs2" />
-        <show object="bucket" />
-        <show object="scorelabel" />
-        <show object="scorevalue" />
-        <show object="bucketslabel" />
-        <show object="bucketsvalue" />
         <show object="wave2label" />
       </shows>
       <inputs keys="bucket" />
@@ -597,15 +597,9 @@
     </state>
     <state name="wave3">
       <shows>
-        <show object="rooftop" />
-        <show object="ledge" />
+        <show set="wave" />
         <show object="bomber3" />
         <show object="bombs3" />
-        <show object="bucket" />
-        <show object="scorelabel" />
-        <show object="scorevalue" />
-        <show object="bucketslabel" />
-        <show object="bucketsvalue" />
         <show object="wave3label" />
       </shows>
       <inputs keys="bucket" />

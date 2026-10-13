@@ -537,6 +537,17 @@
       <input button="p escape"><push state="paused" /></input>
     </keys>
 
+    <!-- what every wave shows besides its own missiles and label -->
+    <shows name="defence">
+      <show object="ground" />
+      <show object="cities" />
+      <show object="base" />
+      <show object="abms" />
+      <show object="bursts" />
+      <show object="sight" />
+      <show object="score" />
+    </shows>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -551,14 +562,8 @@
 
     <state name="wave1">
       <shows>
-        <show object="ground" />
-        <show object="cities" />
-        <show object="base" />
+        <show set="defence" />
         <show object="missiles1" />
-        <show object="abms" />
-        <show object="bursts" />
-        <show object="sight" />
-        <show object="score" />
         <show object="wave1label" />
       </shows>
       <inputs keys="command" />
@@ -577,14 +582,8 @@
     </state>
     <state name="wave2">
       <shows>
-        <show object="ground" />
-        <show object="cities" />
-        <show object="base" />
+        <show set="defence" />
         <show object="missiles2" />
-        <show object="abms" />
-        <show object="bursts" />
-        <show object="sight" />
-        <show object="score" />
         <show object="wave2label" />
       </shows>
       <inputs keys="command" />
@@ -603,14 +602,8 @@
     </state>
     <state name="wave3">
       <shows>
-        <show object="ground" />
-        <show object="cities" />
-        <show object="base" />
+        <show set="defence" />
         <show object="missiles3" />
-        <show object="abms" />
-        <show object="bursts" />
-        <show object="sight" />
-        <show object="score" />
         <show object="wave3label" />
       </shows>
       <inputs keys="command" />

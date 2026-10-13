@@ -264,6 +264,15 @@
     </object>
   </objects>
   <states>
+    <!-- the ground, the lander and its fuel, shown while flying and after -->
+    <shows name="moon">
+      <show object="terrain" />
+      <show object="pad" />
+      <show object="lander" />
+      <show object="fuellabel" />
+      <show object="fuelvalue" />
+    </shows>
+
     <state name="mainmenu">
       <shows>
         <show object="title" />
@@ -280,11 +289,7 @@
     </state>
     <state name="playing">
       <shows>
-        <show object="terrain" />
-        <show object="pad" />
-        <show object="lander" />
-        <show object="fuellabel" />
-        <show object="fuelvalue" />
+        <show set="moon" />
       </shows>
       <inputs>
         <input button="up">
@@ -346,11 +351,7 @@
     </state>
     <state name="landed">
       <shows>
-        <show object="terrain" />
-        <show object="pad" />
-        <show object="lander" />
-        <show object="fuellabel" />
-        <show object="fuelvalue" />
+        <show set="moon" />
         <show object="landedmsg" />
         <show object="again" />
       </shows>
@@ -362,11 +363,7 @@
     </state>
     <state name="crashed">
       <shows>
-        <show object="terrain" />
-        <show object="pad" />
-        <show object="lander" />
-        <show object="fuellabel" />
-        <show object="fuelvalue" />
+        <show set="moon" />
         <show object="crashedmsg" />
         <show object="again" />
       </shows>

@@ -459,6 +459,16 @@
       <input button="p escape"><push state="paused" /></input>
     </keys>
 
+    <!-- what every wave shows besides its own enemies -->
+    <shows name="wave">
+      <show object="bombs" />
+      <show object="laser" />
+      <show object="player" />
+      <show object="score" />
+      <show object="energybar" />
+      <show object="lives" />
+    </shows>
+
     <state name="title">
       <shows>
         <show object="title" />
@@ -473,12 +483,7 @@
     <state name="wave1">
       <shows>
         <show object="burgers" />
-        <show object="bombs" />
-        <show object="laser" />
-        <show object="player" />
-        <show object="score" />
-        <show object="energybar" />
-        <show object="lives" />
+        <show set="wave" />
       </shows>
       <inputs keys="ship" />
       <conditions>
@@ -513,12 +518,7 @@
     <state name="wave2">
       <shows>
         <show object="cookies" />
-        <show object="bombs" />
-        <show object="laser" />
-        <show object="player" />
-        <show object="score" />
-        <show object="energybar" />
-        <show object="lives" />
+        <show set="wave" />
       </shows>
       <inputs keys="ship" />
       <conditions>
@@ -553,12 +553,7 @@
     <state name="wave3">
       <shows>
         <show object="bugs" />
-        <show object="bombs" />
-        <show object="laser" />
-        <show object="player" />
-        <show object="score" />
-        <show object="energybar" />
-        <show object="lives" />
+        <show set="wave" />
       </shows>
       <inputs keys="ship" />
       <conditions>
