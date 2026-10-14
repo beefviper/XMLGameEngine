@@ -7,6 +7,19 @@
 
 namespace xge
 {
+	bool passes(Compare compare, float variable, float against) noexcept
+	{
+		switch (compare)
+		{
+		case Compare::AtLeast: return variable >= against;
+		case Compare::AtMost:  return variable <= against;
+		case Compare::Above:   return variable > against;
+		case Compare::Below:   return variable < against;
+		case Compare::Equal:   return variable == against;
+		}
+		return false;
+	}
+
 	std::ostream& operator<<(std::ostream& o, const RawState& f)
 	{
 		o << "state: ";
@@ -23,17 +36,19 @@ namespace xge
 		for (auto& condition : f.conditions)
 		{
 			o << "       condition: ";
+			static const char* const tests[] = { "atleast", "atmost", "remaining", "above", "below", "equal" };
+			const char* test = tests[static_cast<std::size_t>(condition.test)];
 			if (condition.test == RawCondition::Test::Remaining)
 			{
 				o << "remaining=" << condition.threshold;
 			}
-			else if (condition.test == RawCondition::Test::AtMost)
+			else if (!condition.otherVariable.empty())
 			{
-				o << "variable=" << condition.variableName << ", atmost=" << condition.threshold;
+				o << "variable=" << condition.variableName << ", " << test << "=" << (condition.otherObject.empty() ? "" : condition.otherObject + ".") << condition.otherVariable;
 			}
 			else
 			{
-				o << "variable=" << condition.variableName << ", atleast=" << condition.threshold;
+				o << "variable=" << condition.variableName << ", " << test << "=" << condition.threshold;
 			}
 			o << (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
 				<< (condition.filterObject.empty() ? "" : ", object=" + condition.filterObject)
@@ -64,17 +79,19 @@ namespace xge
 		for (auto& condition : f.conditions)
 		{
 			o << "       condition: ";
+			static const char* const compares[] = { "atleast", "atmost", "above", "below", "equal" };
+			const char* compare = compares[static_cast<std::size_t>(condition.compare)];
 			if (condition.remaining)
 			{
 				o << "remaining=" << *condition.remaining;
 			}
-			else if (condition.atMost)
+			else if (!condition.otherVariable.empty())
 			{
-				o << "variable=" << condition.variableName << ", atmost=" << *condition.atMost;
+				o << "variable=" << condition.variableName << ", " << compare << "=" << (condition.otherObject.empty() ? "" : condition.otherObject + ".") << condition.otherVariable;
 			}
 			else
 			{
-				o << "variable=" << condition.variableName << ", value=" << condition.value;
+				o << "variable=" << condition.variableName << ", " << compare << "=" << condition.value;
 			}
 			o << (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
 				<< (condition.filterObject.empty() ? "" : ", object=" + condition.filterObject)

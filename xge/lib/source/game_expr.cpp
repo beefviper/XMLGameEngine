@@ -111,6 +111,43 @@ namespace xge
 			}, command);
 		}
 
+		// A condition compared with another variable: the object named has
+		// it, or, with no object named, every object the condition tests that
+		// has its variable has the other one too.
+		void checkOtherVariable(const Condition& condition, const std::vector<Object>& objects, const std::string& where)
+		{
+			const auto has = [&](const Object& object) { return object.variable.count(condition.otherVariable) > 0; };
+
+			if (!condition.otherObject.empty())
+			{
+				const auto other = std::find_if(objects.begin(), objects.end(), [&](const Object& object) { return object.name == condition.otherObject; });
+				if (other == objects.end())
+				{
+					std::vector<std::string> names;
+					for (const Object& object : objects) { names.push_back(object.name); }
+					throw std::runtime_error(where + ": compares with object=\"" + condition.otherObject + "\", and there is no object of that name" + didYouMean(condition.otherObject, names));
+				}
+				if (!has(*other))
+				{
+					std::vector<std::string> names;
+					for (const auto& [name, value] : other->variable) { names.push_back(name); }
+					throw std::runtime_error(where + ": compares with " + condition.otherObject + "." + condition.otherVariable + ", and " + condition.otherObject + " has no variable of that name" + didYouMean(condition.otherVariable, names));
+				}
+				return;
+			}
+
+			for (const Object& object : objects)
+			{
+				const bool tested = (condition.filterClass.empty() || condition.filterClass == object.objClass)
+					&& (condition.filterObject.empty() || condition.filterObject == object.name || object.inGroup(condition.filterObject))
+					&& object.variable.count(condition.variableName);
+				if (tested && !has(object))
+				{
+					throw std::runtime_error(where + ": compares " + object.name + "." + condition.variableName + " with its own " + condition.otherVariable + ", and " + object.name + " has no variable of that name");
+				}
+			}
+		}
+
 		// Where a list of commands runs, and what each place does something
 		// with. These mirror the dispatchers in command_executor.cpp (a command
 		// one of them leaves to its catch-all does nothing there); change one
@@ -852,12 +889,23 @@ namespace xge
 				condition.filterObject = rawCondition.filterObject;
 				condition.variableName = rawCondition.variableName;
 
-				const float threshold = evaluate(rawCondition.threshold, where);
+				condition.otherObject = rawCondition.otherObject;
+				condition.otherVariable = rawCondition.otherVariable;
+				const float threshold = rawCondition.otherVariable.empty() ? evaluate(rawCondition.threshold, where) : 0.0f;
 				switch (rawCondition.test)
 				{
-				case RawCondition::Test::AtLeast:   condition.value = threshold; break;
-				case RawCondition::Test::AtMost:    condition.atMost = threshold; break;
+				case RawCondition::Test::AtLeast:   condition.compare = Compare::AtLeast; break;
+				case RawCondition::Test::AtMost:    condition.compare = Compare::AtMost; break;
+				case RawCondition::Test::Above:     condition.compare = Compare::Above; break;
+				case RawCondition::Test::Below:     condition.compare = Compare::Below; break;
+				case RawCondition::Test::Equal:     condition.compare = Compare::Equal; break;
 				case RawCondition::Test::Remaining: condition.remaining = threshold; break;
+				}
+				condition.value = threshold;
+
+				if (!condition.otherVariable.empty())
+				{
+					checkOtherVariable(condition, objects, where + " > <condition variable=\"" + condition.variableName + "\">");
 				}
 
 				if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)

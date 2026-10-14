@@ -184,6 +184,20 @@
     </xs:sequence>
   </xs:complexType>
 
+  <!--
+    What a condition's variable is compared with: a number, as content
+    (<atleast>15</atleast>), or another variable, read every frame:
+    variable= names it, and object= whose (the tested object's own when left
+    out): <above object="gun2" variable="score" />.
+  -->
+  <xs:complexType name="compareType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="object" type="xs:string" use="optional" />
+    <xs:attribute name="variable" type="xs:string" use="optional" />
+  </xs:complexType>
+
   <!-- A number with a name, for <variable name="score">0</variable>. -->
   <xs:complexType name="variableType" mixed="true">
     <xs:sequence>
@@ -711,8 +725,11 @@
   <xs:complexType name="conditionType">
     <xs:sequence minOccurs="0">
       <xs:choice>
-        <xs:element name="atleast" type="valueType" />
-        <xs:element name="atmost" type="valueType" />
+        <xs:element name="atleast" type="compareType" />
+        <xs:element name="atmost" type="compareType" />
+        <xs:element name="above" type="compareType" />
+        <xs:element name="below" type="compareType" />
+        <xs:element name="equal" type="compareType" />
         <xs:element name="remaining" type="valueType" />
       </xs:choice>
       <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />

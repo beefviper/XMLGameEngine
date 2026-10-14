@@ -259,7 +259,8 @@ namespace
 				{
 					const RawCondition& c = s.conditions[i];
 					const std::string here = at + ".condition" + std::to_string(i);
-					out << here << " [" << c.filterClass << "|" << c.filterObject << "|" << c.variableName << "] " << static_cast<int>(c.test) << "\n";
+					out << here << " [" << c.filterClass << "|" << c.filterObject << "|" << c.variableName << "] " << static_cast<int>(c.test)
+						<< " [" << c.otherObject << "|" << c.otherVariable << "]\n";
 					value(here + ".threshold", c.threshold);
 					commands(here + ".commands", c.commands);
 				}

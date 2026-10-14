@@ -1103,12 +1103,24 @@ namespace xge
 					continue;
 				}
 
-				// Reached the threshold going up (value), or fallen to it
-				// going down (atmost).
-				const bool met = condition.atMost
-					? variableIt->second <= *condition.atMost
-					: variableIt->second >= condition.value;
-				if (!met)
+				// Against a number, or another variable as it is now.
+				float against = condition.value;
+				if (!condition.otherVariable.empty())
+				{
+					const Object* other = condition.otherObject.empty() ? &object : tryGetObject(condition.otherObject);
+					if (!other)
+					{
+						continue;
+					}
+					const auto otherIt = other->variable.find(condition.otherVariable);
+					if (otherIt == other->variable.end())
+					{
+						continue;
+					}
+					against = otherIt->second;
+				}
+
+				if (!passes(condition.compare, variableIt->second, against))
 				{
 					continue;
 				}

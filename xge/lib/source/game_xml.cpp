@@ -1698,20 +1698,37 @@ namespace xge
 				raw.variableName = condition->getAttribute("variable");
 
 				std::unique_ptr<XmlNode> test = condition->getFirstChild();
-				if (!test) { fail(conditionHere, "needs an <atleast>, <atmost> or <remaining>"); }
+				if (!test) { fail(conditionHere, "needs an <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>"); }
 
 				const std::string testName = test->getName();
 				if (testName == "atleast") { raw.test = RawCondition::Test::AtLeast; }
 				else if (testName == "atmost") { raw.test = RawCondition::Test::AtMost; }
+				else if (testName == "above") { raw.test = RawCondition::Test::Above; }
+				else if (testName == "below") { raw.test = RawCondition::Test::Below; }
+				else if (testName == "equal") { raw.test = RawCondition::Test::Equal; }
 				else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
-				else { fail(conditionHere, "starts with <" + testName + ">; expected <atleast>, <atmost> or <remaining>"); }
+				else { fail(conditionHere, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>"); }
 
 				if (raw.test != RawCondition::Test::Remaining && raw.variableName.empty())
 				{
 					fail(conditionHere, "<" + testName + "> reads a variable, so the condition needs variable=\"...\"");
 				}
 
-				raw.threshold = readValue(*test, conditionHere);
+				// Against another variable (<above object="gun2" variable="score" />),
+				// or a number.
+				raw.otherObject = test->getAttribute("object");
+				raw.otherVariable = test->getAttribute("variable");
+				if (!raw.otherVariable.empty() || !raw.otherObject.empty())
+				{
+					const std::string tag = "<" + testName + ">";
+					if (raw.test == RawCondition::Test::Remaining) { fail(conditionHere, "<remaining> counts objects, so it takes a number, not a variable"); }
+					if (raw.otherVariable.empty()) { fail(conditionHere, tag + " names object=\"" + raw.otherObject + "\" but no variable= of it to compare with"); }
+					if (test->getFirstChild() || !readText(*test).empty()) { fail(conditionHere, tag + " compares with variable=\"" + raw.otherVariable + "\", so it has no number as well"); }
+				}
+				else
+				{
+					raw.threshold = readValue(*test, conditionHere);
+				}
 				raw.commands = readCommands(test->getNextSibling(), conditionHere);
 				out.push_back(std::move(raw));
 			}

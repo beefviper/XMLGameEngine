@@ -581,13 +581,13 @@ TEST_CASE("a condition is a test tag, then the commands it runs", "[xml_format][
 	CHECK(all[0].filterClass == "paddle");
 	CHECK(all[0].variableName == "score");
 	CHECK(all[0].value == 15.0f);
-	CHECK_FALSE(all[0].atMost);
+	CHECK(all[0].compare == Compare::AtLeast);
 	CHECK_FALSE(all[0].remaining);
 	CHECK(as<CmdPushState>(all[0].commands.at(0)).name == "gameover");
 
 	CHECK(all[1].filterObject == "frog");
-	REQUIRE(all[1].atMost);
-	CHECK(*all[1].atMost == 0.0f);
+	CHECK(all[1].compare == Compare::AtMost);
+	CHECK(all[1].value == 0.0f);
 	CHECK(all[1].commands.size() == 2);
 
 	CHECK(all[2].filterClass == "aliens");
@@ -596,10 +596,74 @@ TEST_CASE("a condition is a test tag, then the commands it runs", "[xml_format][
 	CHECK(all[2].variableName.empty());
 }
 
+TEST_CASE("a condition compares with a number or with another variable, in five ways", "[xml_format][conditions]")
+{
+	// Two objects, each with a score and a best; the state "playing" moves on
+	// to "won" when the first test holds.
+	const auto finish = [](const std::string& test, float a, float b, float best)
+	{
+		const std::string variables = "<variables><variable name=\"score\">0</variable><variable name=\"best\">0</variable></variables>";
+		ObjectXml one; one.extra = variables;
+		ObjectXml two; two.name = "p"; two.extra = variables;
+		Loaded loaded(gameXml("", objectXml(one) + objectXml(two),
+			"<conditions><condition object=\"o\" variable=\"score\">" + test + "<push state=\"won\" /></condition></conditions>",
+			idleState("won")));
+		loaded.game.setCurrentState("playing");
+		loaded.game.getObject("o").variable["score"] = a;
+		loaded.game.getObject("p").variable["score"] = b;
+		loaded.game.getObject("o").variable["best"] = best;
+		loaded.game.updateObjects();
+		return loaded.game.getCurrentState().name == "won";
+	};
+
+	const std::string other = "object=\"p\" variable=\"score\" />";
+	CHECK(finish("<above " + other, 3, 2, 0));
+	CHECK_FALSE(finish("<above " + other, 2, 2, 0));
+	CHECK(finish("<below " + other, 1, 2, 0));
+	CHECK_FALSE(finish("<below " + other, 2, 2, 0));
+	CHECK(finish("<equal " + other, 2, 2, 0));
+	CHECK_FALSE(finish("<equal " + other, 2, 3, 0));
+	CHECK(finish("<atleast " + other, 2, 2, 0));
+	CHECK_FALSE(finish("<atleast " + other, 1, 2, 0));
+	CHECK(finish("<atmost " + other, 2, 2, 0));
+	CHECK_FALSE(finish("<atmost " + other, 3, 2, 0));
+
+	// With no object=, the tested object's own other variable.
+	CHECK(finish("<above variable=\"best\" />", 5, 0, 4));
+	CHECK_FALSE(finish("<above variable=\"best\" />", 4, 0, 4));
+
+	// And the new tests with a plain number.
+	CHECK(finish("<above>2</above>", 3, 0, 0));
+	CHECK_FALSE(finish("<above>2</above>", 2, 0, 0));
+	CHECK(finish("<below>2</below>", 1, 0, 0));
+	CHECK(finish("<equal>2</equal>", 2, 0, 0));
+	CHECK_FALSE(finish("<equal>2</equal>", 2.5f, 0, 0));
+}
+
+TEST_CASE("a comparison with a variable the game does not have is turned away", "[xml_format][conditions][errors]")
+{
+	const auto fails = [](const std::string& test, const std::string& expected)
+	{
+		INFO(test);
+		ObjectXml one; one.extra = "<variables><variable name=\"score\">0</variable></variables>";
+		CHECK_THROWS_WITH(Loaded(gameXml("", objectXml(one),
+			"<conditions><condition object=\"o\" variable=\"score\">" + test + "<pop /></condition></conditions>")),
+			ContainsSubstring(expected));
+	};
+
+	fails("<above object=\"q\" variable=\"score\" />", "compares with object=\"q\", and there is no object of that name");
+	fails("<above object=\"o\" variable=\"scroe\" />", "o has no variable of that name (did you mean 'score'?)");
+	fails("<above variable=\"best\" />", "compares o.score with its own best");
+	fails("<above object=\"o\" />", "<above> names object=\"o\" but no variable=");
+	fails("<above variable=\"score\">1</above>", "so it has no number as well");
+	fails("<remaining variable=\"score\" />", "<remaining> counts objects");
+	fails("<over>1</over>", "expected <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>");
+}
+
 TEST_CASE("a condition with no test, a wrong first tag, or no variable to read is turned away", "[xml_format][errors]")
 {
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml({}), "<conditions><condition class=\"c\" variable=\"v\" /></conditions>")),
-		ContainsSubstring("needs an <atleast>, <atmost> or <remaining>"));
+		ContainsSubstring("needs an <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>"));
 
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml({}), "<conditions><condition class=\"c\" variable=\"v\"><pop /></condition></conditions>")),
 		ContainsSubstring("starts with <pop>"));

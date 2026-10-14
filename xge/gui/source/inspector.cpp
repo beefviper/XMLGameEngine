@@ -629,13 +629,12 @@ namespace xge
 				{
 					when << "remaining <= " << *condition.remaining;
 				}
-				else if (condition.atMost)
-				{
-					when << condition.variableName << " <= " << *condition.atMost;
-				}
 				else
 				{
-					when << condition.variableName << " >= " << condition.value;
+					static const char* const signs[] = { " >= ", " <= ", " > ", " < ", " = " };
+					when << condition.variableName << signs[static_cast<std::size_t>(condition.compare)];
+					if (condition.otherVariable.empty()) { when << condition.value; }
+					else { when << (condition.otherObject.empty() ? "" : condition.otherObject + ".") << condition.otherVariable; }
 				}
 
 				if (!condition.filterClass.empty()) { when << ", class " << condition.filterClass; }

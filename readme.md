@@ -29,7 +29,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/descriptions/pitfall.xml` | Pitfall!: run Harry through four jungle screens, each a state, past rolling logs, a tar pit, a crocodile pond, a fire and the scorpions in the tunnel, after a treasure on each, in three minutes with three lives |
 | `games/descriptions/missilecommand.xml` | Missile Command: missiles chase the nearest of six cities; steer a sight, and the base aims a counter-missile that bursts there and takes every missile flying into it; three waves |
 | `games/descriptions/combat.xml` | Combat, two players: tanks that drive along the way they point and turn on the spot, among walls, one shell in the air each; first to five hits |
-| `games/descriptions/airseabattle.xml` | Air-Sea Battle, two players: swing a gun and fire at four lanes of planes going round the sky; most hits in two minutes wins |
+| `games/descriptions/airseabattle.xml` | Air-Sea Battle, two players: swing a gun and fire at four lanes of planes going round the sky; most hits in two minutes wins, and the end screen compares the scores to say who |
 | `games/descriptions/megamania.xml` | Megamania: three waves of hamburgers, cookies and bugs wrap round the sides and drop bombs while your energy runs down; shoot each wave before it is gone, three ships |
 
 ## What a game file looks like

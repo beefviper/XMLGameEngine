@@ -171,7 +171,26 @@ TEST_CASE("the battle lasts two minutes", "[airseabattle]")
 
 	play.game.getObject("status").variable["time"] = 1;
 	play.frames(61);
-	CHECK(play.state() == "timeup");
+	CHECK(play.state() == "draw"); // no hits either side
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
+}
+
+TEST_CASE("at time up the scores are compared, and the screen says who won", "[airseabattle][conditions]")
+{
+	const auto endWith = [](float yellow, float white)
+	{
+		AirSeaBattle play;
+		play.start();
+		play.game.getObject("gun1").variable["score"] = yellow;
+		play.game.getObject("gun2").variable["score"] = white;
+		play.game.getObject("status").variable["time"] = 1;
+		play.frames(62);
+		return play.state();
+	};
+
+	CHECK(endWith(7, 3) == "yellowwins");
+	CHECK(endWith(3, 7) == "whitewins");
+	CHECK(endWith(5, 5) == "draw");
+	CHECK(endWith(0, 1) == "whitewins");
 }

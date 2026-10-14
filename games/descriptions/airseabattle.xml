@@ -25,6 +25,9 @@
     <die />s, and a timer of the battle <reveal>s one of each lane again
     every second and a half, back off the side it came from.
   * The clock is a timer of the battle taking a second off status.time.
+  * At time up the two scores are compared (<above object="gun2"
+    variable="score" />, <equal>) and a state saying who won, or a draw,
+    takes the place of TIME UP.
   Not in it: the guns' three fixed angles (they swing freely here, and can
   point at the sea), and the other games on the cartridge (the submarines,
   the torpedoes, the shooting gallery).
@@ -453,6 +456,37 @@
       </sprite>
       <position><x>window.width.center - timeup.width / 2</x><y>window.height.center - timeup.height / 2 + (-60)</y></position>
     </object>
+    <!-- who won: one of these under TIME UP, picked by comparing the two scores -->
+    <object name="yellowwon">
+      <sprite>
+        <text>
+          <content>YELLOW WINS</content>
+          <size>50</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - yellowwon.width / 2</x><y>window.height.center - yellowwon.height / 2 + (10)</y></position>
+    </object>
+    <object name="whitewon">
+      <sprite>
+        <text>
+          <content>WHITE WINS</content>
+          <size>50</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - whitewon.width / 2</x><y>window.height.center - whitewon.height / 2 + (10)</y></position>
+    </object>
+    <object name="drawn">
+      <sprite>
+        <text>
+          <content>A DRAW</content>
+          <size>50</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - drawn.width / 2</x><y>window.height.center - drawn.height / 2 + (10)</y></position>
+    </object>
     <object name="again">
       <sprite>
         <text>
@@ -465,6 +499,13 @@
     </object>
   </objects>
   <states>
+    <!-- what every end screen shows -->
+    <shows name="end">
+      <show object="timeup" />
+      <show object="score1" />
+      <show object="score2" />
+      <show object="again" />
+    </shows>
     <state name="title">
       <shows>
         <show object="title" />
@@ -530,12 +571,51 @@
         <input button="space p escape"><pop /></input>
       </inputs>
     </state>
+    <!-- Time up: the scores are compared, and the state that says who won takes this one's place. -->
     <state name="timeup">
       <shows>
-        <show object="timeup" />
-        <show object="score1" />
-        <show object="score2" />
-        <show object="again" />
+        <show set="end" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+      <conditions>
+        <condition object="gun1" variable="score">
+          <above object="gun2" variable="score" />
+          <pop state="yellowwins" />
+        </condition>
+        <condition object="gun2" variable="score">
+          <above object="gun1" variable="score" />
+          <pop state="whitewins" />
+        </condition>
+        <condition object="gun1" variable="score">
+          <equal object="gun2" variable="score" />
+          <pop state="draw" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="yellowwins">
+      <shows>
+        <show set="end" />
+        <show object="yellowwon" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+    <state name="whitewins">
+      <shows>
+        <show set="end" />
+        <show object="whitewon" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+    <state name="draw">
+      <shows>
+        <show set="end" />
+        <show object="drawn" />
       </shows>
       <inputs>
         <input button="space"><reset /></input>

@@ -9,7 +9,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 ## Engine
 
-- Numbers are evaluated **once at load**, except a timer's `<every>`/`<after>` and positions using a measured text or image size. A condition's `<atleast>`/`<atmost>`/`<remaining>` and an `<inc>`/`<dec>` amount cannot follow a variable. `<random>` is drawn once, so `<reset />` repeats it ([values-and-names](../designs/04-values-and-names.md)).
+- Numbers are evaluated **once at load**, except a timer's `<every>`/`<after>` and positions using a measured text or image size. A condition's number and an `<inc>`/`<dec>` amount cannot follow a variable; a condition can compare with one instead (`<above object="gun2" variable="score" />`, read every frame). `<random>` is drawn once, so `<reset />` repeats it ([values-and-names](../designs/04-values-and-names.md)).
 - `<reset object="x" />` resets **every variable** of x. A rule's bare `<reset />` resets only its own object. Never put `<reset object="player" />` in someone else's rule; keep score, lives and clock on an object no state shows (Pitfall's `status`).
 - Variables are `float`; there is no handle system or `Value` variant. `collisionData.basic` is the old name of the object-against-object rule list.
 - Every engine-drawn picture (`<line>`, `<bitmap>`, `<svg>`) is `ShapeKind::Line`, built in `game_expr::buildSpriteParams`. Add new kinds there; never rotate or draw in a backend ([pictures](../designs/30-pictures.md)).

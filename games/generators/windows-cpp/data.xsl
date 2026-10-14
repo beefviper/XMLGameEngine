@@ -1434,15 +1434,37 @@
           <xsl:value-of select="concat($inner, 'condition.test = RawCondition::Test::')" />
           <xsl:choose>
             <xsl:when test="$test[self::atmost]">AtMost</xsl:when>
+            <xsl:when test="$test[self::above]">Above</xsl:when>
+            <xsl:when test="$test[self::below]">Below</xsl:when>
+            <xsl:when test="$test[self::equal]">Equal</xsl:when>
             <xsl:otherwise>Remaining</xsl:otherwise>
           </xsl:choose>
           <xsl:text>;&#10;</xsl:text>
         </xsl:if>
-        <xsl:call-template name="assign-value">
-          <xsl:with-param name="indent" select="$inner" />
-          <xsl:with-param name="to" select="'condition.threshold'" />
-          <xsl:with-param name="node" select="$test" />
-        </xsl:call-template>
+        <xsl:choose>
+          <!-- against another variable, read every frame -->
+          <xsl:when test="$test/@variable">
+            <xsl:if test="$test/@object != ''">
+              <xsl:value-of select="concat($inner, 'condition.otherObject = ')" />
+              <xsl:call-template name="string">
+                <xsl:with-param name="text" select="$test/@object" />
+              </xsl:call-template>
+              <xsl:text>;&#10;</xsl:text>
+            </xsl:if>
+            <xsl:value-of select="concat($inner, 'condition.otherVariable = ')" />
+            <xsl:call-template name="string">
+              <xsl:with-param name="text" select="$test/@variable" />
+            </xsl:call-template>
+            <xsl:text>;&#10;</xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:call-template name="assign-value">
+              <xsl:with-param name="indent" select="$inner" />
+              <xsl:with-param name="to" select="'condition.threshold'" />
+              <xsl:with-param name="node" select="$test" />
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
         <xsl:value-of select="concat($inner, 'condition.commands = ')" />
         <xsl:call-template name="commands">
           <xsl:with-param name="nodes" select="*[position() &gt; 1]" />

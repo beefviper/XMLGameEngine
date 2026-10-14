@@ -140,7 +140,7 @@ TEST_CASE("frogger.xml loads under every XML backend, checked against the schema
 
 		game.setCurrentState("playing");
 		REQUIRE(game.getCurrentState().conditions.size() == 2);
-		CHECK(game.getCurrentState().conditions[0].atMost.has_value());
+		CHECK(game.getCurrentState().conditions[0].compare == Compare::AtMost);
 	}
 }
 
