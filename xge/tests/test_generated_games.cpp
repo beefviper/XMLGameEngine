@@ -269,6 +269,7 @@ namespace
 			{
 				const std::string at = "sound " + s.name;
 				text(at + ".wave", s.wave);
+				flag(at + ".loop", s.loop);
 				value(at + ".volume", s.volume);
 				for (std::size_t i = 0; i < s.notes.size(); ++i)
 				{

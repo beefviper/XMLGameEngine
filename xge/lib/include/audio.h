@@ -43,8 +43,20 @@ namespace xge
 		// file is checked for those when it loads (see game_expr.cpp).
 		virtual void play(const std::string& name) = 0;
 
+		// Starts the sound of that name playing over and over, from its end
+		// straight back to its start, until stop() or stopAll(). One that is
+		// already looping carries on undisturbed.
+		virtual void loop(const std::string& name) = 0;
+
+		// Silences the sound of that name, if it is playing.
+		virtual void stop(const std::string& name) = 0;
+
 		// Silences everything that is playing.
 		virtual void stopAll() = 0;
+
+		// Called once a frame (Engine::step), for a library that has to be
+		// handed more of a looping sound as it plays (raylib).
+		virtual void update() {}
 	};
 
 	// Plays nothing. What the tests use (they must not need a sound card), what
@@ -55,6 +67,8 @@ namespace xge
 	public:
 		void load(const std::vector<SoundDesc>& sounds) override { (void)sounds; }
 		void play(const std::string& name) override { (void)name; }
+		void loop(const std::string& name) override { (void)name; }
+		void stop(const std::string& name) override { (void)name; }
 		void stopAll() override {}
 	};
 

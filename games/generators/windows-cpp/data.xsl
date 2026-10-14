@@ -1543,6 +1543,9 @@
         </xsl:call-template>
         <xsl:text>;&#10;</xsl:text>
       </xsl:if>
+      <xsl:if test="loop">
+        <xsl:value-of select="concat($inner, 'sound.loop = true;&#10;')" />
+      </xsl:if>
       <xsl:call-template name="assign-value">
         <xsl:with-param name="indent" select="$inner" />
         <xsl:with-param name="to" select="'sound.volume'" />

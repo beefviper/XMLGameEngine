@@ -229,13 +229,16 @@
   </xs:complexType>
 
   <!--
-    A sound that <play sound="..." /> starts: how loud (0 to 1, 0.3 when left
+    A sound that <play sound="..." /> starts: whether it loops (<loop />: over
+    and over until a <silence>, or, played from a key, until the key is let
+    go), how loud (0 to 1, 0.3 when left
     out), then notes and rests (a rest's content is how many seconds of
     silence), played one after the other. wave is every note's that does not
     give its own (square when left out).
   -->
   <xs:complexType name="soundType">
     <xs:sequence>
+      <xs:element name="loop" type="emptyType" minOccurs="0" />
       <xs:element name="volume" type="valueType" minOccurs="0" />
       <xs:choice maxOccurs="unbounded">
         <xs:element name="note" type="noteType" />
@@ -607,6 +610,11 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="play">
+        <xs:complexType>
+          <xs:attribute name="sound" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="silence">
         <xs:complexType>
           <xs:attribute name="sound" type="xs:string" use="required" />
         </xs:complexType>

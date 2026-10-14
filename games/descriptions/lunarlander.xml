@@ -40,6 +40,18 @@
     <variable name="margin">20</variable>
   </variables>
   <sounds>
+    <!-- the main engine, for as long as it is held: a low rumble of noise, over and over -->
+    <sound name="thrust" wave="noise">
+      <loop />
+      <volume>0.15</volume>
+      <note pitch="150">1</note>
+    </sound>
+    <!-- a side jet, held the same way: a thinner, higher hiss -->
+    <sound name="jet" wave="noise">
+      <loop />
+      <volume>0.06</volume>
+      <note pitch="900">1</note>
+    </sound>
     <!-- a good landing: a rising arpeggio -->
     <sound name="land" wave="triangle">
       <volume>0.4</volume>
@@ -148,12 +160,15 @@
       <actions>
         <action name="thrust">
           <accelerate direction="up" burn="fuel">thrust</accelerate>
+          <play sound="thrust" />
         </action>
         <action name="left">
           <accelerate direction="left" burn="fuel">sidethrust</accelerate>
+          <play sound="jet" />
         </action>
         <action name="right">
           <accelerate direction="right" burn="fuel">sidethrust</accelerate>
+          <play sound="jet" />
         </action>
       </actions>
       <variables>
@@ -330,6 +345,12 @@
           <atleast>1</atleast>
           <push state="landed" />
           <play sound="land" />
+        </condition>
+        <!-- out of fuel, the engines go quiet even with a key held -->
+        <condition object="lander" variable="fuel">
+          <atmost>0</atmost>
+          <silence sound="thrust" />
+          <silence sound="jet" />
         </condition>
       </conditions>
     </state>

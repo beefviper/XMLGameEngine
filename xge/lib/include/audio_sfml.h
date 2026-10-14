@@ -25,6 +25,8 @@ namespace xge
 	public:
 		void load(const std::vector<SoundDesc>& sounds) override;
 		void play(const std::string& name) override;
+		void loop(const std::string& name) override;
+		void stop(const std::string& name) override;
 		void stopAll() override;
 
 	private:

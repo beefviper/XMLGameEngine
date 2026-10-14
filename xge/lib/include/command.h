@@ -268,6 +268,14 @@ namespace xge
 		std::string sound;
 	};
 
+	// <silence sound="thrust" /> - stops one of the game's sounds if it is
+	// playing: above all a sound that loops (<loop />), which otherwise plays
+	// until something silences it. Anywhere <play> can go.
+	struct CmdSilence
+	{
+		std::string sound;
+	};
+
 	// <fire object="projectileName" /> - spawn/launch a named projectile object
 	struct CmdFire
 	{
@@ -308,7 +316,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdDeflect, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdBecome, CmdReveal, CmdFollow>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow>;
 
 	// --- What the XML says, before any of it is evaluated.
 
@@ -423,6 +431,7 @@ namespace xge
 	{
 		std::string name;
 		std::string wave;   // "" means square
+		bool loop{ false }; // <loop />
 		RawValue volume;
 		std::vector<RawNote> notes;
 	};

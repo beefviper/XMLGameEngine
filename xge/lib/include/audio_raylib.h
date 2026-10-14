@@ -33,10 +33,24 @@ namespace xge
 
 		void load(const std::vector<SoundDesc>& sounds) override;
 		void play(const std::string& name) override;
+		void loop(const std::string& name) override;
+		void stop(const std::string& name) override;
 		void stopAll() override;
+		void update() override;
 
 	private:
 		std::unordered_map<std::string, Sound> sounds;
+
+		// A raylib Sound plays once; what loops is a Music stream, which raylib
+		// is handed more of each frame (update). Each is made from the sound's
+		// samples written as a WAV file in memory, which it reads from as it
+		// plays, so the bytes are kept beside it.
+		struct Loop
+		{
+			std::vector<unsigned char> wav;
+			Music music{};
+		};
+		std::unordered_map<std::string, Loop> loops;
 
 		void unloadAll();
 	};

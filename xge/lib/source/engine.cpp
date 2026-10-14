@@ -49,6 +49,7 @@ namespace xge
 	void Engine::replaceAudio(const std::function<std::unique_ptr<Audio>()>& create)
 	{
 		audio.reset();
+		playingLoops.clear();
 
 		try
 		{
@@ -71,14 +72,36 @@ namespace xge
 	void Engine::silence(void)
 	{
 		audio->stopAll();
+
+		// Started again by the next step() if the game still wants them.
+		playingLoops.clear();
 	}
 
 	void Engine::playRequestedSounds(void)
 	{
+		for (const std::string& name : game.takeSilenceRequests())
+		{
+			audio->stop(name);
+			playingLoops.erase(name);
+		}
+
+		const std::set<std::string>& wanted = game.loopingSounds();
+		for (const std::string& name : playingLoops)
+		{
+			if (!wanted.count(name)) { audio->stop(name); }
+		}
+		for (const std::string& name : wanted)
+		{
+			if (!playingLoops.count(name)) { audio->loop(name); }
+		}
+		playingLoops = wanted;
+
 		for (const std::string& name : game.takeSoundRequests())
 		{
 			audio->play(name);
 		}
+
+		audio->update();
 	}
 
 	void Engine::requireWindow(void) const

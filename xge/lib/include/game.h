@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <stack>
 #include <algorithm>
 #include <cmath>
@@ -111,6 +112,22 @@ namespace xge
 		// forgets them.
 		std::vector<std::string> takeSoundRequests(void);
 
+		// A sound that loops (<loop />) is not asked for once but switched on:
+		// requestSound puts it among the loopingSounds, where it stays, playing
+		// over and over, until silenceSound takes it out (a <silence>, the key
+		// that started it let go, or a reset of the whole game). Engine plays
+		// what is in the list each frame and stops what has left it.
+		const std::set<std::string>& loopingSounds(void) const noexcept;
+
+		// <silence sound="..." />: stops a sound, looping or not.
+		void silenceSound(const std::string& name);
+
+		// The sounds silenced since the last call, and forgets them.
+		std::vector<std::string> takeSilenceRequests(void);
+
+		// Whether the sound of that name loops; false for no such sound.
+		bool soundLoops(const std::string& name) const noexcept;
+
 		// Sets an object's own <variable> to a value (for a front end that lets
 		// the user edit one), and refreshes every text display bound to it, the
 		// same way <inc /> does. Returns false when there is no such object or
@@ -201,6 +218,8 @@ namespace xge
 		std::vector<RawPath> rawPaths;
 		std::map<std::string, Path> paths;
 		std::vector<std::string> soundRequests;
+		std::vector<std::string> silenceRequests;
+		std::set<std::string> loops;
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
 

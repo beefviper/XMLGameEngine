@@ -104,6 +104,7 @@ namespace xge
 				[](const CmdTriggerAction&) { return std::string("<trigger>"); },
 				[](const CmdResetObject&) { return std::string("<reset object>"); },
 				[](const CmdPlay&) { return std::string("<play>"); },
+				[](const CmdSilence&) { return std::string("<silence>"); },
 				[](const CmdBecome&) { return std::string("<become>"); },
 				[](const CmdReveal&) { return std::string("<reveal>"); },
 				[](const CmdFollow&) { return std::string("<follow>"); },
@@ -124,8 +125,8 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<become>", "<reveal>", "<follow>" };
-			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<become>", "<reveal>", "<follow>",
+			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
+			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
 				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
@@ -135,14 +136,14 @@ namespace xge
 			}();
 			static const PlaceRule rules[] = {
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<release>", "<move>", "<inc>", "<dec>",
-					"<play>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
+					"<play>", "<silence>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>",
-					"<ride />", "<land />", "<chase>", "<aim>", "<play>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
+					"<ride />", "<land />", "<chase>", "<aim>", "<play>", "<silence>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimerCommands },
-				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<play>" } },
+				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<play>", "<silence>" } },
 				{ "a path's <step>", ownerCommands },
 			};
 			return rules[static_cast<std::size_t>(place)];
@@ -240,14 +241,16 @@ namespace xge
 					throw std::runtime_error(where + ": <reveal> names '" + reveal->target + "', and there is no object of that name" + didYouMean(reveal->target, objectNames(objects)));
 				}
 			}
-			else if (const auto* play = std::get_if<CmdPlay>(&command))
+			else if (std::holds_alternative<CmdPlay>(command) || std::holds_alternative<CmdSilence>(command))
 			{
-				const bool known = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == play->sound; });
+				const auto* play = std::get_if<CmdPlay>(&command);
+				const std::string& name = play ? play->sound : std::get<CmdSilence>(command).sound;
+				const bool known = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == name; });
 				if (!known)
 				{
 					std::vector<std::string> names;
 					for (const SoundDesc& sound : sounds) { names.push_back(sound.name); }
-					throw std::runtime_error(where + ": <play sound=\"" + play->sound + "\" /> names no sound of the game" + didYouMean(play->sound, names));
+					throw std::runtime_error(where + ": <" + (play ? "play" : "silence") + " sound=\"" + name + "\" /> names no sound of the game" + didYouMean(name, names));
 				}
 			}
 			else if (const auto* push = std::get_if<CmdPushState>(&command))
@@ -931,6 +934,7 @@ namespace xge
 
 		SoundDesc sound;
 		sound.name = raw.name;
+		sound.loop = raw.loop;
 
 		const bool noVolume = raw.volume.kind == RawValue::Kind::Expression && raw.volume.text.empty();
 		if (!noVolume)

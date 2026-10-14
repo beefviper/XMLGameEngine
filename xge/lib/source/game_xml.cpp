@@ -711,7 +711,7 @@ namespace xge
 			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "ride" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
-				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play"
+				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow";
 		}
 
@@ -744,7 +744,7 @@ namespace xge
 			}
 			if (verb == "push") { requireAttribute(node, "state", where); }
 			if (verb == "fire") { requireAttribute(node, "object", where); }
-			if (verb == "play") { requireAttribute(node, "sound", where); }
+			if (verb == "play" || verb == "silence") { requireAttribute(node, "sound", where); }
 			if (verb == "become") { requireAttribute(node, "sprite", where); }
 			if (verb == "reveal")
 			{
@@ -1569,8 +1569,8 @@ namespace xge
 			}
 		}
 
-		// <sound name="..." wave="square">: an optional <volume>, then <note>s and
-		// <rest>s in the order they play. The words (wave, pitch) are checked by
+		// <sound name="..." wave="square">: an optional <loop />, an optional
+		// <volume>, then <note>s and <rest>s in the order they play. The words (wave, pitch) are checked by
 		// game_expr, which also works out the lengths.
 		RawSound readSound(const XmlNode& sound)
 		{
@@ -1584,7 +1584,12 @@ namespace xge
 			{
 				const std::string tag = child->getName();
 
-				if (tag == "volume")
+				if (tag == "loop")
+				{
+					if (!raw.notes.empty() || raw.volume.kind != RawValue::Kind::Expression || !raw.volume.text.empty()) { fail(where, "<loop /> has to come first"); }
+					raw.loop = true;
+				}
+				else if (tag == "volume")
 				{
 					if (!raw.notes.empty()) { fail(where, "<volume> has to come before the <note>s and <rest>s"); }
 					raw.volume = readValue(*child, where);
@@ -1607,7 +1612,7 @@ namespace xge
 				}
 				else
 				{
-					fail(where, "unknown <" + tag + ">; expected a <volume>, then <note>s and <rest>s");
+					fail(where, "unknown <" + tag + ">; expected a <loop />, a <volume>, then <note>s and <rest>s");
 				}
 			}
 

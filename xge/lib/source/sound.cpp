@@ -205,7 +205,7 @@ namespace xge
 
 	std::ostream& operator<<(std::ostream& o, const SoundDesc& sound)
 	{
-		o << "sound: name=" << sound.name << ", volume=" << sound.volume << ", notes=";
+		o << "sound: name=" << sound.name << (sound.loop ? ", loop" : "") << ", volume=" << sound.volume << ", notes=";
 
 		for (std::size_t i = 0; i < sound.notes.size(); ++i)
 		{

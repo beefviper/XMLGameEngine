@@ -50,13 +50,18 @@ namespace xge
 		void executeTimer(const Command& command, Object* owner);
 
 		// A key that was already down when a state began: applies only the
-		// continuous part of its binding (an action's move.* and accelerate.*) and returns true
+		// continuous part of its binding (an action's move.* and accelerate.*,
+		// a sound that loops) and returns true
 		// if the command was one of those. One-shot commands (state changes,
 		// fire) are left alone, since the key was never pressed in this state.
 		bool executeHeldInput(const Command& command);
 
 	private:
 		Game& game;
+
+		// A <play> on a key, or in the action a key triggers: the press asks
+		// for the sound; letting go silences it if it loops.
+		void playHeld(const std::string& sound, bool keyPressed);
 
 		void bounceScreenEdge(Object& object, Edge edge);
 		void moveByStep(Object& object, Direction direction, float step);

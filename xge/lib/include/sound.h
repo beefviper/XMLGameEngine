@@ -49,13 +49,15 @@ namespace xge
 	};
 
 	// A sound from the game file's <sounds>, worked out: its name (what
-	// <play sound="..." /> asks for), how loud (0 to 1) and its notes in the
-	// order they play. Nothing about any audio library is in it; an Audio
+	// <play sound="..." /> asks for), whether it loops (<loop />: it plays
+	// over and over until it is silenced), how loud (0 to 1) and its notes in
+	// the order they play. Nothing about any audio library is in it; an Audio
 	// backend (audio.h) is given these and turns each into samples with
 	// synthesize() below.
 	struct SoundDesc
 	{
 		std::string name;
+		bool loop{ false };
 		float volume{ 0.3f };
 		std::vector<SoundNote> notes;
 	};

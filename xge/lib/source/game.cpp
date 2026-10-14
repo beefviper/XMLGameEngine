@@ -140,6 +140,15 @@ namespace xge
 
 	void Game::requestSound(const std::string& name)
 	{
+		// Within a frame the last word wins: a loop silenced and asked for
+		// again (one of two keys let go, the other still down) plays on.
+		if (soundLoops(name))
+		{
+			loops.insert(name);
+			silenceRequests.erase(std::remove(silenceRequests.begin(), silenceRequests.end(), name), silenceRequests.end());
+			return;
+		}
+
 		if (std::find(soundRequests.begin(), soundRequests.end(), name) == soundRequests.end())
 		{
 			soundRequests.push_back(name);
@@ -149,6 +158,31 @@ namespace xge
 	std::vector<std::string> Game::takeSoundRequests(void)
 	{
 		return std::exchange(soundRequests, {});
+	}
+
+	const std::set<std::string>& Game::loopingSounds(void) const noexcept
+	{
+		return loops;
+	}
+
+	void Game::silenceSound(const std::string& name)
+	{
+		loops.erase(name);
+		soundRequests.erase(std::remove(soundRequests.begin(), soundRequests.end(), name), soundRequests.end());
+		if (std::find(silenceRequests.begin(), silenceRequests.end(), name) == silenceRequests.end())
+		{
+			silenceRequests.push_back(name);
+		}
+	}
+
+	std::vector<std::string> Game::takeSilenceRequests(void)
+	{
+		return std::exchange(silenceRequests, {});
+	}
+
+	bool Game::soundLoops(const std::string& name) const noexcept
+	{
+		return std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.loop && sound.name == name; });
 	}
 
 	WindowDesc& Game::getWindowDesc(void) noexcept
@@ -780,6 +814,10 @@ namespace xge
 
 	void Game::resetAll()
 	{
+		// A new game starts quiet: whatever loop the last one left on (music,
+		// a thrust held into the game over) stops.
+		loops.clear();
+
 		for (auto& object : objects)
 		{
 			drawStartAgain(object);

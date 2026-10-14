@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iterator>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -56,6 +57,8 @@ namespace
 	{
 		std::vector<std::string> loaded;
 		std::vector<std::string> played;
+		std::vector<std::string> looped;
+		std::vector<std::string> stopped;
 		int stops{ 0 };
 	};
 
@@ -70,6 +73,8 @@ namespace
 			for (const auto& sound : sounds) { log.loaded.push_back(sound.name); }
 		}
 		void play(const std::string& name) override { log.played.push_back(name); }
+		void loop(const std::string& name) override { log.looped.push_back(name); }
+		void stop(const std::string& name) override { log.stopped.push_back(name); }
 		void stopAll() override { ++log.stops; }
 
 	private:
@@ -324,6 +329,9 @@ TEST_CASE("a sound the game cannot use is turned away when it loads, saying wher
 
 	fails(blip, "<play sound=\"bleep\" />", "<play sound=\"bleep\" /> names no sound of the game");
 	fails(blip, "<play />", "<play> needs sound=");
+	fails(blip, "<silence sound=\"bleep\" />", "<silence sound=\"bleep\" /> names no sound of the game");
+	fails(blip, "<silence />", "<silence> needs sound=");
+	fails("<sounds><sound name=\"s\"><volume>0.5</volume><loop /><note pitch=\"A4\">0.1</note></sound></sounds>", "<pop />", "<loop /> has to come first");
 	fails("<sounds><sound name=\"s\" wave=\"organ\"><note pitch=\"A4\">0.1</note></sound></sounds>", "<pop />", "wave=\"organ\"");
 	fails("<sounds><sound name=\"s\"><note pitch=\"A4\" wave=\"pulse\">0.1</note></sound></sounds>", "<pop />", "wave=\"pulse\"");
 	fails("<sounds><sound name=\"s\"><note pitch=\"H2\">0.1</note></sound></sounds>", "<pop />", "pitch=\"H2\" is not a pitch");
@@ -466,8 +474,8 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 		{ "freeway", { "hop", "hit", "cross", "start", "win" } },
 		{ "depthcharge", { "drop", "sink", "miss", "start", "win", "gameover" } },
 		{ "astrosmash", { "pop", "thud", "shoot", "start", "win", "gameover" } },
-		{ "lunarlander", { "land", "crash", "start" } },
-		{ "asteroids", { "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "start", "win", "gameover" } },
+		{ "lunarlander", { "thrust", "jet", "land", "crash", "start" } },
+		{ "asteroids", { "thrust", "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "start", "win", "gameover" } },
 	};
 
 	for (const auto& [name, expected] : games)
@@ -492,4 +500,131 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 			CHECK(text.find("<play sound=\"" + sound + "\" />") != std::string::npos);
 		}
 	}
+}
+
+TEST_CASE("a sound that loops is read from the file, and a silence beside it", "[sound][xml]")
+{
+	const std::vector<SoundDesc> sounds = loadSounds(gameWithSounds(
+		"<sounds><sound name=\"hum\" wave=\"noise\"><loop /><volume>0.2</volume><note pitch=\"150\">1</note></sound>"
+		"<sound name=\"blip\"><note pitch=\"A4\">0.05</note></sound></sounds>",
+		"<silence sound=\"hum\" />"));
+
+	REQUIRE(sounds.size() == 2);
+	CHECK(sounds[0].loop);
+	CHECK(sounds[0].volume == Approx(0.2f));
+	CHECK_FALSE(sounds[1].loop);
+}
+
+TEST_CASE("a sound that loops stays on until it is silenced, and is asked for once", "[sound]")
+{
+	Game game{ "descriptions/lunarlander.xml" };
+
+	CHECK(game.soundLoops("thrust"));
+	CHECK_FALSE(game.soundLoops("land"));
+	CHECK_FALSE(game.soundLoops("nothing"));
+
+	game.requestSound("thrust");
+	game.requestSound("thrust");
+	game.requestSound("land");
+	CHECK(game.loopingSounds() == std::set<std::string>{ "thrust" });
+	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "land" });
+	CHECK(game.loopingSounds() == std::set<std::string>{ "thrust" }); // still on next frame
+
+	game.silenceSound("thrust");
+	CHECK(game.loopingSounds().empty());
+	CHECK(game.takeSilenceRequests() == std::vector<std::string>{ "thrust" });
+	CHECK(game.takeSilenceRequests().empty());
+
+	// A new game starts quiet.
+	game.requestSound("thrust");
+	game.resetAll();
+	CHECK(game.loopingSounds().empty());
+}
+
+TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when let go, paused or out of fuel", "[sound][engine][lunarlander]")
+{
+	Game game{ "descriptions/lunarlander.xml" };
+	AudioLog log;
+	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));
+
+	engine.handleKeyPressed(KeyCode::Space);
+	engine.handleKeyReleased(KeyCode::Space);
+	engine.step();
+	REQUIRE(game.getCurrentState().name == "playing");
+
+	// Held: started once, and left playing frame after frame.
+	engine.handleKeyPressed(KeyCode::Up);
+	engine.step();
+	engine.step();
+	engine.step();
+	CHECK(log.looped == std::vector<std::string>{ "thrust" });
+	CHECK(log.stopped.empty());
+
+	// Up and W both thrust: letting go of one while the other is down keeps it going.
+	engine.handleKeyPressed(KeyCode::W);
+	engine.handleKeyReleased(KeyCode::Up);
+	engine.step();
+	CHECK(log.stopped.empty());
+	engine.handleKeyReleased(KeyCode::W);
+	engine.step();
+	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
+
+	// The side jets are a sound of their own, beside the main engine.
+	log.looped.clear();
+	log.stopped.clear();
+	engine.handleKeyPressed(KeyCode::Up);
+	engine.handleKeyPressed(KeyCode::Left);
+	engine.step();
+	CHECK(log.looped == std::vector<std::string>{ "jet", "thrust" });
+
+	// Paused, a held key drives nothing, so it is quiet; back in play it hums again.
+	log.looped.clear();
+	engine.handleKeyPressed(KeyCode::P);
+	engine.handleKeyReleased(KeyCode::P);
+	engine.step();
+	REQUIRE(game.getCurrentState().name == "paused");
+	CHECK(game.loopingSounds().empty());
+	std::sort(log.stopped.begin(), log.stopped.end());
+	CHECK(log.stopped == std::vector<std::string>{ "jet", "thrust" });
+	engine.handleKeyPressed(KeyCode::P);
+	engine.handleKeyReleased(KeyCode::P);
+	engine.step();
+	REQUIRE(game.getCurrentState().name == "playing");
+	CHECK(log.looped == std::vector<std::string>{ "jet", "thrust" });
+
+	// Out of fuel, nothing pushes, and nothing hums.
+	log.stopped.clear();
+	game.getObject("lander").variable["fuel"] = 0.0f;
+	engine.step();
+	CHECK(game.loopingSounds().empty());
+	CHECK(log.stopped == std::vector<std::string>{ "thrust", "jet" });
+
+	// A front end pausing silences everything; the next frame plays again what is still on.
+	log.looped.clear();
+	game.getObject("lander").variable["fuel"] = 100.0f;
+	game.requestSound("thrust");
+	engine.step();
+	CHECK(log.looped == std::vector<std::string>{ "thrust" });
+	engine.silence();
+	engine.step();
+	CHECK(log.looped == std::vector<std::string>{ "thrust", "thrust" });
+}
+
+TEST_CASE("Asteroids: the ship's engine hums while thrust is held", "[sound][engine][asteroids]")
+{
+	Game game{ "descriptions/asteroids.xml" };
+	AudioLog log;
+	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));
+
+	engine.handleKeyPressed(KeyCode::Space);
+	engine.handleKeyReleased(KeyCode::Space);
+	engine.step();
+	REQUIRE(game.getCurrentState().name == "playing");
+
+	engine.handleKeyPressed(KeyCode::Up);
+	engine.step();
+	CHECK(log.looped == std::vector<std::string>{ "thrust" });
+	engine.handleKeyReleased(KeyCode::Up);
+	engine.step();
+	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 }

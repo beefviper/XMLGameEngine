@@ -37,6 +37,8 @@ namespace xge
 
 		void load(const std::vector<SoundDesc>& sounds) override;
 		void play(const std::string& name) override;
+		void loop(const std::string& name) override;
+		void stop(const std::string& name) override;
 		void stopAll() override;
 
 	private:
@@ -46,6 +48,9 @@ namespace xge
 
 			// The next sample to play; samples.size() while it is silent.
 			std::size_t position{ 0 };
+
+			// Back to the start at the end, instead of falling silent.
+			bool looping{ false };
 		};
 
 		SDL_AudioDeviceID device{ 0 };

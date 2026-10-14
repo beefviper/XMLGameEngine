@@ -82,6 +82,35 @@ namespace xge
 		if (found != voices.end())
 		{
 			found->second.position = 0;
+			found->second.looping = false;
+		}
+		SDL_UnlockAudioDevice(device);
+	}
+
+	void SDL2Audio::loop(const std::string& name)
+	{
+		SDL_LockAudioDevice(device);
+		const auto found = voices.find(name);
+		if (found != voices.end())
+		{
+			Voice& voice = found->second;
+			if (!voice.looping || voice.position >= voice.samples.size())
+			{
+				voice.position = 0;
+			}
+			voice.looping = !voice.samples.empty();
+		}
+		SDL_UnlockAudioDevice(device);
+	}
+
+	void SDL2Audio::stop(const std::string& name)
+	{
+		SDL_LockAudioDevice(device);
+		const auto found = voices.find(name);
+		if (found != voices.end())
+		{
+			found->second.position = found->second.samples.size();
+			found->second.looping = false;
 		}
 		SDL_UnlockAudioDevice(device);
 	}
@@ -92,6 +121,7 @@ namespace xge
 		for (auto& [name, voice] : voices)
 		{
 			voice.position = voice.samples.size();
+			voice.looping = false;
 		}
 		SDL_UnlockAudioDevice(device);
 	}
@@ -113,6 +143,10 @@ namespace xge
 				if (voice.position < voice.samples.size())
 				{
 					mixed += voice.samples[voice.position++];
+					if (voice.looping && voice.position == voice.samples.size())
+					{
+						voice.position = 0;
+					}
 				}
 			}
 

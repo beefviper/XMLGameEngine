@@ -47,6 +47,12 @@
     <variable name="margin">20</variable>
   </variables>
   <sounds>
+    <!-- the engine, for as long as thrust is held: a low rumble of noise, over and over -->
+    <sound name="thrust" wave="noise">
+      <loop />
+      <volume>0.12</volume>
+      <note pitch="180">1</note>
+    </sound>
     <!-- a shot fired: a quick falling zap -->
     <sound name="shoot" wave="square">
       <volume>0.15</volume>
@@ -133,6 +139,7 @@
         </action>
         <action name="thrust">
           <thrust>thrustpower</thrust>
+          <play sound="thrust" />
         </action>
         <action name="fire">
           <fire object="shots" />

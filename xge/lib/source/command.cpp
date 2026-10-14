@@ -135,6 +135,7 @@ namespace xge
 		if (verb == "pop")  { return CmdPopState{ raw.state }; }
 
 		if (verb == "play")    { return CmdPlay{ raw.sound }; }
+		if (verb == "silence") { return CmdSilence{ raw.sound }; }
 		if (verb == "become")  { return CmdBecome{ raw.sprite, raw.object }; }
 		if (verb == "reveal")
 		{
@@ -311,6 +312,7 @@ namespace xge
 			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << ")"; },
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
+			[&](const CmdSilence& s) { o << "silence(" << s.sound << ")"; },
 			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << ")"; },
 			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
@@ -474,7 +476,7 @@ namespace xge
 		{
 			o << "(" << command.object << ")";
 		}
-		else if (command.verb == "play")
+		else if (command.verb == "play" || command.verb == "silence")
 		{
 			o << "(" << command.sound << ")";
 		}

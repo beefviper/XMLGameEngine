@@ -29,6 +29,7 @@ namespace xge
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
+			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
 			[&](const CmdReverse&) { reverse(object); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
 			[&](const CmdBecome& b) { become(&object, b); },
@@ -58,6 +59,7 @@ namespace xge
 			[&](const CmdChase& c) { chase(object, c); },
 			[&](const CmdAim& a) { aim(object, a.target); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
+			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
 			[&](const CmdReverse&) { reverse(object); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
 			[&](const CmdBecome& b) { become(&object, b); },
@@ -81,7 +83,9 @@ namespace xge
 			// object's own position): with no "colliding object" to be implicit
 			// about, it's the full-game reset - see Game::resetAll.
 			[&](const CmdReset&) { if (keyPressed) { game.resetAll(); } },
-			[&](const CmdPlay& p) { if (keyPressed) { game.requestSound(p.sound); } },
+			// A sound that loops plays for as long as its key is held.
+			[&](const CmdPlay& p) { playHeld(p.sound, keyPressed); },
+			[&](const CmdSilence& s) { if (keyPressed) { game.silenceSound(s.sound); } },
 			// What a <condition> (or a key) can also do to the game's objects:
 			// change a variable, a look, or bring something back into play.
 			[&](const CmdIncrement& i) { if (keyPressed) { game.incrementText(i.target, i.amount); } },
@@ -106,6 +110,7 @@ namespace xge
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
+			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
 			[&](const CmdBecome& b) { become(owner, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const CmdFollow& f) { follow(owner, f); },
@@ -159,8 +164,31 @@ namespace xge
 		executeInput(command, true);
 	}
 
+	void CommandExecutor::playHeld(const std::string& sound, bool keyPressed)
+	{
+		if (keyPressed)
+		{
+			game.requestSound(sound);
+		}
+		else if (game.soundLoops(sound))
+		{
+			game.silenceSound(sound);
+		}
+	}
+
 	bool CommandExecutor::executeHeldInput(const Command& command)
 	{
+		// A looping sound right on a key goes on again, as a move does.
+		if (const auto* play = std::get_if<CmdPlay>(&command))
+		{
+			if (!game.soundLoops(play->sound))
+			{
+				return false;
+			}
+			game.requestSound(play->sound);
+			return true;
+		}
+
 		const auto* trigger = std::get_if<CmdTriggerAction>(&command);
 		if (!trigger)
 		{
@@ -190,6 +218,10 @@ namespace xge
 			else if (const auto* ahead = std::get_if<CmdThrust>(&actionCommand))
 			{
 				applyActionThrustAhead(object, trigger->action, ahead->amount, ahead->burn);
+			}
+			else if (const auto* play = std::get_if<CmdPlay>(&actionCommand))
+			{
+				if (game.soundLoops(play->sound)) { game.requestSound(play->sound); }
 			}
 		}
 
@@ -350,9 +382,11 @@ namespace xge
 				[&](const CmdThrust& t) { applyActionThrustAhead(object, actionName, keyPressed ? t.amount : 0.0f, t.burn); },
 				[&](const CmdFire& f) { if (keyPressed) { spawnProjectile(object, f.projectileName); } },
 				// A sound belongs to the press, like a hop: letting go is silent.
-				[&](const CmdPlay& p) { if (keyPressed) { game.requestSound(p.sound); } },
+				// One that loops is held like a move: on while the key is down.
+				[&](const CmdPlay& p) { playHeld(p.sound, keyPressed); },
+				[&](const CmdSilence& s) { if (keyPressed) { game.silenceSound(s.sound); } },
 				[&](const auto&) { /* an object's own <action> list only ever produces
-				                      move/hop/accelerate/turn/thrust/fire/play commands today; ignore anything else. */ }
+				                      move/hop/accelerate/turn/thrust/fire/play/silence commands today; ignore anything else. */ }
 			}, command);
 		}
 	}

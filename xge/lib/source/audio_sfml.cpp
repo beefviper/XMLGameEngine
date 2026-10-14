@@ -44,7 +44,35 @@ namespace xge
 
 		// play() on a sound that is playing starts it again from the beginning.
 		found->second->sound->stop();
+		found->second->sound->setLooping(false);
 		found->second->sound->play();
+	}
+
+	void SFMLAudio::loop(const std::string& name)
+	{
+		const auto found = voices.find(name);
+		if (found == voices.end())
+		{
+			return;
+		}
+
+		sf::Sound& sound = *found->second->sound;
+		if (sound.isLooping() && sound.getStatus() == sf::Sound::Status::Playing)
+		{
+			return;
+		}
+
+		sound.setLooping(true);
+		sound.play();
+	}
+
+	void SFMLAudio::stop(const std::string& name)
+	{
+		const auto found = voices.find(name);
+		if (found != voices.end())
+		{
+			found->second->sound->stop();
+		}
 	}
 
 	void SFMLAudio::stopAll()

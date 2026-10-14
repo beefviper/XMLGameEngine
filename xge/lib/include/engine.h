@@ -16,6 +16,7 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -128,7 +129,11 @@ namespace xge
 		// Throws std::logic_error when there is no window (see replaceWindow).
 		void requireWindow(void) const;
 
-		// Plays what the game asked for this frame (Game::requestSound).
+		// Plays what the game asked for this frame (Game::requestSound), stops
+		// what it silenced, and keeps its looping sounds playing.
 		void playRequestedSounds(void);
+
+		// The game's looping sounds the Audio was last told to play.
+		std::set<std::string> playingLoops;
 	};
 }
