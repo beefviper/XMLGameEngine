@@ -613,6 +613,8 @@ namespace xge
 			// Nor should a reset object go on riding, or jump; it
 			// faces the way it started, and its timers start over.
 			object.riding = {};
+			object.carrying.clear();
+			object.dropped.clear();
 			object.hopPending = {};
 			object.hopped = false;
 			object.jumpStep = {};
@@ -655,6 +657,16 @@ namespace xge
 			{
 				drawStartAgain(candidate);
 				resetObjectState(candidate);
+			}
+		}
+
+		// Back where it started, it is no longer carried.
+		for (auto& carrier : objects)
+		{
+			const Object* carried = carrier.carrying.empty() ? nullptr : tryGetObject(carrier.carrying);
+			if (carried && (carried->name == name || carried->inGroup(name)))
+			{
+				carrier.carrying.clear();
 			}
 		}
 

@@ -59,6 +59,9 @@ namespace xge
 	private:
 		Game& game;
 
+		// <carry />: see CmdCarry.
+		void carry(Object& object, const Object& item);
+
 		// A <play> on a key, or in the action a key triggers: the press asks
 		// for the sound; letting go silences it if it loops.
 		void playHeld(const std::string& sound, bool keyPressed);

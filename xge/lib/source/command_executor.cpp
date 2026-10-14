@@ -24,6 +24,7 @@ namespace xge
 			[&](const CmdDie&) { xge::die(object); },
 			[&](const CmdStop&) { xge::stop(object); },
 			[&](const CmdWrap&) { xge::wrap(object, game.getWindowDesc(), edge); },
+			[&](const CmdDrop&) { xge::drop(object); },
 			[&](const CmdRelease& r) { release(object, r.target, r.count); },
 			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
@@ -55,6 +56,8 @@ namespace xge
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdRide&) { xge::ride(object, other); },
+			[&](const CmdCarry&) { carry(object, other); },
+			[&](const CmdDrop&) { xge::drop(object); },
 			[&](const CmdLand&) { land(object, other, edge); },
 			[&](const CmdChase& c) { chase(object, c); },
 			[&](const CmdAim& a) { aim(object, a.target); },
@@ -121,6 +124,7 @@ namespace xge
 			[&](const CmdReverse&) { if (owner) { reverse(*owner); } },
 			[&](const CmdDie&) { if (owner) { xge::die(*owner); } },
 			[&](const CmdStop&) { if (owner) { xge::stop(*owner); } },
+			[&](const CmdDrop&) { if (owner) { xge::drop(*owner); } },
 			[&](const CmdMove& m) { if (owner) { moveByStep(*owner, m.direction, m.step); } },
 			[&](const CmdRelease& r) { if (owner) { release(*owner, r.target, r.count); } },
 			[&](const CmdChase& c) { if (owner) { chase(*owner, c); } },
@@ -162,6 +166,25 @@ namespace xge
 	void CommandExecutor::executeCondition(const Command& command)
 	{
 		executeInput(command, true);
+	}
+
+	// Taken from whatever had it: one thing is carried by one object at a time.
+	void CommandExecutor::carry(Object& object, const Object& item)
+	{
+		if (item.name == object.carrying || item.name == object.dropped)
+		{
+			return;
+		}
+
+		for (auto& other : game.getCurrentObjects())
+		{
+			if (&other != &object && other.carrying == item.name)
+			{
+				other.carrying.clear();
+			}
+		}
+
+		xge::carry(object, item);
 	}
 
 	void CommandExecutor::playHeld(const std::string& sound, bool keyPressed)
@@ -381,12 +404,13 @@ namespace xge
 				[&](const CmdTurn& t) { applyActionTurn(object, t.direction, keyPressed ? t.rate : 0.0f); },
 				[&](const CmdThrust& t) { applyActionThrustAhead(object, actionName, keyPressed ? t.amount : 0.0f, t.burn); },
 				[&](const CmdFire& f) { if (keyPressed) { spawnProjectile(object, f.projectileName); } },
+				[&](const CmdDrop&) { if (keyPressed) { xge::drop(object); } },
 				// A sound belongs to the press, like a hop: letting go is silent.
 				// One that loops is held like a move: on while the key is down.
 				[&](const CmdPlay& p) { playHeld(p.sound, keyPressed); },
 				[&](const CmdSilence& s) { if (keyPressed) { game.silenceSound(s.sound); } },
 				[&](const auto&) { /* an object's own <action> list only ever produces
-				                      move/hop/accelerate/turn/thrust/fire/play/silence commands today; ignore anything else. */ }
+				                      move/hop/accelerate/turn/thrust/fire/drop/play/silence commands today; ignore anything else. */ }
 			}, command);
 		}
 	}

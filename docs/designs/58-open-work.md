@@ -13,6 +13,7 @@
 - **Groups** ([groups](06-groups.md)): a bare `<x>` in a member, evenly spaced members.
 - **Arithmetic** ([arithmetic](03-arithmetic.md), [vocabulary-map](11-vocabulary-map.md)): move the other games' arithmetic to `<equation>`/`<formula>` if wanted; add `min`, `max`, `negate`, `abs`, `clamp` and a `<random>` step.
 - **Repetition** (counted 2026-10-13, before defaults: about 940 lines of the games repeat exactly and 2,200 with only a number or name changed). Done since: [objects](05-objects.md)' defaults, [groups inside a group](06-groups.md), and `<shows>` and `<conditions>` sets ([states-and-conditions](07-states-and-conditions.md)). Left: a numbered bundle of objects and a state copied whole (Berserk's rooms ×4, Kaboom's waves ×3; the one case that needs parameters, perhaps expanded by XSLT before load). One rule throughout: take the shared thing, say only what differs.
+- **Adventure** ([games-atari](56-games-atari.md)): one room is built with `<carry />`; more rooms with the carried thing going along, the bat.
 - **Games the vocabulary cannot say yet**: see [games-atari](56-games-atari.md).
 
 ## Code

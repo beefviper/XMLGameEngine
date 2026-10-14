@@ -205,6 +205,60 @@ namespace xge
 			}
 		}
 
+		// The object of that name, or null.
+		Object* named(std::vector<Object>& objects, const std::string& name)
+		{
+			const auto found = std::find_if(objects.begin(), objects.end(), [&](const Object& object) { return object.name == name; });
+			return found == objects.end() ? nullptr : &*found;
+		}
+
+		// What is carried goes the way its carrier goes this frame, lent the
+		// carrier's motion as a ride is, so it is swept and meets what is on
+		// the way (a key reaching a gate). Either out of play, and it is put
+		// down.
+		void lendCarried(std::vector<Object>& objects, FrameRules& rules)
+		{
+			for (auto& carrier : objects)
+			{
+				if (carrier.carrying.empty()) { continue; }
+
+				Object* item = named(objects, carrier.carrying);
+				if (!item || !rules.inPlay(carrier) || !rules.inPlay(*item))
+				{
+					carrier.carrying.clear();
+					continue;
+				}
+
+				item->riding = motionOf(carrier) - item->velocity;
+			}
+		}
+
+		// After the move: what is carried is put exactly where it is held
+		// (the carrier may have been stopped on the way, or hopped), and
+		// what was put down can be picked up again once the two are apart.
+		void holdCarried(std::vector<Object>& objects)
+		{
+			for (auto& carrier : objects)
+			{
+				if (!carrier.carrying.empty())
+				{
+					if (Object* item = named(objects, carrier.carrying))
+					{
+						item->position = carrier.position + carrier.carryOffset;
+					}
+				}
+
+				if (!carrier.dropped.empty())
+				{
+					const Object* item = named(objects, carrier.dropped);
+					if (!item || !boxesOverlap({ carrier.position, sizeOf(carrier) }, { item->position, sizeOf(*item) }))
+					{
+						carrier.dropped.clear();
+					}
+				}
+			}
+		}
+
 		// Plays one frame of movement. Every object in play moves by its
 		// velocity (and by whatever it is riding), but not in one jump: each
 		// pair of objects that can touch is swept along its own path, the
@@ -219,6 +273,7 @@ namespace xge
 		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules)
 		{
 			applyHops(all, window, rules);
+			lendCarried(all, rules);
 
 			struct Pair
 			{
@@ -370,6 +425,8 @@ namespace xge
 				}
 			}
 		}
+
+		holdCarried(objects);
 
 		rules.conditions();
 	}

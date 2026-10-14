@@ -52,6 +52,14 @@ namespace xge
 	// <ride />: moves with `other` for this frame.
 	void ride(Object& object, const Object& other);
 
+	// <carry />: picks `item` up, held where it is now, putting down what
+	// it carried before; nothing if it was just put down and is still
+	// being touched.
+	void carry(Object& object, const Object& item);
+
+	// <drop />: puts down what it carries.
+	void drop(Object& object);
+
 	// <die />: out of play; not drawn, moved or collided with.
 	void die(Object& object);
 

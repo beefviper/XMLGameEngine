@@ -489,6 +489,17 @@ namespace xge
 		Vector2f hopPending{};
 		bool hopped{ false };
 
+		// What it carries (<carry />): the name of one other object, which
+		// goes where it goes, held where it was when it was picked up
+		// (`carryOffset` from this object's top left), until a <drop />, until
+		// something else is picked up, or until either is out of play
+		// (playOneFrame). `dropped` is what it last let go of: not picked up
+		// again until the two have stopped touching, so it can be walked away
+		// from.
+		std::string carrying;
+		Vector2f carryOffset{};
+		std::string dropped;
+
 		// The object's own measured bounding box (width/height) - {0,0} until
 		// whichever Window backend is running has actually built this
 		// object's visual and measured it (see Window::init() in window.h).

@@ -81,6 +81,8 @@ namespace xge
 				[](const CmdDie&) { return std::string("<die />"); },
 				[](const CmdWrap&) { return std::string("<wrap />"); },
 				[](const CmdRide&) { return std::string("<ride />"); },
+				[](const CmdCarry&) { return std::string("<carry />"); },
+				[](const CmdDrop&) { return std::string("<drop />"); },
 				[](const CmdDeflect&) { return std::string("<deflect>"); },
 				[](const CmdReverse&) { return std::string("<reverse />"); },
 				[](const CmdMove&) { return std::string("<move>"); },
@@ -164,7 +166,7 @@ namespace xge
 		{
 			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
 			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
-				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>" };
+				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
 				tags.push_back("<chase>");
@@ -172,15 +174,15 @@ namespace xge
 				return tags;
 			}();
 			static const PlaceRule rules[] = {
-				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<release>", "<move>", "<inc>", "<dec>",
+				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>",
 					"<play>", "<silence>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>",
-					"<ride />", "<land />", "<chase>", "<aim>", "<play>", "<silence>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
+					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<play>", "<silence>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimerCommands },
-				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<play>", "<silence>" } },
+				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<play>", "<silence>" } },
 				{ "a path's <step>", ownerCommands },
 			};
 			return rules[static_cast<std::size_t>(place)];

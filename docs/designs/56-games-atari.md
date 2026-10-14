@@ -13,6 +13,7 @@ The author listed about thirty non-scrolling Atari 2600 games (2026-10-07) and a
 | Combat | `<heading>`, `<turn>`, `<thrust>` (a negative one backs up) and `<drag>` for the tanks; a shell fired from the nose; pixel tanks `<bounce />` off box walls; two players, first to five | guided and bouncing shells, the plane games, invisible tanks, the spin when hit |
 | Air-Sea Battle | guns with a `<heading>` that `<turn>`, so a shell flies at any angle; lanes of planes as `<group>`s that `<wrap />`, starting off the side they fly in from, so a `<reveal>`ed plane comes back from there; a state timer as the two-minute clock | the guns' three fixed angles (they swing freely, even at the sea), the other games on the cartridge (the winner screen came with conditions comparing two variables, 2026-10-14) |
 | Megamania | waves as `<group>`s that `<wrap />` (and `<bounce />` up and down for the cookies), each member dropping bombs from a `<facing>down</facing>` on a `<random>` timer; energy as a variable of its own object, run down by a state timer and filled by `<reset object="energy" />` | steering a shot, five of the eight waves, the bonus for energy left |
+| Adventure (one room, 2026-10-14) | the hero `<carry />`s what he walks into (one rule for class `item`), Space `<drop />`s it; the carried key opens the gate on its own touch, the dragon `<chase>`s and dies on the sword, the chalice carried into the hall is counted and a condition ends the game; walls and the gate `<stop />` | the other rooms and castles, the bat, three dragons, the bridge and the magnet |
 
 Found on the way:
 - **A rule can stop the touch that would have come next.** Two rules on Harry meet at the same moment when the jaws appear over the crocodile he stands on: `<land />` on the crocodile and the hazard of the jaws. Touches at the same moment are handled in the order of the objects in the file, and `<land />` stops him, and a pair where neither moves is not looked at again that frame, so the jaws were never met. The jaws are written before the crocodiles.
@@ -21,7 +22,7 @@ Found on the way:
 
 Near misses from the list, each short of something the engine does not have yet (none were started; verbs are another thread's to add):
 - **Seaquest**: `<facing>` follows the last move, up and down too, so the sub's torpedo would leave upwards after rising; it needs a fire that keeps to left and right (a facing that only some moves change).
-- **Adventure**: carrying a key, a sword or the chalice needs one object attached to another (`<ride />` only lends a velocity while touching; the name `carry` is kept for that), and a dragon killed by a carried sword.
+- **Adventure**: one room is built (`adventure.xml`, 2026-10-14) with `<carry />` and `<drop />` ([collisions](20-collisions.md)): the key opens the gate, the sword slays the dragon, the chalice carried home wins. The rest needs more: rooms to walk between (states, as Pitfall's screens, with the carried thing going along), the bat that steals what you carry, three dragons that each guard something.
 - **Dodge 'Em**: cars turning at the corners of a track (a path could drive the computer's car; the player's needs turns at given places).
 - **Q*bert**: diagonal hops on a pyramid; `<hop>` has four directions.
 - **Warlords**: shields that slide round the corner of a castle, and computer players.

@@ -31,6 +31,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/descriptions/combat.xml` | Combat, two players: tanks that drive along the way they point and turn on the spot, among walls, one shell in the air each; first to five hits |
 | `games/descriptions/airseabattle.xml` | Air-Sea Battle, two players: swing a gun and fire at four lanes of planes going round the sky; most hits in two minutes wins, and the end screen compares the scores to say who |
 | `games/descriptions/megamania.xml` | Megamania: three waves of hamburgers, cookies and bugs wrap round the sides and drop bombs while your energy runs down; shoot each wave before it is gone, three ships |
+| `games/descriptions/adventure.xml` | Adventure, one room of the Atari 2600 game: walk into the key, the sword or the chalice to `<carry />` it and Space to `<drop />` it; the key opens the castle gate, the sword slays the dragon, the chalice carried into the hall wins |
 
 ## What a game file looks like
 

@@ -23,11 +23,11 @@ Read from the readme and `xgedef.xsd` of the `working` branch on 2026-10-04.
 | Family | Words |
 |---|---|
 | Motion | `move`, `hop`, `jump`, `leap`, `climb`, `chase`, `aim`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `follow` |
-| Collision responses | `bounce`, `deflect`, `stick`, `wrap`, `ride`, `land` |
+| Collision responses | `bounce`, `deflect`, `stick`, `wrap`, `ride`, `carry`, `land` |
 | Lifecycle | `die`, `reset`, `fire`, `release`, `reveal` |
 | Appearance | `become` |
 | Bookkeeping | `inc`, `dec` |
-| Sound | `play` |
+| Sound | `play`, `silence` |
 | Flow between screens | `push`, `pop`, `trigger` |
 
 Most of these now work wherever they make sense (a collision, a condition, a key or a timer), not only where they were first needed ([timers](09-timers.md)).
@@ -36,13 +36,13 @@ Most of these now work wherever they make sense (a collision, a condition, a key
 
 - Look and place: `position`, `velocity`, `acceleration`, `heading`, `facing`, `drag`, `hidden`, `color`, `size`, `radius`, `width`, `height`, `thickness`, `scale`, `flip`, `hide` (parts of an SVG to leave out).
 - Collision settings: `enabled`, `lockstep`, `type` (`box` or `pixel`).
-- Sound: `wave` (`square`, `triangle`, `sawtooth`, `sine`, `noise`), `pitch`, `volume`.
+- Sound: `wave` (`square`, `triangle`, `sawtooth`, `sine`, `noise`), `pitch`, `volume`, `loop`.
 
 **Prepositions and conjunctions: who, when, where**
 
 - Targets: `edge`, `class`, `object`, `direction`, `button`, `keys`.
 - Filters on a rule: `unless`, `slower`, `faster`, `sprite` (only while the object shows that look).
-- Triggers in a condition: `atleast`, `atmost`, `remaining`.
+- Triggers in a condition: `atleast`, `atmost`, `above`, `below`, `equal` (each with a number, or `variable=` and `object=` naming another variable), `remaining`.
 
 **Pronouns: names that can be pointed at**
 
@@ -69,7 +69,7 @@ A note on pictures: an `<image>` is a file loaded by whichever window backend is
 | Kinematics: how things move | velocity, acceleration, heading, facing, drag, `move`, `hop`, `jump`, `thrust`, `turn`, `reverse` | good; the arcing jump (`leap`) has no air control |
 | Collision: what touches what, and the response | `edge`, `class`, `object`, `unless`, `sprite`, `slower`, `faster`, `type`, and a dozen response verbs | the largest layer: it is where verbs, adjectives and prepositions meet |
 | Time | `timers` with `every` and `after`, animation `interval`, `jump` `seconds` | built; counts frames, shows no time left |
-| Sound | `sounds`, `note`, `rest`, `wave`, `pitch`, `to`, `volume`, `play` | built; no looping music, no envelope |
+| Sound | `sounds`, `note`, `rest`, `wave`, `pitch`, `to`, `volume`, `loop`, `play`, `silence` | built; loops started by a command, no envelope |
 | Input | `input`, `button`, `keys`, `action`, `trigger` | small and clean |
 | Game flow | states, `push`, `pop`, conditions | enough for the shipped games; no `goto` |
 | Values | expressions, `random`, `equation`, `formula` with four operations | thin; no `min`, `max`, `clamp`, `negate` as tags |
@@ -86,7 +86,7 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 | **Arcing jump** | air control beyond none, a held variable-height jump (grounded and a jump impulse are built: `land`, `leap`) | [motion](22-motion.md) |
 | **Queries** for conditions | `count`, `distance`, `touching`, `speed`, a timer's time left. Only `remaining` and a variable threshold exist | [states-and-conditions](07-states-and-conditions.md), [timers](09-timers.md) |
 | **Branching and events** | `if`, `and`, `or`, `goto state`, an event queue. A condition tests one threshold; this is deliberate, to keep control flow out | [vision](01-vision.md), [states-and-conditions](07-states-and-conditions.md), [timers](09-timers.md) |
-| **Presentation** | a camera and scrolling, a palette for several colors in one bitmap, per-frame animation intervals, looping music | [ideas](57-ideas.md), [pictures](30-pictures.md), [sound](33-sound.md) |
+| **Presentation** | a camera and scrolling, a palette for several colors in one bitmap, per-frame animation intervals, music that starts with a state | [ideas](57-ideas.md), [pictures](30-pictures.md), [sound](33-sound.md) |
 
 Time and sound were gaps in the first version of this map and are filled now; they are the pattern for how a gap closes: a game could not be written (Frostbite's cold, Kaboom's bomber, every silent game), the word was added in the places that already hold commands, and the workaround objects were deleted.
 

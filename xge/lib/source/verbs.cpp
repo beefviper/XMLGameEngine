@@ -83,6 +83,28 @@ namespace xge
 		object.riding = other.velocity;
 	}
 
+	void carry(Object& object, const Object& item)
+	{
+		if (item.name == object.carrying || item.name == object.dropped || &item == &object)
+		{
+			return;
+		}
+
+		object.carrying = item.name;
+		object.carryOffset = item.position - object.position;
+	}
+
+	void drop(Object& object)
+	{
+		if (object.carrying.empty())
+		{
+			return;
+		}
+
+		object.dropped = object.carrying;
+		object.carrying.clear();
+	}
+
 	// Everything else about it is left as it was, so whatever brings it back
 	// (fire() re-launching a bullet, reset()) starts from a known place.
 	void die(Object& object)

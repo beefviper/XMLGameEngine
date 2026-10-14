@@ -68,6 +68,7 @@ namespace xge
 	// Plays one frame of a game, in the one order every game runs in:
 	// animations, timers, paths, climbing, pull and thrust, the window edges
 	// (before the move), the move (hops, then every pair that can touch swept
-	// through the frame and met in the order they meet), sticks, conditions.
+	// through the frame and met in the order they meet), sticks, what is
+	// carried put where it is held, conditions.
 	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules);
 }

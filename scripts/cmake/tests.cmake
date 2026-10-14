@@ -91,6 +91,7 @@ add_executable(xgetest
 	"xge/tests/test_combat.cpp"
 	"xge/tests/test_airseabattle.cpp"
 	"xge/tests/test_megamania.cpp"
+	"xge/tests/test_adventure.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 )

@@ -4,7 +4,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 ## State
 
-- 23 games in `games/descriptions/`, one test file per area in `xge/tests/`. Newer work lands on `working` ahead of `master`: check `git branch -r` and `git log` first.
+- 24 games in `games/descriptions/`, one test file per area in `xge/tests/`. Newer work lands on `working` ahead of `master`: check `git branch -r` and `git log` first.
 - The author builds on Windows (Visual Studio, vcpkg). Agents usually build on Linux, often without Qt or window and sound backends, and cannot watch or listen.
 
 ## Engine
