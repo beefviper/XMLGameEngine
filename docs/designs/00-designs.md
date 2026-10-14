@@ -21,6 +21,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [timers](09-timers.md) | Timers, commands in every context | Built; event queue Open |
 | [pools-and-enemies](10-pools-and-enemies.md) | Pools instead of spawning, enemies firing back, key sets | Built |
 | [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories | Reference |
+| [rooms](12-rooms.md) | Places beside modes: a room owns its objects, takes another and changes parts, `<enter>` | Idea |
 
 ## Behavior
 
@@ -60,4 +61,4 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [ideas](57-ideas.md) | Scrolling, capability profiles, state export, game ideas | Idea |
 | [open-work](58-open-work.md) | Backlog and known untested areas | Open |
 
-Files are numbered by section (01-11 language, 2x behavior, 3x pictures and sound, 4x code generation, 5x engine, tools and games) with gaps left between sections. Add a topic to the closest existing file before creating a new one; keep this table in step. Keep files to: what we looked for, what we looked at, what we chose and why, what is open. No progress diaries or test-run logs.
+Files are numbered by section (01-12 language, 2x behavior, 3x pictures and sound, 4x code generation, 5x engine, tools and games) with gaps left between sections. Add a topic to the closest existing file before creating a new one; keep this table in step. Keep files to: what we looked for, what we looked at, what we chose and why, what is open. No progress diaries or test-run logs.
