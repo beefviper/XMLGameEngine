@@ -82,9 +82,11 @@ namespace xge
 
 		// For an object whose start draws a <random> (Object::startDrawsRandom):
 		// draws its random <variable>s again, then works out its starting
-		// position and velocity again from them, so a reset is a new draw (a
-		// new serve, a new fall speed). Anything else is left alone.
+		// position and velocity again from them, so coming back into play is a
+		// new draw (a new serve, a new fall speed): a reset, a <reveal>, a
+		// <release> and a <fire> all call it first. Anything else is left alone.
 		void drawStartAgain(Object& object);
+
 		// Pops the current state and pushes `name` in its place (the first
 		// state too: it is replaced, never left empty). An empty name is a
 		// plain pop.

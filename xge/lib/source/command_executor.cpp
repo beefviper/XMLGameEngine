@@ -283,6 +283,8 @@ namespace xge
 			if (released >= count) { break; }
 			if (candidate.isVisible || &candidate == &from || !isNamed(candidate, target)) { continue; }
 
+			// Back in play is a new start: a <random> in it is drawn again.
+			game.drawStartAgain(candidate);
 			candidate.position = middle - sizeOf(candidate) * 0.5f;
 			candidate.velocity = candidate.velocityOriginal;
 			candidate.riding = {};
@@ -545,6 +547,9 @@ namespace xge
 			}
 		}
 		if (!projectile) { return; }
+
+		// Fired is a new start: a <random> in the projectile's is drawn again.
+		game.drawStartAgain(*projectile);
 
 		const Box from{ shooter.position, sizeOf(shooter) };
 		const Vector2f shotSize = sizeOf(*projectile);

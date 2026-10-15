@@ -617,6 +617,50 @@ TEST_CASE("<reveal> brings hidden members of a pool back where they started, as 
 	CHECK(shown() == 3);
 }
 
+TEST_CASE("coming back into play draws a <random> again: a reveal, a release and a fire", "[random][reveal]")
+{
+	// A rock that dies a moment after it is back, so it comes back again and
+	// again; what it comes back with is noted each time.
+	const std::string rock = box("rock", 0, 0, 10, 10, "<enabled>false</enabled>", "<hidden>true</hidden>",
+		"<timers><timer><every>0.05</every><die /></timer></timers>",
+		"<x><random min=\"-50\" max=\"50\" /></x><y>0</y>", " class=\"projectile\"");
+	const auto distinctSpeeds = [](Loaded& loaded)
+	{
+		std::set<int> seen;
+		for (int frame = 0; frame < 600; ++frame)
+		{
+			loaded.game.updateObjects();
+			const Object& shown = loaded.game.getObject("rock");
+			if (shown.isVisible) { seen.insert(static_cast<int>(std::lround(shown.velocity.x * 100.0f))); }
+		}
+		return seen.size();
+	};
+
+	SECTION("<reveal>")
+	{
+		Loaded loaded(gameXml(rock + box("keeper", 0, 0, 1, 1, "<enabled>false</enabled>", {},
+			"<timers><timer><every>0.1</every><reveal object=\"rock\" /></timer></timers>"),
+			state("playing", { "rock", "keeper" })));
+		CHECK(distinctSpeeds(loaded) > 3);
+	}
+
+	SECTION("<release>")
+	{
+		Loaded loaded(gameXml(rock + box("keeper", 400, 300, 1, 1, "<enabled>false</enabled>", {},
+			"<timers><timer><every>0.1</every><release object=\"rock\" /></timer></timers>"),
+			state("playing", { "rock", "keeper" })));
+		CHECK(distinctSpeeds(loaded) > 3);
+	}
+
+	SECTION("<fire>")
+	{
+		Loaded loaded(gameXml(rock + box("keeper", 400, 300, 1, 1, "<enabled>false</enabled>", {},
+			"<timers><timer><every>0.1</every><fire object=\"rock\" /></timer></timers>"),
+			state("playing", { "rock", "keeper" })));
+		CHECK(distinctSpeeds(loaded) > 3);
+	}
+}
+
 TEST_CASE("a condition can change a variable, so it can count and start over", "[conditions]")
 {
 	Loaded loaded(gameXml(
