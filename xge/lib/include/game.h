@@ -86,6 +86,16 @@ namespace xge
 		// timers started over.
 		void resetScene(const std::string& scene);
 
+		// Where the current scene's way of that name leads (a scene's path),
+		// or empty, with a warning, when the current state's current scene
+		// has no such way.
+		std::string wayLeadsTo(const std::string& way) const;
+
+		// <enter> and <reset scene> as written: by a scene's path, or by a
+		// way of the current scene.
+		void enter(const CmdEnterScene& command);
+		void reset(const CmdResetScene& command);
+
 		// The object of that name or <group> in play (shown, not hidden or
 		// dead) whose middle is nearest `from`'s, leaving `from` out; null if
 		// there is none. What <chase> and <aim> look for.

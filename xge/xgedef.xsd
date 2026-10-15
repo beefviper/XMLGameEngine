@@ -570,17 +570,21 @@
       <xs:element name="die" type="emptyType" />
       <xs:element name="stop" type="emptyType" />
       <!-- <reset /> puts back the object running it; object= that object
-           or group; scene= every object of that scene, as it started. -->
+           or group; scene= every object of that scene, as it started; way=
+           the scene that way of the current scene leads to. -->
       <xs:element name="reset">
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="optional" />
           <xs:attribute name="scene" type="xs:string" use="optional" />
+          <xs:attribute name="way" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- <enter scene="room2" />: that scene becomes its state's current one. -->
+      <!-- <enter scene="room2" />: that scene becomes its state's current one;
+           <enter way="east" />: the scene the current scene's way leads to. -->
       <xs:element name="enter">
         <xs:complexType>
-          <xs:attribute name="scene" type="xs:string" use="required" />
+          <xs:attribute name="scene" type="xs:string" use="optional" />
+          <xs:attribute name="way" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="inc" type="variableReferenceType" />
@@ -1034,8 +1038,22 @@
     its state's current scene. from= starts it as a copy of an earlier
     scene's objects and variables.
   -->
+  <!-- Where a scene's ways lead: <way name="east" scene="screen2" />, a
+       scene of the same state, gone to by <enter way="east" />. -->
+  <xs:complexType name="waysType">
+    <xs:sequence>
+      <xs:element name="way" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="name" type="xs:string" use="required" />
+          <xs:attribute name="scene" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="sceneType">
     <xs:sequence>
+      <xs:element name="ways" type="waysType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
       <xs:element name="objects" type="sceneObjectsType" minOccurs="0" />
       <xs:element name="conditions" type="conditionsType" minOccurs="0" />

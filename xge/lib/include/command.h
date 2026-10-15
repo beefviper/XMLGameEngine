@@ -327,17 +327,22 @@ namespace xge
 	// the current one of its state: its objects come into play and the last
 	// one's stop where they are, kept as they were for when it is entered
 	// again. What the state's own objects carry goes along. See Game::enter.
+	// <enter way="east" /> (`way` set, `scene` empty) goes where the current
+	// scene's way of that name leads, worked out when it runs.
 	struct CmdEnterScene
 	{
 		std::string scene;
+		std::string way;
 	};
 
 	// <reset scene="room1" /> - every object of that scene back as it started
 	// (as <reset object> puts one back), and its timers started over: a room
-	// full of robots again. See Game::resetScene.
+	// full of robots again. See Game::resetScene. <reset way="out" /> resets
+	// the scene that way of the current scene leads to.
 	struct CmdResetScene
 	{
 		std::string scene;
+		std::string way;
 	};
 
 	using Command = std::variant<
@@ -481,6 +486,7 @@ namespace xge
 		std::string path;      // follow
 		std::string objClass;  // climb (what it climbs)
 		std::string scene;     // enter, reset
+		std::string way;       // enter, reset: a way of the current scene
 		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance), leap (height), climb
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
 		RawValue distance;     // chase (near; empty text: 0)

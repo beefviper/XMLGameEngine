@@ -71,7 +71,7 @@ A note on pictures: an `<image>` is a file loaded by whichever window backend is
 | Time | `timers` with `every` and `after`, animation `interval`, `jump` `seconds` | built; counts frames, shows no time left |
 | Sound | `sounds`, `note`, `rest`, `wave`, `pitch`, `to`, `volume`, `loop`, `play`, `silence` | built; loops started by a command, no envelope |
 | Input | `input`, `button`, `keys`, `action`, `trigger` | small and clean |
-| Game flow | states, `push`, `pop`, scenes with `enter` and `reset scene`, `show state`, conditions | enough for the shipped games; no map of exits |
+| Game flow | states, `push`, `pop`, scenes with `enter` and `reset scene` (by name or by a scene's way), `show state`, conditions | enough for the shipped games |
 | Values | expressions, `random`, `equation`, `formula` with four operations | thin; no `min`, `max`, `clamp`, `negate` as tags |
 
 A collision rule reads like a sentence: *this object* (noun), *when it touches* (preposition) *that class* (noun), *unless* (conjunction) *it is on a log*, *do this* (verb). The "when does this apply" words (`class`, `object`, `edge`, `unless`, `sprite`, `slower`, `faster`) are where the language works hardest.

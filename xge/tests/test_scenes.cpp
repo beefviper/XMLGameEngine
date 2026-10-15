@@ -286,7 +286,7 @@ TEST_CASE("<reset scene> puts back what started in it, and leaves the other scen
 	loaded.frames(10);
 
 	CommandExecutor executor(loaded.game);
-	executor.executeInput(CmdResetScene{ "playing.room1" }, true);
+	executor.executeInput(CmdResetScene{ "playing.room1", {} }, true);
 	CHECK(loaded.game.getObject("playing.room1.rock").position.x == Approx(100));
 	CHECK(loaded.game.getObject("playing.room2.rock").position.x == Approx(130));
 	CHECK(loaded.game.currentScene("playing") == "playing.room2");
@@ -432,4 +432,77 @@ TEST_CASE("a game whose states own every object has no <objects> of its own", "[
 	REQUIRE(loaded.game.getCurrentObjects().size() == 1);
 	loaded.frames(5);
 	CHECK(loaded.game.getObject("ball").position.x == Approx(5));
+}
+
+TEST_CASE("a scene's <ways> say where its <enter way> and <reset way> lead, so one shared door serves every room", "[scenes][ways]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	// One door in the kit, taken by every room; walking into it enters the
+	// room its way leads to, and that room starts again first.
+	const std::string door = box("door", 200, 100, {}, "<drawn>false</drawn><collisions><enabled>true</enabled>"
+		"<collision object=\"hero\"><reset way=\"on\" /><enter way=\"on\" /></collision></collisions>");
+	const std::string rock = box("rock", 500, 500, "<x>1</x>");
+	Loaded loaded(gameXml(
+		"<state name=\"playing\"><objects>" + box("hero", 100, 100, "<x>4</x>",
+			"<collisions><enabled>true</enabled><collision object=\"door\"><move direction=\"left\">150</move></collision></collisions>") + "</objects>"
+		"<scenes><objects>" + door + rock + "</objects>"
+		"<scene name=\"room1\"><ways><way name=\"on\" scene=\"room2\" /></ways><objects><object name=\"door\" /><object name=\"rock\" /></objects></scene>"
+		"<scene name=\"room2\"><ways><way name=\"on\" scene=\"playing.room1\" /></ways><objects><object name=\"door\" /><object name=\"rock\" /></objects></scene>"
+		"</scenes>" + kSpace + "</state>"), backend);
+	loaded.game.pushState("playing");
+
+	REQUIRE(loaded.game.currentScene("playing") == "playing.room1");
+	CHECK(loaded.game.wayLeadsTo("on") == "playing.room2");
+
+	// Into room1's door: on to room2.
+	loaded.frames(30);
+	CHECK(loaded.game.currentScene("playing") == "playing.room2");
+	CHECK(loaded.game.wayLeadsTo("on") == "playing.room1");
+	const float rockLeft = loaded.game.getObject("playing.room1.rock").position.x;
+	CHECK(rockLeft > 500.0f);
+
+	// Into room2's door: back to room1, which starts again.
+	loaded.frames(40);
+	CHECK(loaded.game.currentScene("playing") == "playing.room1");
+	CHECK(loaded.game.getObject("playing.room1.rock").position.x < rockLeft);
+
+	// From C++ too, and a way the current scene does not have goes nowhere.
+	CommandExecutor executor(loaded.game);
+	executor.executeInput(CmdEnterScene{ {}, "on" }, true);
+	CHECK(loaded.game.currentScene("playing") == "playing.room2");
+	executor.executeInput(CmdEnterScene{ {}, "nowhere" }, true);
+	CHECK(loaded.game.currentScene("playing") == "playing.room2");
+}
+
+TEST_CASE("mistakes with ways stop the load", "[scenes][ways][errors]")
+{
+	SECTION("a way to a scene the state does not have")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><ways><way name=\"on\" scene=\"room9\" /></ways></scene></scenes>" + kSpace + "</state>"),
+			"names no scene of state 'playing'");
+	}
+	SECTION("a way its scene does not have, inside the scene")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><ways><way name=\"on\" scene=\"room2\" /></ways>"
+			"<objects>" + box("door", 0, 0, {}, "<collisions><enabled>true</enabled><collision><enter way=\"off\" /></collision></collisions>") + "</objects></scene>"
+			"<scene name=\"room2\" /></scenes>" + kSpace + "</state>"),
+			"is no way of scene 'playing.room1'");
+	}
+	SECTION("a way no scene has")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\" /></scenes>"
+			"<inputs><input button=\"space\"><enter way=\"on\" /></input></inputs></state>"),
+			"names no way of any scene");
+	}
+	SECTION("an <enter> with both, or neither")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\" /></scenes>"
+			"<inputs><input button=\"space\"><enter scene=\"room1\" way=\"on\" /></input></inputs></state>"),
+			"names a scene=\"...\" or a way=\"...\", one of them");
+	}
+	SECTION("two ways of one name")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><ways><way name=\"on\" scene=\"room1\" /><way name=\"on\" scene=\"room1\" /></ways></scene></scenes>" + kSpace + "</state>"),
+			"has two ways called 'on'");
+	}
 }

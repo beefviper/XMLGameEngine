@@ -92,12 +92,14 @@ namespace xge
 	};
 
 	// A <scene> as written: its name inside its state, the earlier scene it
-	// is from= (or empty), its own <variables>, its objects, and what runs
-	// while it is its state's current scene.
+	// is from= (or empty), its <ways> (each a name and the scene it leads to,
+	// as written), its own <variables>, its objects, and what runs while it
+	// is its state's current scene.
 	struct RawScene
 	{
 		std::string name;
 		std::string from;
+		std::vector<std::pair<std::string, std::string>> ways;
 		std::vector<std::pair<std::string, RawValue>> variables;
 		std::vector<RawSceneEntry> entries;
 		std::vector<RawCondition> conditions;
@@ -135,6 +137,7 @@ namespace xge
 	struct Scene
 	{
 		std::string name;
+		std::map<std::string, std::string> ways; // a way's name: the path of the scene it leads to
 		std::vector<Condition> conditions;
 		std::vector<Timer> timers;
 	};

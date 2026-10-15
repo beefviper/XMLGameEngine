@@ -130,7 +130,7 @@ namespace
 		void command(const std::string& at, const RawCommand& c)
 		{
 			out << at << " " << c.verb << " [" << c.object << "|" << c.variable << "|" << c.state << "|" << c.action << "|" << c.direction
-				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "]\n";
+				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "]\n";
 			value(at + ".amount", c.amount);
 			value(at + ".seconds", c.seconds);
 			value(at + ".distance", c.distance);
@@ -278,6 +278,7 @@ namespace
 				{
 					const std::string here = at + ".scene " + scene.name;
 					text(here + ".from", scene.from);
+					for (const auto& [way, to] : scene.ways) { text(here + ".way " + way, to); }
 					for (const auto& [name, v] : scene.variables) { value(here + ".variable " + name, v); }
 					for (std::size_t i = 0; i < scene.entries.size(); ++i)
 					{

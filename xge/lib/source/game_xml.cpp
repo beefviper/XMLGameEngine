@@ -733,6 +733,7 @@ namespace xge
 			command.path = node.getAttribute("path");
 			command.objClass = node.getAttribute("class");
 			command.scene = node.getAttribute("scene");
+			command.way = node.getAttribute("way");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec")
@@ -744,10 +745,13 @@ namespace xge
 				else { command.amount = RawValue::expression("1"); }
 			}
 			if (verb == "push") { requireAttribute(node, "state", where); }
-			if (verb == "enter") { requireAttribute(node, "scene", where); }
-			if (verb == "reset" && !command.scene.empty() && !command.object.empty())
+			if (verb == "enter" && command.scene.empty() == command.way.empty())
 			{
-				fail(where, "<reset> puts back an object= or a scene=, not both");
+				fail(where, "<enter> names a scene=\"...\" or a way=\"...\", one of them");
+			}
+			if (verb == "reset" && (!command.object.empty()) + (!command.scene.empty()) + (!command.way.empty()) > 1)
+			{
+				fail(where, "<reset> puts back an object=, a scene= or a way=, one of them");
 			}
 			if (verb == "fire") { requireAttribute(node, "object", where); }
 			if (verb == "play" || verb == "silence") { requireAttribute(node, "sound", where); }
@@ -1834,6 +1838,20 @@ namespace xge
 					const auto from = sceneNames.find(scene.from);
 					if (from == sceneNames.end()) { fail(where, "from=\"" + scene.from + "\" names no scene before it"); }
 					names = from->second;
+				}
+
+				if (std::unique_ptr<XmlNode> ways = findChild(node.get(), "ways"))
+				{
+					for (std::unique_ptr<XmlNode> way = ways->getFirstChild(); way != nullptr; way = way->getNextSibling())
+					{
+						if (way->getName() != "way") { continue; }
+						const std::string wayWhere = where + " > <ways>";
+						const std::string name = requireAttribute(*way, "name", wayWhere);
+						const std::string to = requireAttribute(*way, "scene", wayWhere);
+						const bool twice = std::any_of(scene.ways.begin(), scene.ways.end(), [&](const auto& each) { return each.first == name; });
+						if (twice) { fail(wayWhere, "has two ways called '" + name + "'"); }
+						scene.ways.emplace_back(name, to);
+					}
 				}
 
 				readVariables(findChild(node.get(), "variables").get(), where + " > <variables>", scene.variables);

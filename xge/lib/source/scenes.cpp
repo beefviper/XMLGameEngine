@@ -118,6 +118,7 @@ namespace xge
 			std::set<std::string> scenes;    // scene paths
 			std::map<std::string, std::set<std::string>> sceneVariables;
 			std::set<std::string> gameVariables; // the game's <variables>, as written (ball.radius)
+			std::map<std::string, std::set<std::string>> sceneWays; // each scene's <ways>, by name
 
 			// An object or group, from the inside out: the scene's, the state's,
 			// the game's, then the one path that ends with it. Unknown is left
@@ -281,6 +282,17 @@ namespace xge
 					if (command.verb == "inc" || command.verb == "dec") { command.variable = names_.variableTarget(command.variable, context); }
 					command.object = names_.object(command.object, context);
 					command.scene = names_.scene(command.scene, context);
+					if (!command.way.empty() && !context.scene.empty())
+					{
+						// Inside a scene, a way it does not have can only be a mistake.
+						const auto ways = names_.sceneWays.find(context.scene);
+						if (ways == names_.sceneWays.end() || !ways->second.count(command.way))
+						{
+							const std::vector<std::string> known = ways == names_.sceneWays.end() ? std::vector<std::string>{} : std::vector<std::string>(ways->second.begin(), ways->second.end());
+							throw std::runtime_error(context.where + ": way=\"" + command.way + "\" is no way of scene '" + context.scene + "'" + didYouMean(command.way, known)
+								+ (known.empty() ? std::string(" (it has no <ways>)") : ". Its ways are: " + listOf(known)));
+						}
+					}
 					value(command.amount, context);
 					value(command.seconds, context);
 					value(command.distance, context);
@@ -457,6 +469,7 @@ namespace xge
 				}
 
 				names.scenes.insert(path);
+				for (const auto& way : scene.ways) { names.sceneWays[path].insert(way.first); }
 				for (const auto& [name, value] : local.variables)
 				{
 					names.sceneVariables[path].insert(name);

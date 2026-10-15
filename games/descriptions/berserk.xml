@@ -21,14 +21,16 @@
   * The rooms are the <scenes> of the playing state. The man, his shot,
     the robots' shots, Evil Otto and the score are the state's own objects,
     there in every room; each room has its own walls, exits, robots and
-    tally, and its own rules for them, which say plain names (tally,
+    tally (the walls, exits and tally taken from the kit), and its own rules
+    for them, which say plain names (tally,
     robots) and mean the room's own.
   * The walls are a bitmap (a maze drawn as rows of text, scaled up). The
     kit of the scenes holds them with room 1's maze, and the robots' count
     (tally); each room takes both, rooms 2 to 4 with a maze of their own.
-  * The exits are the gaps of the outer wall, never drawn (<drawn>false</drawn>).
-    Walking into one puts the room back as it started (<reset scene>), so
-    it has its robots the next time round, and <enter>s the next room;
+  * The exits are the gaps of the outer wall, never drawn (<drawn>false</drawn>),
+    one kit piece every room takes. Each room's <ways> name the room its
+    way "out" leads to; walking into an exit puts that room back as it
+    started (<reset way="out" />), so it has its robots, and <enter>s it;
     after the fourth it is the first again, harder. The man's own rule for
     class exit puts him back at the start, and counts the room in
     player.depth.
@@ -45,7 +47,7 @@
     his lives).
   * Conditions read their thresholds once, when the game loads, so a count
     that has to start again is its own variable: each room's tally holds the
-    robots shot there (the room's reset clears it on the way out), and
+    robots shot there (the room's reset clears it on the way in), and
     player.lifepoints is the score since the last extra man.
   * Evil Otto is revealed by a timer of each room whose wait is an
     expression of player.depth (the number of rooms the man has left), so
@@ -448,9 +450,9 @@
       </objects>
 
       <scenes>
-        <!-- what every room takes: its walls (here with room 1's maze), and its
+        <!-- what every room takes: its walls (here with room 1's maze), its
              count of the robots shot, which the room's condition reads and the
-             room's reset puts back to nothing -->
+             room's reset puts back to nothing, and its exits -->
         <objects>
           <object name="walls" class="wall">
             <sprite name="maze">
@@ -523,32 +525,36 @@
               <variable name="kills">0</variable>
             </variables>
           </object>
+
+          <!-- the four gaps of the outer wall, never drawn. Walking into one goes
+               out of the room: the room that way is put back as it started
+               (<reset way>), and entered. The robots turn at them. -->
+          <group name="exits" class="exit">
+            <position><x>0</x><y>0</y></position>
+            <drawn>false</drawn>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="player">
+                <reset way="out" />
+                <enter way="out" />
+              </collision>
+            </collisions>
+            <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>48</y></position></member>
+            <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>432</y></position></member>
+            <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>0</x><y>200</y></position></member>
+            <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>576</x><y>200</y></position></member>
+          </group>
         </objects>
 
         <!-- ======================================================== room 1 -->
         <scene name="room1">
+          <ways>
+            <way name="out" scene="room2" />
+          </ways>
           <objects>
             <object name="walls" />
             <object name="tally" />
-
-            <!-- the four gaps of the outer wall, never drawn. Walking into one
-                 puts this room back as it started (<reset scene>), for the next time
-                 round, and goes on to the next; the robots turn at them. -->
-            <group name="exits" class="exit">
-              <position><x>0</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="player">
-                  <reset scene="room1" />
-                  <enter scene="room2" />
-                </collision>
-              </collisions>
-              <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>48</y></position></member>
-              <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>432</y></position></member>
-              <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>0</x><y>200</y></position></member>
-              <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>576</x><y>200</y></position></member>
-            </group>
+            <group name="exits" />
 
             <!-- three robots, in green -->
             <group name="robots" class="robot">
@@ -641,6 +647,9 @@
 
         <!-- ======================================================== room 2 -->
         <scene name="room2">
+          <ways>
+            <way name="out" scene="room3" />
+          </ways>
           <objects>
             <object name="walls">
               <sprite name="maze">
@@ -700,25 +709,7 @@
               </sprite>
             </object>
             <object name="tally" />
-
-            <!-- the four gaps of the outer wall, never drawn. Walking into one
-                 puts this room back as it started (<reset scene>), for the next time
-                 round, and goes on to the next; the robots turn at them. -->
-            <group name="exits" class="exit">
-              <position><x>0</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="player">
-                  <reset scene="room2" />
-                  <enter scene="room3" />
-                </collision>
-              </collisions>
-              <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>48</y></position></member>
-              <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>432</y></position></member>
-              <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>0</x><y>200</y></position></member>
-              <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>576</x><y>200</y></position></member>
-            </group>
+            <group name="exits" />
 
             <!-- four robots, in yellow -->
             <group name="robots" class="robot">
@@ -812,6 +803,9 @@
 
         <!-- ======================================================== room 3 -->
         <scene name="room3">
+          <ways>
+            <way name="out" scene="room4" />
+          </ways>
           <objects>
             <object name="walls">
               <sprite name="maze">
@@ -871,25 +865,7 @@
               </sprite>
             </object>
             <object name="tally" />
-
-            <!-- the four gaps of the outer wall, never drawn. Walking into one
-                 puts this room back as it started (<reset scene>), for the next time
-                 round, and goes on to the next; the robots turn at them. -->
-            <group name="exits" class="exit">
-              <position><x>0</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="player">
-                  <reset scene="room3" />
-                  <enter scene="room4" />
-                </collision>
-              </collisions>
-              <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>48</y></position></member>
-              <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>432</y></position></member>
-              <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>0</x><y>200</y></position></member>
-              <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>576</x><y>200</y></position></member>
-            </group>
+            <group name="exits" />
 
             <!-- five robots, in red -->
             <group name="robots" class="robot">
@@ -984,6 +960,9 @@
 
         <!-- ======================================================== room 4 -->
         <scene name="room4">
+          <ways>
+            <way name="out" scene="room1" />
+          </ways>
           <objects>
             <object name="walls">
               <sprite name="maze">
@@ -1043,25 +1022,7 @@
               </sprite>
             </object>
             <object name="tally" />
-
-            <!-- the four gaps of the outer wall, never drawn. Walking into one
-                 puts this room back as it started (<reset scene>), for the next time
-                 round, and goes on to the next; the robots turn at them. -->
-            <group name="exits" class="exit">
-              <position><x>0</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="player">
-                  <reset scene="room4" />
-                  <enter scene="room1" />
-                </collision>
-              </collisions>
-              <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>48</y></position></member>
-              <member><sprite><rectangle><width>40</width><height>8</height><color>color.black</color></rectangle></sprite><position><x>248</x><y>432</y></position></member>
-              <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>0</x><y>200</y></position></member>
-              <member><sprite><rectangle><width>8</width><height>40</height><color>color.black</color></rectangle></sprite><position><x>576</x><y>200</y></position></member>
-            </group>
+            <group name="exits" />
 
             <!-- six robots, in magenta -->
             <group name="robots" class="robot">

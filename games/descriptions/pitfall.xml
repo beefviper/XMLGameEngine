@@ -30,10 +30,12 @@
     fourth screen's scorpion is further along, and each treasure has its own
     look and place. What a screen's treasure is worth is the screen's
     variable `worth`.
-  * Each screen has an unseen strip (<drawn>false</drawn>) down each side.
-    Harry walking into one <enter>s the screen next to it, and his own rule
-    for that side <move>s him in at the far side. East of the fourth screen
-    is the first, so the jungle goes round. A screen left stays as it was:
+  * The kit also holds an unseen strip (<drawn>false</drawn>) for each side,
+    and every screen takes both. Harry walking into one goes that way: each
+    screen's <ways> say which screen lies east and which west, and the
+    strip says <enter way="east" />. His own rule for that side <move>s him
+    in at the far side. East of the fourth screen is the first, so the
+    jungle goes round. A screen left stays as it was:
     a treasure taken stays taken, a log rolls on from where it was.
   * Harry falls (an <acceleration>), stands on the ground with <land />,
     jumps with <leap> and climbs the ladder of the fourth screen with
@@ -593,10 +595,48 @@
               </collision>
             </collisions>
           </object>
+          <object name="east" class="eastside">
+            <sprite>
+              <rectangle>
+                <width>4</width>
+                <height>window.bottom</height>
+                <color>color.black</color>
+              </rectangle>
+            </sprite>
+            <position><x>window.right - 4</x><y>0</y></position>
+            <drawn>false</drawn>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="harry">
+                <enter way="east" />
+              </collision>
+            </collisions>
+          </object>
+          <object name="west" class="westside">
+            <sprite>
+              <rectangle>
+                <width>4</width>
+                <height>window.bottom</height>
+                <color>color.black</color>
+              </rectangle>
+            </sprite>
+            <position><x>0</x><y>0</y></position>
+            <drawn>false</drawn>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="harry">
+                <enter way="west" />
+              </collision>
+            </collisions>
+          </object>
         </objects>
 
         <!-- screen 1: rolling logs, and the money bag -->
         <scene name="screen1">
+          <ways>
+            <way name="east" scene="screen2" />
+            <way name="west" scene="screen4" />
+          </ways>
           <variables>
             <variable name="worth">2000</variable>
           </variables>
@@ -604,45 +644,17 @@
             <object name="path" />
             <group name="logs" />
             <object name="treasure" />
-            <object name="east" class="eastside">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>window.bottom</height>
-                  <color>color.black</color>
-                </rectangle>
-              </sprite>
-              <position><x>window.right - 4</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="harry">
-                  <enter scene="screen2" />
-                </collision>
-              </collisions>
-            </object>
-            <object name="west" class="westside">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>window.bottom</height>
-                  <color>color.black</color>
-                </rectangle>
-              </sprite>
-              <position><x>0</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="harry">
-                  <enter scene="screen4" />
-                </collision>
-              </collisions>
-            </object>
+            <object name="east" />
+            <object name="west" />
           </objects>
         </scene>
 
         <!-- screen 2: the tar pit, the silver bar, and a scorpion below -->
         <scene name="screen2">
+          <ways>
+            <way name="east" scene="screen3" />
+            <way name="west" scene="screen1" />
+          </ways>
           <variables>
             <variable name="worth">3000</variable>
           </variables>
@@ -664,45 +676,17 @@
               </sprite>
               <position><x>570</x></position>
             </object>
-            <object name="east" class="eastside">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>window.bottom</height>
-                  <color>color.black</color>
-                </rectangle>
-              </sprite>
-              <position><x>window.right - 4</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="harry">
-                  <enter scene="screen3" />
-                </collision>
-              </collisions>
-            </object>
-            <object name="west" class="westside">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>window.bottom</height>
-                  <color>color.black</color>
-                </rectangle>
-              </sprite>
-              <position><x>0</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="harry">
-                  <enter scene="screen1" />
-                </collision>
-              </collisions>
-            </object>
+            <object name="east" />
+            <object name="west" />
           </objects>
         </scene>
 
         <!-- screen 3: the crocodile pond, and the gold bar on the far bank -->
         <scene name="screen3">
+          <ways>
+            <way name="east" scene="screen4" />
+            <way name="west" scene="screen2" />
+          </ways>
           <variables>
             <variable name="worth">4000</variable>
           </variables>
@@ -724,46 +708,18 @@
                 </bitmap>
               </sprite>
             </object>
-            <object name="east" class="eastside">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>window.bottom</height>
-                  <color>color.black</color>
-                </rectangle>
-              </sprite>
-              <position><x>window.right - 4</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="harry">
-                  <enter scene="screen4" />
-                </collision>
-              </collisions>
-            </object>
-            <object name="west" class="westside">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>window.bottom</height>
-                  <color>color.black</color>
-                </rectangle>
-              </sprite>
-              <position><x>0</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="harry">
-                  <enter scene="screen2" />
-                </collision>
-              </collisions>
-            </object>
+            <object name="east" />
+            <object name="west" />
           </objects>
         </scene>
 
         <!-- screen 4: a fire, the ladder down, and the ring in the tunnel past
              a scorpion -->
         <scene name="screen4">
+          <ways>
+            <way name="east" scene="screen1" />
+            <way name="west" scene="screen3" />
+          </ways>
           <variables>
             <variable name="worth">5000</variable>
           </variables>
@@ -791,40 +747,8 @@
             <object name="scorpion">
               <position><x>400</x></position>
             </object>
-            <object name="east" class="eastside">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>window.bottom</height>
-                  <color>color.black</color>
-                </rectangle>
-              </sprite>
-              <position><x>window.right - 4</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="harry">
-                  <enter scene="screen1" />
-                </collision>
-              </collisions>
-            </object>
-            <object name="west" class="westside">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>window.bottom</height>
-                  <color>color.black</color>
-                </rectangle>
-              </sprite>
-              <position><x>0</x><y>0</y></position>
-              <drawn>false</drawn>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="harry">
-                  <enter scene="screen3" />
-                </collision>
-              </collisions>
-            </object>
+            <object name="east" />
+            <object name="west" />
           </objects>
         </scene>
       </scenes>

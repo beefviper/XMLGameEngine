@@ -528,7 +528,7 @@ TEST_CASE("only the room the man is in plays: the others' robots are away and st
 	CHECK(left.position.y == robotBefore.y);
 }
 
-TEST_CASE("a room left is put back as it started: its robots where they began, its count at nothing", "[berserk]")
+TEST_CASE("a room left keeps where it was, and is put back as it started when the man comes in again", "[berserk]")
 {
 	Play play;
 	play.begin(false);
@@ -540,13 +540,25 @@ TEST_CASE("a room left is put back as it started: its robots where they began, i
 	play.man().variable["lives"] = 3.0f;
 	REQUIRE(robot.position.x != started.x);
 
+	// Away, it stands where it was left.
 	play.leaveByTheLeft();
 	REQUIRE(play.room() == 2);
-	CHECK(robot.position.x == Approx(started.x));
-	CHECK(robot.position.y == Approx(started.y));
+	const Vector2f left = robot.position;
+	REQUIRE(std::abs(left.x - started.x) > 10.0f);
+	play.frames(60);
+	CHECK(robot.position.x == Approx(left.x));
+	CHECK(robot.position.y == Approx(left.y));
+
+	// Round the four rooms, the way out of room four puts room one back: the
+	// robot is at its start again, give or take the few frames it has walked
+	// since the man came in.
+	for (int room = 2; room <= 4; ++room) { play.leaveByTheLeft(); }
+	REQUIRE(play.room() == 1);
+	CHECK(robot.position.x == Approx(started.x).margin(4));
+	CHECK(robot.position.y == Approx(started.y).margin(4));
 }
 
-TEST_CASE("shooting every robot of a room pays ten more for each, and leaving puts the count back", "[berserk]")
+TEST_CASE("shooting every robot of a room pays ten more for each, and coming back puts the count back", "[berserk]")
 {
 	Play play;
 	play.begin();
@@ -557,12 +569,9 @@ TEST_CASE("shooting every robot of a room pays ten more for each, and leaving pu
 	play.frames(2);
 	CHECK(play.score() == 0.0f);
 
-	// Leaving puts the count back, so the two do not add to the next visit's.
+	// Room two has four robots.
 	play.leaveByTheLeft();
 	REQUIRE(play.room() == 2);
-	CHECK(tally.variable["kills"] == 0.0f);
-
-	// Room two has four robots.
 	Object& tally2 = play.object(Play::inRoom(2, "tally"));
 	tally2.variable["kills"] = 4.0f;
 	play.frames(2);
@@ -570,6 +579,12 @@ TEST_CASE("shooting every robot of a room pays ten more for each, and leaving pu
 	CHECK(tally2.variable["kills"] == 0.0f);
 	play.frames(10);
 	CHECK(play.score() == 40.0f);
+
+	// Coming round to room one again puts its count back, so the two shot
+	// the first time do not add to this visit's.
+	for (int room = 2; room <= 4; ++room) { play.leaveByTheLeft(); }
+	REQUIRE(play.room() == 1);
+	CHECK(tally.variable["kills"] == 0.0f);
 }
 
 TEST_CASE("three shots at three robots clear room one and make the bonus", "[berserk]")

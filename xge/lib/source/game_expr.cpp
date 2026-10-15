@@ -230,12 +230,31 @@ namespace xge
 			{
 				const bool enter = std::holds_alternative<CmdEnterScene>(command);
 				const std::string& scene = enter ? std::get<CmdEnterScene>(command).scene : std::get<CmdResetScene>(command).scene;
+				const std::string& way = enter ? std::get<CmdEnterScene>(command).way : std::get<CmdResetScene>(command).way;
 				std::vector<std::string> names;
+				std::vector<std::string> ways;
 				for (const State& state : states)
 				{
-					for (const Scene& each : state.scenes) { names.push_back(each.name); }
+					for (const Scene& each : state.scenes)
+					{
+						names.push_back(each.name);
+						for (const auto& entry : each.ways)
+						{
+							if (std::find(ways.begin(), ways.end(), entry.first) == ways.end()) { ways.push_back(entry.first); }
+						}
+					}
 				}
-				if (std::find(names.begin(), names.end(), scene) == names.end())
+				if (!way.empty())
+				{
+					// Which scene's way it is, is known only when it runs; one
+					// that no scene has can never lead anywhere.
+					if (std::find(ways.begin(), ways.end(), way) == ways.end())
+					{
+						throw std::runtime_error(where + ": <" + (enter ? "enter" : "reset") + " way=\"" + way + "\" /> names no way of any scene" + didYouMean(way, ways)
+							+ (ways.empty() ? std::string(" (no scene has <ways>)") : ". The ways are: " + listOf(ways)));
+					}
+				}
+				else if (std::find(names.begin(), names.end(), scene) == names.end())
 				{
 					throw std::runtime_error(where + ": <" + (enter ? "enter" : "reset") + " scene=\"" + scene + "\" /> names no scene of the game" + didYouMean(scene, names)
 						+ (names.empty() ? std::string(" (no state has <scenes>)") : ". The scenes are: " + listOf(names)));
@@ -982,6 +1001,22 @@ namespace xge
 				Scene scene;
 				scene.name = rawState.name + "." + rawScene.name;
 				const std::string sceneWhere = "scene '" + scene.name + "'";
+				for (const auto& [way, to] : rawScene.ways)
+				{
+					// A scene of the same state, by its name there or by its path.
+					const auto leads = std::find_if(rawState.scenes.begin(), rawState.scenes.end(), [&](const RawScene& other)
+						{
+							return other.name == to || rawState.name + "." + other.name == to;
+						});
+					if (leads == rawState.scenes.end())
+					{
+						std::vector<std::string> names;
+						for (const RawScene& other : rawState.scenes) { names.push_back(other.name); }
+						throw std::runtime_error(sceneWhere + ": <way name=\"" + way + "\" scene=\"" + to + "\" /> names no scene of state '" + rawState.name + "'"
+							+ didYouMean(to, names) + ". Its scenes are: " + listOf(names));
+					}
+					scene.ways[way] = rawState.name + "." + leads->name;
+				}
 				for (const RawCondition& rawCondition : rawScene.conditions)
 				{
 					scene.conditions.push_back(makeCondition(rawCondition, sceneWhere, sceneWhere));

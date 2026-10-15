@@ -190,7 +190,7 @@
     <xsl:param name="node" select="." />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
-      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene">
+      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene | $node/@way">
         <xsl:if test=". != ''">
           <xsl:text> command.</xsl:text>
           <xsl:choose>
@@ -1671,6 +1671,21 @@
         <xsl:with-param name="text" select="@from" />
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="ways/way">
+      <xsl:value-of select="concat($in, 'scene.ways = {&#10;')" />
+      <xsl:for-each select="ways/way">
+        <xsl:value-of select="concat($inner, '{ ')" />
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@name" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@scene" />
+        </xsl:call-template>
+        <xsl:text> },&#10;</xsl:text>
+      </xsl:for-each>
+      <xsl:value-of select="concat($in, '};&#10;')" />
     </xsl:if>
     <!-- a variable declared twice keeps the later value, in the earlier place -->
     <xsl:variable name="variables" select="variables/variable[not(@name = preceding-sibling::variable/@name)]" />

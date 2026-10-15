@@ -45,7 +45,7 @@ namespace xge
 		// condition, the whole game) back; <reset object="name"/> that one object.
 		if (verb == "reset")
 		{
-			if (!raw.scene.empty()) { return CmdResetScene{ raw.scene }; }
+			if (!raw.scene.empty() || !raw.way.empty()) { return CmdResetScene{ raw.scene, raw.way }; }
 			if (raw.object.empty()) { return CmdReset{}; }
 			return CmdResetObject{ raw.object };
 		}
@@ -135,7 +135,7 @@ namespace xge
 		if (verb == "dec") { return CmdDecrement{ raw.variable, amountOf(raw) }; }
 
 		if (verb == "push") { return CmdPushState{ raw.state }; }
-		if (verb == "enter") { return CmdEnterScene{ raw.scene }; }
+		if (verb == "enter") { return CmdEnterScene{ raw.scene, raw.way }; }
 		if (verb == "pop")  { return CmdPopState{ raw.state }; }
 
 		if (verb == "play")    { return CmdPlay{ raw.sound }; }
@@ -320,8 +320,8 @@ namespace xge
 			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << ")"; },
 			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
-			[&](const CmdEnterScene& e) { o << "enter(" << e.scene << ")"; },
-			[&](const CmdResetScene& r) { o << "reset(scene " << r.scene << ")"; },
+			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
+			[&](const CmdResetScene& r) { o << "reset(" << (r.way.empty() ? "scene " + r.scene : "way " + r.way) << ")"; },
 		}, command);
 
 		return o;

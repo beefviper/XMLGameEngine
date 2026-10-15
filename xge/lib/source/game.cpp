@@ -1024,6 +1024,35 @@ namespace xge
 		}
 	}
 
+	std::string Game::wayLeadsTo(const std::string& way) const
+	{
+		if (!currentState.empty())
+		{
+			const State& state = currentState.top();
+			const std::string current = currentScene(state.name);
+			for (const Scene& scene : state.scenes)
+			{
+				if (scene.name != current) { continue; }
+				const auto found = scene.ways.find(way);
+				if (found != scene.ways.end()) { return found->second; }
+			}
+		}
+		std::cout << "warning: way=\"" << way << "\": the current scene has no way of that name\n";
+		return {};
+	}
+
+	void Game::enter(const CmdEnterScene& command)
+	{
+		const std::string scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
+		if (!scene.empty()) { enterScene(scene); }
+	}
+
+	void Game::reset(const CmdResetScene& command)
+	{
+		const std::string scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
+		if (!scene.empty()) { resetScene(scene); }
+	}
+
 	void Game::resetScene(const std::string& scene)
 	{
 		const auto owner = std::find_if(states.begin(), states.end(), [&](const State& state)
