@@ -1,6 +1,6 @@
 # Generating a program
 
-**Status:** Built: `--generate windows-cpp` covers every game. A prototype of a readable generated game on the engine's shared frame is below ([Prototype](#prototype-the-game-as-decisions-on-the-engines-modules)). XSLT stylesheets write the game file out as the engine's own data, and the generated program plays it with the engine's own code on SFML; a test checks each game's data against what the engine reads, field by field, and plays it against its file, frame by frame.
+**Status:** Built: `--generate windows-cpp` covers every game. A hand-written prototype of a readable generated game on the engine's shared frame was tried and set aside ([Prototype](#prototype-the-game-as-decisions-on-the-engines-modules)). XSLT stylesheets write the game file out as the engine's own data, and the generated program plays it with the engine's own code on SFML; a test checks each game's data against what the engine reads, field by field, and plays it against its file, frame by frame.
 
 ## Approach
 
@@ -34,7 +34,7 @@ XSLT 1.0 stylesheets wrote each game as a program a person might write on SFML: 
 
 ### Prototype: the game as decisions on the engine's modules
 
-**Status:** Prototype (by hand, `games/prototypes/pong_min/`); not yet written by XSLT.
+**Status:** Set aside (2026-10-15). The hand-written prototype (`games/prototypes/pong_min/`, its `pong_min_prototype` program and `test_prototype_pong.cpp`) was removed to keep the build to the engine, its programs and the generated games; it is in the history up to commit 7163ea2, to bring back when the generated code should read like a program written for the game. The shared frame it led to (`frame.cpp`, `verbs.cpp`, `FrameRules`) stays: the engine and every generated game run on it.
 
 **What we looked for.** What the author had in mind from the start: a generated game that reads like a program written for that game, and plays exactly as the engine does because it calls the same code for the real work. The engine, an interpreter, works out from the file what to call; the generated game has it written down; both then call the same modules.
 

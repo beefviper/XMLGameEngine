@@ -86,8 +86,6 @@ add_executable(xgetest
 	"xge/tests/test_cli.cpp"
 	"xge/tests/test_data_folder.cpp"
 	"xge/tests/test_generate.cpp"
-	"xge/tests/test_prototype_pong.cpp"
-	"games/prototypes/pong_min/source/pong_min.cpp"
 	"xge/tests/test_galaxian.cpp"
 	"xge/tests/test_pitfall.cpp"
 	"xge/tests/test_missilecommand.cpp"
@@ -102,7 +100,7 @@ add_executable(xgetest
 # cli.cpp and generate.cpp are xgecli's own code, compiled in again here so
 # test_cli.cpp and test_generate.cpp can call it; the library does not contain
 # it (see executables.cmake).
-target_include_directories(xgetest PRIVATE xge/cli/include games/prototypes/pong_min/source)
+target_include_directories(xgetest PRIVATE xge/cli/include)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 

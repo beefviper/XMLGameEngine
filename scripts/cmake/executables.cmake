@@ -104,33 +104,3 @@ target_include_directories(xgecli PRIVATE xge/cli/include)
 
 # --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
 xge_link_xslt(xgecli)
-
-# A prototype of what the windows-cpp generator should write (games/prototypes/):
-# pong_min.xml as code that decides what happens, built from only the engine
-# modules that do it (the frame, the verbs, the collisions, the shapes, the
-# random numbers, SFML's window). No game.cpp, no game_expr or exprtk, no XML
-# library, no CommandExecutor: the list below is the whole engine it needs.
-if (XGE_WITH_SFML3)
-	add_executable(pong_min_prototype
-		"games/prototypes/pong_min/source/main.cpp"
-		"games/prototypes/pong_min/source/pong_min.cpp"
-		"games/prototypes/pong_min/source/pong_min.h"
-		"xge/lib/source/frame.cpp"
-		"xge/lib/source/maze.cpp"
-		"xge/lib/source/verbs.cpp"
-		"xge/lib/source/geometry.cpp"
-		"xge/lib/source/collision_detector.cpp"
-		"xge/lib/source/object.cpp"
-		"xge/lib/source/bitmap.cpp"
-		"xge/lib/source/command.cpp"
-		"xge/lib/source/random.cpp"
-		"xge/lib/source/color.cpp"
-		"xge/lib/source/builtin_font.cpp"
-		"xge/lib/source/window_sfml.cpp"
-	)
-	target_compile_features(pong_min_prototype PRIVATE cxx_std_20)
-	target_include_directories(pong_min_prototype PRIVATE xge/lib/include games/prototypes/pong_min/source)
-	target_link_libraries(pong_min_prototype PRIVATE SFML::System SFML::Window SFML::Graphics)
-	xge_warnings(pong_min_prototype)
-	xge_place_program(pong_min_prototype)
-endif()

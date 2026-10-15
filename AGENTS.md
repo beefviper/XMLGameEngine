@@ -20,7 +20,6 @@ The root [readme.md](readme.md) is the short public overview.
 | `xge/xgedef.xsd` | the schema, the definition of the language |
 | `games/descriptions/`, `games/assets/` | the games; their media |
 | `games/generators/` | the XSLT stylesheets `xgecli --generate` runs, a folder per target |
-| `games/prototypes/` | a hand-written generated game on the engine's shared frame (`pong_min`) |
 | `scripts/cmake/`, `scripts/shell/` | CMake modules; `shell/linux/` prerequisite installers, `shell/windows/games-run-all.bat [config]` runs `games-generate-all.bat` (every game into `output/<config>/generated/<game>/`), `games-build-all.bat` (each with MSVC at `/W4`) and `games-test-all.bat` (builds and runs `xgetest-generated`) |
 
 The programs make `games/` their working directory (`data_folder.h`), so asset paths in a game file (`assets/paddle.jpg`) and the tests' paths (`descriptions/pong.xml`) are relative to it.
