@@ -92,6 +92,9 @@ namespace xge
 				[](const CmdLeap&) { return std::string("<leap>"); },
 				[](const CmdClimb&) { return std::string("<climb>"); },
 				[](const CmdChase&) { return std::string("<chase>"); },
+				[](const CmdGo&) { return std::string("<go>"); },
+				[](const CmdHunt&) { return std::string("<hunt>"); },
+				[](const CmdWander&) { return std::string("<wander>"); },
 				[](const CmdAim&) { return std::string("<aim>"); },
 				[](const CmdAccelerate&) { return std::string("<accelerate>"); },
 				[](const CmdTurn&) { return std::string("<turn>"); },
@@ -169,7 +172,7 @@ namespace xge
 		{
 			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
 			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
-				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />" };
+				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<wander>" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
 				tags.push_back("<chase>");
@@ -180,12 +183,12 @@ namespace xge
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
 					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
+					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimerCommands },
-				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<play>", "<silence>" } },
+				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<play>", "<silence>" } },
 				{ "a path's <step>", ownerCommands },
 			};
 			return rules[static_cast<std::size_t>(place)];
@@ -307,6 +310,10 @@ namespace xge
 			}
 			else if (const auto* become = std::get_if<CmdBecome>(&command))
 			{
+				if (!become->from.empty() && become->target.empty())
+				{
+					throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" from=\"" + become->from + "\" /> picks which of several change, so it needs an object=\"...\"");
+				}
 				if (!become->target.empty())
 				{
 					bool any = false;
@@ -320,10 +327,25 @@ namespace xge
 						{
 							throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
 						}
+						if (!become->from.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->from; }))
+						{
+							throw std::runtime_error(where + ": <become from=\"" + become->from + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
+						}
 					}
 					if (!any)
 					{
 						throw std::runtime_error(where + ": <become> names '" + become->target + "', and there is no object of that name" + didYouMean(become->target, objectNames(objects)));
+					}
+				}
+			}
+			else if (const auto* hunt = std::get_if<CmdHunt>(&command))
+			{
+				for (const auto& [name, what] : { std::pair<const std::string*, const char*>{ &hunt->target, "<hunt>" },
+					{ &hunt->partner, "<hunt> > <with>" }, { &hunt->retreatTo, "<hunt> > <retreat>" } })
+				{
+					if (!name->empty() && !findObject(objects, *name))
+					{
+						throw std::runtime_error(where + ": " + what + " names '" + *name + "', and there is no object of that name" + didYouMean(*name, objectNames(objects)));
 					}
 				}
 			}
@@ -530,6 +552,37 @@ namespace xge
 			for (const auto& object : objects)
 			{
 				const std::string where = "object '" + object.name + "'";
+
+				// A walker walks a map the game has; only a walker goes,
+				// hunts or wanders.
+				if (object.walksMaze() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.mapName == object.mazeMap; }))
+				{
+					std::vector<std::string> maps;
+					for (const Object& other : objects)
+					{
+						if (!other.mapName.empty() && std::find(maps.begin(), maps.end(), other.mapName) == maps.end()) { maps.push_back(other.mapName); }
+					}
+					throw std::runtime_error(where + " > <maze map=\"" + object.mazeMap + "\">: the game has no <map> of that name" + didYouMean(object.mazeMap, maps)
+						+ (maps.empty() ? std::string(" (it has no <map>s)") : ". Its maps are: " + listOf(maps)));
+				}
+				const auto checkWalks = [&](const std::vector<Command>& commands, const std::string& here)
+				{
+					for (const Command& command : commands)
+					{
+						if ((std::holds_alternative<CmdGo>(command) || std::holds_alternative<CmdHunt>(command) || std::holds_alternative<CmdWander>(command)) && !object.walksMaze())
+						{
+							throw std::runtime_error(here + ": " + tagOf(command) + " steers an object through a maze, and this one walks none: give it a <maze map=\"...\">");
+						}
+					}
+				};
+				for (const auto& timer : object.timers) { checkWalks(timer.commands, where + " > <timer>"); }
+				for (const auto& [name, commands] : object.action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
+				for (const auto& rule : object.collisionData.basic) { checkWalks(rule.commands, where + " > <collision>"); }
+				for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+				{
+					checkWalks(*edge, where + " > <collision edge>");
+				}
+
 				for (const auto& timer : object.timers)
 				{
 					checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, &object, where + " > <timer>");
@@ -874,6 +927,37 @@ namespace xge
 			object.facingOriginal = object.facing;
 			object.timers = processTimers(rawObject.timers, where);
 			object.looks = looks;
+			for (const Timer& timer : object.timers)
+			{
+				if (!timer.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == timer.sprite; }))
+				{
+					std::vector<std::string> names;
+					for (const Object::Look& look : looks) { names.push_back(look.name); }
+					throw std::runtime_error(where + " > <timer sprite=\"" + timer.sprite + "\">: the object has no look of that name"
+						+ (names.empty() ? std::string(" (it has no looks: several named <sprite>s and no <animation>)") : didYouMean(timer.sprite, names) + ". Its looks are: " + listOf(names)));
+				}
+			}
+
+			// On a map: which tile, and the map itself, for what walks it.
+			if (rawObject.cell.mapColumn > 0)
+			{
+				object.mapName = rawObject.cell.map;
+				object.mapColumn = rawObject.cell.mapColumn - 1;
+				object.mapRow = rawObject.cell.mapRow - 1;
+				object.mapColumns = rawObject.cell.mapColumns;
+				object.mapRows = rawObject.cell.mapRows;
+				object.mapTile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
+				object.mapOrigin = object.positionOriginal - object.cellOffset;
+			}
+			object.mazeMap = rawObject.maze.map;
+			object.mazeWalls = rawObject.maze.walls;
+			for (const MazeWall& wall : object.mazeWalls)
+			{
+				if (!wall.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == wall.sprite; }))
+				{
+					throw std::runtime_error(where + " > <maze> > <wall class=\"" + wall.objClass + "\" sprite=\"" + wall.sprite + "\">: the object has no look of that name");
+				}
+			}
 
 			object.showHeading();
 
@@ -1298,10 +1382,15 @@ namespace xge
 			const std::string& text = rawTimer.interval.text;
 			const bool plainNumber = rawTimer.interval.kind == RawValue::Kind::Expression && !text.empty()
 				&& (std::strtof(text.c_str(), &end), end == text.c_str() + text.size());
-			if (plainNumber && !(seconds > 0.0f))
+			// An <after> of 0 goes off on the first frame it counts (a ghost
+			// told what to do the moment it turns blue); an <every> of 0 would
+			// be every frame, which a frame-counting timer cannot say.
+			if (plainNumber && (rawTimer.repeat ? !(seconds > 0.0f) : seconds < 0.0f))
 			{
-				throw std::runtime_error(here + ": " + (rawTimer.repeat ? "<every>" : "<after>") + " is " + std::to_string(seconds) + "; expected a number of seconds above 0");
+				throw std::runtime_error(here + ": " + (rawTimer.repeat ? "<every> is " + std::to_string(seconds) + "; expected a number of seconds above 0"
+					: "<after> is " + std::to_string(seconds) + "; expected a number of seconds, 0 or more"));
 			}
+			timer.sprite = rawTimer.sprite;
 
 			timers.push_back(std::move(timer));
 		}
@@ -1399,10 +1488,17 @@ namespace xge
 					const int rowsScale = sprite.hasScale ? static_cast<int>(std::lround(evaluate(sprite.scale, where))) : 1;
 
 					// 2. Drawn, once for every sprite of the same rows, scale and
-					// color (a group's cells).
+					// colors (a group's cells).
+					std::map<char, Color> inks;
 					std::string key = "rows|" + std::to_string(rowsScale) + "|" + color + "|" + sprite.flip;
+					for (const auto& [character, ink] : sprite.bitmapColors)
+					{
+						checkColor(ink, where + " > <color char=\"" + std::string(1, character) + "\">");
+						inks[character] = colorFromName(ink);
+						key += std::string("|") + character + "=" + ink;
+					}
 					for (const std::string& row : sprite.bitmapRows) { key += "|" + row; }
-					drawn = drawOnce(key, [&] { return flipped(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color))); });
+					drawn = drawOnce(key, [&] { return flipped(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color), inks)); });
 				}
 
 
@@ -1522,6 +1618,21 @@ namespace xge
 		}
 
 		std::map<std::string, Vector2f> offsets;
+
+		// What a <map> placed: in the middle of its tile, counted from the
+		// map's top left, which is the object's own <position>.
+		for (const RawObject& rawObject : rawObjects)
+		{
+			if (rawObject.cell.mapColumn == 0) { continue; }
+			const std::string where = "object '" + rawObject.name + "' (on map '" + rawObject.cell.map + "')";
+			const Vector2f tile{ evaluate(rawObject.cell.tileWidth, where + " > <tile> > <width>"), evaluate(rawObject.cell.tileHeight, where + " > <tile> > <height>") };
+			if (!(tile.x > 0.0f) || !(tile.y > 0.0f)) { throw std::runtime_error(where + ": a <tile> is " + formatDisplayNumber(tile.x) + " by " + formatDisplayNumber(tile.y) + "; both have to be above 0"); }
+			const std::vector<std::string>& params = spriteParams.at(rawObject.name);
+			const Vector2f own = measureShapeSize(params, shapeKindFromTag(params.empty() ? std::string{} : params.at(0)));
+			offsets[rawObject.name] = { static_cast<float>(rawObject.cell.mapColumn - 1) * tile.x + (tile.x - own.x) / 2.0f,
+				static_cast<float>(rawObject.cell.mapRow - 1) * tile.y + (tile.y - own.y) / 2.0f };
+		}
+
 		for (const auto& [group, rows] : groups)
 		{
 			float top = 0.0f;

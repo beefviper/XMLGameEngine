@@ -221,7 +221,7 @@ namespace xge
 
 		// <become sprite="..." object="name" />: every object of that name or
 		// group that has the look shows it.
-		void become(const std::string& target, const std::string& sprite);
+		void become(const std::string& target, const std::string& sprite, const std::string& from = {});
 
 		// <reveal object="name">count</reveal>: the first `count` objects of
 		// that name or group that are out of play come back where they started.

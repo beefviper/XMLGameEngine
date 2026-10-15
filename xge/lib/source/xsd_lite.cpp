@@ -281,6 +281,19 @@ namespace xge
 				if (!buildContent(*child, *content, error)) { return false; }
 				out.content = std::move(content);
 			}
+			else if (kind == "simpleContent")
+			{
+				// Text with attributes (a bitmap's <color char="w">): the
+				// text is taken as it is, and the extension's attributes are
+				// the element's.
+				out.mixed = true;
+				for (std::unique_ptr<XmlNode> extension = child->getFirstChild(); extension; extension = extension->getNextSibling())
+				{
+					if (localName(extension->getName()) != "extension") { continue; }
+					if (!buildComplexType(*extension, out, error)) { return false; }
+					out.mixed = true;
+				}
+			}
 			else if (kind == "attribute")
 			{
 				Attribute attribute;

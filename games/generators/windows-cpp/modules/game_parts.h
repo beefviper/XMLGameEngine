@@ -92,13 +92,13 @@ namespace xge::parts
 	// <timer><every>seconds</every> commands </timer>
 	inline RawTimer every(RawValue seconds, std::vector<RawCommand> commands)
 	{
-		return RawTimer{ true, std::move(seconds), std::move(commands), {} };
+		return RawTimer{ true, std::move(seconds), std::move(commands), {}, {} };
 	}
 
 	// <timer><after>seconds</after> commands </timer>
 	inline RawTimer after(RawValue seconds, std::vector<RawCommand> commands)
 	{
-		return RawTimer{ false, std::move(seconds), std::move(commands), {} };
+		return RawTimer{ false, std::move(seconds), std::move(commands), {}, {} };
 	}
 
 	// <timer name="...">: the timer with its name, by which a scene from= this
@@ -264,6 +264,49 @@ namespace xge::parts
 		std::initializer_list<Part> rowChanges, int column, int row)
 	{
 		all.push_back(place(made(group, std::move(name), changes), made(group, "", rowChanges), column, row));
+	}
+
+	// A <map>'s groups and objects: a member of the group on each tile of its
+	// character, named by its number in reading order, and an object on the
+	// one tile of its own (the engine has checked that there is one).
+	inline void addMapMembers(std::vector<RawObject>& all, const Member& group, const RawMap& map, const std::string& character, const std::string& name)
+	{
+		int count = 0;
+		for (const auto& [column, row] : tilesOf(map, character.front()))
+		{
+			RawObject member = finish(made(group, name + "." + std::to_string(++count), {}));
+			placeOnMap(member, map, column, row);
+			all.push_back(std::move(member));
+		}
+	}
+
+	inline RawObject onMap(RawObject object, const RawMap& map, const std::string& character)
+	{
+		const auto tiles = tilesOf(map, character.front());
+		placeOnMap(object, map, tiles.front().first, tiles.front().second);
+		return object;
+	}
+
+	// <maze map="..."> and its <wall>s: { class, sprite }.
+	inline RawMaze maze(std::string map, std::vector<MazeWall> walls)
+	{
+		return RawMaze{ std::move(map), std::move(walls) };
+	}
+
+	// A bitmap's <color char="w">: in place of an earlier one of that
+	// character, or added.
+	inline void ink(RawSprite& look, const std::string& character, std::string color)
+	{
+		const auto same = std::find_if(look.bitmapColors.begin(), look.bitmapColors.end(), [&](const auto& each) { return each.first == character.front(); });
+		if (same != look.bitmapColors.end()) { same->second = std::move(color); }
+		else { look.bitmapColors.emplace_back(character.front(), std::move(color)); }
+	}
+
+	// <timer sprite="...">: the timer, counting only while its object shows that look.
+	inline RawTimer whileShowing(std::string sprite, RawTimer timer)
+	{
+		timer.sprite = std::move(sprite);
+		return timer;
 	}
 
 	// The keys a state's <inputs> or a <keys> set gives, and what each runs.

@@ -38,6 +38,7 @@ set(data_xml
 	"games/descriptions/combat.xml"
 	"games/descriptions/airseabattle.xml"
 	"games/descriptions/atlantis.xml"
+	"games/descriptions/pacman.xml"
 	"games/descriptions/megamania.xml"
 	"games/descriptions/adventure.xml")
 
@@ -71,6 +72,8 @@ set(data_engine
 	"xge/lib/source/verbs.cpp"
 	"xge/lib/include/frame.h"
 	"xge/lib/source/frame.cpp"
+	"xge/lib/include/maze.h"
+	"xge/lib/source/maze.cpp"
 	"xge/lib/include/color.h"
 	"xge/lib/source/color.cpp"
 	"xge/lib/include/bitmap.h"

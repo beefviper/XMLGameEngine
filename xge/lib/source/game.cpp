@@ -665,6 +665,13 @@ namespace xge
 					break;
 				}
 
+				// One that follows a look counts only while the object shows it.
+				const std::string& sprite = objects[i].timers[t].sprite;
+				if (!sprite.empty() && objects[i].lookName() != sprite)
+				{
+					continue;
+				}
+
 				if (tickTimer(objects[i].timers[t], "object '" + objects[i].name + "' > <timer>"))
 				{
 					// A copy: a command may reset the object, and its timers with it.
@@ -809,6 +816,7 @@ namespace xge
 			object.hasAim = false;
 			object.facing = object.facingOriginal;
 			object.followPath.clear();
+			object.walk = {};
 			object.ownerScene = object.ownerSceneOriginal;
 			if (!object.looks.empty()) { object.showLook(0); }
 			for (auto& timer : object.timers)
@@ -878,11 +886,11 @@ namespace xge
 		}
 	}
 
-	void Game::become(const std::string& target, const std::string& sprite)
+	void Game::become(const std::string& target, const std::string& sprite, const std::string& from)
 	{
 		for (auto& object : objects)
 		{
-			if (object.name == target || object.inGroup(target))
+			if ((object.name == target || object.inGroup(target)) && (from.empty() || object.lookName() == from))
 			{
 				showLookNamed(object, sprite);
 			}

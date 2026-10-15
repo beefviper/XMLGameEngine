@@ -46,6 +46,11 @@ namespace xge
 
 	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color)
 	{
+		return rasterizeRows(rows, scale, color, {});
+	}
+
+	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color, const std::map<char, Color>& inks)
+	{
 		if (rows.empty()) { throw std::invalid_argument("a bitmap has no <row>s"); }
 		if (scale < 1) { throw std::invalid_argument("a bitmap's <scale> is " + std::to_string(scale) + "; expected 1 or more"); }
 
@@ -64,10 +69,12 @@ namespace xge
 
 			for (std::size_t column = 0; column < text.size(); ++column)
 			{
-				if (text[column] != '.' && text[column] != '*')
+				if (text[column] != '.' && text[column] != '*' && !inks.count(text[column]))
 				{
+					std::string others;
+					for (const auto& [ink, unused] : inks) { others += std::string(", '") + ink + "'"; }
 					throw std::invalid_argument(name + " has '" + std::string(1, text[column]) + "' as character " + std::to_string(column + 1)
-						+ "; use '.' for a clear pixel and '*' for a solid one");
+						+ "; use '.' for a clear pixel and '*' for a solid one" + (others.empty() ? std::string{} : " (or one of the colored" + others.substr(1) + ")"));
 				}
 			}
 		}
@@ -81,9 +88,14 @@ namespace xge
 		{
 			for (std::size_t column = 0; column < columns; ++column)
 			{
-				if (rows[row][column] == '*')
+				const char character = rows[row][column];
+				if (character == '*')
 				{
 					stamp(bitmap, static_cast<int>(column) * scale, static_cast<int>(row) * scale, scale, color);
+				}
+				else if (const auto ink = inks.find(character); ink != inks.end())
+				{
+					stamp(bitmap, static_cast<int>(column) * scale, static_cast<int>(row) * scale, scale, ink->second);
 				}
 			}
 		}

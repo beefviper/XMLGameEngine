@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <map>
 #include <vector>
 
 namespace xge
@@ -71,6 +72,12 @@ namespace xge
 	// row, for no rows, a row with nothing in it, rows of different lengths, a
 	// character other than '.' and '*', or a scale under 1.
 	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color);
+
+	// The same, with more colors than one: a character `inks` has a color for
+	// (a bitmap's <color char="w">) is a solid pixel of that color, so a
+	// ghost's eyes are white on its red body. '.' is still clear and '*' still
+	// `color`; any character neither of those nor in `inks` is the error.
+	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color, const std::map<char, Color>& inks);
 
 	// The picture mirrored: left for right (horizontal), top for bottom
 	// (vertical), or both. The same size, each pixel exactly as it was, only

@@ -15,6 +15,7 @@
 | Astrosmash | Kaboom's pieces plus a gun | nothing | splitting rocks (a pool and `<release>` would now do it, as in Asteroids) |
 | Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation (headings exist now), score by fuel |
 | Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping and expiring shots, saucer, waves, a safe respawn |
+| Pac-Man | a tile maze, steering, four ghosts each chasing its own way | `<map>`, `<maze>`, `<go>`, `<hunt>`, `<wander>`, bitmap inks, look timers, `<become from>` | scatter mode, fruit, levels, points doubling per ghost, the dot counters that let ghosts out, the arcade's own maze ([below](#pac-man)) |
 | Berserk, Demon Attack, Frostbite (first written by another AI; all three since rewritten) | can the schema alone be enough for an author | (found gaps) then timers, facing, jump, looks, key sets; later chasing and aiming | |
 | Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania | five Atari 2600 games picked because today's verbs already say them | nothing | see [below](56-games-atari.md#five-atari-2600-games) |
 
@@ -82,3 +83,9 @@
 
 - Invaders 1 was a grid of identical rectangles; redrawn with three alien kinds (squid, two rows of crab, two of octopus) as a group of three grids of two named bitmaps animated on a one-second interval (since one group of 11 columns and 5 rows whose rows change the bitmaps, [objects](05-objects.md)), a bitmap cannon and a thin bullet. Making the bullet thin showed `<fire>` put its left edge, not its middle, at the middle of the shooter; now centered (this moved Depth Charge's and Astrosmash's shots by half their width). Invaders 2 is the same game drawn from an SVG sprite sheet with three-frame animations a half second apart ([pictures](30-pictures.md)). In both, and in Demon Attack, the aliens fire back from pools on random timers, and the cannon has three lives.
 - Moving the game to three kinds broke tests that borrowed it as a block fixture, so those load `xge/tests/invaders_fixture.h`, a frozen copy of the first game.
+
+## Pac-Man
+
+- A smaller maze of its own (19 by 22 tiles), drawn as a `<map>` in wall characters; the arcade's 28 by 31 would have filled the window with tiny tiles and is not ours to copy.
+- Ghosts: Blinky hunts Pac-Man, Pinky four tiles ahead of him, Inky doubles the point two ahead away from Blinky, Clyde hunts until within eight tiles and then heads for his corner. They leave the house on paths after 1, 5 and 10 seconds (Blinky starts outside). A pellet turns them blue (they wander, slower) for six seconds; an eaten ghost is eyes that hunt the house through the door and turn normal inside.
+- Kept simple: a ghost is a flat 200 points; one maze and no levels; ghosts always chase (no scatter waves); speeds are guesses, unplayed by agents.

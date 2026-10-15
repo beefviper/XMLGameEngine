@@ -176,6 +176,46 @@ namespace xge
 		float stopWithin{}; // not "near": windows.h defines near (and far) as nothing
 	};
 
+	// <go direction="left">2</go> - only ever in an object's own <action>,
+	// once for each press, for an object that walks a <maze>: it turns that
+	// way at the first gap there is and keeps going, `speed` pixels a frame,
+	// until a wall stops it; turned straight round, it goes back at once.
+	// Pac-Man's stick. See maze.h.
+	struct CmdGo
+	{
+		Direction direction{};
+		float speed{};
+	};
+
+	// <hunt object="pacman"><speed>2</speed><ahead>4</ahead><with object="blinky"
+	// /><retreat object="corner">8</retreat></hunt> - for an object that walks
+	// a <maze>: from now on, at every tile, it takes the open way (never back
+	// the way it came) whose next tile is nearest its target, as the arcade's
+	// ghosts do. The target is the middle of the nearest one in play of that
+	// name or <group>; `ahead` tiles in front of the way that one faces;
+	// with a partner, as far past that point again as the partner is short of
+	// it (Inky's pincer); and while the hunter is within `retreatWithin`
+	// tiles of what it hunts, the middle of `retreatTo` instead (Clyde backing
+	// off). Kept until another <hunt>, a <go>, a <wander> or a reset. See
+	// maze.h.
+	struct CmdHunt
+	{
+		std::string target;
+		float speed{};
+		float ahead{};
+		std::string partner;
+		std::string retreatTo;
+		float retreatWithin{};
+	};
+
+	// <wander><speed>1</speed></wander> - for an object that walks a <maze>:
+	// at every tile it takes an open way at random, never back the way it
+	// came: a frightened ghost. Kept as a <hunt> is.
+	struct CmdWander
+	{
+		float speed{};
+	};
+
 	// <aim object="player" /> - the object turns to the nearest one in play
 	// of that name or <group>: its next <fire>s go straight at where that was,
 	// at any angle, and its <facing> (or <heading>) turns that way. Kept until
@@ -190,11 +230,14 @@ namespace xge
 	// with object="name", every object of that name or <group> does: a row of
 	// ice turning blue when it is stood on, a light going green. A collision
 	// rule with sprite="..." runs only while its object shows that sprite, so
-	// a look is also a simple state. See Object::looks.
+	// a look is also a simple state. With from="normal", only an object
+	// showing that look changes: the ghosts turn blue, but not the eyes of
+	// one already eaten. See Object::looks.
 	struct CmdBecome
 	{
 		std::string sprite;
 		std::string target; // empty: the object running the command
+		std::string from;   // from="normal": only one showing that look; empty: any
 	};
 
 	// <reveal object="igloo">count</reveal> - brings back the first `count`
@@ -357,7 +400,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdDeflect, CmdReverse,
-		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene>;
 
 	// --- What the XML says, before any of it is evaluated.
@@ -498,9 +541,13 @@ namespace xge
 		std::string objClass;  // climb (what it climbs)
 		std::string scene;     // enter, reset
 		std::string way;       // enter, reset: a way of the current scene
-		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance), leap (height), climb
+		std::string from;      // become: only one showing this look
+		std::string partner;   // hunt: <with object="...">
+		std::string retreat;   // hunt: <retreat object="...">
+		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
-		RawValue distance;     // chase (near; empty text: 0)
+		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)
+		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
 	};
 
 	// A <timer> as written: <every> (again and again) or <after> (once), a
@@ -512,6 +559,7 @@ namespace xge
 		RawValue interval;
 		std::vector<RawCommand> commands;
 		std::string name; // name="...": a scene from= this one's can put another in its place
+		std::string sprite; // sprite="blue": an object's timer that counts only while it shows that look
 	};
 
 	// A <timer>, on an object or in a state, made ready to run. It counts
@@ -527,6 +575,12 @@ namespace xge
 		bool repeat{ true };
 		RawValue interval;
 		std::vector<Command> commands;
+
+		// sprite="blue": it counts only while its object shows that look, and
+		// starts over whenever a <become> gives it that look (even the look it
+		// shows already), so <after>6</after> is six seconds of being blue.
+		// Empty: it counts whatever the object shows.
+		std::string sprite;
 
 		// Frames until it goes off; -1 means not started yet (worked out on
 		// the first frame it counts). `done` is a once-only timer that has

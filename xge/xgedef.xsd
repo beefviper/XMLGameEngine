@@ -317,7 +317,7 @@
           <xs:sequence>
             <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
             <xs:element name="scale" type="valueType" minOccurs="0" />
-            <xs:element name="color" type="xs:string" minOccurs="0" />
+            <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
         </xs:complexType>
@@ -425,7 +425,7 @@
           <xs:sequence>
             <xs:element name="row" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="scale" type="valueType" minOccurs="0" />
-            <xs:element name="color" type="xs:string" minOccurs="0" />
+            <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
         </xs:complexType>
@@ -549,6 +549,77 @@
     <xs:attribute name="class" type="xs:string" use="required" />
   </xs:complexType>
 
+  <!-- One character of a <map>'s rows. -->
+  <xs:simpleType name="mapCharType">
+    <xs:restriction base="xs:string">
+      <xs:length value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- A bitmap's <color>: with no char=, the color of its '*'s; with char="w", of its 'w's. -->
+  <xs:complexType name="bitmapColorType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="char" type="mapCharType" use="optional" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- maze: the <map> an object walks, and each class that is a wall to it (only while it shows sprite=, if given). -->
+  <xs:complexType name="mazeType">
+    <xs:sequence>
+      <xs:element name="wall" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="class" type="xs:string" use="required" />
+          <xs:attribute name="sprite" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="map" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- go: the way to turn at the first gap, and the speed (pixels a frame). -->
+  <xs:complexType name="goType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="direction" type="directionType" use="required" />
+  </xs:complexType>
+
+  <!--
+    hunt: what to hunt, how fast, and how the target is found from it: tiles
+    in front of it (ahead), as far again past that as a partner is short of
+    it (with), and, within that many tiles of it, another object instead
+    (retreat).
+  -->
+  <xs:complexType name="huntType">
+    <xs:sequence>
+      <xs:element name="speed" type="valueType" />
+      <xs:element name="ahead" type="valueType" minOccurs="0" />
+      <xs:element name="with" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="object" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="retreat" minOccurs="0">
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:group ref="valueTag" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="object" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="object" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- wander: how fast. -->
+  <xs:complexType name="wanderType">
+    <xs:sequence>
+      <xs:element name="speed" type="valueType" />
+    </xs:sequence>
+  </xs:complexType>
+
   <!-- chase: the object to head for, how fast, and (if given) how near is near enough to stop. -->
   <xs:complexType name="chaseType">
     <xs:sequence>
@@ -605,6 +676,9 @@
       <xs:element name="climb" type="climbType" />
       <!-- chase: head for an object; aim: face it, so the next <fire> goes straight at it -->
       <xs:element name="chase" type="chaseType" />
+      <xs:element name="go" type="goType" />
+      <xs:element name="hunt" type="huntType" />
+      <xs:element name="wander" type="wanderType" />
       <xs:element name="aim">
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="required" />
@@ -615,6 +689,8 @@
         <xs:complexType>
           <xs:attribute name="sprite" type="xs:string" use="required" />
           <xs:attribute name="object" type="xs:string" use="optional" />
+          <!-- only those showing this look change -->
+          <xs:attribute name="from" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="reveal" type="releaseType" />
@@ -780,6 +856,8 @@
     </xs:sequence>
     <!-- a scene from= this one's can put a timer of the same name in its place -->
     <xs:attribute name="name" type="xs:string" use="optional" />
+    <!-- an object's timer that counts only while it shows this look -->
+    <xs:attribute name="sprite" type="xs:string" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="timersType">
@@ -838,6 +916,7 @@
       <xs:element name="heading" type="valueType" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
@@ -943,6 +1022,7 @@
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
@@ -993,11 +1073,91 @@
     <xs:attribute name="class" type="xs:string" use="optional" />
   </xs:complexType>
 
+  <!--
+    An object on a <map>: as any other, but with no <position>; char= picks
+    the one tile of the map's rows it starts on.
+  -->
+  <xs:complexType name="mapObjectType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteType" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
+      <xs:element name="heading" type="valueType" minOccurs="0" />
+      <xs:element name="drag" type="valueType" minOccurs="0" />
+      <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:element name="maze" type="mazeType" minOccurs="0" />
+      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
+      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
+      <xs:element name="actions" type="actionsType" minOccurs="0" />
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+      <xs:element name="timers" type="timersType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="char" type="mapCharType" use="required" />
+  </xs:complexType>
+
+  <!--
+    A group on a <map>: a member on each tile of the character char= picks,
+    or groups inside it that each pick one (and change its sprites by name,
+    as an inner group does). The map says where, so it has no layout, no
+    <position> and no <member>s.
+  -->
+  <xs:complexType name="mapGroupType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
+      <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:element name="maze" type="mazeType" minOccurs="0" />
+      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
+      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
+      <xs:element name="actions" type="actionsType" minOccurs="0" />
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+      <xs:element name="timers" type="timersType" minOccurs="0" />
+      <xs:element name="group" type="mapGroupType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="char" type="mapCharType" use="optional" />
+  </xs:complexType>
+
+  <!--
+    Level data: the size of a tile, where the top left of the map is, its
+    <row>s of characters (a character a tile, every row as wide), and the
+    groups and objects that say what each character is. A character nothing
+    picks is an empty tile. The map's name means everything on it.
+  -->
+  <xs:complexType name="mapType">
+    <xs:sequence>
+      <xs:element name="tile">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="width" type="valueType" />
+            <xs:element name="height" type="valueType" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="position" type="vector2Type" />
+      <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="group" type="mapGroupType" />
+        <xs:element name="object" type="mapObjectType" />
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+  </xs:complexType>
+
   <!-- Objects and groups: the game's, a state's, or the kit of its scenes. -->
   <xs:complexType name="objectsType">
     <xs:choice maxOccurs="unbounded">
       <xs:element name="object" type="objectType" />
       <xs:element name="group" type="groupType" />
+      <xs:element name="map" type="mapType" />
     </xs:choice>
   </xs:complexType>
 
@@ -1019,6 +1179,7 @@
       <xs:element name="heading" type="valueType" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
@@ -1034,6 +1195,7 @@
     <xs:choice maxOccurs="unbounded">
       <xs:element name="object" type="sceneObjectType" />
       <xs:element name="group" type="groupType" />
+      <xs:element name="map" type="mapType" />
     </xs:choice>
   </xs:complexType>
 

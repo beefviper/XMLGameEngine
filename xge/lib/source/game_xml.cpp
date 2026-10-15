@@ -325,6 +325,47 @@ namespace xge
 			return text;
 		}
 
+		// A bitmap's <color char="w">s: a character and the color it draws,
+		// each in place of an earlier one of the same character. One with no
+		// char= is the color of the '*'s, read with the other shapes' <color>.
+		void readBitmapColors(const XmlNode& shape, const std::string& where, std::vector<std::pair<char, std::string>>& colors)
+		{
+			bool plain = false;
+			std::set<char> given;
+			for (std::unique_ptr<XmlNode> node = shape.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() != "color") { continue; }
+				const std::string character = node->getAttribute("char");
+				if (character.empty())
+				{
+					if (plain) { fail(where, "has two <color>s with no char=; the one with none is the color of the '*'s"); }
+					plain = true;
+					continue;
+				}
+				if (character.size() != 1) { fail(where, "<color char=\"" + character + "\">: char= is one character"); }
+				if (character == "." || character == "*")
+				{
+					fail(where, "<color char=\"" + character + "\">: '.' is always clear and '*' is the <color> with no char=; give another character");
+				}
+				if (!given.insert(character[0]).second) { fail(where, "has two <color char=\"" + character + "\">s"); }
+
+				const auto same = std::find_if(colors.begin(), colors.end(), [&](const auto& each) { return each.first == character[0]; });
+				if (same != colors.end()) { same->second = readText(*node); }
+				else { colors.emplace_back(character[0], readText(*node)); }
+			}
+		}
+
+		// The <color> of a shape: the one with no char= (a bitmap's others are
+		// its other colors, readBitmapColors).
+		std::unique_ptr<XmlNode> findPlainColor(const XmlNode& shape)
+		{
+			for (std::unique_ptr<XmlNode> node = shape.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() == "color" && node->getAttribute("char").empty()) { return node; }
+			}
+			return nullptr;
+		}
+
 		// One <circle>, <rectangle>, <text>, <image>, <bitmap> or <svg>, written into `sprite`.
 		void readShape(const XmlNode& shape, RawSprite& sprite, const std::string& where)
 		{
@@ -358,6 +399,7 @@ namespace xge
 					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, here);
 				}
+				readBitmapColors(shape, here, sprite.bitmapColors);
 				sprite.flip = readPictureFlip(shape, here);
 			}
 			else if (kind == "svg")
@@ -420,7 +462,7 @@ namespace xge
 
 			if (kind != "image" && kind != "svg")
 			{
-				if (auto color = findChild(&shape, "color")) { sprite.color = readText(*color); }
+				if (auto color = findPlainColor(shape)) { sprite.color = readText(*color); }
 			}
 		}
 
@@ -558,12 +600,13 @@ namespace xge
 					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, here);
 				}
+				if (base.kind == "bitmap") { readBitmapColors(*shape, here, sprite.bitmapColors); }
 				if (findChild(shape.get(), "flip")) { sprite.flip = readPictureFlip(*shape, here); }
 			}
 
 			if (base.kind != "image" && base.kind != "svg")
 			{
-				if (auto color = findChild(shape.get(), "color")) { sprite.color = readText(*color); }
+				if (auto color = findPlainColor(*shape)) { sprite.color = readText(*color); }
 			}
 
 			return sprite;
@@ -712,7 +755,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
-				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter";
+				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -735,6 +778,7 @@ namespace xge
 			command.scene = node.getAttribute("scene");
 			command.way = node.getAttribute("way");
 			command.into = node.getAttribute("into");
+			command.from = node.getAttribute("from");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec")
@@ -810,6 +854,43 @@ namespace xge
 				command.amount = readValueOf(node, "speed", here);
 				if (auto nearNode = findChild(&node, "near")) { command.distance = readValue(*nearNode, here); }
 			}
+			if (verb == "go")
+			{
+				requireAttribute(node, "direction", where);
+				command.amount = readValue(node, where);
+			}
+			if (verb == "wander")
+			{
+				const std::string here = where + " > <wander>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "speed") { fail(here, "unknown <" + child->getName() + ">; expected <speed>"); }
+				}
+				command.amount = readValueOf(node, "speed", here);
+			}
+			if (verb == "hunt")
+			{
+				// What it hunts, how fast, and how its target is found from that:
+				// tiles ahead of it, with a partner, or backing off when near.
+				requireAttribute(node, "object", where);
+				const std::string here = where + " > <hunt>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					const std::string tag = child->getName();
+					if (tag == "with") { command.partner = requireAttribute(*child, "object", here + " > <with>"); }
+					else if (tag == "retreat")
+					{
+						command.retreat = requireAttribute(*child, "object", here + " > <retreat>");
+						command.distance = readValue(*child, here + " > <retreat>");
+					}
+					else if (tag != "speed" && tag != "ahead")
+					{
+						fail(here, "unknown <" + tag + ">; expected <speed>, then <ahead>, <with> and <retreat>, each if wanted");
+					}
+				}
+				command.amount = readValueOf(node, "speed", here);
+				if (auto ahead = findChild(&node, "ahead")) { command.ahead = readValue(*ahead, here); }
+			}
 			if (verb == "follow")
 			{
 				requireAttribute(node, "path", where);
@@ -846,7 +927,9 @@ namespace xge
 		}
 
 		// <timers>: each <timer> an <every> or an <after>, then its commands.
-		std::vector<RawTimer> readTimers(const XmlNode* timersNode, const std::string& where)
+		// An object's timer may follow one of its looks (sprite="blue"); a
+		// state or a scene has no looks (`ofObject` false).
+		std::vector<RawTimer> readTimers(const XmlNode* timersNode, const std::string& where, bool ofObject = true)
 		{
 			std::vector<RawTimer> timers;
 			if (!timersNode) { return timers; }
@@ -865,6 +948,11 @@ namespace xge
 				if (!raw.name.empty() && std::any_of(timers.begin(), timers.end(), [&](const RawTimer& other) { return other.name == raw.name; }))
 				{
 					fail(here, "has two timers called '" + raw.name + "'");
+				}
+				raw.sprite = timer->getAttribute("sprite");
+				if (!raw.sprite.empty() && !ofObject)
+				{
+					fail(here, "sprite=\"" + raw.sprite + "\": only an object's timer follows a look; a state or a scene has none");
 				}
 				raw.repeat = when->getName() == "every";
 				raw.interval = readValue(*when, here);
@@ -1122,7 +1210,59 @@ namespace xge
 			return value;
 		}
 
-		RawObject readObject(const XmlNode& object)
+		// <maze map="maze"> and its <wall class="..." sprite="..." />s.
+		RawMaze readMaze(const XmlNode& node, const std::string& where)
+		{
+			const std::string here = where + " > <maze>";
+			RawMaze maze;
+			maze.map = requireAttribute(node, "map", here);
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "wall") { fail(here, "unknown <" + child->getName() + ">; expected <wall>s"); }
+				MazeWall wall;
+				wall.objClass = requireAttribute(*child, "class", here + " > <wall>");
+				wall.sprite = child->getAttribute("sprite");
+				maze.walls.push_back(std::move(wall));
+			}
+			return maze;
+		}
+
+		// A <map> as what is on it is read (readMap): the map, and which
+		// character each of its groups and objects picks, so that no two pick
+		// the same one.
+		struct MapLayout : RawMap
+		{
+			std::map<char, std::string>* picked = nullptr;
+		};
+
+		// The one character a group or object on a map picks (char="."),
+		// noted as picked by `who`.
+		char readMapCharacter(const XmlNode& node, const MapLayout& map, const std::string& who, const std::string& where)
+		{
+			const std::string character = requireAttribute(node, "char", where);
+			if (character.size() != 1) { fail(where, "char=\"" + character + "\": a map's tiles are one character each"); }
+			const auto [earlier, isNew] = map.picked->emplace(character[0], who);
+			if (!isNew) { fail(where, "char=\"" + character + "\" is picked by " + earlier->second + " already"); }
+			return character[0];
+		}
+
+		// An object on a map starts on the one tile of the character it picks.
+		void placeObjectOnMap(const XmlNode& node, const MapLayout& map, RawObject& object, const std::string& where)
+		{
+			const char character = readMapCharacter(node, map, where, where);
+			const auto tiles = tilesOf(map, character);
+			const std::size_t found = tiles.size();
+			if (found == 1) { placeOnMap(object, map, tiles.front().first, tiles.front().second); }
+			if (found != 1)
+			{
+				fail(where, "picks '" + std::string(1, character) + "', which is on " + std::to_string(found) + " tiles of map '" + map.name
+					+ "'; an object starts on one, and a group is what has a member on each");
+			}
+		}
+
+		// An <object>; on a <map> (`map`), one that starts on the one tile of
+		// the character it picks, with no <position> of its own.
+		RawObject readObject(const XmlNode& object, const MapLayout* map = nullptr)
 		{
 			RawObject rawObject;
 			rawObject.name = requireAttribute(object, "name", "<object>");
@@ -1133,7 +1273,16 @@ namespace xge
 			std::optional<AnimationSpec> animation;
 			if (auto node = findChild(&object, "animation")) { animation = readAnimation(*node, where); }
 			chooseSprite(readSprites(object, where), animation, where, rawObject);
-			rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
+			if (map)
+			{
+				if (findChild(&object, "position")) { fail(where, "is on a <map>, where the tile of its char= is where it starts, so it has no <position>"); }
+				placeObjectOnMap(object, *map, rawObject, where);
+			}
+			else
+			{
+				if (!object.getAttribute("char").empty()) { fail(where, "char=\"" + object.getAttribute("char") + "\" picks a character of a <map>'s rows; this object is on no <map>"); }
+				rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
+			}
 			// What a game leaves out is nothing: no <velocity> (or no half of
 			// one) stands still, and no <collisions> touches nothing.
 			if (auto velocity = findChild(&object, "velocity"))
@@ -1162,6 +1311,7 @@ namespace xge
 				rawObject.rawDrag = readValue(*drag, where);
 			}
 			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readFacing(*facing, where); }
+			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
 			if (auto hidden = findChild(&object, "hidden"))
 			{
@@ -1313,6 +1463,9 @@ namespace xge
 			// Visibility, facing, acceleration, collisions, actions, variables,
 			// timers, class and the names of the groups around it.
 			RawObject object;
+			// The <map> it is on, if it is: its members are the tiles of the
+			// character it picks.
+			const MapLayout* map = nullptr;
 		};
 
 		// A <group> is read as one RawObject per member, which from then on is
@@ -1348,9 +1501,18 @@ namespace xge
 			RawObject& shared = own.object;
 			bool inner = false;
 
+			if (!group.getAttribute("char").empty() && !own.map)
+			{
+				fail(where, "char=\"" + group.getAttribute("char") + "\" picks a character of a <map>'s rows; this group is on no <map>");
+			}
+
 			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
+				if (own.map && (tag == "columns" || tag == "rows" || tag == "padding" || tag == "position" || tag == "member" || tag == "row" || tag == "column" || tag == "cell"))
+				{
+					fail(where, "is on map '" + own.map->name + "', whose rows say where its members are, so it has no <" + tag + ">");
+				}
 
 				if (tag == "hidden") { shared.isVisible = !readBool(*child, where); }
 				else if (tag == "drawn") { shared.isDrawn = readBool(*child, where); }
@@ -1377,10 +1539,11 @@ namespace xge
 				}
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
+				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -1392,6 +1555,7 @@ namespace xge
 
 			if (inner)
 			{
+				if (!group.getAttribute("char").empty()) { fail(where, "has groups inside it, so it picks no character itself; give the char= to the groups inside"); }
 				own.object.outerGroups.push_back(name);
 				for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
@@ -1416,6 +1580,11 @@ namespace xge
 			if ((columns > 0) != (rows > 0)) { fail(where, "has <columns> or <rows> and not the other; a group laid out in cells needs both"); }
 
 			shared.groupName = name;
+			if (own.map)
+			{
+				own.position.x = own.map->position.x;
+				own.position.y = own.map->position.y;
+			}
 
 			// One member or cell from the group and its own parts, the most
 			// particular last.
@@ -1450,6 +1619,26 @@ namespace xge
 				rawObject.rawVelocity.y = velocityY.value_or(zeroValue());
 				return rawObject;
 			};
+
+			// On a map: a member for each tile of its character, named by its
+			// number in the order the rows are read (dots.17).
+			if (own.map)
+			{
+				const MapLayout& map = *own.map;
+				const char character = readMapCharacter(group, map, where, where);
+				int count = 0;
+				for (const auto& [column, row] : tilesOf(map, character))
+				{
+					++count;
+					const std::string memberName = name + "." + std::to_string(count);
+					const std::string here = "object '" + memberName + "' (a member of " + where + ")";
+					RawObject member = make(memberName, here, {});
+					placeOnMap(member, map, column, row);
+					out.push_back(std::move(member));
+				}
+				if (count == 0) { fail(where, "picks '" + std::string(1, character) + "', which is on no tile of map '" + map.name + "'"); }
+				return;
+			}
 
 			std::vector<std::unique_ptr<XmlNode>> children;
 			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr;)
@@ -1586,6 +1775,66 @@ namespace xge
 					out.push_back(std::move(rawObject));
 				}
 			}
+		}
+
+		// A <map name="maze">: the size of a <tile>, where its top left is (its
+		// <position>), the <row>s of characters, one to a tile, and then the
+		// groups and objects on it. A group on it (or inside a group on it)
+		// picks a character with char="." and has a member on each tile of it,
+		// in the middle of the tile; an object picks one used on one tile only,
+		// where it starts. A character nothing picks is an empty tile. The
+		// map's name means everything on it. Rows are trimmed like any text, so
+		// an empty tile at either end of a row needs a character, not a space.
+		void readMap(const XmlNode& node, std::vector<RawObject>& out)
+		{
+			MapLayout map;
+			map.name = requireAttribute(node, "name", "<map>");
+			const std::string where = "map '" + map.name + "'";
+
+			const std::unique_ptr<XmlNode> tile = requireChild(node, "tile", where);
+			map.tileWidth = readValueOf(*tile, "width", where + " > <tile>");
+			map.tileHeight = readValueOf(*tile, "height", where + " > <tile>");
+			map.position = readVector2(*requireChild(node, "position", where), where);
+
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "row") { continue; }
+				const std::string row = readText(*child);
+				const std::string here = where + " > <row> " + std::to_string(map.rows.size() + 1);
+				if (row.empty()) { fail(here, "is empty"); }
+				if (!map.rows.empty() && row.size() != map.rows.front().size())
+				{
+					fail(here, "is " + std::to_string(row.size()) + " tiles wide, but row 1 is " + std::to_string(map.rows.front().size()) + "; every row is as wide as the map");
+				}
+				map.rows.push_back(row);
+			}
+			if (map.rows.empty()) { fail(where, "has no <row>s"); }
+
+			std::map<char, std::string> picked;
+			map.picked = &picked;
+
+			GroupShared outer;
+			outer.map = &map;
+			bool any = false;
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag == "group")
+				{
+					readGroup(*child, out, outer);
+					any = true;
+				}
+				else if (tag == "object")
+				{
+					out.push_back(readObject(*child, &map));
+					any = true;
+				}
+				else if (tag != "tile" && tag != "position" && tag != "row")
+				{
+					fail(where, "unknown <" + tag + ">; expected a <tile>, a <position>, <row>s, then <group>s and <object>s");
+				}
+			}
+			if (!any) { fail(where, "has nothing on it; give it <group>s and <object>s that pick its characters"); }
 		}
 
 		// <sound name="..." wave="square">: an optional <loop />, an optional
@@ -1769,13 +2018,14 @@ namespace xge
 			}
 		}
 
-		// The <object>s and <group>s of an <objects>, in order: the game's, a
-		// state's, or a kit's.
+		// The <object>s, <group>s and <map>s of an <objects>, in order: the
+		// game's, a state's, or a kit's.
 		void readObjects(const XmlNode& objects, std::vector<RawObject>& out)
 		{
 			for (std::unique_ptr<XmlNode> object = objects.getFirstChild(); object != nullptr; object = object->getNextSibling())
 			{
 				if (object->getName() == "group") { readGroup(*object, out); }
+				else if (object->getName() == "map") { readMap(*object, out); }
 				else { out.push_back(readObject(*object)); }
 			}
 		}
@@ -1895,6 +2145,7 @@ namespace xge
 						else
 						{
 							if (child->getName() == "group") { readGroup(*child, entry.objects); }
+							else if (child->getName() == "map") { readMap(*child, entry.objects); }
 							else { entry.objects.push_back(readObject(*child)); }
 							const std::set<std::string> own = namesOf(entry.objects);
 							names.insert(own.begin(), own.end());
@@ -1907,7 +2158,7 @@ namespace xge
 				{
 					readConditions(*conditions, where, conditionSets, scene.conditions);
 				}
-				scene.timers = readTimers(findChild(node.get(), "timers").get(), where);
+				scene.timers = readTimers(findChild(node.get(), "timers").get(), where, false);
 
 				sceneNames[scene.name] = std::move(names);
 				state.scenes.push_back(std::move(scene));
@@ -1960,7 +2211,7 @@ namespace xge
 			}
 
 			// <timers> (optional): counted while this is the current state.
-			rawState.timers = readTimers(findChild(&state, "timers").get(), where);
+			rawState.timers = readTimers(findChild(&state, "timers").get(), where, false);
 
 			return rawState;
 		}

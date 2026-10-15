@@ -190,7 +190,7 @@
     <xsl:param name="node" select="." />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
-      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into">
+      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from">
         <xsl:if test=". != ''">
           <xsl:text> command.</xsl:text>
           <xsl:choose>
@@ -218,7 +218,7 @@
           </xsl:choose>
           <xsl:text>;</xsl:text>
         </xsl:when>
-        <xsl:when test="$verb = 'move' or $verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb'">
+        <xsl:when test="$verb = 'move' or $verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb' or $verb = 'go'">
           <xsl:text> command.amount = </xsl:text>
           <xsl:call-template name="value">
             <xsl:with-param name="node" select="$node" />
@@ -244,6 +244,40 @@
             <xsl:with-param name="name" select="'command.distance'" />
             <xsl:with-param name="node" select="$node/near" />
           </xsl:call-template>
+        </xsl:when>
+        <xsl:when test="$verb = 'wander'">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.amount'" />
+            <xsl:with-param name="node" select="$node/speed" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:when test="$verb = 'hunt'">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.amount'" />
+            <xsl:with-param name="node" select="$node/speed" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.ahead'" />
+            <xsl:with-param name="node" select="$node/ahead" />
+          </xsl:call-template>
+          <xsl:if test="$node/with">
+            <xsl:text> command.partner = </xsl:text>
+            <xsl:call-template name="string">
+              <xsl:with-param name="text" select="$node/with/@object" />
+            </xsl:call-template>
+            <xsl:text>;</xsl:text>
+          </xsl:if>
+          <xsl:if test="$node/retreat">
+            <xsl:text> command.retreat = </xsl:text>
+            <xsl:call-template name="string">
+              <xsl:with-param name="text" select="$node/retreat/@object" />
+            </xsl:call-template>
+            <xsl:text>;</xsl:text>
+            <xsl:call-template name="field">
+              <xsl:with-param name="name" select="'command.distance'" />
+              <xsl:with-param name="node" select="$node/retreat" />
+            </xsl:call-template>
+          </xsl:if>
         </xsl:when>
         <xsl:when test="$verb = 'follow'">
           <xsl:call-template name="field">
@@ -508,13 +542,25 @@
           <xsl:with-param name="name" select="'flip'" />
           <xsl:with-param name="node" select="$shape/flip" />
         </xsl:call-template>
+        <!-- a bitmap's other colors, a character each -->
+        <xsl:for-each select="$shape/color[@char]">
+          <xsl:value-of select="concat($indent, 'ink(look, ')" />
+          <xsl:call-template name="string">
+            <xsl:with-param name="text" select="@char" />
+          </xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="text">
+            <xsl:with-param name="node" select="." />
+          </xsl:call-template>
+          <xsl:text>);&#10;</xsl:text>
+        </xsl:for-each>
       </xsl:when>
     </xsl:choose>
     <xsl:if test="$kind != 'image' and $kind != 'svg' and $kind != 'line'">
       <xsl:call-template name="look-text">
         <xsl:with-param name="indent" select="$indent" />
         <xsl:with-param name="name" select="'color'" />
-        <xsl:with-param name="node" select="$shape/color" />
+        <xsl:with-param name="node" select="$shape/color[not(@char)]" />
       </xsl:call-template>
     </xsl:if>
   </xsl:template>
@@ -699,6 +745,14 @@
     <xsl:param name="indent" />
     <xsl:for-each select="$node/timer">
       <xsl:value-of select="concat($indent, $list, '.push_back(')" />
+      <!-- one that follows a look: whileShowing("blue", after(...)) -->
+      <xsl:if test="@sprite != ''">
+        <xsl:text>whileShowing(</xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@sprite" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+      </xsl:if>
       <!-- a named one: named("launch", every(...)) -->
       <xsl:if test="@name != ''">
         <xsl:text>named(</xsl:text>
@@ -717,6 +771,7 @@
         <xsl:with-param name="indent" select="$indent" />
       </xsl:call-template>
       <xsl:if test="@name != ''">)</xsl:if>
+      <xsl:if test="@sprite != ''">)</xsl:if>
       <xsl:text>));&#10;</xsl:text>
     </xsl:for-each>
   </xsl:template>
@@ -884,6 +939,26 @@
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
+    <xsl:if test="$node/maze">
+      <xsl:value-of select="concat($indent, $to, '.maze = maze(')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="$node/maze/@map" />
+      </xsl:call-template>
+      <xsl:text>, {</xsl:text>
+      <xsl:for-each select="$node/maze/wall">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:text> { </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@class" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@sprite" />
+        </xsl:call-template>
+        <xsl:text> }</xsl:text>
+      </xsl:for-each>
+      <xsl:text> });&#10;</xsl:text>
+    </xsl:if>
     <xsl:call-template name="timers">
       <xsl:with-param name="node" select="$node/timers" />
       <xsl:with-param name="list" select="concat($to, '.timers')" />
@@ -953,18 +1028,23 @@
       <xsl:call-template name="group-function" />
     </xsl:variable>
     <xsl:variable name="in" select="concat($tab, $tab)" />
-    <xsl:variable name="top" select="boolean(parent::objects)" />
+    <xsl:variable name="top" select="boolean(parent::objects or parent::map)" />
+    <!-- on a <map>: its function is handed the map -->
+    <xsl:variable name="onMap" select="boolean(ancestor::map)" />
+    <xsl:variable name="mapParameter">
+      <xsl:if test="$onMap">, const RawMap&amp; map</xsl:if>
+    </xsl:variable>
     <xsl:variable name="leaf" select="not(group)" />
     <xsl:variable name="cells" select="boolean(ancestor-or-self::group/columns)" />
     <xsl:text>&#9;// &lt;group name="</xsl:text>
     <xsl:value-of select="@name" />
     <xsl:choose>
       <xsl:when test="$top">
-        <xsl:value-of select="concat('&quot;&gt;&#10;&#9;void ', $function, '(std::vector&lt;RawObject&gt;&amp; all)&#10;&#9;{&#10;')" />
+        <xsl:value-of select="concat('&quot;&gt;&#10;&#9;void ', $function, '(std::vector&lt;RawObject&gt;&amp; all', $mapParameter, ')&#10;&#9;{&#10;')" />
         <xsl:value-of select="concat($in, '// what every member has, unless it says otherwise&#10;', $in, 'Member group;&#10;')" />
       </xsl:when>
       <xsl:otherwise>
-        <xsl:value-of select="concat('&quot;&gt;, inside &lt;group name=&quot;', ../@name, '&quot;&gt;&#10;&#9;void ', $function, '(std::vector&lt;RawObject&gt;&amp; all, Member group)&#10;&#9;{&#10;')" />
+        <xsl:value-of select="concat('&quot;&gt;, inside &lt;group name=&quot;', ../@name, '&quot;&gt;&#10;&#9;void ', $function, '(std::vector&lt;RawObject&gt;&amp; all, Member group', $mapParameter, ')&#10;&#9;{&#10;')" />
         <xsl:value-of select="concat($in, '// what the group around it gives, changed by what this one says&#10;')" />
       </xsl:otherwise>
     </xsl:choose>
@@ -1086,8 +1166,21 @@
         <xsl:for-each select="group">
           <xsl:value-of select="$in" />
           <xsl:call-template name="group-function" />
-          <xsl:text>(all, group);&#10;</xsl:text>
+          <xsl:text>(all, group</xsl:text>
+          <xsl:if test="$onMap">, map</xsl:if>
+          <xsl:text>);&#10;</xsl:text>
         </xsl:for-each>
+      </xsl:when>
+      <xsl:when test="$onMap">
+        <xsl:value-of select="concat($in, 'addMapMembers(all, group, map, ')" />
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@char" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@name" />
+        </xsl:call-template>
+        <xsl:text>);&#10;</xsl:text>
       </xsl:when>
       <xsl:when test="$cells">
         <xsl:call-template name="cells">
@@ -1120,6 +1213,75 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text>&#9;}&#10;&#10;</xsl:text>
+  </xsl:template>
+
+  <!-- <map name="..."> (readMap): the functions of its groups and objects,
+       then a function that lays the map out and adds them, each group with
+       a member on every tile of its character and each object on the one
+       tile of its own. -->
+  <xsl:template match="map">
+    <xsl:apply-templates select="group | object" />
+    <xsl:variable name="in" select="concat($tab, $tab)" />
+    <xsl:text>&#9;// &lt;map name="</xsl:text>
+    <xsl:value-of select="@name" />
+    <xsl:text>"&gt;&#10;&#9;void </xsl:text>
+    <xsl:call-template name="map-function" />
+    <xsl:value-of select="concat('(std::vector&lt;RawObject&gt;&amp; all)&#10;&#9;{&#10;', $in, 'RawMap map;&#10;', $in, 'map.name = ')" />
+    <xsl:call-template name="string">
+      <xsl:with-param name="text" select="@name" />
+    </xsl:call-template>
+    <xsl:value-of select="concat(';&#10;', $in, 'map.rows = {&#10;')" />
+    <xsl:for-each select="row">
+      <xsl:value-of select="concat($in, $tab)" />
+      <xsl:call-template name="text">
+        <xsl:with-param name="node" select="." />
+      </xsl:call-template>
+      <xsl:text>,&#10;</xsl:text>
+    </xsl:for-each>
+    <xsl:value-of select="concat($in, '};&#10;', $in, 'map.position = ')" />
+    <xsl:call-template name="vector">
+      <xsl:with-param name="node" select="position" />
+    </xsl:call-template>
+    <xsl:value-of select="concat(';&#10;', $in, 'map.tileWidth = ')" />
+    <xsl:call-template name="value">
+      <xsl:with-param name="node" select="tile/width" />
+    </xsl:call-template>
+    <xsl:value-of select="concat(';&#10;', $in, 'map.tileHeight = ')" />
+    <xsl:call-template name="value">
+      <xsl:with-param name="node" select="tile/height" />
+    </xsl:call-template>
+    <xsl:text>;&#10;</xsl:text>
+    <xsl:for-each select="group | object">
+      <xsl:value-of select="$in" />
+      <xsl:choose>
+        <xsl:when test="self::group">
+          <xsl:call-template name="group-function" />
+          <xsl:text>(all, map);&#10;</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>all.push_back(onMap(</xsl:text>
+          <xsl:call-template name="object-function" />
+          <xsl:text>(), map, </xsl:text>
+          <xsl:call-template name="string">
+            <xsl:with-param name="text" select="@char" />
+          </xsl:call-template>
+          <xsl:text>));&#10;</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:text>&#9;}&#10;&#10;</xsl:text>
+  </xsl:template>
+
+  <!-- The function a <map> is written as: its name in camel case and Map. -->
+  <xsl:template name="map-function">
+    <xsl:variable name="container" select="generate-id(ancestor::objects[1])" />
+    <xsl:call-template name="function-name">
+      <xsl:with-param name="earlier" select="preceding::map[generate-id(ancestor::objects[1]) = $container]" />
+      <xsl:with-param name="suffix" select="'Map'" />
+      <xsl:with-param name="prefix">
+        <xsl:call-template name="owner-prefix" />
+      </xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
 
   <!-- The function a <group> is written as: its name in camel case and
@@ -1550,6 +1712,10 @@
           <xsl:call-template name="group-function" />
           <xsl:text>(all);&#10;</xsl:text>
         </xsl:when>
+        <xsl:when test="self::map">
+          <xsl:call-template name="map-function" />
+          <xsl:text>(all);&#10;</xsl:text>
+        </xsl:when>
         <xsl:otherwise>
           <xsl:text>all.push_back(</xsl:text>
           <xsl:call-template name="object-function" />
@@ -1748,6 +1914,11 @@
           <xsl:call-template name="group-function" />
           <xsl:text>)</xsl:text>
         </xsl:when>
+        <xsl:when test="self::map">
+          <xsl:text>own(</xsl:text>
+          <xsl:call-template name="map-function" />
+          <xsl:text>)</xsl:text>
+        </xsl:when>
         <xsl:otherwise>
           <xsl:text>own(</xsl:text>
           <xsl:call-template name="object-function" />
@@ -1780,7 +1951,7 @@
       </xsl:call-template>
     </xsl:variable>
     <xsl:if test="objects/*">
-      <xsl:apply-templates select="objects/object | objects/group" />
+      <xsl:apply-templates select="objects/object | objects/group | objects/map" />
       <xsl:call-template name="objects-function">
         <xsl:with-param name="nodes" select="objects/*" />
         <xsl:with-param name="function" select="concat($camel, 'Objects')" />
@@ -1788,7 +1959,7 @@
       </xsl:call-template>
     </xsl:if>
     <xsl:if test="scenes/objects/*">
-      <xsl:apply-templates select="scenes/objects/object | scenes/objects/group" />
+      <xsl:apply-templates select="scenes/objects/object | scenes/objects/group | scenes/objects/map" />
       <xsl:call-template name="objects-function">
         <xsl:with-param name="nodes" select="scenes/objects/*" />
         <xsl:with-param name="function" select="concat($camel, 'Kit')" />
@@ -2053,7 +2224,7 @@
       <xsl:if test="$game/paths/path">
         <xsl:call-template name="paths" />
       </xsl:if>
-      <xsl:apply-templates select="$game/objects/object | $game/objects/group" />
+      <xsl:apply-templates select="$game/objects/object | $game/objects/group | $game/objects/map" />
       <xsl:call-template name="objects-function">
         <xsl:with-param name="nodes" select="$game/objects/*" />
         <xsl:with-param name="function" select="'objects'" />

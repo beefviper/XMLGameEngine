@@ -1,0 +1,959 @@
+<!-- pacman.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 15, 2026 -->
+
+<!--
+  Pac-Man, after the 1980 Namco arcade game, on a smaller maze of its own. Eat
+  every dot to win. Four ghosts hunt you, each its own way; a power pellet in a
+  corner turns them blue for a while, and a blue ghost can be eaten. Its eyes
+  hurry back to the ghost house, and it comes out again. A ghost that catches
+  you costs a life; with none left it is game over.
+
+  How it is written:
+  * The maze is a <map>: each <row> is a row of tiles, a character a tile, so
+    the file shows the maze as it looks. Every group and object on the map
+    picks a character with char=: a group has a member on each tile of it
+    (the dots, a wall piece), an object starts on its one tile (Pac-Man, the
+    marker inside the ghost house). A character nothing picks is an empty
+    tile. The walls are one group of fourteen pieces, a line through the
+    middle of the tile each, joined to the walls beside it: across (-), down
+    (|), four corners (r 7 L J), four tees (T ^ E 3) and four ends ([ ] n u).
+  * Pac-Man and the ghosts walk the map (<maze map="maze">): they keep to the
+    middle of a lane, turn only in the middle of a tile, and never go onto a
+    tile whose object is a wall to them. The door of the ghost house is a wall
+    to a ghost only while it shows its normal or blue look, so the eyes of an
+    eaten ghost go in through it.
+  * Pac-Man's keys say <go>: he turns that way at the first gap there is, and
+    keeps going until a wall stops him.
+  * Each ghost <hunt>s Pac-Man as in the arcade: at every tile it takes the
+    way whose next tile is nearest its target, and never turns back. Blinky's
+    target is Pac-Man; Pinky's is four tiles in front of him; Inky's is two
+    tiles in front of him, doubled from Blinky (<with>), so the two close in
+    from both sides; and Clyde's is Pac-Man until he is within eight tiles,
+    when it is the corner (<retreat>).
+  * The ghosts' modes are their looks, and timers that follow a look
+    (<timer sprite="blue">) count only while the ghost shows it and start
+    over whenever it is given that look. A power pellet turns the normal
+    ghosts blue (<become from="normal">) and keeps the blue ones blue for
+    longer; blue, a ghost turns round and <wander>s, and after `fright`
+    seconds it is normal again; normal, it hunts. An eaten ghost becomes its
+    eyes, which hunt the marker in the ghost house; there it is normal again
+    and follows its path out.
+  * Pinky, Inky and Clyde wait in the ghost house until their timers send
+    them out along a <path> of their own.
+  * The tunnel at the sides runs off the map: a walker goes straight on, and
+    <wrap />s at the window's edge.
+  * Paused and the two endings draw the game still underneath (<show state>).
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+  <window name="Pac-Man">
+    <width>456</width>
+    <height>576</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="tile">24</variable>
+    <variable name="tilescale">3</variable>
+    <variable name="top">44</variable>
+    <variable name="pacspeed">2.5</variable>
+    <variable name="ghostspeed">2.25</variable>
+    <variable name="frightspeed">1.25</variable>
+    <variable name="eyesspeed">4</variable>
+    <variable name="pathspeed">1.5</variable>
+    <variable name="fright">6</variable>
+  </variables>
+  <sounds>
+    <!-- a dot eaten -->
+    <sound name="chomp" wave="square">
+      <volume>0.12</volume>
+      <note pitch="G4" to="C5">0.04</note>
+    </sound>
+    <!-- a power pellet -->
+    <sound name="power" wave="triangle">
+      <volume>0.35</volume>
+      <note pitch="C4" to="C6">0.25</note>
+    </sound>
+    <!-- a ghost eaten -->
+    <sound name="eatghost" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="C7">0.15</note>
+    </sound>
+    <!-- caught -->
+    <sound name="caught" wave="square">
+      <volume>0.25</volume>
+      <note pitch="B4" to="B2">0.6</note>
+    </sound>
+    <!-- the start of a game -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="C6">0.2</note>
+    </sound>
+  </sounds>
+  <paths>
+    <!-- out of the ghost house, each ghost from its own place: back to it,
+         over to the door and up through it to the tile above -->
+    <path name="blinkyout">
+      <speed>pathspeed</speed>
+      <home />
+    </path>
+    <path name="pinkyout">
+      <speed>pathspeed</speed>
+      <home />
+      <step><x>0</x><y>-2 * tile</y></step>
+    </path>
+    <path name="inkyout">
+      <speed>pathspeed</speed>
+      <home />
+      <step><x>tile</x><y>0</y></step>
+      <step><x>0</x><y>-2 * tile</y></step>
+    </path>
+    <path name="clydeout">
+      <speed>pathspeed</speed>
+      <home />
+      <step><x>-tile</x><y>0</y></step>
+      <step><x>0</x><y>-2 * tile</y></step>
+    </path>
+  </paths>
+  <objects>
+    <!-- after a game, in both endings -->
+    <object name="again">
+      <sprite>
+        <text>
+          <content>spacebar to play again</content>
+          <size>32</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (60)</y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <objects>
+        <object name="title">
+          <sprite>
+            <text>
+              <content>PAC-MAN</content>
+              <size>80</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-110)</y></position>
+        </object>
+        <object name="help">
+          <sprite>
+            <text>
+              <content>eat every dot; mind the ghosts</content>
+              <size>26</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
+        </object>
+        <object name="keys">
+          <sprite>
+            <text>
+              <content>w a s d, or the arrow keys</content>
+              <size>24</size>
+              <color>color.lightgrey</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (20)</y></position>
+        </object>
+        <object name="start">
+          <sprite>
+            <text>
+              <content>spacebar to start</content>
+              <size>32</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (100)</y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+          <play sound="start" />
+        </input>
+      </inputs>
+    </state>
+
+    <state name="playing">
+      <objects>
+        <!-- the score and the lives, on an object of their own so that
+             resetting Pac-Man when he is caught keeps them -->
+        <object name="status">
+          <sprite>
+            <rectangle>
+              <width>1</width>
+              <height>1</height>
+              <color>color.black</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="lives">3</variable>
+          </variables>
+        </object>
+        <!-- where Clyde backs off to: the bottom left corner, off the maze -->
+        <object name="corner">
+          <sprite>
+            <rectangle>
+              <width>1</width>
+              <height>1</height>
+              <color>color.black</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>window.bottom</y></position>
+          <drawn>false</drawn>
+        </object>
+        <map name="maze">
+          <tile>
+            <width>tile</width>
+            <height>tile</height>
+          </tile>
+          <position><x>0</x><y>top</y></position>
+          <row>r--------T--------7</row>
+          <row>|........|........|</row>
+          <row>|o[].[-].u.[-].[]o|</row>
+          <row>|.................|</row>
+          <row>|.[].n.[-T-].n.[].|</row>
+          <row>|....|...|...|....|</row>
+          <row>L--7.E-].u.[-3.r--J</row>
+          <row>,,,|.|   B   |.|,,,</row>
+          <row>,,,u.u r-=-7 u.u,,,</row>
+          <row>,   .  |IPC|  .   ,</row>
+          <row>,,,n.n | h | n.n,,,</row>
+          <row>,,,|.| L---J |.|,,,</row>
+          <row>,,,|.|       |.|,,,</row>
+          <row>r--J.u [-T-] u.L--7</row>
+          <row>|........|........|</row>
+          <row>|.[7.[-].u.[-].r].|</row>
+          <row>|o.|....@......|.o|</row>
+          <row>E].u.n.[-T-].n.u.[3</row>
+          <row>|....|...|...|....|</row>
+          <row>|.[--^-].u.[-^--].|</row>
+          <row>|.................|</row>
+          <row>L-----------------J</row>
+          <!-- the walls: a line through the middle of each tile, joined to the walls beside it -->
+          <group name="walls" class="wall">
+            <group name="across" char="-">
+              <sprite>
+                <bitmap>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>********</row>
+                  <row>********</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="down" char="|">
+              <sprite>
+                <bitmap>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="topleft" char="r">
+              <sprite>
+                <bitmap>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>...*****</row>
+                  <row>...*****</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="topright" char="7">
+              <sprite>
+                <bitmap>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>*****...</row>
+                  <row>*****...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="bottomleft" char="L">
+              <sprite>
+                <bitmap>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...*****</row>
+                  <row>...*****</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="bottomright" char="J">
+              <sprite>
+                <bitmap>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>*****...</row>
+                  <row>*****...</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="teedown" char="T">
+              <sprite>
+                <bitmap>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>********</row>
+                  <row>********</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="teeup" char="^">
+              <sprite>
+                <bitmap>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>********</row>
+                  <row>********</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="teeright" char="E">
+              <sprite>
+                <bitmap>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...*****</row>
+                  <row>...*****</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="teeleft" char="3">
+              <sprite>
+                <bitmap>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>*****...</row>
+                  <row>*****...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="endleft" char="[">
+              <sprite>
+                <bitmap>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>...*****</row>
+                  <row>...*****</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="endright" char="]">
+              <sprite>
+                <bitmap>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>*****...</row>
+                  <row>*****...</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="endtop" char="n">
+              <sprite>
+                <bitmap>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+            <group name="endbottom" char="u">
+              <sprite>
+                <bitmap>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>...**...</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <row>........</row>
+                  <scale>tilescale</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+            </group>
+          </group>
+          <!-- the door of the ghost house -->
+          <group name="door" char="=" class="door">
+            <sprite>
+              <bitmap>
+                <row>........</row>
+                <row>........</row>
+                <row>........</row>
+                <row>********</row>
+                <row>********</row>
+                <row>........</row>
+                <row>........</row>
+                <row>........</row>
+                <scale>tilescale</scale>
+                <color>color.magenta</color>
+              </bitmap>
+            </sprite>
+          </group>
+          <!-- the dots, and the power pellets in the corners -->
+          <group name="dots" char="." class="food">
+            <sprite>
+              <rectangle>
+                <width>4</width>
+                <height>4</height>
+                <color>color.white</color>
+              </rectangle>
+            </sprite>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="pacman">
+                <inc variable="status.score">10</inc>
+                <play sound="chomp" />
+                <die />
+              </collision>
+            </collisions>
+          </group>
+          <group name="pellets" char="o" class="food">
+            <sprite>
+              <circle>
+                <radius>7</radius>
+                <color>color.white</color>
+              </circle>
+            </sprite>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="pacman">
+                <inc variable="status.score">50</inc>
+                <play sound="power" />
+                <!-- the blue ones first, so the ones turning blue now turn round once -->
+                <become object="ghosts" sprite="blue" from="blue" />
+                <become object="ghosts" sprite="blue" from="normal" />
+                <die />
+              </collision>
+            </collisions>
+          </group>
+          <!-- what the eyes of an eaten ghost make for, inside the ghost house -->
+          <object name="pen" char="h">
+            <sprite>
+              <rectangle>
+                <width>4</width>
+                <height>4</height>
+                <color>color.black</color>
+              </rectangle>
+            </sprite>
+            <drawn>false</drawn>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+          <object name="pacman" char="@">
+            <sprite name="open">
+              <bitmap>
+                <row>..........</row>
+                <row>..*....*..</row>
+                <row>.**....**.</row>
+                <row>****..****</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>.********.</row>
+                <row>..******..</row>
+                <row>...****...</row>
+                <scale>2</scale>
+                <color>color.yellow</color>
+              </bitmap>
+            </sprite>
+            <sprite name="closed">
+              <bitmap>
+                <row>...****...</row>
+                <row>..******..</row>
+                <row>.********.</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>.********.</row>
+                <row>..******..</row>
+                <row>...****...</row>
+                <scale>2</scale>
+                <color>color.yellow</color>
+              </bitmap>
+            </sprite>
+            <animation>
+              <interval>0.08</interval>
+              <frame sprite="open" />
+              <frame sprite="closed" />
+            </animation>
+            <heading>270</heading>
+            <facing>left</facing>
+            <maze map="maze">
+              <wall class="wall" />
+              <wall class="door" />
+            </maze>
+            <collisions>
+              <enabled>true</enabled>
+              <collision edge="horizontal">
+                <wrap />
+              </collision>
+            </collisions>
+            <actions>
+              <action name="left">
+                <go direction="left">pacspeed</go>
+              </action>
+              <action name="right">
+                <go direction="right">pacspeed</go>
+              </action>
+              <action name="up">
+                <go direction="up">pacspeed</go>
+              </action>
+              <action name="down">
+                <go direction="down">pacspeed</go>
+              </action>
+            </actions>
+          </object>
+          <!-- the ghosts: what they share, then each one's color and how it hunts -->
+          <group name="ghosts" class="ghost">
+            <sprite name="normal">
+              <bitmap>
+                <row>...****...</row>
+                <row>.********.</row>
+                <row>**********</row>
+                <row>**ww**ww**</row>
+                <row>**wb**wb**</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>*.**..**.*</row>
+                <scale>2</scale>
+                <color>color.red</color>
+                <color char="w">color.white</color>
+                <color char="b">color.darkblue</color>
+              </bitmap>
+            </sprite>
+            <sprite name="blue">
+              <bitmap>
+                <row>...****...</row>
+                <row>.********.</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>***w**w***</row>
+                <row>**********</row>
+                <row>**w*ww*w**</row>
+                <row>*w*w**w*w*</row>
+                <row>**********</row>
+                <row>*.**..**.*</row>
+                <scale>2</scale>
+                <color>color.blue</color>
+                <color char="w">color.white</color>
+              </bitmap>
+            </sprite>
+            <sprite name="eyes">
+              <bitmap>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..ww..ww..</row>
+                <row>..wb..wb..</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <scale>2</scale>
+                <color>color.white</color>
+                <color char="w">color.white</color>
+                <color char="b">color.darkblue</color>
+              </bitmap>
+            </sprite>
+            <maze map="maze">
+              <wall class="wall" />
+              <wall class="door" sprite="normal" />
+              <wall class="door" sprite="blue" />
+            </maze>
+            <collisions>
+              <enabled>true</enabled>
+              <collision edge="horizontal">
+                <wrap />
+              </collision>
+              <collision object="pacman" sprite="normal">
+                <dec variable="status.lives" />
+                <play sound="caught" />
+                <reset object="pacman" />
+                <reset object="ghosts" />
+              </collision>
+              <collision object="pacman" sprite="blue">
+                <inc variable="status.score">200</inc>
+                <play sound="eatghost" />
+                <become sprite="eyes" />
+              </collision>
+            </collisions>
+            <timers>
+              <!-- blue: it turns round and wanders, and in time is normal again -->
+              <timer sprite="blue">
+                <after>0</after>
+                <reverse />
+                <wander>
+                  <speed>frightspeed</speed>
+                </wander>
+              </timer>
+              <timer sprite="blue">
+                <after>fright</after>
+                <become sprite="normal" />
+              </timer>
+              <!-- eaten: the eyes go home -->
+              <timer sprite="eyes">
+                <after>0</after>
+                <hunt object="pen">
+                  <speed>eyesspeed</speed>
+                </hunt>
+              </timer>
+            </timers>
+            <!-- Blinky goes straight for Pac-Man -->
+            <group name="blinky" char="B">
+              <sprite name="normal">
+                <bitmap>
+                  <color>color.red</color>
+                </bitmap>
+              </sprite>
+              <collisions>
+                <enabled>true</enabled>
+                <collision object="pen" sprite="eyes">
+                  <become sprite="normal" />
+                  <follow path="blinkyout" />
+                </collision>
+              </collisions>
+              <timers>
+                <timer sprite="normal">
+                  <after>0</after>
+                  <hunt object="pacman">
+                    <speed>ghostspeed</speed>
+                  </hunt>
+                </timer>
+              </timers>
+            </group>
+            <!-- Pinky makes for four tiles in front of him -->
+            <group name="pinky" char="P">
+              <sprite name="normal">
+                <bitmap>
+                  <color>color.magenta</color>
+                </bitmap>
+              </sprite>
+              <collisions>
+                <enabled>true</enabled>
+                <collision object="pen" sprite="eyes">
+                  <become sprite="normal" />
+                  <follow path="pinkyout" />
+                </collision>
+              </collisions>
+              <timers>
+                <timer sprite="normal">
+                  <after>0</after>
+                  <hunt object="pacman">
+                    <speed>ghostspeed</speed>
+                    <ahead>4</ahead>
+                  </hunt>
+                </timer>
+                <timer>
+                  <after>1</after>
+                  <follow path="pinkyout" />
+                </timer>
+              </timers>
+            </group>
+            <!-- Inky closes in from the other side to Blinky -->
+            <group name="inky" char="I">
+              <sprite name="normal">
+                <bitmap>
+                  <color>color.cyan</color>
+                </bitmap>
+              </sprite>
+              <collisions>
+                <enabled>true</enabled>
+                <collision object="pen" sprite="eyes">
+                  <become sprite="normal" />
+                  <follow path="inkyout" />
+                </collision>
+              </collisions>
+              <timers>
+                <timer sprite="normal">
+                  <after>0</after>
+                  <hunt object="pacman">
+                    <speed>ghostspeed</speed>
+                    <ahead>2</ahead>
+                    <with object="blinky" />
+                  </hunt>
+                </timer>
+                <timer>
+                  <after>5</after>
+                  <follow path="inkyout" />
+                </timer>
+              </timers>
+            </group>
+            <!-- Clyde backs off to his corner when he gets near -->
+            <group name="clyde" char="C">
+              <sprite name="normal">
+                <bitmap>
+                  <color>color.orange</color>
+                </bitmap>
+              </sprite>
+              <collisions>
+                <enabled>true</enabled>
+                <collision object="pen" sprite="eyes">
+                  <become sprite="normal" />
+                  <follow path="clydeout" />
+                </collision>
+              </collisions>
+              <timers>
+                <timer sprite="normal">
+                  <after>0</after>
+                  <hunt object="pacman">
+                    <speed>ghostspeed</speed>
+                    <retreat object="corner">8</retreat>
+                  </hunt>
+                </timer>
+                <timer>
+                  <after>10</after>
+                  <follow path="clydeout" />
+                </timer>
+              </timers>
+            </group>
+          </group>
+        </map>
+        <object name="scorelabel">
+          <sprite>
+            <text>
+              <content>SCORE</content>
+              <size>24</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>12</x><y>10</y></position>
+        </object>
+        <object name="scorevalue">
+          <sprite>
+            <text>
+              <number>status.score</number>
+              <size>24</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>12 + scorelabel.width + 10</x><y>10</y></position>
+        </object>
+        <object name="livesvalue">
+          <sprite>
+            <text>
+              <number>status.lives</number>
+              <size>24</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.right - livesvalue.width - 12</x><y>10</y></position>
+        </object>
+        <object name="liveslabel">
+          <sprite>
+            <text>
+              <content>LIVES</content>
+              <size>24</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.right - livesvalue.width - liveslabel.width - 22</x><y>10</y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="a left">
+          <trigger object="pacman" action="left" />
+        </input>
+        <input button="d right">
+          <trigger object="pacman" action="right" />
+        </input>
+        <input button="w up">
+          <trigger object="pacman" action="up" />
+        </input>
+        <input button="s down">
+          <trigger object="pacman" action="down" />
+        </input>
+        <input button="space p">
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <!-- caught with no lives left -->
+        <condition object="status" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <!-- every dot and pellet eaten -->
+        <condition class="food">
+          <remaining>0</remaining>
+          <push state="youwin" />
+          <play sound="start" />
+        </condition>
+      </conditions>
+    </state>
+
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text>
+              <content>PAUSED</content>
+              <size>80</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space p">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="youwin">
+      <objects>
+        <object name="youwin">
+          <sprite>
+            <text>
+              <content>YOU WIN</content>
+              <size>80</size>
+              <color>color.green</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-40)</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <objects>
+        <object name="gameover">
+          <sprite>
+            <text>
+              <content>GAME OVER</content>
+              <size>80</size>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-40)</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
+</game>

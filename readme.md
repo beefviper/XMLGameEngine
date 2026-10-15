@@ -32,6 +32,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/descriptions/airseabattle.xml` | Air-Sea Battle, two players: swing a gun and fire at four lanes of planes going round the sky; most hits in two minutes wins, and the end screen compares the scores to say who |
 | `games/descriptions/megamania.xml` | Megamania: three waves of hamburgers, cookies and bugs wrap round the sides and drop bombs while your energy runs down; shoot each wave before it is gone, three ships |
 | `games/descriptions/atlantis.xml` | Atlantis: Gorgon ships cross the sky over the city, a lane lower each pass, and ray it from the lowest; three gun posts fire at their own angles; three waves, the later ones the first changed (`from=`, named timers and conditions) |
+| `games/descriptions/pacman.xml` | Pac-Man, on a smaller maze of its own: the maze is a `<map>` whose rows draw it in wall characters; Pac-Man `<go>`es where the keys say, the four ghosts `<hunt>` him each their own way, and a power pellet turns them blue (looks and timers that follow a look); eat every dot to win |
 | `games/descriptions/adventure.xml` | Adventure, two rooms of the Atari 2600 game, the castle and the field east of it, as scenes: walk into the key, the sword or the chalice to `<carry />` it and Space to `<drop />` it; the key opens the castle gate, the sword slays the dragon, the chalice carried into the hall wins |
 
 ## What a game file looks like

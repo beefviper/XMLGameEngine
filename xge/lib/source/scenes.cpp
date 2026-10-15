@@ -46,6 +46,7 @@ namespace xge
 			object.name = prefix + object.name;
 			if (!object.groupName.empty()) { object.groupName = prefix + object.groupName; }
 			for (std::string& group : object.outerGroups) { group = prefix + group; }
+			if (!object.cell.map.empty()) { object.cell.map = prefix + object.cell.map; }
 		}
 
 		// A whole sprite in place of the one of its name, wherever the object
@@ -298,6 +299,8 @@ namespace xge
 					if (command.verb == "inc" || command.verb == "dec" || command.verb == "copy") { command.variable = names_.variableTarget(command.variable, context); }
 					if (command.verb == "copy") { command.into = names_.variableTarget(command.into, context); }
 					command.object = names_.object(command.object, context);
+					command.partner = names_.object(command.partner, context);
+					command.retreat = names_.object(command.retreat, context);
 					command.scene = names_.scene(command.scene, context);
 					if (!command.way.empty() && !context.scene.empty())
 					{
@@ -313,6 +316,7 @@ namespace xge
 					value(command.amount, context);
 					value(command.seconds, context);
 					value(command.distance, context);
+					value(command.ahead, context);
 				}
 			}
 
@@ -384,6 +388,9 @@ namespace xge
 				sprite(object.cell.slot, context);
 				value(object.cell.gapBefore, context);
 				value(object.cell.gapAbove, context);
+				value(object.cell.tileWidth, context);
+				value(object.cell.tileHeight, context);
+				object.maze.map = names_.object(object.maze.map, context);
 			}
 
 		private:

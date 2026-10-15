@@ -116,6 +116,7 @@ if (XGE_WITH_SFML3)
 		"games/prototypes/pong_min/source/pong_min.cpp"
 		"games/prototypes/pong_min/source/pong_min.h"
 		"xge/lib/source/frame.cpp"
+		"xge/lib/source/maze.cpp"
 		"xge/lib/source/verbs.cpp"
 		"xge/lib/source/geometry.cpp"
 		"xge/lib/source/collision_detector.cpp"

@@ -524,9 +524,9 @@ TEST_CASE("an object with several named sprites can <become> each of them, and a
 
 	// A key in a state can name it; a reset brings back the first look.
 	CommandExecutor executor(loaded.game);
-	executor.executeInput(CmdBecome{ "off", "lamp" }, true);
+	executor.executeInput(CmdBecome{ "off", "lamp", {} }, true);
 	CHECK(lamp1.lookName() == "off");
-	executor.executeInput(CmdBecome{ "on", "lamp" }, true);
+	executor.executeInput(CmdBecome{ "on", "lamp", {} }, true);
 	loaded.game.resetAll();
 	CHECK(lamp1.lookName() == "off");
 }

@@ -30,6 +30,35 @@ namespace xge
 		visualDirty = true;
 	}
 
+	std::vector<std::pair<std::size_t, std::size_t>> tilesOf(const RawMap& map, char character)
+	{
+		std::vector<std::pair<std::size_t, std::size_t>> tiles;
+		for (std::size_t row = 0; row < map.rows.size(); ++row)
+		{
+			for (std::size_t column = 0; column < map.rows[row].size(); ++column)
+			{
+				if (map.rows[row][column] == character) { tiles.emplace_back(column, row); }
+			}
+		}
+		return tiles;
+	}
+
+	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row)
+	{
+		object.rawPosition = map.position;
+		object.cell.map = map.name;
+		object.cell.mapColumn = static_cast<int>(column) + 1;
+		object.cell.mapRow = static_cast<int>(row) + 1;
+		object.cell.mapColumns = map.rows.empty() ? 0 : static_cast<int>(map.rows.front().size());
+		object.cell.mapRows = static_cast<int>(map.rows.size());
+		object.cell.tileWidth = map.tileWidth;
+		object.cell.tileHeight = map.tileHeight;
+		if (std::find(object.outerGroups.begin(), object.outerGroups.end(), map.name) == object.outerGroups.end())
+		{
+			object.outerGroups.insert(object.outerGroups.begin(), map.name);
+		}
+	}
+
 	bool showLookNamed(Object& object, const std::string& name)
 	{
 		for (std::size_t i = 0; i < object.looks.size(); ++i)
@@ -37,6 +66,16 @@ namespace xge
 			if (object.looks[i].name == name)
 			{
 				if (object.look != i) { object.showLook(i); }
+				// A timer that follows this look starts over, even when the
+				// object showed it already: blue again is six seconds again.
+				for (auto& timer : object.timers)
+				{
+					if (timer.sprite == name)
+					{
+						timer.framesLeft = -1;
+						timer.done = false;
+					}
+				}
 				return true;
 			}
 		}

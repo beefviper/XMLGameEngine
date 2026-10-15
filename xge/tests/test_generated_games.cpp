@@ -130,8 +130,10 @@ namespace
 		void command(const std::string& at, const RawCommand& c)
 		{
 			out << at << " " << c.verb << " [" << c.object << "|" << c.variable << "|" << c.state << "|" << c.action << "|" << c.direction
-				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "|" << c.into << "]\n";
+				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "|" << c.into
+				<< "|" << c.from << "|" << c.partner << "|" << c.retreat << "]\n";
 			value(at + ".amount", c.amount);
+			value(at + ".ahead", c.ahead);
 			value(at + ".seconds", c.seconds);
 			value(at + ".distance", c.distance);
 		}
@@ -149,6 +151,7 @@ namespace
 			{
 				const std::string here = at + "[" + std::to_string(i) + "]";
 				flag(here + ".repeat", list[i].repeat);
+				text(here + ".sprite", list[i].sprite);
 				value(here + ".interval", list[i].interval);
 				commands(here + ".commands", list[i].commands);
 			}
@@ -169,6 +172,7 @@ namespace
 				flag(here + ".hasThickness", s.lines[i].hasThickness);
 			}
 			for (const std::string& row : s.bitmapRows) { text(at + ".row", row); }
+			for (const auto& [character, color] : s.bitmapColors) { text(at + ".ink." + std::string(1, character), color); }
 			value(at + ".scale", s.scale);
 			flag(at + ".hasScale", s.hasScale);
 			value(at + ".svgX", s.svgX);
@@ -239,6 +243,12 @@ namespace
 			for (const auto& [name, list] : o.action) { commands(at + ".action." + name, list); }
 			for (const auto& [name, v] : o.variable) { value(at + ".variable." + name, v); }
 			text(at + ".group", o.groupName);
+			for (const std::string& group : o.outerGroups) { text(at + ".outer", group); }
+			text(at + ".maze", o.maze.map);
+			for (const MazeWall& wall : o.maze.walls) { out << at << ".wall [" << wall.objClass << "|" << wall.sprite << "]\n"; }
+			out << at << ".map [" << o.cell.map << "] " << o.cell.mapColumn << " " << o.cell.mapRow << " " << o.cell.mapColumns << " " << o.cell.mapRows << "\n";
+			value(at + ".tileWidth", o.cell.tileWidth);
+			value(at + ".tileHeight", o.cell.tileHeight);
 			out << at << ".cell " << o.cell.column << " " << o.cell.row << "\n";
 			sprite(at + ".cell.slot", o.cell.slot);
 			value(at + ".cell.gapBefore", o.cell.gapBefore);

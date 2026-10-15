@@ -15,10 +15,10 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [arithmetic](03-arithmetic.md) | Math as text, `<equation>`, `<formula>` | Built |
 | [values-and-names](04-values-and-names.md) | `<random>`, evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
-| [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, groups inside a group | Built |
+| [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, groups inside a group | Built |
 | [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` and `<conditions>` sets, `atleast`/`atmost`/`remaining` | Built; per-state behavior Open |
 | [input](08-input.md) | Actions, held keys, key sets across states | Built |
-| [timers](09-timers.md) | Timers, commands in every context | Built; event queue Open |
+| [timers](09-timers.md) | Timers, look timers, commands in every context | Built; event queue Open |
 | [pools-and-enemies](10-pools-and-enemies.md) | Pools instead of spawning, enemies firing back, key sets | Built |
 | [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories | Reference |
 | [scenes](12-scenes.md) | Scenes inside a state; states and scenes own objects, take and change kit pieces, `<enter>`, dotted paths, `<drawn>`, `<show state>` | Built |
@@ -31,7 +31,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [collisions-open](21-collisions-open.md) | Weaknesses, response alternatives, escalation, reference Pong | Open / Idea |
 | [motion](22-motion.md) | Verb principle, gravity, thrust, headings, hop, jump, facing | Built |
 | [platforming](23-platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump | Built; air control Idea |
-| [chase-and-paths](24-chase-and-paths.md) | `<chase>`, `<aim>`, paths and formations (Galaxian), AI targeting | Built; curved paths Idea |
+| [chase-and-paths](24-chase-and-paths.md) | `<chase>`, `<aim>`, paths and formations (Galaxian), maze walking (`<go>`, `<hunt>`, `<wander>`), AI targeting | Built; curved paths Idea |
 
 ## Pictures and sound
 

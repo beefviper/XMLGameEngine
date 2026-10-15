@@ -90,6 +90,29 @@ namespace xge
 		}
 		if (verb == "aim") { return CmdAim{ raw.object }; }
 
+		// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
+		const auto speedOf = [&](const char* what)
+		{
+			const float speed = evaluate(raw.amount);
+			if (speed < 0.0f) { throw std::runtime_error(std::string("<") + what + ">: the speed is below 0"); }
+			return speed;
+		};
+
+		if (verb == "go") { return CmdGo{ directionFromName(raw.direction, verb), speedOf("go") }; }
+		if (verb == "wander") { return CmdWander{ speedOf("wander") }; }
+		if (verb == "hunt")
+		{
+			CmdHunt hunt{ raw.object, speedOf("hunt"), 0.0f, raw.partner, raw.retreat, 0.0f };
+			const bool noAhead = raw.ahead.kind == RawValue::Kind::Expression && raw.ahead.text.empty();
+			if (!noAhead) { hunt.ahead = evaluate(raw.ahead); }
+			if (!raw.retreat.empty())
+			{
+				hunt.retreatWithin = evaluate(raw.distance);
+				if (hunt.retreatWithin < 0.0f) { throw std::runtime_error("<hunt object=\"" + raw.object + "\">: the <retreat> is below 0 tiles"); }
+			}
+			return hunt;
+		}
+
 		if (verb == "accelerate")
 		{
 			return CmdAccelerate{ directionFromName(raw.direction, verb), evaluate(raw.amount), raw.burn };
@@ -141,7 +164,7 @@ namespace xge
 
 		if (verb == "play")    { return CmdPlay{ raw.sound }; }
 		if (verb == "silence") { return CmdSilence{ raw.sound }; }
-		if (verb == "become")  { return CmdBecome{ raw.sprite, raw.object }; }
+		if (verb == "become")  { return CmdBecome{ raw.sprite, raw.object, raw.from }; }
 		if (verb == "reveal")
 		{
 			const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
@@ -297,6 +320,23 @@ namespace xge
 			[&](const CmdLeap& l) { o << "leap(" << l.height << ")"; },
 			[&](const CmdClimb& c) { o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")"; },
 			[&](const CmdChase& c) { o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")"; },
+			[&](const CmdGo& g)
+			{
+				const char* direction = (g.direction == Direction::Up) ? "up"
+					: (g.direction == Direction::Down) ? "down"
+					: (g.direction == Direction::Left) ? "left"
+					: "right";
+				o << "go." << direction << "(" << g.speed << ")";
+			},
+			[&](const CmdHunt& h)
+			{
+				o << "hunt(" << h.target << ", " << h.speed;
+				if (h.ahead != 0.0f) { o << ", ahead " << h.ahead; }
+				if (!h.partner.empty()) { o << ", with " << h.partner; }
+				if (!h.retreatTo.empty()) { o << ", retreat " << h.retreatTo << " within " << h.retreatWithin; }
+				o << ")";
+			},
+			[&](const CmdWander& w) { o << "wander(" << w.speed << ")"; },
 			[&](const CmdAim& a) { o << "aim(" << a.target << ")"; },
 			[&](const CmdAccelerate& a)
 			{
@@ -319,7 +359,7 @@ namespace xge
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
 			[&](const CmdSilence& s) { o << "silence(" << s.sound << ")"; },
-			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << ")"; },
+			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << (b.from.empty() ? "" : ", from " + b.from) << ")"; },
 			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
 			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
@@ -462,7 +502,7 @@ namespace xge
 		{
 			o << "." << command.direction << "(" << command.amount << ", " << command.objClass << ")";
 		}
-		else if (command.verb == "move" || command.verb == "hop" || command.verb == "accelerate" || command.verb == "turn")
+		else if (command.verb == "move" || command.verb == "hop" || command.verb == "accelerate" || command.verb == "turn" || command.verb == "go")
 		{
 			o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
 		}
@@ -483,6 +523,15 @@ namespace xge
 		else if (command.verb == "chase")
 		{
 			o << "(" << command.object << ", " << command.amount << ", " << command.distance << ")";
+		}
+		else if (command.verb == "hunt")
+		{
+			o << "(" << command.object << ", " << command.amount << ", ahead " << command.ahead << ", with " << command.partner
+				<< ", retreat " << command.retreat << " " << command.distance << ")";
+		}
+		else if (command.verb == "wander")
+		{
+			o << "(" << command.amount << ")";
 		}
 		else if (command.verb == "fire" || command.verb == "aim" || (command.verb == "reset" && !command.object.empty()))
 		{

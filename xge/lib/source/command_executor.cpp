@@ -7,6 +7,7 @@
 
 #include "game.h"
 #include "geometry.h"
+#include "maze.h"
 #include "verbs.h"
 
 #include <algorithm>
@@ -65,6 +66,8 @@ namespace xge
 			[&](const CmdLand&) { land(object, other, edge); },
 			[&](const CmdChase& c) { chase(object, c); },
 			[&](const CmdAim& a) { aim(object, a.target); },
+			[&](const CmdHunt& h) { startHunt(object, h); },
+			[&](const CmdWander& w) { startWander(object, w); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
 			[&](const CmdReverse&) { reverse(object); },
@@ -141,6 +144,8 @@ namespace xge
 			[&](const CmdRelease& r) { if (owner) { release(*owner, r.target, r.count); } },
 			[&](const CmdChase& c) { if (owner) { chase(*owner, c); } },
 			[&](const CmdAim& a) { if (owner) { aim(*owner, a.target); } },
+			[&](const CmdHunt& h) { if (owner) { startHunt(*owner, h); } },
+			[&](const CmdWander& w) { if (owner) { startWander(*owner, w); } },
 			[&](const auto&) { /* the rest are about a key held, an edge or another
 			                      object touched, none of which a timer has */ }
 		}, command);
@@ -150,7 +155,7 @@ namespace xge
 	{
 		if (!command.target.empty())
 		{
-			game.become(command.target, command.sprite);
+			game.become(command.target, command.sprite, command.from);
 		}
 		else if (self)
 		{
@@ -399,6 +404,8 @@ namespace xge
 				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); object.facing = h.direction; object.hasAim = false; } },
 				// So does a jump, and one in the air waits for the landing.
 				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
+				// A <go> is the press alone too: the walker keeps going that way.
+				[&](const CmdGo& g) { if (keyPressed) { startGo(object, g); } },
 				[&](const CmdLeap& l) { if (keyPressed) { leap(object, l.height); } },
 				// A climb is held like a move; playOneFrame makes it.
 				[&](const CmdClimb& c)

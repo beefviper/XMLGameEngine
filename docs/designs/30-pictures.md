@@ -28,6 +28,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - One `<row>` element per line, not one text block: whitespace handling in text nodes differs among the four XML libraries.
 - Rejected: a palette now (a two-color sprite is two objects), frames as an attribute (`<sprite frames="2">`, cannot reorder or reuse).
 - A bitmap can be the sprite of a group in columns and rows, a row changing its rows of text and color.
+- **Inks (Pac-Man's ghosts):** a ghost is a body with white eyes and blue pupils, and as two or three objects on top of each other the eyes would not follow the body's looks. So a `<bitmap>` takes more `<color char="w">color.white</color>`s after its first: each names one more character and its color, the plain `<color>` staying `*`. The rows stay a picture; the strictness stays (a character no color names is an error). A palette shared between bitmaps is still open.
 
 
 ## SVG parts

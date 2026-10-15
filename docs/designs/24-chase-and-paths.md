@@ -17,6 +17,14 @@
 **Open.** Chasing round walls (pathfinding), leading a moving target, aiming only in 8 or 4 ways (Berzerk's robots fire along 8), a condition on distance ("when near, fire"), the Pac-Man strategies below.
 
 
+## Walking a maze (Pac-Man)
+
+- Need: Pac-Man and four ghosts on a tile maze. Pac-Man turns where the keys say as soon as the maze lets him; each ghost chases its own way.
+- **Chosen: a `<maze map=>` on the walker and three verbs that say how it chooses its way at a tile**: `<go direction>` (a player's stick: the wished way at the first tile it is open, straight on until then, stopped by a wall, reversed at once), `<hunt object>` (the arcade's targeting) and `<wander>` (one open way at random, a frightened ghost). The walking itself (keep to the lane, turn exactly in the middle of a tile, never onto a wall tile, straight on off the map) is one engine pass after the paths (`maze.cpp`), the same for all three.
+- **Arcade targeting, not a search.** At each tile a hunter takes, of the open ways other than back, the one whose next tile is nearest its target; ties go up, left, down, right. The four ghosts are four targets on one verb: the quarry (Blinky), `<ahead>` tiles in front of it (Pinky), that point doubled away from a `<with object>` partner (Inky), and a `<retreat object>` corner inside so many tiles (Clyde). A* or a breadth-first search was rejected as the default: the ghosts' getting stuck and doubling back is how the game plays, and a search would make every ghost the same perfect chaser. A real search can be another verb later.
+- Walls are the walker's own list (`<wall class="door" sprite="blue" />`): a tile is closed to it while an object in play of that class is there and the walker shows that look. The ghost house is just that: the door is a wall to a hunting or frightened ghost and open to eyes going home, and a `<path>` takes a ghost out of the house, since a path moves an object regardless of the maze.
+- Rejected: one `<ai targeting="...">` attribute with a mode per ghost (packs a choice and its numbers into attributes; the parts of the target are elements now), and a verb per ghost (names a ghost, not a behaviour).
+
 ## AI targeting (idea)
 
 - Maze-game AI decomposes into a few strategies with parameters. The Pac-Man ghosts: Blinky chases directly; Pinky targets a few tiles ahead of the player's direction; Inky uses the player's and Blinky's positions to flank; Clyde chases when far and retreats to a corner inside a threshold. Sketch: `<ai targeting="direct" />`, `"ahead" lookahead=4`, `"flank" reference="blinky"`, `"proximity_flee" threshold=8 fallback="corner"`. Pathfinding is the engine's job. Other modes: predictive, random, territorial.

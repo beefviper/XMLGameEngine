@@ -130,6 +130,7 @@ namespace xge
 		object.activeTurn = {};
 		object.activeThrustAheadBy.clear();
 		object.followPath.clear();
+		object.walk = {};
 	}
 
 	void restart(Object& object)

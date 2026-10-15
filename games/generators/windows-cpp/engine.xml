@@ -20,6 +20,8 @@
   <file>lib/source/verbs.cpp</file>
   <file>lib/include/frame.h</file>
   <file>lib/source/frame.cpp</file>
+  <file>lib/include/maze.h</file>
+  <file>lib/source/maze.cpp</file>
   <file>lib/include/color.h</file>
   <file>lib/source/color.cpp</file>
   <file>lib/include/bitmap.h</file>

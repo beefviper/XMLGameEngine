@@ -169,6 +169,9 @@ namespace xge
 		std::vector<RawLine> lines;  // line: one or more
 
 		std::vector<std::string> bitmapRows; // bitmap: the <row>s, top to bottom
+		// bitmap: each <color char="w">: the character and the name of its
+		// color, in the order written (`color` is the '*'s).
+		std::vector<std::pair<char, std::string>> bitmapColors;
 		RawValue scale;              // bitmap: real pixels to a character; svg: real pixels to a unit of the drawing; only when hasScale
 		bool hasScale{ false };
 
@@ -220,6 +223,36 @@ namespace xge
 		RawSprite slot;              // its row's sprite, as the row first shows it
 		RawValue gapBefore;          // the gap before its column, in its row (0 in column 1)
 		RawValue gapAbove;           // the gap above its row (0 in row 1)
+
+		// A place on a <map> (game_xml's readMap), when mapColumn is above 0:
+		// the map's name, the tile's column and row counting from 1, how many
+		// columns and rows the map has, and the size of a tile. The object
+		// sits in the middle of its tile (game_expr::layOutCells), measured
+		// from the map's <position>, which is the object's own.
+		std::string map;
+		int mapColumn{ 0 };
+		int mapRow{ 0 };
+		int mapColumns{ 0 };
+		int mapRows{ 0 };
+		RawValue tileWidth;
+		RawValue tileHeight;
+	};
+
+	// One <wall class="wall" sprite="normal" /> of a <maze>: the objects of
+	// that class on the map stop the walker, while it shows that look (any
+	// look, when sprite is empty).
+	struct MazeWall
+	{
+		std::string objClass;
+		std::string sprite;
+	};
+
+	// An object's <maze map="maze">: the <map> whose tiles it walks ("" for
+	// an object that walks none), and what is a wall to it. See maze.h.
+	struct RawMaze
+	{
+		std::string map;
+		std::vector<MazeWall> walls;
 	};
 
 	struct RawObject
@@ -250,6 +283,7 @@ namespace xge
 		RawValue rawDrag;            // only when hasDrag
 		bool hasDrag{ false };
 		std::string facing;          // "" when the object has no <facing>
+		RawMaze maze;                // <maze>: the map it walks, if any
 		std::vector<RawTimer> timers;
 		RawCollisionData rawCollisionData;
 		std::map<std::string, std::vector<RawCommand>> action;
@@ -281,6 +315,29 @@ namespace xge
 		std::string ownerScene;
 
 		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
+	};
+
+	// Where a maze walker is headed (see maze.h): what its last <go>, <hunt>
+	// or <wander> said, and the tile it last chose its way at, so that it
+	// chooses once a tile.
+	struct Walk
+	{
+		enum class Mode { None, Go, Hunt, Wander };
+		Mode mode{ Mode::None };
+		float speed{};
+
+		// <go>: the way it turns at the first gap, and keeps going.
+		Direction wish{ Direction::Up };
+
+		// <hunt>: what it is after, and how its target is found from that.
+		CmdHunt hunt;
+
+		// The tile it last chose at, and the way it was going then: a way
+		// changed by anything else (a <reverse />) lets it choose again.
+		int chosenColumn{ -1 };
+		int chosenRow{ -1 };
+		bool chose{ false };
+		Direction going{ Direction::Up };
 	};
 
 	struct Object
@@ -405,6 +462,29 @@ namespace xge
 		bool hasFacing{ false };
 		Direction facing{ Direction::Up };
 		Direction facingOriginal{ Direction::Up };
+
+		// Its place on a <map> (see RawCell): the map's name ("" for an object
+		// no map placed), its tile counting from 0, and the map's top left,
+		// the size of a tile and how many tiles across and down it is. The
+		// maps a walker finds its way on are made from these (buildMazes).
+		std::string mapName;
+		int mapColumn{};
+		int mapRow{};
+		Vector2f mapOrigin{};
+		Vector2f mapTile{};
+		int mapColumns{};
+		int mapRows{};
+
+		// A maze walker (<maze>): the map it walks (its name, and where it is
+		// among the game's mazes), what stops it, and where it is headed now:
+		// what its last <go>, <hunt> or <wander> said (Walk). It keeps to the
+		// middle of a lane, stops at a wall and turns only where there is a
+		// gap; a reset stops it. See maze.h.
+		std::string mazeMap;
+		std::vector<MazeWall> mazeWalls;
+		std::size_t mazeIndex{};
+		Walk walk;
+		bool walksMaze() const noexcept { return !mazeMap.empty(); }
 
 		// A <jump> under way: how far the object travels each frame, and how
 		// many frames are left. While framesLeft is above 0 the object is in
@@ -615,7 +695,30 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, Object const& f);
 	};
 
-	// Shows the object's look of that name; false (and nothing changes) if it
-	// has none of that name.
+	// A <map> (game_xml's readMap; a generated game's map function): its
+	// name, its rows of characters, a character a tile, where its top left
+	// is, and the size of a tile.
+	struct RawMap
+	{
+		std::string name;
+		std::vector<std::string> rows;
+		RawVector2 position;
+		RawValue tileWidth;
+		RawValue tileHeight;
+	};
+
+	// The tiles of a map that show this character, row by row and each row
+	// left to right: column, then row, counting from 0.
+	std::vector<std::pair<std::size_t, std::size_t>> tilesOf(const RawMap& map, char character);
+
+	// Puts an object on a tile of the map (column and row from 0): at the
+	// map's <position>, which game_expr's layOutCells moves it on from to
+	// the middle of the tile. The map's name means it too, outermost of
+	// its names.
+	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row);
+
+	// Shows the object's look of that name, and starts over the timers that
+	// follow it (Timer::sprite); false (and nothing changes) if it has none
+	// of that name.
 	bool showLookNamed(Object& object, const std::string& name);
 }

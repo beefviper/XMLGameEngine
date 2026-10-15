@@ -7,6 +7,7 @@
 
 #include "collision_detector.h"
 #include "geometry.h"
+#include "maze.h"
 #include "verbs.h"
 
 #include <algorithm>
@@ -385,6 +386,9 @@ namespace xge
 		rules.timers();
 
 		rules.followPaths();
+
+		// Who walks a maze chooses its way, now that a path may have let it go.
+		walkMazes(objects, rules);
 
 		applyClimbing(objects, rules);
 
