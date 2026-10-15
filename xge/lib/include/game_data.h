@@ -28,6 +28,10 @@ namespace xge
 		std::vector<RawSound> sounds;
 		std::vector<RawPath> paths;
 
+		// <keeps>: the objects (or groups) a full <reset /> passes over, as
+		// named in the file.
+		std::vector<std::string> keeps;
+
 		// How it was checked against xgedef.xsd, as printGame() says it.
 		std::string validation;
 	};

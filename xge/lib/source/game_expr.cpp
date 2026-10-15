@@ -99,6 +99,7 @@ namespace xge
 				[](const CmdRelease&) { return std::string("<release>"); },
 				[](const CmdStop&) { return std::string("<stop />"); },
 				[](const CmdIncrement&) { return std::string("<inc>"); },
+				[](const CmdCopy&) { return std::string("<copy>"); },
 				[](const CmdDecrement&) { return std::string("<dec>"); },
 				[](const CmdPushState&) { return std::string("<push>"); },
 				[](const CmdPopState&) { return std::string("<pop>"); },
@@ -166,8 +167,8 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
-			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
+			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
+			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
 				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
@@ -176,9 +177,9 @@ namespace xge
 				return tags;
 			}();
 			static const PlaceRule rules[] = {
-				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>",
+				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
 					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
-				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>",
+				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
 					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
@@ -223,6 +224,37 @@ namespace xge
 		// runs: pressing a key bound to <push state="pasued" /> would otherwise
 		// stop the game in the middle of play (and used to read past the end of
 		// the list of states).
+		// The variable a command names: owner.variable, the variable after the
+		// last dot (the owner may be a path), or, where `ownNumber`, a text
+		// object of that whole name counting its own <number> (<inc>, <dec>).
+		void checkVariable(const std::string& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where, bool ownNumber)
+		{
+			const bool whole = ownNumber && std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == target; });
+			const auto dot = whole ? std::string::npos : target.rfind('.');
+			if (dot == std::string::npos && !ownNumber)
+			{
+				throw std::runtime_error(where + ": " + tag + ": '" + target + "' is no variable; name one as owner.variable (player.score)");
+			}
+			const std::string ownerName = target.substr(0, dot);
+			const Object* owner = findObject(objects, ownerName);
+			if (!owner)
+			{
+				throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects))
+					+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
+			}
+			if (dot != std::string::npos)
+			{
+				const std::string variableName = target.substr(dot + 1);
+				if (!owner->variable.count(variableName))
+				{
+					std::vector<std::string> names;
+					for (const auto& entry : owner->variable) { names.push_back(entry.first); }
+					throw std::runtime_error(where + ": " + tag + ": '" + ownerName + "' has no variable named '" + variableName + "'" + didYouMean(variableName, names)
+						+ (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
+				}
+			}
+		}
+
 		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
 			const std::vector<SoundDesc>& sounds, const std::map<std::string, Path>& paths, const std::string& where)
 		{
@@ -387,29 +419,15 @@ namespace xge
 				// its own <number>.
 				const bool inc = std::holds_alternative<CmdIncrement>(command);
 				const std::string& target = inc ? std::get<CmdIncrement>(command).target : std::get<CmdDecrement>(command).target;
-				const std::string tag = std::string(inc ? "<inc" : "<dec") + " variable=\"" + target + "\" />";
-				// A text object of that name counts its own number; anything else
-				// is owner.variable, the variable after the last dot.
-				const bool whole = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == target; });
-				const auto dot = whole ? std::string::npos : target.rfind('.');
-				const std::string ownerName = target.substr(0, dot);
-				const Object* owner = findObject(objects, ownerName);
-				if (!owner)
-				{
-					throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects))
-						+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
-				}
-				if (dot != std::string::npos)
-				{
-					const std::string variableName = target.substr(dot + 1);
-					if (!owner->variable.count(variableName))
-					{
-						std::vector<std::string> names;
-						for (const auto& entry : owner->variable) { names.push_back(entry.first); }
-						throw std::runtime_error(where + ": " + tag + ": '" + ownerName + "' has no variable named '" + variableName + "'" + didYouMean(variableName, names)
-							+ (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
-					}
-				}
+				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + target + "\" />", objects, where, true);
+			}
+			else if (const auto* copy = std::get_if<CmdCopy>(&command))
+			{
+				// Both are owner.variable: a copy reads one object's variable
+				// and writes another's.
+				const std::string tag = "<copy variable=\"" + copy->from + "\" into=\"" + copy->into + "\" />";
+				checkVariable(copy->from, tag, objects, where, false);
+				checkVariable(copy->into, tag, objects, where, false);
 			}
 		}
 

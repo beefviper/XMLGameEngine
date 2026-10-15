@@ -310,6 +310,10 @@ namespace xge
 		// Whether it is drawn while in play (see RawObject::isDrawn).
 		bool isDrawn{ true };
 
+		// Named in the game's <keeps>: a full <reset /> passes it over, so it
+		// keeps what it holds (a best score) from one game to the next.
+		bool kept{ false };
+
 		// Who owns it (see RawObject::ownerState). An object carried into
 		// another scene (<enter>) belongs to that one from then on;
 		// ownerSceneOriginal is the scene it started in, where a reset puts it

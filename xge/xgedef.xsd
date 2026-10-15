@@ -589,6 +589,13 @@
       </xs:element>
       <xs:element name="inc" type="variableReferenceType" />
       <xs:element name="dec" type="variableReferenceType" />
+      <!-- copy: the variable into= takes the number variable= holds now (both owner.variable) -->
+      <xs:element name="copy">
+        <xs:complexType>
+          <xs:attribute name="variable" type="xs:string" use="required" />
+          <xs:attribute name="into" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="move" type="stepType" />
       <xs:element name="hop" type="stepType" />
       <xs:element name="jump" type="jumpType" />
@@ -1109,6 +1116,21 @@
           </xs:complexType>
         </xs:element>
         <xs:element name="objects" type="objectsType" minOccurs="0" />
+        <!--
+          What a full <reset /> passes over: each <keep> names an object or a
+          group, which keeps what it holds (a best score) into the next game.
+        -->
+        <xs:element name="keeps" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="keep" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="object" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
         <xs:element name="states">
           <xs:complexType>
             <xs:sequence>

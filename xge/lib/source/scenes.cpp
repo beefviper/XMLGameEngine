@@ -279,7 +279,8 @@ namespace xge
 			{
 				for (RawCommand& command : commands)
 				{
-					if (command.verb == "inc" || command.verb == "dec") { command.variable = names_.variableTarget(command.variable, context); }
+					if (command.verb == "inc" || command.verb == "dec" || command.verb == "copy") { command.variable = names_.variableTarget(command.variable, context); }
+					if (command.verb == "copy") { command.into = names_.variableTarget(command.into, context); }
 					command.object = names_.object(command.object, context);
 					command.scene = names_.scene(command.scene, context);
 					if (!command.way.empty() && !context.scene.empty())

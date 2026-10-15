@@ -431,3 +431,39 @@ TEST_CASE("paused, the fleet is drawn still underneath and stops where it is", "
 	CHECK(play.state() == "playing");
 	CHECK((alien.position.x != Approx(where.x) || alien.position.y != Approx(where.y)));
 }
+
+TEST_CASE("the best score follows the score up, and a new game keeps it", "[galaxian][keeps]")
+{
+	Play play("descriptions/galaxian.xml");
+	Object& best = play.object("best");
+	CHECK(best.kept);
+	CHECK(play.game.isShown(best)); // on the title
+	play.tap(KeyCode::Space);
+	CHECK(play.game.isShown(best));
+
+	Object& ship = play.object("ship");
+	ship.variable["score"] = 240.0f;
+	play.frames(1);
+	CHECK(best.variable.at("score") == 240.0f);
+	CHECK(best.spriteParams.at(1) == "240");
+
+	// Game over, then Space: the score starts again, the best does not.
+	ship.variable["lives"] = 0.0f;
+	play.frames(1);
+	REQUIRE(play.state() == "gameover");
+	CHECK(play.game.isStill(best));
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "mainmenu");
+	CHECK(ship.variable.at("score") == 0.0f);
+	CHECK(best.variable.at("score") == 240.0f);
+	CHECK(best.spriteParams.at(1) == "240");
+
+	// A lower score leaves it alone; a higher one moves it on.
+	play.tap(KeyCode::Space);
+	ship.variable["score"] = 100.0f;
+	play.frames(1);
+	CHECK(best.variable.at("score") == 240.0f);
+	ship.variable["score"] = 300.0f;
+	play.frames(1);
+	CHECK(best.variable.at("score") == 300.0f);
+}

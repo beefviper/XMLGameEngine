@@ -130,7 +130,7 @@ namespace
 		void command(const std::string& at, const RawCommand& c)
 		{
 			out << at << " " << c.verb << " [" << c.object << "|" << c.variable << "|" << c.state << "|" << c.action << "|" << c.direction
-				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "]\n";
+				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "|" << c.into << "]\n";
 			value(at + ".amount", c.amount);
 			value(at + ".seconds", c.seconds);
 			value(at + ".distance", c.distance);
@@ -314,6 +314,7 @@ namespace
 					value(here + ".length", n.length);
 				}
 			}
+			for (const std::string& keep : g.keeps) { text("keep", keep); }
 			for (const RawPath& p : g.paths)
 			{
 				const std::string at = "path " + p.name;
