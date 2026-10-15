@@ -295,7 +295,8 @@ TEST_CASE("five crossings win, and four are not enough", "[freeway]")
 		table.hop(1, "up");
 		table.frames(1);
 		CHECK(table.score(1) == 5.0f);
-		CHECK(table.game.getCurrentState().name == "p1wins");
+		CHECK(table.game.getCurrentState().name == "wins");
+		CHECK(table.game.getObject("wins.winner").lookName() == "player1");
 	}
 	{
 		Table table;
@@ -304,7 +305,8 @@ TEST_CASE("five crossings win, and four are not enough", "[freeway]")
 		table.chicken(2).position.y = rowY(1);
 		table.hop(2, "up");
 		table.frames(1);
-		CHECK(table.game.getCurrentState().name == "p2wins");
+		CHECK(table.game.getCurrentState().name == "wins");
+		CHECK(table.game.getObject("wins.winner").lookName() == "player2");
 	}
 }
 
@@ -317,7 +319,7 @@ TEST_CASE("space starts a new game from either win screen, with both scores back
 	table.hop(2, "up");
 	table.frames(1);
 	table.chicken(1).variable["score"] = 2.0f;
-	REQUIRE(table.game.getCurrentState().name == "p2wins");
+	REQUIRE(table.game.getCurrentState().name == "wins");
 
 	table.executor.executeInput(Command{ CmdReset{} }, true);
 
@@ -429,10 +431,11 @@ TEST_CASE("paused and the endings draw the road still underneath, scores and all
 
 	table.chicken(1).variable["score"] = 5.0f;
 	table.frames(1);
-	REQUIRE(table.game.getCurrentState().name == "p1wins");
+	REQUIRE(table.game.getCurrentState().name == "wins");
 	CHECK(table.game.isStill(table.game.getObject("score1")));
 	CHECK(table.game.isStill(table.game.getObject("score2")));
 	CHECK(table.game.isStill(car));
-	CHECK(table.game.isShown(table.game.getObject("p1wins.p1wins")));
+	CHECK(table.game.isShown(table.game.getObject("wins.winner")));
+	CHECK(table.game.getObject("wins.winner").lookName() == "player1");
 	CHECK(table.game.isShown(table.game.getObject("again")));
 }

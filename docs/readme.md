@@ -452,6 +452,18 @@ An object with several named sprites and no `<animation>` has **looks**: it star
 
 runs once, when Bailey lands on a white row, and turns the whole row blue. A look can also count hits: Breakout's grey top row is a group of two looks, `whole` and `cracked`, with `<collision object="ball" sprite="cracked"><die /></collision>` and then `<collision object="ball" sprite="whole"><become sprite="cracked" /></collision>`. Rules run in the order written and each looks at the look as it is then, so the cracked rule comes first; the other way round, the first hit would crack a brick and the second rule would take it out at once. Looks are pictures of any shape kind (a rectangle in another colour, another bitmap); an object with a `<heading>` cannot have them, and a look cannot be a text showing a `<number>`.
 
+A look is also how one state is told something by the state before it. Space Race, Combat and Freeway each have one `wins` state whose `winner` has a look per player; the condition that ends the game picks the look and then pushes the state, and the full reset that starts the next game brings back the first look:
+
+```xml
+<condition object="rocket2" variable="score">
+  <atleast>2</atleast>
+  <become object="wins.winner" sprite="player2" />
+  <push state="wins" />
+</condition>
+```
+
+A text whose look changes is measured again, so a position worked out from its width (`window.width.center - winner.width / 2`) keeps it centred.
+
 ### Timers
 
 ```xml
@@ -525,7 +537,7 @@ Commands are tags, and where they are meaningful is what the table says. Any lis
 | `<thrust burn="fuel">amount</thrust>` | object `<action>` | Like `<accelerate>`, but along the way the object faces instead of along an axis; `burn` works the same. Needs a `<heading>` on the object |
 | `<release object="name">count</release>` | collision (screen edge or another object) | Puts the first `count` (default 1) out-of-play objects of that name or group back in play, centered on the object running the rule, at their own starting velocity. Fewer left in the pool gives what is there. This is how a rock breaks into smaller ones |
 | `<push state="name" />` / `<pop />` | state input or condition | Push a state / pop back. The state named must be one of the game's. `<pop />` with only the first state left does nothing |
-| `<pop state="name" />` | state input or condition | This state goes and that one takes its place, so moving on (Air-Sea Battle's end screens) does not grow the stack; moving between places of one state is `<enter scene>` |
+| `<pop state="name" />` | state input or condition | This state goes and that one takes its place, so moving on (Air-Sea Battle's time up to its result) does not grow the stack; moving between places of one state is `<enter scene>` |
 | `<trigger object="name" action="up" />` | state input | Runs one of that object's named `<action>`s. The object and the action must exist |
 | `<play sound="name" />` | anywhere: collision (screen edge or another object), object `<action>`, state input or condition | Plays one of the game's [sounds](#sounds). In an action or an input it plays on the press, not on the release; a sound that loops plays while the key is held. The game only asks for the sound; the engine plays everything asked for once the frame's keys, collisions and conditions have run |
 | `<silence sound="name" />` | anywhere `<play>` can go | Stops one of the game's sounds if it is playing: above all one that [loops](#sounds), which otherwise plays until something silences it |
@@ -632,7 +644,7 @@ Each object of a scene also answers to `state.name` (`playing.robots`): the robo
 
 ### Show sets
 
-Objects several states show are written once, as a named `<shows>` set at the top of `<states>` (with the `<keys>` and [`<conditions>`](#conditions) sets, before the first `<state>`), holding `<show>`s like a state's. A state takes a set with `<show set="name" />` among its own `<show>`s, one set to a `<show>`, and adds whatever else it shows. A set can take a set written before it. Now that states own their objects, a set is for objects of the game that several states show: Air-Sea Battle's four end screens each draw the battle still and take TIME UP and "spacebar to play again" from one `end` set:
+Objects several states show are written once, as a named `<shows>` set at the top of `<states>` (with the `<keys>` and [`<conditions>`](#conditions) sets, before the first `<state>`), holding `<show>`s like a state's. A state takes a set with `<show set="name" />` among its own `<show>`s, one set to a `<show>`, and adds whatever else it shows. A set can take a set written before it. Now that states own their objects, a set is for objects of the game that several states show: Air-Sea Battle's two end screens (time up, then the result) each draw the battle still and take TIME UP and "spacebar to play again" from one `end` set:
 
 ```xml
 <states>
@@ -640,7 +652,7 @@ Objects several states show are written once, as a named `<shows>` set at the to
     <show object="timeup" />
     <show object="again" />
   </shows>
-  <state name="yellowwins">
+  <state name="result">
     <objects> ... </objects>                  <!-- its own words -->
     <shows>
       <show state="battle" />
@@ -654,7 +666,7 @@ A `<show>` names an `object`, a `set` or (in a state's own `<shows>`) a `state`,
 
 What a state shows is drawn in the order the objects are written in the file, a later one over an earlier, whatever order its `<show>`s are in.
 
-The first state in the file is the starting state. States form a **stack**: `<push state="name" />` pushes a state, and `<pop />` pops back to the previous one. The starting state is never popped: a `<pop />` with only it left does nothing. `<pop state="name" />` puts that state in place of the current one (the starting state too), for a game that moves from one screen to the next (Air-Sea Battle's clock running out puts the right end screen in its place); places inside one mode are [scenes](#scenes).
+The first state in the file is the starting state. States form a **stack**: `<push state="name" />` pushes a state, and `<pop />` pops back to the previous one. The starting state is never popped: a `<pop />` with only it left does nothing. `<pop state="name" />` puts that state in place of the current one (the starting state too), for a game that moves from one screen to the next (Air-Sea Battle's clock running out puts its result screen in its place); places inside one mode are [scenes](#scenes).
 
 ## Input
 
@@ -738,15 +750,18 @@ The other forms:
 ```xml
 <condition object="gun1" variable="score">
   <above object="gun2" variable="score" />
-  <pop state="yellowwins" />
+  <become object="result.outcome" sprite="yellow" />
+  <pop state="result" />
 </condition>
 <condition object="gun2" variable="score">
   <above object="gun1" variable="score" />
-  <pop state="whitewins" />
+  <become object="result.outcome" sprite="white" />
+  <pop state="result" />
 </condition>
 <condition object="gun1" variable="score">
   <equal object="gun2" variable="score" />
-  <pop state="draw" />
+  <become object="result.outcome" sprite="draw" />
+  <pop state="result" />
 </condition>
 ```
 

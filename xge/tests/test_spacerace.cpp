@@ -151,7 +151,8 @@ TEST_CASE("first to two points wins", "[spacerace]")
 		table.frames(6);
 
 		CHECK(table.score(1) == 2.0f);
-		CHECK(table.game.getCurrentState().name == "player1wins");
+		CHECK(table.game.getCurrentState().name == "wins");
+		CHECK(table.game.getObject("wins.winner").lookName() == "player1");
 	}
 
 	SECTION("player 2, and one point is not enough")
@@ -167,12 +168,14 @@ TEST_CASE("first to two points wins", "[spacerace]")
 		table.key(2, "up", true);
 		table.frames(6);
 		CHECK(table.score(2) == 2.0f);
-		CHECK(table.game.getCurrentState().name == "player2wins");
+		CHECK(table.game.getCurrentState().name == "wins");
+		CHECK(table.game.getObject("wins.winner").lookName() == "player2");
 
 		// Space starts a new game from the menu with the scores back at 0.
 		table.executor.executeInput(Command{ CmdReset{} }, true);
 		CHECK(table.game.getCurrentState().name == "mainmenu");
 		CHECK(table.score(2) == 0.0f);
+		CHECK(table.game.getObject("wins.winner").lookName() == "player1");
 		CHECK(table.game.getObject("score2").spriteParams.at(1) == "0");
 	}
 }
@@ -257,10 +260,10 @@ TEST_CASE("paused and the endings draw the race still underneath", "[spacerace][
 
 	table.rocket(2).variable["score"] = 2.0f;
 	table.frames(1);
-	REQUIRE(table.game.getCurrentState().name == "player2wins");
+	REQUIRE(table.game.getCurrentState().name == "wins");
 	CHECK(table.game.isStill(table.rocket(2)));
 	CHECK(table.game.isStill(table.game.getObject("score2")));
-	CHECK(table.game.isShown(table.game.getObject("player2wins.player2wins")));
+	CHECK(table.game.isShown(table.game.getObject("wins.winner")));
+	CHECK(table.game.getObject("wins.winner").lookName() == "player2");
 	CHECK(table.game.isShown(table.game.getObject("continue")));
-	CHECK_FALSE(table.game.isShown(table.game.getObject("player1wins.player1wins")));
 }

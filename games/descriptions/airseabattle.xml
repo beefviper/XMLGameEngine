@@ -26,15 +26,16 @@
     every second and a half, back off the side it came from.
   * The clock is a timer of the battle taking a second off status.time.
   * At time up the two scores are compared (<above object="gun2"
-    variable="score" />, <equal>) and a state saying who won, or a draw,
-    takes the place of TIME UP.
+    variable="score" />, <equal>), and the result screen takes the place of
+    time up, its words picked to say who won, or a draw (<become
+    object="result.outcome" sprite="white" />).
   * Each state owns what it draws: the title texts are the title state's;
     the clock (status, never drawn), the sea, the lanes, the guns, their
-    shells and the scores are the battle's; the PAUSED text and each
-    ending's message are those states' own. Paused and the end screens draw
+    shells and the scores are the battle's; the PAUSED text is paused's and
+    the result's words are result's. Paused and the end screens draw
     the battle still underneath (<show state="battle" />), the scores with
     it. TIME UP and "spacebar to play again" are the game's own objects,
-    shown by all four end screens through the set "end".
+    shown by both end screens through the set "end".
   Not in it: the guns' three fixed angles (they swing freely here, and can
   point at the sea), and the other games on the cartridge (the submarines,
   the torpedoes, the shooting gallery).
@@ -544,72 +545,47 @@
       <conditions>
         <condition object="gun1" variable="score">
           <above object="gun2" variable="score" />
-          <pop state="yellowwins" />
+          <become object="result.outcome" sprite="yellow" />
+          <pop state="result" />
         </condition>
         <condition object="gun2" variable="score">
           <above object="gun1" variable="score" />
-          <pop state="whitewins" />
+          <become object="result.outcome" sprite="white" />
+          <pop state="result" />
         </condition>
         <condition object="gun1" variable="score">
           <equal object="gun2" variable="score" />
-          <pop state="draw" />
+          <become object="result.outcome" sprite="draw" />
+          <pop state="result" />
         </condition>
       </conditions>
     </state>
-    <state name="yellowwins">
+    <state name="result">
       <objects>
-        <!-- yellow has more: under TIME UP -->
-        <object name="yellowwon">
-          <sprite>
+        <!-- who won, or a draw: under TIME UP -->
+        <object name="outcome">
+          <sprite name="yellow">
             <text>
               <content>YELLOW WINS</content>
               <size>50</size>
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - yellowwon.width / 2</x><y>window.height.center - yellowwon.height / 2 + (10)</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="battle" />
-        <show set="end" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-    <state name="whitewins">
-      <objects>
-        <object name="whitewon">
-          <sprite>
+          <sprite name="white">
             <text>
               <content>WHITE WINS</content>
               <size>50</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - whitewon.width / 2</x><y>window.height.center - whitewon.height / 2 + (10)</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="battle" />
-        <show set="end" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-    <state name="draw">
-      <objects>
-        <object name="drawn">
-          <sprite>
+          <sprite name="draw">
             <text>
               <content>A DRAW</content>
               <size>50</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - drawn.width / 2</x><y>window.height.center - drawn.height / 2 + (10)</y></position>
+          <position><x>window.width.center - outcome.width / 2</x><y>window.height.center - outcome.height / 2 + (10)</y></position>
         </object>
       </objects>
       <shows>

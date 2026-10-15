@@ -655,7 +655,7 @@ TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups
 	CHECK(frogger.at("pads") == 5);
 
 	const auto race = census("descriptions/spacerace.xml");
-	CHECK(race.at("all") == 37);
+	CHECK(race.at("all") == 36);
 	CHECK(race.at("debris") == 27);
 }
 

@@ -13,9 +13,8 @@
 
   How it is written:
   * Each state owns what it draws: the title to the main menu, the debris, the
-    rockets and the scores to playing, the PAUSED sign to paused, each
-    winner's words to its own state. Only "spacebar to continue", which both
-    endings show, is the game's.
+    rockets and the scores to playing, the PAUSED sign to paused, the
+    winner's words and "spacebar to continue" to wins.
   * Held <move> for the rockets, and for the debris a <group> per lane (the
     speed and row written once, each <member> saying where it starts;
     debris5.2 is the second piece in the fifth lane, and debris5 means the
@@ -25,7 +24,10 @@
     `size`).
   * <reset /> when a rocket is hit, <inc> and <reset /> on the top edge, and
     a variable condition to end it.
-  * Paused and the endings draw the race still underneath (<show state>).
+  * One win screen for both players: its words are a look per player, and
+    the condition that ends the race picks one (<become object="wins.winner"
+    sprite="player2" />) before it pushes wins.
+  * Paused and the win screen draw the race still underneath (<show state>).
   There are no levels, so there are no <scenes>.
 -->
 
@@ -73,19 +75,6 @@
       <note pitch="C6">0.3</note>
     </sound>
   </sounds>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="continue">
-      <sprite>
-        <text>
-          <content>spacebar to continue</content>
-          <size>48</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - continue.width / 2</x><y>window.height.center - continue.height / 2 + (70)</y></position>
-    </object>
-  </objects>
   <states>
     <state name="mainmenu">
       <objects>
@@ -321,12 +310,14 @@
       <conditions>
         <condition object="rocket1" variable="score">
           <atleast>2</atleast>
-          <push state="player1wins" />
+          <become object="wins.winner" sprite="player1" />
+          <push state="wins" />
           <play sound="win" />
         </condition>
         <condition object="rocket2" variable="score">
           <atleast>2</atleast>
-          <push state="player2wins" />
+          <become object="wins.winner" sprite="player2" />
+          <push state="wins" />
           <play sound="win" />
         </condition>
       </conditions>
@@ -356,45 +347,38 @@
         </input>
       </inputs>
     </state>
-    <state name="player1wins">
+    <state name="wins">
       <objects>
-        <object name="player1wins">
-          <sprite>
+        <object name="winner">
+          <sprite name="player1">
             <text>
               <content>PLAYER 1 WINS</content>
               <size>96</size>
               <color>color.cyan</color>
             </text>
           </sprite>
-          <position><x>window.width.center - player1wins.width / 2</x><y>window.height.center - player1wins.height / 2 + (-60)</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-        <show object="continue" />
-      </shows>
-      <inputs>
-        <input button="space">
-          <reset />
-        </input>
-      </inputs>
-    </state>
-    <state name="player2wins">
-      <objects>
-        <object name="player2wins">
-          <sprite>
+          <sprite name="player2">
             <text>
               <content>PLAYER 2 WINS</content>
               <size>96</size>
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - player2wins.width / 2</x><y>window.height.center - player2wins.height / 2 + (-60)</y></position>
+          <position><x>window.width.center - winner.width / 2</x><y>window.height.center - winner.height / 2 + (-60)</y></position>
+        </object>
+        <object name="continue">
+          <sprite>
+            <text>
+              <content>spacebar to continue</content>
+              <size>48</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - continue.width / 2</x><y>window.height.center - continue.height / 2 + (70)</y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
-        <show object="continue" />
       </shows>
       <inputs>
         <input button="space">

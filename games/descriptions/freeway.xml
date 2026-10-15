@@ -21,12 +21,13 @@
   How it is written:
   * Each state owns what it draws: the title, the help and the keys to the
     main menu, the road, the traffic, the chickens and the scores to playing,
-    the PAUSED sign to paused, each winner's words to its own state. Only
-    "spacebar to play again", which both endings show, is the game's.
+    the PAUSED sign to paused, the winner's words and "spacebar to play
+    again" to wins, one screen for both players with a look for each, which
+    the condition that ends the game picks with <become>.
   * It is Frogger's road without the river: <hop> for the chicken, a <group>
     per lane with <wrap /> so traffic loops, <reset /> for being hit, and
     <inc /> plus an <atleast> condition for scoring.
-  * Paused and the endings draw the road still underneath (<show state>),
+  * Paused and the win screen draw the road still underneath (<show state>),
     scores and all.
   There are no levels, so there are no <scenes>.
 -->
@@ -83,19 +84,6 @@
       <note pitch="C6">0.3</note>
     </sound>
   </sounds>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite>
-        <text>
-          <content>spacebar to play again</content>
-          <size>48</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (60)</y></position>
-    </object>
-  </objects>
   <states>
     <state name="mainmenu">
       <objects>
@@ -557,12 +545,14 @@
       <conditions>
         <condition object="chicken1" variable="score">
           <atleast>crossings</atleast>
-          <push state="p1wins" />
+          <become object="wins.winner" sprite="player1" />
+          <push state="wins" />
           <play sound="win" />
         </condition>
         <condition object="chicken2" variable="score">
           <atleast>crossings</atleast>
-          <push state="p2wins" />
+          <become object="wins.winner" sprite="player2" />
+          <push state="wins" />
           <play sound="win" />
         </condition>
       </conditions>
@@ -595,45 +585,38 @@
         </input>
       </inputs>
     </state>
-    <state name="p1wins">
+    <state name="wins">
       <objects>
-        <object name="p1wins">
-          <sprite>
+        <object name="winner">
+          <sprite name="player1">
             <text>
               <content>PLAYER 1 WINS</content>
               <size>100</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - p1wins.width / 2</x><y>window.height.center - p1wins.height / 2 + (-60)</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input button="space">
-          <reset />
-        </input>
-      </inputs>
-    </state>
-    <state name="p2wins">
-      <objects>
-        <object name="p2wins">
-          <sprite>
+          <sprite name="player2">
             <text>
               <content>PLAYER 2 WINS</content>
               <size>100</size>
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - p2wins.width / 2</x><y>window.height.center - p2wins.height / 2 + (-60)</y></position>
+          <position><x>window.width.center - winner.width / 2</x><y>window.height.center - winner.height / 2 + (-60)</y></position>
+        </object>
+        <object name="again">
+          <sprite>
+            <text>
+              <content>spacebar to play again</content>
+              <size>48</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (60)</y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
-        <show object="again" />
       </shows>
       <inputs>
         <input button="space">
