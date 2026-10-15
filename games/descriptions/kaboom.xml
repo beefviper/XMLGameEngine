@@ -33,8 +33,10 @@
     at a time and that <die /> back into the pool when caught.
   * A bomb that hits the ground runs <reset object="bombs" />, which puts
     every bomb of the wave back in the pool at once: the explosion.
-  * A <condition> of each wave on the score <enter>s the next one, and the
-    last one's wins.
+  * A <condition> of the first wave on the score <enter>s its way "next"
+    once the score is `upto`. A later wave copies it with the rest (from=),
+    so it says only its own `upto` and where its "next" leads; the last one
+    has a condition of its own, which wins.
   * Paused and the two endings draw the game still underneath (<show state>).
 -->
 
@@ -53,8 +55,6 @@
     <variable name="step">9</variable>
     <variable name="margin">20</variable>
     <variable name="roof">104</variable>
-    <variable name="wave2at">15</variable>
-    <variable name="wave3at">45</variable>
     <variable name="goal">90</variable>
   </variables>
   <sounds>
@@ -334,7 +334,11 @@
         </objects>
 
         <scene name="wave1">
+          <ways>
+            <way name="next" scene="wave2" />
+          </ways>
           <variables>
+            <variable name="upto">15</variable>
             <variable name="pace">3</variable>
             <variable name="drop">0.55</variable>
             <variable name="fall">3</variable>
@@ -347,8 +351,8 @@
           </objects>
           <conditions>
             <condition object="bucket" variable="score">
-              <atleast>wave2at</atleast>
-              <enter scene="wave2" />
+              <atleast>upto</atleast>
+              <enter way="next" />
               <play sound="wave" />
             </condition>
           </conditions>
@@ -356,7 +360,11 @@
 
         <!-- the same man, quicker, and dropping faster, orange bombs -->
         <scene name="wave2" from="wave1">
+          <ways>
+            <way name="next" scene="wave3" />
+          </ways>
           <variables>
+            <variable name="upto">45</variable>
             <variable name="pace">4.5</variable>
             <variable name="drop">0.42</variable>
             <variable name="fall">4.5</variable>
@@ -381,13 +389,6 @@
               </sprite>
             </object>
           </objects>
-          <conditions>
-            <condition object="bucket" variable="score">
-              <atleast>wave3at</atleast>
-              <enter scene="wave3" />
-              <play sound="wave" />
-            </condition>
-          </conditions>
         </scene>
 
         <!-- quicker again, red bombs -->

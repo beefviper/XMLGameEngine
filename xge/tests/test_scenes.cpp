@@ -278,6 +278,102 @@ TEST_CASE("a condition that names no object looks only at the current scene, and
 	CHECK(loaded.game.getObject("playing.wave2.aliens.1").isVisible);
 }
 
+TEST_CASE("from= copies the conditions, timers and ways of the scene it is from, and its own replace them", "[scenes][conditions]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	// Each wave is over when its aliens are gone and goes on by its way
+	// "next"; a timer counts the time spent in waves. The second wave says
+	// only where its "next" leads, and the third wins instead.
+	const std::string aliens = "<group name=\"aliens\" class=\"alien\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<member><position><x>10</x><y>10</y></position></member><member><position><x>30</x><y>10</y></position></member></group>";
+	const std::string states =
+		"<state name=\"playing\"><objects>" + box("clock", 0, 500, {}, "<variables><variable name=\"ticks\">0</variable></variables>") + "</objects>"
+		"<scenes><objects>" + aliens + "</objects>"
+		"<scene name=\"wave1\"><ways><way name=\"next\" scene=\"wave2\" /><way name=\"back\" scene=\"wave1\" /></ways>"
+		"<objects><group name=\"aliens\" /></objects>"
+		"<conditions><condition class=\"alien\"><remaining>0</remaining><enter way=\"next\" /></condition></conditions>"
+		"<timers><timer><every>0.5</every><inc variable=\"clock.ticks\" /></timer></timers></scene>"
+		"<scene name=\"wave2\" from=\"wave1\"><ways><way name=\"next\" scene=\"wave3\" /></ways></scene>"
+		"<scene name=\"wave3\" from=\"wave2\"><conditions><condition class=\"alien\"><remaining>0</remaining><pop state=\"won\" /></condition></conditions></scene>"
+		"</scenes>" + kSpace + "</state>"
+		"<state name=\"won\"><inputs><input button=\"space\"><reset /></input></inputs></state>";
+	Loaded loaded(gameXml(states), backend);
+
+	const State& playing = loaded.game.getStates().front();
+	REQUIRE(playing.scenes.size() == 3);
+	CHECK(playing.scenes[1].conditions.size() == 1);
+	CHECK(playing.scenes[1].timers.size() == 1);
+	CHECK(playing.scenes[2].timers.size() == 1);
+	CHECK(playing.scenes[1].ways.at("next") == "playing.wave3");
+	CHECK(playing.scenes[1].ways.at("back") == "playing.wave1");
+	CHECK(playing.scenes[2].ways.at("next") == "playing.wave3");
+
+	// Wave 2's copy of the condition counts wave 2's aliens and goes by wave 2's way.
+	loaded.game.enterScene("playing.wave2");
+	for (const char* name : { "playing.wave2.aliens.1", "playing.wave2.aliens.2" }) { loaded.game.getObject(name).isVisible = false; }
+	loaded.frames(1);
+	CHECK(loaded.game.currentScene("playing") == "playing.wave3");
+	CHECK(loaded.game.getCurrentState().name == "playing");
+
+	// Its copy of the timer runs in wave 3 too.
+	const float ticks = loaded.game.getObject("playing.clock").variable.at("ticks");
+	loaded.frames(65);
+	CHECK(loaded.game.getObject("playing.clock").variable.at("ticks") > ticks);
+
+	// Wave 3's own condition, in place of the copy: it wins.
+	for (const char* name : { "playing.wave3.aliens.1", "playing.wave3.aliens.2" }) { loaded.game.getObject(name).isVisible = false; }
+	loaded.frames(1);
+	CHECK(loaded.game.getCurrentState().name == "won");
+}
+
+TEST_CASE("a class, or a name every scene has, counts the scene in play; a name by its path counts that scene wherever it is", "[scenes][conditions]")
+{
+	const std::string robots = "<group name=\"robots\" class=\"robot\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<member><position><x>10</x><y>10</y></position></member><member><position><x>30</x><y>10</y></position></member></group>";
+	const auto game = [&](const std::string& condition)
+	{
+		return gameXml("<state name=\"playing\"><scenes><objects>" + robots + "</objects>"
+			"<scene name=\"room1\"><objects><group name=\"robots\" /></objects></scene>"
+			"<scene name=\"room2\"><objects><group name=\"robots\" /></objects></scene>"
+			"</scenes>" + kSpace + "<conditions>" + condition + "</conditions></state>"
+			"<state name=\"won\">" + kSpace + "</state>");
+	};
+	const auto clearRoom2 = [](Loaded& loaded)
+	{
+		for (const char* name : { "playing.room2.robots.1", "playing.room2.robots.2" }) { loaded.game.getObject(name).isVisible = false; }
+		loaded.frames(1);
+	};
+
+	SECTION("a class: room 2 cleared while in room 1 is not room 1 cleared")
+	{
+		Loaded loaded(game("<condition class=\"robot\"><remaining>0</remaining><push state=\"won\" /></condition>"));
+		clearRoom2(loaded);
+		CHECK(loaded.game.getCurrentState().name == "playing");
+	}
+	SECTION("the name every room's robots have is the robots in play")
+	{
+		Loaded loaded(game("<condition object=\"robots\"><remaining>0</remaining><push state=\"won\" /></condition>"));
+		clearRoom2(loaded);
+		CHECK(loaded.game.getCurrentState().name == "playing");
+	}
+	SECTION("room 2's robots by their path, counted from room 1")
+	{
+		Loaded loaded(game("<condition object=\"room2.robots\"><remaining>0</remaining><push state=\"won\" /></condition>"));
+		loaded.frames(1);
+		CHECK(loaded.game.getCurrentState().name == "playing");
+		clearRoom2(loaded);
+		CHECK(loaded.game.currentScene("playing") == "playing.room1");
+		CHECK(loaded.game.getCurrentState().name == "won");
+	}
+	SECTION("one of them by its path")
+	{
+		Loaded loaded(game("<condition object=\"playing.room2.robots.2\"><remaining>0</remaining><push state=\"won\" /></condition>"));
+		loaded.game.getObject("playing.room2.robots.2").isVisible = false;
+		loaded.frames(1);
+		CHECK(loaded.game.getCurrentState().name == "won");
+	}
+}
+
 TEST_CASE("<reset scene> puts back what started in it, and leaves the other scenes alone", "[scenes]")
 {
 	Loaded loaded(gameXml(kRooms));

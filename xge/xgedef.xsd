@@ -1036,7 +1036,8 @@
     One place of a state: its own numbers (read inside it by their plain
     names), its objects, and the conditions and timers that run while it is
     its state's current scene. from= starts it as a copy of an earlier
-    scene's objects and variables.
+    scene: its objects, variables and ways, changed by its own, and its
+    conditions and timers, unless it has its own.
   -->
   <!-- Where a scene's ways lead: <way name="east" scene="screen2" />, a
        scene of the same state, gone to by <enter way="east" />. -->

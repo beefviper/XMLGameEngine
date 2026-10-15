@@ -401,8 +401,9 @@ namespace xge
 			}
 
 			std::map<std::string, Made> made;
-			for (const RawScene& scene : state.scenes)
+			for (std::size_t index = 0; index < state.scenes.size(); ++index)
 			{
+				RawScene& scene = state.scenes[index];
 				const std::string sceneWhere = where + " > scene '" + scene.name + "'";
 				const std::string path = state.name + "." + scene.name;
 				if (made.count(scene.name)) { throw std::runtime_error(where + ": has two scenes called '" + scene.name + "'"); }
@@ -413,6 +414,23 @@ namespace xge
 					const auto from = made.find(scene.from);
 					if (from == made.end()) { throw std::runtime_error(sceneWhere + ": from=\"" + scene.from + "\" names no scene before it"); }
 					local = from->second;
+
+					// Its ways too, with its own in place of those of the same
+					// name; and the conditions and timers of the scene it is
+					// from=, unless it has its own (a list without names
+					// cannot be changed one by one, so its own replace them).
+					const RawScene& earlier = *std::find_if(state.scenes.begin(), state.scenes.begin() + static_cast<std::ptrdiff_t>(index),
+						[&](const RawScene& each) { return each.name == scene.from; });
+					std::vector<std::pair<std::string, std::string>> ways = earlier.ways;
+					for (const auto& way : scene.ways)
+					{
+						const auto existing = std::find_if(ways.begin(), ways.end(), [&](const auto& each) { return each.first == way.first; });
+						if (existing != ways.end()) { existing->second = way.second; }
+						else { ways.push_back(way); }
+					}
+					scene.ways = std::move(ways);
+					if (scene.conditions.empty()) { scene.conditions = earlier.conditions; }
+					if (scene.timers.empty()) { scene.timers = earlier.timers; }
 				}
 
 				for (const auto& [name, value] : scene.variables)

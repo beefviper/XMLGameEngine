@@ -1147,6 +1147,16 @@ namespace xge
 			return true;
 		}
 
+		// The name is the object's, or one of its groups', under the path of
+		// the scene or state it belongs to: not the name its state gives that
+		// piece in every scene.
+		bool namedByPath(const Object& object, const std::string& name)
+		{
+			const std::string& owner = object.ownerScene.empty() ? object.ownerState : object.ownerScene;
+			return !name.empty() && !owner.empty() && (name == object.name || object.inGroup(name))
+				&& name.compare(0, owner.size() + 1, owner + ".") == 0;
+		}
+
 		bool collisionRuleMatches(const CollisionRule& rule, const Object& other)
 		{
 			return matchesClassOrObjectFilter(rule.filterClass, rule.filterObject, other);
@@ -1293,13 +1303,14 @@ namespace xge
 	{
 		for (auto& condition : conditions)
 		{
-			// It looks at what is in this state and scene (and the game's own),
-			// not at the robots of another room, unless it names one object
-			// by its own name.
+			// A class, or a name every scene has (robots, for playing.robots),
+			// is what is in this state and scene (and the game's own); a name
+			// by its path (room2.robots, playing.room2.robots.3) is that
+			// thing, wherever it is.
 			const auto considers = [&](const Object& object)
 			{
 				return matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object)
-					&& (inScope(object) || object.name == condition.filterObject);
+					&& (inScope(object) || namedByPath(object, condition.filterObject));
 			};
 
 			// "No more than N of them left": everything that matches, still

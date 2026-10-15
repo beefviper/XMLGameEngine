@@ -32,8 +32,10 @@
     number), which a timer of the state takes down a second at a time and a
     <reset object="energy" /> fills again: at the start of each wave and
     when a ship is lost.
-  * A wave's condition that none of it is left <enter>s the next wave; the
-    last one wins.
+  * A wave's condition that none of it is left (a class counts the wave in
+    play, not the others) <enter>s its way "next". The second wave is the
+    first (from=), so it has that condition too and says only where its
+    "next" leads; the last one wins instead.
   * Paused, won and lost draw the game still underneath (<show state>).
   Not in it: steering a shot after it is fired, the other five waves (tires,
   bow ties, diamonds, irons, dice), and the bonus for energy left.
@@ -346,6 +348,9 @@
 
         <!-- hamburgers, crossing straight over -->
         <scene name="wave1">
+          <ways>
+            <way name="next" scene="wave2" />
+          </ways>
           <variables>
             <variable name="speed">2</variable>
             <variable name="row1">80</variable>
@@ -362,15 +367,18 @@
               <reset object="energy" />
               <reset object="bombs" />
               <reset object="laser" />
-              <enter scene="wave2" />
+              <enter way="next" />
             </condition>
           </conditions>
         </scene>
 
-        <!-- cookies, coming down at a slant and bouncing back up -->
-        <scene name="wave2">
+        <!-- cookies, coming down at a slant and bouncing back up: the
+             first wave (from=), with its own pictures, rows and points -->
+        <scene name="wave2" from="wave1">
+          <ways>
+            <way name="next" scene="wave3" />
+          </ways>
           <variables>
-            <variable name="speed">2</variable>
             <variable name="row1">60</variable>
             <variable name="row2">140</variable>
             <variable name="points">30</variable>
@@ -393,16 +401,6 @@
               <velocity><y>speed / 2</y></velocity>
             </group>
           </objects>
-          <conditions>
-            <condition class="enemy">
-              <remaining>0</remaining>
-              <play sound="wave" />
-              <reset object="energy" />
-              <reset object="bombs" />
-              <reset object="laser" />
-              <enter scene="wave3" />
-            </condition>
-          </conditions>
         </scene>
 
         <!-- bugs, rushing the other way -->
