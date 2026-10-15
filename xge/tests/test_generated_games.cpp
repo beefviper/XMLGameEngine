@@ -130,7 +130,7 @@ namespace
 		void command(const std::string& at, const RawCommand& c)
 		{
 			out << at << " " << c.verb << " [" << c.object << "|" << c.variable << "|" << c.state << "|" << c.action << "|" << c.direction
-				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "]\n";
+				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "]\n";
 			value(at + ".amount", c.amount);
 			value(at + ".seconds", c.seconds);
 			value(at + ".distance", c.distance);
@@ -204,6 +204,7 @@ namespace
 			for (std::size_t i = 0; i < o.animation.frames.size(); ++i) { sprite(at + ".frame" + std::to_string(i), o.animation.frames[i]); }
 			for (std::size_t i = 0; i < o.looks.size(); ++i) { sprite(at + ".look" + std::to_string(i), o.looks[i]); }
 			flag(at + ".isVisible", o.isVisible);
+			flag(at + ".isDrawn", o.isDrawn);
 			vector2(at + ".position", o.rawPosition);
 			vector2(at + ".velocity", o.rawVelocity);
 			vector2(at + ".acceleration", o.rawAcceleration);
@@ -244,6 +245,19 @@ namespace
 			value(at + ".cell.gapAbove", o.cell.gapAbove);
 		}
 
+		void conditions(const std::string& at, const std::vector<RawCondition>& list)
+		{
+			for (std::size_t i = 0; i < list.size(); ++i)
+			{
+				const RawCondition& c = list[i];
+				const std::string here = at + ".condition" + std::to_string(i);
+				out << here << " [" << c.filterClass << "|" << c.filterObject << "|" << c.variableName << "] " << static_cast<int>(c.test)
+					<< " [" << c.otherObject << "|" << c.otherVariable << "]\n";
+				value(here + ".threshold", c.threshold);
+				commands(here + ".commands", c.commands);
+			}
+		}
+
 		void game(const GameData& g)
 		{
 			out << "window [" << g.window.name << "] " << g.window.width << " " << g.window.height << " [" << g.window.background << "] ["
@@ -254,17 +268,36 @@ namespace
 			{
 				const std::string at = "state " + s.name;
 				for (const std::string& shown : s.show) { text(at + ".show", shown); }
+				for (const std::string& shown : s.showStates) { text(at + ".showState", shown); }
 				for (const auto& [button, list] : s.input) { commands(at + ".input." + button, list); }
-				for (std::size_t i = 0; i < s.conditions.size(); ++i)
-				{
-					const RawCondition& c = s.conditions[i];
-					const std::string here = at + ".condition" + std::to_string(i);
-					out << here << " [" << c.filterClass << "|" << c.filterObject << "|" << c.variableName << "] " << static_cast<int>(c.test)
-						<< " [" << c.otherObject << "|" << c.otherVariable << "]\n";
-					value(here + ".threshold", c.threshold);
-					commands(here + ".commands", c.commands);
-				}
+				conditions(at, s.conditions);
 				timers(at + ".timers", s.timers);
+				for (const RawObject& o : s.objects) { object(at + ".object " + o.name, o); }
+				for (const RawObject& o : s.kit) { object(at + ".kit " + o.name, o); }
+				for (const RawScene& scene : s.scenes)
+				{
+					const std::string here = at + ".scene " + scene.name;
+					text(here + ".from", scene.from);
+					for (const auto& [name, v] : scene.variables) { value(here + ".variable " + name, v); }
+					for (std::size_t i = 0; i < scene.entries.size(); ++i)
+					{
+						const RawSceneEntry& e = scene.entries[i];
+						const std::string entry = here + ".entry" + std::to_string(i);
+						text(entry + ".take", e.take);
+						const RawSceneChange& c = e.change;
+						if (c.positionX) { value(entry + ".positionX", *c.positionX); }
+						if (c.positionY) { value(entry + ".positionY", *c.positionY); }
+						if (c.velocityX) { value(entry + ".velocityX", *c.velocityX); }
+						if (c.velocityY) { value(entry + ".velocityY", *c.velocityY); }
+						if (c.hidden) { flag(entry + ".hidden", *c.hidden); }
+						if (c.drawn) { flag(entry + ".drawn", *c.drawn); }
+						for (const auto& [name, v] : c.variables) { value(entry + ".variable " + name, v); }
+						for (std::size_t j = 0; j < c.sprites.size(); ++j) { sprite(entry + ".sprite" + std::to_string(j), c.sprites[j]); }
+						for (const RawObject& o : e.objects) { object(entry + ".object " + o.name, o); }
+					}
+					conditions(here, scene.conditions);
+					timers(here + ".timers", scene.timers);
+				}
 			}
 			for (const RawSound& s : g.sounds)
 			{

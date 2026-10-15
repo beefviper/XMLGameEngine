@@ -569,9 +569,18 @@
       <xs:element name="drop" type="emptyType" />
       <xs:element name="die" type="emptyType" />
       <xs:element name="stop" type="emptyType" />
+      <!-- <reset /> puts back the object running it; object= that object
+           or group; scene= every object of that scene, as it started. -->
       <xs:element name="reset">
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="optional" />
+          <xs:attribute name="scene" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+      <!-- <enter scene="room2" />: that scene becomes its state's current one. -->
+      <xs:element name="enter">
+        <xs:complexType>
+          <xs:attribute name="scene" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="inc" type="variableReferenceType" />
@@ -815,6 +824,7 @@
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
+      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
@@ -852,10 +862,13 @@
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <!-- One thing a state shows: an object (or a group) by name, or a named <shows> set. One of the two. -->
+  <!-- One thing a state shows: an object (or a group) by name, a named
+       <shows> set, or (in a state's own <shows>) another state, whose objects
+       are drawn still underneath. One of the three. -->
   <xs:complexType name="showType">
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="set" type="xs:string" use="optional" />
+    <xs:attribute name="state" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!--
@@ -916,6 +929,7 @@
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
+      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
@@ -964,6 +978,81 @@
     <xs:attribute name="class" type="xs:string" use="optional" />
   </xs:complexType>
 
+  <!-- Objects and groups: the game's, a state's, or the kit of its scenes. -->
+  <xs:complexType name="objectsType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="object" type="objectType" />
+      <xs:element name="group" type="groupType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <!--
+    An object in a scene: the same as any other, or, when it is named after
+    a piece of the kit (or one of the scene it is from=), that piece taken,
+    changed by what it gives: whole <sprite>s by name, either half of the
+    <position> or the <velocity>, <hidden>, <drawn> and <variables>. So
+    everything here may be left out, and the engine checks that an object of
+    the scene's own is complete.
+  -->
+  <xs:complexType name="sceneObjectType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="position" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
+      <xs:element name="heading" type="valueType" minOccurs="0" />
+      <xs:element name="drag" type="valueType" minOccurs="0" />
+      <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
+      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
+      <xs:element name="actions" type="actionsType" minOccurs="0" />
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+      <xs:element name="timers" type="timersType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="class" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <xs:complexType name="sceneObjectsType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="object" type="sceneObjectType" />
+      <xs:element name="group" type="groupType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="conditionsType">
+    <xs:sequence>
+      <xs:element name="condition" type="conditionType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!--
+    One place of a state: its own numbers (read inside it by their plain
+    names), its objects, and the conditions and timers that run while it is
+    its state's current scene. from= starts it as a copy of an earlier
+    scene's objects and variables.
+  -->
+  <xs:complexType name="sceneType">
+    <xs:sequence>
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+      <xs:element name="objects" type="sceneObjectsType" minOccurs="0" />
+      <xs:element name="conditions" type="conditionsType" minOccurs="0" />
+      <xs:element name="timers" type="timersType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="from" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!-- The kit of pieces the scenes take, then the scenes; the first is current when the game starts. -->
+  <xs:complexType name="scenesType">
+    <xs:sequence>
+      <xs:element name="objects" type="objectsType" minOccurs="0" />
+      <xs:element name="scene" type="sceneType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:element name="game">
     <xs:complexType>
       <xs:sequence>
@@ -1000,14 +1089,7 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="objects">
-          <xs:complexType>
-            <xs:choice maxOccurs="unbounded">
-              <xs:element name="object" type="objectType" />
-              <xs:element name="group" type="groupType" />
-            </xs:choice>
-          </xs:complexType>
-        </xs:element>
+        <xs:element name="objects" type="objectsType" />
         <xs:element name="states">
           <xs:complexType>
             <xs:sequence>
@@ -1055,7 +1137,10 @@
               <xs:element name="state" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:sequence>
-                    <xs:element name="shows">
+                    <!-- the state's own objects, in play in every scene of it -->
+                    <xs:element name="objects" type="objectsType" minOccurs="0" />
+                    <xs:element name="scenes" type="scenesType" minOccurs="0" />
+                    <xs:element name="shows" minOccurs="0">
                       <xs:complexType>
                         <xs:sequence>
                           <xs:element name="show" type="showType" maxOccurs="unbounded" />
@@ -1070,13 +1155,7 @@
                         <xs:attribute name="keys" type="xs:string" use="optional" />
                       </xs:complexType>
                     </xs:element>
-                    <xs:element name="conditions" minOccurs="0">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="condition" type="conditionType" maxOccurs="unbounded" />
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
+                    <xs:element name="conditions" type="conditionsType" minOccurs="0" />
                     <xs:element name="timers" type="timersType" minOccurs="0" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />

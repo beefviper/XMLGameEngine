@@ -481,7 +481,7 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show set=\"nothing\" /></shows>" + inputs + "</state>",
 		"set=\"nothing\" names no <shows> set before it");
 	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" set=\"o\" /></shows>" + inputs + "</state>",
-		"names an object=\"...\" or a set=\"...\", one of them");
+		"names an object=\"...\", a set=\"...\" or a state=\"...\", one of them");
 	fails(box("o", 0, 0, 1, 1), "<shows name=\"a\"><show set=\"b\" /></shows><shows name=\"b\"><show object=\"o\" /></shows>" + plain,
 		"set=\"b\" names no <shows> set before it");
 	fails(box("o", 0, 0, 1, 1), "<shows name=\"a\"><show object=\"o\" /></shows><shows name=\"a\"><show object=\"o\" /></shows>" + plain,

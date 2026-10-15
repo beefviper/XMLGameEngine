@@ -75,6 +75,7 @@ add_executable(xgetest
 	"xge/tests/test_builtin_font.cpp"
 	"xge/tests/test_sound.cpp"
 	"xge/tests/test_gameplay_verbs.cpp"
+	"xge/tests/test_scenes.cpp"
 	"xge/tests/test_frostbite.cpp"
 	"xge/tests/test_donkeykong.cpp"
 	"xge/tests/test_berserk.cpp"

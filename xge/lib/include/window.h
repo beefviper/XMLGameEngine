@@ -100,6 +100,31 @@ namespace xge
 		window.display();
 	}
 
+	// The same, with what is drawn still first, underneath (a paused game
+	// behind its pause): every object `still` says, then every object in play.
+	template <typename Still, typename InPlay>
+	void drawFrame(Window& window, std::vector<Object>& objects, const std::string& background, Still still, InPlay inPlay)
+	{
+		window.clear(background);
+
+		for (auto& object : objects)
+		{
+			if (still(object))
+			{
+				window.draw(object);
+			}
+		}
+		for (auto& object : objects)
+		{
+			if (inPlay(object))
+			{
+				window.draw(object);
+			}
+		}
+
+		window.display();
+	}
+
 	enum class WindowBackend
 	{
 		SFML3,

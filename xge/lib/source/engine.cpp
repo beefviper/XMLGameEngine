@@ -179,7 +179,9 @@ namespace xge
 	{
 		requireWindow();
 
-		drawFrame(*window, game.getCurrentObjects(), game.getWindowDesc().background, [&](const Object& object) { return game.isShown(object); });
+		drawFrame(*window, game.getCurrentObjects(), game.getWindowDesc().background,
+			[&](const Object& object) { return object.isDrawn && game.isStill(object); },
+			[&](const Object& object) { return object.isDrawn && game.isShown(object); });
 	}
 
 	void Engine::handleKeyPressed(KeyCode key)

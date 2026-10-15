@@ -36,6 +36,8 @@ namespace xge
 			[&](const CmdBecome& b) { become(&object, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const CmdFollow& f) { follow(&object, f); },
+			[&](const CmdEnterScene& e) { game.enterScene(e.scene); },
+			[&](const CmdResetScene& r) { game.resetScene(r.scene); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
 			                      appear in a collisionData list, and ride() and
 			                      deflect() are about another object, which a screen
@@ -68,6 +70,8 @@ namespace xge
 			[&](const CmdBecome& b) { become(&object, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const CmdFollow& f) { follow(&object, f); },
+			[&](const CmdEnterScene& e) { game.enterScene(e.scene); },
+			[&](const CmdResetScene& r) { game.resetScene(r.scene); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
@@ -96,6 +100,8 @@ namespace xge
 			[&](const CmdBecome& b) { if (keyPressed) { become(nullptr, b); } },
 			[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
 			[&](const CmdFollow& f) { if (keyPressed) { follow(nullptr, f); } },
+			[&](const CmdEnterScene& e) { if (keyPressed) { game.enterScene(e.scene); } },
+			[&](const CmdResetScene& r) { if (keyPressed) { game.resetScene(r.scene); } },
 			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
 			                      directly on a state's <input>; only reachable
 			                      via CmdTriggerAction into an object's own
@@ -117,6 +123,8 @@ namespace xge
 			[&](const CmdBecome& b) { become(owner, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const CmdFollow& f) { follow(owner, f); },
+			[&](const CmdEnterScene& e) { game.enterScene(e.scene); },
+			[&](const CmdResetScene& r) { game.resetScene(r.scene); },
 			// On an object, a bare reset puts that object back; in a state, it is
 			// the whole game, as on a key.
 			[&](const CmdReset&) { if (owner) { restart(*owner); } else { game.resetAll(); } },
@@ -281,7 +289,7 @@ namespace xge
 		for (auto& candidate : game.getCurrentObjects())
 		{
 			if (released >= count) { break; }
-			if (candidate.isVisible || &candidate == &from || !isNamed(candidate, target)) { continue; }
+			if (candidate.isVisible || &candidate == &from || !isNamed(candidate, target) || game.isAway(candidate)) { continue; }
 
 			// Back in play is a new start: a <random> in it is drawn again.
 			game.drawStartAgain(candidate);
@@ -540,7 +548,7 @@ namespace xge
 		Object* projectile = nullptr;
 		for (auto& candidate : game.getCurrentObjects())
 		{
-			if (isNamed(candidate, projectileName) && !candidate.collisionData.enabled)
+			if (isNamed(candidate, projectileName) && !candidate.collisionData.enabled && !game.isAway(candidate))
 			{
 				projectile = &candidate;
 				break;

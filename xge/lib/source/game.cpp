@@ -7,6 +7,7 @@
 
 #include "command_executor.h"
 #include "geometry.h"
+#include "scenes.h"
 #include "verbs.h"
 
 #include <algorithm>
@@ -17,15 +18,18 @@
 
 namespace xge
 {
-	Game::Game(GameData data) :
-		windowDesc(std::move(data.window)),
-		validation(std::move(data.validation)),
-		rawVariables(std::move(data.variables)),
-		rawStates(std::move(data.states)),
-		rawObjects(std::move(data.objects)),
-		rawSounds(std::move(data.sounds)),
-		rawPaths(std::move(data.paths))
+	Game::Game(GameData data)
 	{
+		// What states and scenes own, among the game's objects and named in full.
+		layOutScenes(data);
+		windowDesc = std::move(data.window);
+		validation = std::move(data.validation);
+		rawVariables = std::move(data.variables);
+		rawStates = std::move(data.states);
+		rawObjects = std::move(data.objects);
+		rawSounds = std::move(data.sounds);
+		rawPaths = std::move(data.paths);
+
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 
@@ -33,6 +37,7 @@ namespace xge
 		{
 			stateTimers[state.name] = state.timers;
 		}
+		startScenes();
 		// Every object's own visual is built later, by Engine, once a real
 		// Window (and therefore a real backend to build against) exists -
 		// see Window::init() in window.h.
@@ -215,16 +220,116 @@ namespace xge
 
 	bool Game::isShown(const Object& object) noexcept
 	{
-		bool result = false;
+		return object.isVisible && runsIn(object, currentState.top());
+	}
 
-		for (auto& shown : currentState.top().show)
+	bool Game::runsIn(const Object& object, const State& state) const
+	{
+		if (!object.ownerState.empty() && object.ownerState == state.name)
 		{
-			if (shown == object.name || object.inGroup(shown))
+			if (object.ownerScene.empty()) { return true; }
+			const auto current = currentScenes.find(state.name);
+			if (current != currentScenes.end() && current->second == object.ownerScene) { return true; }
+		}
+
+		return std::any_of(state.show.begin(), state.show.end(), [&](const std::string& shown) { return shown == object.name || object.inGroup(shown); });
+	}
+
+	bool Game::isStill(const Object& object) noexcept
+	{
+		const State& top = currentState.top();
+		if (top.showStates.empty() || !object.isVisible || runsIn(object, top)) { return false; }
+
+		for (const std::string& name : top.showStates)
+		{
+			const auto state = std::find_if(states.begin(), states.end(), [&](const State& candidate) { return candidate.name == name; });
+			if (state != states.end() && runsIn(object, *state)) { return true; }
+		}
+		return false;
+	}
+
+	bool Game::inScope(const Object& object) const
+	{
+		if (object.ownerState.empty()) { return true; }
+		if (object.ownerState != currentState.top().name) { return false; }
+		if (object.ownerScene.empty()) { return true; }
+		const auto current = currentScenes.find(object.ownerState);
+		return current != currentScenes.end() && current->second == object.ownerScene;
+	}
+
+	bool Game::isAway(const Object& object) const
+	{
+		if (object.ownerScene.empty()) { return false; }
+		const auto current = currentScenes.find(object.ownerState);
+		return current == currentScenes.end() || current->second != object.ownerScene;
+	}
+
+	std::string Game::currentScene(const std::string& state) const
+	{
+		const auto current = currentScenes.find(state);
+		return current == currentScenes.end() ? std::string{} : current->second;
+	}
+
+	void Game::startScenes(void)
+	{
+		currentScenes.clear();
+		sceneTimers.clear();
+		for (const State& state : states)
+		{
+			if (!state.scenes.empty()) { currentScenes[state.name] = state.scenes.front().name; }
+			for (const Scene& scene : state.scenes) { sceneTimers[scene.name] = scene.timers; }
+		}
+	}
+
+	void Game::enterScene(const std::string& scene)
+	{
+		const std::string state = scene.substr(0, scene.find('.'));
+		if (!sceneTimers.count(scene))
+		{
+			// The file is checked for this when it loads; this is for a caller in C++.
+			throw std::out_of_range("no scene named '" + scene + "'");
+		}
+
+		std::string& current = currentScenes[state];
+		if (current == scene) { return; }
+		current = scene;
+		++sceneChanges;
+
+		// What is carried by something that is in every scene (the state's
+		// own, or the game's) belongs to the scene it is carried into.
+		for (const Object& carrier : objects)
+		{
+			if (carrier.carrying.empty() || !carrier.ownerScene.empty()) { continue; }
+			Object* carried = tryGetObject(carrier.carrying);
+			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = scene; }
+		}
+	}
+
+	std::string Game::fullName(const std::string& name) const
+	{
+		const auto calls = [&](const Object& object, const std::string& wanted) { return object.name == wanted || object.inGroup(wanted); };
+		if (std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return calls(object, name); })) { return name; }
+
+		const std::string end = "." + name;
+		const auto endsWith = [&](const std::string& text) { return text.size() > end.size() && text.compare(text.size() - end.size(), end.size(), end) == 0; };
+		// The shortest path wins, as when the game loads (playing.rock, the
+		// rock of every room, over playing.room1.rock); two as short: neither.
+		const auto dots = [](const std::string& text) { return std::count(text.begin(), text.end(), '.'); };
+		std::string found;
+		bool tied = false;
+		for (const Object& object : objects)
+		{
+			std::vector<std::string> callings{ object.name };
+			if (!object.groupName.empty()) { callings.push_back(object.groupName); }
+			callings.insert(callings.end(), object.outerGroups.begin(), object.outerGroups.end());
+			for (const std::string& calling : callings)
 			{
-				result = true;
+				if (!endsWith(calling) || calling == found) { continue; }
+				if (found.empty() || dots(calling) < dots(found)) { found = calling; tied = false; }
+				else if (dots(calling) == dots(found)) { tied = true; }
 			}
 		}
-		return result && object.isVisible;
+		return found.empty() || tied ? name : found;
 	}
 
 	Object& Game::getObject(const std::string& name)
@@ -248,7 +353,14 @@ namespace xge
 		}
 
 		const auto first = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.inGroup(name); });
-		return (first == std::end(objects)) ? nullptr : &(*first);
+		if (first != std::end(objects))
+		{
+			return &(*first);
+		}
+
+		// The end of one path: robots for playing.room1.robots.
+		const std::string full = fullName(name);
+		return full == name ? nullptr : tryGetObject(full);
 	}
 
 	float Game::getVariable(const std::string& name)
@@ -402,7 +514,11 @@ namespace xge
 
 	void Game::changeVariable(const std::string& target, float delta, const char* verb)
 	{
-		const auto dot = target.find('.');
+		// A text object counts its own number; anything else is
+		// owner.variable, the variable after the last dot (the owner may be a
+		// path: playing.room1.tally.kills).
+		const bool whole = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == target; });
+		const auto dot = whole ? std::string::npos : target.rfind('.');
 
 		if (dot == std::string::npos)
 		{
@@ -518,17 +634,31 @@ namespace xge
 		}
 
 		const unsigned long changes = stateChanges;
-		for (std::size_t t = 0; t < found->second.size() && stateChanges == changes; ++t)
+		const unsigned long scenes = sceneChanges;
+		const auto unchanged = [&] { return stateChanges == changes && sceneChanges == scenes; };
+		const auto count = [&](std::vector<Timer>& timers, const std::string& where)
 		{
-			if (tickTimer(found->second[t], "state '" + stateName + "' > <timer>"))
+			for (std::size_t t = 0; t < timers.size() && unchanged(); ++t)
 			{
-				const std::vector<Command> commands = found->second[t].commands;
-				for (const auto& command : commands)
+				if (tickTimer(timers[t], where))
 				{
-					executor.executeTimer(command, nullptr);
-					if (stateChanges != changes) { break; }
+					const std::vector<Command> commands = timers[t].commands;
+					for (const auto& command : commands)
+					{
+						executor.executeTimer(command, nullptr);
+						if (!unchanged()) { break; }
+					}
 				}
 			}
+		};
+		count(found->second, "state '" + stateName + "' > <timer>");
+
+		// Then its current scene's.
+		const std::string scene = currentScene(stateName);
+		const auto sceneFound = sceneTimers.find(scene);
+		if (unchanged() && sceneFound != sceneTimers.end())
+		{
+			count(sceneFound->second, "scene '" + scene + "' > <timer>");
 		}
 	}
 
@@ -626,6 +756,7 @@ namespace xge
 			object.hasAim = false;
 			object.facing = object.facingOriginal;
 			object.followPath.clear();
+			object.ownerScene = object.ownerSceneOriginal;
 			if (!object.looks.empty()) { object.showLook(0); }
 			for (auto& timer : object.timers)
 			{
@@ -640,8 +771,9 @@ namespace xge
 		}
 	}
 
-	void Game::resetObject(const std::string& name)
+	void Game::resetObject(const std::string& given)
 	{
+		const std::string name = fullName(given);
 		Object* object = tryGetObject(name);
 		if (!object)
 		{
@@ -711,7 +843,7 @@ namespace xge
 			if (count <= 0) { break; }
 
 			const bool named = object.name == target || object.inGroup(target);
-			if (!named || object.isVisible) { continue; }
+			if (!named || object.isVisible || isAway(object)) { continue; }
 
 			// Back in play is a new start: a <random> in it is drawn again.
 			drawStartAgain(object);
@@ -756,7 +888,7 @@ namespace xge
 		for (auto& object : objects)
 		{
 			const bool named = object.name == target || object.inGroup(target);
-			if (!named || !object.isVisible || object.isFollowing()) { continue; }
+			if (!named || !object.isVisible || object.isFollowing() || isAway(object)) { continue; }
 
 			follow(object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(framerate))));
 			++setOff;
@@ -842,11 +974,29 @@ namespace xge
 		{
 			stateTimers[state.name] = state.timers;
 		}
+		startScenes();
 
 		// Refresh every text display bound to another object's variable, now
 		// that all of them are back to their starting values (same notify
 		// pattern as resetObject/incrementText above, just over every bound
 		// display instead of one object's worth).
+		refreshAllBoundTexts();
+
+		// Collapse the whole state stack. mainmenu -> playing -> gameover ->
+		// mainmenu -> ... is push-only (see pushState/setCurrentState) - only
+		// settings and paused ever pop back off - so left alone it grows for as
+		// long as the game keeps getting played. Clear it and start fresh from
+		// the very first state, exactly like Engine's constructor does once at
+		// startup.
+		while (!currentState.empty())
+		{
+			currentState.pop();
+		}
+		setCurrentState(0);
+	}
+
+	void Game::refreshAllBoundTexts(void)
+	{
 		for (auto& object : objects)
 		{
 			if (object.boundVariableOwner.empty())
@@ -871,18 +1021,37 @@ namespace xge
 				}
 			}
 		}
+	}
 
-		// Collapse the whole state stack. mainmenu -> playing -> gameover ->
-		// mainmenu -> ... is push-only (see pushState/setCurrentState) - only
-		// settings and paused ever pop back off - so left alone it grows for as
-		// long as the game keeps getting played. Clear it and start fresh from
-		// the very first state, exactly like Engine's constructor does once at
-		// startup.
-		while (!currentState.empty())
+	void Game::resetScene(const std::string& scene)
+	{
+		const auto owner = std::find_if(states.begin(), states.end(), [&](const State& state)
+			{
+				return std::any_of(state.scenes.begin(), state.scenes.end(), [&](const Scene& each) { return each.name == scene; });
+			});
+		if (owner == states.end())
 		{
-			currentState.pop();
+			throw std::out_of_range("no scene named '" + scene + "'");
 		}
-		setCurrentState(0);
+
+		for (auto& object : objects)
+		{
+			if (object.ownerSceneOriginal != scene) { continue; }
+			drawStartAgain(object);
+			resetObjectState(object);
+
+			// Back where it started, it is no longer carried.
+			for (auto& carrier : objects)
+			{
+				if (carrier.carrying == object.name) { carrier.carrying.clear(); }
+			}
+		}
+
+		for (const Scene& each : owner->scenes)
+		{
+			if (each.name == scene) { sceneTimers[scene] = each.timers; }
+		}
+		refreshAllBoundTexts();
 	}
 
 	void Game::updateLockstepObjects(const Object& object) noexcept
@@ -1081,24 +1250,41 @@ namespace xge
 		// currentState.top() directly, rather than getCurrentState() (which
 		// returns a copy of the whole State) - this runs every frame, so
 		// copying every command list in it just to read .conditions would be
-		// wasteful.
+		// wasteful. The state's own conditions, then its current scene's.
 		const State& state = currentState.top();
+		if (checkConditionList(state.conditions)) { return; }
 
-		for (auto& condition : state.conditions)
+		const std::string scene = currentScene(state.name);
+		const auto found = std::find_if(state.scenes.begin(), state.scenes.end(), [&](const Scene& each) { return each.name == scene; });
+		if (found != state.scenes.end()) { checkConditionList(found->conditions); }
+	}
+
+	bool Game::checkConditionList(const std::vector<Condition>& conditions)
+	{
+		for (auto& condition : conditions)
 		{
+			// It looks at what is in this state and scene (and the game's own),
+			// not at the robots of another room, unless it names one object
+			// by its own name.
+			const auto considers = [&](const Object& object)
+			{
+				return matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object)
+					&& (inScope(object) || object.name == condition.filterObject);
+			};
+
 			// "No more than N of them left": everything that matches, still
 			// in play. Nothing to look at per object, so this is its own case.
 			if (condition.remaining)
 			{
 				const auto stillIn = std::count_if(objects.begin(), objects.end(), [&](const Object& object)
 					{
-						return object.isVisible && matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object);
+						return object.isVisible && considers(object);
 					});
 
 				if (static_cast<float>(stillIn) <= *condition.remaining)
 				{
 					runConditionCommands(condition.commands);
-					return; // the state may have just changed - stop for this frame
+					return true; // the state may have just changed - stop for this frame
 				}
 
 				continue;
@@ -1106,7 +1292,7 @@ namespace xge
 
 			for (auto& object : objects)
 			{
-				if (!matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object))
+				if (!considers(object))
 				{
 					continue;
 				}
@@ -1140,9 +1326,10 @@ namespace xge
 				}
 
 				runConditionCommands(condition.commands);
-				return; // the state may have just changed - stop for this frame
+				return true; // the state may have just changed - stop for this frame
 			}
 		}
+		return false;
 	}
 
 	// A copy of the commands, not the state's own list: the list belongs to the

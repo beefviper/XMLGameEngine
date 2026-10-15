@@ -4,18 +4,29 @@
 <!-- date: Oct 14, 2026 -->
 
 <!--
-  Adventure, one room of the 1980 Atari 2600 game. A square hero, a gold
-  castle with its gate shut, and three things lying about: a key, a sword
-  and the enchanted chalice, which a dragon guards. Pick a thing up by
-  walking into it, carry it, put it down. The key opens the gate, the sword
-  slays the dragon (it dies on touching the sword, carried or not), and the
-  chalice carried into the castle's hall wins. A dragon that catches the
-  hero eats him.
+  Adventure, two rooms of the 1980 Atari 2600 game. A square hero, a gold
+  castle with its gate shut and the key to it, and east of the castle a
+  field where the enchanted chalice lies, a sword beside it and a dragon
+  guarding it. Pick a thing up by walking into it, carry it, put it down.
+  The key opens the gate, the sword slays the dragon (it dies on touching
+  the sword, carried or not), and the chalice carried into the castle's hall
+  wins. A dragon that catches the hero eats him.
 
   W A S D or the arrow keys walk, Space puts down what is carried, P or
   Escape pauses, Space starts.
 
   How it is written:
+  * The two rooms are the <scenes> of the playing state: the castle and the
+    field. The hero and the score he plays for (status) are the state's own
+    objects, there in both rooms; each room's things are its own, and a
+    room left stays as it was until he comes back (the dragon waits).
+  * The walls along the top and the bottom are the kit of the scenes: each
+    room takes them, the field in its own green.
+  * Each room has an unseen side (<drawn>false</drawn>) towards the other:
+    walking into it <enter>s the other room, and the hero's own rule for it
+    puts him in at the far side. What he carries goes with him.
+  * The castle's measures are its scene's <variables>, read by plain names
+    inside it.
   * The hero <carry />s any object of class item he touches: it goes where
     he goes, held where it was when he picked it up, and is swept on the
     way like anything that moves, so a carried key meets the gate. One thing
@@ -25,6 +36,7 @@
   * The gate <die />s when the key touches it, and the hall counts the
     chalice in (status.won) when it touches it; a condition ends the game.
   * The dragon <chase>s the hero on a timer, slower than he walks.
+  * Paused, won and eaten draw the room still underneath (<show state>).
   Not in it: the other rooms and castles, the bat that steals, the three
   dragons, the bridge and the magnet.
 -->
@@ -40,8 +52,6 @@
   <variables>
     <variable name="step">3</variable>
     <variable name="dragonspeed">1.2</variable>
-    <variable name="castleleft">220</variable>
-    <variable name="castletop">40</variable>
   </variables>
   <sounds>
     <!-- something put down: a soft low blip -->
@@ -86,308 +96,7 @@
     </sound>
   </sounds>
   <objects>
-    <!-- how the game ends; never shown -->
-    <object name="status">
-      <sprite>
-        <rectangle>
-          <width>1</width>
-          <height>1</height>
-          <color>color.black</color>
-        </rectangle>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <variables>
-        <variable name="won">0</variable>
-        <variable name="eaten">0</variable>
-      </variables>
-    </object>
-
-    <!-- The gold castle: two side walls and a back wall, open at the front where the gate is. -->
-    <object name="castlewest" class="wall">
-      <sprite>
-        <rectangle>
-          <width>40</width>
-          <height>120</height>
-          <color>color.yellow</color>
-        </rectangle>
-      </sprite>
-      <position><x>castleleft</x><y>castletop</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-    </object>
-    <object name="castleeast" class="wall">
-      <sprite>
-        <rectangle>
-          <width>40</width>
-          <height>120</height>
-          <color>color.yellow</color>
-        </rectangle>
-      </sprite>
-      <position><x>castleleft + 160</x><y>castletop</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-    </object>
-    <object name="castleback" class="wall">
-      <sprite>
-        <rectangle>
-          <width>120</width>
-          <height>20</height>
-          <color>color.yellow</color>
-        </rectangle>
-      </sprite>
-      <position><x>castleleft + 40</x><y>castletop</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-    </object>
-
-    <!-- The hall inside, where the chalice belongs. -->
-    <object name="hall">
-      <sprite>
-        <rectangle>
-          <width>100</width>
-          <height>80</height>
-          <color>color.darkblue</color>
-        </rectangle>
-      </sprite>
-      <position><x>castleleft + 50</x><y>castletop + 30</y></position>
-      <collisions>
-        <enabled>true</enabled>
-        <collision object="chalice">
-          <inc variable="status.won" />
-        </collision>
-      </collisions>
-    </object>
-
-    <!-- The gate, shut until the key touches it. -->
-    <object name="gate" class="wall">
-      <sprite>
-        <rectangle>
-          <width>120</width>
-          <height>10</height>
-          <color>color.lightgrey</color>
-        </rectangle>
-      </sprite>
-      <position><x>castleleft + 40</x><y>castletop + 110</y></position>
-      <collisions>
-        <enabled>true</enabled>
-        <collision object="key">
-          <die />
-          <play sound="open" />
-        </collision>
-      </collisions>
-    </object>
-
-    <!-- The things to carry. -->
-    <object name="key" class="item">
-      <sprite>
-        <bitmap>
-          <row>***.....</row>
-          <row>*.******</row>
-          <row>***..*.*</row>
-          <scale>3</scale>
-          <color>color.yellow</color>
-        </bitmap>
-      </sprite>
-      <position><x>560</x><y>420</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-    </object>
-    <object name="sword" class="item">
-      <sprite>
-        <bitmap>
-          <row>.....*..</row>
-          <row>********</row>
-          <row>.....*..</row>
-          <scale>3</scale>
-          <color>color.cyan</color>
-        </bitmap>
-      </sprite>
-      <position><x>60</x><y>420</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-    </object>
-    <object name="chalice" class="item">
-      <sprite>
-        <bitmap>
-          <row>*.....*</row>
-          <row>*.....*</row>
-          <row>.*...*.</row>
-          <row>..***..</row>
-          <row>...*...</row>
-          <row>...*...</row>
-          <row>.*****.</row>
-          <scale>3</scale>
-          <color>color.magenta</color>
-        </bitmap>
-      </sprite>
-      <position><x>580</x><y>220</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-    </object>
-
-    <!-- The hero: walks, stops at walls, carries what he walks into. -->
-    <object name="hero">
-      <sprite>
-        <rectangle>
-          <width>10</width>
-          <height>10</height>
-          <color>color.orange</color>
-        </rectangle>
-      </sprite>
-      <position><x>window.width.center - 5</x><y>380</y></position>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="all">
-          <stick />
-        </collision>
-        <collision class="wall">
-          <stop />
-        </collision>
-        <collision class="item">
-          <carry />
-        </collision>
-        <collision object="dragon">
-          <die />
-          <inc variable="status.eaten" />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="up">
-          <move direction="up">step</move>
-        </action>
-        <action name="down">
-          <move direction="down">step</move>
-        </action>
-        <action name="left">
-          <move direction="left">step</move>
-        </action>
-        <action name="right">
-          <move direction="right">step</move>
-        </action>
-        <action name="drop">
-          <drop />
-          <play sound="drop" />
-        </action>
-      </actions>
-    </object>
-
-    <!-- The dragon: after the hero, slower than him, and slain by the sword. -->
-    <object name="dragon">
-      <sprite>
-        <bitmap>
-          <row>....***.</row>
-          <row>....*.**</row>
-          <row>....****</row>
-          <row>*...**..</row>
-          <row>**..***.</row>
-          <row>.*****..</row>
-          <row>..****..</row>
-          <row>...**...</row>
-          <row>...*.*..</row>
-          <row>..**.**.</row>
-          <scale>3</scale>
-          <color>color.green</color>
-        </bitmap>
-      </sprite>
-      <position><x>480</x><y>200</y></position>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="all">
-          <stick />
-        </collision>
-        <collision class="wall">
-          <stop />
-        </collision>
-        <collision object="sword">
-          <die />
-          <play sound="slay" />
-        </collision>
-      </collisions>
-      <timers>
-        <timer>
-          <every>0.3</every>
-          <chase object="hero"><speed>dragonspeed</speed></chase>
-        </timer>
-      </timers>
-    </object>
-
-    <!-- Words. -->
-    <object name="title">
-      <sprite>
-        <text>
-          <content>ADVENTURE</content>
-          <size>72</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
-    </object>
-    <object name="help">
-      <sprite>
-        <text>
-          <content>carry the chalice to the gold castle</content>
-          <size>24</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-40)</y></position>
-    </object>
-    <object name="keys">
-      <sprite>
-        <text>
-          <content>w a s d or arrows walk, space puts down</content>
-          <size>22</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (0)</y></position>
-    </object>
-    <object name="start">
-      <sprite>
-        <text>
-          <content>spacebar to start</content>
-          <size>40</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (100)</y></position>
-    </object>
-    <object name="paused">
-      <sprite>
-        <text>
-          <content>PAUSED</content>
-          <size>100</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
-    </object>
-    <object name="wonmsg">
-      <sprite>
-        <text>
-          <content>THE CHALICE IS HOME</content>
-          <size>50</size>
-          <color>color.magenta</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - wonmsg.width / 2</x><y>window.height.center - wonmsg.height / 2 + (20)</y></position>
-    </object>
-    <object name="eatenmsg">
-      <sprite>
-        <text>
-          <content>EATEN BY THE DRAGON</content>
-          <size>50</size>
-          <color>color.green</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - eatenmsg.width / 2</x><y>window.height.center - eatenmsg.height / 2 + (20)</y></position>
-    </object>
+    <!-- after a game, in both endings -->
     <object name="again">
       <sprite>
         <text>
@@ -414,27 +123,49 @@
       <input button="escape"><push state="paused" /></input>
     </keys>
 
-    <!-- the room -->
-    <shows name="room">
-      <show object="hall" />
-      <show object="castlewest" />
-      <show object="castleeast" />
-      <show object="castleback" />
-      <show object="gate" />
-      <show object="key" />
-      <show object="sword" />
-      <show object="chalice" />
-      <show object="dragon" />
-      <show object="hero" />
-    </shows>
-
     <state name="title">
-      <shows>
-        <show object="title" />
-        <show object="help" />
-        <show object="keys" />
-        <show object="start" />
-      </shows>
+      <objects>
+        <object name="title">
+          <sprite>
+            <text>
+              <content>ADVENTURE</content>
+              <size>72</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
+        </object>
+        <object name="help">
+          <sprite>
+            <text>
+              <content>carry the chalice to the gold castle</content>
+              <size>24</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-40)</y></position>
+        </object>
+        <object name="keys">
+          <sprite>
+            <text>
+              <content>w a s d or arrows walk, space puts down</content>
+              <size>22</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (0)</y></position>
+        </object>
+        <object name="start">
+          <sprite>
+            <text>
+              <content>spacebar to start</content>
+              <size>40</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (100)</y></position>
+        </object>
+      </objects>
       <inputs>
         <input button="space">
           <push state="playing" />
@@ -442,10 +173,345 @@
         </input>
       </inputs>
     </state>
+
     <state name="playing">
-      <shows>
-        <show set="room" />
-      </shows>
+      <objects>
+        <!-- how the game ends; never drawn -->
+        <object name="status">
+          <sprite>
+            <rectangle>
+              <width>1</width>
+              <height>1</height>
+              <color>color.black</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
+          <variables>
+            <variable name="won">0</variable>
+            <variable name="eaten">0</variable>
+          </variables>
+        </object>
+
+        <!-- The hero: walks, stops at walls, carries what he walks into. -->
+        <object name="hero">
+          <sprite>
+            <rectangle>
+              <width>10</width>
+              <height>10</height>
+              <color>color.orange</color>
+            </rectangle>
+          </sprite>
+          <position><x>window.width.center - 5</x><y>400</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="all">
+              <stick />
+            </collision>
+            <collision class="wall">
+              <stop />
+            </collision>
+            <collision class="item">
+              <carry />
+            </collision>
+            <!-- through a side of a room: in at the other side of the next -->
+            <collision class="eastside">
+              <move direction="left">window.right - 40</move>
+            </collision>
+            <collision class="westside">
+              <move direction="right">window.right - 40</move>
+            </collision>
+            <collision object="dragon">
+              <die />
+              <inc variable="status.eaten" />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="up">
+              <move direction="up">step</move>
+            </action>
+            <action name="down">
+              <move direction="down">step</move>
+            </action>
+            <action name="left">
+              <move direction="left">step</move>
+            </action>
+            <action name="right">
+              <move direction="right">step</move>
+            </action>
+            <action name="drop">
+              <drop />
+              <play sound="drop" />
+            </action>
+          </actions>
+        </object>
+      </objects>
+      <scenes>
+        <!-- the walls along the top and the bottom of every room -->
+        <objects>
+          <object name="topwall" class="wall">
+            <sprite>
+              <rectangle>
+                <width>window.right</width>
+                <height>12</height>
+                <color>color.yellow</color>
+              </rectangle>
+            </sprite>
+            <position><x>0</x><y>0</y></position>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+          <object name="bottomwall" class="wall">
+            <sprite>
+              <rectangle>
+                <width>window.right</width>
+                <height>12</height>
+                <color>color.yellow</color>
+              </rectangle>
+            </sprite>
+            <position><x>0</x><y>window.bottom - 12</y></position>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+        </objects>
+
+        <!-- the gold castle, with the key in front of it -->
+        <scene name="castle">
+          <variables>
+            <variable name="castleleft">220</variable>
+            <variable name="castletop">40</variable>
+          </variables>
+          <objects>
+            <object name="topwall" />
+            <object name="bottomwall" />
+            <!-- two side walls and a back wall, open at the front where the gate is -->
+          <object name="castlewest" class="wall">
+            <sprite>
+              <rectangle>
+                <width>40</width>
+                <height>120</height>
+                <color>color.yellow</color>
+              </rectangle>
+            </sprite>
+            <position><x>castleleft</x><y>castletop</y></position>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+          <object name="castleeast" class="wall">
+            <sprite>
+              <rectangle>
+                <width>40</width>
+                <height>120</height>
+                <color>color.yellow</color>
+              </rectangle>
+            </sprite>
+            <position><x>castleleft + 160</x><y>castletop</y></position>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+          <object name="castleback" class="wall">
+            <sprite>
+              <rectangle>
+                <width>120</width>
+                <height>20</height>
+                <color>color.yellow</color>
+              </rectangle>
+            </sprite>
+            <position><x>castleleft + 40</x><y>castletop</y></position>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+            <!-- the hall inside, where the chalice belongs -->
+          <object name="hall">
+            <sprite>
+              <rectangle>
+                <width>100</width>
+                <height>80</height>
+                <color>color.darkblue</color>
+              </rectangle>
+            </sprite>
+            <position><x>castleleft + 50</x><y>castletop + 30</y></position>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="chalice">
+                <inc variable="status.won" />
+              </collision>
+            </collisions>
+          </object>
+            <!-- the gate, shut until the key touches it -->
+          <object name="gate" class="wall">
+            <sprite>
+              <rectangle>
+                <width>120</width>
+                <height>10</height>
+                <color>color.lightgrey</color>
+              </rectangle>
+            </sprite>
+            <position><x>castleleft + 40</x><y>castletop + 110</y></position>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="key">
+                <die />
+                <play sound="open" />
+              </collision>
+            </collisions>
+          </object>
+          <object name="key" class="item">
+            <sprite>
+              <bitmap>
+                <row>***.....</row>
+                <row>*.******</row>
+                <row>***..*.*</row>
+                <scale>3</scale>
+                <color>color.yellow</color>
+              </bitmap>
+            </sprite>
+            <position><x>520</x><y>400</y></position>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+            <!-- the way east, to the field -->
+          <object name="east" class="eastside">
+            <sprite>
+              <rectangle>
+                <width>4</width>
+                <height>window.bottom</height>
+                <color>color.black</color>
+              </rectangle>
+            </sprite>
+            <position><x>window.right - 4</x><y>0</y></position>
+            <drawn>false</drawn>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="hero">
+                <enter scene="field" />
+              </collision>
+            </collisions>
+          </object>
+          </objects>
+        </scene>
+
+        <!-- the field east of the castle: the chalice, the sword, the dragon -->
+        <scene name="field">
+          <objects>
+            <object name="topwall">
+              <sprite>
+                <rectangle>
+                  <width>window.right</width>
+                  <height>12</height>
+                  <color>color.green</color>
+                </rectangle>
+              </sprite>
+            </object>
+            <object name="bottomwall">
+              <sprite>
+                <rectangle>
+                  <width>window.right</width>
+                  <height>12</height>
+                  <color>color.green</color>
+                </rectangle>
+              </sprite>
+            </object>
+          <object name="sword" class="item">
+            <sprite>
+              <bitmap>
+                <row>.....*..</row>
+                <row>********</row>
+                <row>.....*..</row>
+                <scale>3</scale>
+                <color>color.cyan</color>
+              </bitmap>
+            </sprite>
+            <position><x>100</x><y>400</y></position>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+          <object name="chalice" class="item">
+            <sprite>
+              <bitmap>
+                <row>*.....*</row>
+                <row>*.....*</row>
+                <row>.*...*.</row>
+                <row>..***..</row>
+                <row>...*...</row>
+                <row>...*...</row>
+                <row>.*****.</row>
+                <scale>3</scale>
+                <color>color.magenta</color>
+              </bitmap>
+            </sprite>
+            <position><x>560</x><y>120</y></position>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+          </object>
+            <!-- the dragon: after the hero, slower than him, and slain by the sword -->
+          <object name="dragon">
+            <sprite>
+              <bitmap>
+                <row>....***.</row>
+                <row>....*.**</row>
+                <row>....****</row>
+                <row>*...**..</row>
+                <row>**..***.</row>
+                <row>.*****..</row>
+                <row>..****..</row>
+                <row>...**...</row>
+                <row>...*.*..</row>
+                <row>..**.**.</row>
+                <scale>3</scale>
+                <color>color.green</color>
+              </bitmap>
+            </sprite>
+            <position><x>400</x><y>200</y></position>
+            <collisions>
+              <enabled>true</enabled>
+              <collision edge="all">
+                <stick />
+              </collision>
+              <collision class="wall">
+                <stop />
+              </collision>
+              <collision object="sword">
+                <die />
+                <play sound="slay" />
+              </collision>
+            </collisions>
+            <timers>
+              <timer>
+                <every>0.3</every>
+                <chase object="hero"><speed>dragonspeed</speed></chase>
+              </timer>
+            </timers>
+          </object>
+            <!-- the way west, back to the castle -->
+          <object name="west" class="westside">
+            <sprite>
+              <rectangle>
+                <width>4</width>
+                <height>window.bottom</height>
+                <color>color.black</color>
+              </rectangle>
+            </sprite>
+            <position><x>0</x><y>0</y></position>
+            <drawn>false</drawn>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="hero">
+                <enter scene="castle" />
+              </collision>
+            </collisions>
+          </object>
+          </objects>
+        </scene>
+      </scenes>
       <inputs keys="walk" />
       <conditions>
         <condition object="status" variable="eaten">
@@ -460,9 +526,22 @@
         </condition>
       </conditions>
     </state>
+
     <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text>
+              <content>PAUSED</content>
+              <size>100</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="paused" />
+        <show state="playing" />
       </shows>
       <inputs>
         <input button="p"><pop /></input>
@@ -470,18 +549,44 @@
         <input button="space"><pop /></input>
       </inputs>
     </state>
+
     <state name="won">
+      <objects>
+        <object name="wonmsg">
+          <sprite>
+            <text>
+              <content>THE CHALICE IS HOME</content>
+              <size>50</size>
+              <color>color.magenta</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - wonmsg.width / 2</x><y>window.height.center - wonmsg.height / 2 + (20)</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="wonmsg" />
+        <show state="playing" />
         <show object="again" />
       </shows>
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
     </state>
+
     <state name="eaten">
+      <objects>
+        <object name="eatenmsg">
+          <sprite>
+            <text>
+              <content>EATEN BY THE DRAGON</content>
+              <size>50</size>
+              <color>color.green</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - eatenmsg.width / 2</x><y>window.height.center - eatenmsg.height / 2 + (20)</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="eatenmsg" />
+        <show state="playing" />
         <show object="again" />
       </shows>
       <inputs>

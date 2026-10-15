@@ -237,6 +237,10 @@ namespace xge
 		// one and no animation (sprite is the first). Empty otherwise.
 		std::vector<RawSprite> looks;
 		bool isVisible{ true };
+
+		// <drawn>false</drawn>: in play, moving and colliding, but never drawn
+		// (an exit, a trigger zone).
+		bool isDrawn{ true };
 		RawVector2 rawPosition;
 		RawVector2 rawVelocity;
 		RawVector2 rawAcceleration;  // only when hasAcceleration
@@ -269,6 +273,13 @@ namespace xge
 		// Where it goes in its group's <columns> and <rows>, when it is a cell.
 		RawCell cell;
 
+		// Who owns it: empty for one of the game's own <objects>; the state's
+		// name for one of a state's; and that and the scene's path
+		// (playing.room1) for one of a scene's. Set when the states and
+		// scenes are laid out (scenes.h), never read from the file.
+		std::string ownerState;
+		std::string ownerScene;
+
 		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
 	};
 
@@ -295,6 +306,17 @@ namespace xge
 		}
 		std::string objClass;
 		bool isVisible{ true };
+
+		// Whether it is drawn while in play (see RawObject::isDrawn).
+		bool isDrawn{ true };
+
+		// Who owns it (see RawObject::ownerState). An object carried into
+		// another scene (<enter>) belongs to that one from then on;
+		// ownerSceneOriginal is the scene it started in, where a reset puts it
+		// back.
+		std::string ownerState;
+		std::string ownerScene;
+		std::string ownerSceneOriginal;
 
 		// How the object started (see Game::resetObject), so that a reset brings
 		// back what has since died or been fired: die() hides an object and

@@ -712,7 +712,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
-				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow";
+				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -732,6 +732,7 @@ namespace xge
 			command.sprite = node.getAttribute("sprite");
 			command.path = node.getAttribute("path");
 			command.objClass = node.getAttribute("class");
+			command.scene = node.getAttribute("scene");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec")
@@ -743,6 +744,11 @@ namespace xge
 				else { command.amount = RawValue::expression("1"); }
 			}
 			if (verb == "push") { requireAttribute(node, "state", where); }
+			if (verb == "enter") { requireAttribute(node, "scene", where); }
+			if (verb == "reset" && !command.scene.empty() && !command.object.empty())
+			{
+				fail(where, "<reset> puts back an object= or a scene=, not both");
+			}
 			if (verb == "fire") { requireAttribute(node, "object", where); }
 			if (verb == "play" || verb == "silence") { requireAttribute(node, "sound", where); }
 			if (verb == "become") { requireAttribute(node, "sprite", where); }
@@ -1150,6 +1156,7 @@ namespace xge
 			{
 				if (readBool(*hidden, where)) { rawObject.isVisible = false; }
 			}
+			if (auto drawn = findChild(&object, "drawn")) { rawObject.isDrawn = readBool(*drawn, where); }
 			if (auto collisions = findChild(&object, "collisions")) { rawObject.rawCollisionData = readCollisions(*collisions, where); }
 			readActions(object, where, rawObject.action);
 			readObjectVariables(object, where, rawObject.variable);
@@ -1335,6 +1342,7 @@ namespace xge
 				const std::string tag = child->getName();
 
 				if (tag == "hidden") { shared.isVisible = !readBool(*child, where); }
+				else if (tag == "drawn") { shared.isDrawn = readBool(*child, where); }
 				else if (tag == "columns") { own.columns = readCount(*child, where); }
 				else if (tag == "rows") { own.rows = readCount(*child, where); }
 				else if (tag == "padding")
@@ -1361,7 +1369,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <hidden>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -1645,16 +1653,27 @@ namespace xge
 
 		// The <show>s under a node (a state's <shows>, or a <shows> set), in
 		// order: <show object="..."> names one object (or group), <show
-		// set="..."> takes a named <shows> set's objects in its place.
-		void readShows(const XmlNode& node, const std::string& where, const ShowSets& showSets, std::vector<std::string>& out)
+		// set="..."> takes a named <shows> set's objects in its place, and, in
+		// a state's own (`states` not null), <show state="..."> a state drawn
+		// still underneath.
+		void readShows(const XmlNode& node, const std::string& where, const ShowSets& showSets, std::vector<std::string>& out,
+			std::vector<std::string>* states = nullptr)
 		{
 			for (std::unique_ptr<XmlNode> show = node.getFirstChild(); show != nullptr; show = show->getNextSibling())
 			{
 				const std::string object = show->getAttribute("object");
 				const std::string setName = show->getAttribute("set");
+				const std::string stateName = show->getAttribute("state");
+				if (!stateName.empty())
+				{
+					if (!states) { fail(where, "<show state=\"" + stateName + "\" /> goes in a state's own <shows>, not in a set"); }
+					if (!object.empty() || !setName.empty()) { fail(where, "a <show> names an object=\"...\", a set=\"...\" or a state=\"...\", one of them"); }
+					states->push_back(stateName);
+					continue;
+				}
 				if (object.empty() == setName.empty())
 				{
-					fail(where, "a <show> names an object=\"...\" or a set=\"...\", one of them");
+					fail(where, "a <show> names an object=\"...\", a set=\"...\" or a state=\"...\", one of them");
 				}
 				if (!object.empty())
 				{
@@ -1734,6 +1753,131 @@ namespace xge
 			}
 		}
 
+		// The <object>s and <group>s of an <objects>, in order: the game's, a
+		// state's, or a kit's.
+		void readObjects(const XmlNode& objects, std::vector<RawObject>& out)
+		{
+			for (std::unique_ptr<XmlNode> object = objects.getFirstChild(); object != nullptr; object = object->getNextSibling())
+			{
+				if (object->getName() == "group") { readGroup(*object, out); }
+				else { out.push_back(readObject(*object)); }
+			}
+		}
+
+		// Every name the objects can be called by: their own, and their groups'.
+		std::set<std::string> namesOf(const std::vector<RawObject>& objects)
+		{
+			std::set<std::string> names;
+			for (const RawObject& object : objects)
+			{
+				names.insert(object.name);
+				if (!object.groupName.empty()) { names.insert(object.groupName); }
+				names.insert(object.outerGroups.begin(), object.outerGroups.end());
+			}
+			return names;
+		}
+
+		// What a piece a scene takes changes: whole <sprite>s by name, either
+		// half of the <position> and the <velocity>, <hidden>, <drawn> and
+		// <variables>.
+		RawSceneChange readSceneChange(const XmlNode& node, const std::string& where)
+		{
+			RawSceneChange change;
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag == "sprite") { change.sprites.push_back(readSprite(*child, where)); }
+				else if (tag == "position" || tag == "velocity")
+				{
+					const PartialVector2 given = readPartialVector2(*child, where);
+					if (tag == "position") { change.positionX = given.x; change.positionY = given.y; }
+					else { change.velocityX = given.x; change.velocityY = given.y; }
+				}
+				else if (tag == "hidden") { change.hidden = readBool(*child, where); }
+				else if (tag == "drawn") { change.drawn = readBool(*child, where); }
+				else if (tag != "variables")
+				{
+					fail(where, "takes a piece, and a piece taken can change only its <sprite>s, <position>, <velocity>, <hidden>, <drawn> and <variables>, not its <" + tag
+						+ ">; give the kit another piece for that");
+				}
+			}
+			readObjectVariables(node, where, change.variables);
+			return change;
+		}
+
+		// <scenes>: the kit (an <objects> of pieces), then each <scene>. An
+		// object or group in a scene named after a piece of the kit, or of an
+		// object the scene it is from= has, takes it; anything else is the
+		// scene's own and must be complete.
+		void readScenes(const XmlNode& scenes, const std::string& stateWhere, const ConditionSets& conditionSets, RawState& state)
+		{
+			if (std::unique_ptr<XmlNode> kit = findChild(&scenes, "objects")) { readObjects(*kit, state.kit); }
+			const std::set<std::string> kitNames = namesOf(state.kit);
+
+			// What each scene so far can be taken from: its own names and those it took.
+			std::map<std::string, std::set<std::string>> sceneNames;
+
+			for (std::unique_ptr<XmlNode> node = scenes.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() != "scene") { continue; }
+
+				RawScene scene;
+				scene.name = requireAttribute(*node, "name", stateWhere + " > <scenes>");
+				scene.from = node->getAttribute("from");
+				const std::string where = stateWhere + " > scene '" + scene.name + "'";
+				if (sceneNames.count(scene.name)) { fail(stateWhere, "has two scenes called '" + scene.name + "'"); }
+				if (scene.name.find('.') != std::string::npos) { fail(where, "a scene's name has no dots: they join the parts of a path (" + state.name + "." + scene.name + ")"); }
+
+				std::set<std::string> names;
+				if (!scene.from.empty())
+				{
+					const auto from = sceneNames.find(scene.from);
+					if (from == sceneNames.end()) { fail(where, "from=\"" + scene.from + "\" names no scene before it"); }
+					names = from->second;
+				}
+
+				readVariables(findChild(node.get(), "variables").get(), where + " > <variables>", scene.variables);
+
+				if (std::unique_ptr<XmlNode> objects = findChild(node.get(), "objects"))
+				{
+					for (std::unique_ptr<XmlNode> child = objects->getFirstChild(); child != nullptr; child = child->getNextSibling())
+					{
+						const std::string name = requireAttribute(*child, "name", where + " > <objects>");
+						RawSceneEntry entry;
+						if (kitNames.count(name) || names.count(name))
+						{
+							entry.take = name;
+							entry.change = readSceneChange(*child, where + " > <" + child->getName() + " name=\"" + name + "\">");
+							std::vector<RawObject> taken;
+							for (const RawObject& piece : state.kit)
+							{
+								if (piece.name == name || piece.inGroup(name)) { taken.push_back(piece); }
+							}
+							const std::set<std::string> more = namesOf(taken);
+							names.insert(more.begin(), more.end());
+						}
+						else
+						{
+							if (child->getName() == "group") { readGroup(*child, entry.objects); }
+							else { entry.objects.push_back(readObject(*child)); }
+							const std::set<std::string> own = namesOf(entry.objects);
+							names.insert(own.begin(), own.end());
+						}
+						scene.entries.push_back(std::move(entry));
+					}
+				}
+
+				if (std::unique_ptr<XmlNode> conditions = findChild(node.get(), "conditions"))
+				{
+					readConditions(*conditions, where, conditionSets, scene.conditions);
+				}
+				scene.timers = readTimers(findChild(node.get(), "timers").get(), where);
+
+				sceneNames[scene.name] = std::move(names);
+				state.scenes.push_back(std::move(scene));
+			}
+		}
+
 		RawState readState(const XmlNode& state, const std::map<std::string, KeyBindings>& keySets, const ShowSets& showSets, const ConditionSets& conditionSets)
 		{
 			RawState rawState{};
@@ -1741,9 +1885,24 @@ namespace xge
 
 			const std::string where = "state '" + rawState.name + "'";
 
-			// <shows>: objects, and named <shows> sets taken whole
-			std::unique_ptr<XmlNode> shows = requireChild(state, "shows", where);
-			readShows(*shows, where + " > <shows>", showSets, rawState.show);
+			// <objects>: its own, in play in every scene of it
+			if (std::unique_ptr<XmlNode> objects = findChild(&state, "objects"))
+			{
+				readObjects(*objects, rawState.objects);
+			}
+
+			// <scenes>: the kit, then the scenes
+			if (std::unique_ptr<XmlNode> scenes = findChild(&state, "scenes"))
+			{
+				readScenes(*scenes, where, conditionSets, rawState);
+			}
+
+			// <shows> (optional): objects of the game's, named <shows> sets
+			// taken whole, and states drawn still underneath
+			if (std::unique_ptr<XmlNode> shows = findChild(&state, "shows"))
+			{
+				readShows(*shows, where + " > <shows>", showSets, rawState.show, &rawState.showStates);
+			}
 
 			// <inputs>: the named <keys> sets it uses (keys="player menu"), in
 			// order, each over the one before, then its own <input>s over those: a
@@ -1863,11 +2022,7 @@ namespace xge
 		}
 
 		// load objects
-		for (std::unique_ptr<XmlNode> object = objectsNode->getFirstChild(); object != nullptr; object = object->getNextSibling())
-		{
-			if (object->getName() == "group") { readGroup(*object, rawObjects); }
-			else { rawObjects.push_back(readObject(*object)); }
-		}
+		readObjects(*objectsNode, rawObjects);
 
 		// load states: the named <keys>, <shows> and <conditions> sets first, so
 		// any state can use any of them (a <shows> or <conditions> set can take

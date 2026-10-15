@@ -120,22 +120,24 @@
   </xsl:template>
 
   <!-- The C++ function a named thing of the game is written as: its name in
-       camel case and $suffix, and if one of the $earlier ones already has
-       that, its place among them too. -->
+       camel case (after the words of $prefix, its owner's, when it has one)
+       and $suffix, and if one of the $earlier ones already has that, its
+       place among them too. -->
   <xsl:template name="function-name">
     <xsl:param name="node" select="." />
     <xsl:param name="earlier" />
     <xsl:param name="suffix" />
+    <xsl:param name="prefix" select="''" />
     <xsl:variable name="camel">
       <xsl:call-template name="camel">
-        <xsl:with-param name="name" select="$node/@name" />
+        <xsl:with-param name="name" select="concat($prefix, ' ', $node/@name)" />
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="clashes">
       <xsl:for-each select="$earlier">
         <xsl:variable name="other">
           <xsl:call-template name="camel">
-            <xsl:with-param name="name" select="@name" />
+            <xsl:with-param name="name" select="concat($prefix, ' ', @name)" />
           </xsl:call-template>
         </xsl:variable>
         <xsl:if test="$other = $camel">x</xsl:if>

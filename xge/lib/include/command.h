@@ -323,10 +323,27 @@ namespace xge
 		float stagger{};
 	};
 
+	// <enter scene="room2" /> - that scene (its path, playing.room2) becomes
+	// the current one of its state: its objects come into play and the last
+	// one's stop where they are, kept as they were for when it is entered
+	// again. What the state's own objects carry goes along. See Game::enter.
+	struct CmdEnterScene
+	{
+		std::string scene;
+	};
+
+	// <reset scene="room1" /> - every object of that scene back as it started
+	// (as <reset object> puts one back), and its timers started over: a room
+	// full of robots again. See Game::resetScene.
+	struct CmdResetScene
+	{
+		std::string scene;
+	};
+
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdDeflect, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene>;
 
 	// --- What the XML says, before any of it is evaluated.
 
@@ -463,6 +480,7 @@ namespace xge
 		std::string sprite;    // become
 		std::string path;      // follow
 		std::string objClass;  // climb (what it climbs)
+		std::string scene;     // enter, reset
 		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance), leap (height), climb
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
 		RawValue distance;     // chase (near; empty text: 0)
@@ -584,9 +602,9 @@ namespace xge
 	std::vector<std::string> rectangleSprite(float width, float height, const std::string& color);
 
 	// If `expression` is nothing but an "owner.variable" reference (for
-	// example paddle1.score), returns {owner, variable}. Returns nullopt for
-	// anything else - a number, a sum, a name with no owner or with more than
-	// one dot. Used to tell a <number> in a text sprite that should stay live
+	// example paddle1.score, or playing.room1.tally.kills, whose owner is a
+	// path), returns {owner, variable}, split at the last dot. Returns nullopt
+	// for anything else - a number, a sum, a name with no owner. Used to tell a <number> in a text sprite that should stay live
 	// (bound to that variable) from one that is just worked out once; it is a
 	// plain scan of the text rather than an exprtk lookup, since once
 	// exprtk has evaluated the expression only the resolved value is left.

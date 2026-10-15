@@ -39,6 +39,8 @@
   <file>lib/include/sound.h</file>
   <file>lib/source/sound.cpp</file>
   <file>lib/include/game_data.h</file>
+  <file>lib/include/scenes.h</file>
+  <file>lib/source/scenes.cpp</file>
   <file>lib/include/game_expr.h</file>
   <file>lib/source/game_expr.cpp</file>
   <file>lib/include/collision_detector.h</file>

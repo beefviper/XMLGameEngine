@@ -54,7 +54,37 @@ namespace xge
 		void printGame(void);
 
 		WindowDesc& getWindowDesc(void) noexcept;
+
+		// Whether the object is in play: it moves, animates, counts its timers
+		// and collides (and is drawn, unless it is <drawn>false</drawn>). It
+		// is, when it is not hidden or dead, and is the current state's (or
+		// of its current scene), or the current state shows it.
 		bool isShown(const Object& object) noexcept;
+
+		// Whether the object is drawn still, underneath what is in play: it is
+		// not in play, and would be in a state the current one shows with
+		// <show state="..." /> (the game behind its pause).
+		bool isStill(const Object& object) noexcept;
+
+		// Whether the object belongs to a scene that is not its state's current
+		// one: left as it was, out of reach of a <fire>, a <release> or a
+		// <reveal> that names it by a name every scene's has.
+		bool isAway(const Object& object) const;
+
+		// The current scene of that state (its path, playing.room1), or empty
+		// for a state with no scenes.
+		std::string currentScene(const std::string& state) const;
+
+		// <enter scene="playing.room2" />: that scene becomes its state's
+		// current one, and what the state's own objects (or the game's) carry
+		// out of the last one goes with them. Throws std::out_of_range for a
+		// scene the game does not have.
+		void enterScene(const std::string& scene);
+
+		// <reset scene="playing.room1" />: every object that started in that
+		// scene back as it started (into it, if it was carried out), and its
+		// timers started over.
+		void resetScene(const std::string& scene);
 
 		// The object of that name or <group> in play (shown, not hidden or
 		// dead) whose middle is nearest `from`'s, leaving `from` out; null if
@@ -262,6 +292,36 @@ namespace xge
 		// they start); kept here, by state name, because the state stack
 		// holds copies of states. A reset starts them all over.
 		std::map<std::string, std::vector<Timer>> stateTimers;
+
+		// Each state's current scene, by state name, and every scene's
+		// timers as they are counting, by its path. Goes up by one each time
+		// a scene is entered (a timer or condition list stops for the frame).
+		std::map<std::string, std::string> currentScenes;
+		std::map<std::string, std::vector<Timer>> sceneTimers;
+		unsigned long sceneChanges = 0;
+
+		// Every state at its first scene, and every scene's timers from the start.
+		void startScenes(void);
+
+		// Whether the object would be in play were `state` the current one
+		// (hidden or not).
+		bool runsIn(const Object& object, const State& state) const;
+
+		// Whether a condition that names no object looks at it: the game's
+		// own, and the current state's in play or in its current scene.
+		bool inScope(const Object& object) const;
+
+		// The full name a name means: itself, when it names an object or a
+		// group, or else the one path that ends with it (robots for
+		// playing.room1.robots, for a test or a front end); else itself.
+		std::string fullName(const std::string& name) const;
+
+		// Works out what is shown in every text bound to a variable, after many have changed.
+		void refreshAllBoundTexts(void);
+
+		// The conditions of one list, as checkConditions does; true when one
+		// fired (and the frame's checking is over).
+		bool checkConditionList(const std::vector<Condition>& conditions);
 
 		// Counts a frame on every object timer of what is shown and every
 		// timer of the current state, and runs the commands of the ones that

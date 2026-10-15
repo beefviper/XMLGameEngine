@@ -89,6 +89,8 @@ set(data_engine
 	"xge/lib/include/sound.h"
 	"xge/lib/source/sound.cpp"
 	"xge/lib/include/game_data.h"
+	"xge/lib/include/scenes.h"
+	"xge/lib/source/scenes.cpp"
 	"xge/lib/include/game_expr.h"
 	"xge/lib/source/game_expr.cpp"
 	"xge/lib/include/collision_detector.h"

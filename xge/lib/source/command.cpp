@@ -45,6 +45,7 @@ namespace xge
 		// condition, the whole game) back; <reset object="name"/> that one object.
 		if (verb == "reset")
 		{
+			if (!raw.scene.empty()) { return CmdResetScene{ raw.scene }; }
 			if (raw.object.empty()) { return CmdReset{}; }
 			return CmdResetObject{ raw.object };
 		}
@@ -134,6 +135,7 @@ namespace xge
 		if (verb == "dec") { return CmdDecrement{ raw.variable, amountOf(raw) }; }
 
 		if (verb == "push") { return CmdPushState{ raw.state }; }
+		if (verb == "enter") { return CmdEnterScene{ raw.scene }; }
 		if (verb == "pop")  { return CmdPopState{ raw.state }; }
 
 		if (verb == "play")    { return CmdPlay{ raw.sound }; }
@@ -224,7 +226,9 @@ namespace xge
 		const auto last = expression.find_last_not_of(" \t\r\n");
 		const std::string reference = expression.substr(first, last - first + 1);
 
-		const auto dot = reference.find('.');
+		// The variable is after the last dot; the owner, before it, may be a
+		// path (playing.room1.tally.kills).
+		const auto dot = reference.rfind('.');
 		if (dot == std::string::npos || dot == 0 || dot == reference.size() - 1)
 		{
 			return std::nullopt;
@@ -232,14 +236,10 @@ namespace xge
 
 		const auto isIdentChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_'; };
 
-		for (char c : reference)
+		for (std::size_t i = 0; i < reference.size(); ++i)
 		{
-			if (c != '.' && !isIdentChar(c)) { return std::nullopt; }
-		}
-
-		if (std::count(reference.begin(), reference.end(), '.') != 1)
-		{
-			return std::nullopt; // only a single "owner.variable" level is supported
+			const char c = reference[i];
+			if (c == '.' ? (i == 0 || reference[i - 1] == '.') : !isIdentChar(c)) { return std::nullopt; }
 		}
 
 		return std::make_pair(reference.substr(0, dot), reference.substr(dot + 1));
@@ -320,6 +320,8 @@ namespace xge
 			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << ")"; },
 			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
+			[&](const CmdEnterScene& e) { o << "enter(" << e.scene << ")"; },
+			[&](const CmdResetScene& r) { o << "reset(scene " << r.scene << ")"; },
 		}, command);
 
 		return o;
@@ -471,6 +473,10 @@ namespace xge
 		else if (command.verb == "push")
 		{
 			o << "(" << command.state << ")";
+		}
+		else if (command.verb == "enter" || (command.verb == "reset" && !command.scene.empty()))
+		{
+			o << "(scene " << command.scene << ")";
 		}
 		else if (command.verb == "chase")
 		{

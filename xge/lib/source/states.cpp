@@ -24,10 +24,15 @@ namespace xge
 	{
 		o << "state: ";
 		o << "name=" << f.name << ", show=";
-		for (auto& show : f.show)
+		for (std::size_t i = 0; i < f.show.size(); ++i)
 		{
-			o << show << (show != f.show.back() ? ", " : "\n");
+			o << (i > 0 ? ", " : "") << f.show[i];
 		}
+		for (const auto& still : f.showStates)
+		{
+			o << (f.show.empty() && &still == &f.showStates.front() ? "" : ", ") << "state " << still;
+		}
+		o << '\n';
 		for (auto& input : f.input)
 		{
 			o << "       button=" << input.first << ", action=" << input.second << '\n';
@@ -62,10 +67,15 @@ namespace xge
 	{
 		o << "state: ";
 		o << "name=" << f.name << ", show=";
-		for (auto& show : f.show)
+		for (std::size_t i = 0; i < f.show.size(); ++i)
 		{
-			o << show << (show != f.show.back() ? ", " : "\n");
+			o << (i > 0 ? ", " : "") << f.show[i];
 		}
+		for (const auto& still : f.showStates)
+		{
+			o << (f.show.empty() && &still == &f.showStates.front() ? "" : ", ") << "state " << still;
+		}
+		o << '\n';
 		for (auto& input : f.input)
 		{
 			o << "       button=" << keyCodeToString(input.first) << ", action=";

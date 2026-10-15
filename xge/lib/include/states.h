@@ -7,6 +7,7 @@
 
 #include "command.h"
 #include "keycode.h"
+#include "object.h"
 
 #include <string>
 #include <vector>
@@ -64,6 +65,45 @@ namespace xge
 		std::vector<Command> commands;
 	};
 
+	// What a scene changes in a piece it takes (from its state's kit, or from
+	// the scene it is from=): each part given replaces that part in every
+	// object the piece is made of. A sprite replaces the look of its name (an
+	// unnamed one, an object's only sprite).
+	struct RawSceneChange
+	{
+		std::optional<RawValue> positionX;
+		std::optional<RawValue> positionY;
+		std::optional<RawValue> velocityX;
+		std::optional<RawValue> velocityY;
+		std::optional<bool> hidden;
+		std::optional<bool> drawn;
+		std::map<std::string, RawValue> variables;
+		std::vector<RawSprite> sprites;
+	};
+
+	// One <object> or <group> in a scene's <objects>, in the order written:
+	// a piece taken (`take` its name, and what it changes), or the scene's
+	// own (`objects`, what it is made of: one object, or a group's members).
+	struct RawSceneEntry
+	{
+		std::string take;
+		RawSceneChange change;
+		std::vector<RawObject> objects;
+	};
+
+	// A <scene> as written: its name inside its state, the earlier scene it
+	// is from= (or empty), its own <variables>, its objects, and what runs
+	// while it is its state's current scene.
+	struct RawScene
+	{
+		std::string name;
+		std::string from;
+		std::vector<std::pair<std::string, RawValue>> variables;
+		std::vector<RawSceneEntry> entries;
+		std::vector<RawCondition> conditions;
+		std::vector<RawTimer> timers;
+	};
+
 	class RawState
 	{
 	public:
@@ -73,10 +113,30 @@ namespace xge
 		std::vector<RawCondition> conditions;
 		std::vector<RawTimer> timers;
 
+		// The states it draws still underneath its own (<show state="..." />).
+		std::vector<std::string> showStates;
+
+		// Its own <objects>, in play in every scene of it, as read (names
+		// as written); then the kit at the top of its <scenes>, and the scenes.
+		// scenes.h lays them out among the game's objects.
+		std::vector<RawObject> objects;
+		std::vector<RawObject> kit;
+		std::vector<RawScene> scenes;
+
 		friend std::ostream& operator<<(std::ostream& o, RawState const& f);
 
 	private:
 
+	};
+
+	// A scene, made ready to run: its path (playing.room1), and the
+	// conditions and timers that run while it is its state's current scene,
+	// after the state's own.
+	struct Scene
+	{
+		std::string name;
+		std::vector<Condition> conditions;
+		std::vector<Timer> timers;
 	};
 
 	class State
@@ -86,6 +146,12 @@ namespace xge
 		std::vector<std::string> show;
 		std::map<KeyCode, std::vector<Command>> input;
 		std::vector<Condition> conditions;
+
+		// The states drawn still underneath it (RawState::showStates).
+		std::vector<std::string> showStates;
+
+		// Its scenes, in the order written; the first is current at the start.
+		std::vector<Scene> scenes;
 
 		// Counted while this is the current state (Game::updateTimers); the
 		// counts themselves are kept by Game, per state, so a state pushed

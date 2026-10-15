@@ -42,6 +42,15 @@ TEST_CASE("parseVariableReference recognizes an owner.variable reference", "[obj
 	}
 }
 
+TEST_CASE("parseVariableReference takes the owner of a variable as a path, up to the last dot", "[object_variables][scenes]")
+{
+	auto binding = parseVariableReference("playing.room1.tally.kills");
+	REQUIRE(binding.has_value());
+	CHECK(binding->first == "playing.room1.tally");
+	CHECK(binding->second == "kills");
+	CHECK_FALSE(parseVariableReference("hp..current").has_value()); // an empty part of the path
+}
+
 TEST_CASE("parseVariableReference finds nothing in a number or a sum", "[object_variables]")
 {
 	// A number typed by hand, and arithmetic - worked out once, not bound.
@@ -53,7 +62,6 @@ TEST_CASE("parseVariableReference finds nothing in a number or a sum", "[object_
 
 TEST_CASE("parseVariableReference rejects malformed owner.variable shapes rather than guessing", "[object_variables]")
 {
-	CHECK_FALSE(parseVariableReference("hp.max.current").has_value()); // more than one '.'
 	CHECK_FALSE(parseVariableReference(".score").has_value());          // no owner before '.'
 	CHECK_FALSE(parseVariableReference("score.").has_value());          // no variable after '.'
 	CHECK_FALSE(parseVariableReference("score").has_value());           // no owner at all

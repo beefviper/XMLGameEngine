@@ -8,7 +8,8 @@
 // (picking a thing up by walking into it, taking it along, one at a time,
 // from another carrier), <drop /> (and not picking it up again until walked
 // off), the key opening the gate on its own way there, the sword slaying the
-// dragon, the dragon eating the hero, and the chalice carried home.
+// dragon, the dragon eating the hero, the two rooms (scenes) walked between
+// with what is carried, and the chalice carried home from the field.
 //
 // Window::init() normally measures each object's size once a backend exists;
 // the helper gives every shape the size its sprite implies instead.
@@ -83,6 +84,10 @@ namespace
 
 		Object& object(const std::string& name) { return game.getObject(name); }
 		Object& hero() { return object("hero"); }
+		bool carrying(const std::string& name) { return hero().carrying == object(name).name; }
+
+		std::string room() { return game.currentScene("playing"); }
+		void enter(const std::string& room) { game.enterScene("playing." + room); }
 
 		// Puts the hero (and anything) somewhere, standing still.
 		void put(const std::string& name, float x, float y)
@@ -102,7 +107,7 @@ TEST_CASE("the hero picks up what he walks into and takes it along, held where i
 	play.put("key", 540, 420);
 
 	play.hold(KeyCode::D, 10);
-	REQUIRE(play.hero().carrying == "key");
+	REQUIRE(play.carrying("key"));
 	const Vector2f held = play.object("key").position - play.hero().position;
 	CHECK(held.x > 0.0f);
 
@@ -118,19 +123,20 @@ TEST_CASE("one thing at a time: picking up another puts the first down where it 
 {
 	Adventure play;
 	play.start();
+	play.enter("field");
 	play.put("hero", 100, 300);
-	play.put("key", 120, 300);
+	play.put("chalice", 120, 300);
 	play.put("sword", 100, 200);
 
 	play.hold(KeyCode::Right, 5);
-	REQUIRE(play.hero().carrying == "key");
+	REQUIRE(play.carrying("chalice"));
 
 	play.hold(KeyCode::Up, 40);
-	CHECK(play.hero().carrying == "sword");
-	const Vector2f keyLeft = play.object("key").position;
+	CHECK(play.carrying("sword"));
+	const Vector2f chaliceLeft = play.object("chalice").position;
 
 	play.hold(KeyCode::Down, 20);
-	CHECK(play.object("key").position == keyLeft);
+	CHECK(play.object("chalice").position == chaliceLeft);
 	CHECK(play.object("sword").position.y > 200.0f);
 }
 
@@ -142,7 +148,7 @@ TEST_CASE("Space puts it down, and it is not picked up again until he has walked
 	play.put("key", 525, 422);
 
 	play.hold(KeyCode::Left, 2);
-	REQUIRE(play.hero().carrying == "key");
+	REQUIRE(play.carrying("key"));
 
 	play.tap(KeyCode::Space);
 	play.frames(1);
@@ -157,7 +163,7 @@ TEST_CASE("Space puts it down, and it is not picked up again until he has walked
 	// Off it, and back onto it: picked up.
 	play.hold(KeyCode::Left, 20);
 	play.hold(KeyCode::Right, 25);
-	CHECK(play.hero().carrying == "key");
+	CHECK(play.carrying("key"));
 }
 
 TEST_CASE("the gate stops the hero, and opens to the key he carries", "[adventure][carry]")
@@ -176,7 +182,7 @@ TEST_CASE("the gate stops the hero, and opens to the key he carries", "[adventur
 	play.put("hero", 315, 300);
 	play.put("key", 312, 280);
 	play.hold(KeyCode::Up, 5);
-	REQUIRE(play.hero().carrying == "key");
+	REQUIRE(play.carrying("key"));
 	play.hold(KeyCode::Up, 60);
 	CHECK_FALSE(play.object("gate").collisionData.enabled);
 	CHECK(play.hero().position.y < gateBottom);
@@ -187,6 +193,7 @@ TEST_CASE("the dragon chases the hero and eats him; the sword slays it", "[adven
 	{
 		Adventure play;
 		play.start(true);
+		play.enter("field");
 		play.put("hero", 400, 200);
 		play.put("dragon", 450, 200);
 		play.frames(120);
@@ -196,6 +203,7 @@ TEST_CASE("the dragon chases the hero and eats him; the sword slays it", "[adven
 		// The sword lying between them: the dragon runs into it.
 		Adventure play;
 		play.start(true);
+		play.enter("field");
 		play.put("hero", 400, 200);
 		play.put("sword", 430, 205);
 		play.put("dragon", 480, 200);
@@ -205,23 +213,78 @@ TEST_CASE("the dragon chases the hero and eats him; the sword slays it", "[adven
 	}
 }
 
-TEST_CASE("the chalice carried into the hall wins, and a new game starts with nothing carried", "[adventure][carry]")
+TEST_CASE("the field and the castle are two rooms: walking through a side enters the other, and the one left waits", "[adventure][scenes]")
+{
+	Adventure play;
+	play.start(true);
+	REQUIRE(play.room() == "playing.castle");
+	CHECK(play.game.isAway(play.object("dragon")));
+	CHECK_FALSE(play.game.isShown(play.object("dragon")));
+	CHECK(play.game.isShown(play.object("key")));
+	const Vector2f dragonAt = play.object("dragon").position;
+
+	// East, through the castle's unseen side: in at the west of the field.
+	play.put("hero", 560, 300);
+	play.hold(KeyCode::Right, 40);
+	CHECK(play.room() == "playing.field");
+	CHECK(play.hero().position.x < 100.0f);
+	CHECK(play.game.isShown(play.object("dragon")));
+	CHECK(play.game.isAway(play.object("key")));
+
+	// And straight back, before the dragon gets far.
+	play.hold(KeyCode::Left, 30);
+	CHECK(play.room() == "playing.castle");
+	CHECK(play.hero().position.x > 500.0f);
+	const Vector2f dragonLeft = play.object("dragon").position;
+	CHECK(dragonLeft != dragonAt);
+	play.frames(60);
+	CHECK(play.object("dragon").position == dragonLeft);
+}
+
+TEST_CASE("the chalice carried from the field into the hall wins, and a new game starts with nothing carried", "[adventure][carry][scenes]")
 {
 	Adventure play;
 	play.start();
 	die(play.object("gate"));
 
-	play.put("hero", 315, 300);
-	play.put("chalice", 310, 270);
-	play.hold(KeyCode::Up, 3);
-	REQUIRE(play.hero().carrying == "chalice");
+	// Picked up in the field and carried west through its side into the castle.
+	play.enter("field");
+	play.put("hero", 80, 300);
+	play.put("chalice", 50, 300);
+	play.hold(KeyCode::Left, 3);
+	REQUIRE(play.carrying("chalice"));
+	play.hold(KeyCode::Left, 30);
+	REQUIRE(play.room() == "playing.castle");
+	CHECK(play.carrying("chalice"));
+	CHECK(play.game.isShown(play.object("chalice")));
+	CHECK(play.object("chalice").ownerScene == "playing.castle");
+
+	// Along to the gate, and up into the hall.
+	play.hold(KeyCode::Left, 96);
+	REQUIRE(play.carrying("chalice"));
 	play.hold(KeyCode::Up, 120);
 	CHECK(play.state() == "won");
+	CHECK(play.game.isStill(play.hero()));
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(play.hero().carrying.empty());
+	CHECK(play.room() == "playing.castle");
 	CHECK(play.object("chalice").position == play.object("chalice").positionOriginal);
+	CHECK(play.object("chalice").ownerScene == "playing.field");
+}
+
+TEST_CASE("paused, the room is drawn still underneath and nothing in it moves", "[adventure][scenes]")
+{
+	Adventure play;
+	play.start();
+	play.enter("field");
+	play.tap(KeyCode::P);
+	REQUIRE(play.state() == "paused");
+	CHECK(play.game.isStill(play.hero()));
+	CHECK(play.game.isStill(play.object("chalice")));
+	CHECK_FALSE(play.game.isStill(play.object("key")));
+	CHECK_FALSE(play.game.isShown(play.hero()));
 }
 
 TEST_CASE("a carrier out of play puts down what it carried", "[adventure][carry]")
@@ -231,7 +294,7 @@ TEST_CASE("a carrier out of play puts down what it carried", "[adventure][carry]
 	play.put("hero", 520, 420);
 	play.put("key", 540, 420);
 	play.hold(KeyCode::D, 10);
-	REQUIRE(play.hero().carrying == "key");
+	REQUIRE(play.carrying("key"));
 
 	die(play.hero());
 	play.frames(1);

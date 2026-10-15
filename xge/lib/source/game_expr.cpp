@@ -110,6 +110,8 @@ namespace xge
 				[](const CmdBecome&) { return std::string("<become>"); },
 				[](const CmdReveal&) { return std::string("<reveal>"); },
 				[](const CmdFollow&) { return std::string("<follow>"); },
+				[](const CmdEnterScene&) { return std::string("<enter>"); },
+				[](const CmdResetScene&) { return std::string("<reset scene>"); },
 			}, command);
 		}
 
@@ -164,8 +166,8 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
-			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
+			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
+			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
 				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
@@ -175,9 +177,9 @@ namespace xge
 			}();
 			static const PlaceRule rules[] = {
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>",
-					"<play>", "<silence>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
+					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>",
-					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<play>", "<silence>", "<reverse />", "<reset object>", "<become>", "<reveal>", "<follow>" } },
+					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
@@ -224,7 +226,22 @@ namespace xge
 		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
 			const std::vector<SoundDesc>& sounds, const std::map<std::string, Path>& paths, const std::string& where)
 		{
-			if (const auto* follow = std::get_if<CmdFollow>(&command))
+			if (std::holds_alternative<CmdEnterScene>(command) || std::holds_alternative<CmdResetScene>(command))
+			{
+				const bool enter = std::holds_alternative<CmdEnterScene>(command);
+				const std::string& scene = enter ? std::get<CmdEnterScene>(command).scene : std::get<CmdResetScene>(command).scene;
+				std::vector<std::string> names;
+				for (const State& state : states)
+				{
+					for (const Scene& each : state.scenes) { names.push_back(each.name); }
+				}
+				if (std::find(names.begin(), names.end(), scene) == names.end())
+				{
+					throw std::runtime_error(where + ": <" + (enter ? "enter" : "reset") + " scene=\"" + scene + "\" /> names no scene of the game" + didYouMean(scene, names)
+						+ (names.empty() ? std::string(" (no state has <scenes>)") : ". The scenes are: " + listOf(names)));
+				}
+			}
+			else if (const auto* follow = std::get_if<CmdFollow>(&command))
 			{
 				if (!paths.count(follow->path))
 				{
@@ -352,7 +369,10 @@ namespace xge
 				const bool inc = std::holds_alternative<CmdIncrement>(command);
 				const std::string& target = inc ? std::get<CmdIncrement>(command).target : std::get<CmdDecrement>(command).target;
 				const std::string tag = std::string(inc ? "<inc" : "<dec") + " variable=\"" + target + "\" />";
-				const auto dot = target.find('.');
+				// A text object of that name counts its own number; anything else
+				// is owner.variable, the variable after the last dot.
+				const bool whole = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == target; });
+				const auto dot = whole ? std::string::npos : target.rfind('.');
 				const std::string ownerName = target.substr(0, dot);
 				const Object* owner = findObject(objects, ownerName);
 				if (!owner)
@@ -446,6 +466,27 @@ namespace xge
 				{
 					const std::string here = where + " > <timer>";
 					checkAll(timer.commands, here); checkOwnLooks(timer.commands, nullptr, here); checkOwnFollow(timer.commands, here); checkPlace(timer.commands, Place::StateTimer, here);
+				}
+				for (const auto& scene : state.scenes)
+				{
+					const std::string sceneWhere = "scene '" + scene.name + "'";
+					for (const auto& condition : scene.conditions)
+					{
+						const std::string here = sceneWhere + " > <condition>";
+						checkAll(condition.commands, here); checkOwnLooks(condition.commands, nullptr, here); checkOwnFollow(condition.commands, here); checkPlace(condition.commands, Place::Condition, here);
+					}
+					for (const auto& timer : scene.timers)
+					{
+						const std::string here = sceneWhere + " > <timer>";
+						checkAll(timer.commands, here); checkOwnLooks(timer.commands, nullptr, here); checkOwnFollow(timer.commands, here); checkPlace(timer.commands, Place::StateTimer, here);
+					}
+				}
+				for (const auto& still : state.showStates)
+				{
+					if (std::none_of(states.begin(), states.end(), [&](const State& other) { return other.name == still; }))
+					{
+						throw std::runtime_error(where + " > <show state=\"" + still + "\" />: there is no state of that name" + didYouMean(still, stateNames(states)));
+					}
 				}
 			}
 
@@ -700,7 +741,7 @@ namespace xge
 			if (object.shapeKind == ShapeKind::Text && rawObject.sprite.textIsNumber
 				&& rawObject.sprite.number.kind == RawValue::Kind::Expression)
 			{
-				if (auto binding = parseVariableReference(rawObject.sprite.number.text))
+				if (auto binding = parseVariableReference(rawObject.sprite.number.text); binding && objectVariables.count(binding->first + "." + binding->second))
 				{
 					object.boundVariableOwner = binding->first;
 					object.boundVariableName = binding->second;
@@ -711,6 +752,10 @@ namespace xge
 			object.outerGroups = rawObject.outerGroups;
 			object.name = rawObject.name;
 			object.objClass = rawObject.objClass;
+			object.isDrawn = rawObject.isDrawn;
+			object.ownerState = rawObject.ownerState;
+			object.ownerScene = rawObject.ownerScene;
+			object.ownerSceneOriginal = rawObject.ownerScene;
 
 			if (rawObject.objClass == "projectile")
 			{
@@ -865,6 +910,46 @@ namespace xge
 			}
 		}
 
+		// A condition made ready, from a state's or a scene's.
+		const auto makeCondition = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner)
+		{
+			Condition condition;
+			condition.filterClass = rawCondition.filterClass;
+			condition.filterObject = rawCondition.filterObject;
+			condition.variableName = rawCondition.variableName;
+
+			condition.otherObject = rawCondition.otherObject;
+			condition.otherVariable = rawCondition.otherVariable;
+			const float threshold = rawCondition.otherVariable.empty() ? evaluate(rawCondition.threshold, where) : 0.0f;
+			switch (rawCondition.test)
+			{
+			case RawCondition::Test::AtLeast:   condition.compare = Compare::AtLeast; break;
+			case RawCondition::Test::AtMost:    condition.compare = Compare::AtMost; break;
+			case RawCondition::Test::Above:     condition.compare = Compare::Above; break;
+			case RawCondition::Test::Below:     condition.compare = Compare::Below; break;
+			case RawCondition::Test::Equal:     condition.compare = Compare::Equal; break;
+			case RawCondition::Test::Remaining: condition.remaining = threshold; break;
+			}
+			condition.value = threshold;
+
+			if (!condition.otherVariable.empty())
+			{
+				checkOtherVariable(condition, objects, where + " > <condition variable=\"" + condition.variableName + "\">");
+			}
+
+			if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)
+				{
+					return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
+						&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name
+							|| object.inGroup(rawCondition.filterObject));
+				}))
+			{
+				std::cout << "warning: " << owner << ": a condition with remaining= matches no object at all, so it would fire at once\n";
+			}
+			condition.commands = processCommands(rawCondition.commands, where);
+			return condition;
+		};
+
 		for (auto& rawState : rawStates)
 		{
 			State state{};
@@ -872,6 +957,7 @@ namespace xge
 
 			state.name = rawState.name;
 			state.show = rawState.show;
+			state.showStates = rawState.showStates;
 
 			for (auto& rawAction : rawState.input)
 			{
@@ -886,44 +972,23 @@ namespace xge
 
 			for (auto& rawCondition : rawState.conditions)
 			{
-				Condition condition;
-				condition.filterClass = rawCondition.filterClass;
-				condition.filterObject = rawCondition.filterObject;
-				condition.variableName = rawCondition.variableName;
-
-				condition.otherObject = rawCondition.otherObject;
-				condition.otherVariable = rawCondition.otherVariable;
-				const float threshold = rawCondition.otherVariable.empty() ? evaluate(rawCondition.threshold, where) : 0.0f;
-				switch (rawCondition.test)
-				{
-				case RawCondition::Test::AtLeast:   condition.compare = Compare::AtLeast; break;
-				case RawCondition::Test::AtMost:    condition.compare = Compare::AtMost; break;
-				case RawCondition::Test::Above:     condition.compare = Compare::Above; break;
-				case RawCondition::Test::Below:     condition.compare = Compare::Below; break;
-				case RawCondition::Test::Equal:     condition.compare = Compare::Equal; break;
-				case RawCondition::Test::Remaining: condition.remaining = threshold; break;
-				}
-				condition.value = threshold;
-
-				if (!condition.otherVariable.empty())
-				{
-					checkOtherVariable(condition, objects, where + " > <condition variable=\"" + condition.variableName + "\">");
-				}
-
-				if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)
-					{
-						return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
-							&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name
-								|| object.inGroup(rawCondition.filterObject));
-					}))
-				{
-					std::cout << "warning: state '" << rawState.name << "': a condition with remaining= matches no object at all, so it would fire at once\n";
-				}
-				condition.commands = processCommands(rawCondition.commands, where);
-				state.conditions.push_back(std::move(condition));
+				state.conditions.push_back(makeCondition(rawCondition, where, where));
 			}
 
 			state.timers = processTimers(rawState.timers, where);
+
+			for (const RawScene& rawScene : rawState.scenes)
+			{
+				Scene scene;
+				scene.name = rawState.name + "." + rawScene.name;
+				const std::string sceneWhere = "scene '" + scene.name + "'";
+				for (const RawCondition& rawCondition : rawScene.conditions)
+				{
+					scene.conditions.push_back(makeCondition(rawCondition, sceneWhere, sceneWhere));
+				}
+				scene.timers = processTimers(rawScene.timers, sceneWhere);
+				state.scenes.push_back(std::move(scene));
+			}
 
 			states.push_back(state);
 		}
