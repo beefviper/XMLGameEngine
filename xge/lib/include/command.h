@@ -500,6 +500,7 @@ namespace xge
 		bool repeat{ true };
 		RawValue interval;
 		std::vector<RawCommand> commands;
+		std::string name; // name="...": a scene from= this one's can put another in its place
 	};
 
 	// A <timer>, on an object or in a state, made ready to run. It counts

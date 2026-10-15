@@ -33,10 +33,11 @@
     at a time and that <die /> back into the pool when caught.
   * A bomb that hits the ground runs <reset object="bombs" />, which puts
     every bomb of the wave back in the pool at once: the explosion.
-  * A <condition> of the first wave on the score <enter>s its way "next"
-    once the score is `upto`. A later wave copies it with the rest (from=),
-    so it says only its own `upto` and where its "next" leads; the last one
-    has a condition of its own, which wins.
+  * A <condition name="reached"> of the first wave on the score <enter>s its
+    way "next" once the score is `upto`. A later wave copies it with the rest
+    (from=), so it says only its own `upto` and where its "next" leads; the
+    last one writes a condition of the same name, which takes the copied
+    one's place and wins.
   * Paused and the two endings draw the game still underneath (<show state>).
 -->
 
@@ -350,7 +351,7 @@
             <object name="wavelabel" />
           </objects>
           <conditions>
-            <condition object="bucket" variable="score">
+            <condition name="reached" object="bucket" variable="score">
               <atleast>upto</atleast>
               <enter way="next" />
               <play sound="wave" />
@@ -419,7 +420,8 @@
             </object>
           </objects>
           <conditions>
-            <condition object="bucket" variable="score">
+            <!-- in place of the copied "reached": the last wave wins -->
+            <condition name="reached" object="bucket" variable="score">
               <atleast>goal</atleast>
               <reset object="bombs" />
               <push state="youwin" />

@@ -698,7 +698,16 @@
     <xsl:param name="list" />
     <xsl:param name="indent" />
     <xsl:for-each select="$node/timer">
-      <xsl:value-of select="concat($indent, $list, '.push_back(', local-name(*[1]), '(')" />
+      <xsl:value-of select="concat($indent, $list, '.push_back(')" />
+      <!-- a named one: named("launch", every(...)) -->
+      <xsl:if test="@name != ''">
+        <xsl:text>named(</xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@name" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+      </xsl:if>
+      <xsl:value-of select="concat(local-name(*[1]), '(')" />
       <xsl:call-template name="value">
         <xsl:with-param name="node" select="*[1]" />
       </xsl:call-template>
@@ -707,6 +716,7 @@
         <xsl:with-param name="nodes" select="*[position() &gt; 1]" />
         <xsl:with-param name="indent" select="$indent" />
       </xsl:call-template>
+      <xsl:if test="@name != ''">)</xsl:if>
       <xsl:text>));&#10;</xsl:text>
     </xsl:for-each>
   </xsl:template>
@@ -1465,10 +1475,11 @@
       <xsl:otherwise>
         <xsl:variable name="test" select="*[1]" />
         <xsl:value-of select="concat($in, $list, '.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; condition)&#10;', $in, '{&#10;')" />
-        <xsl:for-each select="@class | @object | @variable">
+        <xsl:for-each select="@name | @class | @object | @variable">
           <xsl:if test=". != ''">
             <xsl:value-of select="$inner" />
             <xsl:choose>
+              <xsl:when test="local-name() = 'name'">condition.name</xsl:when>
               <xsl:when test="local-name() = 'class'">condition.filterClass</xsl:when>
               <xsl:when test="local-name() = 'object'">condition.filterObject</xsl:when>
               <xsl:otherwise>condition.variableName</xsl:otherwise>

@@ -43,6 +43,7 @@ namespace xge
 		std::string otherObject;  // the test tag's object=, or empty
 		std::string otherVariable; // the test tag's variable=, or empty
 		std::vector<RawCommand> commands;
+		std::string name; // name="...": a scene from= this one's can put another in its place
 	};
 
 	// How a condition's variable is compared, and whether `variable` passes

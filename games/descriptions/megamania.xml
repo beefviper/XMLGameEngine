@@ -33,9 +33,10 @@
     <reset object="energy" /> fills again: at the start of each wave and
     when a ship is lost.
   * A wave's condition that none of it is left (a class counts the wave in
-    play, not the others) <enter>s its way "next". The second wave is the
-    first (from=), so it has that condition too and says only where its
-    "next" leads; the last one wins instead.
+    play, not the others), named "cleared", <enter>s its way "next". The
+    later waves are the first (from=), so they have that condition too: the
+    second says only where its "next" leads, and the third writes a
+    "cleared" of its own, which takes the copied one's place and wins.
   * Paused, won and lost draw the game still underneath (<show state>).
   Not in it: steering a shot after it is fired, the other five waves (tires,
   bow ties, diamonds, irons, dice), and the bonus for energy left.
@@ -361,7 +362,7 @@
             <group name="enemies" />
           </objects>
           <conditions>
-            <condition class="enemy">
+            <condition name="cleared" class="enemy">
               <remaining>0</remaining>
               <play sound="wave" />
               <reset object="energy" />
@@ -403,8 +404,9 @@
           </objects>
         </scene>
 
-        <!-- bugs, rushing the other way -->
-        <scene name="wave3">
+        <!-- bugs, rushing the other way: the first wave again, quicker, with a
+             "cleared" of its own that wins -->
+        <scene name="wave3" from="wave1">
           <variables>
             <variable name="speed">3</variable>
             <variable name="row1">90</variable>
@@ -428,7 +430,7 @@
             </group>
           </objects>
           <conditions>
-            <condition class="enemy">
+            <condition name="cleared" class="enemy">
               <remaining>0</remaining>
               <play sound="wave" />
               <push state="youwin" />

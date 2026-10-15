@@ -86,6 +86,22 @@ namespace xge
 			for (const RawSprite& sprite : change.sprites) { replaceSprite(object, sprite, where); }
 		}
 
+		// The copied list with the own one's added: one named like a copied
+		// one takes its place there, the rest go after, in the order written.
+		template <typename Item>
+		std::vector<Item> mergedByName(const std::vector<Item>& copied, const std::vector<Item>& own)
+		{
+			std::vector<Item> merged = copied;
+			for (const Item& item : own)
+			{
+				const auto same = item.name.empty() ? merged.end()
+					: std::find_if(merged.begin(), merged.end(), [&](const Item& each) { return each.name == item.name; });
+				if (same != merged.end()) { *same = item; }
+				else { merged.push_back(item); }
+			}
+			return merged;
+		}
+
 		// What a scene is made of, its names as written (before its path is
 		// put in front), for a scene that is from= it.
 		struct Made
@@ -415,10 +431,8 @@ namespace xge
 					if (from == made.end()) { throw std::runtime_error(sceneWhere + ": from=\"" + scene.from + "\" names no scene before it"); }
 					local = from->second;
 
-					// Its ways too, with its own in place of those of the same
-					// name; and the conditions and timers of the scene it is
-					// from=, unless it has its own (a list without names
-					// cannot be changed one by one, so its own replace them).
+					// Its ways, conditions and timers too: its own are added,
+					// each in place of the one of the same name, if there is one.
 					const RawScene& earlier = *std::find_if(state.scenes.begin(), state.scenes.begin() + static_cast<std::ptrdiff_t>(index),
 						[&](const RawScene& each) { return each.name == scene.from; });
 					std::vector<std::pair<std::string, std::string>> ways = earlier.ways;
@@ -429,8 +443,8 @@ namespace xge
 						else { ways.push_back(way); }
 					}
 					scene.ways = std::move(ways);
-					if (scene.conditions.empty()) { scene.conditions = earlier.conditions; }
-					if (scene.timers.empty()) { scene.timers = earlier.timers; }
+					scene.conditions = mergedByName(earlier.conditions, scene.conditions);
+					scene.timers = mergedByName(earlier.timers, scene.timers);
 				}
 
 				for (const auto& [name, value] : scene.variables)

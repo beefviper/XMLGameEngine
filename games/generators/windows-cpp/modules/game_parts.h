@@ -92,13 +92,21 @@ namespace xge::parts
 	// <timer><every>seconds</every> commands </timer>
 	inline RawTimer every(RawValue seconds, std::vector<RawCommand> commands)
 	{
-		return RawTimer{ true, std::move(seconds), std::move(commands) };
+		return RawTimer{ true, std::move(seconds), std::move(commands), {} };
 	}
 
 	// <timer><after>seconds</after> commands </timer>
 	inline RawTimer after(RawValue seconds, std::vector<RawCommand> commands)
 	{
-		return RawTimer{ false, std::move(seconds), std::move(commands) };
+		return RawTimer{ false, std::move(seconds), std::move(commands), {} };
+	}
+
+	// <timer name="...">: the timer with its name, by which a scene from= this
+	// one's puts another in its place.
+	inline RawTimer named(std::string name, RawTimer timer)
+	{
+		timer.name = std::move(name);
+		return timer;
 	}
 
 	// A <collision edge="...">: its commands added to each screen edge it

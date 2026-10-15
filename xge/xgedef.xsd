@@ -753,6 +753,8 @@
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="variable" type="xs:string" use="optional" />
     <xs:attribute name="set" type="xs:string" use="optional" />
+    <!-- a scene from= this one's can put a condition of the same name in its place -->
+    <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!--
@@ -769,6 +771,8 @@
       </xs:choice>
       <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
+    <!-- a scene from= this one's can put a timer of the same name in its place -->
+    <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="timersType">

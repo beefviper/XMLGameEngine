@@ -859,6 +859,11 @@ namespace xge
 				}
 
 				RawTimer raw;
+				raw.name = timer->getAttribute("name");
+				if (!raw.name.empty() && std::any_of(timers.begin(), timers.end(), [&](const RawTimer& other) { return other.name == raw.name; }))
+				{
+					fail(here, "has two timers called '" + raw.name + "'");
+				}
 				raw.repeat = when->getName() == "every";
 				raw.interval = readValue(*when, here);
 				raw.commands = readCommands(when->getNextSibling(), here);
@@ -1705,7 +1710,7 @@ namespace xge
 				if (!condition->getAttribute("set").empty())
 				{
 					const std::string setName = condition->getAttribute("set");
-					if (condition->getFirstChild() || !condition->getAttribute("class").empty() || !condition->getAttribute("object").empty() || !condition->getAttribute("variable").empty())
+					if (condition->getFirstChild() || !condition->getAttribute("class").empty() || !condition->getAttribute("object").empty() || !condition->getAttribute("variable").empty() || !condition->getAttribute("name").empty())
 					{
 						fail(conditionHere, "set=\"" + setName + "\" takes a <conditions> set whole, so it has nothing else");
 					}
@@ -1716,6 +1721,11 @@ namespace xge
 				}
 
 				RawCondition raw;
+				raw.name = condition->getAttribute("name");
+				if (!raw.name.empty() && std::any_of(out.begin(), out.end(), [&](const RawCondition& other) { return other.name == raw.name; }))
+				{
+					fail(conditionHere, "has two conditions called '" + raw.name + "'");
+				}
 				raw.filterClass = condition->getAttribute("class");
 				raw.filterObject = condition->getAttribute("object");
 				raw.variableName = condition->getAttribute("variable");

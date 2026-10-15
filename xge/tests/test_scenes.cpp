@@ -254,8 +254,8 @@ TEST_CASE("a condition that names no object looks only at the current scene, and
 	const std::string states =
 		"<state name=\"playing\"><scenes><objects>" + aliens + "</objects>"
 		"<scene name=\"wave1\"><objects><group name=\"aliens\" /></objects>"
-		"<conditions><condition class=\"alien\"><remaining>0</remaining><enter scene=\"wave2\" /></condition></conditions></scene>"
-		"<scene name=\"wave2\" from=\"wave1\"><conditions><condition class=\"alien\"><remaining>0</remaining><pop state=\"won\" /></condition></conditions></scene>"
+		"<conditions><condition name=\"cleared\" class=\"alien\"><remaining>0</remaining><enter scene=\"wave2\" /></condition></conditions></scene>"
+		"<scene name=\"wave2\" from=\"wave1\"><conditions><condition name=\"cleared\" class=\"alien\"><remaining>0</remaining><pop state=\"won\" /></condition></conditions></scene>"
 		"</scenes>" + kSpace + "</state>"
 		"<state name=\"won\"><inputs><input button=\"space\"><reset /></input></inputs></state>";
 	Loaded loaded(gameXml(states));
@@ -278,12 +278,14 @@ TEST_CASE("a condition that names no object looks only at the current scene, and
 	CHECK(loaded.game.getObject("playing.wave2.aliens.1").isVisible);
 }
 
-TEST_CASE("from= copies the conditions, timers and ways of the scene it is from, and its own replace them", "[scenes][conditions]")
+TEST_CASE("from= copies the conditions, timers and ways of the scene it is from; its own are added, or take the place of one of the same name", "[scenes][conditions]")
 {
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
 	// Each wave is over when its aliens are gone and goes on by its way
-	// "next"; a timer counts the time spent in waves. The second wave says
-	// only where its "next" leads, and the third wins instead.
+	// "next"; a timer named "tick" counts the time spent in waves. The second
+	// wave says only where its "next" leads; the third has a "cleared" of
+	// its own that wins, a "tick" that counts ten at a time, and a timer
+	// more, which is added.
 	const std::string aliens = "<group name=\"aliens\" class=\"alien\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<member><position><x>10</x><y>10</y></position></member><member><position><x>30</x><y>10</y></position></member></group>";
 	const std::string states =
@@ -291,10 +293,11 @@ TEST_CASE("from= copies the conditions, timers and ways of the scene it is from,
 		"<scenes><objects>" + aliens + "</objects>"
 		"<scene name=\"wave1\"><ways><way name=\"next\" scene=\"wave2\" /><way name=\"back\" scene=\"wave1\" /></ways>"
 		"<objects><group name=\"aliens\" /></objects>"
-		"<conditions><condition class=\"alien\"><remaining>0</remaining><enter way=\"next\" /></condition></conditions>"
-		"<timers><timer><every>0.5</every><inc variable=\"clock.ticks\" /></timer></timers></scene>"
+		"<conditions><condition name=\"cleared\" class=\"alien\"><remaining>0</remaining><enter way=\"next\" /></condition></conditions>"
+		"<timers><timer name=\"tick\"><every>0.5</every><inc variable=\"clock.ticks\" /></timer></timers></scene>"
 		"<scene name=\"wave2\" from=\"wave1\"><ways><way name=\"next\" scene=\"wave3\" /></ways></scene>"
-		"<scene name=\"wave3\" from=\"wave2\"><conditions><condition class=\"alien\"><remaining>0</remaining><pop state=\"won\" /></condition></conditions></scene>"
+		"<scene name=\"wave3\" from=\"wave2\"><conditions><condition name=\"cleared\" class=\"alien\"><remaining>0</remaining><pop state=\"won\" /></condition></conditions>"
+		"<timers><timer><after>100</after><inc variable=\"clock.ticks\" /></timer><timer name=\"tick\"><every>0.5</every><inc variable=\"clock.ticks\">10</inc></timer></timers></scene>"
 		"</scenes>" + kSpace + "</state>"
 		"<state name=\"won\"><inputs><input button=\"space\"><reset /></input></inputs></state>";
 	Loaded loaded(gameXml(states), backend);
@@ -303,7 +306,9 @@ TEST_CASE("from= copies the conditions, timers and ways of the scene it is from,
 	REQUIRE(playing.scenes.size() == 3);
 	CHECK(playing.scenes[1].conditions.size() == 1);
 	CHECK(playing.scenes[1].timers.size() == 1);
-	CHECK(playing.scenes[2].timers.size() == 1);
+	REQUIRE(playing.scenes[2].timers.size() == 2);
+	CHECK(playing.scenes[2].conditions.size() == 1);
+	CHECK_FALSE(playing.scenes[2].timers[1].repeat); // the added one, after the one it took the place of
 	CHECK(playing.scenes[1].ways.at("next") == "playing.wave3");
 	CHECK(playing.scenes[1].ways.at("back") == "playing.wave1");
 	CHECK(playing.scenes[2].ways.at("next") == "playing.wave3");
@@ -315,10 +320,10 @@ TEST_CASE("from= copies the conditions, timers and ways of the scene it is from,
 	CHECK(loaded.game.currentScene("playing") == "playing.wave3");
 	CHECK(loaded.game.getCurrentState().name == "playing");
 
-	// Its copy of the timer runs in wave 3 too.
+	// Wave 3's own "tick", in place of the copy: ten at a time.
 	const float ticks = loaded.game.getObject("playing.clock").variable.at("ticks");
-	loaded.frames(65);
-	CHECK(loaded.game.getObject("playing.clock").variable.at("ticks") > ticks);
+	loaded.frames(31);
+	CHECK(loaded.game.getObject("playing.clock").variable.at("ticks") == Approx(ticks + 10));
 
 	// Wave 3's own condition, in place of the copy: it wins.
 	for (const char* name : { "playing.wave3.aliens.1", "playing.wave3.aliens.2" }) { loaded.game.getObject(name).isVisible = false; }
@@ -595,6 +600,18 @@ TEST_CASE("mistakes with ways stop the load", "[scenes][ways][errors]")
 		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\" /></scenes>"
 			"<inputs><input button=\"space\"><enter scene=\"room1\" way=\"on\" /></input></inputs></state>"),
 			"names a scene=\"...\" or a way=\"...\", one of them");
+	}
+	SECTION("two conditions, or two timers, of one name in one list")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><conditions>"
+			"<condition name=\"done\" object=\"marker\" variable=\"x\"><atleast>1</atleast><pop /></condition>"
+			"<condition name=\"done\" object=\"marker\" variable=\"x\"><atleast>2</atleast><pop /></condition>"
+			"</conditions></scene></scenes>" + kSpace + "</state>"),
+			"has two conditions called 'done'");
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><timers>"
+			"<timer name=\"tick\"><every>1</every><pop /></timer><timer name=\"tick\"><every>2</every><pop /></timer>"
+			"</timers></scene></scenes>" + kSpace + "</state>"),
+			"has two timers called 'tick'");
 	}
 	SECTION("two ways of one name")
 	{

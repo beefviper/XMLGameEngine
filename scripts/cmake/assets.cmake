@@ -37,6 +37,7 @@ set(data_xml
 	"games/descriptions/missilecommand.xml"
 	"games/descriptions/combat.xml"
 	"games/descriptions/airseabattle.xml"
+	"games/descriptions/atlantis.xml"
 	"games/descriptions/megamania.xml"
 	"games/descriptions/adventure.xml")
 

@@ -67,6 +67,7 @@ add_executable(xgetest
 	"xge/tests/test_freeway.cpp"
 	"xge/tests/test_depthcharge.cpp"
 	"xge/tests/test_astrosmash.cpp"
+	"xge/tests/test_atlantis.cpp"
 	"xge/tests/test_lines_and_pixels.cpp"
 	"xge/tests/test_bitmap_sprites.cpp"
 	"xge/tests/test_svg_sprites.cpp"
