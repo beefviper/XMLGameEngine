@@ -118,6 +118,41 @@ namespace xge
 		return given;
 	}
 
+	std::filesystem::path findSchema(const std::filesystem::path& gameFile, const std::string& schemaLocation)
+	{
+		// A file that is not there sets the error code, so each check has its own.
+		const auto isFile = [](const std::filesystem::path& file)
+		{
+			std::error_code missing;
+			return std::filesystem::is_regular_file(file, missing);
+		};
+
+		const std::filesystem::path folder = gameFile.parent_path();
+		const std::filesystem::path named = folder / schemaLocation;
+		if (isFile(named))
+		{
+			return named;
+		}
+
+		const std::filesystem::path name = std::filesystem::path(schemaLocation).filename();
+		std::error_code error;
+		std::filesystem::path at = std::filesystem::absolute(folder.empty() ? std::filesystem::path(".") : folder, error).lexically_normal();
+		while (!error && !name.empty())
+		{
+			if (isFile(at / name))
+			{
+				return at / name;
+			}
+			if (at == at.parent_path() || !at.has_relative_path())
+			{
+				break;
+			}
+			at = at.parent_path();
+		}
+
+		return named;
+	}
+
 	std::optional<std::filesystem::path> locateGameFile(const std::string& game,
 		const std::filesystem::path& gamesDirectory)
 	{

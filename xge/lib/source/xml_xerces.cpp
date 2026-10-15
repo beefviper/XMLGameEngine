@@ -5,12 +5,17 @@
 
 #include "xml_xerces.h"
 
+#include "data_folder.h"
+
 #include <xercesc/dom/DOMException.hpp>
+#include <xercesc/framework/LocalFileInputSource.hpp>
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XMLException.hpp>
+#include <xercesc/util/XMLResourceIdentifier.hpp>
 #include <xercesc/util/XMLString.hpp>
 
+#include <filesystem>
 #include <iostream>
 
 namespace xge
@@ -126,6 +131,24 @@ namespace xge
 	void XercesXmlDocument::ParserErrorHandler::fatalError(const xc::SAXParseException& ex) { reportParseException(ex, true); }
 	void XercesXmlDocument::ParserErrorHandler::resetErrors() noexcept { first.clear(); }
 
+	xc::InputSource* XercesXmlDocument::SchemaResolver::resolveEntity(xc::XMLResourceIdentifier* resource)
+	{
+		if (!resource || resource->getResourceIdentifierType() != xc::XMLResourceIdentifier::SchemaGrammar || !resource->getSystemId())
+		{
+			return nullptr;
+		}
+
+		const std::string named = xmlChToStr(resource->getSystemId());
+		const std::filesystem::path found = findSchema(gameFile, named);
+		if (found == std::filesystem::path(gameFile).parent_path() / named)
+		{
+			return nullptr;
+		}
+
+		const StrToXMLCh path(found.string());
+		return new xc::LocalFileInputSource(path.value());
+	}
+
 	XercesXmlDocument::XercesXmlDocument() noexcept
 	{
 		try
@@ -167,6 +190,8 @@ namespace xge
 		domParser->setDoNamespaces(true);
 		domParser->setDoSchema(true);
 		domParser->setValidationConstraintFatal(true);
+		schemaResolver.gameFile = filename;
+		domParser->setXMLEntityResolver(&schemaResolver);
 
 		try
 		{

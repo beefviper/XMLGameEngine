@@ -6,8 +6,8 @@
 # Everything needed to run a game goes in one folder per configuration at the
 # top of the repository, output/Debug or output/Release (output/RelWithDebInfo,
 # output/MinSizeRel):
-#   xgecli, xgegui, xgetest   the programs
-#   games/, assets/           copied next to them by assets.cmake
+#   xgecli, xgegui, xgetest   the programs (and xgetest-generated, when built)
+#   games/, xgedef.xsd        copied next to them by assets.cmake
 #   libraries/                every DLL (.so on Linux) the programs load, and
 #                             Qt's plug-ins in libraries/plugins
 # The build directory keeps only what the compiler and linker make on the way.

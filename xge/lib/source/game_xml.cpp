@@ -5,6 +5,7 @@
 
 #include "game_xml.h"
 
+#include "data_folder.h"
 #include "game.h"
 #include "xsd_lite.h"
 
@@ -2258,7 +2259,7 @@ namespace xge
 		}
 		else
 		{
-			const std::string schemaPath = (std::filesystem::path(filename).parent_path() / schemaLocation).string();
+			const std::string schemaPath = findSchema(filename, schemaLocation).string();
 
 			XsdLiteValidator validator;
 

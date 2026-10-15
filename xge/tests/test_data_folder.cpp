@@ -6,7 +6,7 @@
 // Catch2 tests for xge/lib/source/data_folder.cpp: where xgecli and xgegui look
 // for the games folder, with descriptions/ and assets/ in it (the working
 // directory, the program's folder, the folder above it, and the games/ of each)
-// and for a game file.
+// and for a game file and its schema.
 //
 // Test names must not start with "-" or contain a comma: ctest hands the name to
 // Catch2 on its command line, which reads them as an option or a list.
@@ -197,4 +197,32 @@ TEST_CASE("a game that is nowhere is not found", "[data_folder]")
 
 	CHECK_FALSE(locateGameFile("missing", temp.path() / "data" / "games" / "descriptions").has_value());
 	CHECK_FALSE(locateGameFile("missing", temp.path() / "no_such_folder").has_value());
+}
+
+TEST_CASE("a game's schema is found where the game names it", "[data_folder]")
+{
+	TempRoot temp;
+	temp.touch("xge/xgedef.xsd");
+	temp.touch("output/xgedef.xsd");
+	temp.touch("games/descriptions/pong.xml");
+
+	CHECK(findSchema(temp.path() / "games/descriptions/pong.xml", "../../xge/xgedef.xsd") == temp.path() / "games/descriptions/../../xge/xgedef.xsd");
+}
+
+TEST_CASE("a game's schema is found by its file name in a folder above the game", "[data_folder]")
+{
+	// As in output/<config>: the schema at the top, two folders above the game.
+	TempRoot temp;
+	temp.touch("output/xgedef.xsd");
+	temp.touch("output/games/descriptions/pong.xml");
+
+	CHECK(findSchema(temp.path() / "output/games/descriptions/pong.xml", "../../xge/xgedef.xsd") == temp.path() / "output/xgedef.xsd");
+}
+
+TEST_CASE("a game's schema that is nowhere is the path the game names", "[data_folder]")
+{
+	TempRoot temp;
+	temp.touch("games/descriptions/pong.xml");
+
+	CHECK(findSchema(temp.path() / "games/descriptions/pong.xml", "../../xge/nothere.xsd") == temp.path() / "games/descriptions/../../xge/nothere.xsd");
 }

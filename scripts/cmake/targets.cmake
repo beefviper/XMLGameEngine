@@ -98,7 +98,10 @@ endif()
 # libxslt for xgecli's --generate (xge/cli/source/generate.cpp), and for the tests
 # that compile that file in again. XGE_WITH_XSLT is 1 when it was found, so the
 # file can say, when it was not, that this program cannot generate.
+# XGE_ENGINE_FOLDER is xge/ in the repository: a generated program's engine
+# files are copied from xge/lib/ there, not from a copy beside the programs.
 function(xge_link_xslt target)
+	target_compile_definitions(${target} PRIVATE XGE_ENGINE_FOLDER="${PROJECT_SOURCE_DIR}/xge")
 	if (LibXslt_FOUND AND LibXml2_FOUND)
 		target_compile_definitions(${target} PRIVATE XGE_WITH_XSLT=1)
 		target_link_libraries(${target} PRIVATE LibXslt::LibXslt LibXslt::LibExslt LibXml2::LibXml2)

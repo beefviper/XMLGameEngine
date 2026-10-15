@@ -21,7 +21,7 @@ The root [readme.md](readme.md) is the short public overview.
 | `games/descriptions/`, `games/assets/` | the games; their media |
 | `games/generators/` | the XSLT stylesheets `xgecli --generate` runs, a folder per target |
 | `games/prototypes/` | a hand-written generated game on the engine's shared frame (`pong_min`) |
-| `scripts/cmake/`, `scripts/shell/` | CMake modules; `shell/linux/` prerequisite installers, `shell/windows/generate-all.bat [config]` generates every game into `output/<config>/generated/<game>/`, `build-all.bat [config]` builds them with MSVC at `/W4` |
+| `scripts/cmake/`, `scripts/shell/` | CMake modules; `shell/linux/` prerequisite installers, `shell/windows/games-run-all.bat [config]` runs `games-generate-all.bat` (every game into `output/<config>/generated/<game>/`), `games-build-all.bat` (each with MSVC at `/W4`) and `games-test-all.bat` (builds and runs `xgetest-generated`) |
 
 The programs make `games/` their working directory (`data_folder.h`), so asset paths in a game file (`assets/paddle.jpg`) and the tests' paths (`descriptions/pong.xml`) are relative to it.
 
@@ -33,6 +33,7 @@ Flow: `game_xml` (parse, validate) → `game_expr` (evaluate with exprtk) → `O
 cmake -B build -DBUILD_TESTING=ON
 cmake --build build
 output/Debug/xgetest            # Catch2 filters work, e.g. "[kaboom]"
+cmake --build build --target xgetest-generated && output/Debug/xgetest-generated   # generated games, separate
 output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
 ```
 

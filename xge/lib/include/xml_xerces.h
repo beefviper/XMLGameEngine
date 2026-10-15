@@ -11,6 +11,9 @@
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/sax/ErrorHandler.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/util/XMLEntityResolver.hpp>
+
+#include <string>
 
 namespace xc = xercesc;
 
@@ -76,8 +79,19 @@ namespace xge
 			void reportParseException(const xc::SAXParseException& ex, bool isError);
 		};
 
+		// Finds the schema where findSchema (data_folder.h) does when it is
+		// not where the game names it.
+		class SchemaResolver : public xc::XMLEntityResolver
+		{
+		public:
+			xc::InputSource* resolveEntity(xc::XMLResourceIdentifier* resource) override;
+
+			std::string gameFile;
+		};
+
 		std::unique_ptr<xc::XercesDOMParser> domParser;
 		ParserErrorHandler parserErrorHandler;
+		SchemaResolver schemaResolver;
 		std::string errorMessage;
 	};
 }

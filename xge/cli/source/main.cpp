@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 	if (!options.generate.empty())
 	{
 		// The generators are in the games folder; the engine's own files are in
-		// xge/, beside it.
+		// xge/ in the repository the program was built from.
 		const std::filesystem::path base = dataFolder.empty() ? std::filesystem::current_path() / "games" : dataFolder;
 
 		xge::GenerateRequest request;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 		request.target = options.generate;
 		request.generators = base / "generators";
 		request.dataFolder = base;
-		request.engineFolder = base.parent_path() / "xge";
+		request.engineFolder = XGE_ENGINE_FOLDER;
 		request.output = std::filesystem::absolute(options.output.empty()
 			? std::filesystem::path(std::filesystem::path(filename).stem().string() + "-" + options.generate)
 			: std::filesystem::path(options.output));

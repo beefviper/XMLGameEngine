@@ -13,6 +13,7 @@
 // measure() gives every shape the size its sprite implies instead.
 
 #include "command_executor.h"
+#include "data_folder.h"
 #include "game.h"
 #include "xml_document.h"
 #include "xsd_lite.h"
@@ -112,20 +113,23 @@ namespace
 
 	std::string loadError(const std::string& xml)
 	{
+		const std::filesystem::path path = "descriptions/pacman_scratch.xml";
+		{
+			std::ofstream out(path);
+			out << xml;
+		}
+		std::string error;
 		try
 		{
-			const std::filesystem::path path = "descriptions/pacman_scratch.xml";
-			{
-				std::ofstream out(path);
-				out << xml;
-			}
 			Game game(path.string());
 		}
-		catch (const std::exception& error)
+		catch (const std::exception& thrown)
 		{
-			return error.what();
+			error = thrown.what();
 		}
-		return {};
+		std::error_code ignored;
+		std::filesystem::remove(path, ignored);
+		return error;
 	}
 
 	// A small game around a <map>, with `objects` in place of OBJECTS.
@@ -434,7 +438,7 @@ TEST_CASE("pacman: both schema checkers take the game", "[pacman][schema]")
 	auto weak = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 	REQUIRE(weak->load("descriptions/pacman.xml"));
 	XsdLiteValidator validator;
-	REQUIRE(validator.loadSchema("../xge/xgedef.xsd", XmlBackend::TinyXml2));
+	REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../../xge/xgedef.xsd").string(), XmlBackend::TinyXml2));
 	CHECK(validator.validate(*weak->getRootElement()));
 
 	auto strong = XmlDocumentFactory::create(XmlBackend::Xerces);

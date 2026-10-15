@@ -86,7 +86,6 @@ add_executable(xgetest
 	"xge/tests/test_cli.cpp"
 	"xge/tests/test_data_folder.cpp"
 	"xge/tests/test_generate.cpp"
-	"xge/tests/test_generated_games.cpp"
 	"xge/tests/test_prototype_pong.cpp"
 	"games/prototypes/pong_min/source/pong_min.cpp"
 	"xge/tests/test_galaxian.cpp"
@@ -117,11 +116,43 @@ target_link_libraries(xgetest PRIVATE xgelib Catch2::Catch2WithMain)
 # test_generate.cpp runs --generate, which needs libxslt.
 xge_link_xslt(xgetest)
 
-# Every game, generated (xgecli --generate windows-cpp) into the build folder
-# as the build runs, and its data (source/<game>.cpp) compiled into the tests:
-# test_generated_games.cpp plays each one against its file, frame by frame.
+# games/ (the games, their assets and the generators) and the schema end up
+# next to the test binary, in output/<config> (same as they do for the
+# programs - see output.cmake and assets.cmake), because several tests load
+# the shipped games; the tests run
+# in games/ there, as xgecli and xgegui do (test_main.cpp makes sure of it when
+# xgetest is started from anywhere else).
+add_dependencies(xgetest xgedata)
+
+# In output/<config>, with its DLLs in libraries/ (output.cmake). Before
+# catch_discover_tests(), which runs the program after it is built.
+xge_place_program(xgetest)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(xgetest
+	WORKING_DIRECTORY "$<TARGET_FILE_DIR:xgetest>/games")
+
+# The generated games' tests are a second test program, xgetest-generated,
+# built only when asked for (cmake --build build --target xgetest-generated,
+# or scripts/shell/windows/games-test-all.bat), never by an ordinary build:
+# building it generates every game (xgecli --generate windows-cpp) into
+# build/generated/ and compiles each one's data (source/<game>.cpp) in, and
+# test_generated_games.cpp plays each against its file, frame by frame.
 # generated_games.h names them; the function for a game is its file's name in
 # camel case and "Game", as gameFunctionName in xge/cli/source/generate.cpp.
+add_executable(xgetest-generated EXCLUDE_FROM_ALL
+	"xge/tests/test_main.cpp"
+	"xge/tests/test_generated_games.cpp"
+)
+# Visual Studio's Build Solution leaves it out too.
+set_target_properties(xgetest-generated PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD ON)
+target_compile_features(xgetest-generated PRIVATE cxx_std_20)
+xge_warnings(xgetest-generated)
+target_link_libraries(xgetest-generated PRIVATE xgelib Catch2::Catch2WithMain)
+add_dependencies(xgetest-generated xgedata)
+xge_place_program(xgetest-generated)
+
 set(XGE_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
 set(generated_declarations "")
 set(generated_entries "")
@@ -155,7 +186,7 @@ foreach(game_file IN LISTS data_xml)
 		WORKING_DIRECTORY "${XGE_OUTPUT_DIR}"
 		DEPENDS xgecli xgedata "${CMAKE_CURRENT_SOURCE_DIR}/${game_file}" ${generator_files}
 		COMMENT "Generating ${game_file} for the tests")
-	target_sources(xgetest PRIVATE "${data}")
+	target_sources(xgetest-generated PRIVATE "${data}")
 
 	string(APPEND generated_declarations "xge::GameData ${function}();\n")
 	# The tests run in the games folder, so a game is descriptions/<game>.xml.
@@ -175,21 +206,4 @@ file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
 	"struct GeneratedGame\n{\n\tconst char* file;\n\txge::GameData (*describe)();\n};\n\n"
 	"inline const GeneratedGame generatedGames[] = {\n${generated_entries}};\n")
 configure_file("${XGE_GENERATED_DIR}/generated_games.h.in" "${XGE_GENERATED_DIR}/generated_games.h" COPYONLY)
-target_include_directories(xgetest PRIVATE "${XGE_GENERATED_DIR}")
-
-# games/ (the games, their assets and the generators) and xge/ (the schema and
-# the engine files the generator copies) end up next to the test binary, in
-# output/<config> (same as they do for the programs - see output.cmake and
-# assets.cmake), because several tests load the shipped games; the tests run
-# in games/ there, as xgecli and xgegui do (test_main.cpp makes sure of it when
-# xgetest is started from anywhere else).
-add_dependencies(xgetest xgedata)
-
-# In output/<config>, with its DLLs in libraries/ (output.cmake). Before
-# catch_discover_tests(), which runs the program after it is built.
-xge_place_program(xgetest)
-
-include(CTest)
-include(Catch)
-catch_discover_tests(xgetest
-	WORKING_DIRECTORY "$<TARGET_FILE_DIR:xgetest>/games")
+target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}")

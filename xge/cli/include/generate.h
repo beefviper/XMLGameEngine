@@ -28,7 +28,7 @@ namespace xge
 		std::string target;                  // the generator ("windows-cpp")
 		std::filesystem::path generators;    // the folder holding a folder of stylesheets per target (games/generators/)
 		std::filesystem::path dataFolder;    // where the game's assets/ are looked for (games/)
-		std::filesystem::path engineFolder;  // where the engine's lib/ is looked for (xge/)
+		std::filesystem::path engineFolder;  // where the engine's lib/ is looked for (xge/ in the repository)
 		std::filesystem::path output;      // the folder the program is written to
 	};
 

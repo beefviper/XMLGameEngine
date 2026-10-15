@@ -16,6 +16,7 @@
 // Small games are written to a scratch file and loaded by a real xge::Game;
 // none of it needs a window.
 
+#include "data_folder.h"
 #include "game.h"
 #include "xml_document.h"
 #include "xsd_lite.h"
@@ -729,7 +730,7 @@ namespace
 		auto weak = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 		REQUIRE(weak->load(scratch.path.string()));
 		XsdLiteValidator validator;
-		REQUIRE(validator.loadSchema("../xge/xgedef.xsd", XmlBackend::TinyXml2));
+		REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../../xge/xgedef.xsd").string(), XmlBackend::TinyXml2));
 		verdict.weakAccepts = validator.validate(*weak->getRootElement());
 		verdict.weakMessage = validator.getErrorMessage();
 

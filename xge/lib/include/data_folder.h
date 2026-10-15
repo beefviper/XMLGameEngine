@@ -53,4 +53,12 @@ namespace xge
 	// Returns the path as it was found, or nothing.
 	std::optional<std::filesystem::path> locateGameFile(const std::string& game,
 		const std::filesystem::path& gamesDirectory);
+
+	// The schema a game file names (its xsi:noNamespaceSchemaLocation),
+	// relative to the game's folder: there when it is there, else a file of
+	// that name in the game's folder or the nearest folder above it. A game
+	// names ../../xge/xgedef.xsd, right in the repository; in output/<config>
+	// the schema is at the top (assets.cmake), two folders above the game.
+	// The path as named when it is found nowhere.
+	std::filesystem::path findSchema(const std::filesystem::path& gameFile, const std::string& schemaLocation);
 }

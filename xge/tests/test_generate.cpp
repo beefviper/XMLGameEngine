@@ -60,8 +60,8 @@ namespace
 	}
 
 	// The tests run in the games folder beside the test program, with the
-	// games, their assets and the generators in it, and the engine's lib/ in
-	// xge/ beside it (assets.cmake).
+	// games, their assets and the generators in it; the engine's lib/ is in
+	// xge/ in the repository (XGE_ENGINE_FOLDER, targets.cmake).
 	GenerateRequest requestFor(const fs::path& game, const fs::path& output, const std::string& target = "windows-cpp")
 	{
 		GenerateRequest request;
@@ -69,7 +69,7 @@ namespace
 		request.target = target;
 		request.generators = fs::current_path() / "generators";
 		request.dataFolder = fs::current_path();
-		request.engineFolder = fs::current_path().parent_path() / "xge";
+		request.engineFolder = XGE_ENGINE_FOLDER;
 		request.output = output;
 		return request;
 	}
@@ -146,7 +146,7 @@ TEST_CASE("a generated program carries the engine's files unchanged, and none of
 		}
 		INFO(file.generic_string());
 		const std::string name = file.filename().string();
-		const fs::path original = fs::current_path().parent_path() / "xge" / "lib" / (name.ends_with(".cpp") ? "source" : "include") / name;
+		const fs::path original = fs::path(XGE_ENGINE_FOLDER) / "lib" / (name.ends_with(".cpp") ? "source" : "include") / name;
 		CHECK(readFile(engine / name) == readFile(original));
 		copied.insert(name);
 	}
