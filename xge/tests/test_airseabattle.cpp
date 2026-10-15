@@ -171,7 +171,8 @@ TEST_CASE("the battle lasts two minutes", "[airseabattle]")
 
 	play.game.getObject("status").variable["time"] = 1;
 	play.frames(61);
-	CHECK(play.state() == "draw"); // no hits either side
+	CHECK(play.state() == "result");
+	CHECK(play.game.getObject("result.outcome").lookName() == "draw"); // no hits either side
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 }
@@ -186,13 +187,14 @@ TEST_CASE("at time up the scores are compared, and the screen says who won", "[a
 		play.game.getObject("gun2").variable["score"] = white;
 		play.game.getObject("status").variable["time"] = 1;
 		play.frames(62);
-		return play.state();
+		REQUIRE(play.state() == "result");
+		return play.game.getObject("result.outcome").lookName();
 	};
 
-	CHECK(endWith(7, 3) == "yellowwins");
-	CHECK(endWith(3, 7) == "whitewins");
+	CHECK(endWith(7, 3) == "yellow");
+	CHECK(endWith(3, 7) == "white");
 	CHECK(endWith(5, 5) == "draw");
-	CHECK(endWith(0, 1) == "whitewins");
+	CHECK(endWith(0, 1) == "white");
 }
 
 TEST_CASE("paused, the battle is drawn still: the planes stop and the clock never shows", "[airseabattle]")
@@ -236,11 +238,11 @@ TEST_CASE("each end screen draws the battle still under TIME UP and its message"
 	play.game.getObject("gun1").variable["score"] = 7;
 	play.game.getObject("status").variable["time"] = 1;
 	play.frames(62);
-	REQUIRE(play.state() == "yellowwins");
+	REQUIRE(play.state() == "result");
 	CHECK(play.game.isStill(play.game.getObject("score1")));
 	CHECK(play.game.isStill(play.game.getObject("sea")));
 	CHECK(play.game.isShown(play.game.getObject("timeup")));
 	CHECK(play.game.isShown(play.game.getObject("again")));
-	CHECK(play.game.isShown(play.game.getObject("yellowwon")));
-	CHECK_FALSE(play.game.isShown(play.game.getObject("whitewon")));
+	CHECK(play.game.isShown(play.game.getObject("outcome")));
+	CHECK(play.game.getObject("outcome").lookName() == "yellow");
 }

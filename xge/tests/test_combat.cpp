@@ -183,7 +183,8 @@ TEST_CASE("five hits win, and space plays again", "[combat]")
 
 	play.tank2().variable["score"] = 5;
 	play.frames(2);
-	CHECK(play.state() == "wins2");
+	CHECK(play.state() == "wins");
+	CHECK(play.game.getObject("wins.winner").lookName() == "blue");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(play.tank2().variable.at("score") == 0);
@@ -222,17 +223,17 @@ TEST_CASE("each state owns what it draws, and a win draws the field still under 
 	Combat play;
 	CHECK(play.tank1().ownerState == "playing");
 	CHECK(play.game.getObject("keys1").ownerState == "title");
-	CHECK(play.game.getObject("again").ownerState.empty());
+	CHECK(play.game.getObject("again").ownerState == "wins");
 	CHECK(play.game.isShown(play.game.getObject("title.title")));
 	CHECK_FALSE(play.game.isShown(play.tank1()));
 
 	play.start();
 	play.tank1().variable["score"] = 5;
 	play.frames(2);
-	REQUIRE(play.state() == "wins1");
+	REQUIRE(play.state() == "wins");
 	CHECK(play.game.isStill(play.tank2()));
 	CHECK(play.game.isStill(play.game.getObject("score1")));
-	CHECK(play.game.isShown(play.game.getObject("wins1.wins1")));
+	CHECK(play.game.isShown(play.game.getObject("wins.winner")));
+	CHECK(play.game.getObject("wins.winner").lookName() == "yellow");
 	CHECK(play.game.isShown(play.game.getObject("again")));
-	CHECK_FALSE(play.game.isShown(play.game.getObject("wins2.wins2")));
 }

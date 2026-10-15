@@ -709,7 +709,7 @@ namespace xge
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "die"
-				|| name == "reset" || name == "inc" || name == "dec" || name == "move" || name == "hop"
+				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter";
@@ -734,6 +734,7 @@ namespace xge
 			command.objClass = node.getAttribute("class");
 			command.scene = node.getAttribute("scene");
 			command.way = node.getAttribute("way");
+			command.into = node.getAttribute("into");
 
 			const std::string& verb = command.verb;
 			if (verb == "inc" || verb == "dec")
@@ -744,6 +745,7 @@ namespace xge
 				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
 				else { command.amount = RawValue::expression("1"); }
 			}
+			if (verb == "copy") { requireAttribute(node, "variable", where); requireAttribute(node, "into", where); }
 			if (verb == "push") { requireAttribute(node, "state", where); }
 			if (verb == "enter" && command.scene.empty() == command.way.empty())
 			{
@@ -1967,7 +1969,7 @@ namespace xge
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
-		SchemaValidation& validation)
+		std::vector<std::string>& rawKeeps, SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
 
@@ -2058,6 +2060,15 @@ namespace xge
 		// load objects
 		if (objectsNode) { readObjects(*objectsNode, rawObjects); }
 
+		// load keeps (optional: what a full reset passes over)
+		if (std::unique_ptr<XmlNode> keepsNode = findChild(root.get(), "keeps"))
+		{
+			for (std::unique_ptr<XmlNode> keep = keepsNode->getFirstChild(); keep != nullptr; keep = keep->getNextSibling())
+			{
+				rawKeeps.push_back(requireAttribute(*keep, "object", "<keeps> > <keep>"));
+			}
+		}
+
 		// load states: the named <keys>, <shows> and <conditions> sets first, so
 		// any state can use any of them (a <shows> or <conditions> set can take
 		// a set written before it)
@@ -2101,7 +2112,7 @@ namespace xge
 	{
 		GameData data;
 		SchemaValidation validation = SchemaValidation::None;
-		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, validation);
+		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.keeps, validation);
 
 		std::ostringstream said;
 		said << validation;

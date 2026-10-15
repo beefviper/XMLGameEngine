@@ -25,10 +25,10 @@
     is drawn, not by the square it turns in, and <bounce />s off it.
   * Each state owns what it draws: the title texts are the title state's;
     the walls, the two tanks, their shells and the scores are the playing
-    state's; the PAUSED text and each winner's message are those states'
-    own. Paused and the two endings draw the field still underneath
-    (<show state="playing" />); "spacebar to play again" is the one object
-    of the game itself, shown by both endings.
+    state's; the PAUSED text is paused's; the winner's message, a look for
+    each tank that the winning condition picks with <become>, and "spacebar
+    to play again" are wins'. Paused and wins draw the field still
+    underneath (<show state="playing" />).
   Not in it: guided and bouncing shells, the plane and jet games, invisible
   tanks, and the hit tank spinning away.
 -->
@@ -64,19 +64,6 @@
       <note pitch="C3">0.04</note>
     </sound>
   </sounds>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite>
-        <text>
-          <content>spacebar to play again</content>
-          <size>40</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
-    </object>
-  </objects>
   <states>
     <state name="title">
       <objects>
@@ -381,11 +368,13 @@
       <conditions>
         <condition object="tank1" variable="score">
           <atleast>goal</atleast>
-          <push state="wins1" />
+          <become object="wins.winner" sprite="yellow" />
+          <push state="wins" />
         </condition>
         <condition object="tank2" variable="score">
           <atleast>goal</atleast>
-          <push state="wins2" />
+          <become object="wins.winner" sprite="blue" />
+          <push state="wins" />
         </condition>
       </conditions>
     </state>
@@ -409,43 +398,38 @@
         <input button="space p escape"><pop /></input>
       </inputs>
     </state>
-    <state name="wins1">
+    <state name="wins">
       <objects>
-        <object name="wins1">
-          <sprite>
+        <object name="winner">
+          <sprite name="yellow">
             <text>
               <content>YELLOW WINS</content>
               <size>90</size>
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - wins1.width / 2</x><y>window.height.center - wins1.height / 2 + (-60)</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-    <state name="wins2">
-      <objects>
-        <object name="wins2">
-          <sprite>
+          <sprite name="blue">
             <text>
               <content>BLUE WINS</content>
               <size>90</size>
               <color>color.cyan</color>
             </text>
           </sprite>
-          <position><x>window.width.center - wins2.width / 2</x><y>window.height.center - wins2.height / 2 + (-60)</y></position>
+          <position><x>window.width.center - winner.width / 2</x><y>window.height.center - winner.height / 2 + (-60)</y></position>
+        </object>
+        <object name="again">
+          <sprite>
+            <text>
+              <content>spacebar to play again</content>
+              <size>40</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
-        <show object="again" />
       </shows>
       <inputs>
         <input button="space"><reset /></input>

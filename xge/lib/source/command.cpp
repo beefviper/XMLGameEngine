@@ -133,6 +133,7 @@ namespace xge
 
 		if (verb == "inc") { return CmdIncrement{ raw.variable, amountOf(raw) }; }
 		if (verb == "dec") { return CmdDecrement{ raw.variable, amountOf(raw) }; }
+		if (verb == "copy") { return CmdCopy{ raw.variable, raw.into }; }
 
 		if (verb == "push") { return CmdPushState{ raw.state }; }
 		if (verb == "enter") { return CmdEnterScene{ raw.scene, raw.way }; }
@@ -310,6 +311,7 @@ namespace xge
 			[&](const CmdRelease& r) { o << "release(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdIncrement& c) { o << "inc(" << c.target << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdDecrement& c) { o << "dec(" << c.target << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
+			[&](const CmdCopy& c) { o << "copy(" << c.from << ", " << c.into << ")"; },
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
 			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },

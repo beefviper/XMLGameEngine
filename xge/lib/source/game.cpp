@@ -8,6 +8,7 @@
 #include "command_executor.h"
 #include "geometry.h"
 #include "scenes.h"
+#include "spelling.h"
 #include "verbs.h"
 
 #include <algorithm>
@@ -29,9 +30,11 @@ namespace xge
 		rawObjects = std::move(data.objects);
 		rawSounds = std::move(data.sounds);
 		rawPaths = std::move(data.paths);
+		const std::vector<std::string> keeps = std::move(data.keeps);
 
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
+		keep(keeps);
 
 		for (const auto& state : states)
 		{
@@ -513,6 +516,55 @@ namespace xge
 		changeVariable(target, -amount, "dec");
 	}
 
+	void Game::copyVariable(const std::string& from, const std::string& into)
+	{
+		// Both are owner.variable, the variable after the last dot.
+		const auto find = [&](const std::string& target) -> std::pair<Object*, float*>
+		{
+			const auto dot = target.rfind('.');
+			Object* owner = dot == std::string::npos ? nullptr : tryGetObject(target.substr(0, dot));
+			if (!owner) { return { nullptr, nullptr }; }
+			auto variable = owner->variable.find(target.substr(dot + 1));
+			return { owner, variable == owner->variable.end() ? nullptr : &variable->second };
+		};
+
+		const auto [source, value] = find(from);
+		const auto [owner, variable] = find(into);
+		if (!value || !variable)
+		{
+			std::cout << "warning: <copy variable=\"" << from << "\" into=\"" << into << "\" />: no such variable\n";
+			return;
+		}
+
+		*variable = *value;
+		refreshBoundTexts(owner->name, into.substr(into.rfind('.') + 1), *variable);
+	}
+
+	void Game::keep(const std::vector<std::string>& names)
+	{
+		// A name is an object or a group (every member of it), written out in
+		// full the way a command's are.
+		for (const std::string& given : names)
+		{
+			const std::string name = fullName(given);
+			bool found = false;
+			for (auto& object : objects)
+			{
+				if (object.name == name || object.inGroup(name))
+				{
+					object.kept = true;
+					found = true;
+				}
+			}
+			if (!found)
+			{
+				std::vector<std::string> known;
+				for (const auto& object : objects) { known.push_back(object.name); }
+				throw std::runtime_error("<keeps> > <keep object=\"" + given + "\" />: names no object of the game" + didYouMean(given, known));
+			}
+		}
+	}
+
 	void Game::changeVariable(const std::string& target, float delta, const char* verb)
 	{
 		// A text object counts its own number; anything else is
@@ -967,6 +1019,7 @@ namespace xge
 
 		for (auto& object : objects)
 		{
+			if (object.kept) { continue; }
 			drawStartAgain(object);
 			resetObjectState(object);
 		}

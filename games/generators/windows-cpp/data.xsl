@@ -190,7 +190,7 @@
     <xsl:param name="node" select="." />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
-      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene | $node/@way">
+      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into">
         <xsl:if test=". != ''">
           <xsl:text> command.</xsl:text>
           <xsl:choose>
@@ -2113,7 +2113,19 @@
     <xsl:if test="$game/paths/path">
       <xsl:text>&#9;game.paths = paths();&#10;</xsl:text>
     </xsl:if>
-    <xsl:text>&#9;game.objects = objects();&#10;&#9;game.states = {</xsl:text>
+    <xsl:text>&#9;game.objects = objects();&#10;</xsl:text>
+    <xsl:if test="$game/keeps/keep">
+      <xsl:text>&#9;game.keeps = {</xsl:text>
+      <xsl:for-each select="$game/keeps/keep">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:text> </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@object" />
+        </xsl:call-template>
+      </xsl:for-each>
+      <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
+    <xsl:text>&#9;game.states = {</xsl:text>
     <xsl:for-each select="$game/states/state">
       <xsl:if test="position() &gt; 1">,</xsl:if>
       <xsl:text> </xsl:text>

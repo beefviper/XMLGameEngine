@@ -770,3 +770,81 @@ TEST_CASE("<chase> and <aim> that name nothing are turned away when the game loa
 	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><aim object=\"o\" /></input></inputs></state>")),
 		ContainsSubstring("<aim> does nothing in an <input>"));
 }
+
+TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes objects over on a full reset", "[keeps][copy]")
+{
+	// A score, a best kept from game to game, and a row of two lamps kept too.
+	const std::string objects = box("player", 0, 0, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
+		+ box("best", 0, 20, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
+		+ "<object name=\"shown\"><sprite><text><number>best.score</number><size>20</size><color>color.white</color></text></sprite>"
+		  "<position><x>0</x><y>40</y></position></object>"
+		+ "<group name=\"lamps\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
+		  "<position><x>0</x><y>60</y></position><member><position><x>0</x></position></member><member><position><x>10</x></position></member></group>";
+	const std::string xml = "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
+		"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+		"<variables><variable name=\"unused\">0</variable></variables>"
+		"<objects>" + objects + "</objects>"
+		"<keeps><keep object=\"best\" /><keep object=\"lamps\" /></keeps>"
+		"<states>" + state("playing", { "player", "best", "shown", "lamps" },
+			"<input button=\"space\"><copy variable=\"player.score\" into=\"best.score\" /></input>",
+			"<conditions><condition object=\"player\" variable=\"score\"><atleast>5</atleast><push state=\"over\" /></condition></conditions>")
+		+ state("over", { "best" }, "<input button=\"space\"><reset /></input>") + "</states></game>";
+
+	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::PugiXml })
+	{
+		Loaded loaded(xml, backend);
+		Game& game = loaded.game;
+		CHECK(game.getObject("best").kept);
+		CHECK(game.getObject("lamps.1").kept);
+		CHECK(game.getObject("lamps.2").kept);
+		CHECK_FALSE(game.getObject("player").kept);
+
+		// From a key: the number as it is now, shown by what is bound to it.
+		CommandExecutor executor(game);
+		game.getObject("player").variable["score"] = 3;
+		executor.executeInput(Command{ CmdCopy{ "player.score", "best.score" } }, true);
+		CHECK(loaded.variable("best", "score") == 3);
+		CHECK(game.getObject("shown").spriteParams.at(1) == "3");
+
+		// A full reset passes the kept ones over and puts the rest back.
+		game.getObject("lamps.2").isVisible = false;
+		game.getObject("best").position.x = 99;
+		game.resetAll();
+		CHECK(loaded.variable("player", "score") == 0);
+		CHECK(loaded.variable("best", "score") == 3);
+		CHECK(game.getObject("shown").spriteParams.at(1) == "3");
+		CHECK(game.getObject("best").position.x == 99);
+		CHECK_FALSE(game.getObject("lamps.2").isVisible);
+
+		// <reset object> still resets one by name.
+		game.resetObject("best");
+		CHECK(loaded.variable("best", "score") == 0);
+		CHECK(game.getObject("shown").spriteParams.at(1) == "0");
+	}
+}
+
+TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game loads", "[keeps][copy][errors]")
+{
+	const auto fails = [](const std::string& keeps, const std::string& inputs, const std::string& expected)
+	{
+		INFO(keeps << inputs);
+		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+			"<objects>" + box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
+			+ "</objects>" + keeps + "<states>" + state("playing", { "o" }, inputs) + "</states></game>";
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / "xge_verbs_errors.xml" };
+		{
+			std::ofstream out(scratch.path);
+			out << xml;
+		}
+		CHECK_THROWS_WITH(Game{ scratch.path.string() }, ContainsSubstring(expected));
+	};
+
+	const std::string space = "<input button=\"space\"><pop /></input>";
+	fails({}, "<input button=\"space\"><copy variable=\"o.score\" into=\"o.best\" /></input>", "'o' has no variable named 'best'");
+	fails({}, "<input button=\"space\"><copy variable=\"p.score\" into=\"o.score\" /></input>", "there is no object named 'p'");
+	fails({}, "<input button=\"space\"><copy variable=\"o\" into=\"o.score\" /></input>", "'o' is no variable");
+	fails({}, "<input button=\"space\"><copy variable=\"o.score\" /></input>", "into");
+	fails("<keeps><keep object=\"0\" /></keeps>", space, "<keep object=\"0\" />: names no object of the game (did you mean 'o'?)");
+}

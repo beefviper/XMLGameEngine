@@ -89,6 +89,16 @@ namespace xge
 		float amount{ 1.0f };
 	};
 
+	// <copy variable="player.score" into="best.score" /> - puts the number one
+	// variable holds now into another, and refreshes every text bound to that
+	// one (see Game::copyVariable). Both are owner.variable. A high score:
+	// a condition copies the score into the best whenever it is above it.
+	struct CmdCopy
+	{
+		std::string from;
+		std::string into;
+	};
+
 	// <dec variable="ownerName.variableName" /> - the opposite of <inc />: takes 1 off that
 	// object's named <variable> (or off a text object's own number) and
 	// refreshes every text bound to it.
@@ -347,7 +357,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdDeflect, CmdReverse,
-		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene>;
 
 	// --- What the XML says, before any of it is evaluated.
@@ -476,7 +486,8 @@ namespace xge
 	{
 		std::string verb;
 		std::string object;    // reset, fire, release, trigger, chase, aim
-		std::string variable;  // inc, dec
+		std::string variable;  // inc, dec, copy (the one read)
+		std::string into;      // copy (the one written)
 		std::string state;     // push
 		std::string action;    // trigger
 		std::string direction; // move, hop, accelerate, turn, climb

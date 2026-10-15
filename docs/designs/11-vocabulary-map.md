@@ -12,7 +12,7 @@ Read from the readme and `xgedef.xsd` of the `working` branch on 2026-10-04.
 
 **Nouns: things that exist**
 
-- Containers: `game`, `window`, `variables`, `sounds`, `paths`, `objects`, `states`.
+- Containers: `game`, `window`, `variables`, `sounds`, `paths`, `objects`, `keeps`, `states`.
 - Things: `object`, `group` and its `member`s or cells (`columns`, `rows`, changed by `row`, `column`, `cell`), `variable`, `state`, `sound`, a named `keys` set, `timer`.
 - Sprite shapes: `circle`, `rectangle`, `text`, `image`, `line`, `bitmap`, `svg`. Several named `sprite`s on one object are its **looks** (`become`) or the frames of an `animation` (`frame`).
 - Sound parts: `note`, `rest`.
@@ -26,7 +26,7 @@ Read from the readme and `xgedef.xsd` of the `working` branch on 2026-10-04.
 | Collision responses | `bounce`, `deflect`, `stick`, `wrap`, `ride`, `carry`, `land` |
 | Lifecycle | `die`, `reset`, `fire`, `release`, `reveal` |
 | Appearance | `become` |
-| Bookkeeping | `inc`, `dec` |
+| Bookkeeping | `inc`, `dec`, `copy` |
 | Sound | `play`, `silence` |
 | Flow between screens | `push`, `pop`, `trigger` |
 

@@ -192,6 +192,11 @@ namespace xge
 		// atmost= is what notices it has run out.
 		void decrementText(const std::string& objectName, float amount = 1.0f);
 
+		// <copy variable="player.score" into="best.score" />: the second
+		// variable takes the number the first holds now, and every text bound
+		// to it shows it.
+		void copyVariable(const std::string& from, const std::string& into);
+
 		// <reset object="objectName" /> from a state's <input>/<condition> (see
 		// CmdResetObject): restores that object's position, velocity, and every
 		// <variable> to their starting values, then refreshes any text display
@@ -201,6 +206,9 @@ namespace xge
 		void resetObject(const std::string& name);
 
 		// Bare <reset /> from a state's <input>/<condition> (see CmdReset,
+		// handled this way only in CommandExecutor::executeInput). Objects
+		// the game <keeps> are passed over.
+		//
 		// handled this way only in CommandExecutor::executeInput - a collision's
 		// own bare <reset /> still just resets that one object's position).
 		// Resets every object back to how the game loaded (position, velocity,
@@ -237,6 +245,10 @@ namespace xge
 		// The one implementation behind incrementText and decrementText;
 		// `verb` is only for the warning printed when the target is not found.
 		void changeVariable(const std::string& target, float delta, const char* verb);
+
+		// Marks the objects (and every member of the groups) of these names
+		// as kept (Object::kept); a name that is no object stops the load.
+		void keep(const std::vector<std::string>& names);
 
 		// Shows `value` in every text object bound to ownerName.variableName.
 		void refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value);

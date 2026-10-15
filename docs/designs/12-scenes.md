@@ -81,7 +81,7 @@ Being shown is today what makes an object drawn, moving, timing and colliding at
 
 ### Information between scenes and states
 
-Between scenes, it goes through the state's own objects (the score, the lives, what the hero carries belong to `playing`, which every scene sees). Between states (who won, for one end screen instead of two), see Open.
+Between scenes, it goes through the state's own objects (the score, the lives, what the hero carries belong to `playing`, which every scene sees). Between states (who won, for one end screen instead of two), a look of the end state's own object, picked by the condition that pushes it ([states and conditions](07-states-and-conditions.md)), and numbers by path.
 
 ### The game's own objects
 
@@ -102,7 +102,6 @@ Kept, since every game depends on them. With states and scenes owning objects, t
 
 ## Open
 
-- **Passing a value between states**: the destination reads the source by path (`playing.score`), which works now. A condition handing the state it pushes the object that triggered it (Space Race's two win screens, high-score entry) is not built.
 - **Drawing again on entry**: whether entering a scene fresh should draw its `<random>`s again (today only `<reset scene>` does), and whether a command should draw again without moving the object back.
 - **Grid-map level data** ([ideas](57-ideas.md)) would sit inside a scene; with ways, a map of screens is each screen's `<ways>`, which is enough for four screens and may not be for Pitfall's 255.
 - **Who entered, and from which side**, beyond what the state's own objects already carry.

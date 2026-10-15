@@ -30,6 +30,10 @@
     comes back in from the top and ends the dive at its own place, whichever
     row it started from.
   * Paused and game over draw the game still underneath (<show state>).
+  * The best score is an object of the game's own, which the title and play
+    show. While the ship's score is <above> it, a condition <copy>s the score
+    into it, and <keeps> passes it over when Space starts a new game, so it
+    lasts until the program is closed.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -141,6 +145,26 @@
       <home />
     </path>
   </paths>
+  <objects>
+    <!-- the best score, at the top in the middle on the title and in play -->
+    <object name="best">
+      <sprite>
+        <text>
+          <number>best.score</number>
+          <size>36</size>
+          <color>color.red</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - best.width / 2</x><y>margin</y></position>
+      <variables>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
+  </objects>
+  <!-- a new game starts the score again, but not the best -->
+  <keeps>
+    <keep object="best" />
+  </keeps>
   <states>
     <state name="mainmenu">
       <objects>
@@ -185,6 +209,9 @@
           <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (110)</y></position>
         </object>
       </objects>
+      <shows>
+        <show object="best" />
+      </shows>
       <inputs>
         <input button="space">
           <push state="playing" />
@@ -570,6 +597,9 @@
           </timers>
         </scene>
       </scenes>
+      <shows>
+        <show object="best" />
+      </shows>
       <inputs>
         <input button="a left">
           <trigger object="ship" action="left" />
@@ -588,6 +618,11 @@
         <condition object="ship" variable="lives">
           <atmost>0</atmost>
           <push state="gameover" />
+        </condition>
+        <!-- a new best: the score is copied into it as it goes up -->
+        <condition object="ship" variable="score">
+          <above object="best" variable="score" />
+          <copy variable="ship.score" into="best.score" />
         </condition>
       </conditions>
     </state>
