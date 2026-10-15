@@ -21,7 +21,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [timers](09-timers.md) | Timers, commands in every context | Built; event queue Open |
 | [pools-and-enemies](10-pools-and-enemies.md) | Pools instead of spawning, enemies firing back, key sets | Built |
 | [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories | Reference |
-| [rooms](12-rooms.md) | Places beside modes: a room owns its objects, takes another and changes parts, `<enter>` | Idea |
+| [scenes](12-scenes.md) | Scenes inside a state; states and scenes own objects, take and change kit pieces, `<enter>`, dotted paths | Idea |
 
 ## Behavior
 
