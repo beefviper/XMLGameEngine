@@ -202,7 +202,7 @@ TEST_CASE("an object can be placed by another object's size", "[size_expressions
 	// The title is a text, so the logo has to wait for it to be measured.
 	CHECK(logo.positionUsesSize);
 	CHECK_FALSE(logo.positionResolved);
-	CHECK(logo.sizeDependencies == std::vector<std::string>{ "title" });
+	CHECK(logo.sizeDependencies == std::vector<std::string>{ "mainmenu.title" }); // the title is the main menu's
 
 	measure(title, 600.0f, 200.0f);
 	game.resolveSizeDependentPositions();
@@ -230,7 +230,7 @@ TEST_CASE("an object's own <variable> named width is not replaced by its size", 
 	Object& logo = game.getObject("logo");
 	Object& paddle1 = game.getObject("paddle1");
 
-	CHECK(logo.sizeDependencies == std::vector<std::string>{ "paddle1" }); // for the height only
+	CHECK(logo.sizeDependencies == std::vector<std::string>{ "playing.paddle1" }); // for the height only
 	CHECK_FALSE(logo.positionResolved); // still waiting on the height
 
 	measure(paddle1, 30.0f, 150.0f);

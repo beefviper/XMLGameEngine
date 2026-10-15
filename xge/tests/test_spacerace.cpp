@@ -224,3 +224,43 @@ TEST_CASE("the debris loops round without losing its spacing", "[spacerace][wrap
 		}
 	}
 }
+
+TEST_CASE("each state has its own objects: the title, the race, the signs", "[spacerace][states]")
+{
+	Game game{ "descriptions/spacerace.xml" };
+	game.setCurrentState("mainmenu");
+	CHECK(game.isShown(game.getObject("title")));
+	CHECK_FALSE(game.isShown(game.getObject("rocket1")));
+
+	game.pushState("playing");
+	CHECK(game.getObject("rocket1").name == "playing.rocket1");
+	CHECK(game.getObject("debris5.2").name == "playing.debris5.2");
+	CHECK(game.isShown(game.getObject("debris5.2")));
+	CHECK(game.isShown(game.getObject("score2")));
+	CHECK_FALSE(game.isShown(game.getObject("title")));
+}
+
+TEST_CASE("paused and the endings draw the race still underneath", "[spacerace][states]")
+{
+	Table table;
+	Object& debris = table.game.getObject("debris5.2"); // +3.5 a frame
+	const float x = debris.position.x;
+
+	table.game.pushState("paused");
+	table.frames(30);
+	CHECK(debris.position.x == x);
+	CHECK(table.game.isStill(debris));
+	CHECK(table.game.isStill(table.rocket(1)));
+	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+	table.game.popState();
+	CHECK(table.game.isShown(debris));
+
+	table.rocket(2).variable["score"] = 2.0f;
+	table.frames(1);
+	REQUIRE(table.game.getCurrentState().name == "player2wins");
+	CHECK(table.game.isStill(table.rocket(2)));
+	CHECK(table.game.isStill(table.game.getObject("score2")));
+	CHECK(table.game.isShown(table.game.getObject("player2wins.player2wins")));
+	CHECK(table.game.isShown(table.game.getObject("continue")));
+	CHECK_FALSE(table.game.isShown(table.game.getObject("player1wins.player1wins")));
+}

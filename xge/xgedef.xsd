@@ -1089,7 +1089,7 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="objects" type="objectsType" />
+        <xs:element name="objects" type="objectsType" minOccurs="0" />
         <xs:element name="states">
           <xs:complexType>
             <xs:sequence>

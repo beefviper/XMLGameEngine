@@ -109,20 +109,6 @@
     </object>
   </objects>
   <states>
-    <keys name="walk">
-      <input button="w"><trigger object="hero" action="up" /></input>
-      <input button="up"><trigger object="hero" action="up" /></input>
-      <input button="s"><trigger object="hero" action="down" /></input>
-      <input button="down"><trigger object="hero" action="down" /></input>
-      <input button="a"><trigger object="hero" action="left" /></input>
-      <input button="left"><trigger object="hero" action="left" /></input>
-      <input button="d"><trigger object="hero" action="right" /></input>
-      <input button="right"><trigger object="hero" action="right" /></input>
-      <input button="space"><trigger object="hero" action="drop" /></input>
-      <input button="p"><push state="paused" /></input>
-      <input button="escape"><push state="paused" /></input>
-    </keys>
-
     <state name="title">
       <objects>
         <object name="title">
@@ -512,7 +498,19 @@
           </objects>
         </scene>
       </scenes>
-      <inputs keys="walk" />
+      <inputs>
+        <input button="w"><trigger object="hero" action="up" /></input>
+        <input button="up"><trigger object="hero" action="up" /></input>
+        <input button="s"><trigger object="hero" action="down" /></input>
+        <input button="down"><trigger object="hero" action="down" /></input>
+        <input button="a"><trigger object="hero" action="left" /></input>
+        <input button="left"><trigger object="hero" action="left" /></input>
+        <input button="d"><trigger object="hero" action="right" /></input>
+        <input button="right"><trigger object="hero" action="right" /></input>
+        <input button="space"><trigger object="hero" action="drop" /></input>
+        <input button="p"><push state="paused" /></input>
+        <input button="escape"><push state="paused" /></input>
+      </inputs>
       <conditions>
         <condition object="status" variable="eaten">
           <atleast>1</atleast>

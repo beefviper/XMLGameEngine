@@ -32,6 +32,18 @@
   player bolt, and the aliens' bombs are the enemy bolt, flipped to fly down.
   The rest of the sheet (banking, the hit flash, the charged bolt, the enemy
   bomb, the explosions, the saucer) is not used yet.
+
+  A and D or the arrow keys move, Space fires, P or Escape pauses, Space
+  starts and plays again; S on the title opens the settings and Escape
+  leaves them.
+
+  How it is written:
+  * Each state has the objects it shows: the title its name, the settings
+    theirs, playing the bullet, the bombs, the aliens and the lives left,
+    paused its word and each ending its line. The ship is the game's own, as
+    the title, the settings and playing all show it, and so is "spacebar to
+    continue", which both endings show.
+  * Paused and both endings draw the game still underneath (<show state>).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -68,30 +80,6 @@
     </sound>
   </sounds>
   <objects>
-    <object name="bullet" class="projectile">
-      <sprite>
-        <svg>
-          <path>assets/Space Invaders Color Sprites.svg</path>
-          <x>140.5</x>
-          <y>2.5</y>
-          <width>7</width>
-          <height>27</height>
-          <scale>boltzoom</scale>
-          <hide>backdrop</hide>
-        </svg>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <velocity><y>-12</y></velocity>
-      <collisions>
-        <enabled>false</enabled>
-        <collision edge="all">
-          <die />
-        </collision>
-        <collision class="aliens">
-          <die />
-        </collision>
-      </collisions>
-    </object>
     <object name="player">
       <sprite>
         <svg>
@@ -131,168 +119,6 @@
         <variable name="lives">3</variable>
       </variables>
     </object>
-    <!--
-      The aliens' plasma bolts (the sheet's enemy bolt, (0,1)): a pool of
-      three. Every alien faces down and drops one after a random wait.
-    -->
-    <group name="bombs" class="bomb">
-      <sprite>
-        <svg>
-          <path>assets/Space Invaders Color Sprites.svg</path>
-          <x>11</x>
-          <y>37</y>
-          <width>10</width>
-          <height>23</height>
-          <scale>boltzoom</scale>
-          <hide>backdrop</hide>
-          <!-- drawn flying up the sheet; these fly down -->
-          <flip>vertical</flip>
-        </svg>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <velocity><y>5</y></velocity>
-      <hidden>true</hidden>
-      <collisions>
-        <enabled>false</enabled>
-        <collision edge="all">
-          <die />
-        </collision>
-        <collision object="player">
-          <die />
-        </collision>
-      </collisions>
-      <member />
-      <member />
-      <member />
-    </group>
-    <group name="aliens" class="aliens">
-      <columns>11</columns>
-      <rows>5</rows>
-      <padding><x>gap</x><y>gap</y></padding>
-      <sprite name="a">
-        <svg>
-          <path>assets/Space Invaders Color Sprites.svg</path>
-          <x>1.5</x>
-          <y>64.5</y>
-          <width>28</width>
-          <height>25</height>
-          <scale>zoom</scale>
-          <hide>backdrop</hide>
-        </svg>
-      </sprite>
-      <sprite name="b">
-        <svg>
-          <path>assets/Space Invaders Color Sprites.svg</path>
-          <x>33.5</x>
-          <y>64.5</y>
-          <width>28</width>
-          <height>25</height>
-          <scale>zoom</scale>
-          <hide>backdrop</hide>
-        </svg>
-      </sprite>
-      <sprite name="c">
-        <svg>
-          <path>assets/Space Invaders Color Sprites.svg</path>
-          <x>65.5</x>
-          <y>64.5</y>
-          <width>28</width>
-          <height>25</height>
-          <scale>zoom</scale>
-          <hide>backdrop</hide>
-        </svg>
-      </sprite>
-      <animation>
-        <interval>animation.seconds</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-        <frame sprite="c" />
-      </animation>
-      <position><x>margin</x><y>margin / 2</y></position>
-      <velocity><x>2</x></velocity>
-      <facing>down</facing>
-      <collisions>
-        <enabled>true</enabled>
-        <lockstep>true</lockstep>
-        <collision edge="horizontal">
-          <bounce />
-          <move direction="down">10</move>
-        </collision>
-        <collision object="bullet">
-          <play sound="alienhit" />
-          <die />
-        </collision>
-      </collisions>
-      <timers>
-        <timer>
-          <every><random min="2" max="25" /></every>
-          <fire object="bombs" />
-        </timer>
-      </timers>
-      <row number="2 3">
-        <sprite name="a">
-          <svg>
-            <x>98</x>
-            <y>70.5</y>
-            <height>23</height>
-          </svg>
-        </sprite>
-        <sprite name="b">
-          <svg>
-            <x>130</x>
-            <y>70.5</y>
-            <height>23</height>
-          </svg>
-        </sprite>
-        <sprite name="c">
-          <svg>
-            <x>162</x>
-            <y>70.5</y>
-            <height>23</height>
-          </svg>
-        </sprite>
-      </row>
-      <row number="4 5">
-        <sprite name="a">
-          <svg>
-            <y>99.5</y>
-            <height>24.5</height>
-          </svg>
-        </sprite>
-        <sprite name="b">
-          <svg>
-            <y>99.5</y>
-            <height>24.5</height>
-          </svg>
-        </sprite>
-        <sprite name="c">
-          <svg>
-            <y>99.5</y>
-            <height>24.5</height>
-          </svg>
-        </sprite>
-      </row>
-    </group>
-    <object name="title">
-      <sprite>
-        <text>
-          <content>SPACE INVADERS</content>
-          <size>110</size>
-          <color>color.green</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 - 100</y></position>
-    </object>
-    <object name="youwin">
-      <sprite>
-        <text>
-          <content>YOU WIN</content>
-          <size>128</size>
-          <color>color.green</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - 150</y></position>
-    </object>
     <object name="continue">
       <sprite>
         <text>
@@ -303,51 +129,22 @@
       </sprite>
       <position><x>window.width.center - continue.width / 2</x><y>window.height.center + 60</y></position>
     </object>
-    <object name="settings">
-      <sprite>
-        <text>
-          <content>settings</content>
-          <size>128</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - settings.width / 2</x><y>window.height.center - settings.height / 2</y></position>
-    </object>
-    <object name="paused">
-      <sprite>
-        <text>
-          <content>paused</content>
-          <size>128</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
-    </object>
-    <object name="lives">
-      <sprite>
-        <text>
-          <number>player.lives</number>
-          <size>40</size>
-          <color>color.green</color>
-        </text>
-      </sprite>
-      <position><x>20</x><y>window.bottom - 50</y></position>
-    </object>
-    <object name="youlose">
-      <sprite>
-        <text>
-          <content>GAME OVER</content>
-          <size>128</size>
-          <color>color.red</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - youlose.width / 2</x><y>window.height.center - 150</y></position>
-    </object>
   </objects>
   <states>
     <state name="mainmenu">
+      <objects>
+        <object name="title">
+          <sprite>
+            <text>
+              <content>SPACE INVADERS</content>
+              <size>110</size>
+              <color>color.green</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 - 100</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="title" />
         <show object="player" />
       </shows>
       <inputs>
@@ -360,8 +157,19 @@
       </inputs>
     </state>
     <state name="settings">
+      <objects>
+        <object name="settings">
+          <sprite>
+            <text>
+              <content>settings</content>
+              <size>128</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - settings.width / 2</x><y>window.height.center - settings.height / 2</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="settings" />
         <show object="player" />
       </shows>
       <inputs>
@@ -371,12 +179,186 @@
       </inputs>
     </state>
     <state name="playing">
+      <objects>
+        <object name="bullet" class="projectile">
+          <sprite>
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>140.5</x>
+              <y>2.5</y>
+              <width>7</width>
+              <height>27</height>
+              <scale>boltzoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <velocity><y>-12</y></velocity>
+          <collisions>
+            <enabled>false</enabled>
+            <collision edge="all">
+              <die />
+            </collision>
+            <collision class="aliens">
+              <die />
+            </collision>
+          </collisions>
+        </object>
+        <!--
+          The aliens' plasma bolts (the sheet's enemy bolt, (0,1)): a pool of
+          three. Every alien faces down and drops one after a random wait.
+        -->
+        <group name="bombs" class="bomb">
+          <sprite>
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>11</x>
+              <y>37</y>
+              <width>10</width>
+              <height>23</height>
+              <scale>boltzoom</scale>
+              <hide>backdrop</hide>
+              <!-- drawn flying up the sheet; these fly down -->
+              <flip>vertical</flip>
+            </svg>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <velocity><y>5</y></velocity>
+          <hidden>true</hidden>
+          <collisions>
+            <enabled>false</enabled>
+            <collision edge="all">
+              <die />
+            </collision>
+            <collision object="player">
+              <die />
+            </collision>
+          </collisions>
+          <member />
+          <member />
+          <member />
+        </group>
+        <group name="aliens" class="aliens">
+          <columns>11</columns>
+          <rows>5</rows>
+          <padding><x>gap</x><y>gap</y></padding>
+          <sprite name="a">
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>1.5</x>
+              <y>64.5</y>
+              <width>28</width>
+              <height>25</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="b">
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>33.5</x>
+              <y>64.5</y>
+              <width>28</width>
+              <height>25</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="c">
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>65.5</x>
+              <y>64.5</y>
+              <width>28</width>
+              <height>25</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <animation>
+            <interval>animation.seconds</interval>
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+          </animation>
+          <position><x>margin</x><y>margin / 2</y></position>
+          <velocity><x>2</x></velocity>
+          <facing>down</facing>
+          <collisions>
+            <enabled>true</enabled>
+            <lockstep>true</lockstep>
+            <collision edge="horizontal">
+              <bounce />
+              <move direction="down">10</move>
+            </collision>
+            <collision object="bullet">
+              <play sound="alienhit" />
+              <die />
+            </collision>
+          </collisions>
+          <timers>
+            <timer>
+              <every><random min="2" max="25" /></every>
+              <fire object="bombs" />
+            </timer>
+          </timers>
+          <row number="2 3">
+            <sprite name="a">
+              <svg>
+                <x>98</x>
+                <y>70.5</y>
+                <height>23</height>
+              </svg>
+            </sprite>
+            <sprite name="b">
+              <svg>
+                <x>130</x>
+                <y>70.5</y>
+                <height>23</height>
+              </svg>
+            </sprite>
+            <sprite name="c">
+              <svg>
+                <x>162</x>
+                <y>70.5</y>
+                <height>23</height>
+              </svg>
+            </sprite>
+          </row>
+          <row number="4 5">
+            <sprite name="a">
+              <svg>
+                <y>99.5</y>
+                <height>24.5</height>
+              </svg>
+            </sprite>
+            <sprite name="b">
+              <svg>
+                <y>99.5</y>
+                <height>24.5</height>
+              </svg>
+            </sprite>
+            <sprite name="c">
+              <svg>
+                <y>99.5</y>
+                <height>24.5</height>
+              </svg>
+            </sprite>
+          </row>
+        </group>
+        <object name="lives">
+          <sprite>
+            <text>
+              <number>player.lives</number>
+              <size>40</size>
+              <color>color.green</color>
+            </text>
+          </sprite>
+          <position><x>20</x><y>window.bottom - 50</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="bullet" />
-        <show object="bombs" />
         <show object="player" />
-        <show object="aliens" />
-        <show object="lives" />
       </shows>
       <inputs>
         <input button="p">
@@ -413,9 +395,20 @@
       </conditions>
     </state>
     <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text>
+              <content>paused</content>
+              <size>128</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="paused" />
-        <show object="player" />
+        <show state="playing" />
       </shows>
       <inputs>
         <input button="space">
@@ -427,8 +420,20 @@
       </inputs>
     </state>
     <state name="lost">
+      <objects>
+        <object name="youlose">
+          <sprite>
+            <text>
+              <content>GAME OVER</content>
+              <size>128</size>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - youlose.width / 2</x><y>window.height.center - 150</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="youlose" />
+        <show state="playing" />
         <show object="continue" />
       </shows>
       <inputs>
@@ -438,8 +443,20 @@
       </inputs>
     </state>
     <state name="gameover">
+      <objects>
+        <object name="youwin">
+          <sprite>
+            <text>
+              <content>YOU WIN</content>
+              <size>128</size>
+              <color>color.green</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - 150</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="youwin" />
+        <show state="playing" />
         <show object="continue" />
       </shows>
       <inputs>

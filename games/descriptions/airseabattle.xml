@@ -28,6 +28,13 @@
   * At time up the two scores are compared (<above object="gun2"
     variable="score" />, <equal>) and a state saying who won, or a draw,
     takes the place of TIME UP.
+  * Each state owns what it draws: the title texts are the title state's;
+    the clock (status, never drawn), the sea, the lanes, the guns, their
+    shells and the scores are the battle's; the PAUSED text and each
+    ending's message are those states' own. Paused and the end screens draw
+    the battle still underneath (<show state="battle" />), the scores with
+    it. TIME UP and "spacebar to play again" are the game's own objects,
+    shown by all four end screens through the set "end".
   Not in it: the guns' three fixed angles (they swing freely here, and can
   point at the sea), and the other games on the cartridge (the submarines,
   the torpedoes, the shooting gallery).
@@ -68,384 +75,7 @@
     </sound>
   </sounds>
   <objects>
-    <!-- the clock; never shown -->
-    <object name="status">
-      <sprite>
-        <rectangle>
-          <width>1</width>
-          <height>1</height>
-          <color>color.black</color>
-        </rectangle>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <variables>
-        <variable name="time">120</variable>
-      </variables>
-    </object>
-
-    <object name="sea">
-      <sprite>
-        <rectangle>
-          <width>window.right</width>
-          <height>window.bottom - sea</height>
-          <color>color.blue</color>
-        </rectangle>
-      </sprite>
-      <position><x>0</x><y>sea</y></position>
-    </object>
-
-    <!-- four lanes of planes, each going round and round the sky: they
-         start off the side they fly in from, and one shot down comes back from
-         there -->
-    <group name="jets" class="plane">
-      <sprite>
-        <bitmap>
-          <row>....**......</row>
-          <row>...****.....</row>
-          <row>**********..</row>
-          <row>************</row>
-          <row>.**********.</row>
-          <row>...**.......</row>
-          <scale>3</scale>
-          <color>color.white</color>
-        </bitmap>
-      </sprite>
-      <position><y>60</y></position>
-      <velocity><x>jetspeed</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-        <collision class="shots1">
-          <inc variable="gun1.score" />
-          <play sound="hit" />
-          <die />
-        </collision>
-        <collision class="shots2">
-          <inc variable="gun2.score" />
-          <play sound="hit" />
-          <die />
-        </collision>
-      </collisions>
-      <member><position><x>-60</x></position></member>
-      <member><position><x>-280</x></position></member>
-      <member><position><x>-500</x></position></member>
-    </group>
-    <group name="bombers" class="plane">
-      <sprite>
-        <bitmap>
-          <row>......**....</row>
-          <row>.....****...</row>
-          <row>..**********</row>
-          <row>************</row>
-          <row>.**********.</row>
-          <row>.......**...</row>
-          <scale>3</scale>
-          <color>color.yellow</color>
-        </bitmap>
-      </sprite>
-      <position><y>130</y></position>
-      <velocity><x>-bomberspeed</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-        <collision class="shots1">
-          <inc variable="gun1.score" />
-          <play sound="hit" />
-          <die />
-        </collision>
-        <collision class="shots2">
-          <inc variable="gun2.score" />
-          <play sound="hit" />
-          <die />
-        </collision>
-      </collisions>
-      <member><position><x>window.right + 40</x></position></member>
-      <member><position><x>window.right + 260</x></position></member>
-      <member><position><x>window.right + 480</x></position></member>
-    </group>
-    <group name="blimps" class="plane">
-      <sprite>
-        <bitmap>
-          <row>..********..</row>
-          <row>.**********.</row>
-          <row>************</row>
-          <row>************</row>
-          <row>.**********.</row>
-          <row>....****....</row>
-          <scale>3</scale>
-          <color>color.lightgrey</color>
-        </bitmap>
-      </sprite>
-      <position><y>200</y></position>
-      <velocity><x>blimpspeed</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-        <collision class="shots1">
-          <inc variable="gun1.score" />
-          <play sound="hit" />
-          <die />
-        </collision>
-        <collision class="shots2">
-          <inc variable="gun2.score" />
-          <play sound="hit" />
-          <die />
-        </collision>
-      </collisions>
-      <member><position><x>-60</x></position></member>
-      <member><position><x>-300</x></position></member>
-      <member><position><x>-540</x></position></member>
-    </group>
-    <group name="choppers" class="plane">
-      <sprite>
-        <bitmap>
-          <row>************</row>
-          <row>.....**.....</row>
-          <row>..*******...</row>
-          <row>.*********.*</row>
-          <row>..*******..*</row>
-          <row>...*...*....</row>
-          <scale>3</scale>
-          <color>color.orange</color>
-        </bitmap>
-      </sprite>
-      <position><y>270</y></position>
-      <velocity><x>-chopperspeed</x></velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <wrap />
-        </collision>
-        <collision class="shots1">
-          <inc variable="gun1.score" />
-          <play sound="hit" />
-          <die />
-        </collision>
-        <collision class="shots2">
-          <inc variable="gun2.score" />
-          <play sound="hit" />
-          <die />
-        </collision>
-      </collisions>
-      <member><position><x>window.right + 40</x></position></member>
-      <member><position><x>window.right + 360</x></position></member>
-    </group>
-
-    <!-- the two guns, pointing straight up to start with -->
-    <object name="gun1">
-      <sprite>
-        <bitmap>
-          <row>....*....</row>
-          <row>....*....</row>
-          <row>....*....</row>
-          <row>....*....</row>
-          <row>...***...</row>
-          <row>..*****..</row>
-          <row>.*******.</row>
-          <row>*********</row>
-          <row>*********</row>
-          <scale>3</scale>
-          <color>color.yellow</color>
-        </bitmap>
-      </sprite>
-      <position><x>window.width.center / 2 - gun1.width / 2</x><y>sea - gun1.height / 2</y></position>
-      <heading>0</heading>
-      <actions>
-        <action name="left">
-          <turn direction="left">swing</turn>
-        </action>
-        <action name="right">
-          <turn direction="right">swing</turn>
-        </action>
-        <action name="fire">
-          <fire object="shots1" />
-          <play sound="fire" />
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-    <object name="gun2">
-      <sprite>
-        <bitmap>
-          <row>....*....</row>
-          <row>....*....</row>
-          <row>....*....</row>
-          <row>....*....</row>
-          <row>...***...</row>
-          <row>..*****..</row>
-          <row>.*******.</row>
-          <row>*********</row>
-          <row>*********</row>
-          <scale>3</scale>
-          <color>color.white</color>
-        </bitmap>
-      </sprite>
-      <position><x>window.width.center * 3 / 2 - gun2.width / 2</x><y>sea - gun2.height / 2</y></position>
-      <heading>0</heading>
-      <actions>
-        <action name="left">
-          <turn direction="left">swing</turn>
-        </action>
-        <action name="right">
-          <turn direction="right">swing</turn>
-        </action>
-        <action name="fire">
-          <fire object="shots2" />
-          <play sound="fire" />
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-
-    <!-- two shells each, out of play until fired -->
-    <group name="shots1" class="shots1">
-      <sprite>
-        <rectangle>
-          <width>4</width>
-          <height>4</height>
-          <color>color.yellow</color>
-        </rectangle>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <velocity><y>-shellspeed</y></velocity>
-      <hidden>true</hidden>
-      <collisions>
-        <enabled>false</enabled>
-        <collision edge="all">
-          <die />
-        </collision>
-        <collision class="plane">
-          <die />
-        </collision>
-      </collisions>
-      <member />
-      <member />
-    </group>
-    <group name="shots2" class="shots2">
-      <sprite>
-        <rectangle>
-          <width>4</width>
-          <height>4</height>
-          <color>color.white</color>
-        </rectangle>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <velocity><y>-shellspeed</y></velocity>
-      <hidden>true</hidden>
-      <collisions>
-        <enabled>false</enabled>
-        <collision edge="all">
-          <die />
-        </collision>
-        <collision class="plane">
-          <die />
-        </collision>
-      </collisions>
-      <member />
-      <member />
-    </group>
-
-    <object name="score1">
-      <sprite>
-        <text>
-          <number>gun1.score</number>
-          <size>40</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>margin</x><y>margin</y></position>
-    </object>
-    <object name="clock">
-      <sprite>
-        <text>
-          <number>status.time</number>
-          <size>32</size>
-          <color>color.lightgrey</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - clock.width / 2</x><y>margin</y></position>
-    </object>
-    <object name="score2">
-      <sprite>
-        <text>
-          <number>gun2.score</number>
-          <size>40</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.right - score2.width - margin</x><y>margin</y></position>
-    </object>
-
-    <object name="title">
-      <sprite>
-        <text>
-          <content>AIR-SEA BATTLE</content>
-          <size>80</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-140)</y></position>
-    </object>
-    <object name="help">
-      <sprite>
-        <text>
-          <content>two players, two minutes, most planes wins</content>
-          <size>26</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-50)</y></position>
-    </object>
-    <object name="keys1">
-      <sprite>
-        <text>
-          <content>yellow: a and d swing the gun, w fires</content>
-          <size>22</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - keys1.width / 2</x><y>window.height.center - keys1.height / 2 + (0)</y></position>
-    </object>
-    <object name="keys2">
-      <sprite>
-        <text>
-          <content>white: left and right swing, up fires</content>
-          <size>22</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - keys2.width / 2</x><y>window.height.center - keys2.height / 2 + (35)</y></position>
-    </object>
-    <object name="start">
-      <sprite>
-        <text>
-          <content>spacebar to start</content>
-          <size>40</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (120)</y></position>
-    </object>
-    <object name="paused">
-      <sprite>
-        <text>
-          <content>PAUSED</content>
-          <size>100</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
-    </object>
+    <!-- on every end screen -->
     <object name="timeup">
       <sprite>
         <text>
@@ -455,37 +85,6 @@
         </text>
       </sprite>
       <position><x>window.width.center - timeup.width / 2</x><y>window.height.center - timeup.height / 2 + (-60)</y></position>
-    </object>
-    <!-- who won: one of these under TIME UP, picked by comparing the two scores -->
-    <object name="yellowwon">
-      <sprite>
-        <text>
-          <content>YELLOW WINS</content>
-          <size>50</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - yellowwon.width / 2</x><y>window.height.center - yellowwon.height / 2 + (10)</y></position>
-    </object>
-    <object name="whitewon">
-      <sprite>
-        <text>
-          <content>WHITE WINS</content>
-          <size>50</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - whitewon.width / 2</x><y>window.height.center - whitewon.height / 2 + (10)</y></position>
-    </object>
-    <object name="drawn">
-      <sprite>
-        <text>
-          <content>A DRAW</content>
-          <size>50</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - drawn.width / 2</x><y>window.height.center - drawn.height / 2 + (10)</y></position>
     </object>
     <object name="again">
       <sprite>
@@ -499,40 +98,390 @@
     </object>
   </objects>
   <states>
-    <!-- what every end screen shows -->
+    <!-- what every end screen shows over the battle -->
     <shows name="end">
       <show object="timeup" />
-      <show object="score1" />
-      <show object="score2" />
       <show object="again" />
     </shows>
     <state name="title">
-      <shows>
-        <show object="title" />
-        <show object="help" />
-        <show object="keys1" />
-        <show object="keys2" />
-        <show object="start" />
-      </shows>
+      <objects>
+
+        <object name="title">
+          <sprite>
+            <text>
+              <content>AIR-SEA BATTLE</content>
+              <size>80</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-140)</y></position>
+        </object>
+        <object name="help">
+          <sprite>
+            <text>
+              <content>two players, two minutes, most planes wins</content>
+              <size>26</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-50)</y></position>
+        </object>
+        <object name="keys1">
+          <sprite>
+            <text>
+              <content>yellow: a and d swing the gun, w fires</content>
+              <size>22</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - keys1.width / 2</x><y>window.height.center - keys1.height / 2 + (0)</y></position>
+        </object>
+        <object name="keys2">
+          <sprite>
+            <text>
+              <content>white: left and right swing, up fires</content>
+              <size>22</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - keys2.width / 2</x><y>window.height.center - keys2.height / 2 + (35)</y></position>
+        </object>
+        <object name="start">
+          <sprite>
+            <text>
+              <content>spacebar to start</content>
+              <size>40</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (120)</y></position>
+        </object>
+      </objects>
       <inputs>
         <input button="space"><push state="battle" /></input>
       </inputs>
     </state>
     <state name="battle">
-      <shows>
-        <show object="sea" />
-        <show object="jets" />
-        <show object="bombers" />
-        <show object="blimps" />
-        <show object="choppers" />
-        <show object="gun1" />
-        <show object="gun2" />
-        <show object="shots1" />
-        <show object="shots2" />
-        <show object="score1" />
-        <show object="clock" />
-        <show object="score2" />
-      </shows>
+      <objects>
+        <!-- the clock; never drawn -->
+        <object name="status">
+          <sprite>
+            <rectangle>
+              <width>1</width>
+              <height>1</height>
+              <color>color.black</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
+          <variables>
+            <variable name="time">120</variable>
+          </variables>
+        </object>
+
+        <object name="sea">
+          <sprite>
+            <rectangle>
+              <width>window.right</width>
+              <height>window.bottom - sea</height>
+              <color>color.blue</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>sea</y></position>
+        </object>
+
+        <!-- four lanes of planes, each going round and round the sky: they
+             start off the side they fly in from, and one shot down comes back from
+             there -->
+        <group name="jets" class="plane">
+          <sprite>
+            <bitmap>
+              <row>....**......</row>
+              <row>...****.....</row>
+              <row>**********..</row>
+              <row>************</row>
+              <row>.**********.</row>
+              <row>...**.......</row>
+              <scale>3</scale>
+              <color>color.white</color>
+            </bitmap>
+          </sprite>
+          <position><y>60</y></position>
+          <velocity><x>jetspeed</x></velocity>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal">
+              <wrap />
+            </collision>
+            <collision class="shots1">
+              <inc variable="gun1.score" />
+              <play sound="hit" />
+              <die />
+            </collision>
+            <collision class="shots2">
+              <inc variable="gun2.score" />
+              <play sound="hit" />
+              <die />
+            </collision>
+          </collisions>
+          <member><position><x>-60</x></position></member>
+          <member><position><x>-280</x></position></member>
+          <member><position><x>-500</x></position></member>
+        </group>
+        <group name="bombers" class="plane">
+          <sprite>
+            <bitmap>
+              <row>......**....</row>
+              <row>.....****...</row>
+              <row>..**********</row>
+              <row>************</row>
+              <row>.**********.</row>
+              <row>.......**...</row>
+              <scale>3</scale>
+              <color>color.yellow</color>
+            </bitmap>
+          </sprite>
+          <position><y>130</y></position>
+          <velocity><x>-bomberspeed</x></velocity>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal">
+              <wrap />
+            </collision>
+            <collision class="shots1">
+              <inc variable="gun1.score" />
+              <play sound="hit" />
+              <die />
+            </collision>
+            <collision class="shots2">
+              <inc variable="gun2.score" />
+              <play sound="hit" />
+              <die />
+            </collision>
+          </collisions>
+          <member><position><x>window.right + 40</x></position></member>
+          <member><position><x>window.right + 260</x></position></member>
+          <member><position><x>window.right + 480</x></position></member>
+        </group>
+        <group name="blimps" class="plane">
+          <sprite>
+            <bitmap>
+              <row>..********..</row>
+              <row>.**********.</row>
+              <row>************</row>
+              <row>************</row>
+              <row>.**********.</row>
+              <row>....****....</row>
+              <scale>3</scale>
+              <color>color.lightgrey</color>
+            </bitmap>
+          </sprite>
+          <position><y>200</y></position>
+          <velocity><x>blimpspeed</x></velocity>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal">
+              <wrap />
+            </collision>
+            <collision class="shots1">
+              <inc variable="gun1.score" />
+              <play sound="hit" />
+              <die />
+            </collision>
+            <collision class="shots2">
+              <inc variable="gun2.score" />
+              <play sound="hit" />
+              <die />
+            </collision>
+          </collisions>
+          <member><position><x>-60</x></position></member>
+          <member><position><x>-300</x></position></member>
+          <member><position><x>-540</x></position></member>
+        </group>
+        <group name="choppers" class="plane">
+          <sprite>
+            <bitmap>
+              <row>************</row>
+              <row>.....**.....</row>
+              <row>..*******...</row>
+              <row>.*********.*</row>
+              <row>..*******..*</row>
+              <row>...*...*....</row>
+              <scale>3</scale>
+              <color>color.orange</color>
+            </bitmap>
+          </sprite>
+          <position><y>270</y></position>
+          <velocity><x>-chopperspeed</x></velocity>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal">
+              <wrap />
+            </collision>
+            <collision class="shots1">
+              <inc variable="gun1.score" />
+              <play sound="hit" />
+              <die />
+            </collision>
+            <collision class="shots2">
+              <inc variable="gun2.score" />
+              <play sound="hit" />
+              <die />
+            </collision>
+          </collisions>
+          <member><position><x>window.right + 40</x></position></member>
+          <member><position><x>window.right + 360</x></position></member>
+        </group>
+
+        <!-- the two guns, pointing straight up to start with -->
+        <object name="gun1">
+          <sprite>
+            <bitmap>
+              <row>....*....</row>
+              <row>....*....</row>
+              <row>....*....</row>
+              <row>....*....</row>
+              <row>...***...</row>
+              <row>..*****..</row>
+              <row>.*******.</row>
+              <row>*********</row>
+              <row>*********</row>
+              <scale>3</scale>
+              <color>color.yellow</color>
+            </bitmap>
+          </sprite>
+          <position><x>window.width.center / 2 - gun1.width / 2</x><y>sea - gun1.height / 2</y></position>
+          <heading>0</heading>
+          <actions>
+            <action name="left">
+              <turn direction="left">swing</turn>
+            </action>
+            <action name="right">
+              <turn direction="right">swing</turn>
+            </action>
+            <action name="fire">
+              <fire object="shots1" />
+              <play sound="fire" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+          </variables>
+        </object>
+        <object name="gun2">
+          <sprite>
+            <bitmap>
+              <row>....*....</row>
+              <row>....*....</row>
+              <row>....*....</row>
+              <row>....*....</row>
+              <row>...***...</row>
+              <row>..*****..</row>
+              <row>.*******.</row>
+              <row>*********</row>
+              <row>*********</row>
+              <scale>3</scale>
+              <color>color.white</color>
+            </bitmap>
+          </sprite>
+          <position><x>window.width.center * 3 / 2 - gun2.width / 2</x><y>sea - gun2.height / 2</y></position>
+          <heading>0</heading>
+          <actions>
+            <action name="left">
+              <turn direction="left">swing</turn>
+            </action>
+            <action name="right">
+              <turn direction="right">swing</turn>
+            </action>
+            <action name="fire">
+              <fire object="shots2" />
+              <play sound="fire" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+          </variables>
+        </object>
+
+        <!-- two shells each, out of play until fired -->
+        <group name="shots1" class="shots1">
+          <sprite>
+            <rectangle>
+              <width>4</width>
+              <height>4</height>
+              <color>color.yellow</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <velocity><y>-shellspeed</y></velocity>
+          <hidden>true</hidden>
+          <collisions>
+            <enabled>false</enabled>
+            <collision edge="all">
+              <die />
+            </collision>
+            <collision class="plane">
+              <die />
+            </collision>
+          </collisions>
+          <member />
+          <member />
+        </group>
+        <group name="shots2" class="shots2">
+          <sprite>
+            <rectangle>
+              <width>4</width>
+              <height>4</height>
+              <color>color.white</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <velocity><y>-shellspeed</y></velocity>
+          <hidden>true</hidden>
+          <collisions>
+            <enabled>false</enabled>
+            <collision edge="all">
+              <die />
+            </collision>
+            <collision class="plane">
+              <die />
+            </collision>
+          </collisions>
+          <member />
+          <member />
+        </group>
+
+        <object name="score1">
+          <sprite>
+            <text>
+              <number>gun1.score</number>
+              <size>40</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>margin</x><y>margin</y></position>
+        </object>
+        <object name="clock">
+          <sprite>
+            <text>
+              <number>status.time</number>
+              <size>32</size>
+              <color>color.lightgrey</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - clock.width / 2</x><y>margin</y></position>
+        </object>
+        <object name="score2">
+          <sprite>
+            <text>
+              <number>gun2.score</number>
+              <size>40</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.right - score2.width - margin</x><y>margin</y></position>
+        </object>
+      </objects>
       <inputs>
         <input button="a"><trigger object="gun1" action="left" /></input>
         <input button="d"><trigger object="gun1" action="right" /></input>
@@ -564,8 +513,20 @@
       </timers>
     </state>
     <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text>
+              <content>PAUSED</content>
+              <size>100</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="paused" />
+        <show state="battle" />
       </shows>
       <inputs>
         <input button="space p escape"><pop /></input>
@@ -574,6 +535,7 @@
     <!-- Time up: the scores are compared, and the state that says who won takes this one's place. -->
     <state name="timeup">
       <shows>
+        <show state="battle" />
         <show set="end" />
       </shows>
       <inputs>
@@ -595,27 +557,64 @@
       </conditions>
     </state>
     <state name="yellowwins">
+      <objects>
+        <!-- yellow has more: under TIME UP -->
+        <object name="yellowwon">
+          <sprite>
+            <text>
+              <content>YELLOW WINS</content>
+              <size>50</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - yellowwon.width / 2</x><y>window.height.center - yellowwon.height / 2 + (10)</y></position>
+        </object>
+      </objects>
       <shows>
+        <show state="battle" />
         <show set="end" />
-        <show object="yellowwon" />
       </shows>
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
     </state>
     <state name="whitewins">
+      <objects>
+        <object name="whitewon">
+          <sprite>
+            <text>
+              <content>WHITE WINS</content>
+              <size>50</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - whitewon.width / 2</x><y>window.height.center - whitewon.height / 2 + (10)</y></position>
+        </object>
+      </objects>
       <shows>
+        <show state="battle" />
         <show set="end" />
-        <show object="whitewon" />
       </shows>
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
     </state>
     <state name="draw">
+      <objects>
+        <object name="drawn">
+          <sprite>
+            <text>
+              <content>A DRAW</content>
+              <size>50</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - drawn.width / 2</x><y>window.height.center - drawn.height / 2 + (10)</y></position>
+        </object>
+      </objects>
       <shows>
+        <show state="battle" />
         <show set="end" />
-        <show object="drawn" />
       </shows>
       <inputs>
         <input button="space"><reset /></input>

@@ -220,7 +220,7 @@ namespace xge
 
 	bool Game::isShown(const Object& object) noexcept
 	{
-		return object.isVisible && runsIn(object, currentState.top());
+		return object.isVisible && !currentState.empty() && runsIn(object, currentState.top());
 	}
 
 	bool Game::runsIn(const Object& object, const State& state) const
@@ -237,6 +237,7 @@ namespace xge
 
 	bool Game::isStill(const Object& object) noexcept
 	{
+		if (currentState.empty()) { return false; }
 		const State& top = currentState.top();
 		if (top.showStates.empty() || !object.isVisible || runsIn(object, top)) { return false; }
 
@@ -251,7 +252,7 @@ namespace xge
 	bool Game::inScope(const Object& object) const
 	{
 		if (object.ownerState.empty()) { return true; }
-		if (object.ownerState != currentState.top().name) { return false; }
+		if (currentState.empty() || object.ownerState != currentState.top().name) { return false; }
 		if (object.ownerScene.empty()) { return true; }
 		const auto current = currentScenes.find(object.ownerState);
 		return current != currentScenes.end() && current->second == object.ownerScene;
@@ -561,7 +562,7 @@ namespace xge
 		}
 
 		variableIt->second += delta;
-		refreshBoundTexts(ownerName, variableName, variableIt->second);
+		refreshBoundTexts(owner->name, variableName, variableIt->second);
 	}
 
 	int Game::framesFor(float seconds) const noexcept
@@ -697,7 +698,7 @@ namespace xge
 		}
 
 		variableIt->second = value;
-		refreshBoundTexts(objectName, variableName, value);
+		refreshBoundTexts(owner->name, variableName, value);
 		return true;
 	}
 

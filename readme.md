@@ -26,12 +26,12 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/descriptions/frostbite.xml` | Frostbite: jump Bailey between the snowy shore and four rows of drifting ice; every white row he lands on turns blue and adds a block to his igloo; the water, the cold and the snow geese are against him; finish the igloo and walk in |
 | `games/descriptions/donkeykong.xml` | Donkey Kong: climb six girders past the barrels Kong throws, jumping them or dodging up the ladders, to save Pauline; each rescue Kong throws faster, three rescues win |
 | `games/descriptions/galaxian.xml` | Galaxian: a fleet flies in on curving paths and settles into formation, then one alien at a time dives at your ship, weaving and dropping bombs, and loops back to its place from the top of the screen |
-| `games/descriptions/pitfall.xml` | Pitfall!: run Harry through four jungle screens, each a state, past rolling logs, a tar pit, a crocodile pond, a fire and the scorpions in the tunnel, after a treasure on each, in three minutes with three lives |
+| `games/descriptions/pitfall.xml` | Pitfall!: run Harry through four jungle screens, the scenes of one state built from a kit of pieces, past rolling logs, a tar pit, a crocodile pond, a fire and the scorpions in the tunnel, after a treasure on each, in three minutes with three lives |
 | `games/descriptions/missilecommand.xml` | Missile Command: missiles chase the nearest of six cities; steer a sight, and the base aims a counter-missile that bursts there and takes every missile flying into it; three waves |
 | `games/descriptions/combat.xml` | Combat, two players: tanks that drive along the way they point and turn on the spot, among walls, one shell in the air each; first to five hits |
 | `games/descriptions/airseabattle.xml` | Air-Sea Battle, two players: swing a gun and fire at four lanes of planes going round the sky; most hits in two minutes wins, and the end screen compares the scores to say who |
 | `games/descriptions/megamania.xml` | Megamania: three waves of hamburgers, cookies and bugs wrap round the sides and drop bombs while your energy runs down; shoot each wave before it is gone, three ships |
-| `games/descriptions/adventure.xml` | Adventure, one room of the Atari 2600 game: walk into the key, the sword or the chalice to `<carry />` it and Space to `<drop />` it; the key opens the castle gate, the sword slays the dragon, the chalice carried into the hall wins |
+| `games/descriptions/adventure.xml` | Adventure, two rooms of the Atari 2600 game, the castle and the field east of it, as scenes: walk into the key, the sword or the chalice to `<carry />` it and Space to `<drop />` it; the key opens the castle gate, the sword slays the dragon, the chalice carried into the hall wins |
 
 ## What a game file looks like
 
@@ -70,9 +70,10 @@ What many objects or states share is written once, under a name, higher up in th
 
 * **Leave out what is nothing.** An object that never moves has no `<velocity>`, and one that never collides has no `<collisions>`.
 * **Groups.** A `<group>` writes the shared parts of its members once: a list of members, or a block of columns and rows where a row, a column or a single cell changes what it needs to (Breakout's rows of colors, Space Invaders' rows of aliens). A group can hold groups (Frogger's lanes), and a group's name means every member in it.
-* **Named sets in `<states>`.** At the top of `<states>`, before the first `<state>`, named `<keys>`, `<shows>` and `<conditions>` sets hold what several states bind, show and check. A state takes one with `set="name"` and adds its own; a set can take a set written before it. Pitfall's four screens share the jungle, Harry, the score and how a screen ends; Berserk's rooms share the player, Otto and the score.
+* **Named sets in `<states>`.** At the top of `<states>`, before the first `<state>`, named `<keys>`, `<shows>` and `<conditions>` sets hold what several states bind, show and check. A state takes one with `set="name"` and adds its own; a set can take a set written before it.
+* **States and scenes own their objects.** A `<state>` is a mode (title, playing, paused, game over) and holds the objects it uses; a pause can draw the game still underneath it (`<show state="playing" />`). A state played in several places holds them as `<scenes>`: shared pieces sit in a kit at the top, and each scene takes what it needs and changes what differs (a speed, a position, a sprite), or starts as a copy of an earlier scene (`from=`). `<enter scene="room2" />` moves on, what the hero carries goes along, and a scene left stays as it was. Inside a scene a plain name means its own (`robots`), and a path reaches anything (`playing.room2.robots`).
 
-See [docs/readme.md](docs/readme.md#group) for the details.
+See [docs/readme.md](docs/readme.md#group) and [scenes](docs/readme.md#scenes) for the details.
 
 ## How it works
 

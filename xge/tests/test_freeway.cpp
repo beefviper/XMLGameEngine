@@ -148,7 +148,7 @@ TEST_CASE("each lane sits in its own row, and neighbouring lanes go opposite way
 			bool found = false;
 			for (const auto& object : table.game.getCurrentObjects())
 			{
-				if (object.name == name) { found = true; }
+				if (object.name == "playing." + name) { found = true; } // the playing state's own
 			}
 			if (!found) { continue; }
 			const Object& other = table.game.getObject(name);
@@ -395,4 +395,44 @@ TEST_CASE("a chicken that just keeps hopping up is hit by the traffic", "[freewa
 
 	CHECK(hits > 0);
 	CHECK(hits + crossings > 0);
+}
+
+TEST_CASE("each state has its own objects: the title, the road, the signs", "[freeway][states]")
+{
+	Game game{ "descriptions/freeway.xml" };
+	game.setCurrentState("mainmenu");
+	CHECK(game.isShown(game.getObject("keys2")));
+	CHECK_FALSE(game.isShown(game.getObject("chicken1")));
+
+	game.pushState("playing");
+	CHECK(game.getObject("chicken1").name == "playing.chicken1");
+	CHECK(game.getObject("lane5.1").name == "playing.lane5.1");
+	CHECK(game.isShown(game.getObject("lane5.1")));
+	CHECK(game.isShown(game.getObject("score1")));
+	CHECK_FALSE(game.isShown(game.getObject("keys2")));
+}
+
+TEST_CASE("paused and the endings draw the road still underneath, scores and all", "[freeway][states]")
+{
+	Table table;
+	Object& car = table.game.getObject("lane2.1"); // +3 a frame
+	const float x = car.position.x;
+
+	table.game.pushState("paused");
+	table.frames(30);
+	CHECK(car.position.x == x);
+	CHECK(table.game.isStill(car));
+	CHECK(table.game.isStill(table.chicken(1)));
+	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+	table.game.popState();
+	CHECK(table.game.isShown(car));
+
+	table.chicken(1).variable["score"] = 5.0f;
+	table.frames(1);
+	REQUIRE(table.game.getCurrentState().name == "p1wins");
+	CHECK(table.game.isStill(table.game.getObject("score1")));
+	CHECK(table.game.isStill(table.game.getObject("score2")));
+	CHECK(table.game.isStill(car));
+	CHECK(table.game.isShown(table.game.getObject("p1wins.p1wins")));
+	CHECK(table.game.isShown(table.game.getObject("again")));
 }

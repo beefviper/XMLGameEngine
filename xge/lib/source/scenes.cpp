@@ -117,6 +117,7 @@ namespace xge
 			std::set<std::string> all;       // objects and groups
 			std::set<std::string> scenes;    // scene paths
 			std::map<std::string, std::set<std::string>> sceneVariables;
+			std::set<std::string> gameVariables; // the game's <variables>, as written (ball.radius)
 
 			// An object or group, from the inside out: the scene's, the state's,
 			// the game's, then the one path that ends with it. Unknown is left
@@ -200,6 +201,10 @@ namespace xge
 					}
 					return name;
 				}
+
+				// A game variable written with a dot is that variable, whatever
+				// object its first part might name.
+				if (gameVariables.count(name)) { return name; }
 
 				const std::string owner = name.substr(0, dot);
 				const std::string part = name.substr(dot);
@@ -366,6 +371,7 @@ namespace xge
 		if (!owns) { return; }
 
 		Names names;
+		for (const auto& variable : data.variables) { names.gameVariables.insert(variable.first); }
 		const std::set<std::string> gameNames = namesOf(data.objects);
 
 		// The game's own objects first, then each state's, with the scene

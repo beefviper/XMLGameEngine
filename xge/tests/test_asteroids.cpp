@@ -68,12 +68,14 @@ namespace
 		float lives() { return ship().variable["lives"]; }
 		std::string state() { return game.getCurrentState().name; }
 
+		// The members of one of the playing state's groups (its full name is
+		// playing.<name>).
 		std::vector<Object*> group(const std::string& name)
 		{
 			std::vector<Object*> members;
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == name) { members.push_back(&object); }
+				if (object.groupName == "playing." + name) { members.push_back(&object); }
 			}
 			return members;
 		}
@@ -889,6 +891,55 @@ TEST_CASE("with rocks still left, even small ones, it is not yet won", "[asteroi
 	CHECK(field.state() == "playing");
 }
 
+TEST_CASE("paused, the field is drawn still: the rocks and the ship stop where they are", "[asteroids][states]")
+{
+	Field field;
+	field.frames(5);
+	Object& rock = *field.group("bigrocks")[0];
+	const Vector2f rockAt = rock.position;
+	const Vector2f shipAt = field.ship().position;
+
+	field.game.pushState("paused");
+	field.frames(60);
+	CHECK(rock.position == rockAt);
+	CHECK(field.ship().position == shipAt);
+	CHECK(field.game.isStill(rock));
+	CHECK(field.game.isStill(field.ship()));
+	CHECK(field.game.isStill(field.named("scorevalue")));
+	CHECK_FALSE(field.game.isShown(rock));
+	CHECK(field.game.isShown(field.named("paused")));
+
+	// A rock not yet released is not drawn, even still.
+	CHECK_FALSE(field.game.isStill(*field.group("mediumrocks")[0]));
+
+	field.game.popState();
+	field.frames(1);
+	CHECK(rock.position != rockAt);
+}
+
+TEST_CASE("each state owns what it draws, and the endings draw the field still under their message", "[asteroids][states]")
+{
+	Field field;
+	CHECK(field.ship().ownerState == "playing");
+	CHECK(field.group("bigrocks")[0]->ownerState == "playing");
+	CHECK(field.named("title").ownerState == "mainmenu");
+	CHECK(field.named("again").ownerState.empty());
+	CHECK_FALSE(field.game.isShown(field.named("title")));
+
+	for (Object* rock : field.group("bigrocks")) { rock->isVisible = false; }
+	field.group("smallrocks")[0]->isVisible = true;
+	field.group("smallrocks")[0]->velocity = { 1.0f, 0.0f };
+	field.frames(1);
+	REQUIRE(field.state() == "playing");
+	field.group("smallrocks")[0]->isVisible = false;
+	field.frames(1);
+	REQUIRE(field.state() == "won");
+	CHECK(field.game.isStill(field.ship()));
+	CHECK(field.game.isShown(field.named("wonmsg")));
+	CHECK(field.game.isShown(field.named("again")));
+	CHECK_FALSE(field.game.isShown(field.named("overmsg")));
+}
+
 TEST_CASE("playing again puts everything back: rocks, pools, shots, score and ships", "[asteroids][states]")
 {
 	Field field;
@@ -995,7 +1046,7 @@ TEST_CASE("a heading, a drag and a hidden are read from the file", "[asteroids][
 
 	for (const Object& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "mediumrocks" || object.groupName == "smallrocks" || object.groupName == "shots")
+		if (object.groupName == "playing.mediumrocks" || object.groupName == "playing.smallrocks" || object.groupName == "playing.shots")
 		{
 			CHECK_FALSE(object.isVisible);
 		}

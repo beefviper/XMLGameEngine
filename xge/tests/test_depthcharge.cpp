@@ -91,9 +91,10 @@ namespace
 		// Sinks all but the named submarine, as if they had been hit earlier.
 		void sinkAllBut(const std::string& survivor)
 		{
+			const Object* spared = &game.getObject(survivor);
 			for (Object* sub : subs())
 			{
-				if (sub->name == survivor) { continue; }
+				if (sub == spared) { continue; }
 				sub->isVisible = false;
 				sub->collisionData.enabled = false;
 			}
@@ -435,4 +436,47 @@ TEST_CASE("a crude player who fires when a submarine is overhead sinks some", "[
 	}
 
 	CHECK(table.sunk() > 0.0f);
+}
+
+TEST_CASE("each state has its own objects: the title, the sea, the signs", "[depthcharge][states]")
+{
+	Game game{ "descriptions/depthcharge.xml" };
+	game.setCurrentState("mainmenu");
+	CHECK(game.isShown(game.getObject("help")));
+	CHECK_FALSE(game.isShown(game.getObject("ship")));
+
+	game.pushState("playing");
+	CHECK(game.getObject("ship").name == "playing.ship");
+	CHECK(game.getObject("subs2.2").name == "playing.subs2.2");
+	CHECK(game.isShown(game.getObject("subs2.2")));
+	CHECK(game.isShown(game.getObject("chargesvalue")));
+	CHECK_FALSE(game.isShown(game.getObject("charge"))); // not dropped yet
+	CHECK_FALSE(game.isShown(game.getObject("help")));
+}
+
+TEST_CASE("paused and the endings draw the sea still underneath, with the count of what was sunk", "[depthcharge][states]")
+{
+	Table table;
+	Object& sub = table.game.getObject("subs1.1"); // +2 a frame
+	const float x = sub.position.x;
+
+	table.game.pushState("paused");
+	table.frames(30);
+	CHECK(sub.position.x == x);
+	CHECK(table.game.isStill(sub));
+	CHECK(table.game.isStill(table.ship()));
+	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+	table.game.popState();
+	CHECK(table.game.isShown(sub));
+
+	table.freezeSubs();
+	table.sinkAllBut("subs3.3");
+	table.dropOnto("subs3.3");
+	table.frames(1);
+	REQUIRE(table.game.getCurrentState().name == "youwin");
+	CHECK(table.game.isStill(table.ship()));
+	CHECK(table.game.isStill(table.game.getObject("sunkvalue")));
+	CHECK(table.game.isShown(table.game.getObject("youwin.youwin")));
+	CHECK(table.game.isShown(table.game.getObject("again")));
+	CHECK_FALSE(table.game.isShown(table.game.getObject("gameover.gameover")));
 }

@@ -45,18 +45,18 @@ namespace pong_min
 
 		seedRandom();
 
-		// <object name="ball">
-		objects.push_back(makeObject("ball", circleSprite(ballRadius, "color.white"), true));
+		// <state name="playing"> > <object name="ball">, named by its path
+		objects.push_back(makeObject("playing.ball", circleSprite(ballRadius, "color.white"), true));
 		ball().variable["speed"] = 6.0f;
 		drawBallStart();
 		startAt(ball(), ball().positionOriginal, ball().velocityOriginal);
 
-		// <object name="paddle1">
-		objects.push_back(makeObject("paddle1", rectangleSprite(width, height, "color.white"), true));
+		// <state name="playing"> > <object name="paddle1">, named by its path
+		objects.push_back(makeObject("playing.paddle1", rectangleSprite(width, height, "color.white"), true));
 		startAt(paddle1(), { windowLeft + margin, windowHeightCenter - height / 2 }, { 0, 0 });
 
-		// <object name="paddle2">
-		objects.push_back(makeObject("paddle2", rectangleSprite(width, height, "color.white"), true));
+		// <state name="playing"> > <object name="paddle2">, named by its path
+		objects.push_back(makeObject("playing.paddle2", rectangleSprite(width, height, "color.white"), true));
 		startAt(paddle2(), { windowRight - margin - width, windowHeightCenter - height / 2 }, { 0, 0 });
 	}
 
@@ -94,7 +94,7 @@ namespace pong_min
 		playOneFrame(objects, window, *this);
 	}
 
-	// <state name="playing"> > <shows>: all three.
+	// <state name="playing"> > <objects>: all three, its own.
 	bool Pong::inPlay(const Object& object)
 	{
 		return object.isVisible;

@@ -89,7 +89,7 @@ namespace
 			int n = 0;
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == "barrels" && object.isVisible) { ++n; }
+				if (object.groupName == "playing.barrels" && object.isVisible) { ++n; }
 			}
 			return n;
 		}
@@ -323,4 +323,53 @@ TEST_CASE("saving Pauline scores, starts the climb again with Kong quicker, and 
 	CHECK(play.state() == "mainmenu");
 	CHECK(play.variable("rescues") == 0);
 	CHECK(play.kong().variable.at("wait") == Approx(2.8f));
+}
+
+TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where it is", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	play.standAt(420.0f, kPerch);
+	play.kong().timers.at(0).framesLeft = 1;
+	play.frames(10);
+	REQUIRE(play.barrelsInPlay() >= 1);
+	Object& barrel = play.game.getObject("barrels.1");
+	const Vector2f barrelAt = barrel.position;
+
+	play.tap(KeyCode::P);
+	REQUIRE(play.state() == "paused");
+	play.frames(60);
+	CHECK(barrel.position == barrelAt);
+	CHECK(play.game.isStill(barrel));
+	CHECK(play.game.isStill(play.man()));
+	CHECK(play.game.isStill(play.kong()));
+	CHECK(play.game.isStill(play.game.getObject("floor")));
+	CHECK_FALSE(play.game.isShown(barrel));
+	CHECK(play.game.isShown(play.game.getObject("paused")));
+	CHECK_FALSE(play.game.isStill(play.game.getObject("barrels.8"))); // never thrown
+
+	play.tap(KeyCode::P);
+	REQUIRE(play.state() == "playing");
+	play.frames(1);
+	CHECK(barrel.position != barrelAt);
+}
+
+TEST_CASE("each state owns what it draws, and game over draws the girders still under its message", "[donkeykong]")
+{
+	DonkeyKong play;
+	CHECK(play.man().ownerState == "playing");
+	CHECK(play.game.getObject("title").ownerState == "mainmenu");
+	CHECK(play.game.getObject("again").ownerState.empty());
+	CHECK(play.game.isShown(play.game.getObject("title")));
+	CHECK_FALSE(play.game.isShown(play.man()));
+
+	play.start();
+	play.man().variable["lives"] = 0;
+	play.frames(1);
+	REQUIRE(play.state() == "gameover");
+	CHECK(play.game.isStill(play.man()));
+	CHECK(play.game.isStill(play.game.getObject("score")));
+	CHECK(play.game.isShown(play.game.getObject("gameover.gameover")));
+	CHECK(play.game.isShown(play.game.getObject("again")));
+	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin")));
 }

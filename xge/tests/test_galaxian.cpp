@@ -9,7 +9,9 @@
 // ends a path, the mistakes a game file can make with them, and Galaxian
 // played frame by frame through a real xge::Engine with no window: the fleet
 // flying in to its places, a dive that weaves down, wraps and comes home, a
-// shot alien scoring, and a new fleet when the last one is down.
+// shot alien scoring, a new fleet when the last one is down (the fleet is
+// the playing state's one scene, put back with <reset scene>), and the pause
+// drawing the game still.
 
 #include "engine.h"
 #include "game.h"
@@ -388,4 +390,44 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 36);
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 36);
 	CHECK(play.object("flagships.1").position.y < 0.0f);
+	// the ship and its score are the state's, not the fleet's: kept
+	CHECK(ship.variable["score"] == 30.0f);
+	CHECK(ship.variable["lives"] == 3.0f);
+}
+
+TEST_CASE("the fleet is the playing state's scene, and the ship and its shot are the state's own", "[galaxian]")
+{
+	Play play("descriptions/galaxian.xml");
+	CHECK(play.game.currentScene("playing") == "playing.fleet");
+	CHECK(play.object("blues2.5").name == "playing.fleet.blues2.5");
+	CHECK(play.object("ship").name == "playing.ship");
+	CHECK(play.object("shot").name == "playing.shot");
+	CHECK(play.object("title").name == "mainmenu.title");
+	CHECK_FALSE(play.game.isShown(play.object("ship")));
+	play.tap(KeyCode::Space);
+	CHECK(play.game.isShown(play.object("ship")));
+	CHECK(play.game.isShown(play.object("flagships.1")));
+}
+
+TEST_CASE("paused, the fleet is drawn still underneath and stops where it is", "[galaxian]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.tap(KeyCode::Space);
+	play.frames(30);
+
+	Object& alien = play.object("blues.1");
+	REQUIRE(alien.isFollowing());
+	const Vector2f where = alien.position;
+	play.tap(KeyCode::P);
+	REQUIRE(play.state() == "paused");
+	play.frames(60);
+	CHECK(alien.position.x == Approx(where.x));
+	CHECK(alien.position.y == Approx(where.y));
+	CHECK(play.game.isStill(alien));
+	CHECK(play.game.isStill(play.object("ship")));
+
+	play.tap(KeyCode::P);
+	play.frames(1);
+	CHECK(play.state() == "playing");
+	CHECK((alien.position.x != Approx(where.x) || alien.position.y != Approx(where.y)));
 }

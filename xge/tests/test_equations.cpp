@@ -396,12 +396,13 @@ namespace
 	}
 
 	// pong.xml with its title's <equation> replaced by `value` (the whole
-	// <x>...</x> element's inner text).
+	// <x>...</x> element's inner text). The title is the main menu's own, so
+	// it is written inside that state.
 	std::string pongTitleX(const std::string& value)
 	{
 		std::string xml = readFile("descriptions/pong.xml");
-		const std::string open = "<x>\n          <equation>";
-		const std::string close = "</equation>\n        </x>";
+		const std::string open = "<x>\n              <equation>";
+		const std::string close = "</equation>\n            </x>";
 		const auto from = xml.find(open);
 		const auto to = xml.find(close);
 		REQUIRE(from != std::string::npos);

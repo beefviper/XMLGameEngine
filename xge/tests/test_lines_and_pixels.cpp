@@ -816,7 +816,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in lines, types and 
 	const Mistake mistakes[] = {
 		{ "a line with no end", "<to><x>76</x><y>0</y></to>", "", "to" },
 		{ "a line with a corner it cannot hold", "<thickness>4</thickness>", "<thickness>4</thickness><corner />", "corner" },
-		{ "a collision type that is not one", "<enabled>true</enabled>\n        <type>pixel</type>", "<enabled>true</enabled>\n        <type>round</type>", "round" },
+		{ "a collision type that is not one", "<enabled>true</enabled>\n            <type>pixel</type>", "<enabled>true</enabled>\n            <type>round</type>", "round" },
 		{ "an acceleration missing its y", "<y>gravity</y>", "", "y" },
 		{ "a thruster with no direction", "<accelerate direction=\"left\" burn=\"fuel\">", "<accelerate burn=\"fuel\">", "direction" },
 	};

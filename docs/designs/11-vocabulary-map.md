@@ -64,14 +64,14 @@ A note on pictures: an `<image>` is a file loaded by whichever window backend is
 
 | Layer | Vocabulary | How complete |
 |---|---|---|
-| Data model: what exists | objects, groups (members or cells), variables, states | solid |
+| Data model: what exists | objects, groups (members or cells), variables, states, scenes (owning objects, a kit, `from=`), `drawn` | solid |
 | Appearance | seven shapes, `animation`, looks and `become`, `flip`, `heading` | solid; one color per bitmap, no palette |
 | Kinematics: how things move | velocity, acceleration, heading, facing, drag, `move`, `hop`, `jump`, `thrust`, `turn`, `reverse` | good; the arcing jump (`leap`) has no air control |
 | Collision: what touches what, and the response | `edge`, `class`, `object`, `unless`, `sprite`, `slower`, `faster`, `type`, and a dozen response verbs | the largest layer: it is where verbs, adjectives and prepositions meet |
 | Time | `timers` with `every` and `after`, animation `interval`, `jump` `seconds` | built; counts frames, shows no time left |
 | Sound | `sounds`, `note`, `rest`, `wave`, `pitch`, `to`, `volume`, `loop`, `play`, `silence` | built; loops started by a command, no envelope |
 | Input | `input`, `button`, `keys`, `action`, `trigger` | small and clean |
-| Game flow | states, `push`, `pop`, conditions | enough for the shipped games; no `goto` |
+| Game flow | states, `push`, `pop`, scenes with `enter` and `reset scene`, `show state`, conditions | enough for the shipped games; no map of exits |
 | Values | expressions, `random`, `equation`, `formula` with four operations | thin; no `min`, `max`, `clamp`, `negate` as tags |
 
 A collision rule reads like a sentence: *this object* (noun), *when it touches* (preposition) *that class* (noun), *unless* (conjunction) *it is on a log*, *do this* (verb). The "when does this apply" words (`class`, `object`, `edge`, `unless`, `sprite`, `slower`, `faster`) are where the language works hardest.

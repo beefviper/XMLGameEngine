@@ -657,6 +657,30 @@ TEST_CASE("a shot from the ship of Space Invaders 2 can still kill an alien", "[
 	CHECK_FALSE(game.getObject("bullet").isVisible);
 }
 
+TEST_CASE("paused, Space Invaders 2 draws the invasion still under the word", "[spaceinvaders2][scenes][shows]")
+{
+	Invasion invasion;
+	Game& game = invasion.game;
+	CHECK(game.getObject("aliens.1.1").name == "playing.aliens.1.1");
+	CHECK(game.getObject("player").name == "player"); // the game's own: the title, the settings and playing show it
+
+	frames(game, 5);
+	game.pushState("paused");
+	const Vector2f at = game.getObject("aliens.1.1").position;
+	frames(game, 30);
+	CHECK(game.getObject("aliens.1.1").position.x == at.x);
+	CHECK(game.isStill(game.getObject("aliens.1.1")));
+	CHECK(game.isStill(game.getObject("player")));
+	CHECK(game.isShown(game.getObject("paused")));
+	game.popState();
+	CHECK(game.isShown(game.getObject("aliens.1.1")));
+
+	game.pushState("gameover");
+	CHECK(game.isStill(game.getObject("aliens.1.1")));
+	CHECK(game.isShown(game.getObject("youwin")));
+	CHECK(game.isShown(game.getObject("continue")));
+}
+
 // ----------------------------------------------------------------- schema
 
 namespace

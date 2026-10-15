@@ -10,6 +10,9 @@
 // starts, W, A, S, D (or the arrows) walk and set which way the man faces,
 // Space fires, P pauses.
 //
+// The rooms are the scenes of the playing state (playing.room1 to room4),
+// each with its own walls, exits, robots and tally (playing.room2.robots.3).
+//
 // Window::init() normally measures each object's size once a backend exists;
 // measure() gives every shape the size its sprite implies instead.
 
@@ -83,6 +86,15 @@ namespace
 		}
 
 		std::string state() { return game.getCurrentState().name; }
+		// The room the man is in: 1 to 4, or 0 when the game is not being played.
+		int room()
+		{
+			if (state() != "playing") { return 0; }
+			const std::string scene = game.currentScene("playing");
+			return scene.back() - '0';
+		}
+		static std::string inRoom(int n, const std::string& name) { return "playing.room" + std::to_string(n) + "." + name; }
+		static std::string robot(int n, int member) { return inRoom(n, "robots." + std::to_string(member)); }
 		Object& object(const std::string& name) { return game.getObject(name); }
 		Object& man() { return object("player"); }
 		Object& bullet() { return object("bullet"); }
@@ -98,6 +110,22 @@ namespace
 				if (object.objClass == objClass && object.isVisible) { ++n; }
 			}
 			return n;
+		}
+
+		// The robots of a room still standing.
+		int robotsLeft(int n)
+		{
+			return alive("robot", inRoom(n, "robots."));
+		}
+
+		int alive(const std::string& objClass, const std::string& prefix)
+		{
+			int k = 0;
+			for (auto& object : game.getCurrentObjects())
+			{
+				if (object.objClass == objClass && object.isVisible && object.name.rfind(prefix, 0) == 0) { ++k; }
+			}
+			return k;
 		}
 
 		// Puts the man in the middle of a cell, counting cells from 0 across
@@ -118,7 +146,7 @@ namespace
 		{
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.objClass.rfind("robots", 0) == 0)
+				if (object.objClass == "robot")
 				{
 					object.velocity = { 0.0f, 0.0f };
 					object.timers.clear();
@@ -126,12 +154,13 @@ namespace
 			}
 		}
 
-		// Takes every robot of a class out of play, as if they were all shot.
-		void killRobots(const std::string& objClass)
+		// Takes every robot of a room out of play, as if they were all shot.
+		void killRobots(int n)
 		{
+			const std::string prefix = inRoom(n, "robots.");
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.objClass == objClass) { object.isVisible = false; object.collisionData.enabled = false; }
+				if (object.name.rfind(prefix, 0) == 0) { object.isVisible = false; object.collisionData.enabled = false; }
 			}
 		}
 
@@ -186,23 +215,35 @@ TEST_CASE("berserk.xml loads the man, four rooms of robots, exits, an Otto and a
 	CHECK_FALSE(play.bullet().isVisible);
 	CHECK_FALSE(play.object("otto").isVisible);
 	CHECK(play.alive("robotshot") == 0);
-	CHECK(play.object("walls1").size.x == 584.0f);
-	CHECK(play.object("walls1").size.y == 392.0f);
+	CHECK(play.game.currentScene("playing") == "playing.room1");
 
-	// Each room has more robots than the one before, and four exits.
-	CHECK(play.alive("robots1") == 3);
-	CHECK(play.alive("robots2") == 4);
-	CHECK(play.alive("robots3") == 5);
-	CHECK(play.alive("robots4") == 6);
-	for (int room = 1; room <= 4; ++room) { CHECK(play.alive("exit" + std::to_string(room)) == 4); }
-	CHECK(count(play, "robotshots.") == 4);
+	// The man and what is his are the playing state's, there in every room.
+	CHECK(play.man().ownerState == "playing");
+	CHECK(play.man().ownerScene.empty());
+	CHECK(play.object("score").ownerState == "playing");
+	CHECK_FALSE(play.game.isShown(play.object("score")));
+
+	// Each room has its own walls, the same size, more robots than the one
+	// before, and four exits that are never drawn.
+	for (int room = 1; room <= 4; ++room)
+	{
+		Object& walls = play.object(Play::inRoom(room, "walls"));
+		CHECK(walls.size.x == 584.0f);
+		CHECK(walls.size.y == 392.0f);
+		CHECK(walls.isDrawn);
+		CHECK(play.robotsLeft(room) == room + 2);
+		CHECK(play.alive("exit", Play::inRoom(room, "exits.")) == 4);
+		CHECK_FALSE(play.object(Play::inRoom(room, "exits.1")).isDrawn);
+		CHECK_FALSE(play.object(Play::inRoom(room, "tally")).isDrawn);
+	}
+	CHECK(count(play, "playing.robotshots.") == 4);
 }
 
 TEST_CASE("Space starts Berserk, and the man walks the four ways and faces the way he walked", "[berserk]")
 {
 	Play play;
 	play.begin();
-	CHECK(play.state() == "room1");
+	CHECK(play.room() == 1);
 
 	Object& man = play.man();
 	play.placeMan(1, 3);
@@ -267,14 +308,16 @@ TEST_CASE("a shot robot is gone and scores fifty, and the shot goes with it", "[
 	Play play;
 	play.begin();
 
-	Object& robot = play.object("robots1left.1");
+	Object& robot = play.object(Play::robot(1, 1));
 	REQUIRE(robot.isVisible);
-	play.shootRobot("robots1left.1");
+	play.shootRobot(Play::robot(1, 1));
 
 	CHECK_FALSE(robot.isVisible);
-	CHECK(play.alive("robots1") == 2);
+	CHECK(play.robotsLeft(1) == 2);
 	CHECK(play.score() == 50.0f);
-	CHECK(play.object("tally1").variable["kills"] == 1.0f);
+	// The robot's rule says tally and means its own room's.
+	CHECK(play.object(Play::inRoom(1, "tally")).variable["kills"] == 1.0f);
+	CHECK(play.object(Play::inRoom(2, "tally")).variable["kills"] == 0.0f);
 	CHECK_FALSE(play.bullet().isVisible);
 }
 
@@ -285,15 +328,16 @@ TEST_CASE("a robot touching the man costs a life and sends him back to the start
 
 	Object& man = play.man();
 	const Vector2f start = man.position;
+	const std::string robot = Play::robot(1, 1);
 	play.placeMan(0, 3);
-	play.placeRobot("robots1left.1", 2, 3);
-	man.position.x = play.object("robots1left.1").position.x - 20.0f;
+	play.placeRobot(robot, 2, 3);
+	man.position.x = play.object(robot).position.x - 20.0f;
 	play.walk(KeyCode::D, 4);
 
 	CHECK(play.lives() == 2.0f);
 	CHECK(man.position.x == Approx(start.x).margin(10.0));
 	CHECK(man.position.y == Approx(start.y).margin(4.0));
-	CHECK(play.object("robots1left.1").isVisible);
+	CHECK(play.object(robot).isVisible);
 	CHECK(play.score() == 0.0f);
 }
 
@@ -320,13 +364,13 @@ TEST_CASE("the man is safe at the start of every room, and can walk out of each"
 
 	for (int room = 1; room <= 4; ++room)
 	{
-		REQUIRE(play.state() == "room" + std::to_string(room));
+		REQUIRE(play.room() == room);
 		play.frames(120);
 		CHECK(play.lives() == 3.0f);
-		play.killRobots("robots" + std::to_string(room));
+		play.killRobots(room);
 		play.leaveByTheLeft();
 	}
-	CHECK(play.state() == "room1");
+	CHECK(play.room() == 1);
 	CHECK(play.lives() == 3.0f);
 }
 
@@ -345,14 +389,14 @@ TEST_CASE("robots patrol their corridors and turn at the walls instead of leavin
 		play.man().variable["lives"] = 3.0f;
 		for (auto& object : play.game.getCurrentObjects())
 		{
-			if (object.objClass != "robots1" || !object.isVisible) { continue; }
+			if (object.objClass != "robot" || !object.isVisible || object.ownerScene != "playing.room1") { continue; }
 			CHECK(object.position.x > 8.0f);
 			CHECK(object.position.x + object.size.x < 584.0f - 8.0f);
 			CHECK(object.position.y > mazeTop + 8.0f);
 			CHECK(object.position.y + object.size.y < mazeTop + 392.0f - 8.0f);
 		}
 	}
-	CHECK(play.alive("robots1") == 3);
+	CHECK(play.robotsLeft(1) == 3);
 }
 
 TEST_CASE("robots fire at the man, and a shot that reaches the man costs a life", "[berserk]")
@@ -446,23 +490,60 @@ TEST_CASE("walking through a gap leaves the room: the next room, the man back at
 {
 	Play play;
 	play.begin();
-	REQUIRE(play.state() == "room1");
+	REQUIRE(play.room() == 1);
 
 	play.leaveByTheLeft();
-	CHECK(play.state() == "room2");
+	CHECK(play.room() == 2);
 	CHECK(play.variable("depth") == 1.0f);
-	CHECK(play.variable("exited") == 0.0f);
 	CHECK(play.lives() == 3.0f);
 	CHECK(play.man().position.x < 40.0f);
 
 	// The other exits do the same, and after room four comes room one.
 	play.leaveByTheTop();
-	CHECK(play.state() == "room3");
+	CHECK(play.room() == 3);
 	play.leaveByTheRight();
-	CHECK(play.state() == "room4");
+	CHECK(play.room() == 4);
 	play.leaveByTheBottom();
-	CHECK(play.state() == "room1");
+	CHECK(play.room() == 1);
 	CHECK(play.variable("depth") == 4.0f);
+}
+
+TEST_CASE("only the room the man is in plays: the others' robots are away and stand still", "[berserk]")
+{
+	Play play;
+	play.begin();
+	play.leaveByTheLeft();
+	REQUIRE(play.room() == 2);
+
+	Object& left = play.object(Play::robot(1, 1));
+	CHECK(play.game.isAway(left));
+	CHECK_FALSE(play.game.isShown(left));
+	CHECK(play.game.isShown(play.object(Play::robot(2, 1))));
+	CHECK_FALSE(play.game.isShown(play.object(Play::inRoom(1, "walls"))));
+	CHECK(play.game.isShown(play.object(Play::inRoom(2, "walls"))));
+
+	const Vector2f robotBefore = left.position;
+	play.frames(60);
+	CHECK(left.position.x == robotBefore.x);
+	CHECK(left.position.y == robotBefore.y);
+}
+
+TEST_CASE("a room left is put back as it started: its robots where they began, its count at nothing", "[berserk]")
+{
+	Play play;
+	play.begin(false);
+
+	// Room one's first robot walks off from where it started.
+	Object& robot = play.object(Play::robot(1, 1));
+	const Vector2f started = robot.position;
+	play.frames(60);
+	play.man().variable["lives"] = 3.0f;
+	REQUIRE(robot.position.x != started.x);
+
+	play.leaveByTheLeft();
+	REQUIRE(play.room() == 2);
+	CHECK(robot.position.x == Approx(started.x));
+	CHECK(robot.position.y == Approx(started.y));
 }
 
 TEST_CASE("shooting every robot of a room pays ten more for each, and leaving puts the count back", "[berserk]")
@@ -471,18 +552,18 @@ TEST_CASE("shooting every robot of a room pays ten more for each, and leaving pu
 	play.begin();
 
 	// Room one has three robots: two shot is only fifty each.
-	Object& tally = play.object("tally1");
+	Object& tally = play.object(Play::inRoom(1, "tally"));
 	tally.variable["kills"] = 2.0f;
 	play.frames(2);
 	CHECK(play.score() == 0.0f);
 
 	// Leaving puts the count back, so the two do not add to the next visit's.
 	play.leaveByTheLeft();
-	REQUIRE(play.state() == "room2");
+	REQUIRE(play.room() == 2);
 	CHECK(tally.variable["kills"] == 0.0f);
 
 	// Room two has four robots.
-	Object& tally2 = play.object("tally2");
+	Object& tally2 = play.object(Play::inRoom(2, "tally"));
 	tally2.variable["kills"] = 4.0f;
 	play.frames(2);
 	CHECK(play.score() == 40.0f);
@@ -496,14 +577,15 @@ TEST_CASE("three shots at three robots clear room one and make the bonus", "[ber
 	Play play;
 	play.begin();
 
-	for (const char* name : { "robots1left.1", "robots1up.1", "robots1up.2" })
+	for (int member = 1; member <= 3; ++member)
 	{
+		const std::string name = Play::robot(1, member);
 		REQUIRE(play.object(name).isVisible);
 		play.shootRobot(name);
 		CHECK_FALSE(play.object(name).isVisible);
 	}
 	play.frames(2);
-	CHECK(play.alive("robots1") == 0);
+	CHECK(play.robotsLeft(1) == 0);
 	CHECK(play.score() == 3 * 50.0f + 30.0f);
 }
 
@@ -511,25 +593,12 @@ TEST_CASE("coming round again, the rooms have their robots back", "[berserk]")
 {
 	Play play;
 	play.begin();
-	play.killRobots("robots1");
-	REQUIRE(play.alive("robots1") == 0);
+	play.killRobots(1);
+	REQUIRE(play.robotsLeft(1) == 0);
 
 	for (int room = 1; room <= 4; ++room) { play.leaveByTheLeft(); }
-	REQUIRE(play.state() == "room1");
-	CHECK(play.alive("robots1") == 3);
-}
-
-TEST_CASE("the robots of one room stand still while the man is in another", "[berserk]")
-{
-	Play play;
-	play.begin();
-	play.leaveByTheLeft();
-	REQUIRE(play.state() == "room2");
-
-	const Vector2f robotBefore = play.object("robots1left.1").position;
-	play.frames(60);
-	CHECK(play.object("robots1left.1").position.x == robotBefore.x);
-	CHECK(play.object("robots1left.1").position.y == robotBefore.y);
+	REQUIRE(play.room() == 1);
+	CHECK(play.robotsLeft(1) == 3);
 }
 
 // ----------------------------------------------------------------- Evil Otto
@@ -558,19 +627,42 @@ TEST_CASE("Evil Otto turns up after a while, and one touch costs the man a life"
 	CHECK(play.lives() == 2.0f);
 }
 
+TEST_CASE("each room's wait for Otto starts when the man comes in", "[berserk]")
+{
+	Play play;
+	play.begin();
+
+	// Ten seconds in room one, then into room two at depth one: its wait is
+	// thirteen seconds from the door, not what was left of room one's.
+	play.frames(10 * 60);
+	play.leaveByTheLeft();
+	REQUIRE(play.room() == 2);
+	Object& otto = play.object("otto");
+	REQUIRE_FALSE(otto.isVisible);
+	int frame = 0;
+	while (!otto.isVisible && frame < 2000)
+	{
+		play.frames(1);
+		++frame;
+	}
+	CHECK(frame == Approx(13 * 60).margin(2));
+}
+
 TEST_CASE("Otto comes at once when every robot is gone, goes when the man leaves, and cannot be shot", "[berserk]")
 {
 	Play play;
 	play.begin();
 	CHECK_FALSE(play.object("otto").isVisible);
 
-	play.killRobots("robots1");
+	play.killRobots(1);
 	play.frames(2);
 	REQUIRE(play.object("otto").isVisible);
 
-	// He goes when the man leaves the room.
+	// He goes when the man leaves the room, and room two's robots keep him away.
 	play.leaveByTheLeft();
-	CHECK(play.state() == "room2");
+	CHECK(play.room() == 2);
+	CHECK_FALSE(play.object("otto").isVisible);
+	play.frames(2);
 	CHECK_FALSE(play.object("otto").isVisible);
 
 	// A shot meeting him is put away and he stays.
@@ -597,46 +689,62 @@ TEST_CASE("an extra man at every two thousand points", "[berserk]")
 
 	// A robot is fifty points; the fortieth makes the man.
 	play.man().variable["lifepoints"] = 1950.0f;
-	play.shootRobot("robots1left.1");
+	play.shootRobot(Play::robot(1, 1));
 	CHECK(play.lives() == 4.0f);
 	CHECK(play.variable("lifepoints") == 0.0f);
 	play.frames(10);
 	CHECK(play.lives() == 4.0f);
 }
 
-TEST_CASE("no men left is game over, and Space plays again", "[berserk]")
+TEST_CASE("no men left is game over, over the room standing still, and Space plays again", "[berserk]")
 {
 	Play play;
 	play.begin();
+	play.leaveByTheLeft();
+	REQUIRE(play.room() == 2);
 
 	play.man().variable["lives"] = 1.0f;
 	play.placeMan(2, 0);
 	play.walk(KeyCode::W, 6);
 	play.frames(2);
 	CHECK(play.state() == "gameover");
+	CHECK(play.game.isStill(play.object(Play::inRoom(2, "walls"))));
+	CHECK(play.game.isShown(play.object("gameover")));
+	CHECK(play.game.isStill(play.object("score")));
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(play.lives() == 3.0f);
 	CHECK(play.score() == 0.0f);
-	CHECK(play.alive("robots1") == 3);
+	CHECK(play.variable("depth") == 0.0f);
+	CHECK(play.robotsLeft(1) == 3);
+	CHECK(play.game.currentScene("playing") == "playing.room1");
 }
 
-TEST_CASE("P pauses, and Space or P carries on", "[berserk]")
+TEST_CASE("P pauses over the room standing still, and Space or P carries on", "[berserk]")
 {
 	Play play;
 	play.begin(false);
 
 	play.tap(KeyCode::P);
 	CHECK(play.state() == "paused");
-	const Vector2f robot = play.object("robots1left.1").position;
+	const std::string robot = Play::robot(1, 1);
+	const Vector2f standing = play.object(robot).position;
 	play.frames(60);
-	CHECK(play.object("robots1left.1").position.x == robot.x);
+	CHECK(play.object(robot).position.x == standing.x);
+
+	// The room, the man and the score are drawn still under PAUSED.
+	CHECK(play.game.isStill(play.object(robot)));
+	CHECK(play.game.isStill(play.man()));
+	CHECK(play.game.isStill(play.object(Play::inRoom(1, "walls"))));
+	CHECK_FALSE(play.game.isStill(play.object(Play::inRoom(2, "walls"))));
+	CHECK(play.game.isShown(play.object("paused")));
+	CHECK(play.game.isStill(play.object("score")));
 
 	play.tap(KeyCode::Space);
-	CHECK(play.state() == "room1");
+	CHECK(play.state() == "playing");
 	play.tap(KeyCode::Escape);
 	CHECK(play.state() == "paused");
 	play.tap(KeyCode::Escape);
-	CHECK(play.state() == "room1");
+	CHECK(play.state() == "playing");
 }

@@ -194,3 +194,53 @@ TEST_CASE("at time up the scores are compared, and the screen says who won", "[a
 	CHECK(endWith(5, 5) == "draw");
 	CHECK(endWith(0, 1) == "whitewins");
 }
+
+TEST_CASE("paused, the battle is drawn still: the planes stop and the clock never shows", "[airseabattle]")
+{
+	AirSeaBattle play;
+	play.start();
+	play.frames(30);
+	Object& jet = play.game.getObject("jets.1");
+	const Vector2f jetAt = jet.position;
+
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "paused");
+	play.frames(60);
+	CHECK(jet.position == jetAt);
+	CHECK(play.game.isStill(jet));
+	CHECK(play.game.isStill(play.game.getObject("gun1")));
+	CHECK(play.game.isStill(play.game.getObject("clock")));
+	CHECK_FALSE(play.game.isShown(jet));
+	CHECK(play.game.isShown(play.game.getObject("paused")));
+	CHECK_FALSE(play.game.isStill(play.game.getObject("shots1.1"))); // never fired
+
+	// The clock's holder runs in the battle but is never drawn.
+	Object& status = play.game.getObject("status");
+	CHECK(status.ownerState == "battle");
+	CHECK_FALSE(status.isDrawn);
+
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "battle");
+	play.frames(1);
+	CHECK(jet.position != jetAt);
+}
+
+TEST_CASE("each end screen draws the battle still under TIME UP and its message", "[airseabattle]")
+{
+	AirSeaBattle play;
+	CHECK(play.game.getObject("keys1").ownerState == "title");
+	CHECK(play.game.getObject("timeup").ownerState.empty());
+	CHECK_FALSE(play.game.isShown(play.game.getObject("timeup")));
+
+	play.start();
+	play.game.getObject("gun1").variable["score"] = 7;
+	play.game.getObject("status").variable["time"] = 1;
+	play.frames(62);
+	REQUIRE(play.state() == "yellowwins");
+	CHECK(play.game.isStill(play.game.getObject("score1")));
+	CHECK(play.game.isStill(play.game.getObject("sea")));
+	CHECK(play.game.isShown(play.game.getObject("timeup")));
+	CHECK(play.game.isShown(play.game.getObject("again")));
+	CHECK(play.game.isShown(play.game.getObject("yellowwon")));
+	CHECK_FALSE(play.game.isShown(play.game.getObject("whitewon")));
+}

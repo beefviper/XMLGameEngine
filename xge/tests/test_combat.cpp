@@ -188,3 +188,51 @@ TEST_CASE("five hits win, and space plays again", "[combat]")
 	CHECK(play.state() == "title");
 	CHECK(play.tank2().variable.at("score") == 0);
 }
+
+TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is", "[combat]")
+{
+	Combat play;
+	play.start();
+	play.game.getObject("walls.1").isVisible = false;
+	play.tap(KeyCode::F);
+	play.frames(5);
+	Object& shell = play.game.getObject("shell1");
+	REQUIRE(shell.isVisible);
+	const Vector2f shellAt = shell.position;
+
+	play.tap(KeyCode::P);
+	REQUIRE(play.state() == "paused");
+	play.frames(30);
+	CHECK(shell.position == shellAt);
+	CHECK(play.game.isStill(shell));
+	CHECK(play.game.isStill(play.tank1()));
+	CHECK(play.game.isStill(play.game.getObject("walls.2")));
+	CHECK_FALSE(play.game.isStill(play.game.getObject("shell2"))); // never fired
+	CHECK_FALSE(play.game.isShown(play.tank1()));
+	CHECK(play.game.isShown(play.game.getObject("paused")));
+
+	play.tap(KeyCode::P);
+	REQUIRE(play.state() == "playing");
+	play.frames(1);
+	CHECK(shell.position != shellAt);
+}
+
+TEST_CASE("each state owns what it draws, and a win draws the field still under its message", "[combat]")
+{
+	Combat play;
+	CHECK(play.tank1().ownerState == "playing");
+	CHECK(play.game.getObject("keys1").ownerState == "title");
+	CHECK(play.game.getObject("again").ownerState.empty());
+	CHECK(play.game.isShown(play.game.getObject("title.title")));
+	CHECK_FALSE(play.game.isShown(play.tank1()));
+
+	play.start();
+	play.tank1().variable["score"] = 5;
+	play.frames(2);
+	REQUIRE(play.state() == "wins1");
+	CHECK(play.game.isStill(play.tank2()));
+	CHECK(play.game.isStill(play.game.getObject("score1")));
+	CHECK(play.game.isShown(play.game.getObject("wins1.wins1")));
+	CHECK(play.game.isShown(play.game.getObject("again")));
+	CHECK_FALSE(play.game.isShown(play.game.getObject("wins2.wins2")));
+}

@@ -309,11 +309,36 @@ TEST_CASE("coming down slowly onto the pad is a landing", "[lunarlander]")
 	CHECK(moon.state() == "landed");
 	CHECK(moon.lander().velocity.y == 0.0f);
 
-	// It stays where it touched down.
+	// It stays where it touched down, drawn still under the message.
 	const Vector2f where = moon.lander().position;
 	moon.frames(120);
 	CHECK(moon.lander().position == where);
 	CHECK(moon.state() == "landed");
+	CHECK(moon.game.isStill(moon.lander()));
+	CHECK(moon.game.isStill(moon.game.getObject("pad")));
+	CHECK(moon.game.isShown(moon.game.getObject("landedmsg")));
+	CHECK(moon.game.isShown(moon.game.getObject("again")));
+	CHECK_FALSE(moon.game.isShown(moon.game.getObject("crashedmsg")));
+}
+
+TEST_CASE("each state owns what it draws: the menu its texts, playing the moon", "[lunarlander]")
+{
+	Moon moon;
+	CHECK(moon.lander().ownerState == "playing");
+	CHECK(moon.game.getObject("terrain").ownerState == "playing");
+	CHECK(moon.game.getObject("title").ownerState == "mainmenu");
+	CHECK(moon.game.getObject("paused").ownerState == "paused");
+	CHECK(moon.game.getObject("again").ownerState.empty());
+
+	CHECK(moon.game.isShown(moon.lander()));
+	CHECK_FALSE(moon.game.isShown(moon.game.getObject("title")));
+	CHECK_FALSE(moon.game.isShown(moon.game.getObject("again")));
+
+	moon.game.resetAll();
+	REQUIRE(moon.state() == "mainmenu");
+	CHECK(moon.game.isShown(moon.game.getObject("title")));
+	CHECK_FALSE(moon.game.isShown(moon.lander()));
+	CHECK_FALSE(moon.game.isStill(moon.lander()));
 }
 
 TEST_CASE("a pilot who brakes with the thruster brings it down from a drop, and has fuel left", "[lunarlander]")
@@ -387,6 +412,15 @@ TEST_CASE("the pause screen holds the lander where it is", "[lunarlander]")
 
 	CHECK(moon.lander().position == where);
 	CHECK(moon.lander().velocity.y == velocity);
+
+	// The moon is drawn still underneath the PAUSED text: the playing state's
+	// objects, not in play, and the menu's not drawn at all.
+	CHECK(moon.game.isStill(moon.lander()));
+	CHECK(moon.game.isStill(moon.game.getObject("terrain")));
+	CHECK(moon.game.isStill(moon.game.getObject("fuelvalue")));
+	CHECK_FALSE(moon.game.isShown(moon.lander()));
+	CHECK(moon.game.isShown(moon.game.getObject("paused")));
+	CHECK_FALSE(moon.game.isStill(moon.game.getObject("title")));
 
 	moon.game.popState();
 	moon.frames(10);

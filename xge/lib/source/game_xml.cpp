@@ -1846,6 +1846,12 @@ namespace xge
 						RawSceneEntry entry;
 						if (kitNames.count(name) || names.count(name))
 						{
+							// A piece is taken by a name written in the file (an object, a
+							// group, a named member), the one the generated program sees too.
+							if (name.find('.') != std::string::npos)
+							{
+								fail(where, "takes '" + name + "', a numbered member of a group: take the whole group, or give the member a name= in the kit and take that");
+							}
 							entry.take = name;
 							entry.change = readSceneChange(*child, where + " > <" + child->getName() + " name=\"" + name + "\">");
 							std::vector<RawObject> taken;
@@ -1986,7 +1992,7 @@ namespace xge
 		const std::string where = "game";
 		std::unique_ptr<XmlNode> window = requireChild(*root, "window", where);
 		std::unique_ptr<XmlNode> variablesNode = requireChild(*root, "variables", where);
-		std::unique_ptr<XmlNode> objectsNode = requireChild(*root, "objects", where);
+		std::unique_ptr<XmlNode> objectsNode = findChild(root.get(), "objects"); // none: every object is a state's own
 		std::unique_ptr<XmlNode> states = requireChild(*root, "states", where);
 
 		// load window description: <window name="..."> and its settings. These
@@ -2022,7 +2028,7 @@ namespace xge
 		}
 
 		// load objects
-		readObjects(*objectsNode, rawObjects);
+		if (objectsNode) { readObjects(*objectsNode, rawObjects); }
 
 		// load states: the named <keys>, <shows> and <conditions> sets first, so
 		// any state can use any of them (a <shows> or <conditions> set can take

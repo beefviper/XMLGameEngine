@@ -24,6 +24,18 @@
     `kong.wait` seconds, a variable that each rescue takes some off.
   Flat girders where the arcade's slope, and no hammer, no fireballs and no
   points for jumping a barrel: see the notes in docs/designs/23-platforming.md.
+
+  How it is written:
+  * Each state owns what it draws: the title texts are the main menu's; the
+    girders, the ladders, the oil drum, Kong, Pauline, the barrels, Jumpman
+    and the score and lives are the playing state's; the PAUSED text and the
+    endings' messages are those states' own.
+  * Paused, won and game over draw the girders still underneath
+    (<show state="playing" />), the barrels stopped where they were.
+    "spacebar to play again" is the one object of the game itself, shown by
+    both endings.
+  * The three climbs are one board: a rescue puts Jumpman back at the
+    bottom and takes some off Kong's wait, so there are no scenes.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -63,322 +75,7 @@
     </sound>
   </sounds>
   <objects>
-    <!-- six girders from the floor up, each open at one end in turn, and the
-         short one Pauline stands on -->
-    <group name="girders" class="girder">
-      <sprite>
-        <rectangle>
-          <width>720</width>
-          <height>thick</height>
-          <color>color.red</color>
-        </rectangle>
-      </sprite>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-      <member name="floor">
-        <sprite>
-          <rectangle>
-            <width>800</width>
-            <height>thick</height>
-            <color>color.red</color>
-          </rectangle>
-        </sprite>
-        <position><x>0</x><y>660</y></position>
-      </member>
-      <member>
-        <position><x>0</x><y>560</y></position>
-      </member>
-      <member>
-        <position><x>80</x><y>460</y></position>
-      </member>
-      <member>
-        <position><x>0</x><y>360</y></position>
-      </member>
-      <member>
-        <position><x>80</x><y>260</y></position>
-      </member>
-      <member name="top">
-        <position><x>0</x><y>160</y></position>
-      </member>
-      <member name="perch">
-        <sprite>
-          <rectangle>
-            <width>200</width>
-            <height>thick</height>
-            <color>color.red</color>
-          </rectangle>
-        </sprite>
-        <position><x>260</x><y>80</y></position>
-      </member>
-    </group>
-    <!-- a ladder runs from the top of one girder to the top of the next -->
-    <group name="ladders" class="ladder">
-      <sprite>
-        <rectangle>
-          <width>rung</width>
-          <height>100</height>
-          <color>color.cyan</color>
-        </rectangle>
-      </sprite>
-      <member>
-        <position><x>560</x><y>560</y></position>
-      </member>
-      <member>
-        <position><x>200</x><y>460</y></position>
-      </member>
-      <member>
-        <position><x>500</x><y>360</y></position>
-      </member>
-      <member>
-        <position><x>180</x><y>260</y></position>
-      </member>
-      <member>
-        <position><x>560</x><y>160</y></position>
-      </member>
-      <member>
-        <sprite>
-          <rectangle>
-            <width>rung</width>
-            <height>80</height>
-            <color>color.cyan</color>
-          </rectangle>
-        </sprite>
-        <position><x>420</x><y>80</y></position>
-      </member>
-    </group>
-    <!-- the barrels: a pool of eight, out of play until Kong throws one -->
-    <group name="barrels" class="barrel">
-      <sprite>
-        <circle>
-          <radius>11</radius>
-          <color>color.orange</color>
-        </circle>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <velocity><x>roll</x></velocity>
-      <acceleration><x>0</x><y>pull</y></acceleration>
-      <hidden>true</hidden>
-      <collisions>
-        <enabled>false</enabled>
-        <collision edge="horizontal">
-          <bounce />
-        </collision>
-        <collision edge="bottom">
-          <die />
-        </collision>
-        <collision class="girder">
-          <land />
-        </collision>
-        <collision object="oil">
-          <die />
-        </collision>
-      </collisions>
-      <member />
-      <member />
-      <member />
-      <member />
-      <member />
-      <member />
-      <member />
-      <member />
-    </group>
-    <object name="oil">
-      <sprite>
-        <rectangle>
-          <width>30</width>
-          <height>36</height>
-          <color>color.blue</color>
-        </rectangle>
-      </sprite>
-      <position><x>4</x><y>660 - oil.height</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-    </object>
-    <object name="kong">
-      <sprite>
-        <rectangle>
-          <width>70</width>
-          <height>60</height>
-          <color>color.brown</color>
-        </rectangle>
-      </sprite>
-      <position><x>20</x><y>160 - kong.height</y></position>
-      <facing>right</facing>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-      <variables>
-        <variable name="wait">2.8</variable>
-      </variables>
-      <timers>
-        <timer>
-          <every>kong.wait</every>
-          <fire object="barrels" />
-        </timer>
-      </timers>
-    </object>
-    <object name="pauline">
-      <sprite>
-        <rectangle>
-          <width>20</width>
-          <height>32</height>
-          <color>color.magenta</color>
-        </rectangle>
-      </sprite>
-      <position><x>300</x><y>80 - pauline.height</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-    </object>
-    <object name="man">
-      <sprite>
-        <rectangle>
-          <width>20</width>
-          <height>32</height>
-          <color>color.white</color>
-        </rectangle>
-      </sprite>
-      <position><x>100</x><y>660 - man.height</y></position>
-      <acceleration><x>0</x><y>pull</y></acceleration>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="horizontal">
-          <stick />
-        </collision>
-        <collision class="girder">
-          <land />
-        </collision>
-        <collision class="barrel">
-          <dec variable="man.lives" />
-          <play sound="hit" />
-          <reset />
-          <reset object="barrels" />
-        </collision>
-        <collision object="pauline">
-          <inc variable="man.score">1000</inc>
-          <inc variable="man.rescues" />
-          <dec variable="kong.wait">0.6</dec>
-          <play sound="rescue" />
-          <reset />
-          <reset object="barrels" />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="left">
-          <move direction="left">walk</move>
-        </action>
-        <action name="right">
-          <move direction="right">walk</move>
-        </action>
-        <action name="up">
-          <climb direction="up" class="ladder">climbstep</climb>
-        </action>
-        <action name="down">
-          <climb direction="down" class="ladder">climbstep</climb>
-        </action>
-        <action name="jump">
-          <leap>leapheight</leap>
-          <play sound="jump" />
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-        <variable name="lives">3</variable>
-        <variable name="rescues">0</variable>
-      </variables>
-    </object>
-    <object name="score">
-      <sprite>
-        <text>
-          <number>man.score</number>
-          <size>36</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>margin</x><y>margin</y></position>
-    </object>
-    <object name="lives">
-      <sprite>
-        <text>
-          <number>man.lives</number>
-          <size>36</size>
-          <color>color.red</color>
-        </text>
-      </sprite>
-      <position><x>window.right - lives.width - margin</x><y>margin</y></position>
-    </object>
-    <object name="title">
-      <sprite>
-        <text>
-          <content>DONKEY KONG</content>
-          <size>110</size>
-          <color>color.red</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-150)</y></position>
-    </object>
-    <object name="help">
-      <sprite>
-        <text>
-          <content>climb to the top and save pauline</content>
-          <size>36</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-40)</y></position>
-    </object>
-    <object name="keys">
-      <sprite>
-        <text>
-          <content>a and d walk, w and s climb (or the arrows), space jumps</content>
-          <size>24</size>
-          <color>color.lightgrey</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (10)</y></position>
-    </object>
-    <object name="start">
-      <sprite>
-        <text>
-          <content>spacebar to start</content>
-          <size>48</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (120)</y></position>
-    </object>
-    <object name="paused">
-      <sprite>
-        <text>
-          <content>PAUSED</content>
-          <size>128</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
-    </object>
-    <object name="youwin">
-      <sprite>
-        <text>
-          <content>YOU WIN</content>
-          <size>128</size>
-          <color>color.green</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-60)</y></position>
-    </object>
-    <object name="gameover">
-      <sprite>
-        <text>
-          <content>GAME OVER</content>
-          <size>128</size>
-          <color>color.red</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-60)</y></position>
-    </object>
+    <!-- after a game, in both endings -->
     <object name="again">
       <sprite>
         <text>
@@ -392,12 +89,48 @@
   </objects>
   <states>
     <state name="mainmenu">
-      <shows>
-        <show object="title" />
-        <show object="help" />
-        <show object="keys" />
-        <show object="start" />
-      </shows>
+      <objects>
+        <object name="title">
+          <sprite>
+            <text>
+              <content>DONKEY KONG</content>
+              <size>110</size>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-150)</y></position>
+        </object>
+        <object name="help">
+          <sprite>
+            <text>
+              <content>climb to the top and save pauline</content>
+              <size>36</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-40)</y></position>
+        </object>
+        <object name="keys">
+          <sprite>
+            <text>
+              <content>a and d walk, w and s climb (or the arrows), space jumps</content>
+              <size>24</size>
+              <color>color.lightgrey</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (10)</y></position>
+        </object>
+        <object name="start">
+          <sprite>
+            <text>
+              <content>spacebar to start</content>
+              <size>48</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (120)</y></position>
+        </object>
+      </objects>
       <inputs>
         <input button="space">
           <push state="playing" />
@@ -405,17 +138,254 @@
       </inputs>
     </state>
     <state name="playing">
-      <shows>
-        <show object="girders" />
-        <show object="ladders" />
-        <show object="oil" />
-        <show object="kong" />
-        <show object="pauline" />
-        <show object="barrels" />
-        <show object="man" />
-        <show object="score" />
-        <show object="lives" />
-      </shows>
+      <objects>
+        <!-- six girders from the floor up, each open at one end in turn, and the
+             short one Pauline stands on -->
+        <group name="girders" class="girder">
+          <sprite>
+            <rectangle>
+              <width>720</width>
+              <height>thick</height>
+              <color>color.red</color>
+            </rectangle>
+          </sprite>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+          <member name="floor">
+            <sprite>
+              <rectangle>
+                <width>800</width>
+                <height>thick</height>
+                <color>color.red</color>
+              </rectangle>
+            </sprite>
+            <position><x>0</x><y>660</y></position>
+          </member>
+          <member>
+            <position><x>0</x><y>560</y></position>
+          </member>
+          <member>
+            <position><x>80</x><y>460</y></position>
+          </member>
+          <member>
+            <position><x>0</x><y>360</y></position>
+          </member>
+          <member>
+            <position><x>80</x><y>260</y></position>
+          </member>
+          <member name="top">
+            <position><x>0</x><y>160</y></position>
+          </member>
+          <member name="perch">
+            <sprite>
+              <rectangle>
+                <width>200</width>
+                <height>thick</height>
+                <color>color.red</color>
+              </rectangle>
+            </sprite>
+            <position><x>260</x><y>80</y></position>
+          </member>
+        </group>
+        <!-- a ladder runs from the top of one girder to the top of the next -->
+        <group name="ladders" class="ladder">
+          <sprite>
+            <rectangle>
+              <width>rung</width>
+              <height>100</height>
+              <color>color.cyan</color>
+            </rectangle>
+          </sprite>
+          <member>
+            <position><x>560</x><y>560</y></position>
+          </member>
+          <member>
+            <position><x>200</x><y>460</y></position>
+          </member>
+          <member>
+            <position><x>500</x><y>360</y></position>
+          </member>
+          <member>
+            <position><x>180</x><y>260</y></position>
+          </member>
+          <member>
+            <position><x>560</x><y>160</y></position>
+          </member>
+          <member>
+            <sprite>
+              <rectangle>
+                <width>rung</width>
+                <height>80</height>
+                <color>color.cyan</color>
+              </rectangle>
+            </sprite>
+            <position><x>420</x><y>80</y></position>
+          </member>
+        </group>
+        <!-- the barrels: a pool of eight, out of play until Kong throws one -->
+        <group name="barrels" class="barrel">
+          <sprite>
+            <circle>
+              <radius>11</radius>
+              <color>color.orange</color>
+            </circle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <velocity><x>roll</x></velocity>
+          <acceleration><x>0</x><y>pull</y></acceleration>
+          <hidden>true</hidden>
+          <collisions>
+            <enabled>false</enabled>
+            <collision edge="horizontal">
+              <bounce />
+            </collision>
+            <collision edge="bottom">
+              <die />
+            </collision>
+            <collision class="girder">
+              <land />
+            </collision>
+            <collision object="oil">
+              <die />
+            </collision>
+          </collisions>
+          <member />
+          <member />
+          <member />
+          <member />
+          <member />
+          <member />
+          <member />
+          <member />
+        </group>
+        <object name="oil">
+          <sprite>
+            <rectangle>
+              <width>30</width>
+              <height>36</height>
+              <color>color.blue</color>
+            </rectangle>
+          </sprite>
+          <position><x>4</x><y>660 - oil.height</y></position>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+        </object>
+        <object name="kong">
+          <sprite>
+            <rectangle>
+              <width>70</width>
+              <height>60</height>
+              <color>color.brown</color>
+            </rectangle>
+          </sprite>
+          <position><x>20</x><y>160 - kong.height</y></position>
+          <facing>right</facing>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+          <variables>
+            <variable name="wait">2.8</variable>
+          </variables>
+          <timers>
+            <timer>
+              <every>kong.wait</every>
+              <fire object="barrels" />
+            </timer>
+          </timers>
+        </object>
+        <object name="pauline">
+          <sprite>
+            <rectangle>
+              <width>20</width>
+              <height>32</height>
+              <color>color.magenta</color>
+            </rectangle>
+          </sprite>
+          <position><x>300</x><y>80 - pauline.height</y></position>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+        </object>
+        <object name="man">
+          <sprite>
+            <rectangle>
+              <width>20</width>
+              <height>32</height>
+              <color>color.white</color>
+            </rectangle>
+          </sprite>
+          <position><x>100</x><y>660 - man.height</y></position>
+          <acceleration><x>0</x><y>pull</y></acceleration>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal">
+              <stick />
+            </collision>
+            <collision class="girder">
+              <land />
+            </collision>
+            <collision class="barrel">
+              <dec variable="man.lives" />
+              <play sound="hit" />
+              <reset />
+              <reset object="barrels" />
+            </collision>
+            <collision object="pauline">
+              <inc variable="man.score">1000</inc>
+              <inc variable="man.rescues" />
+              <dec variable="kong.wait">0.6</dec>
+              <play sound="rescue" />
+              <reset />
+              <reset object="barrels" />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="left">
+              <move direction="left">walk</move>
+            </action>
+            <action name="right">
+              <move direction="right">walk</move>
+            </action>
+            <action name="up">
+              <climb direction="up" class="ladder">climbstep</climb>
+            </action>
+            <action name="down">
+              <climb direction="down" class="ladder">climbstep</climb>
+            </action>
+            <action name="jump">
+              <leap>leapheight</leap>
+              <play sound="jump" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="lives">3</variable>
+            <variable name="rescues">0</variable>
+          </variables>
+        </object>
+        <object name="score">
+          <sprite>
+            <text>
+              <number>man.score</number>
+              <size>36</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>margin</x><y>margin</y></position>
+        </object>
+        <object name="lives">
+          <sprite>
+            <text>
+              <number>man.lives</number>
+              <size>36</size>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+        </object>
+      </objects>
       <inputs>
         <input button="a">
           <trigger object="man" action="left" />
@@ -463,8 +433,20 @@
       </conditions>
     </state>
     <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text>
+              <content>PAUSED</content>
+              <size>128</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="paused" />
+        <show state="playing" />
       </shows>
       <inputs>
         <input button="space">
@@ -479,9 +461,20 @@
       </inputs>
     </state>
     <state name="youwin">
+      <objects>
+        <object name="youwin">
+          <sprite>
+            <text>
+              <content>YOU WIN</content>
+              <size>128</size>
+              <color>color.green</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-60)</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="youwin" />
-        <show object="score" />
+        <show state="playing" />
         <show object="again" />
       </shows>
       <inputs>
@@ -491,9 +484,20 @@
       </inputs>
     </state>
     <state name="gameover">
+      <objects>
+        <object name="gameover">
+          <sprite>
+            <text>
+              <content>GAME OVER</content>
+              <size>128</size>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-60)</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="gameover" />
-        <show object="score" />
+        <show state="playing" />
         <show object="again" />
       </shows>
       <inputs>

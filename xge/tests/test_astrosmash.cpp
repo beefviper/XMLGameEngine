@@ -140,8 +140,9 @@ TEST_CASE("astrosmash.xml loads a ship, four boulders, four pebbles and five liv
 	for (const auto& object : table.game.getCurrentObjects())
 	{
 		if (object.objClass != "rocks") { continue; }
-		if (object.name.rfind("boulders.", 0) == 0) { ++boulders; }
-		if (object.name.rfind("pebbles.", 0) == 0) { ++pebbles; }
+		// The rocks are the playing state's own: playing.boulders.1 and so on.
+		if (object.name.rfind("playing.boulders.", 0) == 0) { ++boulders; }
+		if (object.name.rfind("playing.pebbles.", 0) == 0) { ++pebbles; }
 	}
 	CHECK(boulders == 4);
 	CHECK(pebbles == 4);
@@ -437,4 +438,44 @@ TEST_CASE("a crude player who shoots the lowest rock in the sights scores", "[as
 	}
 
 	CHECK(table.score() > startScore);
+}
+
+TEST_CASE("each state has its own objects: the title, the sky, the signs", "[astrosmash][states]")
+{
+	Game game{ "descriptions/astrosmash.xml" };
+	game.setCurrentState("mainmenu");
+	CHECK(game.isShown(game.getObject("help")));
+	CHECK_FALSE(game.isShown(game.getObject("ship")));
+
+	game.pushState("playing");
+	CHECK(game.getObject("ship").name == "playing.ship");
+	CHECK(game.getObject("pebbles.3").name == "playing.pebbles.3");
+	CHECK(game.isShown(game.getObject("pebbles.3")));
+	CHECK(game.isShown(game.getObject("playing.lives")));
+	CHECK_FALSE(game.isShown(game.getObject("help")));
+}
+
+TEST_CASE("paused and the endings draw the sky still underneath, with the score", "[astrosmash][states]")
+{
+	Table table;
+	Object& rock = table.game.getObject("boulders.1");
+	const float y = rock.position.y;
+
+	table.game.pushState("paused");
+	table.frames(30);
+	CHECK(rock.position.y == y);
+	CHECK(table.game.isStill(rock));
+	CHECK(table.game.isStill(table.ship()));
+	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+	table.game.popState();
+	CHECK(table.game.isShown(rock));
+
+	table.ship().variable["lives"] = 0.0f;
+	table.frames(1);
+	REQUIRE(table.game.getCurrentState().name == "gameover");
+	CHECK(table.game.isStill(table.ship()));
+	CHECK(table.game.isStill(table.game.getObject("playing.score")));
+	CHECK(table.game.isShown(table.game.getObject("gameover.gameover")));
+	CHECK(table.game.isShown(table.game.getObject("again")));
+	CHECK_FALSE(table.game.isShown(table.game.getObject("youwin.youwin")));
 }

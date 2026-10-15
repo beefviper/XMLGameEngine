@@ -98,17 +98,18 @@ namespace
 			int n = 0;
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == group && object.isVisible) { ++n; }
+				if (object.groupName == "playing." + group && object.isVisible) { ++n; }
 			}
 			return n;
 		}
 
-		// Every floe of a row shows this look.
+		// Every floe of a row shows this look (the rows are the playing
+		// state's groups, playing.row1 and so on).
 		bool rowIs(const std::string& row, const std::string& look)
 		{
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == row && object.lookName() != look) { return false; }
+				if (object.groupName == "playing." + row && object.lookName() != look) { return false; }
 			}
 			return true;
 		}
@@ -347,4 +348,52 @@ TEST_CASE("no lives left is game over, and Space starts over with the ice white 
 	CHECK(play.visible("igloo") == 0);
 	CHECK(play.variable("lives") == 4);
 	CHECK(play.degrees() == 45);
+}
+
+TEST_CASE("paused, the shore and the ice are drawn still and nothing drifts", "[frostbite]")
+{
+	Frostbite play;
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "playing");
+	Object& floe = play.game.getObject("row1.1");
+	const float floeAt = floe.position.x;
+	const float degrees = play.degrees();
+
+	play.tap(KeyCode::P);
+	REQUIRE(play.state() == "paused");
+	play.frames(3 * kFramerate);
+	CHECK(floe.position.x == floeAt);
+	CHECK(play.degrees() == degrees);
+	CHECK(play.game.isStill(floe));
+	CHECK(play.game.isStill(play.bailey()));
+	CHECK(play.game.isStill(play.game.getObject("snow")));
+	CHECK_FALSE(play.game.isShown(play.bailey()));
+	CHECK(play.game.isShown(play.game.getObject("paused")));
+	CHECK_FALSE(play.game.isStill(play.game.getObject("door"))); // still hidden
+
+	play.tap(KeyCode::P);
+	REQUIRE(play.state() == "playing");
+	play.frames(1);
+	CHECK(floe.position.x != floeAt);
+}
+
+TEST_CASE("each state owns what it draws, and frozen draws the ice still under its message", "[frostbite]")
+{
+	Frostbite play;
+	CHECK(play.bailey().ownerState == "playing");
+	CHECK(play.game.getObject("title").ownerState == "mainmenu");
+	CHECK(play.game.getObject("again").ownerState.empty());
+	CHECK(play.game.isShown(play.game.getObject("title")));
+	CHECK_FALSE(play.game.isShown(play.bailey()));
+	CHECK_FALSE(play.game.isStill(play.bailey()));
+
+	play.startStill();
+	play.bailey().variable["lives"] = 0;
+	play.frames(1);
+	REQUIRE(play.state() == "gameover");
+	CHECK(play.game.isStill(play.game.getObject("scorevalue")));
+	CHECK(play.game.isStill(play.game.getObject("row4.3")));
+	CHECK(play.game.isShown(play.game.getObject("gameover.gameover")));
+	CHECK(play.game.isShown(play.game.getObject("again")));
+	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin")));
 }

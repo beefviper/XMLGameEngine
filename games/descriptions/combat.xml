@@ -23,6 +23,12 @@
     heading, at the shell's own speed.
   * The tanks are <type>pixel</type>, so a turned tank meets a wall where it
     is drawn, not by the square it turns in, and <bounce />s off it.
+  * Each state owns what it draws: the title texts are the title state's;
+    the walls, the two tanks, their shells and the scores are the playing
+    state's; the PAUSED text and each winner's message are those states'
+    own. Paused and the two endings draw the field still underneath
+    (<show state="playing" />); "spacebar to play again" is the one object
+    of the game itself, shown by both endings.
   Not in it: guided and bouncing shells, the plane and jet games, invisible
   tanks, and the hit tank spinning away.
 -->
@@ -59,313 +65,7 @@
     </sound>
   </sounds>
   <objects>
-    <!-- the walls of the field: a block in the middle, and two either side -->
-    <group name="walls" class="wall">
-      <sprite>
-        <rectangle>
-          <width>20</width>
-          <height>100</height>
-          <color>color.orange</color>
-        </rectangle>
-      </sprite>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
-      <member>
-        <sprite>
-          <rectangle>
-            <width>40</width>
-            <height>120</height>
-            <color>color.orange</color>
-          </rectangle>
-        </sprite>
-        <position><x>300</x><y>180</y></position>
-      </member>
-      <member><position><x>150</x><y>60</y></position></member>
-      <member><position><x>150</x><y>320</y></position></member>
-      <member><position><x>470</x><y>60</y></position></member>
-      <member><position><x>470</x><y>320</y></position></member>
-    </group>
-
-    <!-- player one -->
-    <object name="tank1" class="tank">
-      <sprite>
-        <bitmap>
-          <row>.....*.....</row>
-          <row>.....*.....</row>
-          <row>.....*.....</row>
-          <row>**..***..**</row>
-          <row>**.*****.**</row>
-          <row>***********</row>
-          <row>**.*****.**</row>
-          <row>**.*****.**</row>
-          <row>***********</row>
-          <row>**.......**</row>
-          <row>**.......**</row>
-          <scale>3</scale>
-          <color>color.yellow</color>
-        </bitmap>
-      </sprite>
-      <position><x>40</x><y>window.height.center - tank1.height / 2</y></position>
-      <heading>90</heading>
-      <drag>drag</drag>
-      <collisions>
-        <enabled>true</enabled>
-        <type>pixel</type>
-        <collision edge="all">
-          <stick />
-        </collision>
-        <collision class="wall">
-          <bounce />
-          <play sound="thud" />
-        </collision>
-        <collision object="tank2">
-          <bounce />
-        </collision>
-        <collision object="shell2">
-          <inc variable="tank2.score" />
-          <play sound="hit" />
-          <reset />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="forward">
-          <thrust>drive</thrust>
-        </action>
-        <action name="back">
-          <thrust>back</thrust>
-        </action>
-        <action name="left">
-          <turn direction="left">turnrate</turn>
-        </action>
-        <action name="right">
-          <turn direction="right">turnrate</turn>
-        </action>
-        <action name="fire">
-          <fire object="shell1" />
-          <play sound="fire" />
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-
-    <!-- player two -->
-    <object name="tank2" class="tank">
-      <sprite>
-        <bitmap>
-          <row>.....*.....</row>
-          <row>.....*.....</row>
-          <row>.....*.....</row>
-          <row>**..***..**</row>
-          <row>**.*****.**</row>
-          <row>***********</row>
-          <row>**.*****.**</row>
-          <row>**.*****.**</row>
-          <row>***********</row>
-          <row>**.......**</row>
-          <row>**.......**</row>
-          <scale>3</scale>
-          <color>color.cyan</color>
-        </bitmap>
-      </sprite>
-      <position><x>window.right - 40 - tank2.width</x><y>window.height.center - tank2.height / 2</y></position>
-      <heading>270</heading>
-      <drag>drag</drag>
-      <collisions>
-        <enabled>true</enabled>
-        <type>pixel</type>
-        <collision edge="all">
-          <stick />
-        </collision>
-        <collision class="wall">
-          <bounce />
-          <play sound="thud" />
-        </collision>
-        <collision object="tank1">
-          <bounce />
-        </collision>
-        <collision object="shell1">
-          <inc variable="tank1.score" />
-          <play sound="hit" />
-          <reset />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="forward">
-          <thrust>drive</thrust>
-        </action>
-        <action name="back">
-          <thrust>back</thrust>
-        </action>
-        <action name="left">
-          <turn direction="left">turnrate</turn>
-        </action>
-        <action name="right">
-          <turn direction="right">turnrate</turn>
-        </action>
-        <action name="fire">
-          <fire object="shell2" />
-          <play sound="fire" />
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-
-    <!-- one shell each, out of play until it is fired -->
-    <object name="shell1" class="shell">
-      <sprite>
-        <rectangle>
-          <width>4</width>
-          <height>4</height>
-          <color>color.yellow</color>
-        </rectangle>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <velocity><y>-shellspeed</y></velocity>
-      <hidden>true</hidden>
-      <collisions>
-        <enabled>false</enabled>
-        <collision edge="all">
-          <die />
-        </collision>
-        <collision class="wall">
-          <die />
-        </collision>
-        <collision object="tank2">
-          <die />
-        </collision>
-      </collisions>
-    </object>
-    <object name="shell2" class="shell">
-      <sprite>
-        <rectangle>
-          <width>4</width>
-          <height>4</height>
-          <color>color.cyan</color>
-        </rectangle>
-      </sprite>
-      <position><x>0</x><y>0</y></position>
-      <velocity><y>-shellspeed</y></velocity>
-      <hidden>true</hidden>
-      <collisions>
-        <enabled>false</enabled>
-        <collision edge="all">
-          <die />
-        </collision>
-        <collision class="wall">
-          <die />
-        </collision>
-        <collision object="tank1">
-          <die />
-        </collision>
-      </collisions>
-    </object>
-
-    <object name="score1">
-      <sprite>
-        <text>
-          <number>tank1.score</number>
-          <size>40</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - 80</x><y>margin</y></position>
-    </object>
-    <object name="score2">
-      <sprite>
-        <text>
-          <number>tank2.score</number>
-          <size>40</size>
-          <color>color.cyan</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center + 80 - score2.width</x><y>margin</y></position>
-    </object>
-
-    <object name="title">
-      <sprite>
-        <text>
-          <content>COMBAT</content>
-          <size>110</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-140)</y></position>
-    </object>
-    <object name="help">
-      <sprite>
-        <text>
-          <content>two players, first to five hits</content>
-          <size>30</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-50)</y></position>
-    </object>
-    <object name="keys1">
-      <sprite>
-        <text>
-          <content>yellow: w s drive, a d turn, f fires</content>
-          <size>22</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - keys1.width / 2</x><y>window.height.center - keys1.height / 2 + (0)</y></position>
-    </object>
-    <object name="keys2">
-      <sprite>
-        <text>
-          <content>blue: arrows drive and turn, right shift fires</content>
-          <size>22</size>
-          <color>color.cyan</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - keys2.width / 2</x><y>window.height.center - keys2.height / 2 + (35)</y></position>
-    </object>
-    <object name="start">
-      <sprite>
-        <text>
-          <content>spacebar to start</content>
-          <size>40</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (120)</y></position>
-    </object>
-    <object name="paused">
-      <sprite>
-        <text>
-          <content>PAUSED</content>
-          <size>100</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
-    </object>
-    <object name="wins1">
-      <sprite>
-        <text>
-          <content>YELLOW WINS</content>
-          <size>90</size>
-          <color>color.yellow</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - wins1.width / 2</x><y>window.height.center - wins1.height / 2 + (-60)</y></position>
-    </object>
-    <object name="wins2">
-      <sprite>
-        <text>
-          <content>BLUE WINS</content>
-          <size>90</size>
-          <color>color.cyan</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - wins2.width / 2</x><y>window.height.center - wins2.height / 2 + (-60)</y></position>
-    </object>
+    <!-- after a game, in both endings -->
     <object name="again">
       <sprite>
         <text>
@@ -379,27 +79,292 @@
   </objects>
   <states>
     <state name="title">
-      <shows>
-        <show object="title" />
-        <show object="help" />
-        <show object="keys1" />
-        <show object="keys2" />
-        <show object="start" />
-      </shows>
+      <objects>
+
+        <object name="title">
+          <sprite>
+            <text>
+              <content>COMBAT</content>
+              <size>110</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-140)</y></position>
+        </object>
+        <object name="help">
+          <sprite>
+            <text>
+              <content>two players, first to five hits</content>
+              <size>30</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-50)</y></position>
+        </object>
+        <object name="keys1">
+          <sprite>
+            <text>
+              <content>yellow: w s drive, a d turn, f fires</content>
+              <size>22</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - keys1.width / 2</x><y>window.height.center - keys1.height / 2 + (0)</y></position>
+        </object>
+        <object name="keys2">
+          <sprite>
+            <text>
+              <content>blue: arrows drive and turn, right shift fires</content>
+              <size>22</size>
+              <color>color.cyan</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - keys2.width / 2</x><y>window.height.center - keys2.height / 2 + (35)</y></position>
+        </object>
+        <object name="start">
+          <sprite>
+            <text>
+              <content>spacebar to start</content>
+              <size>40</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (120)</y></position>
+        </object>
+      </objects>
       <inputs>
         <input button="space"><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
-      <shows>
-        <show object="walls" />
-        <show object="tank1" />
-        <show object="tank2" />
-        <show object="shell1" />
-        <show object="shell2" />
-        <show object="score1" />
-        <show object="score2" />
-      </shows>
+      <objects>
+        <!-- the walls of the field: a block in the middle, and two either side -->
+        <group name="walls" class="wall">
+          <sprite>
+            <rectangle>
+              <width>20</width>
+              <height>100</height>
+              <color>color.orange</color>
+            </rectangle>
+          </sprite>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+          <member>
+            <sprite>
+              <rectangle>
+                <width>40</width>
+                <height>120</height>
+                <color>color.orange</color>
+              </rectangle>
+            </sprite>
+            <position><x>300</x><y>180</y></position>
+          </member>
+          <member><position><x>150</x><y>60</y></position></member>
+          <member><position><x>150</x><y>320</y></position></member>
+          <member><position><x>470</x><y>60</y></position></member>
+          <member><position><x>470</x><y>320</y></position></member>
+        </group>
+
+        <!-- player one -->
+        <object name="tank1" class="tank">
+          <sprite>
+            <bitmap>
+              <row>.....*.....</row>
+              <row>.....*.....</row>
+              <row>.....*.....</row>
+              <row>**..***..**</row>
+              <row>**.*****.**</row>
+              <row>***********</row>
+              <row>**.*****.**</row>
+              <row>**.*****.**</row>
+              <row>***********</row>
+              <row>**.......**</row>
+              <row>**.......**</row>
+              <scale>3</scale>
+              <color>color.yellow</color>
+            </bitmap>
+          </sprite>
+          <position><x>40</x><y>window.height.center - tank1.height / 2</y></position>
+          <heading>90</heading>
+          <drag>drag</drag>
+          <collisions>
+            <enabled>true</enabled>
+            <type>pixel</type>
+            <collision edge="all">
+              <stick />
+            </collision>
+            <collision class="wall">
+              <bounce />
+              <play sound="thud" />
+            </collision>
+            <collision object="tank2">
+              <bounce />
+            </collision>
+            <collision object="shell2">
+              <inc variable="tank2.score" />
+              <play sound="hit" />
+              <reset />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="forward">
+              <thrust>drive</thrust>
+            </action>
+            <action name="back">
+              <thrust>back</thrust>
+            </action>
+            <action name="left">
+              <turn direction="left">turnrate</turn>
+            </action>
+            <action name="right">
+              <turn direction="right">turnrate</turn>
+            </action>
+            <action name="fire">
+              <fire object="shell1" />
+              <play sound="fire" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+          </variables>
+        </object>
+
+        <!-- player two -->
+        <object name="tank2" class="tank">
+          <sprite>
+            <bitmap>
+              <row>.....*.....</row>
+              <row>.....*.....</row>
+              <row>.....*.....</row>
+              <row>**..***..**</row>
+              <row>**.*****.**</row>
+              <row>***********</row>
+              <row>**.*****.**</row>
+              <row>**.*****.**</row>
+              <row>***********</row>
+              <row>**.......**</row>
+              <row>**.......**</row>
+              <scale>3</scale>
+              <color>color.cyan</color>
+            </bitmap>
+          </sprite>
+          <position><x>window.right - 40 - tank2.width</x><y>window.height.center - tank2.height / 2</y></position>
+          <heading>270</heading>
+          <drag>drag</drag>
+          <collisions>
+            <enabled>true</enabled>
+            <type>pixel</type>
+            <collision edge="all">
+              <stick />
+            </collision>
+            <collision class="wall">
+              <bounce />
+              <play sound="thud" />
+            </collision>
+            <collision object="tank1">
+              <bounce />
+            </collision>
+            <collision object="shell1">
+              <inc variable="tank1.score" />
+              <play sound="hit" />
+              <reset />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="forward">
+              <thrust>drive</thrust>
+            </action>
+            <action name="back">
+              <thrust>back</thrust>
+            </action>
+            <action name="left">
+              <turn direction="left">turnrate</turn>
+            </action>
+            <action name="right">
+              <turn direction="right">turnrate</turn>
+            </action>
+            <action name="fire">
+              <fire object="shell2" />
+              <play sound="fire" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+          </variables>
+        </object>
+
+        <!-- one shell each, out of play until it is fired -->
+        <object name="shell1" class="shell">
+          <sprite>
+            <rectangle>
+              <width>4</width>
+              <height>4</height>
+              <color>color.yellow</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <velocity><y>-shellspeed</y></velocity>
+          <hidden>true</hidden>
+          <collisions>
+            <enabled>false</enabled>
+            <collision edge="all">
+              <die />
+            </collision>
+            <collision class="wall">
+              <die />
+            </collision>
+            <collision object="tank2">
+              <die />
+            </collision>
+          </collisions>
+        </object>
+        <object name="shell2" class="shell">
+          <sprite>
+            <rectangle>
+              <width>4</width>
+              <height>4</height>
+              <color>color.cyan</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <velocity><y>-shellspeed</y></velocity>
+          <hidden>true</hidden>
+          <collisions>
+            <enabled>false</enabled>
+            <collision edge="all">
+              <die />
+            </collision>
+            <collision class="wall">
+              <die />
+            </collision>
+            <collision object="tank1">
+              <die />
+            </collision>
+          </collisions>
+        </object>
+
+        <object name="score1">
+          <sprite>
+            <text>
+              <number>tank1.score</number>
+              <size>40</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - 80</x><y>margin</y></position>
+        </object>
+        <object name="score2">
+          <sprite>
+            <text>
+              <number>tank2.score</number>
+              <size>40</size>
+              <color>color.cyan</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center + 80 - score2.width</x><y>margin</y></position>
+        </object>
+      </objects>
       <inputs>
         <input button="w"><trigger object="tank1" action="forward" /></input>
         <input button="s"><trigger object="tank1" action="back" /></input>
@@ -425,18 +390,40 @@
       </conditions>
     </state>
     <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text>
+              <content>PAUSED</content>
+              <size>100</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="paused" />
+        <show state="playing" />
       </shows>
       <inputs>
         <input button="space p escape"><pop /></input>
       </inputs>
     </state>
     <state name="wins1">
+      <objects>
+        <object name="wins1">
+          <sprite>
+            <text>
+              <content>YELLOW WINS</content>
+              <size>90</size>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - wins1.width / 2</x><y>window.height.center - wins1.height / 2 + (-60)</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="wins1" />
-        <show object="score1" />
-        <show object="score2" />
+        <show state="playing" />
         <show object="again" />
       </shows>
       <inputs>
@@ -444,10 +431,20 @@
       </inputs>
     </state>
     <state name="wins2">
+      <objects>
+        <object name="wins2">
+          <sprite>
+            <text>
+              <content>BLUE WINS</content>
+              <size>90</size>
+              <color>color.cyan</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - wins2.width / 2</x><y>window.height.center - wins2.height / 2 + (-60)</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="wins2" />
-        <show object="score1" />
-        <show object="score2" />
+        <show state="playing" />
         <show object="again" />
       </shows>
       <inputs>

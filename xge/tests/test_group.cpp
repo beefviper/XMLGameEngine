@@ -661,6 +661,7 @@ TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups
 
 TEST_CASE("every lane of frogger and space race is a group of the members it had", "[group][shipped]")
 {
+	// The lanes are the playing state's own, so their names are paths: playing.logrow2.1.
 	struct Lane { const char* group; int members; };
 	const Lane frogger[] = {
 		{ "homes", 5 }, { "pads", 5 }, { "hedges", 6 },
@@ -674,9 +675,9 @@ TEST_CASE("every lane of frogger and space race is a group of the members it had
 		int found = 0;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.groupName != lane.group) { continue; }
+			if (object.groupName != "playing." + std::string(lane.group)) { continue; }
 			++found;
-			CHECK(object.name == std::string(lane.group) + "." + std::to_string(found));
+			CHECK(object.name == "playing." + std::string(lane.group) + "." + std::to_string(found));
 		}
 		INFO(lane.group);
 		CHECK(found == lane.members);
@@ -685,7 +686,7 @@ TEST_CASE("every lane of frogger and space race is a group of the members it had
 	Game race{ "descriptions/spacerace.xml" };
 	for (int lane = 1; lane <= 9; ++lane)
 	{
-		const std::string group = "debris" + std::to_string(lane);
+		const std::string group = "playing.debris" + std::to_string(lane);
 		const auto members = std::count_if(race.getCurrentObjects().begin(), race.getCurrentObjects().end(),
 			[&](const Object& object) { return object.groupName == group; });
 		INFO(group);

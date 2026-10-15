@@ -394,6 +394,14 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><objects><object name=\"rock\" /></objects></scene></scenes>" + kSpace + "</state>"),
 			"rock");
 	}
+	SECTION("a take of a numbered member of a group, which only the group's name or a member's own name can take")
+	{
+		const std::string rocks = "<group name=\"rocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+			"<member><position><x>0</x><y>0</y></position></member><member><position><x>20</x><y>0</y></position></member></group>";
+		fails(gameXml("<state name=\"playing\"><scenes><objects>" + rocks + "</objects>"
+			"<scene name=\"room1\"><objects><object name=\"rocks.2\"><hidden>true</hidden></object></objects></scene></scenes>" + kSpace + "</state>"),
+			"a numbered member of a group");
+	}
 	SECTION("a scene no state has")
 	{
 		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\" /></scenes>"
@@ -404,4 +412,24 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 	{
 		fails(gameXml("<state name=\"playing\"><shows><show state=\"plying\" /></shows>" + kSpace + "</state>"), "there is no state of that name");
 	}
+}
+
+TEST_CASE("a game variable written with a dot stays that variable beside a state's object of its first part", "[scenes]")
+{
+	// ball.radius is the game's; the playing state's ball is another thing.
+	Loaded loaded(gameXml("<state name=\"playing\"><objects>" + box("ball", 0, 0, "<x>ball.radius</x>") + "</objects>" + kSpace + "</state>",
+		{}, "<variable name=\"ball.radius\">4</variable>"));
+	CHECK(loaded.game.getObject("playing.ball").velocity.x == Approx(4));
+}
+
+TEST_CASE("a game whose states own every object has no <objects> of its own", "[scenes]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	std::string xml = gameXml("<state name=\"playing\"><objects>" + box("ball", 0, 0, "<x>1</x>") + "</objects>" + kSpace + "</state>");
+	const std::string marker = "<objects>" + box("marker", 0, 0) + "</objects>";
+	xml.replace(xml.find(marker), marker.size(), "");
+	Loaded loaded(xml, backend);
+	REQUIRE(loaded.game.getCurrentObjects().size() == 1);
+	loaded.frames(5);
+	CHECK(loaded.game.getObject("ball").position.x == Approx(5));
 }

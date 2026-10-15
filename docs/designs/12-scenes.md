@@ -1,6 +1,6 @@
 # Scenes
 
-**Status:** Idea, nothing built. First written 2026-10-14 as "rooms"; renamed and reshaped with the author's direction on 2026-10-15.
+**Status:** Built 2026-10-15 (the reference is [readme: Scenes](../readme.md#scenes)). First written 2026-10-14 as "rooms"; renamed and reshaped with the author's direction on 2026-10-15.
 
 ## What we looked for
 
@@ -9,7 +9,7 @@ A game made of several places, one screen each: Berserk's four rooms, Pitfall's 
 - **Modes** of the program: an attract screen, an options menu, the main game, pause, game over. A stack of these is what a state machine is for, and `<push>` and `<pop>` say it well ([states-and-conditions](07-states-and-conditions.md)).
 - **Places**: room1 to room4, screen1 to screen4, wave1 to wave3. They are states only because there is nowhere else to put a place.
 
-What the second job costs, read from the games on `working` at 771ae06:
+What the second job cost, read from the games on `working` at 771ae06, before the games were rewritten on scenes:
 
 - **Copies.** Every object is global, so a room's walls, robots and tally are written once per room under new names (`walls1` to `walls4`, `robots1left`, `tally3`), and each room state lists them, resets them and pops to the next (`berserk.xml`, the states from line 1398). Kaboom writes its bomber, its bombs, its label and its state three times, differing in a speed and a drop rate. Roughly 600 of Berserk's 1,613 lines and 200 of Kaboom's 654 are the second and later copies (estimated from the line ranges, not counted tag by tag).
 - **No pause over a place.** A paused state cannot show the room behind it without the room moving, because being shown is what makes an object move and collide; so pause shows only the HUD.
@@ -29,7 +29,7 @@ This is the "numbered bundles" item of [open work](58-open-work.md). The author 
 
 The name: `room` fits Berserk and Adventure, `screen` Pitfall, `wave` Kaboom. **`scene`** is the general word, and it sharpens what a state is: a mode of operation, which may hold scenes.
 
-## Proposed
+## Chosen
 
 ```xml
 <state name="playing">
@@ -87,16 +87,20 @@ Between scenes, it goes through the state's own objects (the score, the lives, w
 
 Kept, since every game depends on them. With states and scenes owning objects, they become the outermost owner: what every state sees. Whether a game still needs any once states own their objects is a question for later, not a reason to change the 24 games now.
 
-## What it touches
+## How it was built
 
-- **Engine.** An object gets its owner (game, state, scene); the game gets a current scene per state; "running" and "drawn" are worked out from the owner and the state stack instead of one flag. The reader builds owned objects as it builds a group's members, and resolves names inside out. `enter` and `reset scene` are verbs in `verbs.cpp`.
-- **Schema, generator, tests.** `<objects>` and `<scenes>` in a state in `xgedef.xsd`, with a kit piece taken in a scene allowed to be partial (as `innerGroupType` is); `data.xsl` writes a scene as it writes a group (a function per scene, one taking another by value); `test_generated_games.cpp` compares owners and scenes field by field. Berserk, Kaboom and Pitfall rewritten, and Adventure given more scenes, as the games that prove it.
+- **One layout pass, before anything is worked out.** `layOutScenes` (`scenes.cpp`) turns the states' and scenes' objects into ordinary objects among the game's, each with its owner (state, scene) and its path as its name, and writes every name the file uses out in full. Everything after it (evaluation, the frame, the generated programs) sees plain objects with owners, so a generated game gets scenes from the same code: `data.xsl` writes the state's objects, the kit and each scene as data (`take(...)`, `own(...)` in `game_parts.h`), not the layout.
+- **Takes change whole sprites.** The note above said a sprite of the same shape changes only what it gives, as in a group. A take replaces the sprite of that name instead: a piece's sprite is already finished, and a whole sprite reads plainly (the field's walls in green are a green wall). Only the parts listed in the readme can change (position and velocity halves, `<hidden>`, `<drawn>`, `<variables>`, sprites); a scene that needs more owns its own object.
+- **`state.name` names a piece in every scene.** Each scene object also answers to `playing.rock`, so a rule of the state (the hero's shot) can say `rock` and mean whichever room's rock it meets. Where a short name is the end of several paths, the shortest wins; two as short stop the load.
+- **Shadowing stops the load.** A scene object named like one of its state's, or a state's or scene's like one of the game's, would make a plain name read two ways, so it is refused rather than ruled on.
+- **Running, drawn and seen:** running is owned by the current state (and its current scene) or shown by it; `<drawn>false</drawn>` runs unseen; `<show state="...">` draws another state still, under the current one (the first of the open questions, settled: a tag in `<shows>`, and a still state's timers do not count).
+- **What is carried belongs to where it is carried.** On `<enter>`, an object a state-level carrier holds moves to the new scene; a reset gives it back to the scene it started in.
+- **`<random>`** is drawn again whenever its object comes back into play (reset, `<reset scene>`, `<reveal>`, `<release>`, `<fire>`), not on entering a scene, which finds the scene as it was left.
 
 ## Open
 
-- **Drawing what is below**: how a state says it (a tag in its `<shows>`, or an attribute), and whether a still scene's timers count.
-- **Passing a value between states**: a condition handing the state it pushes the object that triggered it (Space Race's two win screens, high-score entry), or the destination reading a variable of the state it came from by path (`playing.score`). The second needs nothing new once states own objects.
-- **`<random>` drawn again more easily.** Today it is drawn at load and again when its object is reset (`<reset />`, `<reset object>`, a game reset); a timer's interval is drawn every round. Entering a scene draws nothing. Open: whether entering a scene fresh (or `<reset scene>`) draws again, and whether a command should draw again without moving the object back.
+- **Passing a value between states**: the destination reads the source by path (`playing.score`), which works now. A condition handing the state it pushes the object that triggered it (Space Race's two win screens, high-score entry) is not built.
+- **Drawing again on entry**: whether entering a scene fresh should draw its `<random>`s again (today only `<reset scene>` does), and whether a command should draw again without moving the object back.
 - **A map of exits** on the scene (`<exit edge="right" scene="screen2" />`), as a shorthand for the edge-rule-plus-`<enter>` pattern, if Pitfall's 255 screens or Adventure's map make it worth a second spelling. Grid-map level data ([ideas](57-ideas.md)) would sit inside a scene.
-- **Who entered, and from which side**, beyond what the state's objects already carry.
-- A state with no `<scenes>` is a game as today; every shipped game keeps working unchanged.
+- **Who entered, and from which side**, beyond what the state's own objects already carry.
+- **The game's own objects**: kept; whether a game still needs any once states own their objects is left for later.

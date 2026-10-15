@@ -15,7 +15,7 @@ xgecli --game pong --window raylib --xml pugixml
 xgecli pong -a sdl2          # sounds played by SDL2 (or -a none for silence)
 ```
 
-The game is a bare argument or `-g` / `--game`; both are looked for the same way: as given (a path, or a name in the current directory), then its file name in the working directory, then its file name in `descriptions/` of the games folder (the first folder with both `descriptions/` and `assets/` in it, looking at the working directory, the program's folder and the folder above it, each itself and then its `games/`; the program then runs from the games folder, so it can be started from anywhere, and a game's asset paths are relative to it). If it is not found the program prints an error and exits. `-w` / `--window` picks the window library (`sfml3`, `raylib`, `sdl2`, `opengl`; default `sfml3`) `-x` / `--xml` the XML library (`xerces`, `tinyxml2`, `pugixml`, `rapidxml`; default `xerces`) and `-a` / `--audio` the sound library (`sfml3`, `raylib`, `sdl2`, `none`; default `sfml3`), not case sensitive. Only the libraries the program was built with can be named ([Backends](#backends)): a default build has `sfml3` and `xerces` (and `none` for sound), `--help` lists what there is, and another is an error that says which there are. Any sound library goes with any window library. A short option takes its value attached or after a space (`-gpong`, `-g pong`); a long option needs the space (`--game pong`, not `--game=pong`). Each option can be given once, the game only once (bare or with `-g`), and `-h` / `--help` prints the usage. The program starts by printing the file, window library, XML library and sound library it chose, one to a line. See [cli](designs/52-cli.md). Shipped games: `games/descriptions/pong.xml`, `games/descriptions/breakout.xml`, `games/descriptions/spaceinvaders.xml`, `games/descriptions/spaceinvaders2.xml` (the same game drawn from an SVG sprite sheet), `games/descriptions/frogger.xml`, `games/descriptions/spacerace.xml` (two players, W/S and Up/Down, first to two points), `games/descriptions/kaboom.xml` (A/D or Left/Right; the Mad Bomber paces the rooftop and drops bombs as he goes, catch them through three waves, three missed bombs end the game, 90 points win), `games/descriptions/freeway.xml` (two players, W/S and Up/Down, first to five crossings), `games/descriptions/depthcharge.xml` (A/D or Left/Right to move, Space to drop, Space to start; sink all nine submarines before eight charges are wasted) `games/descriptions/astrosmash.xml` (A/D or Left/Right to move, Space to fire, Space to start; shoot 20 rocks before five land) and `games/descriptions/lunarlander.xml` (Up or W for the main thruster, Left/Right for the side ones, Space to start; set the lander down on the green pad slower than the safe speed, with fuel to spare, and do not touch anything else), `games/descriptions/asteroids.xml` (Left/Right or A/D turn, Up or W thrusts, Space fires; break every rock before three ships are lost), `games/descriptions/berserk.xml` (W A S D or the arrows walk the man and set the way he faces, Space fires that way, one shot at a time, P or Escape pauses, Space starts; four mazes of electrified walls with robots that patrol and fire at the man, a bonus for clearing a room, Evil Otto coming for him if he lingers, and an exit in each outer wall for the next room; after the arcade game Berzerk, see [games-classic](designs/54-games-classic.md)), `games/descriptions/demonattack.xml` (A/D or Left/Right, Space to start and to fire; a small game first written by another AI from the schema alone, see [games-classic](designs/54-games-classic.md); the demons fire back), `games/descriptions/pong_min.xml` (Pong with nothing but two paddles and a ball, W/S and Up/Down, a point puts the ball back in the middle; the game [`--generate windows-cpp`](#generating-a-program) was grown on), `games/descriptions/frostbite.xml` (W/S or Up/Down jump between the shore and four rows of drifting ice, A/D or Left/Right walk; land on white ice to build the igloo before the cold gets you, then walk in; see [timers](designs/09-timers.md)), `games/descriptions/galaxian.xml` (A/D or Left/Right, Space to start and to fire, P or Escape pauses; the fleet flies in on [paths](#paths) and dives at you, three ships; a new fleet when one is shot down), `games/descriptions/donkeykong.xml` (A/D or Left/Right walk, W/S or Up/Down climb the ladders, Space starts and jumps, P or Escape pauses; climb past Kong's barrels to Pauline, three times, with three lives), and five after Atari 2600 games ([games-atari](designs/56-games-atari.md#five-atari-2600-games)): `games/descriptions/pitfall.xml` (A/D or Left/Right run, Space starts and jumps, W/S climb, P or Escape pauses; four jungle screens, each a state, with logs, a tar pit, a crocodile pond, a fire, scorpions in the tunnel and a treasure on each, three minutes and three lives), `games/descriptions/missilecommand.xml` (W A S D or the arrows move the sight, Space launches, P or Escape pauses; the base `<aim>`s at the sight, a counter-missile bursts there, missiles `<chase>` the nearest city, three waves), `games/descriptions/combat.xml` (two players: W/S drive, A/D turn, F or Left Shift fires; Up/Down, Left/Right, Right Shift or Right Control; Space pauses; tanks with headings among walls, first to five hits), `games/descriptions/airseabattle.xml` (two players: A/D swing the gun and W fires; Left/Right and Up; Space pauses; four lanes of planes, two minutes, most hits wins, and the end screen says who) and `games/descriptions/megamania.xml` (A/D or Left/Right slide, Space fires, P or Escape pauses; three waves that wrap round the sides and drop bombs while the energy runs down, three ships); and `games/descriptions/adventure.xml` (W A S D or the arrows walk, Space puts down what is carried, P or Escape pauses, Space starts; one room of Adventure: `<carry />` the key to the castle gate, the sword to the dragon and the chalice into the hall).
+The game is a bare argument or `-g` / `--game`; both are looked for the same way: as given (a path, or a name in the current directory), then its file name in the working directory, then its file name in `descriptions/` of the games folder (the first folder with both `descriptions/` and `assets/` in it, looking at the working directory, the program's folder and the folder above it, each itself and then its `games/`; the program then runs from the games folder, so it can be started from anywhere, and a game's asset paths are relative to it). If it is not found the program prints an error and exits. `-w` / `--window` picks the window library (`sfml3`, `raylib`, `sdl2`, `opengl`; default `sfml3`) `-x` / `--xml` the XML library (`xerces`, `tinyxml2`, `pugixml`, `rapidxml`; default `xerces`) and `-a` / `--audio` the sound library (`sfml3`, `raylib`, `sdl2`, `none`; default `sfml3`), not case sensitive. Only the libraries the program was built with can be named ([Backends](#backends)): a default build has `sfml3` and `xerces` (and `none` for sound), `--help` lists what there is, and another is an error that says which there are. Any sound library goes with any window library. A short option takes its value attached or after a space (`-gpong`, `-g pong`); a long option needs the space (`--game pong`, not `--game=pong`). Each option can be given once, the game only once (bare or with `-g`), and `-h` / `--help` prints the usage. The program starts by printing the file, window library, XML library and sound library it chose, one to a line. See [cli](designs/52-cli.md). Shipped games: `games/descriptions/pong.xml`, `games/descriptions/breakout.xml`, `games/descriptions/spaceinvaders.xml`, `games/descriptions/spaceinvaders2.xml` (the same game drawn from an SVG sprite sheet), `games/descriptions/frogger.xml`, `games/descriptions/spacerace.xml` (two players, W/S and Up/Down, first to two points), `games/descriptions/kaboom.xml` (A/D or Left/Right; the Mad Bomber paces the rooftop and drops bombs as he goes, catch them through three waves, three missed bombs end the game, 90 points win), `games/descriptions/freeway.xml` (two players, W/S and Up/Down, first to five crossings), `games/descriptions/depthcharge.xml` (A/D or Left/Right to move, Space to drop, Space to start; sink all nine submarines before eight charges are wasted) `games/descriptions/astrosmash.xml` (A/D or Left/Right to move, Space to fire, Space to start; shoot 20 rocks before five land) and `games/descriptions/lunarlander.xml` (Up or W for the main thruster, Left/Right for the side ones, Space to start; set the lander down on the green pad slower than the safe speed, with fuel to spare, and do not touch anything else), `games/descriptions/asteroids.xml` (Left/Right or A/D turn, Up or W thrusts, Space fires; break every rock before three ships are lost), `games/descriptions/berserk.xml` (W A S D or the arrows walk the man and set the way he faces, Space fires that way, one shot at a time, P or Escape pauses, Space starts; four mazes of electrified walls with robots that patrol and fire at the man, a bonus for clearing a room, Evil Otto coming for him if he lingers, and an exit in each outer wall for the next room; after the arcade game Berzerk, see [games-classic](designs/54-games-classic.md)), `games/descriptions/demonattack.xml` (A/D or Left/Right, Space to start and to fire; a small game first written by another AI from the schema alone, see [games-classic](designs/54-games-classic.md); the demons fire back), `games/descriptions/pong_min.xml` (Pong with nothing but two paddles and a ball, W/S and Up/Down, a point puts the ball back in the middle; the game [`--generate windows-cpp`](#generating-a-program) was grown on), `games/descriptions/frostbite.xml` (W/S or Up/Down jump between the shore and four rows of drifting ice, A/D or Left/Right walk; land on white ice to build the igloo before the cold gets you, then walk in; see [timers](designs/09-timers.md)), `games/descriptions/galaxian.xml` (A/D or Left/Right, Space to start and to fire, P or Escape pauses; the fleet flies in on [paths](#paths) and dives at you, three ships; a new fleet when one is shot down), `games/descriptions/donkeykong.xml` (A/D or Left/Right walk, W/S or Up/Down climb the ladders, Space starts and jumps, P or Escape pauses; climb past Kong's barrels to Pauline, three times, with three lives), and five after Atari 2600 games ([games-atari](designs/56-games-atari.md#five-atari-2600-games)): `games/descriptions/pitfall.xml` (A/D or Left/Right run, Space starts and jumps, W/S climb, P or Escape pauses; four jungle screens, the scenes of one state built from a kit of pieces, with logs, a tar pit, a crocodile pond, a fire, scorpions in the tunnel and a treasure on each, three minutes and three lives), `games/descriptions/missilecommand.xml` (W A S D or the arrows move the sight, Space launches, P or Escape pauses; the base `<aim>`s at the sight, a counter-missile bursts there, missiles `<chase>` the nearest city, three waves), `games/descriptions/combat.xml` (two players: W/S drive, A/D turn, F or Left Shift fires; Up/Down, Left/Right, Right Shift or Right Control; Space pauses; tanks with headings among walls, first to five hits), `games/descriptions/airseabattle.xml` (two players: A/D swing the gun and W fires; Left/Right and Up; Space pauses; four lanes of planes, two minutes, most hits wins, and the end screen says who) and `games/descriptions/megamania.xml` (A/D or Left/Right slide, Space fires, P or Escape pauses; three waves that wrap round the sides and drop bombs while the energy runs down, three ships); and `games/descriptions/adventure.xml` (W A S D or the arrows walk, Space puts down what is carried, P or Escape pauses, Space starts; one room of Adventure: `<carry />` the key to the castle gate, the sword to the dragon and the chalice into the hall).
 
 The XML, window and sound libraries are chosen in C++ with `Game(file, XmlBackend)` and `Engine(game, WindowBackend, AudioBackend)`; `xgecli` passes what `-x`, `-w` and `-a` named, Xerces, SFML3 and SFML3 when they are not given. `xgegui` (the Qt application) takes the game the same way, `xgegui pong`, or opens a file dialog in `games/descriptions/` when none is named; its Options dialog picks the video library, the XML parser and the sound library. See [Backends](#backends).
 
@@ -39,7 +39,7 @@ So it plays as `xgecli` and `xgegui` do: the data is the engine's reading of the
 
 ## Game file layout
 
-A game file has one `<game>` root with four children, and two optional ones (`<sounds>` and `<paths>`), in this order, as enforced by [xgedef.xsd](../xge/xgedef.xsd):
+A game file has one `<game>` root with three children, and three optional ones (`<sounds>`, `<paths>` and `<objects>`, which a game whose states own all its objects leaves out), in this order, as enforced by [xgedef.xsd](../xge/xgedef.xsd):
 
 ```xml
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -48,10 +48,12 @@ A game file has one `<game>` root with four children, and two optional ones (`<s
   <variables> <variable name="...">...</variable> ... </variables>
   <sounds>    <sound name="..."> ... </sound> ... </sounds>   (optional)
   <paths>     <path name="..."> ... </path> ... </paths>      (optional)
-  <objects>   <object name="..."> ... </object> <group name="..."> ... </group> ... </objects>
+  <objects>   <object name="..."> ... </object> <group name="..."> ... </group> ... </objects>   (optional)
   <states>    <state name="..."> ... </state> ... </states>
 </game>
 ```
+
+The game's `<objects>` are seen by every state. A [`<state>`](#state) can own objects of its own, and hold [`<scenes>`](#scenes) that own theirs; the game's own objects are kept for what several states share (a game may need none of them once its states own their objects, which is left for later).
 
 ### Attributes and content
 
@@ -75,7 +77,7 @@ Wherever the content of an element is a number (a position, a velocity, a size, 
 </velocity>
 ```
 
-A value holds text or a tag, not both, and not two tags (`<x>5 <random .../></x>` is an error naming the element). A `<random>` is drawn at load and drawn again whenever its object comes back into play: it is reset (a `<reset />` in a collision, `<reset object>`, or a reset of the whole game), revealed (`<reveal>`), released (`<release>`) or fired (`<fire>`). So each Pong serve is new, and each rock released from a pool falls its own way. A `<random>` in a game-level variable is drawn once.
+A value holds text or a tag, not both, and not two tags (`<x>5 <random .../></x>` is an error naming the element). A `<random>` is drawn at load and drawn again whenever its object comes back into play: it is reset (a `<reset />` in a collision, `<reset object>`, `<reset scene>` of its scene, or a reset of the whole game), revealed (`<reveal>`), released (`<release>`) or fired (`<fire>`). So each Pong serve is new, and each rock released from a pool falls its own way. A `<random>` in a game-level variable is drawn once.
 
 - **Arithmetic written as tags**, an `<equation>` or a `<formula>`: the same sums as the expression text, with nothing left in a string for a tool to parse. They are value tags too, so they go wherever `<random>` does. See [Arithmetic as tags](#arithmetic-as-tags).
 
@@ -147,7 +149,7 @@ A step of an `<equation>` takes its operands as attributes and an operation insi
 
 ### `<variables>`
 
-Global named numbers. Each `<variable name="margin">30</variable>` becomes a constant that any expression in the file can use (for example `margin`, `ball.radius`). Names may contain dots. A name exprtk already has for a function (`floor`, `min`, `max`, `abs`, `sqrt`, ...) cannot be used: an expression reads it as the function and the load stops (`Expected a '(' at start of function call to 'floor'`), which is why Pitfall's tunnel floor is the variable `tunnel`. The content is a value, so `<variable name="b">a * 2</variable>` and `<variable name="start"><random min="1" max="3" /></variable>` both work. Declaring a name twice keeps the later value.
+Global named numbers. Each `<variable name="margin">30</variable>` becomes a constant that any expression in the file can use (for example `margin`, `ball.radius`). Names may contain dots, and a name written so is always that variable, even where its first part names an object (a state's `ball` and the game's `ball.radius`). A name exprtk already has for a function (`floor`, `min`, `max`, `abs`, `sqrt`, ...) cannot be used: an expression reads it as the function and the load stops (`Expected a '(' at start of function call to 'floor'`), which is why Pitfall's tunnel floor is the variable `tunnel`. The content is a value, so `<variable name="b">a * 2</variable>` and `<variable name="start"><random min="1" max="3" /></variable>` both work. Declaring a name twice keeps the later value.
 
 ### `<sounds>`
 
@@ -217,6 +219,7 @@ Children, in this order:
 | `<drag>` | no | A value from 0 up to (not including) 1: the fraction of its velocity the object loses every frame, after its thrust is added. Objects only |
 | `<facing>` | no | `up`, `down`, `left` or `right`: the way the object faces, without turning its picture. It follows the last `<move>`, `<hop>` or `<jump>` it makes, and a `<fire>` leaves the middle of that side moving that way, at the projectile's own speed: a man in a maze shoots the way he last walked, and an alien with `<facing>down</facing>` drops its bombs below it. A reset faces it the way it started. Objects and groups |
 | `<hidden>` | no | `true`: the object starts out of play (not drawn, no collisions, not counted by a condition's `remaining`) until a `<release>`, a `<reveal>` or a `<fire>` brings it in. Objects, and groups (after `<velocity>`) |
+| `<drawn>` | no | `false`: the object is in play (moves, collides, counts its timers) but is never drawn: an exit, a trigger zone, a `status` object that only holds variables. Objects and groups (after `<hidden>`); a [scene](#scenes) can change it on a piece it takes |
 | `<collisions>` | no | Left out, the object touches nothing (as `<enabled>false</enabled>`). Otherwise `<enabled>` (`true`/`false`), an optional `<lockstep>` (`true`), an optional `<type>` (`box`, the default, or `pixel`), then zero or more `<collision>` rules. See [Collisions](#collisions) |
 | `<actions>` | no | Named actions the object can perform, each `<action name="up"><move direction="up">step</move></action>`: the commands are what it does. States bind keys to these names |
 | `<variables>` | no | Variables owned by this object, each `<variable name="score">0</variable>`. Other expressions refer to them as `objectName.variableName`, e.g. `paddle1.score` |
@@ -501,8 +504,10 @@ Commands are tags, and where they are meaningful is what the table says. Any lis
 | `<drop />` | object `<action>` (on the press), collision, object timer | Puts down what the object carries, where it is. It is not picked up again until the two have stopped touching, so the carrier can walk off it |
 | `<die />` | collision | Disables the object's collisions and hides it; it stops moving and being drawn until something brings it back (`<fire>` re-launching a bullet, `<reset />`) |
 | `<reset />` | collision (screen edge or another object) | Puts the object back as it started: its starting position and velocity (the velocity is left alone while a held key is moving it), with any `<random>` in its start, or in its `<variables>`, drawn again. Pong's ball serves anew after every point |
-| `<reset />` | state input or condition | Full game reset: every object's position, velocity, variables, visibility and collisions go back to how they started (a bullet in flight is put away, a dead alien is back), and the state stack collapses to the first state |
+| `<reset />` | state input or condition | Full game reset: every object's position, velocity, variables, visibility and collisions go back to how they started (a bullet in flight is put away, a dead alien is back), and the state stack collapses to the first state; every [scene](#scenes) starts again, and each state's first scene is current |
 | `<reset object="name" />` | anywhere: collision, state input, condition, timer | Resets that one object (or every member or cell of a group, for its name) the same way. From a collision it acts on another object: Kaboom's bomb hitting the ground resets the wave's whole pool of bombs, the explosion |
+| `<reset scene="name" />` | anywhere: collision, state input, condition, timer | Puts every object of that [scene](#scenes) back as it started (with its `<random>`s drawn again), and its timers too; what was carried off from it comes back. Whether it is current does not change. Berserk's rooms come round again with their robots back |
+| `<enter scene="name" />` | anywhere: collision, state input, condition, timer | Makes that scene the current one of its state: the scene left stops where it is, and is found as it was when entered again. What one of the state's own objects carries goes with it. The name is a scene's, plain inside its state (`room2`) or as a path (`playing.room2`); a scene that does not exist stops the load |
 | `<inc variable="owner.variable" />` or `<inc variable="owner.variable">amount</inc>` | anywhere: collision, condition, state input, timer | Adds 1, or the amount (a value, so an expression works), to that variable and refreshes any text bound to it |
 | `<dec variable="owner.variable" />` or `<dec variable="owner.variable">amount</dec>` | anywhere: collision, condition, state input, timer | Takes 1, or the amount, off that variable and refreshes any text bound to it. The variable may go below zero; a condition with `<atmost>` is what notices it has run out |
 | `<move direction="up">step</move>` (also `down`, `left`, `right`) | collision, or an object `<action>` | In a collision: shifts the object (or everything in lockstep with it) once. In an object action: sets a held-key velocity (see [Input](#input)). The content is a value |
@@ -520,7 +525,7 @@ Commands are tags, and where they are meaningful is what the table says. Any lis
 | `<thrust burn="fuel">amount</thrust>` | object `<action>` | Like `<accelerate>`, but along the way the object faces instead of along an axis; `burn` works the same. Needs a `<heading>` on the object |
 | `<release object="name">count</release>` | collision (screen edge or another object) | Puts the first `count` (default 1) out-of-play objects of that name or group back in play, centered on the object running the rule, at their own starting velocity. Fewer left in the pool gives what is there. This is how a rock breaks into smaller ones |
 | `<push state="name" />` / `<pop />` | state input or condition | Push a state / pop back. The state named must be one of the game's. `<pop />` with only the first state left does nothing |
-| `<pop state="name" />` | state input or condition | This state goes and that one takes its place, so moving on (Kaboom's waves, Berserk's rooms) does not grow the stack |
+| `<pop state="name" />` | state input or condition | This state goes and that one takes its place, so moving on (Air-Sea Battle's end screens) does not grow the stack; moving between places of one state is `<enter scene>` |
 | `<trigger object="name" action="up" />` | state input | Runs one of that object's named `<action>`s. The object and the action must exist |
 | `<play sound="name" />` | anywhere: collision (screen edge or another object), object `<action>`, state input or condition | Plays one of the game's [sounds](#sounds). In an action or an input it plays on the press, not on the release; a sound that loops plays while the key is held. The game only asks for the sound; the engine plays everything asked for once the frame's keys, collisions and conditions have run |
 | `<silence sound="name" />` | anywhere `<play>` can go | Stops one of the game's sounds if it is playing: above all one that [loops](#sounds), which otherwise plays until something silences it |
@@ -541,67 +546,129 @@ The schema accepts some mistakes the engine could only ignore, so the loader ref
 
 ### `<state>`
 
-A state is one screen: a menu, the playfield, a pause screen, a game-over screen. Attribute: `name`. Children, in this order:
+A state is a mode of the program: a menu, the game being played, a pause screen, a game-over screen. Attribute: `name`. Children, in this order:
 
 | Element | Required | What it does |
 |---|---|---|
-| `<shows>` | yes | A list of `<show object="name" />`. Only these objects are drawn and updated while the state is current. `<show set="name" />` shows a shared [show set](#show-sets) |
+| `<objects>` | no | The state's own objects and groups, written as the game's are. They are in play (drawn, moving, colliding, counting their timers) whenever the state is the current one, with no `<show>`, in every scene of it |
+| `<scenes>` | no | The places the state is played in, one current at a time: see [Scenes](#scenes) |
+| `<shows>` | no | A list of `<show object="name" />`: objects of the game (or of another state) drawn and updated while the state is current, as if they were its own. `<show set="name" />` shows a shared [show set](#show-sets). `<show state="name" />` draws that state's objects, and those of its current scene, **still** underneath: not moving, not colliding, their timers not counting, so a pause or a game over is drawn over the frozen game |
 | `<inputs>` | yes | A list of `<input button="key">`, each holding the commands that key runs, e.g. `<push state="playing" />` or `<trigger object="paddle1" action="up" />`. `keys="name"` takes a shared [key set](#input) first; the state's own `<input>`s go over it |
 | `<conditions>` | no | A list of `<condition>`, checked every frame. `<condition set="name" />` checks a shared set there. See [Conditions](#conditions) |
 | `<timers>` | no | Timers that count while this is the current state. See [Timers](#timers) |
 
+```xml
+<state name="paused">
+  <objects>
+    <object name="paused"> ... </object>     <!-- the PAUSED text -->
+  </objects>
+  <shows>
+    <show state="playing" />                 <!-- the game, still, under it -->
+  </shows>
+  <inputs>
+    <input button="space"><pop /></input>
+  </inputs>
+</state>
+```
+
+What is drawn is drawn in two layers: first what is shown still (`<show state>`), then what is in play, each in the order the objects are written, a later one over an earlier (`drawFrame` in `window.h`, which a generated game calls too). A state's own objects come after its scenes' objects, so they are drawn over them.
+
+### Scenes
+
+A state that is played in several places (Berserk's rooms, Pitfall's jungle screens, Kaboom's waves, Adventure's castle and field) holds them as `<scenes>`: one place at a time is its **current scene**, and only its objects are in play, alongside the state's own.
+
+```xml
+<state name="playing">
+  <objects>
+    <object name="hero"> ... </object>                  <!-- in every scene -->
+  </objects>
+  <scenes>
+    <objects>                                           <!-- the kit: pieces scenes take -->
+      <object name="topwall" class="wall"> ... </object>
+      <group name="robots" class="robot"> ... </group>
+    </objects>
+    <scene name="room1">
+      <variables>
+        <variable name="pace">2</variable>                <!-- read inside as pace -->
+      </variables>
+      <objects>
+        <object name="topwall" />                       <!-- taken as it is -->
+        <group name="robots">                           <!-- taken and changed -->
+          <velocity><x>pace</x></velocity>
+        </group>
+        <object name="exit"> ... </object>               <!-- this scene's own -->
+      </objects>
+      <conditions> ... </conditions>                    <!-- checked while it is current -->
+      <timers> ... </timers>
+    </scene>
+    <scene name="room2" from="room1">                   <!-- room1's objects and variables -->
+      <variables>
+        <variable name="pace">3</variable>
+      </variables>
+    </scene>
+  </scenes>
+  ...
+</state>
+```
+
+- **The kit** is an optional `<objects>` at the top of `<scenes>`, written like any other. Its pieces are never in play themselves. A scene takes one by naming it in its own `<objects>`: empty, as it is; with parts inside, changed: whole `<sprite>`s (the sprite of that name is replaced), the `<x>` or `<y>` of its `<position>` or `<velocity>`, `<hidden>`, `<drawn>` and its `<variables>`. A piece is taken by a name written in the kit: an object's, a group's (the whole group) or a member's own `name`; a numbered member (`rocks.2`) cannot be taken alone. Anything else a scene's `<objects>` holds is its own, written in full.
+- **Each scene gets its own copies.** Two scenes that take the robots each have robots of their own, which move, die and are counted on their own.
+- **`from="room1"`** makes a scene start as a copy of an earlier one: its objects (what that scene took and owned) and its `<variables>`, which it can then take and change like kit pieces and add to. Conditions and timers are not copied.
+- **A scene's `<variables>`** are its own numbers, read by the objects it holds (a robot's speed in room2 is room2's `pace`).
+- **`<conditions>` and `<timers>`** in a scene are checked and counted only while it is current, after the state's own.
+- **Moving between scenes** is the command [`<enter scene="room2" />`](#commands), run wherever the move happens: an exit's collision rule, a condition on the score, a timer. What an object of the state carries goes with it into the new scene.
+- **A scene left stays as it was** (positions, variables, what was dropped there) until it is entered again. `<reset scene="room1" />` puts it back as it started. A game's `<reset />` starts every scene again and makes each state's first scene current.
+
+### Names
+
+A state's own objects are named by their path: `playing.hero`; a scene's by the state, the scene and the name, `playing.room1.robots`, and a member as before, `playing.room1.robots.3`. A scene's variable is `playing.room1.pace`. A name written in the file is looked for from the inside out, from where it is written: the scene's own, then its state's, then the game's, and last as the end of exactly one path (`room1.robots`, or `hero` for `playing.hero` anywhere). So the rules inside a scene say `robots` and mean their own, and a label at the game level can show `room2.tally.hits`.
+
+Each object of a scene also answers to `state.name` (`playing.robots`): the robots of every scene of the state. A state-level rule that says `robots` means them all, whichever scene is current. Where a short name could still mean two things (a `rock` in two states), the shortest path wins, and two as short stop the load (`'rock' could be playing.rock, practice.rock; write the path of the one meant`). A name given twice where both can be seen (a scene's object named like one of its state's, or a state's or a scene's named like one of the game's) stops the load too, as do two scenes of one name, a `from=` naming no scene before it, and a take of a piece neither the kit nor the `from=` scene has.
+
 ### Show sets
 
-Objects several states show are written once, as a named `<shows>` set at the top of `<states>` (with the `<keys>` and [`<conditions>`](#conditions) sets, before the first `<state>`), holding `<show>`s like a state's. A state takes a set with `<show set="name" />` among its own `<show>`s, one set to a `<show>`, and adds whatever else it shows. A set can take a set written before it. Pitfall's four screens share the jungle, Harry and the score; Berserk's rooms share the player and Otto, and take the score from a `hud` set that the pause and game-over screens use too:
+Objects several states show are written once, as a named `<shows>` set at the top of `<states>` (with the `<keys>` and [`<conditions>`](#conditions) sets, before the first `<state>`), holding `<show>`s like a state's. A state takes a set with `<show set="name" />` among its own `<show>`s, one set to a `<show>`, and adds whatever else it shows. A set can take a set written before it. Now that states own their objects, a set is for objects of the game that several states show: Air-Sea Battle's four end screens each draw the battle still and take TIME UP and "spacebar to play again" from one `end` set:
 
 ```xml
 <states>
-  <shows name="hud">
-    <show object="score" />
-    <show object="lives" />
+  <shows name="end">
+    <show object="timeup" />
+    <show object="again" />
   </shows>
-  <shows name="room">
-    <show object="player" />
-    <show object="otto" />
-    <show set="hud" />
-  </shows>
-  <state name="room1">
+  <state name="yellowwins">
+    <objects> ... </objects>                  <!-- its own words -->
     <shows>
-      <show object="walls1" />
-      <show set="room" />
+      <show state="battle" />
+      <show set="end" />
     </shows>
     ...
   </state>
-  <state name="paused">
-    <shows>
-      <show object="paused" />
-      <show set="hud" />
-    </shows>
-    ...
 ```
 
-A `<show>` names an `object` or a `set`, not both; a set named before it is written, or two sets with one name, are turned away when the game loads.
+A `<show>` names an `object`, a `set` or (in a state's own `<shows>`) a `state`, one of them; a set named before it is written, or two sets with one name, are turned away when the game loads.
 
-What a state shows is drawn in the order the objects are written in the file, a later one over an earlier, whatever order its `<show>`s are in (`drawFrame` in `window.h`, which a generated game calls too).
+What a state shows is drawn in the order the objects are written in the file, a later one over an earlier, whatever order its `<show>`s are in.
 
-The first state in the file is the starting state. States form a **stack**: `<push state="name" />` pushes a state, and `<pop />` pops back to the previous one. The starting state is never popped: a `<pop />` with only it left does nothing. `<pop state="name" />` puts that state in place of the current one (the starting state too), for a game that moves from one screen to the next.
+The first state in the file is the starting state. States form a **stack**: `<push state="name" />` pushes a state, and `<pop />` pops back to the previous one. The starting state is never popped: a `<pop />` with only it left does nothing. `<pop state="name" />` puts that state in place of the current one (the starting state too), for a game that moves from one screen to the next (Air-Sea Battle's clock running out puts the right end screen in its place); places inside one mode are [scenes](#scenes).
 
 ## Input
 
 An `<input button="w"><trigger object="paddle1" action="up" /></input>` names a key and the commands it runs. Objects never mention keys, and states never mention what an action does, so remapping a key means editing one attribute in one state. `button` can name several keys separated by spaces, `<input button="a left">`, for the same commands.
 
-**Key sets.** Bindings several states share are written once, as a named `<keys>` set at the top of `<states>` (before the first `<state>`), holding `<input>`s like a state's. A state takes one or more with `<inputs keys="bucket">` (several names separated by spaces, each over the one before), and its own `<input>`s go over the set's, key by key, so a state can use the set and still give a key a job of its own:
+**Key sets.** Bindings several states share are written once, as a named `<keys>` set at the top of `<states>` (before the first `<state>`), holding `<input>`s like a state's. A state takes one or more with `<inputs keys="walk">` (several names separated by spaces, each over the one before), and its own `<input>`s go over the set's, key by key, so a state can use the set and still give a key a job of its own:
 
 ```xml
 <states>
-  <keys name="bucket">
-    <input button="a left"><trigger object="bucket" action="left" /></input>
-    <input button="d right"><trigger object="bucket" action="right" /></input>
-    <input button="space p"><push state="paused" /></input>
+  <keys name="walk">
+    <input button="a left"><trigger object="hero" action="left" /></input>
+    <input button="d right"><trigger object="hero" action="right" /></input>
+    <input button="p escape"><push state="paused" /></input>
   </keys>
-  <state name="wave1"> ... <inputs keys="bucket" /> ... </state>
-  <state name="wave2"> ... <inputs keys="bucket" /> ... </state>
+  <state name="playing"> ... <inputs keys="walk" /> ... </state>
+  <state name="practice"> ... <inputs keys="walk" /> ... </state>
 ```
+
+No shipped game uses one now: each game's keys are bound by its one playing state.
 
 The shipped games share one convention: Space starts, pauses and unpauses, and plays again after a game over (in games where Space fires, such as Space Invaders, Astrosmash and Depth Charge, pausing is P or Escape, and Space still unpauses); player one plays on W, A, S and D (the arrow keys are a second way in the one-player games, and player two's keys in the two-player ones). The games written after Pong and Breakout also pause on P, and most of them on Escape; in Pong and Breakout Escape leaves the settings screen (S on the main menu).
 
@@ -682,7 +749,7 @@ A test with `variable=` has no number as well; an object or variable the game do
 
 Besides changing the state, a condition can `<inc>` and `<dec>` a variable, `<become>`, `<reveal>`, `<play>`, `<silence>` and `<trigger>`. A condition that changes the variable it reads can count and start over: Frostbite's `<condition object="bailey" variable="blue"><atleast>4</atleast>` turns the four rows of ice white again and takes 4 off the count.
 
-**Condition sets.** Conditions several states check are written once, as a named `<conditions>` set at the top of `<states>` (with the `<keys>` and `<shows>` sets, before the first `<state>`), holding `<condition>`s like a state's. A state takes a set with `<condition set="name" />` among its own conditions, and the set's conditions are checked right there, in order, as if written in its place; since the first condition that holds is the only one run in a frame, where the `<condition set>` stands matters. A set can take a set written before it. A `<condition set>` has nothing else, no test, no filter and no commands. Pitfall's four screens share how a screen ends:
+**Condition sets.** Conditions several states check are written once, as a named `<conditions>` set at the top of `<states>` (with the `<keys>` and `<shows>` sets, before the first `<state>`), holding `<condition>`s like a state's. A state takes a set with `<condition set="name" />` among its own conditions, and the set's conditions are checked right there, in order, as if written in its place; since the first condition that holds is the only one run in a frame, where the `<condition set>` stands matters. A set can take a set written before it. A `<condition set>` has nothing else, no test, no filter and no commands. No shipped game uses one now (the conditions several places shared are the playing state's, checked in every scene of it); two modes that end the same way would:
 
 ```xml
 <states>
@@ -691,19 +758,11 @@ Besides changing the state, a condition can `<inc>` and `<dec>` a variable, `<be
       <atmost>0</atmost>
       <push state="gameover" />
     </condition>
-    <condition class="treasure">
-      <remaining>0</remaining>
-      <push state="youwin" />
-    </condition>
   </conditions>
-  <state name="screen1">
+  <state name="playing">
     ...
     <conditions>
       <condition set="ending" />
-      <condition object="status" variable="screen">
-        <atleast>2</atleast>
-        <pop state="screen2" />
-      </condition>
     </conditions>
   </state>
 ```
@@ -713,7 +772,7 @@ Besides changing the state, a condition can `<inc>` and `<dec>` a variable, `<be
 1. **Parse and validate.** The XML backend loads the file. If the file names a schema, it is validated: Xerces does full XSD validation ("strong"); the other three backends use a small built-in validator for the subset of XSD this project uses ("weak", `xsd_lite`). `printGame()` reports which one ran.
 2. **Evaluate.** exprtk evaluates every value once (an expression text, or a value tag such as `<random>`, which is drawn here). Objects (a group's members and cells among them), their variables, states and sounds are built. Nothing here needs a window or a sound device.
 3. **Open the window and the sound.** `Engine` creates the window backend and the audio backend (if the sound library will not start, it prints a warning and the game plays silently), makes every sound into samples and hands them to the audio backend, measures each object's real size for drawing and collisions, finishes the position of any text or image that uses `objectName.width` or `objectName.height`, then pushes the first state. The program prints the game twice, once before this step (sizes and size-dependent positions shown as unknown) and once after.
-4. **Loop.** Each frame: read key changes and run the current state's bindings for them; count the frame towards the next picture of every shown object that has an [animation](#animation); count the frame on every [timer](#timers) of a shown object and of the current state, and run the ones that go off; set the velocity of every shown object on a [path](#paths) for its part of the path (starting its next leg, and running that leg's commands, when one is done); change every shown object's velocity by its acceleration and held thrust; run the screen-edge rules; make any queued hops; lend what is carried its carrier's motion; move every shown object by its velocity, and by what it is being carried at, running the object-against-object rules at each touch on the way (per frame, not scaled by time); put each carried thing where it is held; check conditions; play the sounds the frame asked for, and start or stop its loops; clear; draw shown objects; present.
+4. **Loop.** An object is *shown* (in play) when it is visible and is the current state's own, or its current scene's, or one the state `<show>`s. Each frame: read key changes and run the current state's bindings for them; count the frame towards the next picture of every shown object that has an [animation](#animation); count the frame on every [timer](#timers) of a shown object, of the current state and of its current scene, and run the ones that go off; set the velocity of every shown object on a [path](#paths) for its part of the path (starting its next leg, and running that leg's commands, when one is done); change every shown object's velocity by its acceleration and held thrust; run the screen-edge rules; make any queued hops; lend what is carried its carrier's motion; move every shown object by its velocity, and by what it is being carried at, running the object-against-object rules at each touch on the way (per frame, not scaled by time); put each carried thing where it is held; check conditions (the state's, then its current scene's); play the sounds the frame asked for, and start or stop its loops; clear; draw what a `<show state>` shows still, then the shown objects, each but those that are not `<drawn>`; present.
 
 ## Backends
 
@@ -751,7 +810,8 @@ The library is static by default: each program has the engine's code copied into
 | `game_xml.cpp` | Walk the parsed XML tags into a `GameData` (`game_data.h`: raw window/variable/object/state data, `RawValue`, `RawCommand`, `RawSprite`), `readGame()`; a `<group>` is read here as one raw object per member. `Game(GameData)` works one out, so `game.cpp` reads no XML |
 | `game_expr.cpp` | exprtk symbol table and evaluation of raw values (expressions, `<random>`, `<equation>`, `<formula>`) into `Object`s and `State`s |
 | `command.cpp` | Turn raw command tags into typed `Command`s; the table of arithmetic operations (`operationShape`) and a value printed as text (`valueText`) |
-| `game.cpp` | The interpreter: objects, state stack, conditions, resets, paths (`follow`, `applyPaths`), and the answers to `FrameRules` (what the file says happens at an edge, on a touch, which rules hold), which it carries out through `CommandExecutor`. It does none of the frame's work itself |
+| `scenes.cpp` | `layOutScenes`, run first by `Game`'s constructor on data read from a file or written by a generated program alike: makes each state's and scene's objects (takes from the kit, `from=`, changes), names them by their path, adds the scenes' variables, and writes every name the game uses out in full, looked for from the inside out |
+| `game.cpp` | The interpreter: objects, state stack, current scenes (`enterScene`, `resetScene`, what runs and what is drawn still), conditions, resets, paths (`follow`, `applyPaths`), and the answers to `FrameRules` (what the file says happens at an edge, on a touch, which rules hold), which it carries out through `CommandExecutor`. It does none of the frame's work itself |
 | `frame.cpp` | `playOneFrame`: the order every frame runs in (animations, timers, paths, climbing, pull and thrust, the window edges, the move with its sweep, sticks, conditions) and the moving, asking a `FrameRules` (`frame.h`) what the game says at each moment. The engine's `Game` answers from the file; a generated game ([prototype](designs/40-generator.md#prototype-the-game-as-decisions-on-the-engines-modules)) answers in code |
 | `verbs.cpp` | What a verb does to an `Object` once something has decided it happens (`bounce`, `deflect`, `stick`, `wrap`, `ride`, `die`, `stop`, `restart`, `holdMove`), and making an object (`makeObject`, `startAt`); `CommandExecutor` and generated games both call them |
 | `random.cpp` | The one random number source (`seedRandom`, `randomBetween`, `fixRandomSeed`), drawn from by a `<random>` and by generated games alike |
@@ -767,7 +827,7 @@ The library is static by default: each program has the engine's code copied into
 | `engine_backends.cpp` | Engine's constructor that picks the window and sound libraries by name, through the factories; apart so a program built for one library leaves the factories out |
 | `object.h`, `states.h`, `color.cpp`, `keycode.cpp` | Data model, named colors, key names |
 | `window_*.cpp`, `xml_*.cpp`, `xsd_lite.cpp` | Backends and the weak validator |
-| `xge/tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `ride`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), arithmetic as tags (`test_equations`: the three spellings agreeing, each operation in both forms, chains, nesting, step names, every rejection with its message, a divisor of 0 at load and while running, both schema checkers, and Pong's and Breakout's titles), groups (`test_group`: expansion, overrides, names, lockstep, columns and rows with what a row, column or cell changes, gaps, picks, clashes, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about a block of cells and not about that game), the built-in font, the command line and the data folder search, sound (`test_sound`: pitch names, the synthesizer, `<sounds>` and its rejections, Pong asking for its sounds, the eight games that were silent each having theirs and playing each, `Engine` and a recording `Audio`), the one path of drawn pictures and `<flip>` (`test_pictures`), timers, facing, jumps, `<reverse />`, looks, `<reveal>`, conditions that count, key sets, `<chase>` and `<aim>` (`test_gameplay_verbs`), `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), Breakout (`test_breakout`: the top row cracking at one hit and going at the next, and whole again after a restart; the sounds its ball asks for off a wall, the paddle and the bricks), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame , Demon Attack (`test_demonattack`: the three waves, a demon splitting in two, a big one taking two hits, bombs on the cannon, three cannons and game over), Berserk (`test_berserk`: the man's four looks and shots, robots patrolling and firing at the man, the exits and the room bonus, Otto chasing him, extra men, pausing and game over), paths and Galaxian (`test_galaxian`: steps, home, a start, a stagger, a step's commands, what ends a path, the mistakes, the fleet flying in, a dive that wraps and comes home, a new fleet), Frostbite (`test_frostbite`: jumps, rows turning blue, the igloo, the cold, drowning, the geese and the fish), Donkey Kong (`test_donkeykong`: standing on girders, walking off an open end, a leap's height and fixed arc, ladders up and down, a barrel's way down to the oil drum, a barrel jumped and one not, saving Pauline), and the five Atari games: Pitfall! (`test_pitfall`: screen to screen and round, a log, the tar pit leapt and fallen into, the crocodiles and their jaws, crossing the pond, the ladder, the treasures, the clock), Missile Command (`test_missilecommand`: missiles chasing cities and turning when one goes, a counter-missile bursting at the sight, a burst taking a missile, a city lost, the waves), Combat (`test_combat`: driving, backing and turning along the heading, a shell from the gun, a hit, a wall), Air-Sea Battle (`test_airseabattle`: the lanes going round, a gun swung and fired at an angle, a plane shot down for the right player and coming back, the clock, the winner) and Megamania (`test_megamania`: a wave wrapping, bombs, a shot, the energy, the cookies bouncing, the waves won), and Adventure (`test_adventure`: picking up and carrying, one thing at a time, putting down and walking off, the key opening the gate on its way, the sword and the dragon, the chalice home) |
+| `xge/tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `ride`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), arithmetic as tags (`test_equations`: the three spellings agreeing, each operation in both forms, chains, nesting, step names, every rejection with its message, a divisor of 0 at load and while running, both schema checkers, and Pong's and Breakout's titles), groups (`test_group`: expansion, overrides, names, lockstep, columns and rows with what a row, column or cell changes, gaps, picks, clashes, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about a block of cells and not about that game), the built-in font, the command line and the data folder search, sound (`test_sound`: pitch names, the synthesizer, `<sounds>` and its rejections, Pong asking for its sounds, the eight games that were silent each having theirs and playing each, `Engine` and a recording `Audio`), the one path of drawn pictures and `<flip>` (`test_pictures`), timers, facing, jumps, `<reverse />`, looks, `<reveal>`, conditions that count, key sets, `<chase>` and `<aim>` (`test_gameplay_verbs`), `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), Breakout (`test_breakout`: the top row cracking at one hit and going at the next, and whole again after a restart; the sounds its ball asks for off a wall, the paddle and the bricks), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, the pool of shots, `release`, wrapping, losing ships, winning) played frame by frame , Demon Attack (`test_demonattack`: the three waves, a demon splitting in two, a big one taking two hits, bombs on the cannon, three cannons and game over), Berserk (`test_berserk`: the man's four looks and shots, robots patrolling and firing at the man, the exits and the room bonus, Otto chasing him, extra men, pausing and game over), paths and Galaxian (`test_galaxian`: steps, home, a start, a stagger, a step's commands, what ends a path, the mistakes, the fleet flying in, a dive that wraps and comes home, a new fleet), Frostbite (`test_frostbite`: jumps, rows turning blue, the igloo, the cold, drowning, the geese and the fish), Donkey Kong (`test_donkeykong`: standing on girders, walking off an open end, a leap's height and fixed arc, ladders up and down, a barrel's way down to the oil drum, a barrel jumped and one not, saving Pauline), and the five Atari games: Pitfall! (`test_pitfall`: screen to screen and round, a log, the tar pit leapt and fallen into, the crocodiles and their jaws, crossing the pond, the ladder, the treasures, the clock), Missile Command (`test_missilecommand`: missiles chasing cities and turning when one goes, a counter-missile bursting at the sight, a burst taking a missile, a city lost, the waves), Combat (`test_combat`: driving, backing and turning along the heading, a shell from the gun, a hit, a wall), Air-Sea Battle (`test_airseabattle`: the lanes going round, a gun swung and fired at an angle, a plane shot down for the right player and coming back, the clock, the winner) and Megamania (`test_megamania`: a wave wrapping, bombs, a shot, the energy, the cookies bouncing, the waves won), Adventure (`test_adventure`: picking up and carrying, one thing at a time, putting down and walking off, the key opening the gate on its way, the sword and the dragon, the two rooms walked between, the chalice carried home from the field, the pause drawing the room still), Pong (`test_pong`: each state's own objects, the pause and the game over drawn over the game still), and states and scenes (`test_scenes`: a state's own objects, each scene's copies and `<enter>`, names from the inside out, scene variables, scoped class conditions, `<reset scene>`, what is carried going along, `<drawn>`, `<show state>`, and every mistake the loader turns away). Each game's tests also check what its states own and that its pause draws the game still |
 
 ## Known limitations
 
@@ -779,8 +839,9 @@ The library is static by default: each program has the engine's code copied into
 - A look is a whole picture; there is no way to recolour one. An object with a `<heading>` or an `<animation>` has no looks, and looks do not combine with an animation (an animated object that changes look).
 - `<facing>` is one of four directions; a picture does not turn with it (use `<heading>` for that).
 - Sound is short effects and little tunes, not music: one wave at a time per sound (no chords inside one sound; two sounds at once do play together), no looping background tune, no stopping a sound from the game file, no volume envelope beyond the click-free fade (a note does not decay like a plucked string), and no stereo. A sound is made when the window opens, so its notes cannot change with a variable while the game runs. It starts on the frame it is asked for, so it is as late as the sound library's buffer (a few hundredths of a second).
-- An object that is not visible is not moved and does not collide, whatever its velocity; that is how a bullet waits, unseen and still, to be fired. There are no hidden objects that still move and collide (an invisible trigger zone, an off-screen enemy on its way in); a game that wants one will need visibility and "in play" to be separate things.
-- An object's velocity and collisions belong to the object, not to a state: any state that shows it lets it move. There is no way to show the Space Invaders aliens standing still behind the menu and have them march only in `playing`; they start marching as soon as they are shown. See [designs/04](designs/07-states-and-conditions.md).
+- An object that is not visible is not moved and does not collide, whatever its velocity; that is how a bullet waits, unseen and still, to be fired. One that should run unseen (an exit, a trigger zone) is `<drawn>false</drawn>` instead.
+- A state drawn still under another (`<show state>`) is frozen whole: nothing of it animates or counts its timers, so a demo cannot play behind an attract screen. An object shown by `<show object>` in two states runs in both.
+- Going to a scene is always a command written where the move happens (an exit's rule, a condition); there is no map of exits, and nothing says which way the hero came in beyond where the state's own objects are. A value cannot yet be handed from one state to another other than by reading it by path (`playing.score`).
 - An object's own `<variable>` named `width` or `height` shadows its measured size (`objectName.width` then reads the variable). A non-colliding spelling is under consideration; see [designs/02](designs/04-values-and-names.md).
 - A text or image placed with `objectName.width` / `objectName.height` is re-placed only when the size of an object it names changes, so it is not re-centered after it has moved on its own, and other expressions (velocity, variables) see those sizes as 0 for unmeasured text and images.
 - Text is drawn with `assets/tuffy.ttf`, found relative to the directory the program runs from (the games folder, which the programs move into). If that file cannot be found, each backend prints `error: failed to load font: assets/tuffy.ttf - drawing text with the built-in 8x8 font instead` once, and draws every text with the font stored in the program: 8 by 8 pixel glyphs for printable ASCII (anything else is a `?`), scaled to about `<size>` / 16 in blocks tall (so a letter is 8 times that tall) and half as wide, so it is chunky and monospaced and its width differs from the real font's ([pictures](designs/30-pictures.md)).
@@ -791,7 +852,7 @@ The library is static by default: each program has the engine's code copied into
 - An `<svg>` is drawn once, when the game loads, at one scale: to show one at two sizes, make two sprites. A pixel collision counts any partly transparent edge pixel as solid. An animated object cannot have looks, so an animated alien cannot change picture on a hit; an explosion would be a pool released where it died. The banking, hit-flash, charged-bolt, explosion and saucer pictures on the Space Invaders 2 sheet are not used yet (see [pictures](designs/30-pictures.md)).
 - An animation has one interval for all its frames, and counts frames of the game, not time (see [Animation](#animation)). There is no way yet to show a picture that depends on something other than time (a variable, the direction of travel, a hit), to run an animation once and stop, or to start it from a collision.
 - Each cell of a group is its own object with its own count of frames. The cells stay in step because they start together (at load, and again at every reset) and only count while shown.
-- A `<random>` is drawn when the game loads and again only when its object comes back into play: a reset, a `<reveal>`, a `<release>` or a `<fire>` (see [Values](#values)). A `<random>` in a game-level variable is drawn once, and entering a state draws nothing. There is no command that draws again without putting the object back in play, and nothing in the language creates a new object while the game runs, so things that fall are a fixed set that cycles, or a pool that is fired from, released or revealed. A `<timer>`'s own interval is drawn again every round.
+- A `<random>` is drawn when the game loads and again only when its object comes back into play: a reset (of it, of its [scene](#scenes), or of the game), a `<reveal>`, a `<release>` or a `<fire>` (see [Values](#values)). A `<random>` in a game-level or scene variable is drawn once, and entering a state or a scene draws nothing. There is no command that draws again without putting the object back in play, and nothing in the language creates a new object while the game runs, so things that fall are a fixed set that cycles, or a pool that is fired from, released or revealed. A `<timer>`'s own interval is drawn again every round.
 - A hop is a jump, not a slide: the object is simply one step away, with no animation between and nothing touched on the way (a step is meant to be one lane). The arcing jump is `<leap>`.
 - `ride()` lends velocity one frame at a time and only while touching. It is not attached: an object riding something that meets a screen edge is handled by that edge's rule like any other (Frogger's frog loses a life), and nothing pushes it into a wall.
 - A pair in which nothing moves is not looked at (see the collision rules above), so a rule against something that stands still runs only when the object moves, rides something, hops or lands from a jump.

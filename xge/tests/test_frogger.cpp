@@ -374,11 +374,13 @@ TEST_CASE("dec takes a life off the bound text as well as the variable", "[frogg
 {
 	Table table;
 
-	table.game.decrementText("frog.lives");
+	// The frog is the playing state's own, so its full name is the one a
+	// <dec variable="frog.lives" /> in the game is loaded as.
+	table.game.decrementText("playing.frog.lives");
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.game.getObject("livesvalue").spriteParams.at(1) == "2");
 
-	table.game.incrementText("frog.lives");
+	table.game.incrementText("playing.frog.lives");
 	CHECK(table.lives() == 3.0f);
 	CHECK(table.game.getObject("livesvalue").spriteParams.at(1) == "3");
 }
@@ -464,4 +466,71 @@ TEST_CASE("an object only wraps once it has gone right off the screen", "[frogge
 	other.position.x = -36.0f - 2.0f; // gone off the left
 	table.frames(1);
 	CHECK(other.position.x == -38.0f + (kWindowWidth + 36.0f) - 1.5f);
+}
+
+TEST_CASE("each state has its own objects: the title, the board, the signs", "[frogger][states]")
+{
+	Game game{ "descriptions/frogger.xml" };
+	game.setCurrentState("mainmenu");
+	CHECK(game.isShown(game.getObject("title")));
+	CHECK_FALSE(game.isShown(game.getObject("frog")));
+	CHECK_FALSE(game.isStill(game.getObject("frog")));
+
+	game.pushState("playing");
+	CHECK(game.getObject("frog").name == "playing.frog");
+	CHECK(game.getObject("carrow9.1").name == "playing.carrow9.1");
+	CHECK(game.isShown(game.getObject("frog")));
+	CHECK(game.isShown(game.getObject("carrow9.1")));
+	CHECK(game.isShown(game.getObject("livesvalue")));
+	CHECK_FALSE(game.isShown(game.getObject("title")));
+	CHECK_FALSE(game.isShown(game.getObject("paused.paused")));
+}
+
+TEST_CASE("paused, the board is drawn still underneath and nothing on it moves", "[frogger][states]")
+{
+	Table table;
+	Object& car = table.game.getObject("carrow9.1"); // +3 a frame
+	const float x = car.position.x;
+
+	table.game.pushState("paused");
+	table.frames(30);
+	CHECK(car.position.x == x);
+	CHECK(table.game.isStill(car));
+	CHECK(table.game.isStill(table.frog()));
+	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+
+	table.game.popState();
+	table.frames(1);
+	CHECK(table.game.isShown(car));
+	CHECK(car.position.x == x + 3.0f);
+}
+
+TEST_CASE("game over and the win draw the board still, with their own words over it", "[frogger][states]")
+{
+	Table table;
+	for (int i = 0; i < 3; ++i)
+	{
+		table.place(3, 2);
+		table.hop("up"); // into a hedge
+		table.frames(1);
+	}
+	REQUIRE(table.game.getCurrentState().name == "gameover");
+	CHECK(table.game.isStill(table.frog()));
+	CHECK(table.game.isStill(table.game.getObject("pads.1")));
+	CHECK(table.game.isShown(table.game.getObject("gameovertext")));
+	CHECK(table.game.isShown(table.game.getObject("continue")));
+	CHECK_FALSE(table.game.isShown(table.game.getObject("youwin.youwin")));
+
+	Table won;
+	for (int i = 0; i < 5; ++i)
+	{
+		won.place(static_cast<float>(2 + 2 * i), 2);
+		won.hop("up");
+		won.frames(1);
+	}
+	REQUIRE(won.game.getCurrentState().name == "youwin");
+	CHECK(won.game.isStill(won.frog()));
+	CHECK(won.game.isStill(won.game.getObject("homes.5")));
+	CHECK(won.game.isShown(won.game.getObject("youwin.youwin")));
+	CHECK(won.game.isShown(won.game.getObject("continue")));
 }

@@ -3,6 +3,25 @@
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
+<!--
+  Pong for two players: a paddle each, a ball between, and the first to
+  fifteen points wins.
+
+  W and S move the left paddle, the arrow keys the right one (it can go
+  left and right too), Space starts, pauses and plays again, S on the title
+  opens the settings and Escape leaves them.
+
+  How it is written:
+  * Each state has the objects it shows: the title its name, playing the
+    ball, the paddles and the scores, paused its PAUSED and game over its
+    two lines. The logo is the game's own, as the title and the settings
+    both show it.
+  * The ball <bounce>s off the top and the bottom, <deflect>s off a paddle,
+    and off either side gives the other player a point and is served again
+    (<reset />, its randoms drawn again).
+  * A condition on the paddles' class ends the game at fifteen.
+  * Paused and game over draw the game still underneath (<show state>).
+-->
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
   <!-- window -->
   <window name="Pong">
@@ -17,7 +36,6 @@
     <variable name="margin">30</variable>
     <variable name="text.size">256</variable>
     <variable name="logo.radius">100</variable>
-    <variable name="ball.radius">10</variable>
     <variable name="width">30</variable>
     <variable name="height">150</variable>
     <variable name="step">2</variable>
@@ -58,26 +76,6 @@
   </sounds>
   <!-- objects -->
   <objects>
-    <!-- title -->
-    <object name="title">
-      <sprite>
-        <text>
-          <content>PONG</content>
-          <size>text.size</size>
-          <color>color.red</color>
-        </text>
-      </sprite>
-      <!-- x is window.width.center - title.width / 2, written as an <equation>: steps, each naming its answer for the next -->
-      <position>
-        <x>
-          <equation>
-            <divide name="half" dividend="title.width" divisor="2" />
-            <subtract minuend="window.width.center" subtrahend="half" />
-          </equation>
-        </x>
-        <y>margin</y>
-      </position>
-    </object>
     <!-- logo -->
     <object name="logo">
       <sprite>
@@ -88,170 +86,34 @@
       </sprite>
       <position><x>window.width.center - logo.radius</x><y>window.height.center - logo.radius</y></position>
     </object>
-    <!-- ball -->
-    <object name="ball">
-      <sprite>
-        <circle>
-          <radius>ball.radius</radius>
-          <color>color.green</color>
-        </circle>
-      </sprite>
-      <position><x>window.width.center - ball.radius</x><y>window.height.center - ball.radius</y></position>
-      <!-- a serve: at ball.speed, within 30 degrees of straight left or right,
-           to either side; the randoms are drawn again for every serve -->
-      <velocity>
-        <x>sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)</x>
-        <y>ball.speed * sin(ball.angle * pi / 180)</y>
-      </velocity>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="vertical">
-          <bounce />
-          <play sound="wall" />
-        </collision>
-        <collision edge="left">
-          <inc variable="paddle2.score" />
-          <reset />
-          <play sound="score" />
-        </collision>
-        <collision edge="right">
-          <inc variable="paddle1.score" />
-          <reset />
-          <play sound="score" />
-        </collision>
-        <!-- off a paddle: straight back from its middle, up to 45 degrees up or down towards its ends -->
-        <collision>
-          <deflect>45</deflect>
-          <play sound="paddle" />
-        </collision>
-      </collisions>
-      <variables>
-        <variable name="speed">6</variable>
-        <variable name="angle"><random min="-30" max="30" /></variable>
-        <variable name="side"><random min="-1" max="1" /></variable>
-      </variables>
-    </object>
-    <!-- paddle1 -->
-    <object name="paddle1" class="paddle">
-      <sprite>
-        <image>
-          <path>assets/paddle.jpg</path>
-        </image>
-      </sprite>
-      <position><x>window.left + margin</x><y>window.height.center - height / 2</y></position>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="vertical">
-          <stick />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="up">
-          <move direction="up">step</move>
-        </action>
-        <action name="down">
-          <move direction="down">step</move>
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-    <!-- paddle2 -->
-    <object name="paddle2" class="paddle">
-      <sprite>
-        <image>
-          <path>assets/paddle.jpg</path>
-          <flip>horizontal</flip>
-        </image>
-      </sprite>
-      <position><x>window.right - margin - width</x><y>window.height.center - height / 2</y></position>
-      <collisions>
-        <enabled>true</enabled>
-        <collision edge="vertical">
-          <stick />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="up">
-          <move direction="up">step</move>
-        </action>
-        <action name="down">
-          <move direction="down">step</move>
-        </action>
-        <action name="left">
-          <move direction="left">step</move>
-        </action>
-        <action name="right">
-          <move direction="right">step</move>
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-    <!-- score1 -->
-    <object name="score1">
-      <sprite>
-        <text>
-          <number>paddle1.score</number>
-          <size>128</size>
-          <color>color.blue</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - 50 - score1.width</x><y>margin</y></position>
-    </object>
-    <!-- score2 -->
-    <object name="score2">
-      <sprite>
-        <text>
-          <number>paddle2.score</number>
-          <size>128</size>
-          <color>color.red</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center + 50</x><y>margin</y></position>
-    </object>
-    <!-- paused -->
-    <object name="paused">
-      <sprite>
-        <text>
-          <content>PAUSED</content>
-          <size>128</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
-    </object>
-    <!-- gameover -->
-    <object name="gameover">
-      <sprite>
-        <text>
-          <content>GAME OVER</content>
-          <size>128</size>
-          <color>color.red</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - 150</y></position>
-    </object>
-    <!-- continue -->
-    <object name="continue">
-      <sprite>
-        <text>
-          <content>spacebar to continue</content>
-          <size>48</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - continue.width / 2</x><y>window.height.center + 60</y></position>
-    </object>
   </objects>
   <!-- states -->
   <states>
     <!-- mainmenu -->
     <state name="mainmenu">
+      <objects>
+        <!-- title -->
+        <object name="title">
+          <sprite>
+            <text>
+              <content>PONG</content>
+              <size>text.size</size>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <!-- x is window.width.center - title.width / 2, written as an <equation>: steps, each naming its answer for the next -->
+          <position>
+            <x>
+              <equation>
+                <divide name="half" dividend="title.width" divisor="2" />
+                <subtract minuend="window.width.center" subtrahend="half" />
+              </equation>
+            </x>
+            <y>margin</y>
+          </position>
+        </object>
+      </objects>
       <shows>
-        <show object="title" />
         <show object="logo" />
       </shows>
       <inputs>
@@ -277,13 +139,133 @@
     </state>
     <!-- playing -->
     <state name="playing">
-      <shows>
-        <show object="ball" />
-        <show object="paddle1" />
-        <show object="paddle2" />
-        <show object="score1" />
-        <show object="score2" />
-      </shows>
+      <objects>
+        <!-- ball -->
+        <object name="ball">
+          <sprite>
+            <circle>
+              <radius>ball.radius</radius>
+              <color>color.green</color>
+            </circle>
+          </sprite>
+          <position><x>window.width.center - ball.radius</x><y>window.height.center - ball.radius</y></position>
+          <!-- a serve: at ball.speed, within 30 degrees of straight left or right,
+               to either side; the randoms are drawn again for every serve -->
+          <velocity>
+            <x>sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)</x>
+            <y>ball.speed * sin(ball.angle * pi / 180)</y>
+          </velocity>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="vertical">
+              <bounce />
+              <play sound="wall" />
+            </collision>
+            <collision edge="left">
+              <inc variable="paddle2.score" />
+              <reset />
+              <play sound="score" />
+            </collision>
+            <collision edge="right">
+              <inc variable="paddle1.score" />
+              <reset />
+              <play sound="score" />
+            </collision>
+            <!-- off a paddle: straight back from its middle, up to 45 degrees up or down towards its ends -->
+            <collision>
+              <deflect>45</deflect>
+              <play sound="paddle" />
+            </collision>
+          </collisions>
+          <variables>
+            <variable name="radius">10</variable>
+            <variable name="speed">6</variable>
+            <variable name="angle"><random min="-30" max="30" /></variable>
+            <variable name="side"><random min="-1" max="1" /></variable>
+          </variables>
+        </object>
+        <!-- paddle1 -->
+        <object name="paddle1" class="paddle">
+          <sprite>
+            <image>
+              <path>assets/paddle.jpg</path>
+            </image>
+          </sprite>
+          <position><x>window.left + margin</x><y>window.height.center - height / 2</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="vertical">
+              <stick />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="up">
+              <move direction="up">step</move>
+            </action>
+            <action name="down">
+              <move direction="down">step</move>
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+          </variables>
+        </object>
+        <!-- paddle2 -->
+        <object name="paddle2" class="paddle">
+          <sprite>
+            <image>
+              <path>assets/paddle.jpg</path>
+              <flip>horizontal</flip>
+            </image>
+          </sprite>
+          <position><x>window.right - margin - width</x><y>window.height.center - height / 2</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="vertical">
+              <stick />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="up">
+              <move direction="up">step</move>
+            </action>
+            <action name="down">
+              <move direction="down">step</move>
+            </action>
+            <action name="left">
+              <move direction="left">step</move>
+            </action>
+            <action name="right">
+              <move direction="right">step</move>
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+          </variables>
+        </object>
+        <!-- score1 -->
+        <object name="score1">
+          <sprite>
+            <text>
+              <number>paddle1.score</number>
+              <size>128</size>
+              <color>color.blue</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - 50 - score1.width</x><y>margin</y></position>
+        </object>
+        <!-- score2 -->
+        <object name="score2">
+          <sprite>
+            <text>
+              <number>paddle2.score</number>
+              <size>128</size>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center + 50</x><y>margin</y></position>
+        </object>
+      </objects>
       <inputs>
         <input button="space">
           <push state="paused" />
@@ -317,8 +299,21 @@
     </state>
     <!-- paused -->
     <state name="paused">
+      <objects>
+        <!-- paused -->
+        <object name="paused">
+          <sprite>
+            <text>
+              <content>PAUSED</content>
+              <size>128</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="paused" />
+        <show state="playing" />
       </shows>
       <inputs>
         <input button="space">
@@ -328,9 +323,32 @@
     </state>
     <!-- gameover -->
     <state name="gameover">
+      <objects>
+        <!-- gameover -->
+        <object name="gameover">
+          <sprite>
+            <text>
+              <content>GAME OVER</content>
+              <size>128</size>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - 150</y></position>
+        </object>
+        <!-- continue -->
+        <object name="continue">
+          <sprite>
+            <text>
+              <content>spacebar to continue</content>
+              <size>48</size>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x>window.width.center - continue.width / 2</x><y>window.height.center + 60</y></position>
+        </object>
+      </objects>
       <shows>
-        <show object="gameover" />
-        <show object="continue" />
+        <show state="playing" />
       </shows>
       <inputs>
         <input button="space">

@@ -112,11 +112,12 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	CHECK(data.rfind("// pong_min.cpp\n// XML Game Engine\n", 0) == 0);
 	CHECK(data.find("#include \"game_parts.h\"") != std::string::npos);
 	CHECK(data.find("xge::GameData pongMinGame()\n{") != std::string::npos);
-	CHECK(data.find("\t// <object name=\"ball\">\n\tRawObject ballObject()\n\t{\n\t\tRawObject object;\n\t\tobject.name = \"ball\";") != std::string::npos);
+	CHECK(data.find("\t// <object name=\"ball\">\n\tRawObject playingBallObject()\n\t{\n\t\tRawObject object;\n\t\tobject.name = \"ball\";") != std::string::npos);
 	CHECK(data.find("\t\tobject.sprite = sprite(\"circle\", \"\", [](RawSprite& look)") != std::string::npos);
 	CHECK(data.find("\t\tobject.rawCollisionData.enabled = true;") != std::string::npos);
 	CHECK(data.find("edge(object.rawCollisionData, \"vertical\", { verb(\"bounce\") });") != std::string::npos);
 	CHECK(data.find("\tgame.objects = objects();") != std::string::npos);
+	CHECK(data.find("\t\tstate.objects = playingObjects();") != std::string::npos);
 	CHECK(data.find("std::vector<RawSound> sounds()") == std::string::npos);
 
 	// game_parts.h is the target's own, copied unchanged
@@ -195,16 +196,22 @@ TEST_CASE("a group is written as what it gives its members, then a line for each
 	const std::string data = readFile(folder.path / "out/source/spaceinvaders.cpp");
 
 	const GameData game = readGame((fs::current_path() / "descriptions/spaceinvaders.xml").string());
+	// The aliens are the playing state's own objects.
 	std::size_t members = 0;
-	for (const RawObject& object : game.objects)
+	const auto tally = [&](const std::vector<RawObject>& objects)
 	{
-		if (!object.groupName.empty())
+		for (const RawObject& object : objects)
 		{
-			++members;
+			if (!object.groupName.empty())
+			{
+				++members;
+			}
 		}
-	}
+	};
+	tally(game.objects);
+	for (const RawState& state : game.states) { tally(state.objects); }
 	REQUIRE(members > 55);
-	CHECK(data.find("\tvoid aliensGroup(std::vector<RawObject>& all)") != std::string::npos);
+	CHECK(data.find("\tvoid playingAliensGroup(std::vector<RawObject>& all)") != std::string::npos);
 	CHECK(data.find("\t\tMember group;\n") != std::string::npos);
 	CHECK(count(data, "\t\taddCell(all, group, ") + count(data, "\t\taddMember(all, group, ") == members);
 }

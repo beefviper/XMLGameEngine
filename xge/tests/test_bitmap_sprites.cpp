@@ -1026,6 +1026,51 @@ TEST_CASE("the aliens still win the game for the player when they are all gone, 
 	CHECK(invasion.alive() == 55);
 }
 
+TEST_CASE("each state of Space Invaders has its own objects, and paused and the endings draw the invasion still", "[spaceinvaders][scenes][shows]")
+{
+	Invasion invasion;
+	Game& game = invasion.game;
+	CHECK(game.getObject("aliens.1.1").name == "playing.aliens.1.1");
+	CHECK(game.getObject("lives").name == "playing.lives");
+	CHECK(game.getObject("player").name == "player"); // the game's own: the title, the settings and playing show it
+	CHECK(game.isShown(game.getObject("player")));
+	CHECK(game.isShown(game.getObject("aliens.1.1")));
+	CHECK_FALSE(game.isShown(game.getObject("title")));
+
+	game.setCurrentState("mainmenu");
+	CHECK(game.isShown(game.getObject("title")));
+	CHECK(game.isShown(game.getObject("player")));
+	CHECK_FALSE(game.isShown(game.getObject("aliens.1.1")));
+	CHECK_FALSE(game.isStill(game.getObject("aliens.1.1")));
+
+	// Paused: the block stands where it was, drawn under the word, ship and all.
+	game.setCurrentState("playing");
+	frames(game, 5);
+	game.pushState("paused");
+	const Vector2f at = game.getObject("aliens.1.1").position;
+	frames(game, 30);
+	CHECK(game.getObject("aliens.1.1").position.x == at.x);
+	CHECK(game.isStill(game.getObject("aliens.1.1")));
+	CHECK(game.isStill(game.getObject("player")));
+	CHECK(game.isStill(game.getObject("lives")));
+	CHECK(game.isShown(game.getObject("paused")));
+	game.popState();
+	frames(game, 30);
+	CHECK(game.getObject("aliens.1.1").position.x != at.x);
+
+	for (const char* ending : { "lost", "gameover" })
+	{
+		INFO(ending);
+		game.pushState(ending);
+		CHECK(game.isStill(game.getObject("aliens.1.1")));
+		CHECK(game.isShown(game.getObject("continue")));
+		game.popState();
+	}
+	game.pushState("lost");
+	CHECK(game.isShown(game.getObject("youlose")));
+	CHECK_FALSE(game.isShown(game.getObject("youwin")));
+}
+
 // ------------------------------------------------------------------ schema
 
 namespace
