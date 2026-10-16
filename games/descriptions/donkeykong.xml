@@ -458,7 +458,7 @@
     </state>
     <state name="youwin">
       <objects>
-        <object name="youwin">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>YOU WIN</content>
@@ -478,26 +478,16 @@
         </input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="gameover" from="youwin">
       <objects>
-        <object name="gameover">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>GAME OVER</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input button="space">
-          <reset />
-        </input>
-      </inputs>
     </state>
   </states>
 </game>

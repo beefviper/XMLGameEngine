@@ -476,7 +476,7 @@ TEST_CASE("paused and the endings draw the sea still underneath, with the count 
 	REQUIRE(table.game.getCurrentState().name == "youwin");
 	CHECK(table.game.isStill(table.ship()));
 	CHECK(table.game.isStill(table.game.getObject("sunkvalue")));
-	CHECK(table.game.isShown(table.game.getObject("youwin.youwin")));
+	CHECK(table.game.isShown(table.game.getObject("youwin.message")));
 	CHECK(table.game.isShown(table.game.getObject("again")));
-	CHECK_FALSE(table.game.isShown(table.game.getObject("gameover.gameover")));
+	CHECK_FALSE(table.game.isShown(table.game.getObject("gameover.message")));
 }

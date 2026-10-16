@@ -421,7 +421,7 @@
     </state>
     <state name="lost">
       <objects>
-        <object name="youlose">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>GAME OVER</content>
@@ -441,26 +441,16 @@
         </input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="gameover" from="lost">
       <objects>
-        <object name="youwin">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>YOU WIN</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y>window.height.center - 150</y></position>
         </object>
       </objects>
-      <shows>
-        <show state="playing" />
-        <show object="continue" />
-      </shows>
-      <inputs>
-        <input button="space">
-          <reset />
-        </input>
-      </inputs>
     </state>
   </states>
 </game>

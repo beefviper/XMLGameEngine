@@ -517,9 +517,9 @@ TEST_CASE("game over and the win draw the board still, with their own words over
 	REQUIRE(table.game.getCurrentState().name == "gameover");
 	CHECK(table.game.isStill(table.frog()));
 	CHECK(table.game.isStill(table.game.getObject("pads.1")));
-	CHECK(table.game.isShown(table.game.getObject("gameovertext")));
+	CHECK(table.game.isShown(table.game.getObject("gameover.message")));
 	CHECK(table.game.isShown(table.game.getObject("continue")));
-	CHECK_FALSE(table.game.isShown(table.game.getObject("youwin.youwin")));
+	CHECK_FALSE(table.game.isShown(table.game.getObject("youwin.message")));
 
 	Table won;
 	for (int i = 0; i < 5; ++i)
@@ -531,6 +531,6 @@ TEST_CASE("game over and the win draw the board still, with their own words over
 	REQUIRE(won.game.getCurrentState().name == "youwin");
 	CHECK(won.game.isStill(won.frog()));
 	CHECK(won.game.isStill(won.game.getObject("homes.5")));
-	CHECK(won.game.isShown(won.game.getObject("youwin.youwin")));
+	CHECK(won.game.isShown(won.game.getObject("youwin.message")));
 	CHECK(won.game.isShown(won.game.getObject("continue")));
 }

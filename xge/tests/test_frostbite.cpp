@@ -393,7 +393,7 @@ TEST_CASE("each state owns what it draws, and frozen draws the ice still under i
 	REQUIRE(play.state() == "gameover");
 	CHECK(play.game.isStill(play.game.getObject("scorevalue")));
 	CHECK(play.game.isStill(play.game.getObject("row4.3")));
-	CHECK(play.game.isShown(play.game.getObject("gameover.gameover")));
+	CHECK(play.game.isShown(play.game.getObject("gameover.message")));
 	CHECK(play.game.isShown(play.game.getObject("again")));
-	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin")));
+	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin.message")));
 }

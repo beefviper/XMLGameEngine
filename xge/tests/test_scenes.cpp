@@ -636,3 +636,60 @@ TEST_CASE("mistakes with ways stop the load", "[scenes][ways][errors]")
 			"has two ways called 'on'");
 	}
 }
+
+TEST_CASE("a state from= an earlier one is a copy of it with its own parts over it", "[scenes][states]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	const std::string text = "<sprite><text><content>YOU WIN</content><size>40</size><color>color.green</color></text></sprite>";
+	Loaded loaded(gameXml(
+		"<state name=\"youwin\"><objects><object name=\"message\">" + text + "<position><x>100</x><y>50</y></position></object></objects>"
+		"<shows><show object=\"marker\" /></shows><inputs><input button=\"space\"><reset /></input></inputs></state>"
+		"<state name=\"gameover\" from=\"youwin\"><objects>"
+		"<object name=\"message\"><sprite><text><content>GAME OVER</content><size>40</size><color>color.red</color></text></sprite></object>"
+		+ box("skull", 10, 10) + "</objects></state>"
+		"<state name=\"theend\" from=\"gameover\"><objects><object name=\"message\"><position><y>80</y></position></object></objects>"
+		"<inputs><input button=\"escape\"><pop /></input></inputs></state>"), backend);
+
+	Object& over = loaded.game.getObject("gameover.message");
+	CHECK(over.spriteParams.at(3) == "color.red");
+	CHECK(over.position.x == Approx(100));          // copied
+	CHECK(loaded.has("gameover.skull"));            // its own
+	Object& end = loaded.game.getObject("theend.message");
+	CHECK(end.spriteParams.at(3) == "color.red");   // a copy of a copy
+	CHECK(end.position.y == Approx(80));
+	CHECK(loaded.has("theend.skull"));
+
+	const auto state = [&](const std::string& name) -> const State&
+	{
+		for (const State& each : loaded.game.getStates()) { if (each.name == name) { return each; } }
+		FAIL("no state " << name);
+		throw;
+	};
+	CHECK(state("gameover").input.count(KeyCode::Space) == 1);   // its keys come with it
+	CHECK(state("theend").input.count(KeyCode::Space) == 1);
+	CHECK(state("theend").input.count(KeyCode::Escape) == 1);
+	CHECK(std::find(state("gameover").show.begin(), state("gameover").show.end(), "marker") != state("gameover").show.end());
+}
+
+TEST_CASE("a state from= that cannot be made stops the load", "[scenes][states]")
+{
+	SECTION("a state that is not before it")
+	{
+		fails(gameXml("<state name=\"youwin\" from=\"gameover\" />"
+			"<state name=\"gameover\">" + kSpace + "</state>"), "from=\"gameover\" names no state before it");
+	}
+	SECTION("a state of its own with no <inputs>")
+	{
+		fails(gameXml("<state name=\"youwin\" />"), "missing <inputs>");
+	}
+	SECTION("half a position on an object of its own")
+	{
+		fails(gameXml("<state name=\"youwin\"><objects><object name=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+			"<position><x>5</x></position></object></objects>" + kSpace + "</state>"), "missing <y>");
+	}
+	SECTION("a copy of a state with scenes")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\" /></scenes>" + kSpace + "</state>"
+			"<state name=\"again\" from=\"playing\" />"), "a copy of one is not built yet");
+	}
+}

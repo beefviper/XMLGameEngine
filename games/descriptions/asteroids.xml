@@ -729,7 +729,7 @@
     </state>
     <state name="won">
       <objects>
-        <object name="wonmsg">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>ALL CLEAR</content>
@@ -749,9 +749,9 @@
         </input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="gameover" from="won">
       <objects>
-        <object name="overmsg">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>GAME OVER</content>
@@ -759,18 +759,8 @@
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input button="space">
-          <reset />
-        </input>
-      </inputs>
     </state>
   </states>
 </game>

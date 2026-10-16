@@ -581,7 +581,7 @@
 
     <state name="won">
       <objects>
-        <object name="wonmsg">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>THE CHALICE IS HOME</content>
@@ -600,25 +600,17 @@
       </inputs>
     </state>
 
-    <state name="eaten">
+    <state name="eaten" from="won">
       <objects>
-        <object name="eatenmsg">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>EATEN BY THE DRAGON</content>
               <color>color.green</color>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 20</centered></y></position>
         </object>
       </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
     </state>
   </states>
 </game>

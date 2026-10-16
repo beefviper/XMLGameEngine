@@ -25,7 +25,9 @@ namespace xge
 {
 	Game::Game(GameData data)
 	{
-		// What states and scenes own, among the game's objects and named in full.
+		// States that are copies of others, then what states and scenes own,
+		// among the game's objects and named in full.
+		takeStates(data.states);
 		layOutScenes(data);
 		// Then, with every object's name final, its text styles, what it
 		// leaves to mean itself, and its centering.

@@ -38,4 +38,5 @@ The rule, reached by removing a small scripting language that had grown inside a
 - `number="2 4 6"` (and `odd`, `even`) on a group's `<row>` and `<column>`: several rows or columns.
 - `pitch="F#4"` and `to=`: a letter, a sharp or flat and an octave in one word, or a number of hertz ([sound](33-sound.md)).
 - The XSD can check these only with a pattern; XSLT has to split them (the windows-cpp generator walks the words one by one).
+- Beef (2026-10-16): leave these, and the arithmetic still written as text, as they are for now; we will probably change both at some point.
 - Possible forms, none chosen: one element per value (`<input><button>space</button><button>p</button>...`), an attribute per part for notes (`<note letter="F" sharp="true" octave="4">`, or `<note><pitch>...</pitch>`), or keep a single name per attribute and repeat the element. Shared `<shows>` sets (2026-10-13) avoid the problem: a state takes one set per `<show set="..."/>`.

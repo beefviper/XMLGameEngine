@@ -347,7 +347,7 @@
     </state>
     <state name="landed">
       <objects>
-        <object name="landedmsg">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>GOOD LANDING</content>
@@ -367,9 +367,9 @@
         </input>
       </inputs>
     </state>
-    <state name="crashed">
+    <state name="crashed" from="landed">
       <objects>
-        <object name="crashedmsg">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>CRASHED</content>
@@ -377,18 +377,8 @@
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input button="space">
-          <reset />
-        </input>
-      </inputs>
     </state>
   </states>
 </game>

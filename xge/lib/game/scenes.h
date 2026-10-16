@@ -32,4 +32,16 @@ namespace xge
 	//
 	// A game whose states own nothing is left exactly as it was.
 	void layOutScenes(GameData& data);
+
+	// Makes each state with from= a copy of the earlier state it names
+	// (itself already made, so copies of copies work), with its own parts
+	// over it: the copied objects with its changes, then its own objects;
+	// the shows and the still states drawn under it, the earlier's then its
+	// own; the keys, its own in place of the earlier's of the same key; the
+	// conditions and timers, its own in place of the earlier's of the same
+	// name, the rest after; its music if it has one. A from= that names no
+	// state before it, a change of an object the copy has not got, and a
+	// copy of a state with scenes stop the load (std::runtime_error). Run
+	// before layOutScenes, so the copies are named by their own state.
+	void takeStates(std::vector<RawState>& states);
 }

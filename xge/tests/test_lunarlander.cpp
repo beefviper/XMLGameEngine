@@ -316,9 +316,9 @@ TEST_CASE("coming down slowly onto the pad is a landing", "[lunarlander]")
 	CHECK(moon.state() == "landed");
 	CHECK(moon.game.isStill(moon.lander()));
 	CHECK(moon.game.isStill(moon.game.getObject("pad")));
-	CHECK(moon.game.isShown(moon.game.getObject("landedmsg")));
+	CHECK(moon.game.isShown(moon.game.getObject("landed.message")));
 	CHECK(moon.game.isShown(moon.game.getObject("again")));
-	CHECK_FALSE(moon.game.isShown(moon.game.getObject("crashedmsg")));
+	CHECK_FALSE(moon.game.isShown(moon.game.getObject("crashed.message")));
 }
 
 TEST_CASE("each state owns what it draws: the menu its texts, playing the moon", "[lunarlander]")

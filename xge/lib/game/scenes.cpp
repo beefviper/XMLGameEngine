@@ -407,6 +407,67 @@ namespace xge
 		};
 	}
 
+	void takeStates(std::vector<RawState>& states)
+	{
+		for (std::size_t index = 0; index < states.size(); ++index)
+		{
+			RawState& state = states[index];
+			if (state.from.empty()) { continue; }
+
+			const std::string where = "state '" + state.name + "'";
+			const auto earlier = std::find_if(states.begin(), states.begin() + static_cast<std::ptrdiff_t>(index),
+				[&](const RawState& each) { return each.name == state.from; });
+			if (earlier == states.begin() + static_cast<std::ptrdiff_t>(index))
+			{
+				throw std::runtime_error(where + ": from=\"" + state.from + "\" names no state before it");
+			}
+			if (!earlier->kit.empty() || !earlier->scenes.empty())
+			{
+				throw std::runtime_error(where + ": from=\"" + state.from + "\" names a state with scenes, and a copy of one is not built yet");
+			}
+
+			RawState made = *earlier;
+			made.name = state.name;
+			made.from = state.from;
+			made.changes.clear();
+
+			// The copied objects with what it changes in them, then its own.
+			for (const RawSceneEntry& entry : state.changes)
+			{
+				bool changed = false;
+				for (RawObject& object : made.objects)
+				{
+					const bool named = object.name == entry.take || object.groupName == entry.take
+						|| std::find(object.outerGroups.begin(), object.outerGroups.end(), entry.take) != object.outerGroups.end();
+					if (!named) { continue; }
+					applyChange(object, entry.change, where);
+					changed = true;
+				}
+				if (!changed) { throw std::runtime_error(where + ": changes '" + entry.take + "', which state '" + state.from + "' has not got"); }
+			}
+			made.objects.insert(made.objects.end(), state.objects.begin(), state.objects.end());
+
+			const auto add = [](std::vector<std::string>& to, const std::vector<std::string>& own)
+			{
+				for (const std::string& name : own)
+				{
+					if (std::find(to.begin(), to.end(), name) == to.end()) { to.push_back(name); }
+				}
+			};
+			add(made.show, state.show);
+			add(made.showStates, state.showStates);
+			for (const auto& [button, commands] : state.input) { made.input[button] = commands; }
+			for (const auto& [axis, commands] : state.axes) { made.axes[axis] = commands; }
+			made.conditions = mergedByName(earlier->conditions, state.conditions);
+			made.timers = mergedByName(earlier->timers, state.timers);
+			if (!state.music.empty()) { made.music = state.music; }
+			made.kit = std::move(state.kit);
+			made.scenes = std::move(state.scenes);
+
+			state = std::move(made);
+		}
+	}
+
 	void layOutScenes(GameData& data)
 	{
 		const bool owns = std::any_of(data.states.begin(), data.states.end(), [](const RawState& state)

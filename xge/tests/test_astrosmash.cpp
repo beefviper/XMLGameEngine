@@ -475,7 +475,7 @@ TEST_CASE("paused and the endings draw the sky still underneath, with the score"
 	REQUIRE(table.game.getCurrentState().name == "gameover");
 	CHECK(table.game.isStill(table.ship()));
 	CHECK(table.game.isStill(table.game.getObject("playing.score")));
-	CHECK(table.game.isShown(table.game.getObject("gameover.gameover")));
+	CHECK(table.game.isShown(table.game.getObject("gameover.message")));
 	CHECK(table.game.isShown(table.game.getObject("again")));
-	CHECK_FALSE(table.game.isShown(table.game.getObject("youwin.youwin")));
+	CHECK_FALSE(table.game.isShown(table.game.getObject("youwin.message")));
 }

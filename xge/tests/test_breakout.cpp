@@ -155,7 +155,7 @@ TEST_CASE("each state of Breakout has its own objects, and paused and the ending
 	{
 		INFO(ending);
 		game.pushState(ending);
-		CHECK(game.isShown(game.getObject(ending)));
+		CHECK(game.isShown(game.getObject(std::string(ending) + ".message")));
 		CHECK(game.isShown(game.getObject("again")));
 		CHECK(game.isStill(game.getObject("strong.1.1")));
 		CHECK_FALSE(game.isShown(game.getObject("paused")));

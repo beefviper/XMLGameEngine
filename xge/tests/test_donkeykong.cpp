@@ -369,7 +369,7 @@ TEST_CASE("each state owns what it draws, and game over draws the girders still 
 	REQUIRE(play.state() == "gameover");
 	CHECK(play.game.isStill(play.man()));
 	CHECK(play.game.isStill(play.game.getObject("score")));
-	CHECK(play.game.isShown(play.game.getObject("gameover.gameover")));
+	CHECK(play.game.isShown(play.game.getObject("gameover.message")));
 	CHECK(play.game.isShown(play.game.getObject("again")));
-	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin")));
+	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin.message")));
 }

@@ -2370,17 +2370,66 @@ namespace xge
 			}
 		}
 
-		RawState readState(const XmlNode& state, const std::map<std::string, KeyBindings>& keySets, const ShowSets& showSets, const ConditionSets& conditionSets)
+		// What comes after a state's <inputs>: its <conditions> (optional - the
+		// schema allows a state with none) and its <timers> (optional: counted
+		// while this is the current state).
+		RawState finishState(const XmlNode& state, const std::string& where, const ConditionSets& conditionSets, RawState rawState)
+		{
+			if (std::unique_ptr<XmlNode> conditions = findChild(&state, "conditions"))
+			{
+				readConditions(*conditions, where, conditionSets, rawState.conditions);
+			}
+			rawState.timers = readTimers(findChild(&state, "timers").get(), where, false);
+			return rawState;
+		}
+
+		// Every name the objects of a state can be called by, with those of
+		// the state it is a copy of, and so on.
+		void stateNames(const RawState& state, const std::vector<RawState>& earlier, std::set<std::string>& names)
+		{
+			const std::set<std::string> own = namesOf(state.objects);
+			names.insert(own.begin(), own.end());
+			if (state.from.empty()) { return; }
+			const auto from = std::find_if(earlier.begin(), earlier.end(), [&](const RawState& each) { return each.name == state.from; });
+			if (from != earlier.end()) { stateNames(*from, earlier, names); }
+		}
+
+		RawState readState(const XmlNode& state, const std::vector<RawState>& earlier, const std::map<std::string, KeyBindings>& keySets, const ShowSets& showSets, const ConditionSets& conditionSets)
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");
+			rawState.from = state.getAttribute("from");
 
 			const std::string where = "state '" + rawState.name + "'";
 
-			// <objects>: its own, in play in every scene of it
+			// from="...": what the earlier state's objects are called, so that
+			// an <object> of one of those names is a change to it
+			std::set<std::string> copied;
+			if (!rawState.from.empty())
+			{
+				const auto from = std::find_if(earlier.begin(), earlier.end(), [&](const RawState& each) { return each.name == rawState.from; });
+				if (from == earlier.end()) { fail(where, "from=\"" + rawState.from + "\" names no state before it"); }
+				stateNames(*from, earlier, copied);
+			}
+
+			// <objects>: its own, in play in every scene of it; in a copy, an
+			// object or group the copy has is what it changes in it
 			if (std::unique_ptr<XmlNode> objects = findChild(&state, "objects"))
 			{
-				readObjects(*objects, rawState.objects);
+				for (std::unique_ptr<XmlNode> object = objects->getFirstChild(); object != nullptr; object = object->getNextSibling())
+				{
+					const std::string name = object->getAttribute("name");
+					if (copied.count(name) && object->getName() != "map")
+					{
+						RawSceneEntry entry;
+						entry.take = name;
+						entry.change = readSceneChange(*object, where + " > <" + object->getName() + " name=\"" + name + "\">");
+						rawState.changes.push_back(std::move(entry));
+					}
+					else if (object->getName() == "group") { readGroup(*object, rawState.objects); }
+					else if (object->getName() == "map") { readMap(*object, rawState.objects); }
+					else { rawState.objects.push_back(readObject(*object)); }
+				}
 			}
 
 			// <scenes>: the kit, then the scenes
@@ -2405,7 +2454,8 @@ namespace xge
 			// <inputs>: the named <keys> sets it uses (keys="player menu"), in
 			// order, each over the one before, then its own <input>s over those: a
 			// state can use a set and still give one of its keys a job of its own.
-			std::unique_ptr<XmlNode> inputs = requireChild(state, "inputs", where);
+			std::unique_ptr<XmlNode> inputs = rawState.from.empty() ? requireChild(state, "inputs", where) : findChild(&state, "inputs");
+			if (!inputs) { return finishState(state, where, conditionSets, std::move(rawState)); }
 			std::istringstream setNames(inputs->getAttribute("keys"));
 			for (std::string setName; setNames >> setName;)
 			{
@@ -2419,16 +2469,7 @@ namespace xge
 			for (auto& [button, commands] : own.buttons) { rawState.input[button] = std::move(commands); }
 			for (auto& [axis, commands] : own.axes) { rawState.axes[axis] = std::move(commands); }
 
-			// <conditions> (optional - the schema allows a state with none)
-			if (std::unique_ptr<XmlNode> conditions = findChild(&state, "conditions"))
-			{
-				readConditions(*conditions, where, conditionSets, rawState.conditions);
-			}
-
-			// <timers> (optional): counted while this is the current state.
-			rawState.timers = readTimers(findChild(&state, "timers").get(), where, false);
-
-			return rawState;
+			return finishState(state, where, conditionSets, std::move(rawState));
 		}
 	}
 
@@ -2625,7 +2666,7 @@ namespace xge
 		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
 		{
 			if (state->getName() != "state") { continue; }
-			rawStates.push_back(readState(*state, keySets, showSets, conditionSets));
+			rawStates.push_back(readState(*state, rawStates, keySets, showSets, conditionSets));
 		}
 	}
 

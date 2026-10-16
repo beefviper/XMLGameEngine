@@ -81,6 +81,12 @@ namespace xge
 		std::vector<RawObject> kit;
 		std::vector<RawScene> scenes;
 
+		// from="...": an earlier state it is a copy of (see takeStates), and
+		// what it changes in the objects it copies (each a take and its
+		// change, as in a scene). Empty when it is a state of its own.
+		std::string from;
+		std::vector<RawSceneEntry> changes;
+
 		friend std::ostream& operator<<(std::ostream& o, RawState const& f);
 
 	private:

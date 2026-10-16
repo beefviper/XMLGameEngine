@@ -531,7 +531,7 @@
 
     <state name="youwin">
       <objects>
-        <object name="youwin">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>YOU WIN</content>
@@ -550,24 +550,16 @@
       </inputs>
     </state>
 
-    <state name="theend">
+    <state name="theend" from="youwin">
       <objects>
-        <object name="theend">
+        <object name="message">
           <sprite>
             <text style="banner">
               <content>THE END</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
     </state>
   </states>
 </game>

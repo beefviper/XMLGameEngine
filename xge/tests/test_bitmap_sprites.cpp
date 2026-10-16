@@ -1068,8 +1068,8 @@ TEST_CASE("each state of Space Invaders has its own objects, and paused and the 
 		game.popState();
 	}
 	game.pushState("lost");
-	CHECK(game.isShown(game.getObject("youlose")));
-	CHECK_FALSE(game.isShown(game.getObject("youwin")));
+	CHECK(game.isShown(game.getObject("lost.message")));
+	CHECK_FALSE(game.isShown(game.getObject("gameover.message")));
 }
 
 // ------------------------------------------------------------------ schema

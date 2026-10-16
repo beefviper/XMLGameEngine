@@ -936,9 +936,9 @@ TEST_CASE("each state owns what it draws, and the endings draw the field still u
 	field.frames(1);
 	REQUIRE(field.state() == "won");
 	CHECK(field.game.isStill(field.ship()));
-	CHECK(field.game.isShown(field.named("wonmsg")));
+	CHECK(field.game.isShown(field.named("won.message")));
 	CHECK(field.game.isShown(field.named("again")));
-	CHECK_FALSE(field.game.isShown(field.named("overmsg")));
+	CHECK_FALSE(field.game.isShown(field.named("gameover.message")));
 }
 
 TEST_CASE("playing again puts everything back: rocks, pools, shots, score and ships", "[asteroids][states]")

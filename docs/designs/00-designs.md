@@ -16,7 +16,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [values-and-names](04-values-and-names.md) | `<random>`, evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
 | [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, groups inside a group | Built |
-| [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` and `<conditions>` sets, `atleast`/`atmost`/`remaining` | Built; per-state behavior Open |
+| [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` and `<conditions>` sets, `atleast`/`atmost`/`remaining`, states `from=` | Built; per-state behavior Open |
 | [input](08-input.md) | Actions, held keys, key sets across states | Built |
 | [timers](09-timers.md) | Timers, look timers, commands in every context | Built; event queue Open |
 | [pools-and-enemies](10-pools-and-enemies.md) | Pools instead of spawning, enemies firing back, key sets | Built |

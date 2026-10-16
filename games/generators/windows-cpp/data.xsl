@@ -2052,8 +2052,23 @@
     <xsl:value-of select="concat($in, 'return scene;&#10;&#9;}&#10;&#10;')" />
   </xsl:template>
 
+  <!-- The names of the objects, groups and named members of $state, and of
+       the state it is from=, and so on, each between spaces (stateNames). -->
+  <xsl:template name="state-names">
+    <xsl:param name="state" />
+    <xsl:for-each select="$state/objects//*[self::object or self::group or self::member][@name]">
+      <xsl:value-of select="concat(' ', @name, ' ')" />
+    </xsl:for-each>
+    <xsl:if test="$state/@from">
+      <xsl:call-template name="state-names">
+        <xsl:with-param name="state" select="$state/preceding-sibling::state[@name = $state/@from][1]" />
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
   <!-- <state name="..."> (readState): the functions of what it owns, then a
-       function that makes it. -->
+       function that makes it. In a state from= another, an object or group
+       named like one the other has is a change to it, not its own. -->
   <xsl:template match="state">
     <xsl:variable name="in" select="concat($tab, $tab)" />
     <xsl:variable name="inner" select="concat($in, $tab)" />
@@ -2062,10 +2077,19 @@
         <xsl:with-param name="name" select="@name" />
       </xsl:call-template>
     </xsl:variable>
-    <xsl:if test="objects/*">
-      <xsl:apply-templates select="objects/object | objects/group | objects/map" />
+    <xsl:variable name="copied">
+      <xsl:if test="@from">
+        <xsl:call-template name="state-names">
+          <xsl:with-param name="state" select="preceding-sibling::state[@name = current()/@from][1]" />
+        </xsl:call-template>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:variable name="own" select="objects/*[self::map or not(contains($copied, concat(' ', @name, ' ')))]" />
+    <xsl:variable name="changes" select="objects/*[not(self::map) and contains($copied, concat(' ', @name, ' '))]" />
+    <xsl:if test="$own">
+      <xsl:apply-templates select="$own" />
       <xsl:call-template name="objects-function">
-        <xsl:with-param name="nodes" select="objects/*" />
+        <xsl:with-param name="nodes" select="$own" />
         <xsl:with-param name="function" select="concat($camel, 'Objects')" />
         <xsl:with-param name="comment" select="concat('The objects of &lt;state name=&quot;', @name, '&quot;&gt;, in the order of the file.')" />
       </xsl:call-template>
@@ -2114,9 +2138,27 @@
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>
-    <xsl:if test="objects/*">
+    <xsl:if test="@from">
+      <xsl:value-of select="concat($in, 'state.from = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="@from" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$own">
       <xsl:value-of select="concat($in, 'state.objects = ', $camel, 'Objects();&#10;')" />
     </xsl:if>
+    <xsl:for-each select="$changes">
+      <xsl:value-of select="concat($in, 'state.changes.push_back(take(')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="@name" />
+      </xsl:call-template>
+      <xsl:value-of select="concat(', [](RawSceneChange&amp; change)&#10;', $in, '{&#10;')" />
+      <xsl:call-template name="scene-change">
+        <xsl:with-param name="indent" select="$inner" />
+      </xsl:call-template>
+      <xsl:value-of select="concat($in, '}));&#10;')" />
+    </xsl:for-each>
     <xsl:if test="scenes/objects/*">
       <xsl:value-of select="concat($in, 'state.kit = ', $camel, 'Kit();&#10;')" />
     </xsl:if>

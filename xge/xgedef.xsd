@@ -995,13 +995,6 @@
     </xs:choice>
   </xs:complexType>
 
-  <xs:complexType name="positionType">
-    <xs:sequence>
-      <xs:element name="x" type="positionValueType" />
-      <xs:element name="y" type="positionValueType" />
-    </xs:sequence>
-  </xs:complexType>
-
   <!-- Some of a <position>: a group's, a member's, a cell's or a scene's change (a half left out is the group's, or 0). -->
   <xs:complexType name="partialPositionType">
     <xs:sequence>
@@ -1058,7 +1051,8 @@
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" />
-      <xs:element name="position" type="positionType" minOccurs="0" />
+      <!-- both halves, unless it changes an object in a state from= another -->
+      <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
@@ -1531,7 +1525,8 @@
                         <xs:attribute name="sound" type="xs:string" use="required" />
                       </xs:complexType>
                     </xs:element>
-                    <xs:element name="inputs">
+                    <!-- needed, unless the state is from= another, whose it takes -->
+                    <xs:element name="inputs" minOccurs="0">
                       <xs:complexType>
                         <xs:sequence>
                           <xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
@@ -1543,6 +1538,13 @@
                     <xs:element name="timers" type="timersType" minOccurs="0" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />
+                  <!--
+                    A copy of an earlier state: its objects (an <object> or
+                    <group> of one of their names changes it, as a scene changes
+                    a piece it takes), shows, keys, conditions, timers and music,
+                    with this one's own over them.
+                  -->
+                  <xs:attribute name="from" type="xs:string" use="optional" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>

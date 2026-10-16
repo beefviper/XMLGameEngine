@@ -718,7 +718,7 @@ Left alone on the title, an arcade machine plays itself. A game's `<demo>`, afte
 
 ### `<state>`
 
-A state is a mode of the program: a menu, the game being played, a pause screen, a game-over screen. Attribute: `name`. Children, in this order:
+A state is a mode of the program: a menu, the game being played, a pause screen, a game-over screen. Attributes: `name`, and `from` (below). Children, in this order:
 
 | Element | Required | What it does |
 |---|---|---|
@@ -726,7 +726,7 @@ A state is a mode of the program: a menu, the game being played, a pause screen,
 | `<scenes>` | no | The places the state is played in, one current at a time: see [Scenes](#scenes) |
 | `<shows>` | no | A list of `<show object="name" />`: objects of the game (or of another state) drawn and updated while the state is current, as if they were its own. `<show set="name" />` shows a shared [show set](#show-sets). `<show state="name" />` draws that state's objects, and those of its current scene, **still** underneath: not moving, not colliding, their timers not counting, so a pause or a game over is drawn over the frozen game |
 | `<music>` | no | `<music sound="name" />`: one of the game's [sounds](#sounds) that is the state's own. One that loops plays while this is the current state (stopping when another goes over it, a pause, and starting again from its beginning when it is current again); one that plays once plays as the state begins (pushed, or switched to with `<pop state>`), not when a state over it is taken off |
-| `<inputs>` | yes | A list of `<input button="key">`, each holding the commands that key runs, e.g. `<push state="playing" />` or `<trigger object="paddle1" action="up" />`. `keys="name"` takes a shared [key set](#input) first; the state's own `<input>`s go over it |
+| `<inputs>` | yes, unless `from=` | A list of `<input button="key">`, each holding the commands that key runs, e.g. `<push state="playing" />` or `<trigger object="paddle1" action="up" />`. `keys="name"` takes a shared [key set](#input) first; the state's own `<input>`s go over it |
 | `<conditions>` | no | A list of `<condition>`, checked every frame. `<condition set="name" />` checks a shared set there. See [Conditions](#conditions) |
 | `<timers>` | no | Timers that count while this is the current state. See [Timers](#timers) |
 
@@ -741,6 +741,18 @@ A state is a mode of the program: a menu, the game being played, a pause screen,
   <inputs>
     <input button="space"><pop /></input>
   </inputs>
+</state>
+```
+
+**A state from another.** `<state name="gameover" from="youwin">` is a copy of an earlier state, with what it says itself over it: the copied objects (named by the new state, `gameover.message`), its `<shows>` and still states, its keys, conditions, timers and music. In its `<objects>`, an `<object>` or `<group>` named like one the copy has changes it, as a [scene](#scenes) changes a piece it takes: whole `<sprite>`s by name, either half of the `<position>` or `<velocity>`, `<hidden>`, `<drawn>` and `<variables>`; any other is its own, after the copied ones. Its own `<input>`s replace the copied ones of the same key and add the rest; its conditions and timers replace the copied ones of the same `name`, and come after the rest; its `<music>`, if it has one, replaces the copied. A from= that names no state before it, or a state with scenes (a copy of those is not built yet), stops the load. A copy of a copy works. The end screens of 17 games are one state and a copy changing its message:
+
+```xml
+<state name="gameover" from="youwin">
+  <objects>
+    <object name="message">
+      <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
+    </object>
+  </objects>
 </state>
 ```
 
