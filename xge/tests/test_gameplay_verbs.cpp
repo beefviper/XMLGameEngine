@@ -1085,11 +1085,11 @@ TEST_CASE("a condition can test how far each object it matches is from the neare
 	CHECK(Coins("object=\"coin3\" distance=\"ball\"><equal>150</equal>").fires());
 
 	// Any one of a class near enough is enough; one out of play is not near.
-	Coins near("class=\"coin\" distance=\"ball\"><below>60</below>");
-	CHECK(near.fires());
-	near.object("coin1").isVisible = false;
-	near.object("coin2").isVisible = false;
-	CHECK_FALSE(near.fires());
+	Coins nearby("class=\"coin\" distance=\"ball\"><below>60</below>");
+	CHECK(nearby.fires());
+	nearby.object("coin1").isVisible = false;
+	nearby.object("coin2").isVisible = false;
+	CHECK_FALSE(nearby.fires());
 
 	// To a group: the nearest member (the posts' middles are 305,105 and
 	// 505,105; coin3's is 205,5).
