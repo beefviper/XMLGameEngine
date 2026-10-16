@@ -50,8 +50,14 @@ namespace xge
 			std::vector<RawSound>& rawSounds,
 			std::vector<RawPath>& rawPaths,
 			std::vector<std::string>& rawKeeps,
+			RawDemo& rawDemo,
 			SchemaValidation& validation);
 	};
+
+	// The text of a game file with `demo` written into it as its <demo>, in
+	// place of the one it had, or as the last thing in <game>: what
+	// xgecli --record does when it closes.
+	std::string withDemo(const std::string& gameText, const RawDemo& demo);
 
 	// The game in that file, read with that XML library and checked against
 	// the schema it names (game_xml::init), as Game is made from it.

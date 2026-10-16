@@ -44,6 +44,10 @@ namespace xge
 		std::string generate;
 		std::string output;
 
+		// --record: play the game and write what was played into the game
+		// file as its <demo> when the window closes.
+		bool record = false;
+
 		bool showHelp = false;
 	};
 
@@ -65,6 +69,8 @@ namespace xge
 	//                          instead of playing it (no short form: -g is the game)
 	//   -o out -oout           the folder --generate writes to
 	//   --output out
+	//   --record               play and write what was played into the game
+	//                          file as its <demo>, for its attract mode
 	//   -h  --help             show the usage and exit
 	//
 	// A short option takes its value attached or after a space; a long option

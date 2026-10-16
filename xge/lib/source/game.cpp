@@ -35,11 +35,13 @@ namespace xge
 		rawSounds = std::move(data.sounds);
 		rawPaths = std::move(data.paths);
 		const std::vector<std::string> keeps = std::move(data.keeps);
+		demo = std::move(data.demo);
 
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 		keep(keeps);
 		refreshAllBoundTexts();
+		checkDemo();
 
 		for (const auto& state : states)
 		{
@@ -543,6 +545,36 @@ namespace xge
 
 		*variable = *value;
 		refreshBoundTexts(owner->name, into.substr(into.rfind('.') + 1), *variable);
+	}
+
+	void Game::checkDemo(void) const
+	{
+		if (demo.recorded)
+		{
+			return;
+		}
+		const auto check = [&](const std::vector<Command>& commands, const std::string& where)
+		{
+			for (const Command& command : commands)
+			{
+				if (std::holds_alternative<CmdDemo>(command))
+				{
+					throw std::runtime_error(where + ": <demo /> plays the game's recorded <demo>, and this game has none; record one with xgecli --record");
+				}
+			}
+		};
+		for (const State& state : states)
+		{
+			const std::string where = "state '" + state.name + "'";
+			for (const auto& [key, commands] : state.input) { check(commands, where + " > <input>"); }
+			for (const Condition& condition : state.conditions) { check(condition.commands, where + " > <condition>"); }
+			for (const Timer& timer : state.timers) { check(timer.commands, where + " > <timer>"); }
+			for (const Scene& scene : state.scenes)
+			{
+				for (const Condition& condition : scene.conditions) { check(condition.commands, where + " > <condition>"); }
+				for (const Timer& timer : scene.timers) { check(timer.commands, where + " > <timer>"); }
+			}
+		}
 	}
 
 	void Game::startTurns(const std::vector<std::string>& playerStates)

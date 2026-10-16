@@ -330,6 +330,10 @@ namespace
 				}
 			}
 			for (const std::string& keep : g.keeps) { text("keep", keep); }
+			flag("demo", g.demo.recorded);
+			text("demo.seed", std::to_string(g.demo.seed));
+			text("demo.frames", std::to_string(g.demo.frames));
+			for (const DemoKey& key : g.demo.keys) { text("demo.key", key.button + (key.pressed ? " down " : " up ") + std::to_string(key.frame)); }
 			for (const RawPath& p : g.paths)
 			{
 				const std::string at = "path " + p.name;

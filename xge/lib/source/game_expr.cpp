@@ -115,6 +115,7 @@ namespace xge
 				[](const CmdTurns&) { return std::string("<turns>"); },
 				[](const CmdPass&) { return std::string("<pass />"); },
 				[](const CmdOut&) { return std::string("<out />"); },
+				[](const CmdDemo&) { return std::string("<demo />"); },
 				[](const CmdDecrement&) { return std::string("<dec>"); },
 				[](const CmdPushState&) { return std::string("<push>"); },
 				[](const CmdPopState&) { return std::string("<pop>"); },
@@ -182,7 +183,7 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
+			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<demo />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
 			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
 				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<wander>" };
 			static std::vector<std::string> objectTimerCommands = [] {

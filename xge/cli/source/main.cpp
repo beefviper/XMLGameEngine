@@ -13,7 +13,10 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <iterator>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -128,11 +131,32 @@ int main(int argc, char* argv[])
 
 		xge::Engine engine(game, options.window, options.audio);
 		engine.keepIn(xge::keptFileFor(filename).string());
+		if (options.record)
+		{
+			engine.record();
+		}
 
 		std::cout << "=== after Engine: sizes measured, positions finished ===\n\n";
 		game.printGame();
 
 		engine.loop();
+
+		if (options.record)
+		{
+			std::string text;
+			{
+				std::ifstream in(filename, std::ios::binary);
+				text.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+			}
+			const xge::RawDemo demo = engine.recorded();
+			std::ofstream out(filename, std::ios::binary | std::ios::trunc);
+			out << xge::withDemo(text, demo);
+			if (!out)
+			{
+				throw std::runtime_error("could not write the demo into " + filename);
+			}
+			std::cout << "recorded " << demo.frames << " frames and " << demo.keys.size() << " key changes into " << std::filesystem::absolute(filename).string() << " as its <demo>\n";
+		}
 	}
 	catch (const std::exception& error)
 	{

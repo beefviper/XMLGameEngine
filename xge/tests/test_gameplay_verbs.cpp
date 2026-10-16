@@ -946,3 +946,58 @@ TEST_CASE("<turns> names the players' states, and goes only where a state's comm
 	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"all\"><pass /></collision>"), state("s", { "o" }))),
 		ContainsSubstring("<pass />"));
 }
+
+TEST_CASE("withDemo writes a <demo> in before </game>, in place of the one there, as the file's lines end", "[demo]")
+{
+	RawDemo demo;
+	demo.recorded = true;
+	demo.seed = 7;
+	demo.frames = 90;
+	demo.keys = { { "space", true, 3 }, { "space", false, 5 }, { "left", true, 40 } };
+
+	const std::string game = "<game>\n  <states>\n  </states>\n</game>\n";
+	const std::string once = withDemo(game, demo);
+	CHECK(once == "<game>\n  <states>\n  </states>\n  <demo>\n    <seed>7</seed>\n    <frames>90</frames>\n"
+		"    <press button=\"space\">3</press>\n    <release button=\"space\">5</release>\n    <press button=\"left\">40</press>\n"
+		"  </demo>\n</game>\n");
+
+	// Recorded again: the new one replaces it.
+	demo.seed = 8;
+	demo.keys.pop_back();
+	const std::string twice = withDemo(once, demo);
+	CHECK(twice.find("<seed>7</seed>") == std::string::npos);
+	CHECK(twice.find("<seed>8</seed>") != std::string::npos);
+	CHECK(twice.find("left") == std::string::npos);
+	CHECK(twice.find("<demo>") == twice.rfind("<demo>"));
+
+	// A Windows checkout's file keeps its \r\n.
+	const std::string windows = withDemo("<game>\r\n  <states>\r\n  </states>\r\n</game>\r\n", demo);
+	CHECK(windows.find("    <seed>8</seed>\r\n") != std::string::npos);
+	CHECK(windows.find("\n\n") == std::string::npos);
+
+	CHECK_THROWS_WITH(withDemo("<game>", demo), ContainsSubstring("no </game>"));
+}
+
+TEST_CASE("a <demo> is read by every XML library, and a <demo /> needs one", "[demo]")
+{
+	RawDemo demo;
+	demo.recorded = true;
+	demo.seed = 12;
+	demo.frames = 60;
+	demo.keys = { { "space", true, 0 }, { "space", false, 2 } };
+	const std::string game = gameXml(box("o", 0, 0, 1, 1), state("s", { "o" }, "<input button=\"space\"><pop /></input>", "<timers><timer><after>1</after><demo /></timer></timers>"));
+
+	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
+	{
+		Loaded loaded(withDemo(game, demo), backend);
+		const RawDemo& read = loaded.game.getDemo();
+		CHECK(read.recorded);
+		CHECK(read.seed == 12u);
+		CHECK(read.frames == 60u);
+		REQUIRE(read.keys.size() == 2);
+		CHECK(read.keys[1].button == "space");
+		CHECK_FALSE(read.keys[1].pressed);
+		CHECK(read.keys[1].frame == 2u);
+	}
+	CHECK_THROWS_WITH(Loaded(game), ContainsSubstring("xgecli --record"));
+}

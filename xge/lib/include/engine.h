@@ -49,6 +49,20 @@ namespace xge
 
 		void loop(void);
 
+		// Records the game being played, for its attract mode: a new game
+		// starts now, with random numbers drawn from a seed picked here, and
+		// every key pressed and let go from now on is noted with the frame it
+		// happened in. recorded() is what was played so far, as a <demo>
+		// (xgecli --record writes it into the game file when it closes).
+		void record(void);
+		RawDemo recorded(void) const;
+
+		// Whether the game's <demo> is playing (a <demo /> asked for it):
+		// a new game started from the demo's seed, played by its recorded
+		// keys, until a key is pressed or the recording ends. Then a new game
+		// starts, with what the game keeps as it was before the demo.
+		bool isPlayingDemo(void) const noexcept { return demoPlaying; }
+
 		// What the game <keeps> lasts in that file from one run of the program
 		// to the next: it is read now, if it is there, and written whenever a
 		// new game starts (a full reset) and when the engine is done, its
@@ -163,6 +177,20 @@ namespace xge
 		// Plays what the game asked for this frame (Game::requestSound), stops
 		// what it silenced, and keeps its looping sounds playing.
 		void playRequestedSounds(void);
+
+		// Recording (record()): its seed, the frames played since, and the keys.
+		bool recording = false;
+		RawDemo recordedSoFar;
+
+		// Playing the demo: the frame of it reached, the next key of it to
+		// press or let go, and what the game kept before it started.
+		bool demoPlaying = false;
+		unsigned int demoFrame = 0;
+		std::size_t demoNext = 0;
+		std::string keptBeforeDemo;
+		void startDemo(void);
+		void stopDemo(void);
+		void releaseHeldKeys(void);
 
 		// Where what the game keeps is written (empty: nowhere), and
 		// Game::resetCount() when it last was.

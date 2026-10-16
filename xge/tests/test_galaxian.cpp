@@ -12,7 +12,8 @@
 // shot alien scoring, a new fleet when the last one is down (the fleet is
 // the playing state's one scene, put back with <reset scene>), the pause
 // drawing the game still, and the table of the best five: initials asked
-// for, ranked, and kept in a file.
+// for, ranked, and kept in a file, two players taking turns, and the demo
+// the title plays when left alone.
 
 #include "engine.h"
 #include "game.h"
@@ -36,25 +37,33 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
+	// Keys pressed at the window (as a player's would be) go in `typed`.
 	class FakeWindow : public Window
 	{
 	public:
+		explicit FakeWindow(std::vector<std::pair<KeyCode, bool>>& keys) : typed(keys) {}
 		bool isOpen() const override { return true; }
 		void close() override {}
 		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
+		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return std::exchange(typed, {}); }
 		void clear(const std::string&) override {}
 		void draw(Object&) override {}
 		void display() override {}
+
+	private:
+		std::vector<std::pair<KeyCode, bool>>& typed;
 	};
 
 	struct Play
 	{
+		std::vector<std::pair<KeyCode, bool>> typed;
 		Game game;
 		Engine engine;
 
-		explicit Play(const char* file)
-			: game(file), engine(game, std::make_unique<FakeWindow>())
+		explicit Play(const char* file) : Play(readGame(file)) {}
+
+		explicit Play(GameData data)
+			: game(std::move(data)), engine(game, std::make_unique<FakeWindow>(typed))
 		{
 			for (auto& object : game.getCurrentObjects())
 			{
@@ -653,4 +662,117 @@ TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run",
 	REQUIRE(play.state() == "gameover");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "mainmenu");
+}
+
+TEST_CASE("left on the title, Galaxian plays its demo until a key is pressed", "[galaxian][demo]")
+{
+	Play play("descriptions/galaxian.xml");
+	REQUIRE(play.game.getDemo().recorded);
+	play.object("best").variable["score"] = 70.0f;
+
+	play.frames(599);
+	CHECK_FALSE(play.engine.isPlayingDemo());
+	play.frames(2); // ten seconds on the title
+	REQUIRE(play.engine.isPlayingDemo());
+	CHECK(play.state() == "mainmenu"); // a new game, from the start
+	CHECK(play.object("best").variable.at("score") == 70.0f); // kept
+
+	// The recording presses Space, and then plays.
+	play.frames(40);
+	CHECK(play.state() == "playing");
+	const float startX = play.object("ship").position.x;
+	play.frames(230);
+	CHECK(play.object("ship").position.x != Approx(startX)); // it moved the ship
+
+	// A key pressed: the demo ends, without the key doing anything, and
+	// the game is as it was before it.
+	play.object("best").variable["score"] = 900.0f; // as if the demo had scored
+	play.typed = { { KeyCode::Num2, true }, { KeyCode::Num2, false } };
+	play.frames(1);
+	CHECK_FALSE(play.engine.isPlayingDemo());
+	CHECK(play.state() == "mainmenu");
+	CHECK(play.game.playerCount() == 0); // the 2 did not start a game
+	CHECK(play.object("best").variable.at("score") == 70.0f);
+	CHECK(play.object("best").spriteParams.at(1) == "70");
+
+	// Ten more seconds on the title, and it plays again.
+	play.frames(601);
+	CHECK(play.engine.isPlayingDemo());
+}
+
+TEST_CASE("the demo plays to its end and the title comes back", "[galaxian][demo]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.game.requestDemo();
+	play.frames(1);
+	REQUIRE(play.engine.isPlayingDemo());
+	play.frames(static_cast<int>(play.game.getDemo().frames) - 1);
+	CHECK(play.engine.isPlayingDemo());
+	play.frames(1);
+	CHECK_FALSE(play.engine.isPlayingDemo());
+	CHECK(play.state() == "mainmenu");
+	CHECK(play.object("ship").variable.at("score") == 0.0f);
+}
+
+TEST_CASE("a game recorded plays back the same as it was played", "[galaxian][demo]")
+{
+	Play played("descriptions/galaxian.xml");
+	played.engine.record();
+	played.tap(KeyCode::Space);
+	played.frames(150);
+	played.engine.handleKeyPressed(KeyCode::Left);
+	played.frames(40);
+	played.engine.handleKeyReleased(KeyCode::Left);
+	for (int i = 0; i < 6; ++i)
+	{
+		played.tap(KeyCode::Space);
+		played.frames(30);
+	}
+	played.engine.handleKeyPressed(KeyCode::Right);
+	played.frames(98);
+
+	// Where everything is, a frame before the end (the last frame of a
+	// demo ends it).
+	struct Seen { std::string name; float x; float y; bool visible; };
+	std::vector<Seen> seen;
+	for (const auto& object : played.game.getCurrentObjects())
+	{
+		seen.push_back({ object.name, object.position.x, object.position.y, object.isVisible });
+	}
+	const std::string state = played.state();
+	const float score = played.object("ship").variable.at("score");
+	played.frames(1);
+
+	const RawDemo demo = played.engine.recorded();
+	CHECK(demo.recorded);
+	CHECK(demo.frames == 469u);
+	REQUIRE(demo.keys.size() == 17);
+	CHECK(demo.keys[0].button == "space");
+	CHECK(demo.keys[0].pressed);
+	CHECK(demo.keys[0].frame == 0u);
+	CHECK(demo.keys[2].button == "left");
+	CHECK(demo.keys[3].frame == 190u);
+	CHECK(demo.keys.back().button == "right");
+
+	// Played back, frame for frame.
+	GameData data = readGame("descriptions/galaxian.xml");
+	data.demo = demo;
+	Play replay(std::move(data));
+	replay.game.requestDemo();
+	replay.frames(1);
+	REQUIRE(replay.engine.isPlayingDemo());
+	replay.frames(static_cast<int>(demo.frames) - 1);
+	REQUIRE(replay.engine.isPlayingDemo());
+
+	CHECK(replay.state() == state);
+	CHECK(replay.object("ship").variable.at("score") == score);
+	int same = 0;
+	for (const Seen& was : seen)
+	{
+		const Object& now = replay.object(was.name.c_str());
+		if (std::abs(now.position.x - was.x) < 0.01f && std::abs(now.position.y - was.y) < 0.01f && now.isVisible == was.visible) { ++same; }
+		else { UNSCOPED_INFO(was.name << " was at " << was.x << "," << was.y << " and is at " << now.position.x << "," << now.position.y); }
+	}
+	CHECK(same == static_cast<int>(seen.size()));
+	CHECK(seen.size() > 36);
 }

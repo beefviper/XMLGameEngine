@@ -2319,6 +2319,19 @@
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>
+    <!-- the recorded demo: its keys a table in the program, not on the stack -->
+    <xsl:if test="$game/demo">
+      <xsl:text>&#9;static const DemoStep demoKeys[] = {&#10;</xsl:text>
+      <xsl:for-each select="$game/demo/press | $game/demo/release">
+        <xsl:text>&#9;&#9;{ </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@button" />
+        </xsl:call-template>
+        <xsl:value-of select="concat(', ', local-name() = 'press', ', ', normalize-space(.), ' },&#10;')" />
+      </xsl:for-each>
+      <xsl:text>&#9;&#9;{ nullptr, false, 0 } };&#10;</xsl:text>
+      <xsl:value-of select="concat('&#9;game.demo = demo(', normalize-space($game/demo/seed), 'u, ', normalize-space($game/demo/frames), 'u, demoKeys);&#10;')" />
+    </xsl:if>
     <xsl:text>&#9;game.states = {</xsl:text>
     <xsl:for-each select="$game/states/state">
       <xsl:if test="position() &gt; 1">,</xsl:if>

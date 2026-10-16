@@ -12,6 +12,7 @@ xgecli [game] [options]
   -a, --audio <name>   sfml3 (default), raylib, sdl2, none
   --generate <target>  write the game out as a program (windows-cpp) instead of playing it
   -o, --output <dir>   where --generate writes (default <game>-<target>)
+  --record             play, and write what was played into the game file as its <demo>
   -h, --help
 ```
 
@@ -21,4 +22,5 @@ xgecli [game] [options]
 - **Finding the game:** add `.xml` if no extension; then as given; then its file name alone in the working directory; then in `descriptions/` of the data folder. The **data folder** is the games folder: the first folder with both `descriptions/` and `assets/` in it, looking at the working directory, the program's folder and the folder above it, each itself and then its `games/`; then the working directory is changed to it (the engine reads `assets/` relative to it), so the program starts from anywhere. Shared with xgegui through `xge/lib/include/data_folder.h` so they cannot drift.
 - `parseCommandLine` and `findGameFile` throw `CliError`; `main()` prints the message and usage to stderr. `cli.cpp` is compiled into `xgetest` too (the library does not contain it). Library code throws and never calls `exit()` because xgegui loads game after game.
 - **Generating** ([generator](40-generator.md)): `--generate` takes a platform-language target (`windows-cpp`), long form only because `-g` is the game; `-o` is an error without it. It is resolved before the working directory changes, so the default folder and a relative `-o` are where the user started; the stylesheets are found in `generators/` of the data folder, and the engine's files it copies in `lib/` of `xge/` beside it (`GenerateRequest::engineFolder`). It prints the files written and the assets copied, and does not start a window. `generate.cpp` is compiled into `xgetest` too.
+- **Recording** ([states-and-conditions](07-states-and-conditions.md), attract mode): `--record` plays as usual from a new seed and, when the window closes, writes the `<demo>` into the game file (`withDemo`), replacing the one there and keeping the file's line endings. Long form only, like `--generate`, with which it cannot go. It writes the repository's file on purpose: the demo is part of the game.
 - Rejected: `-g` for generate (it is the game); `--game=pong`; last-one-wins; short backend aliases (`sfml`, `xerxes`). Open: every backend is built in, so every name is accepted; a build that leaves one out should reject its name with that reason.

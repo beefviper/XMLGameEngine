@@ -116,7 +116,7 @@ namespace xge
 		// Which option an argument is, and the value stuck to it if any.
 		struct OptionMatch
 		{
-			char key = 0; // 'g', 'w', 'x', 'a', 'G' (--generate), 'o' or 'h'
+			char key = 0; // 'g', 'w', 'x', 'a', 'G' (--generate), 'o', 'r' (--record) or 'h'
 			std::optional<std::string> attachedValue;
 		};
 
@@ -129,13 +129,14 @@ namespace xge
 			if (arg == "--audio")  return 'a';
 			if (arg == "--generate") return 'G';
 			if (arg == "--output") return 'o';
+			if (arg == "--record") return 'r';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
 
 		bool takesValue(char key)
 		{
-			return key != 'h';
+			return key != 'h' && key != 'r';
 		}
 
 		std::string optionName(char key)
@@ -284,6 +285,15 @@ namespace xge
 				}
 			}
 
+			if (match.key == 'r')
+			{
+				if (options.record)
+				{
+					throw CliError("--record was given more than once");
+				}
+				options.record = true;
+				continue;
+			}
 			if (!takesValue(match.key))
 			{
 				options.showHelp = true;
@@ -313,6 +323,10 @@ namespace xge
 		if (haveOutput && !haveGenerate)
 		{
 			throw CliError("an output folder is only for --generate");
+		}
+		if (options.record && haveGenerate)
+		{
+			throw CliError("--record plays the game, and --generate writes it out instead; give one of them");
 		}
 
 		return options;
@@ -391,6 +405,8 @@ namespace xge
 			"                       windows-cpp (plain C++ on SFML 3, with a CMakeLists.txt;\n"
 			"                       a small part of the language so far)\n"
 			"  -o, --output <dir>   where --generate writes it (default <game>-<target>)\n"
+			"  --record             play, and write what was played into the game file as\n"
+			"                       its <demo> when the window closes (the attract mode)\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"

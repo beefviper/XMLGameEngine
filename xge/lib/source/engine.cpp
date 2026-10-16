@@ -5,12 +5,16 @@
 
 #include "engine.h"
 
+#include "random.h"
+
 #include <algorithm>
 #include <cmath>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <random>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 
@@ -143,13 +147,33 @@ namespace xge
 			events.push_back(event);
 		}
 
-		for (const auto& [key, pressed] : events)
+		// A key pressed while the demo plays ends it, and is not played.
+		if (demoPlaying && std::any_of(events.begin(), events.end(), [](const auto& event) { return event.second; }))
 		{
-			if (pressed) { handleKeyPressed(key); }
-			else { handleKeyReleased(key); }
+			stopDemo();
+			events.clear();
 		}
 
-		handleControls(window->controls());
+		if (demoPlaying)
+		{
+			const std::vector<DemoKey>& keys = game.getDemo().keys;
+			for (; demoNext < keys.size() && keys[demoNext].frame <= demoFrame; ++demoNext)
+			{
+				const KeyCode key = keyCodeFromString(keys[demoNext].button);
+				if (keys[demoNext].pressed) { handleKeyPressed(key); }
+				else { handleKeyReleased(key); }
+			}
+		}
+		else
+		{
+			for (const auto& [key, pressed] : events)
+			{
+				if (pressed) { handleKeyPressed(key); }
+				else { handleKeyReleased(key); }
+			}
+
+			handleControls(window->controls());
+		}
 
 		game.updateObjects();
 
@@ -170,16 +194,87 @@ namespace xge
 		// Keys, collisions and conditions have all had their say.
 		playRequestedSounds();
 
-		// A new game: what the last one left to keep is written down.
-		if (!keptFile.empty() && game.resetCount() != keptResets)
+		// A new game: what the last one left to keep is written down (not
+		// what a demo did).
+		if (!keptFile.empty() && !demoPlaying && game.resetCount() != keptResets)
 		{
 			keptResets = game.resetCount();
 			writeKept();
 		}
+
+		if (recording && !demoPlaying)
+		{
+			++recordedSoFar.frames;
+		}
+		if (demoPlaying && ++demoFrame >= game.getDemo().frames)
+		{
+			stopDemo();
+		}
+		if (game.takeDemoRequest() && !demoPlaying && game.getDemo().recorded)
+		{
+			startDemo();
+		}
+	}
+
+	void Engine::record(void)
+	{
+		recordedSoFar = RawDemo{};
+		recordedSoFar.recorded = true;
+		recordedSoFar.seed = std::random_device{}();
+		setRandomState(std::mt19937{ recordedSoFar.seed });
+		game.resetAll();
+		recording = true;
+	}
+
+	RawDemo Engine::recorded(void) const
+	{
+		return recordedSoFar;
+	}
+
+	void Engine::releaseHeldKeys(void)
+	{
+		for (std::size_t key = 0; key < static_cast<std::size_t>(KeyCode::Count); ++key)
+		{
+			if (heldKeys.isDown(static_cast<KeyCode>(key)))
+			{
+				handleKeyReleased(static_cast<KeyCode>(key));
+			}
+		}
+	}
+
+	void Engine::startDemo(void)
+	{
+		releaseHeldKeys();
+		std::ostringstream kept;
+		game.saveKept(kept);
+		keptBeforeDemo = kept.str();
+
+		demoPlaying = true;
+		demoFrame = 0;
+		demoNext = 0;
+		setRandomState(std::mt19937{ game.getDemo().seed });
+		game.resetAll();
+	}
+
+	void Engine::stopDemo(void)
+	{
+		releaseHeldKeys();
+		demoPlaying = false;
+		seedRandom();
+		game.resetAll();
+		std::istringstream kept(keptBeforeDemo);
+		game.loadKept(kept);
+		keptResets = game.resetCount();
 	}
 
 	Engine::~Engine()
 	{
+		// Closed while the demo plays: what was kept before it is what lasts.
+		if (demoPlaying)
+		{
+			std::istringstream kept(keptBeforeDemo);
+			game.loadKept(kept);
+		}
 		writeKept();
 	}
 
@@ -249,6 +344,11 @@ namespace xge
 	{
 		const auto index = static_cast<std::size_t>(key);
 
+		if (recording && !demoPlaying)
+		{
+			recordedSoFar.keys.push_back({ keyCodeToString(key), true, recordedSoFar.frames });
+		}
+
 		// Held keys repeat as press events on some backends; only the first
 		// one counts.
 		if (!heldKeys.press(key))
@@ -279,6 +379,11 @@ namespace xge
 	void Engine::handleKeyReleased(KeyCode key)
 	{
 		const auto index = static_cast<std::size_t>(key);
+
+		if (recording && !demoPlaying && heldKeys.isDown(key))
+		{
+			recordedSoFar.keys.push_back({ keyCodeToString(key), false, recordedSoFar.frames });
+		}
 
 		heldKeys.release(key);
 

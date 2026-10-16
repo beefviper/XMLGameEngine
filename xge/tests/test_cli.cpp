@@ -225,6 +225,18 @@ TEST_CASE("generate needs a known target and output needs generate", "[cli]")
 	CHECK(generateTargets() == std::vector<std::string>{ "windows-cpp" });
 }
 
+TEST_CASE("record writes the game played into the game file, once and not when generating", "[cli][demo]")
+{
+	CHECK_FALSE(parseCommandLine({ "galaxian" }).record);
+	CHECK(parseCommandLine({ "galaxian", "--record" }).record);
+	CHECK(parseCommandLine({ "-g", "galaxian", "--record" }).record);
+	CHECK_THROWS_AS(parseCommandLine({ "-r" }), CliError); // long form only, as --generate
+	CHECK(parseCommandLine({ "--record", "galaxian" }).game == "galaxian");
+	CHECK_THROWS_AS(parseCommandLine({ "--record", "--record" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--record", "--generate", "windows-cpp" }), CliError);
+	CHECK(usageText().find("--record") != std::string::npos);
+}
+
 TEST_CASE("the help options ask for the usage", "[cli]")
 {
 	CHECK(parseCommandLine({ "-h" }).showHelp);

@@ -205,6 +205,14 @@ namespace xge
 		void saveKept(std::ostream& out) const;
 		void loadKept(std::istream& in);
 
+		// The game's recorded <demo> (RawDemo::recorded false for none).
+		const RawDemo& getDemo(void) const noexcept { return demo; }
+
+		// <demo />: asks for the demo to play; Engine, which has the keys,
+		// plays it (takeDemoRequest).
+		void requestDemo(void) noexcept { demoAsked = true; }
+		bool takeDemoRequest(void) noexcept { return std::exchange(demoAsked, false); }
+
 		// Whether the game <keeps> anything.
 		bool keepsAnything(void) const noexcept;
 
@@ -321,6 +329,8 @@ namespace xge
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
 		unsigned long resets = 0;
+		RawDemo demo;
+		bool demoAsked = false;
 
 		// FrameRules: what the game file says, asked by playOneFrame.
 		bool inPlay(const Object& object) override { return isShown(object); }
@@ -366,6 +376,9 @@ namespace xge
 		std::map<std::string, std::string> currentScenes;
 		std::map<std::string, std::vector<Timer>> sceneTimers;
 		unsigned long sceneChanges = 0;
+
+		// A <demo /> in a game with no <demo> stops the load.
+		void checkDemo(void) const;
 
 		// One player's own game while another plays (see startTurns): every
 		// object (those the game keeps are left alone), every state's and

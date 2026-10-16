@@ -560,6 +560,15 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <!-- A key of a recorded <demo>: which, and the frame it happened at. -->
+  <xs:complexType name="demoKeyType">
+    <xs:simpleContent>
+      <xs:extension base="xs:unsignedInt">
+        <xs:attribute name="button" type="xs:string" use="required" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
   <!-- A bitmap's <color>: with no char=, the color of its '*'s; with char="w", of its 'w's. -->
   <xs:complexType name="bitmapColorType">
     <xs:simpleContent>
@@ -686,6 +695,8 @@
       </xs:element>
       <!-- pass: the next player's turn; out: this player is out, and the next player's turn -->
       <xs:element name="pass" type="emptyType" />
+      <!-- demo: the game's recorded <demo> plays, until a key is pressed -->
+      <xs:element name="demo" type="emptyType" />
       <xs:element name="out" type="emptyType" />
       <!-- rank: the entry variable= is of goes into the group into= (the best first), in place by that variable -->
       <xs:element name="rank">
@@ -1399,6 +1410,24 @@
                   <xs:attribute name="name" type="xs:string" use="required" />
                 </xs:complexType>
               </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <!--
+          A recorded game for the attract mode (written by recording a game with xgecli):
+          the random seed it was played with, how many frames long it is,
+          then each key pressed and let go, at the frame it happened. A
+          <demo /> command plays it.
+        -->
+        <xs:element name="demo" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="seed" type="xs:unsignedInt" />
+              <xs:element name="frames" type="xs:unsignedInt" />
+              <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="press" type="demoKeyType" />
+                <xs:element name="release" type="demoKeyType" />
+              </xs:choice>
             </xs:sequence>
           </xs:complexType>
         </xs:element>

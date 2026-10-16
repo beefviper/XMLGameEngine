@@ -30,6 +30,28 @@ namespace xge::parts
 	}
 
 	// <random min="..." max="..." />
+	// A key of a recorded <demo>, as a table of them is written (it ends with
+	// a null button): which, pressed or let go, and the frame.
+	struct DemoStep
+	{
+		const char* button;
+		bool pressed;
+		unsigned int frame;
+	};
+
+	inline RawDemo demo(unsigned int seed, unsigned int frames, const DemoStep* keys)
+	{
+		RawDemo recorded;
+		recorded.recorded = true;
+		recorded.seed = seed;
+		recorded.frames = frames;
+		for (; keys->button != nullptr; ++keys)
+		{
+			recorded.keys.push_back({ keys->button, keys->pressed, keys->frame });
+		}
+		return recorded;
+	}
+
 	// The pieces of a <text>: a <content>, a <number> and a <letter>.
 	inline RawTextPiece words(std::string text)
 	{

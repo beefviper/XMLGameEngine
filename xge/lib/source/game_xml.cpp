@@ -7,6 +7,8 @@
 
 #include "data_folder.h"
 #include "game.h"
+#include "keycode.h"
+#include "spelling.h"
 #include "xsd_lite.h"
 
 #include <algorithm>
@@ -767,7 +769,7 @@ namespace xge
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
-				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "move" || name == "hop"
+				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter";
@@ -2267,7 +2269,7 @@ namespace xge
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
-		std::vector<std::string>& rawKeeps, SchemaValidation& validation)
+		std::vector<std::string>& rawKeeps, RawDemo& rawDemo, SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
 
@@ -2367,6 +2369,39 @@ namespace xge
 			}
 		}
 
+		// load the demo (optional: a recorded game for the attract mode)
+		if (std::unique_ptr<XmlNode> demoNode = findChild(root.get(), "demo"))
+		{
+			const std::string demoWhere = "<demo>";
+			const auto whole = [&](const XmlNode& node, const std::string& here)
+			{
+				const std::string text = readText(node);
+				if (text.empty() || text.find_first_not_of("0123456789") != std::string::npos)
+				{
+					fail(here, "\"" + text + "\" is not a whole number");
+				}
+				return static_cast<unsigned int>(std::stoul(text));
+			};
+			rawDemo.recorded = true;
+			rawDemo.seed = whole(*requireChild(*demoNode, "seed", demoWhere), demoWhere + " > <seed>");
+			rawDemo.frames = whole(*requireChild(*demoNode, "frames", demoWhere), demoWhere + " > <frames>");
+			for (std::unique_ptr<XmlNode> child = demoNode->getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag != "press" && tag != "release") { continue; }
+				const std::string here = demoWhere + " > <" + tag + ">";
+				DemoKey key;
+				key.button = requireAttribute(*child, "button", here);
+				key.pressed = tag == "press";
+				key.frame = whole(*child, here);
+				if (keyCodeFromString(key.button) == KeyCode::Unknown)
+				{
+					fail(here, "there is no key named '" + key.button + "'" + didYouMean(key.button, keyNames()));
+				}
+				rawDemo.keys.push_back(std::move(key));
+			}
+		}
+
 		// load states: the named <keys>, <shows> and <conditions> sets first, so
 		// any state can use any of them (a <shows> or <conditions> set can take
 		// a set written before it)
@@ -2414,7 +2449,7 @@ namespace xge
 	{
 		GameData data;
 		SchemaValidation validation = SchemaValidation::None;
-		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.keeps, validation);
+		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.keeps, data.demo, validation);
 
 		std::ostringstream said;
 		said << validation;
@@ -2425,5 +2460,57 @@ namespace xge
 	Game::Game(const std::string& file) :
 		Game(readGame(file))
 	{
+	}
+
+	std::string withDemo(const std::string& gameText, const RawDemo& demo)
+	{
+		std::ostringstream element;
+		element << "  <demo>\n"
+			<< "    <seed>" << demo.seed << "</seed>\n"
+			<< "    <frames>" << demo.frames << "</frames>\n";
+		for (const DemoKey& key : demo.keys)
+		{
+			const char* tag = key.pressed ? "press" : "release";
+			element << "    <" << tag << " button=\"" << key.button << "\">" << key.frame << "</" << tag << ">\n";
+		}
+		element << "  </demo>\n";
+
+		// The one it had goes, from the start of its line to the end of it.
+		std::string text = gameText;
+		const auto open = text.find("<demo>", text.rfind("</states>") == std::string::npos ? 0 : text.rfind("</states>"));
+		if (open != std::string::npos)
+		{
+			const auto close = text.find("</demo>", open);
+			if (close != std::string::npos)
+			{
+				const auto lineStart = text.rfind('\n', open);
+				auto end = text.find('\n', close);
+				end = end == std::string::npos ? text.size() : end + 1;
+				text.erase(lineStart == std::string::npos ? 0 : lineStart + 1, end - (lineStart == std::string::npos ? 0 : lineStart + 1));
+			}
+		}
+
+		const auto gameEnd = text.rfind("</game>");
+		if (gameEnd == std::string::npos)
+		{
+			throw std::runtime_error("the game file has no </game> to write the demo before");
+		}
+
+		// Lines end as the file's do (a Windows checkout's end in \r\n).
+		std::string lines = element.str();
+		if (text.find("\r\n") != std::string::npos)
+		{
+			std::string crlf;
+			for (const char c : lines)
+			{
+				if (c == '\n') { crlf += '\r'; }
+				crlf += c;
+			}
+			lines = std::move(crlf);
+		}
+
+		const auto lineStart = text.rfind('\n', gameEnd);
+		text.insert(lineStart == std::string::npos ? gameEnd : lineStart + 1, lines);
+		return text;
 	}
 }

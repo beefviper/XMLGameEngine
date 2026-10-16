@@ -166,6 +166,7 @@ namespace xge
 		}
 		if (verb == "pass") { return CmdPass{}; }
 		if (verb == "out") { return CmdOut{}; }
+		if (verb == "demo") { return CmdDemo{}; }
 
 		if (verb == "push") { return CmdPushState{ raw.state }; }
 		if (verb == "enter") { return CmdEnterScene{ raw.scene, raw.way }; }
@@ -371,6 +372,7 @@ namespace xge
 			},
 			[&](const CmdPass&) { o << "pass()"; },
 			[&](const CmdOut&) { o << "out()"; },
+			[&](const CmdDemo&) { o << "demo()"; },
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
 			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },

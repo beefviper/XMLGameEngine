@@ -46,6 +46,9 @@
     both are out the game ends.
   * The best and the table are kept, and the engine writes what is kept to
     saves/galaxian.xml, so they last from one run of the program to the next.
+  * Left on the title for ten seconds, the game plays itself (attract mode):
+    the title's timer runs <demo />, which plays the game's recorded <demo>,
+    a seed and the keys pressed frame by frame, until a key is pressed.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -326,6 +329,10 @@
           </turns>
         </input>
       </inputs>
+      <!-- left alone, the game shows itself being played -->
+      <timers>
+        <timer><after>10</after><demo /></timer>
+      </timers>
     </state>
     <state name="playing">
       <objects>
@@ -898,4 +905,63 @@
       </inputs>
     </state>
   </states>
+  <!-- the attract mode: a game played by itself, from the title after ten seconds -->
+  <demo>
+    <seed>20261016</seed>
+    <frames>1200</frames>
+    <press button="space">30</press>
+    <release button="space">34</release>
+    <press button="left">200</press>
+    <press button="space">240</press>
+    <release button="space">244</release>
+    <release button="left">260</release>
+    <press button="space">285</press>
+    <release button="space">289</release>
+    <press button="space">330</press>
+    <release button="space">334</release>
+    <press button="space">375</press>
+    <release button="space">379</release>
+    <press button="right">420</press>
+    <press button="space">420</press>
+    <release button="space">424</release>
+    <press button="space">465</press>
+    <release button="space">469</release>
+    <press button="space">510</press>
+    <release button="space">514</release>
+    <release button="right">540</release>
+    <press button="space">555</press>
+    <release button="space">559</release>
+    <press button="space">600</press>
+    <release button="space">604</release>
+    <press button="space">645</press>
+    <release button="space">649</release>
+    <press button="space">690</press>
+    <release button="space">694</release>
+    <press button="left">700</press>
+    <press button="space">735</press>
+    <release button="space">739</release>
+    <release button="left">760</release>
+    <press button="space">780</press>
+    <release button="space">784</release>
+    <press button="space">825</press>
+    <release button="space">829</release>
+    <press button="space">870</press>
+    <release button="space">874</release>
+    <press button="space">915</press>
+    <release button="space">919</release>
+    <press button="right">950</press>
+    <press button="space">960</press>
+    <release button="space">964</release>
+    <release button="right">990</release>
+    <press button="space">1005</press>
+    <release button="space">1009</release>
+    <press button="space">1050</press>
+    <release button="space">1054</release>
+    <press button="space">1095</press>
+    <release button="space">1099</release>
+    <press button="space">1140</press>
+    <release button="space">1144</release>
+    <press button="space">1185</press>
+    <release button="space">1189</release>
+  </demo>
 </game>
