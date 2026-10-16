@@ -4,7 +4,7 @@
 
 ## Language and engine
 
-- **Chasing and aiming** ([chase-and-paths](24-chase-and-paths.md)): aim in 8 ways, lead a target, chase round walls, a condition on distance; Galaxian's divers and bombs could `<aim>`. Only the front invader of a column firing ([pools-and-enemies](10-pools-and-enemies.md)).
+- **Chasing and aiming** ([chase-and-paths](24-chase-and-paths.md)): aim in 8 ways, lead a target, chase round walls; Galaxian's divers and bombs could `<aim>`. Only the front invader of a column firing ([pools-and-enemies](10-pools-and-enemies.md)).
 - **Donkey Kong** ([platforming](23-platforming.md)): sloped girders, barrels down ladders, points for a jumped barrel, the hammer, the rest of the air-control ladder.
 - **Galaxian** ([chase-and-paths](24-chase-and-paths.md)): a swaying formation, divers that aim at the ship, the flagship taking escorts, points doubled in a dive, curved path legs. Its speeds and timings were chosen without seeing it played; so were Berserk's. Tune them first.
 - **Asteroids**: wrapping and expiring shots, a safe respawn, a saucer, more waves. Lunar Lander could turn with `<heading>` and score by fuel left.
