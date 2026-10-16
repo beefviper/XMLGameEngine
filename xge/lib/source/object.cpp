@@ -10,6 +10,29 @@
 
 namespace xge
 {
+	std::string showPiece(RawTextPiece::Kind kind, float value)
+	{
+		if (kind != RawTextPiece::Kind::Letter)
+		{
+			return formatDisplayNumber(value);
+		}
+		const long whole = std::lround(std::floor(value));
+		const long letter = ((whole % 26) + 26) % 26;
+		return std::string(1, static_cast<char>('A' + letter));
+	}
+
+	std::string joinText(const std::vector<TextPiece>& pieces)
+	{
+		std::string text;
+		for (std::size_t i = 0; i < pieces.size(); ++i)
+		{
+			const bool word = i > 0 && !(pieces[i].kind == RawTextPiece::Kind::Letter && pieces[i - 1].kind == RawTextPiece::Kind::Letter);
+			if (word) { text += ' '; }
+			text += pieces[i].shown;
+		}
+		return text;
+	}
+
 	const std::string& Object::lookName() const
 	{
 		static const std::string none;

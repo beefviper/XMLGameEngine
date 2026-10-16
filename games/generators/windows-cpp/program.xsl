@@ -59,6 +59,11 @@ int main()
 		}
 
 		xge::Engine engine(game, std::make_unique&lt;xge::SFMLWindow&gt;(game.getWindowDesc()), std::move(audio));
+
+		// What the game keeps (a best score) lasts from one run to the next.
+		engine.keepIn("saves/</xsl:text>
+    <xsl:value-of select="$name" />
+    <xsl:text>.xml");
 		engine.loop();
 	}
 	catch (const std::exception&amp; error)

@@ -23,6 +23,13 @@ namespace xge
 {
 	namespace
 	{
+		// Whether a text sprite has a <number> or a <letter> among its pieces.
+		bool showsNumbers(const RawSprite& sprite)
+		{
+			return std::any_of(sprite.text.begin(), sprite.text.end(),
+				[](const RawTextPiece& piece) { return piece.kind != RawTextPiece::Kind::Words; });
+		}
+
 		// The object a command names: its exact name (aliens.3.2), the name
 		// from the file (aliens), or the name of its <group> - the same lookup
 		// Game::tryGetObject does while the game runs.
@@ -104,6 +111,7 @@ namespace xge
 				[](const CmdStop&) { return std::string("<stop />"); },
 				[](const CmdIncrement&) { return std::string("<inc>"); },
 				[](const CmdCopy&) { return std::string("<copy>"); },
+				[](const CmdRank&) { return std::string("<rank>"); },
 				[](const CmdDecrement&) { return std::string("<dec>"); },
 				[](const CmdPushState&) { return std::string("<push>"); },
 				[](const CmdPopState&) { return std::string("<pop>"); },
@@ -171,8 +179,8 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
-			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
+			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
+			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
 				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<wander>" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
@@ -451,6 +459,28 @@ namespace xge
 				const std::string tag = "<copy variable=\"" + copy->from + "\" into=\"" + copy->into + "\" />";
 				checkVariable(copy->from, tag, objects, where, false);
 				checkVariable(copy->into, tag, objects, where, false);
+			}
+			else if (const auto* rank = std::get_if<CmdRank>(&command))
+			{
+				// The entry's variable, and a group whose every member has one
+				// of that name to be ordered by.
+				const std::string tag = "<rank variable=\"" + rank->entry + "\" into=\"" + rank->table + "\" />";
+				checkVariable(rank->entry, tag, objects, where, false);
+				const std::string variableName = rank->entry.substr(rank->entry.rfind('.') + 1);
+				bool any = false;
+				for (const Object& object : objects)
+				{
+					if (!object.inGroup(rank->table)) { continue; }
+					any = true;
+					if (!object.variable.count(variableName))
+					{
+						throw std::runtime_error(where + ": " + tag + ": '" + object.name + "' has no variable named '" + variableName + "' to be ranked by");
+					}
+				}
+				if (!any)
+				{
+					throw std::runtime_error(where + ": " + tag + ": into= names no <group> of the game" + didYouMean(rank->table, objectNames(objects)));
+				}
 			}
 		}
 
@@ -738,7 +768,7 @@ namespace xge
 			}
 
 			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name],
-				rawObject.hasHeading ? &firstPassTurned[rawObject.name] : nullptr);
+				rawObject.hasHeading ? &firstPassTurned[rawObject.name] : nullptr, &rawObject);
 			const ShapeKind kind = shapeKindFromTag(params.empty() ? std::string{} : params.at(0));
 			objectShapeKinds[rawObject.name] = kind;
 			objectSizes[rawObject.name] = measureShapeSize(params, kind);
@@ -772,8 +802,8 @@ namespace xge
 
 			// Only a text showing a number needs working out again here, for the
 			// value it has by now (see above).
-			std::vector<std::string> tempSpriteParams = (rawObject.sprite.kind == "text" && rawObject.sprite.textIsNumber)
-				? buildSpriteParams(rawObject.sprite, where)
+			std::vector<std::string> tempSpriteParams = (rawObject.sprite.kind == "text" && showsNumbers(rawObject.sprite))
+				? buildSpriteParams(rawObject.sprite, where, nullptr, nullptr, &rawObject)
 				: firstPassSpriteParams.at(rawObject.name);
 			const ShapeKind rawObjectShapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
 
@@ -798,9 +828,9 @@ namespace xge
 					look.name = rawLook.name;
 					look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap);
 					look.shapeKind = shapeKindFromTag(look.spriteParams.empty() ? std::string{} : look.spriteParams.at(0));
-					if (look.shapeKind == ShapeKind::Text && rawLook.textIsNumber)
+					if (look.shapeKind == ShapeKind::Text && showsNumbers(rawLook))
 					{
-						throw std::runtime_error(where + ": a look cannot be a text showing a <number>");
+						throw std::runtime_error(where + ": a look cannot be a text showing a <number> or a <letter>");
 					}
 					looks.push_back(std::move(look));
 				}
@@ -841,13 +871,12 @@ namespace xge
 				object.bitmap = object.animationBitmaps.front();
 			}
 
-			if (object.shapeKind == ShapeKind::Text && rawObject.sprite.textIsNumber
-				&& rawObject.sprite.number.kind == RawValue::Kind::Expression)
+			if (object.shapeKind == ShapeKind::Text && showsNumbers(rawObject.sprite))
 			{
-				if (auto binding = parseVariableReference(rawObject.sprite.number.text); binding && objectVariables.count(binding->first + "." + binding->second))
+				std::vector<TextPiece> pieces = textPieces(rawObject.sprite, where, &rawObject);
+				if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
 				{
-					object.boundVariableOwner = binding->first;
-					object.boundVariableName = binding->second;
+					object.textPieces = std::move(pieces);
 				}
 			}
 
@@ -1434,8 +1463,48 @@ namespace xge
 		}
 	}
 
+	std::vector<TextPiece> game_expr::textPieces(const RawSprite& sprite, const std::string& where, const RawObject* self)
+	{
+		std::vector<TextPiece> pieces;
+		for (const RawTextPiece& raw : sprite.text)
+		{
+			TextPiece piece;
+			piece.kind = raw.kind;
+			if (raw.kind == RawTextPiece::Kind::Words)
+			{
+				piece.shown = raw.words;
+				pieces.push_back(std::move(piece));
+				continue;
+			}
+
+			if (raw.value.kind == RawValue::Kind::Expression)
+			{
+				if (const auto reference = parseVariableReference(raw.value.text))
+				{
+					std::string owner = reference->first;
+					if (self && self->inGroup(owner) && objectVariables.count(self->name + "." + reference->second))
+					{
+						owner = self->name;
+					}
+					if (const auto found = objectVariables.find(owner + "." + reference->second); found != objectVariables.end())
+					{
+						piece.owner = owner;
+						piece.variable = reference->second;
+						piece.shown = showPiece(raw.kind, found->second);
+						pieces.push_back(std::move(piece));
+						continue;
+					}
+				}
+			}
+
+			piece.shown = showPiece(raw.kind, evaluate(raw.value, where));
+			pieces.push_back(std::move(piece));
+		}
+		return pieces;
+	}
+
 	std::vector<std::string> game_expr::buildSpriteParams(const RawSprite& sprite, const std::string& where,
-		std::shared_ptr<const Bitmap>* bitmap, std::shared_ptr<const Turnable>* turnable)
+		std::shared_ptr<const Bitmap>* bitmap, std::shared_ptr<const Turnable>* turnable, const RawObject* self)
 	{
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		checkColor(color, where);
@@ -1560,10 +1629,10 @@ namespace xge
 		}
 		else if (sprite.kind == "text")
 		{
-			// A fixed label, or a number - shown as the whole number it is, with
-			// no decimal point, the way someone typing the label would.
-			const std::string label = sprite.textIsNumber ? formatDisplayNumber(evaluate(sprite.number, where)) : sprite.content;
-			params = { "text", label, std::to_string(evaluate(sprite.size, where)), color };
+			// Its pieces: fixed labels, numbers shown as the whole numbers they
+			// are, with no decimal point, the way someone typing the label
+			// would, and letters.
+			params = { "text", joinText(textPieces(sprite, where, self)), std::to_string(evaluate(sprite.size, where)), color };
 		}
 		else if (sprite.kind == "image")
 		{

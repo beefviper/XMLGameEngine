@@ -286,11 +286,14 @@
       <xs:element name="text">
         <xs:complexType>
           <xs:sequence>
-            <xs:choice>
+            <!-- its pieces, in order, a space between them (letters side by side make one word) -->
+            <xs:choice maxOccurs="unbounded">
               <!-- a fixed label -->
               <xs:element name="content" type="xs:string" />
               <!-- a live number: an owner.variable stays up to date as it changes -->
               <xs:element name="number" type="valueType" />
+              <!-- a number shown as a letter, 0 is A and 25 is Z, live the same way -->
+              <xs:element name="letter" type="valueType" />
             </xs:choice>
             <xs:element name="size" type="valueType" />
             <xs:element name="color" type="xs:string" minOccurs="0" />
@@ -403,9 +406,10 @@
       <xs:element name="text">
         <xs:complexType>
           <xs:sequence>
-            <xs:choice minOccurs="0">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
               <xs:element name="content" type="xs:string" />
               <xs:element name="number" type="valueType" />
+              <xs:element name="letter" type="valueType" />
             </xs:choice>
             <xs:element name="size" type="valueType" minOccurs="0" />
             <xs:element name="color" type="xs:string" minOccurs="0" />
@@ -663,6 +667,13 @@
       <xs:element name="dec" type="variableReferenceType" />
       <!-- copy: the variable into= takes the number variable= holds now (both owner.variable) -->
       <xs:element name="copy">
+        <xs:complexType>
+          <xs:attribute name="variable" type="xs:string" use="required" />
+          <xs:attribute name="into" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <!-- rank: the entry variable= is of goes into the group into= (the best first), in place by that variable -->
+      <xs:element name="rank">
         <xs:complexType>
           <xs:attribute name="variable" type="xs:string" use="required" />
           <xs:attribute name="into" type="xs:string" use="required" />

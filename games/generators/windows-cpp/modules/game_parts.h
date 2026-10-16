@@ -30,6 +30,30 @@ namespace xge::parts
 	}
 
 	// <random min="..." max="..." />
+	// The pieces of a <text>: a <content>, a <number> and a <letter>.
+	inline RawTextPiece words(std::string text)
+	{
+		RawTextPiece piece;
+		piece.words = std::move(text);
+		return piece;
+	}
+
+	inline RawTextPiece number(RawValue shown)
+	{
+		RawTextPiece piece;
+		piece.kind = RawTextPiece::Kind::Number;
+		piece.value = std::move(shown);
+		return piece;
+	}
+
+	inline RawTextPiece letter(RawValue shown)
+	{
+		RawTextPiece piece;
+		piece.kind = RawTextPiece::Kind::Letter;
+		piece.value = std::move(shown);
+		return piece;
+	}
+
 	inline RawValue random(std::string min, std::string max)
 	{
 		RawValue drawn;

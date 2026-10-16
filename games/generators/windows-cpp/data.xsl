@@ -448,26 +448,27 @@
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$kind = 'text'">
-        <xsl:choose>
-          <xsl:when test="$shape/content">
-            <xsl:call-template name="look-text">
-              <xsl:with-param name="indent" select="$indent" />
-              <xsl:with-param name="name" select="'content'" />
-              <xsl:with-param name="node" select="$shape/content" />
-            </xsl:call-template>
-            <xsl:if test="$change">
-              <xsl:value-of select="concat($indent, 'look.textIsNumber = false;&#10;')" />
-            </xsl:if>
-          </xsl:when>
-          <xsl:when test="$shape/number">
-            <xsl:value-of select="concat($indent, 'look.textIsNumber = true;&#10;')" />
-            <xsl:call-template name="look-value">
-              <xsl:with-param name="indent" select="$indent" />
-              <xsl:with-param name="name" select="'number'" />
-              <xsl:with-param name="node" select="$shape/number" />
-            </xsl:call-template>
-          </xsl:when>
-        </xsl:choose>
+        <!-- its pieces in order (readTextPieces); none, and a change keeps them -->
+        <xsl:if test="$shape/content | $shape/number | $shape/letter">
+          <xsl:value-of select="concat($indent, 'look.text = { ')" />
+          <xsl:for-each select="$shape/content | $shape/number | $shape/letter">
+            <xsl:if test="position() &gt; 1">, </xsl:if>
+            <xsl:choose>
+              <xsl:when test="self::content">
+                <xsl:text>words(</xsl:text>
+                <xsl:call-template name="text" />
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="concat(local-name(), '(')" />
+                <xsl:call-template name="value">
+                  <xsl:with-param name="node" select="." />
+                </xsl:call-template>
+              </xsl:otherwise>
+            </xsl:choose>
+            <xsl:text>)</xsl:text>
+          </xsl:for-each>
+          <xsl:text> };&#10;</xsl:text>
+        </xsl:if>
         <xsl:call-template name="look-value">
           <xsl:with-param name="indent" select="$indent" />
           <xsl:with-param name="name" select="'size'" />

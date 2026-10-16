@@ -5,6 +5,7 @@
 
 #include "game_session.h"
 
+#include "data_folder.h"
 #include "game_stage.h"
 #include "game_xml.h"
 #include "qt_window.h"
@@ -100,6 +101,7 @@ namespace xge
 			const WindowDesc& desc = game->getWindowDesc();
 
 			engine = std::make_unique<Engine>(*game, makeWindow(desc), makeAudio());
+			engine->keepIn(keptFileFor(file.toStdString()).string());
 
 			// The frame pace: the game moves a fixed amount a frame, so this is
 			// also its speed.

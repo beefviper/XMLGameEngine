@@ -32,8 +32,15 @@
   * Paused and game over draw the game still underneath (<show state>).
   * The best score is an object of the game's own, which the title and play
     show. While the ship's score is <above> it, a condition <copy>s the score
-    into it, and <keeps> passes it over when Space starts a new game, so it
-    lasts until the program is closed.
+    into it, and <keeps> passes it over when Space starts a new game.
+  * The best five are a table on the title screen: a group of five places,
+    the best first, each a <text> of three <letter>s and a <number> that
+    name the group's variables (table.first, table.score), so each place
+    shows its own. A game that ends above the fifth asks for initials, one
+    letter a state (W and S or the arrows change it, Space goes on), and
+    <rank> puts the entry in its place, the ones below moving down.
+  * The best and the table are kept, and the engine writes what is kept to
+    saves/galaxian.xml, so they last from one run of the program to the next.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -59,6 +66,10 @@
     <variable name="spacing">0.15</variable>
     <variable name="step">4</variable>
     <variable name="margin">12</variable>
+    <variable name="tabletop">250</variable>
+    <variable name="tablerow">36</variable>
+    <variable name="letters">window.width.center - 80</variable>
+    <variable name="letterstep">60</variable>
     <variable name="startlives">3</variable>
   </variables>
   <sounds>
@@ -160,12 +171,96 @@
         <variable name="score">0</variable>
       </variables>
     </object>
+    <!-- the best five, on the title screen: three letters and a score each -->
+    <group name="table">
+      <sprite>
+        <text>
+          <letter>table.first</letter>
+          <letter>table.second</letter>
+          <letter>table.third</letter>
+          <number>table.score</number>
+          <size>28</size>
+          <color>color.cyan</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - 60</x></position>
+      <variables>
+        <variable name="first">0</variable>
+        <variable name="second">0</variable>
+        <variable name="third">0</variable>
+        <variable name="score">0</variable>
+      </variables>
+      <member><position><y>tabletop</y></position></member>
+      <member><position><y>tabletop + tablerow</y></position></member>
+      <member><position><y>tabletop + tablerow * 2</y></position></member>
+      <member><position><y>tabletop + tablerow * 3</y></position></member>
+      <member><position><y>tabletop + tablerow * 4</y></position></member>
+    </group>
+    <!-- a score for the table, and the initials it is given -->
+    <object name="entry">
+      <sprite>
+        <text>
+          <content>NEW BEST</content>
+          <size>60</size>
+          <color>color.yellow</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - entry.width / 2</x><y>120</y></position>
+      <variables>
+        <variable name="first">0</variable>
+        <variable name="second">0</variable>
+        <variable name="third">0</variable>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
+    <object name="entryscore">
+      <sprite>
+        <text>
+          <number>entry.score</number>
+          <size>36</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - entryscore.width / 2</x><y>210</y></position>
+    </object>
+    <object name="letter1">
+      <sprite><text><letter>entry.first</letter><size>60</size><color>color.cyan</color></text></sprite>
+      <position><x>letters</x><y>300</y></position>
+    </object>
+    <object name="letter2">
+      <sprite><text><letter>entry.second</letter><size>60</size><color>color.cyan</color></text></sprite>
+      <position><x>letters + letterstep</x><y>300</y></position>
+    </object>
+    <object name="letter3">
+      <sprite><text><letter>entry.third</letter><size>60</size><color>color.cyan</color></text></sprite>
+      <position><x>letters + letterstep * 2</x><y>300</y></position>
+    </object>
+    <object name="howto">
+      <sprite>
+        <text>
+          <content>w and s, or up and down, change the letter; space for the next</content>
+          <size>18</size>
+          <color>color.lightgrey</color>
+        </text>
+      </sprite>
+      <position><x>window.width.center - howto.width / 2</x><y>440</y></position>
+    </object>
   </objects>
-  <!-- a new game starts the score again, but not the best -->
+  <!-- a new game starts the score again, but not the best or the table -->
   <keeps>
     <keep object="best" />
+    <keep object="table" />
   </keeps>
   <states>
+    <!-- what the three states that ask for initials show -->
+    <shows name="initials">
+      <show object="entry" />
+      <show object="entryscore" />
+      <show object="letter1" />
+      <show object="letter2" />
+      <show object="letter3" />
+      <show object="howto" />
+    </shows>
     <state name="mainmenu">
       <objects>
         <object name="title">
@@ -176,7 +271,7 @@
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-120)</y></position>
+          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-230)</y></position>
         </object>
         <object name="help">
           <sprite>
@@ -186,7 +281,7 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
+          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-150)</y></position>
         </object>
         <object name="keys">
           <sprite>
@@ -196,7 +291,7 @@
               <color>color.lightgrey</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (20)</y></position>
+          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (-115)</y></position>
         </object>
         <object name="start">
           <sprite>
@@ -206,11 +301,12 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (110)</y></position>
+          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (230)</y></position>
         </object>
       </objects>
       <shows>
         <show object="best" />
+        <show object="table" />
       </shows>
       <inputs>
         <input button="space">
@@ -676,6 +772,67 @@
       </shows>
       <inputs>
         <input button="space">
+          <reset />
+        </input>
+      </inputs>
+      <conditions>
+        <!-- above the fifth of the table: initials for it -->
+        <condition object="ship" variable="score">
+          <above object="table.5" variable="score" />
+          <copy variable="ship.score" into="entry.score" />
+          <pop state="initial1" />
+        </condition>
+      </conditions>
+    </state>
+    <!-- the initials, a letter a state; the cursor shows which -->
+    <state name="initial1">
+      <objects>
+        <object name="cursor1">
+          <sprite><rectangle><width>36</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+          <position><x>letters</x><y>375</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show set="initials" />
+      </shows>
+      <inputs>
+        <input button="w up"><inc variable="entry.first" /></input>
+        <input button="s down"><dec variable="entry.first" /></input>
+        <input button="space d right"><pop state="initial2" /></input>
+      </inputs>
+    </state>
+    <state name="initial2">
+      <objects>
+        <object name="cursor2">
+          <sprite><rectangle><width>36</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+          <position><x>letters + letterstep</x><y>375</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show set="initials" />
+      </shows>
+      <inputs>
+        <input button="w up"><inc variable="entry.second" /></input>
+        <input button="s down"><dec variable="entry.second" /></input>
+        <input button="space d right"><pop state="initial3" /></input>
+      </inputs>
+    </state>
+    <state name="initial3">
+      <objects>
+        <object name="cursor3">
+          <sprite><rectangle><width>36</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+          <position><x>letters + letterstep * 2</x><y>375</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show set="initials" />
+      </shows>
+      <inputs>
+        <input button="w up"><inc variable="entry.third" /></input>
+        <input button="s down"><dec variable="entry.third" /></input>
+        <!-- the entry into its place in the table, and a new game -->
+        <input button="space d right">
+          <rank variable="entry.score" into="table" />
           <reset />
         </input>
       </inputs>

@@ -176,4 +176,9 @@ namespace xge
 
 		return std::nullopt;
 	}
+
+	std::filesystem::path keptFileFor(const std::filesystem::path& gameFile)
+	{
+		return std::filesystem::path{ "saves" } / gameFile.stem().concat(".xml");
+	}
 }

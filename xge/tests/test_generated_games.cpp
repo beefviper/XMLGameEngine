@@ -185,9 +185,12 @@ namespace
 			value(at + ".width", s.width);
 			value(at + ".height", s.height);
 			value(at + ".size", s.size);
-			text(at + ".content", s.content);
-			flag(at + ".textIsNumber", s.textIsNumber);
-			value(at + ".number", s.number);
+			for (const RawTextPiece& piece : s.text)
+			{
+				text(at + ".text.kind", std::to_string(static_cast<int>(piece.kind)));
+				text(at + ".text.words", piece.words);
+				value(at + ".text.value", piece.value);
+			}
 			text(at + ".path", s.path);
 			text(at + ".flip", s.flip);
 			text(at + ".color", s.color);

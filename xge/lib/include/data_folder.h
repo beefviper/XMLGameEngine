@@ -54,6 +54,10 @@ namespace xge
 	std::optional<std::filesystem::path> locateGameFile(const std::string& game,
 		const std::filesystem::path& gamesDirectory);
 
+	// Where what a game <keeps> lasts between runs (Engine::keepIn):
+	// saves/<game>.xml, in the working directory (the games folder).
+	std::filesystem::path keptFileFor(const std::filesystem::path& gameFile);
+
 	// The schema a game file names (its xsi:noNamespaceSchemaLocation),
 	// relative to the game's folder: there when it is there, else a file of
 	// that name in the game's folder or the nearest folder above it. A game

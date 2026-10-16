@@ -539,14 +539,13 @@ TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", 
 	Loaded loaded(gameXml("", objectXml(owner) + objectXml(bound) + objectXml(sum) + objectXml(label)));
 	Game& game = loaded.game;
 
-	CHECK(game.getObject("bound").boundVariableOwner == "paddle");
-	CHECK(game.getObject("bound").boundVariableName == "score");
+	CHECK(game.getObject("bound").showsVariable("paddle", "score"));
 	CHECK(game.getObject("bound").spriteParams.at(1) == "3");
 
-	CHECK(game.getObject("sum").boundVariableOwner.empty());
+	CHECK(game.getObject("sum").textPieces.empty());
 	CHECK(game.getObject("sum").spriteParams.at(1) == "4");
 
-	CHECK(game.getObject("label").boundVariableOwner.empty());
+	CHECK(game.getObject("label").textPieces.empty());
 	CHECK(game.getObject("label").spriteParams.at(1) == "paddle.score"); // a label is text, not a lookup
 }
 

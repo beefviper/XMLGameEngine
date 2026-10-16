@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
 		game.printGame();
 
 		xge::Engine engine(game, options.window, options.audio);
+		engine.keepIn(xge::keptFileFor(filename).string());
 
 		std::cout << "=== after Engine: sizes measured, positions finished ===\n\n";
 		game.printGame();

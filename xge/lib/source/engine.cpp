@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cmath>
 #include <exception>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
@@ -167,6 +169,61 @@ namespace xge
 
 		// Keys, collisions and conditions have all had their say.
 		playRequestedSounds();
+
+		// A new game: what the last one left to keep is written down.
+		if (!keptFile.empty() && game.resetCount() != keptResets)
+		{
+			keptResets = game.resetCount();
+			writeKept();
+		}
+	}
+
+	Engine::~Engine()
+	{
+		writeKept();
+	}
+
+	void Engine::keepIn(const std::string& file)
+	{
+		if (!game.keepsAnything())
+		{
+			return;
+		}
+		keptFile = file;
+		keptResets = game.resetCount();
+		std::ifstream in(file);
+		if (in)
+		{
+			game.loadKept(in);
+		}
+	}
+
+	void Engine::writeKept(void) const
+	{
+		if (keptFile.empty())
+		{
+			return;
+		}
+
+		// Written beside it and moved into place, so a program stopped while
+		// writing leaves the last good one.
+		try
+		{
+			const std::filesystem::path path{ keptFile };
+			if (path.has_parent_path()) { std::filesystem::create_directories(path.parent_path()); }
+			std::filesystem::path partial = path;
+			partial += ".partial";
+			{
+				std::ofstream out(partial, std::ios::trunc);
+				game.saveKept(out);
+				if (!out) { throw std::runtime_error("could not write " + partial.string()); }
+			}
+			std::filesystem::rename(partial, path);
+		}
+		catch (const std::exception& error)
+		{
+			std::cerr << "warning: what the game keeps was not saved: " << error.what() << '\n';
+		}
 	}
 
 	void Engine::pump(void)

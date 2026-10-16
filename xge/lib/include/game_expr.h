@@ -141,9 +141,18 @@ namespace xge
 		// drawing of lines or a <bitmap> is to be turned from is handed back
 		// through it (see Turnable), `bitmap` is the drawing at heading 0, and
 		// the size in the params is the square it turns in.
+		//
+		// A text's pieces that name a variable of `self`'s group (scores.score
+		// in a member of the group scores) mean `self`'s own.
 		std::vector<std::string> buildSpriteParams(const RawSprite& sprite, const std::string& where,
 			std::shared_ptr<const Bitmap>* bitmap = nullptr,
-			std::shared_ptr<const Turnable>* turnable = nullptr);
+			std::shared_ptr<const Turnable>* turnable = nullptr,
+			const RawObject* self = nullptr);
+
+		// The pieces of a text sprite as they show now: a <number> or a
+		// <letter> that is just owner.variable follows that variable (of
+		// `self`, for its group's name), the rest worked out once.
+		std::vector<TextPiece> textPieces(const RawSprite& sprite, const std::string& where, const RawObject* self);
 
 		// Where each cell of a group laid out in <columns> and <rows> goes,
 		// from the group's position, by its name (see RawCell). `spriteParams`

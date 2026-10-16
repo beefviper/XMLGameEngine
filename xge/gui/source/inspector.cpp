@@ -515,9 +515,12 @@ namespace xge
 			}
 		}
 
-		if (!first.boundVariableOwner.empty())
+		for (const TextPiece& piece : first.textPieces)
 		{
-			addInfo(node, tr("shows"), text(first.boundVariableOwner + "." + first.boundVariableName));
+			if (!piece.owner.empty())
+			{
+				addInfo(node, tr("shows"), text(piece.owner + "." + piece.variable));
+			}
 		}
 	}
 

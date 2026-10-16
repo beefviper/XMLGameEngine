@@ -215,7 +215,7 @@ TEST_CASE("names inside a scene mean its own first, then its state's, then the g
 	CHECK(loaded.game.getObject("playing.hero").variable.at("score") == 1);
 
 	const Object& shown = loaded.game.getObject("label");
-	CHECK(shown.boundVariableOwner == "playing.room2.tally");
+	CHECK(shown.showsVariable("playing.room2.tally", "hits"));
 	CHECK(shown.position.x == Approx(10));
 
 	// room2's own rock and tally, from its own rules

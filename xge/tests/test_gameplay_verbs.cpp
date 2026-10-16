@@ -5,7 +5,8 @@
 //
 // Catch2 tests for timers (an object's and a state's, <every> and <after>),
 // <facing> and firing along it, <jump>, <reverse />, <reset object> in a
-// collision, and named <keys> sets with several keys to one <input>.
+// collision, named <keys> sets with several keys to one <input>, a <text>
+// of pieces with <letter>s, and <rank>.
 //
 // Each game is written beside the shipped ones so that its schema path
 // resolves, and loaded with Xerces (full validation) or TinyXML2 (the built-in
@@ -847,4 +848,88 @@ TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game lo
 	fails({}, "<input button=\"space\"><copy variable=\"o\" into=\"o.score\" /></input>", "'o' is no variable");
 	fails({}, "<input button=\"space\"><copy variable=\"o.score\" /></input>", "into");
 	fails("<keeps><keep object=\"0\" /></keeps>", space, "<keep object=\"0\" />: names no object of the game (did you mean 'o'?)");
+}
+
+TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following its variable", "[scores][text]")
+{
+	const std::string owner = box("p", 0, 0, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">120</variable>"
+		"<variable name=\"a\">7</variable><variable name=\"b\">-1</variable><variable name=\"c\">27</variable></variables>");
+	const std::string label = "<object name=\"label\"><sprite><text><content>SCORE</content><number>p.score</number>"
+		"<letter>p.a</letter><letter>p.b</letter><letter>p.c</letter><number>p.score * 2</number><size>20</size></text></sprite>"
+		"<position><x>0</x><y>0</y></position></object>";
+
+	for (XmlBackend backend : { XmlBackend::Xerces, XmlBackend::PugiXml })
+	{
+		Loaded loaded(gameXml(owner + label, state("s", { "p", "label" })), backend);
+		Object& shown = loaded.game.getObject("label");
+		// A space between pieces, but letters side by side are one word; a
+		// letter goes round (-1 is Z, 27 is B); a sum is worked out once.
+		CHECK(shown.spriteParams.at(1) == "SCORE 120 HZB 240");
+		CHECK(shown.showsVariable("p", "a"));
+
+		loaded.game.incrementText("p.a");
+		loaded.game.incrementText("p.score", 5.0f);
+		CHECK(shown.spriteParams.at(1) == "SCORE 125 IZB 240");
+	}
+}
+
+TEST_CASE("a group's text naming the group's variables shows each member's own", "[scores][text][group]")
+{
+	const std::string group = "<group name=\"rows\"><sprite><text><letter>rows.l</letter><number>rows.n</number><size>20</size></text></sprite>"
+		"<position><x>0</x></position><variables><variable name=\"l\">0</variable><variable name=\"n\">0</variable></variables>"
+		"<member><position><y>0</y></position></member><member><position><y>30</y></position></member></group>";
+	Loaded loaded(gameXml(group, state("s", { "rows" })));
+	loaded.game.incrementText("rows.2.n", 9.0f);
+	loaded.game.incrementText("rows.2.l");
+	CHECK(loaded.game.getObject("rows.1").spriteParams.at(1) == "A 0");
+	CHECK(loaded.game.getObject("rows.2").spriteParams.at(1) == "B 9");
+}
+
+TEST_CASE("<rank> puts an entry into its place in a table, the rest moving down", "[scores][rank]")
+{
+	const std::string vars = "<variables><variable name=\"score\">0</variable><variable name=\"tag\">0</variable></variables>";
+	const std::string entry = box("entry", 0, 0, 10, 10, "<enabled>false</enabled>", {}, vars);
+	const std::string table = "<group name=\"table\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
+		"<position><x>0</x></position>" + vars + "<member><position><y>0</y></position></member><member><position><y>10</y></position></member>"
+		"<member><position><y>20</y></position></member></group>";
+	Loaded loaded(gameXml(entry + table, state("s", { "entry", "table" },
+		"<input button=\"space\"><rank variable=\"entry.score\" into=\"table\" /></input>")));
+	Game& game = loaded.game;
+
+	const auto enter = [&](float score, float tag)
+	{
+		game.setVariable("entry", "score", score);
+		game.setVariable("entry", "tag", tag);
+		game.rank("entry.score", "table");
+	};
+	const auto column = [&](const char* name)
+	{
+		return std::vector<float>{ loaded.variable("table.1", name), loaded.variable("table.2", name), loaded.variable("table.3", name) };
+	};
+
+	enter(50, 1);
+	enter(80, 2);
+	enter(50, 3); // a tie goes below the one already there
+	CHECK(column("score") == std::vector<float>{ 80, 50, 50 });
+	CHECK(column("tag") == std::vector<float>{ 2, 1, 3 });
+	enter(60, 4); // the last falls off
+	CHECK(column("score") == std::vector<float>{ 80, 60, 50 });
+	CHECK(column("tag") == std::vector<float>{ 2, 4, 1 });
+	enter(10, 5); // below them all: nothing
+	CHECK(column("tag") == std::vector<float>{ 2, 4, 1 });
+}
+
+TEST_CASE("<rank> names a variable and a group that has it", "[scores][rank]")
+{
+	const std::string vars = "<variables><variable name=\"score\">0</variable></variables>";
+	const std::string entry = box("entry", 0, 0, 10, 10, "<enabled>false</enabled>", {}, vars);
+	const std::string table = "<group name=\"table\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
+		"<position><x>0</x></position><member><position><y>0</y></position></member></group>";
+	const auto load = [&](const std::string& objects, const std::string& rank)
+	{
+		Loaded loaded(gameXml(objects, state("s", { "entry" }, "<input button=\"space\">" + rank + "</input>")));
+	};
+	CHECK_THROWS_WITH(load(entry + table, "<rank variable=\"entry.score\" into=\"table\" />"), ContainsSubstring("has no variable named 'score' to be ranked by"));
+	CHECK_THROWS_WITH(load(entry, "<rank variable=\"entry.score\" into=\"tabel\" />"), ContainsSubstring("into= names no <group>"));
+	CHECK_THROWS_WITH(load(entry, "<rank variable=\"entry.scor\" into=\"entry\" />"), ContainsSubstring("has no variable named 'scor'"));
 }

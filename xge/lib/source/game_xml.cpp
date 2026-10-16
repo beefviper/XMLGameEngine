@@ -326,6 +326,33 @@ namespace xge
 			return text;
 		}
 
+		// The pieces of a <text>, in the order written: each <content>,
+		// <number> and <letter>.
+		std::vector<RawTextPiece> readTextPieces(const XmlNode& shape, const std::string& where)
+		{
+			std::vector<RawTextPiece> pieces;
+			for (std::unique_ptr<XmlNode> child = shape.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				RawTextPiece piece;
+				if (tag == "content")
+				{
+					piece.words = readText(*child);
+				}
+				else if (tag == "number" || tag == "letter")
+				{
+					piece.kind = tag == "number" ? RawTextPiece::Kind::Number : RawTextPiece::Kind::Letter;
+					piece.value = readValue(*child, where + " > <" + tag + ">");
+				}
+				else
+				{
+					continue;
+				}
+				pieces.push_back(std::move(piece));
+			}
+			return pieces;
+		}
+
 		// A bitmap's <color char="w">s: a character and the color it draws,
 		// each in place of an earlier one of the same character. One with no
 		// char= is the color of the '*'s, read with the other shapes' <color>.
@@ -439,18 +466,10 @@ namespace xge
 			}
 			else if (kind == "text")
 			{
-				if (auto content = findChild(&shape, "content"))
+				sprite.text = readTextPieces(shape, here);
+				if (sprite.text.empty())
 				{
-					sprite.content = readText(*content);
-				}
-				else if (auto number = findChild(&shape, "number"))
-				{
-					sprite.textIsNumber = true;
-					sprite.number = readValue(*number, here);
-				}
-				else
-				{
-					fail(here, "needs a <content> (a label) or a <number>");
+					fail(here, "needs a <content> (a label), a <number> or a <letter>");
 				}
 
 				sprite.size = readValueOf(shape, "size", here);
@@ -547,15 +566,10 @@ namespace xge
 			}
 			else if (base.kind == "text")
 			{
-				if (auto content = findChild(shape.get(), "content"))
+				// Pieces given are the whole text; none, and it is kept.
+				if (std::vector<RawTextPiece> text = readTextPieces(*shape, here); !text.empty())
 				{
-					sprite.content = readText(*content);
-					sprite.textIsNumber = false;
-				}
-				else if (auto number = findChild(shape.get(), "number"))
-				{
-					sprite.textIsNumber = true;
-					sprite.number = readValue(*number, here);
+					sprite.text = std::move(text);
 				}
 				change("size", sprite.size);
 			}
@@ -753,7 +767,7 @@ namespace xge
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
-				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "move" || name == "hop"
+				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter";
@@ -790,7 +804,7 @@ namespace xge
 				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
 				else { command.amount = RawValue::expression("1"); }
 			}
-			if (verb == "copy") { requireAttribute(node, "variable", where); requireAttribute(node, "into", where); }
+			if (verb == "copy" || verb == "rank") { requireAttribute(node, "variable", where); requireAttribute(node, "into", where); }
 			if (verb == "push") { requireAttribute(node, "state", where); }
 			if (verb == "enter" && command.scene.empty() == command.way.empty())
 			{

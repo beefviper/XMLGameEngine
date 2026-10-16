@@ -13,6 +13,10 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iomanip>
+#include <limits>
+#include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 #include <variant>
@@ -35,6 +39,7 @@ namespace xge
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 		keep(keeps);
+		refreshAllBoundTexts();
 
 		for (const auto& state : states)
 		{
@@ -540,6 +545,123 @@ namespace xge
 		refreshBoundTexts(owner->name, into.substr(into.rfind('.') + 1), *variable);
 	}
 
+	bool Game::keepsAnything(void) const noexcept
+	{
+		return std::any_of(objects.begin(), objects.end(), [](const Object& object) { return object.kept; });
+	}
+
+	void Game::saveKept(std::ostream& out) const
+	{
+		out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+			<< "<!-- What the game keeps from one game to the next (its <keeps>), written by the engine. -->\n"
+			<< "<kept>\n";
+		for (const auto& object : objects)
+		{
+			if (!object.kept) { continue; }
+			out << "  <object name=\"" << object.name << "\"";
+			if (!object.lookName().empty()) { out << " sprite=\"" << object.lookName() << "\""; }
+			out << ">\n";
+			for (const auto& [name, value] : object.variable)
+			{
+				std::ostringstream number;
+				number << std::setprecision(std::numeric_limits<float>::max_digits10) << value;
+				out << "    <variable name=\"" << name << "\">" << number.str() << "</variable>\n";
+			}
+			out << "  </object>\n";
+		}
+		out << "</kept>\n";
+	}
+
+	void Game::loadKept(std::istream& in)
+	{
+		// The file is the engine's own, written by saveKept, one tag a line,
+		// so it is read a line at a time, without an XML library (a generated
+		// program has none).
+		static const std::regex objectLine{ R"line(^\s*<object name="([^"]*)"(?: sprite="([^"]*)")?>\s*$)line" };
+		static const std::regex variableLine{ R"line(^\s*<variable name="([^"]*)">([^<]*)</variable>\s*$)line" };
+
+		Object* object = nullptr;
+		std::string line;
+		while (std::getline(in, line))
+		{
+			std::smatch match;
+			if (std::regex_match(line, match, objectLine))
+			{
+				object = tryGetObject(match[1].str());
+				if (object && !object->kept) { object = nullptr; }
+				if (object && match[2].matched)
+				{
+					const auto look = std::find_if(object->looks.begin(), object->looks.end(),
+						[&](const Object::Look& each) { return each.name == match[2].str(); });
+					if (look != object->looks.end()) { object->showLook(static_cast<std::size_t>(look - object->looks.begin())); }
+				}
+			}
+			else if (object && std::regex_match(line, match, variableLine))
+			{
+				const auto variable = object->variable.find(match[1].str());
+				if (variable == object->variable.end()) { continue; }
+				try
+				{
+					variable->second = std::stof(match[2].str());
+				}
+				catch (const std::exception&)
+				{
+					std::cout << "warning: kept " << object->name << "." << variable->first << " is \"" << match[2].str() << "\", which is no number; left as it was\n";
+				}
+			}
+		}
+		refreshAllBoundTexts();
+	}
+
+	void Game::rank(const std::string& entry, const std::string& table)
+	{
+		const auto dot = entry.rfind('.');
+		Object* from = dot == std::string::npos ? nullptr : tryGetObject(entry.substr(0, dot));
+		const std::string by = dot == std::string::npos ? std::string{} : entry.substr(dot + 1);
+		if (!from || !from->variable.count(by))
+		{
+			std::cout << "warning: <rank variable=\"" << entry << "\" into=\"" << table << "\" />: no such variable\n";
+			return;
+		}
+
+		// The places, the best first, in the order the group's members are written.
+		const std::string group = fullName(table);
+		std::vector<Object*> places;
+		for (auto& object : objects)
+		{
+			if (object.inGroup(group)) { places.push_back(&object); }
+		}
+
+		// Its place is the first one it beats; an equal score stays above it.
+		const float score = from->variable.at(by);
+		const auto place = std::find_if(places.begin(), places.end(),
+			[&](const Object* each) { return each->variable.count(by) && each->variable.at(by) < score; });
+		if (place == places.end())
+		{
+			return;
+		}
+
+		for (auto below = places.end() - 1; below != place; --below)
+		{
+			(*below)->variable = (*(below - 1))->variable;
+		}
+		for (auto& [name, value] : (*place)->variable)
+		{
+			if (const auto given = from->variable.find(name); given != from->variable.end())
+			{
+				value = given->second;
+			}
+		}
+
+		for (Object* each : places)
+		{
+			for (const auto& [name, value] : each->variable)
+			{
+				refreshBoundTexts(each->name, name, value);
+			}
+		}
+	}
+
 	void Game::keep(const std::vector<std::string>& names)
 	{
 		// A name is an object or a group (every member of it), written out in
@@ -593,9 +715,8 @@ namespace xge
 
 		// Usual pattern (e.g. <inc variable="paddle1.score" />): change another object's
 		// own named <variable>, then refresh every text object whose displayed
-		// number is bound to it (Object::boundVariableOwner/boundVariableName,
-		// set from a <text> sprite whose <number> is paddle1.score - see
-		// parseVariableReference).
+		// number is bound to it (Object::textPieces, set from a <text> sprite
+		// whose <number> is paddle1.score - see parseVariableReference).
 		const std::string ownerName = target.substr(0, dot);
 		const std::string variableName = target.substr(dot + 1);
 
@@ -734,10 +855,9 @@ namespace xge
 
 		for (auto& object : objects)
 		{
-			if (object.boundVariableOwner == ownerName && object.boundVariableName == variableName)
+			if (object.showsVariable(ownerName, variableName))
 			{
-				object.spriteParams.at(1) = formatDisplayNumber(value);
-				object.visualDirty = true;
+				relabel(object);
 			}
 		}
 	}
@@ -866,22 +986,12 @@ namespace xge
 		// Refresh every text display bound to one of this object's variables
 		// (same notify pattern as incrementText above), so e.g. a HUD showing
 		// paddle1.score visibly drops back to 0 immediately, not just internally.
+		const std::string owner = object->name;
 		for (auto& other : objects)
 		{
-			if (other.boundVariableOwner != name)
+			if (std::any_of(other.textPieces.begin(), other.textPieces.end(), [&](const TextPiece& piece) { return piece.owner == owner; }))
 			{
-				continue;
-			}
-
-			const auto valueIt = object->variable.find(other.boundVariableName);
-			if (valueIt != object->variable.end())
-			{
-				const std::string text = formatDisplayNumber(valueIt->second);
-				if (other.spriteParams.at(1) != text)
-				{
-					other.spriteParams.at(1) = text;
-					other.visualDirty = true;
-				}
+				relabel(other);
 			}
 		}
 	}
@@ -1024,6 +1134,7 @@ namespace xge
 		// A new game starts quiet: whatever loop the last one left on (music,
 		// a thrust held into the game over) stops.
 		loops.clear();
+		++resets;
 
 		for (auto& object : objects)
 		{
@@ -1061,27 +1172,43 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			if (object.boundVariableOwner.empty())
+			if (!object.textPieces.empty())
+			{
+				relabel(object);
+			}
+		}
+	}
+
+	void Game::relabel(Object& object)
+	{
+		if (object.shapeKind != ShapeKind::Text || object.spriteParams.size() < 2)
+		{
+			return;
+		}
+
+		for (TextPiece& piece : object.textPieces)
+		{
+			if (piece.owner.empty())
 			{
 				continue;
 			}
-
-			Object* owner = tryGetObject(object.boundVariableOwner);
+			const Object* owner = tryGetObject(piece.owner);
 			if (!owner)
 			{
 				continue;
 			}
-
-			const auto valueIt = owner->variable.find(object.boundVariableName);
-			if (valueIt != owner->variable.end())
+			const auto value = owner->variable.find(piece.variable);
+			if (value != owner->variable.end())
 			{
-				const std::string text = formatDisplayNumber(valueIt->second);
-				if (object.spriteParams.at(1) != text)
-				{
-					object.spriteParams.at(1) = text;
-					object.visualDirty = true;
-				}
+				piece.shown = showPiece(piece.kind, value->second);
 			}
+		}
+
+		const std::string text = joinText(object.textPieces);
+		if (object.spriteParams.at(1) != text)
+		{
+			object.spriteParams.at(1) = text;
+			object.visualDirty = true;
 		}
 	}
 

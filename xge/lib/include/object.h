@@ -158,6 +158,17 @@ namespace xge
 	// or a picture written as rows of text.
 	// Which of the fields are used depends on `kind` (circle, rectangle, text,
 	// image, line, bitmap or svg).
+	// One piece of a <text>, in the order written: a fixed label
+	// (<content>), a number (<number>) or a number shown as a letter
+	// (<letter>, 0 is A, 25 is Z, and round again).
+	struct RawTextPiece
+	{
+		enum class Kind { Words, Number, Letter };
+		Kind kind{ Kind::Words };
+		std::string words;           // Words
+		RawValue value;              // Number, Letter
+	};
+
 	struct RawSprite
 	{
 		std::string kind;
@@ -190,12 +201,10 @@ namespace xge
 		RawValue height;             // rectangle
 		RawValue size;               // text
 
-		// A text is either a fixed label (<content>) or a number (<number>);
-		// a number that is just an owner.variable stays live (see
-		// Object::boundVariableOwner).
-		std::string content;         // text label
-		bool textIsNumber{ false };
-		RawValue number;             // text, when textIsNumber
+		// A text: its pieces, in order (see RawTextPiece); a <number> or a
+		// <letter> that is just an owner.variable stays live (see
+		// Object::textPieces).
+		std::vector<RawTextPiece> text;
 
 		std::string path;            // image, svg
 		std::string flip;            // image: "", "horizontal" or "vertical"
@@ -339,6 +348,25 @@ namespace xge
 		bool chose{ false };
 		Direction going{ Direction::Up };
 	};
+
+	// A piece of a text as an object shows it (see RawTextPiece): what it
+	// shows now, and, for a number or a letter that follows a variable, its
+	// owner and name.
+	struct TextPiece
+	{
+		RawTextPiece::Kind kind{ RawTextPiece::Kind::Words };
+		std::string shown;
+		std::string owner;
+		std::string variable;
+	};
+
+	// What a number shows as a piece of that kind: a whole number, or a
+	// letter (0 is A, 25 is Z, and round again: 26 is A, -1 is Z).
+	std::string showPiece(RawTextPiece::Kind kind, float value);
+
+	// What a text of these pieces reads: each piece a word, one space
+	// between, except that letters side by side make one word (initials).
+	std::string joinText(const std::vector<TextPiece>& pieces);
 
 	struct Object
 	{
@@ -680,17 +708,22 @@ namespace xge
 		// game instantly re-tripping a <condition> left over from the last one.
 		std::map<std::string, float> variableOriginal;
 
-		// Set when this is a text object whose displayed number tracks another
-		// object's own <variable> (e.g. a <text> sprite whose <number> is paddle1.score
-		// -> boundVariableOwner="paddle1", boundVariableName="score"). Empty
-		// owner means this text object isn't bound to anything and only ever
-		// updates via <inc /> targeting its own name directly (the older,
-		// still-supported pattern for a text object that just displays its own
-		// counter, with nothing else deriving its number - no shipped game
-		// currently needs it, now that pong.xml's score1/score2 are bound to
-		// paddle1.score/paddle2.score instead).
-		std::string boundVariableOwner;
-		std::string boundVariableName;
+		// Set when this is a text object that shows a variable (e.g. a <text>
+		// sprite whose <number> is paddle1.score): every piece of the text,
+		// those that follow a variable with its owner and name, the rest as
+		// they were worked out, so it can be put together again whenever one
+		// of its variables changes (Game::relabel). Empty means the text shows
+		// no variable and only ever changes by an <inc /> naming the text
+		// object itself (the older pattern for a text that counts its own
+		// number).
+		std::vector<TextPiece> textPieces;
+
+		// Whether one of the pieces shows that variable of that object.
+		bool showsVariable(const std::string& ownerName, const std::string& variableName) const noexcept
+		{
+			return std::any_of(textPieces.begin(), textPieces.end(),
+				[&](const TextPiece& piece) { return piece.owner == ownerName && piece.variable == variableName; });
+		}
 
 		friend std::ostream& operator<<(std::ostream& o, Object const& f);
 	};

@@ -86,7 +86,7 @@ namespace xge
 	// <inc variable="objectName" /> - add 1 to (or, for <inc variable="...">5</inc>, add the amount to) a text object's own displayed number, OR
 	// <inc variable="ownerName.variableName" /> - increment that object's named <variable>
 	// and refresh every text object whose display is bound to it (see
-	// Game::incrementText and Object::boundVariableOwner/boundVariableName).
+	// Game::incrementText and Object::textPieces).
 	struct CmdIncrement
 	{
 		std::string target;
@@ -101,6 +101,18 @@ namespace xge
 	{
 		std::string from;
 		std::string into;
+	};
+
+	// <rank variable="entry.score" into="table" /> - the entry goes into a
+	// table of the best, a <group> whose members are its places, the best
+	// first: it takes the place of the first member whose variable of that
+	// name is below its own, with every variable it has that the member has,
+	// and the members from there on move down a place, the last one falling
+	// off. Below them all, nothing happens. See Game::rank.
+	struct CmdRank
+	{
+		std::string entry;     // owner.variable: the entry and what orders it
+		std::string table;     // the group
 	};
 
 	// <dec variable="ownerName.variableName" /> - the opposite of <inc />: takes 1 off that
@@ -404,7 +416,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdReverse,
-		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene>;
 
 	// --- What the XML says, before any of it is evaluated.

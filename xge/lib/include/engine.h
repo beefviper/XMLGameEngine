@@ -41,7 +41,21 @@ namespace xge
 		// real one. No audio (nullptr) is NullAudio: silent.
 		Engine(Game& game, std::unique_ptr<Window> window, std::unique_ptr<Audio> audio = nullptr);
 
+		// Writes what the game keeps (see keepIn) one last time.
+		~Engine();
+
+		Engine(const Engine&) = delete;
+		Engine& operator=(const Engine&) = delete;
+
 		void loop(void);
+
+		// What the game <keeps> lasts in that file from one run of the program
+		// to the next: it is read now, if it is there, and written whenever a
+		// new game starts (a full reset) and when the engine is done, its
+		// folder made if need be. A game that keeps nothing reads and writes
+		// nothing. Without a call, nothing is read or written (the tests).
+		// xgecli and xgegui use keptFileFor (data_folder.h).
+		void keepIn(const std::string& file);
 
 		// False once the window has been closed (the user closed it, or
 		// close() was called), and while a replaceWindow() has left the engine
@@ -149,6 +163,12 @@ namespace xge
 		// Plays what the game asked for this frame (Game::requestSound), stops
 		// what it silenced, and keeps its looping sounds playing.
 		void playRequestedSounds(void);
+
+		// Where what the game keeps is written (empty: nowhere), and
+		// Game::resetCount() when it last was.
+		std::string keptFile;
+		unsigned long keptResets = 0;
+		void writeKept(void) const;
 
 		// The game's looping sounds the Audio was last told to play.
 		std::set<std::string> playingLoops;

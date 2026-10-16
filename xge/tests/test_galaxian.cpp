@@ -10,8 +10,9 @@
 // played frame by frame through a real xge::Engine with no window: the fleet
 // flying in to its places, a dive that weaves down, wraps and comes home, a
 // shot alien scoring, a new fleet when the last one is down (the fleet is
-// the playing state's one scene, put back with <reset scene>), and the pause
-// drawing the game still.
+// the playing state's one scene, put back with <reset scene>), the pause
+// drawing the game still, and the table of the best five: initials asked
+// for, ranked, and kept in a file.
 
 #include "engine.h"
 #include "game.h"
@@ -466,4 +467,100 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 	ship.variable["score"] = 300.0f;
 	play.frames(1);
 	CHECK(best.variable.at("score") == 300.0f);
+}
+
+TEST_CASE("a game above the fifth best asks for initials and takes its place in the table", "[galaxian][scores]")
+{
+	Play play("descriptions/galaxian.xml");
+	Object& first = play.object("table.1");
+	CHECK(first.kept);
+	CHECK(play.game.isShown(first)); // on the title
+	CHECK(first.spriteParams.at(1) == "AAA 0");
+
+	const auto playTo = [&](float score)
+	{
+		play.tap(KeyCode::Space);
+		REQUIRE(play.state() == "playing");
+		play.object("ship").variable["score"] = score;
+		play.object("ship").variable["lives"] = 0.0f;
+		play.frames(2); // game over, then above the fifth
+	};
+
+	playTo(240.0f);
+	REQUIRE(play.state() == "initial1");
+	CHECK(play.object("entry").variable.at("score") == 240.0f);
+	CHECK(play.object("entryscore").spriteParams.at(1) == "240");
+
+	// Up and down go round the letters; Space goes on to the next.
+	play.tap(KeyCode::Up);
+	play.tap(KeyCode::Up);
+	CHECK(play.object("letter1").spriteParams.at(1) == "C");
+	play.tap(KeyCode::S);
+	play.tap(KeyCode::S);
+	play.tap(KeyCode::S);
+	CHECK(play.object("letter1").spriteParams.at(1) == "Z");
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "initial2");
+	play.tap(KeyCode::W);
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "initial3");
+	play.tap(KeyCode::Space);
+
+	// Ranked, and a new game: the title shows it at the top.
+	REQUIRE(play.state() == "mainmenu");
+	CHECK(first.spriteParams.at(1) == "ZBA 240");
+	CHECK(play.object("table.2").spriteParams.at(1) == "AAA 0");
+	CHECK(play.object("letter1").spriteParams.at(1) == "A"); // the entry starts again
+
+	// A lower one goes below it; a higher one above both, the rest moving down.
+	playTo(100.0f);
+	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Space);
+	playTo(300.0f);
+	play.tap(KeyCode::Down);
+	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "mainmenu");
+	CHECK(first.spriteParams.at(1) == "ZAA 300");
+	CHECK(play.object("table.2").spriteParams.at(1) == "ZBA 240");
+	CHECK(play.object("table.3").spriteParams.at(1) == "AAA 100");
+
+	// Not above the fifth: no initials.
+	for (int i = 4; i <= 5; ++i)
+	{
+		play.object(("table." + std::to_string(i)).c_str()).variable["score"] = 50.0f;
+	}
+	playTo(50.0f);
+	CHECK(play.state() == "gameover");
+}
+
+TEST_CASE("what Galaxian keeps lasts in a file from one run to the next", "[galaxian][scores][keeps]")
+{
+	const std::filesystem::path file = "saves/galaxian_test.xml";
+	std::filesystem::remove(file);
+	{
+		Play play("descriptions/galaxian.xml");
+		play.engine.keepIn(file.string());
+		CHECK_FALSE(std::filesystem::exists(file)); // nothing to read yet
+		play.object("table.1").variable["score"] = 500.0f;
+		play.object("table.1").variable["first"] = 6.0f;
+		play.object("best").variable["score"] = 500.0f;
+		play.game.resetAll();
+		play.frames(1); // a new game writes it
+		REQUIRE(std::filesystem::exists(file));
+	}
+	{
+		Play play("descriptions/galaxian.xml");
+		CHECK(play.object("table.1").variable.at("score") == 0.0f);
+		play.engine.keepIn(file.string());
+		CHECK(play.object("table.1").variable.at("score") == 500.0f);
+		CHECK(play.object("table.1").spriteParams.at(1) == "GAA 500");
+		CHECK(play.object("best").spriteParams.at(1) == "500");
+		CHECK(play.object("table.2").variable.at("score") == 0.0f);
+	}
+	std::filesystem::remove(file);
+	std::error_code notEmpty; // other games' saves stay
+	std::filesystem::remove(file.parent_path(), notEmpty);
 }

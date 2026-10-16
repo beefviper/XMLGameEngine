@@ -197,6 +197,25 @@ namespace xge
 		// to it shows it.
 		void copyVariable(const std::string& from, const std::string& into);
 
+		// What the game <keeps>, written out and read back, so that it lasts
+		// from one run of the program to the next (Engine::keepIn): each kept
+		// object's look and variables, as XML. Reading takes only what this
+		// game still keeps and still has; a file that is not one is passed
+		// over with a warning.
+		void saveKept(std::ostream& out) const;
+		void loadKept(std::istream& in);
+
+		// Whether the game <keeps> anything.
+		bool keepsAnything(void) const noexcept;
+
+		// Goes up by one at every full reset (a new game).
+		unsigned long resetCount(void) const noexcept { return resets; }
+
+		// <rank variable="entry.score" into="table" />: the entry takes its
+		// place among the members of the group (the best first), by that
+		// variable, the ones below it moving down a place (see CmdRank).
+		void rank(const std::string& entry, const std::string& table);
+
 		// <reset object="objectName" /> from a state's <input>/<condition> (see
 		// CmdResetObject): restores that object's position, velocity, and every
 		// <variable> to their starting values, then refreshes any text display
@@ -276,6 +295,7 @@ namespace xge
 		std::set<std::string> loops;
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
+		unsigned long resets = 0;
 
 		// FrameRules: what the game file says, asked by playOneFrame.
 		bool inPlay(const Object& object) override { return isShown(object); }
@@ -340,6 +360,9 @@ namespace xge
 
 		// Works out what is shown in every text bound to a variable, after many have changed.
 		void refreshAllBoundTexts(void);
+
+		// Puts a text that shows variables together again from what they hold now.
+		void relabel(Object& object);
 
 		// The conditions of one list, as checkConditions does; true when one
 		// fired (and the frame's checking is over).
