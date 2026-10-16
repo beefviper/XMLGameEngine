@@ -6,59 +6,59 @@
 
 <!-- The engine's own files a generated program compiles, as they are in xge/lib/
      (copied to engine/ by xgecli): everything Game and Engine are made of,
-     with SFML's window and sound; not game_xml (the game is C++ already),
+     with SFML's window and sound; not load/xml (the game is C++ already),
      the other libraries, or the factories that choose among them
-     (window.cpp, audio.cpp, engine_backends.cpp). data_engine in
+     (window/window.cpp, audio/audio.cpp, engine/backends.cpp). data_engine in
      scripts/cmake/assets.cmake puts the same files beside xgecli. -->
 <engine>
-  <file>lib/include/types.h</file>
-  <file>lib/include/geometry.h</file>
-  <file>lib/source/geometry.cpp</file>
-  <file>lib/include/random.h</file>
-  <file>lib/source/random.cpp</file>
-  <file>lib/include/verbs.h</file>
-  <file>lib/source/verbs.cpp</file>
-  <file>lib/include/frame.h</file>
-  <file>lib/source/frame.cpp</file>
-  <file>lib/include/maze.h</file>
-  <file>lib/source/maze.cpp</file>
-  <file>lib/include/color.h</file>
-  <file>lib/source/color.cpp</file>
-  <file>lib/include/bitmap.h</file>
-  <file>lib/source/bitmap.cpp</file>
-  <file>lib/include/svg.h</file>
-  <file>lib/source/svg.cpp</file>
-  <file>lib/include/spelling.h</file>
-  <file>lib/source/spelling.cpp</file>
-  <file>lib/include/keycode.h</file>
-  <file>lib/source/keycode.cpp</file>
-  <file>lib/include/command.h</file>
-  <file>lib/source/command.cpp</file>
-  <file>lib/include/object.h</file>
-  <file>lib/source/object.cpp</file>
-  <file>lib/include/states.h</file>
-  <file>lib/source/states.cpp</file>
-  <file>lib/include/sound.h</file>
-  <file>lib/source/sound.cpp</file>
-  <file>lib/include/game_data.h</file>
-  <file>lib/include/scenes.h</file>
-  <file>lib/source/scenes.cpp</file>
-  <file>lib/include/game_expr.h</file>
-  <file>lib/source/game_expr.cpp</file>
-  <file>lib/include/collision_detector.h</file>
-  <file>lib/source/collision_detector.cpp</file>
-  <file>lib/include/command_executor.h</file>
-  <file>lib/source/command_executor.cpp</file>
-  <file>lib/include/game.h</file>
-  <file>lib/source/game.cpp</file>
-  <file>lib/include/audio.h</file>
-  <file>lib/include/audio_sfml.h</file>
-  <file>lib/source/audio_sfml.cpp</file>
-  <file>lib/include/builtin_font.h</file>
-  <file>lib/source/builtin_font.cpp</file>
-  <file>lib/include/window.h</file>
-  <file>lib/include/window_sfml.h</file>
-  <file>lib/source/window_sfml.cpp</file>
-  <file>lib/include/engine.h</file>
-  <file>lib/source/engine.cpp</file>
+  <file>lib/game/types.h</file>
+  <file>lib/play/geometry.h</file>
+  <file>lib/play/geometry.cpp</file>
+  <file>lib/game/random.h</file>
+  <file>lib/game/random.cpp</file>
+  <file>lib/play/verbs.h</file>
+  <file>lib/play/verbs.cpp</file>
+  <file>lib/play/frame.h</file>
+  <file>lib/play/frame.cpp</file>
+  <file>lib/play/maze.h</file>
+  <file>lib/play/maze.cpp</file>
+  <file>lib/picture/color.h</file>
+  <file>lib/picture/color.cpp</file>
+  <file>lib/picture/bitmap.h</file>
+  <file>lib/picture/bitmap.cpp</file>
+  <file>lib/picture/svg.h</file>
+  <file>lib/picture/svg.cpp</file>
+  <file>lib/load/spelling.h</file>
+  <file>lib/load/spelling.cpp</file>
+  <file>lib/engine/keys.h</file>
+  <file>lib/engine/keys.cpp</file>
+  <file>lib/game/command.h</file>
+  <file>lib/game/command.cpp</file>
+  <file>lib/game/object.h</file>
+  <file>lib/game/object.cpp</file>
+  <file>lib/game/states.h</file>
+  <file>lib/game/states.cpp</file>
+  <file>lib/audio/sound.h</file>
+  <file>lib/audio/sound.cpp</file>
+  <file>lib/game/data.h</file>
+  <file>lib/game/scenes.h</file>
+  <file>lib/game/scenes.cpp</file>
+  <file>lib/load/expr.h</file>
+  <file>lib/load/expr.cpp</file>
+  <file>lib/play/collision.h</file>
+  <file>lib/play/collision.cpp</file>
+  <file>lib/play/executor.h</file>
+  <file>lib/play/executor.cpp</file>
+  <file>lib/game/game.h</file>
+  <file>lib/game/game.cpp</file>
+  <file>lib/audio/audio.h</file>
+  <file>lib/audio/sfml.h</file>
+  <file>lib/audio/sfml.cpp</file>
+  <file>lib/picture/font.h</file>
+  <file>lib/picture/font.cpp</file>
+  <file>lib/window/window.h</file>
+  <file>lib/window/sfml.h</file>
+  <file>lib/window/sfml.cpp</file>
+  <file>lib/engine/engine.h</file>
+  <file>lib/engine/engine.cpp</file>
 </engine>

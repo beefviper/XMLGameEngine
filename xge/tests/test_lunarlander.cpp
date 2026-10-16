@@ -14,9 +14,9 @@
 // its sprite implies, which is what the backends would measure too (a sprite of
 // lines measures as the picture it was drawn as).
 
-#include "command_executor.h"
-#include "game.h"
-#include "game_xml.h"
+#include "play/executor.h"
+#include "game/game.h"
+#include "load/xml.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -134,7 +134,7 @@ TEST_CASE("lunarlander.xml loads under every XML backend, checked against the sc
 		// Both rules about the pad came through with their speeds.
 		int slow = 0;
 		int fast = 0;
-		for (const auto& rule : lander.collisionData.basic)
+		for (const auto& rule : lander.collisionData.others)
 		{
 			if (rule.slower) { ++slow; }
 			if (rule.faster) { ++fast; }

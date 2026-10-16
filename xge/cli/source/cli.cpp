@@ -4,7 +4,7 @@
 // date: Sept 28, 2026
 
 #include "cli.h"
-#include "data_folder.h"
+#include "engine/folder.h"
 
 #include <algorithm>
 #include <cctype>
@@ -334,7 +334,7 @@ namespace xge
 
 	std::string findGameFile(const std::string& game, const std::filesystem::path& gamesDirectory)
 	{
-		// The search itself is shared with xgegui (data_folder.h), so the two
+		// The search itself is shared with xgegui (engine/folder.h), so the two
 		// programs look in the same places.
 		if (const auto found = locateGameFile(game, gamesDirectory))
 		{

@@ -4,7 +4,7 @@
 <!-- author: beefviper -->
 <!-- date: Oct 11, 2026 -->
 
-<!-- Text as C++ wants it: a game's text trimmed as game_xml.cpp trims it,
+<!-- Text as C++ wants it: a game's text trimmed as load/xml.cpp trims it,
      written as a string literal, and a name made into a C++ name. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">

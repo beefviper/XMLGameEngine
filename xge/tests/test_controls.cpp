@@ -9,11 +9,11 @@
 // mouse, as the Atari's paddle). Engine::handleControls is given what a
 // window would report.
 
-#include "engine.h"
-#include "game.h"
-#include "keycode.h"
-#include "verbs.h"
-#include "window.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "engine/keys.h"
+#include "play/verbs.h"
+#include "window/window.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>

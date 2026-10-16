@@ -12,9 +12,11 @@ include(scripts/cmake/output.cmake)
 
 # The engine is a library (the xgelib target, xge/lib/);
 # the programs that use it are separate targets - xgecli (the command line,
-# xge/cli/) and xgegui (the Qt application, xge/gui/, built when Qt 6 is found); every
-# project has its own source/ and include/ - see
-# scripts/cmake/executables.cmake. Static by default; -DXGE_BUILD_SHARED=ON
+# xge/cli/) and xgegui (the Qt application, xge/gui/, built when Qt 6 is found), each
+# with its own source/ and include/ - see scripts/cmake/executables.cmake. The
+# engine's files are in a folder for each part of it (game/, play/, load/, xml/,
+# window/, audio/, picture/, engine/), a header beside its source, and are
+# included by that path ("game/game.h"). Static by default; -DXGE_BUILD_SHARED=ON
 # builds it as a shared library (a DLL on Windows) instead.
 if (XGE_BUILD_SHARED)
 	add_library(xgelib SHARED)
@@ -32,76 +34,76 @@ include(scripts/cmake/assets.cmake)
 # that is xge/cli/ (xgecli). The test suite links this same library
 # (scripts/cmake/tests.cmake), so there is one list of files to keep.
 set(ENGINE_SOURCES
-	"xge/lib/source/game.cpp"
-	"xge/lib/source/data_folder.cpp"
-	"xge/lib/source/engine.cpp"
-	"xge/lib/source/engine_backends.cpp"
-	"xge/lib/source/object.cpp"
-	"xge/lib/source/states.cpp"
-	"xge/lib/source/color.cpp"
-	"xge/lib/source/bitmap.cpp"
-	"xge/lib/source/svg.cpp"
-	"xge/lib/source/builtin_font.cpp"
-	"xge/lib/source/keycode.cpp"
-	"xge/lib/source/spelling.cpp"
-	"xge/lib/source/game_xml.cpp"
-	"xge/lib/source/xml_document.cpp"
-	"xge/lib/source/xsd_lite.cpp"
-	"xge/lib/source/game_expr.cpp"
-	"xge/lib/source/scenes.cpp"
-	"xge/lib/source/command.cpp"
-	"xge/lib/source/geometry.cpp"
-	"xge/lib/source/verbs.cpp"
-	"xge/lib/source/frame.cpp"
-	"xge/lib/source/maze.cpp"
-	"xge/lib/source/random.cpp"
-	"xge/lib/source/collision_detector.cpp"
-	"xge/lib/source/command_executor.cpp"
-	"xge/lib/source/window.cpp"
-	"xge/lib/source/sound.cpp"
-	"xge/lib/source/audio.cpp"
+	"xge/lib/game/game.cpp"
+	"xge/lib/engine/folder.cpp"
+	"xge/lib/engine/engine.cpp"
+	"xge/lib/engine/backends.cpp"
+	"xge/lib/game/object.cpp"
+	"xge/lib/game/states.cpp"
+	"xge/lib/picture/color.cpp"
+	"xge/lib/picture/bitmap.cpp"
+	"xge/lib/picture/svg.cpp"
+	"xge/lib/picture/font.cpp"
+	"xge/lib/engine/keys.cpp"
+	"xge/lib/load/spelling.cpp"
+	"xge/lib/load/xml.cpp"
+	"xge/lib/xml/document.cpp"
+	"xge/lib/load/xsd.cpp"
+	"xge/lib/load/expr.cpp"
+	"xge/lib/game/scenes.cpp"
+	"xge/lib/game/command.cpp"
+	"xge/lib/play/geometry.cpp"
+	"xge/lib/play/verbs.cpp"
+	"xge/lib/play/frame.cpp"
+	"xge/lib/play/maze.cpp"
+	"xge/lib/game/random.cpp"
+	"xge/lib/play/collision.cpp"
+	"xge/lib/play/executor.cpp"
+	"xge/lib/window/window.cpp"
+	"xge/lib/audio/sound.cpp"
+	"xge/lib/audio/audio.cpp"
 )
 
 set(ENGINE_HEADERS
-	"xge/lib/include/game.h"
-	"xge/lib/include/data_folder.h"
-	"xge/lib/include/engine.h"
-	"xge/lib/include/object.h"
-	"xge/lib/include/states.h"
-	"xge/lib/include/scenes.h"
-	"xge/lib/include/types.h"
-	"xge/lib/include/color.h"
-	"xge/lib/include/bitmap.h"
-	"xge/lib/include/svg.h"
-	"xge/lib/include/builtin_font.h"
-	"xge/lib/include/keycode.h"
-	"xge/lib/include/spelling.h"
-	"xge/lib/include/game_xml.h"
-	"xge/lib/include/xml_document.h"
-	"xge/lib/include/xsd_lite.h"
-	"xge/lib/include/game_data.h"
-	"xge/lib/include/game_expr.h"
-	"xge/lib/include/command.h"
-	"xge/lib/include/geometry.h"
-	"xge/lib/include/verbs.h"
-	"xge/lib/include/frame.h"
-	"xge/lib/include/maze.h"
-	"xge/lib/include/random.h"
-	"xge/lib/include/collision_detector.h"
-	"xge/lib/include/command_executor.h"
-	"xge/lib/include/window.h"
-	"xge/lib/include/sound.h"
-	"xge/lib/include/audio.h"
+	"xge/lib/game/game.h"
+	"xge/lib/engine/folder.h"
+	"xge/lib/engine/engine.h"
+	"xge/lib/game/object.h"
+	"xge/lib/game/states.h"
+	"xge/lib/game/scenes.h"
+	"xge/lib/game/types.h"
+	"xge/lib/picture/color.h"
+	"xge/lib/picture/bitmap.h"
+	"xge/lib/picture/svg.h"
+	"xge/lib/picture/font.h"
+	"xge/lib/engine/keys.h"
+	"xge/lib/load/spelling.h"
+	"xge/lib/load/xml.h"
+	"xge/lib/xml/document.h"
+	"xge/lib/load/xsd.h"
+	"xge/lib/game/data.h"
+	"xge/lib/load/expr.h"
+	"xge/lib/game/command.h"
+	"xge/lib/play/geometry.h"
+	"xge/lib/play/verbs.h"
+	"xge/lib/play/frame.h"
+	"xge/lib/play/maze.h"
+	"xge/lib/game/random.h"
+	"xge/lib/play/collision.h"
+	"xge/lib/play/executor.h"
+	"xge/lib/window/window.h"
+	"xge/lib/audio/sound.h"
+	"xge/lib/audio/audio.h"
 )
 
 # The backends that are built (options.cmake), each a pair of files named after
-# it. SFML 3, raylib and SDL2 give a window and a sound backend; OpenGL a
+# it in the folder of its kind (window/sfml.cpp). SFML 3, raylib and SDL2 give a window and a sound backend; OpenGL a
 # window only.
 foreach(backend IN ITEMS xerces tinyxml2 pugixml rapidxml)
 	string(TOUPPER ${backend} upper)
 	if (XGE_WITH_${upper})
-		list(APPEND ENGINE_SOURCES "xge/lib/source/xml_${backend}.cpp")
-		list(APPEND ENGINE_HEADERS "xge/lib/include/xml_${backend}.h")
+		list(APPEND ENGINE_SOURCES "xge/lib/xml/${backend}.cpp")
+		list(APPEND ENGINE_HEADERS "xge/lib/xml/${backend}.h")
 	endif()
 endforeach()
 
@@ -112,12 +114,12 @@ foreach(backend IN ITEMS sfml raylib sdl2 opengl)
 	endif()
 
 	if (XGE_WITH_${upper})
-		list(APPEND ENGINE_SOURCES "xge/lib/source/window_${backend}.cpp")
-		list(APPEND ENGINE_HEADERS "xge/lib/include/window_${backend}.h")
+		list(APPEND ENGINE_SOURCES "xge/lib/window/${backend}.cpp")
+		list(APPEND ENGINE_HEADERS "xge/lib/window/${backend}.h")
 
 		if (NOT backend STREQUAL "opengl")
-			list(APPEND ENGINE_SOURCES "xge/lib/source/audio_${backend}.cpp")
-			list(APPEND ENGINE_HEADERS "xge/lib/include/audio_${backend}.h")
+			list(APPEND ENGINE_SOURCES "xge/lib/audio/${backend}.cpp")
+			list(APPEND ENGINE_HEADERS "xge/lib/audio/${backend}.h")
 		endif()
 	endif()
 endforeach()

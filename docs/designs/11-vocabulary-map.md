@@ -58,7 +58,7 @@ Time words arrived with timers and sound: `every` (again and again), `after` (on
 - Both are built from four operation words, each with a first and a second operand named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`). An operand is a name or a number, never an expression.
 - exprtk's own functions work in the text form (Berserk uses `max` to keep a wait above a floor), but the format does not depend on them, and the tags have no `min`, `max` or the like yet.
 
-A note on pictures: an `<image>` is a file loaded by whichever window backend is running, and so can be a JPEG or a PNG (`assets/paddle.jpg` is one; the loader code was not checked for the exact list). An `<svg>` is different: the engine draws it itself into its own bitmap (`svg.cpp`), so no backend loads one. A `<bitmap>` is the ASCII-rows form, and `<line>`s are the command-sequence form. Lines, bitmaps and SVGs share one path and can all be `pixel` collision shapes; an `<image>` cannot ([pictures](30-pictures.md)).
+A note on pictures: an `<image>` is a file loaded by whichever window backend is running, and so can be a JPEG or a PNG (`assets/paddle.jpg` is one; the loader code was not checked for the exact list). An `<svg>` is different: the engine draws it itself into its own bitmap (`picture/svg.cpp`), so no backend loads one. A `<bitmap>` is the ASCII-rows form, and `<line>`s are the command-sequence form. Lines, bitmaps and SVGs share one path and can all be `pixel` collision shapes; an `<image>` cannot ([pictures](30-pictures.md)).
 
 ## The words today, by engine layer
 

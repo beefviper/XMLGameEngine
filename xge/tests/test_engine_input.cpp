@@ -17,8 +17,8 @@
 // and a held key kept driving the player through a state that did not bind
 // it.
 
-#include "engine.h"
-#include "game.h"
+#include "engine/engine.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 

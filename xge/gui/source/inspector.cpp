@@ -5,7 +5,7 @@
 
 #include "inspector.h"
 
-#include "game.h"
+#include "game/game.h"
 #include "game_session.h"
 
 #include <QAbstractSpinBox>
@@ -487,7 +487,7 @@ namespace xge
 			[object]() { return object().collisionData.enabled ? 1.0 : 0.0; },
 			[object](double value) { object().collisionData.enabled = value != 0; });
 		addInfo(collision, tr("type"), first.collisionData.type == CollisionType::Pixel ? tr("pixel") : tr("box"));
-		addInfo(collision, tr("rules about other objects"), QString::number(first.collisionData.basic.size()));
+		addInfo(collision, tr("rules about other objects"), QString::number(first.collisionData.others.size()));
 		addInfo(collision, tr("top"), commandsText(first.collisionData.top));
 		addInfo(collision, tr("bottom"), commandsText(first.collisionData.bottom));
 		addInfo(collision, tr("left"), commandsText(first.collisionData.left));

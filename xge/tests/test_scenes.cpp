@@ -11,9 +11,9 @@
 // TinyXml2 (the built-in validator). Frames are played with
 // Game::updateObjects(); nothing needs a window.
 
-#include "command_executor.h"
-#include "game.h"
-#include "game_xml.h"
+#include "play/executor.h"
+#include "game/game.h"
+#include "load/xml.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>

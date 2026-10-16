@@ -12,10 +12,10 @@
 // a Game built on its own has {0, 0}, so measure() gives every shape the size
 // its sprite implies, which is what the backends would measure too.
 
-#include "command_executor.h"
-#include "engine.h"
-#include "game.h"
-#include "game_xml.h"
+#include "play/executor.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "load/xml.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -132,7 +132,7 @@ TEST_CASE("frogger.xml loads under every XML backend, checked against the schema
 
 		// One rule with unless, and the condition with atmost, came through.
 		bool unlessSeen = false;
-		for (const auto& rule : frog.collisionData.basic)
+		for (const auto& rule : frog.collisionData.others)
 		{
 			if (rule.unlessClass == "logs") { unlessSeen = true; }
 		}

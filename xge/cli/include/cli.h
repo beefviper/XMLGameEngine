@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "audio.h"
-#include "window.h"
-#include "xml_document.h"
+#include "audio/audio.h"
+#include "window/window.h"
+#include "xml/document.h"
 
 #include <filesystem>
 #include <stdexcept>
@@ -91,7 +91,7 @@ namespace xge
 	//   3. its file name alone in the games directory (default
 	//      "games/descriptions", beneath the working directory; xgecli passes
 	//      the descriptions/ of the games folder findDataFolder() found - see
-	//      data_folder.h)
+	//      engine/folder.h)
 	//
 	// Throws CliError, saying which file was not found, if none of them has it.
 	std::string findGameFile(const std::string& game,

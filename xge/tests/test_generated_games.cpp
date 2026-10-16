@@ -11,12 +11,12 @@
 // same frames and the same random numbers drawn, every object is compared
 // every frame.
 
-#include "engine.h"
-#include "game.h"
-#include "game_expr.h"
-#include "game_xml.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "load/expr.h"
+#include "load/xml.h"
 #include "generated_games.h"
-#include "window.h"
+#include "window/window.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -235,9 +235,9 @@ namespace
 			guards(at + ".bottomGuards", c.bottomGuards);
 			guards(at + ".leftGuards", c.leftGuards);
 			guards(at + ".rightGuards", c.rightGuards);
-			for (std::size_t i = 0; i < c.basic.size(); ++i)
+			for (std::size_t i = 0; i < c.others.size(); ++i)
 			{
-				const RawCollisionRule& r = c.basic[i];
+				const RawCollisionRule& r = c.others[i];
 				const std::string here = at + ".rule" + std::to_string(i);
 				out << here << " [" << r.filterClass << "|" << r.filterObject << "|" << r.unlessClass << "|" << r.whileSprite << "]\n";
 				if (r.slower) { value(here + ".slower", *r.slower); }

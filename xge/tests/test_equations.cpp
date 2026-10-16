@@ -17,11 +17,11 @@
 // Small games are written to a scratch file and loaded by a real xge::Game;
 // none of it needs a window.
 
-#include "command.h"
-#include "data_folder.h"
-#include "game.h"
-#include "xml_document.h"
-#include "xsd_lite.h"
+#include "game/command.h"
+#include "engine/folder.h"
+#include "game/game.h"
+#include "xml/document.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>

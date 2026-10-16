@@ -144,9 +144,9 @@ xge_dependency(raylib WHEN XGE_WITH_RAYLIB
 	PACKAGE raylib
 	REPO https://github.com/raysan5/raylib.git TAG 5.5)
 
-# The OpenGL backend (window_opengl.cpp) calls OpenGL itself: the system's
+# The OpenGL backend (window/opengl.cpp) calls OpenGL itself: the system's
 # library, part of every platform's SDK, so it is only ever found, never fetched.
-# It also uses GLFW for its window and keyboard (window_opengl.h), which raylib is
+# It also uses GLFW for its window and keyboard (window/opengl.h), which raylib is
 # built on too: vcpkg installs it for raylib, and a raylib built from source brings
 # its own `glfw` target.
 xge_dependency(OpenGL WHEN XGE_WITH_OPENGL
@@ -193,7 +193,7 @@ xge_dependency(PugiXML WHEN XGE_WITH_PUGIXML
 # RapidXML has no official CMake package to find, so its header is looked for the
 # way exprtk's is, and it is pinned by commit rather than a tag: upstream (the
 # discord/rapidxml mirror of the last released 1.13, the version this project's
-# own xml_rapidxml.cpp is written against) has never cut a tagged release. It is
+# own xml/rapidxml.cpp is written against) has never cut a tagged release. It is
 # header-only with no CMakeLists.txt of its own, so unlike this project's other
 # fetched libraries it is not add_subdirectory()'d by FetchContent_MakeAvailable
 # below: see the rapidxml::rapidxml target synthesized after it instead.
@@ -201,8 +201,8 @@ xge_dependency(RapidXML WHEN XGE_WITH_RAPIDXML
 	HEADER rapidxml.hpp
 	REPO https://github.com/discord/rapidxml.git TAG 2ae4b2888165a393dfb6382168825fddf00c27b9)
 
-# lunasvg draws the SVG files an <svg> sprite names (xge/lib/source/svg.cpp). It is
-# the engine's own tool, not a Window backend: only svg.cpp includes it, and
+# lunasvg draws the SVG files an <svg> sprite names (xge/lib/picture/svg.cpp). It is
+# the engine's own tool, not a Window backend: only picture/svg.cpp includes it, and
 # what it draws goes to every backend as an ordinary picture. The plutovg
 # library it draws with comes along inside it. With vcpkg: vcpkg install lunasvg
 xge_dependency(lunasvg

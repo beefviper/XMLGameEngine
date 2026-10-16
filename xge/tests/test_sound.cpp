@@ -4,16 +4,16 @@
 // date: Oct 3, 2026
 //
 // Catch2 tests for the sound system: pitch names, the synthesizer
-// (sound.h), reading <sounds> and <play> from a game file, the checks made
+// (audio/sound.h), reading <sounds> and <play> from a game file, the checks made
 // when it loads, Pong asking for its sounds when the ball bounces and
 // scores, the eight games that were silent now having sounds, and Engine
-// handing what was asked for to its Audio (audio.h). No
+// handing what was asked for to its Audio (audio/audio.h). No
 // test opens a sound device: Engine is given a recording Audio instead.
 
-#include "engine.h"
-#include "game.h"
-#include "game_xml.h"
-#include "sound.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "load/xml.h"
+#include "audio/sound.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -97,7 +97,7 @@ namespace
 	};
 
 	// A one-object game with the given <sounds> and the given commands on
-	// Space; no schema is named, so only what game_xml and game_expr check
+	// Space; no schema is named, so only what load/xml and load/expr check
 	// is checked.
 	std::string gameWithSounds(const std::string& sounds, const std::string& onSpace = "<pop />")
 	{

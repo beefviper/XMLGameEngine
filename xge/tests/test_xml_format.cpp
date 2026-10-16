@@ -13,11 +13,11 @@
 // Small games are written to a scratch file and loaded by a real xge::Game;
 // none of it needs a window.
 
-#include "data_folder.h"
-#include "game.h"
-#include "game_xml.h"
-#include "xml_document.h"
-#include "xsd_lite.h"
+#include "engine/folder.h"
+#include "game/game.h"
+#include "load/xml.h"
+#include "xml/document.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -110,7 +110,7 @@ namespace
 	}
 
 	// Loads a game made of the given parts (no schema named, so nothing is
-	// validated but what game_xml itself checks).
+	// validated but what load/xml itself checks).
 	struct Loaded
 	{
 		ScratchFile file;
@@ -260,7 +260,7 @@ TEST_CASE("an edge rule reaches the edges it names, and several rules on one edg
 	CHECK(data.right.size() == 1);  // all
 	as<CmdBounce>(data.left[0]);
 	as<CmdDie>(data.left[1]);
-	CHECK(data.basic.empty());
+	CHECK(data.others.empty());
 }
 
 TEST_CASE("a collision without an edge is about another object; naming nothing means anything", "[xml_format][commands]")
@@ -272,19 +272,19 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 		"<collision object=\"wall\" unless=\"logs\"><reverse /></collision>";
 	Loaded loaded(gameXml("", objectXml(o)));
 
-	const auto& basic = loaded.game.getObject("o").collisionData.basic;
-	REQUIRE(basic.size() == 3);
+	const auto& others = loaded.game.getObject("o").collisionData.others;
+	REQUIRE(others.size() == 3);
 
-	CHECK(basic[0].filterClass.empty());
-	CHECK(basic[0].filterObject.empty());
-	as<CmdBounce>(basic[0].commands.at(0));
+	CHECK(others[0].filterClass.empty());
+	CHECK(others[0].filterObject.empty());
+	as<CmdBounce>(others[0].commands.at(0));
 
-	CHECK(basic[1].filterClass == "bricks");
-	as<CmdDie>(basic[1].commands.at(0));
+	CHECK(others[1].filterClass == "bricks");
+	as<CmdDie>(others[1].commands.at(0));
 
-	CHECK(basic[2].filterObject == "wall");
-	CHECK(basic[2].unlessClass == "logs");
-	as<CmdReverse>(basic[2].commands.at(0));
+	CHECK(others[2].filterObject == "wall");
+	CHECK(others[2].unlessClass == "logs");
+	as<CmdReverse>(others[2].commands.at(0));
 
 	const auto& data = loaded.game.getObject("o").collisionData;
 	CHECK(data.top.empty());

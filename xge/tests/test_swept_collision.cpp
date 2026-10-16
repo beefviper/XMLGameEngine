@@ -8,8 +8,8 @@
 // was hit reacts (each cell of a group is its own object), and the rest of a
 // step is played out after a bounce.
 
-#include "command_executor.h"
-#include "game.h"
+#include "play/executor.h"
+#include "game/game.h"
 #include "invaders_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>

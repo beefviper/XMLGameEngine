@@ -15,9 +15,9 @@
 // for, ranked, and kept in a file, two players taking turns, and the demo
 // the title plays when left alone.
 
-#include "engine.h"
-#include "game.h"
-#include "game_xml.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "load/xml.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>

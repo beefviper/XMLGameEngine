@@ -14,7 +14,7 @@ The root [readme.md](readme.md) is the short public overview.
 
 | Path | What |
 |---|---|
-| `xge/lib/` | `xgelib`, the engine (`source/`, `include/`; flat). Throws, never `exit()`s |
+| `xge/lib/` | `xgelib`, the engine, a folder per part (`game/`, `play/`, `load/`, `xml/`, `window/`, `audio/`, `picture/`, `engine/`), each header beside its source, included as `"game/game.h"`. Throws, never `exit()`s |
 | `xge/cli/`, `xge/gui/` | `xgecli`; `xgegui` (Qt 6, built only when Qt is found) |
 | `xge/tests/` | Catch2 (`xgetest`), one `test_<topic>.cpp` per area; games are played frame by frame |
 | `xge/xgedef.xsd` | the schema, the definition of the language |
@@ -22,9 +22,9 @@ The root [readme.md](readme.md) is the short public overview.
 | `games/generators/` | the XSLT stylesheets `xgecli --generate` runs, a folder per target |
 | `scripts/cmake/`, `scripts/shell/` | CMake modules; `shell/linux/` prerequisite installers, `shell/windows/games-run-all.bat [config]` runs `games-generate-all.bat` (every game into `output/<config>/generated/<game>/`), `games-build-all.bat` (each with MSVC at `/W4`) and `games-test-all.bat` (builds and runs `xgetest-generated`) |
 
-The programs make `games/` their working directory (`data_folder.h`), so asset paths in a game file (`assets/paddle.jpg`) and the tests' paths (`descriptions/pong.xml`) are relative to it.
+The programs make `games/` their working directory (`engine/folder.h`), so asset paths in a game file (`assets/paddle.jpg`) and the tests' paths (`descriptions/pong.xml`) are relative to it.
 
-Flow: `game_xml` (parse, validate) → `game_expr` (evaluate with exprtk) → `Object`/`State` → `Game` (frame update) + `Engine` (loop, windows, sound). Backends sit behind `XmlDocument`, `Window` and `Audio` factories.
+Flow: `load/xml` (parse, validate) → `load/expr` (evaluate with exprtk) → `Object`/`State` → `Game` (frame update) + `Engine` (loop, windows, sound). Backends sit behind `XmlDocument`, `Window` and `Audio` factories.
 
 ## Build and test
 

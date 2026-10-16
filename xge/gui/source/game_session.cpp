@@ -5,9 +5,9 @@
 
 #include "game_session.h"
 
-#include "data_folder.h"
+#include "engine/folder.h"
 #include "game_stage.h"
-#include "game_xml.h"
+#include "load/xml.h"
 #include "qt_window.h"
 
 #include <QPoint>

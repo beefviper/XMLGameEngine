@@ -5,9 +5,9 @@
 <!-- date: Oct 11, 2026 -->
 
 <!-- The game as the engine's own data: source/<game>.cpp of a generated
-     program, a function that returns the GameData (game_data.h) the engine
+     program, a function that returns the GameData (game/data.h) the engine
      would read from the file. Each tag becomes the line of C++ that makes
-     what game_xml.cpp makes of it, with the small functions of
+     what load/xml.cpp makes of it, with the small functions of
      modules/game_parts.h, so the program plays the game with the engine's
      own code. The file has been checked by the engine before this runs
      (generate.cpp), so nothing here checks it again. -->
@@ -707,7 +707,7 @@
         </xsl:when>
         <xsl:otherwise>
           <xsl:variable name="inner" select="concat($indent, $tab)" />
-          <xsl:value-of select="concat($indent, $data, '.basic.push_back(make&lt;RawCollisionRule&gt;([](RawCollisionRule&amp; rule)&#10;', $indent, '{&#10;')" />
+          <xsl:value-of select="concat($indent, $data, '.others.push_back(make&lt;RawCollisionRule&gt;([](RawCollisionRule&amp; rule)&#10;', $indent, '{&#10;')" />
           <xsl:for-each select="@class | @object | @unless | @sprite">
             <xsl:if test=". != ''">
               <xsl:value-of select="$inner" />
@@ -2318,10 +2318,10 @@
     <xsl:value-of select="$title" />
     <xsl:text>, as written in </xsl:text>
     <xsl:value-of select="$source" />
-    <xsl:text>, written out by xgecli --generate&#10;// windows-cpp (games/generators/windows-cpp/data.xsl) as the engine's own data&#10;// (game_data.h): </xsl:text>
+    <xsl:text>, written out by xgecli --generate&#10;// windows-cpp (games/generators/windows-cpp/data.xsl) as the engine's own data&#10;// (game/data.h): </xsl:text>
     <xsl:value-of select="$function" />
     <xsl:text>() is the game file, with no XML left to read, each&#10;// tag the line that makes what the engine makes of it (game_parts.h). Change&#10;// the game file and generate it again rather than this.&#10;&#10;</xsl:text>
-    <xsl:text>#include "game_data.h"&#10;#include "game_parts.h"&#10;&#10;#include &lt;vector&gt;&#10;&#10;namespace&#10;{&#10;&#9;using namespace xge;&#10;&#9;using namespace xge::parts;&#10;&#10;</xsl:text>
+    <xsl:text>#include "game/data.h"&#10;#include "game_parts.h"&#10;&#10;#include &lt;vector&gt;&#10;&#10;namespace&#10;{&#10;&#9;using namespace xge;&#10;&#9;using namespace xge::parts;&#10;&#10;</xsl:text>
     <!-- the functions, each followed by a blank line but the last -->
     <xsl:variable name="functions">
       <xsl:if test="$game/sounds/sound">

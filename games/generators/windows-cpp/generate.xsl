@@ -92,7 +92,7 @@ output/
       <file path=".gitignore" />
       <module path="source/game_parts.h" from="game_parts.h" />
       <xsl:for-each select="$engine">
-        <engine path="engine/{substring-after(substring-after(., '/'), '/')}" from="{.}" />
+        <engine path="engine/{substring-after(., '/')}" from="{.}" />
       </xsl:for-each>
       <xsl:if test="$texts">
         <asset path="assets/tuffy.ttf" />

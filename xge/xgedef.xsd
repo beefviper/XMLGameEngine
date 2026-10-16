@@ -11,7 +11,7 @@
       number (valueType below) it is either a math expression written out as
       text - window.width.center - title.width / 2 - or a single value tag that
       makes the number, such as <random min="-7" max="7" />. To add a new kind
-      of value, add it to the valueTag group and teach game_xml and game_expr
+      of value, add it to the valueTag group and teach load/xml and load/expr
       about it; every place that takes a value takes it.
     * What an object DOES is a list of command tags (the command group below):
       <bounce />, <inc variable="paddle1.score" />, <push state="playing" />.

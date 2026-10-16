@@ -1,0 +1,208 @@
+// engine.h
+// XML Game Engine
+// author: beefviper
+// date: Sept 28, 2026
+
+#pragma once
+
+#include "audio/audio.h"
+#include "game/command.h"
+#include "play/executor.h"
+#include "game/game.h"
+#include "engine/keys.h"
+#include "game/object.h"
+#include "window/window.h"
+
+#include <array>
+#include <functional>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace xge
+{
+	class Engine
+	{
+	public:
+		// backend picks which Window implementation actually opens (SFML3,
+		// Raylib, SDL2 or OpenGL - see window/window.h), and audioBackend which Audio
+		// plays the game's sounds (SFML3, Raylib, SDL2 or None - see audio/audio.h);
+		// both default to SFML3, or the first one built when SFML 3 is not (see
+		// WindowFactory::defaultBackend), so existing callers don't have to name one. A
+		// window that cannot be made throws; sound that cannot start is not
+		// worth stopping a game for, so it prints a warning and the game plays
+		// silently (NullAudio).
+		explicit Engine(Game& game, WindowBackend backend = WindowFactory::defaultBackend(), AudioBackend audioBackend = AudioFactory::defaultBackend());
+
+		// Same, but with an already-built Window (and Audio) - what lets a test
+		// drive Engine's key handling with a fake window instead of opening a
+		// real one. No audio (nullptr) is NullAudio: silent.
+		Engine(Game& game, std::unique_ptr<Window> window, std::unique_ptr<Audio> audio = nullptr);
+
+		// Writes what the game keeps (see keepIn) one last time.
+		~Engine();
+
+		Engine(const Engine&) = delete;
+		Engine& operator=(const Engine&) = delete;
+
+		void loop(void);
+
+		// Records the game being played, for its attract mode: a new game
+		// starts now, with random numbers drawn from a seed picked here, and
+		// every key pressed and let go from now on is noted with the frame it
+		// happened in. recorded() is what was played so far, as a <demo>
+		// (xgecli --record writes it into the game file when it closes).
+		void record(void);
+		RawDemo recorded(void) const;
+
+		// Whether the game's <demo> is playing (a <demo /> asked for it):
+		// a new game started from the demo's seed, played by its recorded
+		// keys, until a key is pressed or the recording ends. Then a new game
+		// starts, with what the game keeps as it was before the demo.
+		bool isPlayingDemo(void) const noexcept { return demoPlaying; }
+
+		// What the game <keeps> lasts in that file from one run of the program
+		// to the next: it is read now, if it is there, and written whenever a
+		// new game starts (a full reset) and when the engine is done, its
+		// folder made if need be. A game that keeps nothing reads and writes
+		// nothing. Without a call, nothing is read or written (the tests).
+		// xgecli and xgegui use keptFileFor (engine/folder.h).
+		void keepIn(const std::string& file);
+
+		// False once the window has been closed (the user closed it, or
+		// close() was called), and while a replaceWindow() has left the engine
+		// without one.
+		bool isWindowOpen(void) const;
+
+		// Null while there is no window.
+		Window* currentWindow(void) noexcept { return window.get(); }
+
+		// Never null: NullAudio when there is no sound.
+		Audio* currentAudio(void) noexcept { return audio.get(); }
+
+		// Swaps the Audio for another while the game is running, as
+		// replaceWindow() does the Window: the old one is destroyed first, then
+		// `create` is called and the game's sounds are loaded into the new one.
+		// If `create` throws (or gives nullptr), the game carries on silently
+		// with NullAudio, and the exception is passed on so the caller can say
+		// so.
+		void replaceAudio(const std::function<std::unique_ptr<Audio>()>& create);
+
+		// Stops every sound that is playing: for a front end pausing the game.
+		void silence(void);
+
+		// Swaps the Window for another while the game is running: the old one
+		// is destroyed first (some libraries can only have one window at a
+		// time), then `create` is called for the new one, and every object's
+		// picture is built again for it. Nothing about the game changes - not
+		// the objects, the values, or the state the game is in - and the keys
+		// held stay held. If `create` throws, the engine has no window and can
+		// only be given one by calling this again (or destroyed); step() and
+		// render() throw std::logic_error until then.
+		void replaceWindow(const std::function<std::unique_ptr<Window>()>& create);
+
+		// What loop() does each frame, split in two so a front end that owns
+		// the event loop (the Qt application, xgegui) can run the engine from
+		// its own timer instead of handing control to loop(). step() is the
+		// simulation: it reads the keys, moves everything, checks the
+		// conditions, and plays the sounds the frame asked for. render() draws the current picture without moving
+		// anything, so a paused game can be redrawn after its values are edited.
+		void step(void);
+		void render(void);
+
+		// Lets the window deal with its own events (move, resize, close)
+		// without playing a frame: for a front end that has paused the game
+		// but keeps its window alive. The keys it reports are held back and
+		// handled by the next step(), so none is lost or reaches the game
+		// while it is not running.
+		void pump(void);
+
+		// TODO: make handleKeyPressed and handleKeyReleased private
+		void handleKeyPressed(KeyCode key);
+		void handleKeyReleased(KeyCode key);
+
+		// The mouse and the pads as the window sees them now (step() asks it
+		// every frame): a button that went down or up is pressed or released
+		// as a key is (KeyCode::MouseLeft, Pad1A...; a pad's direction is its
+		// d-pad or its stick past halfway), and a control that moved runs the
+		// current state's <input axis="..."> for it. The first call only
+		// notes where everything is, so a mouse resting on the window does
+		// not move anything when the game starts.
+		void handleControls(const Controls& controls);
+
+	private:
+		Game& game;
+		CommandExecutor commandExecutor;
+		std::unique_ptr<Window> window;
+		std::unique_ptr<Audio> audio;
+
+		// Key changes pump() took from the window that step() has not handled yet.
+		std::vector<std::pair<KeyCode, bool>> pumpedKeys;
+
+		// Which keys are down; a repeated press of a held key is not a new one.
+		HeldKeys heldKeys;
+
+		// What handleControls last saw: whether it has seen anything yet,
+		// each mouse and pad button, and each control's place (0 to 1;
+		// negative when it was not there).
+		bool controlsSeen = false;
+		Controls lastControls;
+		std::array<std::array<bool, padButtonCount>, padCount> lastPadDown{};
+		std::array<float, axisCount> lastAxes{};
+
+		// The commands each held key is currently driving: what its press ran,
+		// or, after a state change, what the new state's binding for it
+		// resumed. Releasing a key sends the release to exactly these, so it
+		// always reaches whatever it started, even across a state change.
+		std::array<std::vector<Command>, static_cast<std::size_t>(KeyCode::Count)> heldCommands{};
+
+		// Sends the release to everything the held keys are driving, and
+		// forgets it; the keys stay down.
+		void stopHeldCommands(void);
+
+		// Game::stateChangeCount() as of the last syncHeldKeysToState().
+		unsigned long syncedStateChanges = 0;
+
+		// The current state decides what a held key means: when the state has
+		// changed, releases what the held keys were driving in the old one and
+		// resumes the new state's continuous bindings (an action's move.*) for
+		// the keys still down - so a paddle stops while a state that does not
+		// bind its key is up and moves again on return, with no re-press. A
+		// key's state-changing or one-shot commands are never resumed, only
+		// run on a real press (otherwise holding Space through a menu would
+		// pause the game the moment it started).
+		void syncHeldKeysToState();
+
+		// Throws std::logic_error when there is no window (see replaceWindow).
+		void requireWindow(void) const;
+
+		// Plays what the game asked for this frame (Game::requestSound), stops
+		// what it silenced, and keeps its looping sounds playing.
+		void playRequestedSounds(void);
+
+		// Recording (record()): its seed, the frames played since, and the keys.
+		bool recording = false;
+		RawDemo recordedSoFar;
+
+		// Playing the demo: the frame of it reached, the next key of it to
+		// press or let go, and what the game kept before it started.
+		bool demoPlaying = false;
+		unsigned int demoFrame = 0;
+		std::size_t demoNext = 0;
+		std::string keptBeforeDemo;
+		void startDemo(void);
+		void stopDemo(void);
+		void releaseHeldKeys(void);
+
+		// Where what the game keeps is written (empty: nowhere), and
+		// Game::resetCount() when it last was.
+		std::string keptFile;
+		unsigned long keptResets = 0;
+		void writeKept(void) const;
+
+		// The game's looping sounds the Audio was last told to play.
+		std::set<std::string> playingLoops;
+	};
+}

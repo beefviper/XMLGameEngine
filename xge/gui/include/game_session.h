@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "engine.h"
-#include "game.h"
+#include "engine/engine.h"
+#include "game/game.h"
 #include "session_options.h"
 
 #include <QElapsedTimer>

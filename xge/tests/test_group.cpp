@@ -16,10 +16,10 @@
 // Small games are written to a scratch file and loaded by a real xge::Game;
 // none of it needs a window.
 
-#include "data_folder.h"
-#include "game.h"
-#include "xml_document.h"
-#include "xsd_lite.h"
+#include "engine/folder.h"
+#include "game/game.h"
+#include "xml/document.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -571,14 +571,14 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(std::find(slow.spriteParams.begin(), slow.spriteParams.end(), "color.red") != slow.spriteParams.end());
 	CHECK(slow.collisionData.enabled);
 	CHECK(slow.collisionData.left.size() == 1);
-	CHECK(slow.collisionData.basic.empty());
+	CHECK(slow.collisionData.others.empty());
 	CHECK(slow.variable.at("weight") == 3.0f);
 
 	// The inner group's rules and variables add to the outer's, its class replaces it.
 	const Object& fast = game.getObject("fast.1");
 	CHECK(fast.objClass == "hazard");
 	CHECK(fast.collisionData.left.size() == 1);
-	CHECK(fast.collisionData.basic.size() == 1);
+	CHECK(fast.collisionData.others.size() == 1);
 	CHECK(fast.variable.at("weight") == 5.0f);
 	CHECK(fast.velocity.x == -3.0f);
 

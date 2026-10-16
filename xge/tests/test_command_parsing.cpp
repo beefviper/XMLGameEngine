@@ -4,11 +4,11 @@
 // date: Sept 28, 2026
 //
 // Catch2 tests for makeCommands()/operator<<(Command) against the actual
-// production command.cpp (not a reimplementation) - they don't touch SFML or
+// production game/command.cpp (not a reimplementation) - they don't touch SFML or
 // exprtk, so nothing here needs a real Object/Game. A RawCommand is what
-// game_xml reads a command tag (<bounce />, <inc variable="..." />) into.
+// load/xml reads a command tag (<bounce />, <inc variable="..." />) into.
 
-#include "command.h"
+#include "game/command.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -21,7 +21,7 @@ using namespace xge;
 
 namespace
 {
-	// Stands in for game_expr: every value in these tests is a plain number.
+	// Stands in for load/expr: every value in these tests is a plain number.
 	float evaluatePlainNumber(const RawValue& value)
 	{
 		return std::stof(value.text);

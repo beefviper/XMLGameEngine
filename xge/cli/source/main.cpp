@@ -4,11 +4,11 @@
 // date: Sept 28, 2026
 
 #include "cli.h"
-#include "data_folder.h"
+#include "engine/folder.h"
 #include "generate.h"
-#include "game.h"
-#include "game_xml.h"
-#include "engine.h"
+#include "game/game.h"
+#include "load/xml.h"
+#include "engine/engine.h"
 
 #include <cstdlib>
 #include <exception>
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
 		// The games folder (descriptions/ and assets/) is looked for in the
 		// working directory, next to the program, and one folder above it (see
-		// data_folder.h), the same as xgegui does. A game given as a relative
+		// engine/folder.h), the same as xgegui does. A game given as a relative
 		// path is relative to where the program was started, so it is found
 		// before the working directory is changed to the games folder.
 		dataFolder = xge::findDataFolder(std::filesystem::current_path(), xge::programDirectory());
@@ -115,10 +115,10 @@ int main(int argc, char* argv[])
 		// Game is fully evaluated the moment its constructor returns - every
 		// object's position (a group's cells included), velocity, action, and
 		// variable is real - none of it needs a Window/backend to exist first
-		// (see game_expr.cpp, command.cpp's measureShapeSize). The exceptions are
+		// (see load/expr.cpp, game/command.cpp's measureShapeSize). The exceptions are
 		// Object::size of a text or image (the real rendered footprint, used for
 		// drawing/collision), which stays {0,0} until Engine's constructor builds
-		// a real Window backend to measure it (see Window::init(), window.h), and
+		// a real Window backend to measure it (see Window::init(), window/window.h), and
 		// any <position> that uses the width or height of such an object (for
 		// example title.width), which can only be worked out after that. printGame() knows the
 		// difference and prints both as "unknown" instead of a misleading {0,0}

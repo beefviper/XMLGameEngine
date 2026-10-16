@@ -9,9 +9,9 @@
 // proportion between), that the speed is kept, and Pong's ball doing it in a
 // real frame.
 
-#include "command.h"
-#include "command_executor.h"
-#include "game.h"
+#include "game/command.h"
+#include "play/executor.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -110,7 +110,7 @@ TEST_CASE("Pong's ball deflects off the paddles at up to 45 degrees", "[deflect]
 {
 	Pong pong;
 
-	const auto& rules = pong.ball.collisionData.basic;
+	const auto& rules = pong.ball.collisionData.others;
 	REQUIRE(rules.size() == 1);
 	REQUIRE(std::holds_alternative<CmdDeflect>(rules[0].commands.at(0)));
 	CHECK(std::get<CmdDeflect>(rules[0].commands.at(0)).maxAngle == 45.0f);

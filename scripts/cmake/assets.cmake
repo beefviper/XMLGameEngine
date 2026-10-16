@@ -10,7 +10,7 @@ add_dependencies(xgelib xgedata)
 # games/assets/ and games/generators/. The schema goes at the top of
 # output/<config> (xgedef.xsd): a game names it as ../../xge/xgedef.xsd, which
 # is right in the repository, and the engine looks for it by its file name in
-# the folders above a game when it is not there (findSchema, data_folder.h).
+# the folders above a game when it is not there (findSchema, engine/folder.h).
 # Each file is its own copy step, so a build copies only the files that
 # changed. The engine's own files are not copied: --generate takes them from
 # xge/lib/ in the repository (xge_link_xslt, targets.cmake).

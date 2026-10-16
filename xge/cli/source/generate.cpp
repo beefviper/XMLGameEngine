@@ -5,8 +5,8 @@
 
 #include "generate.h"
 
-#include "game.h"
-#include "game_xml.h"
+#include "game/game.h"
+#include "load/xml.h"
 
 #include <cctype>
 #include <ctime>

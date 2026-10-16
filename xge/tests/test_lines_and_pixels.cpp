@@ -13,13 +13,13 @@
 // Objects for the geometry tests are built by hand; small games are written to
 // a scratch file and loaded by a real xge::Game. None of it needs a window.
 
-#include "bitmap.h"
-#include "collision_detector.h"
-#include "command_executor.h"
-#include "data_folder.h"
-#include "game.h"
-#include "xml_document.h"
-#include "xsd_lite.h"
+#include "picture/bitmap.h"
+#include "play/collision.h"
+#include "play/executor.h"
+#include "engine/folder.h"
+#include "game/game.h"
+#include "xml/document.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -54,7 +54,7 @@ namespace
 		return line;
 	}
 
-	// An object whose sprite is these lines, placed at (x, y), as game_expr would make it.
+	// An object whose sprite is these lines, placed at (x, y), as load/expr would make it.
 	Object lineObject(const std::string& name, const std::vector<LineSegment>& lines, float x, float y, CollisionType type = CollisionType::Pixel)
 	{
 		Object object;
@@ -718,12 +718,12 @@ TEST_CASE("the new tags read back the way they were written", "[rules][xml]")
 	Flight flight;
 	const Object& ship = flight.ship();
 
-	REQUIRE(ship.collisionData.basic.size() == 2);
-	REQUIRE(ship.collisionData.basic[0].slower);
-	CHECK(*ship.collisionData.basic[0].slower == 3.0f);
-	CHECK_FALSE(ship.collisionData.basic[0].faster);
-	REQUIRE(ship.collisionData.basic[1].faster);
-	CHECK(*ship.collisionData.basic[1].faster == 3.0f);
+	REQUIRE(ship.collisionData.others.size() == 2);
+	REQUIRE(ship.collisionData.others[0].slower);
+	CHECK(*ship.collisionData.others[0].slower == 3.0f);
+	CHECK_FALSE(ship.collisionData.others[0].faster);
+	REQUIRE(ship.collisionData.others[1].faster);
+	CHECK(*ship.collisionData.others[1].faster == 3.0f);
 
 	REQUIRE(ship.action.at("burn").size() == 1);
 	const auto* burn = std::get_if<CmdAccelerate>(&ship.action.at("burn")[0]);
@@ -736,7 +736,7 @@ TEST_CASE("the new tags read back the way they were written", "[rules][xml]")
 	REQUIRE(free);
 	CHECK(free->burn.empty());
 
-	REQUIRE(std::holds_alternative<CmdStop>(ship.collisionData.basic[0].commands.back()));
+	REQUIRE(std::holds_alternative<CmdStop>(ship.collisionData.others[0].commands.back()));
 }
 
 // ------------------------------------------------------------------ schema
@@ -837,7 +837,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in lines, types and 
 
 TEST_CASE("an attribute the schema does not declare is turned away by Xerces, which the weak validator cannot see", "[lines][schema]")
 {
-	// The weak validator cannot list a node's attributes (see xsd_lite.h), so
+	// The weak validator cannot list a node's attributes (see load/xsd.h), so
 	// this is the one kind of mistake only the real validation catches.
 	const Verdict verdict = judge(gameWith("descriptions/lunarlander.xml", "<accelerate direction=\"up\" burn=\"fuel\">", "<accelerate direction=\"up\" fuel=\"fuel\">"));
 

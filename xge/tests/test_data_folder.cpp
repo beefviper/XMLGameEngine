@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Oct 1, 2026
 //
-// Catch2 tests for xge/lib/source/data_folder.cpp: where xgecli and xgegui look
+// Catch2 tests for xge/lib/engine/folder.cpp: where xgecli and xgegui look
 // for the games folder, with descriptions/ and assets/ in it (the working
 // directory, the program's folder, the folder above it, and the games/ of each)
 // and for a game file and its schema.
@@ -11,7 +11,7 @@
 // Test names must not start with "-" or contain a comma: ctest hands the name to
 // Catch2 on its command line, which reads them as an option or a list.
 
-#include "data_folder.h"
+#include "engine/folder.h"
 
 #include <catch2/catch_test_macros.hpp>
 

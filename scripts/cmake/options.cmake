@@ -83,7 +83,7 @@ if (NOT (XGE_WITH_XERCES OR XGE_WITH_TINYXML2 OR XGE_WITH_PUGIXML OR XGE_WITH_RA
 endif()
 
 # The OpenGL backend draws with OpenGL but loads its pictures and draws its text
-# with SDL2_image and SDL2_ttf (window_opengl.cpp), so it needs SDL2's libraries
+# with SDL2_image and SDL2_ttf (window/opengl.cpp), so it needs SDL2's libraries
 # even when the SDL2 backend itself is not built.
 if (XGE_WITH_SDL2 OR XGE_WITH_OPENGL)
 	set(XGE_NEEDS_SDL2 ON)

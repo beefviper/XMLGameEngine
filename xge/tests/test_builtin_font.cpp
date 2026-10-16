@@ -4,11 +4,11 @@
 // date: Oct 1, 2026
 //
 // Catch2 tests for the font the engine carries inside itself
-// (xge/lib/source/builtin_font.cpp), which the window backends draw text with when
+// (xge/lib/picture/font.cpp), which the window backends draw text with when
 // a game's font file cannot be found: its glyphs, the whole-number scaling,
 // lines, and what happens to characters it does not have.
 
-#include "builtin_font.h"
+#include "picture/font.h"
 
 #include <catch2/catch_test_macros.hpp>
 

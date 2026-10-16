@@ -8,8 +8,8 @@
 // last alien dying sends the game to its gameover state, and reset() from
 // there brings everything back.
 
-#include "command_executor.h"
-#include "game.h"
+#include "play/executor.h"
+#include "game/game.h"
 #include "invaders_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>

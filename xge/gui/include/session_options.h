@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "audio.h"
-#include "window.h"
-#include "xml_document.h"
+#include "audio/audio.h"
+#include "window/window.h"
+#include "xml/document.h"
 
 #include <QString>
 

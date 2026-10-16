@@ -22,7 +22,7 @@
 // games/ in build/. The working directory is then set to the games folder, so
 // the program can be started from anywhere.
 
-#include "data_folder.h"
+#include "engine/folder.h"
 #include "main_window.h"
 #include "theme.h"
 
@@ -33,7 +33,7 @@
 #include <filesystem>
 #include <optional>
 
-// The lookup itself is shared with xgecli: see data_folder.h.
+// The lookup itself is shared with xgecli: see engine/folder.h.
 
 int main(int argc, char* argv[])
 {

@@ -13,12 +13,12 @@
 // Small games are written to a scratch file and loaded by a real xge::Game,
 // and frames are played with Game::updateObjects(); none of it needs a window.
 
-#include "bitmap.h"
-#include "command_executor.h"
-#include "data_folder.h"
-#include "game.h"
-#include "xml_document.h"
-#include "xsd_lite.h"
+#include "picture/bitmap.h"
+#include "play/executor.h"
+#include "engine/folder.h"
+#include "game/game.h"
+#include "xml/document.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -1151,7 +1151,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in bitmaps and anima
 
 TEST_CASE("an attribute the schema does not declare is turned away by Xerces, which the weak validator cannot see", "[animation][schema]")
 {
-	// The weak validator cannot list a node's attributes (see xsd_lite.h), so
+	// The weak validator cannot list a node's attributes (see load/xsd.h), so
 	// this is the one kind of mistake only the real validation catches.
 	const Verdict verdict = judge(gameWith("descriptions/spaceinvaders.xml", "<sprite name=\"a\">", "<sprite title=\"a\">"));
 

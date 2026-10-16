@@ -9,7 +9,7 @@
 // sounds the ball asks for off a wall, the paddle and the bricks; and each
 // state's own objects, with paused and the endings drawing the game still.
 
-#include "game.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 

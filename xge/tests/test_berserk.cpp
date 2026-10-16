@@ -16,8 +16,8 @@
 // Window::init() normally measures each object's size once a backend exists;
 // measure() gives every shape the size its sprite implies instead.
 
-#include "engine.h"
-#include "game.h"
+#include "engine/engine.h"
+#include "game/game.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>

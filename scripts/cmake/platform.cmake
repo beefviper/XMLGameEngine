@@ -26,7 +26,7 @@ endif()
 # virtuals, missing virtual destructors, narrowing, uninitialised members and so
 # on: the usual set from the C++ Best Practices project); headers named with <>
 # are external, with no warnings from them (and no code analysis), and /bigobj
-# because the files that include game_expr.h, whose exprtk use generates enough
+# because the files that include load/expr.h, whose exprtk use generates enough
 # object sections to hit MSVC's C1128 without it.
 # GCC and Clang: the "all" and "extra" sets, pedantic, shadowing (a parameter or
 # local named like a member), every implicit conversion that can lose a value or

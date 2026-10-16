@@ -10,8 +10,8 @@
 // written to a scratch file and loaded by a real xge::Game; nothing needs a
 // window.
 
-#include "bitmap.h"
-#include "game.h"
+#include "picture/bitmap.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>

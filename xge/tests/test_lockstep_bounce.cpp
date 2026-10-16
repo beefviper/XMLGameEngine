@@ -11,7 +11,7 @@
 // before the touching one were shifted three steps and the rest one, so the
 // last column of the block drifted 4 px further away each time.
 
-#include "game.h"
+#include "game/game.h"
 #include "invaders_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>

@@ -36,7 +36,7 @@ if (NOT XGE_ALL_BACKENDS)
 endif()
 
 # A second executable: the test files plus the engine library itself (the
-# xgelib target), so tests call into the real command.cpp/game.cpp
+# xgelib target), so tests call into the real game/command.cpp/game.cpp
 # etc., not a hand-copied reimplementation of them. The library brings the
 # include directory and every third-party library it needs along with it.
 add_executable(xgetest
@@ -106,7 +106,7 @@ target_include_directories(xgetest PRIVATE xge/cli/include)
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
 # The same warnings as the library (platform.cmake), /bigobj included:
-# several test files include game_expr.h, whose exprtk use generates enough
+# several test files include load/expr.h, whose exprtk use generates enough
 # object sections to hit MSVC's C1128 without it.
 xge_warnings(xgetest)
 
@@ -200,7 +200,7 @@ file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
 	"//\n"
 	"// Written by scripts/cmake/tests.cmake: every game's generated data.\n\n"
 	"#pragma once\n\n"
-	"#include \"game_data.h\"\n\n"
+	"#include \"game/data.h\"\n\n"
 	"${generated_declarations}\n"
 	"struct GeneratedGame\n{\n\tconst char* file;\n\txge::GameData (*describe)();\n};\n\n"
 	"inline const GeneratedGame generatedGames[] = {\n${generated_entries}};\n")

@@ -10,9 +10,9 @@
 // of play are tested in test_deflect.cpp, test_stick.cpp,
 // test_input_resolution.cpp and test_sound.cpp.
 
-#include "engine.h"
-#include "game.h"
-#include "verbs.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "play/verbs.h"
 
 #include <catch2/catch_test_macros.hpp>
 

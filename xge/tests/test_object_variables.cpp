@@ -4,11 +4,11 @@
 // date: Sept 28, 2026
 //
 // Catch2 tests for parseVariableReference()/formatDisplayNumber() against
-// the actual production command.cpp (not a reimplementation), using the
+// the actual production game/command.cpp (not a reimplementation), using the
 // <number> expressions games/descriptions/*.xml gives a text sprite. Neither function
 // touches SFML.
 
-#include "command.h"
+#include "game/command.h"
 
 #include <catch2/catch_test_macros.hpp>
 

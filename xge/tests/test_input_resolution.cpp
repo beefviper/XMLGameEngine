@@ -4,7 +4,7 @@
 // date: Sept 28, 2026
 //
 // Catch2 tests for CommandExecutor::triggerObjectAction/applyActionVelocity
-// (xge/lib/source/command_executor.cpp) against a real xge::Game built from
+// (xge/lib/play/executor.cpp) against a real xge::Game built from
 // games/descriptions/pong.xml - not a reimplementation. Game's constructor fully
 // evaluates every object's <action> list (including each move's numeric
 // step) without needing a Window/backend first (see the comment on Game's
@@ -16,8 +16,8 @@
 // (0 on release), stopping the object instead of letting the still-held
 // key resume it. See Object::activeMoveStep for the fix.
 
-#include "command_executor.h"
-#include "game.h"
+#include "play/executor.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 

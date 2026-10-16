@@ -16,8 +16,8 @@
 // backend by setting Object::size and sizeKnown themselves, or by using a
 // fake Window whose init() measures every text.
 
-#include "engine.h"
-#include "game.h"
+#include "engine/engine.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 

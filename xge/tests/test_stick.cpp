@@ -13,8 +13,8 @@
 // (2) stick() used to zero velocity.x whatever edge was touched, so pushing left
 // while pressed against the bottom wall froze the paddle.
 
-#include "command_executor.h"
-#include "game.h"
+#include "play/executor.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 

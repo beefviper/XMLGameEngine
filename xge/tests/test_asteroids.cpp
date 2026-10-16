@@ -16,13 +16,13 @@
 // a Game built on its own has {0, 0}, so measure() gives every shape the size
 // its sprite implies, which is what the backends would measure too.
 
-#include "bitmap.h"
-#include "command_executor.h"
-#include "data_folder.h"
-#include "game.h"
-#include "game_xml.h"
-#include "xml_document.h"
-#include "xsd_lite.h"
+#include "picture/bitmap.h"
+#include "play/executor.h"
+#include "engine/folder.h"
+#include "game/game.h"
+#include "load/xml.h"
+#include "xml/document.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -295,7 +295,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 					if (std::holds_alternative<CmdThrust>(command)) { ++thrusts; }
 				}
 			}
-			for (const auto& rule : object.collisionData.basic)
+			for (const auto& rule : object.collisionData.others)
 			{
 				for (const Command& command : rule.commands)
 				{

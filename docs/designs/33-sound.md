@@ -1,6 +1,6 @@
 # Sound
 
-**Status:** Built (`sound.h`, `audio.h`, `audio_*.cpp`).
+**Status:** Built (`audio/sound.h`, `audio/audio.h`, `audio_*.cpp`).
 
 ## What we wanted
 
@@ -13,7 +13,7 @@ A game has an optional `<sounds>` after `<variables>`. Each `<sound name wave>` 
 ## Decisions
 
 - **Notes, not sound files.** Files need a loader per library, shipping, and are opaque in the XML. A file tag can come later beside notes.
-- **The engine makes the samples; a backend only plays them.** `synthesize()` (`sound.cpp`) produces 16-bit mono at 44100 Hz, the same for every library; a backend hands them over (`sf::SoundBuffer`, raylib `LoadSoundFromWave`, an SDL audio callback with a small mixer of its own). Each library's own synthesis does not exist in SFML or SDL2, and would make a sound depend on the library. The synthesizer is tested with no sound device.
+- **The engine makes the samples; a backend only plays them.** `synthesize()` (`audio/sound.cpp`) produces 16-bit mono at 44100 Hz, the same for every library; a backend hands them over (`sf::SoundBuffer`, raylib `LoadSoundFromWave`, an SDL audio callback with a small mixer of its own). Each library's own synthesis does not exist in SFML or SDL2, and would make a sound depend on the library. The synthesizer is tested with no sound device.
 - **Waves of a chip:** square, triangle, sawtooth tone channels; noise as percussion, pitched like a chip (a new random level every half cycle, seeded per note, so it sounds the same every time and in every library); sine kept as a soft option. Plucked string, piano and horn from the author's waveform tester were left out as not of the era.
 - **Slides by semitones** (exponential in hertz) so a bend sounds even; phase accumulates per sample.
 - **Looping is the sound's, holding is the key's (built 2026-10-14).** A thrust hum or a piece of music is made to loop, so `<loop />` sits on the `<sound>`, an empty element like `<wrap />`, not a flag on each `<play>`. A key's `<play>` of a loop is held like a `<move>`: on with the press, off with the release, off when a state change lets go of the keys, on again when the new state's held keys resume (`executeHeldInput`). Anywhere else a `<play>` switches it on and `<silence>` off, the verb also stopping a sound that plays once. A loop is state, not an event: `Game` keeps the set that is on (`loopingSounds`), and `Engine` compares it each frame with what it told the `Audio`, so a frame that silences and asks again (one of two keys for thrust let go) does not restart it, and `Engine::silence()` (xgegui's pause) only has to forget what was playing. Each library loops in its own way: SFML's `setLooping`, a wrap in the SDL mixer, and in raylib a `Music` stream (a `Sound` cannot loop) read from the samples written out as a WAV in memory and fed each frame by `Audio::update()`. `<silence>` was chosen over `<stop>` (an object's verb) and `<hush>`. Lunar Lander's main engine and side jets and Asteroids' engine use it; Lunar Lander silences both when the fuel runs out.

@@ -12,10 +12,10 @@
 // the enums have no name for; a default build is looked at by hand, with
 // `xgecli -w raylib`.
 
-#include "audio.h"
+#include "audio/audio.h"
 #include "cli.h"
-#include "window.h"
-#include "xml_document.h"
+#include "window/window.h"
+#include "xml/document.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>

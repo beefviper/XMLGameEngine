@@ -22,10 +22,10 @@
     <xsl:text>.cpp, as the engine's own data; it is played
 // by the engine's own code (engine/), on SFML, as xgecli plays it.
 
-#include "audio_sfml.h"
-#include "engine.h"
-#include "game.h"
-#include "window_sfml.h"
+#include "audio/sfml.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "window/sfml.h"
 
 #include &lt;cstdlib&gt;
 #include &lt;exception&gt;
@@ -137,7 +137,7 @@ add_executable(</xsl:text>
 	# the engine's own code, as it is in xge/lib/
 </xsl:text>
     <xsl:for-each select="$engine">
-      <xsl:value-of select="concat('&#9;engine/', substring-after(substring-after(., '/'), '/'), '&#10;')" />
+      <xsl:value-of select="concat('&#9;engine/', substring-after(., '/'), '&#10;')" />
     </xsl:for-each>
     <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio exprtk lunasvg::lunasvg)&#10;')" />
     <xsl:text>

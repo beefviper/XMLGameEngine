@@ -9,10 +9,10 @@
 // work in a whole game are in test_frogger.cpp. Also here: an amount on inc
 // and dec.
 
-#include "color.h"
-#include "command.h"
-#include "command_executor.h"
-#include "game.h"
+#include "picture/color.h"
+#include "game/command.h"
+#include "play/executor.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>

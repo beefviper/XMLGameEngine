@@ -13,13 +13,13 @@
 // Small games and SVG files are written to scratch files and loaded by a real
 // xge::Game; none of it needs a window.
 
-#include "bitmap.h"
-#include "command_executor.h"
-#include "data_folder.h"
-#include "game.h"
-#include "svg.h"
-#include "xml_document.h"
-#include "xsd_lite.h"
+#include "picture/bitmap.h"
+#include "play/executor.h"
+#include "engine/folder.h"
+#include "game/game.h"
+#include "picture/svg.h"
+#include "xml/document.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>

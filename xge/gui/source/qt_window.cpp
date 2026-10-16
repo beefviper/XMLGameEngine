@@ -5,8 +5,8 @@
 
 #include "qt_window.h"
 
-#include "builtin_font.h"
-#include "color.h"
+#include "picture/font.h"
+#include "picture/color.h"
 #include "game_view.h"
 
 #include <QColor>

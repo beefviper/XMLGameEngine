@@ -4,7 +4,7 @@
 
 ## The one decision behind all of it
 
-**The engine draws every picture it can, once, at load, into its own `Bitmap`; backends only show that bitmap.** One path in `game_expr::buildSpriteParams`: read, draw, flip (bitmap, svg), keep a `Turnable` for objects with a heading. Consequences:
+**The engine draws every picture it can, once, at load, into its own `Bitmap`; backends only show that bitmap.** One path in `buildSpriteParams` (`load/expr.cpp`): read, draw, flip (bitmap, svg), keep a `Turnable` for objects with a heading. Consequences:
 
 - no window backend, the Qt renderer or the collision detector changes when a picture kind is added, and every library shows identical pixels;
 - the object's size is known without a window (`name.width` works in tests);
@@ -35,7 +35,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 
 - Need: a vector sprite sheet (Space Invaders: 6 frames across, 4 rows, 32 units a cell) that `<bitmap>` and `<image>` cannot use. `<image>` hands the file to whichever backend runs, and only SDL2/OpenGL (via SDL_image) can read an SVG; the pictures would differ per library and could not be pixel-tested.
 - **`<svg>`**: `<path>`, an optional part (`<x>`, `<y>`, `<width>`, `<height>`: all four or none, so a typo cannot mean the whole sheet), `<scale>` (pixels per unit, may be 1.5), `<hide>` by element id (so the file stays as drawn; a missing id is not an error, so a sheet with its backdrop already removed works with the same game file). The drawing's own colors, straight RGBA, antialiased edges; size rounded up so no edge is lost.
-- **lunasvg v3.5.0, not a backend:** no interface, factory, command-line choice or Options entry (a choice would only make one sprite look different in different libraries). `svg.h` speaks only in `Bitmap`; only `svg.cpp` includes the library, linked `PRIVATE`. Fetched pinned by `FetchContent`, or found through `find_package`. It supports `<use>` (the sheet defines the ship once and shows it three times); nanosvg does not. It adds no `stb_image` symbols.
+- **lunasvg v3.5.0, not a backend:** no interface, factory, command-line choice or Options entry (a choice would only make one sprite look different in different libraries). `picture/svg.h` speaks only in `Bitmap`; only `picture/svg.cpp` includes the library, linked `PRIVATE`. Fetched pinned by `FetchContent`, or found through `find_package`. It supports `<use>` (the sheet defines the ship once and shows it three times); nanosvg does not. It adds no `stb_image` symbols.
 - The sheet is cut close round what is drawn, because non-pixel collisions use the whole picture box; all three frames of an alien share one cut so the animation frames match in size.
 - Rejected: SDL_image in backends (pictures differ per library), converting to PNG at build time (a tool, a second file to keep in step, no part or scale in the game file), rasterizing at window size (resize redraws; `<scale>` already says what a unit is), a palette/recolor, caching the drawing by file (cheap if loading the sheet per sprite is ever slow).
 - Mistakes stop the load naming object and file. Space Invaders 2 uses the aliens, the idle ship, the player bolt and the enemy bolt (flipped). The banking ship, hit flash, charged bolt, explosions and saucer are unused; they could now be written with looks (`<become>` from the ship's actions and rules), a pool released where an alien died, and a timer for the saucer, but the game has not been.

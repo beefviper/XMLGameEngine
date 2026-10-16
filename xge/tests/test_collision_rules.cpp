@@ -11,7 +11,7 @@
 // Regression covered: Space Invaders' bullet used an unfiltered collision
 // rule, so it died the moment it overlapped the ship that fired it.
 
-#include "game.h"
+#include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -23,9 +23,9 @@ TEST_CASE("a collision with no selector still matches anything", "[collision_rul
 	const Object& ball = game.getObject("ball");
 
 	// pong.xml's ball: <collision><bounce /></collision>
-	REQUIRE(ball.collisionData.basic.size() == 1);
-	CHECK(ball.collisionData.basic[0].filterClass.empty());
-	CHECK(ball.collisionData.basic[0].filterObject.empty());
+	REQUIRE(ball.collisionData.others.size() == 1);
+	CHECK(ball.collisionData.others[0].filterClass.empty());
+	CHECK(ball.collisionData.others[0].filterObject.empty());
 }
 
 TEST_CASE("a collision naming only a class is an object rule for that class", "[collision_rules]")
@@ -34,9 +34,9 @@ TEST_CASE("a collision naming only a class is an object rule for that class", "[
 	const Object& bullet = game.getObject("bullet");
 
 	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>
-	REQUIRE(bullet.collisionData.basic.size() == 1);
-	CHECK(bullet.collisionData.basic[0].filterClass == "aliens");
-	CHECK(bullet.collisionData.basic[0].filterObject.empty());
+	REQUIRE(bullet.collisionData.others.size() == 1);
+	CHECK(bullet.collisionData.others[0].filterClass == "aliens");
+	CHECK(bullet.collisionData.others[0].filterObject.empty());
 
 	// ...and it did not also turn into a screen-edge rule.
 	CHECK(bullet.collisionData.left.size() == 1); // only the edge="all" <die />

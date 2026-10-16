@@ -6,12 +6,12 @@
 // What a generated game's data (source/<game>.cpp, written by
 // games/generators/windows-cpp/data.xsl) is written with: one small function for
 // each kind of tag, so each tag of the game file is one line of C++ that
-// makes the engine's own data (game_data.h) as game_xml.cpp reads it. Copied
+// makes the engine's own data (game/data.h) as load/xml.cpp reads it. Copied
 // into every generated program unchanged.
 
 #pragma once
 
-#include "game_data.h"
+#include "game/data.h"
 
 #include <algorithm>
 #include <initializer_list>

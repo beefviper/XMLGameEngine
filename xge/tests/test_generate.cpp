@@ -11,8 +11,8 @@
 // the file, field by field and frame by frame, is in
 // test_generated_games.cpp, which compiles it.
 
-#include "game.h"
-#include "game_xml.h"
+#include "game/game.h"
+#include "load/xml.h"
 #include "generate.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -126,8 +126,8 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	// the build compiles the engine's files beside them, with the engine's warnings
 	const std::string cmake = readFile(out / "CMakeLists.txt");
 	CHECK(cmake.find("\tsource/pong_min.cpp\n") != std::string::npos);
-	CHECK(cmake.find("\tengine/game.cpp\n") != std::string::npos);
-	CHECK(cmake.find("\tengine/engine.cpp\n") != std::string::npos);
+	CHECK(cmake.find("\tengine/game/game.cpp\n") != std::string::npos);
+	CHECK(cmake.find("\tengine/engine/engine.cpp\n") != std::string::npos);
 	CHECK(cmake.find("-Wall -Wextra -Wpedantic -Wshadow -Wconversion") != std::string::npos);
 }
 
@@ -140,21 +140,23 @@ TEST_CASE("a generated program carries the engine's files unchanged, and none of
 	std::set<std::string> copied;
 	for (const fs::path& file : program.files)
 	{
-		if (file.parent_path() != "engine")
+		const std::string path = file.generic_string();
+		if (!path.starts_with("engine/"))
 		{
 			continue;
 		}
-		INFO(file.generic_string());
-		const std::string name = file.filename().string();
-		const fs::path original = fs::path(XGE_ENGINE_FOLDER) / "lib" / (name.ends_with(".cpp") ? "source" : "include") / name;
-		CHECK(readFile(engine / name) == readFile(original));
+		INFO(path);
+		// The path inside engine/ is the one inside xge/lib/ and the one the
+		// files include each other by ("game/game.h").
+		const std::string name = path.substr(7);
+		CHECK(readFile(engine / name) == readFile(fs::path(XGE_ENGINE_FOLDER) / "lib" / name));
 		copied.insert(name);
 	}
-	REQUIRE(copied.count("engine.cpp") == 1);
-	REQUIRE(copied.count("game.cpp") == 1);
+	REQUIRE(copied.count("engine/engine.cpp") == 1);
+	REQUIRE(copied.count("game/game.cpp") == 1);
 	copied.insert("game_parts.h");
-	for (const char* left : { "game_xml.h", "game_xml.cpp", "xml_document.h", "xsd_lite.h", "window.cpp", "audio.cpp", "engine_backends.cpp",
-		"window_raylib.h", "window_sdl2.h", "window_opengl.h", "audio_raylib.h", "audio_sdl2.h", "data_folder.h" })
+	for (const char* left : { "load/xml.h", "load/xml.cpp", "xml/document.h", "load/xsd.h", "window/window.cpp", "audio/audio.cpp", "engine/backends.cpp",
+		"window/raylib.h", "window/sdl2.h", "window/opengl.h", "audio/raylib.h", "audio/sdl2.h", "engine/folder.h" })
 	{
 		INFO(left);
 		CHECK(copied.count(left) == 0);

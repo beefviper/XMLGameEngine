@@ -10,7 +10,7 @@
 // the thing being hit. (This file used to test a hand-copied version of the
 // overlap code against SFML types; it now tests the real thing.)
 
-#include "collision_detector.h"
+#include "play/collision.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>

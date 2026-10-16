@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "window.h"
+#include "window/window.h"
 
 #include <QImage>
 #include <QPainter>
