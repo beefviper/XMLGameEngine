@@ -166,16 +166,37 @@ TEST_CASE("running off one side of a screen is the next screen, and the jungle g
 	CHECK(play.state() == "playing");
 }
 
-TEST_CASE("a log rolling over Harry costs points while it does", "[pitfall]")
+TEST_CASE("a log knocks Harry back and costs points; a leap clears it", "[pitfall]")
 {
 	Pitfall play;
 	play.start();
 	Object& log = play.game.getObject("playing.screen1.logs.1");
-	play.standAt(log.position.x - 40.0f);
 
-	play.frames(60);
+	// Running at it, he is thrown back the way it rolls, again and again,
+	// and never gets past it.
+	play.standAt(log.position.x - 40.0f);
+	for (int i = 0; i < 60; ++i)
+	{
+		play.engine.handleKeyPressed(KeyCode::D);
+		play.frames(1);
+		CHECK(play.harry().position.x < log.position.x + log.size.x);
+	}
+	play.engine.handleKeyReleased(KeyCode::D);
 	CHECK(play.status("score") < 2000);
 	CHECK(play.status("lives") == 3);
+
+	// Leaping as he runs at it, he lands past it with nothing taken.
+	Pitfall leap;
+	leap.start();
+	Object& rolling = leap.game.getObject("playing.screen1.logs.1");
+	leap.standAt(rolling.position.x - 40.0f);
+	leap.engine.handleKeyPressed(KeyCode::D);
+	leap.tap(KeyCode::Space);
+	leap.frames(30);
+	leap.engine.handleKeyReleased(KeyCode::D);
+	leap.frames(2);
+	CHECK(leap.harry().position.x > rolling.position.x + rolling.size.x);
+	CHECK(leap.status("score") == 2000);
 }
 
 TEST_CASE("the tar pit costs a life, unless Harry leaps over it", "[pitfall]")
@@ -302,8 +323,10 @@ TEST_CASE("a treasure is taken once, a screen left keeps it taken, and all four 
 	CHECK(play.status("found") == 3);
 	CHECK(play.state() == "playing");
 
-	// The money bag, past the logs, is the fourth.
+	// The money bag, past the logs, is the fourth, once they have rolled by.
 	play.enter("playing.screen1");
+	play.game.getObject("playing.screen1.logs.1").position.x = 100.0f;
+	play.game.getObject("playing.screen1.logs.2").position.x = 200.0f;
 	play.standAt(560.0f);
 	play.hold(KeyCode::D, 15);
 	CHECK(play.state() == "youwin");

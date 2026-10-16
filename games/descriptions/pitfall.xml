@@ -73,8 +73,10 @@
     <variable name="leapheight">48</variable>
     <variable name="roll">1.5</variable>
     <variable name="crawl">1</variable>
-    <!-- points a rolling log takes away every frame it is on top of Harry -->
-    <variable name="bump">5</variable>
+    <!-- what a rolling log does to Harry each time it knocks into him: the
+         points it takes away and how far back it throws him -->
+    <variable name="bump">50</variable>
+    <variable name="knock">24</variable>
   </variables>
   <sounds>
     <sound name="jump" wave="square">
@@ -91,6 +93,10 @@
     <sound name="die" wave="triangle">
       <volume>0.4</volume>
       <note pitch="G4" to="G2">0.6</note>
+    </sound>
+    <sound name="thud" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="400" to="80">0.12</note>
     </sound>
     <sound name="snap" wave="noise">
       <volume>0.2</volume>
@@ -281,8 +287,12 @@
             <collision class="croc">
               <land />
             </collision>
+            <!-- a log knocks Harry back the way it rolls; only a leap gets
+                 him over it -->
             <collision class="log">
               <dec variable="status.score">bump</dec>
+              <move direction="left">knock</move>
+              <play sound="thud" />
             </collision>
             <collision class="hazard">
               <dec variable="status.lives" />
