@@ -284,18 +284,15 @@
               <move direction="left">knock</move>
               <play sound="thud" />
             </collision>
-            <collision class="hazard">
-              <dec variable="status.lives" />
-              <play sound="die" />
-              <reset />
-            </collision>
-            <collision class="water">
-              <dec variable="status.lives" />
-              <play sound="die" />
-              <reset />
-            </collision>
+            <collision class="hazard"><trigger action="lose" /></collision>
+            <collision class="water"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <action name="lose">
+              <dec variable="status.lives" />
+              <play sound="die" />
+              <reset />
+            </action>
             <action name="left">
               <move direction="left">run</move>
             </action>

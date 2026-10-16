@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <stdexcept>
 
 namespace xge
@@ -110,6 +111,38 @@ namespace xge
 			for (RawSprite& look : object.looks) { apply(look); }
 			for (RawSprite& frame : object.animation.frames) { apply(frame); }
 			apply(object.cell.slot);
+		}
+	}
+
+	void nameSelf(std::vector<RawObject>& objects)
+	{
+		for (RawObject& object : objects)
+		{
+			const auto commands = [&](std::vector<RawCommand>& list)
+			{
+				for (RawCommand& command : list)
+				{
+					if (command.verb == "trigger" && command.object.empty()) { command.object = object.name; }
+				}
+			};
+			const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
+			{
+				for (RawCondition& part : condition.parts) { check(part); }
+				if (condition.join == RawCondition::Join::None && condition.filterClass.empty() && condition.filterObject.empty())
+				{
+					condition.filterObject = object.name;
+				}
+			};
+
+			RawCollisionData& collisions = object.rawCollisionData;
+			for (auto* edge : { &collisions.top, &collisions.bottom, &collisions.left, &collisions.right }) { commands(*edge); }
+			for (RawCollisionRule& rule : collisions.others)
+			{
+				commands(rule.commands);
+				if (rule.check.join != RawCondition::Join::None) { check(rule.check); }
+			}
+			for (RawTimer& timer : object.timers) { commands(timer.commands); }
+			for (auto& [name, list] : object.action) { commands(list); }
 		}
 	}
 

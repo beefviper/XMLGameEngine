@@ -7,6 +7,7 @@
 
 #include "picture/bitmap.h"
 #include "game/command.h"
+#include "game/condition.h"
 #include "game/types.h"
 
 #include <algorithm>
@@ -58,6 +59,18 @@ namespace xge
 		// sprite="name": the rule only runs while the object running it shows
 		// its sprite of that name (see <become>). Empty means whatever it shows.
 		std::string whileSprite;
+
+		// side="...": the rule only runs when the object is touched on that
+		// side of its own (top, bottom, left, right, horizontal for left or
+		// right, vertical for top or bottom). Empty means any side.
+		std::string side;
+
+		// <check>s, <all>s and <any>s after <slower>/<faster>: the rule only
+		// runs while every one holds. Gathered as an <all> (join All); join
+		// None means there are none. A <check> with no class= or object= is
+		// about the object running the rule (see nameSelf).
+		RawCondition check;
+
 		std::vector<RawCommand> commands;
 	};
 
@@ -112,6 +125,8 @@ namespace xge
 		std::optional<float> slower;
 		std::optional<float> faster;
 		std::string whileSprite;
+		std::vector<Edge> sides;           // empty: any side
+		std::optional<Condition> check;    // see RawCollisionRule::check
 		std::vector<Command> commands;
 	};
 
@@ -767,6 +782,11 @@ namespace xge
 	// size and its color. A style no <style> has, or a text left with no
 	// size, stops the load.
 	void applyStyles(std::vector<RawObject>& objects, const std::vector<RawStyle>& styles);
+
+	// What an object's own rules, timers and actions leave to mean itself,
+	// made its name (final, so after layOutScenes): a <trigger> with no
+	// object=, and a collision rule's <check> with no class= or object=.
+	void nameSelf(std::vector<RawObject>& objects);
 
 	// Makes each <centered> of an object's <position> the expression it
 	// means: where its middle goes, less half its own width (or height),

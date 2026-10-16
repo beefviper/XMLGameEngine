@@ -70,6 +70,7 @@ set(ENGINE_HEADERS
 	"xge/lib/engine/engine.h"
 	"xge/lib/game/object.h"
 	"xge/lib/game/states.h"
+	"xge/lib/game/condition.h"
 	"xge/lib/game/scenes.h"
 	"xge/lib/game/types.h"
 	"xge/lib/picture/color.h"

@@ -697,7 +697,7 @@
       </xsl:when>
     </xsl:choose>
     <xsl:for-each select="$node/collision">
-      <xsl:variable name="commands" select="*[not(self::slower or self::faster)]" />
+      <xsl:variable name="commands" select="*[not(self::slower or self::faster or self::check or self::all or self::any)]" />
       <xsl:choose>
         <xsl:when test="@edge != ''">
           <xsl:value-of select="concat($indent, 'edge(', $data, ', &quot;', @edge, '&quot;, ')" />
@@ -722,13 +722,14 @@
         <xsl:otherwise>
           <xsl:variable name="inner" select="concat($indent, $tab)" />
           <xsl:value-of select="concat($indent, $data, '.others.push_back(make&lt;RawCollisionRule&gt;([](RawCollisionRule&amp; rule)&#10;', $indent, '{&#10;')" />
-          <xsl:for-each select="@class | @object | @unless | @sprite">
+          <xsl:for-each select="@class | @object | @unless | @sprite | @side">
             <xsl:if test=". != ''">
               <xsl:value-of select="$inner" />
               <xsl:choose>
                 <xsl:when test="local-name() = 'class'">rule.filterClass</xsl:when>
                 <xsl:when test="local-name() = 'object'">rule.filterObject</xsl:when>
                 <xsl:when test="local-name() = 'unless'">rule.unlessClass</xsl:when>
+                <xsl:when test="local-name() = 'side'">rule.side</xsl:when>
                 <xsl:otherwise>rule.whileSprite</xsl:otherwise>
               </xsl:choose>
               <xsl:text> = </xsl:text>
@@ -751,6 +752,16 @@
               <xsl:with-param name="node" select="faster[last()]" />
             </xsl:call-template>
             <xsl:text>;&#10;</xsl:text>
+          </xsl:if>
+          <!-- its checks, gathered as an <all> (readCollisions) -->
+          <xsl:if test="check | all | any">
+            <xsl:call-template name="condition-join">
+              <xsl:with-param name="join" select="." />
+              <xsl:with-param name="parts" select="check | all | any" />
+              <xsl:with-param name="var" select="'rule.check'" />
+              <xsl:with-param name="inner" select="$inner" />
+              <xsl:with-param name="depth" select="0" />
+            </xsl:call-template>
           </xsl:if>
           <xsl:value-of select="concat($inner, 'rule.commands = ')" />
           <xsl:call-template name="commands">
@@ -1765,15 +1776,17 @@
   </xsl:template>
 
   <!-- An <all> or <any> ($join): which, then each of its <check>s, <all>s
-       and <any>s pushed onto $var's parts. -->
+       and <any>s pushed onto $var's parts. A <collision> ($join) gives its
+       checks as $parts, and they are an <all>. -->
   <xsl:template name="condition-join">
     <xsl:param name="join" />
+    <xsl:param name="parts" select="$join/*" />
     <xsl:param name="var" />
     <xsl:param name="inner" />
     <xsl:param name="depth" />
     <xsl:variable name="part" select="concat('check', $depth)" />
-    <xsl:value-of select="concat($inner, $var, '.join = RawCondition::Join::', substring('All', 1, 3 * boolean($join[self::all])), substring('Any', 1, 3 * boolean($join[self::any])), ';&#10;')" />
-    <xsl:for-each select="$join/*">
+    <xsl:value-of select="concat($inner, $var, '.join = RawCondition::Join::', substring('Any', 1, 3 * boolean($join[self::any])), substring('All', 1, 3 * not($join[self::any])), ';&#10;')" />
+    <xsl:for-each select="$parts">
       <xsl:value-of select="concat($inner, $var, '.parts.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; ', $part, ')&#10;', $inner, '{&#10;')" />
       <xsl:choose>
         <xsl:when test="self::check">

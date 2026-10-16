@@ -195,14 +195,15 @@ namespace xge
 			}();
 			static const PlaceRule rules[] = {
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
+					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>" } },
+					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimerCommands },
-				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>" } },
+				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>",
+					"<inc>", "<dec>", "<copy>", "<reset object>", "<reset scene>", "<enter>", "<die />" } },
 				{ "a path's <step>", ownerCommands },
 			};
 			return rules[static_cast<std::size_t>(place)];
@@ -226,10 +227,6 @@ namespace xge
 				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<leap>" || tag == "<climb>" || tag == "<accelerate>"))
 				{
 					hint = " A key moves or fires an object through one of its <action>s: <trigger object=\"...\" action=\"...\" />.";
-				}
-				else if (tag == "<reset object>" && place == Place::Action)
-				{
-					hint = " Here only a bare <reset /> (the object itself) works.";
 				}
 				throw std::runtime_error(where + ": " + tag + " does nothing in " + rule.what + ", so it would be ignored." + hint
 					+ " What can go there: " + listOf(rule.tags));
@@ -425,6 +422,10 @@ namespace xge
 			}
 			else if (const auto* trigger = std::get_if<CmdTriggerAction>(&command))
 			{
+				if (trigger->object.empty())
+				{
+					throw std::runtime_error(where + ": <trigger action=\"" + trigger->action + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
+				}
 				const Object* object = findObject(objects, trigger->object);
 				if (!object)
 				{
@@ -1102,6 +1103,11 @@ namespace xge
 				}
 				if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
 				if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
+				const std::string& side = rawRule.side;
+				if (side == "top" || side == "vertical") { rule.sides.push_back(Edge::Top); }
+				if (side == "bottom" || side == "vertical") { rule.sides.push_back(Edge::Bottom); }
+				if (side == "left" || side == "horizontal") { rule.sides.push_back(Edge::Left); }
+				if (side == "right" || side == "horizontal") { rule.sides.push_back(Edge::Right); }
 				rule.commands = processCommands(rawRule.commands, where);
 				object.collisionData.others.push_back(std::move(rule));
 			}
@@ -1203,6 +1209,23 @@ namespace xge
 			condition.commands = processCommands(rawCondition.commands, where);
 			return condition;
 		};
+
+		// The checks of the objects' collision rules, now that every object
+		// they can name is made.
+		for (const RawObject& rawObject : rawObjects)
+		{
+			const auto object = std::find_if(objects.begin(), objects.end(), [&](const Object& each) { return each.name == rawObject.name; });
+			if (object == objects.end()) { continue; }
+			const std::string where = "object '" + rawObject.name + "' > <collision>";
+			for (std::size_t i = 0; i < rawObject.rawCollisionData.others.size(); ++i)
+			{
+				const RawCondition& check = rawObject.rawCollisionData.others[i].check;
+				if (check.join != RawCondition::Join::None)
+				{
+					object->collisionData.others[i].check = makeTest(check, where, where);
+				}
+			}
+		}
 
 		for (auto& rawState : rawStates)
 		{

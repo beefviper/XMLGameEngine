@@ -837,7 +837,7 @@ namespace xge
 				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
 				else { command.amount = RawValue::expression("1"); }
 			}
-			if (verb == "trigger") { requireAttribute(node, "object", where); requireAttribute(node, "action", where); }
+			if (verb == "trigger") { requireAttribute(node, "action", where); }
 			if (verb == "move" || verb == "hop" || verb == "accelerate" || verb == "turn")
 			{
 				requireAttribute(node, "direction", where);
@@ -1103,6 +1103,10 @@ namespace xge
 			}
 		}
 
+		// What a <check>, an <all> or an <any> tests (below, with <condition>s).
+		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, RawCondition& raw);
+		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw);
+
 		// <collisions>: whether they are on, whether the objects move in lockstep
 		// with the others of their group, then the rules.
 		// A <collisions>, added to what `base` already has: a group inside
@@ -1145,6 +1149,38 @@ namespace xge
 				if ((slower || faster) && !edge.empty())
 				{
 					fail(ruleHere, "<slower> and <faster> are about speed against another object; a rule about a screen edge has none");
+				}
+
+				// Then the checks that must all hold for it to run.
+				RawCondition check;
+				while (firstCommand && (firstCommand->getName() == "check" || firstCommand->getName() == "all" || firstCommand->getName() == "any"))
+				{
+					const std::string name = firstCommand->getName();
+					RawCondition part;
+					if (name == "check")
+					{
+						if (readCheck(*firstCommand, ruleHere + " > <check>", part)) { fail(ruleHere + " > <check>", "has its one test and nothing after it; the commands go after the checks"); }
+					}
+					else
+					{
+						readJoin(*firstCommand, ruleHere + " > <" + name + ">", part);
+					}
+					check.join = RawCondition::Join::All;
+					check.parts.push_back(std::move(part));
+					firstCommand = firstCommand->getNextSibling();
+				}
+				if (check.join != RawCondition::Join::None && !edge.empty())
+				{
+					fail(ruleHere, "a <check> on a rule about a screen edge is not built yet; a <condition> of the state can test the same variable");
+				}
+				const std::string side = collision->getAttribute("side");
+				if (!side.empty())
+				{
+					if (!edge.empty()) { fail(ruleHere, "side= is the side of the object another object touches; a rule about a screen edge says which with edge="); }
+					if (side != "top" && side != "bottom" && side != "left" && side != "right" && side != "horizontal" && side != "vertical")
+					{
+						fail(ruleHere, "side=\"" + side + "\"; expected top, bottom, left, right, horizontal or vertical");
+					}
 				}
 
 				std::vector<RawCommand> commands = readCommands(std::move(firstCommand), ruleHere);
@@ -1191,6 +1227,8 @@ namespace xge
 					rule.whileSprite = collision->getAttribute("sprite");
 					rule.slower = std::move(slower);
 					rule.faster = std::move(faster);
+					rule.side = side;
+					rule.check = std::move(check);
 					rule.commands = std::move(commands);
 					collisionData.others.push_back(std::move(rule));
 				}
@@ -2052,11 +2090,6 @@ namespace xge
 
 		using ConditionSets = std::map<std::string, std::vector<RawCondition>>;
 
-		// The <condition>s under a node (a state's <conditions>, or a
-		// <conditions> set), in order: a test, then the commands to run when it
-		// holds; or <condition set="..."> for a named set's, in its place.
-		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, RawCondition& raw);
-
 		// An <all> or an <any>, into `raw`: which, and its <check>s, <all>s
 		// and <any>s in order.
 		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw)
@@ -2155,6 +2188,9 @@ namespace xge
 			return test->getNextSibling();
 		}
 
+		// The <condition>s under a node (a state's <conditions>, or a
+		// <conditions> set), in order: a test, then the commands to run when it
+		// holds; or <condition set="..."> for a named set's, in its place.
 		void readConditions(const XmlNode& node, const std::string& where, const ConditionSets& conditionSets, std::vector<RawCondition>& out)
 		{
 			for (std::unique_ptr<XmlNode> condition = node.getFirstChild(); condition != nullptr; condition = condition->getNextSibling())

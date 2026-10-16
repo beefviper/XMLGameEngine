@@ -170,20 +170,16 @@
             <collision edge="horizontal">
               <stick />
             </collision>
-            <collision class="bomb">
-              <dec variable="player.lives" />
-              <play sound="lost" />
-              <reset object="bombs" />
-              <reset />
-            </collision>
-            <collision class="demon">
-              <dec variable="player.lives" />
-              <play sound="lost" />
-              <reset object="bombs" />
-              <reset />
-            </collision>
+            <collision class="bomb"><trigger action="lose" /></collision>
+            <collision class="demon"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <action name="lose">
+              <dec variable="player.lives" />
+              <play sound="lost" />
+              <reset object="bombs" />
+              <reset />
+            </action>
             <action name="left">
               <move direction="left">slide</move>
             </action>

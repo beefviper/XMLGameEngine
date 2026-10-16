@@ -37,6 +37,7 @@
   <file>lib/game/object.h</file>
   <file>lib/game/object.cpp</file>
   <file>lib/game/states.h</file>
+  <file>lib/game/condition.h</file>
   <file>lib/game/states.cpp</file>
   <file>lib/audio/sound.h</file>
   <file>lib/audio/sound.cpp</file>

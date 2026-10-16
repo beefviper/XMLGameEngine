@@ -247,37 +247,13 @@
           <collisions>
             <enabled>true</enabled>
             <!-- the walls are electrified, and so is everything else that touches him.
-                 The rules are his own: a <reset /> in one only puts him back at the
-                 start, where somebody else's <reset object="player" /> would take his
-                 score and his lives as well. -->
-            <collision class="wall">
-            <dec variable="player.lives">1</dec>
-            <play sound="zap" />
-            <reset />
-            <reset object="bullet" />
-            <reset object="robotshots" />
-          </collision>
-            <collision class="robotshot">
-            <dec variable="player.lives">1</dec>
-            <play sound="zap" />
-            <reset />
-            <reset object="bullet" />
-            <reset object="robotshots" />
-          </collision>
-            <collision class="otto">
-            <dec variable="player.lives">1</dec>
-            <play sound="zap" />
-            <reset />
-            <reset object="bullet" />
-            <reset object="robotshots" />
-          </collision>
-            <collision class="robot">
-            <dec variable="player.lives">1</dec>
-            <play sound="zap" />
-            <reset />
-            <reset object="bullet" />
-            <reset object="robotshots" />
-          </collision>
+                 Each touch runs his own action lose: its <reset /> only puts him back
+                 at the start, where somebody else's <reset object="player" /> would take
+                 his score and his lives as well. -->
+            <collision class="wall"><trigger action="lose" /></collision>
+            <collision class="robotshot"><trigger action="lose" /></collision>
+            <collision class="otto"><trigger action="lose" /></collision>
+            <collision class="robot"><trigger action="lose" /></collision>
             <!-- through an exit (the exit's own rule goes on to the next room):
                  back at the start, one room deeper, and the room tidied -->
             <collision class="exit">
@@ -291,6 +267,13 @@
             <collision edge="all"><stick /></collision>
           </collisions>
           <actions>
+            <action name="lose">
+              <dec variable="player.lives">1</dec>
+              <play sound="zap" />
+              <reset />
+              <reset object="bullet" />
+              <reset object="robotshots" />
+            </action>
             <action name="up">
               <move direction="up">walk</move>
               <become sprite="up" />

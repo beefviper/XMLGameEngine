@@ -444,11 +444,7 @@
           <position><x>6 * cell + inset</x><y>13 * cell + inset</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision class="hazard">
-              <dec variable="frog.lives" />
-              <reset />
-              <play sound="squash" />
-            </collision>
+            <collision class="hazard"><trigger action="lose" /></collision>
             <collision class="water" unless="logs">
               <dec variable="frog.lives" />
               <reset />
@@ -462,13 +458,14 @@
               <reset />
               <play sound="pad" />
             </collision>
-            <collision edge="horizontal">
+            <collision edge="horizontal"><trigger action="lose" /></collision>
+          </collisions>
+          <actions>
+            <action name="lose">
               <dec variable="frog.lives" />
               <reset />
               <play sound="squash" />
-            </collision>
-          </collisions>
-          <actions>
+            </action>
             <action name="up">
               <hop direction="up">step</hop>
               <play sound="hop" />

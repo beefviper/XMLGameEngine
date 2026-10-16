@@ -403,18 +403,15 @@
             <collision edge="horizontal">
               <stick />
             </collision>
-            <collision class="alien">
-              <dec variable="ship.lives" />
-              <inc variable="ship.lost" />
-              <play sound="boom" />
-            </collision>
-            <collision class="bomb">
-              <dec variable="ship.lives" />
-              <inc variable="ship.lost" />
-              <play sound="boom" />
-            </collision>
+            <collision class="alien"><trigger action="lose" /></collision>
+            <collision class="bomb"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <action name="lose">
+              <dec variable="ship.lives" />
+              <inc variable="ship.lost" />
+              <play sound="boom" />
+            </action>
             <action name="left">
               <move direction="left">step</move>
             </action>

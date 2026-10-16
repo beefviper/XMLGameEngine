@@ -27,7 +27,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 
 | File | Topic | Status |
 |---|---|---|
-| [collisions](20-collisions.md) | Detection, dispatch, swept and pixel collision, speed filters, `<deflect>` | Built |
+| [collisions](20-collisions.md) | Detection, dispatch, swept and pixel collision, speed filters, `<deflect>`, `side=`, checks and `<trigger>` in rules | Built |
 | [collisions-open](21-collisions-open.md) | Weaknesses, response alternatives, escalation, reference Pong | Open / Idea |
 | [motion](22-motion.md) | Verb principle, gravity, thrust, headings, hop, jump, facing | Built |
 | [platforming](23-platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump | Built; air control Idea |

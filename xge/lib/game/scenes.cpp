@@ -387,6 +387,7 @@ namespace xge
 					rule.filterObject = names_.object(rule.filterObject, context);
 					if (rule.slower) { value(*rule.slower, context); }
 					if (rule.faster) { value(*rule.faster, context); }
+					conditions(rule.check.parts, context);
 					commands(rule.commands, context);
 				}
 

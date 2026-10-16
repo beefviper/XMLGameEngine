@@ -27,8 +27,10 @@ namespace xge
 	{
 		// What states and scenes own, among the game's objects and named in full.
 		layOutScenes(data);
-		// Then, with every object's name final, its text styles and centering.
+		// Then, with every object's name final, its text styles, what it
+		// leaves to mean itself, and its centering.
 		applyStyles(data.objects, data.styles);
+		nameSelf(data.objects);
 		centerOnOwnSize(data.objects);
 		windowDesc = std::move(data.window);
 		validation = std::move(data.validation);
@@ -1622,6 +1624,8 @@ namespace xge
 				if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
 				if (rule.slower && !(speed < *rule.slower)) { continue; }
 				if (rule.faster && !(speed >= *rule.faster)) { continue; }
+				if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), selfEdge) == rule.sides.end()) { continue; }
+				if (rule.check && !holds(*rule.check)) { continue; }
 
 				for (const auto& command : rule.commands)
 				{

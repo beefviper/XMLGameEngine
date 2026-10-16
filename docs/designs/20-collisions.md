@@ -1,6 +1,6 @@
 # Collisions
 
-**Status:** Built: detection, dispatch, execution; swept object collision; pixel tests; riding; exceptions; deflect.
+**Status:** Built: detection, dispatch, execution; swept object collision; pixel tests; riding; exceptions; deflect; side, checks and triggers in rules.
 
 ## Structure
 
@@ -46,3 +46,12 @@
 - **Chosen: `<deflect>angle</deflect>`**, a new verb in a rule about another object (angle is a value, 0 up to 90). Measured from the side's middle: half the side's length is the full angle, in proportion between; leaves away from the side touched; **speed kept**. Pong uses 45.
 - Rejected: `<bounce>45</bounce>` (bounce also runs on screen edges and in lockstep, keep every bounce unchanged); measuring to the ball's own edge (gave about 40 degrees at the top corner).
 - Open: serve at a set speed and random angle, speeding up per hit with a cap, adding the paddle's motion to the angle (velocity transfer). Breakout's paddle does not use it yet (plain `<bounce />`).
+
+
+## Side, checks and triggers (2026-10-16)
+
+- Need: Mario Bros. and Joust tell a bump from below or above from a touch from the side; a lap that counts only after the halfway marker is a rule that depends on a variable; six games wrote the same death (three to five commands) in two to four rules.
+- **`side=`, chosen:** the side of the rule's own object that was touched, the edge the detector already reported. Same words as `edge=` (top, bottom, left, right, horizontal, vertical), but a separate attribute, since `edge=` already means a screen edge. Looked at: `edge=` doing both (one word meaning two things), and a `<from>` filter naming the other's motion (the touched side already says it).
+- **Checks, chosen:** the `<check>`, `<all>` and `<any>` of [conditions](07-states-and-conditions.md) after `<slower>`/`<faster>`, all of which must hold. One test vocabulary, not a second one for rules. A `<check>` with no `class=` or `object=` means the object itself (`nameSelf`, after names are final), since a rule is always about its own object; in a state's condition that same check still means every object with the variable. Not yet on screen-edge rules (`EdgeGuard` would need its own checks); a state condition covers the cases met so far.
+- **`<trigger>` in rules, chosen:** a rule runs one of the object's `<action>`s, `object=` left out meaning itself, and an action can now also `<inc>`, `<dec>`, `<copy>`, `<reset object>`, `<reset scene>`, `<enter>` and `<die />`. So a death is one action and the rules that kill each say `<trigger action="lose" />`. Looked at: several classes in one `class=` (a list in a string), and a named rule set (another mechanism for what an action already is). An action run from a rule or a timer is one press: a `<move>` in it stays on, as it did from a timer.
+- Open: what a touch knows beyond the side (where along it, the touch point, the normal, the depth), for knocking and pool; the other object as a name in a rule (shelved earlier as a name whose meaning changes).

@@ -41,7 +41,8 @@ namespace xge
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
-			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire/CmdTriggerAction never
+			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
+			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire never
 			                      appear in a collisionData list, and ride() and
 			                      deflect() are about another object, which a screen
 			                      edge is not; ignore defensively. */ }
@@ -79,6 +80,7 @@ namespace xge
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
+			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
@@ -462,8 +464,16 @@ namespace xge
 				// One that loops is held like a move: on while the key is down.
 				[&](const CmdPlay& p) { playHeld(p.sound, keyPressed); },
 				[&](const CmdSilence& s) { if (keyPressed) { game.silenceSound(s.sound); } },
-				[&](const auto&) { /* an object's own <action> list only ever produces
-				                      move/hop/accelerate/turn/thrust/fire/drop/play/silence commands today; ignore anything else. */ }
+				// What a rule or a timer does through an action (one death for
+				// several rules): change a variable, put things back, move on.
+				[&](const CmdIncrement& i) { if (keyPressed) { game.incrementText(i.target, i.amount); } },
+				[&](const CmdDecrement& d) { if (keyPressed) { game.decrementText(d.target, d.amount); } },
+				[&](const CmdCopy& c) { if (keyPressed) { game.copyVariable(c.from, c.into); } },
+				[&](const CmdResetObject& r) { if (keyPressed) { game.resetObject(r.target); } },
+				[&](const CmdResetScene& r) { if (keyPressed) { game.reset(r); } },
+				[&](const CmdEnterScene& e) { if (keyPressed) { game.enter(e); } },
+				[&](const CmdDie&) { if (keyPressed) { xge::die(object); } },
+				[&](const auto&) { /* ruleFor in load/expr lists what an action holds */ }
 			}, command);
 		}
 	}

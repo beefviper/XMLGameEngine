@@ -773,7 +773,8 @@
       </xs:element>
       <xs:element name="trigger">
         <xs:complexType>
-          <xs:attribute name="object" type="xs:string" use="required" />
+          <!-- left out in an object's own collision, action or timer: that object -->
+          <xs:attribute name="object" type="xs:string" use="optional" />
           <xs:attribute name="action" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
@@ -844,9 +845,18 @@
     <xs:sequence>
       <xs:element name="slower" type="valueType" minOccurs="0" />
       <xs:element name="faster" type="valueType" minOccurs="0" />
+      <!-- checks that must all hold for the rule to run; a <check> with no
+           class= or object= is about the object itself -->
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="check" type="checkType" />
+        <xs:element name="all" type="joinType" />
+        <xs:element name="any" type="joinType" />
+      </xs:choice>
       <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="edge" type="edgeType" use="optional" />
+    <!-- the side of this object the other touched: top, bottom, left, right, horizontal or vertical -->
+    <xs:attribute name="side" type="edgeType" use="optional" />
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="unless" type="xs:string" use="optional" />
@@ -900,21 +910,22 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <!-- One test with what it tests, inside an <all>, an <any> or a <collision>. -->
+  <xs:complexType name="checkType">
+    <xs:group ref="conditionTest" />
+    <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="object" type="xs:string" use="optional" />
+    <xs:attribute name="variable" type="xs:string" use="optional" />
+    <!-- count: how many are in play; sum, highest, lowest: of variable= over them -->
+    <xs:attribute name="total" type="totalType" use="optional" />
+    <!-- how far each is from the nearest in play of this object or group -->
+    <xs:attribute name="distance" type="xs:string" use="optional" />
+  </xs:complexType>
+
   <!-- all: every check holds; any: one of them does. Each check a test of its own. -->
   <xs:complexType name="joinType">
     <xs:choice maxOccurs="unbounded">
-      <xs:element name="check">
-        <xs:complexType>
-          <xs:group ref="conditionTest" />
-          <xs:attribute name="class" type="xs:string" use="optional" />
-          <xs:attribute name="object" type="xs:string" use="optional" />
-          <xs:attribute name="variable" type="xs:string" use="optional" />
-          <!-- count: how many are in play; sum, highest, lowest: of variable= over them -->
-          <xs:attribute name="total" type="totalType" use="optional" />
-          <!-- how far each is from the nearest in play of this object or group -->
-          <xs:attribute name="distance" type="xs:string" use="optional" />
-        </xs:complexType>
-      </xs:element>
+      <xs:element name="check" type="checkType" />
       <xs:element name="all" type="joinType" />
       <xs:element name="any" type="joinType" />
     </xs:choice>
