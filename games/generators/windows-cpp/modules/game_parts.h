@@ -387,6 +387,13 @@ namespace xge::parts
 		return quiet;
 	}
 
+	// A note or rest of a sound's <part> (counted from 0).
+	inline RawNote inPart(unsigned part, RawNote note)
+	{
+		note.part = part;
+		return note;
+	}
+
 	// A <path>'s <step>: where to, and the commands run on getting there.
 	inline RawPathStep step(RawValue x, RawValue y, std::vector<RawCommand> commands = {})
 	{

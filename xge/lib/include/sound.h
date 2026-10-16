@@ -46,12 +46,17 @@ namespace xge
 		float startHz{ 0.0f };
 		float endHz{ 0.0f };
 		float seconds{ 0.0f };
+
+		// Which part (voice) of the sound it is in, from 0. A sound's parts
+		// play at the same time, each its notes one after another.
+		unsigned part{ 0 };
 	};
 
 	// A sound from the game file's <sounds>, worked out: its name (what
 	// <play sound="..." /> asks for), whether it loops (<loop />: it plays
 	// over and over until it is silenced), how loud (0 to 1) and its notes in
-	// the order they play. Nothing about any audio library is in it; an Audio
+	// the order they play, each in its part (the parts play together, as a
+	// sound chip's channels do). Nothing about any audio library is in it; an Audio
 	// backend (audio.h) is given these and turns each into samples with
 	// synthesize() below.
 	struct SoundDesc
@@ -72,6 +77,8 @@ namespace xge
 
 	// A sound's samples: signed 16 bit, one channel, kSoundSampleRate a second.
 	// The same for every backend, which only has to hand them to its library.
+	// The parts are made one by one and added together, as long as the
+	// longest; a sum louder than the loudest a sample can be is cut off there.
 	// Each note fades in and out over a couple of milliseconds so that it
 	// starts and stops without a click; a noise note is the same hiss every
 	// time it plays (its random numbers are seeded per note).

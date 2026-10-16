@@ -1866,9 +1866,32 @@ namespace xge
 			if (!any) { fail(where, "has nothing on it; give it <group>s and <object>s that pick its characters"); }
 		}
 
+		// A <note> or <rest> of a sound, in the part given; a note with no
+		// wave of its own takes the part's (`wave`, "" for the sound's).
+		RawNote readNote(const XmlNode& node, const std::string& where, unsigned part, const std::string& wave)
+		{
+			RawNote note;
+			note.part = part;
+			if (node.getName() == "rest")
+			{
+				note.rest = true;
+			}
+			else
+			{
+				note.wave = node.getAttribute("wave");
+				if (note.wave.empty()) { note.wave = wave; }
+				note.pitch = requireAttribute(node, "pitch", where);
+				note.to = node.getAttribute("to");
+			}
+			note.length = readValue(node, where);
+			return note;
+		}
+
 		// <sound name="..." wave="square">: an optional <loop />, an optional
-		// <volume>, then <note>s and <rest>s in the order they play. The words (wave, pitch) are checked by
-		// game_expr, which also works out the lengths.
+		// <volume>, then <note>s and <rest>s in the order they play, or the
+		// <part>s that play together, each its own <note>s and <rest>s. The
+		// words (wave, pitch) are checked by game_expr, which also works out
+		// the lengths.
 		RawSound readSound(const XmlNode& sound)
 		{
 			RawSound raw;
@@ -1877,39 +1900,47 @@ namespace xge
 
 			const std::string where = "sound '" + raw.name + "'";
 
+			unsigned parts = 0;
+			bool loose = false; // a <note> or <rest> not in a part
 			for (std::unique_ptr<XmlNode> child = sound.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
 
 				if (tag == "loop")
 				{
-					if (!raw.notes.empty() || raw.volume.kind != RawValue::Kind::Expression || !raw.volume.text.empty()) { fail(where, "<loop /> has to come first"); }
+					if (!raw.notes.empty() || parts > 0 || raw.volume.kind != RawValue::Kind::Expression || !raw.volume.text.empty()) { fail(where, "<loop /> has to come first"); }
 					raw.loop = true;
 				}
 				else if (tag == "volume")
 				{
-					if (!raw.notes.empty()) { fail(where, "<volume> has to come before the <note>s and <rest>s"); }
+					if (!raw.notes.empty() || parts > 0) { fail(where, "<volume> has to come before the <note>s and <rest>s"); }
 					raw.volume = readValue(*child, where);
 				}
-				else if (tag == "note")
+				else if (tag == "note" || tag == "rest")
 				{
-					RawNote note;
-					note.wave = child->getAttribute("wave");
-					note.pitch = requireAttribute(*child, "pitch", where);
-					note.to = child->getAttribute("to");
-					note.length = readValue(*child, where);
-					raw.notes.push_back(std::move(note));
+					if (parts > 0) { fail(where, "has <part>s, so its <" + tag + ">s go inside them"); }
+					loose = true;
+					raw.notes.push_back(readNote(*child, where, 0, ""));
 				}
-				else if (tag == "rest")
+				else if (tag == "part")
 				{
-					RawNote rest;
-					rest.rest = true;
-					rest.length = readValue(*child, where);
-					raw.notes.push_back(std::move(rest));
+					if (loose) { fail(where, "has <note>s and <rest>s of its own, so it cannot have <part>s as well"); }
+					const std::string partWhere = where + " > <part> " + std::to_string(parts + 1);
+					const std::string wave = child->getAttribute("wave");
+					bool any = false;
+					for (std::unique_ptr<XmlNode> step = child->getFirstChild(); step != nullptr; step = step->getNextSibling())
+					{
+						const std::string stepTag = step->getName();
+						if (stepTag != "note" && stepTag != "rest") { fail(partWhere, "unknown <" + stepTag + ">; expected <note>s and <rest>s"); }
+						raw.notes.push_back(readNote(*step, partWhere, parts, wave));
+						any = true;
+					}
+					if (!any) { fail(partWhere, "has no <note>"); }
+					++parts;
 				}
 				else
 				{
-					fail(where, "unknown <" + tag + ">; expected a <loop />, a <volume>, then <note>s and <rest>s");
+					fail(where, "unknown <" + tag + ">; expected a <loop />, a <volume>, then <note>s and <rest>s, or <part>s");
 				}
 			}
 
@@ -2234,6 +2265,12 @@ namespace xge
 			if (std::unique_ptr<XmlNode> shows = findChild(&state, "shows"))
 			{
 				readShows(*shows, where + " > <shows>", showSets, rawState.show, &rawState.showStates);
+			}
+
+			// <music sound="..." /> (optional)
+			if (std::unique_ptr<XmlNode> music = findChild(&state, "music"))
+			{
+				rawState.music = requireAttribute(*music, "sound", where + " > <music>");
 			}
 
 			// <inputs>: the named <keys> sets it uses (keys="player menu"), in

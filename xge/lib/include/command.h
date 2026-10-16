@@ -548,6 +548,7 @@ namespace xge
 		std::string pitch;
 		std::string to;     // "" means no slide
 		RawValue length;
+		unsigned part{ 0 }; // which <part> it is in, from 0 (0 for a sound of one part)
 	};
 
 	// One <sound name="..." wave="square"> as written; volume is empty text

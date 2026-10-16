@@ -247,16 +247,29 @@
     and over until a <silence>, or, played from a key, until the key is let
     go), how loud (0 to 1, 0.3 when left
     out), then notes and rests (a rest's content is how many seconds of
-    silence), played one after the other. wave is every note's that does not
-    give its own (square when left out).
+    silence), played one after the other, or parts (voices) that play at
+    the same time, each its own notes and rests: a tune and its bass. wave is
+    every note's that does not give its own (square when left out); a part's
+    wave is its notes'.
   -->
+  <xs:complexType name="partType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="note" type="noteType" />
+      <xs:element name="rest" type="valueType" />
+    </xs:choice>
+    <xs:attribute name="wave" type="waveType" use="optional" />
+  </xs:complexType>
+
   <xs:complexType name="soundType">
     <xs:sequence>
       <xs:element name="loop" type="emptyType" minOccurs="0" />
       <xs:element name="volume" type="valueType" minOccurs="0" />
-      <xs:choice maxOccurs="unbounded">
-        <xs:element name="note" type="noteType" />
-        <xs:element name="rest" type="valueType" />
+      <xs:choice>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element name="note" type="noteType" />
+          <xs:element name="rest" type="valueType" />
+        </xs:choice>
+        <xs:element name="part" type="partType" maxOccurs="unbounded" />
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
@@ -1394,6 +1407,16 @@
                         <xs:sequence>
                           <xs:element name="show" type="showType" maxOccurs="unbounded" />
                         </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <!--
+                      music: a sound of the game's that is the state's own.
+                      One that loops plays while the state is the current one;
+                      one that does not plays once as the state begins.
+                    -->
+                    <xs:element name="music" minOccurs="0">
+                      <xs:complexType>
+                        <xs:attribute name="sound" type="xs:string" use="required" />
                       </xs:complexType>
                     </xs:element>
                     <xs:element name="inputs">

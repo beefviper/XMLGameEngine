@@ -45,6 +45,10 @@
   * The tunnel at the sides runs off the map: a walker goes straight on, and
     <wrap />s at the window's edge.
   * Paused and the two endings draw the game still underneath (<show state>).
+  * Music: the start, the win and the loss are tunes with a bass, each a
+    <sound> of two <part>s that play together. Play has a siren for its
+    <music>, a loop that sounds while play is the current state (quiet when
+    paused), and each ending's <music> plays once as it begins.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -87,14 +91,59 @@
       <volume>0.25</volume>
       <note pitch="B4" to="B2">0.6</note>
     </sound>
-    <!-- the start of a game -->
-    <sound name="start" wave="square">
+    <!-- the start of a game: a tune and its bass, played together -->
+    <sound name="start">
       <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="C6">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="C6">0.2</note>
+      <part wave="square">
+        <note pitch="C5">0.1</note>
+        <note pitch="E5">0.1</note>
+        <note pitch="G5">0.1</note>
+        <note pitch="C6">0.1</note>
+        <note pitch="G5">0.1</note>
+        <note pitch="C6">0.3</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="C3">0.2</note>
+        <note pitch="G3">0.2</note>
+        <note pitch="C3">0.2</note>
+        <note pitch="C2">0.2</note>
+      </part>
+    </sound>
+    <!-- the playing state's music: a siren that rises and falls, over and over -->
+    <sound name="siren" wave="square">
+      <loop />
+      <volume>0.05</volume>
+      <note pitch="A4" to="E5">0.25</note>
+      <note pitch="E5" to="A4">0.25</note>
+    </sound>
+    <!-- every dot eaten -->
+    <sound name="win">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="E5">0.12</note>
+        <note pitch="G5">0.12</note>
+        <note pitch="C6">0.12</note>
+        <note pitch="E6">0.4</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="C3">0.24</note>
+        <note pitch="G3">0.12</note>
+        <note pitch="C4">0.4</note>
+      </part>
+    </sound>
+    <!-- the last life lost -->
+    <sound name="lose">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="G4">0.2</note>
+        <note pitch="F#4">0.2</note>
+        <note pitch="F4">0.2</note>
+        <note pitch="E4" to="C4">0.6</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="C3">0.6</note>
+        <note pitch="C2">0.6</note>
+      </part>
     </sound>
   </sounds>
   <paths>
@@ -855,6 +904,7 @@
           <position><x>window.right - livesvalue.width - liveslabel.width - 22</x><y>10</y></position>
         </object>
       </objects>
+      <music sound="siren" />
       <inputs>
         <input button="a left pad1.left">
           <trigger object="pacman" action="left" />
@@ -882,7 +932,6 @@
         <condition class="food">
           <remaining>0</remaining>
           <push state="youwin" />
-          <play sound="start" />
         </condition>
       </conditions>
     </state>
@@ -926,6 +975,7 @@
         <show state="playing" />
         <show object="again" />
       </shows>
+      <music sound="win" />
       <inputs>
         <input button="space pad1.start">
           <reset />
@@ -949,6 +999,7 @@
         <show state="playing" />
         <show object="again" />
       </shows>
+      <music sound="lose" />
       <inputs>
         <input button="space pad1.start">
           <reset />

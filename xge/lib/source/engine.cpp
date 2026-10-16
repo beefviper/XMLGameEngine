@@ -97,7 +97,7 @@ namespace xge
 			playingLoops.erase(name);
 		}
 
-		const std::set<std::string>& wanted = game.loopingSounds();
+		const std::set<std::string> wanted = game.soundsOn();
 		for (const std::string& name : playingLoops)
 		{
 			if (!wanted.count(name)) { audio->stop(name); }

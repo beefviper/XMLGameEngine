@@ -180,6 +180,16 @@ namespace xge
 		return loops;
 	}
 
+	std::set<std::string> Game::soundsOn(void) const
+	{
+		std::set<std::string> on = loops;
+		if (!currentState.empty() && !currentState.top().music.empty() && soundLoops(currentState.top().music))
+		{
+			on.insert(currentState.top().music);
+		}
+		return on;
+	}
+
 	void Game::silenceSound(const std::string& name)
 	{
 		loops.erase(name);
@@ -402,6 +412,7 @@ namespace xge
 	{
 		currentState.push(states.at(static_cast<std::size_t>(index)));
 		++stateChanges;
+		beginMusic();
 	}
 
 	void Game::setCurrentState(const std::string& name)
@@ -421,6 +432,16 @@ namespace xge
 
 		currentState.push(*result);
 		++stateChanges;
+		beginMusic();
+	}
+
+	void Game::beginMusic(void)
+	{
+		const std::string& music = currentState.top().music;
+		if (!music.empty() && !soundLoops(music))
+		{
+			requestSound(music);
+		}
 	}
 
 	void Game::popState(void) noexcept
@@ -492,6 +513,7 @@ namespace xge
 		}
 		currentState.push(*result);
 		++stateChanges;
+		beginMusic();
 	}
 
 	unsigned long Game::stateChangeCount(void) const noexcept

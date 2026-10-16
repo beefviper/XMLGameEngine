@@ -502,6 +502,17 @@ namespace xge
 		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
 			const std::map<std::string, Path>& paths)
 		{
+			// A state's <music> names one of the game's sounds.
+			for (const State& state : states)
+			{
+				if (!state.music.empty() && std::none_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == state.music; }))
+				{
+					std::vector<std::string> names;
+					for (const SoundDesc& sound : sounds) { names.push_back(sound.name); }
+					throw std::runtime_error("state '" + state.name + "': <music sound=\"" + state.music + "\" /> names no sound of the game" + didYouMean(state.music, names));
+				}
+			}
+
 			const auto checkAll = [&](const std::vector<Command>& commands, const std::string& where)
 			{
 				for (const auto& command : commands)
@@ -1136,6 +1147,7 @@ namespace xge
 			state.name = rawState.name;
 			state.show = rawState.show;
 			state.showStates = rawState.showStates;
+			state.music = rawState.music;
 
 			for (auto& rawAction : rawState.input)
 			{
@@ -1296,6 +1308,7 @@ namespace xge
 
 			SoundNote note;
 			note.rest = rawNote.rest;
+			note.part = rawNote.part;
 			note.seconds = evaluate(rawNote.length, here);
 			if (!(note.seconds > 0.0f && note.seconds <= kMaxNoteSeconds))
 			{

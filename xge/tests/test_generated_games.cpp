@@ -283,6 +283,7 @@ namespace
 				const std::string at = "state " + s.name;
 				for (const std::string& shown : s.show) { text(at + ".show", shown); }
 				for (const std::string& shown : s.showStates) { text(at + ".showState", shown); }
+				text(at + ".music", s.music);
 				for (const auto& [button, list] : s.input) { commands(at + ".input." + button, list); }
 				for (const auto& [axis, list] : s.axes) { commands(at + ".axis." + axis, list); }
 				conditions(at, s.conditions);
@@ -325,7 +326,7 @@ namespace
 				{
 					const RawNote& n = s.notes[i];
 					const std::string here = at + ".note" + std::to_string(i);
-					out << here << " " << n.rest << " [" << n.wave << "|" << n.pitch << "|" << n.to << "]\n";
+					out << here << " " << n.rest << " [" << n.wave << "|" << n.pitch << "|" << n.to << "] part " << n.part << "\n";
 					value(here + ".length", n.length);
 				}
 			}

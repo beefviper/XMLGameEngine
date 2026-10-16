@@ -133,19 +133,28 @@ namespace xge
 
 	std::vector<std::int16_t> synthesize(const SoundDesc& sound, unsigned sampleRate)
 	{
-		std::vector<std::int16_t> samples;
 		const double volume = std::clamp(static_cast<double>(sound.volume), 0.0, 1.0);
+
+		// Each part is laid down from the start, added to what the parts
+		// before it put there.
+		std::vector<double> mix;
+		std::vector<std::size_t> partAt;
 
 		std::uint32_t noteNumber = 0;
 		for (const SoundNote& note : sound.notes)
 		{
 			++noteNumber;
 
+			if (partAt.size() <= note.part) { partAt.resize(note.part + 1, 0); }
+			std::size_t& at = partAt[note.part];
+
 			const std::size_t count = static_cast<std::size_t>(std::max(0.0, static_cast<double>(note.seconds)) * sampleRate);
+
+			if (mix.size() < at + count) { mix.resize(at + count, 0.0); }
 
 			if (note.rest || count == 0)
 			{
-				samples.insert(samples.end(), count, 0);
+				at += count;
 				continue;
 			}
 
@@ -196,10 +205,17 @@ namespace xge
 				if (fade > 0 && i < fade) { envelope = static_cast<double>(i) / static_cast<double>(fade); }
 				else if (fade > 0 && i >= count - fade) { envelope = static_cast<double>(count - 1 - i) / static_cast<double>(fade); }
 
-				samples.push_back(static_cast<std::int16_t>(std::lround(value * envelope * volume * 32767.0)));
+				mix[at + i] += value * envelope * volume;
 			}
+			at += count;
 		}
 
+		std::vector<std::int16_t> samples;
+		samples.reserve(mix.size());
+		for (const double value : mix)
+		{
+			samples.push_back(static_cast<std::int16_t>(std::lround(std::clamp(value, -1.0, 1.0) * 32767.0)));
+		}
 		return samples;
 	}
 
@@ -211,6 +227,7 @@ namespace xge
 		{
 			const SoundNote& note = sound.notes[i];
 			o << (i ? ";" : "");
+			if (note.part > 0) { o << "part" << note.part << ":"; }
 
 			if (note.rest)
 			{

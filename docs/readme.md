@@ -155,7 +155,7 @@ Global named numbers. Each `<variable name="margin">30</variable>` becomes a con
 
 ### `<sounds>`
 
-Optional. The bleeps, bloops and little tunes of an old 8-bit machine, written as notes: nothing is loaded from a sound file. Each `<sound name="...">` is something a `<play sound="..." />` command (see [Commands](#commands)) can start. Its children, in this order: an optional `<loop />`, an optional `<volume>` (a value, 0 for silent to 1 for the loudest; 0.3 if left out), then any mix of `<note>`s and `<rest>`s, played one after the other.
+Optional. The bleeps, bloops and little tunes of an old 8-bit machine, written as notes: nothing is loaded from a sound file. Each `<sound name="...">` is something a `<play sound="..." />` command (see [Commands](#commands)) or a state's [`<music>`](#state) can start. Its children, in this order: an optional `<loop />`, an optional `<volume>` (a value, 0 for silent to 1 for the loudest; 0.3 if left out), then any mix of `<note>`s and `<rest>`s, played one after the other, or `<part>`s that play together.
 
 ```xml
 <sounds>
@@ -178,6 +178,23 @@ Optional. The bleeps, bloops and little tunes of an old 8-bit machine, written a
 
 - **`<note pitch="..." to="..." wave="...">seconds</note>`**: a tone. The content is how long it lasts, a value in seconds (so `<note pitch="C5">beat / 2</note>` works with a variable `beat`), more than 0 and at most 10. `pitch` is a note name with an octave, a letter `A` to `G`, an optional `#` (sharp) or `b` (flat), then the octave: `C4` is middle C and `A4` is 440 Hz, as on a piano; or a plain number of hertz (`440`, `97.5`). `to` (optional) is a pitch to slide to while the note plays, evenly in semitones: a bloop that falls, a laser that rises. `wave` (optional) is the note's own wave instead of the sound's.
 - **`<rest>seconds</rest>`**: silence that long, between notes.
+- **`<part wave="...">`**: a voice, like a channel of a sound chip. A sound written in parts plays them all at once, each its own `<note>`s and `<rest>`s one after another: a tune over its bass, or a chord as several parts of one note. The sound lasts as long as its longest part. `wave` (optional) is the wave of the part's notes that do not give their own; without it they take the sound's. The parts are added together, so two parts at full volume can be too loud and are cut off at the loudest a sample can be: keep the `<volume>` down. A sound has either `<part>`s or notes of its own, not both.
+
+  ```xml
+  <sound name="start">
+    <volume>0.2</volume>
+    <part wave="square">
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      ...
+    </part>
+    <part wave="triangle">
+      <note pitch="C3">0.2</note>
+      <note pitch="G3">0.2</note>
+      ...
+    </part>
+  </sound>
+  ```
 - **`<loop />`**: the sound plays over and over, from its end straight back to its start, instead of once. A `<play>` of it switches it on, and it stays on until a `<silence sound="..." />` (anywhere a `<play>` can go), the reset of the whole game, or, when the `<play>` is on a key or in the action a key triggers, until that key is let go, as a `<move>` is held: Asteroids' and Lunar Lander's engines hum while thrust is held. Asking for a loop that is already on leaves it playing; one silenced and asked for again in the same frame (one of two keys for it let go, the other still down) plays on. A state change lets go of what the held keys were driving, so a pause is quiet, and the new state's held keys start their loops again.
 
   ```xml
@@ -202,7 +219,7 @@ Optional. The bleeps, bloops and little tunes of an old 8-bit machine, written a
 
 Every sound is made into samples (16 bit, one channel, 44100 a second) by the engine when the window opens, the same for every sound library ([sound](designs/33-sound.md)). Each note fades in and out over a couple of milliseconds so it does not click. Each sound has one voice, like a channel of a sound chip: playing a sound that is still playing starts it again from the beginning, and different sounds play over each other. A sound asked for more than once in one frame is played once.
 
-A wave, pitch or length the engine cannot use, a `<volume>` outside 0 to 1 or after a note, a `<loop />` after anything, a sound with no notes, two sounds of one name, and a `<play>` or `<silence>` naming no sound all stop the game loading with a message saying where (`sound 'wall' > <note> 1: pitch="H2" is not a pitch; ...`).
+A wave, pitch or length the engine cannot use, a `<volume>` outside 0 to 1 or after a note, a `<loop />` after anything, a sound with no notes, a `<part>` with none, notes beside `<part>`s, two sounds of one name, and a `<play>`, `<silence>` or `<music>` naming no sound all stop the game loading with a message saying where (`sound 'wall' > <note> 1: pitch="H2" is not a pitch; ...`).
 
 ### `<object>`
 
@@ -702,6 +719,7 @@ A state is a mode of the program: a menu, the game being played, a pause screen,
 | `<objects>` | no | The state's own objects and groups, written as the game's are. They are in play (drawn, moving, colliding, counting their timers) whenever the state is the current one, with no `<show>`, in every scene of it |
 | `<scenes>` | no | The places the state is played in, one current at a time: see [Scenes](#scenes) |
 | `<shows>` | no | A list of `<show object="name" />`: objects of the game (or of another state) drawn and updated while the state is current, as if they were its own. `<show set="name" />` shows a shared [show set](#show-sets). `<show state="name" />` draws that state's objects, and those of its current scene, **still** underneath: not moving, not colliding, their timers not counting, so a pause or a game over is drawn over the frozen game |
+| `<music>` | no | `<music sound="name" />`: one of the game's [sounds](#sounds) that is the state's own. One that loops plays while this is the current state (stopping when another goes over it, a pause, and starting again from its beginning when it is current again); one that plays once plays as the state begins (pushed, or switched to with `<pop state>`), not when a state over it is taken off |
 | `<inputs>` | yes | A list of `<input button="key">`, each holding the commands that key runs, e.g. `<push state="playing" />` or `<trigger object="paddle1" action="up" />`. `keys="name"` takes a shared [key set](#input) first; the state's own `<input>`s go over it |
 | `<conditions>` | no | A list of `<condition>`, checked every frame. `<condition set="name" />` checks a shared set there. See [Conditions](#conditions) |
 | `<timers>` | no | Timers that count while this is the current state. See [Timers](#timers) |
@@ -1012,7 +1030,7 @@ The library is static by default: each program has the engine's code copied into
 - A demo records the keys, not the mouse, a pad's stick or a paddle, and plays the same only from the start of a game: random numbers drawn when the file loads (a game-level `<random>` variable) are not drawn again from its seed, so a game that uses them at the start can play out differently. A demo recorded with a game that has since changed plays the old keys into the new game.
 - The table of the best has no place numbers (1. 2. 3.) unless each member's text is written with its own, and its numbers do not line up in columns in a proportional font. A saved file holds numbers and looks, not where a kept object is.
 - `<facing>` is one of four directions; a picture does not turn with it (use `<heading>` for that).
-- Sound is short effects and little tunes, not music: one wave at a time per sound (no chords inside one sound; two sounds at once do play together), no looping background tune, no stopping a sound from the game file, no volume envelope beyond the click-free fade (a note does not decay like a plucked string), and no stereo. A sound is made when the window opens, so its notes cannot change with a variable while the game runs. It starts on the frame it is asked for, so it is as late as the sound library's buffer (a few hundredths of a second).
+- Music is a chip's: parts of one wave each, no volume envelope beyond the click-free fade (a note does not decay like a plucked string), no stereo, no tempo of its own (a length can use a variable, `beat / 2`). A state's music that loops starts again from its beginning whenever the state is current again (after a pause), and cannot be silenced while the state is current. A sound is made when the window opens, so its notes cannot change with a variable while the game runs. It starts on the frame it is asked for, so it is as late as the sound library's buffer (a few hundredths of a second).
 - An object that is not visible is not moved and does not collide, whatever its velocity; that is how a bullet waits, unseen and still, to be fired. One that should run unseen (an exit, a trigger zone) is `<drawn>false</drawn>` instead.
 - A state drawn still under another (`<show state>`) is frozen whole: nothing of it animates or counts its timers, so a [demo](#attract-mode) is played as a game of its own, not behind an attract screen. An object shown by `<show object>` in two states runs in both.
 - Going to a scene is always a command written where the move happens (an exit's rule, a condition), naming the scene or one of the current scene's ways; nothing says which way the hero came in beyond where the state's own objects are. A value cannot yet be handed from one state to another other than by reading it by path (`playing.score`).

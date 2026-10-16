@@ -162,6 +162,10 @@ namespace xge
 		// what is in the list each frame and stops what has left it.
 		const std::set<std::string>& loopingSounds(void) const noexcept;
 
+		// The loops that should be playing now: the loopingSounds, and the
+		// current state's <music> when it loops. What Engine plays.
+		std::set<std::string> soundsOn(void) const;
+
 		// <silence sound="..." />: stops a sound, looping or not.
 		void silenceSound(const std::string& name);
 
@@ -407,6 +411,10 @@ namespace xge
 		void putTurnAway(Turn& into) const;
 		void takeTurnUp(const Turn& from);
 		void beginTurn(void);
+
+		// A state just begun (pushed, or switched to): its <music>, if it
+		// plays once, is asked for.
+		void beginMusic(void);
 
 		// Every state at its first scene, and every scene's timers from the start.
 		void startScenes(void);

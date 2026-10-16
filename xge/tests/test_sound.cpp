@@ -628,3 +628,138 @@ TEST_CASE("Asteroids: the ship's engine hums while thrust is held", "[sound][eng
 	engine.step();
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 }
+
+TEST_CASE("a sound's parts are read in order, each note with its part's wave unless it gives its own", "[sound][xml][music]")
+{
+	const std::vector<SoundDesc> sounds = loadSounds(gameWithSounds(
+		"<sounds><sound name=\"tune\" wave=\"sine\">"
+		"<part wave=\"square\"><note pitch=\"C5\">0.1</note><note pitch=\"E5\" wave=\"sawtooth\">0.1</note></part>"
+		"<part><rest>0.05</rest><note pitch=\"C3\">beat</note></part>"
+		"</sound></sounds>"));
+
+	REQUIRE(sounds.size() == 1);
+	const std::vector<SoundNote>& notes = sounds[0].notes;
+	REQUIRE(notes.size() == 4);
+	CHECK(notes[0].part == 0);
+	CHECK(notes[0].wave == Waveform::Square);
+	CHECK(notes[1].wave == Waveform::Sawtooth);
+	CHECK(notes[2].part == 1);
+	CHECK(notes[2].rest);
+	CHECK(notes[3].part == 1);
+	CHECK(notes[3].wave == Waveform::Sine); // the part gives none: the sound's
+	CHECK(notes[3].seconds == Approx(0.25f));
+}
+
+TEST_CASE("a sound's parts play at the same time, added together, as long as the longest", "[sound][music]")
+{
+	SoundDesc tune;
+	tune.volume = 0.4f;
+	tune.notes = { SoundNote{ false, Waveform::Square, 440.0f, 440.0f, 0.1f, 0 },
+		SoundNote{ false, Waveform::Triangle, 110.0f, 110.0f, 0.2f, 1 } };
+
+	SoundDesc melody = tune;
+	melody.notes = { tune.notes[0] };
+	SoundDesc bass = tune;
+	bass.notes = { tune.notes[1] };
+	bass.notes[0].part = 0;
+
+	const std::vector<std::int16_t> both = synthesize(tune);
+	const std::vector<std::int16_t> high = synthesize(melody);
+	const std::vector<std::int16_t> low = synthesize(bass);
+	REQUIRE(both.size() == low.size()); // the longer part
+	REQUIRE(high.size() < low.size());
+
+	bool same = true;
+	for (std::size_t i = 0; i < both.size(); ++i)
+	{
+		const int sum = (i < high.size() ? high[i] : 0) + low[i];
+		if (std::abs(both[i] - sum) > 1) { same = false; }
+	}
+	CHECK(same);
+
+	// Loud parts are cut off at the loudest a sample can be, not wrapped.
+	tune.volume = 1.0f;
+	tune.notes[1].wave = Waveform::Square;
+	tune.notes[1].startHz = tune.notes[1].endHz = 440.0f;
+	const std::vector<std::int16_t> loud = synthesize(tune);
+	CHECK(*std::max_element(loud.begin(), loud.end()) == 32767);
+	CHECK(*std::min_element(loud.begin(), loud.end()) == -32767);
+}
+
+TEST_CASE("parts the game cannot use are turned away when it loads, saying where", "[sound][xml][music][errors]")
+{
+	const auto fails = [](const std::string& sounds, const std::string& expected)
+	{
+		INFO(sounds);
+		CHECK_THROWS_WITH(loadSounds(gameWithSounds(sounds)), ContainsSubstring(expected));
+	};
+	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><part><note pitch=\"A4\">0.1</note></part></sound></sounds>", "cannot have <part>s as well");
+	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><note pitch=\"A4\">0.1</note></sound></sounds>", "go inside them");
+	fails("<sounds><sound name=\"s\"><part></part></sound></sounds>", "sound 's' > <part> 1: has no <note>");
+	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><part><loop /></part></sound></sounds>", "<part> 2: unknown <loop>");
+	fails("<sounds><sound name=\"s\"><part wave=\"organ\"><note pitch=\"A4\">0.1</note></part></sound></sounds>", "wave=\"organ\"");
+	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><volume>1</volume></sound></sounds>", "<volume> has to come before");
+}
+
+TEST_CASE("a state's music names a sound of the game", "[sound][xml][music][errors]")
+{
+	const std::string blip = "<sounds><sound name=\"blip\"><note pitch=\"A4\">0.05</note></sound></sounds>";
+	std::string game = gameWithSounds(blip);
+	game.replace(game.find("<inputs>"), 0, "<music sound=\"blip\" />");
+	CHECK(loadSounds(game).size() == 1);
+	game.replace(game.find("blip\" />"), 4, "bleep");
+	CHECK_THROWS_WITH(loadSounds(game), ContainsSubstring("state 'playing': <music sound=\"bleep\" /> names no sound of the game"));
+}
+
+TEST_CASE("Pac-Man's music: the siren loops while play is current, and each ending's tune plays once as it begins", "[sound][engine][music][pacman]")
+{
+	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
+	{
+		CHECK_NOTHROW(Game{ readGame("descriptions/pacman.xml", backend) });
+	}
+
+	Game game{ "descriptions/pacman.xml" };
+	AudioLog log;
+	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));
+
+	engine.step();
+	CHECK(log.looped.empty()); // the title is quiet
+
+	engine.handleKeyPressed(KeyCode::Space);
+	engine.handleKeyReleased(KeyCode::Space);
+	engine.step();
+	REQUIRE(game.getCurrentState().name == "playing");
+	CHECK(log.played == std::vector<std::string>{ "start" });
+	CHECK(log.looped == std::vector<std::string>{ "siren" });
+	engine.step();
+	CHECK(log.looped.size() == 1); // started once
+
+	// Paused: quiet; back: it starts again.
+	engine.handleKeyPressed(KeyCode::P);
+	engine.handleKeyReleased(KeyCode::P);
+	engine.step();
+	REQUIRE(game.getCurrentState().name == "paused");
+	CHECK(log.stopped == std::vector<std::string>{ "siren" });
+	engine.handleKeyPressed(KeyCode::P);
+	engine.handleKeyReleased(KeyCode::P);
+	engine.step();
+	REQUIRE(game.getCurrentState().name == "playing");
+	CHECK(log.looped == std::vector<std::string>{ "siren", "siren" });
+	CHECK(log.played.size() == 1); // coming back to play is not beginning it
+
+	// The last life lost: the siren stops and the loss plays, once.
+	game.getObject("status").variable["lives"] = 0.0f;
+	engine.step();
+	REQUIRE(game.getCurrentState().name == "gameover");
+	CHECK(log.stopped == std::vector<std::string>{ "siren", "siren" });
+	CHECK(log.played == std::vector<std::string>{ "start", "lose" });
+	engine.step();
+	CHECK(log.played.size() == 2);
+
+	// A won game plays the win.
+	game.resetAll();
+	game.pushState("playing");
+	game.pushState("youwin");
+	engine.step();
+	CHECK(log.played.back() == "win");
+}

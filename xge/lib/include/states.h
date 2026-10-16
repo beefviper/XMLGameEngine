@@ -120,6 +120,9 @@ namespace xge
 		// The states it draws still underneath its own (<show state="..." />).
 		std::vector<std::string> showStates;
 
+		// <music sound="..." />: its own sound ("" for none).
+		std::string music;
+
 		// Its own <objects>, in play in every scene of it, as read (names
 		// as written); then the kit at the top of its <scenes>, and the scenes.
 		// scenes.h lays them out among the game's objects.
@@ -155,6 +158,11 @@ namespace xge
 
 		// The states drawn still underneath it (RawState::showStates).
 		std::vector<std::string> showStates;
+
+		// Its music (<music sound="..." />, "" for none): a loop plays while
+		// this is the current state, a sound that does not loop plays as it
+		// begins (Game::pushState).
+		std::string music;
 
 		// Its scenes, in the order written; the first is current at the start.
 		std::vector<Scene> scenes;
