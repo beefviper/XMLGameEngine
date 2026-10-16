@@ -623,6 +623,7 @@ namespace xge
 			return; // the only one still in plays on
 		}
 
+		if (turnPutAway) { turnPutAway(); }
 		putTurnAway(turns[turn]);
 		turn = next;
 		takeTurnUp(turns[turn]);

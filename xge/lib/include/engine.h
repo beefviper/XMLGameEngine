@@ -158,6 +158,10 @@ namespace xge
 		// always reaches whatever it started, even across a state change.
 		std::array<std::vector<Command>, static_cast<std::size_t>(KeyCode::Count)> heldCommands{};
 
+		// Sends the release to everything the held keys are driving, and
+		// forgets it; the keys stay down.
+		void stopHeldCommands(void);
+
 		// Game::stateChangeCount() as of the last syncHeldKeysToState().
 		unsigned long syncedStateChanges = 0;
 

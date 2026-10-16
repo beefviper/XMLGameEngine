@@ -776,3 +776,37 @@ TEST_CASE("a game recorded plays back the same as it was played", "[galaxian][de
 	CHECK(same == static_cast<int>(seen.size()));
 	CHECK(seen.size() > 36);
 }
+
+TEST_CASE("a key held when the turn passes does not keep moving that player's ship when their turn comes back", "[galaxian][turns]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.tap(KeyCode::Num2);
+	play.frames(121);
+	REQUIRE(play.state() == "playing");
+	Object& ship = play.object("ship");
+
+	// Player 1 dies moving left, the key still held.
+	play.engine.handleKeyPressed(KeyCode::Left);
+	play.frames(5);
+	REQUIRE(ship.velocity.x != 0.0f);
+	play.game.decrementText("ship.lives");
+	play.game.incrementText("ship.lost");
+	play.frames(1);
+	REQUIRE(play.state() == "player2");
+	play.engine.handleKeyReleased(KeyCode::Left);
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "playing");
+	CHECK(ship.velocity.x == 0.0f);
+
+	// Player 2 dies standing still: player 1's ship comes back still.
+	play.game.decrementText("ship.lives");
+	play.game.incrementText("ship.lost");
+	play.frames(1);
+	REQUIRE(play.state() == "player1");
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "playing");
+	const float x = ship.position.x;
+	play.frames(10);
+	CHECK(ship.velocity.x == 0.0f);
+	CHECK(ship.position.x == Approx(x));
+}

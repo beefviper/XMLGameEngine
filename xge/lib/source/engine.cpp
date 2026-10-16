@@ -41,6 +41,10 @@ namespace xge
 
 		game.setCurrentState(0);
 		syncedStateChanges = game.stateChangeCount();
+
+		// A player's game put away mid-move stops moving; the keys stay down,
+		// and the next state picks up the ones it binds (syncHeldKeysToState).
+		game.onTurnPutAway([this] { stopHeldCommands(); });
 	}
 
 	void Engine::replaceWindow(const std::function<std::unique_ptr<Window>()>& create)
@@ -269,6 +273,8 @@ namespace xge
 
 	Engine::~Engine()
 	{
+		game.onTurnPutAway({});
+
 		// Closed while the demo plays: what was kept before it is what lasts.
 		if (demoPlaying)
 		{
@@ -510,16 +516,7 @@ namespace xge
 		syncedStateChanges = game.stateChangeCount();
 
 		// Everything the old state had running stops first...
-		for (auto& held : heldCommands)
-		{
-			const std::vector<Command> commands = std::move(held);
-			held.clear();
-
-			for (const auto& command : commands)
-			{
-				commandExecutor.executeInput(command, false);
-			}
-		}
+		stopHeldCommands();
 
 		// ...then the new state's continuous bindings start for the keys that
 		// are still down.
@@ -538,6 +535,20 @@ namespace xge
 				{
 					heldCommands[index].push_back(command);
 				}
+			}
+		}
+	}
+
+	void Engine::stopHeldCommands(void)
+	{
+		for (auto& held : heldCommands)
+		{
+			const std::vector<Command> commands = std::move(held);
+			held.clear();
+
+			for (const auto& command : commands)
+			{
+				commandExecutor.executeInput(command, false);
 			}
 		}
 	}

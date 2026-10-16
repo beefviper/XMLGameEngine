@@ -14,6 +14,7 @@
 #include "sound.h"
 #include "states.h"
 
+#include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -239,6 +240,11 @@ namespace xge
 		// whatever runs a list of commands in a state.
 		bool takeTurnStop(void) noexcept;
 
+		// Called just before a player's game is put away, so whatever the
+		// keys held are doing to it (a ship moving) stops there and does not
+		// carry on when their turn comes back. Engine sets it.
+		void onTurnPutAway(std::function<void()> stop) { turnPutAway = std::move(stop); }
+
 		// How many players take turns (0 without <turns>), and whose turn it
 		// is, from 1.
 		std::size_t playerCount(void) const noexcept { return turns.size(); }
@@ -397,6 +403,7 @@ namespace xge
 		std::size_t turn = 0;
 		std::string turnsState;
 		bool turnHandedOver = false;
+		std::function<void()> turnPutAway;
 		void putTurnAway(Turn& into) const;
 		void takeTurnUp(const Turn& from);
 		void beginTurn(void);
