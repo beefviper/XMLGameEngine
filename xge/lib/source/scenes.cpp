@@ -606,6 +606,7 @@ namespace xge
 			const Context context{ state.name, {}, "state '" + state.name + "'" };
 			for (std::string& shown : state.show) { shown = names.object(shown, context); }
 			for (auto& [button, list] : state.input) { resolve.commands(list, context); }
+			for (auto& [axis, list] : state.axes) { resolve.commands(list, context); }
 			resolve.conditions(state.conditions, context);
 			resolve.timers(state.timers, context);
 			for (RawScene& scene : state.scenes)

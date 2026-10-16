@@ -95,6 +95,15 @@ namespace xge
 		void handleKeyPressed(KeyCode key);
 		void handleKeyReleased(KeyCode key);
 
+		// The mouse and the pads as the window sees them now (step() asks it
+		// every frame): a button that went down or up is pressed or released
+		// as a key is (KeyCode::MouseLeft, Pad1A...; a pad's direction is its
+		// d-pad or its stick past halfway), and a control that moved runs the
+		// current state's <input axis="..."> for it. The first call only
+		// notes where everything is, so a mouse resting on the window does
+		// not move anything when the game starts.
+		void handleControls(const Controls& controls);
+
 	private:
 		Game& game;
 		CommandExecutor commandExecutor;
@@ -106,6 +115,14 @@ namespace xge
 
 		// Which keys are down; a repeated press of a held key is not a new one.
 		HeldKeys heldKeys;
+
+		// What handleControls last saw: whether it has seen anything yet,
+		// each mouse and pad button, and each control's place (0 to 1;
+		// negative when it was not there).
+		bool controlsSeen = false;
+		Controls lastControls;
+		std::array<std::array<bool, padButtonCount>, padCount> lastPadDown{};
+		std::array<float, axisCount> lastAxes{};
 
 		// The commands each held key is currently driving: what its press ran,
 		// or, after a state change, what the new state's binding for it

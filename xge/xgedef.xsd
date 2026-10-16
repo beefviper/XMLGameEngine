@@ -638,6 +638,7 @@
       <xs:element name="ride" type="emptyType" />
       <xs:element name="carry" type="emptyType" />
       <xs:element name="drop" type="emptyType" />
+      <xs:element name="track" type="emptyType" />
       <xs:element name="die" type="emptyType" />
       <xs:element name="stop" type="emptyType" />
       <!-- <reset /> puts back the object running it; object= that object
@@ -805,12 +806,16 @@
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- What pressing a key does in a state: button is one key, or several separated by spaces ("a left"). -->
+  <!-- What pressing a key does in a state: button is one key, or several
+       separated by spaces ("a left"); or, with axis= (mouse.x, mouse.y,
+       pad1.x, ...) instead, the <trigger> run as that control moves. One of
+       the two, which the engine checks. -->
   <xs:complexType name="inputType">
     <xs:sequence>
       <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
-    <xs:attribute name="button" type="xs:string" use="required" />
+    <xs:attribute name="button" type="xs:string" use="optional" />
+    <xs:attribute name="axis" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!--

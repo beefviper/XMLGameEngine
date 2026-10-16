@@ -37,6 +37,7 @@ namespace xge
 		void setTitle(const std::string& title) override;
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override;
+		Controls controls() override;
 		void clear(const std::string& colorName) override;
 		void prepare(Object& object) override;
 		void draw(Object& object) override;

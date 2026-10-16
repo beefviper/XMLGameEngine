@@ -280,6 +280,7 @@ namespace
 				for (const std::string& shown : s.show) { text(at + ".show", shown); }
 				for (const std::string& shown : s.showStates) { text(at + ".showState", shown); }
 				for (const auto& [button, list] : s.input) { commands(at + ".input." + button, list); }
+				for (const auto& [axis, list] : s.axes) { commands(at + ".axis." + axis, list); }
 				conditions(at, s.conditions);
 				timers(at + ".timers", s.timers);
 				for (const RawObject& o : s.objects) { object(at + ".object " + o.name, o); }

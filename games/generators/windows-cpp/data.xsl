@@ -2015,11 +2015,23 @@
       <xsl:with-param name="words" select="normalize-space(inputs/@keys)" />
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
-    <xsl:for-each select="inputs/input">
+    <xsl:for-each select="inputs/input[@button]">
       <xsl:call-template name="input">
         <xsl:with-param name="to" select="'state.input'" />
         <xsl:with-param name="indent" select="$in" />
       </xsl:call-template>
+    </xsl:for-each>
+    <xsl:for-each select="inputs/input[@axis]">
+      <xsl:value-of select="concat($in, 'state.axes[')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="@axis" />
+      </xsl:call-template>
+      <xsl:text>] = </xsl:text>
+      <xsl:call-template name="commands">
+        <xsl:with-param name="nodes" select="*" />
+        <xsl:with-param name="indent" select="$in" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
     </xsl:for-each>
     <xsl:apply-templates select="conditions/condition" mode="condition">
       <xsl:with-param name="in" select="$in" />

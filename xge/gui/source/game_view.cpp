@@ -6,7 +6,9 @@
 #include "game_view.h"
 
 #include <QColor>
+#include <QCursor>
 #include <QFocusEvent>
+#include <QGuiApplication>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPaintEvent>
@@ -71,6 +73,30 @@ namespace xge
 
 		painter.setRenderHint(QPainter::SmoothPixmapTransform, scale < 1.0);
 		painter.drawImage(target, backBuffer);
+	}
+
+	Controls GameView::controls() const
+	{
+		Controls controls;
+		if (backBuffer.isNull() || !hasFocus())
+		{
+			return controls;
+		}
+
+		// The picture's place in the widget, as paintEvent draws it.
+		const double scale = std::min(static_cast<double>(width()) / backBuffer.width(), static_cast<double>(height()) / backBuffer.height());
+		const double left = (width() - backBuffer.width() * scale) / 2;
+		const double top = (height() - backBuffer.height() * scale) / 2;
+		const QPointF at = mapFromGlobal(QCursor::pos());
+		const double x = (at.x() - left) / scale;
+		const double y = (at.y() - top) / scale;
+		controls.pointerInside = x >= 0 && y >= 0 && x < backBuffer.width() && y < backBuffer.height();
+		controls.pointerX = static_cast<float>(x);
+		controls.pointerY = static_cast<float>(y);
+
+		const Qt::MouseButtons buttons = QGuiApplication::mouseButtons();
+		controls.mouse = { buttons.testFlag(Qt::LeftButton), buttons.testFlag(Qt::RightButton), buttons.testFlag(Qt::MiddleButton) };
+		return controls;
 	}
 
 	void GameView::keyPressEvent(QKeyEvent* event)

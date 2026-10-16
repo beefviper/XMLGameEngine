@@ -5,6 +5,8 @@
 
 #include "engine.h"
 
+#include <algorithm>
+#include <cmath>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
@@ -145,6 +147,8 @@ namespace xge
 			else { handleKeyReleased(key); }
 		}
 
+		handleControls(window->controls());
+
 		game.updateObjects();
 
 		// A <condition> can change the state during updateObjects.
@@ -247,6 +251,89 @@ namespace xge
 		}
 
 		syncHeldKeysToState();
+	}
+
+	void Engine::handleControls(const Controls& controls)
+	{
+		// A pad's buttons as keys: its d-pad and its stick pushed past halfway
+		// are one set of directions.
+		std::array<std::array<bool, padButtonCount>, padCount> padDown{};
+		for (std::size_t pad = 0; pad < padCount; ++pad)
+		{
+			const Pad& now = controls.pads[pad];
+			if (!now.connected) { continue; }
+			padDown[pad] = now.buttons;
+			constexpr float half = 0.5f;
+			padDown[pad][static_cast<std::size_t>(PadButton::Up)] = padDown[pad][static_cast<std::size_t>(PadButton::Up)] || now.y < -half;
+			padDown[pad][static_cast<std::size_t>(PadButton::Down)] = padDown[pad][static_cast<std::size_t>(PadButton::Down)] || now.y > half;
+			padDown[pad][static_cast<std::size_t>(PadButton::Left)] = padDown[pad][static_cast<std::size_t>(PadButton::Left)] || now.x < -half;
+			padDown[pad][static_cast<std::size_t>(PadButton::Right)] = padDown[pad][static_cast<std::size_t>(PadButton::Right)] || now.x > half;
+		}
+
+		// Where each control is, 0 to 1 across the window; -1 when it is not there.
+		const WindowDesc& desc = game.getWindowDesc();
+		std::array<float, axisCount> axes{};
+		axes.fill(-1.0f);
+		if (controls.pointerInside && desc.width > 0.0f && desc.height > 0.0f)
+		{
+			axes[static_cast<std::size_t>(Axis::MouseX)] = std::clamp(controls.pointerX / desc.width, 0.0f, 1.0f);
+			axes[static_cast<std::size_t>(Axis::MouseY)] = std::clamp(controls.pointerY / desc.height, 0.0f, 1.0f);
+		}
+		for (std::size_t pad = 0; pad < padCount; ++pad)
+		{
+			const Pad& now = controls.pads[pad];
+			if (!now.connected) { continue; }
+			axes[static_cast<std::size_t>(pad == 0 ? Axis::Pad1X : Axis::Pad2X)] = std::clamp((now.x + 1.0f) * 0.5f, 0.0f, 1.0f);
+			axes[static_cast<std::size_t>(pad == 0 ? Axis::Pad1Y : Axis::Pad2Y)] = std::clamp((now.y + 1.0f) * 0.5f, 0.0f, 1.0f);
+		}
+
+		if (!controlsSeen)
+		{
+			controlsSeen = true;
+			lastControls = controls;
+			lastPadDown = padDown;
+			lastAxes = axes;
+			return;
+		}
+
+		for (std::size_t button = 0; button < controls.mouse.size(); ++button)
+		{
+			if (controls.mouse[button] == lastControls.mouse[button]) { continue; }
+			const auto key = static_cast<KeyCode>(static_cast<std::size_t>(KeyCode::MouseLeft) + button);
+			if (controls.mouse[button]) { handleKeyPressed(key); }
+			else { handleKeyReleased(key); }
+		}
+		for (std::size_t pad = 0; pad < padCount; ++pad)
+		{
+			for (std::size_t button = 0; button < padButtonCount; ++button)
+			{
+				if (padDown[pad][button] == lastPadDown[pad][button]) { continue; }
+				const KeyCode key = padKey(pad, static_cast<PadButton>(button));
+				if (padDown[pad][button]) { handleKeyPressed(key); }
+				else { handleKeyReleased(key); }
+			}
+		}
+		lastControls = controls;
+		lastPadDown = padDown;
+
+		// A control runs its binding when it has moved (or come back), so a
+		// mouse left resting lets the keys move the same object.
+		const std::array<float, axisCount> before = lastAxes;
+		lastAxes = axes;
+		const State state = game.getCurrentState();
+		for (const auto& [axis, commands] : state.axes)
+		{
+			const auto index = static_cast<std::size_t>(axis);
+			constexpr float still = 0.0005f;
+			if (axes[index] < 0.0f || std::abs(axes[index] - before[index]) < still)
+			{
+				continue;
+			}
+			for (const auto& command : commands)
+			{
+				commandExecutor.executeAxis(command, axis, axes[index]);
+			}
+		}
 	}
 
 	void Engine::syncHeldKeysToState()

@@ -752,7 +752,7 @@ namespace xge
 
 		bool isCommandTag(const std::string& name)
 		{
-			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "die"
+			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
@@ -1890,22 +1890,38 @@ namespace xge
 			return raw;
 		}
 
-		using KeyBindings = std::map<std::string, std::vector<RawCommand>>;
+		struct KeyBindings
+		{
+			std::map<std::string, std::vector<RawCommand>> buttons;
+			std::map<std::string, std::vector<RawCommand>> axes;
+		};
 
 		// The <input>s under a node (a state's <inputs>, or a <keys> set): a key,
-		// or several keys separated by spaces (button="a left"), and the
-		// commands each one runs. A key given twice keeps the later binding.
+		// or several keys separated by spaces (button="a left"), or a control
+		// that points (axis="mouse.x"), and the commands each one runs. One
+		// given twice keeps the later binding.
 		void readInputs(const XmlNode& node, const std::string& where, KeyBindings& out)
 		{
 			for (std::unique_ptr<XmlNode> input = node.getFirstChild(); input != nullptr; input = input->getNextSibling())
 			{
-				const std::string buttons = requireAttribute(*input, "button", where);
+				const std::string buttons = input->getAttribute("button");
+				const std::string axis = input->getAttribute("axis");
+				if (buttons.empty() == axis.empty())
+				{
+					fail(where, "an <input> names a button=\"...\" or an axis=\"...\", one of the two");
+				}
+				if (!axis.empty())
+				{
+					out.axes[axis] = readCommands(input->getFirstChild(), where + " > <input axis=\"" + axis + "\">");
+					continue;
+				}
+
 				const std::vector<RawCommand> commands = readCommands(input->getFirstChild(), where + " > <input button=\"" + buttons + "\">");
 
 				std::istringstream words(buttons);
 				for (std::string button; words >> button;)
 				{
-					out[button] = commands;
+					out.buttons[button] = commands;
 				}
 			}
 		}
@@ -2201,9 +2217,13 @@ namespace xge
 			{
 				const auto set = keySets.find(setName);
 				if (set == keySets.end()) { fail(where + " > <inputs>", "keys=\"" + setName + "\" names no <keys> set"); }
-				for (const auto& [button, commands] : set->second) { rawState.input[button] = commands; }
+				for (const auto& [button, commands] : set->second.buttons) { rawState.input[button] = commands; }
+				for (const auto& [axis, commands] : set->second.axes) { rawState.axes[axis] = commands; }
 			}
-			readInputs(*inputs, where + " > <inputs>", rawState.input);
+			KeyBindings own;
+			readInputs(*inputs, where + " > <inputs>", own);
+			for (auto& [button, commands] : own.buttons) { rawState.input[button] = std::move(commands); }
+			for (auto& [axis, commands] : own.axes) { rawState.axes[axis] = std::move(commands); }
 
 			// <conditions> (optional - the schema allows a state with none)
 			if (std::unique_ptr<XmlNode> conditions = findChild(&state, "conditions"))
@@ -2334,6 +2354,10 @@ namespace xge
 				const std::string name = requireAttribute(*node, "name", "<states> > <keys>");
 				if (keySets.count(name)) { fail("<states>", "two <keys> sets are called '" + name + "'"); }
 				readInputs(*node, "<keys name=\"" + name + "\">", keySets[name]);
+				if (!keySets[name].axes.empty())
+				{
+					fail("<keys name=\"" + name + "\">", "an <input axis=\"...\"> goes in a state's own <inputs>, not in a <keys> set");
+				}
 			}
 			else if (node->getName() == "shows")
 			{

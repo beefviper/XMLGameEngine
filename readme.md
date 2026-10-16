@@ -15,7 +15,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/descriptions/spaceinvaders2.xml` | Space Invaders again, drawn from an SVG sprite sheet (`assets/Space Invaders Color Sprites.svg`): the same game and group of columns and rows, with three-frame animations for the three kinds of alien, a ship and a bolt cut out of the sheet by `<svg>` sprites, and the aliens firing the sheet's plasma bolts back |
 | `games/descriptions/frogger.xml` | Frogger: lives, one-step hops, looping lanes, riding logs, a river that kills unless you are on one |
 | `games/descriptions/spacerace.xml` | Space Race, two players, first to two points |
-| `games/descriptions/kaboom.xml` | Kaboom!: the Mad Bomber paces the rooftop, changing direction when he likes, and drops bombs as he goes; catch them in three waves, each faster and worth more; a miss sets off every falling bomb and costs a bucket |
+| `games/descriptions/kaboom.xml` | Kaboom!: the Mad Bomber paces the rooftop, changing direction when he likes, and drops bombs as he goes; catch them in three waves, each faster and worth more; a miss sets off every falling bomb and costs a bucket. The bucket follows the mouse, or a gamepad's stick, as the Atari's paddle |
 | `games/descriptions/freeway.xml` | Freeway, two players: hop a chicken across ten lanes of traffic, first to five crossings wins |
 | `games/descriptions/depthcharge.xml` | Depth Charge: drop one charge at a time on submarines in three lanes; only misses use up your charges |
 | `games/descriptions/astrosmash.xml` | Astrosmash: shoot falling rocks before they land; fall speeds and starting heights are `<random>` |

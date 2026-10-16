@@ -162,7 +162,7 @@
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <push state="playing" />
           <play sound="start" />
         </input>
@@ -221,6 +221,9 @@
             </action>
             <action name="right">
               <move direction="right">step</move>
+            </action>
+            <action name="steer">
+              <track />
             </action>
           </actions>
         </object>
@@ -293,16 +296,19 @@
         <input button="a">
           <trigger object="player" action="left" />
         </input>
-        <input button="left">
+        <input button="left pad1.left">
           <trigger object="player" action="left" />
         </input>
         <input button="d">
           <trigger object="player" action="right" />
         </input>
-        <input button="right">
+        <input button="right pad1.right">
           <trigger object="player" action="right" />
         </input>
-        <input button="space">
+        <input axis="mouse.x">
+          <trigger object="player" action="steer" />
+        </input>
+        <input button="space pad1.start">
           <push state="paused" />
         </input>
         <input button="p">
@@ -339,7 +345,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <pop />
         </input>
         <input button="p">
@@ -365,7 +371,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <reset />
         </input>
       </inputs>
@@ -388,7 +394,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <reset />
         </input>
       </inputs>

@@ -46,6 +46,10 @@ namespace xge
 		// The keys that changed since the last call, as {key, pressed}.
 		std::vector<std::pair<KeyCode, bool>> takeKeyEvents();
 
+		// The mouse, while the view has the keyboard: where it is on the
+		// picture, in the game's own pixels, and its buttons. No gamepads.
+		Controls controls() const;
+
 	protected:
 		void paintEvent(QPaintEvent* event) override;
 		void keyPressEvent(QKeyEvent* event) override;

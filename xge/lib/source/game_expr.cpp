@@ -83,6 +83,7 @@ namespace xge
 				[](const CmdRide&) { return std::string("<ride />"); },
 				[](const CmdCarry&) { return std::string("<carry />"); },
 				[](const CmdDrop&) { return std::string("<drop />"); },
+				[](const CmdTrack&) { return std::string("<track />"); },
 				[](const CmdDeflect&) { return std::string("<deflect>"); },
 				[](const CmdReverse&) { return std::string("<reverse />"); },
 				[](const CmdMove&) { return std::string("<move>"); },
@@ -188,7 +189,7 @@ namespace xge
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimerCommands },
-				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<play>", "<silence>" } },
+				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>" } },
 				{ "a path's <step>", ownerCommands },
 			};
 			return rules[static_cast<std::size_t>(place)];
@@ -515,6 +516,18 @@ namespace xge
 				{
 					const std::string here = where + " > <input button=\"" + keyCodeToString(key) + "\">";
 					checkAll(commands, here); checkOwnLooks(commands, nullptr, here); checkOwnFollow(commands, here); checkPlace(commands, Place::Input, here);
+				}
+				for (const auto& [axis, commands] : state.axes)
+				{
+					const std::string here = where + " > <input axis=\"" + axisToString(axis) + "\">";
+					checkAll(commands, here);
+					for (const Command& command : commands)
+					{
+						if (!std::holds_alternative<CmdTriggerAction>(command))
+						{
+							throw std::runtime_error(here + ": " + tagOf(command) + " does nothing on a control that points; it runs an object's <action> with <trigger object=\"...\" action=\"...\" />, and a <track /> there follows it");
+						}
+					}
 				}
 				for (const auto& condition : state.conditions)
 				{
@@ -1089,6 +1102,17 @@ namespace xge
 						+ didYouMean(rawAction.first, keyNames()) + ". The keys are: " + listOf(keyNames()));
 				}
 				state.input[key] = processCommands(rawAction.second, where);
+			}
+
+			for (auto& [name, commands] : rawState.axes)
+			{
+				const Axis axis = axisFromString(name);
+				if (axis == Axis::Count)
+				{
+					throw std::runtime_error(where + " > <input axis=\"" + name + "\">: there is no control named '" + name + "'"
+						+ didYouMean(name, axisNames()) + ". The controls are: " + listOf(axisNames()));
+				}
+				state.axes[axis] = processCommands(commands, where);
 			}
 
 			for (auto& rawCondition : rawState.conditions)

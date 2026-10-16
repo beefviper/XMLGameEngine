@@ -37,6 +37,10 @@ namespace xge
 		{
 			o << "       button=" << input.first << ", action=" << input.second << '\n';
 		}
+		for (auto& input : f.axes)
+		{
+			o << "       axis=" << input.first << ", action=" << input.second << '\n';
+		}
 
 		for (auto& condition : f.conditions)
 		{
@@ -79,6 +83,15 @@ namespace xge
 		for (auto& input : f.input)
 		{
 			o << "       button=" << keyCodeToString(input.first) << ", action=";
+			for (auto& command : input.second)
+			{
+				o << command << (&command != &input.second.back() ? ";" : "");
+			}
+			o << '\n';
+		}
+		for (auto& input : f.axes)
+		{
+			o << "       axis=" << axisToString(input.first) << ", action=";
 			for (auto& command : input.second)
 			{
 				o << command << (&command != &input.second.back() ? ";" : "");

@@ -8,6 +8,7 @@
 #include "builtin_font.h"
 #include "color.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -129,6 +130,8 @@ namespace xge
 
 		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
+		padsInitialized = (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) == 0);
+
 		isOpenFlag = true;
 	}
 
@@ -163,6 +166,12 @@ namespace xge
 		if (imgInitialized) { IMG_Quit(); imgInitialized = false; }
 		if (ttfInitialized) { TTF_Quit(); ttfInitialized = false; }
 
+		for (SDL_GameController*& pad : pads)
+		{
+			if (pad) { SDL_GameControllerClose(pad); pad = nullptr; }
+		}
+		if (padsInitialized) { SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER); padsInitialized = false; }
+
 		quitVideo();
 		isOpenFlag = false;
 	}
@@ -183,6 +192,66 @@ namespace xge
 	void SDL2Window::setTitle(const std::string& title)
 	{
 		SDL_SetWindowTitle(window, title.c_str());
+	}
+
+	Controls SDL2Window::controls()
+	{
+		Controls controls;
+		if (!isOpenFlag || !(SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS))
+		{
+			return controls;
+		}
+
+		int x = 0;
+		int y = 0;
+		const Uint32 mouse = SDL_GetMouseState(&x, &y);
+		controls.pointerInside = SDL_GetMouseFocus() == window;
+		controls.pointerX = static_cast<float>(x);
+		controls.pointerY = static_cast<float>(y);
+		controls.mouse = { (mouse & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0, (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0, (mouse & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0 };
+
+		if (!padsInitialized)
+		{
+			return controls;
+		}
+
+		// The first two game controllers plugged in, opened when first seen
+		// and again after one is pulled out.
+		int joystick = 0;
+		for (std::size_t pad = 0; pad < padCount; ++pad)
+		{
+			if (pads[pad] && !SDL_GameControllerGetAttached(pads[pad]))
+			{
+				SDL_GameControllerClose(pads[pad]);
+				pads[pad] = nullptr;
+			}
+			while (!pads[pad] && joystick < SDL_NumJoysticks())
+			{
+				const int index = joystick++;
+				if (!SDL_IsGameController(index)) { continue; }
+				const SDL_JoystickID id = SDL_JoystickGetDeviceInstanceID(index);
+				const bool taken = std::any_of(pads.begin(), pads.end(), [&](SDL_GameController* other)
+					{ return other && SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(other)) == id; });
+				if (!taken) { pads[pad] = SDL_GameControllerOpen(index); }
+			}
+			if (!pads[pad]) { continue; }
+
+			constexpr SDL_GameControllerButton buttons[padButtonCount] = {
+				SDL_CONTROLLER_BUTTON_A, SDL_CONTROLLER_BUTTON_B, SDL_CONTROLLER_BUTTON_X, SDL_CONTROLLER_BUTTON_Y,
+				SDL_CONTROLLER_BUTTON_LEFTSHOULDER, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, SDL_CONTROLLER_BUTTON_BACK, SDL_CONTROLLER_BUTTON_START,
+				SDL_CONTROLLER_BUTTON_DPAD_UP, SDL_CONTROLLER_BUTTON_DPAD_DOWN, SDL_CONTROLLER_BUTTON_DPAD_LEFT, SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+			};
+			Pad& now = controls.pads[pad];
+			now.connected = true;
+			for (std::size_t button = 0; button < padButtonCount; ++button)
+			{
+				now.buttons[button] = SDL_GameControllerGetButton(pads[pad], buttons[button]) != 0;
+			}
+			now.x = static_cast<float>(SDL_GameControllerGetAxis(pads[pad], SDL_CONTROLLER_AXIS_LEFTX)) / 32767.0f;
+			now.y = static_cast<float>(SDL_GameControllerGetAxis(pads[pad], SDL_CONTROLLER_AXIS_LEFTY)) / 32767.0f;
+		}
+
+		return controls;
 	}
 
 	void SDL2Window::init(std::vector<Object>& objects)

@@ -61,6 +61,11 @@ namespace xge
 		// not handle a "closed" event themselves.
 		virtual std::vector<std::pair<KeyCode, bool>> pollEvents() = 0;
 
+		// What the mouse and the gamepads are doing now, asked for once a
+		// frame after pollEvents (Engine::handleControls makes presses of
+		// what changed). A window with neither says nothing is there.
+		virtual Controls controls() { return {}; }
+
 		// colorName matches a sprite's color argument (e.g. "color.black") -
 		// see WindowDesc::background and xge::colorFromName (color.h).
 		virtual void clear(const std::string& colorName) = 0;

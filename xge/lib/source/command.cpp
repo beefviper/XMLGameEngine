@@ -38,6 +38,7 @@ namespace xge
 		if (verb == "ride")   { return CmdRide{}; }
 		if (verb == "carry")  { return CmdCarry{}; }
 		if (verb == "drop")   { return CmdDrop{}; }
+		if (verb == "track")  { return CmdTrack{}; }
 		if (verb == "land")   { return CmdLand{}; }
 		if (verb == "reverse") { return CmdReverse{}; }
 
@@ -290,6 +291,7 @@ namespace xge
 			[&](const CmdRide&) { o << "ride"; },
 			[&](const CmdCarry&) { o << "carry"; },
 			[&](const CmdDrop&) { o << "drop"; },
+			[&](const CmdTrack&) { o << "track"; },
 			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
 			[&](const CmdReverse&) { o << "reverse"; },
 			[&](const CmdMove& m)

@@ -105,6 +105,15 @@ namespace xge
 		object.carrying.clear();
 	}
 
+	void track(Object& object, bool horizontal, float fraction, float span)
+	{
+		const Vector2f size = sizeOf(object);
+		const float extent = horizontal ? size.x : size.y;
+		const float room = std::max(span - extent, 0.0f);
+		const float place = std::clamp(fraction * span - extent * 0.5f, 0.0f, room);
+		(horizontal ? object.position.x : object.position.y) = place;
+	}
+
 	// Everything else about it is left as it was, so whatever brings it back
 	// (fire() re-launching a bullet, reset()) starts from a known place.
 	void die(Object& object)

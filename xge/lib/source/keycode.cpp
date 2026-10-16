@@ -66,7 +66,22 @@ namespace xge
 			{ KeyCode::F13, "f13" }, { KeyCode::F14, "f14" }, { KeyCode::F15, "f15" },
 
 			{ KeyCode::Pause, "pause" },
+
+			{ KeyCode::MouseLeft, "mouse.left" }, { KeyCode::MouseRight, "mouse.right" },
+			{ KeyCode::MouseMiddle, "mouse.middle" },
+			{ KeyCode::Pad1A, "pad1.a" }, { KeyCode::Pad1B, "pad1.b" }, { KeyCode::Pad1X, "pad1.x" }, { KeyCode::Pad1Y, "pad1.y" },
+			{ KeyCode::Pad1LB, "pad1.lb" }, { KeyCode::Pad1RB, "pad1.rb" }, { KeyCode::Pad1Back, "pad1.back" }, { KeyCode::Pad1Start, "pad1.start" },
+			{ KeyCode::Pad1Up, "pad1.up" }, { KeyCode::Pad1Down, "pad1.down" }, { KeyCode::Pad1Left, "pad1.left" }, { KeyCode::Pad1Right, "pad1.right" },
+			{ KeyCode::Pad2A, "pad2.a" }, { KeyCode::Pad2B, "pad2.b" }, { KeyCode::Pad2X, "pad2.x" }, { KeyCode::Pad2Y, "pad2.y" },
+			{ KeyCode::Pad2LB, "pad2.lb" }, { KeyCode::Pad2RB, "pad2.rb" }, { KeyCode::Pad2Back, "pad2.back" }, { KeyCode::Pad2Start, "pad2.start" },
+			{ KeyCode::Pad2Up, "pad2.up" }, { KeyCode::Pad2Down, "pad2.down" }, { KeyCode::Pad2Left, "pad2.left" }, { KeyCode::Pad2Right, "pad2.right" },
 			{ KeyCode::Unknown, "unknown" },
+		};
+
+		constexpr std::pair<Axis, const char*> axes[] = {
+			{ Axis::MouseX, "mouse.x" }, { Axis::MouseY, "mouse.y" },
+			{ Axis::Pad1X, "pad1.x" }, { Axis::Pad1Y, "pad1.y" },
+			{ Axis::Pad2X, "pad2.x" }, { Axis::Pad2Y, "pad2.y" },
 		};
 	}
 
@@ -95,5 +110,32 @@ namespace xge
 		}
 
 		return "unknown";
+	}
+
+	Axis axisFromString(const std::string& name) noexcept
+	{
+		for (const auto& [axis, text] : axes)
+		{
+			if (name == text) { return axis; }
+		}
+
+		return Axis::Count;
+	}
+
+	std::string axisToString(Axis axis) noexcept
+	{
+		for (const auto& [candidate, text] : axes)
+		{
+			if (candidate == axis) { return text; }
+		}
+
+		return "unknown";
+	}
+
+	std::vector<std::string> axisNames()
+	{
+		std::vector<std::string> names;
+		for (const auto& entry : axes) { names.emplace_back(entry.second); }
+		return names;
 	}
 }

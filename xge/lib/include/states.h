@@ -113,6 +113,7 @@ namespace xge
 		std::string name;
 		std::vector<std::string> show;
 		std::map<std::string, std::vector<RawCommand>> input;
+		std::map<std::string, std::vector<RawCommand>> axes;  // <input axis="mouse.x">
 		std::vector<RawCondition> conditions;
 		std::vector<RawTimer> timers;
 
@@ -149,6 +150,7 @@ namespace xge
 		std::string name;
 		std::vector<std::string> show;
 		std::map<KeyCode, std::vector<Command>> input;
+		std::map<Axis, std::vector<Command>> axes;  // <input axis="mouse.x">: run as the control moves
 		std::vector<Condition> conditions;
 
 		// The states drawn still underneath it (RawState::showStates).

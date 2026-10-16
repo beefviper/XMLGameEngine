@@ -180,7 +180,7 @@
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <push state="playing" />
           <play sound="start" />
         </input>
@@ -856,19 +856,19 @@
         </object>
       </objects>
       <inputs>
-        <input button="a left">
+        <input button="a left pad1.left">
           <trigger object="pacman" action="left" />
         </input>
-        <input button="d right">
+        <input button="d right pad1.right">
           <trigger object="pacman" action="right" />
         </input>
-        <input button="w up">
+        <input button="w up pad1.up">
           <trigger object="pacman" action="up" />
         </input>
-        <input button="s down">
+        <input button="s down pad1.down">
           <trigger object="pacman" action="down" />
         </input>
-        <input button="space p">
+        <input button="space p pad1.start">
           <push state="paused" />
         </input>
       </inputs>
@@ -904,7 +904,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p">
+        <input button="space p pad1.start">
           <pop />
         </input>
       </inputs>
@@ -927,7 +927,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <reset />
         </input>
       </inputs>
@@ -950,7 +950,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <reset />
         </input>
       </inputs>

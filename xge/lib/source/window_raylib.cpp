@@ -194,6 +194,41 @@ namespace xge
 		return events;
 	}
 
+	Controls RaylibWindow::controls()
+	{
+		Controls controls;
+		if (!isOpenFlag || !IsWindowFocused())
+		{
+			return controls;
+		}
+
+		const Vector2 at = GetMousePosition();
+		controls.pointerInside = IsCursorOnScreen();
+		controls.pointerX = at.x;
+		controls.pointerY = at.y;
+		controls.mouse = { IsMouseButtonDown(MOUSE_BUTTON_LEFT), IsMouseButtonDown(MOUSE_BUTTON_RIGHT), IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) };
+
+		constexpr int buttons[padButtonCount] = {
+			GAMEPAD_BUTTON_RIGHT_FACE_DOWN, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT, GAMEPAD_BUTTON_RIGHT_FACE_LEFT, GAMEPAD_BUTTON_RIGHT_FACE_UP,
+			GAMEPAD_BUTTON_LEFT_TRIGGER_1, GAMEPAD_BUTTON_RIGHT_TRIGGER_1, GAMEPAD_BUTTON_MIDDLE_LEFT, GAMEPAD_BUTTON_MIDDLE_RIGHT,
+			GAMEPAD_BUTTON_LEFT_FACE_UP, GAMEPAD_BUTTON_LEFT_FACE_DOWN, GAMEPAD_BUTTON_LEFT_FACE_LEFT, GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
+		};
+		for (int pad = 0; pad < static_cast<int>(padCount); ++pad)
+		{
+			if (!IsGamepadAvailable(pad)) { continue; }
+			Pad& now = controls.pads[static_cast<std::size_t>(pad)];
+			now.connected = true;
+			for (std::size_t button = 0; button < padButtonCount; ++button)
+			{
+				now.buttons[button] = IsGamepadButtonDown(pad, buttons[button]);
+			}
+			now.x = GetGamepadAxisMovement(pad, GAMEPAD_AXIS_LEFT_X);
+			now.y = GetGamepadAxisMovement(pad, GAMEPAD_AXIS_LEFT_Y);
+		}
+
+		return controls;
+	}
+
 	void RaylibWindow::clear(const std::string& colorName)
 	{
 		BeginDrawing();

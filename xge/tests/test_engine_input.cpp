@@ -254,7 +254,8 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 		CHECK(text.find("button=\"q\"") == std::string::npos);
 		CHECK(text.find("button=\"z\"") == std::string::npos);
 		const bool oneScreen = text.find("<state ") == text.rfind("<state ");
-		CHECK((oneScreen || text.find("button=\"space\"") != std::string::npos));
+		// Space alone, or with the pad's Start beside it ("space pad1.start").
+		CHECK((oneScreen || text.find("button=\"space\"") != std::string::npos || text.find("button=\"space pad1.start\"") != std::string::npos));
 		++checked;
 	}
 	CHECK(checked >= 10);

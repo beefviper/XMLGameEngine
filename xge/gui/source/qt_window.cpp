@@ -64,6 +64,11 @@ namespace xge
 		return view.takeKeyEvents();
 	}
 
+	Controls QtWindow::controls()
+	{
+		return view.controls();
+	}
+
 	void QtWindow::clear(const std::string& colorName)
 	{
 		// A painter still open from a frame that never reached display() has

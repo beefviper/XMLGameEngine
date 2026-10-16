@@ -53,6 +53,7 @@ add_executable(xgetest
 	"xge/tests/test_lockstep_bounce.cpp"
 	"xge/tests/test_size_expressions.cpp"
 	"xge/tests/test_engine_input.cpp"
+	"xge/tests/test_controls.cpp"
 	"xge/tests/test_new_verbs.cpp"
 	"xge/tests/test_deflect.cpp"
 	"xge/tests/test_xml_format.cpp"

@@ -208,6 +208,50 @@ namespace xge
 		}
 	}
 
+	Controls OpenGLWindow::controls()
+	{
+		Controls controls;
+		if (!window || glfwGetWindowAttrib(window, GLFW_FOCUSED) == 0)
+		{
+			return controls;
+		}
+
+		double x = 0.0;
+		double y = 0.0;
+		glfwGetCursorPos(window, &x, &y);
+		int shownWidth = 0;
+		int shownHeight = 0;
+		glfwGetWindowSize(window, &shownWidth, &shownHeight);
+		controls.pointerInside = x >= 0.0 && y >= 0.0 && x < shownWidth && y < shownHeight;
+		// The game is drawn across the whole window (setUpProjection).
+		controls.pointerX = shownWidth > 0 ? static_cast<float>(x * width / shownWidth) : 0.0f;
+		controls.pointerY = shownHeight > 0 ? static_cast<float>(y * height / shownHeight) : 0.0f;
+		controls.mouse = { glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS,
+			glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS };
+
+		constexpr int buttons[padButtonCount] = {
+			GLFW_GAMEPAD_BUTTON_A, GLFW_GAMEPAD_BUTTON_B, GLFW_GAMEPAD_BUTTON_X, GLFW_GAMEPAD_BUTTON_Y,
+			GLFW_GAMEPAD_BUTTON_LEFT_BUMPER, GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER, GLFW_GAMEPAD_BUTTON_BACK, GLFW_GAMEPAD_BUTTON_START,
+			GLFW_GAMEPAD_BUTTON_DPAD_UP, GLFW_GAMEPAD_BUTTON_DPAD_DOWN, GLFW_GAMEPAD_BUTTON_DPAD_LEFT, GLFW_GAMEPAD_BUTTON_DPAD_RIGHT,
+		};
+		std::size_t pad = 0;
+		for (int joystick = GLFW_JOYSTICK_1; joystick <= GLFW_JOYSTICK_LAST && pad < padCount; ++joystick)
+		{
+			GLFWgamepadstate state;
+			if (!glfwJoystickIsGamepad(joystick) || !glfwGetGamepadState(joystick, &state)) { continue; }
+			Pad& now = controls.pads[pad++];
+			now.connected = true;
+			for (std::size_t button = 0; button < padButtonCount; ++button)
+			{
+				now.buttons[button] = state.buttons[buttons[button]] == GLFW_PRESS;
+			}
+			now.x = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+			now.y = state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+		}
+
+		return controls;
+	}
+
 	std::vector<std::pair<KeyCode, bool>> OpenGLWindow::pollEvents()
 	{
 		glfwPollEvents();

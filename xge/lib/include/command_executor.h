@@ -6,6 +6,7 @@
 #pragma once
 
 #include "command.h"
+#include "keycode.h"
 #include "object.h"
 
 #include <string>
@@ -55,6 +56,12 @@ namespace xge
 		// if the command was one of those. One-shot commands (state changes,
 		// fire) are left alone, since the key was never pressed in this state.
 		bool executeHeldInput(const Command& command);
+
+		// A command bound to a control that points (<input axis="mouse.x">),
+		// run when it moves: a <trigger>'s action runs its <track />s,
+		// `fraction` (0 to 1) of the way across the window, along the
+		// axis's own direction.
+		void executeAxis(const Command& command, Axis axis, float fraction);
 
 	private:
 		Game& game;

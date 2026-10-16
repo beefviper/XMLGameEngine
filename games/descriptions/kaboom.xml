@@ -144,7 +144,7 @@
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <push state="playing" />
           <play sound="wave" />
         </input>
@@ -196,6 +196,9 @@
             </action>
             <action name="right">
               <move direction="right">step</move>
+            </action>
+            <action name="steer">
+              <track />
             </action>
           </actions>
           <variables>
@@ -431,13 +434,20 @@
         </scene>
       </scenes>
       <inputs>
-        <input button="a left">
+        <input button="a left pad1.left">
           <trigger object="bucket" action="left" />
         </input>
-        <input button="d right">
+        <input button="d right pad1.right">
           <trigger object="bucket" action="right" />
         </input>
-        <input button="space p">
+        <!-- the mouse, or a pad's stick, is the Atari's paddle -->
+        <input axis="mouse.x">
+          <trigger object="bucket" action="steer" />
+        </input>
+        <input axis="pad1.x">
+          <trigger object="bucket" action="steer" />
+        </input>
+        <input button="space p pad1.start">
           <push state="paused" />
         </input>
       </inputs>
@@ -468,7 +478,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p">
+        <input button="space p pad1.start">
           <pop />
         </input>
       </inputs>
@@ -491,7 +501,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <reset />
         </input>
       </inputs>
@@ -514,7 +524,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
+        <input button="space pad1.start">
           <reset />
         </input>
       </inputs>

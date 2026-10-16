@@ -98,6 +98,49 @@ namespace xge
 		return events;
 	}
 
+	Controls SFMLWindow::controls()
+	{
+		Controls controls;
+		if (!window.hasFocus())
+		{
+			return controls;
+		}
+
+		const sf::Vector2i pixel = sf::Mouse::getPosition(window);
+		const sf::Vector2u size = window.getSize();
+		const sf::Vector2f at = window.mapPixelToCoords(pixel);
+		controls.pointerInside = pixel.x >= 0 && pixel.y >= 0 && pixel.x < static_cast<int>(size.x) && pixel.y < static_cast<int>(size.y);
+		controls.pointerX = at.x;
+		controls.pointerY = at.y;
+		controls.mouse = { sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), sf::Mouse::isButtonPressed(sf::Mouse::Button::Right),
+			sf::Mouse::isButtonPressed(sf::Mouse::Button::Middle) };
+
+		// SFML numbers a pad's buttons as the system does; on an Xbox pad
+		// that is A B X Y, the shoulders, Back and Start. The hat is the d-pad
+		// (negative is up and left).
+		for (unsigned int pad = 0; pad < padCount; ++pad)
+		{
+			if (!sf::Joystick::isConnected(pad)) { continue; }
+			Pad& now = controls.pads[pad];
+			now.connected = true;
+			const unsigned int buttons = sf::Joystick::getButtonCount(pad);
+			for (unsigned int button = 0; button < 8 && button < buttons; ++button)
+			{
+				now.buttons[button] = sf::Joystick::isButtonPressed(pad, button);
+			}
+			const float hatX = sf::Joystick::hasAxis(pad, sf::Joystick::Axis::PovX) ? sf::Joystick::getAxisPosition(pad, sf::Joystick::Axis::PovX) : 0.0f;
+			const float hatY = sf::Joystick::hasAxis(pad, sf::Joystick::Axis::PovY) ? sf::Joystick::getAxisPosition(pad, sf::Joystick::Axis::PovY) : 0.0f;
+			now.buttons[static_cast<std::size_t>(PadButton::Up)] = hatY < -50.0f;
+			now.buttons[static_cast<std::size_t>(PadButton::Down)] = hatY > 50.0f;
+			now.buttons[static_cast<std::size_t>(PadButton::Left)] = hatX < -50.0f;
+			now.buttons[static_cast<std::size_t>(PadButton::Right)] = hatX > 50.0f;
+			now.x = sf::Joystick::getAxisPosition(pad, sf::Joystick::Axis::X) / 100.0f;
+			now.y = sf::Joystick::getAxisPosition(pad, sf::Joystick::Axis::Y) / 100.0f;
+		}
+
+		return controls;
+	}
+
 	void SFMLWindow::clear(const std::string& colorName)
 	{
 		const Color c = colorFromName(colorName);

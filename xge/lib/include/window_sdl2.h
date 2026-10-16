@@ -11,6 +11,7 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
+#include <array>
 #include <unordered_map>
 
 namespace xge
@@ -36,6 +37,7 @@ namespace xge
 		void setTitle(const std::string& title) override;
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override;
+		Controls controls() override;
 		void clear(const std::string& colorName) override;
 		void prepare(Object& object) override;
 		void draw(Object& object) override;
@@ -62,6 +64,11 @@ namespace xge
 
 		SDL_Window* window{ nullptr };
 		SDL_Renderer* renderer{ nullptr };
+
+		// The pads opened so far (controls()), and whether SDL's game
+		// controller part started.
+		std::array<SDL_GameController*, padCount> pads{};
+		bool padsInitialized{ false };
 		bool isOpenFlag{ false };
 		// The close button was pressed. isOpen() turns false at once, but
 		// nothing is torn down until close() (the destructor), because the

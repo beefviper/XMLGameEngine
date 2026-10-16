@@ -60,6 +60,11 @@ namespace xge
 	// <drop />: puts down what it carries.
 	void drop(Object& object);
 
+	// <track />: the object's middle goes to `fraction` (0 to 1) of the way
+	// across `span` (the window's width, or its height when not
+	// `horizontal`), kept wholly inside it. Its speed is left alone.
+	void track(Object& object, bool horizontal, float fraction, float span);
+
 	// <die />: out of play; not drawn, moved or collided with.
 	void die(Object& object);
 

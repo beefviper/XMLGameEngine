@@ -62,6 +62,10 @@ namespace xge
 	// <drop /> - the object puts down what it carries, where it is.
 	struct CmdDrop {};
 
+	// <track />, in an action an <input axis="..."> triggers: the object
+	// goes where the control points, across the window (an Atari paddle).
+	struct CmdTrack {};
+
 	// <deflect>45</deflect> - in a collision rule about another object: a
 	// bounce whose angle depends on where along the touched side of the other
 	// object it hit. Square in the middle goes straight back out; at either
@@ -399,7 +403,7 @@ namespace xge
 	};
 
 	using Command = std::variant<
-		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdDeflect, CmdReverse,
+		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene>;
 

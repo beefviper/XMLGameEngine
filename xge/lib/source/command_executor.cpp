@@ -115,6 +115,26 @@ namespace xge
 		}, command);
 	}
 
+	void CommandExecutor::executeAxis(const Command& command, Axis axis, float fraction)
+	{
+		const auto* trigger = std::get_if<CmdTriggerAction>(&command);
+		if (!trigger)
+		{
+			return;
+		}
+
+		const bool horizontal = axis == Axis::MouseX || axis == Axis::Pad1X || axis == Axis::Pad2X;
+		const WindowDesc& window = game.getWindowDesc();
+		Object& object = game.getObject(trigger->object);
+		for (const auto& action : object.action[trigger->action])
+		{
+			if (std::holds_alternative<CmdTrack>(action))
+			{
+				track(object, horizontal, fraction, horizontal ? window.width : window.height);
+			}
+		}
+	}
+
 	void CommandExecutor::executeTimer(const Command& command, Object* owner)
 	{
 		std::visit(overload{
