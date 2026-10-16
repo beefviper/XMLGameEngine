@@ -251,15 +251,6 @@
 
         <!-- the energy that runs down; never drawn, only its number -->
         <object name="energy">
-          <sprite>
-            <rectangle>
-              <width>1</width>
-              <height>1</height>
-              <color>color.black</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
           <variables>
             <variable name="level">45</variable>
           </variables>

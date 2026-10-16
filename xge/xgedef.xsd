@@ -1006,12 +1006,16 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- Anything that can be drawn, moved or collided with. -->
+  <!--
+    Anything that can be drawn, moved or collided with. One with no sprite only
+    holds numbers (a score, the lives): it is never drawn, and its position,
+    0, 0 if left out, is only where it is.
+  -->
   <xs:complexType name="objectType">
     <xs:sequence>
-      <xs:element name="sprite" type="spriteType" maxOccurs="unbounded" />
+      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" />
-      <xs:element name="position" type="vector2Type" />
+      <xs:element name="position" type="vector2Type" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />

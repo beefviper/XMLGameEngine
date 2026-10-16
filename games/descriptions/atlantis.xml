@@ -147,30 +147,12 @@
       <objects>
         <!-- the score; never drawn, only its number -->
         <object name="status">
-          <sprite>
-            <rectangle>
-              <width>1</width>
-              <height>1</height>
-              <color>color.black</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
           <variables>
             <variable name="score">0</variable>
           </variables>
         </object>
         <!-- the ships brought down in this wave; put back for the next one -->
         <object name="tally">
-          <sprite>
-            <rectangle>
-              <width>1</width>
-              <height>1</height>
-              <color>color.black</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
           <variables>
             <variable name="downed">0</variable>
           </variables>

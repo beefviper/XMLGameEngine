@@ -82,6 +82,16 @@ namespace xge
 		}
 	}
 
+	RawSprite nothingSprite()
+	{
+		RawSprite sprite;
+		sprite.kind = "rectangle";
+		sprite.width = RawValue::expression("0");
+		sprite.height = RawValue::expression("0");
+		sprite.color = "color.black";
+		return sprite;
+	}
+
 	bool showLookNamed(Object& object, const std::string& name)
 	{
 		for (std::size_t i = 0; i < object.looks.size(); ++i)

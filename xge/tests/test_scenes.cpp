@@ -153,6 +153,18 @@ TEST_CASE("a state's own objects are in play while it is the current state, with
 	CHECK(&loaded.game.getObject("ball") == &ball);
 }
 
+TEST_CASE("an object with no <sprite> only holds numbers: it is never drawn and needs no <position>", "[scenes]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	Loaded loaded(gameXml(
+		"<state name=\"playing\"><objects><object name=\"tally\"><variables><variable name=\"kills\">4</variable></variables></object></objects>" + kSpace + "</state>"), backend);
+
+	Object& tally = loaded.game.getObject("playing.tally");
+	CHECK_FALSE(tally.isDrawn);
+	CHECK(tally.position.x == Approx(0));
+	CHECK(tally.variable.at("kills") == Approx(4));
+}
+
 TEST_CASE("each scene that takes a piece gets its own copy, named by its path, and only the current scene runs", "[scenes]")
 {
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
@@ -494,6 +506,11 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 	{
 		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><objects><object name=\"rock\" /></objects></scene></scenes>" + kSpace + "</state>"),
 			"rock");
+	}
+	SECTION("an object with no picture that asks to be drawn")
+	{
+		fails(gameXml("<state name=\"playing\"><objects><object name=\"tally\"><drawn>true</drawn><variables><variable name=\"kills\">0</variable></variables></object></objects>" + kSpace + "</state>"),
+			"it has no <drawn>");
 	}
 	SECTION("a take of a numbered member of a group, which only the group's name or a member's own name can take")
 	{

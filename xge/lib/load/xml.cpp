@@ -1301,7 +1301,23 @@ namespace xge
 
 			std::optional<AnimationSpec> animation;
 			if (auto node = findChild(&object, "animation")) { animation = readAnimation(*node, where); }
-			chooseSprite(readSprites(object, where), animation, where, rawObject);
+			std::vector<RawSprite> sprites = readSprites(object, where);
+
+			// No <sprite>: an object that only holds numbers (a score, the
+			// lives, the clock), never drawn and, unless it says, at 0, 0.
+			const bool holder = sprites.empty() && !animation && !map;
+			if (holder)
+			{
+				rawObject.sprite = nothingSprite();
+				rawObject.isDrawn = false;
+				if (findChild(&object, "drawn")) { fail(where, "has no <sprite>, so it is never drawn; it has no <drawn>"); }
+				if (!findChild(&object, "variables") && !findChild(&object, "timers")) { fail(where, "has no <sprite> and no <variables> or <timers>, so it is nothing"); }
+			}
+			else
+			{
+				chooseSprite(std::move(sprites), animation, where, rawObject);
+			}
+
 			if (map)
 			{
 				if (findChild(&object, "position")) { fail(where, "is on a <map>, where the tile of its char= is where it starts, so it has no <position>"); }
@@ -1310,7 +1326,9 @@ namespace xge
 			else
 			{
 				if (!object.getAttribute("char").empty()) { fail(where, "char=\"" + object.getAttribute("char") + "\" picks a character of a <map>'s rows; this object is on no <map>"); }
-				rawObject.rawPosition = readVector2(*requireChild(object, "position", where), where);
+				if (auto position = findChild(&object, "position")) { rawObject.rawPosition = readVector2(*position, where); }
+				else if (holder) { rawObject.rawPosition = { zeroValue(), zeroValue() }; }
+				else { fail(where, "missing <position>"); }
 			}
 			// What a game leaves out is nothing: no <velocity> (or no half of
 			// one) stands still, and no <collisions> touches nothing.

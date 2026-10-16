@@ -880,6 +880,10 @@
         </xsl:call-template>
         <xsl:text>);&#10;</xsl:text>
       </xsl:when>
+      <!-- no sprite: one that only holds numbers, never drawn -->
+      <xsl:when test="not(sprite)">
+        <xsl:value-of select="concat($in, 'object.sprite = nothingSprite();&#10;', $in, 'object.isDrawn = false;&#10;')" />
+      </xsl:when>
       <xsl:when test="count(sprite) = 1">
         <xsl:value-of select="concat($in, 'object.sprite = sprite(')" />
         <xsl:call-template name="sprite-arguments">

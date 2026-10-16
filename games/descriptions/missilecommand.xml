@@ -145,15 +145,6 @@
       <objects>
         <!-- the score, and the missiles done with in this wave; never drawn -->
         <object name="status">
-          <sprite>
-            <rectangle>
-              <width>1</width>
-              <height>1</height>
-              <color>color.black</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
           <variables>
             <variable name="score">0</variable>
             <variable name="spent">0</variable>

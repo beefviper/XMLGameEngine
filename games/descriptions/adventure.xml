@@ -173,15 +173,6 @@
       <objects>
         <!-- how the game ends; never drawn -->
         <object name="status">
-          <sprite>
-            <rectangle>
-              <width>1</width>
-              <height>1</height>
-              <color>color.black</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
           <variables>
             <variable name="won">0</variable>
             <variable name="eaten">0</variable>

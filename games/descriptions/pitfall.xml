@@ -169,15 +169,6 @@
       <objects>
         <!-- what is kept from screen to screen; never drawn -->
         <object name="status">
-          <sprite>
-            <rectangle>
-              <width>1</width>
-              <height>1</height>
-              <color>color.black</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
           <variables>
             <variable name="score">2000</variable>
             <variable name="lives">3</variable>

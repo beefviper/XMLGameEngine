@@ -750,6 +750,10 @@ namespace xge
 	// its names.
 	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row);
 
+	// What an object with no <sprite> is drawn as, which is never: an empty
+	// rectangle (it only holds numbers; see RawObject::isDrawn).
+	RawSprite nothingSprite();
+
 	// Shows the object's look of that name, and starts over the timers that
 	// follow it (Timer::sprite); false (and nothing changes) if it has none
 	// of that name.
