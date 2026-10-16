@@ -112,6 +112,9 @@ namespace xge
 				[](const CmdIncrement&) { return std::string("<inc>"); },
 				[](const CmdCopy&) { return std::string("<copy>"); },
 				[](const CmdRank&) { return std::string("<rank>"); },
+				[](const CmdTurns&) { return std::string("<turns>"); },
+				[](const CmdPass&) { return std::string("<pass />"); },
+				[](const CmdOut&) { return std::string("<out />"); },
 				[](const CmdDecrement&) { return std::string("<dec>"); },
 				[](const CmdPushState&) { return std::string("<push>"); },
 				[](const CmdPopState&) { return std::string("<pop>"); },
@@ -179,7 +182,7 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
+			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
 			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
 				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<wander>" };
 			static std::vector<std::string> objectTimerCommands = [] {
@@ -397,6 +400,17 @@ namespace xge
 				if (!known)
 				{
 					throw std::runtime_error(where + ": <push state=\"" + push->name + "\" /> names no state of the game" + didYouMean(push->name, stateNames(states)));
+				}
+			}
+			else if (const auto* turns = std::get_if<CmdTurns>(&command))
+			{
+				for (const std::string& player : turns->players)
+				{
+					const bool known = player.empty() || std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == player; });
+					if (!known)
+					{
+						throw std::runtime_error(where + ": <turns> > <player state=\"" + player + "\" /> names no state of the game" + didYouMean(player, stateNames(states)));
+					}
 				}
 			}
 			else if (const auto* pop = std::get_if<CmdPopState>(&command); pop && !pop->name.empty())

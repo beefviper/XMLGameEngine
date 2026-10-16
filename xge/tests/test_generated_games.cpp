@@ -136,6 +136,7 @@ namespace
 			value(at + ".ahead", c.ahead);
 			value(at + ".seconds", c.seconds);
 			value(at + ".distance", c.distance);
+			for (const std::string& player : c.players) { out << at << ".player " << player << "\n"; }
 		}
 
 		void commands(const std::string& at, const std::vector<RawCommand>& list)

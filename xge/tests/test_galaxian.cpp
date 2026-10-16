@@ -564,3 +564,93 @@ TEST_CASE("what Galaxian keeps lasts in a file from one run to the next", "[gala
 	std::error_code notEmpty; // other games' saves stay
 	std::filesystem::remove(file.parent_path(), notEmpty);
 }
+
+TEST_CASE("two players take turns, each with a game of their own", "[galaxian][turns]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.tap(KeyCode::Num2);
+	REQUIRE(play.state() == "player1");
+	CHECK(play.game.playerCount() == 2);
+	CHECK(play.game.currentPlayer() == 1);
+	CHECK(play.game.isStill(play.object("ship"))); // their game, under the screen
+
+	// Two seconds, and player 1 plays.
+	play.frames(121);
+	REQUIRE(play.state() == "playing");
+	Object& ship = play.object("ship");
+	ship.variable["score"] = 120.0f;
+	ship.position.x = 40.0f;
+
+	// A ship lost: player 2's turn, with a game of their own from the start.
+	play.game.decrementText("ship.lives");
+	play.game.incrementText("ship.lost");
+	play.frames(1);
+	REQUIRE(play.state() == "player2");
+	CHECK(play.game.currentPlayer() == 2);
+	CHECK(ship.variable.at("score") == 0.0f);
+	CHECK(ship.variable.at("lives") == 3.0f);
+	CHECK(play.object("score").spriteParams.at(1) == "0");
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "playing");
+	ship.variable["score"] = 30.0f;
+
+	// Player 2 loses one: player 1's game comes back as they left it.
+	play.game.decrementText("ship.lives");
+	play.game.incrementText("ship.lost");
+	play.frames(1);
+	REQUIRE(play.state() == "player1");
+	CHECK(ship.variable.at("score") == 120.0f);
+	CHECK(ship.variable.at("lives") == 2.0f);
+	CHECK(ship.variable.at("lost") == 0.0f);
+	CHECK(ship.position.x == Approx(40.0f));
+	CHECK(play.object("score").spriteParams.at(1) == "120");
+
+	// Player 1 runs out (not above the table's fifth, so no initials): Space
+	// goes on to player 2, who plays on alone.
+	for (int i = 1; i <= 5; ++i)
+	{
+		play.object(("table." + std::to_string(i)).c_str()).variable["score"] = 1000.0f;
+	}
+	play.tap(KeyCode::Space);
+	ship.variable["lives"] = 0.0f;
+	play.frames(1);
+	REQUIRE(play.state() == "gameover");
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "player2");
+	CHECK(ship.variable.at("score") == 30.0f);
+	play.tap(KeyCode::Space);
+	play.game.incrementText("ship.lost");
+	play.frames(1);
+	CHECK(play.state() == "playing"); // no one to pass to
+	CHECK(play.game.currentPlayer() == 2);
+
+	// Player 2 out too: a new game.
+	ship.variable["lives"] = 0.0f;
+	play.frames(1);
+	REQUIRE(play.state() == "gameover");
+	play.tap(KeyCode::Space);
+	CHECK(play.state() == "mainmenu");
+	CHECK(play.game.playerCount() == 0);
+}
+
+TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run", "[galaxian][turns]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.tap(KeyCode::Space);
+	Object& ship = play.object("ship");
+	ship.variable["score"] = 10.0f;
+	play.game.incrementText("ship.lost");
+	play.frames(1);
+	CHECK(play.state() == "playing");
+	CHECK(ship.variable.at("score") == 10.0f);
+	CHECK(ship.variable.at("lost") == 0.0f);
+	for (int i = 1; i <= 5; ++i)
+	{
+		play.object(("table." + std::to_string(i)).c_str()).variable["score"] = 1000.0f;
+	}
+	ship.variable["lives"] = 0.0f;
+	play.frames(1);
+	REQUIRE(play.state() == "gameover");
+	play.tap(KeyCode::Space);
+	CHECK(play.state() == "mainmenu");
+}

@@ -545,6 +545,106 @@ namespace xge
 		refreshBoundTexts(owner->name, into.substr(into.rfind('.') + 1), *variable);
 	}
 
+	void Game::startTurns(const std::vector<std::string>& playerStates)
+	{
+		turnsState = currentState.empty() ? std::string{} : currentState.top().name;
+		Turn start;
+		putTurnAway(start);
+		turns.assign(playerStates.size(), start);
+		for (std::size_t i = 0; i < playerStates.size(); ++i)
+		{
+			turns[i].state = playerStates[i];
+		}
+		turn = 0;
+		beginTurn();
+	}
+
+	void Game::passTurn(bool out)
+	{
+		if (turns.empty())
+		{
+			return;
+		}
+		if (out)
+		{
+			turns[turn].out = true;
+		}
+
+		std::size_t next = turn;
+		bool anyone = false;
+		for (std::size_t k = 1; k <= turns.size(); ++k)
+		{
+			next = (turn + k) % turns.size();
+			if (!turns[next].out)
+			{
+				anyone = true;
+				break;
+			}
+		}
+		if (!anyone)
+		{
+			turns.clear(); // everyone is out: what follows <out /> runs
+			return;
+		}
+		if (next == turn)
+		{
+			return; // the only one still in plays on
+		}
+
+		putTurnAway(turns[turn]);
+		turn = next;
+		takeTurnUp(turns[turn]);
+		turnHandedOver = out;
+		beginTurn();
+	}
+
+	bool Game::takeTurnStop(void) noexcept
+	{
+		return std::exchange(turnHandedOver, false);
+	}
+
+	void Game::putTurnAway(Turn& into) const
+	{
+		into.objects = objects;
+		into.stateTimers = stateTimers;
+		into.currentScenes = currentScenes;
+		into.sceneTimers = sceneTimers;
+	}
+
+	void Game::takeTurnUp(const Turn& from)
+	{
+		for (std::size_t i = 0; i < objects.size() && i < from.objects.size(); ++i)
+		{
+			if (objects[i].kept) { continue; }
+			objects[i] = from.objects[i];
+			objects[i].visualDirty = true;
+		}
+		stateTimers = from.stateTimers;
+		currentScenes = from.currentScenes;
+		sceneTimers = from.sceneTimers;
+		++sceneChanges;
+	}
+
+	void Game::beginTurn(void)
+	{
+		// What was playing stops; the turn is played in the state the turns
+		// started in, with the player's own state over it.
+		loops.clear();
+		while (currentState.size() > 1 && currentState.top().name != turnsState)
+		{
+			currentState.pop();
+		}
+		const std::string& state = turns[turn].state;
+		if (!state.empty())
+		{
+			const auto found = std::find_if(states.begin(), states.end(), [&](const State& each) { return each.name == state; });
+			if (found != states.end()) { stateTimers[state] = found->timers; }
+			pushState(state);
+		}
+		++stateChanges;
+		refreshAllBoundTexts();
+	}
+
 	bool Game::keepsAnything(void) const noexcept
 	{
 		return std::any_of(objects.begin(), objects.end(), [](const Object& object) { return object.kept; });
@@ -824,10 +924,11 @@ namespace xge
 				if (tickTimer(timers[t], where))
 				{
 					const std::vector<Command> commands = timers[t].commands;
+					takeTurnStop();
 					for (const auto& command : commands)
 					{
 						executor.executeTimer(command, nullptr);
-						if (!unchanged()) { break; }
+						if (takeTurnStop() || !unchanged()) { break; }
 					}
 				}
 			}
@@ -1135,6 +1236,8 @@ namespace xge
 		// a thrust held into the game over) stops.
 		loops.clear();
 		++resets;
+		turns.clear();
+		turnHandedOver = false;
 
 		for (auto& object : objects)
 		{
@@ -1567,9 +1670,11 @@ namespace xge
 	void Game::runConditionCommands(std::vector<Command> commands)
 	{
 		CommandExecutor executor(*this);
+		takeTurnStop();
 		for (const auto& command : commands)
 		{
 			executor.executeCondition(command);
+			if (takeTurnStop()) { break; }
 		}
 	}
 }

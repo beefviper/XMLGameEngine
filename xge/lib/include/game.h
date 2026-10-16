@@ -211,6 +211,31 @@ namespace xge
 		// Goes up by one at every full reset (a new game).
 		unsigned long resetCount(void) const noexcept { return resets; }
 
+		// <turns><player state="..." />...</turns>: from now on that many
+		// players take turns, each with a game of their own that starts as
+		// the game is now (every object it does not keep, every timer, the
+		// current scenes). The first player's turn begins (beginTurn). The
+		// state current now is the one each turn is played in. A full reset
+		// ends the turns.
+		void startTurns(const std::vector<std::string>& playerStates);
+
+		// <pass /> (out false) and <out /> (out true): the next player still
+		// in takes over, their game coming back as they left it and the
+		// state stack going back to the state the turns are played in, with
+		// their state= pushed over it. With no turns, or no one else in,
+		// nothing changes; when everyone is out, the turns are over.
+		void passTurn(bool out);
+
+		// True once after an <out /> handed the turn to another player: the
+		// list of commands it was in stops there. Read and cleared by
+		// whatever runs a list of commands in a state.
+		bool takeTurnStop(void) noexcept;
+
+		// How many players take turns (0 without <turns>), and whose turn it
+		// is, from 1.
+		std::size_t playerCount(void) const noexcept { return turns.size(); }
+		std::size_t currentPlayer(void) const noexcept { return turns.empty() ? 0 : turn + 1; }
+
 		// <rank variable="entry.score" into="table" />: the entry takes its
 		// place among the members of the group (the best first), by that
 		// variable, the ones below it moving down a place (see CmdRank).
@@ -341,6 +366,27 @@ namespace xge
 		std::map<std::string, std::string> currentScenes;
 		std::map<std::string, std::vector<Timer>> sceneTimers;
 		unsigned long sceneChanges = 0;
+
+		// One player's own game while another plays (see startTurns): every
+		// object (those the game keeps are left alone), every state's and
+		// scene's timers, the current scenes; their state= and whether they
+		// are out.
+		struct Turn
+		{
+			std::vector<Object> objects;
+			std::map<std::string, std::vector<Timer>> stateTimers;
+			std::map<std::string, std::string> currentScenes;
+			std::map<std::string, std::vector<Timer>> sceneTimers;
+			std::string state;
+			bool out = false;
+		};
+		std::vector<Turn> turns;
+		std::size_t turn = 0;
+		std::string turnsState;
+		bool turnHandedOver = false;
+		void putTurnAway(Turn& into) const;
+		void takeTurnUp(const Turn& from);
+		void beginTurn(void);
 
 		// Every state at its first scene, and every scene's timers from the start.
 		void startScenes(void);

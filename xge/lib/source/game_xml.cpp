@@ -767,7 +767,7 @@ namespace xge
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
-				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "move" || name == "hop"
+				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter";
@@ -882,6 +882,18 @@ namespace xge
 					if (child->getName() != "speed") { fail(here, "unknown <" + child->getName() + ">; expected <speed>"); }
 				}
 				command.amount = readValueOf(node, "speed", here);
+			}
+			if (verb == "turns")
+			{
+				// A <player> for each player, each with the state (if any) that
+				// says it is their turn.
+				const std::string here = where + " > <turns>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "player") { fail(here, "unknown <" + child->getName() + ">; expected a <player> for each player"); }
+					command.players.push_back(child->getAttribute("state"));
+				}
+				if (command.players.empty()) { fail(here, "has no <player>; it needs one for each player"); }
 			}
 			if (verb == "hunt")
 			{

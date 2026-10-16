@@ -115,6 +115,25 @@ namespace xge
 		std::string table;     // the group
 	};
 
+	// <turns><player state="player1" /><player state="player2" /></turns> -
+	// the game from here is played by that many players taking turns, each
+	// with a game of their own, all starting as the game is now. The first
+	// player plays first; each player's state= (optional) is pushed whenever
+	// their turn comes up, a screen saying whose it is. See Game::startTurns.
+	struct CmdTurns
+	{
+		std::vector<std::string> players;
+	};
+
+	// <pass /> - the turn passes to the next player still in: this player's
+	// game is put away as it is, theirs comes back. See Game::passTurn.
+	struct CmdPass {};
+
+	// <out /> - this player is out of the game, and the turn passes; when
+	// another is still in, nothing after it in the list runs, and when none
+	// is, what follows does (<out /><reset />). See Game::passTurn.
+	struct CmdOut {};
+
 	// <dec variable="ownerName.variableName" /> - the opposite of <inc />: takes 1 off that
 	// object's named <variable> (or off a text object's own number) and
 	// refreshes every text bound to it.
@@ -416,7 +435,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdReverse,
-		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene>;
 
 	// --- What the XML says, before any of it is evaluated.
@@ -560,6 +579,7 @@ namespace xge
 		std::string from;      // become: only one showing this look
 		std::string partner;   // hunt: <with object="...">
 		std::string retreat;   // hunt: <retreat object="...">
+		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)

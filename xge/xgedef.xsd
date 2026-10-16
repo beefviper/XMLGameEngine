@@ -672,6 +672,21 @@
           <xs:attribute name="into" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- turns: a <player> for each player taking turns, each with the state that says whose turn it is -->
+      <xs:element name="turns">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="player" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="state" type="xs:string" use="optional" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <!-- pass: the next player's turn; out: this player is out, and the next player's turn -->
+      <xs:element name="pass" type="emptyType" />
+      <xs:element name="out" type="emptyType" />
       <!-- rank: the entry variable= is of goes into the group into= (the best first), in place by that variable -->
       <xs:element name="rank">
         <xs:complexType>

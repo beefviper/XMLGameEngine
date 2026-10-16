@@ -266,9 +266,11 @@ namespace xge
 		}
 
 		heldCommands[index] = binding->second;
+		game.takeTurnStop();
 		for (const auto& command : heldCommands[index])
 		{
 			commandExecutor.executeInput(command, true);
+			if (game.takeTurnStop()) { break; }
 		}
 
 		syncHeldKeysToState();

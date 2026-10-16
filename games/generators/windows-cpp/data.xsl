@@ -279,6 +279,16 @@
             </xsl:call-template>
           </xsl:if>
         </xsl:when>
+        <xsl:when test="$verb = 'turns'">
+          <xsl:text> command.players = { </xsl:text>
+          <xsl:for-each select="$node/player">
+            <xsl:if test="position() &gt; 1">, </xsl:if>
+            <xsl:call-template name="string">
+              <xsl:with-param name="text" select="string(@state)" />
+            </xsl:call-template>
+          </xsl:for-each>
+          <xsl:text> };</xsl:text>
+        </xsl:when>
         <xsl:when test="$verb = 'follow'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.seconds'" />

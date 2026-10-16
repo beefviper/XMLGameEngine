@@ -933,3 +933,16 @@ TEST_CASE("<rank> names a variable and a group that has it", "[scores][rank]")
 	CHECK_THROWS_WITH(load(entry, "<rank variable=\"entry.score\" into=\"tabel\" />"), ContainsSubstring("into= names no <group>"));
 	CHECK_THROWS_WITH(load(entry, "<rank variable=\"entry.scor\" into=\"entry\" />"), ContainsSubstring("has no variable named 'scor'"));
 }
+
+TEST_CASE("<turns> names the players' states, and goes only where a state's commands go", "[turns]")
+{
+	const auto load = [&](const std::string& inputs, XmlBackend backend = XmlBackend::Xerces)
+	{
+		Loaded loaded(gameXml(box("o", 0, 0, 1, 1), state("s", { "o" }, inputs)), backend);
+	};
+	CHECK_NOTHROW(load("<input button=\"space\"><turns><player state=\"s\" /><player /></turns></input><input button=\"p\"><pass /><out /></input>"));
+	CHECK_THROWS_WITH(load("<input button=\"space\"><turns><player state=\"t\" /></turns></input>"), ContainsSubstring("<player state=\"t\" /> names no state"));
+	CHECK_THROWS_WITH(load("<input button=\"space\"><turns /></input>", XmlBackend::PugiXml), ContainsSubstring("expected <player>"));
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"all\"><pass /></collision>"), state("s", { "o" }))),
+		ContainsSubstring("<pass />"));
+}

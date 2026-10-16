@@ -39,6 +39,11 @@
     shows its own. A game that ends above the fifth asks for initials, one
     letter a state (W and S or the arrows change it, Space goes on), and
     <rank> puts the entry in its place, the ones below moving down.
+  * Two players take turns, as on the arcade machine: 2 on the title starts
+    a game with <turns>, a <player> each, so each has a game of their own.
+    A ship lost <pass>es the turn, each player's own screen saying whose it
+    is, and a player out of ships is <out />: the other plays on, and when
+    both are out the game ends.
   * The best and the table are kept, and the engine writes what is kept to
     saves/galaxian.xml, so they last from one run of the program to the next.
 -->
@@ -296,7 +301,7 @@
         <object name="start">
           <sprite>
             <text>
-              <content>spacebar to start</content>
+              <content>spacebar to start, 2 for two players</content>
               <size>36</size>
               <color>color.white</color>
             </text>
@@ -311,6 +316,14 @@
       <inputs>
         <input button="space">
           <push state="playing" />
+        </input>
+        <!-- two players, taking turns -->
+        <input button="num2">
+          <push state="playing" />
+          <turns>
+            <player state="player1" />
+            <player state="player2" />
+          </turns>
         </input>
       </inputs>
     </state>
@@ -387,10 +400,12 @@
             </collision>
             <collision class="alien">
               <dec variable="ship.lives" />
+              <inc variable="ship.lost" />
               <play sound="boom" />
             </collision>
             <collision class="bomb">
               <dec variable="ship.lives" />
+              <inc variable="ship.lost" />
               <play sound="boom" />
             </collision>
           </collisions>
@@ -409,6 +424,7 @@
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">startlives</variable>
+            <variable name="lost">0</variable>
           </variables>
         </object>
         <object name="score">
@@ -715,6 +731,12 @@
           <atmost>0</atmost>
           <push state="gameover" />
         </condition>
+        <!-- a ship lost: the other player's turn, with two -->
+        <condition object="ship" variable="lost">
+          <atleast>1</atleast>
+          <dec variable="ship.lost" />
+          <pass />
+        </condition>
         <!-- a new best: the score is copied into it as it goes up -->
         <condition object="ship" variable="score">
           <above object="best" variable="score" />
@@ -759,7 +781,7 @@
         <object name="again">
           <sprite>
             <text>
-              <content>spacebar to play again</content>
+              <content>spacebar to go on</content>
               <size>36</size>
               <color>color.white</color>
             </text>
@@ -771,7 +793,9 @@
         <show state="playing" />
       </shows>
       <inputs>
+        <!-- the other player plays on; with no one left, a new game -->
         <input button="space">
+          <out />
           <reset />
         </input>
       </inputs>
@@ -783,6 +807,41 @@
           <pop state="initial1" />
         </condition>
       </conditions>
+    </state>
+    <!-- whose turn it is, over their game, for two seconds -->
+    <state name="player1">
+      <objects>
+        <object name="player1">
+          <sprite><text><content>PLAYER 1</content><size>80</size><color>color.yellow</color></text></sprite>
+          <position><x>window.width.center - player1.width / 2</x><y>window.height.center - player1.height / 2</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space"><pop /></input>
+      </inputs>
+      <timers>
+        <timer><after>2</after><pop /></timer>
+      </timers>
+    </state>
+    <state name="player2">
+      <objects>
+        <object name="player2">
+          <sprite><text><content>PLAYER 2</content><size>80</size><color>color.cyan</color></text></sprite>
+          <position><x>window.width.center - player2.width / 2</x><y>window.height.center - player2.height / 2</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space"><pop /></input>
+      </inputs>
+      <timers>
+        <timer><after>2</after><pop /></timer>
+      </timers>
     </state>
     <!-- the initials, a letter a state; the cursor shows which -->
     <state name="initial1">
@@ -833,6 +892,7 @@
         <!-- the entry into its place in the table, and a new game -->
         <input button="space d right">
           <rank variable="entry.score" into="table" />
+          <out />
           <reset />
         </input>
       </inputs>
