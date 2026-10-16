@@ -11,6 +11,7 @@
 #include "svg.h"
 
 #include <algorithm>
+#include <functional>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -1100,12 +1101,38 @@ namespace xge
 		}
 
 		// A condition made ready, from a state's or a scene's.
-		const auto makeCondition = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner)
+		const auto matches = [&](const RawCondition& rawCondition, const Object& object)
+		{
+			return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
+				&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name || object.inGroup(rawCondition.filterObject));
+		};
+
+		// What a condition or a <check> tests, made ready (with its <all> or
+		// <any>'s checks, each made the same way).
+		std::function<Condition(const RawCondition&, const std::string&, const std::string&)> makeTest;
+		makeTest = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner)
 		{
 			Condition condition;
+			condition.join = rawCondition.join;
+			for (std::size_t i = 0; i < rawCondition.parts.size(); ++i)
+			{
+				const RawCondition& part = rawCondition.parts[i];
+				const char* kind = part.join == RawCondition::Join::All ? "<all>" : part.join == RawCondition::Join::Any ? "<any>" : "<check>";
+				condition.parts.push_back(makeTest(part, where + " > " + kind + " " + std::to_string(i + 1), owner));
+			}
+			if (condition.join != RawCondition::Join::None)
+			{
+				return condition;
+			}
+
 			condition.filterClass = rawCondition.filterClass;
 			condition.filterObject = rawCondition.filterObject;
 			condition.variableName = rawCondition.variableName;
+			condition.distanceTo = rawCondition.distance;
+			if (rawCondition.total == "count") { condition.total = Total::Count; }
+			else if (rawCondition.total == "sum") { condition.total = Total::Sum; }
+			else if (rawCondition.total == "highest") { condition.total = Total::Highest; }
+			else if (rawCondition.total == "lowest") { condition.total = Total::Lowest; }
 
 			condition.otherObject = rawCondition.otherObject;
 			condition.otherVariable = rawCondition.otherVariable;
@@ -1126,15 +1153,29 @@ namespace xge
 				checkOtherVariable(condition, objects, where + " > <condition variable=\"" + condition.variableName + "\">");
 			}
 
-			if (condition.remaining && std::none_of(objects.begin(), objects.end(), [&](const Object& object)
-				{
-					return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
-						&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name
-							|| object.inGroup(rawCondition.filterObject));
-				}))
+			if (!condition.distanceTo.empty() && !findObject(objects, condition.distanceTo))
 			{
-				std::cout << "warning: " << owner << ": a condition with remaining= matches no object at all, so it would fire at once\n";
+				throw std::runtime_error(where + ": distance=\"" + condition.distanceTo + "\" names no object or group" + didYouMean(condition.distanceTo, objectNames(objects)));
 			}
+
+			// A total of a variable: some object it can count has it.
+			if ((condition.total == Total::Sum || condition.total == Total::Highest || condition.total == Total::Lowest)
+				&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matches(rawCondition, object) && object.variable.count(condition.variableName); }))
+			{
+				throw std::runtime_error(where + ": total=\"" + rawCondition.total + "\" of variable=\"" + condition.variableName + "\", and no object it looks at has a variable of that name");
+			}
+
+			if ((condition.remaining || condition.total == Total::Count) && std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matches(rawCondition, object); }))
+			{
+				std::cout << "warning: " << owner << (condition.remaining ? ": a condition with remaining= matches no object at all, so it would fire at once\n"
+					: ": a condition with total=\"count\" matches no object at all, so it counts 0\n");
+			}
+			return condition;
+		};
+
+		const auto makeCondition = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner)
+		{
+			Condition condition = makeTest(rawCondition, where, owner);
 			condition.commands = processCommands(rawCondition.commands, where);
 			return condition;
 		};

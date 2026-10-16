@@ -1001,3 +1001,164 @@ TEST_CASE("a <demo> is read by every XML library, and a <demo /> needs one", "[d
 	}
 	CHECK_THROWS_WITH(Loaded(game), ContainsSubstring("xgecli --record"));
 }
+
+namespace
+{
+	// Three coins (class coin, v 2, 5 and 9, at x 0, 100 and 200), a ball
+	// at x 50 and a counter; `condition` is a <condition>'s attributes and
+	// test, and fires() whether it holds this frame (it counts in flag.n).
+	struct Coins
+	{
+		Loaded loaded;
+
+		explicit Coins(const std::string& condition, XmlBackend backend = XmlBackend::Xerces, bool schema = true) :
+			loaded(withSchema(schema, gameXml(coin("coin1", 0, 2) + coin("coin2", 100, 5) + coin("coin3", 200, 9)
+				+ box("ball", 50, 0, 10, 10) + box("flag", 0, 300, 1, 1, "<enabled>false</enabled>", {}, kCounter)
+				+ "<group name=\"posts\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+				"<position><y>100</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
+				"<member><position><x>300</x></position></member><member><position><x>500</x></position></member></group>",
+				state("playing", { "coin1", "coin2", "coin3", "ball", "flag", "posts" }, "<input button=\"space\"><pop /></input>",
+					"<conditions><condition " + condition + "<inc variable=\"flag.n\" /></condition></conditions>"))), backend)
+		{
+		}
+
+		// The game as it is, or with no schema named, so only what the
+		// engine itself checks is checked.
+		static std::string withSchema(bool schema, std::string xml)
+		{
+			const std::string named = " xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\"";
+			if (!schema) { xml.erase(xml.find(named), named.size()); }
+			return xml;
+		}
+
+		static std::string coin(const std::string& name, float x, float v)
+		{
+			return box(name, x, 0, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"v\">" + std::to_string(v) + "</variable></variables>",
+				"<x>0</x><y>0</y>", " class=\"coin\"");
+		}
+
+		bool fires()
+		{
+			const float before = loaded.variable("flag", "n");
+			loaded.frames(1);
+			return loaded.variable("flag", "n") > before;
+		}
+
+		Object& object(const char* name) { return loaded.game.getObject(name); }
+	};
+}
+
+TEST_CASE("a condition can test a total over what it matches: how many, the sum, the highest, the lowest", "[conditions][totals]")
+{
+	CHECK(Coins("class=\"coin\" total=\"count\"><equal>3</equal>").fires());
+	CHECK_FALSE(Coins("class=\"coin\" total=\"count\"><above>3</above>").fires());
+	CHECK(Coins("class=\"coin\" variable=\"v\" total=\"sum\"><equal>16</equal>").fires());
+	CHECK_FALSE(Coins("class=\"coin\" variable=\"v\" total=\"sum\"><below>16</below>").fires());
+	CHECK(Coins("class=\"coin\" variable=\"v\" total=\"highest\"><equal>9</equal>").fires());
+	CHECK(Coins("class=\"coin\" variable=\"v\" total=\"lowest\"><equal>2</equal>").fires());
+	CHECK_FALSE(Coins("class=\"coin\" variable=\"v\" total=\"lowest\"><above>2</above>").fires());
+
+	// Only what is in play counts.
+	Coins coins("class=\"coin\" variable=\"v\" total=\"sum\"><atmost>7</atmost>");
+	CHECK_FALSE(coins.fires());
+	coins.object("coin3").isVisible = false;
+	CHECK(coins.fires());
+
+	Coins count("class=\"coin\" total=\"count\"><atmost>1</atmost>");
+	CHECK_FALSE(count.fires());
+	count.object("coin1").isVisible = false;
+	count.object("coin2").isVisible = false;
+	CHECK(count.fires());
+
+	// Against another variable, read as it is now.
+	Coins against("class=\"coin\" variable=\"v\" total=\"sum\"><atleast object=\"flag\" variable=\"gap\" />");
+	CHECK(against.fires());
+	against.object("flag").variable["gap"] = 17.0f;
+	CHECK_FALSE(against.fires());
+}
+
+TEST_CASE("a condition can test how far each object it matches is from the nearest of another", "[conditions][distance]")
+{
+	// The ball (middle 55) is 50 from coin1 and coin2 (middles 5 and 105).
+	CHECK(Coins("object=\"ball\" distance=\"coin2\"><atmost>50</atmost>").fires());
+	CHECK_FALSE(Coins("object=\"ball\" distance=\"coin2\"><below>50</below>").fires());
+	CHECK(Coins("object=\"coin3\" distance=\"ball\"><equal>150</equal>").fires());
+
+	// Any one of a class near enough is enough; one out of play is not near.
+	Coins near("class=\"coin\" distance=\"ball\"><below>60</below>");
+	CHECK(near.fires());
+	near.object("coin1").isVisible = false;
+	near.object("coin2").isVisible = false;
+	CHECK_FALSE(near.fires());
+
+	// To a group: the nearest member (the posts' middles are 305,105 and
+	// 505,105; coin3's is 205,5).
+	Coins posts("object=\"coin3\" distance=\"posts\"><below>142</below>");
+	CHECK(posts.fires());
+	posts.object("posts.1").isVisible = false; // the far one is 316 away
+	CHECK_FALSE(posts.fires());
+
+	// Moving closer.
+	Coins closing("object=\"coin3\" distance=\"ball\"><below>100</below>");
+	CHECK_FALSE(closing.fires());
+	closing.object("ball").position.x = 150.0f;
+	CHECK(closing.fires());
+}
+
+TEST_CASE("<all> holds when every check does, <any> when one does, and they nest", "[conditions][join]")
+{
+	const std::string yes = "<check object=\"coin1\" variable=\"v\"><equal>2</equal></check>";
+	const std::string no = "<check object=\"coin2\" variable=\"v\"><equal>2</equal></check>";
+
+	CHECK(Coins("><all>" + yes + yes + "</all>").fires());
+	CHECK_FALSE(Coins("><all>" + yes + no + "</all>").fires());
+	CHECK(Coins("><any>" + no + yes + "</any>").fires());
+	CHECK_FALSE(Coins("><any>" + no + no + "</any>").fires());
+	CHECK(Coins("><all>" + yes + "<any>" + no + "<check class=\"coin\" total=\"count\"><equal>3</equal></check></any></all>").fires());
+	CHECK_FALSE(Coins("><any>" + no + "<all>" + yes + no + "</all></any>").fires());
+
+	// Each check its own kind of test, read every frame.
+	Coins coins("><all><check object=\"ball\" distance=\"coin1\"><below>60</below></check>"
+		"<check object=\"flag\" variable=\"n\"><equal>0</equal></check></all>");
+	CHECK(coins.fires());
+	CHECK_FALSE(coins.fires()); // n is 1 now
+}
+
+TEST_CASE("totals, distances, <all> and <any> load with every XML library", "[conditions][xml]")
+{
+	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
+	{
+		INFO(static_cast<int>(backend));
+		CHECK(Coins("><all><check class=\"coin\" variable=\"v\" total=\"sum\"><atleast>1</atleast></check>"
+			"<any><check object=\"ball\" distance=\"coin1\"><below>60</below></check></any></all>", backend).fires());
+	}
+}
+
+TEST_CASE("mistakes in totals, distances, <all> and <any> stop the load, saying where", "[conditions][errors]")
+{
+	// With no schema named, so these are the engine's own checks.
+	const auto fails = [](const std::string& condition, const std::string& expected)
+	{
+		INFO(condition);
+		CHECK_THROWS_WITH(Coins(condition, XmlBackend::TinyXml2, false), ContainsSubstring(expected));
+	};
+	fails("class=\"coin\" total=\"most\"><atleast>1</atleast>", "total=\"most\" is not a total");
+	fails("class=\"coin\" total=\"count\" variable=\"v\"><atleast>1</atleast>", "reads no variable=");
+	fails("class=\"coin\" total=\"sum\"><atleast>1</atleast>", "needs variable=");
+	fails("class=\"coin\" total=\"sum\" variable=\"w\"><atleast>1</atleast>", "no object it looks at has a variable of that name");
+	fails("class=\"coin\" total=\"sum\" variable=\"v\"><atleast variable=\"gap\" /></condition><condition object=\"x\">"
+		"<atleast>1</atleast>", "needs object= as well as variable=");
+	fails("object=\"ball\" distance=\"coins\"><below>5</below>", "distance=\"coins\" names no object or group");
+	fails("object=\"ball\" distance=\"coin1\" variable=\"v\"><below>5</below>", "reads no variable=");
+	fails("object=\"ball\" distance=\"coin1\" total=\"count\"><below>5</below>", "has total= and distance=");
+	fails("class=\"coin\" total=\"count\"><remaining>1</remaining>", "<remaining> counts what is in play");
+	fails("object=\"ball\"><all><check object=\"ball\" variable=\"n\"><below>5</below></check></all>", "so the condition has no class=");
+	fails("><all></all>", "<all>: has no <check>");
+	fails("><any><check object=\"coin1\" variable=\"v\"><below>5</below><inc variable=\"flag.n\" /></check></any>", "the commands go at the end");
+	fails("><any><when /></any>", "unknown <when>");
+	fails("><all><check object=\"coin1\"><below>5</below></check></all>", "<all> > <check>: <below> reads a variable");
+
+	// The schema turns the shapes away first.
+	CHECK_THROWS_WITH(Coins("class=\"coin\" total=\"most\"><atleast>1</atleast>", XmlBackend::TinyXml2), ContainsSubstring("is not a valid totalType"));
+	CHECK_THROWS_WITH(Coins("><any><when /></any>"), ContainsSubstring("when"));
+}

@@ -357,7 +357,9 @@ namespace xge
 				{
 					condition.filterObject = names_.object(condition.filterObject, context);
 					condition.otherObject = names_.object(condition.otherObject, context);
+					condition.distance = names_.object(condition.distance, context);
 					value(condition.threshold, context);
+					this->conditions(condition.parts, context);
 					commands(condition.commands, context);
 				}
 			}

@@ -2027,6 +2027,106 @@ namespace xge
 		// The <condition>s under a node (a state's <conditions>, or a
 		// <conditions> set), in order: a test, then the commands to run when it
 		// holds; or <condition set="..."> for a named set's, in its place.
+		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, RawCondition& raw);
+
+		// An <all> or an <any>, into `raw`: which, and its <check>s, <all>s
+		// and <any>s in order.
+		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw)
+		{
+			raw.join = join.getName() == "all" ? RawCondition::Join::All : RawCondition::Join::Any;
+			for (std::unique_ptr<XmlNode> part = join.getFirstChild(); part != nullptr; part = part->getNextSibling())
+			{
+				const std::string partName = part->getName();
+				RawCondition check;
+				if (partName == "check")
+				{
+					const std::string checkHere = here + " > <check>";
+					if (readCheck(*part, checkHere, check)) { fail(checkHere, "has its one test and nothing after it; the commands go at the end of the <condition>"); }
+				}
+				else if (partName == "all" || partName == "any")
+				{
+					readJoin(*part, here + " > <" + partName + ">", check);
+				}
+				else
+				{
+					fail(here, "unknown <" + partName + ">; expected <check>s, <all>s and <any>s");
+				}
+				raw.parts.push_back(std::move(check));
+			}
+			if (raw.parts.empty()) { fail(here, "has no <check>"); }
+		}
+
+		// What a <condition> or a <check> tests, into `raw`: its filters and
+		// what it measures (attributes), then its test tag, or an <all> or
+		// <any> of <check>s. Gives back what follows (a condition's commands).
+		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, RawCondition& raw)
+		{
+			raw.filterClass = node.getAttribute("class");
+			raw.filterObject = node.getAttribute("object");
+			raw.variableName = node.getAttribute("variable");
+			raw.total = node.getAttribute("total");
+			raw.distance = node.getAttribute("distance");
+
+			std::unique_ptr<XmlNode> test = node.getFirstChild();
+			if (!test) { fail(here, "needs an <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>, or an <all> or <any>"); }
+
+			const std::string testName = test->getName();
+
+			// <all> / <any>: several checks, each a test of its own.
+			if (testName == "all" || testName == "any")
+			{
+				if (!raw.filterClass.empty() || !raw.filterObject.empty() || !raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty())
+				{
+					fail(here, "<" + testName + "> says what is tested in each of its <check>s, so the condition has no class=, object=, variable=, total= or distance=");
+				}
+				readJoin(*test, here + " > <" + testName + ">", raw);
+				return test->getNextSibling();
+			}
+
+			if (testName == "atleast") { raw.test = RawCondition::Test::AtLeast; }
+			else if (testName == "atmost") { raw.test = RawCondition::Test::AtMost; }
+			else if (testName == "above") { raw.test = RawCondition::Test::Above; }
+			else if (testName == "below") { raw.test = RawCondition::Test::Below; }
+			else if (testName == "equal") { raw.test = RawCondition::Test::Equal; }
+			else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
+			else { fail(here, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>, or an <all> or <any>"); }
+
+			const bool remaining = raw.test == RawCondition::Test::Remaining;
+			if (!raw.total.empty() && raw.total != "count" && raw.total != "sum" && raw.total != "highest" && raw.total != "lowest")
+			{
+				fail(here, "total=\"" + raw.total + "\" is not a total; expected count, sum, highest or lowest");
+			}
+			if (!raw.total.empty() && !raw.distance.empty()) { fail(here, "has total= and distance=; it tests one thing"); }
+			if (remaining && (!raw.total.empty() || !raw.distance.empty())) { fail(here, "<remaining> counts what is in play, so it takes no total= or distance="); }
+			if (!raw.distance.empty() && !raw.variableName.empty()) { fail(here, "distance=\"" + raw.distance + "\" measures how far, so it reads no variable="); }
+			if (raw.total == "count" && !raw.variableName.empty()) { fail(here, "total=\"count\" counts the objects in play, so it reads no variable="); }
+			if (!remaining && raw.variableName.empty() && raw.total != "count" && raw.distance.empty())
+			{
+				fail(here, "<" + testName + "> reads a variable, so it needs variable=\"...\"");
+			}
+
+			// Against another variable (<above object="gun2" variable="score" />),
+			// or a number.
+			raw.otherObject = test->getAttribute("object");
+			raw.otherVariable = test->getAttribute("variable");
+			if (!raw.otherVariable.empty() || !raw.otherObject.empty())
+			{
+				const std::string tag = "<" + testName + ">";
+				if (remaining) { fail(here, "<remaining> counts objects, so it takes a number, not a variable"); }
+				if (raw.otherVariable.empty()) { fail(here, tag + " names object=\"" + raw.otherObject + "\" but no variable= of it to compare with"); }
+				if (raw.otherObject.empty() && (!raw.total.empty() || !raw.distance.empty()))
+				{
+					fail(here, tag + " compares a total or a distance, which has no variables of its own, so it needs object= as well as variable=");
+				}
+				if (test->getFirstChild() || !readText(*test).empty()) { fail(here, tag + " compares with variable=\"" + raw.otherVariable + "\", so it has no number as well"); }
+			}
+			else
+			{
+				raw.threshold = readValue(*test, here);
+			}
+			return test->getNextSibling();
+		}
+
 		void readConditions(const XmlNode& node, const std::string& where, const ConditionSets& conditionSets, std::vector<RawCondition>& out)
 		{
 			for (std::unique_ptr<XmlNode> condition = node.getFirstChild(); condition != nullptr; condition = condition->getNextSibling())
@@ -2053,43 +2153,8 @@ namespace xge
 				{
 					fail(conditionHere, "has two conditions called '" + raw.name + "'");
 				}
-				raw.filterClass = condition->getAttribute("class");
-				raw.filterObject = condition->getAttribute("object");
-				raw.variableName = condition->getAttribute("variable");
-
-				std::unique_ptr<XmlNode> test = condition->getFirstChild();
-				if (!test) { fail(conditionHere, "needs an <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>"); }
-
-				const std::string testName = test->getName();
-				if (testName == "atleast") { raw.test = RawCondition::Test::AtLeast; }
-				else if (testName == "atmost") { raw.test = RawCondition::Test::AtMost; }
-				else if (testName == "above") { raw.test = RawCondition::Test::Above; }
-				else if (testName == "below") { raw.test = RawCondition::Test::Below; }
-				else if (testName == "equal") { raw.test = RawCondition::Test::Equal; }
-				else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
-				else { fail(conditionHere, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>"); }
-
-				if (raw.test != RawCondition::Test::Remaining && raw.variableName.empty())
-				{
-					fail(conditionHere, "<" + testName + "> reads a variable, so the condition needs variable=\"...\"");
-				}
-
-				// Against another variable (<above object="gun2" variable="score" />),
-				// or a number.
-				raw.otherObject = test->getAttribute("object");
-				raw.otherVariable = test->getAttribute("variable");
-				if (!raw.otherVariable.empty() || !raw.otherObject.empty())
-				{
-					const std::string tag = "<" + testName + ">";
-					if (raw.test == RawCondition::Test::Remaining) { fail(conditionHere, "<remaining> counts objects, so it takes a number, not a variable"); }
-					if (raw.otherVariable.empty()) { fail(conditionHere, tag + " names object=\"" + raw.otherObject + "\" but no variable= of it to compare with"); }
-					if (test->getFirstChild() || !readText(*test).empty()) { fail(conditionHere, tag + " compares with variable=\"" + raw.otherVariable + "\", so it has no number as well"); }
-				}
-				else
-				{
-					raw.threshold = readValue(*test, conditionHere);
-				}
-				raw.commands = readCommands(test->getNextSibling(), conditionHere);
+				std::unique_ptr<XmlNode> after = readCheck(*condition, conditionHere, raw);
+				raw.commands = readCommands(std::move(after), conditionHere);
 				out.push_back(std::move(raw));
 			}
 		}

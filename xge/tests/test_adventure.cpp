@@ -213,6 +213,33 @@ TEST_CASE("the dragon chases the hero and eats him; the sword slays it", "[adven
 	}
 }
 
+TEST_CASE("the dragon sleeps until the hero comes near, then wakes once, with a roar, and chases him", "[adventure][conditions]")
+{
+	Adventure play;
+	play.start(true);
+	play.enter("field");
+	Object& dragon = play.object("dragon");
+	play.put("hero", 100, 300);
+	play.put("dragon", 400, 300); // 300 apart
+	play.frames(60);
+	CHECK(dragon.lookName() == "asleep");
+	CHECK(dragon.position.x == Approx(400.0f));
+
+	// Within 160: awake (with a roar), and after him.
+	play.put("hero", 260, 300);
+	play.frames(1);
+	CHECK(dragon.lookName() == "awake");
+	CHECK(dragon.variable.at("awake") == 1.0f);
+	play.frames(30);
+	CHECK(dragon.position.x < 400.0f);
+	CHECK(dragon.variable.at("awake") == 1.0f); // woken once
+
+	// A new game: asleep again.
+	play.game.resetAll();
+	CHECK(dragon.lookName() == "asleep");
+	CHECK(dragon.variable.at("awake") == 0.0f);
+}
+
 TEST_CASE("the field and the castle are two rooms: walking through a side enters the other, and the one left waits", "[adventure][scenes]")
 {
 	Adventure play;
@@ -230,13 +257,19 @@ TEST_CASE("the field and the castle are two rooms: walking through a side enters
 	CHECK(play.hero().position.x < 100.0f);
 	CHECK(play.game.isShown(play.object("dragon")));
 	CHECK(play.game.isAway(play.object("key")));
+	CHECK(play.object("dragon").position == dragonAt); // asleep, he is far off
+
+	// It wakes when he is near.
+	play.put("dragon", play.hero().position.x + 120, play.hero().position.y);
+	play.frames(1);
+	const Vector2f dragonWoke = play.object("dragon").position;
 
 	// And straight back, before the dragon gets far.
 	play.hold(KeyCode::Left, 30);
 	CHECK(play.room() == "playing.castle");
 	CHECK(play.hero().position.x > 500.0f);
 	const Vector2f dragonLeft = play.object("dragon").position;
-	CHECK(dragonLeft != dragonAt);
+	CHECK(dragonLeft != dragonWoke);
 	play.frames(60);
 	CHECK(play.object("dragon").position == dragonLeft);
 }

@@ -442,6 +442,11 @@ namespace xge
 		// fired (and the frame's checking is over).
 		bool checkConditionList(const std::vector<Condition>& conditions);
 
+		// Whether a condition's test holds now: its <all> or <any> of
+		// checks, a total over what it matches, or any one object it
+		// matches passing it.
+		bool holds(const Condition& condition);
+
 		// Counts a frame on every object timer of what is shown and every
 		// timer of the current state, and runs the commands of the ones that
 		// go off (CommandExecutor::executeTimer).

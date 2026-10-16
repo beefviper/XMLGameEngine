@@ -35,7 +35,11 @@
   * Walls and the gate <stop /> the hero and the dragon.
   * The gate <die />s when the key touches it, and the hall counts the
     chalice in (status.won) when it touches it; a condition ends the game.
-  * The dragon <chase>s the hero on a timer, slower than he walks.
+  * The dragon sleeps (its first look) until the hero comes within 160
+    pixels: a condition of the field, an <all> of two <check>s (how far the
+    hero is, by distance=, and that it is still asleep), wakes it with a
+    roar. Its timer follows the awake look, so only then does it <chase>
+    the hero, slower than he walks.
   * Paused, won and eaten draw the room still underneath (<show state>).
   Not in it: the other rooms and castles, the bat that steals, the three
   dragons, the bridge and the magnet.
@@ -68,6 +72,11 @@
     <sound name="slay" wave="noise">
       <volume>0.4</volume>
       <note pitch="2000" to="150">0.5</note>
+    </sound>
+    <!-- the dragon woken: a low growl that rises -->
+    <sound name="roar" wave="sawtooth">
+      <volume>0.25</volume>
+      <note pitch="A1" to="E2">0.5</note>
     </sound>
     <!-- a game started: a rising arpeggio -->
     <sound name="start" wave="square">
@@ -438,9 +447,26 @@
               <enabled>true</enabled>
             </collisions>
           </object>
-            <!-- the dragon: after the hero, slower than him, and slain by the sword -->
+            <!-- the dragon: asleep until the hero comes near, then after him,
+                 slower than him, and slain by the sword -->
           <object name="dragon">
-            <sprite>
+            <sprite name="asleep">
+              <bitmap>
+                <row>....***.</row>
+                <row>....*.**</row>
+                <row>....****</row>
+                <row>*...**..</row>
+                <row>**..***.</row>
+                <row>.*****..</row>
+                <row>..****..</row>
+                <row>...**...</row>
+                <row>...*.*..</row>
+                <row>..**.**.</row>
+                <scale>3</scale>
+                <color>color.darkgreen</color>
+              </bitmap>
+            </sprite>
+            <sprite name="awake">
               <bitmap>
                 <row>....***.</row>
                 <row>....*.**</row>
@@ -470,8 +496,11 @@
                 <play sound="slay" />
               </collision>
             </collisions>
+            <variables>
+              <variable name="awake">0</variable>
+            </variables>
             <timers>
-              <timer>
+              <timer sprite="awake">
                 <every>0.3</every>
                 <chase object="hero"><speed>dragonspeed</speed></chase>
               </timer>
@@ -496,6 +525,18 @@
             </collisions>
           </object>
           </objects>
+          <conditions>
+            <!-- the hero near the sleeping dragon wakes it -->
+            <condition>
+              <all>
+                <check object="dragon" distance="hero"><below>160</below></check>
+                <check object="dragon" variable="awake"><equal>0</equal></check>
+              </all>
+              <inc variable="dragon.awake" />
+              <become object="dragon" sprite="awake" />
+              <play sound="roar" />
+            </condition>
+          </conditions>
         </scene>
       </scenes>
       <inputs>

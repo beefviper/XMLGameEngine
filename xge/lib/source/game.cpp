@@ -1649,71 +1649,135 @@ namespace xge
 	{
 		for (auto& condition : conditions)
 		{
-			// A class, or a name every scene has (robots, for playing.robots),
-			// is what is in this state and scene (and the game's own); a name
-			// by its path (room2.robots, playing.room2.robots.3) is that
-			// thing, wherever it is.
-			const auto considers = [&](const Object& object)
+			if (holds(condition))
 			{
-				return matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object)
-					&& (inScope(object) || namedByPath(object, condition.filterObject));
-			};
+				runConditionCommands(condition.commands);
+				return true; // the state may have just changed - stop for this frame
+			}
+		}
+		return false;
+	}
 
-			// "No more than N of them left": everything that matches, still
-			// in play. Nothing to look at per object, so this is its own case.
-			if (condition.remaining)
+	bool Game::holds(const Condition& condition)
+	{
+		if (condition.join == RawCondition::Join::All)
+		{
+			return std::all_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part) { return holds(part); });
+		}
+		if (condition.join == RawCondition::Join::Any)
+		{
+			return std::any_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part) { return holds(part); });
+		}
+
+		// A class, or a name every scene has (robots, for playing.robots),
+		// is what is in this state and scene (and the game's own); a name
+		// by its path (room2.robots, playing.room2.robots.3) is that
+		// thing, wherever it is.
+		const auto considers = [&](const Object& object)
+		{
+			return matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object)
+				&& (inScope(object) || namedByPath(object, condition.filterObject));
+		};
+
+		// Against a number, or another variable as it is now (of the
+		// object tested, when the test names no object). Nothing to compare
+		// with: does not hold.
+		const auto against = [&](const Object* tested) -> std::optional<float>
+		{
+			if (condition.otherVariable.empty())
 			{
-				const auto stillIn = std::count_if(objects.begin(), objects.end(), [&](const Object& object)
-					{
-						return object.isVisible && considers(object);
-					});
+				return condition.value;
+			}
+			const Object* other = condition.otherObject.empty() ? tested : tryGetObject(condition.otherObject);
+			if (!other)
+			{
+				return std::nullopt;
+			}
+			const auto otherIt = other->variable.find(condition.otherVariable);
+			if (otherIt == other->variable.end())
+			{
+				return std::nullopt;
+			}
+			return otherIt->second;
+		};
 
-				if (static_cast<float>(stillIn) <= *condition.remaining)
+		// "No more than N of them left": everything that matches, still
+		// in play.
+		if (condition.remaining)
+		{
+			const auto stillIn = std::count_if(objects.begin(), objects.end(), [&](const Object& object)
 				{
-					runConditionCommands(condition.commands);
-					return true; // the state may have just changed - stop for this frame
-				}
+					return object.isVisible && considers(object);
+				});
+			return static_cast<float>(stillIn) <= *condition.remaining;
+		}
 
+		// A total over everything that matches and is in play.
+		if (condition.total != Total::None)
+		{
+			float total = 0.0f;
+			std::size_t counted = 0;
+			for (const auto& object : objects)
+			{
+				if (!object.isVisible || !considers(object)) { continue; }
+				if (condition.total == Total::Count)
+				{
+					++counted;
+					continue;
+				}
+				const auto variableIt = object.variable.find(condition.variableName);
+				if (variableIt == object.variable.end()) { continue; }
+				const float value = variableIt->second;
+				if (condition.total == Total::Sum) { total += value; }
+				else if (counted == 0) { total = value; }
+				else if (condition.total == Total::Highest) { total = std::max(total, value); }
+				else { total = std::min(total, value); }
+				++counted;
+			}
+			if (condition.total == Total::Count)
+			{
+				total = static_cast<float>(counted);
+			}
+			else if (counted == 0 && condition.total != Total::Sum)
+			{
+				return false; // no highest or lowest of nothing
+			}
+			const std::optional<float> other = against(nullptr);
+			return other && passes(condition.compare, total, *other);
+		}
+
+		for (auto& object : objects)
+		{
+			if (!considers(object))
+			{
 				continue;
 			}
 
-			for (auto& object : objects)
+			// How far it is from the nearest of the other (both in play), or
+			// its variable.
+			float tested = 0.0f;
+			if (!condition.distanceTo.empty())
 			{
-				if (!considers(object))
-				{
-					continue;
-				}
-
-				auto variableIt = object.variable.find(condition.variableName);
+				if (!object.isVisible || !isShown(object)) { continue; }
+				const Object* nearest = nearestInPlay(object, condition.distanceTo);
+				if (!nearest) { continue; }
+				const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
+				tested = std::hypot(apart.x, apart.y);
+			}
+			else
+			{
+				const auto variableIt = object.variable.find(condition.variableName);
 				if (variableIt == object.variable.end())
 				{
 					continue;
 				}
+				tested = variableIt->second;
+			}
 
-				// Against a number, or another variable as it is now.
-				float against = condition.value;
-				if (!condition.otherVariable.empty())
-				{
-					const Object* other = condition.otherObject.empty() ? &object : tryGetObject(condition.otherObject);
-					if (!other)
-					{
-						continue;
-					}
-					const auto otherIt = other->variable.find(condition.otherVariable);
-					if (otherIt == other->variable.end())
-					{
-						continue;
-					}
-					against = otherIt->second;
-				}
-
-				if (!passes(condition.compare, variableIt->second, against))
-				{
-					continue;
-				}
-
-				runConditionCommands(condition.commands);
-				return true; // the state may have just changed - stop for this frame
+			const std::optional<float> other = against(&object);
+			if (other && passes(condition.compare, tested, *other))
+			{
+				return true;
 			}
 		}
 		return false;

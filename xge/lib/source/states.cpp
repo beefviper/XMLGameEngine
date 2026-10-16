@@ -5,6 +5,8 @@
 
 #include "states.h"
 
+#include <sstream>
+
 namespace xge
 {
 	bool passes(Compare compare, float variable, float against) noexcept
@@ -18,6 +20,49 @@ namespace xge
 		case Compare::Equal:   return variable == against;
 		}
 		return false;
+	}
+
+	std::string describe(const Condition& condition)
+	{
+		std::ostringstream text;
+		if (condition.join != RawCondition::Join::None)
+		{
+			text << (condition.join == RawCondition::Join::All ? "all of (" : "any of (");
+			for (std::size_t i = 0; i < condition.parts.size(); ++i)
+			{
+				text << (i ? "; " : "") << describe(condition.parts[i]);
+			}
+			text << ")";
+			return text.str();
+		}
+
+		std::string what = condition.filterObject.empty() ? condition.filterClass : condition.filterObject;
+		if (condition.remaining)
+		{
+			text << "remaining of " << (what.empty() ? "anything" : what) << " <= " << *condition.remaining;
+			return text.str();
+		}
+
+		static const char* const signs[] = { " >= ", " <= ", " > ", " < ", " = " };
+		static const char* const totals[] = { "", "count of ", "sum of ", "highest of ", "lowest of " };
+		text << totals[static_cast<std::size_t>(condition.total)];
+		if (!condition.distanceTo.empty())
+		{
+			text << "distance from " << (what.empty() ? "anything" : what) << " to " << condition.distanceTo;
+		}
+		else if (condition.total == Total::Count)
+		{
+			text << (what.empty() ? "anything" : what);
+		}
+		else
+		{
+			text << (what.empty() ? "" : what + ".") << condition.variableName;
+		}
+		text << signs[static_cast<std::size_t>(condition.compare)];
+		if (condition.otherVariable.empty()) { text << condition.value; }
+		else { text << (condition.otherObject.empty() ? "" : condition.otherObject + ".") << condition.otherVariable; }
+		if (!condition.filterClass.empty() && !condition.filterObject.empty()) { text << " (class " << condition.filterClass << ")"; }
+		return text.str();
 	}
 
 	std::ostream& operator<<(std::ostream& o, const RawState& f)
@@ -47,7 +92,11 @@ namespace xge
 			o << "       condition: ";
 			static const char* const tests[] = { "atleast", "atmost", "remaining", "above", "below", "equal" };
 			const char* test = tests[static_cast<std::size_t>(condition.test)];
-			if (condition.test == RawCondition::Test::Remaining)
+			if (condition.join != RawCondition::Join::None)
+			{
+				o << (condition.join == RawCondition::Join::All ? "all" : "any") << " of " << condition.parts.size() << " checks";
+			}
+			else if (condition.test == RawCondition::Test::Remaining)
 			{
 				o << "remaining=" << condition.threshold;
 			}
@@ -101,24 +150,7 @@ namespace xge
 
 		for (auto& condition : f.conditions)
 		{
-			o << "       condition: ";
-			static const char* const compares[] = { "atleast", "atmost", "above", "below", "equal" };
-			const char* compare = compares[static_cast<std::size_t>(condition.compare)];
-			if (condition.remaining)
-			{
-				o << "remaining=" << *condition.remaining;
-			}
-			else if (!condition.otherVariable.empty())
-			{
-				o << "variable=" << condition.variableName << ", " << compare << "=" << (condition.otherObject.empty() ? "" : condition.otherObject + ".") << condition.otherVariable;
-			}
-			else
-			{
-				o << "variable=" << condition.variableName << ", " << compare << "=" << condition.value;
-			}
-			o << (condition.filterClass.empty() ? "" : ", class=" + condition.filterClass)
-				<< (condition.filterObject.empty() ? "" : ", object=" + condition.filterObject)
-				<< ", action=";
+			o << "       condition: " << describe(condition) << ", action=";
 			for (auto& command : condition.commands)
 			{
 				o << command << (&command != &condition.commands.back() ? ";" : "");

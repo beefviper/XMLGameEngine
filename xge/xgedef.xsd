@@ -869,27 +869,73 @@
   </xs:complexType>
 
   <!--
-    Checked every frame. One test, then the commands to run when it holds:
-    atleast / atmost read the variable named by the variable attribute off
-    every object that matches class and/or object; remaining counts the
-    matching objects still in play. Or, with set="name" and nothing else, a
+    One test of a condition or a check: atleast / atmost / above / below /
+    equal compare what is tested (the variable named by variable= of every
+    object that matches class and/or object; a total= over them; or each
+    one's distance= to the nearest of another) with a number or another
+    variable; remaining counts the matching objects still in play.
+  -->
+  <xs:group name="conditionTest">
+    <xs:choice>
+      <xs:element name="atleast" type="compareType" />
+      <xs:element name="atmost" type="compareType" />
+      <xs:element name="above" type="compareType" />
+      <xs:element name="below" type="compareType" />
+      <xs:element name="equal" type="compareType" />
+      <xs:element name="remaining" type="valueType" />
+    </xs:choice>
+  </xs:group>
+
+  <xs:simpleType name="totalType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="count" />
+      <xs:enumeration value="sum" />
+      <xs:enumeration value="highest" />
+      <xs:enumeration value="lowest" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- all: every check holds; any: one of them does. Each check a test of its own. -->
+  <xs:complexType name="joinType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="check">
+        <xs:complexType>
+          <xs:group ref="conditionTest" />
+          <xs:attribute name="class" type="xs:string" use="optional" />
+          <xs:attribute name="object" type="xs:string" use="optional" />
+          <xs:attribute name="variable" type="xs:string" use="optional" />
+          <!-- count: how many are in play; sum, highest, lowest: of variable= over them -->
+          <xs:attribute name="total" type="totalType" use="optional" />
+          <!-- how far each is from the nearest in play of this object or group -->
+          <xs:attribute name="distance" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="all" type="joinType" />
+      <xs:element name="any" type="joinType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <!--
+    Checked every frame. One test (or an <all> or <any> of checks), then the
+    commands to run when it holds. Or, with set="name" and nothing else, a
     named <conditions> set's conditions in its place.
   -->
   <xs:complexType name="conditionType">
     <xs:sequence minOccurs="0">
       <xs:choice>
-        <xs:element name="atleast" type="compareType" />
-        <xs:element name="atmost" type="compareType" />
-        <xs:element name="above" type="compareType" />
-        <xs:element name="below" type="compareType" />
-        <xs:element name="equal" type="compareType" />
-        <xs:element name="remaining" type="valueType" />
+        <xs:group ref="conditionTest" />
+        <xs:element name="all" type="joinType" />
+        <xs:element name="any" type="joinType" />
       </xs:choice>
       <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="variable" type="xs:string" use="optional" />
+    <!-- count: how many are in play; sum, highest, lowest: of variable= over them -->
+    <xs:attribute name="total" type="totalType" use="optional" />
+    <!-- how far each is from the nearest in play of this object or group -->
+    <xs:attribute name="distance" type="xs:string" use="optional" />
     <xs:attribute name="set" type="xs:string" use="optional" />
     <!-- a scene from= this one's can put a condition of the same name in its place -->
     <xs:attribute name="name" type="xs:string" use="optional" />

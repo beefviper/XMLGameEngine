@@ -628,21 +628,7 @@ namespace xge
 			for (const Condition& condition : state.conditions)
 			{
 				std::ostringstream when;
-				if (condition.remaining)
-				{
-					when << "remaining <= " << *condition.remaining;
-				}
-				else
-				{
-					static const char* const signs[] = { " >= ", " <= ", " > ", " < ", " = " };
-					when << condition.variableName << signs[static_cast<std::size_t>(condition.compare)];
-					if (condition.otherVariable.empty()) { when << condition.value; }
-					else { when << (condition.otherObject.empty() ? "" : condition.otherObject + ".") << condition.otherVariable; }
-				}
-
-				if (!condition.filterClass.empty()) { when << ", class " << condition.filterClass; }
-				if (!condition.filterObject.empty()) { when << ", object " << condition.filterObject; }
-				when << ": ";
+				when << describe(condition) << ": ";
 
 				addInfo(node, tr("condition %1").arg(++number), text(when.str()) + commandsText(condition.commands));
 			}
