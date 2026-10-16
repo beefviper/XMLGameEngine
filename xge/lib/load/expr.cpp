@@ -771,6 +771,30 @@ namespace xge
 			symbolTable.add_variable(objectVariable.first, objectVariable.second);
 		}
 
+		// The ones that draw no random number are worked out now as well, in
+		// file order, so a sprite measured below can use them (Pong's ball is
+		// a <circle> of radius ball.radius, its own variable); without this it
+		// read 0 and was drawn as nothing. One that reads what is not known
+		// yet (a size) keeps 0 here and gets its value in the object loop.
+		for (auto& rawObject : rawObjects)
+		{
+			for (auto& rawVariable : rawObject.variable)
+			{
+				if (rawVariable.second.drawsRandom())
+				{
+					continue;
+				}
+				try
+				{
+					objectVariables[rawObject.name + "." + rawVariable.first] = evaluate(rawVariable.second, "object '" + rawObject.name + "'");
+				}
+				catch (const std::runtime_error&)
+				{
+					// worked out, or reported, in the object loop
+				}
+			}
+		}
+
 		// Every object's size as name.width / name.height, so an expression can
 		// place an object by its own size (or another's) the same way it reads
 		// paddle1.score. Worked out before anything is placed so the order

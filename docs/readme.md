@@ -242,7 +242,7 @@ Children, in this order:
 | `<drawn>` | no | `false`: the object is in play (moves, collides, counts its timers) but is never drawn: an exit, a trigger zone, a `status` object that only holds variables. Objects and groups (after `<hidden>`); a [scene](#scenes) can change it on a piece it takes |
 | `<collisions>` | no | Left out, the object touches nothing (as `<enabled>false</enabled>`). Otherwise `<enabled>` (`true`/`false`), an optional `<lockstep>` (`true`), an optional `<type>` (`box`, the default, or `pixel`), then zero or more `<collision>` rules. See [Collisions](#collisions) |
 | `<actions>` | no | Named actions the object can perform, each `<action name="up"><move direction="up">step</move></action>`: the commands are what it does. States bind keys to these names |
-| `<variables>` | no | Variables owned by this object, each `<variable name="score">0</variable>`. Other expressions refer to them as `objectName.variableName`, e.g. `paddle1.score` |
+| `<variables>` | no | Variables owned by this object, each `<variable name="score">0</variable>`. Other expressions refer to them as `objectName.variableName`, e.g. `paddle1.score`. A sprite can use them for its size (Pong's ball is a `<circle>` of radius `ball.radius`), except one that draws a `<random>` |
 | `<timers>` | no | Things the object does on its own, every so many seconds or once after a while: see [Timers](#timers). Objects and groups |
 
 An object with `class="projectile"` starts invisible (used for bullets).

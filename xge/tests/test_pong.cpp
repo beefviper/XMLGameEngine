@@ -144,3 +144,13 @@ TEST_CASE("at fifteen, game over is written over the game still, and Space start
 	CHECK(pong.object("paddle2").variable.at("score") == 0);
 	CHECK_FALSE(pong.still("ball"));
 }
+TEST_CASE("the ball is drawn as big as its own variable says", "[pong]")
+{
+	// Its <circle> reads ball.radius, the ball's own <variable>; it was once
+	// worked out before the variable had its value, and drawn with radius 0.
+	Pong pong;
+	const Object& ball = pong.object("ball");
+	REQUIRE(ball.spriteParams.size() > 1);
+	CHECK(std::stof(ball.spriteParams.at(1)) == 10.0f);
+	CHECK(measureShapeSize(ball.spriteParams, ball.shapeKind).x == 20.0f);
+}
