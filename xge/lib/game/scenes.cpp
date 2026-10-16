@@ -269,6 +269,7 @@ namespace xge
 				switch (value.kind)
 				{
 				case RawValue::Kind::Expression:
+				case RawValue::Kind::Centered:
 					value.text = names_.expression(value.text, context);
 					break;
 				case RawValue::Kind::Random:

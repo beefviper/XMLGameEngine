@@ -27,6 +27,9 @@ namespace xge
 	{
 		// What states and scenes own, among the game's objects and named in full.
 		layOutScenes(data);
+		// Then, with every object's name final, its text styles and centering.
+		applyStyles(data.objects, data.styles);
+		centerOnOwnSize(data.objects);
 		windowDesc = std::move(data.window);
 		validation = std::move(data.validation);
 		rawVariables = std::move(data.variables);

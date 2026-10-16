@@ -208,7 +208,20 @@ namespace xge
 
 		std::string path;            // image, svg
 		std::string flip;            // image: "", "horizontal" or "vertical"
-		std::string color;           // "" means color.white
+		std::string color;           // "" means color.white (or the style's)
+
+		// text: style="...", a <style> of the game's <styles>, which gives the
+		// <size> and <color> the text leaves out (see applyStyles).
+		std::string style;
+	};
+
+	// A game's <style name="...">: a size and a color a <text> can take by
+	// style="..." instead of saying them. Either may be left out.
+	struct RawStyle
+	{
+		std::string name;
+		RawValue size;               // empty: the style gives no size
+		std::string color;           // empty: the style gives no color
 	};
 
 	// An object's <animation>: the sprites it shows one after the other, each
@@ -749,6 +762,16 @@ namespace xge
 	// the middle of the tile. The map's name means it too, outermost of
 	// its names.
 	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row);
+
+	// Gives every text with a style= what it leaves out of that style: its
+	// size and its color. A style no <style> has, or a text left with no
+	// size, stops the load.
+	void applyStyles(std::vector<RawObject>& objects, const std::vector<RawStyle>& styles);
+
+	// Makes each <centered> of an object's <position> the expression it
+	// means: where its middle goes, less half its own width (or height),
+	// named by the object's final name (so after layOutScenes).
+	void centerOnOwnSize(std::vector<RawObject>& objects);
 
 	// What an object with no <sprite> is drawn as, which is never: an empty
 	// rectangle (it only holds numbers; see RawObject::isDrawn).

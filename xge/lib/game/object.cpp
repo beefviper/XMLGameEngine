@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 
 namespace xge
 {
@@ -79,6 +80,51 @@ namespace xge
 		if (std::find(object.outerGroups.begin(), object.outerGroups.end(), map.name) == object.outerGroups.end())
 		{
 			object.outerGroups.insert(object.outerGroups.begin(), map.name);
+		}
+	}
+
+	void applyStyles(std::vector<RawObject>& objects, const std::vector<RawStyle>& styles)
+	{
+		for (RawObject& object : objects)
+		{
+			const auto apply = [&](RawSprite& sprite)
+			{
+				if (sprite.kind != "text") { return; }
+				const bool noSize = sprite.size.kind == RawValue::Kind::Expression && sprite.size.text.empty();
+				if (!sprite.style.empty())
+				{
+					const auto style = std::find_if(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == sprite.style; });
+					if (style == styles.end())
+					{
+						throw std::runtime_error("object '" + object.name + "': style=\"" + sprite.style + "\" names no <style> of the game's <styles>");
+					}
+					if (noSize) { sprite.size = style->size; }
+					if (sprite.color.empty()) { sprite.color = style->color; }
+				}
+				if (sprite.size.kind == RawValue::Kind::Expression && sprite.size.text.empty())
+				{
+					throw std::runtime_error("object '" + object.name + "': a <text> needs a <size>, or a style= whose <style> has one");
+				}
+			};
+			apply(object.sprite);
+			for (RawSprite& look : object.looks) { apply(look); }
+			for (RawSprite& frame : object.animation.frames) { apply(frame); }
+			apply(object.cell.slot);
+		}
+	}
+
+	void centerOnOwnSize(std::vector<RawObject>& objects)
+	{
+		for (RawObject& object : objects)
+		{
+			const auto center = [&](RawValue& value, const char* windowMiddle, const char* size)
+			{
+				if (value.kind != RawValue::Kind::Centered) { return; }
+				const std::string middle = value.text.empty() ? windowMiddle : "(" + value.text + ")";
+				value = RawValue::expression(middle + " - " + object.name + "." + size + " / 2");
+			};
+			center(object.rawPosition.x, "window.width.center", "width");
+			center(object.rawPosition.y, "window.height.center", "height");
 		}
 	}
 

@@ -64,19 +64,23 @@
       <note pitch="C3">0.04</note>
     </sound>
   </sounds>
+  <styles>
+    <style name="banner"><size>110</size><color>color.yellow</color></style>
+    <style name="prompt"><size>40</size></style>
+    <style name="keys"><size>22</size><color>color.yellow</color></style>
+    <style name="hud"><size>40</size><color>color.yellow</color></style>
+  </styles>
   <states>
     <state name="title">
       <objects>
 
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>COMBAT</content>
-              <size>110</size>
-              <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-140)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
         <object name="help">
           <sprite>
@@ -86,37 +90,32 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-50)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 50</centered></y></position>
         </object>
         <object name="keys1">
           <sprite>
-            <text>
+            <text style="keys">
               <content>yellow: w s drive, a d turn, f fires</content>
-              <size>22</size>
-              <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys1.width / 2</x><y>window.height.center - keys1.height / 2 + (0)</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
         <object name="keys2">
           <sprite>
-            <text>
+            <text style="keys">
               <content>blue: arrows drive and turn, right shift fires</content>
-              <size>22</size>
               <color>color.cyan</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys2.width / 2</x><y>window.height.center - keys2.height / 2 + (35)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 35</centered></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to start</content>
-              <size>40</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (120)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -172,7 +171,7 @@
               <color>color.yellow</color>
             </bitmap>
           </sprite>
-          <position><x>40</x><y>window.height.center - tank1.height / 2</y></position>
+          <position><x>40</x><y><centered /></y></position>
           <heading>90</heading>
           <drag>drag</drag>
           <collisions>
@@ -236,7 +235,7 @@
               <color>color.cyan</color>
             </bitmap>
           </sprite>
-          <position><x>window.right - 40 - tank2.width</x><y>window.height.center - tank2.height / 2</y></position>
+          <position><x>window.right - 40 - tank2.width</x><y><centered /></y></position>
           <heading>270</heading>
           <drag>drag</drag>
           <collisions>
@@ -333,19 +332,16 @@
 
         <object name="score1">
           <sprite>
-            <text>
+            <text style="hud">
               <number>tank1.score</number>
-              <size>40</size>
-              <color>color.yellow</color>
             </text>
           </sprite>
           <position><x>window.width.center - 80</x><y>margin</y></position>
         </object>
         <object name="score2">
           <sprite>
-            <text>
+            <text style="hud">
               <number>tank2.score</number>
-              <size>40</size>
               <color>color.cyan</color>
             </text>
           </sprite>
@@ -382,13 +378,13 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAUSED</content>
               <size>100</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -402,10 +398,9 @@
       <objects>
         <object name="winner">
           <sprite name="yellow">
-            <text>
+            <text style="banner">
               <content>YELLOW WINS</content>
               <size>90</size>
-              <color>color.yellow</color>
             </text>
           </sprite>
           <sprite name="blue">
@@ -415,17 +410,15 @@
               <color>color.cyan</color>
             </text>
           </sprite>
-          <position><x>window.width.center - winner.width / 2</x><y>window.height.center - winner.height / 2 + (-60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="again">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to play again</content>
-              <size>40</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
         </object>
       </objects>
       <shows>

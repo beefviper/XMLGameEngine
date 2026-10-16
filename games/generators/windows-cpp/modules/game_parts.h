@@ -29,7 +29,6 @@ namespace xge::parts
 		return RawValue::expression(std::move(text));
 	}
 
-	// <random min="..." max="..." />
 	// A key of a recorded <demo>, as a table of them is written (it ends with
 	// a null button): which, pressed or let go, and the frame.
 	struct DemoStep
@@ -76,6 +75,21 @@ namespace xge::parts
 		return piece;
 	}
 
+	// <centered>: where the object's middle goes, or empty for the window's.
+	inline RawValue centered(std::string text)
+	{
+		RawValue middle = RawValue::expression(std::move(text));
+		middle.kind = RawValue::Kind::Centered;
+		return middle;
+	}
+
+	// A <style> of the game's <styles>: a size (value("") for none) and a color.
+	inline RawStyle style(std::string name, RawValue size, std::string color)
+	{
+		return RawStyle{ std::move(name), std::move(size), std::move(color) };
+	}
+
+	// <random min="..." max="..." />
 	inline RawValue random(std::string min, std::string max)
 	{
 		RawValue drawn;

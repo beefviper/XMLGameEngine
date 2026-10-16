@@ -308,9 +308,12 @@
               <!-- a number shown as a letter, 0 is A and 25 is Z, live the same way -->
               <xs:element name="letter" type="valueType" />
             </xs:choice>
-            <xs:element name="size" type="valueType" />
+            <!-- left out, the style's -->
+            <xs:element name="size" type="valueType" minOccurs="0" />
             <xs:element name="color" type="xs:string" minOccurs="0" />
           </xs:sequence>
+          <!-- a <style> of the game's <styles>, for the <size> and <color> left out -->
+          <xs:attribute name="style" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="image">
@@ -427,6 +430,8 @@
             <xs:element name="size" type="valueType" minOccurs="0" />
             <xs:element name="color" type="xs:string" minOccurs="0" />
           </xs:sequence>
+          <!-- a <style> of the game's <styles>, for the <size> and <color> left out -->
+          <xs:attribute name="style" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="image">
@@ -967,7 +972,34 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- Some of two numbers: a group's or a member's <position> and <velocity>, and an object's <velocity> (a half left out is 0). -->
+  <!--
+    Where an object starts: a value, or <centered>, its middle at the
+    expression it holds, less half its own width (or height); left empty, at
+    the window's middle: <x><centered /></x>, <y><centered>cell / 2</centered></y>.
+  -->
+  <xs:complexType name="positionValueType" mixed="true">
+    <xs:choice minOccurs="0">
+      <xs:group ref="valueTag" />
+      <xs:element name="centered" type="xs:string" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="positionType">
+    <xs:sequence>
+      <xs:element name="x" type="positionValueType" />
+      <xs:element name="y" type="positionValueType" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Some of a <position>: a group's, a member's, a cell's or a scene's change (a half left out is the group's, or 0). -->
+  <xs:complexType name="partialPositionType">
+    <xs:sequence>
+      <xs:element name="x" type="positionValueType" minOccurs="0" />
+      <xs:element name="y" type="positionValueType" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Some of two numbers: a group's or a member's <velocity> and <padding>, and an object's <velocity> (a half left out is 0). -->
   <xs:complexType name="partialVector2Type">
     <xs:sequence>
       <xs:element name="x" type="valueType" minOccurs="0" />
@@ -1015,7 +1047,7 @@
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" />
-      <xs:element name="position" type="vector2Type" minOccurs="0" />
+      <xs:element name="position" type="positionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
@@ -1055,7 +1087,7 @@
     <xs:sequence>
       <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" />
-      <xs:element name="position" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="optional" />
@@ -1123,7 +1155,7 @@
   <xs:group name="groupParts">
     <xs:sequence>
       <xs:element name="animation" type="animationType" minOccurs="0" />
-      <xs:element name="position" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
@@ -1278,7 +1310,7 @@
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" />
-      <xs:element name="position" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
@@ -1383,6 +1415,25 @@
           <xs:complexType>
             <xs:sequence>
               <xs:element name="path" type="pathType" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <!--
+          Named looks for text: a <text style="title"> takes the <size> and
+          <color> it leaves out from the <style name="title">.
+        -->
+        <xs:element name="styles" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="style" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="size" type="valueType" minOccurs="0" />
+                    <xs:element name="color" type="xs:string" minOccurs="0" />
+                  </xs:sequence>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
             </xs:sequence>
           </xs:complexType>
         </xs:element>

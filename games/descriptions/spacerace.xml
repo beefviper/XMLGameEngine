@@ -75,28 +75,29 @@
       <note pitch="C6">0.3</note>
     </sound>
   </sounds>
+  <styles>
+    <style name="banner"><size>128</size></style>
+    <style name="prompt"><size>48</size></style>
+    <style name="hud"><size>64</size><color>color.cyan</color></style>
+  </styles>
   <states>
     <state name="mainmenu">
       <objects>
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>SPACE RACE</content>
-              <size>128</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to start</content>
-              <size>48</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (70)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -202,7 +203,7 @@
               <color>color.cyan</color>
             </rectangle>
           </sprite>
-          <position><x>window.width.center / 2 - rocket1.width / 2</x><y>window.bottom - rocket1.height - margin</y></position>
+          <position><x><centered>window.width.center / 2</centered></x><y>window.bottom - rocket1.height - margin</y></position>
           <collisions>
             <enabled>true</enabled>
             <collision edge="bottom">
@@ -238,7 +239,7 @@
               <color>color.yellow</color>
             </rectangle>
           </sprite>
-          <position><x>window.width.center * 1.5 - rocket2.width / 2</x><y>window.bottom - rocket2.height - margin</y></position>
+          <position><x><centered>window.width.center * 1.5</centered></x><y>window.bottom - rocket2.height - margin</y></position>
           <collisions>
             <enabled>true</enabled>
             <collision edge="bottom">
@@ -268,19 +269,16 @@
         </object>
         <object name="score1">
           <sprite>
-            <text>
+            <text style="hud">
               <number>rocket1.score</number>
-              <size>64</size>
-              <color>color.cyan</color>
             </text>
           </sprite>
           <position><x>window.width.center - 60 - score1.width</x><y>window.bottom - score1.height - margin</y></position>
         </object>
         <object name="score2">
           <sprite>
-            <text>
+            <text style="hud">
               <number>rocket2.score</number>
-              <size>64</size>
               <color>color.yellow</color>
             </text>
           </sprite>
@@ -326,13 +324,11 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAUSED</content>
-              <size>128</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -351,7 +347,7 @@
       <objects>
         <object name="winner">
           <sprite name="player1">
-            <text>
+            <text style="banner">
               <content>PLAYER 1 WINS</content>
               <size>96</size>
               <color>color.cyan</color>
@@ -364,17 +360,15 @@
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - winner.width / 2</x><y>window.height.center - winner.height / 2 + (-60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="continue">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to continue</content>
-              <size>48</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - continue.width / 2</x><y>window.height.center - continue.height / 2 + (70)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
         </object>
       </objects>
       <shows>

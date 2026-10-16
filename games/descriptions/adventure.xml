@@ -104,17 +104,19 @@
       <note pitch="C4" to="C3">0.7</note>
     </sound>
   </sounds>
+  <styles>
+    <style name="banner"><size>50</size><color>color.yellow</color></style>
+    <style name="prompt"><size>40</size></style>
+  </styles>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
       <sprite>
-        <text>
+        <text style="prompt">
           <content>spacebar to play again</content>
-          <size>40</size>
-          <color>color.white</color>
         </text>
       </sprite>
-      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (90)</y></position>
+      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
     </object>
   </objects>
   <states>
@@ -122,13 +124,12 @@
       <objects>
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>ADVENTURE</content>
               <size>72</size>
-              <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
         </object>
         <object name="help">
           <sprite>
@@ -138,7 +139,7 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-40)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
         </object>
         <object name="keys">
           <sprite>
@@ -148,17 +149,15 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (0)</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to start</content>
-              <size>40</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (100)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 100</centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -561,13 +560,13 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAUSED</content>
               <size>100</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -584,13 +583,12 @@
       <objects>
         <object name="wonmsg">
           <sprite>
-            <text>
+            <text style="banner">
               <content>THE CHALICE IS HOME</content>
-              <size>50</size>
               <color>color.magenta</color>
             </text>
           </sprite>
-          <position><x>window.width.center - wonmsg.width / 2</x><y>window.height.center - wonmsg.height / 2 + (20)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 20</centered></y></position>
         </object>
       </objects>
       <shows>
@@ -606,13 +604,12 @@
       <objects>
         <object name="eatenmsg">
           <sprite>
-            <text>
+            <text style="banner">
               <content>EATEN BY THE DRAGON</content>
-              <size>50</size>
               <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - eatenmsg.width / 2</x><y>window.height.center - eatenmsg.height / 2 + (20)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 20</centered></y></position>
         </object>
       </objects>
       <shows>

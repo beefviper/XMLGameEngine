@@ -195,6 +195,7 @@ namespace
 			text(at + ".path", s.path);
 			text(at + ".flip", s.flip);
 			text(at + ".color", s.color);
+			text(at + ".style", s.style);
 		}
 
 		void guards(const std::string& at, const std::vector<EdgeGuard>& list)
@@ -332,6 +333,11 @@ namespace
 				}
 			}
 			for (const std::string& keep : g.keeps) { text("keep", keep); }
+			for (const RawStyle& style : g.styles)
+			{
+				value("style " + style.name + ".size", style.size);
+				text("style " + style.name + ".color", style.color);
+			}
 			flag("demo", g.demo.recorded);
 			text("demo.seed", std::to_string(g.demo.seed));
 			text("demo.frames", std::to_string(g.demo.frames));

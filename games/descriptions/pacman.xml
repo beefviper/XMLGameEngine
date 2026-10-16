@@ -171,17 +171,20 @@
       <step><x>0</x><y>-2 * tile</y></step>
     </path>
   </paths>
+  <styles>
+    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="hud"><size>24</size></style>
+  </styles>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
       <sprite>
-        <text>
+        <text style="prompt">
           <content>spacebar to play again</content>
-          <size>32</size>
-          <color>color.white</color>
         </text>
       </sprite>
-      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (60)</y></position>
+      <position><x><centered /></x><y><centered>window.height.center + 60</centered></y></position>
     </object>
   </objects>
   <states>
@@ -189,13 +192,11 @@
       <objects>
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAC-MAN</content>
-              <size>80</size>
-              <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-110)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 110</centered></y></position>
         </object>
         <object name="help">
           <sprite>
@@ -205,7 +206,7 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
         <object name="keys">
           <sprite>
@@ -215,17 +216,15 @@
               <color>color.lightgrey</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (20)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 20</centered></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to start</content>
-              <size>32</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (100)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 100</centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -856,19 +855,16 @@
         </map>
         <object name="scorelabel">
           <sprite>
-            <text>
+            <text style="hud">
               <content>SCORE</content>
-              <size>24</size>
-              <color>color.white</color>
             </text>
           </sprite>
           <position><x>12</x><y>10</y></position>
         </object>
         <object name="scorevalue">
           <sprite>
-            <text>
+            <text style="hud">
               <number>status.score</number>
-              <size>24</size>
               <color>color.yellow</color>
             </text>
           </sprite>
@@ -876,9 +872,8 @@
         </object>
         <object name="livesvalue">
           <sprite>
-            <text>
+            <text style="hud">
               <number>status.lives</number>
-              <size>24</size>
               <color>color.yellow</color>
             </text>
           </sprite>
@@ -886,10 +881,8 @@
         </object>
         <object name="liveslabel">
           <sprite>
-            <text>
+            <text style="hud">
               <content>LIVES</content>
-              <size>24</size>
-              <color>color.white</color>
             </text>
           </sprite>
           <position><x>window.right - livesvalue.width - liveslabel.width - 22</x><y>10</y></position>
@@ -931,13 +924,12 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAUSED</content>
-              <size>80</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -953,13 +945,12 @@
       <objects>
         <object name="youwin">
           <sprite>
-            <text>
+            <text style="banner">
               <content>YOU WIN</content>
-              <size>80</size>
               <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-40)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
         </object>
       </objects>
       <shows>
@@ -977,13 +968,12 @@
       <objects>
         <object name="gameover">
           <sprite>
-            <text>
+            <text style="banner">
               <content>GAME OVER</content>
-              <size>80</size>
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-40)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
         </object>
       </objects>
       <shows>

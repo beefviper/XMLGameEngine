@@ -108,18 +108,22 @@
     </sound>
   </sounds>
 
+  <styles>
+    <style name="banner"><size>110</size></style>
+    <style name="prompt"><size>32</size><color>color.green</color></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>28</size></style>
+  </styles>
   <states>
     <state name="title">
       <objects>
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>BERSERK</content>
-              <size>110</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>70</y></position>
+          <position><x><centered /></x><y>70</y></position>
         </object>
 
         <object name="taunt">
@@ -130,40 +134,34 @@
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - taunt.width / 2</x><y>205</y></position>
+          <position><x><centered /></x><y>205</y></position>
         </object>
 
         <object name="help1">
           <sprite>
-            <text>
+            <text style="help">
               <content>W A S D or the arrow keys walk, Space fires the way you face</content>
-              <size>22</size>
-              <color>color.lightgrey</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help1.width / 2</x><y>270</y></position>
+          <position><x><centered /></x><y>270</y></position>
         </object>
 
         <object name="help2">
           <sprite>
-            <text>
+            <text style="help">
               <content>The walls are electrified: leave by any gap. P pauses.</content>
-              <size>22</size>
-              <color>color.lightgrey</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help2.width / 2</x><y>305</y></position>
+          <position><x><centered /></x><y>305</y></position>
         </object>
 
         <object name="start">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>Press Space to start</content>
-              <size>32</size>
-              <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>380</y></position>
+          <position><x><centered /></x><y>380</y></position>
         </object>
       </objects>
       <inputs>
@@ -407,10 +405,8 @@
         <!-- the score, and the men left -->
         <object name="score">
           <sprite>
-            <text>
+            <text style="hud">
               <number>player.score</number>
-              <size>28</size>
-              <color>color.white</color>
             </text>
           </sprite>
           <position><x>margin</x><y>margin</y></position>
@@ -418,9 +414,8 @@
 
         <object name="lives">
           <sprite>
-            <text>
+            <text style="hud">
               <number>player.lives</number>
-              <size>28</size>
               <color>color.yellow</color>
             </text>
           </sprite>
@@ -1142,13 +1137,11 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAUSED</content>
-              <size>110</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>150</y></position>
+          <position><x><centered /></x><y>150</y></position>
         </object>
       </objects>
       <shows>
@@ -1163,24 +1156,21 @@
       <objects>
         <object name="gameover">
           <sprite>
-            <text>
+            <text style="banner">
               <content>GAME OVER</content>
-              <size>110</size>
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x>window.width.center - gameover.width / 2</x><y>120</y></position>
+          <position><x><centered /></x><y>120</y></position>
         </object>
 
         <object name="again">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>Press Space to play again</content>
-              <size>32</size>
-              <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - again.width / 2</x><y>300</y></position>
+          <position><x><centered /></x><y>300</y></position>
         </object>
       </objects>
       <shows>

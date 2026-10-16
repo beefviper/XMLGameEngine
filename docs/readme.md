@@ -40,7 +40,7 @@ So it plays as `xgecli` and `xgegui` do: the data is the engine's reading of the
 
 ## Game file layout
 
-A game file has one `<game>` root with three children, and four optional ones (`<sounds>`, `<paths>`, `<objects>`, which a game whose states own all its objects leaves out, and [`<keeps>`](#keeps)), in this order, as enforced by [xgedef.xsd](../xge/xgedef.xsd):
+A game file has one `<game>` root with three children, and five optional ones (`<sounds>`, `<paths>`, [`<styles>`](#styles), `<objects>`, which a game whose states own all its objects leaves out, and [`<keeps>`](#keeps)), in this order, as enforced by [xgedef.xsd](../xge/xgedef.xsd):
 
 ```xml
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -49,6 +49,7 @@ A game file has one `<game>` root with three children, and four optional ones (`
   <variables> <variable name="...">...</variable> ... </variables>
   <sounds>    <sound name="..."> ... </sound> ... </sounds>   (optional)
   <paths>     <path name="..."> ... </path> ... </paths>      (optional)
+  <styles>    <style name="..."> ... </style> ... </styles>   (optional)
   <objects>   <object name="..."> ... </object> <group name="..."> ... </group> ... </objects>   (optional)
   <keeps>     <keep object="..." /> ... </keeps>              (optional)
   <states>    <state name="..."> ... </state> ... </states>
@@ -153,6 +154,10 @@ A step of an `<equation>` takes its operands as attributes and an operation insi
 
 Global named numbers. Each `<variable name="margin">30</variable>` becomes a constant that any expression in the file can use (for example `margin`, `ball.radius`). Names may contain dots, and a name written so is always that variable, even where its first part names an object (a state's `ball` and the game's `ball.radius`). A name exprtk already has for a function (`floor`, `min`, `max`, `abs`, `sqrt`, ...) cannot be used: an expression reads it as the function and the load stops (`Expected a '(' at start of function call to 'floor'`), which is why Pitfall's tunnel floor is the variable `tunnel`. The content is a value, so `<variable name="b">a * 2</variable>` and `<variable name="start"><random min="1" max="3" /></variable>` both work. Declaring a name twice keeps the later value.
 
+### `<styles>`
+
+A style is a size and a color for text, named once and taken by any `<text style="...">`, so the title, the prompts and the score are each said once: `<style name="banner"><size>128</size><color>color.red</color></style>`. Each of `<size>` (a value, worked out with the game's names) and `<color>` may be left out. A text with a style= takes what it leaves out from the style, and its own `<size>` or `<color>` wins. A style= that names no `<style>`, or a text left with no size at all, stops the load. The shipped games use `banner` (titles and endings), `prompt` (press Space), `help`, `keys` and `hud` (the score and lives).
+
 ### `<sounds>`
 
 Optional. The bleeps, bloops and little tunes of an old 8-bit machine, written as notes: nothing is loaded from a sound file. Each `<sound name="...">` is something a `<play sound="..." />` command (see [Commands](#commands)) or a state's [`<music>`](#state) can start. Its children, in this order: an optional `<loop />`, an optional `<volume>` (a value, 0 for silent to 1 for the loudest; 0.3 if left out), then any mix of `<note>`s and `<rest>`s, played one after the other, or `<part>`s that play together.
@@ -231,7 +236,7 @@ Children, in this order:
 |---|---|---|
 | `<sprite>` | no | What the object looks like: one shape (see [Sprites](#sprites)). An object with an `<animation>` has several, each with a `name`; so does one with several [looks](#looks). An object with none only holds numbers (a `status` with the score, a `tally`): it is never drawn, needs no `<position>` (it is at 0, 0) and must have `<variables>` or `<timers>`; a `<drawn>` on it is an error |
 | `<animation>` | no | Which of the object's sprites are shown, in what order, and for how many seconds each: see [Animation](#animation). Objects, and groups and their members |
-| `<position>` | yes, unless it has no `<sprite>` | Starting position, in pixels from the top-left: `<x>` and `<y>`, each a value. May use an object's own size by its name, `title.width` and `title.height`, to place it by its size, for example a text called `title` centered: `<x>window.width.center - title.width / 2</x>` |
+| `<position>` | yes, unless it has no `<sprite>` | Starting position, in pixels from the top-left: `<x>` and `<y>`, each a value. May use an object's own size by its name, `title.width` and `title.height`, to place it by its size. Or `<centered>`: the object's middle goes where it says, less half its own width (in `<x>`) or height (in `<y>`), and an empty `<centered />` is the window's middle: `<x><centered /></x><y><centered>window.height.center - 110</centered></y>` is a title in the middle, 110 above it. It works for groups and their members (each on its own size) and in a scene's change, not in a map's position |
 | `<velocity>` | no | Starting velocity, in pixels per frame: `<x>` and `<y>`, each a value. Left out, the object stands still; a half left out is 0 (`<velocity><y>3</y></velocity>` falls straight down) |
 | `<acceleration>` | no | A constant pull: `<x>` and `<y>`, each a value, added to the velocity once every frame before anything moves, for as long as the object is shown. Gravity is an acceleration with only a `<y>`. `<stop />` takes it away and a reset gives it back. Objects and groups (Donkey Kong's barrels fall); `<land />` is how a falling object stands on something |
 | `<heading>` | no | The way the object faces, in degrees clockwise from straight up (0 is up, 90 is right). It lets `<turn>` and `<thrust>` work, and the sprite (of lines, a `<bitmap>` or an `<svg>`) is then drawn turned to the heading, to the nearest whole degree, so a `pixel` collision follows it. A collision `<reset />` puts it back. Objects only |
@@ -396,7 +401,7 @@ A `<sprite>` holds one shape. Colors are named (`color.red`, below); a `<color>`
 |---|---|---|
 | `<circle>` | `<radius>`, `<color>` | A filled circle |
 | `<rectangle>` | `<width>`, `<height>`, `<color>` | A filled rectangle |
-| `<text>` | one or more pieces, `<content>` (a fixed label), `<number>` and `<letter>` (values), in any order, then `<size>`, `<color>` | Text. `<content>PONG</content>` is written as is. `<number>paddle1.score</number>` shows a number: when the value is exactly one `owner.variable` it is live and redraws when that variable changes; any other value (`paddle1.score + 1`, a `<random>`) is worked out once. `<letter>` shows a number as a letter, 0 is A and 25 is Z, and round again either way (26 is A, -1 is Z), live the same way: initials are three variables an `<inc>` and a `<dec>` change. The pieces are put together with a space between them, except that letters side by side make one word: `<content>SCORE</content><number>ship.score</number>` reads `SCORE 120`, three `<letter>`s and a `<number>` `ABC 120`. In a [group](#group), a piece that names the group's variable (`table.score` in the group `table`) shows each member's own |
+| `<text>` | one or more pieces, `<content>` (a fixed label), `<number>` and `<letter>` (values), in any order, then `<size>`, `<color>`; `style=` names a [style](#styles) for the size and color left out | Text. `<content>PONG</content>` is written as is. `<number>paddle1.score</number>` shows a number: when the value is exactly one `owner.variable` it is live and redraws when that variable changes; any other value (`paddle1.score + 1`, a `<random>`) is worked out once. `<letter>` shows a number as a letter, 0 is A and 25 is Z, and round again either way (26 is A, -1 is Z), live the same way: initials are three variables an `<inc>` and a `<dec>` change. The pieces are put together with a space between them, except that letters side by side make one word: `<content>SCORE</content><number>ship.score</number>` reads `SCORE 120`, three `<letter>`s and a `<number>` `ABC 120`. In a [group](#group), a piece that names the group's variable (`table.score` in the group `table`) shows each member's own |
 | `<image>` | `<path>`, then `<flip>` (`horizontal` or `vertical`, optional) | An image file |
 | `<line>` (one or more) | `<from>` and `<to>` (each an `<x>` and a `<y>`), then `<color>` and `<thickness>` (both optional) | Straight lines, all in one sprite. See [Lines](#lines) |
 | `<bitmap>` | one or more `<row>`s of `.` and `*`, then `<scale>`, `<color>` and `<flip>` (all optional) | A picture written as rows of text. See [Bitmaps](#bitmaps) |

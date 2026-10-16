@@ -84,18 +84,23 @@
       <note pitch="C6">0.3</note>
     </sound>
   </sounds>
+  <styles>
+    <style name="banner"><size>128</size></style>
+    <style name="prompt"><size>48</size></style>
+    <style name="keys"><size>32</size></style>
+    <style name="hud"><size>36</size></style>
+  </styles>
   <states>
     <state name="mainmenu">
       <objects>
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>FREEWAY</content>
-              <size>128</size>
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
         </object>
         <object name="help">
           <sprite>
@@ -105,37 +110,32 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
         <object name="keys1">
           <sprite>
-            <text>
+            <text style="keys">
               <content>player 1: w and s</content>
-              <size>32</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys1.width / 2</x><y>window.height.center - keys1.height / 2 + (40)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
         </object>
         <object name="keys2">
           <sprite>
-            <text>
+            <text style="keys">
               <content>player 2: the up and down arrows</content>
-              <size>32</size>
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys2.width / 2</x><y>window.height.center - keys2.height / 2 + (80)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 80</centered></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to start</content>
-              <size>48</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (160)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 160</centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -500,23 +500,20 @@
         </object>
         <object name="score1">
           <sprite>
-            <text>
+            <text style="hud">
               <number>chicken1.score</number>
-              <size>36</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center / 2 - score1.width / 2</x><y>6</y></position>
+          <position><x><centered>window.width.center / 2</centered></x><y>6</y></position>
         </object>
         <object name="score2">
           <sprite>
-            <text>
+            <text style="hud">
               <number>chicken2.score</number>
-              <size>36</size>
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center * 1.5 - score2.width / 2</x><y>6</y></position>
+          <position><x><centered>window.width.center * 1.5</centered></x><y>6</y></position>
         </object>
       </objects>
       <inputs>
@@ -561,13 +558,11 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAUSED</content>
-              <size>128</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -589,10 +584,9 @@
       <objects>
         <object name="winner">
           <sprite name="player1">
-            <text>
+            <text style="banner">
               <content>PLAYER 1 WINS</content>
               <size>100</size>
-              <color>color.white</color>
             </text>
           </sprite>
           <sprite name="player2">
@@ -602,17 +596,15 @@
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>window.width.center - winner.width / 2</x><y>window.height.center - winner.height / 2 + (-60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="again">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to play again</content>
-              <size>48</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 60</centered></y></position>
         </object>
       </objects>
       <shows>

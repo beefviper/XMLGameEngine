@@ -39,7 +39,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 |---|---|---|
 | [pictures](30-pictures.md) | One `Bitmap` path for lines, bitmaps, SVG parts, flip, turning | Built |
 | [animation-and-looks](31-animation-and-looks.md) | Animation, named looks | Built |
-| [text](32-text.md) | Text and the built-in font | Built |
+| [text](32-text.md) | Text and the built-in font, `<styles>`, `<centered>` | Built |
 | [sound](33-sound.md) | Notes made into samples; `<sounds>`, `<play>` | Built |
 
 ## Code generation

@@ -1423,6 +1423,9 @@ namespace xge
 		case RawValue::Kind::Formula:
 			return evaluateOperation(value.operations->front(), {}, where + " > <formula>").value;
 
+		case RawValue::Kind::Centered:
+			throw std::runtime_error(where + ": <centered> is only for an object's <position>");
+
 		case RawValue::Kind::Expression:
 			break;
 		}

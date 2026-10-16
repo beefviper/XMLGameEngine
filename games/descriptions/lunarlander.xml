@@ -83,17 +83,20 @@
       <note pitch="C6">0.14</note>
     </sound>
   </sounds>
+  <styles>
+    <style name="banner"><size>110</size><color>color.cyan</color></style>
+    <style name="prompt"><size>48</size></style>
+    <style name="hud"><size>30</size><color>color.orange</color></style>
+  </styles>
   <objects>
     <!-- after a landing or a crash -->
     <object name="again">
       <sprite>
-        <text>
+        <text style="prompt">
           <content>spacebar to play again</content>
-          <size>48</size>
-          <color>color.white</color>
         </text>
       </sprite>
-      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
   <states>
@@ -101,13 +104,11 @@
       <objects>
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>LUNAR LANDER</content>
-              <size>110</size>
-              <color>color.cyan</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 + (-130)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
         </object>
         <object name="help">
           <sprite>
@@ -117,7 +118,7 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-20)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
         <object name="keys">
           <sprite>
@@ -127,17 +128,16 @@
               <color>color.lightgrey</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (30)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to start</content>
-              <size>48</size>
               <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (110)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -200,7 +200,7 @@
             <line><from><x>0</x><y>29</y></from><to><x>6</x><y>29</y></to><thickness>2</thickness></line>
             <line><from><x>24</x><y>29</y></from><to><x>30</x><y>29</y></to><thickness>2</thickness></line>
           </sprite>
-          <position><x>window.width.center - lander.width / 2</x><y>40</y></position>
+          <position><x><centered /></x><y>40</y></position>
           <velocity><x>0.5</x></velocity>
           <acceleration><x>0</x><y>gravity</y></acceleration>
           <collisions>
@@ -253,19 +253,16 @@
         </object>
         <object name="fuelvalue">
           <sprite>
-            <text>
+            <text style="hud">
               <number>lander.fuel</number>
-              <size>30</size>
-              <color>color.orange</color>
             </text>
           </sprite>
           <position><x>window.right - margin - 150 + fuellabel.width + 12</x><y>margin</y></position>
         </object>
         <object name="fuellabel">
           <sprite>
-            <text>
+            <text style="hud">
               <content>FUEL</content>
-              <size>30</size>
               <color>color.white</color>
             </text>
           </sprite>
@@ -324,13 +321,13 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAUSED</content>
               <size>128</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -352,13 +349,12 @@
       <objects>
         <object name="landedmsg">
           <sprite>
-            <text>
+            <text style="banner">
               <content>GOOD LANDING</content>
-              <size>110</size>
               <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - landedmsg.width / 2</x><y>window.height.center - landedmsg.height / 2 + (-60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
       <shows>
@@ -375,13 +371,13 @@
       <objects>
         <object name="crashedmsg">
           <sprite>
-            <text>
+            <text style="banner">
               <content>CRASHED</content>
               <size>128</size>
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x>window.width.center - crashedmsg.width / 2</x><y>window.height.center - crashedmsg.height / 2 + (-60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
       <shows>

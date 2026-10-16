@@ -49,6 +49,9 @@ namespace xge
 		std::vector<RawSound> sounds;
 		std::vector<RawPath> paths;
 
+		// <styles>: what a <text> can take by style="..." (see applyStyles).
+		std::vector<RawStyle> styles;
+
 		// <keeps>: the objects (or groups) a full <reset /> passes over, as
 		// named in the file.
 		std::vector<std::string> keeps;

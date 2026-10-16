@@ -289,6 +289,13 @@ namespace xge
 			if (tagName == "random") { return readRandom(*tag, here); }
 			if (tagName == "equation") { return readEquation(*tag, here); }
 			if (tagName == "formula") { return readFormula(*tag, here); }
+			if (tagName == "centered")
+			{
+				if (tag->getFirstChild()) { fail(here + " > <centered>", "holds a tag; it holds where the middle goes, as text, or nothing for the window's middle"); }
+				RawValue value = RawValue::expression(readText(*tag));
+				value.kind = RawValue::Kind::Centered;
+				return value;
+			}
 
 			fail(here, "unknown value tag <" + tagName + ">");
 		}
@@ -474,7 +481,9 @@ namespace xge
 					fail(here, "needs a <content> (a label), a <number> or a <letter>");
 				}
 
-				sprite.size = readValueOf(shape, "size", here);
+				sprite.style = shape.getAttribute("style");
+				if (auto size = findChild(&shape, "size")) { sprite.size = readValue(*size, here); }
+				else if (sprite.style.empty()) { fail(here, "needs a <size>, or a style= whose <style> has one"); }
 			}
 			else
 			{
@@ -574,6 +583,7 @@ namespace xge
 					sprite.text = std::move(text);
 				}
 				change("size", sprite.size);
+				if (const std::string style = shape->getAttribute("style"); !style.empty()) { sprite.style = style; }
 			}
 			else if (base.kind == "image")
 			{
@@ -2389,7 +2399,7 @@ namespace xge
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
-		std::vector<std::string>& rawKeeps, RawDemo& rawDemo, SchemaValidation& validation)
+		std::vector<RawStyle>& rawStyles, std::vector<std::string>& rawKeeps, RawDemo& rawDemo, SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
 
@@ -2474,6 +2484,24 @@ namespace xge
 			for (std::unique_ptr<XmlNode> path = pathsNode->getFirstChild(); path != nullptr; path = path->getNextSibling())
 			{
 				rawPaths.push_back(readPath(*path));
+			}
+		}
+
+		// load styles (optional: what a <text> can take by style="...")
+		if (std::unique_ptr<XmlNode> stylesNode = findChild(root.get(), "styles"))
+		{
+			for (std::unique_ptr<XmlNode> style = stylesNode->getFirstChild(); style != nullptr; style = style->getNextSibling())
+			{
+				RawStyle raw;
+				raw.name = requireAttribute(*style, "name", "<styles> > <style>");
+				const std::string here = "<styles> > <style name=\"" + raw.name + "\">";
+				if (std::any_of(rawStyles.begin(), rawStyles.end(), [&](const RawStyle& each) { return each.name == raw.name; }))
+				{
+					fail("<styles>", "two <style>s are called '" + raw.name + "'");
+				}
+				if (auto size = findChild(style.get(), "size")) { raw.size = readValue(*size, here); }
+				if (auto color = findChild(style.get(), "color")) { raw.color = readText(*color); }
+				rawStyles.push_back(std::move(raw));
 			}
 		}
 
@@ -2569,7 +2597,7 @@ namespace xge
 	{
 		GameData data;
 		SchemaValidation validation = SchemaValidation::None;
-		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.keeps, data.demo, validation);
+		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.styles, data.keeps, data.demo, validation);
 
 		std::ostringstream said;
 		said << validation;

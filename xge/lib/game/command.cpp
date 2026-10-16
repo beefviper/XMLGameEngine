@@ -431,6 +431,9 @@ namespace xge
 		case RawValue::Kind::Random:
 			return "random(" + value.min + ", " + value.max + ")";
 
+		case RawValue::Kind::Centered:
+			return "centered(" + value.text + ")";
+
 		case RawValue::Kind::Formula:
 			return value.operations && !value.operations->empty() ? operationText(value.operations->front()) : "";
 

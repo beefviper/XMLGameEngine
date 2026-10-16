@@ -40,6 +40,13 @@
         </xsl:for-each>
         <xsl:text> })</xsl:text>
       </xsl:when>
+      <xsl:when test="$tag[self::centered]">
+        <xsl:text>centered(</xsl:text>
+        <xsl:call-template name="text">
+          <xsl:with-param name="node" select="$tag" />
+        </xsl:call-template>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
       <xsl:when test="$tag[self::formula]">
         <xsl:text>formula(</xsl:text>
         <xsl:for-each select="$tag/*[1]">
@@ -484,6 +491,13 @@
           <xsl:with-param name="name" select="'size'" />
           <xsl:with-param name="node" select="$shape/size" />
         </xsl:call-template>
+        <xsl:if test="$shape/@style">
+          <xsl:value-of select="concat($indent, 'look.style = ')" />
+          <xsl:call-template name="string">
+            <xsl:with-param name="text" select="$shape/@style" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:if>
       </xsl:when>
       <xsl:when test="$kind = 'image'">
         <xsl:call-template name="look-text">
@@ -2393,6 +2407,30 @@
     </xsl:if>
     <xsl:if test="$game/paths/path">
       <xsl:text>&#9;game.paths = paths();&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$game/styles/style">
+      <xsl:text>&#9;game.styles = {&#10;</xsl:text>
+      <xsl:for-each select="$game/styles/style">
+        <xsl:text>&#9;&#9;style(</xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@name" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:choose>
+          <xsl:when test="size">
+            <xsl:call-template name="value">
+              <xsl:with-param name="node" select="size" />
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:otherwise>value("")</xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="text">
+          <xsl:with-param name="node" select="color" />
+        </xsl:call-template>
+        <xsl:text>),&#10;</xsl:text>
+      </xsl:for-each>
+      <xsl:text>&#9;};&#10;</xsl:text>
     </xsl:if>
     <xsl:text>&#9;game.objects = objects();&#10;</xsl:text>
     <xsl:if test="$game/keeps/keep">

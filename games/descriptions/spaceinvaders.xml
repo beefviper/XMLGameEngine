@@ -65,6 +65,9 @@
       <note pitch="2000" to="100">0.7</note>
     </sound>
   </sounds>
+  <styles>
+    <style name="banner"><size>128</size><color>color.green</color></style>
+  </styles>
   <objects>
     <object name="player">
       <sprite>
@@ -80,7 +83,7 @@
           <color>color.green</color>
         </bitmap>
       </sprite>
-      <position><x>window.width.center - player.width / 2</x><y>window.bottom - player.height * 2</y></position>
+      <position><x><centered /></x><y>window.bottom - player.height * 2</y></position>
       <collisions>
         <enabled>true</enabled>
         <collision edge="horizontal">
@@ -115,7 +118,7 @@
           <color>color.white</color>
         </text>
       </sprite>
-      <position><x>window.width.center - continue.width / 2</x><y>window.height.center + 60</y></position>
+      <position><x><centered /></x><y>window.height.center + 60</y></position>
     </object>
   </objects>
   <states>
@@ -123,13 +126,12 @@
       <objects>
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>SPACE INVADERS</content>
               <size>110</size>
-              <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - title.width / 2</x><y>window.height.center - title.height / 2 - 100</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 100</centered></y></position>
         </object>
       </objects>
       <shows>
@@ -148,13 +150,12 @@
       <objects>
         <object name="settings">
           <sprite>
-            <text>
+            <text style="banner">
               <content>settings</content>
-              <size>128</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - settings.width / 2</x><y>window.height.center - settings.height / 2</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -387,13 +388,12 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>paused</content>
-              <size>128</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -412,13 +412,12 @@
       <objects>
         <object name="youlose">
           <sprite>
-            <text>
+            <text style="banner">
               <content>GAME OVER</content>
-              <size>128</size>
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x>window.width.center - youlose.width / 2</x><y>window.height.center - 150</y></position>
+          <position><x><centered /></x><y>window.height.center - 150</y></position>
         </object>
       </objects>
       <shows>
@@ -435,13 +434,11 @@
       <objects>
         <object name="youwin">
           <sprite>
-            <text>
+            <text style="banner">
               <content>YOU WIN</content>
-              <size>128</size>
-              <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - 150</y></position>
+          <position><x><centered /></x><y>window.height.center - 150</y></position>
         </object>
       </objects>
       <shows>

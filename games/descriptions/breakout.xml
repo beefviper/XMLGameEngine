@@ -82,16 +82,18 @@
       <note pitch="E4" to="D#4">0.5</note>
     </sound>
   </sounds>
+  <styles>
+    <style name="banner"><size>128</size><color>color.orange</color></style>
+    <style name="prompt"><size>48</size></style>
+  </styles>
   <objects>
     <object name="again">
       <sprite>
-        <text>
+        <text style="prompt">
           <content>spacebar to play again</content>
-          <size>48</size>
-          <color>color.white</color>
         </text>
       </sprite>
-      <position><x>window.width.center - again.width / 2</x><y>window.height.center - again.height / 2 + (70)</y></position>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
   <states>
@@ -99,10 +101,8 @@
       <objects>
         <object name="title">
           <sprite>
-            <text>
+            <text style="banner">
               <content>BREAKOUT</content>
-              <size>128</size>
-              <color>color.orange</color>
             </text>
           </sprite>
           <!-- x is window.width.center - title.width / 2 and y is window.height.center - title.height / 2 + (-110), written as <formula>s: one operation, its operands nested inside it -->
@@ -138,7 +138,7 @@
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - help.width / 2</x><y>window.height.center - help.height / 2 + (-10)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 10</centered></y></position>
         </object>
         <object name="keys">
           <sprite>
@@ -148,17 +148,15 @@
               <color>color.lightgrey</color>
             </text>
           </sprite>
-          <position><x>window.width.center - keys.width / 2</x><y>window.height.center - keys.height / 2 + (40)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text>
+            <text style="prompt">
               <content>spacebar to start</content>
-              <size>48</size>
-              <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - start.width / 2</x><y>window.height.center - start.height / 2 + (130)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -332,13 +330,12 @@
       <objects>
         <object name="paused">
           <sprite>
-            <text>
+            <text style="banner">
               <content>PAUSED</content>
-              <size>128</size>
               <color>color.white</color>
             </text>
           </sprite>
-          <position><x>window.width.center - paused.width / 2</x><y>window.height.center - paused.height / 2 + (0)</y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -357,13 +354,12 @@
       <objects>
         <object name="youwin">
           <sprite>
-            <text>
+            <text style="banner">
               <content>YOU WIN</content>
-              <size>128</size>
               <color>color.green</color>
             </text>
           </sprite>
-          <position><x>window.width.center - youwin.width / 2</x><y>window.height.center - youwin.height / 2 + (-60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
       <shows>
@@ -380,13 +376,12 @@
       <objects>
         <object name="gameover">
           <sprite>
-            <text>
+            <text style="banner">
               <content>GAME OVER</content>
-              <size>128</size>
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x>window.width.center - gameover.width / 2</x><y>window.height.center - gameover.height / 2 + (-60)</y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
       <shows>
