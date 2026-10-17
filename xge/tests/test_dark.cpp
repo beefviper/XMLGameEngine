@@ -13,6 +13,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -31,7 +32,7 @@ namespace
 		std::vector<std::string> drawn;
 	};
 
-	bool drawn(const std::vector<std::string>& names, const std::string& name)
+	bool wasDrawn(const std::vector<std::string>& names, const std::string& name)
 	{
 		return std::find(names.begin(), names.end(), "playing." + name) != names.end();
 	}
@@ -59,17 +60,17 @@ TEST_CASE("what is <dark> is drawn only while a <light> reaches some part of it,
 	// The lamp's middle is at 109 after a frame; near's left side 135 is
 	// within 30 of it, the rest are not.
 	std::vector<std::string> names = frame();
-	CHECK(drawn(names, "lamp"));
-	CHECK(drawn(names, "near"));
-	CHECK_FALSE(drawn(names, "far"));
-	CHECK_FALSE(drawn(names, "map"));
+	CHECK(wasDrawn(names, "lamp"));
+	CHECK(wasDrawn(names, "near"));
+	CHECK_FALSE(wasDrawn(names, "far"));
+	CHECK_FALSE(wasDrawn(names, "map"));
 
 	// Moving on: past near (out of reach behind), lighting the map, which stays.
 	for (int i = 0; i < 20; ++i) { names = frame(); }
-	CHECK(drawn(names, "map"));
+	CHECK(wasDrawn(names, "map"));
 	for (int i = 0; i < 20; ++i) { names = frame(); }
-	CHECK_FALSE(drawn(names, "near"));
-	CHECK(drawn(names, "map"));
+	CHECK_FALSE(wasDrawn(names, "near"));
+	CHECK(wasDrawn(names, "map"));
 
 	// A light put out lights nothing; a reset forgets what was seen.
 	engine.handleKeyPressed(KeyCode::Space);
@@ -77,10 +78,10 @@ TEST_CASE("what is <dark> is drawn only while a <light> reaches some part of it,
 	game.getObject("lamp").position.x = 125;
 	game.getObject("lamp").velocity.x = 0;
 	names = frame();
-	CHECK_FALSE(drawn(names, "near"));
+	CHECK_FALSE(wasDrawn(names, "near"));
 	game.resetObject("map");
 	names = frame();
-	CHECK_FALSE(drawn(names, "map"));
+	CHECK_FALSE(wasDrawn(names, "map"));
 	CHECK(game.getObject("lamp").light == Approx(0));
 	game.resetObject("lamp");
 	CHECK(game.getObject("lamp").light == Approx(30));

@@ -20,6 +20,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -661,9 +662,10 @@ TEST_CASE("a state from= an earlier one is a copy of it with its own parts over 
 
 	const auto state = [&](const std::string& name) -> const State&
 	{
-		for (const State& each : loaded.game.getStates()) { if (each.name == name) { return each; } }
-		FAIL("no state " << name);
-		throw;
+		const std::vector<State>& states = loaded.game.getStates();
+		const auto found = std::find_if(states.begin(), states.end(), [&](const State& each) { return each.name == name; });
+		REQUIRE(found != states.end());
+		return *found;
 	};
 	CHECK(state("gameover").input.count(KeyCode::Space) == 1);   // its keys come with it
 	CHECK(state("theend").input.count(KeyCode::Space) == 1);

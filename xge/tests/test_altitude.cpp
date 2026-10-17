@@ -32,12 +32,12 @@ namespace
 		std::vector<std::pair<std::string, Vector2f>> drawn;
 	};
 
-	const std::string ball = box("ball", 100, 200, "<altitude><start>50</start><fall>1</fall><bounce>0.5</bounce></altitude>");
+	const std::string inTheAir = box("ball", 100, 200, "<altitude><start>50</start><fall>1</fall><bounce>0.5</bounce></altitude>");
 }
 
 TEST_CASE("what has an <altitude> falls by its fall, stops at the ground, and bounces back up with its share", "[altitude]")
 {
-	const Scratch file(ball, "<set variable=\"ball.rise\">10</set>");
+	const Scratch file(inTheAir, "<set variable=\"ball.rise\">10</set>");
 	Played play(file.path);
 	Object& thing = play.get("ball");
 	REQUIRE(thing.altitude == Approx(50));
@@ -70,7 +70,7 @@ TEST_CASE("what has an <altitude> falls by its fall, stops at the ground, and bo
 TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on the ground", "[altitude][shadow]")
 {
 	const Scratch file("<object name=\"shade\"><sprite><circle><radius>4</radius></circle></sprite><position><x>0</x><y>0</y></position>"
-		"<shadow object=\"ball\" /></object>" + ball, "<pop />");
+		"<shadow object=\"ball\" /></object>" + inTheAir, "<pop />");
 	Game game(file.path);
 	auto window = std::make_unique<SeeingWindow>();
 	SeeingWindow& seen = *window;
