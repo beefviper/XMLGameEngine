@@ -7,6 +7,7 @@
 
 #include "game/object.h"
 #include "game/types.h"
+#include "play/geometry.h"
 
 #include <string>
 #include <vector>
@@ -57,9 +58,10 @@ namespace xge
 		// not one lockstep block).
 		virtual bool canCollide(const Object& a, const Object& b) { (void)a; (void)b; return false; }
 
-		// a and b have met during the move (edgeOfB is the edge of b that was
-		// hit, so a's is the opposite one): both their rules for it.
-		virtual void touched(Object& a, Object& b, Edge edgeOfB) { (void)a; (void)b; (void)edgeOfB; }
+		// a and b have met during the move (contact.edgeOfSecond is the edge
+		// of b that was hit, so a's is the opposite one; the rest of the
+		// contact is where and how): both their rules for it.
+		virtual void touched(Object& a, Object& b, const Contact& contact) { (void)a; (void)b; (void)contact; }
 
 		// After everything has moved: the state's conditions.
 		virtual void conditions() {}

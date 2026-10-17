@@ -335,6 +335,11 @@ namespace xge
 			o << "\tdrag=" << f.drag << '\n';
 		}
 
+		if (f.mass != 0)
+		{
+			o << "\tmass=" << f.mass << '\n';
+		}
+
 		if (f.sizeKnown)
 		{
 			o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';

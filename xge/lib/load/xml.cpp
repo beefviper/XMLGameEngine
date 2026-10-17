@@ -778,7 +778,7 @@ namespace xge
 
 		bool isCommandTag(const std::string& name)
 		{
-			return name == "bounce" || name == "deflect" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
+			return name == "bounce" || name == "deflect" || name == "knock" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
@@ -844,6 +844,7 @@ namespace xge
 				command.amount = readValue(node, where);
 			}
 			if (verb == "thrust" || verb == "deflect" || verb == "leap") { command.amount = readValue(node, where); }
+			if (verb == "knock" && (node.getFirstChild() || !readText(node).empty())) { command.amount = readValue(node, where); }
 			if (verb == "climb")
 			{
 				requireAttribute(node, "direction", where);
@@ -1405,6 +1406,11 @@ namespace xge
 				rawObject.hasDrag = true;
 				rawObject.rawDrag = readValue(*drag, where);
 			}
+			if (auto mass = findChild(&object, "mass"))
+			{
+				rawObject.hasMass = true;
+				rawObject.rawMass = readValue(*mass, where);
+			}
 			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readFacing(*facing, where); }
 			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
@@ -1632,13 +1638,23 @@ namespace xge
 					shared.hasAcceleration = true;
 					shared.rawAcceleration = readVector2(*child, where);
 				}
+				else if (tag == "drag")
+				{
+					shared.hasDrag = true;
+					shared.rawDrag = readValue(*child, where);
+				}
+				else if (tag == "mass")
+				{
+					shared.hasMass = true;
+					shared.rawMass = readValue(*child, where);
+				}
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <drag>, <mass>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 

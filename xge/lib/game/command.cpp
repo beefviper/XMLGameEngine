@@ -141,6 +141,17 @@ namespace xge
 			return CmdDeflect{ maxAngle };
 		}
 
+		if (verb == "knock")
+		{
+			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
+			const float bounce = none ? 1.0f : evaluate(raw.amount);
+			if (!(bounce >= 0.0f && bounce <= 1.0f))
+			{
+				throw std::runtime_error("<knock> has a bounce of " + formatDisplayNumber(bounce) + "; expected 0 up to 1");
+			}
+			return CmdKnock{ bounce };
+		}
+
 		if (verb == "release")
 		{
 			const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
@@ -302,6 +313,7 @@ namespace xge
 			[&](const CmdDrop&) { o << "drop"; },
 			[&](const CmdTrack&) { o << "track"; },
 			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
+			[&](const CmdKnock& k) { o << "knock(" << k.bounce << ")"; },
 			[&](const CmdReverse&) { o << "reverse"; },
 			[&](const CmdMove& m)
 			{
@@ -518,7 +530,7 @@ namespace xge
 		{
 			o << "." << command.direction << "(" << command.amount << ", " << command.seconds << ")";
 		}
-		else if (command.verb == "leap")
+		else if (command.verb == "leap" || (command.verb == "knock" && (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())))
 		{
 			o << "(" << command.amount << ")";
 		}

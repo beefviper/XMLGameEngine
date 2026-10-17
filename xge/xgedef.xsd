@@ -546,6 +546,13 @@
     </xs:sequence>
   </xs:complexType>
 
+  <!-- knock: how bouncy the meeting is, 0 up to 1; left out, 1. -->
+  <xs:complexType name="knockType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
   <!-- jump: a direction, how far, and how many seconds it takes (0.3 if left out). -->
   <xs:complexType name="jumpType">
     <xs:sequence>
@@ -664,6 +671,7 @@
     <xs:choice>
       <xs:element name="bounce" type="emptyType" />
       <xs:element name="deflect" type="deflectType" />
+      <xs:element name="knock" type="knockType" />
       <xs:element name="stick" type="emptyType" />
       <xs:element name="wrap" type="emptyType" />
       <xs:element name="ride" type="emptyType" />
@@ -1057,6 +1065,8 @@
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
+      <!-- how hard it is to knock; left out, a knock does not move it -->
+      <xs:element name="mass" type="valueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1163,6 +1173,8 @@
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
+      <xs:element name="drag" type="valueType" minOccurs="0" />
+      <xs:element name="mass" type="valueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1227,6 +1239,8 @@
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
+      <!-- how hard it is to knock; left out, a knock does not move it -->
+      <xs:element name="mass" type="valueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1320,6 +1334,8 @@
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
+      <!-- how hard it is to knock; left out, a knock does not move it -->
+      <xs:element name="mass" type="valueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />

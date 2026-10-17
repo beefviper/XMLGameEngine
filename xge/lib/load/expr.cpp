@@ -93,6 +93,7 @@ namespace xge
 				[](const CmdDrop&) { return std::string("<drop />"); },
 				[](const CmdTrack&) { return std::string("<track />"); },
 				[](const CmdDeflect&) { return std::string("<deflect>"); },
+				[](const CmdKnock&) { return std::string("<knock>"); },
 				[](const CmdReverse&) { return std::string("<reverse />"); },
 				[](const CmdMove&) { return std::string("<move>"); },
 				[](const CmdHop&) { return std::string("<hop>"); },
@@ -196,7 +197,7 @@ namespace xge
 			static const PlaceRule rules[] = {
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
 					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>" } },
-				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
+				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<knock>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
 					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
@@ -1007,6 +1008,15 @@ namespace xge
 				if (object.drag < 0.0f || object.drag >= 1.0f)
 				{
 					throw std::runtime_error(where + ": <drag> is " + std::to_string(object.drag) + "; expected 0 up to (not including) 1");
+				}
+			}
+
+			if (rawObject.hasMass)
+			{
+				object.mass = evaluate(rawObject.rawMass, where);
+				if (!(object.mass > 0.0f))
+				{
+					throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.mass) + "; expected more than 0");
 				}
 			}
 

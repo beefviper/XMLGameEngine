@@ -8,6 +8,7 @@
 #include "game/command.h"
 #include "engine/keys.h"
 #include "game/object.h"
+#include "play/geometry.h"
 
 #include <string>
 
@@ -28,12 +29,16 @@ namespace xge
 		// CollisionDetector::touchesScreenEdge.
 		void executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
 
-		// object.collisionData.others, driven by Game::applyObjectCollision.
-		// `other` is the object being touched. `edge` must already be
-		// self-relative to `object` (the edge of *this* object that was
-		// touched) - see the comment on CollisionDetector for why that's not
-		// simply the detector's raw result.
-		void executeObjectCollision(const Command& command, Object& object, const Object& other, Edge edge);
+		// object.collisionData.others, driven by Game::reactTo. `other` is
+		// the object being touched. `touch` must already be self-relative to
+		// `object` (touch.edge the edge of *this* object that was touched,
+		// touch.normal the way out of `other` towards it) - see the comment
+		// on CollisionDetector for why that's not simply the detector's raw
+		// result.
+		void executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch);
+
+		// The same with only the edge known: a touch straight across it.
+		void executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge);
 
 		// A command bound to a key in the current State's <input> list: push or
 		// pop a state, or trigger a named action on another object.
@@ -78,6 +83,10 @@ namespace xge
 		void queueHop(Object& object, Direction direction, float distance);
 		void startJump(Object& object, const CmdJump& jump);
 		void land(Object& object, const Object& other, Edge edge);
+
+		// <knock>: see CmdKnock. Into a thing with no mass, through it, to
+		// everything with a mass resting against its far side.
+		void knock(Object& object, Object& other, const Touch& touch, float bounce);
 		void leap(Object& object, float height);
 		void chase(Object& object, const CmdChase& chase);
 		void aim(Object& object, const std::string& target);

@@ -43,7 +43,9 @@ set(data_xml
 	"games/descriptions/atlantis.xml"
 	"games/descriptions/pacman.xml"
 	"games/descriptions/megamania.xml"
-	"games/descriptions/adventure.xml")
+	"games/descriptions/adventure.xml"
+	"games/descriptions/trickshot.xml"
+	"games/descriptions/mariobros.xml")
 
 set(data_assets
 	"games/assets/tuffy.ttf"

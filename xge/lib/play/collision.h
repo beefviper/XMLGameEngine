@@ -77,5 +77,10 @@ namespace xge
 		// first do, found to a fraction of that), and the edge reported is the
 		// one the motion came in through.
 		static std::optional<SweepHit> sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB);
+
+		// Everything about a touch just found, `time` through the frame, on
+		// that edge of b, as the two are now (play/geometry.h's contactOf):
+		// where they meet, the way apart, where along each side, how deep.
+		static Contact contact(const Object& a, const Object& b, Edge edgeOfB, float time);
 	};
 }

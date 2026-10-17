@@ -693,7 +693,7 @@ TEST_CASE("every shipped game loads the same through all four XML libraries", "[
 	// the file, so the text-and-element reading of each one agrees. (The ball's
 	// velocity, and the fall speeds and heights of Kaboom's bombs and Astrosmash's rocks,
 	// are <random>s, so those objects are left out of the comparison.)
-	for (const char* file : { "descriptions/pong.xml", "descriptions/breakout.xml", "descriptions/spaceinvaders.xml", "descriptions/frogger.xml", "descriptions/spacerace.xml", "descriptions/kaboom.xml", "descriptions/freeway.xml", "descriptions/depthcharge.xml", "descriptions/astrosmash.xml", "descriptions/asteroids.xml", "descriptions/berserk.xml", "descriptions/demonattack.xml", "descriptions/frostbite.xml", "descriptions/pong_min.xml", "descriptions/pitfall.xml", "descriptions/missilecommand.xml", "descriptions/combat.xml", "descriptions/airseabattle.xml", "descriptions/megamania.xml", "descriptions/adventure.xml" })
+	for (const char* file : { "descriptions/pong.xml", "descriptions/breakout.xml", "descriptions/spaceinvaders.xml", "descriptions/frogger.xml", "descriptions/spacerace.xml", "descriptions/kaboom.xml", "descriptions/freeway.xml", "descriptions/depthcharge.xml", "descriptions/astrosmash.xml", "descriptions/asteroids.xml", "descriptions/berserk.xml", "descriptions/demonattack.xml", "descriptions/frostbite.xml", "descriptions/pong_min.xml", "descriptions/pitfall.xml", "descriptions/missilecommand.xml", "descriptions/combat.xml", "descriptions/airseabattle.xml", "descriptions/megamania.xml", "descriptions/adventure.xml", "descriptions/trickshot.xml", "descriptions/mariobros.xml" })
 	{
 		DYNAMIC_SECTION(file)
 		{

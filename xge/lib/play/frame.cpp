@@ -347,14 +347,17 @@ namespace xge
 			};
 			std::vector<Before> before(all.size());
 
-			playFrame(pairs, sweep, advanceTo, [&](const Pair& pair, Edge edgeOfSecond)
+			playFrame(pairs, sweep, advanceTo, [&](const Pair& pair, Edge edgeOfSecond, float at)
 				{
+					// What the touch was, found once, before anything answers it.
+					const Contact contact = CollisionDetector::contact(*pair.first, *pair.second, edgeOfSecond, at);
+
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
 						before[i] = { all[i].position, motionOf(all[i]), rules.inPlay(all[i]) };
 					}
 
-					rules.touched(*pair.first, *pair.second, edgeOfSecond);
+					rules.touched(*pair.first, *pair.second, contact);
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{

@@ -46,8 +46,13 @@ namespace xge
 	// the box, the edge is the side nearest to it.
 	std::optional<Edge> circleOverlapsBox(const Box& circle, const Box& box) noexcept;
 
-	// The right test for the shapes: a circle against the other one's box,
-	// whichever way round (two circles are a circle and a box), or two boxes.
+	// Two circles, each filling its box (its width the diameter), closer than
+	// their two radii. The edge is the side of the second the first is
+	// mostly toward, by the line between their middles.
+	std::optional<Edge> circlesOverlap(const Box& a, const Box& b) noexcept;
+
+	// The right test for the shapes: two circles as circles, a circle against
+	// the other one's box, whichever way round, or two boxes.
 	std::optional<Edge> shapesOverlap(const Box& a, bool aRound, const Box& b, bool bRound) noexcept;
 
 	// When, within one step of motion, two shapes first touch.
@@ -60,6 +65,58 @@ namespace xge
 		// The edge of the second shape that was hit.
 		Edge edgeOfSecond{ Edge::Top };
 	};
+
+	// Everything about a touch, worked out once, where it happens (see
+	// contactOf), for every rule and verb that answers it to read.
+	struct Contact
+	{
+		// The edge of the second shape that was touched; the first's is the
+		// opposite one.
+		Edge edgeOfSecond{ Edge::Top };
+
+		// How far through the frame it happened: 0 its start, 1 its end.
+		float time{};
+
+		// Where on the screen the two meet.
+		Vector2f point;
+
+		// The way out of the second towards the first, one pixel long: across
+		// a flat side, straight out of it; at a circle or a corner, along the
+		// line through the point they meet.
+		Vector2f normal;
+
+		// Where along the touched side of each the point is, from 0 at its
+		// left or top end to 1 at its right or bottom end.
+		float alongSecond{};
+		float alongFirst{};
+
+		// How far into each other they are along the normal; 0 when they
+		// have only just met.
+		float depth{};
+	};
+
+	// The touch between two shapes as they are now, which have just been
+	// found touching on that edge of the second, `time` through the frame.
+	Contact contactOf(const Box& a, bool aRound, const Box& b, bool bRound, Edge edgeOfSecond, float time) noexcept;
+
+	// One side's view of a touch: its own edge, the way out of what it
+	// touched towards itself, and where along the other's side it touched.
+	struct Touch
+	{
+		Edge edge{ Edge::Top };
+		Vector2f point;
+		Vector2f normal;
+		float along{};
+		float depth{};
+		float time{};
+	};
+
+	// The touch as the first or the second of the pair sees it.
+	Touch touchOfFirst(const Contact& contact) noexcept;
+	Touch touchOfSecond(const Contact& contact) noexcept;
+
+	// The way straight out of a side of a box: up out of its top.
+	Vector2f outOf(Edge edge) noexcept;
 
 	// Moves `a` by moveA and `b` by moveB over one step and finds the first
 	// moment they touch, if they do at all, so a small or fast thing cannot
@@ -178,12 +235,13 @@ namespace xge
 	// may touch, in order, sweep(pair, left) says when, through what is left
 	// of the frame, they would first touch (none: they would not, or sit this
 	// out); the earliest anywhere is found, advanceTo(played) moves everything
-	// to that far through the frame (0 its start, 1 its end), react(pair, edgeOfSecond) runs that pair's
+	// to that far through the frame (0 its start, 1 its end), react(pair, edgeOfSecond, played) runs that pair's
 	// rules, and the rest of the frame carries on from there with whatever
 	// velocities the rules left behind. A ball that hits a brick a third of the
 	// way through its move spends the other two thirds heading back. Each pair
 	// reacts at most once a frame, which also bounds the loop; on a tie the
-	// pair first in `pairs` goes first.
+	// pair first in `pairs` goes first. react is also told how far through
+	// the frame the touch came (`played`, as advanceTo was).
 	template <typename Pair, typename Sweep, typename Advance, typename React>
 	void playFrame(const std::vector<Pair>& pairs, Sweep sweep, Advance advanceTo, React react)
 	{
@@ -219,7 +277,7 @@ namespace xge
 			played += step;
 			advanceTo(played);
 			handled[*next] = true;
-			react(pairs[*next], nextHit.edgeOfSecond);
+			react(pairs[*next], nextHit.edgeOfSecond, played);
 		}
 
 		advanceTo(1.0f);
@@ -247,6 +305,23 @@ namespace xge
 	// from straight back out, towards the end it hit nearer to: off a Pong
 	// paddle's top half the ball goes back up, off its bottom half down.
 	Vector2f deflected(const Vector2f& velocity, const Box& mover, const Box& other, Edge edge, float maxDegrees) noexcept;
+
+	// <knock>: two things meeting along `way` (one pixel long, from the
+	// first towards the second), going at those velocities, with those
+	// masses (0: one that does not move), share out what they carry along
+	// that line as things that bounce `bounce` (0 to 1) do; across it each
+	// keeps its own. None when they are not coming together.
+	struct Knocked
+	{
+		Vector2f first;
+		Vector2f second;
+	};
+	std::optional<Knocked> knockedApart(const Vector2f& first, float firstMass, const Vector2f& second, float secondMass, const Vector2f& way, float bounce) noexcept;
+
+	// Whether `thing` rests against that side of `base`: up to a pixel
+	// from it, and overlapping it along it (a walker standing on a floor
+	// tile rests against its top).
+	bool restsAgainst(const Box& thing, const Box& base, Edge side) noexcept;
 
 	// <stick />: pushed back inside the window on the touched edge's own axis,
 	// losing only the velocity carrying it into the edge; the other way it

@@ -14,6 +14,17 @@ namespace xge
 	{
 		constexpr float pi = 3.14159265358979323846f;
 
+		// The edge of a box that faces the way `away` points out of its
+		// middle, by whichever way it mostly goes.
+		Edge edgeFacing(const Vector2f& away) noexcept
+		{
+			if (std::abs(away.x) > std::abs(away.y))
+			{
+				return away.x < 0 ? Edge::Left : Edge::Right;
+			}
+			return away.y < 0 ? Edge::Top : Edge::Bottom;
+		}
+
 		// Where a straight path first enters a box, as a fraction of the path
 		// (0 = its start, 1 = its end), and whether it came in across a
 		// vertical side (moving along x) or a horizontal one.
@@ -133,18 +144,31 @@ namespace xge
 				return std::nullopt;
 			}
 
-			const Vector2f normal = (start + move * time) - corner;
-			Edge edge;
-			if (std::abs(normal.x) > std::abs(normal.y))
+			return SweepHit{ std::max(time, 0.0f), edgeFacing((start + move * time) - corner) };
+		}
+
+		// A circle moving by `move` against one standing still: when their
+		// middles first come their two radii apart.
+		std::optional<SweepHit> sweepCircles(const Box& mover, const Vector2f& move, const Box& still)
+		{
+			const Vector2f offset = mover.middle() - still.middle();
+			const float reach = (mover.size.x + still.size.x) / 2;
+			const float a = move.x * move.x + move.y * move.y;
+			const float b = 2 * (offset.x * move.x + offset.y * move.y);
+			const float c = offset.x * offset.x + offset.y * offset.y - reach * reach;
+			const float discriminant = b * b - 4 * a * c;
+			if (a == 0.0f || b >= 0.0f || discriminant < 0.0f)
 			{
-				edge = normal.x < 0 ? Edge::Left : Edge::Right;
-			}
-			else
-			{
-				edge = normal.y < 0 ? Edge::Top : Edge::Bottom;
+				return std::nullopt;
 			}
 
-			return SweepHit{ std::max(time, 0.0f), edge };
+			const float time = (-b - std::sqrt(discriminant)) / (2 * a);
+			if (time > 1.0f || time < -0.0001f)
+			{
+				return std::nullopt;
+			}
+
+			return SweepHit{ std::max(time, 0.0f), edgeFacing(offset + move * time) };
 		}
 	}
 
@@ -211,8 +235,31 @@ namespace xge
 		return Edge::Bottom;
 	}
 
+	std::optional<Edge> circlesOverlap(const Box& a, const Box& b) noexcept
+	{
+		const Vector2f away = a.middle() - b.middle();
+		const float reach = (a.size.x + b.size.x) / 2;
+		if (away.x * away.x + away.y * away.y >= reach * reach)
+		{
+			return std::nullopt;
+		}
+
+		// One right on top of the other: by their boxes.
+		if (away.x == 0.0f && away.y == 0.0f)
+		{
+			return boxesOverlap(a, b);
+		}
+
+		return edgeFacing(away);
+	}
+
 	std::optional<Edge> shapesOverlap(const Box& a, bool aRound, const Box& b, bool bRound) noexcept
 	{
+		if (aRound && bRound)
+		{
+			return circlesOverlap(a, b);
+		}
+
 		if (aRound)
 		{
 			return circleOverlapsBox(a, b);
@@ -240,6 +287,11 @@ namespace xge
 		if (relative.x == 0.0f && relative.y == 0.0f)
 		{
 			return std::nullopt;
+		}
+
+		if (aRound && bRound)
+		{
+			return sweepCircles(a, relative, b);
 		}
 
 		if (aRound)
@@ -284,6 +336,143 @@ namespace xge
 		}
 
 		return relative.y > 0 ? Edge::Top : Edge::Bottom;
+	}
+
+	Vector2f outOf(Edge edge) noexcept
+	{
+		switch (edge)
+		{
+		case Edge::Left:   return { -1.0f, 0.0f };
+		case Edge::Right:  return { 1.0f, 0.0f };
+		case Edge::Top:    return { 0.0f, -1.0f };
+		case Edge::Bottom: return { 0.0f, 1.0f };
+		}
+
+		return {};
+	}
+
+	namespace
+	{
+		// Where along that side of the box the point is, 0 at its left or
+		// top end and 1 at its right or bottom end.
+		float alongSide(const Box& box, Edge edge, const Vector2f& point) noexcept
+		{
+			const bool across = edge == Edge::Top || edge == Edge::Bottom;
+			const float length = across ? box.size.x : box.size.y;
+			if (length <= 0.0f) { return 0.5f; }
+			return std::clamp(across ? (point.x - box.left()) / length : (point.y - box.top()) / length, 0.0f, 1.0f);
+		}
+
+		// The point of the box nearest to `point`.
+		Vector2f nearestIn(const Box& box, const Vector2f& point) noexcept
+		{
+			return { std::clamp(point.x, box.left(), box.right()), std::clamp(point.y, box.top(), box.bottom()) };
+		}
+
+		float lengthOf(const Vector2f& v) noexcept
+		{
+			return std::hypot(v.x, v.y);
+		}
+
+		// A circle (its middle and radius) against a box: the point on the box
+		// they meet at, the way out of the box towards the circle, and how far
+		// in the circle is. With the middle inside the box, out through
+		// `edge`, the side of the box it came in by.
+		void circleAgainstBox(const Vector2f& middle, float radius, const Box& box, Edge edge, Vector2f& point, Vector2f& normal, float& depth) noexcept
+		{
+			point = nearestIn(box, middle);
+			const Vector2f away = middle - point;
+			const float distance = lengthOf(away);
+			if (distance > 0.0001f)
+			{
+				normal = away * (1.0f / distance);
+				depth = std::max(0.0f, radius - distance);
+				return;
+			}
+
+			normal = outOf(edge);
+			switch (edge)
+			{
+			case Edge::Left:   point.x = box.left(); break;
+			case Edge::Right:  point.x = box.right(); break;
+			case Edge::Top:    point.y = box.top(); break;
+			case Edge::Bottom: point.y = box.bottom(); break;
+			}
+			depth = radius + lengthOf(middle - point);
+		}
+	}
+
+	Contact contactOf(const Box& a, bool aRound, const Box& b, bool bRound, Edge edgeOfSecond, float time) noexcept
+	{
+		Contact contact;
+		contact.edgeOfSecond = edgeOfSecond;
+		contact.time = time;
+
+		if (aRound && bRound)
+		{
+			const float radiusA = a.size.x / 2;
+			const float radiusB = b.size.x / 2;
+			const Vector2f away = a.middle() - b.middle();
+			const float distance = lengthOf(away);
+			contact.normal = distance > 0.0001f ? away * (1.0f / distance) : outOf(edgeOfSecond);
+			contact.point = b.middle() + contact.normal * radiusB;
+			contact.depth = std::max(0.0f, radiusA + radiusB - distance);
+		}
+		else if (aRound)
+		{
+			circleAgainstBox(a.middle(), a.size.x / 2, b, edgeOfSecond, contact.point, contact.normal, contact.depth);
+		}
+		else if (bRound)
+		{
+			// The circle is the second: the way out of it is the way into the
+			// box, turned round.
+			Vector2f intoBox;
+			circleAgainstBox(b.middle(), b.size.x / 2, a, opposite(edgeOfSecond), contact.point, intoBox, contact.depth);
+			contact.normal = intoBox * -1.0f;
+		}
+		else
+		{
+			// Two boxes meet along a stretch of the touched side: its middle.
+			contact.normal = outOf(edgeOfSecond);
+			const float left = std::max(a.left(), b.left());
+			const float right = std::min(a.right(), b.right());
+			const float top = std::max(a.top(), b.top());
+			const float bottom = std::min(a.bottom(), b.bottom());
+			switch (edgeOfSecond)
+			{
+			case Edge::Top:
+				contact.point = { (left + right) / 2, b.top() };
+				contact.depth = a.bottom() - b.top();
+				break;
+			case Edge::Bottom:
+				contact.point = { (left + right) / 2, b.bottom() };
+				contact.depth = b.bottom() - a.top();
+				break;
+			case Edge::Left:
+				contact.point = { b.left(), (top + bottom) / 2 };
+				contact.depth = a.right() - b.left();
+				break;
+			case Edge::Right:
+				contact.point = { b.right(), (top + bottom) / 2 };
+				contact.depth = b.right() - a.left();
+				break;
+			}
+			contact.depth = std::max(0.0f, contact.depth);
+		}
+
+		contact.alongSecond = alongSide(b, edgeOfSecond, contact.point);
+		contact.alongFirst = alongSide(a, opposite(edgeOfSecond), contact.point);
+		return contact;
+	}
+
+	Touch touchOfFirst(const Contact& contact) noexcept
+	{
+		return { opposite(contact.edgeOfSecond), contact.point, contact.normal, contact.alongSecond, contact.depth, contact.time };
+	}
+
+	Touch touchOfSecond(const Contact& contact) noexcept
+	{
+		return { contact.edgeOfSecond, contact.point, contact.normal * -1.0f, contact.alongFirst, contact.depth, contact.time };
 	}
 
 	bool pastWindowEdge(const Box& thing, const Vector2f& window, Edge edge) noexcept
@@ -342,6 +531,53 @@ namespace xge
 		}
 
 		return velocity;
+	}
+
+	std::optional<Knocked> knockedApart(const Vector2f& first, float firstMass, const Vector2f& second, float secondMass, const Vector2f& way, float bounce) noexcept
+	{
+		const auto dot = [](const Vector2f& a, const Vector2f& b) { return a.x * b.x + a.y * b.y; };
+		const float firstAlong = dot(first, way);
+		const float secondAlong = dot(second, way);
+		const float closing = firstAlong - secondAlong;
+		if (!(closing > 0.0f))
+		{
+			return std::nullopt;
+		}
+
+		float firstAfter = firstAlong;
+		float secondAfter = secondAlong;
+		if (firstMass > 0.0f && secondMass > 0.0f)
+		{
+			const float carried = firstMass * firstAlong + secondMass * secondAlong;
+			firstAfter = (carried - secondMass * bounce * closing) / (firstMass + secondMass);
+			secondAfter = (carried + firstMass * bounce * closing) / (firstMass + secondMass);
+		}
+		else if (secondMass > 0.0f)
+		{
+			secondAfter = firstAlong + bounce * closing;
+		}
+		else if (firstMass > 0.0f)
+		{
+			firstAfter = secondAlong - bounce * closing;
+		}
+
+		return Knocked{ first + way * (firstAfter - firstAlong), second + way * (secondAfter - secondAlong) };
+	}
+
+	bool restsAgainst(const Box& thing, const Box& base, Edge side) noexcept
+	{
+		const auto within = [](float a, float b) { return std::abs(a - b) <= 1.0f; };
+		const bool acrossOverlap = thing.right() > base.left() && thing.left() < base.right();
+		const bool downOverlap = thing.bottom() > base.top() && thing.top() < base.bottom();
+		switch (side)
+		{
+		case Edge::Top:    return acrossOverlap && within(thing.bottom(), base.top());
+		case Edge::Bottom: return acrossOverlap && within(thing.top(), base.bottom());
+		case Edge::Left:   return downOverlap && within(thing.right(), base.left());
+		case Edge::Right:  return downOverlap && within(thing.left(), base.right());
+		}
+
+		return false;
 	}
 
 	void stickInside(Vector2f& position, Vector2f& velocity, const Vector2f& size, const Vector2f& window, Edge edge) noexcept

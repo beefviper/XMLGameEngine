@@ -7,6 +7,7 @@
 
 #include "game/object.h"
 #include "game/types.h"
+#include "play/geometry.h"
 
 #include <string>
 #include <vector>
@@ -41,6 +42,12 @@ namespace xge
 	// <deflect>maxDegrees</deflect>: back off `other` at an angle set by
 	// where on the touched side it hit.
 	void deflect(Object& object, const Object& other, Edge edge, float maxDegrees);
+
+	// <knock>: the object knocks `other`, both with a mass (see
+	// knockedApart); `touch` is the object's own view of it. Two that went
+	// into each other are put apart along the touch, the lighter moved
+	// more. Whether they were coming together.
+	bool knock(Object& object, Object& other, const Touch& touch, float bounce);
 
 	// <stick />: pushed back inside the window on that edge's axis, losing
 	// only the velocity carrying it into the edge.

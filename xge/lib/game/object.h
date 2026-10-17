@@ -319,6 +319,8 @@ namespace xge
 		bool hasHeading{ false };
 		RawValue rawDrag;            // only when hasDrag
 		bool hasDrag{ false };
+		RawValue rawMass;            // only when hasMass
+		bool hasMass{ false };
 		std::string facing;          // "" when the object has no <facing>
 		RawMaze maze;                // <maze>: the map it walks, if any
 		std::vector<RawTimer> timers;
@@ -611,6 +613,10 @@ namespace xge
 		// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed
 		// a frame, so a thruster can no longer push it faster than a top speed.
 		float drag{};
+
+		// <mass>: how hard it is to knock (see CmdKnock). 0, when it has
+		// none, is not knocked at all: a wall, a floor.
+		float mass{};
 
 		// Draws `bitmap` again at the current heading (and, for an animated
 		// object, the picture that is showing) when that is not what it

@@ -79,6 +79,11 @@ namespace xge
 		return pixelsOverlapAt(a, a.position, b, b.position);
 	}
 
+	Contact CollisionDetector::contact(const Object& a, const Object& b, Edge edgeOfB, float time)
+	{
+		return contactOf(boxOf(a), isRound(a), boxOf(b), isRound(b), edgeOfB, time);
+	}
+
 	std::optional<CollisionDetector::SweepHit> CollisionDetector::sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)
 	{
 		return sweepThings(boxOf(a), isRound(a), [&](const Vector2f& local) { return solidAt(a, local); }, moveA,

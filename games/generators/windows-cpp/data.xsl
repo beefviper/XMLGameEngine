@@ -232,6 +232,14 @@
           </xsl:call-template>
           <xsl:text>;</xsl:text>
         </xsl:when>
+        <!-- the bounce is optional, and 1 when left out -->
+        <xsl:when test="$verb = 'knock' and ($node/* or normalize-space($node) != '')">
+          <xsl:text> command.amount = </xsl:text>
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="$node" />
+          </xsl:call-template>
+          <xsl:text>;</xsl:text>
+        </xsl:when>
         <xsl:when test="$verb = 'jump'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.amount'" />
@@ -958,6 +966,14 @@
         <xsl:with-param name="node" select="drag" />
       </xsl:call-template>
     </xsl:if>
+    <xsl:if test="mass">
+      <xsl:value-of select="concat($in, 'object.hasMass = true;&#10;')" />
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$in" />
+        <xsl:with-param name="to" select="'object.rawMass'" />
+        <xsl:with-param name="node" select="mass" />
+      </xsl:call-template>
+    </xsl:if>
     <xsl:call-template name="shared">
       <xsl:with-param name="node" select="." />
       <xsl:with-param name="to" select="'object'" />
@@ -1153,6 +1169,22 @@
         <xsl:with-param name="node" select="acceleration[last()]" />
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="drag">
+      <xsl:value-of select="concat($in, 'group.object.hasDrag = true;&#10;')" />
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$in" />
+        <xsl:with-param name="to" select="'group.object.rawDrag'" />
+        <xsl:with-param name="node" select="drag" />
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:if test="mass">
+      <xsl:value-of select="concat($in, 'group.object.hasMass = true;&#10;')" />
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$in" />
+        <xsl:with-param name="to" select="'group.object.rawMass'" />
+        <xsl:with-param name="node" select="mass" />
+      </xsl:call-template>
     </xsl:if>
     <xsl:call-template name="shared">
       <xsl:with-param name="node" select="." />

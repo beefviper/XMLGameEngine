@@ -49,11 +49,22 @@ namespace xge
 		}, command);
 	}
 
-	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, const Object& other, Edge edge)
+	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge)
 	{
+		Touch touch;
+		touch.edge = edge;
+		touch.normal = outOf(opposite(edge));
+		touch.along = 0.5f;
+		executeObjectCollision(command, object, other, touch);
+	}
+
+	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch)
+	{
+		const Edge edge = touch.edge;
 		std::visit(overload{
 			[&](const CmdBounce&) { xge::bounce(object, edge); },
 			[&](const CmdDeflect& d) { xge::deflect(object, other, edge, d.maxAngle); },
+			[&](const CmdKnock& k) { knock(object, other, touch, k.bounce); },
 			[&](const CmdDie&) { xge::die(object); },
 			[&](const CmdStop&) { xge::stop(object); },
 			[&](const CmdReset&) { restart(object); },
@@ -475,6 +486,50 @@ namespace xge
 				[&](const CmdDie&) { if (keyPressed) { xge::die(object); } },
 				[&](const auto&) { /* ruleFor in load/expr lists what an action holds */ }
 			}, command);
+		}
+	}
+
+	void CommandExecutor::knock(Object& object, Object& other, const Touch& touch, float bounce)
+	{
+		if (other.mass > 0.0f)
+		{
+			xge::knock(object, other, touch, bounce);
+			return;
+		}
+
+		// Through a thing that does not move: the far side of it is the side
+		// the object's own touched edge faces, and what rests there is
+		// knocked as though the object, as heavy as can be, had hit it.
+		const Edge farSide = touch.edge;
+		const Box base{ other.position, sizeOf(other) };
+		const Vector2f way = touch.normal * -1.0f;
+		for (Object& thing : game.getCurrentObjects())
+		{
+			if (&thing == &object || &thing == &other || !(thing.mass > 0.0f) || !thing.collisionData.enabled || thing.isAirborne() || !game.isShown(thing))
+			{
+				continue;
+			}
+
+			const Box at{ thing.position, sizeOf(thing) };
+			if (!restsAgainst(at, base, farSide))
+			{
+				continue;
+			}
+
+			const std::optional<Knocked> after = knockedApart(object.velocity, 0.0f, thing.velocity, thing.mass, way, bounce);
+			if (!after)
+			{
+				continue;
+			}
+			thing.velocity = after->second;
+
+			Touch felt;
+			felt.edge = opposite(farSide);
+			felt.normal = way;
+			felt.point = { std::clamp(touch.point.x, at.left(), at.right()), std::clamp(touch.point.y, at.top(), at.bottom()) };
+			felt.along = 0.5f;
+			felt.time = touch.time;
+			game.reactTo(thing, object, felt);
 		}
 	}
 

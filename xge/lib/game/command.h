@@ -77,6 +77,24 @@ namespace xge
 		float maxAngle{};
 	};
 
+	// <knock /> - in a collision rule about another object: the two meet
+	// as things with weight do, along the line through the point they touch
+	// (see Touch::normal): the other is sent off with what the object was
+	// carrying into it, shared out by their <mass>es, and the object keeps
+	// what is left. Only what has a mass is moved; one without is as
+	// heavy as can be (a wall, a paddle, a man's head). A knock on a thing
+	// with no mass goes through it: whatever with a mass rests against its
+	// far side is knocked instead, and runs its own rules about the object
+	// as touched on that side (Mario bumping a floor from below flips what
+	// walks on it). `bounce` (0 to 1, 1 when left out) is how much of the
+	// coming together turns into going apart: 1 is pool balls, 0 leaves the
+	// knocked thing going no faster than what knocked it. Nothing happens
+	// unless they are coming together. See CommandExecutor::knock.
+	struct CmdKnock
+	{
+		float bounce{ 1.0f };
+	};
+
 	struct CmdMove
 	{
 		Direction direction{};
@@ -439,7 +457,7 @@ namespace xge
 	};
 
 	using Command = std::variant<
-		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdReverse,
+		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene>;
 
@@ -591,7 +609,7 @@ namespace xge
 		std::string partner;   // hunt: <with object="...">
 		std::string retreat;   // hunt: <retreat object="...">
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
+		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)

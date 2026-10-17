@@ -1,0 +1,441 @@
+<!-- mariobros.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 16, 2026 -->
+
+<!--
+  Mario Bros., after the 1983 game (arcade and Atari 2600): Mario under four
+  levels of floor, with shellcreepers walking along them. Jump up and bump
+  the floor under one to turn it on its back, then run into it to kick it
+  off. A shellcreeper still on its feet costs a life; one left on its back
+  too long gets up and comes out of its pipe at the top again, as does one
+  that walks into a pipe at the bottom. Kick off all six to win.
+
+  A or D (or the arrows) walk, Space starts and jumps, P or Escape pauses.
+
+  It is the game a <knock> through a floor was made for:
+  * Mario has no <mass>, and nor has a floor: his head hitting a floor from
+    below is a <knock> that goes through it, to whatever with a mass stands
+    on that piece of floor. That shellcreeper is knocked up off the floor
+    and runs its own rules about Mario as touched on its bottom side, which
+    turn it over (<become sprite="flipped" />).
+  * The floors are tiles, so a bump reaches only what stands over the tile
+    Mario hit.
+  * Which side of a shellcreeper Mario touches decides what happens:
+    side="bottom" is a bump through the floor, side="horizontal" and
+    side="top" are Mario walking or falling into it.
+  * Everything wraps round the sides of the screen.
+  No POW block, fighter flies, coins or second player: see
+  docs/designs/56-games-atari.md.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+  <window name="Mario Bros.">
+    <width>800</width>
+    <height>600</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="tile">40</variable>
+    <variable name="thick">12</variable>
+    <variable name="pull">0.4</variable>
+    <variable name="walk">2.5</variable>
+    <variable name="crawl">1.2</variable>
+    <variable name="leapheight">140</variable>
+    <variable name="margin">16</variable>
+  </variables>
+  <sounds>
+    <sound name="jump" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="C6">0.12</note>
+    </sound>
+    <sound name="bump" wave="square">
+      <volume>0.3</volume>
+      <note pitch="C3">0.06</note>
+    </sound>
+    <sound name="flip" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5" to="G4">0.15</note>
+    </sound>
+    <sound name="kick" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.06</note>
+      <note pitch="C6">0.12</note>
+    </sound>
+    <sound name="hit" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E4" to="E2">0.5</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>110</size><color>color.red</color></style>
+    <style name="prompt"><size>40</size></style>
+    <style name="help"><size>28</size></style>
+    <style name="hud"><size>32</size></style>
+  </styles>
+  <objects>
+    <object name="again">
+      <sprite>
+        <text style="prompt">
+          <content>spacebar to play again</content>
+        </text>
+      </sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <objects>
+        <object name="title">
+          <sprite>
+            <text style="banner">
+              <content>MARIO BROS.</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+        </object>
+        <object name="help">
+          <sprite>
+            <text style="help">
+              <content>bump the floor under a shellcreeper, then kick it off</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+        <object name="keys">
+          <sprite>
+            <text style="help">
+              <content>a and d (or the arrows) walk, space jumps</content>
+              <color>color.lightgrey</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite>
+            <text style="prompt">
+              <content>spacebar to start</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="ground" class="floor">
+          <sprite>
+            <rectangle>
+              <width>800</width>
+              <height>16</height>
+              <color>color.brown</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>window.bottom - ground.height</y></position>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+        </object>
+        <!-- three levels of floor, in tiles, so that a bump is felt only over
+             the tile that was hit -->
+        <group name="floors" class="floor">
+          <sprite>
+            <rectangle>
+              <width>tile</width>
+              <height>thick</height>
+              <color>color.blue</color>
+            </rectangle>
+          </sprite>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+          <group name="lowleft">
+            <columns>7</columns>
+            <rows>1</rows>
+            <position><x>0</x><y>452</y></position>
+          </group>
+          <group name="lowright">
+            <columns>7</columns>
+            <rows>1</rows>
+            <position><x>window.right - 7 * tile</x><y>452</y></position>
+          </group>
+          <group name="middle">
+            <columns>10</columns>
+            <rows>1</rows>
+            <position><x>200</x><y>324</y></position>
+          </group>
+          <group name="midleft">
+            <columns>3</columns>
+            <rows>1</rows>
+            <position><x>0</x><y>324</y></position>
+          </group>
+          <group name="midright">
+            <columns>3</columns>
+            <rows>1</rows>
+            <position><x>window.right - 3 * tile</x><y>324</y></position>
+          </group>
+          <group name="topleft">
+            <columns>8</columns>
+            <rows>1</rows>
+            <position><x>0</x><y>196</y></position>
+          </group>
+          <group name="topright">
+            <columns>8</columns>
+            <rows>1</rows>
+            <position><x>window.right - 8 * tile</x><y>196</y></position>
+          </group>
+        </group>
+        <!-- the pipes at the bottom, which take a shellcreeper back up to its
+             start -->
+        <group name="pipes" class="pipe">
+          <sprite>
+            <rectangle>
+              <width>tile</width>
+              <height>40</height>
+              <color>color.green</color>
+            </rectangle>
+          </sprite>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+          <member><position><x>0</x><y>544</y></position></member>
+          <member><position><x>window.right - tile</x><y>544</y></position></member>
+        </group>
+        <group name="creepers" class="enemy">
+          <sprite name="walking">
+            <rectangle>
+              <width>28</width>
+              <height>20</height>
+              <color>color.green</color>
+            </rectangle>
+          </sprite>
+          <sprite name="flipped">
+            <rectangle>
+              <width>28</width>
+              <height>20</height>
+              <color>color.yellow</color>
+            </rectangle>
+          </sprite>
+          <acceleration><x>0</x><y>pull</y></acceleration>
+          <mass>1</mass>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal">
+              <wrap />
+            </collision>
+            <collision class="floor">
+              <land />
+            </collision>
+            <!-- on its back it lies where it comes down -->
+            <collision class="floor" sprite="flipped">
+              <stop />
+            </collision>
+            <collision class="pipe">
+              <reset />
+            </collision>
+            <!-- bumped from below: on its back; bumped again, it stays down -->
+            <collision object="mario" side="bottom" sprite="flipped">
+              <stop />
+            </collision>
+            <collision object="mario" side="bottom" sprite="walking">
+              <become sprite="flipped" />
+              <play sound="flip" />
+            </collision>
+            <!-- touched by Mario: kicked off on its back, deadly on its feet -->
+            <collision object="mario" side="horizontal" sprite="flipped">
+              <inc variable="mario.score">800</inc>
+              <play sound="kick" />
+              <die />
+            </collision>
+            <collision object="mario" side="top" sprite="flipped">
+              <inc variable="mario.score">800</inc>
+              <play sound="kick" />
+              <die />
+            </collision>
+            <collision object="mario" side="horizontal" sprite="walking">
+              <trigger object="mario" action="lose" />
+            </collision>
+            <collision object="mario" side="top" sprite="walking">
+              <trigger object="mario" action="lose" />
+            </collision>
+          </collisions>
+          <timers>
+            <timer sprite="flipped">
+              <after>8</after>
+              <become sprite="walking" />
+              <reset />
+            </timer>
+          </timers>
+          <member>
+            <position><x>40</x><y>196 - 20</y></position>
+            <velocity><x>crawl</x></velocity>
+          </member>
+          <member>
+            <position><x>window.right - 68</x><y>196 - 20</y></position>
+            <velocity><x>0 - crawl</x></velocity>
+          </member>
+          <member>
+            <position><x>300</x><y>324 - 20</y></position>
+            <velocity><x>crawl</x></velocity>
+          </member>
+          <member>
+            <position><x>480</x><y>324 - 20</y></position>
+            <velocity><x>0 - crawl</x></velocity>
+          </member>
+          <member>
+            <position><x>100</x><y>452 - 20</y></position>
+            <velocity><x>crawl</x></velocity>
+          </member>
+          <member>
+            <position><x>660</x><y>452 - 20</y></position>
+            <velocity><x>0 - crawl</x></velocity>
+          </member>
+        </group>
+        <object name="mario">
+          <sprite>
+            <rectangle>
+              <width>24</width>
+              <height>32</height>
+              <color>color.red</color>
+            </rectangle>
+          </sprite>
+          <position><x><centered /></x><y>window.bottom - 16 - mario.height</y></position>
+          <acceleration><x>0</x><y>pull</y></acceleration>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal">
+              <wrap />
+            </collision>
+            <collision class="floor">
+              <land />
+            </collision>
+            <!-- his head against a floor from below: the bump goes through it -->
+            <collision class="floor" side="top">
+              <knock>0</knock>
+              <bounce />
+              <play sound="bump" />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="left">
+              <move direction="left">walk</move>
+            </action>
+            <action name="right">
+              <move direction="right">walk</move>
+            </action>
+            <action name="jump">
+              <leap>leapheight</leap>
+              <play sound="jump" />
+            </action>
+            <action name="lose">
+              <dec variable="mario.lives" />
+              <play sound="hit" />
+              <reset />
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="lives">3</variable>
+          </variables>
+        </object>
+        <object name="score">
+          <sprite>
+            <text style="hud">
+              <number>mario.score</number>
+            </text>
+          </sprite>
+          <position><x>margin</x><y>margin</y></position>
+        </object>
+        <object name="lives">
+          <sprite>
+            <text style="hud">
+              <number>mario.lives</number>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="a"><trigger object="mario" action="left" /></input>
+        <input button="left"><trigger object="mario" action="left" /></input>
+        <input button="d"><trigger object="mario" action="right" /></input>
+        <input button="right"><trigger object="mario" action="right" /></input>
+        <input button="space"><trigger object="mario" action="jump" /></input>
+        <input button="p"><push state="paused" /></input>
+        <input button="escape"><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition class="enemy">
+          <remaining>0</remaining>
+          <push state="youwin" />
+        </condition>
+        <condition object="mario" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text style="banner">
+              <content>PAUSED</content>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space"><pop /></input>
+        <input button="p"><pop /></input>
+        <input button="escape"><pop /></input>
+      </inputs>
+    </state>
+    <state name="youwin">
+      <objects>
+        <object name="message">
+          <sprite>
+            <text style="banner">
+              <content>YOU WIN</content>
+              <color>color.green</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="gameover" from="youwin">
+      <objects>
+        <object name="message">
+          <sprite>
+            <text style="banner">
+              <content>GAME OVER</content>
+            </text>
+          </sprite>
+        </object>
+      </objects>
+    </state>
+  </states>
+</game>

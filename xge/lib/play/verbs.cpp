@@ -45,6 +45,30 @@ namespace xge
 		return object.velocity + object.riding;
 	}
 
+	bool knock(Object& object, Object& other, const Touch& touch, float bounce)
+	{
+		// The way from the object into the other.
+		const Vector2f way = touch.normal * -1.0f;
+		const std::optional<Knocked> after = knockedApart(object.velocity, object.mass, other.velocity, other.mass, way, bounce);
+		if (!after)
+		{
+			return false;
+		}
+
+		object.velocity = after->first;
+		other.velocity = after->second;
+
+		// Gone into each other: apart again, each by its share.
+		if (touch.depth > 0.0f && (object.mass > 0.0f || other.mass > 0.0f))
+		{
+			const float objectShare = object.mass <= 0.0f ? 0.0f : other.mass <= 0.0f ? 1.0f : other.mass / (object.mass + other.mass);
+			object.position -= way * (touch.depth * objectShare);
+			other.position += way * (touch.depth * (1.0f - objectShare));
+		}
+
+		return true;
+	}
+
 	void bounce(Object& object, Edge edge)
 	{
 		object.velocity = bounced(object.velocity, edge);

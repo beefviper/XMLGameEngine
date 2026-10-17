@@ -222,6 +222,8 @@ namespace
 			flag(at + ".hasHeading", o.hasHeading);
 			value(at + ".drag", o.rawDrag);
 			flag(at + ".hasDrag", o.hasDrag);
+			value(at + ".mass", o.rawMass);
+			flag(at + ".hasMass", o.hasMass);
 			text(at + ".facing", o.facing);
 			timers(at + ".timers", o.timers);
 			const RawCollisionData& c = o.rawCollisionData;

@@ -18,6 +18,7 @@
 | `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, `slower`/`faster` | Lunar Lander | below |
 | `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<hidden>`, `<release>`, `<fire>` along a heading, amount on `inc`/`dec` | Asteroids | below |
 | `<deflect>` | Pong | [collisions](20-collisions.md) |
+| `<knock>`, `<mass>`, `<drag>` in a group, circles against circles | Trick Shot, Mario Bros. | [collisions](20-collisions.md#contacts-and-knocks-2026-10-16) |
 | `<timers>`, `<facing>`, `<jump>`, `<reverse />`, looks, `<reveal>`, key sets | a read of every game for workarounds | [timers](09-timers.md) |
 | (none) | Space Race, Kaboom v1, Freeway, Depth Charge, Astrosmash | the vocabulary was already enough ([games-classic](54-games-classic.md)) |
 | `<paths>`, `<follow>` with `<stagger>` | Galaxian | below |

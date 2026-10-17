@@ -111,6 +111,11 @@ namespace xge
 		const std::vector<State>& getStates(void) const noexcept;
 		std::vector<Object>& getCurrentObjects(void) noexcept;
 
+		// `self`'s collision rules about `other`, which it has touched as
+		// `touch` says (its own edge, and the rest): the ones that hold run.
+		// Half of a touch; a knock passed through a floor is only this half.
+		void reactTo(Object& self, Object& other, const Touch& touch);
+
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
 
@@ -350,7 +355,7 @@ namespace xge
 		void atEdge(Object& object, Edge edge) override;
 		bool sticksAt(const Object& object, Edge edge) override;
 		bool canCollide(const Object& a, const Object& b) override;
-		void touched(Object& a, Object& b, Edge edgeOfB) override;
+		void touched(Object& a, Object& b, const Contact& contact) override;
 		void conditions() override { checkConditions(); }
 
 		// Sets the velocity of every shown object that is on a path for this

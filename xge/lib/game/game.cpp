@@ -1603,41 +1603,41 @@ namespace xge
 			});
 	}
 
-	// edgeOfB is the edge of b that was touched, which is already b's own side
-	// of it; a's own touched edge is the opposite one.
-	void Game::touched(Object& a, Object& b, Edge edgeOfB)
+	void Game::reactTo(Object& self, Object& other, const Touch& touch)
 	{
 		CommandExecutor executor(*this);
 
-		// One side's rules for touching the other. A rule with unless= is
-		// passed over while `self` is also touching something of that class.
-		const auto react = [&](Object& self, Object& other, Edge selfEdge)
+		// How fast it is going at the moment of the touch, for the rules with
+		// slower/faster; taken once, so that a rule that stops it does not
+		// change which of the rules after it run.
+		const Vector2f motion = motionOf(self);
+		const float speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+
+		// A rule with unless= is passed over while `self` is also touching
+		// something of that class.
+		for (const auto& rule : self.collisionData.others)
 		{
-			// How fast it is going at the moment of the touch, for the rules
-			// with slower/faster; taken once, so that a rule that stops it does
-			// not change which of the rules after it run.
-			const Vector2f motion = motionOf(self);
-			const float speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+			if (!collisionRuleMatches(rule, other)) { continue; }
+			if (!rule.whileSprite.empty() && self.lookName() != rule.whileSprite) { continue; }
+			if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
+			if (rule.slower && !(speed < *rule.slower)) { continue; }
+			if (rule.faster && !(speed >= *rule.faster)) { continue; }
+			if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), touch.edge) == rule.sides.end()) { continue; }
+			if (rule.check && !holds(*rule.check)) { continue; }
 
-			for (const auto& rule : self.collisionData.others)
+			for (const auto& command : rule.commands)
 			{
-				if (!collisionRuleMatches(rule, other)) { continue; }
-				if (!rule.whileSprite.empty() && self.lookName() != rule.whileSprite) { continue; }
-				if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
-				if (rule.slower && !(speed < *rule.slower)) { continue; }
-				if (rule.faster && !(speed >= *rule.faster)) { continue; }
-				if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), selfEdge) == rule.sides.end()) { continue; }
-				if (rule.check && !holds(*rule.check)) { continue; }
-
-				for (const auto& command : rule.commands)
-				{
-					executor.executeObjectCollision(command, self, other, selfEdge);
-				}
+				executor.executeObjectCollision(command, self, other, touch);
 			}
-		};
+		}
+	}
 
-		react(a, b, opposite(edgeOfB));
-		react(b, a, edgeOfB);
+	// Each side sees the touch from its own point of view: the edge of b that
+	// was touched is b's own side of it, and a's is the opposite one.
+	void Game::touched(Object& a, Object& b, const Contact& contact)
+	{
+		reactTo(a, b, touchOfFirst(contact));
+		reactTo(b, a, touchOfSecond(contact));
 	}
 
 	void Game::checkConditions()
