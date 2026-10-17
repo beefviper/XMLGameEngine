@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <memory>
 #include <optional>
 
 namespace xge
@@ -260,6 +261,41 @@ namespace xge
 			}
 		}
 
+		// A <tether> is a line from one object's middle to another's, drawn
+		// again after the move wherever the two have got to; its own position
+		// and size follow it, so what it touches is where it is now.
+		void drawTethers(std::vector<Object>& objects)
+		{
+			for (auto& tether : objects)
+			{
+				if (tether.tetherFrom.empty()) { continue; }
+
+				const Object* from = named(objects, tether.tetherFrom);
+				const Object* to = named(objects, tether.tetherTo);
+				if (!from || !to) { continue; }
+
+				const Vector2f a = from->position + sizeOf(*from) * 0.5f;
+				const Vector2f b = to->position + sizeOf(*to) * 0.5f;
+				const float half = static_cast<float>(tether.tetherThickness) * 0.5f;
+				const Vector2f corner{ std::floor(std::min(a.x, b.x) - half), std::floor(std::min(a.y, b.y) - half) };
+
+				LineSegment line;
+				line.x1 = a.x - corner.x - half;
+				line.y1 = a.y - corner.y - half;
+				line.x2 = b.x - corner.x - half;
+				line.y2 = b.y - corner.y - half;
+				line.color = tether.tetherColor;
+				line.thickness = tether.tetherThickness;
+
+				auto drawn = std::make_shared<const Bitmap>(rasterizeLines({ line }));
+				tether.position = corner;
+				tether.size = { static_cast<float>(drawn->width), static_cast<float>(drawn->height) };
+				tether.spriteParams = { "line", std::to_string(drawn->width), std::to_string(drawn->height) };
+				tether.bitmap = std::move(drawn);
+				tether.visualDirty = true;
+			}
+		}
+
 		// Plays one frame of movement. Every object in play moves by its
 		// velocity (and by whatever it is riding), but not in one jump: each
 		// pair of objects that can touch is swept along its own path, the
@@ -434,6 +470,8 @@ namespace xge
 		}
 
 		holdCarried(objects);
+
+		drawTethers(objects);
 
 		rules.conditions();
 	}

@@ -45,7 +45,8 @@ set(data_xml
 	"games/descriptions/megamania.xml"
 	"games/descriptions/adventure.xml"
 	"games/descriptions/trickshot.xml"
-	"games/descriptions/mariobros.xml")
+	"games/descriptions/mariobros.xml"
+	"games/descriptions/fishingderby.xml")
 
 set(data_assets
 	"games/assets/tuffy.ttf"

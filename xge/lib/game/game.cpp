@@ -915,7 +915,7 @@ namespace xge
 
 		if (timer.framesLeft < 0)
 		{
-			timer.framesLeft = framesFor(expr.evaluate(timer.interval, where));
+			timer.framesLeft = framesFor(evaluateNow(timer.interval, where));
 		}
 
 		if (--timer.framesLeft > 0)
@@ -1607,6 +1607,14 @@ namespace xge
 	{
 		CommandExecutor executor(*this);
 
+		// What the rules' values can read of the touch (touch.x, ...).
+		if (!liveLinked) { refreshLive(); }
+		const float numbers[] = { touch.point.x, touch.point.y, touch.along, touch.depth, touch.normal.x, touch.normal.y };
+		for (std::size_t i = 0; i < touchNumbers.size(); ++i)
+		{
+			if (touchNumbers[i]) { *touchNumbers[i] = numbers[i]; }
+		}
+
 		// How fast it is going at the moment of the touch, for the rules with
 		// slower/faster; taken once, so that a rule that stops it does not
 		// change which of the rules after it run.
@@ -1630,6 +1638,102 @@ namespace xge
 				executor.executeObjectCollision(command, self, other, touch);
 			}
 		}
+	}
+
+	void Game::refreshLive(void)
+	{
+		if (!liveLinked)
+		{
+			liveLinked = true;
+			const std::vector<std::string>& parts = liveNumberParts();
+			for (std::size_t i = 0; i < objects.size(); ++i)
+			{
+				for (std::size_t part = 0; part < parts.size(); ++part)
+				{
+					const auto found = expr.liveNumbers.find(objects[i].name + "." + parts[part]);
+					if (found != expr.liveNumbers.end()) { liveLinks.push_back({ &found->second, i, part }); }
+				}
+			}
+			const std::vector<std::string>& touch = touchNumberNames();
+			for (std::size_t i = 0; i < touch.size() && i < touchNumbers.size(); ++i)
+			{
+				const auto found = expr.liveNumbers.find(touch[i]);
+				touchNumbers[i] = found == expr.liveNumbers.end() ? nullptr : &found->second;
+			}
+		}
+
+		for (const LiveLink& link : liveLinks)
+		{
+			const Object& object = objects[link.object];
+			switch (link.part)
+			{
+			case 0: *link.number = object.position.x; break;
+			case 1: *link.number = object.position.y; break;
+			case 2: *link.number = object.velocity.x; break;
+			case 3: *link.number = object.velocity.y; break;
+			default: *link.number = object.heading; break;
+			}
+		}
+	}
+
+	float Game::evaluateNow(const RawValue& value, const std::string& where)
+	{
+		refreshLive();
+		return expr.evaluate(value, where);
+	}
+
+	Command Game::makeNow(const CmdLive& live)
+	{
+		try
+		{
+			return makeCommand(*live.raw, [&](const RawValue& value) { return evaluateNow(value, live.where); });
+		}
+		catch (const std::runtime_error& error)
+		{
+			if (liveWarned.insert(live.where + error.what()).second)
+			{
+				std::cout << "warning: " << error.what() << "; it does what it did as the game loaded\n";
+			}
+			return live.loaded->command;
+		}
+	}
+
+	bool Game::setNumber(const std::string& target, float value)
+	{
+		const std::string part = liveNumberPart(target);
+		const std::string owner = part.empty() ? target.substr(0, target.rfind('.')) : target.substr(0, target.size() - part.size() - 1);
+		const std::string name = part.empty() ? target.substr(target.rfind('.') + 1) : part;
+
+		if (const Object* holder = tryGetObject(owner); holder && holder->variable.count(name))
+		{
+			return setVariable(owner, name, value);
+		}
+		if (part.empty())
+		{
+			std::cout << "warning: <set variable=\"" << target << "\">: no such variable\n";
+			return false;
+		}
+
+		bool found = false;
+		for (Object& object : objects)
+		{
+			if (object.name != owner && !object.inGroup(owner)) { continue; }
+			found = true;
+			if (part == "x") { object.position.x = value; }
+			else if (part == "y") { object.position.y = value; }
+			else if (part == "velocity.x") { object.velocity.x = value; }
+			else if (part == "velocity.y") { object.velocity.y = value; }
+			else if (object.hasHeading)
+			{
+				object.heading = value;
+				object.showHeading();
+			}
+		}
+		if (!found)
+		{
+			std::cout << "warning: <set variable=\"" << target << "\">: no object named '" << owner << "'\n";
+		}
+		return found;
 	}
 
 	// Each side sees the touch from its own point of view: the edge of b that

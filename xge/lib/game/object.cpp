@@ -6,8 +6,10 @@
 #include "game/object.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <functional>
+#include <memory>
 #include <stdexcept>
 
 namespace xge
@@ -114,15 +116,78 @@ namespace xge
 		}
 	}
 
+	const std::vector<std::string>& liveNumberParts()
+	{
+		static const std::vector<std::string> parts{ "x", "y", "velocity.x", "velocity.y", "heading" };
+		return parts;
+	}
+
+	std::string liveNumberPart(const std::string& name)
+	{
+		// The longest first: ball.velocity.x is velocity.x, not x.
+		for (const char* part : { "velocity.x", "velocity.y", "heading", "x", "y" })
+		{
+			const std::string tail = std::string(".") + part;
+			if (name.size() > tail.size() && name.compare(name.size() - tail.size(), tail.size(), tail) == 0) { return part; }
+		}
+		return {};
+	}
+
+	const std::vector<std::string>& touchNumberNames()
+	{
+		static const std::vector<std::string> names{ "touch.x", "touch.y", "touch.along", "touch.depth", "touch.normal.x", "touch.normal.y" };
+		return names;
+	}
+
+	std::string renameStart(const std::string& text, const std::string& from, const std::string& to)
+	{
+		const auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '.'; };
+		const std::string start = from + ".";
+		std::string out;
+		std::size_t i = 0;
+		while (i < text.size())
+		{
+			if (!word(text[i])) { out += text[i++]; continue; }
+			std::size_t end = i;
+			while (end < text.size() && word(text[end])) { ++end; }
+			const std::string token = text.substr(i, end - i);
+			out += token.compare(0, start.size(), start) == 0 ? to + "." + token.substr(start.size()) : token;
+			i = end;
+		}
+		return out;
+	}
+
 	void nameSelf(std::vector<RawObject>& objects)
 	{
 		for (RawObject& object : objects)
 		{
+			const std::function<void(RawValue&)> value = [&](RawValue& each)
+			{
+				each.text = renameStart(each.text, "self", object.name);
+				each.min = renameStart(each.min, "self", object.name);
+				each.max = renameStart(each.max, "self", object.name);
+				if (each.operations)
+				{
+					auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
+					for (RawOperation& operation : *operations)
+					{
+						for (RawOperand& operand : operation.operands) { value(operand.value); }
+					}
+					each.operations = std::move(operations);
+				}
+			};
 			const auto commands = [&](std::vector<RawCommand>& list)
 			{
 				for (RawCommand& command : list)
 				{
 					if (command.verb == "trigger" && command.object.empty()) { command.object = object.name; }
+					command.variable = renameStart(command.variable, "self", object.name);
+					command.into = renameStart(command.into, "self", object.name);
+					for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
+						&command.positionX, &command.positionY, &command.velocityX, &command.velocityY })
+					{
+						value(*each);
+					}
 				}
 			};
 			const std::function<void(RawCondition&)> check = [&](RawCondition& condition)

@@ -131,6 +131,9 @@ namespace xge
 				[](const CmdFollow&) { return std::string("<follow>"); },
 				[](const CmdEnterScene&) { return std::string("<enter>"); },
 				[](const CmdResetScene&) { return std::string("<reset scene>"); },
+				[](const CmdSet&) { return std::string("<set>"); },
+				[](const CmdSpawn&) { return std::string("<spawn>"); },
+				[](const CmdLive& live) { return tagOf(live.loaded->command); },
 			}, command);
 		}
 
@@ -185,9 +188,9 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<demo />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>" };
+			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<demo />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<set>", "<spawn>" };
 			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
-				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<wander>" };
+				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<wander>", "<set>", "<spawn>" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
 				tags.push_back("<chase>");
@@ -196,15 +199,15 @@ namespace xge
 			}();
 			static const PlaceRule rules[] = {
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>" } },
+					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<knock>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>" } },
+					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimerCommands },
 				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>",
-					"<inc>", "<dec>", "<copy>", "<reset object>", "<reset scene>", "<enter>", "<die />" } },
+					"<inc>", "<dec>", "<copy>", "<reset object>", "<reset scene>", "<enter>", "<die />", "<set>", "<spawn>" } },
 				{ "a path's <step>", ownerCommands },
 			};
 			return rules[static_cast<std::size_t>(place)];
@@ -273,11 +276,11 @@ namespace xge
 		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
 			const std::vector<SoundDesc>& sounds, const std::map<std::string, Path>& paths, const std::string& where)
 		{
-			if (std::holds_alternative<CmdEnterScene>(command) || std::holds_alternative<CmdResetScene>(command))
+			if (std::holds_alternative<CmdEnterScene>(shapeOf(command)) || std::holds_alternative<CmdResetScene>(shapeOf(command)))
 			{
-				const bool enter = std::holds_alternative<CmdEnterScene>(command);
-				const std::string& scene = enter ? std::get<CmdEnterScene>(command).scene : std::get<CmdResetScene>(command).scene;
-				const std::string& way = enter ? std::get<CmdEnterScene>(command).way : std::get<CmdResetScene>(command).way;
+				const bool enter = std::holds_alternative<CmdEnterScene>(shapeOf(command));
+				const std::string& scene = enter ? std::get<CmdEnterScene>(shapeOf(command)).scene : std::get<CmdResetScene>(shapeOf(command)).scene;
+				const std::string& way = enter ? std::get<CmdEnterScene>(shapeOf(command)).way : std::get<CmdResetScene>(shapeOf(command)).way;
 				std::vector<std::string> names;
 				std::vector<std::string> ways;
 				for (const State& state : states)
@@ -307,7 +310,7 @@ namespace xge
 						+ (names.empty() ? std::string(" (no state has <scenes>)") : ". The scenes are: " + listOf(names)));
 				}
 			}
-			else if (const auto* follow = std::get_if<CmdFollow>(&command))
+			else if (const auto* follow = std::get_if<CmdFollow>(&shapeOf(command)))
 			{
 				if (!paths.count(follow->path))
 				{
@@ -320,7 +323,7 @@ namespace xge
 					throw std::runtime_error(where + ": <follow> names '" + follow->target + "', and there is no object of that name" + didYouMean(follow->target, objectNames(objects)));
 				}
 			}
-			else if (const auto* become = std::get_if<CmdBecome>(&command))
+			else if (const auto* become = std::get_if<CmdBecome>(&shapeOf(command)))
 			{
 				if (!become->from.empty() && become->target.empty())
 				{
@@ -350,7 +353,7 @@ namespace xge
 					}
 				}
 			}
-			else if (const auto* hunt = std::get_if<CmdHunt>(&command))
+			else if (const auto* hunt = std::get_if<CmdHunt>(&shapeOf(command)))
 			{
 				for (const auto& [name, what] : { std::pair<const std::string*, const char*>{ &hunt->target, "<hunt>" },
 					{ &hunt->partner, "<hunt> > <with>" }, { &hunt->retreatTo, "<hunt> > <retreat>" } })
@@ -361,31 +364,31 @@ namespace xge
 					}
 				}
 			}
-			else if (const auto* chase = std::get_if<CmdChase>(&command))
+			else if (const auto* chase = std::get_if<CmdChase>(&shapeOf(command)))
 			{
 				if (!findObject(objects, chase->target))
 				{
 					throw std::runtime_error(where + ": <chase> names '" + chase->target + "', and there is no object of that name" + didYouMean(chase->target, objectNames(objects)));
 				}
 			}
-			else if (const auto* aim = std::get_if<CmdAim>(&command))
+			else if (const auto* aim = std::get_if<CmdAim>(&shapeOf(command)))
 			{
 				if (!findObject(objects, aim->target))
 				{
 					throw std::runtime_error(where + ": <aim> names '" + aim->target + "', and there is no object of that name" + didYouMean(aim->target, objectNames(objects)));
 				}
 			}
-			else if (const auto* reveal = std::get_if<CmdReveal>(&command))
+			else if (const auto* reveal = std::get_if<CmdReveal>(&shapeOf(command)))
 			{
 				if (!findObject(objects, reveal->target))
 				{
 					throw std::runtime_error(where + ": <reveal> names '" + reveal->target + "', and there is no object of that name" + didYouMean(reveal->target, objectNames(objects)));
 				}
 			}
-			else if (std::holds_alternative<CmdPlay>(command) || std::holds_alternative<CmdSilence>(command))
+			else if (std::holds_alternative<CmdPlay>(shapeOf(command)) || std::holds_alternative<CmdSilence>(shapeOf(command)))
 			{
-				const auto* play = std::get_if<CmdPlay>(&command);
-				const std::string& name = play ? play->sound : std::get<CmdSilence>(command).sound;
+				const auto* play = std::get_if<CmdPlay>(&shapeOf(command));
+				const std::string& name = play ? play->sound : std::get<CmdSilence>(shapeOf(command)).sound;
 				const bool known = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == name; });
 				if (!known)
 				{
@@ -394,7 +397,7 @@ namespace xge
 					throw std::runtime_error(where + ": <" + (play ? "play" : "silence") + " sound=\"" + name + "\" /> names no sound of the game" + didYouMean(name, names));
 				}
 			}
-			else if (const auto* push = std::get_if<CmdPushState>(&command))
+			else if (const auto* push = std::get_if<CmdPushState>(&shapeOf(command)))
 			{
 				const bool known = std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == push->name; });
 				if (!known)
@@ -402,7 +405,7 @@ namespace xge
 					throw std::runtime_error(where + ": <push state=\"" + push->name + "\" /> names no state of the game" + didYouMean(push->name, stateNames(states)));
 				}
 			}
-			else if (const auto* turns = std::get_if<CmdTurns>(&command))
+			else if (const auto* turns = std::get_if<CmdTurns>(&shapeOf(command)))
 			{
 				for (const std::string& player : turns->players)
 				{
@@ -413,7 +416,7 @@ namespace xge
 					}
 				}
 			}
-			else if (const auto* pop = std::get_if<CmdPopState>(&command); pop && !pop->name.empty())
+			else if (const auto* pop = std::get_if<CmdPopState>(&shapeOf(command)); pop && !pop->name.empty())
 			{
 				const bool known = std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == pop->name; });
 				if (!known)
@@ -421,7 +424,7 @@ namespace xge
 					throw std::runtime_error(where + ": <pop state=\"" + pop->name + "\" /> names no state of the game" + didYouMean(pop->name, stateNames(states)));
 				}
 			}
-			else if (const auto* trigger = std::get_if<CmdTriggerAction>(&command))
+			else if (const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command)))
 			{
 				if (trigger->object.empty())
 				{
@@ -440,37 +443,69 @@ namespace xge
 						+ (names.empty() ? std::string(" (it has no <actions>)") : "; its actions are: " + listOf(names)));
 				}
 			}
-			else if (const auto* fire = std::get_if<CmdFire>(&command))
+			else if (const auto* fire = std::get_if<CmdFire>(&shapeOf(command)))
 			{
 				if (!findObject(objects, fire->projectileName))
 				{
 					throw std::runtime_error(where + ": <fire> names '" + fire->projectileName + "', and there is no object of that name" + didYouMean(fire->projectileName, objectNames(objects)));
 				}
 			}
-			else if (const auto* release = std::get_if<CmdRelease>(&command))
+			else if (const auto* release = std::get_if<CmdRelease>(&shapeOf(command)))
 			{
 				if (!findObject(objects, release->target))
 				{
 					throw std::runtime_error(where + ": <release> names '" + release->target + "', and there is no object of that name" + didYouMean(release->target, objectNames(objects)));
 				}
 			}
-			else if (const auto* reset = std::get_if<CmdResetObject>(&command))
+			else if (const auto* reset = std::get_if<CmdResetObject>(&shapeOf(command)))
 			{
 				if (!findObject(objects, reset->target))
 				{
 					throw std::runtime_error(where + ": <reset object=\"" + reset->target + "\" /> names no object of the game" + didYouMean(reset->target, objectNames(objects)));
 				}
 			}
-			else if (std::holds_alternative<CmdIncrement>(command) || std::holds_alternative<CmdDecrement>(command))
+			else if (std::holds_alternative<CmdIncrement>(shapeOf(command)) || std::holds_alternative<CmdDecrement>(shapeOf(command)))
 			{
 				// A variable belongs to an object: paddle1.score is paddle1's
 				// <variable name="score">. A bare name is a text object counting
 				// its own <number>.
-				const bool inc = std::holds_alternative<CmdIncrement>(command);
-				const std::string& target = inc ? std::get<CmdIncrement>(command).target : std::get<CmdDecrement>(command).target;
+				const bool inc = std::holds_alternative<CmdIncrement>(shapeOf(command));
+				const std::string& target = inc ? std::get<CmdIncrement>(shapeOf(command)).target : std::get<CmdDecrement>(shapeOf(command)).target;
 				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + target + "\" />", objects, where, true);
 			}
-			else if (const auto* copy = std::get_if<CmdCopy>(&command))
+			else if (const auto* set = std::get_if<CmdSet>(&shapeOf(command)))
+			{
+				// A variable of an object's, or one of the numbers every
+				// object has (where it is, how it is going, its heading).
+				const std::string tag = "<set variable=\"" + set->target + "\">";
+				const std::string part = liveNumberPart(set->target);
+				const Object* holder = part.empty() ? nullptr : findObject(objects, set->target.substr(0, set->target.size() - part.size() - 1));
+				if (part.empty() || (holder && holder->variable.count(part)))
+				{
+					checkVariable(set->target, tag, objects, where, false);
+				}
+				else
+				{
+					const std::string owner = set->target.substr(0, set->target.size() - part.size() - 1);
+					const Object* found = findObject(objects, owner);
+					if (!found)
+					{
+						throw std::runtime_error(where + ": " + tag + ": there is no object named '" + owner + "'" + didYouMean(owner, objectNames(objects)));
+					}
+					if (part == "heading" && !found->hasHeading)
+					{
+						throw std::runtime_error(where + ": " + tag + ": '" + owner + "' has no <heading> to set");
+					}
+				}
+			}
+			else if (const auto* spawn = std::get_if<CmdSpawn>(&shapeOf(command)))
+			{
+				if (!findObject(objects, spawn->target))
+				{
+					throw std::runtime_error(where + ": <spawn> names '" + spawn->target + "', and there is no object or group of that name" + didYouMean(spawn->target, objectNames(objects)));
+				}
+			}
+			else if (const auto* copy = std::get_if<CmdCopy>(&shapeOf(command)))
 			{
 				// Both are owner.variable: a copy reads one object's variable
 				// and writes another's.
@@ -478,7 +513,7 @@ namespace xge
 				checkVariable(copy->from, tag, objects, where, false);
 				checkVariable(copy->into, tag, objects, where, false);
 			}
-			else if (const auto* rank = std::get_if<CmdRank>(&command))
+			else if (const auto* rank = std::get_if<CmdRank>(&shapeOf(command)))
 			{
 				// The entry's variable, and a group whose every member has one
 				// of that name to be ordered by.
@@ -505,6 +540,18 @@ namespace xge
 		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
 			const std::map<std::string, Path>& paths)
 		{
+			// A <tether> joins two objects the game has.
+			for (const Object& object : objects)
+			{
+				for (const std::string* end : { &object.tetherFrom, &object.tetherTo })
+				{
+					if (!end->empty() && !findObject(objects, *end))
+					{
+						throw std::runtime_error("object '" + object.name + "' > <tether>: there is no object named '" + *end + "'" + didYouMean(*end, objectNames(objects)));
+					}
+				}
+			}
+
 			// A state's <music> names one of the game's sounds.
 			for (const State& state : states)
 			{
@@ -530,7 +577,7 @@ namespace xge
 			{
 				for (const auto& command : commands)
 				{
-					const auto* follow = std::get_if<CmdFollow>(&command);
+					const auto* follow = std::get_if<CmdFollow>(&shapeOf(command));
 					if (follow && follow->target.empty())
 					{
 						throw std::runtime_error(where + ": <follow path=\"" + follow->path + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
@@ -555,7 +602,7 @@ namespace xge
 			{
 				for (const auto& command : commands)
 				{
-					const auto* become = std::get_if<CmdBecome>(&command);
+					const auto* become = std::get_if<CmdBecome>(&shapeOf(command));
 					if (!become || !become->target.empty()) { continue; }
 					if (!self)
 					{
@@ -582,7 +629,7 @@ namespace xge
 					checkAll(commands, here);
 					for (const Command& command : commands)
 					{
-						if (!std::holds_alternative<CmdTriggerAction>(command))
+						if (!std::holds_alternative<CmdTriggerAction>(shapeOf(command)))
 						{
 							throw std::runtime_error(here + ": " + tagOf(command) + " does nothing on a control that points; it runs an object's <action> with <trigger object=\"...\" action=\"...\" />, and a <track /> there follows it");
 						}
@@ -641,7 +688,7 @@ namespace xge
 				{
 					for (const Command& command : commands)
 					{
-						if ((std::holds_alternative<CmdGo>(command) || std::holds_alternative<CmdHunt>(command) || std::holds_alternative<CmdWander>(command)) && !object.walksMaze())
+						if ((std::holds_alternative<CmdGo>(shapeOf(command)) || std::holds_alternative<CmdHunt>(shapeOf(command)) || std::holds_alternative<CmdWander>(shapeOf(command))) && !object.walksMaze())
 						{
 							throw std::runtime_error(here + ": " + tagOf(command) + " steers an object through a maze, and this one walks none: give it a <maze map=\"...\">");
 						}
@@ -675,25 +722,25 @@ namespace xge
 					// that does not face any way.
 					for (const auto& command : commands)
 					{
-						if ((std::holds_alternative<CmdTurn>(command) || std::holds_alternative<CmdThrust>(command)) && !object.hasHeading)
+						if ((std::holds_alternative<CmdTurn>(shapeOf(command)) || std::holds_alternative<CmdThrust>(shapeOf(command))) && !object.hasHeading)
 						{
 							throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");
 						}
 
 						// A leap rises against the object's own pull, and only
 						// from the ground, which a <land /> rule gives it.
-						if (std::holds_alternative<CmdLeap>(command) && !(object.acceleration.y > 0.0f))
+						if (std::holds_alternative<CmdLeap>(shapeOf(command)) && !(object.acceleration.y > 0.0f))
 						{
 							throw std::runtime_error(where + ": action '" + name + "' has a <leap>, and nothing pulls the object down to come back:"
 								" give it an <acceleration> with a <y> above 0, and a <collision> with <land /> to stand on");
 						}
-						if (std::holds_alternative<CmdLeap>(command) && std::none_of(object.collisionData.others.begin(), object.collisionData.others.end(),
-							[](const CollisionRule& rule) { return std::any_of(rule.commands.begin(), rule.commands.end(), [](const Command& c) { return std::holds_alternative<CmdLand>(c); }); }))
+						if (std::holds_alternative<CmdLeap>(shapeOf(command)) && std::none_of(object.collisionData.others.begin(), object.collisionData.others.end(),
+							[](const CollisionRule& rule) { return std::any_of(rule.commands.begin(), rule.commands.end(), [](const Command& c) { return std::holds_alternative<CmdLand>(shapeOf(c)); }); }))
 						{
 							throw std::runtime_error(where + ": action '" + name + "' has a <leap>, and the object never stands on anything to leap from:"
 								" give it a <collision> with <land /> (<collision class=\"girder\"><land /></collision>)");
 						}
-						if (const auto* climb = std::get_if<CmdClimb>(&command))
+						if (const auto* climb = std::get_if<CmdClimb>(&shapeOf(command)))
 						{
 							std::vector<std::string> classes;
 							for (const Object& other : objects)
@@ -797,6 +844,19 @@ namespace xge
 			}
 		}
 
+		// Where each object is and how it is going, and the touch a rule is
+		// answering, as names; worked out when they are used (Game::evaluateNow).
+		for (const RawObject& rawObject : rawObjects)
+		{
+			for (const std::string& part : liveNumberParts())
+			{
+				const std::string name = rawObject.name + "." + part;
+				if (!objectVariables.count(name) && !liveNumbers.count(name)) { liveNumbers[name] = 0.0f; }
+			}
+		}
+		for (const std::string& name : touchNumberNames()) { liveNumbers[name] = 0.0f; }
+		for (auto& [name, number] : liveNumbers) { symbolTable.add_variable(name, number); }
+
 		// Every object's size as name.width / name.height, so an expression can
 		// place an object by its own size (or another's) the same way it reads
 		// paddle1.score. Worked out before anything is placed so the order
@@ -838,6 +898,7 @@ namespace xge
 			if (!objectVariables.count(name + ".width")) { symbolTable.add_variable(name + ".width", size.x); }
 			if (!objectVariables.count(name + ".height")) { symbolTable.add_variable(name + ".height", size.y); }
 		}
+
 
 		// Where each cell of a group laid out in <columns> and <rows> goes.
 		const std::map<std::string, Vector2f> cellOffsets = layOutCells(rawObjects, firstPassSpriteParams);
@@ -1018,6 +1079,22 @@ namespace xge
 				{
 					throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.mass) + "; expected more than 0");
 				}
+			}
+
+			if (rawObject.sprite.kind == "tether")
+			{
+				if (rawObject.hasHeading || !rawObject.looks.empty() || rawObject.hasAnimation)
+				{
+					throw std::runtime_error(where + ": a <tether> is drawn where its ends are; it has no <heading>, other looks or <animation>");
+				}
+				object.tetherFrom = rawObject.sprite.tetherFrom;
+				object.tetherTo = rawObject.sprite.tetherTo;
+				if (!rawObject.sprite.thickness.text.empty() || rawObject.sprite.thickness.kind != RawValue::Kind::Expression)
+				{
+					object.tetherThickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
+					if (object.tetherThickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
+				}
+				object.tetherColor = colorFromName(rawObject.sprite.color.empty() ? "color.white" : rawObject.sprite.color);
 			}
 
 			if (!rawObject.facing.empty())
@@ -1535,8 +1612,39 @@ namespace xge
 		{
 			throw std::runtime_error(where + ": cannot read \"" + text + "\": " + parser.error().c_str());
 		}
+
+		// Where things are has no meaning until the game runs.
+		if (loading && !commandValues && !liveNumbers.empty())
+		{
+			std::vector<std::string> names;
+			exprtk::collect_variables(text, names);
+			for (const std::string& name : names)
+			{
+				if (liveNumbers.count(name))
+				{
+					throw std::runtime_error(where + ": \"" + text + "\" reads " + name + ", which is only known while the game runs;"
+						" a command's value can read it, worked out when the command runs");
+				}
+			}
+		}
 		return expression.value();
 	}
+
+	bool game_expr::namesLive(const RawValue& value) const
+	{
+		for (const std::string* text : value.expressions())
+		{
+			if (text->empty()) { continue; }
+			std::vector<std::string> names;
+			exprtk::collect_variables(*text, names);
+			for (const std::string& name : names)
+			{
+				if (objectVariables.count(name) || liveNumbers.count(name)) { return true; }
+			}
+		}
+		return false;
+	}
+
 
 	std::vector<Timer> game_expr::processTimers(const std::vector<RawTimer>& raw, const std::string& where)
 	{
@@ -1558,7 +1666,9 @@ namespace xge
 			// (A <random> in it is checked with the generator put back after, so that
 			// checking does not use up the numbers the game will draw.)
 			const std::mt19937 drawn = randomState();
+			commandValues = true;
 			const float seconds = evaluate(rawTimer.interval, here);
+			commandValues = false;
 			setRandomState(drawn);
 			char* end = nullptr;
 			const std::string& text = rawTimer.interval.text;
@@ -1582,14 +1692,38 @@ namespace xge
 
 	std::vector<Command> game_expr::processCommands(const std::vector<RawCommand>& raw, const std::string& where)
 	{
+		std::vector<Command> commands;
+		commandValues = true;
 		try
 		{
-			return makeCommands(raw, [&](const RawValue& value) { return evaluate(value, where); });
+			for (const RawCommand& each : raw)
+			{
+				Command made = makeCommand(each, [&](const RawValue& value) { return evaluate(value, where); });
+
+				// One whose numbers can change is made again each time it runs
+				// (CmdLive); <set> and <spawn> always are, since what they
+				// put somewhere is the point of them.
+				const bool live = each.verb == "set" || each.verb == "spawn"
+					|| namesLive(each.amount) || namesLive(each.seconds) || namesLive(each.distance) || namesLive(each.ahead);
+				if (live)
+				{
+					auto loaded = std::make_shared<LoadedCommand>();
+					loaded->command = std::move(made);
+					commands.push_back(CmdLive{ std::make_shared<const RawCommand>(each), std::move(loaded), where });
+				}
+				else
+				{
+					commands.push_back(std::move(made));
+				}
+			}
 		}
 		catch (const std::runtime_error& error)
 		{
+			commandValues = false;
 			throw std::runtime_error(where + ": " + error.what());
 		}
+		commandValues = false;
+		return commands;
 	}
 
 	std::vector<TextPiece> game_expr::textPieces(const RawSprite& sprite, const std::string& where, const RawObject* self)
@@ -1766,6 +1900,17 @@ namespace xge
 		else if (sprite.kind == "image")
 		{
 			params = { "image", sprite.path, sprite.flip.empty() ? "color.white" : "flip." + sprite.flip };
+		}
+		else if (sprite.kind == "tether")
+		{
+			// Drawn every frame where its two ends are (drawTethers); until
+			// then, one clear pixel.
+			auto clear = std::make_shared<Bitmap>();
+			clear->width = 1;
+			clear->height = 1;
+			clear->rgba.assign(4, 0);
+			params = { "line", "1", "1" };
+			if (bitmap) { *bitmap = std::move(clear); }
 		}
 		else
 		{

@@ -22,6 +22,7 @@
 #include <set>
 #include <stack>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <assert.h>
 
@@ -115,6 +116,23 @@ namespace xge
 		// `touch` says (its own edge, and the rest): the ones that hold run.
 		// Half of a touch; a knock passed through a floor is only this half.
 		void reactTo(Object& self, Object& other, const Touch& touch);
+
+		// A value worked out now, from where everything is and how it is
+		// going (see game_expr::liveNumbers), and every variable as it is.
+		float evaluateNow(const RawValue& value, const std::string& where);
+
+		// A command that reads something that changes (CmdLive), made again
+		// from what is so now. A value that cannot be worked out (a division
+		// by nothing is fine; an expression gone wrong is not) leaves it as it
+		// was made at load, with one warning.
+		Command makeNow(const CmdLive& live);
+
+		// <set variable="target">: a variable of an object's (owner.name), or
+		// one of the numbers every object has (owner.x, owner.y,
+		// owner.velocity.x, owner.velocity.y, owner.heading), on an object or
+		// on every member of a group. A variable of the object's own of that
+		// name wins. Returns false, with a warning, for no such thing.
+		bool setNumber(const std::string& target, float value);
 
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
@@ -316,6 +334,19 @@ namespace xge
 		// Marks the objects (and every member of the groups) of these names
 		// as kept (Object::kept); a name that is no object stops the load.
 		void keep(const std::vector<std::string>& names);
+
+		// Writes where every object is and how it is going into the
+		// expressions' live numbers, before one is worked out as the game runs.
+		void refreshLive(void);
+
+		// Each live number the expressions read, and whose it is and which
+		// part, worked out the first time (objects keep their places in
+		// `objects`); and the numbers of the touch a rule is answering.
+		struct LiveLink { float* number; std::size_t object; std::size_t part; };
+		std::vector<LiveLink> liveLinks;
+		bool liveLinked = false;
+		std::array<float*, 6> touchNumbers{};
+		std::set<std::string> liveWarned;
 
 		// Shows `value` in every text object bound to ownerName.variableName.
 		void refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value);

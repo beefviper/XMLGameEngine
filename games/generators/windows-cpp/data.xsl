@@ -225,7 +225,7 @@
           </xsl:choose>
           <xsl:text>;</xsl:text>
         </xsl:when>
-        <xsl:when test="$verb = 'move' or $verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb' or $verb = 'go'">
+        <xsl:when test="$verb = 'move' or $verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
           <xsl:text> command.amount = </xsl:text>
           <xsl:call-template name="value">
             <xsl:with-param name="node" select="$node" />
@@ -303,6 +303,25 @@
             </xsl:call-template>
           </xsl:for-each>
           <xsl:text> };</xsl:text>
+        </xsl:when>
+        <!-- where and how fast, each half if given -->
+        <xsl:when test="$verb = 'spawn'">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.positionX'" />
+            <xsl:with-param name="node" select="$node/position/x" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.positionY'" />
+            <xsl:with-param name="node" select="$node/position/y" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.velocityX'" />
+            <xsl:with-param name="node" select="$node/velocity/x" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.velocityY'" />
+            <xsl:with-param name="node" select="$node/velocity/y" />
+          </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'follow'">
           <xsl:call-template name="field">
@@ -458,6 +477,23 @@
           <xsl:with-param name="indent" select="$indent" />
           <xsl:with-param name="name" select="'radius'" />
           <xsl:with-param name="node" select="$shape/radius" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="$kind = 'tether'">
+        <xsl:value-of select="concat($indent, 'look.tetherFrom = ')" />
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="$shape/@from" />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+        <xsl:value-of select="concat($indent, 'look.tetherTo = ')" />
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="$shape/@to" />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+        <xsl:call-template name="look-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="name" select="'thickness'" />
+          <xsl:with-param name="node" select="$shape/thickness" />
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$kind = 'rectangle'">

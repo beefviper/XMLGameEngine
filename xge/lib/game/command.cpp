@@ -202,7 +202,46 @@ namespace xge
 			return CmdFollow{ raw.path, raw.object, stagger };
 		}
 
+		if (verb == "set") { return CmdSet{ raw.variable, evaluate(raw.amount) }; }
+
+		if (verb == "spawn")
+		{
+			CmdSpawn spawn;
+			spawn.target = raw.object;
+			// A <centered> half holds where the middle goes; left empty, the
+			// middle of the window.
+			const auto half = [&](const RawValue& value, std::optional<float>& into, bool* centered, const char* middle)
+			{
+				if (value.kind == RawValue::Kind::Expression && value.text.empty()) { return; }
+				if (value.kind == RawValue::Kind::Centered)
+				{
+					if (!centered)
+					{
+						throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <centered> is for its <position>, not its <velocity>");
+					}
+					*centered = true;
+					into = evaluate(RawValue::expression(value.text.empty() ? middle : value.text));
+					return;
+				}
+				into = evaluate(value);
+			};
+			half(raw.positionX, spawn.x, &spawn.centerX, "window.width.center");
+			half(raw.positionY, spawn.y, &spawn.centerY, "window.height.center");
+			half(raw.velocityX, spawn.velocityX, nullptr, "");
+			half(raw.velocityY, spawn.velocityY, nullptr, "");
+			return spawn;
+		}
+
 		throw std::runtime_error("unknown command <" + verb + ">");
+	}
+
+	const Command& shapeOf(const Command& command) noexcept
+	{
+		if (const auto* live = std::get_if<CmdLive>(&command))
+		{
+			return live->loaded->command;
+		}
+		return command;
 	}
 
 	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate)
@@ -397,6 +436,25 @@ namespace xge
 			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
 			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
 			[&](const CmdResetScene& r) { o << "reset(" << (r.way.empty() ? "scene " + r.scene : "way " + r.way) << ")"; },
+			[&](const CmdSet& s) { o << "set(" << s.target << ", " << s.value << ")"; },
+			[&](const CmdSpawn& s)
+			{
+				const auto half = [&](const std::optional<float>& value, bool centered)
+				{
+					if (!value) { o << "-"; return; }
+					o << (centered ? "centered " : "") << *value;
+				};
+				o << "spawn(" << s.target << ", ";
+				half(s.x, s.centerX);
+				o << " ";
+				half(s.y, s.centerY);
+				o << ", ";
+				half(s.velocityX, false);
+				o << " ";
+				half(s.velocityY, false);
+				o << ")";
+			},
+			[&](const CmdLive& l) { o << "live " << l.loaded->command; },
 		}, command);
 
 		return o;
@@ -584,6 +642,14 @@ namespace xge
 		else if (command.verb == "follow")
 		{
 			o << "(" << command.path << (command.object.empty() ? "" : ", " + command.object) << ")";
+		}
+		else if (command.verb == "set")
+		{
+			o << "(" << command.variable << ", " << command.amount << ")";
+		}
+		else if (command.verb == "spawn")
+		{
+			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ")";
 		}
 
 		return o;

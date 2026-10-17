@@ -21,6 +21,12 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - Rejected: a box with a list of parts (a second description that drifts from the picture).
 
 
+## Tethers (2026-10-17)
+
+- Need: a line between two things that move (a fishing line, a grappling rope, a leash); the author asked for it named, "recalculated every frame".
+- **Chosen: a sprite, `<tether from="rod" to="hook">`**, with `<thickness>` and `<color>`: after each frame's move (`drawTethers` in play/frame, shared with generated games) the line between the two middles is drawn as a picture, as `<line>`s are, and the object's position and size follow it. Attributes, since they name the two ends. Looked at: a verb that draws a line each frame (nothing to name), a `<line>` whose ends read live numbers (a sprite is drawn once at load).
+- Open: ends other than the middles, a tether that limits how far apart the two can go (a rope rather than a line), collisions along the line itself (it touches as its box, or by pixels with `<type>pixel</type>`).
+
 ## Bitmaps
 
 - Need: chunky arcade sprites are small grids of on/off pixels; lines have no fill, an image file is not in the XML (cannot be read, edited or diffed with the game).

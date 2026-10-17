@@ -316,6 +316,17 @@
           <xs:attribute name="style" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
+      <!-- a line from the middle of one object to the middle of another, drawn again every frame wherever they are -->
+      <xs:element name="tether">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="thickness" type="valueType" minOccurs="0" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="from" type="xs:string" use="required" />
+          <xs:attribute name="to" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="image">
         <xs:complexType>
           <xs:sequence>
@@ -496,6 +507,23 @@
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="variable" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- set: the value, worked out as it runs. -->
+  <xs:complexType name="setType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="variable" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- spawn: which object or group, where (a half may be <centered>), and how fast. -->
+  <xs:complexType name="spawnType">
+    <xs:sequence>
+      <xs:element name="position" type="partialPositionType" minOccurs="0" />
+      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
   <!-- move and hop: a direction, and how far. -->
@@ -700,6 +728,14 @@
       </xs:element>
       <xs:element name="inc" type="variableReferenceType" />
       <xs:element name="dec" type="variableReferenceType" />
+      <!-- set: the variable (owner.variable), or owner.x, owner.y,
+           owner.velocity.x, owner.velocity.y or owner.heading, takes the
+           value, worked out as it runs -->
+      <xs:element name="set" type="setType" />
+      <!-- spawn: one of the object or group out of play comes in, where the
+           <position> says and going as the <velocity> says (a half left out
+           is its own start), worked out as it runs -->
+      <xs:element name="spawn" type="spawnType" />
       <!-- copy: the variable into= takes the number variable= holds now (both owner.variable) -->
       <xs:element name="copy">
         <xs:complexType>

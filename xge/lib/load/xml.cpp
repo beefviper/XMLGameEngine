@@ -316,7 +316,7 @@ namespace xge
 
 		bool isShapeTag(const std::string& name)
 		{
-			return name == "circle" || name == "rectangle" || name == "text" || name == "image" || name == "bitmap" || name == "svg";
+			return name == "circle" || name == "rectangle" || name == "text" || name == "image" || name == "bitmap" || name == "svg" || name == "tether";
 		}
 
 		// The <flip> of a picture the engine draws itself (a <bitmap> or an
@@ -472,6 +472,14 @@ namespace xge
 					if (hide->getName() == "hide") { sprite.svgHide.push_back(readText(*hide)); }
 				}
 				sprite.flip = readPictureFlip(shape, here);
+			}
+			else if (kind == "tether")
+			{
+				// A line joining two objects' middles, wherever they go.
+				sprite.tetherFrom = shape.getAttribute("from");
+				sprite.tetherTo = shape.getAttribute("to");
+				if (sprite.tetherFrom.empty() || sprite.tetherTo.empty()) { fail(here, "names the two objects it joins, from=\"...\" and to=\"...\""); }
+				if (auto thickness = findChild(&shape, "thickness")) { sprite.thickness = readValue(*thickness, here); }
 			}
 			else if (kind == "text")
 			{
@@ -776,13 +784,31 @@ namespace xge
 			object.animation = std::move(chosen);
 		}
 
+		// Some of an <x>/<y> pair. A <group> gives what its members share and a
+		// <member> only what differs, so either half may be left out of either;
+		// an object's <velocity> may leave out a half that is 0.
+		struct PartialVector2
+		{
+			std::optional<RawValue> x;
+			std::optional<RawValue> y;
+		};
+
+		PartialVector2 readPartialVector2(const XmlNode& node, const std::string& where)
+		{
+			const std::string here = where + " > <" + node.getName() + ">";
+			PartialVector2 vector;
+			if (auto x = findChild(&node, "x")) { vector.x = readValue(*x, here); }
+			if (auto y = findChild(&node, "y")) { vector.y = readValue(*y, here); }
+			return vector;
+		}
+
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "knock" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
-				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter";
+				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter" || name == "set" || name == "spawn";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -815,6 +841,35 @@ namespace xge
 				// The amount is optional: a bare <inc variable="..." /> is 1.
 				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
 				else { command.amount = RawValue::expression("1"); }
+			}
+			if (verb == "set")
+			{
+				requireAttribute(node, "variable", where);
+				command.amount = readValue(node, where);
+			}
+			if (verb == "spawn")
+			{
+				requireAttribute(node, "object", where);
+				const std::string here = where + " > <spawn>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "position" && child->getName() != "velocity")
+					{
+						fail(here, "unknown <" + child->getName() + ">; expected <position> and <velocity>, each if wanted");
+					}
+				}
+				if (auto position = findChild(&node, "position"))
+				{
+					const PartialVector2 given = readPartialVector2(*position, here);
+					if (given.x) { command.positionX = *given.x; }
+					if (given.y) { command.positionY = *given.y; }
+				}
+				if (auto velocity = findChild(&node, "velocity"))
+				{
+					const PartialVector2 given = readPartialVector2(*velocity, here);
+					if (given.x) { command.velocityX = *given.x; }
+					if (given.y) { command.velocityY = *given.y; }
+				}
 			}
 			if (verb == "copy" || verb == "rank") { requireAttribute(node, "variable", where); requireAttribute(node, "into", where); }
 			if (verb == "push") { requireAttribute(node, "state", where); }
@@ -1260,24 +1315,6 @@ namespace xge
 			std::vector<std::pair<std::string, RawValue>> variables;
 			readVariables(variablesNode.get(), where + " > <variables>", variables);
 			for (auto& [name, value] : variables) { out[name] = std::move(value); }
-		}
-
-		// Some of an <x>/<y> pair. A <group> gives what its members share and a
-		// <member> only what differs, so either half may be left out of either;
-		// an object's <velocity> may leave out a half that is 0.
-		struct PartialVector2
-		{
-			std::optional<RawValue> x;
-			std::optional<RawValue> y;
-		};
-
-		PartialVector2 readPartialVector2(const XmlNode& node, const std::string& where)
-		{
-			const std::string here = where + " > <" + node.getName() + ">";
-			PartialVector2 vector;
-			if (auto x = findChild(&node, "x")) { vector.x = readValue(*x, here); }
-			if (auto y = findChild(&node, "y")) { vector.y = readValue(*y, here); }
-			return vector;
 		}
 
 		// The value of what a game leaves out: 0.

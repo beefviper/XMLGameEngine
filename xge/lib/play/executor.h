@@ -71,6 +71,13 @@ namespace xge
 	private:
 		Game& game;
 
+		// The command as it runs: itself, or one made as it runs (CmdLive)
+		// made again into `made` (see Game::makeNow).
+		const Command& now(const Command& command, Command& made);
+
+		// <spawn>: see CmdSpawn.
+		void spawn(const CmdSpawn& command);
+
 		// <carry />: see CmdCarry.
 		void carry(Object& object, const Object& item);
 

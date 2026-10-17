@@ -222,6 +222,14 @@ namespace xge
 		std::vector<RawTextPiece> text;
 
 		std::string path;            // image, svg
+
+		// tether: the two objects whose middles
+		// the line joins, drawn again every frame, and how thick it is
+		// (empty text: 1).
+		std::string tetherFrom;
+		std::string tetherTo;
+		RawValue thickness;
+
 		std::string flip;            // image: "", "horizontal" or "vertical"
 		std::string color;           // "" means color.white (or the style's)
 
@@ -732,6 +740,15 @@ namespace xge
 		// themselves; they only ever flip this flag.
 		bool visualDirty{ true };
 
+		// A <tether>: a line from the middle of the object tetherFrom names to
+		// the middle of tetherTo's, drawn again every frame wherever the two
+		// are (drawTethers in play/frame), this object's position and size
+		// following it. Empty for every other sprite.
+		std::string tetherFrom;
+		std::string tetherTo;
+		int tetherThickness{ 1 };
+		Color tetherColor{};
+
 		std::map<std::string, std::vector<Command>> action;
 		std::map<std::string, float> variable;
 
@@ -791,8 +808,28 @@ namespace xge
 
 	// What an object's own rules, timers and actions leave to mean itself,
 	// made its name (final, so after layOutScenes): a <trigger> with no
-	// object=, and a collision rule's <check> with no class= or object=.
+	// object=, a collision rule's <check> with no class= or object=, and
+	// self. at the start of a name in a command's value or variable=
+	// (self.x, self.score).
 	void nameSelf(std::vector<RawObject>& objects);
+
+	// The numbers every object has while the game runs, read and set as
+	// owner.part (ball.x, ship.velocity.y): its top left, its velocity and
+	// its heading. A variable of the object's own of that name wins.
+	const std::vector<std::string>& liveNumberParts();
+
+	// The part of liveNumberParts() `name` ends with (after a dot), or ""
+	// when it ends with none.
+	std::string liveNumberPart(const std::string& name);
+
+	// What a rule answering a touch can read of it (see Touch): touch.x and
+	// touch.y (the point), touch.along, touch.depth, touch.normal.x and
+	// touch.normal.y.
+	const std::vector<std::string>& touchNumberNames();
+
+	// `text` with every name in it that starts with `from` (a whole word,
+	// followed by a dot) starting with `to` instead.
+	std::string renameStart(const std::string& text, const std::string& from, const std::string& to);
 
 	// Makes each <centered> of an object's <position> the expression it
 	// means: where its middle goes, less half its own width (or height),

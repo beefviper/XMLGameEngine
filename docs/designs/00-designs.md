@@ -13,7 +13,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [vision](01-vision.md) | What we want, declarative with triggers, the VGDL landscape | Built |
 | [file-format](02-file-format.md) | Why XML + XSD, one file; attributes name, content computes; lists packed in strings | Built; lists in strings Open |
 | [arithmetic](03-arithmetic.md) | Math as text, `<equation>`, `<formula>` | Built |
-| [values-and-names](04-values-and-names.md) | `<random>`, evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
+| [values-and-names](04-values-and-names.md) | `<random>`, values read when used (`<set>`, `<spawn>`, live numbers), evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
 | [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, groups inside a group | Built |
 | [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` and `<conditions>` sets, `atleast`/`atmost`/`remaining`, states `from=` | Built; per-state behavior Open |
@@ -37,7 +37,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 
 | File | Topic | Status |
 |---|---|---|
-| [pictures](30-pictures.md) | One `Bitmap` path for lines, bitmaps, SVG parts, flip, turning | Built |
+| [pictures](30-pictures.md) | One `Bitmap` path for lines, bitmaps, SVG parts, flip, turning; tethers | Built |
 | [animation-and-looks](31-animation-and-looks.md) | Animation, named looks | Built |
 | [text](32-text.md) | Text and the built-in font, `<styles>`, `<centered>` | Built |
 | [sound](33-sound.md) | Notes made into samples; `<sounds>`, `<play>` | Built |

@@ -87,6 +87,11 @@ namespace xge
 		}
 
 		bool loading{ true };
+
+		// While a command's values are worked out at load: they may name
+		// liveNumbers (reading 0), since they are worked out again when the
+		// command runs.
+		bool commandValues{ false };
 		std::set<std::string> warnedDivisions;
 
 		exprtk::symbol_table<float> symbolTable;
@@ -207,6 +212,19 @@ namespace xge
 		// pre-creates every key (so the symbol exists before anything compiles)
 		// and only ever assigns through an existing key afterwards.
 		std::map<std::string, float> objectVariables;
+
+		// The numbers every object has while the game runs (liveNumberParts:
+		// ball.x, ball.velocity.y, ...) and what a rule answering a touch can
+		// read of it (touchNumberNames), bound into symbolTable as the
+		// variables are. Before a value is worked out while the game runs,
+		// Game writes them from where everything is (Game::evaluateNow).
+		// While loading they have no meaning yet, and a value that names one
+		// stops the load, unless it is a command's (see processCommands).
+		std::map<std::string, float> liveNumbers;
+
+		// Whether a value names anything that changes while the game runs: a
+		// variable of an object's, or one of liveNumbers.
+		bool namesLive(const RawValue& value) const;
 
 		// Every game loaded after this draws its <random>s starting from
 		// `value`, the same way each time (see game/random.h, which a generated

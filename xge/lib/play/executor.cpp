@@ -16,8 +16,19 @@
 
 namespace xge
 {
+	const Command& CommandExecutor::now(const Command& command, Command& made)
+	{
+		if (const auto* live = std::get_if<CmdLive>(&command))
+		{
+			made = game.makeNow(*live);
+			return made;
+		}
+		return command;
+	}
+
 	void CommandExecutor::executeScreenEdgeCollision(const Command& command, Object& object, Edge edge)
 	{
+		Command made;
 		std::visit(overload{
 			[&](const CmdBounce&) { bounceScreenEdge(object, edge); },
 			[&](const CmdStick&) { xge::stick(object, game.getWindowDesc(), edge); },
@@ -42,11 +53,13 @@ namespace xge
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
+			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
+			[&](const CmdSpawn& c) { spawn(c); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire never
 			                      appear in a collisionData list, and ride() and
 			                      deflect() are about another object, which a screen
 			                      edge is not; ignore defensively. */ }
-		}, command);
+		}, now(command, made));
 	}
 
 	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge)
@@ -61,6 +74,7 @@ namespace xge
 	void CommandExecutor::executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch)
 	{
 		const Edge edge = touch.edge;
+		Command made;
 		std::visit(overload{
 			[&](const CmdBounce&) { xge::bounce(object, edge); },
 			[&](const CmdDeflect& d) { xge::deflect(object, other, edge, d.maxAngle); },
@@ -92,14 +106,17 @@ namespace xge
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
+			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
+			[&](const CmdSpawn& c) { spawn(c); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
-		}, command);
+		}, now(command, made));
 	}
 
 	void CommandExecutor::executeInput(const Command& command, bool keyPressed)
 	{
+		Command made;
 		std::visit(overload{
 			[&](const CmdPushState& s) { if (keyPressed) { game.pushState(s.name); } },
 			[&](const CmdPopState& s) { if (keyPressed) { game.popState(s.name); } },
@@ -128,16 +145,18 @@ namespace xge
 			[&](const CmdFollow& f) { if (keyPressed) { follow(nullptr, f); } },
 			[&](const CmdEnterScene& e) { if (keyPressed) { game.enter(e); } },
 			[&](const CmdResetScene& r) { if (keyPressed) { game.reset(r); } },
+			[&](const CmdSet& c) { if (keyPressed) { game.setNumber(c.target, c.value); } },
+			[&](const CmdSpawn& c) { if (keyPressed) { spawn(c); } },
 			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
 			                      directly on a state's <input>; only reachable
 			                      via CmdTriggerAction into an object's own
 			                      action list. */ }
-		}, command);
+		}, keyPressed ? now(command, made) : shapeOf(command));
 	}
 
 	void CommandExecutor::executeAxis(const Command& command, Axis axis, float fraction)
 	{
-		const auto* trigger = std::get_if<CmdTriggerAction>(&command);
+		const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command));
 		if (!trigger)
 		{
 			return;
@@ -148,7 +167,7 @@ namespace xge
 		Object& object = game.getObject(trigger->object);
 		for (const auto& action : object.action[trigger->action])
 		{
-			if (std::holds_alternative<CmdTrack>(action))
+			if (std::holds_alternative<CmdTrack>(shapeOf(action)))
 			{
 				track(object, horizontal, fraction, horizontal ? window.width : window.height);
 			}
@@ -157,6 +176,7 @@ namespace xge
 
 	void CommandExecutor::executeTimer(const Command& command, Object* owner)
 	{
+		Command made;
 		std::visit(overload{
 			[&](const CmdPushState& s) { game.pushState(s.name); },
 			[&](const CmdPopState& s) { game.popState(s.name); },
@@ -191,9 +211,11 @@ namespace xge
 			[&](const CmdAim& a) { if (owner) { aim(*owner, a.target); } },
 			[&](const CmdHunt& h) { if (owner) { startHunt(*owner, h); } },
 			[&](const CmdWander& w) { if (owner) { startWander(*owner, w); } },
+			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
+			[&](const CmdSpawn& c) { spawn(c); },
 			[&](const auto&) { /* the rest are about a key held, an edge or another
 			                      object touched, none of which a timer has */ }
-		}, command);
+		}, now(command, made));
 	}
 
 	void CommandExecutor::become(Object* self, const CmdBecome& command)
@@ -261,8 +283,11 @@ namespace xge
 		}
 	}
 
-	bool CommandExecutor::executeHeldInput(const Command& command)
+	bool CommandExecutor::executeHeldInput(const Command& held)
 	{
+		Command made;
+		const Command& command = now(held, made);
+
 		// A looping sound right on a key goes on again, as a move does.
 		if (const auto* play = std::get_if<CmdPlay>(&command))
 		{
@@ -281,8 +306,10 @@ namespace xge
 		}
 
 		Object& object = game.getObject(trigger->object);
-		for (const auto& actionCommand : object.action[trigger->action])
+		for (const auto& written : object.action[trigger->action])
 		{
+			Command madeNow;
+			const Command& actionCommand = now(written, madeNow);
 			if (const auto* move = std::get_if<CmdMove>(&actionCommand))
 			{
 				holdStep(object, move->direction, move->step);
@@ -437,8 +464,9 @@ namespace xge
 	{
 		Object& object = game.getObject(objectName);
 
-		for (const auto& command : object.action[actionName])
+		for (const auto& written : object.action[actionName])
 		{
+			Command made;
 			std::visit(overload{
 				[&](const CmdMove& m)
 				{
@@ -484,8 +512,10 @@ namespace xge
 				[&](const CmdResetScene& r) { if (keyPressed) { game.reset(r); } },
 				[&](const CmdEnterScene& e) { if (keyPressed) { game.enter(e); } },
 				[&](const CmdDie&) { if (keyPressed) { xge::die(object); } },
+				[&](const CmdSet& c) { if (keyPressed) { game.setNumber(c.target, c.value); } },
+				[&](const CmdSpawn& c) { if (keyPressed) { spawn(c); } },
 				[&](const auto&) { /* ruleFor in load/expr lists what an action holds */ }
-			}, command);
+			}, keyPressed ? now(written, made) : shapeOf(written));
 		}
 	}
 
@@ -698,5 +728,35 @@ namespace xge
 		projectile->velocity = shot->velocity;
 		projectile->isVisible = true;
 		projectile->collisionData.enabled = true;
+	}
+
+	// The first of `spawn.target` out of play comes in: started again (a
+	// <random> drawn anew, let go by whatever carried it), then put and sent
+	// where the command says.
+	void CommandExecutor::spawn(const CmdSpawn& command)
+	{
+		for (auto& candidate : game.getCurrentObjects())
+		{
+			if (candidate.isVisible || !isNamed(candidate, command.target) || game.isAway(candidate)) { continue; }
+
+			game.drawStartAgain(candidate);
+			const Vector2f size = sizeOf(candidate);
+			candidate.position = candidate.positionOriginal;
+			candidate.velocity = candidate.velocityOriginal;
+			if (command.x) { candidate.position.x = command.centerX ? *command.x - size.x * 0.5f : *command.x; }
+			if (command.y) { candidate.position.y = command.centerY ? *command.y - size.y * 0.5f : *command.y; }
+			if (command.velocityX) { candidate.velocity.x = *command.velocityX; }
+			if (command.velocityY) { candidate.velocity.y = *command.velocityY; }
+			candidate.riding = {};
+			candidate.isVisible = true;
+			candidate.collisionData.enabled = true;
+
+			// A new start: whatever held it holds it no longer.
+			for (auto& carrier : game.getCurrentObjects())
+			{
+				if (carrier.carrying == candidate.name) { carrier.carrying.clear(); }
+			}
+			return;
+		}
 	}
 }

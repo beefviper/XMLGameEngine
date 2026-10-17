@@ -456,10 +456,65 @@ namespace xge
 		std::string way;
 	};
 
+	// <set variable="ball.speed">value</set> - puts the value, worked out as
+	// it runs, into a variable (owner.variable, and every text showing it is
+	// refreshed), or into one of the numbers every object has: owner.x,
+	// owner.y (its top left), owner.velocity.x, owner.velocity.y and
+	// owner.heading. See Game::setNumber.
+	struct CmdSet
+	{
+		std::string target;
+		float value{};
+	};
+
+	// <spawn object="shots"> with a <position> and a <velocity>, each half
+	// optional - one of `target` (a <group> used as a pool, or an object)
+	// that is out of play comes in, put where the position says (its top
+	// left, or, for a half that is <centered>, its middle) and going as the
+	// velocity says; what is left out stays as it was. None out of play:
+	// nothing. The values are worked out as it runs, so they can say where
+	// the object spawning it is (self.x) and how it is going. See
+	// CommandExecutor::spawn.
+	struct CmdSpawn
+	{
+		std::string target;
+		std::optional<float> x;
+		std::optional<float> y;
+		bool centerX{ false };
+		bool centerY{ false };
+		std::optional<float> velocityX;
+		std::optional<float> velocityY;
+	};
+
+	struct RawCommand;
+	struct LoadedCommand;
+
+	// A command whose numbers name something that changes while the game
+	// runs (a variable of an object, where an object is or how it is going,
+	// the touch a rule is answering): made again from what was written each
+	// time it runs, so a variable can always be changed. `loaded` is the
+	// command as it was made at load, which says what kind of command it is
+	// (see shapeOf). See Game::makeNow.
+	struct CmdLive
+	{
+		std::shared_ptr<const RawCommand> raw;
+		std::shared_ptr<const LoadedCommand> loaded;
+		std::string where;
+	};
+
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdLive>;
+
+	struct LoadedCommand
+	{
+		Command command;
+	};
+
+	// What kind of command it is: itself, or for one made as it runs, the
+	// command it was at load.
+	const Command& shapeOf(const Command& command) noexcept;
 
 	// --- What the XML says, before any of it is evaluated.
 
@@ -593,7 +648,7 @@ namespace xge
 	{
 		std::string verb;
 		std::string object;    // reset, fire, release, trigger, chase, aim
-		std::string variable;  // inc, dec, copy (the one read)
+		std::string variable;  // inc, dec, copy (the one read), set (the one written)
 		std::string into;      // copy (the one written)
 		std::string state;     // push
 		std::string action;    // trigger
@@ -609,10 +664,16 @@ namespace xge
 		std::string partner;   // hunt: <with object="...">
 		std::string retreat;   // hunt: <retreat object="...">
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
+		RawValue amount;       // set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
+		// spawn: its <position> and <velocity>, each half empty text when
+		// left out; a position half may be <centered>.
+		RawValue positionX;
+		RawValue positionY;
+		RawValue velocityX;
+		RawValue velocityY;
 	};
 
 	// A <timer> as written: <every> (again and again) or <after> (once), a

@@ -166,6 +166,11 @@ namespace xge
 				const std::string whole = object(target, context, true);
 				if (objects.count(whole)) { return whole; }
 
+				if (const std::string live = liveNumberPart(target); !live.empty() && live.find('.') != std::string::npos)
+				{
+					return object(target.substr(0, target.size() - live.size() - 1), context) + "." + live;
+				}
+
 				const auto dot = target.rfind('.');
 				if (dot == std::string::npos) { return whole; }
 				return object(target.substr(0, dot), context) + target.substr(dot);
@@ -223,6 +228,14 @@ namespace xge
 				// A game variable written with a dot is that variable, whatever
 				// object its first part might name.
 				if (gameVariables.count(name)) { return name; }
+
+				// One of the numbers every object has (ball.velocity.x): the
+				// owner is all before it.
+				if (const std::string live = liveNumberPart(name); !live.empty() && live.find('.') != std::string::npos)
+				{
+					const std::string liveOwner = object(name.substr(0, name.size() - live.size() - 1), context, true);
+					if (all.count(liveOwner)) { return liveOwner + "." + live; }
+				}
 
 				const std::string owner = name.substr(0, dot);
 				const std::string part = name.substr(dot);
@@ -297,7 +310,7 @@ namespace xge
 			{
 				for (RawCommand& command : commands)
 				{
-					if (command.verb == "inc" || command.verb == "dec" || command.verb == "copy" || command.verb == "rank") { command.variable = names_.variableTarget(command.variable, context); }
+					if (command.verb == "inc" || command.verb == "dec" || command.verb == "copy" || command.verb == "rank" || command.verb == "set") { command.variable = names_.variableTarget(command.variable, context); }
 					if (command.verb == "copy") { command.into = names_.variableTarget(command.into, context); }
 					if (command.verb == "rank") { command.into = names_.object(command.into, context); }
 					command.object = names_.object(command.object, context);
@@ -319,6 +332,10 @@ namespace xge
 					value(command.seconds, context);
 					value(command.distance, context);
 					value(command.ahead, context);
+					value(command.positionX, context);
+					value(command.positionY, context);
+					value(command.velocityX, context);
+					value(command.velocityY, context);
 				}
 			}
 
@@ -333,7 +350,7 @@ namespace xge
 					value(line.thickness, context);
 				}
 				for (RawValue* part : { &sprite.scale, &sprite.svgX, &sprite.svgY, &sprite.svgWidth, &sprite.svgHeight,
-					&sprite.radius, &sprite.width, &sprite.height, &sprite.size })
+					&sprite.radius, &sprite.width, &sprite.height, &sprite.size, &sprite.thickness })
 				{
 					value(*part, context);
 				}
@@ -341,6 +358,8 @@ namespace xge
 				{
 					value(piece.value, context);
 				}
+				if (!sprite.tetherFrom.empty()) { sprite.tetherFrom = names_.object(sprite.tetherFrom, context); }
+				if (!sprite.tetherTo.empty()) { sprite.tetherTo = names_.object(sprite.tetherTo, context); }
 			}
 
 			void timers(std::vector<RawTimer>& timers, const Context& context) const

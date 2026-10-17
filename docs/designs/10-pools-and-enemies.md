@@ -9,7 +9,7 @@
   - `<release object="rocks">N</release>`: into play centered on the object running the rule, at their own starting velocity (a rock breaking).
   - `<reveal object>N</reveal>`: back where they started (an igloo built a block at a time, a door, a fish that returns).
 - **Why pools:** need no new object list at runtime, the tests see every member, and the pool size caps shots in flight as arcade games did. A pool member has the same velocity each release; with all in flight a timer that fires does nothing.
-- Rejected for now: a runtime spawn verb (objects created while running). Fixed-size pools cover splitting rocks, a bomber dropping where he is (`<fire>` from his facing side), and an explosion where something died (a `<release>` from a pool in its rule). A spawn verb is needed only for counts with no upper bound.
+- Rejected for now: a runtime spawn verb (objects created while running). Fixed-size pools cover splitting rocks, a bomber dropping where he is (`<fire>` from his facing side), and an explosion where something died (a `<release>` from a pool in its rule). A spawn verb is needed only for counts with no upper bound. (2026-10-17: `<spawn>` was built, and is a pool too: it brings in the first member out of play with a position and velocity read as it runs; see [values](04-values-and-names.md#values-read-when-used-2026-10-17).)
 - Show/hide as verbs were an earlier idea; `<reveal>` and `<die />` are that pair in pool form.
 - **Fixed sets that cycle:** things that fall and come back (Kaboom, Astrosmash) are a fixed set reset to the top. `<random>` is drawn once at load, so a piece repeats its own fall; the rhythm differs per launch, not within one.
 

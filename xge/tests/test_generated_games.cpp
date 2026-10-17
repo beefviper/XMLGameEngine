@@ -136,6 +136,10 @@ namespace
 			value(at + ".ahead", c.ahead);
 			value(at + ".seconds", c.seconds);
 			value(at + ".distance", c.distance);
+			value(at + ".positionX", c.positionX);
+			value(at + ".positionY", c.positionY);
+			value(at + ".velocityX", c.velocityX);
+			value(at + ".velocityY", c.velocityY);
 			for (const std::string& player : c.players) { out << at << ".player " << player << "\n"; }
 		}
 
@@ -196,6 +200,9 @@ namespace
 			text(at + ".flip", s.flip);
 			text(at + ".color", s.color);
 			text(at + ".style", s.style);
+			text(at + ".tetherFrom", s.tetherFrom);
+			text(at + ".tetherTo", s.tetherTo);
+			value(at + ".thickness", s.thickness);
 		}
 
 		void guards(const std::string& at, const std::vector<EdgeGuard>& list)
