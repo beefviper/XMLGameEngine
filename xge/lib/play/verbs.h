@@ -72,6 +72,11 @@ namespace xge
 	// `horizontal`), kept wholly inside it. Its speed is left alone.
 	void track(Object& object, bool horizontal, float fraction, float span);
 
+	// <track path="...">: the object's middle `fraction` (0 to 1, held to
+	// that) of the way along the path, measured along its legs from its
+	// <start>; a <home /> leg goes back to the start.
+	void trackPath(Object& object, const Path& path, float fraction);
+
 	// <die />: out of play; not drawn, moved or collided with.
 	void die(Object& object);
 

@@ -509,6 +509,38 @@
     <xs:attribute name="variable" type="xs:string" use="required" />
   </xs:complexType>
 
+  <!-- pull and seek: which object or group, and how much. -->
+  <xs:complexType name="targetValueType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="object" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <!-- hop: one of the four ways, or a diagonal, and how far: a distance, or for a diagonal an <x> across and a <y> up or down. -->
+  <xs:simpleType name="hopDirectionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="up" />
+      <xs:enumeration value="down" />
+      <xs:enumeration value="left" />
+      <xs:enumeration value="right" />
+      <xs:enumeration value="up-left" />
+      <xs:enumeration value="up-right" />
+      <xs:enumeration value="down-left" />
+      <xs:enumeration value="down-right" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="hopType" mixed="true">
+    <xs:choice minOccurs="0">
+      <xs:group ref="valueTag" />
+      <xs:sequence>
+        <xs:element name="x" type="valueType" />
+        <xs:element name="y" type="valueType" />
+      </xs:sequence>
+    </xs:choice>
+    <xs:attribute name="direction" type="hopDirectionType" use="required" />
+  </xs:complexType>
+
   <!-- set: the value, worked out as it runs. -->
   <xs:complexType name="setType" mixed="true">
     <xs:sequence>
@@ -705,7 +737,12 @@
       <xs:element name="ride" type="emptyType" />
       <xs:element name="carry" type="emptyType" />
       <xs:element name="drop" type="emptyType" />
-      <xs:element name="track" type="emptyType" />
+      <!-- track: where a control points; path= along that path instead of across the window -->
+      <xs:element name="track">
+        <xs:complexType>
+          <xs:attribute name="path" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="die" type="emptyType" />
       <xs:element name="stop" type="emptyType" />
       <!-- <reset /> puts back the object running it; object= that object
@@ -768,7 +805,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="move" type="stepType" />
-      <xs:element name="hop" type="stepType" />
+      <xs:element name="hop" type="hopType" />
       <xs:element name="jump" type="jumpType" />
       <!-- land: stand on top of the object touched; leap: a jump of that height under the object's own pull -->
       <xs:element name="land" type="emptyType" />
@@ -1103,6 +1140,10 @@
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <!-- how hard it is to knock; left out, a knock does not move it -->
       <xs:element name="mass" type="valueType" minOccurs="0" />
+      <!-- pulled toward the nearest of each, that much speed a frame -->
+      <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
+      <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->
+      <xs:element name="seek" type="targetValueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1211,6 +1252,8 @@
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <xs:element name="mass" type="valueType" minOccurs="0" />
+      <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="seek" type="targetValueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1277,6 +1320,10 @@
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <!-- how hard it is to knock; left out, a knock does not move it -->
       <xs:element name="mass" type="valueType" minOccurs="0" />
+      <!-- pulled toward the nearest of each, that much speed a frame -->
+      <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
+      <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->
+      <xs:element name="seek" type="targetValueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1372,6 +1419,10 @@
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <!-- how hard it is to knock; left out, a knock does not move it -->
       <xs:element name="mass" type="valueType" minOccurs="0" />
+      <!-- pulled toward the nearest of each, that much speed a frame -->
+      <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
+      <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->
+      <xs:element name="seek" type="targetValueType" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />

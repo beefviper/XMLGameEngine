@@ -4,6 +4,7 @@
 // date: Sept 27, 2026
 
 #include "game/command.h"
+#include "play/geometry.h"
 
 #include <algorithm>
 #include <cctype>
@@ -38,7 +39,7 @@ namespace xge
 		if (verb == "ride")   { return CmdRide{}; }
 		if (verb == "carry")  { return CmdCarry{}; }
 		if (verb == "drop")   { return CmdDrop{}; }
-		if (verb == "track")  { return CmdTrack{}; }
+		if (verb == "track")  { return CmdTrack{ raw.path }; }
 		if (verb == "land")   { return CmdLand{}; }
 		if (verb == "reverse") { return CmdReverse{}; }
 
@@ -52,7 +53,32 @@ namespace xge
 		}
 
 		if (verb == "move") { return CmdMove{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
-		if (verb == "hop")  { return CmdHop{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
+		if (verb == "hop")
+		{
+			// up-left and the rest: one of up/down, then one of left/right.
+			const std::string& name = raw.direction;
+			const auto dash = name.find('-');
+			if (dash == std::string::npos)
+			{
+				CmdHop hop{ directionFromName(name, verb), evaluate(raw.amount), {} };
+				hop.step = stepToward(hop.direction, hop.distance);
+				return hop;
+			}
+
+			const Direction upDown = directionFromName(name.substr(0, dash), verb);
+			const Direction leftRight = directionFromName(name.substr(dash + 1), verb);
+			if ((upDown != Direction::Up && upDown != Direction::Down) || (leftRight != Direction::Left && leftRight != Direction::Right))
+			{
+				throw std::runtime_error("<hop> has direction=\"" + name + "\"; a diagonal is up-left, up-right, down-left or down-right");
+			}
+			const bool split = !raw.positionX.text.empty() || raw.positionX.kind != RawValue::Kind::Expression;
+			const float distance = split ? 0.0f : evaluate(raw.amount);
+			const float across = split ? evaluate(raw.positionX) : distance;
+			const float down = split ? evaluate(raw.positionY) : distance;
+			CmdHop hop{ upDown, distance, {} };
+			hop.step = { leftRight == Direction::Left ? -across : across, upDown == Direction::Up ? -down : down };
+			return hop;
+		}
 
 		if (verb == "jump")
 		{
@@ -350,7 +376,7 @@ namespace xge
 			[&](const CmdRide&) { o << "ride"; },
 			[&](const CmdCarry&) { o << "carry"; },
 			[&](const CmdDrop&) { o << "drop"; },
-			[&](const CmdTrack&) { o << "track"; },
+			[&](const CmdTrack& t) { o << "track" << (t.path.empty() ? "" : "(" + t.path + ")"); },
 			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
 			[&](const CmdKnock& k) { o << "knock(" << k.bounce << ")"; },
 			[&](const CmdReverse&) { o << "reverse"; },
@@ -368,7 +394,8 @@ namespace xge
 					: (h.direction == Direction::Down) ? "down"
 					: (h.direction == Direction::Left) ? "left"
 					: "right";
-				o << "hop." << direction << "(" << h.distance << ")";
+				if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y << ")"; }
+				else { o << "hop." << direction << "(" << h.distance << ")"; }
 			},
 			[&](const CmdJump& j)
 			{
@@ -642,6 +669,10 @@ namespace xge
 		else if (command.verb == "follow")
 		{
 			o << "(" << command.path << (command.object.empty() ? "" : ", " + command.object) << ")";
+		}
+		else if (command.verb == "track" && !command.path.empty())
+		{
+			o << "(" << command.path << ")";
 		}
 		else if (command.verb == "set")
 		{

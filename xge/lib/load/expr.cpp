@@ -323,6 +323,20 @@ namespace xge
 					throw std::runtime_error(where + ": <follow> names '" + follow->target + "', and there is no object of that name" + didYouMean(follow->target, objectNames(objects)));
 				}
 			}
+			else if (const auto* along = std::get_if<CmdTrack>(&shapeOf(command)); along && !along->path.empty())
+			{
+				const auto path = paths.find(along->path);
+				if (path == paths.end())
+				{
+					std::vector<std::string> names;
+					for (const auto& entry : paths) { names.push_back(entry.first); }
+					throw std::runtime_error(where + ": <track path=\"" + along->path + "\" /> names no path of the game" + didYouMean(along->path, names));
+				}
+				if (!path->second.hasStart)
+				{
+					throw std::runtime_error(where + ": <track path=\"" + along->path + "\" />: the path needs a <start>, where 0 is");
+				}
+			}
 			else if (const auto* become = std::get_if<CmdBecome>(&shapeOf(command)))
 			{
 				if (!become->from.empty() && become->target.empty())
@@ -540,9 +554,21 @@ namespace xge
 		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
 			const std::map<std::string, Path>& paths)
 		{
-			// A <tether> joins two objects the game has.
+			// A <tether> joins two objects the game has, and a <pull> and a
+			// <seek> name ones it has.
 			for (const Object& object : objects)
 			{
+				for (const auto& [name, strength] : object.pulls)
+				{
+					if (!findObject(objects, name))
+					{
+						throw std::runtime_error("object '" + object.name + "' > <pull>: there is no object named '" + name + "'" + didYouMean(name, objectNames(objects)));
+					}
+				}
+				if (!object.seekTarget.empty() && !findObject(objects, object.seekTarget))
+				{
+					throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + object.seekTarget + "'" + didYouMean(object.seekTarget, objectNames(objects)));
+				}
 				for (const std::string* end : { &object.tetherFrom, &object.tetherTo })
 				{
 					if (!end->empty() && !findObject(objects, *end))
@@ -1079,6 +1105,17 @@ namespace xge
 				{
 					throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.mass) + "; expected more than 0");
 				}
+			}
+
+			for (const auto& [name, strength] : rawObject.rawPulls)
+			{
+				object.pulls.emplace_back(name, evaluate(strength, where + " > <pull object=\"" + name + "\">"));
+			}
+			if (!rawObject.seekTarget.empty())
+			{
+				object.seekTarget = rawObject.seekTarget;
+				object.seekRate = evaluate(rawObject.rawSeek, where + " > <seek>");
+				if (object.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(object.seekRate) + " degrees a frame; expected 0 or more"); }
 			}
 
 			if (rawObject.sprite.kind == "tether")

@@ -24,6 +24,7 @@
 | `<paths>`, `<follow>` with `<stagger>` | Galaxian | below |
 | `<land />`, `<leap>`, `<climb>`, `<acceleration>` in a group | Donkey Kong | below |
 | `<chase>`, `<aim>` | Berserk's Otto and robots | below |
+| `<pull>`, `<seek>`, diagonal `<hop>`s, `<track path>` | the 2600 gap review: Yars' Revenge, Q*bert | [pulls and seeking](#pulls-seeking-and-diagonal-hops-2026-10-17) |
 
 
 ## Gravity, thrust and landing (Lunar Lander)
@@ -50,6 +51,15 @@
 - **`<jump>`**: a straight timed move (`<distance>` over `<seconds>`) that touches nothing in the air and meets what it lands on; refused if it would land off screen. No arc, no air control. Exactly Frostbite's "land on the ice or in the water".
 - **`<facing>`** (up/down/left/right, follows the last move, hop or jump, never turns the picture): `<fire>` leaves the middle of that side at the projectile's own speed. An object with no facing fires from its top as before. Chosen over a heading in 90 degree steps, which would turn the picture.
 
+
+## Pulls, seeking and diagonal hops (2026-10-17)
+
+- Need: the author asked for "pull towards something" as a fundamental, a heat-seeking missile that turns to its target, diagonal hops (Q*bert, 8-way) and a track an input moves along from 0 to 1.
+- **`<pull object>` and `<seek object>` are properties, not verbs.** Each runs every frame (`pullAndSeek` in play/frame, after the frame's acceleration), as `<acceleration>` and `<drag>` do; a verb run by a timer, as `<chase>` is, would make a smooth pull or turn a staircase. Both look for the nearest of a name or group in play, as `<chase>` and `<aim>` do. Looked at: a `<homing>` with a speed of its own (the missile's velocity already says it), a pull that falls off with distance (inverse square: open, for a Spacewar sun), a range beyond which nothing pulls (open: Adventure's magnet).
+- `<seek>` turns the way the object goes, keeping its speed, by at most so many degrees a frame (`turnedToward` in play/geometry), so a missile overshoots and comes round; its heading follows. Still, nothing turns.
+- **Diagonal hops are direction words**, `up-left` and the rest, which pick (an attribute), with the step either one distance both ways or `<x>` and `<y>` (Q*bert's cubes are wider than they are tall). `Direction` stays four ways: a hop keeps the whole step and faces the up or down of it. Moves need nothing new: two keys held already go diagonally.
+- **`<track path>`** puts the middle along a `<path>`'s legs by distance, from its `<start>`; the axis still says how far, 0 to 1. Kept on the input side ([input](08-input.md)) rather than a new kind of path.
+- Open: keys moving along a track (a held key stepping the fraction), a pull's range and fall-off, seeking with a turning heading but no velocity (a turret: `<aim>` does that once), facing in eight ways.
 
 ## Motion models (idea: names)
 

@@ -329,6 +329,12 @@ namespace xge
 		bool hasDrag{ false };
 		RawValue rawMass;            // only when hasMass
 		bool hasMass{ false };
+		// <pull object="sun">strength</pull>s: what pulls it, and how hard.
+		std::vector<std::pair<std::string, RawValue>> rawPulls;
+		// <seek object="ship">degrees</seek>: what it turns toward, and how
+		// fast; seekTarget empty for none.
+		std::string seekTarget;
+		RawValue rawSeek;
 		std::string facing;          // "" when the object has no <facing>
 		RawMaze maze;                // <maze>: the map it walks, if any
 		std::vector<RawTimer> timers;
@@ -625,6 +631,18 @@ namespace xge
 		// <mass>: how hard it is to knock (see CmdKnock). 0, when it has
 		// none, is not knocked at all: a wall, a floor.
 		float mass{};
+
+		// <pull>: each frame it is pulled toward the middle of the nearest of
+		// each name or group in play, by that much speed a frame (gravity
+		// toward a sun, a tractor beam, a magnet). See playOneFrame.
+		std::vector<std::pair<std::string, float>> pulls;
+
+		// <seek>: each frame it turns the way it is going toward the middle of
+		// the nearest of seekTarget in play, by at most seekRate degrees, at
+		// the same speed, and its heading with it if it has one: a homing
+		// missile. Empty for none.
+		std::string seekTarget;
+		float seekRate{};
 
 		// Draws `bitmap` again at the current heading (and, for an animated
 		// object, the picture that is showing) when that is not what it

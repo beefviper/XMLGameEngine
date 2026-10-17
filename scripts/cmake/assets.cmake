@@ -46,7 +46,9 @@ set(data_xml
 	"games/descriptions/adventure.xml"
 	"games/descriptions/trickshot.xml"
 	"games/descriptions/mariobros.xml"
-	"games/descriptions/fishingderby.xml")
+	"games/descriptions/fishingderby.xml"
+	"games/descriptions/qbert.xml"
+	"games/descriptions/yarsrevenge.xml")
 
 set(data_assets
 	"games/assets/tuffy.ttf"

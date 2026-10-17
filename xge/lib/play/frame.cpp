@@ -261,6 +261,55 @@ namespace xge
 			}
 		}
 
+		// The nearest of that name or group in play to `from`, leaving it out.
+		const Object* nearestInPlay(const std::vector<Object>& objects, FrameRules& rules, const Object& from, const std::string& name)
+		{
+			const Vector2f middle = from.position + sizeOf(from) * 0.5f;
+			const Object* best = nullptr;
+			float bestApart = 0.0f;
+			for (const auto& other : objects)
+			{
+				if (&other == &from || (other.name != name && !other.inGroup(name)) || !rules.inPlay(other)) { continue; }
+				const Vector2f apart = other.position + sizeOf(other) * 0.5f - middle;
+				const float distance = apart.x * apart.x + apart.y * apart.y;
+				if (!best || distance < bestApart) { best = &other; bestApart = distance; }
+			}
+			return best;
+		}
+
+		// <pull>: toward the middle of the nearest of each, that much speed a
+		// frame. <seek>: the way it goes turned toward the nearest of its
+		// target, and its heading with it.
+		void pullAndSeek(std::vector<Object>& objects, FrameRules& rules)
+		{
+			for (auto& object : objects)
+			{
+				if (!rules.inPlay(object) || (object.pulls.empty() && object.seekTarget.empty())) { continue; }
+
+				const Vector2f middle = object.position + sizeOf(object) * 0.5f;
+				for (const auto& [name, strength] : object.pulls)
+				{
+					const Object* toward = nearestInPlay(objects, rules, object, name);
+					if (!toward) { continue; }
+					if (const auto way = wayTo(middle, toward->position + sizeOf(*toward) * 0.5f))
+					{
+						object.velocity = object.velocity + *way * strength;
+					}
+				}
+
+				if (object.seekTarget.empty()) { continue; }
+				const Object* target = nearestInPlay(objects, rules, object, object.seekTarget);
+				if (!target) { continue; }
+				const Vector2f before = object.velocity;
+				object.velocity = turnedToward(object.velocity, target->position + sizeOf(*target) * 0.5f - middle, object.seekRate);
+				if (object.hasHeading && (object.velocity.x != before.x || object.velocity.y != before.y))
+				{
+					object.heading = headingOf(object.velocity);
+					object.showHeading();
+				}
+			}
+		}
+
 		// A <tether> is a line from one object's middle to another's, drawn
 		// again after the move wherever the two have got to; its own position
 		// and size follow it, so what it touches is where it is now.
@@ -432,6 +481,8 @@ namespace xge
 		applyClimbing(objects, rules);
 
 		applyAcceleration(objects, rules);
+
+		pullAndSeek(objects, rules);
 
 		// Screen-edge checks: independent per object, order doesn't matter.
 		for (auto& object : objects)

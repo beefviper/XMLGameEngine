@@ -167,9 +167,15 @@ namespace xge
 		Object& object = game.getObject(trigger->object);
 		for (const auto& action : object.action[trigger->action])
 		{
-			if (std::holds_alternative<CmdTrack>(shapeOf(action)))
+			const auto* along = std::get_if<CmdTrack>(&shapeOf(action));
+			if (!along) { continue; }
+			if (along->path.empty())
 			{
 				track(object, horizontal, fraction, horizontal ? window.width : window.height);
+			}
+			else if (const auto path = game.getPaths().find(along->path); path != game.getPaths().end())
+			{
+				trackPath(object, path->second, fraction);
 			}
 		}
 	}
@@ -455,9 +461,9 @@ namespace xge
 		object.hasAim = false;
 	}
 
-	void CommandExecutor::queueHop(Object& object, Direction direction, float distance)
+	void CommandExecutor::queueHop(Object& object, Vector2f step)
 	{
-		object.hopPending = stepToward(direction, distance);
+		object.hopPending = step;
 	}
 
 	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed)
@@ -474,7 +480,7 @@ namespace xge
 				},
 				// A hop belongs to the press alone: letting go of the key does
 				// nothing, and it is not among what executeHeldInput resumes.
-				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.direction, h.distance); object.facing = h.direction; object.hasAim = false; } },
+				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.step); object.facing = h.direction; object.hasAim = false; } },
 				// So does a jump, and one in the air waits for the landing.
 				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
 				// A <go> is the press alone too: the walker keeps going that way.

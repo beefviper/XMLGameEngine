@@ -225,6 +225,17 @@
           </xsl:choose>
           <xsl:text>;</xsl:text>
         </xsl:when>
+        <!-- a diagonal hop's step across and up or down -->
+        <xsl:when test="$verb = 'hop' and $node/x">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.positionX'" />
+            <xsl:with-param name="node" select="$node/x" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.positionY'" />
+            <xsl:with-param name="node" select="$node/y" />
+          </xsl:call-template>
+        </xsl:when>
         <xsl:when test="$verb = 'move' or $verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
           <xsl:text> command.amount = </xsl:text>
           <xsl:call-template name="value">
@@ -1010,6 +1021,29 @@
         <xsl:with-param name="node" select="mass" />
       </xsl:call-template>
     </xsl:if>
+    <xsl:for-each select="pull">
+      <xsl:value-of select="concat($in, 'object.rawPulls.emplace_back(')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="@object" />
+      </xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="value">
+        <xsl:with-param name="node" select="." />
+      </xsl:call-template>
+      <xsl:text>);&#10;</xsl:text>
+    </xsl:for-each>
+    <xsl:if test="seek">
+      <xsl:value-of select="concat($in, 'object.seekTarget = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="seek/@object" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$in" />
+        <xsl:with-param name="to" select="'object.rawSeek'" />
+        <xsl:with-param name="node" select="seek" />
+      </xsl:call-template>
+    </xsl:if>
     <xsl:call-template name="shared">
       <xsl:with-param name="node" select="." />
       <xsl:with-param name="to" select="'object'" />
@@ -1220,6 +1254,29 @@
         <xsl:with-param name="indent" select="$in" />
         <xsl:with-param name="to" select="'group.object.rawMass'" />
         <xsl:with-param name="node" select="mass" />
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:for-each select="pull">
+      <xsl:value-of select="concat($in, 'group.object.rawPulls.emplace_back(')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="@object" />
+      </xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="value">
+        <xsl:with-param name="node" select="." />
+      </xsl:call-template>
+      <xsl:text>);&#10;</xsl:text>
+    </xsl:for-each>
+    <xsl:if test="seek">
+      <xsl:value-of select="concat($in, 'group.object.seekTarget = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="seek/@object" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$in" />
+        <xsl:with-param name="to" select="'group.object.rawSeek'" />
+        <xsl:with-param name="node" select="seek" />
       </xsl:call-template>
     </xsl:if>
     <xsl:call-template name="shared">

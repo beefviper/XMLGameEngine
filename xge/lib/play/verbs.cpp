@@ -9,6 +9,7 @@
 #include "play/geometry.h"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 namespace xge
@@ -136,6 +137,35 @@ namespace xge
 		const float room = std::max(span - extent, 0.0f);
 		const float place = std::clamp(fraction * span - extent * 0.5f, 0.0f, room);
 		(horizontal ? object.position.x : object.position.y) = place;
+	}
+
+	void trackPath(Object& object, const Path& path, float fraction)
+	{
+		std::vector<Vector2f> corners{ path.start };
+		for (const PathStep& step : path.steps)
+		{
+			corners.push_back(step.home ? path.start : corners.back() + step.by);
+		}
+
+		float total = 0.0f;
+		for (std::size_t i = 1; i < corners.size(); ++i) { total += std::hypot(corners[i].x - corners[i - 1].x, corners[i].y - corners[i - 1].y); }
+
+		Vector2f at = corners.front();
+		float left = std::clamp(fraction, 0.0f, 1.0f) * total;
+		for (std::size_t i = 1; i < corners.size(); ++i)
+		{
+			const Vector2f leg = corners[i] - corners[i - 1];
+			const float length = std::hypot(leg.x, leg.y);
+			if (left <= length && length > 0.0f)
+			{
+				at = corners[i - 1] + leg * (left / length);
+				break;
+			}
+			left -= length;
+			at = corners[i];
+		}
+
+		object.position = at - sizeOf(object) * 0.5f;
 	}
 
 	// Everything else about it is left as it was, so whatever brings it back

@@ -64,7 +64,13 @@ namespace xge
 
 	// <track />, in an action an <input axis="..."> triggers: the object
 	// goes where the control points, across the window (an Atari paddle).
-	struct CmdTrack {};
+	// With path="...", its middle goes that far along the path instead, from
+	// the path's <start> (0) to the end of its last leg (1): a paddle on an
+	// arc, a gun on a rail.
+	struct CmdTrack
+	{
+		std::string path;
+	};
 
 	// <deflect>45</deflect> - in a collision rule about another object: a
 	// bounce whose angle depends on where along the touched side of the other
@@ -171,11 +177,15 @@ namespace xge
 	// jump of `distance` pixels, made once for each press of the key (see
 	// CommandExecutor::triggerObjectAction and playOneFrame). Unlike
 	// <move>, holding the key does nothing more, and a state change never
-	// resumes it.
+	// resumes it. A diagonal one (up-left, up-right, down-left, down-right)
+	// goes `distance` along both, or <x> across and <y> up or down: a hop
+	// from cube to cube of Q*bert's pyramid. `direction` is the way it then
+	// faces (the up or down of a diagonal), `step` the whole of the hop.
 	struct CmdHop
 	{
 		Direction direction{};
 		float distance{};
+		Vector2f step{};
 	};
 
 	// <jump direction="down"><distance>40</distance><seconds>0.4</seconds></jump>
@@ -670,6 +680,8 @@ namespace xge
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
 		// spawn: its <position> and <velocity>, each half empty text when
 		// left out; a position half may be <centered>.
+		// hop: a diagonal one's <x> across and <y> up or down (positionX and
+		// positionY), each empty text when it gives one distance instead.
 		RawValue positionX;
 		RawValue positionY;
 		RawValue velocityX;

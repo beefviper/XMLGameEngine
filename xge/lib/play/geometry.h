@@ -358,6 +358,10 @@ namespace xge
 	Vector2f ahead(float heading) noexcept;
 	float headingOf(const Vector2f& way) noexcept;
 
+	// <seek>: `velocity` turned toward `way` by at most `degrees`, at the
+	// same speed. Still, it stays still.
+	Vector2f turnedToward(const Vector2f& velocity, const Vector2f& way, float degrees) noexcept;
+
 	// <chase>: straight from `from` at `to` at `speed`, or, within stopWithin
 	// of it, still. The way it set off, one pixel long, if it did.
 	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, Vector2f& velocity) noexcept;

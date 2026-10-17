@@ -802,6 +802,26 @@ namespace xge
 			return vector;
 		}
 
+		// An object's <pull>s and its <seek>, each naming what with object=.
+		void readPullAndSeek(const XmlNode& object, RawObject& rawObject, const std::string& where)
+		{
+			for (std::unique_ptr<XmlNode> child = object.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag != "pull" && tag != "seek") { continue; }
+				requireAttribute(*child, "object", where + " > <" + tag + ">");
+				if (tag == "pull")
+				{
+					rawObject.rawPulls.emplace_back(child->getAttribute("object"), readValue(*child, where + " > <pull>"));
+				}
+				else
+				{
+					rawObject.seekTarget = child->getAttribute("object");
+					rawObject.rawSeek = readValue(*child, where + " > <seek>");
+				}
+			}
+		}
+
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "knock" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
@@ -893,7 +913,17 @@ namespace xge
 				else { command.amount = RawValue::expression("1"); }
 			}
 			if (verb == "trigger") { requireAttribute(node, "action", where); }
-			if (verb == "move" || verb == "hop" || verb == "accelerate" || verb == "turn")
+			if (verb == "hop" && (findChild(&node, "x") || findChild(&node, "y")))
+			{
+				// A diagonal one's step across and up or down, each its own.
+				requireAttribute(node, "direction", where);
+				const PartialVector2 step = readPartialVector2(node, where);
+				if (!step.x || !step.y) { fail(where, "<hop> gives one distance, or an <x> across and a <y> up or down, both"); }
+				if (command.direction.find('-') == std::string::npos) { fail(where, "<hop direction=\"" + command.direction + "\"> is not diagonal; it gives one distance"); }
+				command.positionX = *step.x;
+				command.positionY = *step.y;
+			}
+			else if (verb == "move" || verb == "hop" || verb == "accelerate" || verb == "turn")
 			{
 				requireAttribute(node, "direction", where);
 				command.amount = readValue(node, where);
@@ -1448,6 +1478,7 @@ namespace xge
 				rawObject.hasMass = true;
 				rawObject.rawMass = readValue(*mass, where);
 			}
+			readPullAndSeek(object, rawObject, where);
 			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readFacing(*facing, where); }
 			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
@@ -1685,13 +1716,14 @@ namespace xge
 					shared.hasMass = true;
 					shared.rawMass = readValue(*child, where);
 				}
+				else if (tag == "pull" || tag == "seek") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <drag>, <mass>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <drag>, <mass>, <pull>, <seek>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -1699,6 +1731,7 @@ namespace xge
 			for (RawTimer& timer : readTimers(findChild(&group, "timers").get(), where)) { shared.timers.push_back(std::move(timer)); }
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
+			readPullAndSeek(group, shared, where);
 			if (const std::string objClass = getAttribute(&group, "class"); !objClass.empty()) { shared.objClass = objClass; }
 
 			if (inner)

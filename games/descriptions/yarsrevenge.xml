@@ -1,0 +1,353 @@
+<!-- yarsrevenge.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 17, 2026 -->
+
+<!--
+  After Howard Scott Warshaw's Yars' Revenge for the Atari 2600: Yar, a fly,
+  nibbles through the shield in front of the Qotile, while the Qotile's
+  destroyer missile homes in on him. Space fires the Zorlon cannon from the
+  left edge, level with Yar; get a shot through the shield into the Qotile
+  to win. The grey neutral zone down the middle is safe: the missile
+  passes over Yar there.
+
+  W A S D or the arrows fly Yar (two at once go diagonally), Space fires
+  the cannon, P or Escape pauses, Space starts and plays again.
+
+  It is the game <seek> was made for:
+  * The destroyer missile has a <seek object="yar">: every frame it turns
+    toward Yar by at most a few degrees, at its own speed, so a quick turn
+    gets out of its way and it comes round again.
+  * The cannon is <spawn>ed at the left edge with its middle level with
+    Yar's, read when Space is pressed (yar.y).
+  * Yar's rule about the missile has unless="zone": in the neutral zone it
+    does nothing.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+  <window name="Yars' Revenge">
+    <width>800</width>
+    <height>600</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="fly">3</variable>
+    <variable name="cell">12</variable>
+    <variable name="layer">24</variable>
+  </variables>
+  <sounds>
+    <sound name="nibble" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5">0.03</note>
+    </sound>
+    <sound name="cannon" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="900" to="200">0.3</note>
+    </sound>
+    <sound name="hit" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5" to="C2">0.4</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>100</size><color>color.green</color></style>
+    <style name="prompt"><size>40</size></style>
+    <style name="help"><size>28</size></style>
+    <style name="hud"><size>32</size><color>color.white</color></style>
+  </styles>
+  <objects>
+    <object name="again">
+      <sprite>
+        <text style="prompt">
+          <content>spacebar to play again</content>
+        </text>
+      </sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <objects>
+        <object name="title">
+          <sprite>
+            <text style="banner">
+              <content>YARS' REVENGE</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+        </object>
+        <object name="help">
+          <sprite>
+            <text style="help">
+              <content>eat through the shield, then fire the cannon into the qotile</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+        <object name="keys">
+          <sprite>
+            <text style="help">
+              <content>w a s d or the arrows fly, space fires, p pauses</content>
+              <color>color.lightgrey</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite>
+            <text style="prompt">
+              <content>spacebar to start</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <!-- the neutral zone, drawn first so everything goes over it -->
+        <object name="zone" class="zone">
+          <sprite>
+            <rectangle>
+              <width>80</width>
+              <height>600</height>
+              <color>color.darkgrey</color>
+            </rectangle>
+          </sprite>
+          <position><x>300</x><y>0</y></position>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+        </object>
+        <object name="score">
+          <sprite>
+            <text style="hud">
+              <number>player.score</number>
+            </text>
+          </sprite>
+          <position><x>40</x><y>12</y></position>
+        </object>
+        <object name="lives">
+          <sprite>
+            <text style="hud">
+              <content>yars</content>
+              <number>player.lives</number>
+            </text>
+          </sprite>
+          <position><x>window.right - lives.width - 40</x><y>12</y></position>
+        </object>
+        <object name="player">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="lives">3</variable>
+          </variables>
+        </object>
+        <object name="qotile">
+          <sprite>
+            <rectangle>
+              <width>30</width>
+              <height>40</height>
+              <color>color.red</color>
+            </rectangle>
+          </sprite>
+          <position><x>740</x><y>280</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision object="cannon">
+              <inc variable="player.score">1000</inc>
+              <play sound="hit" />
+              <die />
+            </collision>
+          </collisions>
+        </object>
+        <!-- the shield: ten layers of four cells in front of the Qotile -->
+        <group name="shield" class="shield">
+          <columns>4</columns>
+          <rows>10</rows>
+          <sprite>
+            <rectangle>
+              <width>cell</width>
+              <height>layer</height>
+              <color>color.orange</color>
+            </rectangle>
+          </sprite>
+          <position><x>680</x><y>180</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision object="yar">
+              <inc variable="player.score">69</inc>
+              <play sound="nibble" />
+              <die />
+            </collision>
+            <collision object="cannon">
+              <die />
+            </collision>
+          </collisions>
+        </group>
+        <object name="yar">
+          <sprite>
+            <rectangle>
+              <width>24</width>
+              <height>24</height>
+              <color>color.green</color>
+            </rectangle>
+          </sprite>
+          <position><x>60</x><y>288</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="all">
+              <stick />
+            </collision>
+            <collision object="missile" unless="zone">
+              <dec variable="player.lives" />
+              <play sound="hit" />
+              <reset />
+              <reset object="missile" />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="up"><move direction="up">fly</move></action>
+            <action name="down"><move direction="down">fly</move></action>
+            <action name="left"><move direction="left">fly</move></action>
+            <action name="right"><move direction="right">fly</move></action>
+            <action name="fire">
+              <spawn object="cannon">
+                <position>
+                  <x>0</x>
+                  <y><centered>yar.y + 12</centered></y>
+                </position>
+              </spawn>
+            </action>
+          </actions>
+        </object>
+        <!-- the destroyer missile: always turning toward Yar -->
+        <object name="missile">
+          <sprite>
+            <rectangle>
+              <width>8</width>
+              <height>8</height>
+              <color>color.white</color>
+            </rectangle>
+          </sprite>
+          <position><x>720</x><y>296</y></position>
+          <velocity><x>-1.6</x><y>0</y></velocity>
+          <seek object="yar">2</seek>
+          <collisions>
+            <enabled>true</enabled>
+          </collisions>
+        </object>
+        <!-- the Zorlon cannon, brought in by Space level with Yar -->
+        <object name="cannon">
+          <sprite>
+            <rectangle>
+              <width>30</width>
+              <height>12</height>
+              <color>color.yellow</color>
+            </rectangle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <velocity><x>8</x><y>0</y></velocity>
+          <hidden>true</hidden>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="right">
+              <die />
+            </collision>
+            <collision class="shield">
+              <play sound="cannon" />
+              <die />
+            </collision>
+            <collision object="qotile">
+              <die />
+            </collision>
+          </collisions>
+        </object>
+      </objects>
+      <inputs>
+        <input button="w"><trigger object="yar" action="up" /></input>
+        <input button="up"><trigger object="yar" action="up" /></input>
+        <input button="s"><trigger object="yar" action="down" /></input>
+        <input button="down"><trigger object="yar" action="down" /></input>
+        <input button="a"><trigger object="yar" action="left" /></input>
+        <input button="left"><trigger object="yar" action="left" /></input>
+        <input button="d"><trigger object="yar" action="right" /></input>
+        <input button="right"><trigger object="yar" action="right" /></input>
+        <input button="space"><trigger object="yar" action="fire" /></input>
+        <input button="p"><push state="paused" /></input>
+        <input button="escape"><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition object="qotile">
+          <remaining>0</remaining>
+          <push state="won" />
+        </condition>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="lost" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text style="banner">
+              <content>PAUSED</content>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space"><pop /></input>
+        <input button="p"><pop /></input>
+        <input button="escape"><pop /></input>
+      </inputs>
+    </state>
+    <state name="won">
+      <objects>
+        <object name="message">
+          <sprite>
+            <text style="banner">
+              <content>QOTILE DESTROYED</content>
+              <size>70</size>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="lost" from="won">
+      <objects>
+        <object name="message">
+          <sprite>
+            <text style="banner">
+              <content>GAME OVER</content>
+              <color>color.red</color>
+            </text>
+          </sprite>
+        </object>
+      </objects>
+    </state>
+  </states>
+</game>

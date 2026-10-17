@@ -405,6 +405,16 @@ namespace xge
 			o << "\tmass=" << f.mass << '\n';
 		}
 
+		for (const auto& [name, strength] : f.pulls)
+		{
+			o << "\tpull=" << name << " " << strength << '\n';
+		}
+
+		if (!f.seekTarget.empty())
+		{
+			o << "\tseek=" << f.seekTarget << " " << f.seekRate << '\n';
+		}
+
 		if (f.sizeKnown)
 		{
 			o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';

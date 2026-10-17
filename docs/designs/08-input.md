@@ -28,7 +28,8 @@ A key can stay down while the state changes (hold Left, pause, unpause).
 - **Buttons are keys.** A mouse or pad button is one more `KeyCode` (`mouse.left`, `pad1.a` ... `pad2.right`, an Xbox layout, two pads), so binding, held keys, key sets and the state rules above all apply unchanged. A pad's d-pad and its stick past halfway are the same four directions, so a game binds `pad1.left` once.
 - **Backends report state, the engine finds changes.** `Window::controls()` gives the mouse's place and buttons and each pad's buttons and stick once a frame; `Engine::handleControls` diffs it with the last frame and presses and releases. One place for the rules (the halfway stick, the first look that only notes) instead of five event loops. Qt has the mouse only (Qt 6 has no gamepad module).
 - **Analog is an `axis=` binding plus `<track />`.** The Atari paddle is a position, not a direction, so it binds to an action like a key does (the three layers stay: state binds, object acts) and `<track />` names the behavior: follow where it points, across the window, kept inside. It runs only when the control moves, so the keys and the mouse share an object. Rejected: a velocity from a stick (the d-pad already moves), a range on `<track>` (the window is every shipped game's range; add `<from>`/`<to>` when one is not).
-- Open: a range for `<track>`, the right stick and triggers, a stick's push as a speed, a third and fourth pad, pads in Qt.
+- 2026-10-17: `<track path="..." />` follows a `<path>`'s legs instead of the window's width, the range asked for above ([motion](22-motion.md#pulls-seeking-and-diagonal-hops-2026-10-17)).
+- Open: the right stick and triggers, a stick's push as a speed, a third and fourth pad, pads in Qt.
 
 ### Ideas
 

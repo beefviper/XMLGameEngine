@@ -36,6 +36,8 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/descriptions/trickshot.xml` | Trick Shot, pool after the Atari 2600 game: steer a cue tip into the white ball and knock the six others into the pockets in two minutes; balls `<knock />` one another by their `<mass>`, slowed by the cloth |
 | `games/descriptions/mariobros.xml` | Mario Bros.: jump up and bump the floor under a shellcreeper, a `<knock>` that goes through the floor and turns it over, then kick it off; one on its feet costs a life |
 | `games/descriptions/fishingderby.xml` | Fishing Derby: steer the hook on its line onto a fish, reel it up past the shark and land it, deeper fish worth more; the line is a `<tether>`, a landed fish `<spawn>`s back faster and the shark is `<set>` faster |
+| `games/descriptions/qbert.xml` | Q*bert: diagonal `<hop>`s over a pyramid of cubes, each turned yellow when landed on; the red ball bounces down, and a hop off the pyramid costs a life |
+| `games/descriptions/yarsrevenge.xml` | Yars' Revenge: Yar eats through the Qotile's shield while the destroyer missile `<seek>`s him; the neutral zone is safe, and the Zorlon cannon is `<spawn>`ed level with him |
 | `games/descriptions/adventure.xml` | Adventure, two rooms of the Atari 2600 game, the castle and the field east of it, as scenes: walk into the key, the sword or the chalice to `<carry />` it and Space to `<drop />` it; the key opens the castle gate, the sword slays the dragon, the chalice carried into the hall wins; the dragon sleeps until the hero comes near |
 
 ## What a game file looks like

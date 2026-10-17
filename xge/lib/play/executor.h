@@ -87,7 +87,7 @@ namespace xge
 
 		void bounceScreenEdge(Object& object, Edge edge);
 		void moveByStep(Object& object, Direction direction, float step);
-		void queueHop(Object& object, Direction direction, float distance);
+		void queueHop(Object& object, Vector2f step);
 		void startJump(Object& object, const CmdJump& jump);
 		void land(Object& object, const Object& other, Edge edge);
 

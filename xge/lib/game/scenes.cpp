@@ -419,6 +419,13 @@ namespace xge
 				value(object.cell.tileWidth, context);
 				value(object.cell.tileHeight, context);
 				object.maze.map = names_.object(object.maze.map, context);
+				for (auto& [name, strength] : object.rawPulls)
+				{
+					name = names_.object(name, context);
+					value(strength, context);
+				}
+				object.seekTarget = names_.object(object.seekTarget, context);
+				value(object.rawSeek, context);
 			}
 
 		private:

@@ -678,6 +678,20 @@ namespace xge
 		return heading < 0.0f ? heading + 360.0f : heading;
 	}
 
+	Vector2f turnedToward(const Vector2f& velocity, const Vector2f& way, float degrees) noexcept
+	{
+		const float speed = std::hypot(velocity.x, velocity.y);
+		if (speed == 0.0f || (way.x == 0.0f && way.y == 0.0f)) { return velocity; }
+
+		const float now = std::atan2(velocity.y, velocity.x);
+		float turn = std::atan2(way.y, way.x) - now;
+		while (turn > pi) { turn -= 2.0f * pi; }
+		while (turn < -pi) { turn += 2.0f * pi; }
+		const float most = degrees * pi / 180.0f;
+		const float after = now + std::clamp(turn, -most, most);
+		return { speed * std::cos(after), speed * std::sin(after) };
+	}
+
 	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, Vector2f& velocity) noexcept
 	{
 		const Vector2f apart = to - from;

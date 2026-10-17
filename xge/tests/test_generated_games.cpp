@@ -231,6 +231,9 @@ namespace
 			flag(at + ".hasDrag", o.hasDrag);
 			value(at + ".mass", o.rawMass);
 			flag(at + ".hasMass", o.hasMass);
+			for (const auto& [name, strength] : o.rawPulls) { value(at + ".pull." + name, strength); }
+			text(at + ".seekTarget", o.seekTarget);
+			value(at + ".seek", o.rawSeek);
 			text(at + ".facing", o.facing);
 			timers(at + ".timers", o.timers);
 			const RawCollisionData& c = o.rawCollisionData;
