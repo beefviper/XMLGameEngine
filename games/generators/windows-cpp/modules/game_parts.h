@@ -75,6 +75,15 @@ namespace xge::parts
 		return piece;
 	}
 
+	inline RawTextPiece choose(RawValue by, std::vector<std::string> choices)
+	{
+		RawTextPiece piece;
+		piece.kind = RawTextPiece::Kind::Choice;
+		piece.value = std::move(by);
+		piece.choices = std::move(choices);
+		return piece;
+	}
+
 	// <centered>: where the object's middle goes, or empty for the window's.
 	inline RawValue centered(std::string text)
 	{

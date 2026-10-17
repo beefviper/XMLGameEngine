@@ -49,6 +49,15 @@ namespace xge
 	// more. Whether they were coming together.
 	bool knock(Object& object, Object& other, const Touch& touch, float bounce);
 
+	// <hole>: clears the pixels of the object's own picture within `radius`
+	// of where `other` struck it - the solid pixel nearest the middle of
+	// `other`, within a pixel or two of it, or that middle when there is
+	// none - each at the edge kept at random by up to `rough` of the
+	// radius. So shot after shot up one line goes deeper and deeper. The
+	// first hole keeps the whole picture in Object::unholed for a reset; the
+	// picture is copied, never changed where other objects share it.
+	void cutHole(Object& object, const Object& other, float radius, float rough);
+
 	// <stick />: pushed back inside the window on that edge's axis, losing
 	// only the velocity carrying it into the edge.
 	void stick(Object& object, const WindowDesc& window, Edge edge);

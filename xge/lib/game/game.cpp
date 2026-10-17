@@ -1080,8 +1080,23 @@ namespace xge
 			object.activeThrustAheadBy.clear();
 			object.showHeading();
 
-			// An animation starts again from its first picture.
+			// An animation starts again from its first picture, and a
+			// picture with holes in it is whole again.
 			object.restartAnimation();
+			// Its light, altitude and rise as they started, and nothing
+			// of it seen yet.
+			object.light = object.lightOriginal;
+			object.altitude = object.altitudeOriginal;
+			object.rise = object.riseOriginal;
+			object.seen = false;
+			object.inDark = object.dark != Object::Darkness::None;
+
+			if (object.unholed)
+			{
+				object.bitmap = std::move(object.unholed);
+				object.unholed.reset();
+				object.visualDirty = true;
+			}
 
 			// Nor should a reset object go on riding, or jump; it
 			// faces the way it started, and its timers start over.
@@ -1365,7 +1380,7 @@ namespace xge
 			const auto value = owner->variable.find(piece.variable);
 			if (value != owner->variable.end())
 			{
-				piece.shown = showPiece(piece.kind, value->second);
+				piece.shown = showPiece(piece.kind, value->second, piece.choices);
 			}
 		}
 
@@ -1671,7 +1686,10 @@ namespace xge
 			case 1: *link.number = object.position.y; break;
 			case 2: *link.number = object.velocity.x; break;
 			case 3: *link.number = object.velocity.y; break;
-			default: *link.number = object.heading; break;
+			case 4: *link.number = object.heading; break;
+			case 5: *link.number = object.altitude; break;
+			case 6: *link.number = object.rise; break;
+			default: *link.number = object.light; break;
 			}
 		}
 	}
@@ -1723,6 +1741,9 @@ namespace xge
 			else if (part == "y") { object.position.y = value; }
 			else if (part == "velocity.x") { object.velocity.x = value; }
 			else if (part == "velocity.y") { object.velocity.y = value; }
+			else if (part == "altitude") { object.altitude = std::max(0.0f, value); }
+			else if (part == "rise") { object.rise = value; }
+			else if (part == "light") { object.light = std::max(0.0f, value); }
 			else if (object.hasHeading)
 			{
 				object.heading = value;
@@ -1756,6 +1777,20 @@ namespace xge
 		const std::string scene = currentScene(state.name);
 		const auto found = std::find_if(state.scenes.begin(), state.scenes.end(), [&](const Scene& each) { return each.name == scene; });
 		if (found != state.scenes.end()) { checkConditionList(found->conditions); }
+	}
+
+	std::set<KeyCode> Game::computerButtons()
+	{
+		std::set<KeyCode> held;
+		for (const Condition& condition : currentState.top().computer)
+		{
+			if (!holds(condition)) { continue; }
+			for (const Command& command : condition.commands)
+			{
+				if (const auto* hold = std::get_if<CmdHold>(&shapeOf(command))) { held.insert(hold->button); }
+			}
+		}
+		return held;
 	}
 
 	bool Game::checkConditionList(const std::vector<Condition>& conditions)
@@ -1806,12 +1841,7 @@ namespace xge
 			{
 				return std::nullopt;
 			}
-			const auto otherIt = other->variable.find(condition.otherVariable);
-			if (otherIt == other->variable.end())
-			{
-				return std::nullopt;
-			}
-			return otherIt->second;
+			return numberOf(*other, condition.otherVariable);
 		};
 
 		// "No more than N of them left": everything that matches, still
@@ -1838,9 +1868,9 @@ namespace xge
 					++counted;
 					continue;
 				}
-				const auto variableIt = object.variable.find(condition.variableName);
-				if (variableIt == object.variable.end()) { continue; }
-				const float value = variableIt->second;
+				const std::optional<float> number = numberOf(object, condition.variableName);
+				if (!number) { continue; }
+				const float value = *number;
 				if (condition.total == Total::Sum) { total += value; }
 				else if (counted == 0) { total = value; }
 				else if (condition.total == Total::Highest) { total = std::max(total, value); }
@@ -1879,12 +1909,12 @@ namespace xge
 			}
 			else
 			{
-				const auto variableIt = object.variable.find(condition.variableName);
-				if (variableIt == object.variable.end())
+				const std::optional<float> number = numberOf(object, condition.variableName);
+				if (!number)
 				{
 					continue;
 				}
-				tested = variableIt->second;
+				tested = *number;
 			}
 
 			const std::optional<float> other = against(&object);

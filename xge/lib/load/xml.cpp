@@ -353,6 +353,18 @@ namespace xge
 					piece.kind = tag == "number" ? RawTextPiece::Kind::Number : RawTextPiece::Kind::Letter;
 					piece.value = readValue(*child, where + " > <" + tag + ">");
 				}
+				else if (tag == "choose")
+				{
+					// <by> which, then its <word>s, the first 0.
+					const std::string here = where + " > <choose>";
+					piece.kind = RawTextPiece::Kind::Choice;
+					piece.value = readValue(*requireChild(*child, "by", here), here);
+					for (std::unique_ptr<XmlNode> word = child->getFirstChild(); word != nullptr; word = word->getNextSibling())
+					{
+						if (word->getName() == "word") { piece.choices.push_back(readText(*word)); }
+					}
+					if (piece.choices.empty()) { fail(here, "needs a <word> to choose from"); }
+				}
 				else
 				{
 					continue;
@@ -486,7 +498,7 @@ namespace xge
 				sprite.text = readTextPieces(shape, here);
 				if (sprite.text.empty())
 				{
-					fail(here, "needs a <content> (a label), a <number> or a <letter>");
+					fail(here, "needs a <content> (a label), a <number>, a <letter> or a <choose>");
 				}
 
 				sprite.style = shape.getAttribute("style");
@@ -822,9 +834,46 @@ namespace xge
 			}
 		}
 
+		// An object's <light>, <dark>, <altitude> and <shadow>.
+		void readSight(const XmlNode& object, RawObject& rawObject, const std::string& where)
+		{
+			if (auto light = findChild(&object, "light"))
+			{
+				rawObject.hasLight = true;
+				rawObject.rawLight = readValue(*light, where + " > <light>");
+			}
+			if (auto dark = findChild(&object, "dark"))
+			{
+				rawObject.dark = readText(*dark);
+				if (rawObject.dark != "unlit" && rawObject.dark != "unseen")
+				{
+					fail(where + " > <dark>", "is '" + rawObject.dark + "'; expected unlit (shown only while lit) or unseen (shown once it has been lit)");
+				}
+			}
+			if (auto altitude = findChild(&object, "altitude"))
+			{
+				const std::string here = where + " > <altitude>";
+				rawObject.hasAltitude = true;
+				for (std::unique_ptr<XmlNode> child = altitude->getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					const std::string tag = child->getName();
+					if (tag == "start") { rawObject.rawAltitude = readValue(*child, here); }
+					else if (tag == "rise") { rawObject.rawRise = readValue(*child, here); }
+					else if (tag == "fall") { rawObject.rawFall = readValue(*child, here); }
+					else if (tag == "bounce") { rawObject.rawAltitudeBounce = readValue(*child, here); }
+					else { fail(here, "unknown <" + tag + ">; expected <start>, <rise>, <fall> or <bounce>"); }
+				}
+			}
+			if (auto shadow = findChild(&object, "shadow"))
+			{
+				requireAttribute(*shadow, "object", where + " > <shadow>");
+				rawObject.shadowOf = shadow->getAttribute("object");
+			}
+		}
+
 		bool isCommandTag(const std::string& name)
 		{
-			return name == "bounce" || name == "deflect" || name == "knock" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
+			return name == "bounce" || name == "deflect" || name == "knock" || name == "hole" || name == "hold" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
@@ -971,6 +1020,17 @@ namespace xge
 			{
 				requireAttribute(node, "direction", where);
 				command.amount = readValue(node, where);
+			}
+			if (verb == "hold") { command.button = requireAttribute(node, "button", where); }
+			if (verb == "hole")
+			{
+				const std::string here = where + " > <hole>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "radius" && child->getName() != "rough") { fail(here, "unknown <" + child->getName() + ">; expected <radius> or <rough>"); }
+				}
+				command.amount = readValueOf(node, "radius", here);
+				if (auto roughNode = findChild(&node, "rough")) { command.distance = readValue(*roughNode, here); }
 			}
 			if (verb == "wander")
 			{
@@ -1479,6 +1539,7 @@ namespace xge
 				rawObject.rawMass = readValue(*mass, where);
 			}
 			readPullAndSeek(object, rawObject, where);
+			readSight(object, rawObject, where);
 			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readFacing(*facing, where); }
 			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
@@ -1716,14 +1777,14 @@ namespace xge
 					shared.hasMass = true;
 					shared.rawMass = readValue(*child, where);
 				}
-				else if (tag == "pull" || tag == "seek") { /* below, all at once */ }
+				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <drag>, <mass>, <pull>, <seek>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -1732,6 +1793,7 @@ namespace xge
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
 			readPullAndSeek(group, shared, where);
+			readSight(group, shared, where);
 			if (const std::string objClass = getAttribute(&group, "class"); !objClass.empty()) { shared.objClass = objClass; }
 
 			if (inner)
@@ -2464,6 +2526,10 @@ namespace xge
 			if (std::unique_ptr<XmlNode> conditions = findChild(&state, "conditions"))
 			{
 				readConditions(*conditions, where, conditionSets, rawState.conditions);
+			}
+			if (std::unique_ptr<XmlNode> computer = findChild(&state, "computer"))
+			{
+				readConditions(*computer, where + " > <computer>", conditionSets, rawState.computer);
 			}
 			rawState.timers = readTimers(findChild(&state, "timers").get(), where, false);
 			return rawState;

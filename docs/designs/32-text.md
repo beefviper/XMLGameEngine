@@ -18,3 +18,10 @@
 - The shipped games were rewritten on both (styles named by role: `banner`, `prompt`, `help`, `keys`, `hud`). Pong's and Breakout's titles keep their `<equation>` and `<formula>` as the examples of those tags.
 - A centered text that changes width (a score gaining a digit) is centered again, as any position naming a size is (`resolveSizeDependentPositions`).
 
+
+## Words (2026-10-17)
+
+- Need: the author asked for "some stuff for strings and words": tennis's LOVE 15 30 40, a dragon asleep or awake, a rank's name.
+- **Chosen: a `<choose>` piece of a `<text>`**, `<by>` a value then its `<word>`s, showing the word the number picks (the first for 0; a fraction goes down; past either end the end word), live like `<number>`. The words stay in the file as elements; nothing is packed in a string.
+- Looked at: string variables (a second kind of value through exprtk and every command), a game-level list of words named and indexed (one more thing to name for one text), formatting in the content (`{score}`; a string to parse).
+- Open: changing the words of a `<content>` at run time other than by a `<choose>` or a look.

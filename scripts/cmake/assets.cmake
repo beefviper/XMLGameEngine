@@ -48,7 +48,9 @@ set(data_xml
 	"games/descriptions/mariobros.xml"
 	"games/descriptions/fishingderby.xml"
 	"games/descriptions/qbert.xml"
-	"games/descriptions/yarsrevenge.xml")
+	"games/descriptions/yarsrevenge.xml"
+	"games/descriptions/tennis.xml"
+	"games/descriptions/hauntedhouse.xml")
 
 set(data_assets
 	"games/assets/tuffy.ttf"

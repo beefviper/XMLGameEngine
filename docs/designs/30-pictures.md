@@ -52,3 +52,19 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - `<flip>` (`horizontal`/`vertical`) on a bitmap or svg is applied to the pixels right after drawing, before they are kept for turning, so the size is exact and pixel tests see flipped pixels. Turning half a round with a heading would also flip, but every heading's picture is a square big enough for any angle (a thin falling bolt would get a box about 38 pixels square).
 - **Turning by heading**, done by the engine, on demand: an object keeps a shared `Turnable` (the lines, or the original bitmap; one per animation frame) and its one current `bitmap`, redrawn by `Object::showHeading` only when the heading rounded to a whole degree changes (360 headings, `turnBitmap`, `rasterizeTurned`). Each result pixel takes the one original pixel under it (nearest sample): flat colors, hard edges, a pixel of art stays a block of `<scale>` pixels. Lines are re-drawn turned, not rotated, to stay sharp. Every heading is the same square, which is the object's size. The first version pre-made 72 pictures at load; on demand costs two pictures per object and gave 360 headings free.
 - Not done: smooth/anti-aliased turned edges, turning by a fraction of a degree.
+
+
+## Holes (2026-10-17)
+
+- Need: shields that shots wear away (Space Invaders), craters; the author's words were a transformation of the picture, with a blast radius and noise, or decals.
+- **`<hole>`, chosen:** a command of a rule about another object, cutting a round hole (`<radius>`, and `<rough>` for a ragged edge) in the object's own picture. A pixel collision then sees the hole, so the next shot goes deeper. Centered on the solid pixel nearest the striker's middle (within two pixels of its box), not on the touch point: the touch point lies on the box edge, which never moves as the picture is eaten, so holes would stay at the surface; the striker's middle alone lies outside the picture and each hole would only reach a few pixels in.
+- Copy on write: the picture is shared by every object made from one definition, so the first hole copies it and keeps the whole one (`Object::unholed`) for a reset.
+- Only for a picture that stays as it is (lines or a bitmap, no heading, animation or second look): a turned or swapped picture is drawn again from its original and would lose its holes, and keeping holes across turns is not needed by any game yet.
+- Not done: decals (painting a picture onto another, a scorch mark), holes in an `<svg>` or `<image>` sprite, a hole's shape other than round.
+
+## Light and dark (2026-10-17)
+
+- Need: Haunted House (walls seen only by a match), fog of war.
+- **Chosen:** an object's `<light>` (a radius from its middle, a live number a `<set>` changes) and `<dark>` (`unlit`: drawn only while some light reaches any part of its box; `unseen`: from the first time until a reset). Only drawing changes, in one place (`drawObject` in `window/window.h`), so every window library and a generated game get it; whether each dark thing is lit is worked out at the end of the frame (`lightAndDark` in `play/frame.cpp`).
+- Looked at: darkening the whole screen and cutting a circle out of it (a backend effect in four libraries, and a dark wall would still be drawn under it), a light that reveals only pixels within the circle (needs clipping in every backend), a map of seen tiles (only for maps; `unseen` on any object covers it).
+- Open: lights that fade at the edge, light blocked by walls (line of sight).

@@ -131,7 +131,7 @@ namespace
 		{
 			out << at << " " << c.verb << " [" << c.object << "|" << c.variable << "|" << c.state << "|" << c.action << "|" << c.direction
 				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "|" << c.into
-				<< "|" << c.from << "|" << c.partner << "|" << c.retreat << "]\n";
+				<< "|" << c.from << "|" << c.partner << "|" << c.retreat << "|" << c.button << "]\n";
 			value(at + ".amount", c.amount);
 			value(at + ".ahead", c.ahead);
 			value(at + ".seconds", c.seconds);
@@ -195,6 +195,7 @@ namespace
 				text(at + ".text.kind", std::to_string(static_cast<int>(piece.kind)));
 				text(at + ".text.words", piece.words);
 				value(at + ".text.value", piece.value);
+				for (const std::string& choice : piece.choices) { text(at + ".text.choice", choice); }
 			}
 			text(at + ".path", s.path);
 			text(at + ".flip", s.flip);
@@ -234,6 +235,15 @@ namespace
 			for (const auto& [name, strength] : o.rawPulls) { value(at + ".pull." + name, strength); }
 			text(at + ".seekTarget", o.seekTarget);
 			value(at + ".seek", o.rawSeek);
+			value(at + ".light", o.rawLight);
+			flag(at + ".hasLight", o.hasLight);
+			text(at + ".dark", o.dark);
+			flag(at + ".hasAltitude", o.hasAltitude);
+			value(at + ".altitude.start", o.rawAltitude);
+			value(at + ".altitude.rise", o.rawRise);
+			value(at + ".altitude.fall", o.rawFall);
+			value(at + ".altitude.bounce", o.rawAltitudeBounce);
+			text(at + ".shadowOf", o.shadowOf);
 			text(at + ".facing", o.facing);
 			timers(at + ".timers", o.timers);
 			const RawCollisionData& c = o.rawCollisionData;
@@ -318,6 +328,7 @@ namespace
 				for (const auto& [button, list] : s.input) { commands(at + ".input." + button, list); }
 				for (const auto& [axis, list] : s.axes) { commands(at + ".axis." + axis, list); }
 				conditions(at, s.conditions);
+				conditions(at + ".computer", s.computer);
 				timers(at + ".timers", s.timers);
 				for (const RawObject& o : s.objects) { object(at + ".object " + o.name, o); }
 				for (const RawObject& o : s.kit) { object(at + ".kit " + o.name, o); }

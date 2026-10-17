@@ -178,10 +178,11 @@ namespace xge
 	// (<letter>, 0 is A, 25 is Z, and round again).
 	struct RawTextPiece
 	{
-		enum class Kind { Words, Number, Letter };
+		enum class Kind { Words, Number, Letter, Choice };
 		Kind kind{ Kind::Words };
 		std::string words;           // Words
-		RawValue value;              // Number, Letter
+		RawValue value;              // Number, Letter, Choice (which, from 0)
+		std::vector<std::string> choices; // Choice: its <word>s
 	};
 
 	struct RawSprite
@@ -335,6 +336,20 @@ namespace xge
 		// fast; seekTarget empty for none.
 		std::string seekTarget;
 		RawValue rawSeek;
+		// <light>radius</light>, only when hasLight.
+		RawValue rawLight;
+		bool hasLight{ false };
+		// <dark>unlit</dark> or <dark>unseen</dark>; "" for neither.
+		std::string dark;
+		// <altitude> with its <start>, <rise>, <fall> and <bounce>, each
+		// optional; only when hasAltitude.
+		bool hasAltitude{ false };
+		RawValue rawAltitude;
+		RawValue rawRise;
+		RawValue rawFall;
+		RawValue rawAltitudeBounce;
+		// <shadow object="ball" />: what it is the shadow of; "" for nothing.
+		std::string shadowOf;
 		std::string facing;          // "" when the object has no <facing>
 		RawMaze maze;                // <maze>: the map it walks, if any
 		std::vector<RawTimer> timers;
@@ -402,11 +417,14 @@ namespace xge
 		std::string shown;
 		std::string owner;
 		std::string variable;
+		std::vector<std::string> choices;
 	};
 
-	// What a number shows as a piece of that kind: a whole number, or a
-	// letter (0 is A, 25 is Z, and round again: 26 is A, -1 is Z).
-	std::string showPiece(RawTextPiece::Kind kind, float value);
+	// What a number shows as a piece of that kind: a whole number, a
+	// letter (0 is A, 25 is Z, and round again: 26 is A, -1 is Z), or the
+	// word of `choices` it picks (0 the first; below 0 the first, past the
+	// end the last).
+	std::string showPiece(RawTextPiece::Kind kind, float value, const std::vector<std::string>& choices = {});
 
 	// What a text of these pieces reads: each piece a word, one space
 	// between, except that letters side by side make one word (initials).
@@ -644,6 +662,39 @@ namespace xge
 		std::string seekTarget;
 		float seekRate{};
 
+		// <light>: how far round its middle it lights, while it is in play;
+		// 0 for no light. A reset puts back how it started. See playOneFrame.
+		float light{};
+		float lightOriginal{};
+
+		// <dark>: an object drawn only where there is light. Unlit, only while
+		// some part of it is within a light; unseen, once that has happened,
+		// from then until it is reset (fog of war). `inDark` is whether it is
+		// hidden this frame; `seen` whether an unseen one has been lit.
+		enum class Darkness { None, Unlit, Unseen };
+		Darkness dark{ Darkness::None };
+		bool seen{ false };
+		bool inDark{ false };
+
+		// <altitude>: how high it is off the ground, which it is drawn
+		// raised by while its position stays where it is on the ground (so
+		// what it touches is what is under it); how fast that is going up
+		// (rise, less each frame by fall); and how much of the rise is kept,
+		// turned upward, when it comes down (bounce). It cannot go below
+		// the ground. A reset puts back the altitude and rise it started with.
+		bool hasAltitude{ false };
+		float altitude{};
+		float altitudeOriginal{};
+		float rise{};
+		float riseOriginal{};
+		float fall{};
+		float altitudeBounce{};
+
+		// <shadow object="ball" />: kept under that object each frame, its
+		// middle at the other's middle on the ground, and shown while the
+		// other is. "" for nothing.
+		std::string shadowOf;
+
 		// Draws `bitmap` again at the current heading (and, for an animated
 		// object, the picture that is showing) when that is not what it
 		// already is, and marks the visual to be rebuilt. Does nothing for an
@@ -749,6 +800,10 @@ namespace xge
 		// not copied, with every copy of the object.
 		std::shared_ptr<const Bitmap> bitmap;
 
+		// The picture as it was before a <hole> was first cut in it, which a
+		// reset puts back; null while it has none. See xge::cutHole.
+		std::shared_ptr<const Bitmap> unholed;
+
 		// True until the active Window backend has built (or rebuilt) this
 		// object's own visual - set again whenever something changes what
 		// should be on screen for it (e.g. a bound text display's number
@@ -832,13 +887,19 @@ namespace xge
 	void nameSelf(std::vector<RawObject>& objects);
 
 	// The numbers every object has while the game runs, read and set as
-	// owner.part (ball.x, ship.velocity.y): its top left, its velocity and
-	// its heading. A variable of the object's own of that name wins.
+	// owner.part (ball.x, ship.velocity.y): its top left, its velocity, its
+	// heading, its altitude and rise, and its light. A variable of the
+	// object's own of that name wins.
 	const std::vector<std::string>& liveNumberParts();
 
 	// The part of liveNumberParts() `name` ends with (after a dot), or ""
 	// when it ends with none.
 	std::string liveNumberPart(const std::string& name);
+
+	// An object's number of that name as it is now: its own variable, or
+	// else one of liveNumberParts() (a heading only if it has one); nothing
+	// for neither. What a condition tests and compares with.
+	std::optional<float> numberOf(const Object& object, const std::string& name);
 
 	// What a rule answering a touch can read of it (see Touch): touch.x and
 	// touch.y (the point), touch.along, touch.depth, touch.normal.x and

@@ -134,6 +134,10 @@ namespace xge
 		// name wins. Returns false, with a warning, for no such thing.
 		bool setNumber(const std::string& target, float value);
 
+		// The buttons the current state's <computer> holds down this frame:
+		// those its conditions that hold name in their <hold>s.
+		std::set<KeyCode> computerButtons();
+
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
 

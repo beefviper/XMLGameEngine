@@ -873,6 +873,33 @@ TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following i
 	}
 }
 
+TEST_CASE("a <choose> piece shows one of its words, picked by a number as it is now", "[scores][text][choose]")
+{
+	const std::string owner = box("p", 0, 0, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"mood\">0</variable></variables>");
+	const std::string label = "<object name=\"label\"><sprite><text><content>THE DRAGON IS</content><choose><by>p.mood</by>"
+		"<word>ASLEEP</word><word>HUNGRY</word><word>VERY ANGRY</word></choose><size>20</size></text></sprite>"
+		"<position><x>0</x><y>0</y></position></object>";
+
+	for (XmlBackend backend : { XmlBackend::Xerces, XmlBackend::PugiXml })
+	{
+		Loaded loaded(gameXml(owner + label, state("s", { "p", "label" })), backend);
+		Object& shown = loaded.game.getObject("label");
+		CHECK(shown.spriteParams.at(1) == "THE DRAGON IS ASLEEP");
+		loaded.game.incrementText("p.mood");
+		CHECK(shown.spriteParams.at(1) == "THE DRAGON IS HUNGRY");
+
+		// Past either end, the word at that end; between two, the lower.
+		loaded.game.incrementText("p.mood", 7.5f);
+		CHECK(shown.spriteParams.at(1) == "THE DRAGON IS VERY ANGRY");
+		loaded.game.incrementText("p.mood", -9.5f);
+		CHECK(shown.spriteParams.at(1) == "THE DRAGON IS ASLEEP");
+	}
+
+	const std::string empty = "<object name=\"label\"><sprite><text><choose><by>p.mood</by></choose><size>20</size></text></sprite>"
+		"<position><x>0</x><y>0</y></position></object>";
+	CHECK_THROWS(Loaded(gameXml(owner + empty, state("s", { "p", "label" })), XmlBackend::PugiXml));
+}
+
 TEST_CASE("a group's text naming the group's variables shows each member's own", "[scores][text][group]")
 {
 	const std::string group = "<group name=\"rows\"><sprite><text><letter>rows.l</letter><number>rows.n</number><size>20</size></text></sprite>"

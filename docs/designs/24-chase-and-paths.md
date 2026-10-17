@@ -47,3 +47,12 @@
 - Rejected for now: absolute points (a dive would need a copy per slot), a `<wait>` leg, a delay before the first of a stagger (the five rows fly in at once, on five paths), aiming.
 
 **Open.** Curves (a Bezier or a parametric leg) for smooth loops; steps that ease in and out; a formation that sways (home would have to move with it); a dive that aims at the player; Galaga's capture beam. The generator does not know paths yet.
+
+
+## Computer players (2026-10-17)
+
+- Need: the author asked for "some way for the game to control the AI", the way the recorded demo sends keys: a far player in Tennis, a second paddle in Pong.
+- **Chosen: a state's `<computer>`**, a list of conditions whose commands are `<hold button=>`. Every condition is tested every frame (unlike a state's conditions, where the first that holds wins), and the engine presses and lets go of the keys as it does a person's or the demo's (`Engine::playComputer`), not recording them. So the computer plays through the same keys and actions a person would, a second person could take its place, and a game needs no new verbs for what a computer does.
+- Conditions can now compare where things are and how they go (`variable="x"`, `<below object="ball" variable="x" />`): a condition reads an object's variable, or, without one of that name, one of its live numbers (`numberOf`). That was the missing piece; it helps every condition, not only the computer's.
+- Looked at: AI verbs on the object (`<follow-ball>`, a different vocabulary from the player's), a script of moves (a program), and the demo stream itself (fixed, cannot react).
+- Open: thresholds that are live values (`<above>ball.x + 10</above>`) for a dead zone, a reaction delay, a computer that also chooses when to fire by distance or timing beyond what conditions say today.

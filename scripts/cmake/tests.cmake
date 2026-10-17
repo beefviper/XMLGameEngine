@@ -98,6 +98,10 @@ add_executable(xgetest
 	"xge/tests/test_knock.cpp"
 	"xge/tests/test_live.cpp"
 	"xge/tests/test_steering.cpp"
+	"xge/tests/test_holes.cpp"
+	"xge/tests/test_altitude.cpp"
+	"xge/tests/test_dark.cpp"
+	"xge/tests/test_computer.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 )

@@ -44,10 +44,12 @@ TEST_CASE("a collision naming only a class is an object rule for that class", "[
 	Game game{ "descriptions/spaceinvaders.xml" };
 	const Object& bullet = game.getObject("bullet");
 
-	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>
-	REQUIRE(bullet.collisionData.others.size() == 1);
+	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>,
+	// then the same for class shield
+	REQUIRE(bullet.collisionData.others.size() == 2);
 	CHECK(bullet.collisionData.others[0].filterClass == "aliens");
 	CHECK(bullet.collisionData.others[0].filterObject.empty());
+	CHECK(bullet.collisionData.others[1].filterClass == "shield");
 
 	// ...and it did not also turn into a screen-edge rule.
 	CHECK(bullet.collisionData.left.size() == 1); // only the edge="all" <die />

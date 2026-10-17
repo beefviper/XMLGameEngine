@@ -426,6 +426,12 @@ namespace xge
 				}
 				object.seekTarget = names_.object(object.seekTarget, context);
 				value(object.rawSeek, context);
+				value(object.rawLight, context);
+				value(object.rawAltitude, context);
+				value(object.rawRise, context);
+				value(object.rawFall, context);
+				value(object.rawAltitudeBounce, context);
+				object.shadowOf = names_.object(object.shadowOf, context);
 			}
 
 		private:
@@ -485,6 +491,7 @@ namespace xge
 			for (const auto& [button, commands] : state.input) { made.input[button] = commands; }
 			for (const auto& [axis, commands] : state.axes) { made.axes[axis] = commands; }
 			made.conditions = mergedByName(earlier->conditions, state.conditions);
+			made.computer = mergedByName(earlier->computer, state.computer);
 			made.timers = mergedByName(earlier->timers, state.timers);
 			if (!state.music.empty()) { made.music = state.music; }
 			made.kit = std::move(state.kit);
@@ -704,6 +711,7 @@ namespace xge
 			for (auto& [button, list] : state.input) { resolve.commands(list, context); }
 			for (auto& [axis, list] : state.axes) { resolve.commands(list, context); }
 			resolve.conditions(state.conditions, context);
+			resolve.conditions(state.computer, context);
 			resolve.timers(state.timers, context);
 			for (RawScene& scene : state.scenes)
 			{

@@ -307,6 +307,15 @@
               <xs:element name="number" type="valueType" />
               <!-- a number shown as a letter, 0 is A and 25 is Z, live the same way -->
               <xs:element name="letter" type="valueType" />
+              <!-- one of its words, picked by a number (0 the first), live the same way -->
+              <xs:element name="choose">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="by" type="valueType" />
+                    <xs:element name="word" type="xs:string" maxOccurs="unbounded" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
             </xs:choice>
             <!-- left out, the style's -->
             <xs:element name="size" type="valueType" minOccurs="0" />
@@ -517,6 +526,40 @@
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
+  <!-- An object's light, darkness, height off the ground and shadow. -->
+  <xs:group name="sightParts">
+    <xs:sequence>
+      <!-- how far round its middle it lights what is dark -->
+      <xs:element name="light" type="valueType" minOccurs="0" />
+      <!-- unlit: drawn only while lit; unseen: drawn once it has been lit -->
+      <xs:element name="dark" type="darkType" minOccurs="0" />
+      <!-- how high off the ground it starts, how fast it rises, how much less each frame, how much it bounces back up -->
+      <xs:element name="altitude" type="altitudeType" minOccurs="0" />
+      <!-- kept under that object, on the ground -->
+      <xs:element name="shadow" type="objectRefType" minOccurs="0" />
+    </xs:sequence>
+  </xs:group>
+
+  <xs:simpleType name="darkType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="unlit" />
+      <xs:enumeration value="unseen" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="altitudeType">
+    <xs:sequence>
+      <xs:element name="start" type="valueType" minOccurs="0" />
+      <xs:element name="rise" type="valueType" minOccurs="0" />
+      <xs:element name="fall" type="valueType" minOccurs="0" />
+      <xs:element name="bounce" type="valueType" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="objectRefType">
+    <xs:attribute name="object" type="xs:string" use="required" />
+  </xs:complexType>
+
   <!-- hop: one of the four ways, or a diagonal, and how far: a distance, or for a diagonal an <x> across and a <y> up or down. -->
   <xs:simpleType name="hopDirectionType">
     <xs:restriction base="xs:string">
@@ -610,6 +653,15 @@
   <xs:complexType name="knockType" mixed="true">
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- hole: cut in the object's own picture where what it touched struck it;
+       rough, 0 up to 1, gives it a ragged edge. -->
+  <xs:complexType name="holeType">
+    <xs:sequence>
+      <xs:element name="radius" type="valueType" />
+      <xs:element name="rough" type="valueType" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
@@ -732,6 +784,7 @@
       <xs:element name="bounce" type="emptyType" />
       <xs:element name="deflect" type="deflectType" />
       <xs:element name="knock" type="knockType" />
+      <xs:element name="hole" type="holeType" />
       <xs:element name="stick" type="emptyType" />
       <xs:element name="wrap" type="emptyType" />
       <xs:element name="ride" type="emptyType" />
@@ -819,6 +872,12 @@
       <xs:element name="aim">
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <!-- hold: only in a <computer>'s condition: the button held down while it holds -->
+      <xs:element name="hold">
+        <xs:complexType>
+          <xs:attribute name="button" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="reverse" type="emptyType" />
@@ -1144,6 +1203,7 @@
       <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
       <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->
       <xs:element name="seek" type="targetValueType" minOccurs="0" />
+      <xs:group ref="sightParts" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1254,6 +1314,7 @@
       <xs:element name="mass" type="valueType" minOccurs="0" />
       <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="seek" type="targetValueType" minOccurs="0" />
+      <xs:group ref="sightParts" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1324,6 +1385,7 @@
       <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
       <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->
       <xs:element name="seek" type="targetValueType" minOccurs="0" />
+      <xs:group ref="sightParts" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1352,6 +1414,7 @@
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
+      <xs:group ref="sightParts" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
@@ -1423,6 +1486,7 @@
       <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
       <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->
       <xs:element name="seek" type="targetValueType" minOccurs="0" />
+      <xs:group ref="sightParts" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1638,6 +1702,12 @@
                       </xs:complexType>
                     </xs:element>
                     <xs:element name="conditions" type="conditionsType" minOccurs="0" />
+                    <!--
+                      computer: a player the game plays itself. Every one of
+                      its conditions is tested every frame, and while one
+                      holds, the buttons its <hold>s name are held down.
+                    -->
+                    <xs:element name="computer" type="conditionsType" minOccurs="0" />
                     <xs:element name="timers" type="timersType" minOccurs="0" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />

@@ -197,7 +197,7 @@
     <xsl:param name="node" select="." />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
-      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from">
+      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button">
         <xsl:if test=". != ''">
           <xsl:text> command.</xsl:text>
           <xsl:choose>
@@ -269,6 +269,16 @@
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.distance'" />
             <xsl:with-param name="node" select="$node/near" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:when test="$verb = 'hole'">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.amount'" />
+            <xsl:with-param name="node" select="$node/radius" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.distance'" />
+            <xsl:with-param name="node" select="$node/rough" />
           </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'wander'">
@@ -521,14 +531,24 @@
       </xsl:when>
       <xsl:when test="$kind = 'text'">
         <!-- its pieces in order (readTextPieces); none, and a change keeps them -->
-        <xsl:if test="$shape/content | $shape/number | $shape/letter">
+        <xsl:if test="$shape/content | $shape/number | $shape/letter | $shape/choose">
           <xsl:value-of select="concat($indent, 'look.text = { ')" />
-          <xsl:for-each select="$shape/content | $shape/number | $shape/letter">
+          <xsl:for-each select="$shape/content | $shape/number | $shape/letter | $shape/choose">
             <xsl:if test="position() &gt; 1">, </xsl:if>
             <xsl:choose>
               <xsl:when test="self::content">
                 <xsl:text>words(</xsl:text>
                 <xsl:call-template name="text" />
+              </xsl:when>
+              <xsl:when test="self::choose">
+                <xsl:text>choose(</xsl:text>
+                <xsl:call-template name="value">
+                  <xsl:with-param name="node" select="by" />
+                </xsl:call-template>
+                <xsl:text>, </xsl:text>
+                <xsl:call-template name="texts">
+                  <xsl:with-param name="nodes" select="word" />
+                </xsl:call-template>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="concat(local-name(), '(')" />
@@ -1044,12 +1064,75 @@
         <xsl:with-param name="node" select="seek" />
       </xsl:call-template>
     </xsl:if>
+    <xsl:call-template name="sight">
+      <xsl:with-param name="to" select="'object'" />
+      <xsl:with-param name="indent" select="$in" />
+    </xsl:call-template>
     <xsl:call-template name="shared">
       <xsl:with-param name="node" select="." />
       <xsl:with-param name="to" select="'object'" />
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
     <xsl:value-of select="concat($in, 'return object;&#10;&#9;}&#10;&#10;')" />
+  </xsl:template>
+
+  <!-- An object's or a group's <light>, <dark>, <altitude> and <shadow>. -->
+  <xsl:template name="sight">
+    <xsl:param name="to" />
+    <xsl:param name="indent" />
+    <xsl:if test="light">
+      <xsl:value-of select="concat($indent, $to, '.hasLight = true;&#10;')" />
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$indent" />
+        <xsl:with-param name="to" select="concat($to, '.rawLight')" />
+        <xsl:with-param name="node" select="light" />
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:if test="dark">
+      <xsl:value-of select="concat($indent, $to, '.dark = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="normalize-space(dark)" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="altitude">
+      <xsl:value-of select="concat($indent, $to, '.hasAltitude = true;&#10;')" />
+      <xsl:if test="altitude/start">
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="to" select="concat($to, '.rawAltitude')" />
+          <xsl:with-param name="node" select="altitude/start" />
+        </xsl:call-template>
+      </xsl:if>
+      <xsl:if test="altitude/rise">
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="to" select="concat($to, '.rawRise')" />
+          <xsl:with-param name="node" select="altitude/rise" />
+        </xsl:call-template>
+      </xsl:if>
+      <xsl:if test="altitude/fall">
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="to" select="concat($to, '.rawFall')" />
+          <xsl:with-param name="node" select="altitude/fall" />
+        </xsl:call-template>
+      </xsl:if>
+      <xsl:if test="altitude/bounce">
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="to" select="concat($to, '.rawAltitudeBounce')" />
+          <xsl:with-param name="node" select="altitude/bounce" />
+        </xsl:call-template>
+      </xsl:if>
+    </xsl:if>
+    <xsl:if test="shadow">
+      <xsl:value-of select="concat($indent, $to, '.shadowOf = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="shadow/@object" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
   </xsl:template>
 
   <!-- What an <object> and a <group> both have: <facing>, <timers>,
@@ -1279,6 +1362,10 @@
         <xsl:with-param name="node" select="seek" />
       </xsl:call-template>
     </xsl:if>
+    <xsl:call-template name="sight">
+      <xsl:with-param name="to" select="'group.object'" />
+      <xsl:with-param name="indent" select="$in" />
+    </xsl:call-template>
     <xsl:call-template name="shared">
       <xsl:with-param name="node" select="." />
       <xsl:with-param name="to" select="'group.object'" />
@@ -2322,6 +2409,11 @@
     <xsl:apply-templates select="conditions/condition" mode="condition">
       <xsl:with-param name="in" select="$in" />
       <xsl:with-param name="inner" select="$inner" />
+    </xsl:apply-templates>
+    <xsl:apply-templates select="computer/condition" mode="condition">
+      <xsl:with-param name="in" select="$in" />
+      <xsl:with-param name="inner" select="$inner" />
+      <xsl:with-param name="list" select="'state.computer'" />
     </xsl:apply-templates>
     <xsl:call-template name="timers">
       <xsl:with-param name="node" select="timers" />

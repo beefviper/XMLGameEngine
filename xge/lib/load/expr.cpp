@@ -94,6 +94,8 @@ namespace xge
 				[](const CmdTrack&) { return std::string("<track />"); },
 				[](const CmdDeflect&) { return std::string("<deflect>"); },
 				[](const CmdKnock&) { return std::string("<knock>"); },
+				[](const CmdHole&) { return std::string("<hole>"); },
+				[](const CmdHold&) { return std::string("<hold>"); },
 				[](const CmdReverse&) { return std::string("<reverse />"); },
 				[](const CmdMove&) { return std::string("<move>"); },
 				[](const CmdHop&) { return std::string("<hop>"); },
@@ -142,7 +144,7 @@ namespace xge
 		// has its variable has the other one too.
 		void checkOtherVariable(const Condition& condition, const std::vector<Object>& objects, const std::string& where)
 		{
-			const auto has = [&](const Object& object) { return object.variable.count(condition.otherVariable) > 0; };
+			const auto has = [&](const Object& object) { return numberOf(object, condition.otherVariable).has_value(); };
 
 			if (!condition.otherObject.empty())
 			{
@@ -166,7 +168,7 @@ namespace xge
 			{
 				const bool tested = (condition.filterClass.empty() || condition.filterClass == object.objClass)
 					&& (condition.filterObject.empty() || condition.filterObject == object.name || object.inGroup(condition.filterObject))
-					&& object.variable.count(condition.variableName);
+					&& numberOf(object, condition.variableName);
 				if (tested && !has(object))
 				{
 					throw std::runtime_error(where + ": compares " + object.name + "." + condition.variableName + " with its own " + condition.otherVariable + ", and " + object.name + " has no variable of that name");
@@ -178,7 +180,7 @@ namespace xge
 		// with. These mirror the dispatchers in play/executor.cpp (a command
 		// one of them leaves to its catch-all does nothing there); change one
 		// and change the other.
-		enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep };
+		enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep, Computer };
 
 		struct PlaceRule
 		{
@@ -200,7 +202,7 @@ namespace xge
 			static const PlaceRule rules[] = {
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
 					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
-				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<knock>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
+				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<knock>", "<hole>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
 					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
@@ -209,6 +211,7 @@ namespace xge
 				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>",
 					"<inc>", "<dec>", "<copy>", "<reset object>", "<reset scene>", "<enter>", "<die />", "<set>", "<spawn>" } },
 				{ "a path's <step>", ownerCommands },
+				{ "a <computer>'s <condition>", { "<hold>" } },
 			};
 			return rules[static_cast<std::size_t>(place)];
 		}
@@ -510,6 +513,10 @@ namespace xge
 					{
 						throw std::runtime_error(where + ": " + tag + ": '" + owner + "' has no <heading> to set");
 					}
+					if ((part == "altitude" || part == "rise") && !found->hasAltitude)
+					{
+						throw std::runtime_error(where + ": " + tag + ": '" + owner + "' has no <altitude> to set");
+					}
 				}
 			}
 			else if (const auto* spawn = std::get_if<CmdSpawn>(&shapeOf(command)))
@@ -564,6 +571,10 @@ namespace xge
 					{
 						throw std::runtime_error("object '" + object.name + "' > <pull>: there is no object named '" + name + "'" + didYouMean(name, objectNames(objects)));
 					}
+				}
+				if (!object.shadowOf.empty() && !findObject(objects, object.shadowOf))
+				{
+					throw std::runtime_error("object '" + object.name + "' > <shadow>: there is no object named '" + object.shadowOf + "'" + didYouMean(object.shadowOf, objectNames(objects)));
 				}
 				if (!object.seekTarget.empty() && !findObject(objects, object.seekTarget))
 				{
@@ -666,6 +677,10 @@ namespace xge
 					const std::string here = where + " > <condition>";
 					checkAll(condition.commands, here); checkOwnLooks(condition.commands, nullptr, here); checkOwnFollow(condition.commands, here); checkPlace(condition.commands, Place::Condition, here);
 				}
+				for (const auto& condition : state.computer)
+				{
+					checkPlace(condition.commands, Place::Computer, where + " > <computer> > <condition>");
+				}
 				for (const auto& timer : state.timers)
 				{
 					const std::string here = where + " > <timer>";
@@ -723,6 +738,20 @@ namespace xge
 				for (const auto& timer : object.timers) { checkWalks(timer.commands, where + " > <timer>"); }
 				for (const auto& [name, commands] : object.action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
 				for (const auto& rule : object.collisionData.others) { checkWalks(rule.commands, where + " > <collision>"); }
+
+				// A hole is cut in a picture that stays as it is: one of
+				// <line>s or a <bitmap>, not turned, animated or swapped.
+				for (const auto& rule : object.collisionData.others)
+				{
+					for (const Command& command : rule.commands)
+					{
+						if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
+						if (!object.bitmap || object.hasHeading || !object.animationBitmaps.empty() || !object.looks.empty())
+						{
+							throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or a <bitmap>, with no <heading>, <animation> or second <sprite>");
+						}
+					}
+				}
 				for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
 				{
 					checkWalks(*edge, where + " > <collision edge>");
@@ -1118,6 +1147,33 @@ namespace xge
 				if (object.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(object.seekRate) + " degrees a frame; expected 0 or more"); }
 			}
 
+			if (rawObject.hasLight)
+			{
+				object.light = evaluate(rawObject.rawLight, where + " > <light>");
+				if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
+				object.lightOriginal = object.light;
+			}
+			if (rawObject.dark == "unlit") { object.dark = Object::Darkness::Unlit; }
+			else if (rawObject.dark == "unseen") { object.dark = Object::Darkness::Unseen; }
+			object.inDark = object.dark != Object::Darkness::None;
+
+			if (rawObject.hasAltitude)
+			{
+				const std::string here = where + " > <altitude>";
+				const auto given = [&](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
+				object.hasAltitude = true;
+				object.altitude = given(rawObject.rawAltitude) ? evaluate(rawObject.rawAltitude, here) : 0.0f;
+				object.rise = given(rawObject.rawRise) ? evaluate(rawObject.rawRise, here) : 0.0f;
+				object.fall = given(rawObject.rawFall) ? evaluate(rawObject.rawFall, here) : 0.0f;
+				object.altitudeBounce = given(rawObject.rawAltitudeBounce) ? evaluate(rawObject.rawAltitudeBounce, here) : 0.0f;
+				if (object.altitude < 0.0f) { throw std::runtime_error(here + ": <start> is " + formatDisplayNumber(object.altitude) + "; it cannot start below the ground"); }
+				if (object.fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(object.fall) + "; expected 0 or more"); }
+				if (!(object.altitudeBounce >= 0.0f && object.altitudeBounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(object.altitudeBounce) + "; expected 0 up to 1"); }
+				object.altitudeOriginal = object.altitude;
+				object.riseOriginal = object.rise;
+			}
+			object.shadowOf = rawObject.shadowOf;
+
 			if (rawObject.sprite.kind == "tether")
 			{
 				if (rawObject.hasHeading || !rawObject.looks.empty() || rawObject.hasAnimation)
@@ -1314,7 +1370,7 @@ namespace xge
 
 			// A total of a variable: some object it can count has it.
 			if ((condition.total == Total::Sum || condition.total == Total::Highest || condition.total == Total::Lowest)
-				&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matches(rawCondition, object) && object.variable.count(condition.variableName); }))
+				&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matches(rawCondition, object) && numberOf(object, condition.variableName); }))
 			{
 				throw std::runtime_error(where + ": total=\"" + rawCondition.total + "\" of variable=\"" + condition.variableName + "\", and no object it looks at has a variable of that name");
 			}
@@ -1386,6 +1442,10 @@ namespace xge
 			for (auto& rawCondition : rawState.conditions)
 			{
 				state.conditions.push_back(makeCondition(rawCondition, where, where));
+			}
+			for (auto& rawCondition : rawState.computer)
+			{
+				state.computer.push_back(makeCondition(rawCondition, where + " > <computer>", where));
 			}
 
 			state.timers = processTimers(rawState.timers, where);
@@ -1790,14 +1850,16 @@ namespace xge
 					{
 						piece.owner = owner;
 						piece.variable = reference->second;
-						piece.shown = showPiece(raw.kind, found->second);
+						piece.choices = raw.choices;
+						piece.shown = showPiece(raw.kind, found->second, piece.choices);
 						pieces.push_back(std::move(piece));
 						continue;
 					}
 				}
 			}
 
-			piece.shown = showPiece(raw.kind, evaluate(raw.value, where));
+			piece.choices = raw.choices;
+			piece.shown = showPiece(raw.kind, evaluate(raw.value, where), piece.choices);
 			pieces.push_back(std::move(piece));
 		}
 		return pieces;

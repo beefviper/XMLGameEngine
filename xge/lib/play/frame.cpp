@@ -310,6 +310,84 @@ namespace xge
 			}
 		}
 
+		// <altitude>: what is in the air rises by its rise, which falls by its
+		// fall each frame; at the ground it stops there, sent back up with
+		// its bounce's share of how fast it came down (none, once that is
+		// less than a frame's fall, so it comes to rest).
+		void riseAndFall(std::vector<Object>& objects, FrameRules& rules)
+		{
+			for (auto& object : objects)
+			{
+				if (!object.hasAltitude || !rules.inPlay(object)) { continue; }
+				object.rise -= object.fall;
+				object.altitude += object.rise;
+				if (object.altitude > 0.0f) { continue; }
+				object.altitude = 0.0f;
+				if (object.rise < 0.0f)
+				{
+					const float up = -object.rise * object.altitudeBounce;
+					object.rise = up > object.fall ? up : 0.0f;
+				}
+			}
+		}
+
+		// A <shadow> is kept under what casts it, on the ground, and shown
+		// while that is.
+		void castShadows(std::vector<Object>& objects)
+		{
+			for (auto& shadow : objects)
+			{
+				if (shadow.shadowOf.empty()) { continue; }
+				const Object* caster = named(objects, shadow.shadowOf);
+				if (!caster) { continue; }
+				shadow.position = caster->position + sizeOf(*caster) * 0.5f - sizeOf(shadow) * 0.5f;
+				shadow.isVisible = caster->isVisible;
+			}
+		}
+
+		// What is <dark> is drawn only where a <light> of something in play
+		// reaches some part of it; an unseen one, from the first time it does.
+		void lightAndDark(std::vector<Object>& objects, FrameRules& rules)
+		{
+			struct Light
+			{
+				Vector2f middle;
+				float reach;
+			};
+			std::vector<Light> lights;
+			bool anyDark = false;
+			for (const auto& object : objects)
+			{
+				anyDark = anyDark || object.dark != Object::Darkness::None;
+				if (object.light > 0.0f && rules.inPlay(object))
+				{
+					lights.push_back({ object.position + sizeOf(object) * 0.5f, object.light });
+				}
+			}
+			if (!anyDark) { return; }
+
+			for (auto& object : objects)
+			{
+				if (object.dark == Object::Darkness::None) { continue; }
+				const Vector2f size = sizeOf(object);
+				const bool lit = std::any_of(lights.begin(), lights.end(), [&](const Light& light)
+					{
+						const float x = std::clamp(light.middle.x, object.position.x, object.position.x + size.x);
+						const float y = std::clamp(light.middle.y, object.position.y, object.position.y + size.y);
+						return (x - light.middle.x) * (x - light.middle.x) + (y - light.middle.y) * (y - light.middle.y) <= light.reach * light.reach;
+					});
+				if (object.dark == Object::Darkness::Unseen)
+				{
+					object.seen = object.seen || lit;
+					object.inDark = !object.seen;
+				}
+				else
+				{
+					object.inDark = !lit;
+				}
+			}
+		}
+
 		// A <tether> is a line from one object's middle to another's, drawn
 		// again after the move wherever the two have got to; its own position
 		// and size follow it, so what it touches is where it is now.
@@ -484,6 +562,8 @@ namespace xge
 
 		pullAndSeek(objects, rules);
 
+		riseAndFall(objects, rules);
+
 		// Screen-edge checks: independent per object, order doesn't matter.
 		for (auto& object : objects)
 		{
@@ -523,6 +603,10 @@ namespace xge
 		holdCarried(objects);
 
 		drawTethers(objects);
+
+		castShadows(objects);
+
+		lightAndDark(objects, rules);
 
 		rules.conditions();
 	}

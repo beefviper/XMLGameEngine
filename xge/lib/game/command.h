@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "engine/keys.h"
 #include "game/types.h"
 
 #include <functional>
@@ -99,6 +100,20 @@ namespace xge
 	struct CmdKnock
 	{
 		float bounce{ 1.0f };
+	};
+
+	// <hole><radius>6</radius><rough>0.5</rough></hole> - in a collision
+	// rule about another object: a round hole is cut in the object's own
+	// picture (a sprite of <line>s or a <bitmap>), centered where what it
+	// touched struck it: a shot through a bunker, a bomb crater. `rough` (0 to
+	// 1, 0 when left out) is how much of the radius each pixel at the edge
+	// may keep at random, so a rough hole has a ragged edge. What is cut away
+	// is not drawn and, for a <type>pixel</type> collision, not touched; a
+	// reset puts the picture back whole. See xge::cutHole.
+	struct CmdHole
+	{
+		float radius{};
+		float rough{};
 	};
 
 	struct CmdMove
@@ -496,6 +511,15 @@ namespace xge
 		std::optional<float> velocityY;
 	};
 
+	// <hold button="up" /> - only in a <condition> of a state's <computer>:
+	// while that condition holds the computer holds the button down, as a
+	// player would, and lets it go when it no longer does. See
+	// Game::computerButtons.
+	struct CmdHold
+	{
+		KeyCode button{};
+	};
+
 	struct RawCommand;
 	struct LoadedCommand;
 
@@ -513,9 +537,9 @@ namespace xge
 	};
 
 	using Command = std::variant<
-		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdReverse,
+		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdHold, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -673,8 +697,9 @@ namespace xge
 		std::string from;      // become: only one showing this look
 		std::string partner;   // hunt: <with object="...">
 		std::string retreat;   // hunt: <retreat object="...">
+		std::string button;    // hold
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
+		RawValue amount;       // set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)

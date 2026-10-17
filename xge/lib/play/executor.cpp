@@ -79,6 +79,7 @@ namespace xge
 			[&](const CmdBounce&) { xge::bounce(object, edge); },
 			[&](const CmdDeflect& d) { xge::deflect(object, other, edge, d.maxAngle); },
 			[&](const CmdKnock& k) { knock(object, other, touch, k.bounce); },
+			[&](const CmdHole& h) { cutHole(object, other, h.radius, h.rough); },
 			[&](const CmdDie&) { xge::die(object); },
 			[&](const CmdStop&) { xge::stop(object); },
 			[&](const CmdReset&) { restart(object); },

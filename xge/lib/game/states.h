@@ -68,6 +68,10 @@ namespace xge
 		std::vector<RawCondition> conditions;
 		std::vector<RawTimer> timers;
 
+		// <computer>: conditions whose commands are only <hold>s, every one
+		// tested every frame; see State::computer.
+		std::vector<RawCondition> computer;
+
 		// The states it draws still underneath its own (<show state="..." />).
 		std::vector<std::string> showStates;
 
@@ -112,6 +116,13 @@ namespace xge
 		std::map<KeyCode, std::vector<Command>> input;
 		std::map<Axis, std::vector<Command>> axes;  // <input axis="mouse.x">: run as the control moves
 		std::vector<Condition> conditions;
+
+		// <computer>: a player the game plays itself. Every frame each of
+		// these conditions is tested (all of them, not only the first that
+		// holds), and the buttons the <hold>s of those that hold name are
+		// held down, the rest let go, as keys a player presses: see
+		// Game::computerButtons and Engine::step.
+		std::vector<Condition> computer;
 
 		// The states drawn still underneath it (RawState::showStates).
 		std::vector<std::string> showStates;

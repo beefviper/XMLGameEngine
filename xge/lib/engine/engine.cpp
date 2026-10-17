@@ -179,6 +179,8 @@ namespace xge
 			handleControls(window->controls());
 		}
 
+		playComputer();
+
 		game.updateObjects();
 
 		// A <condition> can change the state during updateObjects.
@@ -346,11 +348,27 @@ namespace xge
 			[&](const Object& object) { return object.isDrawn && game.isShown(object); });
 	}
 
+	void Engine::playComputer(void)
+	{
+		const std::set<KeyCode> wanted = game.computerButtons();
+		computerPressing = true;
+		for (const KeyCode key : computerHeld)
+		{
+			if (!wanted.count(key)) { handleKeyReleased(key); }
+		}
+		for (const KeyCode key : wanted)
+		{
+			if (!computerHeld.count(key)) { handleKeyPressed(key); }
+		}
+		computerPressing = false;
+		computerHeld = wanted;
+	}
+
 	void Engine::handleKeyPressed(KeyCode key)
 	{
 		const auto index = static_cast<std::size_t>(key);
 
-		if (recording && !demoPlaying)
+		if (recording && !demoPlaying && !computerPressing)
 		{
 			recordedSoFar.keys.push_back({ keyCodeToString(key), true, recordedSoFar.frames });
 		}
@@ -386,7 +404,7 @@ namespace xge
 	{
 		const auto index = static_cast<std::size_t>(key);
 
-		if (recording && !demoPlaying && heldKeys.isDown(key))
+		if (recording && !demoPlaying && !computerPressing && heldKeys.isDown(key))
 		{
 			recordedSoFar.keys.push_back({ keyCodeToString(key), false, recordedSoFar.frames });
 		}

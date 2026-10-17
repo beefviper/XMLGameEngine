@@ -27,6 +27,9 @@
     the title, the settings and playing all show it, and so is "spacebar to
     continue", which both endings show.
   * The ship <fire>s the bullet; the aliens drop bombs from a pool of three.
+  * Four shields stand over the ship. They are pictures with a pixel
+    collision, so each bullet or bomb that hits one cuts a ragged <hole> in
+    it, and later shots pass through what has been shot away.
   * Conditions end the game: no aliens left wins, no lives left loses.
   * Paused and both endings draw the game still underneath (<show state>).
 -->
@@ -186,6 +189,9 @@
             <collision class="aliens">
               <die />
             </collision>
+            <collision class="shield">
+              <die />
+            </collision>
           </collisions>
         </object>
         <!--
@@ -216,10 +222,55 @@
             <collision object="player">
               <die />
             </collision>
+            <collision class="shield">
+              <die />
+            </collision>
           </collisions>
           <member />
           <member />
           <member />
+        </group>
+        <!--
+          The shields: whatever hits one cuts a hole in it where it hit, a
+          little ragged at the edge, until the ship has nothing to hide under.
+        -->
+        <group name="shields" class="shield">
+          <columns>4</columns>
+          <rows>1</rows>
+          <padding><x>150</x><y>0</y></padding>
+          <sprite>
+            <bitmap>
+              <row>....**************....</row>
+              <row>...****************...</row>
+              <row>..******************..</row>
+              <row>.********************.</row>
+              <row>**********************</row>
+              <row>**********************</row>
+              <row>**********************</row>
+              <row>**********************</row>
+              <row>**********************</row>
+              <row>**********************</row>
+              <row>**********************</row>
+              <row>*******........*******</row>
+              <row>******..........******</row>
+              <row>*****............*****</row>
+              <row>*****............*****</row>
+              <row>*****............*****</row>
+              <scale>4</scale>
+              <color>color.green</color>
+            </bitmap>
+          </sprite>
+          <position><x>111</x><y>540</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <type>pixel</type>
+            <collision object="bullet">
+              <hole><radius>10</radius><rough>0.6</rough></hole>
+            </collision>
+            <collision class="bomb">
+              <hole><radius>8</radius><rough>0.6</rough></hole>
+            </collision>
+          </collisions>
         </group>
         <group name="aliens" class="aliens">
           <columns>11</columns>

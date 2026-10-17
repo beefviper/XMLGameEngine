@@ -1,0 +1,413 @@
+<!-- tennis.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 17, 2026 -->
+
+<!--
+  Tennis, after Activision's 1981 game for the Atari 2600. The court is seen
+  from above, and the ball flies: it is drawn higher the higher it is, with
+  its shadow under it on the court, and it bounces where it lands. Walk into
+  the ball to hit it back, but only when it is low enough to reach. The
+  computer plays the far end. Four points take a game (love, 15, 30, 40,
+  game; no deuce), and three games the match.
+
+  W A S D or the arrow keys walk, Space starts and plays again, P or Escape
+  pauses.
+
+  How it is written:
+  * The ball has an <altitude>: how high it is, how fast it rises (less each
+    frame by its fall) and how much of its speed it keeps when it bounces.
+    Its position is where it is over the court, so what it touches is what
+    is under it, and it is drawn raised by its altitude. The shadow is an
+    object of its own kept under it (<shadow object="ball" />).
+  * Each racket's rule on the ball has a <check> of the ball's altitude, so
+    a ball over a player's head goes past. A hit sends it back up (rise) and
+    toward the other end, more to one side the further from the middle of
+    the racket it was hit (values read as the rule runs).
+  * The far player is the computer's: a <computer> in the playing state
+    holds J or L down while the ball is to one side of it, the keys a second
+    player would use, so a person could play that end instead.
+  * The score is words: a <choose> shows LOVE, 15, 30 or 40 from the points.
+  * A ball out at the far end is a point to the near player, and the other
+    way round; either way it is served again (<reset />).
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+  <window name="Tennis">
+    <width>800</width>
+    <height>600</height>
+    <background>color.darkgreen</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="step">3</variable>
+    <variable name="reach">50</variable>
+    <variable name="hit">4.5</variable>
+    <variable name="loft">6</variable>
+    <variable name="spin">0.12</variable>
+  </variables>
+  <sounds>
+    <sound name="hit" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.04</note>
+    </sound>
+    <sound name="point" wave="triangle">
+      <volume>0.3</volume>
+      <note pitch="E5" to="E4">0.25</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>110</size><color>color.white</color></style>
+    <style name="score"><size>32</size><color>color.white</color></style>
+  </styles>
+  <objects>
+    <object name="continue">
+      <sprite>
+        <text>
+          <content>spacebar to play</content>
+          <size>40</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x><centered /></x><y>window.height.center + 60</y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <objects>
+        <object name="title">
+          <sprite>
+            <text style="banner">
+              <content>TENNIS</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 80</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <!-- the court's lines, and the net across the middle -->
+        <object name="court">
+          <sprite>
+            <line><from><x>0</x><y>0</y></from><to><x>500</x><y>0</y></to><thickness>2</thickness></line>
+            <line><from><x>500</x><y>0</y></from><to><x>500</x><y>440</y></to><thickness>2</thickness></line>
+            <line><from><x>500</x><y>440</y></from><to><x>0</x><y>440</y></to><thickness>2</thickness></line>
+            <line><from><x>0</x><y>440</y></from><to><x>0</x><y>0</y></to><thickness>2</thickness></line>
+            <line><from><x>250</x><y>100</y></from><to><x>250</x><y>340</y></to><thickness>2</thickness></line>
+            <line><from><x>0</x><y>100</y></from><to><x>500</x><y>100</y></to><thickness>2</thickness></line>
+            <line><from><x>0</x><y>340</y></from><to><x>500</x><y>340</y></to><thickness>2</thickness></line>
+          </sprite>
+          <position><x>150</x><y>80</y></position>
+        </object>
+        <object name="net">
+          <sprite>
+            <rectangle>
+              <width>540</width>
+              <height>4</height>
+              <color>color.lightgrey</color>
+            </rectangle>
+          </sprite>
+          <position><x>130</x><y>298</y></position>
+        </object>
+        <!-- the far player, the computer's -->
+        <object name="cpu" class="racket">
+          <sprite>
+            <rectangle>
+              <width>30</width>
+              <height>12</height>
+              <color>color.blue</color>
+            </rectangle>
+          </sprite>
+          <position><x>385</x><y>60</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="all">
+              <stick />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="left">
+              <move direction="left">step</move>
+            </action>
+            <action name="right">
+              <move direction="right">step</move>
+            </action>
+          </actions>
+          <variables>
+            <variable name="points">0</variable>
+            <variable name="games">0</variable>
+          </variables>
+        </object>
+        <!-- the near player -->
+        <object name="player" class="racket">
+          <sprite>
+            <rectangle>
+              <width>30</width>
+              <height>12</height>
+              <color>color.orange</color>
+            </rectangle>
+          </sprite>
+          <position><x>385</x><y>530</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="all">
+              <stick />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="up">
+              <move direction="up">step</move>
+            </action>
+            <action name="down">
+              <move direction="down">step</move>
+            </action>
+            <action name="left">
+              <move direction="left">step</move>
+            </action>
+            <action name="right">
+              <move direction="right">step</move>
+            </action>
+          </actions>
+          <variables>
+            <variable name="points">0</variable>
+            <variable name="games">0</variable>
+          </variables>
+        </object>
+        <!-- the ball's shadow, on the court under it; written before the ball, so drawn under it -->
+        <object name="shadow">
+          <sprite>
+            <circle>
+              <radius>6</radius>
+              <color>color.forestgreen</color>
+            </circle>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <shadow object="ball" />
+        </object>
+        <!-- served from the far end toward the player, falling from high up -->
+        <object name="ball">
+          <sprite>
+            <circle>
+              <radius>6</radius>
+              <color>color.yellow</color>
+            </circle>
+          </sprite>
+          <position><x>394</x><y>90</y></position>
+          <velocity><x><random min="-1.5" max="1.5" /></x><y>3</y></velocity>
+          <altitude>
+            <start>80</start>
+            <fall>0.25</fall>
+            <bounce>0.7</bounce>
+          </altitude>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal">
+              <bounce />
+            </collision>
+            <collision edge="top">
+              <inc variable="player.points" />
+              <play sound="point" />
+              <reset />
+            </collision>
+            <collision edge="bottom">
+              <inc variable="cpu.points" />
+              <play sound="point" />
+              <reset />
+            </collision>
+            <!-- hit back when it is low enough to reach: up, and away, angled by where on the racket -->
+            <collision object="player">
+              <check variable="altitude"><below>reach</below></check>
+              <set variable="ball.velocity.y">0 - hit</set>
+              <set variable="ball.velocity.x">(ball.x - player.x - 9) * spin</set>
+              <set variable="ball.rise">loft</set>
+              <play sound="hit" />
+            </collision>
+            <collision object="cpu">
+              <check variable="altitude"><below>reach</below></check>
+              <set variable="ball.velocity.y">hit</set>
+              <set variable="ball.velocity.x">(ball.x - cpu.x - 9) * spin</set>
+              <set variable="ball.rise">loft</set>
+              <play sound="hit" />
+            </collision>
+          </collisions>
+        </object>
+        <!-- the score: games, then this game's points as words -->
+        <object name="cpuscore">
+          <sprite>
+            <text style="score">
+              <content>CPU</content>
+              <number>cpu.games</number>
+              <choose>
+                <by>cpu.points</by>
+                <word>LOVE</word>
+                <word>15</word>
+                <word>30</word>
+                <word>40</word>
+              </choose>
+            </text>
+          </sprite>
+          <position><x>10</x><y>10</y></position>
+        </object>
+        <object name="playerscore">
+          <sprite>
+            <text style="score">
+              <content>YOU</content>
+              <number>player.games</number>
+              <choose>
+                <by>player.points</by>
+                <word>LOVE</word>
+                <word>15</word>
+                <word>30</word>
+                <word>40</word>
+              </choose>
+            </text>
+          </sprite>
+          <position><x>10</x><y>window.bottom - 50</y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="p">
+          <push state="paused" />
+        </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
+        <input button="w">
+          <trigger object="player" action="up" />
+        </input>
+        <input button="up">
+          <trigger object="player" action="up" />
+        </input>
+        <input button="s">
+          <trigger object="player" action="down" />
+        </input>
+        <input button="down">
+          <trigger object="player" action="down" />
+        </input>
+        <input button="a">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="player" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="player" action="right" />
+        </input>
+        <!-- the far end's keys: the computer's, or a second player's -->
+        <input button="j">
+          <trigger object="cpu" action="left" />
+        </input>
+        <input button="l">
+          <trigger object="cpu" action="right" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="player" variable="games">
+          <atleast>3</atleast>
+          <push state="won" />
+        </condition>
+        <condition object="cpu" variable="games">
+          <atleast>3</atleast>
+          <push state="lost" />
+        </condition>
+        <!-- four points take the game -->
+        <condition object="player" variable="points">
+          <atleast>4</atleast>
+          <inc variable="player.games" />
+          <set variable="player.points">0</set>
+          <set variable="cpu.points">0</set>
+        </condition>
+        <condition object="cpu" variable="points">
+          <atleast>4</atleast>
+          <inc variable="cpu.games" />
+          <set variable="player.points">0</set>
+          <set variable="cpu.points">0</set>
+        </condition>
+      </conditions>
+      <!-- the computer keeps its racket under the ball -->
+      <computer>
+        <condition object="cpu" variable="x">
+          <below object="ball" variable="x" />
+          <hold button="l" />
+        </condition>
+        <condition object="cpu" variable="x">
+          <above object="ball" variable="x" />
+          <hold button="j" />
+        </condition>
+      </computer>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text style="banner">
+              <content>paused</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+        <input button="escape">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="lost">
+      <objects>
+        <object name="message">
+          <sprite>
+            <text style="banner">
+              <content>GAME, CPU</content>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y>window.height.center - 150</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="won" from="lost">
+      <objects>
+        <object name="message">
+          <sprite>
+            <text style="banner">
+              <content>GAME, YOU</content>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+        </object>
+      </objects>
+    </state>
+  </states>
+</game>

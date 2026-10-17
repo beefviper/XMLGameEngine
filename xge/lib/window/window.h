@@ -86,6 +86,22 @@ namespace xge
 		virtual void display() = 0;
 	};
 
+	// Draws one object, unless it is <dark> and unlit, raised off the ground
+	// by its <altitude> (its own position stays on the ground).
+	inline void drawObject(Window& window, Object& object)
+	{
+		if (object.inDark) { return; }
+		if (object.altitude == 0.0f)
+		{
+			window.draw(object);
+			return;
+		}
+		const float ground = object.position.y;
+		object.position.y = ground - object.altitude;
+		window.draw(object);
+		object.position.y = ground;
+	}
+
 	// One picture of a game: the background, then every object in play, in
 	// the order they are listed. What the engine draws each frame, and a
 	// generated game too.
@@ -98,7 +114,7 @@ namespace xge
 		{
 			if (inPlay(object))
 			{
-				window.draw(object);
+				drawObject(window, object);
 			}
 		}
 
@@ -116,14 +132,14 @@ namespace xge
 		{
 			if (still(object))
 			{
-				window.draw(object);
+				drawObject(window, object);
 			}
 		}
 		for (auto& object : objects)
 		{
 			if (inPlay(object))
 			{
-				window.draw(object);
+				drawObject(window, object);
 			}
 		}
 

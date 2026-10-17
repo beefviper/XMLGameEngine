@@ -158,6 +158,16 @@ namespace xge
 			o << '\n';
 		}
 
+		for (auto& condition : f.computer)
+		{
+			o << "       computer: " << describe(condition) << ", holds=";
+			for (auto& command : condition.commands)
+			{
+				o << command << (&command != &condition.commands.back() ? ";" : "");
+			}
+			o << '\n';
+		}
+
 		for (auto& timer : f.timers)
 		{
 			o << "       timer: " << (timer.repeat ? "every=" : "after=") << timer.interval << ", action=";

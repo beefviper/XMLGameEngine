@@ -14,8 +14,14 @@
 
 namespace xge
 {
-	std::string showPiece(RawTextPiece::Kind kind, float value)
+	std::string showPiece(RawTextPiece::Kind kind, float value, const std::vector<std::string>& choices)
 	{
+		if (kind == RawTextPiece::Kind::Choice)
+		{
+			if (choices.empty()) { return {}; }
+			const long last = static_cast<long>(choices.size()) - 1;
+			return choices[static_cast<std::size_t>(std::clamp(std::lround(std::floor(value)), 0L, last))];
+		}
 		if (kind != RawTextPiece::Kind::Letter)
 		{
 			return formatDisplayNumber(value);
@@ -118,19 +124,33 @@ namespace xge
 
 	const std::vector<std::string>& liveNumberParts()
 	{
-		static const std::vector<std::string> parts{ "x", "y", "velocity.x", "velocity.y", "heading" };
+		static const std::vector<std::string> parts{ "x", "y", "velocity.x", "velocity.y", "heading", "altitude", "rise", "light" };
 		return parts;
 	}
 
 	std::string liveNumberPart(const std::string& name)
 	{
 		// The longest first: ball.velocity.x is velocity.x, not x.
-		for (const char* part : { "velocity.x", "velocity.y", "heading", "x", "y" })
+		for (const char* part : { "velocity.x", "velocity.y", "heading", "altitude", "rise", "light", "x", "y" })
 		{
 			const std::string tail = std::string(".") + part;
 			if (name.size() > tail.size() && name.compare(name.size() - tail.size(), tail.size(), tail) == 0) { return part; }
 		}
 		return {};
+	}
+
+	std::optional<float> numberOf(const Object& object, const std::string& name)
+	{
+		if (const auto own = object.variable.find(name); own != object.variable.end()) { return own->second; }
+		if (name == "x") { return object.position.x; }
+		if (name == "y") { return object.position.y; }
+		if (name == "velocity.x") { return object.velocity.x; }
+		if (name == "velocity.y") { return object.velocity.y; }
+		if (name == "heading" && object.hasHeading) { return object.heading; }
+		if (name == "altitude") { return object.altitude; }
+		if (name == "rise") { return object.rise; }
+		if (name == "light") { return object.light; }
+		return std::nullopt;
 	}
 
 	const std::vector<std::string>& touchNumberNames()
@@ -410,6 +430,10 @@ namespace xge
 			o << "\tpull=" << name << " " << strength << '\n';
 		}
 
+		if (f.light > 0.0f) { o << "\tlight=" << f.light << '\n'; }
+		if (f.dark != Object::Darkness::None) { o << "\tdark=" << (f.dark == Object::Darkness::Unlit ? "unlit" : "unseen") << '\n'; }
+		if (f.hasAltitude) { o << "\taltitude=" << f.altitude << " rise " << f.rise << " fall " << f.fall << " bounce " << f.altitudeBounce << '\n'; }
+		if (!f.shadowOf.empty()) { o << "\tshadow of " << f.shadowOf << '\n'; }
 		if (!f.seekTarget.empty())
 		{
 			o << "\tseek=" << f.seekTarget << " " << f.seekRate << '\n';

@@ -190,6 +190,12 @@ namespace xge
 		// press or let go, and what the game kept before it started.
 		bool demoPlaying = false;
 		unsigned int demoFrame = 0;
+
+		// The buttons the state's <computer> is holding down, which it presses
+		// and lets go as a player would, and is not recorded doing.
+		std::set<KeyCode> computerHeld;
+		bool computerPressing = false;
+		void playComputer(void);
 		std::size_t demoNext = 0;
 		std::string keptBeforeDemo;
 		void startDemo(void);

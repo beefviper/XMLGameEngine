@@ -6,6 +6,7 @@
 #include "play/verbs.h"
 
 #include "game/command.h"
+#include "game/random.h"
 #include "play/geometry.h"
 
 #include <algorithm>
@@ -44,6 +45,61 @@ namespace xge
 	Vector2f motionOf(const Object& object) noexcept
 	{
 		return object.velocity + object.riding;
+	}
+
+	void cutHole(Object& object, const Object& other, float radius, float rough)
+	{
+		if (!object.bitmap) { return; }
+
+		auto cut = std::make_shared<Bitmap>(*object.bitmap);
+
+		// Where it struck: the solid pixel nearest the other's middle, near
+		// enough the other to be touched by it.
+		const Vector2f otherSize = sizeOf(other);
+		Vector2f middle = other.position + otherSize * 0.5f - object.position;
+		{
+			const Vector2f from = other.position - object.position;
+			const int reach = 2;
+			float best = -1.0f;
+			Vector2f nearest = middle;
+			const int x0 = std::max(0, static_cast<int>(std::floor(from.x)) - reach);
+			const int y0 = std::max(0, static_cast<int>(std::floor(from.y)) - reach);
+			const int x1 = std::min(cut->width - 1, static_cast<int>(std::ceil(from.x + otherSize.x)) + reach);
+			const int y1 = std::min(cut->height - 1, static_cast<int>(std::ceil(from.y + otherSize.y)) + reach);
+			for (int y = y0; y <= y1; ++y)
+			{
+				for (int x = x0; x <= x1; ++x)
+				{
+					if (!cut->solidAt(x, y)) { continue; }
+					const Vector2f at{ static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f };
+					const float away = (at.x - middle.x) * (at.x - middle.x) + (at.y - middle.y) * (at.y - middle.y);
+					if (best < 0.0f || away < best) { best = away; nearest = at; }
+				}
+			}
+			middle = nearest;
+		}
+		const int left = std::max(0, static_cast<int>(std::floor(middle.x - radius)));
+		const int top = std::max(0, static_cast<int>(std::floor(middle.y - radius)));
+		const int right = std::min(cut->width - 1, static_cast<int>(std::ceil(middle.x + radius)));
+		const int bottom = std::min(cut->height - 1, static_cast<int>(std::ceil(middle.y + radius)));
+		bool changed = false;
+		for (int y = top; y <= bottom; ++y)
+		{
+			for (int x = left; x <= right; ++x)
+			{
+				const float dx = static_cast<float>(x) + 0.5f - middle.x;
+				const float dy = static_cast<float>(y) + 0.5f - middle.y;
+				const float reach = rough > 0.0f ? radius * (1.0f - rough * randomBetween(0.0f, 1.0f)) : radius;
+				if (dx * dx + dy * dy > reach * reach || !cut->solidAt(x, y)) { continue; }
+				cut->rgba[(static_cast<std::size_t>(y) * static_cast<std::size_t>(cut->width) + static_cast<std::size_t>(x)) * 4 + 3] = 0;
+				changed = true;
+			}
+		}
+		if (!changed) { return; }
+
+		if (!object.unholed) { object.unholed = object.bitmap; }
+		object.bitmap = std::move(cut);
+		object.visualDirty = true;
 	}
 
 	bool knock(Object& object, Object& other, const Touch& touch, float bounce)

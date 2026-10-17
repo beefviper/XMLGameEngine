@@ -1,0 +1,358 @@
+<!-- hauntedhouse.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 17, 2026 -->
+
+<!--
+  Haunted House, after Atari's 1982 game for the 2600, on one floor. You are
+  a pair of eyes in a dark house: the walls show only close by, or for a
+  moment further off by the light of a match. Three pieces of an urn lie
+  about the house; find all three. Ghosts drift through the walls after you,
+  and you see one only when it is in the light. Three lives, and a box of
+  ten matches.
+
+  W A S D or the arrow keys walk, Space strikes a match (and starts and plays
+  again), P or Escape pauses.
+
+  How it is written:
+  * The house is a <map>: # is a wall, u a piece of the urn, g a ghost and @
+    you.
+  * The eyes have a <light>, how far round them things can be seen. A match
+    puts it up (<set variable="player.light">), and a timer of the eyes
+    burns it back down, a little every tenth of a second. Values are read as
+    the commands run, so the match only lights while there are matches left.
+  * The walls and the ghosts are <dark>unlit</dark>: drawn only while a light
+    reaches them. The urn pieces are <dark>unseen</dark>: once a light has
+    found one it stays on the map, as a fog of war.
+  * A ghost <chase>s the eyes through the walls, and touching one costs a
+    life and starts you over at the door.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+  <window name="Haunted House">
+    <width>800</width>
+    <height>600</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen>
+    <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="tile">40</variable>
+    <variable name="step">2</variable>
+    <variable name="near">40</variable>
+    <variable name="match">170</variable>
+  </variables>
+  <sounds>
+    <sound name="strike" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="3000" to="800">0.2</note>
+    </sound>
+    <sound name="found" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="G5">0.12</note>
+    </sound>
+    <sound name="caught" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="A3" to="A2">0.5</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>90</size><color>color.orange</color></style>
+    <style name="hud"><size>28</size><color>color.lightgrey</color></style>
+  </styles>
+  <objects>
+    <object name="continue">
+      <sprite>
+        <text>
+          <content>spacebar to play</content>
+          <size>40</size>
+          <color>color.white</color>
+        </text>
+      </sprite>
+      <position><x><centered /></x><y>window.height.center + 60</y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="mainmenu">
+      <objects>
+        <object name="title">
+          <sprite>
+            <text style="banner">
+              <content>HAUNTED HOUSE</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 80</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <map name="house">
+          <tile>
+            <width>tile</width>
+            <height>tile</height>
+          </tile>
+          <position><x>0</x><y>tile</y></position>
+          <row>####################</row>
+          <row>#@     #           #</row>
+          <row>#      #    u      #</row>
+          <row>#  ##  #  ######   #</row>
+          <row>#  #           #   #</row>
+          <row>#  #  g    #   #   #</row>
+          <row>#  #########   #   #</row>
+          <row>#          #       #</row>
+          <row>####  #    #  ###  #</row>
+          <row>#u    #    #    #  #</row>
+          <row>#     ######    #  #</row>
+          <row>#          g    # u#</row>
+          <row>#               #  #</row>
+          <row>####################</row>
+          <!-- the walls: seen only where there is light -->
+          <group name="walls" char="#" class="wall">
+            <sprite>
+              <rectangle>
+                <width>tile</width>
+                <height>tile</height>
+                <color>color.purple</color>
+              </rectangle>
+            </sprite>
+            <dark>unlit</dark>
+          </group>
+          <!-- the pieces of the urn: once found by a light, they stay on the map -->
+          <group name="urn" char="u" class="urn">
+            <sprite>
+              <bitmap>
+                <row>.****.</row>
+                <row>******</row>
+                <row>.****.</row>
+                <row>..**..</row>
+                <row>.****.</row>
+                <scale>3</scale>
+                <color>color.yellow</color>
+              </bitmap>
+            </sprite>
+            <dark>unseen</dark>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="player">
+                <die />
+              </collision>
+            </collisions>
+          </group>
+          <!-- the ghosts: drift through the walls toward the eyes, seen only in the light -->
+          <group name="ghosts" char="g" class="ghost">
+            <sprite>
+              <bitmap>
+                <row>..****..</row>
+                <row>.******.</row>
+                <row>**.**.**</row>
+                <row>********</row>
+                <row>********</row>
+                <row>*.*..*.*</row>
+                <scale>3</scale>
+                <color>color.white</color>
+              </bitmap>
+            </sprite>
+            <dark>unlit</dark>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
+            <timers>
+              <timer>
+                <every>0.1</every>
+                <chase object="player"><speed>0.7</speed></chase>
+              </timer>
+            </timers>
+          </group>
+          <!-- the eyes: always seen, and they light a little round them -->
+          <object name="player" char="@">
+            <sprite>
+              <bitmap>
+                <row>**..**</row>
+                <row>*.**.*</row>
+                <row>**..**</row>
+                <scale>3</scale>
+                <color>color.white</color>
+              </bitmap>
+            </sprite>
+            <light>near</light>
+            <collisions>
+              <enabled>true</enabled>
+              <collision class="wall">
+                <stop />
+              </collision>
+              <collision class="urn">
+                <inc variable="player.urns" />
+                <play sound="found" />
+              </collision>
+              <collision class="ghost">
+                <dec variable="player.lives" />
+                <play sound="caught" />
+                <reset />
+              </collision>
+            </collisions>
+            <actions>
+              <action name="up">
+                <move direction="up">step</move>
+              </action>
+              <action name="down">
+                <move direction="down">step</move>
+              </action>
+              <action name="left">
+                <move direction="left">step</move>
+              </action>
+              <action name="right">
+                <move direction="right">step</move>
+              </action>
+              <!-- a match, while there are any: the light reaches far, then burns down -->
+              <action name="strike">
+                <set variable="player.light">if(player.matches > 0, match, player.light)</set>
+                <set variable="player.matches">max(0, player.matches - 1)</set>
+                <play sound="strike" />
+              </action>
+            </actions>
+            <variables>
+              <variable name="matches">10</variable>
+              <variable name="lives">3</variable>
+              <variable name="urns">0</variable>
+            </variables>
+            <timers>
+              <timer>
+                <every>0.1</every>
+                <set variable="player.light">max(near, player.light - 6)</set>
+              </timer>
+            </timers>
+          </object>
+        </map>
+        <object name="hud">
+          <sprite>
+            <text style="hud">
+              <content>MATCHES</content>
+              <number>player.matches</number>
+              <content>LIVES</content>
+              <number>player.lives</number>
+              <content>URN</content>
+              <number>player.urns</number>
+              <content>OF 3</content>
+            </text>
+          </sprite>
+          <position><x>10</x><y>6</y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="p">
+          <push state="paused" />
+        </input>
+        <input button="escape">
+          <push state="paused" />
+        </input>
+        <input button="space">
+          <trigger object="player" action="strike" />
+        </input>
+        <input button="w">
+          <trigger object="player" action="up" />
+        </input>
+        <input button="up">
+          <trigger object="player" action="up" />
+        </input>
+        <input button="s">
+          <trigger object="player" action="down" />
+        </input>
+        <input button="down">
+          <trigger object="player" action="down" />
+        </input>
+        <input button="a">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="left">
+          <trigger object="player" action="left" />
+        </input>
+        <input button="d">
+          <trigger object="player" action="right" />
+        </input>
+        <input button="right">
+          <trigger object="player" action="right" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="player" variable="urns">
+          <atleast>3</atleast>
+          <push state="won" />
+        </condition>
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="lost" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text style="banner">
+              <content>paused</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <pop />
+        </input>
+        <input button="p">
+          <pop />
+        </input>
+        <input button="escape">
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="lost">
+      <objects>
+        <object name="message">
+          <sprite>
+            <text style="banner">
+              <content>THE HOUSE WINS</content>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y>window.height.center - 150</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space">
+          <reset />
+        </input>
+      </inputs>
+    </state>
+    <state name="won" from="lost">
+      <objects>
+        <object name="message">
+          <sprite>
+            <text style="banner">
+              <content>THE URN IS WHOLE</content>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+        </object>
+      </objects>
+    </state>
+  </states>
+</game>

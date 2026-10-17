@@ -116,6 +116,15 @@ namespace xge
 			return CmdChase{ raw.object, speed, stopWithin };
 		}
 		if (verb == "aim") { return CmdAim{ raw.object }; }
+		if (verb == "hold")
+		{
+			const KeyCode button = keyCodeFromString(raw.button);
+			if (button == KeyCode::Unknown)
+			{
+				throw std::runtime_error("<hold button=\"" + raw.button + "\">: there is no key named '" + raw.button + "'");
+			}
+			return CmdHold{ button };
+		}
 
 		// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
 		const auto speedOf = [&](const char* what)
@@ -176,6 +185,16 @@ namespace xge
 				throw std::runtime_error("<knock> has a bounce of " + formatDisplayNumber(bounce) + "; expected 0 up to 1");
 			}
 			return CmdKnock{ bounce };
+		}
+
+		if (verb == "hole")
+		{
+			const float radius = evaluate(raw.amount);
+			const bool smooth = raw.distance.kind == RawValue::Kind::Expression && raw.distance.text.empty();
+			const float rough = smooth ? 0.0f : evaluate(raw.distance);
+			if (!(radius > 0.0f)) { throw std::runtime_error("<hole> has a <radius> of " + formatDisplayNumber(radius) + "; expected above 0"); }
+			if (!(rough >= 0.0f && rough <= 1.0f)) { throw std::runtime_error("<hole> has a <rough> of " + formatDisplayNumber(rough) + "; expected 0 up to 1"); }
+			return CmdHole{ radius, rough };
 		}
 
 		if (verb == "release")
@@ -379,6 +398,8 @@ namespace xge
 			[&](const CmdTrack& t) { o << "track" << (t.path.empty() ? "" : "(" + t.path + ")"); },
 			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
 			[&](const CmdKnock& k) { o << "knock(" << k.bounce << ")"; },
+			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
+			[&](const CmdHole& h) { o << "hole(" << h.radius << ", " << h.rough << ")"; },
 			[&](const CmdReverse&) { o << "reverse"; },
 			[&](const CmdMove& m)
 			{
@@ -606,6 +627,14 @@ namespace xge
 		if (command.verb == "thrust" || command.verb == "deflect")
 		{
 			o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+		}
+		else if (command.verb == "hold")
+		{
+			o << "(" << command.button << ")";
+		}
+		else if (command.verb == "hole")
+		{
+			o << "(" << command.amount << ", " << command.distance << ")";
 		}
 		else if (command.verb == "release")
 		{
