@@ -16,11 +16,14 @@
   It is the game diagonal hops were made for:
   * Each key is a <hop direction="down-right"> with an <x> across and a <y>
     down: half a cube across and a whole row down, so the cubes of one row
-    sit between those of the next.
-  * The pyramid is a group of rows, each a group of its own of one more
-    cube than the row above. A cube shows its look "lit" once Q*bert has
+    sit between those of the next. Each hop also turns Q*bert to face it
+    (four looks of one bitmap, two of them flipped).
+  * The pyramid is a <map>, drawn as it stands, on tiles half a cube across.
+    A cube is one bitmap of three inks, a top and two sides, so it looks
+    solid; with pixel collisions only the faces touch, so Q*bert on a top
+    touches no other cube. A cube shows its look "lit" once Q*bert has
     landed on it (a rule only for the unlit look, so it scores once).
-  * Around the pyramid is the void: unseen cubes where a hop off the
+  * Around the pyramid is the void: unseen tiles where a hop off the
     pyramid lands, which cost a life and put Q*bert back on top.
   * The red ball hops down on its own, a <trigger> from its own <timer>s
     with <random> waits, and back to the top once it falls off.
@@ -137,112 +140,164 @@
             <variable name="lives">3</variable>
           </variables>
         </object>
-        <!-- the pyramid: six rows, each half a cube further out than the one above -->
-        <group name="cubes" class="cube">
-          <sprite name="unlit">
-            <rectangle>
-              <width>56</width>
-              <height>40</height>
-              <color>color.blue</color>
-            </rectangle>
-          </sprite>
-          <sprite name="lit">
-            <rectangle>
-              <width>56</width>
-              <height>40</height>
-              <color>color.yellow</color>
-            </rectangle>
-          </sprite>
-          <collisions>
-            <enabled>true</enabled>
-            <collision object="qbert" sprite="unlit">
-              <become sprite="lit" />
-              <inc variable="player.score">25</inc>
-            </collision>
-          </collisions>
-          <group name="row1">
-            <columns>1</columns>
-            <rows>1</rows>
-            <padding><x>8</x></padding>
-            <position><x>372</x><y>110</y></position>
+        <!-- the pyramid, drawn as it stands: a tile is half a cube across and a row
+             down, so a cube (#) stands between the two below it; the void (o) is
+             every tile a hop off the pyramid lands on -->
+        <map name="pyramid">
+          <tile><width>across</width><height>down</height></tile>
+          <position><x>160</x><y>74</y></position>
+          <row>......o.o......</row>
+          <row>.....o.#.o.....</row>
+          <row>....o.#.#.o....</row>
+          <row>...o.#.#.#.o...</row>
+          <row>..o.#.#.#.#.o..</row>
+          <row>.o.#.#.#.#.#.o.</row>
+          <row>..#.#.#.#.#.#..</row>
+          <row>.o.o.o.o.o.o.o.</row>
+          <!-- a cube is three faces of one bitmap; its middle is the tile's, so its
+               top face is centred 16 above it, where Q*bert and the ball stand.
+               Pixel collisions, so only the faces count, not the corners of the box -->
+          <group name="cubes" char="#" class="cube">
+            <sprite name="unlit">
+              <bitmap>
+                <row>.......**.......</row>
+                <row>.....******.....</row>
+                <row>...**********...</row>
+                <row>.**************.</row>
+                <row>l**************r</row>
+                <row>lll**********rrr</row>
+                <row>lllll******rrrrr</row>
+                <row>lllllll**rrrrrrr</row>
+                <row>llllllllrrrrrrrr</row>
+                <row>llllllllrrrrrrrr</row>
+                <row>llllllllrrrrrrrr</row>
+                <row>llllllllrrrrrrrr</row>
+                <row>.lllllllrrrrrrr.</row>
+                <row>...lllllrrrrr...</row>
+                <row>.....lllrrr.....</row>
+                <row>.......lr.......</row>
+                <scale>4</scale>
+                <color>color.blue</color>
+                <color char="l">color.brown</color>
+                <color char="r">color.darkgrey</color>
+              </bitmap>
+            </sprite>
+            <sprite name="lit">
+              <bitmap>
+                <row>.......**.......</row>
+                <row>.....******.....</row>
+                <row>...**********...</row>
+                <row>.**************.</row>
+                <row>l**************r</row>
+                <row>lll**********rrr</row>
+                <row>lllll******rrrrr</row>
+                <row>lllllll**rrrrrrr</row>
+                <row>llllllllrrrrrrrr</row>
+                <row>llllllllrrrrrrrr</row>
+                <row>llllllllrrrrrrrr</row>
+                <row>llllllllrrrrrrrr</row>
+                <row>.lllllllrrrrrrr.</row>
+                <row>...lllllrrrrr...</row>
+                <row>.....lllrrr.....</row>
+                <row>.......lr.......</row>
+                <scale>4</scale>
+                <color>color.yellow</color>
+                <color char="l">color.brown</color>
+                <color char="r">color.darkgrey</color>
+              </bitmap>
+            </sprite>
+            <collisions>
+              <enabled>true</enabled>
+              <type>pixel</type>
+              <collision object="qbert" sprite="unlit">
+                <become sprite="lit" />
+                <inc variable="player.score">25</inc>
+              </collision>
+            </collisions>
           </group>
-          <group name="row2">
-            <columns>2</columns>
-            <rows>1</rows>
-            <padding><x>8</x></padding>
-            <position><x>340</x><y>158</y></position>
+          <!-- tall and thin, to reach from the tile's middle up to where a hop lands
+               without touching anything standing on the cubes beside it -->
+          <group name="void" char="o" class="void">
+            <sprite>
+              <rectangle>
+                <width>24</width>
+                <height>56</height>
+              </rectangle>
+            </sprite>
+            <drawn>false</drawn>
+            <collisions>
+              <enabled>true</enabled>
+            </collisions>
           </group>
-          <group name="row3">
-            <columns>3</columns>
-            <rows>1</rows>
-            <padding><x>8</x></padding>
-            <position><x>308</x><y>206</y></position>
-          </group>
-          <group name="row4">
-            <columns>4</columns>
-            <rows>1</rows>
-            <padding><x>8</x></padding>
-            <position><x>276</x><y>254</y></position>
-          </group>
-          <group name="row5">
-            <columns>5</columns>
-            <rows>1</rows>
-            <padding><x>8</x></padding>
-            <position><x>244</x><y>302</y></position>
-          </group>
-          <group name="row6">
-            <columns>6</columns>
-            <rows>1</rows>
-            <padding><x>8</x></padding>
-            <position><x>212</x><y>350</y></position>
-          </group>
-        </group>
-        <!-- the void: where a hop off the pyramid lands -->
-        <group name="void" class="void">
-          <sprite>
-            <rectangle>
-              <width>56</width>
-              <height>40</height>
-            </rectangle>
-          </sprite>
-          <drawn>false</drawn>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
-          <group name="leftside">
-            <member><position><x>340</x><y>62</y></position></member>
-            <member><position><x>308</x><y>110</y></position></member>
-            <member><position><x>276</x><y>158</y></position></member>
-            <member><position><x>244</x><y>206</y></position></member>
-            <member><position><x>212</x><y>254</y></position></member>
-            <member><position><x>180</x><y>302</y></position></member>
-            <member><position><x>148</x><y>350</y></position></member>
-          </group>
-          <group name="rightside">
-            <member><position><x>404</x><y>62</y></position></member>
-            <member><position><x>436</x><y>110</y></position></member>
-            <member><position><x>468</x><y>158</y></position></member>
-            <member><position><x>500</x><y>206</y></position></member>
-            <member><position><x>532</x><y>254</y></position></member>
-            <member><position><x>564</x><y>302</y></position></member>
-            <member><position><x>596</x><y>350</y></position></member>
-          </group>
-          <group name="bottom">
-            <columns>7</columns>
-            <rows>1</rows>
-            <padding><x>8</x></padding>
-            <position><x>180</x><y>398</y></position>
-          </group>
-        </group>
+        </map>
         <object name="qbert">
-          <sprite>
-            <rectangle>
-              <width>20</width>
-              <height>20</height>
+          <sprite name="downright">
+            <bitmap>
+              <row>..****..</row>
+              <row>.******.</row>
+              <row>.*wk*wk.</row>
+              <row>.*wk*wk*</row>
+              <row>.*******</row>
+              <row>..****.*</row>
+              <row>...*.*..</row>
+              <row>..**.**.</row>
+              <scale>2</scale>
               <color>color.orange</color>
-            </rectangle>
+              <color char="w">color.white</color>
+              <color char="k">color.black</color>
+            </bitmap>
           </sprite>
-          <position><x>390</x><y>120</y></position>
+          <sprite name="downleft">
+            <bitmap>
+              <row>..****..</row>
+              <row>.******.</row>
+              <row>.*wk*wk.</row>
+              <row>.*wk*wk*</row>
+              <row>.*******</row>
+              <row>..****.*</row>
+              <row>...*.*..</row>
+              <row>..**.**.</row>
+              <scale>2</scale>
+              <color>color.orange</color>
+              <color char="w">color.white</color>
+              <color char="k">color.black</color>
+              <flip>horizontal</flip>
+            </bitmap>
+          </sprite>
+          <sprite name="upright">
+            <bitmap>
+              <row>......**</row>
+              <row>..*****.</row>
+              <row>.******.</row>
+              <row>.******.</row>
+              <row>.******.</row>
+              <row>..****..</row>
+              <row>...*.*..</row>
+              <row>..**.**.</row>
+              <scale>2</scale>
+              <color>color.orange</color>
+              <color char="w">color.white</color>
+              <color char="k">color.black</color>
+            </bitmap>
+          </sprite>
+          <sprite name="upleft">
+            <bitmap>
+              <row>......**</row>
+              <row>..*****.</row>
+              <row>.******.</row>
+              <row>.******.</row>
+              <row>.******.</row>
+              <row>..****..</row>
+              <row>...*.*..</row>
+              <row>..**.**.</row>
+              <scale>2</scale>
+              <color>color.orange</color>
+              <color char="w">color.white</color>
+              <color char="k">color.black</color>
+              <flip>horizontal</flip>
+            </bitmap>
+          </sprite>
+          <position><x>392</x><y>122</y></position>
           <collisions>
             <enabled>true</enabled>
             <collision class="void">
@@ -259,18 +314,22 @@
           <actions>
             <action name="upright">
               <hop direction="up-right"><x>across</x><y>down</y></hop>
+              <become sprite="upright" />
               <play sound="hop" />
             </action>
             <action name="downright">
               <hop direction="down-right"><x>across</x><y>down</y></hop>
+              <become sprite="downright" />
               <play sound="hop" />
             </action>
             <action name="downleft">
               <hop direction="down-left"><x>across</x><y>down</y></hop>
+              <become sprite="downleft" />
               <play sound="hop" />
             </action>
             <action name="upleft">
               <hop direction="up-left"><x>across</x><y>down</y></hop>
+              <become sprite="upleft" />
               <play sound="hop" />
             </action>
           </actions>
@@ -278,12 +337,21 @@
         <!-- the red ball: down the pyramid one way or the other, and off it -->
         <object name="ball">
           <sprite>
-            <circle>
-              <radius>9</radius>
+            <bitmap>
+              <row>..****..</row>
+              <row>.*ww***.</row>
+              <row>**w*****</row>
+              <row>********</row>
+              <row>********</row>
+              <row>********</row>
+              <row>.******.</row>
+              <row>..****..</row>
+              <scale>2</scale>
               <color>color.red</color>
-            </circle>
+              <color char="w">color.white</color>
+            </bitmap>
           </sprite>
-          <position><x>423</x><y>169</y></position>
+          <position><x>424</x><y>170</y></position>
           <collisions>
             <enabled>true</enabled>
             <collision class="void">

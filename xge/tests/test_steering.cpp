@@ -238,30 +238,45 @@ TEST_CASE("qbert.xml: a hop down a diagonal lights the cube landed on, and one o
 	play.get("ball").position = { 760, 560 };
 	play.get("ball").positionOriginal = { 760, 560 };
 
+	// The cubes are numbered in reading order: 1 the top, 2 and 3 the row below.
 	play.tap(KeyCode::D);
 	play.frames(1);
-	CHECK(play.get("qbert").position.x == Approx(422));
-	CHECK(play.get("qbert").position.y == Approx(168));
-	CHECK(play.get("row2.2.1").lookName() == "lit");
-	CHECK(play.get("row2.1.1").lookName() == "unlit");
+	CHECK(play.get("qbert").position.x == Approx(424));
+	CHECK(play.get("qbert").position.y == Approx(170));
+	CHECK(play.get("qbert").lookName() == "downright");
+	CHECK(play.get("cubes.3").lookName() == "lit");
+	CHECK(play.get("cubes.2").lookName() == "unlit");
+	CHECK(play.get("cubes.1").lookName() == "unlit"); // its side is not touched
 	CHECK(play.get("player").variable.at("score") == Approx(25));
 
+	// Down and left: the side of the cube above is still not touched.
+	play.tap(KeyCode::S);
+	play.frames(1);
+	CHECK(play.get("cubes.5").lookName() == "lit");
+	CHECK(play.get("cubes.2").lookName() == "unlit");
+	CHECK(play.get("cubes.1").lookName() == "unlit");
+	CHECK(play.get("player").variable.at("score") == Approx(50));
+
 	// Back up onto the top, and a second landing on a lit cube scores nothing.
+	play.tap(KeyCode::W);
+	play.frames(1);
 	play.tap(KeyCode::A);
 	play.frames(1);
-	CHECK(play.get("row1.1.1").lookName() == "lit");
+	CHECK(play.get("qbert").lookName() == "upleft");
+	CHECK(play.get("cubes.1").lookName() == "lit");
+	CHECK(play.get("player").variable.at("score") == Approx(75));
 	play.tap(KeyCode::D);
 	play.frames(1);
 	play.tap(KeyCode::A);
 	play.frames(1);
-	CHECK(play.get("player").variable.at("score") == Approx(50));
+	CHECK(play.get("player").variable.at("score") == Approx(75));
 
 	// Up and left off the top: into the void.
 	play.tap(KeyCode::A);
 	play.frames(2);
 	CHECK(play.get("player").variable.at("lives") == Approx(2));
-	CHECK(play.get("qbert").position.x == Approx(390));
-	CHECK(play.get("qbert").position.y == Approx(120));
+	CHECK(play.get("qbert").position.x == Approx(392));
+	CHECK(play.get("qbert").position.y == Approx(122));
 }
 
 TEST_CASE("yarsrevenge.xml: the missile homes on Yar, the zone keeps him safe, and the cannon leaves level with him", "[steering][yarsrevenge]")
