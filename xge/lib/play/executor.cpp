@@ -184,9 +184,10 @@ namespace xge
 		}
 	}
 
-	void CommandExecutor::executeTimer(const Command& command, Object* owner)
+	bool CommandExecutor::executeTimer(const Command& command, Object* owner)
 	{
 		Command made;
+		bool done = true;
 		std::visit(overload{
 			[&](const CmdPushState& s) { game.pushState(s.name); },
 			[&](const CmdPopState& s) { game.popState(s.name); },
@@ -210,7 +211,7 @@ namespace xge
 			// On an object, a bare reset puts that object back; in a state, it is
 			// the whole game, as on a key.
 			[&](const CmdReset&) { if (owner) { restart(*owner); } else { game.resetAll(); } },
-			[&](const CmdFire& f) { if (owner) { spawnProjectile(*owner, f.projectileName); } },
+			[&](const CmdFire& f) { if (owner) { done = spawnProjectile(*owner, f.projectileName); } },
 			[&](const CmdReverse&) { if (owner) { reverse(*owner); } },
 			[&](const CmdDie&) { if (owner) { xge::die(*owner); } },
 			[&](const CmdStop&) { if (owner) { xge::stop(*owner); } },
@@ -220,13 +221,14 @@ namespace xge
 			[&](const CmdChase& c) { if (owner) { chase(*owner, c); } },
 			[&](const CmdAim& a) { if (owner) { aim(*owner, a.target); } },
 			[&](const CmdHunt& h) { if (owner) { startHunt(*owner, h); } },
-			[&](const CmdHuntHop& h) { if (owner) { huntByHop(*owner, h); } },
+			[&](const CmdHuntHop& h) { if (owner) { done = huntByHop(*owner, h); } },
 			[&](const CmdWander& w) { if (owner) { startWander(*owner, w); } },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { spawn(c); },
 			[&](const auto&) { /* the rest are about a key held, an edge or another
 			                      object touched, none of which a timer has */ }
 		}, now(command, made));
+		return done;
 	}
 
 	void CommandExecutor::become(Object* self, const CmdBecome& command)
@@ -442,26 +444,23 @@ namespace xge
 	// playOneFrame makes it at the start of the frame's move, where it can be
 	// refused if it would leave the window. Asking twice in one frame keeps
 	// the later one, so a hop is always a single step in one direction.
-	void CommandExecutor::startJump(Object& object, const CmdJump& jump)
+	bool CommandExecutor::startJump(Object& object, const CmdJump& jump)
 	{
-		if (object.isAirborne())
+		if (!startFlight(object, stepToward(jump.direction, jump.distance), jump.seconds))
 		{
-			return;
+			return false;
 		}
 
-		startFlight(object, stepToward(jump.direction, jump.distance), jump.seconds);
-		if (object.isAirborne())
-		{
-			object.facing = jump.direction;
-			object.hasAim = false;
-		}
+		object.facing = jump.direction;
+		object.hasAim = false;
+		return true;
 	}
 
-	void CommandExecutor::startFlight(Object& object, Vector2f whole, float seconds)
+	bool CommandExecutor::startFlight(Object& object, Vector2f whole, float seconds)
 	{
 		if (object.isAirborne())
 		{
-			return;
+			return false;
 		}
 
 		// A jump that would land off the screen is not made at all (up from the
@@ -470,31 +469,43 @@ namespace xge
 		const Box landing{ object.position + whole, sizeOf(object) };
 		if (!insideWindow(landing, { window.width, window.height }))
 		{
-			return;
+			return false;
 		}
 
 		const int frames = game.framesFor(seconds);
 		object.jumpStep = whole * (1.0f / static_cast<float>(frames));
 		object.jumpFramesLeft = frames;
+		return true;
 	}
 
-	void CommandExecutor::hop(Object& object, const CmdHop& command)
+	bool CommandExecutor::hop(Object& object, const CmdHop& command)
 	{
 		// One in the air waits for the landing.
-		if (object.isAirborne()) { return; }
+		if (object.isAirborne()) { return false; }
 
-		if (command.seconds > 0.0f) { startFlight(object, command.step, command.seconds); }
-		else { queueHop(object, command.step); }
+		if (command.seconds > 0.0f)
+		{
+			if (!startFlight(object, command.step, command.seconds)) { return false; }
+		}
+		else
+		{
+			// playOneFrame refuses it again where the object is then; asked
+			// here, so the action knows at once.
+			const WindowDesc& window = game.getWindowDesc();
+			if (!insideWindow({ object.position + command.step, sizeOf(object) }, { window.width, window.height })) { return false; }
+			queueHop(object, command.step);
+		}
 		object.facing = command.direction;
 		object.hasAim = false;
+		return true;
 	}
 
-	void CommandExecutor::huntByHop(Object& object, const CmdHuntHop& hunt)
+	bool CommandExecutor::huntByHop(Object& object, const CmdHuntHop& hunt)
 	{
-		if (object.isAirborne() || !game.isShown(object)) { return; }
+		if (object.isAirborne() || !game.isShown(object)) { return false; }
 
 		const Object* quarry = game.nearestInPlay(object, hunt.target);
-		if (!quarry) { return; }
+		if (!quarry) { return false; }
 
 		// The four hops it could make, in the order a tie goes: up before
 		// down, then left before right.
@@ -520,9 +531,9 @@ namespace xge
 				bestDistance = distance;
 			}
 		}
-		if (!best) { return; }
+		if (!best) { return false; }
 
-		hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds });
+		return hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds });
 	}
 
 	void CommandExecutor::queueHop(Object& object, Vector2f step)
@@ -537,6 +548,7 @@ namespace xge
 		for (const auto& written : object.action[actionName])
 		{
 			Command made;
+			bool done = true;
 			std::visit(overload{
 				[&](const CmdMove& m)
 				{
@@ -544,13 +556,13 @@ namespace xge
 				},
 				// A hop belongs to the press alone: letting go of the key does
 				// nothing, and it is not among what executeHeldInput resumes.
-				[&](const CmdHop& h) { if (keyPressed) { hop(object, h); } },
-				[&](const CmdHuntHop& h) { if (keyPressed) { huntByHop(object, h); } },
+				[&](const CmdHop& h) { if (keyPressed) { done = hop(object, h); } },
+				[&](const CmdHuntHop& h) { if (keyPressed) { done = huntByHop(object, h); } },
 				// So does a jump, and one in the air waits for the landing.
-				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
+				[&](const CmdJump& j) { if (keyPressed) { done = startJump(object, j); } },
 				// A <go> is the press alone too: the walker keeps going that way.
 				[&](const CmdGo& g) { if (keyPressed) { startGo(object, g); } },
-				[&](const CmdLeap& l) { if (keyPressed) { leap(object, l.height); } },
+				[&](const CmdLeap& l) { if (keyPressed) { done = leap(object, l.height); } },
 				// A climb is held like a move; playOneFrame makes it.
 				[&](const CmdClimb& c)
 				{
@@ -568,7 +580,7 @@ namespace xge
 				// So are a turn and a thrust along the heading.
 				[&](const CmdTurn& t) { applyActionTurn(object, t.direction, keyPressed ? t.rate : 0.0f); },
 				[&](const CmdThrust& t) { applyActionThrustAhead(object, actionName, keyPressed ? t.amount : 0.0f, t.burn); },
-				[&](const CmdFire& f) { if (keyPressed) { spawnProjectile(object, f.projectileName); } },
+				[&](const CmdFire& f) { if (keyPressed) { done = spawnProjectile(object, f.projectileName); } },
 				[&](const CmdDrop&) { if (keyPressed) { xge::drop(object); } },
 				// A sound belongs to the press, like a hop: letting go is silent.
 				// One that loops is held like a move: on while the key is down.
@@ -587,6 +599,9 @@ namespace xge
 				[&](const CmdSpawn& c) { if (keyPressed) { spawn(c); } },
 				[&](const auto&) { /* ruleFor in load/expr lists what an action holds */ }
 			}, keyPressed ? now(written, made) : shapeOf(written));
+
+			// Refused: what comes after it answers a press that did nothing.
+			if (!done) { return; }
 		}
 	}
 
@@ -703,16 +718,17 @@ namespace xge
 	// Up off the ground at the speed that, under the object's own pull, rises
 	// `height` pixels: v * v = 2 * pull * height. Only from the ground and not
 	// on a ladder; nothing without a pull down (the loader refuses that).
-	void CommandExecutor::leap(Object& object, float height)
+	bool CommandExecutor::leap(Object& object, float height)
 	{
 		if (!object.grounded || object.climbing || object.acceleration.y <= 0.0f)
 		{
-			return;
+			return false;
 		}
 
 		object.velocity.y = -leapSpeed(object.acceleration.y, height);
 		object.grounded = false;
 		object.leaping = true;
+		return true;
 	}
 
 	// Records that `direction` is now being pushed by `amount` a frame (0 =
@@ -752,7 +768,7 @@ namespace xge
 	// shot leaves its nose the way it faces, at the projectile's own speed;
 	// from any other it leaves the top centre, at the projectile's own
 	// velocity.
-	void CommandExecutor::spawnProjectile(Object& shooter, const std::string& projectileName)
+	bool CommandExecutor::spawnProjectile(Object& shooter, const std::string& projectileName)
 	{
 		Object* projectile = nullptr;
 		for (auto& candidate : game.getCurrentObjects())
@@ -763,7 +779,7 @@ namespace xge
 				break;
 			}
 		}
-		if (!projectile) { return; }
+		if (!projectile) { return false; }
 
 		// Fired is a new start: a <random> in the projectile's is drawn again.
 		game.drawStartAgain(*projectile);
@@ -799,6 +815,7 @@ namespace xge
 		projectile->velocity = shot->velocity;
 		projectile->isVisible = true;
 		projectile->collisionData.enabled = true;
+		return true;
 	}
 
 	// The first of `spawn.target` out of play comes in: started again (a

@@ -99,6 +99,7 @@ add_executable(xgetest
 	"xge/tests/test_live.cpp"
 	"xge/tests/test_steering.cpp"
 	"xge/tests/test_hitbox.cpp"
+	"xge/tests/test_refused.cpp"
 	"xge/tests/test_holes.cpp"
 	"xge/tests/test_altitude.cpp"
 	"xge/tests/test_dark.cpp"

@@ -10,6 +10,13 @@
 - Held `<move>`s record each direction's step; velocity is recomputed from all four on every key change (replacing an earlier last-key-wins), so Down plus tapping Up cancels, and two keys make a diagonal.
 - One-shot verbs (`<hop>`, `<jump>`, `<fire>`) belong to the press.
 
+### A press that cannot be done (2026-10-18)
+
+- Need: the author saw a ship play its firing sound with its shot already in flight, and Q*bert turn and squeak when pressed in the air: "the engine should be able to work out if a command can trigger or not and then fire off any described responses". About twenty games wrote `<fire>` or a hop and then a `<play>` in one action.
+- **Chosen: an action (on the press), an object's timer or a path step stops at the first verb refused** (`<fire>` with no projectile free, `<hop>`, `<jump>`, hunt by hops, `<leap>`). Each verb already knew; it now says so (`CommandExecutor` returns false) and the list ends. No new tag, and every shipped game already wrote the verb first. Commands before it still run, which Berserk's robots need (`<aim>` before `<fire>`).
+- Looked at: running the verbs first and the rest after (breaks an `<aim>` that must come before), and a wrapper such as `<try><fire/><then>...</then></try>` (the same order said with more tags, and something every author would have to remember).
+- Open: a `<spawn>` with nothing out of play (left running the rest: Fishing Derby's rules spawn after a `<die />`), a sound for a refused press (an empty click), collision rules.
+
 ### Held keys across state changes
 
 A key can stay down while the state changes (hold Left, pause, unpause).

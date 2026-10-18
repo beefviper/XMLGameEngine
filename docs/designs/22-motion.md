@@ -67,7 +67,7 @@
 - Need: Q*bert's hops are seen in the air, not one instant step, and Coily hops down the pyramid after Q*bert.
 - **`<seconds>` in `<hop>`, chosen** (the author said `<time>`; `<seconds>` matches `<jump>`): the hop then flies as a jump does, sharing its code (`startFlight`): touches nothing in the air, a second press waits for the landing, refused off screen. Without it a hop is the instant step it was.
 - **`<hunt object>` with a `<hop>` inside, chosen:** each time it runs, takes the one of the four hops (diagonal when the hop has `<x>`/`<y>`, else straight) whose landing is nearest the target, ties going up, then left. A verb run by a timer, so the hunter keeps its own pace; no maze needed. Looked at: a new verb `<pursue>` (it is still hunting, only by hops), and `<chase>` with steps (chase is a velocity).
-- Open: an arc for a hop, a look that follows the hunt's direction (Coily's picture does not turn), keys pressed mid-hop still changing the look and playing the sound.
+- Open: an arc for a hop, a look that follows the hunt's direction (Coily's picture does not turn). A key pressed mid-hop no longer changes the look or plays the sound ([input](08-input.md#a-press-that-cannot-be-done-2026-10-18)).
 
 ## Motion models (idea: names)
 

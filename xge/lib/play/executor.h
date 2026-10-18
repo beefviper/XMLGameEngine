@@ -53,7 +53,9 @@ namespace xge
 		// owner). The state commands, inc, dec, play and trigger work in both;
 		// on an object, fire, reverse, move, die, stop, release and a bare reset
 		// act on that object (a bare reset in a state resets the game).
-		void executeTimer(const Command& command, Object* owner);
+		// False when the command is a verb that could not happen (see
+		// triggerObjectAction), and the timer's other commands are skipped.
+		bool executeTimer(const Command& command, Object* owner);
 
 		// A key that was already down when a state began: applies only the
 		// continuous part of its binding (an action's move.* and accelerate.*,
@@ -88,25 +90,26 @@ namespace xge
 		void bounceScreenEdge(Object& object, Edge edge);
 		void moveByStep(Object& object, Direction direction, float step);
 		void queueHop(Object& object, Vector2f step);
-		void startJump(Object& object, const CmdJump& jump);
+		bool startJump(Object& object, const CmdJump& jump);
 
 		// A <hop>: at once (queued), or with <seconds> through the air, as a
-		// jump goes; either way the object then faces that way.
-		void hop(Object& object, const CmdHop& hop);
+		// jump goes; either way the object then faces that way. False when
+		// it is in the air, or the hop would land outside the window.
+		bool hop(Object& object, const CmdHop& hop);
 
 		// A hunt by hops: see CmdHuntHop.
-		void huntByHop(Object& object, const CmdHuntHop& hunt);
+		bool huntByHop(Object& object, const CmdHuntHop& hunt);
 
 		// Through the air by `whole` over `seconds`, touching nothing until it
 		// lands: a <jump>, or a <hop> that takes time. Not when it is in the
 		// air already, nor when it would land outside the window.
-		void startFlight(Object& object, Vector2f whole, float seconds);
+		bool startFlight(Object& object, Vector2f whole, float seconds);
 		void land(Object& object, const Object& other, Edge edge);
 
 		// <knock>: see CmdKnock. Into a thing with no mass, through it, to
 		// everything with a mass resting against its far side.
 		void knock(Object& object, Object& other, const Touch& touch, float bounce);
-		void leap(Object& object, float height);
+		bool leap(Object& object, float height);
 		void chase(Object& object, const CmdChase& chase);
 		void aim(Object& object, const std::string& target);
 		void reverse(Object& object);
@@ -124,7 +127,14 @@ namespace xge
 		void release(const Object& from, const std::string& target, int count);
 		void restart(Object& object);
 
+		// Runs an action's commands in order. On the press, a verb that can
+		// be refused (<fire> with nothing left to fire, a <hop>, <jump>,
+		// <leap> or hunt by hops that cannot be made) and is refused ends
+		// the action there: what it would have done after (a sound, a look)
+		// is not done.
 		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed);
-		void spawnProjectile(Object& shooter, const std::string& projectileName);
+
+		// False when every one of the projectiles is in flight.
+		bool spawnProjectile(Object& shooter, const std::string& projectileName);
 	};
 }

@@ -962,7 +962,7 @@ namespace xge
 					const std::vector<Command> commands = objects[i].timers[t].commands;
 					for (const auto& command : commands)
 					{
-						executor.executeTimer(command, &objects[i]);
+						if (!executor.executeTimer(command, &objects[i])) { break; }
 					}
 				}
 			}
@@ -1277,7 +1277,7 @@ namespace xge
 					const std::vector<Command> commands = leg.commands;
 					for (const auto& command : commands)
 					{
-						executor.executeTimer(command, &object);
+						if (!executor.executeTimer(command, &object)) { break; }
 					}
 					if (!object.isFollowing()) { break; }
 				}
