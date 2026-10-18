@@ -132,6 +132,7 @@ namespace
 			out << at << " " << c.verb << " [" << c.object << "|" << c.variable << "|" << c.state << "|" << c.action << "|" << c.direction
 				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "|" << c.into
 				<< "|" << c.from << "|" << c.partner << "|" << c.retreat << "|" << c.button << "]\n";
+			flag(at + ".byHops", c.byHops);
 			value(at + ".amount", c.amount);
 			value(at + ".ahead", c.ahead);
 			value(at + ".seconds", c.seconds);
@@ -250,6 +251,13 @@ namespace
 			flag(at + ".collisions.enabled", c.enabled);
 			flag(at + ".collisions.lockstep", c.lockstep);
 			out << at << ".collisions.type " << static_cast<int>(c.type) << "\n";
+			text(at + ".collisions.solid", c.solid);
+			text(at + ".collisions.hitbox", c.hitboxKind);
+			value(at + ".collisions.hitbox.width", c.hitboxWidth);
+			value(at + ".collisions.hitbox.height", c.hitboxHeight);
+			value(at + ".collisions.hitbox.radius", c.hitboxRadius);
+			value(at + ".collisions.hitbox.x", c.hitboxX);
+			value(at + ".collisions.hitbox.y", c.hitboxY);
 			commands(at + ".top", c.top);
 			commands(at + ".bottom", c.bottom);
 			commands(at + ".left", c.left);

@@ -7,7 +7,7 @@
   After Q*bert, as on the Atari 2600: a pyramid of 21 cubes, and Q*bert
   hopping from cube to cube on the diagonals. Every cube he lands on turns
   from blue to yellow; turn them all to win. Hop off the pyramid, or meet the
-  red ball bouncing down it, and a life is lost.
+  red ball or Coily, and a life is lost.
 
   W or Up hops up and right, D or Right down and right, S or Down down and
   left, A or Left up and left (the four diagonals, as the arcade's stick
@@ -16,17 +16,22 @@
   It is the game diagonal hops were made for:
   * Each key is a <hop direction="down-right"> with an <x> across and a <y>
     down: half a cube across and a whole row down, so the cubes of one row
-    sit between those of the next. Each hop also turns Q*bert to face it
-    (four looks of one bitmap, two of them flipped).
+    sit between those of the next. A hop takes its <seconds>, through the
+    air, and lands. Each hop also turns Q*bert to face it (four looks of one
+    bitmap, two of them flipped).
   * The pyramid is a <map>, drawn as it stands, on tiles half a cube across.
     A cube is one bitmap of three inks, a top and two sides, so it looks
-    solid; with pixel collisions only the faces touch, so Q*bert on a top
-    touches no other cube. A cube shows its look "lit" once Q*bert has
+    solid; its pixels touch, and of them only the top's (<solid char>).
+    Q*bert touches with his feet alone (a <hitbox>), so he stands on a top
+    and touches nothing else. A cube shows its look "lit" once Q*bert has
     landed on it (a rule only for the unlit look, so it scores once).
   * Around the pyramid is the void: unseen tiles where a hop off the
     pyramid lands, which cost a life and put Q*bert back on top.
   * The red ball hops down on its own, a <trigger> from its own <timer>s
-    with <random> waits, and back to the top once it falls off.
+    with <random> waits, and back to the top once it falls off. Coily is an
+    egg that does the same until it reaches the bottom row, then a snake
+    whose timer hunts Q*bert by hops (<hunt> with a <hop>): each time, the
+    diagonal that lands nearest him.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -41,6 +46,7 @@
     <variable name="across">32</variable>
     <variable name="down">48</variable>
     <variable name="goal">21 * 25</variable>
+    <variable name="flight">0.25</variable>
   </variables>
   <sounds>
     <sound name="hop" wave="square">
@@ -141,8 +147,9 @@
           </variables>
         </object>
         <!-- the pyramid, drawn as it stands: a tile is half a cube across and a row
-             down, so a cube (#) stands between the two below it; the void (o) is
-             every tile a hop off the pyramid lands on -->
+             down, so a cube (#) stands between the two below it; the bottom row
+             (=) is cubes too, where Coily hatches; the void (o) is every tile a
+             hop off the pyramid lands on -->
         <map name="pyramid">
           <tile><width>across</width><height>down</height></tile>
           <position><x>160</x><y>74</y></position>
@@ -152,12 +159,13 @@
           <row>...o.#.#.#.o...</row>
           <row>..o.#.#.#.#.o..</row>
           <row>.o.#.#.#.#.#.o.</row>
-          <row>..#.#.#.#.#.#..</row>
+          <row>..=.=.=.=.=.=..</row>
           <row>.o.o.o.o.o.o.o.</row>
           <!-- a cube is three faces of one bitmap; its middle is the tile's, so its
                top face is centred 16 above it, where Q*bert and the ball stand.
-               Pixel collisions, so only the faces count, not the corners of the box -->
-          <group name="cubes" char="#" class="cube">
+               Pixel collisions, and of those only the top (*) is solid: what
+               stands on a cube touches it, not the cube behind -->
+          <group name="cubes" class="cube">
             <sprite name="unlit">
               <bitmap>
                 <row>.......**.......</row>
@@ -209,11 +217,14 @@
             <collisions>
               <enabled>true</enabled>
               <type>pixel</type>
+              <solid char="*" />
               <collision object="qbert" sprite="unlit">
                 <become sprite="lit" />
                 <inc variable="player.score">25</inc>
               </collision>
             </collisions>
+            <group name="upper" char="#" />
+            <group name="bottom" char="=" class="bottom" />
           </group>
           <!-- tall and thin, to reach from the tile's middle up to where a hop lands
                without touching anything standing on the cubes beside it -->
@@ -241,7 +252,7 @@
               <row>..****.*</row>
               <row>...*.*..</row>
               <row>..**.**.</row>
-              <scale>2</scale>
+              <scale>3</scale>
               <color>color.orange</color>
               <color char="w">color.white</color>
               <color char="k">color.black</color>
@@ -257,7 +268,7 @@
               <row>..****.*</row>
               <row>...*.*..</row>
               <row>..**.**.</row>
-              <scale>2</scale>
+              <scale>3</scale>
               <color>color.orange</color>
               <color char="w">color.white</color>
               <color char="k">color.black</color>
@@ -274,7 +285,7 @@
               <row>..****..</row>
               <row>...*.*..</row>
               <row>..**.**.</row>
-              <scale>2</scale>
+              <scale>3</scale>
               <color>color.orange</color>
               <color char="w">color.white</color>
               <color char="k">color.black</color>
@@ -290,52 +301,61 @@
               <row>..****..</row>
               <row>...*.*..</row>
               <row>..**.**.</row>
-              <scale>2</scale>
+              <scale>3</scale>
               <color>color.orange</color>
               <color char="w">color.white</color>
               <color char="k">color.black</color>
               <flip>horizontal</flip>
             </bitmap>
           </sprite>
-          <position><x>392</x><y>122</y></position>
+          <!-- standing on a top: his feet, all he touches with, on its middle -->
+          <position><x>388</x><y>109</y></position>
           <collisions>
             <enabled>true</enabled>
+            <hitbox>
+              <rectangle><width>12</width><height>6</height></rectangle>
+              <position><x>6</x><y>18</y></position>
+            </hitbox>
             <collision class="void">
               <dec variable="player.lives" />
               <play sound="fall" />
               <reset />
+              <reset object="ball" />
+              <reset object="coily" />
             </collision>
-            <collision object="ball">
+            <collision class="enemy">
               <dec variable="player.lives" />
               <play sound="hit" />
               <reset />
+              <reset object="ball" />
+              <reset object="coily" />
             </collision>
           </collisions>
           <actions>
             <action name="upright">
-              <hop direction="up-right"><x>across</x><y>down</y></hop>
+              <hop direction="up-right"><x>across</x><y>down</y><seconds>flight</seconds></hop>
               <become sprite="upright" />
               <play sound="hop" />
             </action>
             <action name="downright">
-              <hop direction="down-right"><x>across</x><y>down</y></hop>
+              <hop direction="down-right"><x>across</x><y>down</y><seconds>flight</seconds></hop>
               <become sprite="downright" />
               <play sound="hop" />
             </action>
             <action name="downleft">
-              <hop direction="down-left"><x>across</x><y>down</y></hop>
+              <hop direction="down-left"><x>across</x><y>down</y><seconds>flight</seconds></hop>
               <become sprite="downleft" />
               <play sound="hop" />
             </action>
             <action name="upleft">
-              <hop direction="up-left"><x>across</x><y>down</y></hop>
+              <hop direction="up-left"><x>across</x><y>down</y><seconds>flight</seconds></hop>
               <become sprite="upleft" />
               <play sound="hop" />
             </action>
           </actions>
         </object>
         <!-- the red ball: down the pyramid one way or the other, and off it -->
-        <object name="ball">
+        <object name="ball" class="enemy">
           <sprite>
             <bitmap>
               <row>..****..</row>
@@ -363,10 +383,10 @@
           </collisions>
           <actions>
             <action name="left">
-              <hop direction="down-left"><x>across</x><y>down</y></hop>
+              <hop direction="down-left"><x>across</x><y>down</y><seconds>0.3</seconds></hop>
             </action>
             <action name="right">
-              <hop direction="down-right"><x>across</x><y>down</y></hop>
+              <hop direction="down-right"><x>across</x><y>down</y><seconds>0.3</seconds></hop>
             </action>
           </actions>
           <timers>
@@ -377,6 +397,88 @@
             <timer>
               <every><random min="0.6" max="1.4" /></every>
               <trigger object="ball" action="right" />
+            </timer>
+          </timers>
+        </object>
+        <!-- Coily: an egg that bounces down as the ball does, and on the bottom
+             row hatches into a snake that hunts Q*bert, a hop at a time -->
+        <object name="coily" class="enemy">
+          <sprite name="egg">
+            <bitmap>
+              <row>........</row>
+              <row>........</row>
+              <row>........</row>
+              <row>........</row>
+              <row>..****..</row>
+              <row>.*ww***.</row>
+              <row>**w*****</row>
+              <row>********</row>
+              <row>********</row>
+              <row>********</row>
+              <row>.******.</row>
+              <row>..****..</row>
+              <scale>2</scale>
+              <color>color.purple</color>
+              <color char="w">color.white</color>
+            </bitmap>
+          </sprite>
+          <sprite name="snake">
+            <bitmap>
+              <row>..****..</row>
+              <row>.*w**w*.</row>
+              <row>.*k**k*.</row>
+              <row>.******.</row>
+              <row>..*rr*..</row>
+              <row>...**...</row>
+              <row>..**....</row>
+              <row>.**.....</row>
+              <row>.**..**.</row>
+              <row>..****..</row>
+              <row>...**...</row>
+              <row>.******.</row>
+              <scale>2</scale>
+              <color>color.purple</color>
+              <color char="w">color.white</color>
+              <color char="k">color.black</color>
+              <color char="r">color.red</color>
+            </bitmap>
+          </sprite>
+          <position><x>360</x><y>162</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <hitbox>
+              <rectangle><width>12</width><height>8</height></rectangle>
+              <position><x>2</x><y>12</y></position>
+            </hitbox>
+            <collision class="bottom" sprite="egg">
+              <become sprite="snake" />
+            </collision>
+            <collision class="void">
+              <reset />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="left">
+              <hop direction="down-left"><x>across</x><y>down</y><seconds>0.3</seconds></hop>
+            </action>
+            <action name="right">
+              <hop direction="down-right"><x>across</x><y>down</y><seconds>0.3</seconds></hop>
+            </action>
+          </actions>
+          <timers>
+            <timer sprite="egg">
+              <every><random min="0.8" max="1.6" /></every>
+              <trigger object="coily" action="left" />
+            </timer>
+            <timer sprite="egg">
+              <every><random min="0.8" max="1.6" /></every>
+              <trigger object="coily" action="right" />
+            </timer>
+            <timer sprite="snake">
+              <every>1</every>
+              <hunt object="qbert">
+                <hop><x>across</x><y>down</y><seconds>0.3</seconds></hop>
+              </hunt>
             </timer>
           </timers>
         </object>

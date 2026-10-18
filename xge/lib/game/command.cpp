@@ -53,6 +53,15 @@ namespace xge
 		}
 
 		if (verb == "move") { return CmdMove{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
+		// How long a <hop> takes: no <seconds>, none at all.
+		const auto hopSeconds = [&]()
+		{
+			if (raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty()) { return 0.0f; }
+			const float seconds = evaluate(raw.seconds);
+			if (!(seconds > 0.0f)) { throw std::runtime_error("<hop> has <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
+			return seconds;
+		};
+
 		if (verb == "hop")
 		{
 			// up-left and the rest: one of up/down, then one of left/right.
@@ -60,7 +69,7 @@ namespace xge
 			const auto dash = name.find('-');
 			if (dash == std::string::npos)
 			{
-				CmdHop hop{ directionFromName(name, verb), evaluate(raw.amount), {} };
+				CmdHop hop{ directionFromName(name, verb), evaluate(raw.amount), {}, hopSeconds() };
 				hop.step = stepToward(hop.direction, hop.distance);
 				return hop;
 			}
@@ -75,7 +84,7 @@ namespace xge
 			const float distance = split ? 0.0f : evaluate(raw.amount);
 			const float across = split ? evaluate(raw.positionX) : distance;
 			const float down = split ? evaluate(raw.positionY) : distance;
-			CmdHop hop{ upDown, distance, {} };
+			CmdHop hop{ upDown, distance, {}, hopSeconds() };
 			hop.step = { leftRight == Direction::Left ? -across : across, upDown == Direction::Up ? -down : down };
 			return hop;
 		}
@@ -136,6 +145,12 @@ namespace xge
 
 		if (verb == "go") { return CmdGo{ directionFromName(raw.direction, verb), speedOf("go") }; }
 		if (verb == "wander") { return CmdWander{ speedOf("wander") }; }
+		if (verb == "hunt" && raw.byHops)
+		{
+			const bool diagonal = !raw.positionX.text.empty() || raw.positionX.kind != RawValue::Kind::Expression;
+			const float distance = diagonal ? 0.0f : evaluate(raw.amount);
+			return CmdHuntHop{ raw.object, diagonal ? evaluate(raw.positionX) : distance, diagonal ? evaluate(raw.positionY) : distance, diagonal, hopSeconds() };
+		}
 		if (verb == "hunt")
 		{
 			CmdHunt hunt{ raw.object, speedOf("hunt"), 0.0f, raw.partner, raw.retreat, 0.0f };
@@ -415,8 +430,14 @@ namespace xge
 					: (h.direction == Direction::Down) ? "down"
 					: (h.direction == Direction::Left) ? "left"
 					: "right";
-				if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y << ")"; }
-				else { o << "hop." << direction << "(" << h.distance << ")"; }
+				if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y; }
+				else { o << "hop." << direction << "(" << h.distance; }
+				o << (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{}) << ")";
+			},
+			[&](const CmdHuntHop& h)
+			{
+				o << "hunt(" << h.target << ", by " << (h.diagonal ? "diagonal " : "") << "hops of " << h.across << ", " << h.down
+					<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{}) << ")";
 			},
 			[&](const CmdJump& j)
 			{
@@ -652,7 +673,12 @@ namespace xge
 		{
 			o << "." << command.direction << "(" << command.amount << ", " << command.objClass << ")";
 		}
-		else if (command.verb == "move" || command.verb == "hop" || command.verb == "accelerate" || command.verb == "turn" || command.verb == "go")
+		else if (command.verb == "hop" || (command.verb == "hunt" && command.byHops))
+		{
+			o << (command.byHops ? "(" + command.object + ", by hops of " : "." + command.direction + "(") << command.amount << ", " << command.positionX << " " << command.positionY
+				<< ", " << command.seconds << ")";
+		}
+		else if (command.verb == "move" || command.verb == "accelerate" || command.verb == "turn" || command.verb == "go")
 		{
 			o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
 		}

@@ -122,6 +122,18 @@ namespace xge
 		}
 	}
 
+	void markSolid(std::vector<RawObject>& objects)
+	{
+		for (RawObject& object : objects)
+		{
+			const std::string& solid = object.rawCollisionData.solid;
+			if (solid.empty()) { continue; }
+			object.sprite.solid = solid;
+			for (RawSprite& look : object.looks) { look.solid = solid; }
+			for (RawSprite& frame : object.animation.frames) { frame.solid = solid; }
+		}
+	}
+
 	const std::vector<std::string>& liveNumberParts()
 	{
 		static const std::vector<std::string> parts{ "x", "y", "velocity.x", "velocity.y", "heading", "altitude", "rise", "light" };

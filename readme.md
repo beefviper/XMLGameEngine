@@ -36,7 +36,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/descriptions/trickshot.xml` | Trick Shot, pool after the Atari 2600 game: steer a cue tip into the white ball and knock the six others into the pockets in two minutes; balls `<knock />` one another by their `<mass>`, slowed by the cloth |
 | `games/descriptions/mariobros.xml` | Mario Bros.: jump up and bump the floor under a shellcreeper, a `<knock>` that goes through the floor and turns it over, then kick it off; one on its feet costs a life |
 | `games/descriptions/fishingderby.xml` | Fishing Derby: steer the hook on its line onto a fish, reel it up past the shark and land it, deeper fish worth more; the line is a `<tether>`, a landed fish `<spawn>`s back faster and the shark is `<set>` faster |
-| `games/descriptions/qbert.xml` | Q*bert: diagonal `<hop>`s over a pyramid of cubes, each turned yellow when landed on; the red ball bounces down, and a hop off the pyramid costs a life |
+| `games/descriptions/qbert.xml` | Q*bert: diagonal `<hop>`s over a pyramid of cubes, each turned yellow when landed on; the red ball bounces down, Coily hatches at the bottom and hunts Q*bert by hops, and a hop off the pyramid costs a life |
 | `games/descriptions/yarsrevenge.xml` | Yars' Revenge: Yar eats through the Qotile's shield while the destroyer missile `<seek>`s him; the neutral zone is safe, and the Zorlon cannon is `<spawn>`ed level with him |
 | `games/descriptions/tennis.xml` | Tennis after Activision's: the ball flies with an `<altitude>` and a `<shadow>` under it, a racket reaches it only when it is low, the far end is a `<computer>` player holding keys as a person would, and the points are said in words (`<choose>`) |
 | `games/descriptions/hauntedhouse.xml` | Haunted House: a pair of eyes in a dark house; the walls and ghosts are `<dark>` and show only within the eyes' `<light>` or a match's, and the urn pieces stay on the map once seen |
@@ -138,7 +138,7 @@ The options are `XGE_WITH_SFML3`, `XGE_WITH_RAYLIB`, `XGE_WITH_SDL2`, `XGE_WITH_
 
 ## Status
 
-The engine is still growing; version 1 is non-scrolling games, and a camera for scrolling ones is planned for version 2. Jumps are a single step (`hop`), a straight, timed line (`<jump>`) and a fixed arc with no steering in the air (`<leap>`); enemies can `<chase>` and `<aim>`, straight at their target, with no lead; all movement is pixels per frame, and timers count frames. Objects can act on their own on timers (enemies fire back), face a way, change their look, and states share named sets of keys, shows and conditions. Sound is short effects and little tunes made from notes, not music or sound files. The full list of known limits is in [docs/readme.md](docs/readme.md).
+The engine is still growing; version 1 is non-scrolling games, and a camera for scrolling ones is planned for version 2. Jumps are a step (`hop`, instant or timed), a straight, timed line (`<jump>`) and a fixed arc with no steering in the air (`<leap>`); enemies can `<chase>` and `<aim>`, straight at their target, with no lead; all movement is pixels per frame, and timers count frames. Objects can act on their own on timers (enemies fire back), face a way, change their look, and states share named sets of keys, shows and conditions. Sound is short effects and little tunes made from notes, not music or sound files. The full list of known limits is in [docs/readme.md](docs/readme.md).
 
 ## Documentation
 

@@ -61,6 +61,14 @@
 - **`<track path>`** puts the middle along a `<path>`'s legs by distance, from its `<start>`; the axis still says how far, 0 to 1. Kept on the input side ([input](08-input.md)) rather than a new kind of path.
 - Open: keys moving along a track (a held key stepping the fraction), a pull's range and fall-off, seeking with a turning heading but no velocity (a turret: `<aim>` does that once), facing in eight ways.
 
+
+## Hops that take time, and hunting by hops (2026-10-18)
+
+- Need: Q*bert's hops are seen in the air, not one instant step, and Coily hops down the pyramid after Q*bert.
+- **`<seconds>` in `<hop>`, chosen** (the author said `<time>`; `<seconds>` matches `<jump>`): the hop then flies as a jump does, sharing its code (`startFlight`): touches nothing in the air, a second press waits for the landing, refused off screen. Without it a hop is the instant step it was.
+- **`<hunt object>` with a `<hop>` inside, chosen:** each time it runs, takes the one of the four hops (diagonal when the hop has `<x>`/`<y>`, else straight) whose landing is nearest the target, ties going up, then left. A verb run by a timer, so the hunter keeps its own pace; no maze needed. Looked at: a new verb `<pursue>` (it is still hunting, only by hops), and `<chase>` with steps (chase is a velocity).
+- Open: an arc for a hop, a look that follows the hunt's direction (Coily's picture does not turn), keys pressed mid-hop still changing the look and playing the sound.
+
 ## Motion models (idea: names)
 
 - Orders of motion: **position-driven** (a paddle set by input), **constant velocity** (rules rewrite velocity; Pong, bullets), **accelerated** (velocity accumulates; asymmetric up/down; grounded vs airborne; Donkey Kong onward). Everything up to the second fits a rule-driven engine; the third is built for one case per object (above) and fixes a frame order: acceleration and held thrust, then edge rules, then hops, then move and collisions.

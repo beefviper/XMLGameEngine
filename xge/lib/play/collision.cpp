@@ -11,39 +11,47 @@ namespace xge
 {
 	namespace
 	{
+		// What the object touches other objects with: its <hitbox>, or else
+		// its picture's box.
 		Box boxOf(const Object& object)
 		{
+			if (object.collisionData.hasHitbox)
+			{
+				return { object.position + object.collisionData.hitboxOffset, object.collisionData.hitboxSize };
+			}
 			return { object.position, object.size };
 		}
 
 		bool isRound(const Object& object)
 		{
+			if (object.collisionData.hasHitbox) { return object.collisionData.hitboxRound; }
 			return object.shapeKind == ShapeKind::Circle;
 		}
 
-		// Whether the point `local` (from the object's top left) is drawn on by
-		// `object`: its picture's pixels when its collisions are of type pixel,
-		// otherwise its shape.
+		// Whether the point `local` (from the top left of boxOf) is touched
+		// with by `object`: its picture's pixels when its collisions are of
+		// type pixel (those its <solid char>s name), otherwise its shape.
 		bool solidAt(const Object& object, const Vector2f& local)
 		{
 			if (object.collisionData.type == CollisionType::Pixel && object.bitmap)
 			{
-				return object.bitmap->solidAt(static_cast<int>(std::floor(local.x)), static_cast<int>(std::floor(local.y)));
+				return object.bitmap->touchesAt(static_cast<int>(std::floor(local.x)), static_cast<int>(std::floor(local.y)));
 			}
 
 			return solidShapeAt(object.size, isRound(object), local);
 		}
 
-		bool pixelsOverlapAt(const Object& a, const Vector2f& atA, const Object& b, const Vector2f& atB)
+		bool pixelsOverlapAt(const Object& a, const Object& b)
 		{
-			return xge::pixelsOverlapAt(Box{ atA, a.size }, [&](const Vector2f& local) { return solidAt(a, local); },
-				Box{ atB, b.size }, [&](const Vector2f& local) { return solidAt(b, local); });
+			return xge::pixelsOverlapAt(boxOf(a), [&](const Vector2f& local) { return solidAt(a, local); },
+				boxOf(b), [&](const Vector2f& local) { return solidAt(b, local); });
 		}
 	}
 
 	bool CollisionDetector::touchesScreenEdge(const Object& object, const WindowDesc& windowDesc, Edge edge)
 	{
-		return pastWindowEdge(boxOf(object), { windowDesc.width, windowDesc.height }, edge);
+		// The window's edges are met by the picture, hitbox or not.
+		return pastWindowEdge({ object.position, object.size }, { windowDesc.width, windowDesc.height }, edge);
 	}
 
 	std::optional<Edge> CollisionDetector::rectangleRectangle(const Object& a, const Object& b)
@@ -76,7 +84,7 @@ namespace xge
 
 	bool CollisionDetector::pixelsOverlap(const Object& a, const Object& b)
 	{
-		return pixelsOverlapAt(a, a.position, b, b.position);
+		return pixelsOverlapAt(a, b);
 	}
 
 	Contact CollisionDetector::contact(const Object& a, const Object& b, Edge edgeOfB, float time)

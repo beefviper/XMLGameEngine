@@ -32,6 +32,7 @@ namespace xge
 		// Then, with every object's name final, its text styles, what it
 		// leaves to mean itself, and its centering.
 		applyStyles(data.objects, data.styles);
+		markSolid(data.objects);
 		nameSelf(data.objects);
 		centerOnOwnSize(data.objects);
 		windowDesc = std::move(data.window);

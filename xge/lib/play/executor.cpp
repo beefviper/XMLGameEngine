@@ -11,8 +11,10 @@
 #include "play/verbs.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <optional>
+#include <utility>
 
 namespace xge
 {
@@ -96,6 +98,7 @@ namespace xge
 			[&](const CmdChase& c) { chase(object, c); },
 			[&](const CmdAim& a) { aim(object, a.target); },
 			[&](const CmdHunt& h) { startHunt(object, h); },
+			[&](const CmdHuntHop& h) { huntByHop(object, h); },
 			[&](const CmdWander& w) { startWander(object, w); },
 			[&](const CmdPlay& p) { game.requestSound(p.sound); },
 			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
@@ -217,6 +220,7 @@ namespace xge
 			[&](const CmdChase& c) { if (owner) { chase(*owner, c); } },
 			[&](const CmdAim& a) { if (owner) { aim(*owner, a.target); } },
 			[&](const CmdHunt& h) { if (owner) { startHunt(*owner, h); } },
+			[&](const CmdHuntHop& h) { if (owner) { huntByHop(*owner, h); } },
 			[&](const CmdWander& w) { if (owner) { startWander(*owner, w); } },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { spawn(c); },
@@ -445,21 +449,80 @@ namespace xge
 			return;
 		}
 
+		startFlight(object, stepToward(jump.direction, jump.distance), jump.seconds);
+		if (object.isAirborne())
+		{
+			object.facing = jump.direction;
+			object.hasAim = false;
+		}
+	}
+
+	void CommandExecutor::startFlight(Object& object, Vector2f whole, float seconds)
+	{
+		if (object.isAirborne())
+		{
+			return;
+		}
+
 		// A jump that would land off the screen is not made at all (up from the
 		// top row stays where it is), rather than going part of the way.
 		const WindowDesc& window = game.getWindowDesc();
-		const Box landing{ object.position + stepToward(jump.direction, jump.distance), sizeOf(object) };
+		const Box landing{ object.position + whole, sizeOf(object) };
 		if (!insideWindow(landing, { window.width, window.height }))
 		{
 			return;
 		}
 
-		const int frames = game.framesFor(jump.seconds);
-		object.jumpStep = stepToward(jump.direction, jump.distance / static_cast<float>(frames));
-
+		const int frames = game.framesFor(seconds);
+		object.jumpStep = whole * (1.0f / static_cast<float>(frames));
 		object.jumpFramesLeft = frames;
-		object.facing = jump.direction;
+	}
+
+	void CommandExecutor::hop(Object& object, const CmdHop& command)
+	{
+		// One in the air waits for the landing.
+		if (object.isAirborne()) { return; }
+
+		if (command.seconds > 0.0f) { startFlight(object, command.step, command.seconds); }
+		else { queueHop(object, command.step); }
+		object.facing = command.direction;
 		object.hasAim = false;
+	}
+
+	void CommandExecutor::huntByHop(Object& object, const CmdHuntHop& hunt)
+	{
+		if (object.isAirborne() || !game.isShown(object)) { return; }
+
+		const Object* quarry = game.nearestInPlay(object, hunt.target);
+		if (!quarry) { return; }
+
+		// The four hops it could make, in the order a tie goes: up before
+		// down, then left before right.
+		const std::array<std::pair<Direction, Vector2f>, 4> hops = hunt.diagonal
+			? std::array<std::pair<Direction, Vector2f>, 4>{ { { Direction::Up, { -hunt.across, -hunt.down } }, { Direction::Up, { hunt.across, -hunt.down } },
+				{ Direction::Down, { -hunt.across, hunt.down } }, { Direction::Down, { hunt.across, hunt.down } } } }
+			: std::array<std::pair<Direction, Vector2f>, 4>{ { { Direction::Up, { 0.0f, -hunt.down } }, { Direction::Left, { -hunt.across, 0.0f } },
+				{ Direction::Down, { 0.0f, hunt.down } }, { Direction::Right, { hunt.across, 0.0f } } } };
+
+		const WindowDesc& window = game.getWindowDesc();
+		const Vector2f there = quarry->position + sizeOf(*quarry) * 0.5f;
+		const Vector2f middle = object.position + sizeOf(object) * 0.5f;
+		std::optional<std::pair<Direction, Vector2f>> best;
+		float bestDistance = 0.0f;
+		for (const auto& [way, step] : hops)
+		{
+			if (!insideWindow({ object.position + step, sizeOf(object) }, { window.width, window.height })) { continue; }
+			const Vector2f off = middle + step - there;
+			const float distance = off.x * off.x + off.y * off.y;
+			if (!best || distance < bestDistance)
+			{
+				best = std::make_pair(way, step);
+				bestDistance = distance;
+			}
+		}
+		if (!best) { return; }
+
+		hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds });
 	}
 
 	void CommandExecutor::queueHop(Object& object, Vector2f step)
@@ -481,7 +544,8 @@ namespace xge
 				},
 				// A hop belongs to the press alone: letting go of the key does
 				// nothing, and it is not among what executeHeldInput resumes.
-				[&](const CmdHop& h) { if (keyPressed) { queueHop(object, h.step); object.facing = h.direction; object.hasAim = false; } },
+				[&](const CmdHop& h) { if (keyPressed) { hop(object, h); } },
+				[&](const CmdHuntHop& h) { if (keyPressed) { huntByHop(object, h); } },
 				// So does a jump, and one in the air waits for the landing.
 				[&](const CmdJump& j) { if (keyPressed) { startJump(object, j); } },
 				// A <go> is the press alone too: the walker keeps going that way.

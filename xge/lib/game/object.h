@@ -96,6 +96,22 @@ namespace xge
 		bool enabled{ false };
 		bool lockstep{ false };
 		CollisionType type{ CollisionType::Box };
+
+		// <solid char="*" />s: with type pixel, the characters of a <bitmap>
+		// whose pixels touch (a cube's top, not its sides); empty, all of them.
+		std::string solid;
+
+		// <hitbox>: the shape it touches other objects with instead of its
+		// picture, a "rectangle" (hitboxWidth by hitboxHeight) or a "circle"
+		// (hitboxRadius), its top left hitboxX, hitboxY from the picture's
+		// (each empty text when left out: 0). Empty kind: none.
+		std::string hitboxKind;
+		RawValue hitboxWidth;
+		RawValue hitboxHeight;
+		RawValue hitboxRadius;
+		RawValue hitboxX;
+		RawValue hitboxY;
+
 		std::vector<RawCommand> top;
 		std::vector<RawCommand> bottom;
 		std::vector<RawCommand> left;
@@ -135,6 +151,15 @@ namespace xge
 		bool enabled{ false };
 		int lockstep{ 0 };
 		CollisionType type{ CollisionType::Box };
+
+		// A <hitbox> (see RawCollisionData): what it touches other objects
+		// with, offset from its top left, that big, and whether it is round
+		// (a circle filling that box). Without one, its picture's box.
+		bool hasHitbox{ false };
+		Vector2f hitboxOffset{};
+		Vector2f hitboxSize{};
+		bool hitboxRound{ false };
+
 		std::vector<Command> top;
 		std::vector<Command> bottom;
 		std::vector<Command> left;
@@ -237,6 +262,10 @@ namespace xge
 		// text: style="...", a <style> of the game's <styles>, which gives the
 		// <size> and <color> the text leaves out (see applyStyles).
 		std::string style;
+
+		// bitmap: the characters whose pixels a pixel collision touches with,
+		// copied from the object's <solid char>s (see markSolid); empty, all.
+		std::string solid;
 	};
 
 	// A game's <style name="...">: a size and a color a <text> can take by
@@ -878,6 +907,10 @@ namespace xge
 	// size and its color. A style no <style> has, or a text left with no
 	// size, stops the load.
 	void applyStyles(std::vector<RawObject>& objects, const std::vector<RawStyle>& styles);
+
+	// Gives every sprite of an object (its looks and animation frames too)
+	// the characters its <collisions> say are solid (RawSprite::solid).
+	void markSolid(std::vector<RawObject>& objects);
 
 	// What an object's own rules, timers and actions leave to mean itself,
 	// made its name (final, so after layOutScenes): a <trigger> with no

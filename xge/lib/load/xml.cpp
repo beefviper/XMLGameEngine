@@ -871,6 +871,42 @@ namespace xge
 			}
 		}
 
+		// What a <hop> says besides its direction: one distance as its value,
+		// or as a <distance>; or an <x> across and a <y> up or down; and with
+		// either of those elements, how long it takes, its <seconds>. True for
+		// an <x> and a <y>.
+		bool readHop(const XmlNode& node, const std::string& where, RawCommand& command)
+		{
+			const std::string here = where + " > <hop>";
+			const bool parts = findChild(&node, "x") || findChild(&node, "y") || findChild(&node, "distance") || findChild(&node, "seconds");
+			if (!parts)
+			{
+				command.amount = readValue(node, where);
+				return false;
+			}
+
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag != "x" && tag != "y" && tag != "distance" && tag != "seconds")
+				{
+					fail(here, "unknown <" + tag + ">; expected a <distance>, or an <x> and a <y>, then <seconds> if wanted");
+				}
+			}
+			if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+
+			const PartialVector2 step = readPartialVector2(node, where);
+			if (!step.x && !step.y)
+			{
+				command.amount = readValueOf(node, "distance", here);
+				return false;
+			}
+			if (!step.x || !step.y || findChild(&node, "distance")) { fail(where, "<hop> gives one distance, or an <x> across and a <y> up or down, both"); }
+			command.positionX = *step.x;
+			command.positionY = *step.y;
+			return true;
+		}
+
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "knock" || name == "hole" || name == "hold" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
@@ -962,17 +998,15 @@ namespace xge
 				else { command.amount = RawValue::expression("1"); }
 			}
 			if (verb == "trigger") { requireAttribute(node, "action", where); }
-			if (verb == "hop" && (findChild(&node, "x") || findChild(&node, "y")))
+			if (verb == "hop")
 			{
-				// A diagonal one's step across and up or down, each its own.
 				requireAttribute(node, "direction", where);
-				const PartialVector2 step = readPartialVector2(node, where);
-				if (!step.x || !step.y) { fail(where, "<hop> gives one distance, or an <x> across and a <y> up or down, both"); }
-				if (command.direction.find('-') == std::string::npos) { fail(where, "<hop direction=\"" + command.direction + "\"> is not diagonal; it gives one distance"); }
-				command.positionX = *step.x;
-				command.positionY = *step.y;
+				if (readHop(node, where, command) && command.direction.find('-') == std::string::npos)
+				{
+					fail(where, "<hop direction=\"" + command.direction + "\"> is not diagonal; it gives one distance");
+				}
 			}
-			else if (verb == "move" || verb == "hop" || verb == "accelerate" || verb == "turn")
+			else if (verb == "move" || verb == "accelerate" || verb == "turn")
 			{
 				requireAttribute(node, "direction", where);
 				command.amount = readValue(node, where);
@@ -1053,7 +1087,21 @@ namespace xge
 				}
 				if (command.players.empty()) { fail(here, "has no <player>; it needs one for each player"); }
 			}
-			if (verb == "hunt")
+			if (verb == "hunt" && findChild(&node, "hop"))
+			{
+				// A hunt by hops: the one hop it makes toward what it hunts.
+				requireAttribute(node, "object", where);
+				const std::string here = where + " > <hunt>";
+				std::unique_ptr<XmlNode> hop = node.getFirstChild();
+				if (hop->getName() != "hop" || hop->getNextSibling())
+				{
+					fail(here, "a hunt by hops has its <hop> and nothing else (no <speed>, <ahead>, <with> or <retreat>: those are for a maze)");
+				}
+				if (!hop->getAttribute("direction").empty()) { fail(here + " > <hop>", "has a direction=; the hunt chooses the way"); }
+				command.byHops = true;
+				readHop(*hop, here, command);
+			}
+			else if (verb == "hunt")
 			{
 				// What it hunts, how fast, and how its target is found from that:
 				// tiles ahead of it, with a partner, or backing off when near.
@@ -1273,6 +1321,60 @@ namespace xge
 				if (text == "box") { collisionData.type = CollisionType::Box; }
 				else if (text == "pixel") { collisionData.type = CollisionType::Pixel; }
 				else { fail(collisionsHere, "<type> is \"" + text + "\"; expected box or pixel"); }
+			}
+
+			// The characters of its bitmap that touch, each <solid char>; an
+			// inner group's replace the outer's.
+			std::string solid;
+			for (std::unique_ptr<XmlNode> child = collisions.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "solid") { continue; }
+				const std::string character = requireAttribute(*child, "char", collisionsHere + " > <solid>");
+				if (character.size() != 1 || character == ".")
+				{
+					fail(collisionsHere + " > <solid>", "char=\"" + character + "\"; expected one character of the bitmap, '*' or one of its <color char>s");
+				}
+				solid += character;
+			}
+			if (!solid.empty()) { collisionData.solid = solid; }
+
+			// The shape it touches with, if not its picture.
+			if (auto hitbox = findChild(&collisions, "hitbox"))
+			{
+				const std::string here = collisionsHere + " > <hitbox>";
+				std::unique_ptr<XmlNode> shape = hitbox->getFirstChild();
+				if (!shape || (shape->getName() != "rectangle" && shape->getName() != "circle"))
+				{
+					fail(here, "expected a <rectangle> or a <circle>, then a <position> if wanted");
+				}
+				collisionData.hitboxKind = shape->getName();
+				const std::string shapeHere = here + " > <" + shape->getName() + ">";
+				for (std::unique_ptr<XmlNode> part = shape->getFirstChild(); part != nullptr; part = part->getNextSibling())
+				{
+					const std::string tag = part->getName();
+					if (shape->getName() == "rectangle" ? (tag != "width" && tag != "height") : tag != "radius")
+					{
+						fail(shapeHere, "unknown <" + tag + ">; a hitbox's " + (shape->getName() == "rectangle" ? "rectangle has a <width> and a <height>" : "circle has a <radius>"));
+					}
+				}
+				if (shape->getName() == "rectangle")
+				{
+					collisionData.hitboxWidth = readValueOf(*shape, "width", shapeHere);
+					collisionData.hitboxHeight = readValueOf(*shape, "height", shapeHere);
+				}
+				else
+				{
+					collisionData.hitboxRadius = readValueOf(*shape, "radius", shapeHere);
+				}
+				collisionData.hitboxX = {};
+				collisionData.hitboxY = {};
+				for (std::unique_ptr<XmlNode> next = shape->getNextSibling(); next != nullptr; next = next->getNextSibling())
+				{
+					if (next->getName() != "position") { fail(here, "unknown <" + next->getName() + ">; after its shape a hitbox has a <position>"); }
+					const PartialVector2 at = readPartialVector2(*next, here);
+					if (at.x) { collisionData.hitboxX = *at.x; }
+					if (at.y) { collisionData.hitboxY = *at.y; }
+				}
 			}
 
 			for (std::unique_ptr<XmlNode> collision = findChild(&collisions, "collision"); collision != nullptr; collision = collision->getNextSibling())

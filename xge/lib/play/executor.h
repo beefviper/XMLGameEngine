@@ -89,6 +89,18 @@ namespace xge
 		void moveByStep(Object& object, Direction direction, float step);
 		void queueHop(Object& object, Vector2f step);
 		void startJump(Object& object, const CmdJump& jump);
+
+		// A <hop>: at once (queued), or with <seconds> through the air, as a
+		// jump goes; either way the object then faces that way.
+		void hop(Object& object, const CmdHop& hop);
+
+		// A hunt by hops: see CmdHuntHop.
+		void huntByHop(Object& object, const CmdHuntHop& hunt);
+
+		// Through the air by `whole` over `seconds`, touching nothing until it
+		// lands: a <jump>, or a <hop> that takes time. Not when it is in the
+		// air already, nor when it would land outside the window.
+		void startFlight(Object& object, Vector2f whole, float seconds);
 		void land(Object& object, const Object& other, Edge edge);
 
 		// <knock>: see CmdKnock. Into a thing with no mass, through it, to

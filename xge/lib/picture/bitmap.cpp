@@ -51,6 +51,20 @@ namespace xge
 
 	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color, const std::map<char, Color>& inks)
 	{
+		return rasterizeRows(rows, scale, color, inks, {});
+	}
+
+	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color, const std::map<char, Color>& inks, const std::string& solid)
+	{
+		for (const char character : solid)
+		{
+			if (character != '*' && !inks.count(character))
+			{
+				throw std::invalid_argument("<solid char=\"" + std::string(1, character) + "\"> names no character of the bitmap; it has '*'"
+					+ (inks.empty() ? std::string{} : " and its <color char>s"));
+			}
+		}
+
 		if (rows.empty()) { throw std::invalid_argument("a bitmap has no <row>s"); }
 		if (scale < 1) { throw std::invalid_argument("a bitmap's <scale> is " + std::to_string(scale) + "; expected 1 or more"); }
 
@@ -96,6 +110,22 @@ namespace xge
 				else if (const auto ink = inks.find(character); ink != inks.end())
 				{
 					stamp(bitmap, static_cast<int>(column) * scale, static_cast<int>(row) * scale, scale, ink->second);
+				}
+			}
+		}
+
+		if (!solid.empty())
+		{
+			bitmap.touching.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height), 0);
+			for (int y = 0; y < bitmap.height; ++y)
+			{
+				for (int x = 0; x < bitmap.width; ++x)
+				{
+					const char character = rows[static_cast<std::size_t>(y / scale)][static_cast<std::size_t>(x / scale)];
+					if (solid.find(character) != std::string::npos)
+					{
+						bitmap.touching[static_cast<std::size_t>(y) * static_cast<std::size_t>(bitmap.width) + static_cast<std::size_t>(x)] = 1;
+					}
 				}
 			}
 		}
@@ -186,6 +216,11 @@ namespace xge
 				{
 					flipped.rgba[to + channel] = picture.rgba[from + channel];
 				}
+				if (!picture.touching.empty())
+				{
+					if (flipped.touching.empty()) { flipped.touching.assign(picture.touching.size(), 0); }
+					flipped.touching[to / 4] = picture.touching[from / 4];
+				}
 			}
 		}
 
@@ -235,6 +270,11 @@ namespace xge
 				const std::size_t from = (static_cast<std::size_t>(sy) * static_cast<std::size_t>(picture.width) + static_cast<std::size_t>(sx)) * 4;
 				const std::size_t to = (static_cast<std::size_t>(y) * static_cast<std::size_t>(side) + static_cast<std::size_t>(x)) * 4;
 				for (std::size_t k = 0; k < 4; ++k) { turned.rgba[to + k] = picture.rgba[from + k]; }
+				if (!picture.touching.empty())
+				{
+					if (turned.touching.empty()) { turned.touching.assign(static_cast<std::size_t>(side) * static_cast<std::size_t>(side), 0); }
+					turned.touching[to / 4] = picture.touching[from / 4];
+				}
 			}
 		}
 

@@ -29,11 +29,24 @@ namespace xge
 		// red, green, blue, alpha.
 		std::vector<std::uint8_t> rgba;
 
+		// Which of the drawn pixels a collision of type pixel touches with,
+		// one to a pixel, row by row (1: it touches): only the characters a
+		// <solid char> names, of a bitmap's rows. Empty: every drawn pixel.
+		std::vector<std::uint8_t> touching;
+
 		// Whether something was drawn on this pixel. Outside the bitmap is empty.
 		bool solidAt(int x, int y) const noexcept
 		{
 			if (x < 0 || y < 0 || x >= width || y >= height) { return false; }
 			return rgba[(static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x)) * 4 + 3] != 0;
+		}
+
+		// Whether a pixel collision touches with this pixel: drawn on, and
+		// among those `touching` names.
+		bool touchesAt(int x, int y) const noexcept
+		{
+			if (!solidAt(x, y)) { return false; }
+			return touching.empty() || touching[static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x)] != 0;
 		}
 	};
 
@@ -78,6 +91,11 @@ namespace xge
 	// ghost's eyes are white on its red body. '.' is still clear and '*' still
 	// `color`; any character neither of those nor in `inks` is the error.
 	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color, const std::map<char, Color>& inks);
+
+	// The same, touching (Bitmap::touching) only with the pixels of the
+	// characters in `solid`; empty, with all of them. A character of `solid`
+	// that is neither '*' nor in `inks` is the error.
+	Bitmap rasterizeRows(const std::vector<std::string>& rows, int scale, const Color& color, const std::map<char, Color>& inks, const std::string& solid);
 
 	// The picture mirrored: left for right (horizontal), top for bottom
 	// (vertical), or both. The same size, each pixel exactly as it was, only

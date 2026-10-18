@@ -196,11 +196,32 @@ namespace xge
 	// goes `distance` along both, or <x> across and <y> up or down: a hop
 	// from cube to cube of Q*bert's pyramid. `direction` is the way it then
 	// faces (the up or down of a diagonal), `step` the whole of the hop.
+	// With <seconds> (then the one distance is a <distance>) it takes that
+	// long, through the air as a <jump> does: touching nothing until it
+	// lands, and a second hop waits for the landing. 0: at once.
 	struct CmdHop
 	{
 		Direction direction{};
 		float distance{};
 		Vector2f step{};
+		float seconds{};
+	};
+
+	// <hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>
+	// - a hunt by hops, for an object that walks no maze: of the four hops
+	// it could make (the diagonals with an <x> and a <y>, else up, down,
+	// left and right by its <distance>), the one that lands nearest the
+	// middle of the nearest in play of that name or <group>, among those that
+	// stay in the window; a tie goes up before down, then left before right.
+	// One hop each time it runs (a timer), so it hunts at its own pace:
+	// Coily. A hop under way, or nothing to hunt, and it stays.
+	struct CmdHuntHop
+	{
+		std::string target;
+		float across{};
+		float down{};
+		bool diagonal{ false };
+		float seconds{};
 	};
 
 	// <jump direction="down"><distance>40</distance><seconds>0.4</seconds></jump>
@@ -538,7 +559,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
-		CmdMove, CmdHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdHold, CmdLive>;
 
 	struct LoadedCommand
@@ -700,7 +721,8 @@ namespace xge
 		std::string button;    // hold
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
-		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0)
+		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0)
+		bool byHops{ false };  // hunt: by a <hop> (its <distance> the amount, or its <x> and <y> positionX and positionY; its <seconds>)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
 		// spawn: its <position> and <velocity>, each half empty text when

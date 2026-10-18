@@ -106,6 +106,7 @@ namespace xge
 				[](const CmdChase&) { return std::string("<chase>"); },
 				[](const CmdGo&) { return std::string("<go>"); },
 				[](const CmdHunt&) { return std::string("<hunt>"); },
+				[](const CmdHuntHop&) { return std::string("<hunt> by <hop>"); },
 				[](const CmdWander&) { return std::string("<wander>"); },
 				[](const CmdAim&) { return std::string("<aim>"); },
 				[](const CmdAccelerate&) { return std::string("<accelerate>"); },
@@ -192,7 +193,7 @@ namespace xge
 		{
 			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<demo />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<set>", "<spawn>" };
 			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
-				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<wander>", "<set>", "<spawn>" };
+				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<hunt> by <hop>", "<wander>", "<set>", "<spawn>" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
 				tags.push_back("<chase>");
@@ -203,12 +204,12 @@ namespace xge
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
 					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<knock>", "<hole>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
+					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<hunt> by <hop>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimerCommands },
-				{ "an <action>", { "<move>", "<hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>",
+				{ "an <action>", { "<move>", "<hop>", "<hunt> by <hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>",
 					"<inc>", "<dec>", "<copy>", "<reset object>", "<reset scene>", "<enter>", "<die />", "<set>", "<spawn>" } },
 				{ "a path's <step>", ownerCommands },
 				{ "a <computer>'s <condition>", { "<hold>" } },
@@ -379,6 +380,13 @@ namespace xge
 					{
 						throw std::runtime_error(where + ": " + what + " names '" + *name + "', and there is no object of that name" + didYouMean(*name, objectNames(objects)));
 					}
+				}
+			}
+			else if (const auto* huntHop = std::get_if<CmdHuntHop>(&shapeOf(command)))
+			{
+				if (!findObject(objects, huntHop->target))
+				{
+					throw std::runtime_error(where + ": <hunt> names '" + huntHop->target + "', and there is no object of that name" + didYouMean(huntHop->target, objectNames(objects)));
 				}
 			}
 			else if (const auto* chase = std::get_if<CmdChase>(&shapeOf(command)))
@@ -1251,6 +1259,50 @@ namespace xge
 				throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
 			}
 
+			// Which of its pixels touch: only for a picture of rows, tested
+			// pixel by pixel.
+			if (!rawObject.rawCollisionData.solid.empty())
+			{
+				if (object.collisionData.type != CollisionType::Pixel)
+				{
+					throw std::runtime_error(where + ": a <solid char> says which pixels touch, so it needs <type>pixel</type>");
+				}
+				const auto rows = [](const RawSprite& sprite) { return sprite.kind == "bitmap"; };
+				if (!rows(rawObject.sprite) || !std::all_of(rawObject.looks.begin(), rawObject.looks.end(), rows)
+					|| !std::all_of(rawObject.animation.frames.begin(), rawObject.animation.frames.end(), rows))
+				{
+					throw std::runtime_error(where + ": a <solid char> names characters of a <bitmap>, and every sprite of the object must be one");
+				}
+			}
+
+			// What it touches with, if not its picture.
+			const RawCollisionData& rawCollisions = rawObject.rawCollisionData;
+			if (!rawCollisions.hitboxKind.empty())
+			{
+				if (object.collisionData.type == CollisionType::Pixel)
+				{
+					throw std::runtime_error(where + ": a <hitbox> is touched as its own shape, not by the pixels of the picture; it cannot go with <type>pixel</type>");
+				}
+				const auto valueOr0 = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where + " > <hitbox>"); };
+				object.collisionData.hasHitbox = true;
+				object.collisionData.hitboxRound = rawCollisions.hitboxKind == "circle";
+				if (object.collisionData.hitboxRound)
+				{
+					const float radius = evaluate(rawCollisions.hitboxRadius, where + " > <hitbox>");
+					object.collisionData.hitboxSize = { radius * 2.0f, radius * 2.0f };
+				}
+				else
+				{
+					object.collisionData.hitboxSize = { evaluate(rawCollisions.hitboxWidth, where + " > <hitbox>"), evaluate(rawCollisions.hitboxHeight, where + " > <hitbox>") };
+				}
+				if (!(object.collisionData.hitboxSize.x > 0.0f) || !(object.collisionData.hitboxSize.y > 0.0f))
+				{
+					throw std::runtime_error(where + ": a <hitbox> must be bigger than nothing; its size is " + formatDisplayNumber(object.collisionData.hitboxSize.x)
+						+ " by " + formatDisplayNumber(object.collisionData.hitboxSize.y));
+				}
+				object.collisionData.hitboxOffset = { valueOr0(rawCollisions.hitboxX), valueOr0(rawCollisions.hitboxY) };
+			}
+
 			object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
 			object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
 			object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
@@ -1953,7 +2005,8 @@ namespace xge
 						key += std::string("|") + character + "=" + ink;
 					}
 					for (const std::string& row : sprite.bitmapRows) { key += "|" + row; }
-					drawn = drawOnce(key, [&] { return flipped(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color), inks)); });
+					if (!sprite.solid.empty()) { key += "|solid=" + sprite.solid; }
+					drawn = drawOnce(key, [&] { return flipped(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color), inks, sprite.solid)); });
 				}
 
 

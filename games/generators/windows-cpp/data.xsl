@@ -225,16 +225,29 @@
           </xsl:choose>
           <xsl:text>;</xsl:text>
         </xsl:when>
-        <!-- a diagonal hop's step across and up or down -->
-        <xsl:when test="$verb = 'hop' and $node/x">
-          <xsl:call-template name="field">
-            <xsl:with-param name="name" select="'command.positionX'" />
-            <xsl:with-param name="node" select="$node/x" />
+        <!-- a hop's step: one distance, or across and up or down, and how long -->
+        <xsl:when test="$verb = 'hop' and ($node/x or $node/distance or $node/seconds)">
+          <xsl:call-template name="hop-parts">
+            <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
-          <xsl:call-template name="field">
-            <xsl:with-param name="name" select="'command.positionY'" />
-            <xsl:with-param name="node" select="$node/y" />
-          </xsl:call-template>
+        </xsl:when>
+        <!-- a hunt by hops: its one hop -->
+        <xsl:when test="$verb = 'hunt' and $node/hop">
+          <xsl:text> command.byHops = true;</xsl:text>
+          <xsl:choose>
+            <xsl:when test="$node/hop/x or $node/hop/distance or $node/hop/seconds">
+              <xsl:call-template name="hop-parts">
+                <xsl:with-param name="node" select="$node/hop" />
+              </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:text> command.amount = </xsl:text>
+              <xsl:call-template name="value">
+                <xsl:with-param name="node" select="$node/hop" />
+              </xsl:call-template>
+              <xsl:text>;</xsl:text>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:when>
         <xsl:when test="$verb = 'move' or $verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
           <xsl:text> command.amount = </xsl:text>
@@ -357,6 +370,27 @@
       <xsl:value-of select="concat(', [](RawCommand&amp; command) {', $fill, ' }')" />
     </xsl:if>
     <xsl:text>)</xsl:text>
+  </xsl:template>
+
+  <!-- A <hop>'s <distance>, or <x> and <y>, and <seconds> (readHop). -->
+  <xsl:template name="hop-parts">
+    <xsl:param name="node" />
+    <xsl:call-template name="field">
+      <xsl:with-param name="name" select="'command.amount'" />
+      <xsl:with-param name="node" select="$node/distance" />
+    </xsl:call-template>
+    <xsl:call-template name="field">
+      <xsl:with-param name="name" select="'command.positionX'" />
+      <xsl:with-param name="node" select="$node/x" />
+    </xsl:call-template>
+    <xsl:call-template name="field">
+      <xsl:with-param name="name" select="'command.positionY'" />
+      <xsl:with-param name="node" select="$node/y" />
+    </xsl:call-template>
+    <xsl:call-template name="field">
+      <xsl:with-param name="name" select="'command.seconds'" />
+      <xsl:with-param name="node" select="$node/seconds" />
+    </xsl:call-template>
   </xsl:template>
 
   <!-- " name = value;" for the first of $node, if there is one. -->
@@ -771,6 +805,40 @@
         <xsl:value-of select="concat($indent, $data, '.type = CollisionType::Box;&#10;')" />
       </xsl:when>
     </xsl:choose>
+    <xsl:if test="$node/solid">
+      <xsl:value-of select="concat($indent, $data, '.solid = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text">
+          <xsl:for-each select="$node/solid"><xsl:value-of select="@char" /></xsl:for-each>
+        </xsl:with-param>
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:for-each select="$node/hitbox">
+      <xsl:value-of select="concat($indent, $data, '.hitboxKind = &quot;', local-name(rectangle | circle), '&quot;;&#10;')" />
+      <xsl:for-each select="rectangle/width | rectangle/height | circle/radius | position/x | position/y">
+        <xsl:value-of select="concat($indent, $data, '.hitbox')" />
+        <xsl:choose>
+          <xsl:when test="local-name() = 'width'">Width</xsl:when>
+          <xsl:when test="local-name() = 'height'">Height</xsl:when>
+          <xsl:when test="local-name() = 'radius'">Radius</xsl:when>
+          <xsl:when test="local-name() = 'x'">X</xsl:when>
+          <xsl:otherwise>Y</xsl:otherwise>
+        </xsl:choose>
+        <xsl:text> = </xsl:text>
+        <xsl:call-template name="value">
+          <xsl:with-param name="node" select="." />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+      </xsl:for-each>
+      <!-- an inner group's hitbox starts again at the picture's top left -->
+      <xsl:if test="$nested and not(position/x)">
+        <xsl:value-of select="concat($indent, $data, '.hitboxX = {};&#10;')" />
+      </xsl:if>
+      <xsl:if test="$nested and not(position/y)">
+        <xsl:value-of select="concat($indent, $data, '.hitboxY = {};&#10;')" />
+      </xsl:if>
+    </xsl:for-each>
     <xsl:for-each select="$node/collision">
       <xsl:variable name="commands" select="*[not(self::slower or self::faster or self::check or self::all or self::any)]" />
       <xsl:choose>

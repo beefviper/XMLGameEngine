@@ -573,15 +573,29 @@
       <xs:enumeration value="down-right" />
     </xs:restriction>
   </xs:simpleType>
+  <!-- hop: how far, as its value, or as a <distance> or an <x> and a <y>, then how long it takes. -->
   <xs:complexType name="hopType" mixed="true">
-    <xs:choice minOccurs="0">
+    <xs:group ref="hopParts" minOccurs="0" />
+    <xs:attribute name="direction" type="hopDirectionType" use="required" />
+  </xs:complexType>
+  <xs:group name="hopParts">
+    <xs:choice>
       <xs:group ref="valueTag" />
       <xs:sequence>
-        <xs:element name="x" type="valueType" />
-        <xs:element name="y" type="valueType" />
+        <xs:choice>
+          <xs:element name="distance" type="valueType" />
+          <xs:sequence>
+            <xs:element name="x" type="valueType" />
+            <xs:element name="y" type="valueType" />
+          </xs:sequence>
+        </xs:choice>
+        <xs:element name="seconds" type="valueType" minOccurs="0" />
       </xs:sequence>
     </xs:choice>
-    <xs:attribute name="direction" type="hopDirectionType" use="required" />
+  </xs:group>
+  <!-- the hop of a hunt by hops: the hunt chooses the way. -->
+  <xs:complexType name="huntHopType" mixed="true">
+    <xs:group ref="hopParts" minOccurs="0" />
   </xs:complexType>
 
   <!-- set: the value, worked out as it runs. -->
@@ -740,26 +754,30 @@
     hunt: what to hunt, how fast, and how the target is found from it: tiles
     in front of it (ahead), as far again past that as a partner is short of
     it (with), and, within that many tiles of it, another object instead
-    (retreat).
+    (retreat). Or, for an object that walks no maze, a hunt by hops: one
+    <hop>, toward it.
   -->
   <xs:complexType name="huntType">
-    <xs:sequence>
-      <xs:element name="speed" type="valueType" />
-      <xs:element name="ahead" type="valueType" minOccurs="0" />
-      <xs:element name="with" minOccurs="0">
-        <xs:complexType>
-          <xs:attribute name="object" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="retreat" minOccurs="0">
-        <xs:complexType mixed="true">
-          <xs:sequence>
-            <xs:group ref="valueTag" minOccurs="0" />
-          </xs:sequence>
-          <xs:attribute name="object" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
+    <xs:choice>
+      <xs:element name="hop" type="huntHopType" />
+      <xs:sequence>
+        <xs:element name="speed" type="valueType" />
+        <xs:element name="ahead" type="valueType" minOccurs="0" />
+        <xs:element name="with" minOccurs="0">
+          <xs:complexType>
+            <xs:attribute name="object" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="retreat" minOccurs="0">
+          <xs:complexType mixed="true">
+            <xs:sequence>
+              <xs:group ref="valueTag" minOccurs="0" />
+            </xs:sequence>
+            <xs:attribute name="object" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:choice>
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
@@ -1165,7 +1183,43 @@
       <xs:element name="enabled" type="xs:boolean" />
       <xs:element name="lockstep" type="xs:boolean" minOccurs="0" />
       <xs:element name="type" type="collisionShapeType" minOccurs="0" />
+      <xs:element name="solid" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="char" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:length value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="hitbox" type="hitboxType" minOccurs="0" />
       <xs:element name="collision" type="collisionType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- What an object touches others with instead of its picture: a rectangle or a circle, its top left from the picture's. -->
+  <xs:complexType name="hitboxType">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="rectangle">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="width" type="valueType" />
+              <xs:element name="height" type="valueType" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="circle">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="radius" type="valueType" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+      <xs:element name="position" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
