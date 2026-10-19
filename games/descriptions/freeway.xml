@@ -4,32 +4,32 @@
 <!-- date: Sept 30, 2026 -->
 
 <!--
-  Freeway, after the 1981 Atari 2600 game: two chickens, side by side at the
-  bottom, each trying to get across ten lanes of traffic to the strip along the
-  top. Each press of the up key is one hop, one lane; a chicken that is hit is
-  put back at the start (and keeps what it has scored). The first to
-  `crossings` trips across wins. Player 1 is W and S, player 2 is the up and
-  down arrows; Space starts and pauses, as do P and Escape.
+  Freeway, after Activision's 1981 game for the Atari 2600: two chickens, side
+  by side at the bottom, cross ten lanes of a highway as often as they can in
+  two minutes and sixteen seconds. Each press of up is one hop, one lane; a
+  chicken that is hit is knocked back a lane. Every time one reaches the far
+  side it scores and starts again at the bottom. When the clock runs out the
+  one with more crossings wins. The five lanes on top drive left, the five
+  below right, faster towards the middle, as on the cartridge. Player 1 is W
+  and S, player 2 the up and down arrows; Space starts and pauses, as do P and
+  Escape.
 
-  On a grid of 50 pixel cells, 12 rows down:
-
-    row  0        the far side, where a crossing scores (and the scores live)
-    rows 1-10     ten lanes of traffic, alternating cars and trucks, each lane
-                  with its own speed and direction
-    row  11       the near side, where both chickens start
+  On a grid of 50 pixel cells, 12 rows down: row 0 is the far side (and the
+  scores and the clock), rows 1-10 the lanes, row 11 the near side.
 
   How it is written:
-  * Each state owns what it draws: the title, the help and the keys to the
-    main menu, the road, the traffic, the chickens and the scores to playing,
-    the PAUSED sign to paused, the winner's words and "spacebar to play
-    again" to wins, one screen for both players with a look for each, which
-    the condition that ends the game picks with <become>.
-  * It is Frogger's road without the river: <hop> for the chicken, a <group>
-    per lane with <wrap /> so traffic loops, <reset /> for being hit, and
-    <inc /> plus an <atleast> condition for scoring.
-  * Paused and the win screen draw the road still underneath (<show state>),
-    scores and all.
-  There are no levels, so there are no <scenes>.
+  * The chickens are one <group>: what they look like, the hop, being hit and
+    scoring are written once, and a crossing counts in the chicken's own
+    score (self.score).
+  * The traffic is one group of all ten lanes, which gives the <wrap /> and
+    the car; each lane inside it says its row, its speed and its colour, a
+    truck lane its wider bitmap. The cars of a lane are laid out as
+    <columns>, so they are evenly spaced round the loop the <wrap /> makes.
+  * Being hit is a <move direction="down"> in the chicken's rule: shoved
+    back one lane, once.
+  * The clock is a state <timer>. When it runs out, wins is pushed with its
+    "draw" look; that state's own two conditions pick the winner's look.
+  * Paused and wins draw the road still underneath (<show state>).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -42,30 +42,26 @@
   </window>
   <variables>
     <variable name="cell">50</variable>
-    <variable name="inset">8</variable>
-    <variable name="body">34</variable>
-    <variable name="crossings">5</variable>
-    <variable name="margin">20</variable>
+    <variable name="inset">9</variable>
+    <variable name="seconds">136</variable>
   </variables>
   <sounds>
-    <!-- a hop: a short chirp -->
     <sound name="hop" wave="square">
       <volume>0.15</volume>
-      <note pitch="C5" to="G5">0.05</note>
+      <note pitch="C5" to="G5">0.04</note>
     </sound>
-    <!-- a chicken hit by traffic: a squawk that falls -->
-    <sound name="hit" wave="sawtooth">
-      <volume>0.3</volume>
-      <note pitch="A4" to="A2">0.4</note>
+    <!-- a chicken hit: a squawk, and a horn -->
+    <sound name="hit">
+      <volume>0.25</volume>
+      <part wave="sawtooth"><note pitch="A5" to="A3">0.25</note></part>
+      <part wave="square"><note pitch="F3">0.2</note></part>
     </sound>
-    <!-- a chicken across -->
     <sound name="cross" wave="square">
       <volume>0.2</volume>
       <note pitch="C6">0.05</note>
       <note pitch="E6">0.05</note>
       <note pitch="G6">0.1</note>
     </sound>
-    <!-- a game started: a rising arpeggio -->
     <sound name="start" wave="square">
       <volume>0.2</volume>
       <note pitch="C5">0.07</note>
@@ -73,69 +69,38 @@
       <note pitch="G5">0.07</note>
       <note pitch="C6">0.14</note>
     </sound>
-    <!-- a player has won -->
-    <sound name="win" wave="square">
+    <sound name="end" wave="square">
       <volume>0.2</volume>
       <note pitch="C5">0.1</note>
       <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.1</note>
       <note pitch="G5">0.1</note>
       <note pitch="C6">0.3</note>
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>128</size></style>
-    <style name="prompt"><size>48</size></style>
-    <style name="keys"><size>32</size></style>
-    <style name="hud"><size>36</size></style>
+    <style name="banner"><size>110</size><color>color.yellow</color></style>
+    <style name="prompt"><size>44</size></style>
+    <style name="help"><size>32</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>36</size><color>color.yellow</color></style>
   </styles>
   <states>
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>FREEWAY</content>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>FREEWAY</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
         </object>
         <object name="help">
-          <sprite>
-            <text>
-              <content>get across ten lanes of traffic</content>
-              <size>40</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="help"><content>cross the highway as often as you can</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
-        <object name="keys1">
-          <sprite>
-            <text style="keys">
-              <content>player 1: w and s</content>
-            </text>
-          </sprite>
+        <object name="keys">
+          <sprite><text style="help"><content>player 1: w and s    player 2: up and down</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
         </object>
-        <object name="keys2">
-          <sprite>
-            <text style="keys">
-              <content>player 2: the up and down arrows</content>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 80</centered></y></position>
-        </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 160</centered></y></position>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 150</centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -148,303 +113,151 @@
     <state name="playing">
       <objects>
         <object name="verge" class="farside">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>cell</height>
-              <color>color.darkgreen</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.grey</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
+          <collisions><enabled>true</enabled></collisions>
         </object>
         <object name="road">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>10 * cell</height>
-              <color>color.darkgrey</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>window.right</width><height>10 * cell</height><color>color.darkgrey</color></rectangle></sprite>
           <position><x>0</x><y>cell</y></position>
         </object>
         <object name="pavement">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>cell</height>
-              <color>color.forestgreen</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.grey</color></rectangle></sprite>
           <position><x>0</x><y>11 * cell</y></position>
         </object>
-        <group name="lane1" class="traffic">
+        <!-- the markings between the lanes, and the double line down the middle -->
+        <group name="dashes">
+          <columns>16</columns>
+          <rows>9</rows>
+          <padding><x>26</x><y>46</y></padding>
+          <sprite><rectangle><width>24</width><height>4</height><color>color.lightgrey</color></rectangle></sprite>
+          <position><x>13</x><y>2 * cell - 2</y></position>
+        </group>
+        <object name="median">
+          <sprite><rectangle><width>window.right</width><height>6</height><color>color.yellow</color></rectangle></sprite>
+          <position><x>0</x><y>6 * cell - 3</y></position>
+        </object>
+
+        <!-- all ten lanes: a car, round and round. Each lane its row, speed and colour. -->
+        <group name="traffic" class="traffic">
+          <columns>3</columns>
+          <rows>1</rows>
+          <padding><x>800 / 3 + 16 - 48</x></padding>
           <sprite>
-            <rectangle>
-              <width>96</width>
-              <height>body</height>
-              <color>color.white</color>
-            </rectangle>
+            <bitmap>
+              <row>..********..</row>
+              <row>.*kk*kk*kk*.</row>
+              <row>************</row>
+              <row>************</row>
+              <row>************</row>
+              <row>.kk......kk.</row>
+              <row>.kk......kk.</row>
+              <scale>4</scale>
+              <color char="k">color.black</color>
+            </bitmap>
           </sprite>
-          <position><y>1 * cell + inset</y></position>
-          <velocity><x>-2</x></velocity>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
+            <collision edge="horizontal"><wrap /></collision>
           </collisions>
-          <member>
-            <position><x>-56</x></position>
-          </member>
-          <member>
-            <position><x>392</x></position>
-          </member>
+          <group name="lane1">
+            <sprite><bitmap><color>color.yellow</color></bitmap></sprite>
+            <position><x>40</x><y>1 * cell + 11</y></position>
+            <velocity><x>-1</x></velocity>
+          </group>
+          <!-- a lane of trucks: two to the loop -->
+          <group name="lane2">
+            <columns>2</columns>
+            <padding><x>400 + 44 - 88</x></padding>
+            <sprite>
+              <bitmap>
+                <row>****************.*****</row>
+                <row>****************.*kk**</row>
+                <row>****************.*kk**</row>
+                <row>**********************</row>
+                <row>**********************</row>
+                <row>.kk..kk.......kk..kk..</row>
+                <row>.kk..kk.......kk..kk..</row>
+                <scale>4</scale>
+                <color>color.white</color>
+                <color char="k">color.black</color>
+              </bitmap>
+            </sprite>
+            <position><x>150</x><y>2 * cell + 11</y></position>
+            <velocity><x>-1.5</x></velocity>
+          </group>
+          <group name="lane3">
+            <sprite><bitmap><color>color.green</color></bitmap></sprite>
+            <position><x>220</x><y>3 * cell + 11</y></position>
+            <velocity><x>-2</x></velocity>
+          </group>
+          <group name="lane4">
+            <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
+            <position><x>10</x><y>4 * cell + 11</y></position>
+            <velocity><x>-2.5</x></velocity>
+          </group>
+          <group name="lane5">
+            <sprite><bitmap><color>color.cyan</color></bitmap></sprite>
+            <position><x>130</x><y>5 * cell + 11</y></position>
+            <velocity><x>-3.5</x></velocity>
+          </group>
+          <group name="lane6">
+            <sprite><bitmap><color>color.orange</color></bitmap></sprite>
+            <position><x>60</x><y>6 * cell + 11</y></position>
+            <velocity><x>3.5</x></velocity>
+          </group>
+          <group name="lane7">
+            <sprite><bitmap><color>color.red</color></bitmap></sprite>
+            <position><x>180</x><y>7 * cell + 11</y></position>
+            <velocity><x>2.5</x></velocity>
+          </group>
+          <group name="lane8">
+            <sprite><bitmap><color>color.blue</color></bitmap></sprite>
+            <position><x>0</x><y>8 * cell + 11</y></position>
+            <velocity><x>2</x></velocity>
+          </group>
+          <group name="lane9">
+            <columns>2</columns>
+            <padding><x>400 + 44 - 88</x></padding>
+            <sprite><bitmap><row>****************.*****</row><row>****************.*kk**</row><row>****************.*kk**</row><row>**********************</row><row>**********************</row><row>.kk..kk.......kk..kk..</row><row>.kk..kk.......kk..kk..</row></bitmap></sprite>
+            <position><x>250</x><y>9 * cell + 11</y></position>
+            <velocity><x>1.5</x></velocity>
+          </group>
+          <group name="lane10">
+            <sprite><bitmap><color>color.lightgrey</color></bitmap></sprite>
+            <position><x>90</x><y>10 * cell + 11</y></position>
+            <velocity><x>1</x></velocity>
+          </group>
         </group>
-        <group name="lane2" class="traffic">
+
+        <!-- the two chickens -->
+        <group name="chickens" class="chicken">
           <sprite>
-            <rectangle>
-              <width>54</width>
-              <height>body</height>
-              <color>color.red</color>
-            </rectangle>
-          </sprite>
-          <position><y>2 * cell + inset</y></position>
-          <velocity><x>3</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>-54</x></position>
-          </member>
-          <member>
-            <position><x>230</x></position>
-          </member>
-          <member>
-            <position><x>514</x></position>
-          </member>
-        </group>
-        <group name="lane3" class="traffic">
-          <sprite>
-            <rectangle>
-              <width>54</width>
-              <height>body</height>
+            <bitmap>
+              <row>...rr...</row>
+              <row>..****..</row>
+              <row>..*k*oo.</row>
+              <row>..****..</row>
+              <row>.*****..</row>
+              <row>*******.</row>
+              <row>.*****..</row>
+              <row>..o.o...</row>
+              <scale>4</scale>
               <color>color.yellow</color>
-            </rectangle>
+              <color char="r">color.red</color>
+              <color char="k">color.black</color>
+              <color char="o">color.orange</color>
+            </bitmap>
           </sprite>
-          <position><y>3 * cell + inset</y></position>
-          <velocity><x>-4</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>76</x></position>
-          </member>
-          <member>
-            <position><x>360</x></position>
-          </member>
-          <member>
-            <position><x>644</x></position>
-          </member>
-        </group>
-        <group name="lane4" class="traffic">
-          <sprite>
-            <rectangle>
-              <width>96</width>
-              <height>body</height>
-              <color>color.orange</color>
-            </rectangle>
-          </sprite>
-          <position><y>4 * cell + inset</y></position>
-          <velocity><x>2</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>204</x></position>
-          </member>
-          <member>
-            <position><x>652</x></position>
-          </member>
-        </group>
-        <group name="lane5" class="traffic">
-          <sprite>
-            <rectangle>
-              <width>54</width>
-              <height>body</height>
-              <color>color.cyan</color>
-            </rectangle>
-          </sprite>
-          <position><y>5 * cell + inset</y></position>
-          <velocity><x>-3</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>6</x></position>
-          </member>
-          <member>
-            <position><x>290</x></position>
-          </member>
-          <member>
-            <position><x>574</x></position>
-          </member>
-        </group>
-        <group name="lane6" class="traffic">
-          <sprite>
-            <rectangle>
-              <width>54</width>
-              <height>body</height>
-              <color>color.magenta</color>
-            </rectangle>
-          </sprite>
-          <position><y>6 * cell + inset</y></position>
-          <velocity><x>4</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>146</x></position>
-          </member>
-          <member>
-            <position><x>430</x></position>
-          </member>
-          <member>
-            <position><x>714</x></position>
-          </member>
-        </group>
-        <group name="lane7" class="traffic">
-          <sprite>
-            <rectangle>
-              <width>96</width>
-              <height>body</height>
-              <color>color.lightgrey</color>
-            </rectangle>
-          </sprite>
-          <position><y>7 * cell + inset</y></position>
-          <velocity><x>-2</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>304</x></position>
-          </member>
-          <member>
-            <position><x>752</x></position>
-          </member>
-        </group>
-        <group name="lane8" class="traffic">
-          <sprite>
-            <rectangle>
-              <width>54</width>
-              <height>body</height>
-              <color>color.blue</color>
-            </rectangle>
-          </sprite>
-          <position><y>8 * cell + inset</y></position>
-          <velocity><x>3</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>36</x></position>
-          </member>
-          <member>
-            <position><x>320</x></position>
-          </member>
-          <member>
-            <position><x>604</x></position>
-          </member>
-        </group>
-        <group name="lane9" class="traffic">
-          <sprite>
-            <rectangle>
-              <width>54</width>
-              <height>body</height>
-              <color>color.red</color>
-            </rectangle>
-          </sprite>
-          <position><y>9 * cell + inset</y></position>
-          <velocity><x>-4</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>196</x></position>
-          </member>
-          <member>
-            <position><x>480</x></position>
-          </member>
-          <member>
-            <position><x>764</x></position>
-          </member>
-        </group>
-        <group name="lane10" class="traffic">
-          <sprite>
-            <rectangle>
-              <width>96</width>
-              <height>body</height>
-              <color>color.yellow</color>
-            </rectangle>
-          </sprite>
-          <position><y>10 * cell + inset</y></position>
-          <velocity><x>2</x></velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-          </collisions>
-          <member>
-            <position><x>-86</x></position>
-          </member>
-          <member>
-            <position><x>362</x></position>
-          </member>
-        </group>
-        <object name="chicken1" class="chicken">
-          <sprite>
-            <rectangle>
-              <width>body</width>
-              <height>body</height>
-              <color>color.white</color>
-            </rectangle>
-          </sprite>
-          <position><x>window.width.center / 2 - body / 2</x><y>11 * cell + inset</y></position>
+          <position><y>11 * cell + inset</y></position>
           <collisions>
             <enabled>true</enabled>
             <collision class="traffic">
-              <reset />
+              <move direction="down">cell</move>
               <play sound="hit" />
             </collision>
             <collision class="farside">
-              <inc variable="chicken1.score" />
+              <inc variable="self.score" />
               <reset />
               <play sound="cross" />
             </collision>
@@ -462,106 +275,51 @@
           <variables>
             <variable name="score">0</variable>
           </variables>
-        </object>
-        <object name="chicken2" class="chicken">
-          <sprite>
-            <rectangle>
-              <width>body</width>
-              <height>body</height>
-              <color>color.yellow</color>
-            </rectangle>
-          </sprite>
-          <position><x>window.width.center * 1.5 - body / 2</x><y>11 * cell + inset</y></position>
-          <collisions>
-            <enabled>true</enabled>
-            <collision class="traffic">
-              <reset />
-              <play sound="hit" />
-            </collision>
-            <collision class="farside">
-              <inc variable="chicken2.score" />
-              <reset />
-              <play sound="cross" />
-            </collision>
-          </collisions>
-          <actions>
-            <action name="up">
-              <hop direction="up">cell</hop>
-              <play sound="hop" />
-            </action>
-            <action name="down">
-              <hop direction="down">cell</hop>
-              <play sound="hop" />
-            </action>
-          </actions>
+          <member name="chicken1"><position><x>200 - 16</x></position></member>
+          <member name="chicken2"><position><x>600 - 16</x></position></member>
+        </group>
+
+        <object name="clock">
+          <sprite><text style="hud"><number>clock.seconds</number><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y>6</y></position>
           <variables>
-            <variable name="score">0</variable>
+            <variable name="seconds">seconds</variable>
           </variables>
         </object>
         <object name="score1">
-          <sprite>
-            <text style="hud">
-              <number>chicken1.score</number>
-            </text>
-          </sprite>
-          <position><x><centered>window.width.center / 2</centered></x><y>6</y></position>
+          <sprite><text style="hud"><number>chicken1.score</number></text></sprite>
+          <position><x><centered>200</centered></x><y>6</y></position>
         </object>
         <object name="score2">
-          <sprite>
-            <text style="hud">
-              <number>chicken2.score</number>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
-          <position><x><centered>window.width.center * 1.5</centered></x><y>6</y></position>
+          <sprite><text style="hud"><number>chicken2.score</number></text></sprite>
+          <position><x><centered>600</centered></x><y>6</y></position>
         </object>
       </objects>
       <inputs>
-        <input button="w">
-          <trigger object="chicken1" action="up" />
-        </input>
-        <input button="s">
-          <trigger object="chicken1" action="down" />
-        </input>
-        <input button="up">
-          <trigger object="chicken2" action="up" />
-        </input>
-        <input button="down">
-          <trigger object="chicken2" action="down" />
-        </input>
-        <input button="space">
-          <push state="paused" />
-        </input>
-        <input button="p">
-          <push state="paused" />
-        </input>
-        <input button="escape">
-          <push state="paused" />
-        </input>
+        <input button="w"><trigger object="chicken1" action="up" /></input>
+        <input button="s"><trigger object="chicken1" action="down" /></input>
+        <input button="up"><trigger object="chicken2" action="up" /></input>
+        <input button="down"><trigger object="chicken2" action="down" /></input>
+        <input button="space p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition object="chicken1" variable="score">
-          <atleast>crossings</atleast>
-          <become object="wins.winner" sprite="player1" />
+        <condition object="clock" variable="seconds">
+          <atmost>0</atmost>
           <push state="wins" />
-          <play sound="win" />
-        </condition>
-        <condition object="chicken2" variable="score">
-          <atleast>crossings</atleast>
-          <become object="wins.winner" sprite="player2" />
-          <push state="wins" />
-          <play sound="win" />
+          <play sound="end" />
         </condition>
       </conditions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <dec variable="clock.seconds" />
+        </timer>
+      </timers>
     </state>
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -569,41 +327,20 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <pop />
-        </input>
-        <input button="p">
-          <pop />
-        </input>
-        <input button="escape">
-          <pop />
-        </input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
+    <!-- time up: a draw, unless one chicken crossed more often -->
     <state name="wins">
       <objects>
         <object name="winner">
-          <sprite name="player1">
-            <text style="banner">
-              <content>PLAYER 1 WINS</content>
-              <size>100</size>
-            </text>
-          </sprite>
-          <sprite name="player2">
-            <text>
-              <content>PLAYER 2 WINS</content>
-              <size>100</size>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
+          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>
+          <sprite name="player1"><text style="banner"><content>PLAYER 1 WINS</content><size>90</size></text></sprite>
+          <sprite name="player2"><text style="banner"><content>PLAYER 2 WINS</content><size>90</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="again">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to play again</content>
-            </text>
-          </sprite>
+          <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 60</centered></y></position>
         </object>
       </objects>
@@ -611,10 +348,18 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <reset />
-        </input>
+        <input button="space"><reset /></input>
       </inputs>
+      <conditions>
+        <condition object="chicken1" variable="score">
+          <above object="chicken2" variable="score" />
+          <become object="wins.winner" sprite="player1" />
+        </condition>
+        <condition object="chicken2" variable="score">
+          <above object="chicken1" variable="score" />
+          <become object="wins.winner" sprite="player2" />
+        </condition>
+      </conditions>
     </state>
   </states>
 </game>
