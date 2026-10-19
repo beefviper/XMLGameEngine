@@ -1364,6 +1364,7 @@
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
+      <xs:element name="heading" type="valueType" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <xs:element name="mass" type="valueType" minOccurs="0" />
       <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />

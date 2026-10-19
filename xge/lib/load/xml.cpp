@@ -1869,6 +1869,11 @@ namespace xge
 					shared.hasAcceleration = true;
 					shared.rawAcceleration = readVector2(*child, where);
 				}
+				else if (tag == "heading")
+				{
+					shared.hasHeading = true;
+					shared.rawHeading = readValue(*child, where);
+				}
 				else if (tag == "drag")
 				{
 					shared.hasDrag = true;
@@ -1886,7 +1891,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 

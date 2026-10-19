@@ -1391,6 +1391,14 @@
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
+    <xsl:if test="heading">
+      <xsl:value-of select="concat($in, 'group.object.hasHeading = true;&#10;')" />
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$in" />
+        <xsl:with-param name="to" select="'group.object.rawHeading'" />
+        <xsl:with-param name="node" select="heading" />
+      </xsl:call-template>
+    </xsl:if>
     <xsl:if test="drag">
       <xsl:value-of select="concat($in, 'group.object.hasDrag = true;&#10;')" />
       <xsl:call-template name="assign-value">
