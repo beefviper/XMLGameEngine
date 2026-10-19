@@ -18,7 +18,7 @@ The author asked another AI to write three games from `xgedef.xsd` alone. All th
 
 ### Frostbite
 
-- Rewritten from scratch: a snowy shore and igloo along the top, four rows of drifting floes in alternating directions, Bailey jumping between rows with `<jump>`. Landing on a white row turns it blue (`<become>`) and adds an igloo block (`<reveal>`); four blue rows turn white again (a counting condition); water drowns unless on a floe; cold takes a degree a second (a state timer); geese push him along (`<ride />`); a fish is a bonus on a timer; the finished igloo opens, and walking in wins.
+- Rewritten from scratch: a snowy shore and igloo along the top, four rows of drifting floes in alternating directions, Bailey jumping between rows with `<jump>`. Landing on a white row turns it blue (`<become>`) and adds an igloo block (`<reveal>`); four blue rows turn white again (a counting condition); water drowns unless on a floe; cold takes a degree a second (a state timer); geese push him along (`<ride />`); a fish is a bonus on a timer; the finished igloo opens, and walking in wins. Rewritten again (2026-10-19): three nights as [scenes](12-scenes.md) (a `from=` chain whose `<variables>` give the drift and what a floe is worth; the door goes the way `next`, so the ice is faster each night), the four rows one `<group>` of `<columns>` with white and blue bitmap looks and a `sprite="white"` rule that turns its row blue and triggers Bailey's `block` action, the igloo a pool of hidden blocks laid out a course at a time so `<reveal>` builds it bottom up, Bailey, geese and fish as multi-ink bitmaps; the temperature left is a bonus at the door; three nights home wins.
 
 ### Berserk (rewritten after Stern's Berzerk, 1980)
 

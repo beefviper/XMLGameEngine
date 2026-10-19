@@ -4,7 +4,7 @@
 
 ## What we looked for
 
-A game made of several places, one screen each: Berserk's four rooms, Pitfall's jungle screens (four of the 255), Kaboom's three waves, Adventure's castles and rooms (one is built, `adventure.xml`). Today every one of them is a `<state>`, and the states do two jobs:
+A game made of several places, one screen each: Berserk's four rooms, Pitfall's jungle screens (four of the 255), Kaboom's waves (eight since 2026-10-19), Adventure's castles and rooms (one is built, `adventure.xml`). Today every one of them is a `<state>`, and the states do two jobs:
 
 - **Modes** of the program: an attract screen, an options menu, the main game, pause, game over. A stack of these is what a state machine is for, and `<push>` and `<pop>` say it well ([states-and-conditions](07-states-and-conditions.md)).
 - **Places**: room1 to room4, screen1 to screen4, wave1 to wave3. They are states only because there is nowhere else to put a place.

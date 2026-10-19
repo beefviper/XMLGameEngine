@@ -7,10 +7,10 @@
 | Game | Chosen to test | Forced (new) | Left out |
 |---|---|---|---|
 | Pong, Breakout, Space Invaders | the core: bounce, stick, die, fire, lockstep blocks | `<deflect>` (Pong), bitmaps, animation, SVG sprites, enemy fire (Invaders 1 and 2) | |
-| Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, verbs in object rules, colors | diving turtles, crocodiles, a timer, speed-up (timers and looks would now allow the first three) |
+| Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, verbs in object rules, colors | (rewritten 2026-10-19 with diving turtles, a timer and filled bays; crocodiles, lady frog, flies and speed-up still missing) |
 | Space Race | a second game on the same vocabulary | nothing | |
-| Kaboom | `<random>` in a `<group>`; states differing only in what they show | nothing at first; when reworked, timers, `<facing>` fire, `<reset object>` in a rule | bucket stack, speed-up inside a wave |
-| Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | timed round (timers exist now, but "most crossings wins" needs a condition comparing two variables) |
+| Kaboom | `<random>` in a `<group>`; states differing only in what they show | nothing at first; when reworked, timers, `<facing>` fire, `<reset object>` in a rule | speed-up inside a wave (eight waves stand in) |
+| Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | (timed round and knock-back built in the 2026-10-19 rewrite) |
 | Depth Charge | limited ammunition without a countdown | nothing | several charges in flight, subs that fire back |
 | Astrosmash | Kaboom's pieces plus a gun | nothing | splitting rocks (a pool and `<release>` would now do it, as in Asteroids) |
 | Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation (headings exist now), score by fuel |
@@ -22,7 +22,7 @@
 
 ## Frogger
 
-- A 48-pixel grid (13 by 14): score row, home pads between hedges, five river lanes, grass, five road lanes, pavement. Everything is a rectangle drawn 6 pixels in from its cell, so positions are small sums of `cell` and `inset`. Drawn in file order (scenery first, frog last). Lanes are `<group>`s ([objects](05-objects.md)).
+- A 48-pixel grid (13 by 14): score, time and lives row, five bays in a hedge, five river lanes, the bank, five road lanes, the pavement. Pictures are multi-ink bitmaps (frog, logs, turtles, truck, cars, bulldozers). Lanes are `<group>`s inside one `lanes` group that gives `<wrap />` and `<rows>1</rows>`; each lane lays its logs or cars out as `<columns>` with a gap of `(window.right + w) / n - w`, so they are evenly spaced round the loop.
 - Needs and what was chosen:
 
 | Need | Chosen | Rejected |
@@ -32,26 +32,29 @@
 | Looping lanes | `wrap`: acts only once fully off screen and still heading that way, keeps overshoot | `reset` at the far edge (pops in whole, snaps to the start); teleport on touching an edge; duplicates at both ends |
 | Riding a log | `ride` ([collisions](20-collisions.md)) | |
 | River kills unless on a log | `unless="logs"` on the rule ([collisions](20-collisions.md)) | |
-| Scenery colors | more named colors | `#rrggbb` literals (probably where it ends up) |
-| A frog sitting in a home | a green frog under each pad; the pad `<die />`s | show/hide verbs, swapping a sprite (looks later, [pictures](30-pictures.md)) |
+| Diving turtles | two looks and a look timer each (`up` after 3.5 s becomes `under`, back after 1.5 s); the turtle's own rule `sprite="under"` triggers the frog's `drown` | a separate hazard object fading in |
+| Bays that fill | the hedge is one strip of class `hazard`, passed over on a bay (`unless="pads"`); a bay has looks `empty` and `home`, and its rules (filled first) trigger the frog's `home` or `lose` | a green frog under each pad and the pad `<die />`ing (the first version) |
+| Time | the clock object's `time`, a state timer `<dec>`s it, every new frog does `<reset object="clock" />`, at zero the frog's `lose` | a timer on the frog |
 
-- A frog ridden off the side dies at the edge by an ordinary `edge="horizontal"` rule. The river is one wide static object. One point per frog home (an amount on `inc` came with Asteroids); a filled home can be entered again.
+- A frog ridden off the side dies at the edge by an ordinary `edge="horizontal"` rule. A frog home scores 50 plus 10 a second left; five home wins.
+- Known quirk: a frog put back by the turtle's rule is still moved by its own `ride` that frame (a turtle's speed, under 2 pixels).
 
 
 ## Kaboom
 
-- An 800 by 600 window, a bucket stopped at the sides by `<stick />`, three buckets, three waves. The waves are [scenes](12-scenes.md) of the playing state, each with its own bomber and its own pool of ten bombs, faster each time and worth 1, 2, then 3 a catch. The first wave's score condition enters its way `next` at its `upto` (15); the second is the first (`from=`) with `upto` 45 and its own `next`; the third writes its own condition of the same name (`reached`), in place of the copied one: `goal` (90) wins. The arcade game has no end.
-- The Mad Bomber paces the rooftop, `<reverse />`s on a timer with a random wait, and `<fire>`s a bomb from his pool every `drop` seconds; he has `<facing>down</facing>`, so bombs leave from under him and come in trails and clusters that follow him. A caught bomb `<die />`s back into the pool. A bomb on the ground does `<reset object="bombs" />`: every falling bomb at once, so one miss costs one bucket. The tests play wave one with an automatic player and check the last wave is harder.
-- History: first a looser game (Gem Catcher), then the arcade rules with bombs in six fixed columns, `<random>` speeds drawn once, and a `tally` object a condition turned into the explosion (a rule could not reset other objects then). Reworked with timers when those came.
+- An 800 by 600 window, a bucket stopped at the sides by `<stick />`, eight waves as on the cartridge. The buckets are one object with three looks (a stack of three, two, one); a miss does `<become from="two" sprite="one">` then `from="three"` to `two`, so the stack and its catching area shrink. The waves are [scenes](12-scenes.md) of the playing state, a `from=` chain each giving only its `<variables>` (`wave`, `upto` score, `pace`, `drop` seconds, `fall`, `points` 1 to 8); the first wave's condition `reached` resets the bombs and enters its way `next`, the eighth writes its own `reached` that wins.
+- The Mad Bomber (a multi-ink bitmap) paces the rooftop, `<reverse />`s on a timer with a random wait, and `<fire>`s a bomb from his pool every `drop` seconds; he has `<facing>down</facing>`, so bombs leave from under him and come in trails and clusters that follow him. Bombs are animated (a fizzing fuse). A caught bomb `<die />`s back into the pool. A bomb on the ground does `<reset object="bombs" />`: every falling bomb at once, so one miss costs one bucket. The tests play wave one with an automatic player and check the last wave is harder.
+- History: first a looser game (Gem Catcher), then the arcade rules with bombs in six fixed columns, `<random>` speeds drawn once, and a `tally` object a condition turned into the explosion (a rule could not reset other objects then). Reworked with timers, then (2026-10-19) with scenes for all eight waves and the bucket stack as looks.
 - Showed: a group's shared part can hold `<random>` and each member still draws its own numbers; keys held across a state change keep moving the bucket.
-- Rejected: a new speed on every reset (`<random>` re-drawn at runtime), a stack of buckets that loses its top (the count is a number), speed rising within a wave (three fixed speeds stand in).
+- Rejected: a new speed on every reset (`<random>` re-drawn at runtime), speed rising within a wave (eight fixed speeds stand in). Open: eight scenes of the same shape are a case for numbered bundles (Beef's call).
 
 
 ## Freeway
 
-- 800 by 600, 50-pixel cells, twelve rows: far side, ten lanes (cars and trucks alternating, each lane its own speed and direction), near side. Two players share the road, each chicken with its own score, two actions and two key sets (W/S and Up/Down), no rule about the other. First to `crossings` (global variable) wins. Lane spacing follows Frogger's rule (window width plus object size).
-- The far side is an object (`class="farside"`) the chicken has a rule for; a hop into that row is judged where it lands, so it scores at once. A car hits a chicken that hops into it because a hopped object counts as moving; two stationary objects are never checked.
-- Rejected: a timed round (there was no clock; timers exist now, but picking the winner by most crossings needs a condition that compares two variables), knocked back one lane instead of to the start (closer to the arcade, one `<move>` line; sending to the start makes a hit far too costly near the far side and costs nothing near the start), lives (kept different from Frogger).
+- 800 by 600, 50-pixel cells, twelve rows: far side, ten lanes (five driving left on top, five right below, faster towards the middle, two of them trucks), near side. Two chickens are one `<group>` with two members; each scores in its own `self.score`. Two key sets (W/S and Up/Down). A 2:16 round: the global `seconds` read by a `clock` object, a state timer counts it down, at zero `wins` is pushed with its `draw` look; that state's own conditions (`<above object variable>`) pick the winner's look.
+- The traffic is one group of all ten lanes, which gives the `<wrap />` and the car bitmap; a lane says its row, speed and colour, truck lanes their wider bitmap, and lays its cars out as `<columns>` evenly round the loop.
+- The far side is an object (`class="farside"`) the chicken has a rule for; a hop into that row is judged where it lands, so it scores at once. A car hits a chicken that hops into it because a hopped object counts as moving; two stationary objects are never checked. A hit is `<move direction="down">cell</move>` in the chicken's rule: knocked back one lane, as on the cartridge.
+- Rejected: lives (kept different from Frogger); sending a hit chicken to the start (far too costly near the far side).
 
 
 ## Depth Charge
