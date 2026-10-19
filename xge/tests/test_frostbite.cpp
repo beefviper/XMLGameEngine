@@ -98,18 +98,18 @@ namespace
 			int n = 0;
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == "playing." + group && object.isVisible) { ++n; }
+				if (object.inGroup("playing.night1." + group) && object.isVisible) { ++n; }
 			}
 			return n;
 		}
 
-		// Every floe of a row shows this look (the rows are the playing
-		// state's groups, playing.row1 and so on).
+		// Every floe of a row shows this look (the rows are the first night's
+		// groups, playing.night1.row1 and so on).
 		bool rowIs(const std::string& row, const std::string& look)
 		{
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == "playing." + row && object.lookName() != look) { return false; }
+				if (object.inGroup("playing.night1." + row) && object.lookName() != look) { return false; }
 			}
 			return true;
 		}
@@ -135,7 +135,7 @@ TEST_CASE("frostbite.xml loads a shore, four rows of white ice, a hidden igloo a
 		CHECK(play.rowIs(row, "white"));
 	}
 	CHECK(play.visible("igloo") == 0);
-	CHECK_FALSE(play.game.getObject("door").isVisible);
+	CHECK_FALSE(play.game.getObject("night1.door").isVisible);
 	CHECK(play.degrees() == 45);
 	CHECK(play.variable("lives") == 4);
 
@@ -147,7 +147,7 @@ TEST_CASE("a jump down lands on the ice a row below, taking its time, and the ro
 {
 	Frostbite play;
 	play.startStill();
-	play.standAbove("row1.1");
+	play.standAbove("night1.row1.1.1");
 	const float startY = play.bailey().position.y;
 
 	play.tap(KeyCode::S);
@@ -198,13 +198,13 @@ TEST_CASE("nothing is touched in mid-air: jumping across a row with a goose in i
 {
 	Frostbite play;
 	play.startStill();
-	play.standAbove("row1.1");
+	play.standAbove("night1.row1.1.1");
 	play.jump(KeyCode::S);
 	REQUIRE(play.variable("lives") == 4);
 
 	// The first goose sits on row 2, right where Bailey would pass by and land.
 	Object& goose = play.game.getObject("geese.1");
-	Object& floe = play.game.getObject("row2.1");
+	Object& floe = play.game.getObject("night1.row2.1.1");
 	floe.position.x = play.bailey().position.x - 40.0f;
 	goose.position.x = play.bailey().position.x + 30.0f;
 
@@ -229,8 +229,8 @@ TEST_CASE("Bailey rides a floe, and a goose pushes him", "[frostbite]")
 {
 	Frostbite play;
 	play.tap(KeyCode::Space);
-	play.standAbove("row1.1");
-	play.game.getObject("row1.1").position.x = play.bailey().position.x - 40.0f;
+	play.standAbove("night1.row1.1.1");
+	play.game.getObject("night1.row1.1.1").position.x = play.bailey().position.x - 40.0f;
 	play.jump(KeyCode::S);
 	REQUIRE(play.variable("lives") == 4);
 
@@ -252,7 +252,7 @@ TEST_CASE("once all four rows are blue, they all turn white again", "[frostbite]
 	play.startStill();
 
 	// Line a floe of every row up under Bailey, and jump down through them.
-	for (const char* floe : { "row1.1", "row2.1", "row3.1", "row4.1" })
+	for (const char* floe : { "night1.row1.1.1", "night1.row2.1.1", "night1.row3.1.1", "night1.row4.1.1" })
 	{
 		play.game.getObject(floe).position.x = play.bailey().position.x - 40.0f;
 	}
@@ -292,17 +292,36 @@ TEST_CASE("the cold takes a degree a second; at zero Bailey freezes, loses a lif
 	CHECK(play.bailey().position.x == Approx(play.bailey().positionOriginal.x));
 }
 
-TEST_CASE("a finished igloo opens its door, and walking in wins", "[frostbite]")
+TEST_CASE("a finished igloo opens its door; walking in is a bonus and the next night, and the third wins", "[frostbite]")
 {
 	Frostbite play;
 	play.startStill();
 
 	play.bailey().variable["blocks"] = 15;
 	play.frames(1);
-	Object& door = play.game.getObject("door");
+	Object& door = play.game.getObject("night1.door");
 	REQUIRE(door.isVisible);
+	const float degrees = play.degrees();
 
 	// Walk right along the shore until he reaches it.
+	play.engine.handleKeyPressed(KeyCode::D);
+	for (int frame = 0; frame < 400 && play.variable("nights") == 0; ++frame) { play.frames(1); }
+	play.engine.handleKeyReleased(KeyCode::D);
+	CHECK(play.variable("nights") == 1);
+	CHECK(play.variable("score") >= (degrees - 7) * 10);
+	CHECK(play.variable("blocks") == 0);
+	CHECK(play.game.currentScene("playing") == "playing.night2");
+	CHECK(play.bailey().position.x == Approx(play.bailey().positionOriginal.x).margin(4)); // the held key walks on
+	CHECK(play.state() == "playing");
+
+	// The ice of the second night drifts faster.
+	CHECK(std::abs(play.game.getObject("night2.row1.1.1").velocity.x) == Approx(1.2f * 1.4f));
+
+	// Two nights home, and in at the third night's door: a win.
+	play.bailey().variable["nights"] = 2;
+	play.bailey().variable["blocks"] = 15;
+	play.frames(1);
+	REQUIRE(play.game.getObject("night2.door").isVisible);
 	play.engine.handleKeyPressed(KeyCode::D);
 	for (int frame = 0; frame < 400 && play.state() == "playing"; ++frame) { play.frames(1); }
 	play.engine.handleKeyReleased(KeyCode::D);
@@ -317,7 +336,7 @@ TEST_CASE("the fish is worth a bonus, and comes back a while later", "[frostbite
 	fish.velocity = fish.velocityOriginal; // swimming: touches are only checked for what moves
 
 	// Put Bailey on the ice of the third row, on the fish.
-	Object& floe = play.game.getObject("row3.1");
+	Object& floe = play.game.getObject("night1.row3.1.1");
 	play.bailey().position = { fish.position.x, floe.position.y - 2.0f };
 	floe.position.x = fish.position.x - 40.0f;
 	play.frames(2);
@@ -334,7 +353,7 @@ TEST_CASE("no lives left is game over, and Space starts over with the ice white 
 {
 	Frostbite play;
 	play.startStill();
-	play.standAbove("row1.1");
+	play.standAbove("night1.row1.1.1");
 	play.jump(KeyCode::S);
 	REQUIRE(play.rowIs("row1", "blue"));
 
@@ -355,7 +374,7 @@ TEST_CASE("paused, the shore and the ice are drawn still and nothing drifts", "[
 	Frostbite play;
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "playing");
-	Object& floe = play.game.getObject("row1.1");
+	Object& floe = play.game.getObject("night1.row1.1.1");
 	const float floeAt = floe.position.x;
 	const float degrees = play.degrees();
 
@@ -369,7 +388,7 @@ TEST_CASE("paused, the shore and the ice are drawn still and nothing drifts", "[
 	CHECK(play.game.isStill(play.game.getObject("snow")));
 	CHECK_FALSE(play.game.isShown(play.bailey()));
 	CHECK(play.game.isShown(play.game.getObject("paused")));
-	CHECK_FALSE(play.game.isStill(play.game.getObject("door"))); // still hidden
+	CHECK_FALSE(play.game.isStill(play.game.getObject("night1.door"))); // still hidden
 
 	play.tap(KeyCode::P);
 	REQUIRE(play.state() == "playing");
@@ -382,7 +401,7 @@ TEST_CASE("each state owns what it draws, and frozen draws the ice still under i
 	Frostbite play;
 	CHECK(play.bailey().ownerState == "playing");
 	CHECK(play.game.getObject("title").ownerState == "mainmenu");
-	CHECK(play.game.getObject("again").ownerState.empty());
+	CHECK(play.game.getObject("youwin.again").ownerState == "youwin");
 	CHECK(play.game.isShown(play.game.getObject("title")));
 	CHECK_FALSE(play.game.isShown(play.bailey()));
 	CHECK_FALSE(play.game.isStill(play.bailey()));
@@ -391,9 +410,9 @@ TEST_CASE("each state owns what it draws, and frozen draws the ice still under i
 	play.bailey().variable["lives"] = 0;
 	play.frames(1);
 	REQUIRE(play.state() == "gameover");
-	CHECK(play.game.isStill(play.game.getObject("scorevalue")));
-	CHECK(play.game.isStill(play.game.getObject("row4.3")));
+	CHECK(play.game.isStill(play.game.getObject("score")));
+	CHECK(play.game.isStill(play.game.getObject("night1.row4.3.1")));
 	CHECK(play.game.isShown(play.game.getObject("gameover.message")));
-	CHECK(play.game.isShown(play.game.getObject("again")));
+	CHECK(play.game.isShown(play.game.getObject("gameover.again")));
 	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin.message")));
 }
