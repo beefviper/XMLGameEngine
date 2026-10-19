@@ -5,8 +5,8 @@
 //
 // Catch2 tests for games/descriptions/airseabattle.xml, played through a real
 // xge::Engine with no window and the keys two players would press: the
-// lanes of planes going round, a gun swung (<turn>) and fired along its
-// heading, a plane brought down scoring for the right player and coming back
+// lanes of planes going round, a gun pointed one of three ways (<set> of
+// its heading) and fired along it, a plane brought down scoring for the right player and coming back
 // (<reveal>), and the clock ending the battle.
 //
 // Window::init() normally measures each object's size once a backend exists;
@@ -104,7 +104,7 @@ TEST_CASE("airseabattle.xml loads, and the planes fly in and go round", "[airsea
 	CHECK(bomber.velocity.x < 0.0f);
 }
 
-TEST_CASE("a gun swings, and fires along the way it points", "[airseabattle]")
+TEST_CASE("a gun points left, up or right, and fires along the way it points", "[airseabattle]")
 {
 	AirSeaBattle play;
 	play.start();
@@ -116,21 +116,30 @@ TEST_CASE("a gun swings, and fires along the way it points", "[airseabattle]")
 	CHECK(straight.velocity.x == Approx(0.0f).margin(0.01f));
 	CHECK(straight.velocity.y == Approx(-6.0f));
 
-	// Thirty degrees to the right.
+	// To the right, at once: 45 degrees, however long the key is held.
 	play.hold(KeyCode::D, 15);
-	CHECK(play.game.getObject("gun1").heading == Approx(30.0f));
+	CHECK(play.game.getObject("gun1").heading == Approx(45.0f));
 	play.tap(KeyCode::W);
 	play.frames(1);
 	const Object& slanted = play.game.getObject("shots1.2");
 	REQUIRE(slanted.isVisible);
-	CHECK(slanted.velocity.x == Approx(3.0f).margin(0.01f));
-	CHECK(slanted.velocity.y == Approx(-5.196f).margin(0.01f));
+	CHECK(slanted.velocity.x == Approx(4.243f).margin(0.01f));
+	CHECK(slanted.velocity.y == Approx(-4.243f).margin(0.01f));
 
 	// Two in the air is all there is.
 	play.tap(KeyCode::W);
 	play.frames(1);
 	CHECK(play.game.getObject("shots1.1").isVisible);
 	CHECK(play.game.getObject("shots1.2").isVisible);
+
+	// Left and back up; player two's gun is its own.
+	play.tap(KeyCode::A);
+	CHECK(play.game.getObject("gun1").heading == Approx(315.0f));
+	play.tap(KeyCode::S);
+	CHECK(play.game.getObject("gun1").heading == Approx(0.0f));
+	play.tap(KeyCode::Right);
+	CHECK(play.game.getObject("gun2").heading == Approx(45.0f));
+	CHECK(play.game.getObject("gun1").heading == Approx(0.0f));
 }
 
 TEST_CASE("a plane shot down scores for whoever shot it, and comes back", "[airseabattle]")
@@ -156,18 +165,18 @@ TEST_CASE("a plane shot down scores for whoever shot it, and comes back", "[airs
 	CHECK(blimp.position.y == Approx(200.0f));
 }
 
-TEST_CASE("the battle lasts two minutes", "[airseabattle]")
+TEST_CASE("the battle lasts 2:16", "[airseabattle]")
 {
 	AirSeaBattle play;
 	play.start();
 	play.frames(120);
-	CHECK(play.game.getObject("status").variable.at("time") == Approx(118.0f));
+	CHECK(play.game.getObject("status").variable.at("time") == Approx(134.0f));
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "paused");
 	play.frames(120);
 	play.tap(KeyCode::Space);
-	CHECK(play.game.getObject("status").variable.at("time") == Approx(118.0f));
+	CHECK(play.game.getObject("status").variable.at("time") == Approx(134.0f));
 
 	play.game.getObject("status").variable["time"] = 1;
 	play.frames(61);

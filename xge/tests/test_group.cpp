@@ -785,7 +785,7 @@ TEST_CASE("both schema checkers accept the games written with groups", "[group][
 {
 	for (const char* file : { "descriptions/frogger.xml", "descriptions/spacerace.xml", "descriptions/kaboom.xml", "descriptions/freeway.xml", "descriptions/depthcharge.xml", "descriptions/astrosmash.xml",
 		"descriptions/breakout.xml", "descriptions/spaceinvaders.xml", "descriptions/spaceinvaders2.xml", "descriptions/pong.xml", "descriptions/pong_min.xml",
-		"descriptions/combat.xml", "descriptions/tennis.xml", "descriptions/trickshot.xml" })
+		"descriptions/combat.xml", "descriptions/tennis.xml", "descriptions/trickshot.xml", "descriptions/airseabattle.xml" })
 	{
 		DYNAMIC_SECTION(file)
 		{
