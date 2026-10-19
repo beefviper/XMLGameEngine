@@ -5,35 +5,36 @@
 
 <!--
   Demon Attack, after Imagic's 1982 Atari 2600 game. Your laser cannon slides
-  along the bottom of the screen and fires up at the demons that flap about
-  the sky above you and drop bombs. Three waves: flapping demons that sweep
-  from side to side; demons that split into two small ones, which dive at you,
-  when they are shot; and big demons that take two hits. A bomb, anything you
-  touch, or a demon that reaches you costs a cannon; three cannons. Clear the
-  three waves to win.
+  along the surface of an ice planet and fires up at the demons that flap
+  about the sky and drop bombs. Three waves: flapping demons that sweep from
+  side to side; demons that split into two small ones, which dive at you,
+  when they are shot; and big demons that take two hits. A bomb or a demon
+  on the cannon costs it; three cannons, and a spare for every wave cleared,
+  up to six. Clear the three waves to win.
 
   A and D (or the arrows) slide, Space fires, P or Escape pauses.
 
   How it is written:
-  * The cannon, its shot, the bombs and the score are the playing state's own
-    objects, there in every wave. The three waves are its <scenes>, each with
-    its own demons and its own speed (a scene variable read by plain name).
-  * A wave is a <group> of demons, each with a velocity of its own, bouncing off
-    the sides, turning round on a timer drawn anew each time and dropping bombs
-    from under it (<facing>down</facing>, <fire>) on another.
-  * The demons of the first wave flap: two named bitmaps and an <animation>.
-  * The second wave's demons <release> two small demons from a pool where they
-    were shot; the pool is made ahead of time and hidden, as Asteroids' rocks
-    are. A wave is over when none of the class is left in play, small ones too.
+  * The cannon, its shot, the bombs, the ground and the score are the playing
+    state's own objects, there in every wave. The three waves are its
+    <scenes>, each with its own demons and its own speed (a scene variable
+    read by plain name).
+  * As on the 2600, the shot goes where the cannon goes: a timer that runs
+    every frame while it flies puts it over the cannon.
+  * A wave is a <group> of demons, each with a velocity of its own, bouncing
+    off the sides, turning round on a timer drawn anew each time and dropping
+    bombs from under it (<facing>down</facing>, <fire>) on another.
+  * The second wave's demons <release> two small demons from a pool where
+    they were shot. A wave is over when none of the class is left in play,
+    small ones too.
   * The third wave's demons have two looks, whole and hurt: a hit turns the
     first into the second, and the next takes it out (Breakout's bricks).
-  * Every demon is of one class, so the cannon and the shot each have one rule
-    for them, and a wave's condition that none of the class is left (which
-    counts only the wave being played) <enter>s the next.
+  * Every demon is of one class, so the cannon and the shot each have one
+    rule for them, and a wave's condition that none of the class is left
+    (which counts only the wave being played) <enter>s the next.
   * Paused and the two endings draw the game still underneath (<show state>).
-  Not in it: the demons that fly down at you from the start of the later
-  waves, the spare cannons that are added every so many points, and the colors
-  that change every wave.
+  Not in it: the demons that materialize one by one, the later waves'
+  colors, and the demons that swoop down at you.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -47,8 +48,7 @@
   <variables>
     <variable name="margin">10</variable>
     <variable name="slide">5</variable>
-    <variable name="laserspeed">9</variable>
-    <variable name="bombspeed">4</variable>
+    <variable name="ground">30</variable>
     <!-- a demon drops a bomb every drop - 1 to drop + 2 seconds; the big ones a second sooner -->
     <variable name="drop">3</variable>
     <!-- what the small demons do as they come down -->
@@ -56,26 +56,14 @@
     <variable name="sway">2</variable>
   </variables>
   <sounds>
-    <sound name="fire" wave="square">
-      <volume>0.15</volume>
-      <note pitch="E6" to="E5">0.07</note>
-    </sound>
-    <sound name="hit" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="3000" to="300">0.25</note>
-    </sound>
+    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.07</note></sound>
+    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="3000" to="300">0.25</note></sound>
+    <sound name="hurt" wave="sawtooth"><volume>0.2</volume><note pitch="A3" to="A2">0.15</note></sound>
+    <sound name="lost" wave="noise"><volume>0.45</volume><note pitch="2000" to="80">0.8</note></sound>
     <sound name="split" wave="triangle">
       <volume>0.3</volume>
       <note pitch="C5" to="G5">0.12</note>
       <note pitch="G5" to="C5">0.12</note>
-    </sound>
-    <sound name="hurt" wave="sawtooth">
-      <volume>0.2</volume>
-      <note pitch="A3" to="A2">0.15</note>
-    </sound>
-    <sound name="lost" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E4" to="E2">0.6</note>
     </sound>
     <sound name="wave" wave="square">
       <volume>0.2</volume>
@@ -87,17 +75,13 @@
   </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
-    <style name="prompt"><size>40</size></style>
-    <style name="hud"><size>28</size></style>
+    <style name="line"><size>24</size><color>color.white</color></style>
+    <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
+      <sprite><text><content>spacebar to play again</content><size>40</size></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
@@ -105,50 +89,39 @@
     <state name="title">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>DEMON ATTACK</content>
-              <size>80</size>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>DEMON ATTACK</content><size>80</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
         <object name="help">
-          <sprite>
-            <text>
-              <content>shoot every demon before it bombs you</content>
-              <size>24</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="line"><content>shoot every demon before it bombs you</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
         </object>
         <object name="keys">
-          <sprite>
-            <text>
-              <content>a and d (or the arrows) slide, space fires</content>
-              <size>22</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
+          <sprite><text style="line"><content>a and d (or the arrows) slide, space fires</content><color>color.lightgrey</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
+          <sprite><text><content>spacebar to start</content><size>40</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input button="space"><push state="playing" /><play sound="wave" /></input>
       </inputs>
     </state>
 
     <state name="playing">
       <objects>
+        <!-- the ice planet's surface, in two bands -->
+        <object name="ground">
+          <sprite><rectangle><width>window.right</width><height>ground</height><color>color.blue</color></rectangle></sprite>
+          <position><x>0</x><y>window.bottom - ground</y></position>
+        </object>
+        <object name="horizon">
+          <sprite><rectangle><width>window.right</width><height>4</height><color>color.cyan</color></rectangle></sprite>
+          <position><x>0</x><y>window.bottom - ground</y></position>
+        </object>
+
         <!-- the laser cannon -->
         <object name="player" class="player">
           <sprite>
@@ -161,15 +134,13 @@
               <row>*************</row>
               <row>***.......***</row>
               <scale>3</scale>
-              <color>color.cyan</color>
+              <color>color.magenta</color>
             </bitmap>
           </sprite>
-          <position><x><centered /></x><y>window.bottom - player.height - 20</y></position>
+          <position><x><centered /></x><y>window.bottom - ground - player.height</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="horizontal">
-              <stick />
-            </collision>
+            <collision edge="horizontal"><stick /></collision>
             <collision class="bomb"><trigger action="lose" /></collision>
             <collision class="demon"><trigger action="lose" /></collision>
           </collisions>
@@ -180,16 +151,9 @@
               <reset object="bombs" />
               <reset />
             </action>
-            <action name="left">
-              <move direction="left">slide</move>
-            </action>
-            <action name="right">
-              <move direction="right">slide</move>
-            </action>
-            <action name="fire">
-              <fire object="laser" />
-              <play sound="fire" />
-            </action>
+            <action name="left"><move direction="left">slide</move></action>
+            <action name="right"><move direction="right">slide</move></action>
+            <action name="fire"><fire object="laser" /><play sound="fire" /></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
@@ -197,75 +161,43 @@
           </variables>
         </object>
 
-        <!-- one shot at a time, away when it hits a demon or leaves the screen -->
+        <!-- one shot at a time, kept over the cannon as it flies -->
         <object name="laser" class="laser">
-          <sprite>
-            <rectangle>
-              <width>3</width>
-              <height>14</height>
-              <color>color.yellow</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>3</width><height>18</height><color>color.yellow</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <velocity><y>-laserspeed</y></velocity>
+          <velocity><y>-9</y></velocity>
           <hidden>true</hidden>
           <collisions>
             <enabled>false</enabled>
-            <collision edge="all">
-              <die />
-            </collision>
-            <collision class="demon">
-              <die />
-            </collision>
+            <collision edge="all"><die /></collision>
+            <collision class="demon"><die /></collision>
           </collisions>
+          <timers>
+            <timer><every>0.01</every><set variable="laser.x">player.x + 18</set></timer>
+          </timers>
         </object>
 
         <!-- the demons' bombs: a pool of eight, hidden until one is dropped -->
         <group name="bombs" class="bomb">
-          <sprite>
-            <rectangle>
-              <width>5</width>
-              <height>12</height>
-              <color>color.red</color>
-            </rectangle>
-          </sprite>
+          <columns>8</columns>
+          <rows>1</rows>
+          <sprite><rectangle><width>4</width><height>12</height><color>color.red</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <velocity><y>bombspeed</y></velocity>
+          <velocity><y>4</y></velocity>
           <hidden>true</hidden>
           <collisions>
             <enabled>false</enabled>
-            <collision edge="all">
-              <die />
-            </collision>
-            <collision object="player">
-              <die />
-            </collision>
+            <collision edge="all"><die /></collision>
+            <collision object="player"><die /></collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
         </group>
 
         <object name="score">
-          <sprite>
-            <text style="hud">
-              <number>player.score</number>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>player.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="lives">
-          <sprite>
-            <text style="hud">
-              <number>player.lives</number>
-              <color>color.cyan</color>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>player.lives</number><color>color.magenta</color></text></sprite>
           <position><x>window.right - lives.width - margin</x><y>margin</y></position>
         </object>
       </objects>
@@ -312,9 +244,7 @@
               <facing>down</facing>
               <collisions>
                 <enabled>true</enabled>
-                <collision edge="horizontal">
-                  <bounce />
-                </collision>
+                <collision edge="horizontal"><bounce /></collision>
                 <collision object="laser">
                   <inc variable="player.score">30</inc>
                   <play sound="hit" />
@@ -322,14 +252,8 @@
                 </collision>
               </collisions>
               <timers>
-                <timer>
-                  <every><random min="1" max="3" /></every>
-                  <reverse />
-                </timer>
-                <timer>
-                  <every><random min="drop - 1" max="drop + 2" /></every>
-                  <fire object="bombs" />
-                </timer>
+                <timer><every><random min="1" max="3" /></every><reverse /></timer>
+                <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bombs" /></timer>
               </timers>
               <member><position><x>70</x><y>70</y></position></member>
               <member><position><x>260</x><y>70</y></position><velocity><x>-speed * 1.25</x></velocity></member>
@@ -340,11 +264,12 @@
             </group>
           </objects>
           <conditions>
-            <condition class="demon">
+            <condition name="cleared" class="demon">
               <remaining>0</remaining>
               <play sound="wave" />
               <reset object="bombs" />
               <reset object="laser" />
+              <set variable="player.lives">min(6, player.lives + 1)</set>
               <enter scene="wave2" />
             </condition>
           </conditions>
@@ -367,7 +292,7 @@
                   <row>..*.*...*.*..</row>
                   <row>.*...*.*...*.</row>
                   <scale>3</scale>
-                  <color>color.magenta</color>
+                  <color>color.green</color>
                 </bitmap>
               </sprite>
               <sprite name="step">
@@ -380,7 +305,7 @@
                   <row>.*..*...*..*.</row>
                   <row>*....*.*....*</row>
                   <scale>3</scale>
-                  <color>color.magenta</color>
+                  <color>color.green</color>
                 </bitmap>
               </sprite>
               <animation>
@@ -392,9 +317,7 @@
               <facing>down</facing>
               <collisions>
                 <enabled>true</enabled>
-                <collision edge="horizontal">
-                  <bounce />
-                </collision>
+                <collision edge="horizontal"><bounce /></collision>
                 <collision object="laser">
                   <inc variable="player.score">50</inc>
                   <play sound="split" />
@@ -403,14 +326,8 @@
                 </collision>
               </collisions>
               <timers>
-                <timer>
-                  <every><random min="1" max="3" /></every>
-                  <reverse />
-                </timer>
-                <timer>
-                  <every><random min="drop - 1" max="drop + 2" /></every>
-                  <fire object="bombs" />
-                </timer>
+                <timer><every><random min="1" max="3" /></every><reverse /></timer>
+                <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bombs" /></timer>
               </timers>
               <member><position><x>100</x><y>70</y></position></member>
               <member><position><x>380</x><y>70</y></position><velocity><x>-speed</x></velocity></member>
@@ -419,9 +336,11 @@
             </group>
 
             <!-- what a split demon leaves: eight small demons, hidden until two are
-                 released where it was, which fall at the cannon, swaying from side to
-                 side, and are gone at the bottom -->
+                 released where it was, which fall at the cannon, swaying from side
+                 to side, and are gone at the ground -->
             <group name="halves" class="demon">
+              <columns>8</columns>
+              <rows>1</rows>
               <sprite>
                 <bitmap>
                   <row>.*...*.</row>
@@ -438,38 +357,25 @@
               <hidden>true</hidden>
               <collisions>
                 <enabled>true</enabled>
-                <collision edge="horizontal">
-                  <bounce />
-                </collision>
-                <collision edge="bottom">
-                  <die />
-                </collision>
+                <collision edge="horizontal"><bounce /></collision>
+                <collision edge="bottom"><die /></collision>
                 <collision object="laser">
                   <inc variable="player.score">25</inc>
                   <play sound="hit" />
                   <die />
                 </collision>
-                <collision object="player">
-                  <die />
-                </collision>
+                <collision object="player"><die /></collision>
               </collisions>
-              <member />
-              <member />
-              <member />
-              <member />
-              <member />
-              <member />
-              <member />
-              <member />
             </group>
           </objects>
           <conditions>
             <!-- the demons and the small ones they leave are one class -->
-            <condition class="demon">
+            <condition name="cleared" class="demon">
               <remaining>0</remaining>
               <play sound="wave" />
               <reset object="bombs" />
               <reset object="laser" />
+              <set variable="player.lives">min(6, player.lives + 1)</set>
               <enter scene="wave3" />
             </condition>
           </conditions>
@@ -514,9 +420,7 @@
               <facing>down</facing>
               <collisions>
                 <enabled>true</enabled>
-                <collision edge="horizontal">
-                  <bounce />
-                </collision>
+                <collision edge="horizontal"><bounce /></collision>
                 <!-- the hurt look first: a hit on a whole one only turns it -->
                 <collision object="laser" sprite="hurt">
                   <inc variable="player.score">100</inc>
@@ -530,14 +434,8 @@
                 </collision>
               </collisions>
               <timers>
-                <timer>
-                  <every><random min="1" max="2.5" /></every>
-                  <reverse />
-                </timer>
-                <timer>
-                  <every><random min="drop - 2" max="drop" /></every>
-                  <fire object="bombs" />
-                </timer>
+                <timer><every><random min="1" max="2.5" /></every><reverse /></timer>
+                <timer><every><random min="drop - 2" max="drop" /></every><fire object="bombs" /></timer>
               </timers>
               <member><position><x>120</x><y>70</y></position></member>
               <member><position><x>300</x><y>130</y></position><velocity><x>-speed</x></velocity></member>
@@ -560,7 +458,7 @@
         <input button="p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <!-- out of lives -->
+        <!-- out of cannons -->
         <condition object="player" variable="lives">
           <atmost>0</atmost>
           <push state="gameover" />
@@ -571,12 +469,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -590,12 +483,7 @@
     <state name="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -610,12 +498,7 @@
     <state name="gameover" from="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
         </object>
       </objects>
     </state>

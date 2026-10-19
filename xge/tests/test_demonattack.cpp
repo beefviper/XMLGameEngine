@@ -168,6 +168,25 @@ TEST_CASE("a shot kills a flapping demon and scores thirty, and the last one mov
 
 	clearWave(play, "wave1");
 	CHECK(play.wave() == "playing.wave2");
+	CHECK(play.object("player").variable["lives"] == 4.0f);
+}
+
+TEST_CASE("the shot follows the cannon as it flies", "[demonattack]")
+{
+	Play play("descriptions/demonattack.xml");
+	play.tap(KeyCode::Space);
+	play.freeze("wave1");
+
+	Object& player = play.object("player");
+	Object& laser = play.object("laser");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	REQUIRE(laser.isVisible);
+	play.engine.handleKeyPressed(KeyCode::D);
+	play.frames(10);
+	play.engine.handleKeyReleased(KeyCode::D);
+	play.frames(1);
+	CHECK(laser.position.x == Approx(player.position.x + 18.0f));
 }
 
 TEST_CASE("a demon of the second wave splits in two small ones, which score when shot", "[demonattack]")
@@ -186,9 +205,9 @@ TEST_CASE("a demon of the second wave splits in two small ones, which score when
 
 	// three demons and the two small ones where it was
 	CHECK(play.alive("wave2") == 5);
-	CHECK(play.object("playing.wave2.halves.1").isVisible);
-	CHECK(play.object("playing.wave2.halves.2").isVisible);
-	CHECK(play.object("playing.wave2.halves.1").velocity.y > 0.0f);
+	CHECK(play.object("playing.wave2.halves.1.1").isVisible);
+	CHECK(play.object("playing.wave2.halves.2.1").isVisible);
+	CHECK(play.object("playing.wave2.halves.1.1").velocity.y > 0.0f);
 
 	// the wave is not over until the small ones are gone too
 	for (const char* name : { "playing.wave2.demons.2", "playing.wave2.demons.3", "playing.wave2.demons.4" }) { play.object(name).isVisible = false; play.object(name).collisionData.enabled = false; }
