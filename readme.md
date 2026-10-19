@@ -40,7 +40,7 @@ The target is to describe the 2D non-scrolling games of the late 1970s and early
 | `games/descriptions/yarsrevenge.xml` | Yars' Revenge: Yar eats through the Qotile's shield while the destroyer missile `<seek>`s him; the neutral zone is safe, and the Zorlon cannon is `<spawn>`ed level with him |
 | `games/descriptions/tennis.xml` | Tennis after Activision's: the ball flies with an `<altitude>` and a `<shadow>` under it, a racket reaches it only when it is low, the far end is a `<computer>` player holding keys as a person would, and the points are said in words (`<choose>`) |
 | `games/descriptions/hauntedhouse.xml` | Haunted House: a pair of eyes in a dark house; the walls and ghosts are `<dark>` and show only within the eyes' `<light>` or a match's, and the urn pieces stay on the map once seen |
-| `games/descriptions/adventure.xml` | Adventure, two rooms of the Atari 2600 game, the castle and the field east of it, as scenes: walk into the key, the sword or the chalice to `<carry />` it and Space to `<drop />` it; the key opens the castle gate, the sword slays the dragon, the chalice carried into the hall wins; the dragon sleeps until the hero comes near |
+| `games/descriptions/adventure.xml` | Adventure, five rooms of the Atari 2600 game as scenes: the gold castle and its hall, the field, the black castle and its dungeon; walk into a key, the sword or the chalice to `<carry />` it and Space to `<drop />` it; each key raises its own castle's portcullis, the sword slays Yorgle and Grundle, who sleep until the hero comes near; the chalice brought home to the gold castle's hall wins |
 
 ## What a game file looks like
 
