@@ -387,3 +387,34 @@ TEST_CASE("mariobros.xml: a shellcreeper on its feet costs a life, and a bump re
 	CHECK(play.creeper().isVisible);
 	CHECK(play.mario().variable.at("lives") == Approx(2.0f));
 }
+
+TEST_CASE("mariobros.xml: the POW block turns over every shellcreeper on its feet, three times", "[knock][mariobros]")
+{
+	Mario play;
+	Object& pow = play.get("pow");
+	REQUIRE(pow.lookName() == "three");
+
+	for (const char* left : { "two", "one" })
+	{
+		play.mario().position.x = pow.position.x + 12.0f;
+		play.frames(2);
+		play.tap(KeyCode::Space);
+		play.frames(80);
+		CHECK(pow.lookName() == left);
+		CHECK(play.creeper().lookName() == "flipped");
+		// It gets up again before the next bump.
+		play.creeper().timers.at(0).framesLeft = 1;
+		play.frames(2);
+		play.creeper().isVisible = true;
+		play.creeper().velocity.x = 0.0f;
+		play.frames(60);
+		REQUIRE(play.creeper().lookName() == "walking");
+	}
+	play.mario().position.x = pow.position.x + 12.0f;
+	play.frames(2);
+	play.tap(KeyCode::Space);
+	play.frames(80);
+	CHECK_FALSE(pow.isVisible);
+	CHECK(play.creeper().lookName() == "flipped");
+	CHECK(play.mario().variable.at("lives") == Approx(3.0f));
+}

@@ -4,12 +4,14 @@
 <!-- date: Oct 16, 2026 -->
 
 <!--
-  Mario Bros., after the 1983 game (arcade and Atari 2600): Mario under four
-  levels of floor, with shellcreepers walking along them. Jump up and bump
-  the floor under one to turn it on its back, then run into it to kick it
-  off. A shellcreeper still on its feet costs a life; one left on its back
-  too long gets up and comes out of its pipe at the top again, as does one
-  that walks into a pipe at the bottom. Kick off all six to win.
+  Mario Bros., after the 1983 arcade game: Mario in the sewer under four
+  levels of brick floor, with shellcreepers coming out of the pipes at the
+  top. Jump up and bump the floor under one to turn it on its back, then run
+  into it to kick it off for 800 points. A shellcreeper still on its feet
+  costs a life; one left on its back too long gets up and comes out of its
+  pipe at the top again, as does one that walks into a pipe at the bottom.
+  The POW block turns over every shellcreeper on its feet at once, three
+  times. Kick off all six to win. The high score is kept.
 
   A or D (or the arrows) walk, Space starts and jumps, P or Escape pauses.
 
@@ -19,13 +21,15 @@
     on that piece of floor. That shellcreeper is knocked up off the floor
     and runs its own rules about Mario as touched on its bottom side, which
     turn it over (<become sprite="flipped" />).
-  * The floors are tiles, so a bump reaches only what stands over the tile
-    Mario hit.
+  * The floors are bricks, one bitmap in a group of floors laid out in
+    columns, so a bump reaches only what stands over the brick Mario hit.
   * Which side of a shellcreeper Mario touches decides what happens:
     side="bottom" is a bump through the floor, side="horizontal" and
     side="top" are Mario walking or falling into it.
+  * The POW block's looks are how many bumps it has left; each bump turns
+    over the whole group (<become object="creepers" from="walking">).
   * Everything wraps round the sides of the screen.
-  No POW block, fighter flies, coins or second player: see
+  No fighter flies, sidesteppers, coins or second player: see
   docs/designs/56-games-atari.md.
 -->
 
@@ -38,8 +42,6 @@
     <framerate>60</framerate>
   </window>
   <variables>
-    <variable name="tile">40</variable>
-    <variable name="thick">12</variable>
     <variable name="pull">0.4</variable>
     <variable name="walk">2.5</variable>
     <variable name="crawl">1.2</variable>
@@ -47,8 +49,23 @@
     <variable name="margin">16</variable>
   </variables>
   <sounds>
-    <sound name="jump" wave="square">
+    <!-- the arcade's start: the opening of Eine kleine Nachtmusik -->
+    <sound name="start" wave="square">
       <volume>0.2</volume>
+      <note pitch="G5">0.24</note>
+      <rest>0.06</rest>
+      <note pitch="D5">0.12</note>
+      <note pitch="G5">0.24</note>
+      <rest>0.06</rest>
+      <note pitch="D5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="D5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="B5">0.12</note>
+      <note pitch="D6">0.36</note>
+    </sound>
+    <sound name="jump" wave="square">
+      <volume>0.15</volume>
       <note pitch="C5" to="C6">0.12</note>
     </sound>
     <sound name="bump" wave="square">
@@ -62,11 +79,25 @@
     <sound name="kick" wave="square">
       <volume>0.2</volume>
       <note pitch="C5">0.06</note>
+      <note pitch="E5">0.06</note>
+      <note pitch="G5">0.06</note>
       <note pitch="C6">0.12</note>
     </sound>
-    <sound name="hit" wave="triangle">
+    <sound name="pow" wave="noise">
       <volume>0.4</volume>
-      <note pitch="E4" to="E2">0.5</note>
+      <note pitch="400" to="40">0.4</note>
+    </sound>
+    <sound name="hit">
+      <volume>0.3</volume>
+      <part wave="square">
+        <note pitch="C5">0.1</note>
+        <note pitch="G4">0.1</note>
+        <note pitch="E4">0.1</note>
+        <note pitch="C4">0.3</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="E4" to="E2">0.6</note>
+      </part>
     </sound>
   </sounds>
   <styles>
@@ -84,7 +115,23 @@
       </sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
+    <!-- the best score, kept from game to game -->
+    <object name="best">
+      <sprite>
+        <text style="hud">
+          <content>TOP</content>
+          <number>best.score</number>
+        </text>
+      </sprite>
+      <position><x><centered /></x><y>margin</y></position>
+      <variables>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
   </objects>
+  <keeps>
+    <keep object="best" />
+  </keeps>
   <states>
     <state name="mainmenu">
       <objects>
@@ -122,106 +169,257 @@
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
+      <shows>
+        <show object="best" />
+      </shows>
       <inputs>
         <input button="space">
+          <play sound="start" />
           <push state="playing" />
         </input>
       </inputs>
     </state>
     <state name="playing">
       <objects>
-        <object name="ground" class="floor">
-          <sprite>
-            <rectangle>
-              <width>800</width>
-              <height>16</height>
-              <color>color.brown</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>window.bottom - ground.height</y></position>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
-        </object>
-        <!-- three levels of floor, in tiles, so that a bump is felt only over
-             the tile that was hit -->
+        <!-- the floors, in bricks, so that a bump is felt only over the brick
+             that was hit: the ground, then three levels of blue -->
         <group name="floors" class="floor">
+          <columns>8</columns>
+          <rows>1</rows>
           <sprite>
-            <rectangle>
-              <width>tile</width>
-              <height>thick</height>
+            <bitmap>
+              <row>********************</row>
+              <row>***.*******.*******.</row>
+              <row>********************</row>
+              <row>.*******.*******.***</row>
+              <row>********************</row>
+              <row>.*.*.*.*.*.*.*.*.*.*</row>
+              <scale>2</scale>
               <color>color.blue</color>
-            </rectangle>
+            </bitmap>
           </sprite>
           <collisions>
             <enabled>true</enabled>
           </collisions>
+          <group name="ground">
+            <columns>20</columns>
+            <sprite>
+              <bitmap>
+                <row>********************</row>
+                <row>****.********.******</row>
+                <row>****.********.******</row>
+                <row>********************</row>
+                <row>*********.*********.</row>
+                <row>*********.*********.</row>
+                <row>********************</row>
+                <row>********************</row>
+                <color>color.orange</color>
+              </bitmap>
+            </sprite>
+            <position><x>0</x><y>window.bottom - 16</y></position>
+          </group>
           <group name="lowleft">
             <columns>7</columns>
-            <rows>1</rows>
             <position><x>0</x><y>452</y></position>
           </group>
           <group name="lowright">
             <columns>7</columns>
-            <rows>1</rows>
-            <position><x>window.right - 7 * tile</x><y>452</y></position>
+            <position><x>window.right - 280</x><y>452</y></position>
           </group>
           <group name="middle">
             <columns>10</columns>
-            <rows>1</rows>
             <position><x>200</x><y>324</y></position>
           </group>
           <group name="midleft">
             <columns>3</columns>
-            <rows>1</rows>
             <position><x>0</x><y>324</y></position>
           </group>
           <group name="midright">
             <columns>3</columns>
-            <rows>1</rows>
-            <position><x>window.right - 3 * tile</x><y>324</y></position>
+            <position><x>window.right - 120</x><y>324</y></position>
           </group>
           <group name="topleft">
-            <columns>8</columns>
-            <rows>1</rows>
             <position><x>0</x><y>196</y></position>
           </group>
           <group name="topright">
-            <columns>8</columns>
-            <rows>1</rows>
-            <position><x>window.right - 8 * tile</x><y>196</y></position>
+            <position><x>window.right - 320</x><y>196</y></position>
           </group>
+        </group>
+        <!-- the pipes the shellcreepers come out of, up in the corners -->
+        <group name="spouts">
+          <sprite>
+            <bitmap>
+              <row>.................gGGG.</row>
+              <row>.................gGGG.</row>
+              <row>...............gggGGGG</row>
+              <row>...............gggGGGG</row>
+              <row>gggggggggggggggggGGGG.</row>
+              <row>GGGGGGGGGGGGGGGGGGGGG.</row>
+              <row>GGGGGGGGGGGGGGGGGGGGG.</row>
+              <row>......................</row>
+              <row>GGGGGGGGGGGGGGGGGGGGG.</row>
+              <row>.ggggggggggggggggGGGG.</row>
+              <row>...............gggGGGG</row>
+              <row>...............gggGGGG</row>
+              <scale>3</scale>
+              <color char="g">color.green</color>
+              <color char="G">color.darkgreen</color>
+            </bitmap>
+          </sprite>
+          <member><position><x>0</x><y>130</y></position></member>
+          <member>
+            <sprite>
+              <bitmap>
+                <row>.GGGg.................</row>
+                <row>.GGGg.................</row>
+                <row>GGGGggg...............</row>
+                <row>GGGGggg...............</row>
+                <row>.GGGGggggggggggggggggg</row>
+                <row>.GGGGGGGGGGGGGGGGGGGGG</row>
+                <row>.GGGGGGGGGGGGGGGGGGGGG</row>
+                <row>......................</row>
+                <row>.GGGGGGGGGGGGGGGGGGGGG</row>
+                <row>.GGGGggggggggggggggggg</row>
+                <row>GGGGggg...............</row>
+                <row>GGGGggg...............</row>
+              </bitmap>
+            </sprite>
+            <position><x>window.right - 66</x><y>130</y></position>
+          </member>
         </group>
         <!-- the pipes at the bottom, which take a shellcreeper back up to its
              start -->
         <group name="pipes" class="pipe">
           <sprite>
-            <rectangle>
-              <width>tile</width>
-              <height>40</height>
-              <color>color.green</color>
-            </rectangle>
+            <bitmap>
+              <row>gggggggggg</row>
+              <row>gGGGGGGGGg</row>
+              <row>gggggggggg</row>
+              <row>.gGGGGGGg.</row>
+              <row>.gGGGGGGg.</row>
+              <row>.gGGGGGGg.</row>
+              <row>.gGGGGGGg.</row>
+              <row>.gGGGGGGg.</row>
+              <row>.gGGGGGGg.</row>
+              <row>.gGGGGGGg.</row>
+              <scale>4</scale>
+              <color char="g">color.green</color>
+              <color char="G">color.darkgreen</color>
+            </bitmap>
           </sprite>
           <collisions>
             <enabled>true</enabled>
           </collisions>
           <member><position><x>0</x><y>544</y></position></member>
-          <member><position><x>window.right - tile</x><y>544</y></position></member>
+          <member><position><x>window.right - 40</x><y>544</y></position></member>
         </group>
+        <!-- POW: bumped from below, every shellcreeper on its feet goes over;
+             it shrinks with each bump, and is gone after three -->
+        <object name="pow" class="pow">
+          <sprite name="three">
+            <bitmap>
+              <row>bbbbbbbbbbbbbbbb</row>
+              <row>b..............b</row>
+              <row>b.ww..ww..w..w.b</row>
+              <row>b.w.w.w.w.w..w.b</row>
+              <row>b.ww..w.w.w..w.b</row>
+              <row>b.w...w.w.w.ww.b</row>
+              <row>b.w...ww..ww.w.b</row>
+              <row>b..............b</row>
+              <row>b..............b</row>
+              <row>bbbbbbbbbbbbbbbb</row>
+              <scale>3</scale>
+              <color>color.cyan</color>
+              <color char="b">color.blue</color>
+              <color char="w">color.black</color>
+            </bitmap>
+          </sprite>
+          <sprite name="two">
+            <bitmap>
+              <row>bbbbbbbbbbbbbbbb</row>
+              <row>b.ww..ww..w..w.b</row>
+              <row>b.w.w.w.w.w..w.b</row>
+              <row>b.ww..w.w.w.ww.b</row>
+              <row>b.w...ww..ww.w.b</row>
+              <row>b..............b</row>
+              <row>bbbbbbbbbbbbbbbb</row>
+              <scale>3</scale>
+              <color>color.cyan</color>
+              <color char="b">color.blue</color>
+              <color char="w">color.black</color>
+            </bitmap>
+          </sprite>
+          <sprite name="one">
+            <bitmap>
+              <row>bbbbbbbbbbbbbbbb</row>
+              <row>b.ww..ww..w.ww.b</row>
+              <row>b.w...ww..ww.w.b</row>
+              <row>bbbbbbbbbbbbbbbb</row>
+              <scale>3</scale>
+              <color>color.cyan</color>
+              <color char="b">color.blue</color>
+              <color char="w">color.black</color>
+            </bitmap>
+          </sprite>
+          <position><x>window.width.center - 24</x><y>470</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <!-- last look first, so one bump changes it only once -->
+            <collision object="mario" side="bottom" sprite="one">
+              <become object="creepers" sprite="flipped" from="walking" />
+              <play sound="pow" />
+              <die />
+            </collision>
+            <collision object="mario" side="bottom" sprite="two">
+              <become sprite="one" />
+              <become object="creepers" sprite="flipped" from="walking" />
+              <play sound="pow" />
+            </collision>
+            <collision object="mario" side="bottom" sprite="three">
+              <become sprite="two" />
+              <become object="creepers" sprite="flipped" from="walking" />
+              <play sound="pow" />
+            </collision>
+          </collisions>
+        </object>
         <group name="creepers" class="enemy">
           <sprite name="walking">
-            <rectangle>
-              <width>28</width>
-              <height>20</height>
-              <color>color.green</color>
-            </rectangle>
+            <bitmap>
+              <row>....GGGG......</row>
+              <row>..GGgGGgGG....</row>
+              <row>.GgggGGgggG...</row>
+              <row>GGGGGGGGGGGG..</row>
+              <row>GgggGGGGgggGoo</row>
+              <row>GGGGGGGGGGGGow</row>
+              <row>.wwwwwwwwwwwoo</row>
+              <row>..oo....oooo..</row>
+              <row>.ooo.....ooo..</row>
+              <row>.oo.......oo..</row>
+              <scale>2</scale>
+              <color char="G">color.darkgreen</color>
+              <color char="g">color.green</color>
+              <color char="o">color.orange</color>
+              <color char="w">color.white</color>
+            </bitmap>
           </sprite>
           <sprite name="flipped">
-            <rectangle>
-              <width>28</width>
-              <height>20</height>
-              <color>color.yellow</color>
-            </rectangle>
+            <bitmap>
+              <row>..o..o..o..o..</row>
+              <row>..o..o..o..o..</row>
+              <row>.wwwwwwwwwwww.</row>
+              <row>GGGGGGGGGGGGGG</row>
+              <row>GgggGGGGGgggGG</row>
+              <row>GGGGGGGGGGGGGG</row>
+              <row>.GGgggGGgggGG.</row>
+              <row>..GGGGGGGGGG..</row>
+              <row>....GGGGGG....</row>
+              <row>..............</row>
+              <scale>2</scale>
+              <color char="G">color.darkgreen</color>
+              <color char="g">color.green</color>
+              <color char="o">color.orange</color>
+              <color char="w">color.white</color>
+            </bitmap>
           </sprite>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <mass>1</mass>
@@ -300,11 +498,30 @@
         </group>
         <object name="mario">
           <sprite>
-            <rectangle>
-              <width>24</width>
-              <height>32</height>
-              <color>color.red</color>
-            </rectangle>
+            <bitmap>
+              <row>...rrrrr....</row>
+              <row>..rrrrrrrrr.</row>
+              <row>..kkksskk...</row>
+              <row>.ksksssskss.</row>
+              <row>.kskksssksss</row>
+              <row>.kksssskkkk.</row>
+              <row>...ssssss...</row>
+              <row>..rrbrrr....</row>
+              <row>.rrrbrrbrrr.</row>
+              <row>rrrrbbbbrrrr</row>
+              <row>ssrbybbybrss</row>
+              <row>sssbbbbbbsss</row>
+              <row>ssbbbbbbbbss</row>
+              <row>..bbb..bbb..</row>
+              <row>.kkk....kkk.</row>
+              <row>kkkk....kkkk</row>
+              <scale>2</scale>
+              <color char="r">color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+              <color char="y">color.yellow</color>
+            </bitmap>
           </sprite>
           <position><x><centered /></x><y>window.bottom - 16 - mario.height</y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
@@ -316,11 +533,17 @@
             <collision class="floor">
               <land />
             </collision>
+            <collision class="pow">
+              <land />
+            </collision>
             <!-- his head against a floor from below: the bump goes through it -->
             <collision class="floor" side="top">
               <knock>0</knock>
               <bounce />
               <play sound="bump" />
+            </collision>
+            <collision class="pow" side="top">
+              <bounce />
             </collision>
           </collisions>
           <actions>
@@ -348,6 +571,7 @@
         <object name="score">
           <sprite>
             <text style="hud">
+              <content>I</content>
               <number>mario.score</number>
             </text>
           </sprite>
@@ -356,6 +580,7 @@
         <object name="lives">
           <sprite>
             <text style="hud">
+              <content>MARIO x</content>
               <number>mario.lives</number>
               <color>color.red</color>
             </text>
@@ -363,14 +588,14 @@
           <position><x>window.right - lives.width - margin</x><y>margin</y></position>
         </object>
       </objects>
+      <shows>
+        <show object="best" />
+      </shows>
       <inputs>
-        <input button="a"><trigger object="mario" action="left" /></input>
-        <input button="left"><trigger object="mario" action="left" /></input>
-        <input button="d"><trigger object="mario" action="right" /></input>
-        <input button="right"><trigger object="mario" action="right" /></input>
+        <input button="a left"><trigger object="mario" action="left" /></input>
+        <input button="d right"><trigger object="mario" action="right" /></input>
         <input button="space"><trigger object="mario" action="jump" /></input>
-        <input button="p"><push state="paused" /></input>
-        <input button="escape"><push state="paused" /></input>
+        <input button="p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition class="enemy">
@@ -380,6 +605,10 @@
         <condition object="mario" variable="lives">
           <atmost>0</atmost>
           <push state="gameover" />
+        </condition>
+        <condition object="mario" variable="score">
+          <above object="best" variable="score" />
+          <copy variable="mario.score" into="best.score" />
         </condition>
       </conditions>
     </state>
@@ -399,9 +628,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space"><pop /></input>
-        <input button="p"><pop /></input>
-        <input button="escape"><pop /></input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
     <state name="youwin">
