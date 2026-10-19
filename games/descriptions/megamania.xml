@@ -4,42 +4,44 @@
 <!-- date: Oct 7, 2026 -->
 
 <!--
-  Megamania, after Activision's 1982 Atari 2600 game. Your ship slides along
-  the bottom of the screen and fires up at waves of strange things that sweep
-  across the sky and drop bombs: hamburgers that cross straight over, cookies
-  that come down at a slant and bounce back up, and bugs that rush the other
-  way. All the while your energy runs down; shoot the whole wave before it is
-  gone. A bomb, anything you fly into, or running out of energy costs a ship;
-  three ships. Clear the three waves to win.
+  Megamania, after Activision's 1982 Atari 2600 game. Your blaster slides
+  along the bottom of the screen and fires up at eight waves of strange
+  things that sweep across the sky and drop bombs: hamburgers, cookies, bugs,
+  radial tires, diamonds, steam irons, bow ties and space dice, each worth
+  more than the last. All the while your energy bar runs down; shoot the
+  whole wave before it is gone, and what is left of it is a bonus. A bomb,
+  anything you fly into, or running out of energy costs a blaster; three
+  blasters. Clear the eight waves to win.
 
   A and D (or the arrows) slide, Space fires, P or Escape pauses.
 
   How it is written:
-  * The three waves are the <scenes> of the playing state: the hamburgers,
-    the cookies and the bugs. The ship, its shot, the bombs, the energy and
-    the numbers along the top are the state's own objects, there in every
-    wave.
+  * The eight waves are the <scenes> of the playing state. The blaster, its
+    shot, the bombs, the energy bar and the numbers along the top are the
+    state's own objects, there in every wave.
   * A wave is the kit's <group> of eight, moving with one velocity and
     <wrap />ping round the sides, so the formation goes off one side and
     comes back on the other, and <bounce />ing off the top and bottom (only
-    the cookies, coming down at a slant, ever reach them). Each wave takes
-    it with a picture of its own and changes its velocity; how fast it goes,
-    the heights of its two rows and what a hit scores are the wave's
-    <variables>, read by plain names.
+    the waves that come down at a slant ever reach them). Each wave takes it
+    with a picture of its own and changes its velocity; the heights of its
+    two rows and what a hit scores are the wave's <variables>.
   * Each member drops bombs from under it (<facing>down</facing>, <fire>)
     on a timer of its own, every few seconds, the wait drawn again each time.
-  * The energy is a variable of its own object (never drawn, only its
-    number), which a timer of the state takes down a second at a time and a
-    <reset object="energy" /> fills again: at the start of each wave and
-    when a ship is lost.
+  * As on the 2600, the shot is steered: a timer that runs every frame while
+    it flies keeps it over the blaster.
+  * The energy is a variable of its own object, which a timer of the state
+    takes down a second at a time and a <reset object="energy" /> fills
+    again: at the start of each wave and when a blaster is lost. The bar is
+    drawn as a green strip with a black cover laid over it, which another
+    timer slides along to where the energy has got to.
   * A wave's condition that none of it is left (a class counts the wave in
-    play, not the others), named "cleared", <enter>s its way "next". The
-    later waves are the first (from=), so they have that condition too: the
-    second says only where its "next" leads, and the third writes a
-    "cleared" of its own, which takes the copied one's place and wins.
+    play, not the others), named "cleared", scores the energy left and
+    <enter>s its way "next". The later waves are the first (from=), so they
+    have that condition too and say only where "next" leads; the last writes
+    a "cleared" of its own, which takes the copied one's place and wins.
   * Paused, won and lost draw the game still underneath (<show state>).
-  Not in it: steering a shot after it is fired, the other five waves (tires,
-  bow ties, diamonds, irons, dice), and the bonus for energy left.
+  Not in it: the waves coming round again faster after the eighth, and a
+  blaster for every 10,000 points.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -53,24 +55,17 @@
   <variables>
     <variable name="margin">10</variable>
     <variable name="slide">4</variable>
-    <variable name="laserspeed">9</variable>
-    <variable name="bombspeed">4</variable>
     <!-- a member of a wave drops a bomb every drop - 1 to drop + 2 seconds -->
     <variable name="drop">3</variable>
+    <!-- the energy bar: seconds of energy, and how wide it is drawn -->
+    <variable name="full">45</variable>
+    <variable name="barwidth">360</variable>
+    <variable name="barleft">window.width.center - barwidth / 2</variable>
   </variables>
   <sounds>
-    <sound name="fire" wave="square">
-      <volume>0.15</volume>
-      <note pitch="E6" to="E5">0.07</note>
-    </sound>
-    <sound name="hit" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="3000" to="300">0.25</note>
-    </sound>
-    <sound name="lost" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E4" to="E2">0.6</note>
-    </sound>
+    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.07</note></sound>
+    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="3000" to="300">0.25</note></sound>
+    <sound name="lost" wave="noise"><volume>0.45</volume><note pitch="2000" to="80">0.8</note></sound>
     <sound name="wave" wave="square">
       <volume>0.2</volume>
       <note pitch="C5">0.08</note>
@@ -81,17 +76,13 @@
   </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
-    <style name="prompt"><size>40</size></style>
-    <style name="hud"><size>28</size></style>
+    <style name="line"><size>24</size><color>color.white</color></style>
+    <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
+      <sprite><text><content>spacebar to play again</content><size>40</size></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
@@ -99,50 +90,30 @@
     <state name="title">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>MEGAMANIA</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>MEGAMANIA</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
         <object name="help">
-          <sprite>
-            <text>
-              <content>shoot every wave before your energy runs out</content>
-              <size>24</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="line"><content>shoot every wave before your energy runs out</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
         </object>
         <object name="keys">
-          <sprite>
-            <text>
-              <content>a and d (or the arrows) slide, space fires</content>
-              <size>22</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
+          <sprite><text style="line"><content>a and d (or the arrows) slide, space fires</content><color>color.lightgrey</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
+          <sprite><text><content>spacebar to start</content><size>40</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input button="space"><push state="playing" /><play sound="wave" /></input>
       </inputs>
     </state>
 
     <state name="playing">
       <objects>
-        <!-- the ship -->
+        <!-- the blaster -->
         <object name="player" class="player">
           <sprite>
             <bitmap>
@@ -154,15 +125,13 @@
               <row>************</row>
               <row>**...**...**</row>
               <scale>3</scale>
-              <color>color.white</color>
+              <color>color.lightgrey</color>
             </bitmap>
           </sprite>
-          <position><x><centered /></x><y>window.bottom - player.height - 30</y></position>
+          <position><x><centered /></x><y>window.bottom - player.height - 40</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="horizontal">
-              <stick />
-            </collision>
+            <collision edge="horizontal"><stick /></collision>
             <collision class="bomb"><trigger action="lose" /></collision>
             <collision class="enemy"><trigger action="lose" /></collision>
           </collisions>
@@ -174,16 +143,9 @@
               <reset object="energy" />
               <reset />
             </action>
-            <action name="left">
-              <move direction="left">slide</move>
-            </action>
-            <action name="right">
-              <move direction="right">slide</move>
-            </action>
-            <action name="fire">
-              <fire object="laser" />
-              <play sound="fire" />
-            </action>
+            <action name="left"><move direction="left">slide</move></action>
+            <action name="right"><move direction="right">slide</move></action>
+            <action name="fire"><fire object="laser" /><play sound="fire" /></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
@@ -191,96 +153,64 @@
           </variables>
         </object>
 
-        <!-- one shot at a time -->
+        <!-- one shot at a time, steered with the blaster -->
         <object name="laser" class="laser">
-          <sprite>
-            <rectangle>
-              <width>3</width>
-              <height>14</height>
-              <color>color.cyan</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>3</width><height>14</height><color>color.cyan</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <velocity><y>-laserspeed</y></velocity>
+          <velocity><y>-9</y></velocity>
           <hidden>true</hidden>
           <collisions>
             <enabled>false</enabled>
-            <collision edge="all">
-              <die />
-            </collision>
-            <collision class="enemy">
-              <die />
-            </collision>
+            <collision edge="all"><die /></collision>
+            <collision class="enemy"><die /></collision>
           </collisions>
+          <timers>
+            <timer><every>0.01</every><set variable="laser.x">player.x + 16.5</set></timer>
+          </timers>
         </object>
 
         <!-- the bombs: a pool of six -->
         <group name="bombs" class="bomb">
-          <sprite>
-            <rectangle>
-              <width>4</width>
-              <height>10</height>
-              <color>color.red</color>
-            </rectangle>
-          </sprite>
+          <columns>6</columns>
+          <rows>1</rows>
+          <sprite><rectangle><width>4</width><height>10</height><color>color.red</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <velocity><y>bombspeed</y></velocity>
+          <velocity><y>4</y></velocity>
           <hidden>true</hidden>
           <collisions>
             <enabled>false</enabled>
-            <collision edge="all">
-              <die />
-            </collision>
-            <collision object="player">
-              <die />
-            </collision>
+            <collision edge="all"><die /></collision>
+            <collision object="player"><die /></collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
         </group>
 
-        <!-- the energy that runs down; never drawn, only its number -->
+        <!-- the energy that runs down, and its bar: a green strip, and a black
+             cover over what is spent -->
         <object name="energy">
-          <variables>
-            <variable name="level">45</variable>
-          </variables>
+          <variables><variable name="level">full</variable></variables>
+        </object>
+        <object name="bar">
+          <sprite><rectangle><width>barwidth</width><height>12</height><color>color.green</color></rectangle></sprite>
+          <position><x>barleft</x><y>window.bottom - 24</y></position>
+        </object>
+        <object name="cover">
+          <sprite><rectangle><width>barwidth</width><height>12</height><color>color.black</color></rectangle></sprite>
+          <position><x>barleft + barwidth</x><y>window.bottom - 24</y></position>
         </object>
 
         <object name="score">
-          <sprite>
-            <text style="hud">
-              <number>player.score</number>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>player.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
-        <object name="energybar">
-          <sprite>
-            <text style="hud">
-              <number>energy.level</number>
-              <color>color.green</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y>window.bottom - energybar.height - 2</y></position>
-        </object>
         <object name="lives">
-          <sprite>
-            <text style="hud">
-              <number>player.lives</number>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>player.lives</number><color>color.red</color></text></sprite>
           <position><x>window.right - lives.width - margin</x><y>margin</y></position>
         </object>
       </objects>
       <scenes>
         <!-- a wave: two rows of four that wrap round the sides and drop
-             bombs on a timer of their own; speed, row1, row2 and points are
-             the wave's -->
+             bombs on a timer of their own; row1, row2 and points are the
+             wave's -->
         <objects>
           <group name="enemies" class="enemy">
             <sprite>
@@ -295,16 +225,12 @@
                 <color>color.orange</color>
               </bitmap>
             </sprite>
-            <velocity><x>speed</x></velocity>
+            <velocity><x>2</x></velocity>
             <facing>down</facing>
             <collisions>
               <enabled>true</enabled>
-              <collision edge="horizontal">
-                <wrap />
-              </collision>
-              <collision edge="vertical">
-                <bounce />
-              </collision>
+              <collision edge="horizontal"><wrap /></collision>
+              <collision edge="vertical"><bounce /></collision>
               <collision object="laser">
                 <inc variable="player.score">points</inc>
                 <play sound="hit" />
@@ -312,10 +238,7 @@
               </collision>
             </collisions>
             <timers>
-              <timer>
-                <every><random min="drop - 1" max="drop + 2" /></every>
-                <fire object="bombs" />
-              </timer>
+              <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bombs" /></timer>
             </timers>
             <member><position><x>40</x><y>row1</y></position></member>
             <member><position><x>200</x><y>row1</y></position></member>
@@ -330,11 +253,8 @@
 
         <!-- hamburgers, crossing straight over -->
         <scene name="wave1">
-          <ways>
-            <way name="next" scene="wave2" />
-          </ways>
+          <ways><way name="next" scene="wave2" /></ways>
           <variables>
-            <variable name="speed">2</variable>
             <variable name="row1">80</variable>
             <variable name="row2">150</variable>
             <variable name="points">20</variable>
@@ -345,6 +265,7 @@
           <conditions>
             <condition name="cleared" class="enemy">
               <remaining>0</remaining>
+              <inc variable="player.score">energy.level * 10</inc>
               <play sound="wave" />
               <reset object="energy" />
               <reset object="bombs" />
@@ -354,12 +275,9 @@
           </conditions>
         </scene>
 
-        <!-- cookies, coming down at a slant and bouncing back up: the
-             first wave (from=), with its own pictures, rows and points -->
+        <!-- cookies, coming down at a slant and bouncing back up -->
         <scene name="wave2" from="wave1">
-          <ways>
-            <way name="next" scene="wave3" />
-          </ways>
+          <ways><way name="next" scene="wave3" /></ways>
           <variables>
             <variable name="row1">60</variable>
             <variable name="row2">140</variable>
@@ -380,16 +298,15 @@
                   <color>color.yellow</color>
                 </bitmap>
               </sprite>
-              <velocity><y>speed / 2</y></velocity>
+              <velocity><y>1</y></velocity>
             </group>
           </objects>
         </scene>
 
-        <!-- bugs, rushing the other way: the first wave again, quicker, with a
-             "cleared" of its own that wins -->
+        <!-- bugs, rushing the other way -->
         <scene name="wave3" from="wave1">
+          <ways><way name="next" scene="wave4" /></ways>
           <variables>
-            <variable name="speed">3</variable>
             <variable name="row1">90</variable>
             <variable name="row2">170</variable>
             <variable name="points">40</variable>
@@ -407,12 +324,145 @@
                   <color>color.green</color>
                 </bitmap>
               </sprite>
-              <velocity><x>-speed</x></velocity>
+              <velocity><x>-3</x></velocity>
+            </group>
+          </objects>
+        </scene>
+
+        <!-- radial tires, rolling down at a slant -->
+        <scene name="wave4" from="wave1">
+          <ways><way name="next" scene="wave5" /></ways>
+          <variables>
+            <variable name="row1">60</variable>
+            <variable name="row2">130</variable>
+            <variable name="points">50</variable>
+          </variables>
+          <objects>
+            <group name="enemies">
+              <sprite>
+                <bitmap>
+                  <row>..****..</row>
+                  <row>.*.**.*.</row>
+                  <row>**.**.**</row>
+                  <row>********</row>
+                  <row>**.**.**</row>
+                  <row>.*.**.*.</row>
+                  <row>..****..</row>
+                  <scale>3</scale>
+                  <color>color.lightgrey</color>
+                </bitmap>
+              </sprite>
+              <velocity><x>3</x><y>2</y></velocity>
+            </group>
+          </objects>
+        </scene>
+        <!-- diamonds, weaving back the other way -->
+        <scene name="wave5" from="wave1">
+          <ways><way name="next" scene="wave6" /></ways>
+          <variables>
+            <variable name="row1">70</variable>
+            <variable name="row2">140</variable>
+            <variable name="points">60</variable>
+          </variables>
+          <objects>
+            <group name="enemies">
+              <sprite>
+                <bitmap>
+                  <row>....*....</row>
+                  <row>...***...</row>
+                  <row>..*****..</row>
+                  <row>.*******.</row>
+                  <row>..*****..</row>
+                  <row>...***...</row>
+                  <row>....*....</row>
+                  <scale>3</scale>
+                  <color>color.cyan</color>
+                </bitmap>
+              </sprite>
+              <velocity><x>-3</x><y>1.5</y></velocity>
+            </group>
+          </objects>
+        </scene>
+        <!-- steam irons, pressing straight across -->
+        <scene name="wave6" from="wave1">
+          <ways><way name="next" scene="wave7" /></ways>
+          <variables>
+            <variable name="row1">90</variable>
+            <variable name="row2">160</variable>
+            <variable name="points">70</variable>
+          </variables>
+          <objects>
+            <group name="enemies">
+              <sprite>
+                <bitmap>
+                  <row>....******</row>
+                  <row>...*******</row>
+                  <row>..********</row>
+                  <row>.*********</row>
+                  <row>**********</row>
+                  <row>**********</row>
+                  <scale>3</scale>
+                  <color>color.lightgrey</color>
+                </bitmap>
+              </sprite>
+              <velocity><x>4</x><y>0</y></velocity>
+            </group>
+          </objects>
+        </scene>
+        <!-- bow ties, flapping down and up -->
+        <scene name="wave7" from="wave1">
+          <ways><way name="next" scene="wave8" /></ways>
+          <variables>
+            <variable name="row1">60</variable>
+            <variable name="row2">130</variable>
+            <variable name="points">80</variable>
+          </variables>
+          <objects>
+            <group name="enemies">
+              <sprite>
+                <bitmap>
+                  <row>**......**</row>
+                  <row>****..****</row>
+                  <row>**********</row>
+                  <row>****..****</row>
+                  <row>**......**</row>
+                  <scale>3</scale>
+                  <color>color.magenta</color>
+                </bitmap>
+              </sprite>
+              <velocity><x>-3</x><y>2.5</y></velocity>
+            </group>
+          </objects>
+        </scene>
+        <!-- space dice, tumbling fast -->
+        <scene name="wave8" from="wave1">
+          <variables>
+            <variable name="row1">70</variable>
+            <variable name="row2">150</variable>
+            <variable name="points">90</variable>
+          </variables>
+          <objects>
+            <group name="enemies">
+              <sprite>
+                <bitmap>
+                  <row>*********</row>
+                  <row>*.*****.*</row>
+                  <row>*********</row>
+                  <row>****.****</row>
+                  <row>*********</row>
+                  <row>*.*****.*</row>
+                  <row>*********</row>
+                  <scale>3</scale>
+                  <color>color.white</color>
+                </bitmap>
+              </sprite>
+              <velocity><x>4</x><y>2</y></velocity>
             </group>
           </objects>
           <conditions>
             <condition name="cleared" class="enemy">
               <remaining>0</remaining>
+              <inc variable="player.score">energy.level * 10</inc>
               <play sound="wave" />
               <push state="youwin" />
             </condition>
@@ -426,12 +476,12 @@
         <input button="p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <!-- out of lives -->
+        <!-- out of blasters -->
         <condition object="player" variable="lives">
           <atmost>0</atmost>
           <push state="gameover" />
         </condition>
-        <!-- out of energy: a ship lost, and the energy filled again -->
+        <!-- out of energy: a blaster lost, and the energy filled again -->
         <condition object="energy" variable="level">
           <atmost>0</atmost>
           <dec variable="player.lives" />
@@ -441,22 +491,15 @@
         </condition>
       </conditions>
       <timers>
-        <timer>
-          <every>1</every>
-          <dec variable="energy.level" />
-        </timer>
+        <timer><every>1</every><dec variable="energy.level" /></timer>
+        <timer><every>0.1</every><set variable="cover.x">barleft + barwidth * energy.level / full</set></timer>
       </timers>
     </state>
 
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -471,12 +514,7 @@
     <state name="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -492,12 +530,7 @@
     <state name="gameover" from="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
         </object>
       </objects>
     </state>

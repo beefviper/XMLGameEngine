@@ -6,7 +6,7 @@
 // Catch2 tests for games/descriptions/megamania.xml, played through a real xge::Engine
 // with no window and the keys a player would press: a wave wrapping round
 // the sides and dropping bombs, a shot scoring, a bomb costing a ship, the
-// energy running out, the cookies bouncing, the three waves (the scenes of
+// energy running out, the cookies bouncing, the eight waves (the scenes of
 // the playing state) won one after another, and the pause drawing the game
 // still.
 //
@@ -139,7 +139,7 @@ TEST_CASE("the wave drops bombs, and a bomb costs a ship", "[megamania]")
 	play.noBombs("wave1");
 	play.game.resetObject("bombs");
 	const float lives = play.player().variable.at("lives");
-	Object& bomb = play.game.getObject("bombs.1");
+	Object& bomb = play.game.getObject("bombs.1.1");
 	bomb.position = { play.player().position.x + 10.0f, play.player().position.y - 30.0f };
 	bomb.velocity = { 0.0f, 4.0f };
 	bomb.isVisible = true;
@@ -202,7 +202,7 @@ TEST_CASE("the cookies come down at a slant and bounce back up", "[megamania]")
 	CHECK(cookie.velocity.y < 0.0f);
 }
 
-TEST_CASE("each wave cleared is the next with the energy full, and the third wins", "[megamania]")
+TEST_CASE("each wave cleared is the next with the energy full, and the eighth wins", "[megamania]")
 {
 	Megamania play;
 	play.start();
@@ -219,10 +219,13 @@ TEST_CASE("each wave cleared is the next with the energy full, and the third win
 	CHECK(play.game.isShown(play.enemy("wave2", 1)));
 	CHECK(play.game.isAway(play.enemy("wave1", 1)));
 
-	play.clear("wave2");
-	play.frames(2);
-	CHECK(play.wave() == "playing.wave3");
-	play.clear("wave3");
+	for (int wave = 2; wave < 8; ++wave)
+	{
+		play.clear("wave" + std::to_string(wave));
+		play.frames(2);
+		CHECK(play.wave() == "playing.wave" + std::to_string(wave + 1));
+	}
+	play.clear("wave8");
 	play.frames(2);
 	CHECK(play.state() == "youwin");
 	CHECK(play.game.isStill(play.player()));
@@ -257,10 +260,11 @@ TEST_CASE("each wave is the kit's formation with its own speed, rows and score",
 	Object& bug = play.enemy("wave3", 5);
 	bug.velocity = { 0.0f, 0.0f };
 	play.player().position.x = bug.position.x + bug.size.x / 2 - play.player().size.x / 2;
+	const float before = play.player().variable.at("score");
 	play.tap(KeyCode::Space);
 	play.frames(60);
 	CHECK_FALSE(bug.isVisible);
-	CHECK(play.player().variable.at("score") == 40);
+	CHECK(play.player().variable.at("score") == before + 40);
 }
 
 TEST_CASE("paused, the game is drawn still underneath and does not move", "[megamania]")
@@ -285,4 +289,39 @@ TEST_CASE("paused, the game is drawn still underneath and does not move", "[mega
 	play.frames(1);
 	CHECK(play.state() == "playing");
 	CHECK(burger.position.x != Approx(x));
+}
+
+TEST_CASE("the energy left is a bonus, and its bar is covered as it runs down", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1");
+
+	Object& cover = play.game.getObject("cover");
+	const float full = cover.position.x;
+	play.frames(600);
+	CHECK(cover.position.x < full);
+	CHECK(cover.position.x == Approx(full - 360.0f * (45.0f - play.energy()) / 45.0f).margin(9.0f));
+
+	const float left = play.energy();
+	play.clear("wave1");
+	play.frames(2);
+	CHECK(play.player().variable.at("score") == Approx(left * 10.0f));
+}
+
+TEST_CASE("the shot is steered with the blaster", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1");
+
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	Object& laser = play.game.getObject("laser");
+	REQUIRE(laser.isVisible);
+	play.engine.handleKeyPressed(KeyCode::A);
+	play.frames(10);
+	play.engine.handleKeyReleased(KeyCode::A);
+	play.frames(1);
+	CHECK(laser.position.x == Approx(play.player().position.x + 16.5f));
 }
