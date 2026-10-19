@@ -25,6 +25,7 @@
 #include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -919,11 +920,11 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 	}
 
 	// The three kinds are laid out one under the other, a row of gap between.
-	CHECK(game.getObject("aliens.1.1").position.y == 40.0f);
-	CHECK(game.getObject("aliens.1.2").position.y == 95.0f);
-	CHECK(game.getObject("aliens.1.3").position.y == 150.0f);
-	CHECK(game.getObject("aliens.1.4").position.y == 205.0f);
-	CHECK(game.getObject("aliens.1.5").position.y == 260.0f);
+	CHECK(game.getObject("aliens.1.1").position.y == 120.0f);
+	CHECK(game.getObject("aliens.1.2").position.y == 175.0f);
+	CHECK(game.getObject("aliens.1.3").position.y == 230.0f);
+	CHECK(game.getObject("aliens.1.4").position.y == 285.0f);
+	CHECK(game.getObject("aliens.1.5").position.y == 340.0f);
 	CHECK(game.getObject("aliens.1.1").position.x == 80.0f);
 	CHECK(game.getObject("aliens.2.1").position.x == 150.0f);
 
@@ -1033,7 +1034,7 @@ TEST_CASE("each state of Space Invaders has its own objects, and paused and the 
 	Game& game = invasion.game;
 	CHECK(game.getObject("aliens.1.1").name == "playing.aliens.1.1");
 	CHECK(game.getObject("lives").name == "playing.lives");
-	CHECK(game.getObject("player").name == "player"); // the game's own: the title, the settings and playing show it
+	CHECK(game.getObject("player").name == "player"); // the game's own: the title and playing show it
 	CHECK(game.isShown(game.getObject("player")));
 	CHECK(game.isShown(game.getObject("aliens.1.1")));
 	CHECK_FALSE(game.isShown(game.getObject("title")));
@@ -1194,11 +1195,14 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	for (const auto& object : game.getCurrentObjects()) { if (object.objClass == "aliens" && object.isVisible) { ++aliens; } }
 	CHECK(aliens == 55);
 
-	// Bombs put on the cannon (a stray one may find it first) until the game is lost.
+	// Bombs put on the cannon (a stray one may find it first) until the game is
+	// lost. Each hit holds the invasion still for a second ("blasted").
 	Object& player = game.getObject("player");
-	for (int frame = 0; frame < 6000 && game.getCurrentState().name == "playing"; ++frame)
+	bool blasted = false;
+	for (int frame = 0; frame < 6000 && game.getCurrentState().name != "lost"; ++frame)
 	{
 		game.updateObjects();
+		if (game.getCurrentState().name == "blasted") { blasted = true; continue; }
 		for (auto& object : game.getCurrentObjects())
 		{
 			if (object.objClass == "bomb" && object.isVisible && object.position.y < player.position.y - 40)
@@ -1208,6 +1212,85 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 			}
 		}
 	}
+	CHECK(blasted);
 	CHECK(player.variable.at("lives") <= 0);
+	CHECK(game.getCurrentState().name == "lost");
+}
+
+TEST_CASE("each kind of alien scores its own, and the block marches faster as it thins", "[spaceinvaders]")
+{
+	Invasion invasion;
+	Game& game = invasion.game;
+
+	CHECK(game.getObject("aliens.1.1").variable.at("worth") == 30.0f);
+	CHECK(game.getObject("aliens.1.3").variable.at("worth") == 20.0f);
+	CHECK(game.getObject("aliens.1.5").variable.at("worth") == 10.0f);
+
+	// A shot under a crab of the third row, the rows below gone.
+	for (const Object* alien : aliensOf(game))
+	{
+		if (alien->name.find("aliens.6.") == std::string::npos) { continue; }
+		if (alien->name.back() == '4' || alien->name.back() == '5') { const_cast<Object*>(alien)->isVisible = false; }
+	}
+	const Object& crab = game.getObject("aliens.6.3");
+	Object& bullet = game.getObject("bullet");
+	bullet.position = { crab.position.x + crab.size.x / 2.0f, crab.position.y + crab.size.y + 2.0f };
+	bullet.velocity = { 0.0f, -12.0f };
+	bullet.isVisible = true;
+	bullet.collisionData.enabled = true;
+	frames(game, 1);
+	CHECK_FALSE(crab.isVisible);
+	CHECK(game.getObject("player").variable.at("score") == 20.0f);
+
+	// 28 left: half as fast again, and the next speed-up at 14.
+	int gone = 55 - invasion.alive();
+	for (const Object* alien : aliensOf(game))
+	{
+		if (gone >= 27) { break; }
+		if (alien->isVisible) { const_cast<Object*>(alien)->isVisible = false; ++gone; }
+	}
+	REQUIRE(invasion.alive() == 28);
+	const float before = std::abs(game.getObject("aliens.11.1").velocity.x);
+	frames(game, 1);
+	CHECK(std::abs(game.getObject("aliens.11.1").velocity.x) == Catch::Approx(before * 1.3f));
+	CHECK(game.getObject("pace").variable.at("next") == 14.0f);
+	frames(game, 1);
+	CHECK(std::abs(game.getObject("aliens.11.1").velocity.x) == Catch::Approx(before * 1.3f));
+}
+
+TEST_CASE("the mystery ship crosses the top now and then and scores 50 to 200", "[spaceinvaders]")
+{
+	Invasion invasion;
+	Game& game = invasion.game;
+	const Object& ufo = game.getObject("ufo");
+	REQUIRE_FALSE(ufo.isVisible);
+
+	for (int frame = 0; frame < 60 * 31 && !ufo.isVisible; ++frame) { frames(game, 1); }
+	REQUIRE(ufo.isVisible);
+	CHECK(ufo.velocity.x > 0.0f);
+	frames(game, 60);
+	REQUIRE(ufo.isVisible);
+
+	Object& player = game.getObject("player");
+	Object& bullet = game.getObject("bullet");
+	bullet.position = { ufo.position.x + ufo.size.x / 2.0f, ufo.position.y + ufo.size.y + 2.0f };
+	bullet.velocity = { 0.0f, -12.0f };
+	bullet.isVisible = true;
+	bullet.collisionData.enabled = true;
+	const float score = player.variable.at("score");
+	frames(game, 1);
+	CHECK_FALSE(ufo.isVisible);
+	const float scored = player.variable.at("score") - score;
+	CHECK(scored >= 50.0f);
+	CHECK(scored <= 200.0f);
+	CHECK(std::fmod(scored, 50.0f) == 0.0f);
+}
+
+TEST_CASE("the invasion landing on the shields ends the game", "[spaceinvaders]")
+{
+	Invasion invasion;
+	Game& game = invasion.game;
+	for (const Object* alien : aliensOf(game)) { const_cast<Object*>(alien)->position.y += 300.0f; }
+	frames(game, 1);
 	CHECK(game.getCurrentState().name == "lost");
 }

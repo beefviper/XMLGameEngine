@@ -45,8 +45,8 @@ TEST_CASE("a collision naming only a class is an object rule for that class", "[
 	const Object& bullet = game.getObject("bullet");
 
 	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>,
-	// then the same for class shield
-	REQUIRE(bullet.collisionData.others.size() == 2);
+	// then the same for the shields, the bombs and the mystery ship
+	REQUIRE(bullet.collisionData.others.size() == 4);
 	CHECK(bullet.collisionData.others[0].filterClass == "aliens");
 	CHECK(bullet.collisionData.others[0].filterObject.empty());
 	CHECK(bullet.collisionData.others[1].filterClass == "shield");

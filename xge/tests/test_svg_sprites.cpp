@@ -578,11 +578,11 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 
 	// Laid out one kind under the other, a gap between, and one column pitch
 	// (56 and a gap of 15) the same for all of them.
-	CHECK(game.getObject("aliens.1.1").position.y == 40.0f);
-	CHECK(game.getObject("aliens.1.2").position.y == 105.0f);
-	CHECK(game.getObject("aliens.1.3").position.y == 166.0f);
-	CHECK(game.getObject("aliens.1.4").position.y == 227.0f);
-	CHECK(game.getObject("aliens.1.5").position.y == 291.0f);
+	CHECK(game.getObject("aliens.1.1").position.y == 120.0f);
+	CHECK(game.getObject("aliens.1.2").position.y == 185.0f);
+	CHECK(game.getObject("aliens.1.3").position.y == 246.0f);
+	CHECK(game.getObject("aliens.1.4").position.y == 307.0f);
+	CHECK(game.getObject("aliens.1.5").position.y == 371.0f);
 	for (const char* name : { "aliens.2.1", "aliens.2.2", "aliens.2.4" })
 	{
 		INFO(name);
@@ -740,7 +740,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in an svg", "[svg][s
 
 	const Mistake mistakes[] = {
 		{ "an svg with no path", "<path>assets/Space Invaders Color Sprites.svg</path>", "", "path" },
-		{ "an svg whose scale comes before its part", "<x>4</x>\n          <y>3.5</y>", "<scale>zoom</scale>\n          <x>4</x>\n          <y>3.5</y>", "<x>" },
+		{ "an svg whose scale comes before its part", "<x>4</x><y>3.5</y>", "<scale>zoom</scale><x>4</x><y>3.5</y>", "<x>" },
 		{ "an svg with a tag it does not have", "<hide>backdrop</hide>", "<opacity>1</opacity>", "opacity" },
 		{ "an svg hiding nothing by name", "<hide>backdrop</hide>", "<hide><x>1</x></hide>", "x" },
 	};
