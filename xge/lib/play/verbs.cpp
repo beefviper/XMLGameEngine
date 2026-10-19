@@ -42,11 +42,6 @@ namespace xge
 		return measureShapeSize(object.spriteParams, object.shapeKind);
 	}
 
-	Vector2f motionOf(const Object& object) noexcept
-	{
-		return object.velocity + object.riding;
-	}
-
 	void cutHole(Object& object, const Object& other, float radius, float rough)
 	{
 		if (!object.bitmap) { return; }

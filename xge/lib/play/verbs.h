@@ -34,7 +34,10 @@ namespace xge
 
 	// How far an object moves in one frame: its own velocity, plus the
 	// velocity of whatever it is riding (see Object::riding).
-	Vector2f motionOf(const Object& object) noexcept;
+	inline Vector2f motionOf(const Object& object) noexcept
+	{
+		return object.velocity + object.riding;
+	}
 
 	// <bounce />: off the touched edge, the speed kept.
 	void bounce(Object& object, Edge edge);

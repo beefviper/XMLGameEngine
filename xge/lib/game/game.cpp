@@ -120,7 +120,11 @@ namespace xge
 
 	void Game::updateObjects(void)
 	{
+		// Anything changed from outside since (a test moving an object to
+		// another scene) is seen, and so is anything this frame changes.
+		stageChanged();
 		playOneFrame(getCurrentObjects(), windowDesc, *this);
+		stageChanged();
 	}
 
 	void Game::printGame(void)
@@ -248,7 +252,26 @@ namespace xge
 
 	bool Game::isShown(const Object& object) noexcept
 	{
-		return object.isVisible && !currentState.empty() && runsIn(object, currentState.top());
+		if (!object.isVisible || currentState.empty()) { return false; }
+
+		// One of the game's own objects (not a copy held elsewhere).
+		const std::less<const Object*> before;
+		if (objects.empty() || before(&object, objects.data()) || !before(&object, objects.data() + objects.size()))
+		{
+			return runsIn(object, currentState.top());
+		}
+
+		const auto index = static_cast<std::size_t>(&object - objects.data());
+		if (runsInTopStage != stage || runsInTop.size() != objects.size())
+		{
+			runsInTop.resize(objects.size());
+			for (std::size_t i = 0; i < objects.size(); ++i)
+			{
+				runsInTop[i] = runsIn(objects[i], currentState.top()) ? 1 : 0;
+			}
+			runsInTopStage = stage;
+		}
+		return runsInTop[index] != 0;
 	}
 
 	bool Game::runsIn(const Object& object, const State& state) const
@@ -303,6 +326,7 @@ namespace xge
 	{
 		currentScenes.clear();
 		sceneTimers.clear();
+		stageChanged();
 		for (const State& state : states)
 		{
 			if (!state.scenes.empty()) { currentScenes[state.name] = state.scenes.front().name; }
@@ -323,6 +347,7 @@ namespace xge
 		if (current == scene) { return; }
 		current = scene;
 		++sceneChanges;
+		stageChanged();
 
 		// What is carried by something that is in every scene (the state's
 		// own, or the game's) belongs to the scene it is carried into.
@@ -332,6 +357,7 @@ namespace xge
 			Object* carried = tryGetObject(carrier.carrying);
 			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = scene; }
 		}
+		stageChanged();
 	}
 
 	std::string Game::fullName(const std::string& name) const
@@ -375,6 +401,18 @@ namespace xge
 	// <group> (aliens) finds its first member.
 	Object* Game::tryGetObject(const std::string& name) noexcept
 	{
+		if (const auto found = foundObjects.find(name); found != foundObjects.end())
+		{
+			return found->second;
+		}
+
+		Object* object = findObject(name);
+		foundObjects.emplace(name, object);
+		return object;
+	}
+
+	Object* Game::findObject(const std::string& name) noexcept
+	{
 		const auto exact = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.name == name; });
 		if (exact != std::end(objects))
 		{
@@ -389,12 +427,12 @@ namespace xge
 
 		// The end of one path: robots for playing.room1.robots.
 		const std::string full = fullName(name);
-		return full == name ? nullptr : tryGetObject(full);
+		return full == name ? nullptr : findObject(full);
 	}
 
 	float Game::getVariable(const std::string& name)
 	{
-		auto result = std::find_if(std::begin(variables), std::end(variables), [&](std::pair<const std::string, float>& var) { return var.first == name; });
+		const auto result = variables.find(name);
 
 		if (result == variables.end())
 		{
@@ -406,7 +444,7 @@ namespace xge
 		}
 	}
 
-	State Game::getCurrentState(void)
+	const State& Game::getCurrentState(void) const
 	{
 		return currentState.top();
 	}
@@ -420,6 +458,7 @@ namespace xge
 	{
 		currentState.push(states.at(static_cast<std::size_t>(index)));
 		++stateChanges;
+		stageChanged();
 		beginMusic();
 	}
 
@@ -440,6 +479,7 @@ namespace xge
 
 		currentState.push(*result);
 		++stateChanges;
+		stageChanged();
 		beginMusic();
 	}
 
@@ -463,6 +503,7 @@ namespace xge
 
 		currentState.pop();
 		++stateChanges;
+		stageChanged();
 	}
 
 	void Game::drawStartAgain(Object& object)
@@ -521,6 +562,7 @@ namespace xge
 		}
 		currentState.push(*result);
 		++stateChanges;
+		stageChanged();
 		beginMusic();
 	}
 
@@ -686,6 +728,7 @@ namespace xge
 		currentScenes = from.currentScenes;
 		sceneTimers = from.sceneTimers;
 		++sceneChanges;
+		stageChanged();
 	}
 
 	void Game::beginTurn(void)
@@ -697,6 +740,7 @@ namespace xge
 		{
 			currentState.pop();
 		}
+		stageChanged();
 		const std::string& state = turns[turn].state;
 		if (!state.empty())
 		{
@@ -1149,6 +1193,7 @@ namespace xge
 			{
 				drawStartAgain(candidate);
 				resetObjectState(candidate);
+				stageChanged();
 			}
 		}
 
@@ -1324,6 +1369,7 @@ namespace xge
 			if (object.kept) { continue; }
 			drawStartAgain(object);
 			resetObjectState(object);
+			stageChanged();
 		}
 
 		for (const auto& state : states)
@@ -1440,6 +1486,7 @@ namespace xge
 			if (object.ownerSceneOriginal != scene) { continue; }
 			drawStartAgain(object);
 			resetObjectState(object);
+			stageChanged();
 
 			// Back where it started, it is no longer carried.
 			for (auto& carrier : objects)
@@ -1809,6 +1856,21 @@ namespace xge
 		return false;
 	}
 
+	const std::vector<std::size_t>& Game::matching(const std::string& filterClass, const std::string& filterObject)
+	{
+		auto found = filtered.find({ filterClass, filterObject });
+		if (found == filtered.end())
+		{
+			std::vector<std::size_t> indices;
+			for (std::size_t i = 0; i < objects.size(); ++i)
+			{
+				if (matchesClassOrObjectFilter(filterClass, filterObject, objects[i])) { indices.push_back(i); }
+			}
+			found = filtered.emplace(std::make_pair(filterClass, filterObject), std::move(indices)).first;
+		}
+		return found->second;
+	}
+
 	bool Game::holds(const Condition& condition)
 	{
 		if (condition.join == RawCondition::Join::All)
@@ -1824,10 +1886,11 @@ namespace xge
 		// is what is in this state and scene (and the game's own); a name
 		// by its path (room2.robots, playing.room2.robots.3) is that
 		// thing, wherever it is.
+		// Only the objects the filter matches are looked at (matching).
+		const std::vector<std::size_t>& candidates = matching(condition.filterClass, condition.filterObject);
 		const auto considers = [&](const Object& object)
 		{
-			return matchesClassOrObjectFilter(condition.filterClass, condition.filterObject, object)
-				&& (inScope(object) || namedByPath(object, condition.filterObject));
+			return inScope(object) || namedByPath(object, condition.filterObject);
 		};
 
 		// Against a number, or another variable as it is now (of the
@@ -1851,9 +1914,9 @@ namespace xge
 		// in play.
 		if (condition.remaining)
 		{
-			const auto stillIn = std::count_if(objects.begin(), objects.end(), [&](const Object& object)
+			const auto stillIn = std::count_if(candidates.begin(), candidates.end(), [&](std::size_t index)
 				{
-					return object.isVisible && considers(object);
+					return objects[index].isVisible && considers(objects[index]);
 				});
 			return static_cast<float>(stillIn) <= *condition.remaining;
 		}
@@ -1863,8 +1926,9 @@ namespace xge
 		{
 			float total = 0.0f;
 			std::size_t counted = 0;
-			for (const auto& object : objects)
+			for (const std::size_t index : candidates)
 			{
+				const Object& object = objects[index];
 				if (!object.isVisible || !considers(object)) { continue; }
 				if (condition.total == Total::Count)
 				{
@@ -1892,8 +1956,9 @@ namespace xge
 			return other && passes(condition.compare, total, *other);
 		}
 
-		for (auto& object : objects)
+		for (const std::size_t index : candidates)
 		{
+			const Object& object = objects[index];
 			if (!considers(object))
 			{
 				continue;

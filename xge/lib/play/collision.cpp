@@ -13,7 +13,7 @@ namespace xge
 	{
 		// What the object touches other objects with: its <hitbox>, or else
 		// its picture's box.
-		Box boxOf(const Object& object)
+		Box boxOf(const Object& object) noexcept
 		{
 			if (object.collisionData.hasHitbox)
 			{
@@ -94,14 +94,12 @@ namespace xge
 
 	std::optional<CollisionDetector::SweepHit> CollisionDetector::sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)
 	{
-		const Box boxA = boxOf(a);
-		const Box boxB = boxOf(b);
-		if (!sweptBoxesMeet(boxA, moveA, boxB, moveB))
-		{
-			return std::nullopt;
-		}
+		return sweepThings(boxOf(a), isRound(a), [&](const Vector2f& local) { return solidAt(a, local); }, moveA,
+			boxOf(b), isRound(b), [&](const Vector2f& local) { return solidAt(b, local); }, moveB, usesPixels(a, b));
+	}
 
-		return sweepThings(boxA, isRound(a), [&](const Vector2f& local) { return solidAt(a, local); }, moveA,
-			boxB, isRound(b), [&](const Vector2f& local) { return solidAt(b, local); }, moveB, usesPixels(a, b));
+	bool CollisionDetector::mayTouch(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB) noexcept
+	{
+		return sweptBoxesMeet(boxOf(a), moveA, boxOf(b), moveB);
 	}
 }

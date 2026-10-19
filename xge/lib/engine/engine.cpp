@@ -380,9 +380,9 @@ namespace xge
 			return;
 		}
 
-		// A copy of the State, not a reference into it: a command run below
+		// The commands are copied out before any runs: a command run below
 		// (<push state="paused" />, <pop />) pushes or pops the state stack.
-		const State state = game.getCurrentState();
+		const State& state = game.getCurrentState();
 		const auto binding = state.input.find(key);
 		if (binding == state.input.end())
 		{
@@ -508,8 +508,10 @@ namespace xge
 		// mouse left resting lets the keys move the same object.
 		const std::array<float, axisCount> before = lastAxes;
 		lastAxes = axes;
-		const State state = game.getCurrentState();
-		for (const auto& [axis, commands] : state.axes)
+		// A copy of the bindings (usually none), not a reference into the
+		// state: a command may push or pop it.
+		const auto bindings = game.getCurrentState().axes;
+		for (const auto& [axis, commands] : bindings)
 		{
 			const auto index = static_cast<std::size_t>(axis);
 			constexpr float still = 0.0005f;

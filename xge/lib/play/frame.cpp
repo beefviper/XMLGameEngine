@@ -504,17 +504,44 @@ namespace xge
 				}
 			};
 
+			// A pair whose boxes are too far apart to meet over the rest of the
+			// frame stays so until a reaction moves, turns or resizes one of
+			// them (what remains of the frame only gets shorter): `far` holds
+			// how many reactions had run when that was found (or -1), and
+			// `changed` the reaction that last changed each object, so the far
+			// pairs are not looked at again after every reaction.
+			std::vector<std::ptrdiff_t> far(pairs.size(), -1);
+			std::vector<std::ptrdiff_t> changed(all.size(), 0);
+			std::ptrdiff_t reactions = 0;
+
 			// Anything taken out of play by an earlier reaction this frame (a
 			// bullet that just died), or that is not moving, sits out.
 			const auto sweep = [&](const Pair& pair, float left) -> std::optional<SweepHit>
 			{
+				// Far apart is looked at first: it is the cheapest, and the
+				// answer for most pairs.
+				std::ptrdiff_t& farSince = far[static_cast<std::size_t>(&pair - pairs.data())];
+				if (farSince >= 0 && changed[pair.i] <= farSince && changed[pair.j] <= farSince)
+				{
+					return std::nullopt;
+				}
+
 				Object& a = *pair.first;
 				Object& b = *pair.second;
 				if (!playing[pair.i] || !playing[pair.j] || !canTouch(a, b) || (!isMoving(a) && !isMoving(b)))
 				{
 					return std::nullopt;
 				}
-				return CollisionDetector::sweep(a, motionOf(a) * left, b, motionOf(b) * left);
+
+				const Vector2f moveA = motionOf(a) * left;
+				const Vector2f moveB = motionOf(b) * left;
+				if (!CollisionDetector::mayTouch(a, moveA, b, moveB))
+				{
+					farSince = reactions;
+					return std::nullopt;
+				}
+				farSince = -1;
+				return CollisionDetector::sweep(a, moveA, b, moveB);
 			};
 
 			// A reaction that moved, turned, showed or hid anything starts that
@@ -523,6 +550,7 @@ namespace xge
 			{
 				Vector2f position;
 				Vector2f motion;
+				Vector2f size;
 			};
 			std::vector<Before> before(all.size());
 
@@ -533,10 +561,11 @@ namespace xge
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
-						before[i] = { all[i].position, motionOf(all[i]) };
+						before[i] = { all[i].position, motionOf(all[i]), all[i].size };
 					}
 
 					rules.touched(*pair.first, *pair.second, contact);
+					++reactions;
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
@@ -545,6 +574,11 @@ namespace xge
 						{
 							origin[i] = all[i].position;
 							since[i] = played;
+							changed[i] = reactions;
+						}
+						else if (all[i].size != before[i].size)
+						{
+							changed[i] = reactions;
 						}
 						playing[i] = nowPlaying;
 					}

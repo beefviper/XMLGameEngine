@@ -17,6 +17,7 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <map>
 #include <set>
@@ -105,7 +106,10 @@ namespace xge
 		Object& getObject(const std::string& name);
 		Object* tryGetObject(const std::string& name) noexcept;
 		float getVariable(const std::string& name);
-		State getCurrentState(void);
+
+		// The state on top of the stack. Only good until the stack changes: a
+		// caller that runs commands (which may push or pop) copies what it needs.
+		const State& getCurrentState(void) const;
 
 		// Every state the game file defines, in file order (the current one is
 		// a copy of one of these, pushed on the state stack).
@@ -378,6 +382,24 @@ namespace xge
 		std::set<std::string> loops;
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
+
+		// What isShown asks of every object (runsIn the top state), worked
+		// out for all of them at once and kept until the state stack, a
+		// scene or an object's scene changes (stageChanged), or the next
+		// frame starts. Asked several times an object a frame otherwise.
+		std::vector<char> runsInTop;
+		unsigned long stage = 1;
+		unsigned long runsInTopStage = 0;
+		void stageChanged(void) noexcept { ++stage; }
+
+		// tryGetObject's answers: names never change while a game runs.
+		std::unordered_map<std::string, Object*> foundObjects;
+		Object* findObject(const std::string& name) noexcept;
+
+		// The objects a condition's class and name filter matches (both
+		// fixed while a game runs), by index, kept per filter.
+		std::map<std::pair<std::string, std::string>, std::vector<std::size_t>> filtered;
+		const std::vector<std::size_t>& matching(const std::string& filterClass, const std::string& filterObject);
 		unsigned long resets = 0;
 		RawDemo demo;
 		bool demoAsked = false;
