@@ -353,9 +353,10 @@ TEST_CASE("qbert.xml: a hop down a diagonal lights the cube landed on, and one o
 	hop(KeyCode::A);
 	CHECK(play.get("player").variable.at("score") == Approx(75));
 
-	// Up and left off the top: into the void.
+	// Up and left off the top: into the void, and he curses.
 	hop(KeyCode::A);
 	CHECK(play.get("player").variable.at("lives") == Approx(2));
+	CHECK(play.get("curse").lookName() == "said");
 	CHECK(play.get("qbert").position.x == Approx(388));
 	CHECK(play.get("qbert").position.y == Approx(109));
 }
@@ -368,29 +369,68 @@ TEST_CASE("qbert.xml: Coily hatches on the bottom row and hunts Q*bert a hop at 
 	play.get("ball").position = { 760, 560 };
 	play.get("ball").positionOriginal = { 760, 560 };
 
-	// The egg, on the left of the fifth row, hops down and left onto the
-	// bottom row (that cube's top centred at 240, 370) and hatches there.
+	// The egg, on the left of the sixth row, hops down and left onto the
+	// bottom row (that cube's top centred at 208, 418) and hatches there.
 	Object& coily = play.get("coily");
-	coily.position = { 264, 306 };
+	coily.position = { 232, 354 };
 	CHECK(coily.lookName() == "egg");
 	CommandExecutor executor(play.game);
 	executor.executeInput(CmdTriggerAction{ "coily", "left" }, true);
 	play.frames(20);
-	CHECK(coily.position.x == Approx(232));
-	CHECK(coily.position.y == Approx(354));
+	CHECK(coily.position.x == Approx(200));
+	CHECK(coily.position.y == Approx(402));
 	CHECK(coily.lookName() == "snake");
+	CHECK(coily.variable.at("snake") == Approx(1));
 
 	// The snake's hops go the diagonal that lands nearest Q*bert, up on the
 	// top cube: up and right each time, a row nearer.
 	play.frames(70);
-	CHECK(coily.position.y < 354.0f);
-	CHECK(coily.position.x > 232.0f);
+	CHECK(coily.position.y < 402.0f);
+	CHECK(coily.position.x > 200.0f);
 	CHECK(play.get("player").variable.at("lives") == Approx(3));
 
 	// Until it lands on him: a life, and Coily back to an egg at the start.
 	play.frames(400);
 	CHECK(play.get("player").variable.at("lives") < 3.0f);
 	CHECK(coily.lookName() == "egg");
+}
+
+TEST_CASE("qbert.xml: a disc carries Q*bert back to the top once, and Coily chasing him falls off", "[steering][qbert]")
+{
+	Played play("descriptions/qbert.xml");
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "playing");
+	for (const char* enemy : { "ball", "coily" })
+	{
+		play.get(enemy).position = { 760, 560 };
+		play.get(enemy).positionOriginal = { 760, 560 };
+	}
+	Object& qbert = play.get("qbert");
+	Object& coily = play.get("coily");
+
+	// On the left cube of the sixth row, up and left onto the disc beside
+	// the fifth: back on the top, no life lost, and Coily, a snake by now,
+	// after him.
+	coily.variable["snake"] = 1.0f;
+	qbert.position = { 228, 349 };
+	play.frames(2);
+	const float before = play.get("player").variable.at("score");
+	play.tap(KeyCode::A);
+	play.frames(20);
+	CHECK(qbert.position.x == Approx(388));
+	CHECK(qbert.position.y == Approx(109));
+	CHECK(play.get("player").variable.at("lives") == Approx(3));
+	CHECK(play.get("discs.1").lookName() == "used");
+	CHECK(play.get("discs.2").lookName() == "ready");
+	CHECK(play.get("player").variable.at("score") - before == Approx(500));
+	CHECK(coily.variable.at("snake") == Approx(0));
+
+	// The disc is gone: the same hop again falls.
+	qbert.position = { 228, 349 };
+	play.frames(2);
+	play.tap(KeyCode::A);
+	play.frames(20);
+	CHECK(play.get("player").variable.at("lives") == Approx(2));
 }
 
 TEST_CASE("yarsrevenge.xml: the missile homes on Yar, the zone keeps him safe, and the cannon leaves level with him", "[steering][yarsrevenge]")

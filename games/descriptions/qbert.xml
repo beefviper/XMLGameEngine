@@ -4,14 +4,17 @@
 <!-- date: Oct 17, 2026 -->
 
 <!--
-  After Q*bert, as on the Atari 2600: a pyramid of 21 cubes, and Q*bert
+  Q*bert, after the 1982 arcade game: a pyramid of 28 cubes, and Q*bert
   hopping from cube to cube on the diagonals. Every cube he lands on turns
-  from blue to yellow; turn them all to win. Hop off the pyramid, or meet the
-  red ball or Coily, and a life is lost.
+  from blue to yellow, for 25 points; turn them all to win. Hop off the
+  pyramid, or meet the red ball or Coily, and he curses and a life is lost.
+  A flying disc on each side carries him back to the top, once; Coily, if
+  he is chasing him by then, leaps after him and falls, for 500 points. The
+  high score is kept.
 
   W or Up hops up and right, D or Right down and right, S or Down down and
   left, A or Left up and left (the four diagonals, as the arcade's stick
-  was turned). P or Escape pauses, Space starts, pauses and plays again.
+  was turned). Space starts, pauses and plays again; P or Escape pauses.
 
   It is the game diagonal hops were made for:
   * Each key is a <hop direction="down-right"> with an <x> across and a <y>
@@ -26,12 +29,15 @@
     and touches nothing else. A cube shows its look "lit" once Q*bert has
     landed on it (a rule only for the unlit look, so it scores once).
   * Around the pyramid is the void: unseen tiles where a hop off the
-    pyramid lands, which cost a life and put Q*bert back on top.
+    pyramid lands, which cost a life and put Q*bert back on top. Two of
+    them are the discs, whose looks say whether they have been used.
   * The red ball hops down on its own, a <trigger> from its own <timer>s
     with <random> waits, and back to the top once it falls off. Coily is an
     egg that does the same until it reaches the bottom row, then a snake
     whose timer hunts Q*bert by hops (<hunt> with a <hop>): each time, the
     diagonal that lands nearest him.
+  No Slick and Sam, Ugg and Wrongway or green ball, and one round: see
+  docs/designs/56-games-atari.md.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -45,21 +51,54 @@
   <variables>
     <variable name="across">32</variable>
     <variable name="down">48</variable>
-    <variable name="goal">21 * 25</variable>
     <variable name="flight">0.25</variable>
+    <variable name="bounce">0.3</variable>
   </variables>
   <sounds>
     <sound name="hop" wave="square">
-      <volume>0.2</volume>
+      <volume>0.15</volume>
       <note pitch="A4" to="E5">0.06</note>
+    </sound>
+    <!-- the ball and the egg landing -->
+    <sound name="thud" wave="triangle">
+      <volume>0.2</volume>
+      <note pitch="G3" to="C3">0.06</note>
     </sound>
     <sound name="fall" wave="triangle">
       <volume>0.4</volume>
-      <note pitch="C6" to="C3">0.5</note>
+      <note pitch="C6" to="C3">0.8</note>
     </sound>
-    <sound name="hit" wave="noise">
+    <!-- his curse: a garble of noise and squawks -->
+    <sound name="curse">
       <volume>0.3</volume>
-      <note pitch="200">0.3</note>
+      <part wave="square">
+        <note pitch="E5">0.07</note>
+        <note pitch="A4">0.05</note>
+        <note pitch="F5">0.08</note>
+        <note pitch="C5">0.05</note>
+        <note pitch="G5">0.07</note>
+        <note pitch="D5">0.1</note>
+      </part>
+      <part wave="noise">
+        <note pitch="900" to="300">0.42</note>
+      </part>
+    </sound>
+    <sound name="disc" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="C6">0.25</note>
+      <note pitch="C5" to="C6">0.25</note>
+      <note pitch="C5" to="C7">0.4</note>
+    </sound>
+    <sound name="done">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="C5">0.1</note>
+        <note pitch="E5">0.1</note>
+        <note pitch="G5">0.1</note>
+        <note pitch="C6">0.1</note>
+        <note pitch="E6">0.1</note>
+        <note pitch="G6">0.3</note>
+      </part>
     </sound>
   </sounds>
   <styles>
@@ -77,7 +116,23 @@
       </sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
+    <!-- the best score, kept from game to game -->
+    <object name="best">
+      <sprite>
+        <text style="hud">
+          <content>TOP</content>
+          <number>best.score</number>
+        </text>
+      </sprite>
+      <position><x><centered /></x><y>12</y></position>
+      <variables>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
   </objects>
+  <keeps>
+    <keep object="best" />
+  </keeps>
   <states>
     <state name="mainmenu">
       <objects>
@@ -115,6 +170,9 @@
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
+      <shows>
+        <show object="best" />
+      </shows>
       <inputs>
         <input button="space">
           <push state="playing" />
@@ -144,23 +202,25 @@
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">3</variable>
+            <variable name="cubes">0</variable>
           </variables>
         </object>
         <!-- the pyramid, drawn as it stands: a tile is half a cube across and a row
              down, so a cube (#) stands between the two below it; the bottom row
              (=) is cubes too, where Coily hatches; the void (o) is every tile a
-             hop off the pyramid lands on -->
+             hop off the pyramid lands on, and the discs (d) two of them -->
         <map name="pyramid">
           <tile><width>across</width><height>down</height></tile>
-          <position><x>160</x><y>74</y></position>
-          <row>......o.o......</row>
-          <row>.....o.#.o.....</row>
-          <row>....o.#.#.o....</row>
-          <row>...o.#.#.#.o...</row>
-          <row>..o.#.#.#.#.o..</row>
-          <row>.o.#.#.#.#.#.o.</row>
-          <row>..=.=.=.=.=.=..</row>
-          <row>.o.o.o.o.o.o.o.</row>
+          <position><x>128</x><y>74</y></position>
+          <row>.......o.o.......</row>
+          <row>......o.#.o......</row>
+          <row>.....o.#.#.o.....</row>
+          <row>....o.#.#.#.o....</row>
+          <row>...o.#.#.#.#.o...</row>
+          <row>..d.#.#.#.#.#.d..</row>
+          <row>.o.#.#.#.#.#.#.o.</row>
+          <row>o.=.=.=.=.=.=.=.o</row>
+          <row>.o.o.o.o.o.o.o.o.</row>
           <!-- a cube is three faces of one bitmap; its middle is the tile's, so its
                top face is centred 16 above it, where Q*bert and the ball stand.
                Pixel collisions, and of those only the top (*) is solid: what
@@ -221,6 +281,7 @@
               <collision object="qbert" sprite="unlit">
                 <become sprite="lit" />
                 <inc variable="player.score">25</inc>
+                <inc variable="player.cubes" />
               </collision>
             </collisions>
             <group name="upper" char="#" />
@@ -238,6 +299,72 @@
             <drawn>false</drawn>
             <collisions>
               <enabled>true</enabled>
+            </collisions>
+          </group>
+          <!-- a disc floats where Q*bert's feet land, in a box as tall as the
+               void's; used, it is void too. Its rules go last look first, so a
+               landing changes the look only once -->
+          <group name="discs" char="d" class="disc">
+            <sprite name="ready">
+              <bitmap>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>...cmmmmc...</row>
+                <row>.cmmyyyymmc.</row>
+                <row>..ccmmmmcc..</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <scale>2</scale>
+                <color char="c">color.cyan</color>
+                <color char="m">color.magenta</color>
+                <color char="y">color.yellow</color>
+              </bitmap>
+            </sprite>
+            <sprite name="used">
+              <rectangle>
+                <width>24</width>
+                <height>56</height>
+                <color>color.black</color>
+              </rectangle>
+            </sprite>
+            <collisions>
+              <enabled>true</enabled>
+              <collision object="qbert" sprite="used">
+                <play sound="fall" />
+                <trigger object="qbert" action="lose" />
+              </collision>
+              <!-- Coily, chasing him, leaps after him -->
+              <collision object="qbert" sprite="ready">
+                <check object="coily" variable="snake"><equal>1</equal></check>
+                <inc variable="player.score">500</inc>
+                <reset object="coily" />
+              </collision>
+              <collision object="qbert" sprite="ready">
+                <become sprite="used" />
+                <play sound="disc" />
+                <reset object="qbert" />
+              </collision>
             </collisions>
           </group>
         </map>
@@ -317,18 +444,12 @@
               <position><x>6</x><y>18</y></position>
             </hitbox>
             <collision class="void">
-              <dec variable="player.lives" />
               <play sound="fall" />
-              <reset />
-              <reset object="ball" />
-              <reset object="coily" />
+              <trigger action="lose" />
             </collision>
             <collision class="enemy">
-              <dec variable="player.lives" />
-              <play sound="hit" />
-              <reset />
-              <reset object="ball" />
-              <reset object="coily" />
+              <play sound="curse" />
+              <trigger action="lose" />
             </collision>
           </collisions>
           <actions>
@@ -352,7 +473,32 @@
               <become sprite="upleft" />
               <play sound="hop" />
             </action>
+            <action name="lose">
+              <dec variable="player.lives" />
+              <become object="curse" sprite="said" />
+              <reset />
+              <reset object="ball" />
+              <reset object="coily" />
+            </action>
           </actions>
+        </object>
+        <!-- what he says when caught, for a moment, over the top of the pyramid -->
+        <object name="curse">
+          <sprite name="quiet">
+            <rectangle><width>1</width><height>1</height><color>color.black</color></rectangle>
+          </sprite>
+          <sprite name="said">
+            <text style="hud">
+              <content>@!#?@!</content>
+            </text>
+          </sprite>
+          <position><x>window.width.center + 30</x><y>60</y></position>
+          <timers>
+            <timer sprite="said">
+              <after>1.5</after>
+              <become sprite="quiet" />
+            </timer>
+          </timers>
         </object>
         <!-- the red ball: down the pyramid one way or the other, and off it -->
         <object name="ball" class="enemy">
@@ -383,20 +529,22 @@
           </collisions>
           <actions>
             <action name="left">
-              <hop direction="down-left"><x>across</x><y>down</y><seconds>0.3</seconds></hop>
+              <hop direction="down-left"><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+              <play sound="thud" />
             </action>
             <action name="right">
-              <hop direction="down-right"><x>across</x><y>down</y><seconds>0.3</seconds></hop>
+              <hop direction="down-right"><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+              <play sound="thud" />
             </action>
           </actions>
           <timers>
             <timer>
               <every><random min="0.6" max="1.4" /></every>
-              <trigger object="ball" action="left" />
+              <trigger action="left" />
             </timer>
             <timer>
               <every><random min="0.6" max="1.4" /></every>
-              <trigger object="ball" action="right" />
+              <trigger action="right" />
             </timer>
           </timers>
         </object>
@@ -452,6 +600,7 @@
             </hitbox>
             <collision class="bottom" sprite="egg">
               <become sprite="snake" />
+              <set variable="coily.snake">1</set>
             </collision>
             <collision class="void">
               <reset />
@@ -459,51 +608,58 @@
           </collisions>
           <actions>
             <action name="left">
-              <hop direction="down-left"><x>across</x><y>down</y><seconds>0.3</seconds></hop>
+              <hop direction="down-left"><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+              <play sound="thud" />
             </action>
             <action name="right">
-              <hop direction="down-right"><x>across</x><y>down</y><seconds>0.3</seconds></hop>
+              <hop direction="down-right"><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+              <play sound="thud" />
             </action>
           </actions>
+          <variables>
+            <variable name="snake">0</variable>
+          </variables>
           <timers>
             <timer sprite="egg">
               <every><random min="0.8" max="1.6" /></every>
-              <trigger object="coily" action="left" />
+              <trigger action="left" />
             </timer>
             <timer sprite="egg">
               <every><random min="0.8" max="1.6" /></every>
-              <trigger object="coily" action="right" />
+              <trigger action="right" />
             </timer>
             <timer sprite="snake">
               <every>1</every>
               <hunt object="qbert">
-                <hop><x>across</x><y>down</y><seconds>0.3</seconds></hop>
+                <hop><x>across</x><y>down</y><seconds>bounce</seconds></hop>
               </hunt>
             </timer>
           </timers>
         </object>
       </objects>
+      <shows>
+        <show object="best" />
+      </shows>
       <inputs>
-        <input button="w"><trigger object="qbert" action="upright" /></input>
-        <input button="up"><trigger object="qbert" action="upright" /></input>
-        <input button="d"><trigger object="qbert" action="downright" /></input>
-        <input button="right"><trigger object="qbert" action="downright" /></input>
-        <input button="s"><trigger object="qbert" action="downleft" /></input>
-        <input button="down"><trigger object="qbert" action="downleft" /></input>
-        <input button="a"><trigger object="qbert" action="upleft" /></input>
-        <input button="left"><trigger object="qbert" action="upleft" /></input>
-        <input button="space"><push state="paused" /></input>
-        <input button="p"><push state="paused" /></input>
-        <input button="escape"><push state="paused" /></input>
+        <input button="w up"><trigger object="qbert" action="upright" /></input>
+        <input button="d right"><trigger object="qbert" action="downright" /></input>
+        <input button="s down"><trigger object="qbert" action="downleft" /></input>
+        <input button="a left"><trigger object="qbert" action="upleft" /></input>
+        <input button="space p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition object="player" variable="score">
-          <atleast>goal</atleast>
+        <condition object="player" variable="cubes">
+          <atleast>28</atleast>
+          <play sound="done" />
           <push state="won" />
         </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
           <push state="lost" />
+        </condition>
+        <condition object="player" variable="score">
+          <above object="best" variable="score" />
+          <copy variable="player.score" into="best.score" />
         </condition>
       </conditions>
     </state>
@@ -523,9 +679,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space"><pop /></input>
-        <input button="p"><pop /></input>
-        <input button="escape"><pop /></input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
     <state name="won">
