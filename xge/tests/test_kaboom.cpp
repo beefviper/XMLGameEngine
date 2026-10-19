@@ -177,6 +177,9 @@ TEST_CASE("the bomber drops a bomb from under himself every so often, and it fal
 	CHECK(std::abs((bomb.position.x + bomb.size.x / 2) - (bomber.position.x + bomber.size.x / 2)) < 8.0f);
 	CHECK(bomb.position.y >= bomber.position.y + bomber.size.y);
 
+	// Three more, while the bucket (wherever the bomber's wanderings put the
+	// bombs) catches none of them.
+	table.bucket().collisionData.enabled = false;
 	table.frames(static_cast<int>(0.7f * kFramerate) * 3 + 1);
 	CHECK(table.falling().size() == 4);
 }
