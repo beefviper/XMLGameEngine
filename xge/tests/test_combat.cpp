@@ -6,8 +6,9 @@
 // Catch2 tests for games/descriptions/combat.xml, played through a real xge::Engine with
 // no window and the keys two players would press: driving and backing along
 // the heading (<thrust>), turning (<turn>) and stopping (<drag>), a shell
-// fired from the gun along the heading, a hit scoring and sending the tank
-// back to its corner, the walls, and the first to five winning.
+// fired from the gun along the heading, a hit scoring and knocking the tank
+// back the way the shell flew, the walls, and the clock ending the game with
+// the most hits winning.
 //
 // Window::init() normally measures each object's size once a backend exists;
 // the helper gives every shape the size its sprite implies instead.
@@ -119,7 +120,7 @@ TEST_CASE("a tank drives the way it points, backs up, and stops when let go", "[
 	CHECK(play.tank1().position.y > y + 15.0f);
 }
 
-TEST_CASE("a shell flies from the gun, one at a time, and a hit scores and sends the tank home", "[combat]")
+TEST_CASE("a shell flies from the gun, one at a time, and a hit scores and knocks the tank back", "[combat]")
 {
 	Combat play;
 	play.start();
@@ -141,15 +142,19 @@ TEST_CASE("a shell flies from the gun, one at a time, and a hit scores and sends
 	play.frames(1);
 	CHECK(shell.position.x > flying.x);
 
-	// Tank two moves off its corner; the hit puts it back.
-	play.hold(KeyCode::Up, 10);
-	const Vector2f home = play.tank2().positionOriginal;
-	CHECK(play.tank2().position.x < home.x);
-	play.frames(120);
-	CHECK(play.tank1().variable.at("score") == 1);
+	// Tank two drives toward it; the hit knocks it back the way the shell flew.
+	play.engine.handleKeyPressed(KeyCode::Up);
+	bool knocked = false;
+	for (int frame = 0; frame < 120 && !knocked; ++frame)
+	{
+		play.frames(1);
+		knocked = play.tank2().velocity.x > 0.0f;
+	}
+	play.engine.handleKeyReleased(KeyCode::Up);
+	CHECK(knocked);
+	CHECK(shell.variable.at("hits") == 1);
 	CHECK_FALSE(shell.isVisible);
-	CHECK(play.tank2().position.x == Approx(home.x));
-	CHECK(play.tank2().heading == Approx(270.0f));
+	CHECK(play.tank2().heading == Approx(270.0f)); // knocked, not turned
 }
 
 TEST_CASE("a shell stops at a wall, and a tank bounces off one", "[combat]")
@@ -160,8 +165,8 @@ TEST_CASE("a shell stops at a wall, and a tank bounces off one", "[combat]")
 	play.tap(KeyCode::RShift);
 	play.frames(120);
 	CHECK_FALSE(play.game.getObject("shell2").isVisible);
-	CHECK(play.tank1().variable.at("score") == 0);
-	CHECK(play.tank2().variable.at("score") == 0);
+	CHECK(play.game.getObject("shell1").variable.at("hits") == 0);
+	CHECK(play.game.getObject("shell2").variable.at("hits") == 0);
 
 	// Straight at the middle wall.
 	const Object& wall = play.game.getObject("walls.1");
@@ -171,7 +176,7 @@ TEST_CASE("a shell stops at a wall, and a tank bounces off one", "[combat]")
 	CHECK(play.tank1().position.x + play.tank1().size.x < wall.position.x + 10.0f);
 }
 
-TEST_CASE("five hits win, and space plays again", "[combat]")
+TEST_CASE("after two minutes sixteen the most hits win, and space plays again", "[combat]")
 {
 	Combat play;
 	play.start();
@@ -181,13 +186,16 @@ TEST_CASE("five hits win, and space plays again", "[combat]")
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "playing");
 
-	play.tank2().variable["score"] = 5;
-	play.frames(2);
-	CHECK(play.state() == "wins");
+	play.game.getObject("shell2").variable["hits"] = 3;
+	play.frames(135 * 60);
+	CHECK(play.state() == "playing");
+	play.frames(62);
+	REQUIRE(play.state() == "wins");
 	CHECK(play.game.getObject("wins.winner").lookName() == "blue");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
-	CHECK(play.tank2().variable.at("score") == 0);
+	CHECK(play.game.getObject("shell2").variable.at("hits") == 0);
+	CHECK(play.game.getObject("wins.winner").lookName() == "draw");
 }
 
 TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is", "[combat]")
@@ -228,8 +236,9 @@ TEST_CASE("each state owns what it draws, and a win draws the field still under 
 	CHECK_FALSE(play.game.isShown(play.tank1()));
 
 	play.start();
-	play.tank1().variable["score"] = 5;
-	play.frames(2);
+	play.game.getObject("shell1").variable["hits"] = 5;
+	play.game.pushState("wins");
+	play.frames(1);
 	REQUIRE(play.state() == "wins");
 	CHECK(play.game.isStill(play.tank2()));
 	CHECK(play.game.isStill(play.game.getObject("score1")));
