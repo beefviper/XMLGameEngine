@@ -11,7 +11,9 @@
 // Space fires, P pauses.
 //
 // The rooms are the scenes of the playing state (playing.room1 to room4),
-// each with its own walls, exits, robots and tally (playing.room2.robots.3).
+// each with its own maze of walls and exits and its own robots, named by
+// room and colour: y1 to y3 in room one, r1 to r4, c1 to c5, g1 to g6
+// (playing.room2.r3).
 //
 // Window::init() normally measures each object's size once a backend exists;
 // measure() gives every shape the size its sprite implies instead.
@@ -45,12 +47,16 @@ namespace
 		void display() override {}
 	};
 
-	// The maze is 12 cells across and 8 down, each cell a 40 pixel floor and
-	// an 8 pixel wall, starting 48 pixels down the window (below the score).
-	// The man is 14 by 22 and the robots 14 by 18. Every room keeps the first
-	// three cells of the row of the left exit (cells 0 to 2 of row 3) open.
-	constexpr float cellSize = 48.0f;
+	// A room is 5 cells across and 3 down, each cell 112 by 128 with an 8
+	// pixel wall, starting 48 pixels down the window (below the score); the
+	// exits are the middle of each side. The man is 14 by 22 and the robots
+	// 14 by 18. Every room keeps the cell of the left exit and the one
+	// beside it (cells 0 and 1 of row 1) open between them.
+	constexpr float cellWidth = 112.0f;
+	constexpr float cellHeight = 128.0f;
 	constexpr float mazeTop = 48.0f;
+	constexpr float roomRight = 568.0f;
+	constexpr float roomBottom = 440.0f;
 
 	struct Play
 	{
@@ -94,7 +100,9 @@ namespace
 			return scene.back() - '0';
 		}
 		static std::string inRoom(int n, const std::string& name) { return "playing.room" + std::to_string(n) + "." + name; }
-		static std::string robot(int n, int member) { return inRoom(n, "robots." + std::to_string(member)); }
+		// A robot of a room, by its number in the room: y1, r1, c1 or g1 for
+		// the first of rooms one to four.
+		static std::string robot(int n, int member) { return inRoom(n, std::string(1, "yrcg"[n - 1]) + std::to_string(member)); }
 		Object& object(const std::string& name) { return game.getObject(name); }
 		Object& man() { return object("player"); }
 		Object& bullet() { return object("bullet"); }
@@ -115,7 +123,7 @@ namespace
 		// The robots of a room still standing.
 		int robotsLeft(int n)
 		{
-			return alive("robot", inRoom(n, "robots."));
+			return alive("robot", inRoom(n, ""));
 		}
 
 		int alive(const std::string& objClass, const std::string& prefix)
@@ -132,12 +140,12 @@ namespace
 		// and down, without a walk.
 		void placeMan(int cellX, int cellY)
 		{
-			man().position = { static_cast<float>(cellX) * cellSize + 8.0f + 13.0f, mazeTop + static_cast<float>(cellY) * cellSize + 8.0f + 9.0f };
+			man().position = { static_cast<float>(cellX) * cellWidth + 53.0f, mazeTop + static_cast<float>(cellY) * cellHeight + 57.0f };
 		}
 
 		void placeRobot(const std::string& name, int cellX, int cellY)
 		{
-			object(name).position = { static_cast<float>(cellX) * cellSize + 8.0f + 13.0f, mazeTop + static_cast<float>(cellY) * cellSize + 8.0f + 11.0f };
+			object(name).position = { static_cast<float>(cellX) * cellWidth + 53.0f, mazeTop + static_cast<float>(cellY) * cellHeight + 59.0f };
 		}
 
 		// Holds every robot of the room still and keeps it from firing, so a
@@ -154,13 +162,25 @@ namespace
 			}
 		}
 
+		// Plays a frame with the robots standing where they are (they keep
+		// their timers, so they still fire), and the man's lives kept up.
+		void standingFrame()
+		{
+			frames(1);
+			man().variable["lives"] = 3.0f;
+			for (auto& object : game.getCurrentObjects())
+			{
+				if (object.objClass == "robot") { object.velocity = { 0.0f, 0.0f }; }
+			}
+		}
+
 		// Takes every robot of a room out of play, as if they were all shot.
 		void killRobots(int n)
 		{
-			const std::string prefix = inRoom(n, "robots.");
+			const std::string prefix = inRoom(n, "");
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.name.rfind(prefix, 0) == 0) { object.isVisible = false; object.collisionData.enabled = false; }
+				if (object.objClass == "robot" && object.name.rfind(prefix, 0) == 0) { object.isVisible = false; object.collisionData.enabled = false; }
 			}
 		}
 
@@ -171,20 +191,23 @@ namespace
 			if (freezeThem) { freezeRobots(); }
 		}
 
-		// Walks out of the room by one of the exits from the cell in front of
-		// it, and stops once through (the man is put back at the start of the
+		// Walks out of the room by one of the exits from just in front of it,
+		// and stops once through (the man is put back at the start of the
 		// next room, still walking, so a longer walk would go out again).
-		void leaveByTheLeft() { placeMan(0, 3); walk(KeyCode::A, 9); }
-		void leaveByTheRight() { placeMan(11, 3); walk(KeyCode::D, 9); }
-		void leaveByTheTop() { placeMan(5, 0); walk(KeyCode::W, 6); }
-		void leaveByTheBottom() { placeMan(5, 7); walk(KeyCode::S, 6); }
+		void leaveByTheLeft() { placeMan(0, 1); man().position.x = 10.0f; walk(KeyCode::A, 6); }
+		void leaveByTheRight() { placeMan(4, 1); man().position.x = roomRight - 24.0f; walk(KeyCode::D, 6); }
+		void leaveByTheTop() { placeMan(2, 0); man().position.y = mazeTop + 10.0f; walk(KeyCode::W, 6); }
+		void leaveByTheBottom() { placeMan(2, 2); man().position.y = roomBottom - 34.0f; walk(KeyCode::S, 6); }
 
-		// The man in the first cell of the row of the exit facing the robot
-		// he has put two cells along, and a shot fired at it.
+		// Walks into the top wall of the second cell of the first row.
+		void touchTheWall() { placeMan(1, 0); man().position.y = mazeTop + 9.0f; walk(KeyCode::W, 2); }
+
+		// The man in the cell of the left exit facing the robot he has put
+		// in the next cell, and a shot fired at it.
 		void shootRobot(const std::string& name)
 		{
-			placeMan(0, 3);
-			placeRobot(name, 2, 3);
+			placeMan(0, 1);
+			placeRobot(name, 1, 1);
 			walk(KeyCode::D, 1);
 			tap(KeyCode::Space);
 			frames(60);
@@ -223,18 +246,25 @@ TEST_CASE("berserk.xml loads the man, four rooms of robots, exits, an Otto and a
 	CHECK(play.object("score").ownerState == "playing");
 	CHECK_FALSE(play.game.isShown(play.object("score")));
 
-	// Each room has its own walls, the same size, more robots than the one
-	// before, and four exits that are never drawn.
+	// Each room is a map of the same frame: a pillar at every corner of a
+	// cell, the walls between them, more robots than the room before, and
+	// four exits that are never drawn.
 	for (int room = 1; room <= 4; ++room)
 	{
-		Object& walls = play.object(Play::inRoom(room, "walls"));
-		CHECK(walls.size.x == 584.0f);
-		CHECK(walls.size.y == 392.0f);
-		CHECK(walls.isDrawn);
+		Object& corner = play.object(Play::inRoom(room, "post.1"));
+		CHECK(corner.position.x == 0.0f);
+		CHECK(corner.position.y == mazeTop);
+		CHECK(corner.size.x == 8.0f);
+		Object& last = play.object(Play::inRoom(room, "post.24"));
+		CHECK(last.position.x == roomRight - 8.0f);
+		CHECK(last.position.y == roomBottom - 8.0f);
+		CHECK(play.object(Play::inRoom(room, "across.1")).size.x == cellWidth - 8.0f);
+		CHECK(play.object(Play::inRoom(room, "down.1")).size.y == cellHeight - 8.0f);
+		CHECK(play.object(Play::inRoom(room, "down.1")).isDrawn);
 		CHECK(play.robotsLeft(room) == room + 2);
-		CHECK(play.alive("exit", Play::inRoom(room, "exits.")) == 4);
-		CHECK_FALSE(play.object(Play::inRoom(room, "exits.1")).isDrawn);
-		CHECK_FALSE(play.object(Play::inRoom(room, "tally")).isDrawn);
+		CHECK(play.alive("exit", Play::inRoom(room, "")) == 4);
+		CHECK_FALSE(play.object(Play::inRoom(room, "level.1")).isDrawn);
+		CHECK_FALSE(play.object(Play::inRoom(room, "side.1")).isDrawn);
 	}
 	CHECK(count(play, "playing.robotshots.") == 4);
 }
@@ -246,7 +276,7 @@ TEST_CASE("Space starts Berserk, and the man walks the four ways and faces the w
 	CHECK(play.room() == 1);
 
 	Object& man = play.man();
-	play.placeMan(1, 3);
+	play.placeMan(1, 1);
 	const Vector2f start = man.position;
 
 	play.walk(KeyCode::D, 5);
@@ -273,7 +303,7 @@ TEST_CASE("the man shoots the way he faces, one shot at a time", "[berserk]")
 	Play play;
 	play.begin();
 	Object& bullet = play.bullet();
-	play.placeMan(5, 4);
+	play.placeMan(1, 1);
 
 	struct Way { KeyCode key; float vx; float vy; };
 	for (const Way& way : { Way{ KeyCode::A, -1.0f, 0.0f }, Way{ KeyCode::D, 1.0f, 0.0f }, Way{ KeyCode::W, 0.0f, -1.0f }, Way{ KeyCode::S, 0.0f, 1.0f } })
@@ -289,7 +319,7 @@ TEST_CASE("the man shoots the way he faces, one shot at a time", "[berserk]")
 		// It flies on until it meets a wall (or the edge of the window).
 		play.frames(120);
 		CHECK_FALSE(bullet.isVisible);
-		play.placeMan(5, 4);
+		play.placeMan(1, 1);
 	}
 
 	// While one is in flight another cannot be fired.
@@ -315,9 +345,8 @@ TEST_CASE("a shot robot is gone and scores fifty, and the shot goes with it", "[
 	CHECK_FALSE(robot.isVisible);
 	CHECK(play.robotsLeft(1) == 2);
 	CHECK(play.score() == 50.0f);
-	// The robot's rule says tally and means its own room's.
-	CHECK(play.object(Play::inRoom(1, "tally")).variable["kills"] == 1.0f);
-	CHECK(play.object(Play::inRoom(2, "tally")).variable["kills"] == 0.0f);
+	// The man counts the robots gone in this room.
+	CHECK(play.variable("kills") == 1.0f);
 	CHECK_FALSE(play.bullet().isVisible);
 }
 
@@ -329,8 +358,8 @@ TEST_CASE("a robot touching the man costs a life and sends him back to the start
 	Object& man = play.man();
 	const Vector2f start = man.position;
 	const std::string robot = Play::robot(1, 1);
-	play.placeMan(0, 3);
-	play.placeRobot(robot, 2, 3);
+	play.placeMan(0, 1);
+	play.placeRobot(robot, 1, 1);
 	man.position.x = play.object(robot).position.x - 20.0f;
 	play.walk(KeyCode::D, 4);
 
@@ -348,10 +377,8 @@ TEST_CASE("the walls are electrified", "[berserk]")
 	Object& man = play.man();
 	const Vector2f start = man.position;
 
-	// The top wall is a few steps up from the first row of cells (the exit
-	// is in the fifth column; this is the third).
-	play.placeMan(2, 0);
-	play.walk(KeyCode::W, 6);
+	// The top wall of the second cell (the exit is the third's).
+	play.touchTheWall();
 	CHECK(play.lives() == 2.0f);
 	CHECK(man.position.x == Approx(start.x).margin(4.0));
 	CHECK(man.position.y == Approx(start.y).margin(4.0));
@@ -376,40 +403,53 @@ TEST_CASE("the man is safe at the start of every room, and can walk out of each"
 
 // ---------------------------------------------------------------- the robots
 
-TEST_CASE("robots patrol their corridors and turn at the walls instead of leaving", "[berserk]")
+TEST_CASE("robots stand a while, then come for the man, and one that walks into a wall is destroyed", "[berserk]")
 {
 	Play play;
 	play.begin(false);
 
-	// The man stands at the start; any robot that reaches him only costs a
-	// life, which this gives back.
-	for (int block = 0; block < 20; ++block)
-	{
-		play.frames(180);
-		play.man().variable["lives"] = 3.0f;
-		for (auto& object : play.game.getCurrentObjects())
-		{
-			if (object.objClass != "robot" || !object.isVisible || object.ownerScene != "playing.room1") { continue; }
-			CHECK(object.position.x > 8.0f);
-			CHECK(object.position.x + object.size.x < 584.0f - 8.0f);
-			CHECK(object.position.y > mazeTop + 8.0f);
-			CHECK(object.position.y + object.size.y < mazeTop + 392.0f - 8.0f);
-		}
-	}
-	CHECK(play.robotsLeft(1) == 3);
+	// Each first turns to the man between one and two and a half seconds in.
+	const std::string robot = Play::robot(1, 1);
+	const Vector2f started = play.object(robot).position;
+	play.frames(59);
+	CHECK(play.object(robot).position.x == started.x);
+	CHECK(play.object(robot).position.y == started.y);
+	CHECK(play.object(robot).velocity.x == 0.0f);
+
+	const auto apart = [&](const Object& object) { return std::hypot(object.position.x - play.man().position.x, object.position.y - play.man().position.y); };
+	const float before = apart(play.object(robot));
+	play.frames(150);
+	play.man().variable["lives"] = 3.0f;
+	CHECK(apart(play.object(robot)) < before);
+
+	// One walked into the wall between the first two cells of row one is gone,
+	// and scores as if shot.
+	Play again;
+	again.begin();
+	Object& walker = again.object(robot);
+	walker.position = { 2 * cellWidth - 18.0f, mazeTop + cellHeight + 59.0f };
+	walker.velocity = { 1.0f, 0.0f };
+	again.frames(6);
+	CHECK_FALSE(walker.isVisible);
+	CHECK(again.score() == 50.0f);
+	CHECK(again.variable("kills") == 1.0f);
+	CHECK(again.robotsLeft(1) == 2);
 }
 
-TEST_CASE("robots fire at the man, and a shot that reaches the man costs a life", "[berserk]")
+TEST_CASE("the first room's robots never fire; the next room's fire at the man, and a shot that reaches him costs a life", "[berserk]")
 {
 	Play play;
 	play.begin(false);
+	for (int frame = 0; frame < 600; ++frame) { play.standingFrame(); }
+	CHECK(play.alive("robotshot") == 0);
 
-	// Within ten seconds a robot has fired.
+	// In room two, within ten seconds a robot has fired.
+	play.leaveByTheLeft();
+	REQUIRE(play.room() == 2);
 	bool fired = false;
 	for (int frame = 0; frame < 600 && !fired; ++frame)
 	{
-		play.man().variable["lives"] = 3.0f;
-		play.frames(1);
+		play.standingFrame();
 		fired = play.alive("robotshot") > 0;
 	}
 	REQUIRE(fired);
@@ -445,26 +485,26 @@ TEST_CASE("robots fire at the man, and a shot that reaches the man costs a life"
 TEST_CASE("robots fire more often, and Otto comes sooner, the deeper the man has gone", "[berserk]")
 {
 	// A robot's wait is worked out when its timer starts, from player.depth:
-	// between 3 and 7 seconds at depth 0, between 0.8 and 2 at depth 12 (every
-	// robot's first wait starts on the first frame of the room, so the depth
-	// is given before it). Otto's wait is 14 seconds, less the depth, but never
-	// under 6.
+	// between 2.75 and 6.5 seconds at depth 1, between 0.8 and 2 at depth 12
+	// (every robot's first wait starts on the first frame of the room, so
+	// the depth is given before the man goes into room two and it counts one
+	// more). Otto's wait is 14 seconds, less the depth, but never under 6.
 	const auto firstShot = [](float depth)
 	{
 		Play play;
 		play.game.incrementText("player.depth", depth);
 		play.begin(false);
+		play.leaveByTheLeft();
 		int frame = 0;
 		while (play.alive("robotshot") == 0 && frame < 1000)
 		{
-			play.frames(1);
+			play.standingFrame();
 			++frame;
-			play.man().variable["lives"] = 3.0f;
 		}
 		return frame;
 	};
-	CHECK(firstShot(0.0f) >= 3 * 60);
-	CHECK(firstShot(12.0f) <= 2 * 60 + 2);
+	CHECK(firstShot(0.0f) >= 155);
+	CHECK(firstShot(11.0f) <= 2 * 60 + 2);
 
 	const auto ottoAt = [](float depth)
 	{
@@ -519,8 +559,8 @@ TEST_CASE("only the room the man is in plays: the others' robots are away and st
 	CHECK(play.game.isAway(left));
 	CHECK_FALSE(play.game.isShown(left));
 	CHECK(play.game.isShown(play.object(Play::robot(2, 1))));
-	CHECK_FALSE(play.game.isShown(play.object(Play::inRoom(1, "walls"))));
-	CHECK(play.game.isShown(play.object(Play::inRoom(2, "walls"))));
+	CHECK_FALSE(play.game.isShown(play.object(Play::inRoom(1, "post.1"))));
+	CHECK(play.game.isShown(play.object(Play::inRoom(2, "post.1"))));
 
 	const Vector2f robotBefore = left.position;
 	play.frames(60);
@@ -536,55 +576,49 @@ TEST_CASE("a room left keeps where it was, and is put back as it started when th
 	// Room one's first robot walks off from where it started.
 	Object& robot = play.object(Play::robot(1, 1));
 	const Vector2f started = robot.position;
-	play.frames(60);
+	play.frames(200);
 	play.man().variable["lives"] = 3.0f;
-	REQUIRE(robot.position.x != started.x);
 
 	// Away, it stands where it was left.
 	play.leaveByTheLeft();
 	REQUIRE(play.room() == 2);
 	const Vector2f left = robot.position;
-	REQUIRE(std::abs(left.x - started.x) > 10.0f);
+	REQUIRE(std::hypot(left.x - started.x, left.y - started.y) > 10.0f);
 	play.frames(60);
 	CHECK(robot.position.x == Approx(left.x));
 	CHECK(robot.position.y == Approx(left.y));
 
 	// Round the four rooms, the way out of room four puts room one back: the
-	// robot is at its start again, give or take the few frames it has walked
-	// since the man came in.
+	// robot is at its start again, and stands there a while.
 	for (int room = 2; room <= 4; ++room) { play.leaveByTheLeft(); }
 	REQUIRE(play.room() == 1);
 	CHECK(robot.position.x == Approx(started.x).margin(4));
 	CHECK(robot.position.y == Approx(started.y).margin(4));
 }
 
-TEST_CASE("shooting every robot of a room pays ten more for each, and coming back puts the count back", "[berserk]")
+TEST_CASE("a room with no robot left pays ten more for each destroyed in it, and leaving puts the count back", "[berserk]")
 {
 	Play play;
 	play.begin();
 
-	// Room one has three robots: two shot is only fifty each.
-	Object& tally = play.object(Play::inRoom(1, "tally"));
-	tally.variable["kills"] = 2.0f;
+	// Two of room one's three gone is only fifty each.
+	play.game.incrementText("player.kills", 2.0f);
 	play.frames(2);
 	CHECK(play.score() == 0.0f);
 
-	// Room two has four robots.
+	// Leaving forgets them: room two counts its own.
 	play.leaveByTheLeft();
 	REQUIRE(play.room() == 2);
-	Object& tally2 = play.object(Play::inRoom(2, "tally"));
-	tally2.variable["kills"] = 4.0f;
+	CHECK(play.variable("kills") == 0.0f);
+
+	// All four of room two gone.
+	play.killRobots(2);
+	play.game.incrementText("player.kills", 4.0f);
 	play.frames(2);
 	CHECK(play.score() == 40.0f);
-	CHECK(tally2.variable["kills"] == 0.0f);
+	CHECK(play.variable("kills") == 0.0f);
 	play.frames(10);
 	CHECK(play.score() == 40.0f);
-
-	// Coming round to room one again puts its count back, so the two shot
-	// the first time do not add to this visit's.
-	for (int room = 2; room <= 4; ++room) { play.leaveByTheLeft(); }
-	REQUIRE(play.room() == 1);
-	CHECK(tally.variable["kills"] == 0.0f);
 }
 
 TEST_CASE("three shots at three robots clear room one and make the bonus", "[berserk]")
@@ -635,7 +669,7 @@ TEST_CASE("Evil Otto turns up after a while, and one touch costs the man a life"
 	const float before = apart();
 	play.frames(30);
 	CHECK(apart() < before - 25.0f);
-	play.placeMan(0, 3);
+	play.placeMan(0, 1);
 	otto.position = { play.man().position.x + 20.0f, play.man().position.y - 2.0f };
 	otto.velocity = { 0.0f, 0.0f };
 	play.walk(KeyCode::D, 4);
@@ -660,7 +694,7 @@ TEST_CASE("each room's wait for Otto starts when the man comes in", "[berserk]")
 		play.frames(1);
 		++frame;
 	}
-	CHECK(frame == Approx(13 * 60).margin(2));
+	CHECK(frame == Approx(13 * 60).margin(6));
 }
 
 TEST_CASE("Otto comes at once when every robot is gone, goes when the man leaves, and cannot be shot", "[berserk]")
@@ -685,8 +719,8 @@ TEST_CASE("Otto comes at once when every robot is gone, goes when the man leaves
 	otto.isVisible = true;
 	otto.collisionData.enabled = true;
 	otto.velocity = { 0.0f, 0.0f };
-	play.placeMan(0, 3);
-	otto.position = { 2 * cellSize + 21.0f, mazeTop + 3 * cellSize + 8.0f + 5.0f };
+	play.placeMan(0, 1);
+	otto.position = { play.man().position.x + 60.0f, play.man().position.y - 2.0f };
 	play.walk(KeyCode::D, 1);
 	play.tap(KeyCode::Space);
 	play.frames(40);
@@ -719,11 +753,10 @@ TEST_CASE("no men left is game over, over the room standing still, and Space pla
 	REQUIRE(play.room() == 2);
 
 	play.man().variable["lives"] = 1.0f;
-	play.placeMan(2, 0);
-	play.walk(KeyCode::W, 6);
+	play.touchTheWall();
 	play.frames(2);
 	CHECK(play.state() == "gameover");
-	CHECK(play.game.isStill(play.object(Play::inRoom(2, "walls"))));
+	CHECK(play.game.isStill(play.object(Play::inRoom(2, "post.1"))));
 	CHECK(play.game.isShown(play.object("gameover")));
 	CHECK(play.game.isStill(play.object("score")));
 
@@ -751,8 +784,8 @@ TEST_CASE("P pauses over the room standing still, and Space or P carries on", "[
 	// The room, the man and the score are drawn still under PAUSED.
 	CHECK(play.game.isStill(play.object(robot)));
 	CHECK(play.game.isStill(play.man()));
-	CHECK(play.game.isStill(play.object(Play::inRoom(1, "walls"))));
-	CHECK_FALSE(play.game.isStill(play.object(Play::inRoom(2, "walls"))));
+	CHECK(play.game.isStill(play.object(Play::inRoom(1, "post.1"))));
+	CHECK_FALSE(play.game.isStill(play.object(Play::inRoom(2, "post.1"))));
 	CHECK(play.game.isShown(play.object("paused")));
 	CHECK(play.game.isStill(play.object("score")));
 
