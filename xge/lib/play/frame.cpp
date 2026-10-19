@@ -31,14 +31,13 @@ namespace xge
 		// Whether a and b can touch at all, whatever their rules: both have
 		// their collisions on, neither is in the middle of a jump (it is over
 		// everything), and they are not one lockstep block (the invaders
-		// never collide with each other). Then whether a rule answers is the
-		// game's (FrameRules::canCollide).
-		bool canTouch(const Object& a, const Object& b, FrameRules& rules)
+		// never collide with each other). Whether a rule answers is the
+		// game's (FrameRules::canCollide), asked once (FrameRules::partners).
+		bool canTouch(const Object& a, const Object& b) noexcept
 		{
 			if (!a.collisionData.enabled || !b.collisionData.enabled) { return false; }
 			if (a.isAirborne() || b.isAirborne()) { return false; }
-			if (a.collisionData.lockstep != 0 && a.collisionData.lockstep == b.collisionData.lockstep) { return false; }
-			return rules.canCollide(a, b);
+			return a.collisionData.lockstep == 0 || a.collisionData.lockstep != b.collisionData.lockstep;
 		}
 
 		// Climbing (a <climb> in an action, held): an object at a ladder - an
@@ -446,17 +445,23 @@ namespace xge
 			{
 				Object* first;
 				Object* second;
+				std::size_t i;
+				std::size_t j;
 			};
 
-			// Whether each is in play, asked once: a game with many objects out
-			// of play (the other rooms of a state) would otherwise ask it for
-			// every pair.
+			// Whether each is in play, asked once and again only after a
+			// reaction (which may hide something, or change the state): asking
+			// for every pair, every time the frame is swept on, was most of a
+			// busy frame.
 			std::vector<char> playing(all.size());
 			for (std::size_t i = 0; i < all.size(); ++i)
 			{
 				playing[i] = rules.inPlay(all[i]) ? 1 : 0;
 			}
 
+			// Only the pairs a rule answers for (partners), and of those the
+			// ones that can touch now.
+			const std::vector<std::vector<std::size_t>>& partners = rules.partners(all);
 			std::vector<Pair> pairs;
 			for (std::size_t i = 0; i < all.size(); ++i)
 			{
@@ -465,11 +470,11 @@ namespace xge
 					continue;
 				}
 
-				for (std::size_t j = i + 1; j < all.size(); ++j)
+				for (const std::size_t j : partners[i])
 				{
-					if (playing[j] && canTouch(all[i], all[j], rules))
+					if (playing[j] && canTouch(all[i], all[j]))
 					{
-						pairs.push_back({ &all[i], &all[j] });
+						pairs.push_back({ &all[i], &all[j], i, j });
 					}
 				}
 			}
@@ -492,7 +497,7 @@ namespace xge
 				played = total;
 				for (std::size_t i = 0; i < all.size(); ++i)
 				{
-					if (rules.inPlay(all[i])) // TODO: at some point you might wanna collide with invisible objects
+					if (playing[i]) // TODO: at some point you might wanna collide with invisible objects
 					{
 						all[i].position = origin[i] + motionOf(all[i]) * (total - since[i]);
 					}
@@ -505,7 +510,7 @@ namespace xge
 			{
 				Object& a = *pair.first;
 				Object& b = *pair.second;
-				if (!rules.inPlay(a) || !rules.inPlay(b) || !canTouch(a, b, rules) || (!isMoving(a) && !isMoving(b)))
+				if (!playing[pair.i] || !playing[pair.j] || !canTouch(a, b) || (!isMoving(a) && !isMoving(b)))
 				{
 					return std::nullopt;
 				}
@@ -518,7 +523,6 @@ namespace xge
 			{
 				Vector2f position;
 				Vector2f motion;
-				bool inPlay;
 			};
 			std::vector<Before> before(all.size());
 
@@ -529,18 +533,20 @@ namespace xge
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
-						before[i] = { all[i].position, motionOf(all[i]), rules.inPlay(all[i]) };
+						before[i] = { all[i].position, motionOf(all[i]) };
 					}
 
 					rules.touched(*pair.first, *pair.second, contact);
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
-						if (all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || rules.inPlay(all[i]) != before[i].inPlay)
+						const char nowPlaying = rules.inPlay(all[i]) ? 1 : 0;
+						if (all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || nowPlaying != playing[i])
 						{
 							origin[i] = all[i].position;
 							since[i] = played;
 						}
+						playing[i] = nowPlaying;
 					}
 				});
 
@@ -549,6 +555,24 @@ namespace xge
 				object.hopped = false;
 			}
 		}
+	}
+
+	const std::vector<std::vector<std::size_t>>& FrameRules::partners(const std::vector<Object>& objects)
+	{
+		if (partnersOf != objects.data() || partnersCount != objects.size())
+		{
+			partnerLists.assign(objects.size(), {});
+			for (std::size_t i = 0; i < objects.size(); ++i)
+			{
+				for (std::size_t j = i + 1; j < objects.size(); ++j)
+				{
+					if (canCollide(objects[i], objects[j])) { partnerLists[i].push_back(j); }
+				}
+			}
+			partnersOf = objects.data();
+			partnersCount = objects.size();
+		}
+		return partnerLists;
 	}
 
 	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules)

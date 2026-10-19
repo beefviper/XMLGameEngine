@@ -274,6 +274,20 @@ namespace xge
 		return boxesOverlap(a, b);
 	}
 
+	bool sweptBoxesMeet(const Box& a, const Vector2f& moveA, const Box& b, const Vector2f& moveB) noexcept
+	{
+		constexpr float spare = 1.0f;
+		const float aLeft = a.left() + std::min(moveA.x, 0.0f) - spare;
+		const float aRight = a.right() + std::max(moveA.x, 0.0f) + spare;
+		const float aTop = a.top() + std::min(moveA.y, 0.0f) - spare;
+		const float aBottom = a.bottom() + std::max(moveA.y, 0.0f) + spare;
+		const float bLeft = b.left() + std::min(moveB.x, 0.0f);
+		const float bRight = b.right() + std::max(moveB.x, 0.0f);
+		const float bTop = b.top() + std::min(moveB.y, 0.0f);
+		const float bBottom = b.bottom() + std::max(moveB.y, 0.0f);
+		return aLeft <= bRight && bLeft <= aRight && aTop <= bBottom && bTop <= aBottom;
+	}
+
 	std::optional<SweepHit> sweepShapes(const Box& a, bool aRound, const Vector2f& moveA, const Box& b, bool bRound, const Vector2f& moveB) noexcept
 	{
 		if (const auto edge = shapesOverlap(a, aRound, b, bRound))

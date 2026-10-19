@@ -125,6 +125,12 @@ namespace xge
 	// are not a hit.
 	std::optional<SweepHit> sweepShapes(const Box& a, bool aRound, const Vector2f& moveA, const Box& b, bool bRound, const Vector2f& moveB) noexcept;
 
+	// A first look before a sweep: whether the box each covers over the
+	// whole step (from where it starts to where it ends, with a pixel to
+	// spare) meets the other's. Two that do not can never touch in that
+	// step; most pairs in a busy frame are far apart and stop here.
+	bool sweptBoxesMeet(const Box& a, const Vector2f& moveA, const Box& b, const Vector2f& moveB) noexcept;
+
 	// Whether the point local (measured from the box's top left) is inside the
 	// shape: a box, or the circle that fills it.
 	bool solidShapeAt(const Vector2f& size, bool round, const Vector2f& local) noexcept;

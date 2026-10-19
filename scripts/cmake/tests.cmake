@@ -78,6 +78,7 @@ add_executable(xgetest
 	"xge/tests/test_demonattack.cpp"
 	"xge/tests/test_builtin_font.cpp"
 	"xge/tests/test_sound.cpp"
+	"xge/tests/test_speed.cpp"
 	"xge/tests/test_gameplay_verbs.cpp"
 	"xge/tests/test_scenes.cpp"
 	"xge/tests/test_text.cpp"

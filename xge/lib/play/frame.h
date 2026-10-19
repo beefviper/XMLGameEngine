@@ -9,6 +9,7 @@
 #include "game/types.h"
 #include "play/geometry.h"
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -55,7 +56,10 @@ namespace xge
 
 		// Whether a rule of a's answers to b, or one of b's to a. Asked only
 		// of two that can touch at all (both colliding, neither in the air,
-		// not one lockstep block).
+		// not one lockstep block). The answer may depend only on what an
+		// object keeps for the whole game (its name, class, groups and rules):
+		// playOneFrame asks once for each two objects and remembers it (see
+		// partners).
 		virtual bool canCollide(const Object& a, const Object& b) { (void)a; (void)b; return false; }
 
 		// a and b have met during the move (contact.edgeOfSecond is the edge
@@ -65,6 +69,17 @@ namespace xge
 
 		// After everything has moved: the state's conditions.
 		virtual void conditions() {}
+
+		// For each object, the later ones (by index) a rule of either answers
+		// to (canCollide), asked once for the whole game rather than for every
+		// two objects every frame: most pairs (a wall and a wall) never can.
+		// Asked again when `objects` is a different list.
+		const std::vector<std::vector<std::size_t>>& partners(const std::vector<Object>& objects);
+
+	private:
+		std::vector<std::vector<std::size_t>> partnerLists;
+		const Object* partnersOf{ nullptr };
+		std::size_t partnersCount{ 0 };
 	};
 
 	// Plays one frame of a game, in the one order every game runs in:

@@ -94,7 +94,14 @@ namespace xge
 
 	std::optional<CollisionDetector::SweepHit> CollisionDetector::sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)
 	{
-		return sweepThings(boxOf(a), isRound(a), [&](const Vector2f& local) { return solidAt(a, local); }, moveA,
-			boxOf(b), isRound(b), [&](const Vector2f& local) { return solidAt(b, local); }, moveB, usesPixels(a, b));
+		const Box boxA = boxOf(a);
+		const Box boxB = boxOf(b);
+		if (!sweptBoxesMeet(boxA, moveA, boxB, moveB))
+		{
+			return std::nullopt;
+		}
+
+		return sweepThings(boxA, isRound(a), [&](const Vector2f& local) { return solidAt(a, local); }, moveA,
+			boxB, isRound(b), [&](const Vector2f& local) { return solidAt(b, local); }, moveB, usesPixels(a, b));
 	}
 }
