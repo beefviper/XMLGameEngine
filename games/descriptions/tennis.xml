@@ -8,13 +8,16 @@
   from above, and the ball flies: it is drawn higher the higher it is, with
   its shadow under it on the court, and it bounces where it lands. Walk into
   the ball to hit it back, but only when it is low enough to reach. The
-  computer plays the far end. Four points take a game (love, 15, 30, 40,
-  game; no deuce), and three games the match.
+  computer plays the far end. Points go love, 15, 30, 40 and game, with
+  deuce and advantage; six games take the set and the match.
 
   W A S D or the arrow keys walk, Space starts and plays again, P or Escape
   pauses.
 
   How it is written:
+  * The two players are one group: the picture, a person and a white
+    racket, the <stick /> at the edges, the walking and the score are said
+    once, and each says where it stands and the far one its colour.
   * The ball has an <altitude>: how high it is, how fast it rises (less each
     frame by its fall) and how much of its speed it keeps when it bounces.
     Its position is where it is over the court, so what it touches is what
@@ -27,7 +30,10 @@
   * The far player is the computer's: a <computer> in the playing state
     holds J or L down while the ball is to one side of it, the keys a second
     player would use, so a person could play that end instead.
-  * The score is words: a <choose> shows LOVE, 15, 30 or 40 from the points.
+  * The score is words: a <choose> shows LOVE, 15, 30, 40 or AD from the
+    points. Conditions of <all> and <any> say who takes the game: four
+    points with the other on 30 or less, or five, after four all has gone
+    back to deuce (three all).
   * A ball out at the far end is a point to the near player, and the other
     way round; either way it is served again (<reset />).
 -->
@@ -36,7 +42,7 @@
   <window name="Tennis">
     <width>800</width>
     <height>600</height>
-    <background>color.darkgreen</background>
+    <background>color.forestgreen</background>
     <fullscreen>false</fullscreen>
     <framerate>60</framerate>
   </window>
@@ -46,12 +52,10 @@
     <variable name="hit">4.5</variable>
     <variable name="loft">6</variable>
     <variable name="spin">0.12</variable>
+    <variable name="set">6</variable>
   </variables>
   <sounds>
-    <sound name="hit" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.04</note>
-    </sound>
+    <sound name="hit"><volume>0.2</volume><note pitch="C5">0.04</note></sound>
     <sound name="point" wave="triangle">
       <volume>0.3</volume>
       <note pitch="E5" to="E4">0.25</note>
@@ -63,13 +67,7 @@
   </styles>
   <objects>
     <object name="continue">
-      <sprite>
-        <text>
-          <content>spacebar to play</content>
-          <size>40</size>
-          <color>color.white</color>
-        </text>
-      </sprite>
+      <sprite><text><content>spacebar to play</content><size>40</size><color>color.white</color></text></sprite>
       <position><x><centered /></x><y>window.height.center + 60</y></position>
     </object>
   </objects>
@@ -77,11 +75,7 @@
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>TENNIS</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>TENNIS</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 80</centered></y></position>
         </object>
       </objects>
@@ -89,14 +83,12 @@
         <show object="continue" />
       </shows>
       <inputs>
-        <input button="space">
-          <push state="playing" />
-        </input>
+        <input button="space"><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
       <objects>
-        <!-- the court's lines, and the net across the middle -->
+        <!-- the court's lines: the sidelines, the service boxes and the line down the middle -->
         <object name="court">
           <sprite>
             <line><from><x>0</x><y>0</y></from><to><x>500</x><y>0</y></to><thickness>2</thickness></line>
@@ -110,98 +102,55 @@
           <position><x>150</x><y>80</y></position>
         </object>
         <object name="net">
-          <sprite>
-            <rectangle>
-              <width>540</width>
-              <height>4</height>
-              <color>color.lightgrey</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>540</width><height>4</height><color>color.lightgrey</color></rectangle></sprite>
           <position><x>130</x><y>298</y></position>
         </object>
-        <!-- the far player, the computer's -->
-        <object name="cpu" class="racket">
+        <!-- the players: a person with a racket; the far one is the computer's -->
+        <group name="players" class="racket">
           <sprite>
-            <rectangle>
-              <width>30</width>
-              <height>12</height>
-              <color>color.blue</color>
-            </rectangle>
-          </sprite>
-          <position><x>385</x><y>60</y></position>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all">
-              <stick />
-            </collision>
-          </collisions>
-          <actions>
-            <action name="left">
-              <move direction="left">step</move>
-            </action>
-            <action name="right">
-              <move direction="right">step</move>
-            </action>
-          </actions>
-          <variables>
-            <variable name="points">0</variable>
-            <variable name="games">0</variable>
-          </variables>
-        </object>
-        <!-- the near player -->
-        <object name="player" class="racket">
-          <sprite>
-            <rectangle>
-              <width>30</width>
-              <height>12</height>
+            <bitmap>
+              <row>...**.....</row>
+              <row>...**...rr</row>
+              <row>.******.rr</row>
+              <row>...**..r..</row>
+              <row>...**.....</row>
+              <row>..*..*....</row>
+              <row>..*..*....</row>
+              <row>.**..**...</row>
+              <scale>3</scale>
               <color>color.orange</color>
-            </rectangle>
+              <color char="r">color.white</color>
+            </bitmap>
           </sprite>
-          <position><x>385</x><y>530</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="all">
-              <stick />
-            </collision>
+            <collision edge="all"><stick /></collision>
           </collisions>
           <actions>
-            <action name="up">
-              <move direction="up">step</move>
-            </action>
-            <action name="down">
-              <move direction="down">step</move>
-            </action>
-            <action name="left">
-              <move direction="left">step</move>
-            </action>
-            <action name="right">
-              <move direction="right">step</move>
-            </action>
+            <action name="up"><move direction="up">step</move></action>
+            <action name="down"><move direction="down">step</move></action>
+            <action name="left"><move direction="left">step</move></action>
+            <action name="right"><move direction="right">step</move></action>
           </actions>
           <variables>
             <variable name="points">0</variable>
             <variable name="games">0</variable>
           </variables>
-        </object>
+          <member name="cpu">
+            <sprite><bitmap><color>color.cyan</color></bitmap></sprite>
+            <position><x>385</x><y>50</y></position>
+          </member>
+          <member name="player"><position><x>385</x><y>520</y></position></member>
+        </group>
         <!-- the ball's shadow, on the court under it; written before the ball, so drawn under it -->
         <object name="shadow">
-          <sprite>
-            <circle>
-              <radius>6</radius>
-              <color>color.forestgreen</color>
-            </circle>
-          </sprite>
+          <sprite><circle><radius>6</radius><color>color.darkgreen</color></circle></sprite>
           <position><x>0</x><y>0</y></position>
           <shadow object="ball" />
         </object>
         <!-- served from the far end toward the player, falling from high up -->
         <object name="ball">
-          <sprite>
-            <circle>
-              <radius>6</radius>
-              <color>color.yellow</color>
-            </circle>
-          </sprite>
+          <sprite><circle><radius>6</radius><color>color.yellow</color></circle></sprite>
           <position><x>394</x><y>90</y></position>
           <velocity><x><random min="-1.5" max="1.5" /></x><y>3</y></velocity>
           <altitude>
@@ -211,9 +160,7 @@
           </altitude>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="horizontal">
-              <bounce />
-            </collision>
+            <collision edge="horizontal"><bounce /></collision>
             <collision edge="top">
               <inc variable="player.points" />
               <play sound="point" />
@@ -247,13 +194,7 @@
             <text style="score">
               <content>CPU</content>
               <number>cpu.games</number>
-              <choose>
-                <by>cpu.points</by>
-                <word>LOVE</word>
-                <word>15</word>
-                <word>30</word>
-                <word>40</word>
-              </choose>
+              <choose><by>cpu.points</by><word>LOVE</word><word>15</word><word>30</word><word>40</word><word>AD</word></choose>
             </text>
           </sprite>
           <position><x>10</x><y>10</y></position>
@@ -263,78 +204,61 @@
             <text style="score">
               <content>YOU</content>
               <number>player.games</number>
-              <choose>
-                <by>player.points</by>
-                <word>LOVE</word>
-                <word>15</word>
-                <word>30</word>
-                <word>40</word>
-              </choose>
+              <choose><by>player.points</by><word>LOVE</word><word>15</word><word>30</word><word>40</word><word>AD</word></choose>
             </text>
           </sprite>
           <position><x>10</x><y>window.bottom - 50</y></position>
         </object>
       </objects>
       <inputs>
-        <input button="p">
-          <push state="paused" />
-        </input>
-        <input button="escape">
-          <push state="paused" />
-        </input>
-        <input button="w">
-          <trigger object="player" action="up" />
-        </input>
-        <input button="up">
-          <trigger object="player" action="up" />
-        </input>
-        <input button="s">
-          <trigger object="player" action="down" />
-        </input>
-        <input button="down">
-          <trigger object="player" action="down" />
-        </input>
-        <input button="a">
-          <trigger object="player" action="left" />
-        </input>
-        <input button="left">
-          <trigger object="player" action="left" />
-        </input>
-        <input button="d">
-          <trigger object="player" action="right" />
-        </input>
-        <input button="right">
-          <trigger object="player" action="right" />
-        </input>
+        <input button="p escape"><push state="paused" /></input>
+        <input button="w up"><trigger object="player" action="up" /></input>
+        <input button="s down"><trigger object="player" action="down" /></input>
+        <input button="a left"><trigger object="player" action="left" /></input>
+        <input button="d right"><trigger object="player" action="right" /></input>
         <!-- the far end's keys: the computer's, or a second player's -->
-        <input button="j">
-          <trigger object="cpu" action="left" />
-        </input>
-        <input button="l">
-          <trigger object="cpu" action="right" />
-        </input>
+        <input button="j"><trigger object="cpu" action="left" /></input>
+        <input button="l"><trigger object="cpu" action="right" /></input>
       </inputs>
       <conditions>
         <condition object="player" variable="games">
-          <atleast>3</atleast>
+          <atleast>set</atleast>
           <push state="won" />
         </condition>
         <condition object="cpu" variable="games">
-          <atleast>3</atleast>
+          <atleast>set</atleast>
           <push state="lost" />
         </condition>
-        <!-- four points take the game -->
-        <condition object="player" variable="points">
-          <atleast>4</atleast>
-          <inc variable="player.games" />
-          <set variable="player.points">0</set>
-          <set variable="cpu.points">0</set>
+        <!-- four all is deuce again: forty all -->
+        <condition>
+          <all>
+            <check object="player" variable="points"><atleast>4</atleast></check>
+            <check object="cpu" variable="points"><atleast>4</atleast></check>
+          </all>
+          <set variable="players.points">3</set>
         </condition>
-        <condition object="cpu" variable="points">
-          <atleast>4</atleast>
+        <!-- four points against thirty or less, or five (after advantage), take the game -->
+        <condition>
+          <any>
+            <check object="player" variable="points"><atleast>5</atleast></check>
+            <all>
+              <check object="player" variable="points"><atleast>4</atleast></check>
+              <check object="cpu" variable="points"><atmost>2</atmost></check>
+            </all>
+          </any>
+          <inc variable="player.games" />
+          <set variable="players.points">0</set>
+        </condition>
+        <condition>
+          <any>
+            <check object="cpu" variable="points"><atleast>5</atleast></check>
+            <all>
+              <check object="cpu" variable="points"><atleast>4</atleast></check>
+              <check object="player" variable="points"><atmost>2</atmost></check>
+            </all>
+          </any>
           <inc variable="cpu.games" />
-          <set variable="player.points">0</set>
-          <set variable="cpu.points">0</set>
+          <set variable="players.points">0</set>
         </condition>
       </conditions>
       <!-- the computer keeps its racket under the ball -->
@@ -352,11 +276,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>paused</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>paused</content></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -364,26 +284,13 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <pop />
-        </input>
-        <input button="p">
-          <pop />
-        </input>
-        <input button="escape">
-          <pop />
-        </input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
     <state name="lost">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME, CPU</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>SET, CPU</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y>window.height.center - 150</y></position>
         </object>
       </objects>
@@ -392,20 +299,13 @@
         <show object="continue" />
       </shows>
       <inputs>
-        <input button="space">
-          <reset />
-        </input>
+        <input button="space"><reset /></input>
       </inputs>
     </state>
     <state name="won" from="lost">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME, YOU</content>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>SET, YOU</content><color>color.yellow</color></text></sprite>
         </object>
       </objects>
     </state>
