@@ -3,10 +3,11 @@
 <!-- author: beefviper -->
 <!-- date: Oct 5, 2026 -->
 
-<!-- Pong with nothing but the game: two paddles and a ball. No title, score,
-     pause, text or sound; a point puts the ball back in the middle and play goes
-     on. The smallest game the windows-cpp generator is tried on. Its one
-     state owns the three objects, so the game has none of its own. -->
+<!-- Pong with nothing but the game: two paddles and a square ball. No title,
+     score, pause, text or sound; a point puts the ball back in the middle and
+     play goes on. The smallest game the windows-cpp generator is tried on. Its
+     one state owns everything, so the game has no objects of its own; the
+     paddles are one group, each saying only where it is. -->
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
   <window name="Pong">
     <width>1280</width>
@@ -17,23 +18,17 @@
   </window>
   <variables>
     <variable name="margin">30</variable>
-    <variable name="ball.radius">10</variable>
-    <variable name="width">30</variable>
-    <variable name="height">150</variable>
+    <variable name="size">16</variable>
+    <variable name="width">20</variable>
+    <variable name="height">120</variable>
     <variable name="step">5</variable>
   </variables>
   <states>
-    <!-- its one state, which owns all three -->
     <state name="playing">
       <objects>
         <object name="ball">
-          <sprite>
-            <circle>
-              <radius>ball.radius</radius>
-              <color>color.white</color>
-            </circle>
-          </sprite>
-          <position><x>window.width.center - ball.radius</x><y>window.height.center - ball.radius</y></position>
+          <sprite><rectangle><width>size</width><height>size</height></rectangle></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
           <!-- a serve: at ball.speed, within 30 degrees of straight left or right,
                to either side; the randoms are drawn again for every serve -->
           <velocity>
@@ -42,15 +37,9 @@
           </velocity>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="vertical">
-              <bounce />
-            </collision>
-            <collision edge="horizontal">
-              <reset />
-            </collision>
-            <collision>
-              <deflect>45</deflect>
-            </collision>
+            <collision edge="vertical"><bounce /></collision>
+            <collision edge="horizontal"><reset /></collision>
+            <collision><deflect>45</deflect></collision>
           </collisions>
           <variables>
             <variable name="speed">6</variable>
@@ -58,68 +47,25 @@
             <variable name="side"><random min="-1" max="1" /></variable>
           </variables>
         </object>
-        <object name="paddle1">
-          <sprite>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.white</color>
-            </rectangle>
-          </sprite>
-          <position><x>window.left + margin</x><y>window.height.center - height / 2</y></position>
+        <group name="paddles">
+          <sprite><rectangle><width>width</width><height>height</height></rectangle></sprite>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="vertical">
-              <stick />
-            </collision>
+            <collision edge="vertical"><stick /></collision>
           </collisions>
           <actions>
-            <action name="up">
-              <move direction="up">step</move>
-            </action>
-            <action name="down">
-              <move direction="down">step</move>
-            </action>
+            <action name="up"><move direction="up">step</move></action>
+            <action name="down"><move direction="down">step</move></action>
           </actions>
-        </object>
-        <object name="paddle2">
-          <sprite>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.white</color>
-            </rectangle>
-          </sprite>
-          <position><x>window.right - margin - width</x><y>window.height.center - height / 2</y></position>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="vertical">
-              <stick />
-            </collision>
-          </collisions>
-          <actions>
-            <action name="up">
-              <move direction="up">step</move>
-            </action>
-            <action name="down">
-              <move direction="down">step</move>
-            </action>
-          </actions>
-        </object>
+          <member name="paddle1"><position><x>margin</x><y><centered /></y></position></member>
+          <member name="paddle2"><position><x>window.right - margin - width</x><y><centered /></y></position></member>
+        </group>
       </objects>
       <inputs>
-        <input button="w">
-          <trigger object="paddle1" action="up" />
-        </input>
-        <input button="s">
-          <trigger object="paddle1" action="down" />
-        </input>
-        <input button="up">
-          <trigger object="paddle2" action="up" />
-        </input>
-        <input button="down">
-          <trigger object="paddle2" action="down" />
-        </input>
+        <input button="w"><trigger object="paddle1" action="up" /></input>
+        <input button="s"><trigger object="paddle1" action="down" /></input>
+        <input button="up"><trigger object="paddle2" action="up" /></input>
+        <input button="down"><trigger object="paddle2" action="down" /></input>
       </inputs>
     </state>
   </states>

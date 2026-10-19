@@ -52,8 +52,8 @@ namespace
 		return std::atan2(object.velocity.y, std::abs(object.velocity.x)) * 180.0f / 3.14159265358979323846f;
 	}
 
-	// pong.xml's ball and paddles, sized as a backend would (the paddle is a
-	// 30 by 150 image), with paddle1's side at x = 130 and its middle at y = 375.
+	// pong.xml's ball and paddles, made 30 by 150 for these tests, with
+	// paddle1's side at x = 130 and its middle at y = 375.
 	struct Pong
 	{
 		Game game{ "descriptions/pong.xml" };
@@ -110,8 +110,10 @@ TEST_CASE("Pong's ball deflects off the paddles at up to 45 degrees", "[deflect]
 {
 	Pong pong;
 
+	// The first of its two rules about a paddle; the second makes it faster.
 	const auto& rules = pong.ball.collisionData.others;
-	REQUIRE(rules.size() == 1);
+	REQUIRE(rules.size() == 2);
+	CHECK(rules[0].filterClass == "paddle");
 	REQUIRE(std::holds_alternative<CmdDeflect>(rules[0].commands.at(0)));
 	CHECK(std::get<CmdDeflect>(rules[0].commands.at(0)).maxAngle == 45.0f);
 }

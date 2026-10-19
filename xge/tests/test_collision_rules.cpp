@@ -30,10 +30,10 @@ using namespace xge;
 
 TEST_CASE("a collision with no selector still matches anything", "[collision_rules]")
 {
-	Game game{ "descriptions/pong.xml" };
+	Game game{ "descriptions/pong_min.xml" };
 	const Object& ball = game.getObject("ball");
 
-	// pong.xml's ball: <collision><bounce /></collision>
+	// pong_min.xml's ball: <collision><deflect>45</deflect></collision>
 	REQUIRE(ball.collisionData.others.size() == 1);
 	CHECK(ball.collisionData.others[0].filterClass.empty());
 	CHECK(ball.collisionData.others[0].filterObject.empty());

@@ -4,26 +4,25 @@
 <!-- date: Sept 18, 2020 -->
 
 <!--
-  Pong for two players: a paddle each, a ball between, and the first to
-  fifteen points wins.
+  Pong, after Atari's 1972 arcade game: white on black, two paddles, a square
+  ball and a dashed net, the scores in big digits at the top. The first to
+  eleven wins.
 
-  W and S move the left paddle, the arrow keys the right one (it can go
-  left and right too), Space starts, pauses and plays again, S on the title
-  opens the settings and Escape leaves them.
+  W and S move the left paddle, Up and Down the right one; Space starts,
+  pauses and plays again.
 
   How it is written:
-  * Each state has the objects it shows: the title its name, playing the
-    ball, the paddles and the scores, paused its PAUSED and game over its
-    two lines. The logo is the game's own, as the title and the settings
-    both show it.
-  * The ball <bounce>s off the top and the bottom, <deflect>s off a paddle,
-    and off either side gives the other player a point and is served again
-    (<reset />, its randoms drawn again).
-  * A condition on the paddles' class ends the game at fifteen.
+  * The paddles are one group: their size, the <stick /> at the top and the
+    bottom, the moves and the score are said once, and each says where it is.
+  * The ball <bounce>s off the top and the bottom and <deflect>s off a
+    paddle, steeper the further from its middle, as the arcade's paddle of
+    eight segments. It counts its hits, and the fourth and the twelfth make
+    it faster, as the arcade's did. Off either side it gives the other player
+    a point and is served again, its <random>s and its hits drawn anew.
+  * The net is a group of one column and many rows.
   * Paused and game over draw the game still underneath (<show state>).
 -->
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
-  <!-- window -->
   <window name="Pong">
     <width>1280</width>
     <height>720</height>
@@ -31,79 +30,28 @@
     <fullscreen>false</fullscreen>
     <framerate>60</framerate>
   </window>
-  <!-- variables -->
   <variables>
     <variable name="margin">30</variable>
-    <variable name="text.size">256</variable>
-    <variable name="logo.radius">100</variable>
-    <variable name="width">30</variable>
-    <variable name="height">150</variable>
-    <variable name="step">2</variable>
+    <variable name="width">20</variable>
+    <variable name="height">120</variable>
+    <variable name="step">6</variable>
   </variables>
-  <!-- sounds -->
+  <!-- the arcade's three tones: a paddle hit, the wall an octave lower, and a long one for a point -->
   <sounds>
-    <!-- the ball off the top or bottom wall: a low blip -->
-    <sound name="wall" wave="square">
-      <note pitch="A3">0.04</note>
-    </sound>
-    <!-- the ball off a paddle: a higher blip -->
-    <sound name="paddle" wave="square">
-      <note pitch="A4">0.05</note>
-    </sound>
-    <!-- a point scored: a bloop that falls two octaves -->
-    <sound name="score" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E5" to="E3">0.35</note>
-    </sound>
-    <!-- a game started: a rising arpeggio -->
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
-    </sound>
-    <!-- fifteen points: a sad little tune, and a hiss to end it -->
-    <sound name="gameover" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G4">0.2</note>
-      <note pitch="F#4">0.2</note>
-      <note pitch="F4">0.2</note>
-      <note pitch="E4" to="D#4">0.5</note>
-      <rest>0.1</rest>
-      <note pitch="2000" wave="noise">0.15</note>
-    </sound>
+    <sound name="paddle"><note pitch="459">0.1</note></sound>
+    <sound name="wall"><note pitch="226">0.02</note></sound>
+    <sound name="score"><note pitch="490">0.26</note></sound>
   </sounds>
-  <!-- objects -->
   <styles>
-    <style name="banner"><size>128</size><color>color.red</color></style>
-    <style name="hud"><size>128</size><color>color.blue</color></style>
+    <style name="banner"><size>160</size></style>
+    <style name="prompt"><size>48</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>128</size></style>
   </styles>
-  <objects>
-    <!-- logo -->
-    <object name="logo">
-      <sprite>
-        <circle>
-          <radius>logo.radius</radius>
-          <color>color.green</color>
-        </circle>
-      </sprite>
-      <position><x>window.width.center - logo.radius</x><y>window.height.center - logo.radius</y></position>
-    </object>
-  </objects>
-  <!-- states -->
   <states>
-    <!-- mainmenu -->
     <state name="mainmenu">
       <objects>
-        <!-- title -->
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>PONG</content>
-              <size>text.size</size>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PONG</content></text></sprite>
           <!-- x is window.width.center - title.width / 2, written as an <equation>: steps, each naming its answer for the next -->
           <position>
             <x>
@@ -112,48 +60,56 @@
                 <subtract minuend="window.width.center" subtrahend="half" />
               </equation>
             </x>
-            <y>margin</y>
+            <y>margin * 4</y>
           </position>
         </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to serve, first to eleven</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+        </object>
       </objects>
-      <shows>
-        <show object="logo" />
-      </shows>
       <inputs>
-        <input button="space">
-          <push state="playing" />
-          <play sound="start" />
-        </input>
-        <input button="s">
-          <push state="settings" />
-        </input>
+        <input button="space"><push state="playing" /></input>
       </inputs>
     </state>
-    <!-- settings -->
-    <state name="settings">
-      <shows>
-        <show object="logo" />
-      </shows>
-      <inputs>
-        <input button="escape">
-          <pop />
-        </input>
-      </inputs>
-    </state>
-    <!-- playing -->
     <state name="playing">
       <objects>
-        <!-- ball -->
+        <!-- the net: a dash in every other place down the middle -->
+        <group name="net">
+          <columns>1</columns>
+          <rows>18</rows>
+          <padding><y>20</y></padding>
+          <sprite><rectangle><width>6</width><height>20</height><color>color.lightgrey</color></rectangle></sprite>
+          <position><x><centered /></x><y>10</y></position>
+        </group>
+        <group name="paddles" class="paddle">
+          <sprite><rectangle><width>width</width><height>height</height></rectangle></sprite>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="vertical"><stick /></collision>
+          </collisions>
+          <actions>
+            <action name="up"><move direction="up">step</move></action>
+            <action name="down"><move direction="down">step</move></action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+          </variables>
+          <member name="paddle1"><position><x>margin</x><y><centered /></y></position></member>
+          <member name="paddle2"><position><x>window.right - margin - width</x><y><centered /></y></position></member>
+        </group>
+        <object name="score1">
+          <sprite><text style="hud"><number>paddle1.score</number></text></sprite>
+          <position><x>window.width.center - 80 - score1.width</x><y>margin</y></position>
+        </object>
+        <object name="score2">
+          <sprite><text style="hud"><number>paddle2.score</number></text></sprite>
+          <position><x>window.width.center + 80</x><y>margin</y></position>
+        </object>
+        <!-- served from the middle at ball.speed, within 30 degrees of straight left or right, to either side -->
         <object name="ball">
-          <sprite>
-            <circle>
-              <radius>ball.radius</radius>
-              <color>color.green</color>
-            </circle>
-          </sprite>
-          <position><x>window.width.center - ball.radius</x><y>window.height.center - ball.radius</y></position>
-          <!-- a serve: at ball.speed, within 30 degrees of straight left or right,
-               to either side; the randoms are drawn again for every serve -->
+          <sprite><rectangle><width>ball.size</width><height>ball.size</height></rectangle></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
           <velocity>
             <x>sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)</x>
             <y>ball.speed * sin(ball.angle * pi / 180)</y>
@@ -166,148 +122,55 @@
             </collision>
             <collision edge="left">
               <inc variable="paddle2.score" />
-              <reset />
               <play sound="score" />
+              <reset object="ball" />
             </collision>
             <collision edge="right">
               <inc variable="paddle1.score" />
-              <reset />
               <play sound="score" />
+              <reset object="ball" />
             </collision>
-            <!-- off a paddle: straight back from its middle, up to 45 degrees up or down towards its ends -->
-            <collision>
+            <collision class="paddle">
               <deflect>45</deflect>
+              <inc variable="ball.hits" />
               <play sound="paddle" />
+            </collision>
+            <collision class="paddle">
+              <any>
+                <check variable="hits"><equal>4</equal></check>
+                <check variable="hits"><equal>12</equal></check>
+              </any>
+              <set variable="ball.velocity.x">ball.velocity.x * 1.3</set>
+              <set variable="ball.velocity.y">ball.velocity.y * 1.3</set>
             </collision>
           </collisions>
           <variables>
-            <variable name="radius">10</variable>
+            <variable name="size">16</variable>
             <variable name="speed">6</variable>
+            <variable name="hits">0</variable>
             <variable name="angle"><random min="-30" max="30" /></variable>
             <variable name="side"><random min="-1" max="1" /></variable>
           </variables>
         </object>
-        <!-- paddle1 -->
-        <object name="paddle1" class="paddle">
-          <sprite>
-            <image>
-              <path>assets/paddle.jpg</path>
-            </image>
-          </sprite>
-          <position><x>window.left + margin</x><y>window.height.center - height / 2</y></position>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="vertical">
-              <stick />
-            </collision>
-          </collisions>
-          <actions>
-            <action name="up">
-              <move direction="up">step</move>
-            </action>
-            <action name="down">
-              <move direction="down">step</move>
-            </action>
-          </actions>
-          <variables>
-            <variable name="score">0</variable>
-          </variables>
-        </object>
-        <!-- paddle2 -->
-        <object name="paddle2" class="paddle">
-          <sprite>
-            <image>
-              <path>assets/paddle.jpg</path>
-              <flip>horizontal</flip>
-            </image>
-          </sprite>
-          <position><x>window.right - margin - width</x><y>window.height.center - height / 2</y></position>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="vertical">
-              <stick />
-            </collision>
-          </collisions>
-          <actions>
-            <action name="up">
-              <move direction="up">step</move>
-            </action>
-            <action name="down">
-              <move direction="down">step</move>
-            </action>
-            <action name="left">
-              <move direction="left">step</move>
-            </action>
-            <action name="right">
-              <move direction="right">step</move>
-            </action>
-          </actions>
-          <variables>
-            <variable name="score">0</variable>
-          </variables>
-        </object>
-        <!-- score1 -->
-        <object name="score1">
-          <sprite>
-            <text style="hud">
-              <number>paddle1.score</number>
-            </text>
-          </sprite>
-          <position><x>window.width.center - 50 - score1.width</x><y>margin</y></position>
-        </object>
-        <!-- score2 -->
-        <object name="score2">
-          <sprite>
-            <text style="hud">
-              <number>paddle2.score</number>
-              <color>color.red</color>
-            </text>
-          </sprite>
-          <position><x>window.width.center + 50</x><y>margin</y></position>
-        </object>
       </objects>
       <inputs>
-        <input button="space">
-          <push state="paused" />
-        </input>
-        <input button="w">
-          <trigger object="paddle1" action="up" />
-        </input>
-        <input button="s">
-          <trigger object="paddle1" action="down" />
-        </input>
-        <input button="up">
-          <trigger object="paddle2" action="up" />
-        </input>
-        <input button="down">
-          <trigger object="paddle2" action="down" />
-        </input>
-        <input button="left">
-          <trigger object="paddle2" action="left" />
-        </input>
-        <input button="right">
-          <trigger object="paddle2" action="right" />
-        </input>
+        <input button="w"><trigger object="paddle1" action="up" /></input>
+        <input button="s"><trigger object="paddle1" action="down" /></input>
+        <input button="up"><trigger object="paddle2" action="up" /></input>
+        <input button="down"><trigger object="paddle2" action="down" /></input>
+        <input button="space"><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition class="paddle" variable="score">
-          <atleast>15</atleast>
+          <atleast>11</atleast>
           <push state="gameover" />
-          <play sound="gameover" />
         </condition>
       </conditions>
     </state>
-    <!-- paused -->
     <state name="paused">
       <objects>
-        <!-- paused -->
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -315,42 +178,25 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <pop />
-        </input>
+        <input button="space"><pop /></input>
       </inputs>
     </state>
-    <!-- gameover -->
     <state name="gameover">
       <objects>
-        <!-- gameover -->
         <object name="gameover">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y>window.height.center - 150</y></position>
+          <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
-        <!-- continue -->
         <object name="continue">
-          <sprite>
-            <text>
-              <content>spacebar to continue</content>
-              <size>48</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y>window.height.center + 60</y></position>
+          <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <reset />
-        </input>
+        <input button="space"><reset /></input>
       </inputs>
     </state>
   </states>
