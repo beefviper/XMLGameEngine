@@ -684,7 +684,7 @@ namespace
 		// Named by their paths where a state or a scene owns them (playing.ball, playing.wave2.halves.1).
 		const auto endsWith = [&](const std::string& end) { return object.name == end || (object.name.size() > end.size() && object.name.compare(object.name.size() - end.size() - 1, end.size() + 1, "." + end) == 0); };
 		const bool halves = object.name.rfind("halves.", 0) == 0 || object.name.find(".halves.") != std::string::npos;
-		const bool drawn = endsWith("ball") || object.objClass == "bombs" || object.objClass == "rocks" || object.objClass == "missile" || object.objClass == "ufo" || halves;
+		const bool drawn = endsWith("ball") || object.objClass == "bombs" || object.objClass == "rocks" || object.objClass == "spinner" || object.objClass == "missile" || object.objClass == "ufo" || halves;
 		return drawn ? object.name : printed(object);
 	}
 
@@ -700,7 +700,7 @@ TEST_CASE("every shipped game loads the same through all four XML libraries", "[
 {
 	// Same objects, sprites, positions, commands and rules whichever library read
 	// the file, so the text-and-element reading of each one agrees. (The ball's
-	// velocity, and the fall speeds and heights of Kaboom's bombs and Astrosmash's rocks,
+	// velocity, and the fall speeds and heights of Kaboom's bombs and Astrosmash's rocks and spinners,
 	// are <random>s, so those objects are left out of the comparison.)
 	for (const char* file : { "descriptions/pong.xml", "descriptions/breakout.xml", "descriptions/spaceinvaders.xml", "descriptions/frogger.xml", "descriptions/spacerace.xml", "descriptions/kaboom.xml", "descriptions/freeway.xml", "descriptions/depthcharge.xml", "descriptions/astrosmash.xml", "descriptions/asteroids.xml", "descriptions/berserk.xml", "descriptions/demonattack.xml", "descriptions/frostbite.xml", "descriptions/pong_min.xml", "descriptions/pitfall.xml", "descriptions/missilecommand.xml", "descriptions/combat.xml", "descriptions/airseabattle.xml", "descriptions/megamania.xml", "descriptions/adventure.xml", "descriptions/trickshot.xml", "descriptions/mariobros.xml", "descriptions/fishingderby.xml", "descriptions/qbert.xml", "descriptions/yarsrevenge.xml", "descriptions/tennis.xml", "descriptions/hauntedhouse.xml" })
 	{

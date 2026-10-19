@@ -4,29 +4,32 @@
 <!-- date: Sept 30, 2026 -->
 
 <!--
-  Astrosmash, after the 1981 Intellivision game: rocks fall from the top of the
-  screen and you shoot them from a ship that slides along the bottom. A rock
-  that is shot scores and starts its fall over; a rock that reaches the ground
-  or hits the ship costs a life. Score `goal` to win, lose all your lives and
-  it is game over. A and D or the arrows move, Space fires, P or Escape
-  pauses.
+  Astrosmash, after the 1981 Intellivision game. Rocks rain down at a slant
+  and you shoot them from a laser base that slides along the ground. A big
+  rock scores 10 and breaks into two small ones; a small rock scores 20. A
+  rock that lands takes half its worth off the score, and one that hits the
+  base costs it. Spinners score 40, but one that lands blows up the base
+  too. A spare base every 1,000 points; the game goes on until the last
+  base is gone, and the peak score reached is shown beside the score.
+
+  A and D or the arrows move, Space fires, P or Escape pauses.
 
   How it is written:
-  * Each state owns what it draws: the title, the help and the keys to the
-    main menu, the rocks, the shot, the ship, the score and the lives to
-    playing, the PAUSED sign to paused, each ending's words to its own state.
-    Only "spacebar to play again", which both endings show, is the game's.
-  * It is Kaboom's falling pieces, with their fall speeds and starting heights
-    drawn by <random> when the game loads, plus Space Invaders' gun: <fire />
-    launches one shot at a time from the ship, and the shot <die />s on a
-    rock or the edge of the screen.
-  * A rock hit by the shot is <inc />'d for the ship and <reset /> to the
-    start of its fall. Two groups of falling things, slow boulders and fast
-    pebbles, share the class `rocks`, so the shot and the ship have one rule
-    each for both.
-  * Paused and the endings draw the sky still underneath (<show state>),
-    with the score.
-  The rocks never change, so there are no waves and no <scenes>.
+  * Every falling rock is of one <group>, `rocks`, holding two groups of
+    columns, the big ones and the small ones, which take its rules and give
+    their own picture and worth (self.worth, read as the rule runs). Their
+    fall speeds, slants and starting heights are <random>, drawn again each
+    time one is reset to the top.
+  * The shot's rule about the big rocks <release>s two chips, a hidden pool
+    of small rocks, where it hits one.
+  * A hit on the base resets every rock and spinner (<reset object>): the
+    sky clears, as it does on the Intellivision.
+  * The spare bases: the ship's `spare` is the next 1,000, and a condition
+    comparing the score with it adds a base and moves it on.
+  * Paused and game over draw the sky still underneath (<show state>).
+  Not in it: the levels (faster rocks, a higher multiplier and a new sky
+  colour at 5,000, 20,000 ...), the guided missiles and the UFO, and
+  holding Space for rapid fire.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -38,32 +41,16 @@
     <framerate>60</framerate>
   </window>
   <variables>
-    <variable name="shipwidth">60</variable>
-    <variable name="shipheight">20</variable>
-    <variable name="boulder">34</variable>
-    <variable name="pebble">18</variable>
     <variable name="step">7</variable>
     <variable name="margin">20</variable>
-    <variable name="goal">20</variable>
-    <variable name="startlives">5</variable>
+    <variable name="ground">40</variable>
+    <variable name="slant">1</variable>
   </variables>
   <sounds>
-    <!-- a rock shot: a pop -->
-    <sound name="pop" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="3000" to="800">0.1</note>
-    </sound>
-    <!-- a rock on the ground, or on the ship -->
-    <sound name="thud" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="1500" to="100">0.4</note>
-    </sound>
-    <!-- a shot fired: a quick falling zap -->
-    <sound name="shoot" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C6" to="C4">0.1</note>
-    </sound>
-    <!-- a game started: a rising arpeggio -->
+    <sound name="pop" wave="noise"><volume>0.3</volume><note pitch="3000" to="800">0.1</note></sound>
+    <sound name="thud" wave="noise"><volume>0.3</volume><note pitch="800" to="100">0.25</note></sound>
+    <sound name="boom" wave="noise"><volume>0.5</volume><note pitch="1500" to="60">0.9</note></sound>
+    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="C6" to="C4">0.1</note></sound>
     <sound name="start" wave="square">
       <volume>0.2</volume>
       <note pitch="C5">0.07</note>
@@ -71,17 +58,13 @@
       <note pitch="G5">0.07</note>
       <note pitch="C6">0.14</note>
     </sound>
-    <!-- twenty rocks shot -->
-    <sound name="win" wave="square">
+    <!-- a spare base -->
+    <sound name="spare" wave="square">
       <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.08</note>
+      <note pitch="G6">0.16</note>
     </sound>
-    <!-- out of ships -->
     <sound name="gameover" wave="triangle">
       <volume>0.4</volume>
       <note pitch="G4">0.25</note>
@@ -90,261 +73,251 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>128</size><color>color.orange</color></style>
-    <style name="prompt"><size>48</size></style>
-    <style name="hud"><size>48</size><color>color.cyan</color></style>
+    <style name="banner"><size>120</size><color>color.orange</color></style>
+    <style name="line"><size>32</size><color>color.white</color></style>
+    <style name="hud"><size>40</size><color>color.white</color></style>
   </styles>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>ASTROSMASH</content>
-              <size>120</size>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
+          <sprite><text style="banner"><content>ASTROSMASH</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
         <object name="help">
-          <sprite>
-            <text>
-              <content>shoot the rocks before they land</content>
-              <size>40</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <sprite><text style="line"><content>big rocks 10, small rocks 20, spinners 40</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
         </object>
         <object name="keys">
-          <sprite>
-            <text>
-              <content>a and d, or the arrow keys, to move; space to fire</content>
-              <size>28</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
+          <sprite><text style="line"><content>a and d, or the arrow keys, to move; space to fire</content><size>26</size><color>color.lightgrey</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 20</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
+          <sprite><text style="line"><content>spacebar to start</content><size>48</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space">
-          <push state="playing" />
-          <play sound="start" />
-        </input>
+        <input button="space"><push state="playing" /><play sound="start" /></input>
       </inputs>
     </state>
     <state name="playing">
       <objects>
-        <group name="boulders" class="rocks">
-          <sprite>
-            <rectangle>
-              <width>boulder</width>
-              <height>boulder</height>
-              <color>color.lightgrey</color>
-            </rectangle>
-          </sprite>
-          <position>
-            <y><random min="-500" max="-40" /></y>
-          </position>
-          <velocity>
-            <x>0</x>
-            <y><random min="1" max="2" /></y>
-          </velocity>
+        <object name="ground" class="ground">
+          <sprite><rectangle><width>window.right</width><height>ground</height><color>color.darkgrey</color></rectangle></sprite>
+          <position><x>0</x><y>window.bottom - ground</y></position>
+          <collisions><enabled>true</enabled></collisions>
+        </object>
+        <!-- the falling rocks: four big and four small, falling at a slant from
+             above the screen, each starting over at the top when shot or landed -->
+        <group name="rocks" class="rocks">
+          <columns>4</columns>
+          <rows>1</rows>
+          <position><y><random min="-600" max="-40" /></y></position>
+          <velocity><x><random min="-slant" max="slant" /></x><y><random min="1" max="2.5" /></y></velocity>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="bottom">
-              <dec variable="ship.lives" />
-              <reset />
-              <play sound="thud" />
-            </collision>
-            <collision object="ship">
-              <dec variable="ship.lives" />
+            <collision edge="horizontal"><bounce /></collision>
+            <collision object="ground">
+              <set variable="ship.score">max(0, ship.score - self.worth / 2)</set>
               <reset />
               <play sound="thud" />
             </collision>
             <collision object="shot">
-              <inc variable="ship.score" />
+              <inc variable="ship.score">self.worth</inc>
+              <set variable="ship.peak">max(ship.peak, ship.score)</set>
               <reset />
               <play sound="pop" />
             </collision>
           </collisions>
-          <member>
+          <group name="boulders">
+            <padding><x>140</x></padding>
+            <sprite>
+              <bitmap>
+                <row>..****..</row>
+                <row>.******.</row>
+                <row>********</row>
+                <row>********</row>
+                <row>.******.</row>
+                <row>..***...</row>
+                <scale>5</scale>
+                <color>color.lightgrey</color>
+              </bitmap>
+            </sprite>
             <position><x>50</x></position>
-          </member>
-          <member>
-            <position><x>230</x></position>
-          </member>
-          <member>
-            <position><x>410</x></position>
-          </member>
-          <member>
-            <position><x>590</x></position>
-          </member>
+            <variables><variable name="worth">10</variable></variables>
+          </group>
+          <group name="pebbles">
+            <padding><x>160</x></padding>
+            <sprite>
+              <bitmap>
+                <row>.**.</row>
+                <row>****</row>
+                <row>***.</row>
+                <scale>5</scale>
+                <color>color.orange</color>
+              </bitmap>
+            </sprite>
+            <position><x>140</x><y><random min="-800" max="-40" /></y></position>
+            <velocity><y><random min="2" max="3.5" /></y></velocity>
+            <variables><variable name="worth">20</variable></variables>
+          </group>
         </group>
-        <group name="pebbles" class="rocks">
+        <!-- what a big rock breaks into: a pool of eight small ones, flying apart -->
+        <group name="chips" class="rocks">
+          <columns>8</columns>
+          <rows>1</rows>
           <sprite>
-            <rectangle>
-              <width>pebble</width>
-              <height>pebble</height>
-              <color>color.orange</color>
-            </rectangle>
+            <bitmap>
+              <row>.**.</row>
+              <row>****</row>
+              <row>.**.</row>
+              <scale>5</scale>
+              <color>color.yellow</color>
+            </bitmap>
           </sprite>
-          <position>
-            <y><random min="-700" max="-40" /></y>
-          </position>
-          <velocity>
-            <x>0</x>
-            <y><random min="2" max="3.5" /></y>
-          </velocity>
+          <position><x>0</x><y>0</y></position>
+          <velocity><x><random min="-2.5" max="2.5" /></x><y>2.5</y></velocity>
+          <hidden>true</hidden>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="bottom">
-              <dec variable="ship.lives" />
-              <reset />
-              <play sound="thud" />
-            </collision>
-            <collision object="ship">
-              <dec variable="ship.lives" />
-              <reset />
+            <collision edge="horizontal"><bounce /></collision>
+            <collision object="ground">
+              <set variable="ship.score">max(0, ship.score - 10)</set>
+              <die />
               <play sound="thud" />
             </collision>
             <collision object="shot">
-              <inc variable="ship.score" />
+              <inc variable="ship.score">20</inc>
+              <set variable="ship.peak">max(ship.peak, ship.score)</set>
+              <die />
+              <play sound="pop" />
+            </collision>
+          </collisions>
+        </group>
+        <!-- spinners: two, now and then, that blow up the base if they land -->
+        <group name="spinners" class="spinner">
+          <columns>2</columns>
+          <rows>1</rows>
+          <padding><x>320</x></padding>
+          <sprite name="a">
+            <bitmap>
+              <row>*...*</row>
+              <row>.*.*.</row>
+              <row>..*..</row>
+              <row>.*.*.</row>
+              <row>*...*</row>
+              <scale>4</scale>
+              <color>color.magenta</color>
+            </bitmap>
+          </sprite>
+          <sprite name="b">
+            <bitmap>
+              <row>..*..</row>
+              <row>..*..</row>
+              <row>*****</row>
+              <row>..*..</row>
+              <row>..*..</row>
+              <scale>4</scale>
+              <color>color.magenta</color>
+            </bitmap>
+          </sprite>
+          <animation>
+            <interval>0.1</interval>
+            <frame sprite="a" />
+            <frame sprite="b" />
+          </animation>
+          <position><x>200</x><y><random min="-2400" max="-900" /></y></position>
+          <velocity><x>0</x><y><random min="1.5" max="2.5" /></y></velocity>
+          <collisions>
+            <enabled>true</enabled>
+            <collision object="ground"><trigger object="ship" action="lose" /></collision>
+            <collision object="shot">
+              <inc variable="ship.score">40</inc>
+              <set variable="ship.peak">max(ship.peak, ship.score)</set>
               <reset />
               <play sound="pop" />
             </collision>
           </collisions>
-          <member>
-            <position><x>140</x></position>
-          </member>
-          <member>
-            <position><x>320</x></position>
-          </member>
-          <member>
-            <position><x>500</x></position>
-          </member>
-          <member>
-            <position><x>680</x></position>
-          </member>
         </group>
         <object name="shot" class="projectile">
-          <sprite>
-            <rectangle>
-              <width>4</width>
-              <height>16</height>
-              <color>color.white</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>4</width><height>16</height><color>color.white</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <velocity><y>-11</y></velocity>
           <collisions>
             <enabled>false</enabled>
-            <collision edge="all">
-              <die />
-            </collision>
-            <collision class="rocks">
-              <die />
-            </collision>
+            <collision edge="all"><die /></collision>
+            <!-- a big rock breaks where the shot hits it -->
+            <collision object="boulders"><release object="chips">2</release></collision>
+            <collision class="rocks"><die /></collision>
+            <collision class="spinner"><die /></collision>
           </collisions>
         </object>
+        <!-- the laser base -->
         <object name="ship">
           <sprite>
-            <rectangle>
-              <width>shipwidth</width>
-              <height>shipheight</height>
+            <bitmap>
+              <row>.....**.....</row>
+              <row>.....**.....</row>
+              <row>....****....</row>
+              <row>.**********.</row>
+              <row>************</row>
+              <scale>5</scale>
               <color>color.cyan</color>
-            </rectangle>
+            </bitmap>
           </sprite>
-          <position><x><centered /></x><y>window.bottom - ship.height - margin</y></position>
+          <position><x><centered /></x><y>window.bottom - ground - ship.height</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="horizontal">
-              <stick />
-            </collision>
+            <collision edge="horizontal"><stick /></collision>
+            <collision class="rocks"><trigger action="lose" /></collision>
+            <collision class="spinner"><trigger action="lose" /></collision>
           </collisions>
           <actions>
-            <action name="left">
-              <move direction="left">step</move>
-            </action>
-            <action name="right">
-              <move direction="right">step</move>
-            </action>
-            <action name="gun">
-              <fire object="shot" />
-              <play sound="shoot" />
+            <action name="left"><move direction="left">step</move></action>
+            <action name="right"><move direction="right">step</move></action>
+            <action name="gun"><fire object="shot" /><play sound="shoot" /></action>
+            <!-- the base blown up: the sky clears and the next comes on -->
+            <action name="lose">
+              <dec variable="ship.lives" />
+              <reset object="rocks" />
+              <reset object="chips" />
+              <reset object="spinners" />
+              <play sound="boom" />
             </action>
           </actions>
           <variables>
             <variable name="score">0</variable>
-            <variable name="lives">startlives</variable>
+            <variable name="peak">0</variable>
+            <variable name="lives">4</variable>
+            <variable name="spare">1000</variable>
           </variables>
         </object>
         <object name="score">
-          <sprite>
-            <text style="hud">
-              <number>ship.score</number>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>ship.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
+        <object name="peak">
+          <sprite><text style="hud"><content>PEAK </content><number>ship.peak</number><size>28</size><color>color.lightgrey</color></text></sprite>
+          <position><x><centered /></x><y>margin + 6</y></position>
+        </object>
         <object name="lives">
-          <sprite>
-            <text style="hud">
-              <number>ship.lives</number>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>ship.lives</number><color>color.cyan</color></text></sprite>
           <position><x>window.right - lives.width - margin</x><y>margin</y></position>
         </object>
       </objects>
       <inputs>
-        <input button="a">
-          <trigger object="ship" action="left" />
-        </input>
-        <input button="left">
-          <trigger object="ship" action="left" />
-        </input>
-        <input button="d">
-          <trigger object="ship" action="right" />
-        </input>
-        <input button="right">
-          <trigger object="ship" action="right" />
-        </input>
-        <input button="space">
-          <trigger object="ship" action="gun" />
-        </input>
-        <input button="p">
-          <push state="paused" />
-        </input>
-        <input button="escape">
-          <push state="paused" />
-        </input>
+        <input button="a left"><trigger object="ship" action="left" /></input>
+        <input button="d right"><trigger object="ship" action="right" /></input>
+        <input button="space"><trigger object="ship" action="gun" /></input>
+        <input button="p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="ship" variable="score">
-          <atleast>goal</atleast>
-          <push state="youwin" />
-          <play sound="win" />
+          <atleast object="ship" variable="spare" />
+          <inc variable="ship.lives" />
+          <inc variable="ship.spare">1000</inc>
+          <play sound="spare" />
         </condition>
         <condition object="ship" variable="lives">
           <atmost>0</atmost>
@@ -356,12 +329,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -369,50 +337,26 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <pop />
-        </input>
-        <input button="p">
-          <pop />
-        </input>
-        <input button="escape">
-          <pop />
-        </input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="gameover">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+        <object name="again">
+          <sprite><text style="line"><content>spacebar to play again</content><size>48</size></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
-        <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
-          <reset />
-        </input>
+        <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
-        </object>
-      </objects>
     </state>
   </states>
 </game>

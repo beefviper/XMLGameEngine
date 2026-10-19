@@ -12,7 +12,7 @@
 | Kaboom | `<random>` in a `<group>`; states differing only in what they show | nothing at first; when reworked, timers, `<facing>` fire, `<reset object>` in a rule | speed-up inside a wave (eight waves stand in) |
 | Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | (timed round and knock-back built in the 2026-10-19 rewrite) |
 | Depth Charge | limited ammunition without a countdown | nothing | several charges in flight, subs that fire back |
-| Astrosmash | Kaboom's pieces plus a gun | nothing | splitting rocks (a pool and `<release>` would now do it, as in Asteroids) |
+| Astrosmash | Kaboom's pieces plus a gun | nothing | levels, guided missiles, the UFO |
 | Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation (headings exist now), score by fuel |
 | Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping and expiring shots, saucer, waves, a safe respawn |
 | Pac-Man | a tile maze, steering, four ghosts each chasing its own way | `<map>`, `<maze>`, `<go>`, `<hunt>`, `<wander>`, bitmap inks, look timers, `<become from>` | the arcade's schedule of scatter waves, the dot counters that let ghosts out, the other fruit ([below](#pac-man)) |
@@ -70,6 +70,9 @@
 - Eight rocks (four slow, four fast) fall fixed columns with `<random>` speeds and heights; a ship fires one shot at a time. A shot kills (`<die />` on the shot, `<inc>` then `<reset />` on the rock: `<die />` is for things that stay dead). A rock reaching the ground or the ship costs a life. 20 points win, five lives lost is game over. Both groups share class `rocks`.
 - A hidden, collision-less shot does not interfere with rocks passing where it sits.
 - Rejected: splitting rocks (there was no way then; pools and `<release>` now do it in Asteroids), drifting (needs wall rules, harder columns), a free miss (unloseable by neglect), differently scored rocks (an amount on `inc` exists now).
+- Rewritten 2026-10-19 (418 to 362 lines) nearer the Intellivision game: no win any more, it goes on until the last base; rocks fall at a slant and bounce off the sides; a big rock scores 10 and the shot's rule about `boulders` `<release>`s two chips from a pool; small rocks 20, spinners 40; a landed rock takes half its worth off the score (`max(0, ...)` in a `<set>`), a landed spinner or anything on the base costs it and resets every rock (the sky clears); a spare base each 1,000 (a condition comparing the score with the ship's `spare`); the peak score shown. All rocks are one group of two inner groups, sharing their rules through `self.worth`.
+- Found: a collision rule's `<check>` with no `object=`, written in a group of groups, did not limit itself to the member running it (the split rule fired for small rocks too), so the split lives on the shot instead. Also a test that sets a variable directly must use `Game::setVariable`, or the live numbers a command reads stay stale.
+- Not in it: levels (multiplier, speed, sky colour), guided missiles, the UFO, rapid fire by holding Space (a `<fire>` is a press, not a hold).
 
 
 ## Lunar Lander
