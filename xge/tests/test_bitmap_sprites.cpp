@@ -1177,6 +1177,8 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 		return n;
 	};
 
+	// The cannon out of the way of the bombs while they are counted.
+	game.getObject("player").collisionData.enabled = false;
 	int most = 0;
 	for (int frame = 0; frame < 600; ++frame)
 	{
@@ -1198,6 +1200,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	// Bombs put on the cannon (a stray one may find it first) until the game is
 	// lost. Each hit holds the invasion still for a second ("blasted").
 	Object& player = game.getObject("player");
+	player.collisionData.enabled = true;
 	bool blasted = false;
 	for (int frame = 0; frame < 20000 && game.getCurrentState().name != "lost"; ++frame)
 	{
