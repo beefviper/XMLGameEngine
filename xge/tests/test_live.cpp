@@ -263,6 +263,22 @@ TEST_CASE("a <chase> turns the heading of what chases to the way it goes", "[liv
 	CHECK(play.get("missile").velocity.x == Approx(2).margin(0.01));
 }
 
+TEST_CASE("a group gives its members a <heading>, each turned on its own", "[live]")
+{
+	const Scratch file(box("target", 500, 100)
+		+ "<group name=\"missiles\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>8</y></to><thickness>2</thickness></line></sprite>"
+		"<position><y>100</y></position><heading>180</heading>"
+		"<timers><timer><every>0.1</every><chase object=\"target\"><speed>2</speed></chase></timer></timers>"
+		"<member><position><x>100</x></position></member><member><position><x>900</x></position></member></group>", "<pop />");
+	Played play(file.path);
+
+	CHECK(play.get("missiles.1").hasHeading);
+	CHECK(play.get("missiles.2").heading == Approx(180));
+	play.frames(10);
+	CHECK(play.get("missiles.1").heading == Approx(90).margin(1));
+	CHECK(play.get("missiles.2").heading == Approx(270).margin(1));
+}
+
 TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed for its worth, and back in its row", "[live][fishingderby]")
 {
 	Played play("descriptions/fishingderby.xml");

@@ -16,6 +16,8 @@
 
 #include "engine/engine.h"
 #include "game/game.h"
+#include "picture/bitmap.h"
+#include "picture/color.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -255,27 +257,104 @@ TEST_CASE("each wave ends when enough missiles are done with, and the third wins
 	CHECK(play.wave() == "playing.wave1");
 }
 
-TEST_CASE("each wave's missiles fall at its own speed, in its own color, under its own label", "[missilecommand]")
+TEST_CASE("each wave's missiles fall at its own speed and in its own color, and the label counts the waves", "[missilecommand]")
 {
 	MissileCommand play;
-	const struct { const char* scene; float speed; const char* color; const char* label; } waves[] = {
-		{ "wave1", 0.8f, "color.red", "wave 1" },
-		{ "wave2", 1.1f, "color.magenta", "wave 2" },
-		{ "wave3", 1.4f, "color.green", "wave 3" },
+	const struct { const char* scene; float speed; const char* color; } waves[] = {
+		{ "wave1", 0.8f, "color.red" },
+		{ "wave2", 1.1f, "color.magenta" },
+		{ "wave3", 1.4f, "color.green" },
 	};
 	for (const auto& wave : waves)
 	{
 		INFO(wave.scene);
 		const Object& one = play.missile(wave.scene, 1);
 		CHECK(one.velocity.y == Approx(wave.speed));
-		CHECK(std::find(one.spriteParams.begin(), one.spriteParams.end(), wave.color) != one.spriteParams.end());
-		const Object& label = play.game.getObject(std::string("playing.") + wave.scene + ".label");
-		CHECK(std::find(label.spriteParams.begin(), label.spriteParams.end(), wave.label) != label.spriteParams.end());
+		REQUIRE(one.bitmap);
+		const Bitmap& picture = *one.bitmap;
+		const Color expected = colorFromName(wave.color);
+		bool found = false;
+		for (int y = 0; y < picture.height && !found; ++y)
+		{
+			for (int x = 0; x < picture.width && !found; ++x)
+			{
+				if (!picture.solidAt(x, y)) { continue; }
+				const std::size_t at = (static_cast<std::size_t>(y) * static_cast<std::size_t>(picture.width) + static_cast<std::size_t>(x)) * 4;
+				found = picture.rgba[at] == expected.r && picture.rgba[at + 1] == expected.g && picture.rgba[at + 2] == expected.b;
+			}
+		}
+		CHECK(found);
 	}
-	CHECK(play.game.tryGetObject(MissileCommand::missileName("wave1", 5)) == nullptr); // the salvo only
+	CHECK_FALSE(play.missile("wave1", 5).isVisible); // the salvo only
 	CHECK(play.missile("wave2", 6).isVisible);
 	CHECK_FALSE(play.missile("wave2", 7).isVisible);
 	CHECK(play.missile("wave3", 8).isVisible);
+
+	CHECK(play.status("wave") == 1.0f);
+	play.start();
+	play.holdMissiles("wave1");
+	play.game.getObject("status").variable["spent"] = 12;
+	play.frames(2);
+	CHECK(play.status("wave") == 2.0f);
+}
+
+TEST_CASE("a missile is a streak that points the way it flies", "[missilecommand]")
+{
+	MissileCommand play;
+	play.start();
+	Object& missile = play.missile("wave1", 1);
+	CHECK(missile.heading == Approx(180.0f));
+
+	// Above and to the left of the first city, it turns toward it.
+	const Object& first = play.game.getObject("cities.1");
+	missile.position = { middleOf(first).x - 200.0f, 100.0f };
+	play.frames(20);
+	CHECK(missile.velocity.x > 0.0f);
+	CHECK(missile.heading < 180.0f);
+	CHECK(missile.heading > 90.0f);
+}
+
+TEST_CASE("a counter-missile trails a line back to the base while it flies", "[missilecommand]")
+{
+	MissileCommand play;
+	play.start();
+	play.holdMissiles("wave1");
+	play.frames(1);
+	CHECK_FALSE(play.game.getObject("trail1").isVisible);
+
+	play.tap(KeyCode::Space);
+	play.frames(5);
+	const Object& abm = play.game.getObject("abms.1");
+	REQUIRE(abm.isVisible);
+	const Object& trail = play.game.getObject("trail1");
+	CHECK(trail.isVisible);
+	CHECK(trail.position.y <= middleOf(abm).y + 1.0f);
+	CHECK(trail.position.y + trail.size.y >= middleOf(play.game.getObject("base")).y - 1.0f);
+
+	// Burst at the sight, the shot and its trail are gone.
+	play.frames(60);
+	CHECK_FALSE(abm.isVisible);
+	CHECK_FALSE(play.game.getObject("trail1").isVisible);
+}
+
+TEST_CASE("a burst swells and shrinks, and goes after three quarters of a second", "[missilecommand]")
+{
+	MissileCommand play;
+	play.start();
+	play.holdMissiles("wave1");
+	play.tap(KeyCode::Space);
+	Object* burst = nullptr;
+	for (int frame = 0; frame < 120 && !burst; ++frame)
+	{
+		play.frames(1);
+		if (play.game.getObject("bursts.1").isVisible) { burst = &play.game.getObject("bursts.1"); }
+	}
+	REQUIRE(burst);
+	CHECK(burst->animationIndex == 0);
+	play.frames(18);
+	CHECK(burst->animationIndex == 2); // full
+	play.frames(30);
+	CHECK_FALSE(burst->isVisible);
 }
 
 TEST_CASE("paused, the game is drawn still underneath and nothing falls", "[missilecommand]")
