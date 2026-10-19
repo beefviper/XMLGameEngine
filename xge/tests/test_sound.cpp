@@ -478,7 +478,7 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 		{ "freeway", { "hop", "hit", "cross", "start", "end" } },
 		{ "depthcharge", { "drop", "sink", "miss", "start", "win", "gameover" } },
 		{ "astrosmash", { "pop", "thud", "boom", "shoot", "start", "spare", "gameover" } },
-		{ "lunarlander", { "thrust", "jet", "land", "crash", "start" } },
+		{ "lunarlander", { "thrust", "land", "crash", "start" } },
 		{ "asteroids", { "beat", "thrust", "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "saucer", "extra", "gameover" } },
 	};
 
@@ -573,35 +573,31 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 	engine.step();
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 
-	// The side jets are a sound of their own, beside the main engine.
+	// Paused, a held key drives nothing, so it is quiet; back in play it hums again.
 	log.looped.clear();
 	log.stopped.clear();
 	engine.handleKeyPressed(KeyCode::Up);
-	engine.handleKeyPressed(KeyCode::Left);
 	engine.step();
-	CHECK(log.looped == std::vector<std::string>{ "jet", "thrust" });
-
-	// Paused, a held key drives nothing, so it is quiet; back in play it hums again.
+	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 	log.looped.clear();
 	engine.handleKeyPressed(KeyCode::P);
 	engine.handleKeyReleased(KeyCode::P);
 	engine.step();
 	REQUIRE(game.getCurrentState().name == "paused");
 	CHECK(game.loopingSounds().empty());
-	std::sort(log.stopped.begin(), log.stopped.end());
-	CHECK(log.stopped == std::vector<std::string>{ "jet", "thrust" });
+	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 	engine.handleKeyPressed(KeyCode::P);
 	engine.handleKeyReleased(KeyCode::P);
 	engine.step();
 	REQUIRE(game.getCurrentState().name == "playing");
-	CHECK(log.looped == std::vector<std::string>{ "jet", "thrust" });
+	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 
 	// Out of fuel, nothing pushes, and nothing hums.
 	log.stopped.clear();
 	game.getObject("lander").variable["fuel"] = 0.0f;
 	engine.step();
 	CHECK(game.loopingSounds().empty());
-	CHECK(log.stopped == std::vector<std::string>{ "thrust", "jet" });
+	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 
 	// A front end pausing silences everything; the next frame plays again what is still on.
 	log.looped.clear();

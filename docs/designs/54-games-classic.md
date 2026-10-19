@@ -13,7 +13,7 @@
 | Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | (timed round and knock-back built in the 2026-10-19 rewrite) |
 | Depth Charge | limited ammunition without a countdown | nothing | several charges in flight, subs that fire back |
 | Astrosmash | Kaboom's pieces plus a gun | nothing | levels, guided missiles, the UFO |
-| Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation (headings exist now), score by fuel |
+| Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain; rewritten 2026-10-19 with turning, scored pads and lander after lander | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | the scrolling terrain and close-up, abort, hard landings |
 | Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping and expiring shots, saucer, waves, a safe respawn |
 | Pac-Man | a tile maze, steering, four ghosts each chasing its own way | `<map>`, `<maze>`, `<go>`, `<hunt>`, `<wander>`, bitmap inks, look timers, `<become from>` | the arcade's schedule of scatter waves, the dot counters that let ghosts out, the other fruit ([below](#pac-man)) |
 | Berserk, Demon Attack, Frostbite (first written by another AI; all three since rewritten) | can the schema alone be enough for an author | (found gaps) then timers, facing, jump, looks, key sets; later chasing and aiming | |
@@ -77,7 +77,9 @@
 
 ## Lunar Lander
 
-- An 800 by 600 window; a moon of 15 `<line>`s with a gap for a short thick green pad; a lander of 13; gravity from its `<acceleration>`; three thrusters burn `fuel`; touching the ground or pad at or above `safespeed` wrecks it, slower sets it down; both end the game through `lander.crashed` / `lander.landed`. Decisions are in [collisions](20-collisions.md), [motion](22-motion.md), [pictures](30-pictures.md). Only the lines are solid, not the space under them (the bottom edge ends the game). Not done: rotation (the original spins), zoom, score by fuel left, several pads or terrains.
+- An 800 by 600 window; a moon of `<line>`s with three gaps for short thick green pads worth 2X, 3X and 5X (100, 150 and 250 points), narrower for more; gravity from the lander's `<acceleration>`. Decisions are in [collisions](20-collisions.md), [motion](22-motion.md), [pictures](30-pictures.md).
+- Rewritten 2026-10-19: the lander turns (`<heading>`, `<turn>`) and fires one engine along its heading (`<thrust burn="fuel">`). A landing is one rule about the pads: slower than `safespeed` and nearly upright, an `<any>` of two `<check>`s of the heading (0 to 10 or 350 to 360); any other touch of class `ground` is a wreck, which `<release>`s four pieces of debris and costs 200 fuel. Each pad's own rule sets what the landing is worth. The next lander is the same one put back with `<reset object="lander" />`, which starts its variables over too, so the fuel is `<copy>`d out to `status.fuel` and back in around the reset (the score is `status`'s); the game is over when what was copied out is nothing. A landing pushes a state that holds the lander on the pad for 2.5 seconds; a wreck shows a message whose timer says when the next one comes. Looked at: the fuel kept only on `status` (a `<thrust burn>` burns the thrusting object's own variable).
+- Not done: the scrolling terrain and the close-up view, the abort button, hard landings (between safe and wrecked), the speeds and altitude on the screen (a text cannot show a value that is not a variable).
 
 
 ## Asteroids

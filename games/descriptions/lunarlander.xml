@@ -4,32 +4,34 @@
 <!-- date: Sept 30, 2026 -->
 
 <!--
-  Lunar Lander, after the 1979 arcade game: a lander falls toward the moon,
-  and has to be set down gently on the flat pad, with fuel to spare. Touch
-  anything else, or the pad too fast, and it is wrecked.
+  Lunar Lander, after the 1979 arcade game: a lander falls toward the moon
+  and has to be set down, upright and gently, on one of the flat pads. The
+  narrower the pad, the more it is worth (2X, 3X, 5X). Touch anything else,
+  or a pad too fast or leaning, and the lander is wrecked and some of the
+  fuel is lost with it. Lander after lander comes down from the top until
+  the fuel is gone.
 
-  Everything on screen is drawn from <line>s, as the original was, and the
-  collisions follow the lines, not the boxes around them: the lander, the
-  ground and the pad are all `<type>pixel</type>`, so the lander is only
-  touching the ground where a pixel of its legs really lies on a pixel of the
-  ground. (The bounding boxes are still swept first, as for any object; the
-  pixels are the second, closer look.)
-
-  It needed verbs the language did not have. The moon pulls the lander down
-  through its <acceleration>, and each thruster is an <accelerate> that adds to
-  its velocity while the key is held and burns one unit of `fuel` a frame; with
-  no fuel the thrusters do nothing. Setting down is a pair of rules about the
-  pad, told apart by speed: <slower> is a landing, <faster> is a crash, and
-  <stop /> is what a landed or wrecked lander does.
+  A and D or Left and Right turn the lander, W or Up fires the engine the
+  way it points, Space, P or Escape pauses.
 
   How it is written:
-  * Each state owns what it draws: the title texts are the main menu's, the
-    moon, the pad, the lander and its fuel are the playing state's, and the
-    PAUSED text and the two endings' messages are those states' own.
-  * Paused, landed and crashed draw the moon still underneath
-    (<show state="playing" />): the lander stays where it stopped.
-  * "spacebar to play again" is the one object of the game itself, shown by
-    both endings.
+  * Everything is drawn from <line>s and tested by pixel, so the lander
+    touches the moon only where a pixel of it lies on a pixel of the moon.
+    The lander has a <heading>: <turn> leans it and <thrust> pushes it the
+    way it points, burning a unit of fuel a frame.
+  * The terrain and the pads are both class "ground". A landing is one rule
+    about the pads: slower than the safe speed and nearly upright (an <any>
+    of two <check>s of the heading); every other touch of the ground is a
+    wreck. Each pad's own rule says what it is worth.
+  * The next lander is the same one put back, <reset object="lander" />,
+    which starts its variables over too, so its fuel is copied out and back
+    in around the reset, and the game is over when what was copied out is
+    nothing; the score is kept apart. A landing pushes a state
+    that holds the lander still on the pad; a wreck breaks it into pieces
+    (<release>d at the lander) under a message whose timer says when the
+    next one may come.
+  Not in it: the terrain scrolling and the close-up view, the abort button,
+  hard landings.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -42,26 +44,21 @@
   </window>
   <variables>
     <variable name="gravity">0.01</variable>
-    <variable name="thrust">0.035</variable>
-    <variable name="sidethrust">0.02</variable>
-    <variable name="fuelstart">500</variable>
+    <variable name="thrustpower">0.03</variable>
+    <variable name="turnrate">3</variable>
+    <variable name="fuelstart">1000</variable>
+    <variable name="wreckcost">200</variable>
     <variable name="safespeed">1.2</variable>
+    <variable name="upright">10</variable>
     <variable name="margin">20</variable>
   </variables>
   <sounds>
-    <!-- the main engine, for as long as it is held: a low rumble of noise, over and over -->
+    <!-- the engine, for as long as it is held: a low rumble of noise -->
     <sound name="thrust" wave="noise">
       <loop />
       <volume>0.15</volume>
       <note pitch="150">1</note>
     </sound>
-    <!-- a side jet, held the same way: a thinner, higher hiss -->
-    <sound name="jet" wave="noise">
-      <loop />
-      <volume>0.06</volume>
-      <note pitch="900">1</note>
-    </sound>
-    <!-- a good landing: a rising arpeggio -->
     <sound name="land" wave="triangle">
       <volume>0.4</volume>
       <note pitch="C4">0.1</note>
@@ -69,12 +66,10 @@
       <note pitch="G4">0.1</note>
       <note pitch="C5">0.3</note>
     </sound>
-    <!-- a crash: a burst of noise that sinks -->
     <sound name="crash" wave="noise">
       <volume>0.45</volume>
       <note pitch="3000" to="100">0.8</note>
     </sound>
-    <!-- a game started: a rising arpeggio -->
     <sound name="start" wave="square">
       <volume>0.2</volume>
       <note pitch="C5">0.07</note>
@@ -84,59 +79,27 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>110</size><color>color.cyan</color></style>
-    <style name="prompt"><size>48</size></style>
-    <style name="hud"><size>30</size><color>color.orange</color></style>
+    <style name="banner"><size>80</size><color>color.white</color></style>
+    <style name="line"><size>28</size><color>color.white</color></style>
+    <style name="hud"><size>26</size><color>color.white</color></style>
   </styles>
-  <objects>
-    <!-- after a landing or a crash -->
-    <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>LUNAR LANDER</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>LUNAR LANDER</content><size>100</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
         </object>
         <object name="help">
-          <sprite>
-            <text>
-              <content>set it down gently on the green pad</content>
-              <size>32</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="line"><content>land upright and slowly on a pad: 2X, 3X or 5X the points</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
         <object name="keys">
-          <sprite>
-            <text>
-              <content>up or w for the main thruster, left and right for the sides</content>
-              <size>28</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
+          <sprite><text style="line"><content>left and right turn, up fires the engine</content><color>color.lightgrey</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 25</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="line"><content>spacebar to start</content><size>48</size><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
@@ -149,184 +112,197 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- The moon's surface, in two runs of lines with the pad's gap between them: peaks, slopes and a ledge. A line's coordinates are measured from the object's top left. -->
+        <!-- the moon: peaks and valleys with a gap for each pad; a line is measured from the object's top left -->
         <object name="terrain" class="ground">
           <sprite>
-            <line><from><x>0</x><y>140</y></from><to><x>60</x><y>90</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>60</x><y>90</y></from><to><x>110</x><y>120</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>110</x><y>120</y></from><to><x>150</x><y>50</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>150</x><y>50</y></from><to><x>200</x><y>140</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>200</x><y>140</y></from><to><x>260</x><y>180</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>260</x><y>180</y></from><to><x>320</x><y>180</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>320</x><y>180</y></from><to><x>360</x><y>120</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>360</x><y>120</y></from><to><x>400</x><y>70</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>400</x><y>70</y></from><to><x>440</x><y>160</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>440</x><y>160</y></from><to><x>498</x><y>180</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>582</x><y>180</y></from><to><x>620</x><y>140</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>620</x><y>140</y></from><to><x>660</x><y>90</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>660</x><y>90</y></from><to><x>700</x><y>150</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>700</x><y>150</y></from><to><x>740</x><y>110</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>740</x><y>110</y></from><to><x>798</x><y>160</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>120</y></from><to><x>40</x><y>80</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>40</x><y>80</y></from><to><x>70</x><y>100</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>70</x><y>100</y></from><to><x>100</x><y>40</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>100</x><y>40</y></from><to><x>130</x><y>90</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>162</x><y>90</y></from><to><x>190</x><y>150</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>190</x><y>150</y></from><to><x>230</x><y>130</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>230</x><y>130</y></from><to><x>260</x><y>170</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>340</x><y>170</y></from><to><x>370</x><y>110</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>370</x><y>110</y></from><to><x>400</x><y>60</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>400</x><y>60</y></from><to><x>430</x><y>30</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>430</x><y>30</y></from><to><x>460</x><y>80</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>460</x><y>80</y></from><to><x>490</x><y>120</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>540</x><y>120</y></from><to><x>570</x><y>160</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>570</x><y>160</y></from><to><x>610</x><y>190</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>610</x><y>190</y></from><to><x>650</x><y>140</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>650</x><y>140</y></from><to><x>690</x><y>70</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>690</x><y>70</y></from><to><x>720</x><y>100</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>720</x><y>100</y></from><to><x>760</x><y>60</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>760</x><y>60</y></from><to><x>798</x><y>110</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
           </sprite>
           <position><x>0</x><y>380</y></position>
-          <collisions>
-            <enabled>true</enabled>
-            <type>pixel</type>
-          </collisions>
+          <collisions><enabled>true</enabled><type>pixel</type></collisions>
         </object>
-        <object name="pad" class="pad">
-          <sprite>
-            <line><from><x>0</x><y>0</y></from><to><x>76</x><y>0</y></to><color>color.green</color><thickness>4</thickness></line>
-          </sprite>
-          <position><x>500</x><y>560</y></position>
-          <collisions>
-            <enabled>true</enabled>
-            <type>pixel</type>
-          </collisions>
-        </object>
+        <!-- the pads, flat and lit, in the terrain's gaps -->
+        <group name="pads" class="ground">
+          <collisions><enabled>true</enabled><type>pixel</type></collisions>
+          <member name="pad5">
+            <sprite><line><from><x>0</x><y>0</y></from><to><x>34</x><y>0</y></to><color>color.green</color><thickness>3</thickness></line></sprite>
+            <position><x>129</x><y>469</y></position>
+          </member>
+          <member name="pad2">
+            <sprite><line><from><x>0</x><y>0</y></from><to><x>82</x><y>0</y></to><color>color.green</color><thickness>3</thickness></line></sprite>
+            <position><x>259</x><y>549</y></position>
+          </member>
+          <member name="pad3">
+            <sprite><line><from><x>0</x><y>0</y></from><to><x>52</x><y>0</y></to><color>color.green</color><thickness>3</thickness></line></sprite>
+            <position><x>489</x><y>499</y></position>
+          </member>
+        </group>
+        <group name="marks">
+          <member><sprite><text style="hud"><content>5X</content></text></sprite><position><x>133</x><y>478</y></position></member>
+          <member><sprite><text style="hud"><content>2X</content></text></sprite><position><x>286</x><y>558</y></position></member>
+          <member><sprite><text style="hud"><content>3X</content></text></sprite><position><x>502</x><y>508</y></position></member>
+        </group>
         <object name="lander">
           <sprite>
             <line><from><x>10</x><y>2</y></from><to><x>20</x><y>2</y></to><thickness>2</thickness></line>
             <line><from><x>20</x><y>2</y></from><to><x>25</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>25</x><y>7</y></from><to><x>25</x><y>14</y></to><thickness>2</thickness></line>
-            <line><from><x>25</x><y>14</y></from><to><x>20</x><y>19</y></to><thickness>2</thickness></line>
-            <line><from><x>20</x><y>19</y></from><to><x>10</x><y>19</y></to><thickness>2</thickness></line>
-            <line><from><x>10</x><y>19</y></from><to><x>5</x><y>14</y></to><thickness>2</thickness></line>
-            <line><from><x>5</x><y>14</y></from><to><x>5</x><y>7</y></to><thickness>2</thickness></line>
+            <line><from><x>25</x><y>7</y></from><to><x>25</x><y>12</y></to><thickness>2</thickness></line>
+            <line><from><x>25</x><y>12</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+            <line><from><x>5</x><y>12</y></from><to><x>5</x><y>7</y></to><thickness>2</thickness></line>
             <line><from><x>5</x><y>7</y></from><to><x>10</x><y>2</y></to><thickness>2</thickness></line>
-            <line><from><x>12</x><y>9</y></from><to><x>18</x><y>9</y></to><thickness>2</thickness></line>
-            <line><from><x>10</x><y>19</y></from><to><x>3</x><y>29</y></to><thickness>2</thickness></line>
-            <line><from><x>20</x><y>19</y></from><to><x>27</x><y>29</y></to><thickness>2</thickness></line>
-            <line><from><x>0</x><y>29</y></from><to><x>6</x><y>29</y></to><thickness>2</thickness></line>
-            <line><from><x>24</x><y>29</y></from><to><x>30</x><y>29</y></to><thickness>2</thickness></line>
+            <line><from><x>7</x><y>14</y></from><to><x>23</x><y>14</y></to><thickness>2</thickness></line>
+            <line><from><x>23</x><y>14</y></from><to><x>23</x><y>19</y></to><thickness>2</thickness></line>
+            <line><from><x>23</x><y>19</y></from><to><x>7</x><y>19</y></to><thickness>2</thickness></line>
+            <line><from><x>7</x><y>19</y></from><to><x>7</x><y>14</y></to><thickness>2</thickness></line>
+            <line><from><x>13</x><y>19</y></from><to><x>11</x><y>23</y></to><thickness>2</thickness></line>
+            <line><from><x>17</x><y>19</y></from><to><x>19</x><y>23</y></to><thickness>2</thickness></line>
+            <line><from><x>7</x><y>18</y></from><to><x>2</x><y>28</y></to><thickness>2</thickness></line>
+            <line><from><x>23</x><y>18</y></from><to><x>28</x><y>28</y></to><thickness>2</thickness></line>
+            <line><from><x>0</x><y>28</y></from><to><x>5</x><y>28</y></to><thickness>2</thickness></line>
+            <line><from><x>25</x><y>28</y></from><to><x>30</x><y>28</y></to><thickness>2</thickness></line>
           </sprite>
-          <position><x><centered /></x><y>40</y></position>
-          <velocity><x>0.5</x></velocity>
+          <position><x><random min="40" max="300" /></x><y>40</y></position>
+          <velocity><x><random min="0.5" max="1.2" /></x></velocity>
           <acceleration><x>0</x><y>gravity</y></acceleration>
+          <heading>0</heading>
           <collisions>
             <enabled>true</enabled>
             <type>pixel</type>
-            <collision edge="horizontal">
-              <stick />
-            </collision>
-            <collision edge="top">
-              <stick />
-            </collision>
-            <collision edge="bottom">
-              <inc variable="lander.crashed" />
-              <stop />
-            </collision>
-            <collision object="terrain">
-              <inc variable="lander.crashed" />
-              <stop />
-            </collision>
-            <collision object="pad">
+            <collision edge="horizontal"><stick /></collision>
+            <collision edge="top"><stick /></collision>
+            <collision object="pad2"><set variable="lander.worth">100</set></collision>
+            <collision object="pad3"><set variable="lander.worth">150</set></collision>
+            <collision object="pad5"><set variable="lander.worth">250</set></collision>
+            <collision object="pads">
               <slower>safespeed</slower>
-              <inc variable="lander.landed" />
+              <any>
+                <check variable="heading"><atmost>upright</atmost></check>
+                <check variable="heading"><atleast>360 - upright</atleast></check>
+              </any>
+              <set variable="lander.landed">1</set>
               <stop />
             </collision>
-            <collision object="pad">
-              <faster>safespeed</faster>
-              <inc variable="lander.crashed" />
-              <stop />
+            <collision class="ground">
+              <check variable="landed"><equal>0</equal></check>
+              <set variable="lander.crashed">1</set>
+              <release object="debris">4</release>
+              <die />
             </collision>
           </collisions>
           <actions>
+            <action name="left"><turn direction="left">turnrate</turn></action>
+            <action name="right"><turn direction="right">turnrate</turn></action>
             <action name="thrust">
-              <accelerate direction="up" burn="fuel">thrust</accelerate>
+              <thrust burn="fuel">thrustpower</thrust>
               <play sound="thrust" />
-            </action>
-            <action name="left">
-              <accelerate direction="left" burn="fuel">sidethrust</accelerate>
-              <play sound="jet" />
-            </action>
-            <action name="right">
-              <accelerate direction="right" burn="fuel">sidethrust</accelerate>
-              <play sound="jet" />
             </action>
           </actions>
           <variables>
             <variable name="fuel">fuelstart</variable>
+            <variable name="worth">0</variable>
             <variable name="landed">0</variable>
             <variable name="crashed">0</variable>
+            <variable name="ready">0</variable>
           </variables>
         </object>
-        <object name="fuelvalue">
-          <sprite>
-            <text style="hud">
-              <number>lander.fuel</number>
-            </text>
-          </sprite>
-          <position><x>window.right - margin - 150 + fuellabel.width + 12</x><y>margin</y></position>
+        <!-- what is left of a wrecked lander, flung out and falling -->
+        <group name="debris">
+          <sprite><line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line></sprite>
+          <position><x>0</x><y>0</y></position>
+          <acceleration><x>0</x><y>gravity * 4</y></acceleration>
+          <hidden>true</hidden>
+          <member><velocity><x>-1.6</x><y>-2</y></velocity></member>
+          <member><velocity><x>1.4</x><y>-2.4</y></velocity></member>
+          <member><velocity><x>-0.6</x><y>-3</y></velocity></member>
+          <member><velocity><x>0.8</x><y>-1.6</y></velocity></member>
+        </group>
+        <object name="wrecked">
+          <sprite><text style="line"><content>YOU JUST DESTROYED A 100 MEGABUCK LANDER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y>window.height.center - 140</y></position>
+          <hidden>true</hidden>
+          <timers>
+            <timer><every>2.5</every><inc variable="lander.ready" /><die /></timer>
+          </timers>
         </object>
-        <object name="fuellabel">
-          <sprite>
-            <text style="hud">
-              <content>FUEL</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
-          <position><x>window.right - margin - 150</x><y>margin</y></position>
+        <!-- the score, and the fuel kept while a new lander is brought in -->
+        <object name="status">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="fuel">fuelstart</variable>
+          </variables>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><content>SCORE </content><number>status.score</number></text></sprite>
+          <position><x>margin</x><y>margin</y></position>
+        </object>
+        <object name="fuel">
+          <sprite><text style="hud"><content>FUEL </content><number>lander.fuel</number></text></sprite>
+          <position><x>window.right - margin - 160</x><y>margin</y></position>
         </object>
       </objects>
       <inputs>
-        <input button="up">
-          <trigger object="lander" action="thrust" />
-        </input>
-        <input button="w">
-          <trigger object="lander" action="thrust" />
-        </input>
-        <input button="left">
-          <trigger object="lander" action="left" />
-        </input>
-        <input button="a">
-          <trigger object="lander" action="left" />
-        </input>
-        <input button="right">
-          <trigger object="lander" action="right" />
-        </input>
-        <input button="d">
-          <trigger object="lander" action="right" />
-        </input>
-        <input button="space">
-          <push state="paused" />
-        </input>
-        <input button="p">
-          <push state="paused" />
-        </input>
-        <input button="escape">
-          <push state="paused" />
-        </input>
+        <input button="up w"><trigger object="lander" action="thrust" /></input>
+        <input button="left a"><trigger object="lander" action="left" /></input>
+        <input button="right d"><trigger object="lander" action="right" /></input>
+        <input button="space p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition object="lander" variable="crashed">
+        <!-- the last lander down with no fuel left -->
+        <condition object="status" variable="fuel">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <!-- the next lander, from the top -->
+        <condition object="lander" variable="ready">
           <atleast>1</atleast>
-          <push state="crashed" />
-          <play sound="crash" />
+          <copy variable="lander.fuel" into="status.fuel" />
+          <reset object="lander" />
+          <copy variable="status.fuel" into="lander.fuel" />
+          <reset object="debris" />
         </condition>
         <condition object="lander" variable="landed">
           <atleast>1</atleast>
-          <push state="landed" />
+          <inc variable="status.score">lander.worth</inc>
+          <silence sound="thrust" />
           <play sound="land" />
+          <push state="landed" />
         </condition>
-        <!-- out of fuel, the engines go quiet even with a key held -->
+        <condition object="lander" variable="crashed">
+          <atleast>1</atleast>
+          <set variable="lander.crashed">0</set>
+          <set variable="lander.fuel">max(0, lander.fuel - wreckcost)</set>
+          <silence sound="thrust" />
+          <play sound="crash" />
+          <reveal object="wrecked" />
+        </condition>
+        <!-- out of fuel, the engine goes quiet even with a key held -->
         <condition object="lander" variable="fuel">
           <atmost>0</atmost>
           <silence sound="thrust" />
-          <silence sound="jet" />
         </condition>
       </conditions>
     </state>
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <size>128</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -334,51 +310,48 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <pop />
-        </input>
-        <input button="p">
-          <pop />
-        </input>
-        <input button="escape">
-          <pop />
-        </input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
+    <!-- down on a pad: the lander stays still while the points are shown, then the next one comes -->
     <state name="landed">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GOOD LANDING</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>THE EAGLE HAS LANDED</content><size>56</size><color>color.green</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 150</centered></y></position>
+        </object>
+        <object name="points">
+          <sprite><text style="line"><number>lander.worth</number><content> POINTS</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space p escape"><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer><every>2.5</every><inc variable="lander.ready" /><pop /></timer>
+      </timers>
+    </state>
+    <state name="gameover">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>OUT OF FUEL</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+        </object>
+        <object name="again">
+          <sprite><text style="line"><content>spacebar to play again</content><size>48</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
-        <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
-          <reset />
-        </input>
+        <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="crashed" from="landed">
-      <objects>
-        <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>CRASHED</content>
-              <size>128</size>
-              <color>color.red</color>
-            </text>
-          </sprite>
-        </object>
-      </objects>
     </state>
   </states>
 </game>

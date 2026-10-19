@@ -16,7 +16,7 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 
 ## Lines
 
-- Need: Lunar Lander is drawn entirely from lines; the moon is one object of 15 lines, the lander 13, the pad one thick line.
+- Need: Lunar Lander is drawn entirely from lines; the moon is one object of lines, the lander 16, each pad one thick line.
 - `<line>` (from/to, `<color>`, `<thickness>` of at least 1) inside a `<sprite>`, in pixels from the sprite's top left. Rasterized with a square brush, no gaps, transparent elsewhere; endpoints rounded. Not mixable with other shapes. Lines have no fill.
 - Rejected: a box with a list of parts (a second description that drifts from the picture).
 

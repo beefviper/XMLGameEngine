@@ -815,11 +815,11 @@ TEST_CASE("both schema checkers turn away the same mistakes in lines, types and 
 	};
 
 	const Mistake mistakes[] = {
-		{ "a line with no end", "<to><x>76</x><y>0</y></to>", "", "to" },
-		{ "a line with a corner it cannot hold", "<thickness>4</thickness>", "<thickness>4</thickness><corner />", "corner" },
+		{ "a line with no end", "<to><x>34</x><y>0</y></to>", "", "to" },
+		{ "a line with a corner it cannot hold", "<thickness>3</thickness>", "<thickness>3</thickness><corner />", "corner" },
 		{ "a collision type that is not one", "<enabled>true</enabled>\n            <type>pixel</type>", "<enabled>true</enabled>\n            <type>round</type>", "round" },
 		{ "an acceleration missing its y", "<y>gravity</y>", "", "y" },
-		{ "a thruster with no direction", "<accelerate direction=\"left\" burn=\"fuel\">", "<accelerate burn=\"fuel\">", "direction" },
+		{ "a turn with no direction", "<turn direction=\"left\">", "<turn>", "direction" },
 	};
 
 	for (const Mistake& mistake : mistakes)
@@ -839,7 +839,7 @@ TEST_CASE("an attribute the schema does not declare is turned away by Xerces, wh
 {
 	// The weak validator cannot list a node's attributes (see load/xsd.h), so
 	// this is the one kind of mistake only the real validation catches.
-	const Verdict verdict = judge(gameWith("descriptions/lunarlander.xml", "<accelerate direction=\"up\" burn=\"fuel\">", "<accelerate direction=\"up\" fuel=\"fuel\">"));
+	const Verdict verdict = judge(gameWith("descriptions/lunarlander.xml", "<thrust burn=\"fuel\">", "<thrust fuel=\"fuel\">"));
 
 	CHECK(verdict.weakAccepts);
 	CHECK_FALSE(verdict.strongAccepts);

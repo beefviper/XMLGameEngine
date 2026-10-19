@@ -33,7 +33,7 @@
 - **Thrust is a held verb that names a variable to burn:** `<accelerate direction burn="fuel">` adds to velocity (not sets it) every frame the key is down, takes 1 off the variable, and does nothing at 0. Opposite thrusters cancel. Rejected: thrust as a plain rule on the key (needs "while held" and "until empty" spelled out).
 - `<stop />` zeroes velocity, acceleration and held thrust so a landed lander stays landed.
 - Landing vs crash: `slower`/`faster` ([collisions](20-collisions.md)).
-- No world-space rotation in Lunar Lander: it has side thrusters; rotation came with Asteroids.
+- Lunar Lander first had side thrusters (`<accelerate>` left and right) and no rotation; since the 2026-10-19 rewrite it turns with `<heading>` and `<turn>` and its one engine is a `<thrust burn="fuel">` along the heading, as the arcade game did. `<accelerate>` stays for things that push along an axis.
 
 
 ## Headings and turning (Asteroids)
