@@ -7,7 +7,7 @@
 // no window and the keys a player would press: Harry running from screen to
 // screen (the scenes of the playing state, entered through the unseen strip
 // down each side), a screen kept as it was when left, the logs, the tar pit
-// leapt over and fallen into, the crocodiles and their jaws, the ladder down
+// leapt over and fallen into, the crocodiles opening their jaws, the ladder down
 // to the tunnel, the treasures, the clock, and the jungle still under the
 // pause.
 //
@@ -357,7 +357,10 @@ TEST_CASE("the pond can be crossed by leaping from head to head between bites", 
 	play.start();
 	play.enter("playing.screen3");
 	// The next bite a good while off, so the crossing is clear.
-	play.game.getObject("pond").timers.at(0).framesLeft = 170;
+	for (const char* croc : { "crocs.1", "crocs.2", "crocs.3" })
+	{
+		play.game.getObject(croc).timers.at(0).framesLeft = 170;
+	}
 
 	// From the edge of the bank, one leap to each head and one to the far bank.
 	play.standAt(200.0f);
