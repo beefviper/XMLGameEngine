@@ -126,7 +126,7 @@ TEST_CASE("the new colors are named, opaque, and different from each other", "[n
 
 namespace
 {
-	// frogger.xml's frog and one of its hedges, sized as a backend would.
+	// frogger.xml's frog and its hedge, sized as a backend would.
 	struct Pair
 	{
 		Game game{ "descriptions/frogger.xml" };
@@ -134,10 +134,10 @@ namespace
 		Object& frog;
 		Object& hedge;
 
-		Pair() : frog(game.getObject("frog")), hedge(game.getObject("hedges.2"))
+		Pair() : frog(game.getObject("frog")), hedge(game.getObject("hedge"))
 		{
-			frog.size = { 36.0f, 36.0f };
-			hedge.size = { 48.0f, 48.0f };
+			frog.size = { 40.0f, 32.0f };
+			hedge.size = { 624.0f, 48.0f };
 			game.setCurrentState("playing");
 		}
 	};

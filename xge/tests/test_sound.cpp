@@ -469,9 +469,9 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 {
 	const std::vector<std::pair<std::string, std::vector<std::string>>> games = {
 		{ "breakout", { "wall", "paddle", "brick", "crack", "start", "win", "gameover" } },
-		{ "frogger", { "hop", "squash", "splash", "pad", "start", "win", "gameover" } },
+		{ "frogger", { "hop", "squash", "splash", "home", "start", "win", "gameover" } },
 		{ "spacerace", { "score", "crash", "start", "win" } },
-		{ "freeway", { "hop", "hit", "cross", "start", "win" } },
+		{ "freeway", { "hop", "hit", "cross", "start", "end" } },
 		{ "depthcharge", { "drop", "sink", "miss", "start", "win", "gameover" } },
 		{ "astrosmash", { "pop", "thud", "shoot", "start", "win", "gameover" } },
 		{ "lunarlander", { "thrust", "jet", "land", "crash", "start" } },

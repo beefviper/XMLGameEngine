@@ -635,11 +635,8 @@ TEST_CASE("a group with groups inside it has no members of its own", "[group][ne
 		ContainsSubstring("group 'lanes'") && ContainsSubstring("has <group>s inside it, so it has no <member>s"));
 }
 
-TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups", "[group][shipped]")
+TEST_CASE("frogger.xml and spacerace.xml are made of the groups they are written as", "[group][shipped]")
 {
-	// Counted from the games as they were written with one <object> for each:
-	// Frogger's 59 objects include the lane markings, then a 13 by 4 grid and
-	// now a group of 13 columns and 4 rows, so 58 objects and 52 cells.
 	const auto census = [](const char* file)
 	{
 		Game game{ file };
@@ -649,10 +646,11 @@ TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups
 		return classes;
 	};
 
+	// Frogger: logs and turtles (class logs), trucks and cars and the hedge
+	// (hazard), and the five bays.
 	const auto frogger = census("descriptions/frogger.xml");
-	CHECK(frogger.at("all") == 110);
-	CHECK(frogger.at("logs") == 13);
-	CHECK(frogger.at("hazard") == 19);
+	CHECK(frogger.at("logs") == 8 + 7);
+	CHECK(frogger.at("hazard") == 14 + 1);
 	CHECK(frogger.at("pads") == 5);
 
 	const auto race = census("descriptions/spacerace.xml");
@@ -662,12 +660,13 @@ TEST_CASE("frogger.xml and spacerace.xml have the objects they had before groups
 
 TEST_CASE("every lane of frogger and space race is a group of the members it had", "[group][shipped]")
 {
-	// The lanes are the playing state's own, so their names are paths: playing.logrow2.1.
+	// Frogger's lanes are laid out in columns, one row each: playing.logrow2.3.1
+	// is the third log of the lane, inside the river group and the lanes group.
 	struct Lane { const char* group; int members; };
 	const Lane frogger[] = {
-		{ "homes", 5 }, { "pads", 5 }, { "hedges", 6 },
-		{ "logrow2", 2 }, { "logrow3", 3 }, { "logrow4", 2 }, { "logrow5", 3 }, { "logrow6", 3 },
-		{ "truckrow8", 2 }, { "carrow9", 2 }, { "carrow10", 3 }, { "carrow11", 3 }, { "carrow12", 3 },
+		{ "pads", 5 },
+		{ "logrow2", 3 }, { "turtlerow3", 4 }, { "logrow4", 2 }, { "logrow5", 3 }, { "turtlerow6", 3 },
+		{ "truckrow8", 2 }, { "carrow9", 2 }, { "carrow10", 4 }, { "carrow11", 3 }, { "carrow12", 3 },
 	};
 
 	Game game{ "descriptions/frogger.xml" };
@@ -678,11 +677,17 @@ TEST_CASE("every lane of frogger and space race is a group of the members it had
 		{
 			if (object.groupName != "playing." + std::string(lane.group)) { continue; }
 			++found;
-			CHECK(object.name == "playing." + std::string(lane.group) + "." + std::to_string(found));
+			CHECK(object.name == "playing." + std::string(lane.group) + "." + std::to_string(found) + ".1");
 		}
 		INFO(lane.group);
 		CHECK(found == lane.members);
 	}
+	int lanes = 0;
+	for (const Object& object : game.getCurrentObjects())
+	{
+		if (object.inGroup("playing.lanes")) { ++lanes; }
+	}
+	CHECK(lanes == 15 + 14);
 
 	Game race{ "descriptions/spacerace.xml" };
 	for (int lane = 1; lane <= 9; ++lane)

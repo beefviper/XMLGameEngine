@@ -4,46 +4,39 @@
 <!-- date: Sept 30, 2026 -->
 
 <!--
-  Frogger, on a grid of 48 pixel cells, 13 across and 14 down:
+  Frogger, after Konami's 1981 arcade game, on a grid of 48 pixel cells, 13
+  across and 14 down:
 
-    row  0        the score and lives
-    row  1        home: five pads between hedges
-    rows 2-6      the river: five lanes of logs
-    row  7        grass
-    rows 8-12     the road: five lanes of trucks and cars
+    row  0        the score, the time and the lives
+    row  1        home: five bays between hedges
+    rows 2-6      the river: logs, and turtles, some of which dive
+    row  7        the grassy bank
+    rows 8-12     the road: a truck lane, a racing car, bulldozers and cars
     row  13       the pavement where the frog starts
 
-  The frog hops one cell for each press of an arrow key (or W, A, S, D) - hold
-  a key and it hops once. It is lost, and put back at the start, when it
-  - is hit by a car or truck, or runs into a hedge,
-  - is in the river and not on a log (a collision with unless="logs"),
-  - is ridden off the side of the screen by a log.
-  Reaching a pad scores and sends the frog back; a bright green frog waits
-  under every pad and shows once the pad is gone. All five pads is a win, no
-  lives left is game over. Space starts and pauses, as do P and Escape.
+  The frog hops one cell for each press of W A S D or the arrows. It is lost,
+  and the next one starts at the bottom, when it is run over, falls in the
+  river (not on a log or a turtle, or on a turtle that has dived), is ridden
+  off the side, hops into a hedge or a bay already filled, or runs out of
+  time. A frog home is 50 points, and fills its bay; five home is a win.
+  Space starts and pauses, as do P and Escape.
 
   How it is written:
-  * Each state owns what it draws: the title and its line belong to the main
-    menu, the whole board and the frog to playing, the PAUSED sign to paused,
-    each ending's words to its own state. Only "spacebar to continue", which
-    both endings show, is the game's.
-  * Everything on the board is a square (or a few squares laid end to end)
-    drawn 6 pixels in from its cell, so the frog fits a lane with room to
-    spare. Each lane of logs, trucks or cars is a <group>: the lane's speed
-    and row are written once and each <member> only says where it starts.
-    The lanes sit inside the group of the river's or the road's, which gives
-    their shape, and those two inside one group of all ten, which gives the
-    <wrap /> they all share; a lane says only what differs (a log three
-    cells long, a red car). A member is still its own object (logrow3.2 is
-    the second log of the third river lane), and each group's name (logrow3,
-    river, lanes) means all the members inside it. A lane loops with
-    <wrap />, so members are spaced by hand (a lane of objects that are
-    `size` wide repeats every `window.width + size` pixels). The pads, the
-    frogs waiting under them and the hedges are groups too; the two end
-    hedges give their own wider <sprite>.
+  * Every lane of the river and the road is a group inside one group that
+    gives the <wrap />. A lane says its row, its speed and its picture; its
+    logs or cars are laid out as <columns>, evenly round the loop.
+  * The diving turtles have two looks and a <timer> on each: up for a while,
+    then under, then up again. A turtle that is under drowns a frog on it,
+    by its own rule (sprite="under"); the frog's water rule only asks
+    whether it is on a log or a turtle (unless="logs").
+  * The hedge is one strip along the home row; the frog's rule for it is
+    passed over while it is also on a bay (unless="pads").
+  * A bay has two looks, empty and home. Its rules, the filled one first,
+    run the frog's own actions: home, or lose.
+  * The time is a variable of the clock that a state <timer> counts down;
+    every new frog puts the clock back (<reset object="clock" />).
   * Paused, game over and the win draw the board still underneath
     (<show state>).
-  There are no levels, so there are no <scenes>: one board, played once.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -56,42 +49,46 @@
   </window>
   <variables>
     <variable name="cell">48</variable>
-    <variable name="inset">6</variable>
-    <variable name="body">36</variable>
-    <variable name="step">48</variable>
+    <variable name="time">40</variable>
   </variables>
   <sounds>
-    <!-- a hop: a short chirp -->
     <sound name="hop" wave="square">
       <volume>0.15</volume>
       <note pitch="C5" to="G5">0.05</note>
     </sound>
-    <!-- run over, or ridden off the screen: a crunch -->
     <sound name="squash" wave="noise">
       <volume>0.4</volume>
       <note pitch="1200" to="150">0.3</note>
     </sound>
-    <!-- into the river: a splash -->
     <sound name="splash" wave="noise">
       <volume>0.4</volume>
       <note pitch="5000" to="300">0.5</note>
     </sound>
-    <!-- a pad reached -->
-    <sound name="pad" wave="square">
+    <sound name="home" wave="square">
       <volume>0.2</volume>
       <note pitch="C6">0.05</note>
       <note pitch="E6">0.05</note>
       <note pitch="G6">0.1</note>
     </sound>
-    <!-- a game started: a rising arpeggio -->
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
+    <!-- the start: a few bars of the tune, over a bass -->
+    <sound name="start">
+      <volume>0.15</volume>
+      <part wave="square">
+        <note pitch="G5">0.12</note>
+        <note pitch="G5">0.12</note>
+        <note pitch="E5">0.12</note>
+        <note pitch="G5">0.12</note>
+        <note pitch="C6">0.24</note>
+        <note pitch="A5">0.12</note>
+        <note pitch="G5">0.24</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="C3">0.24</note>
+        <note pitch="G3">0.24</note>
+        <note pitch="C3">0.24</note>
+        <note pitch="G3">0.36</note>
+      </part>
     </sound>
-    <!-- all five pads -->
     <sound name="win" wave="square">
       <volume>0.2</volume>
       <note pitch="C5">0.1</note>
@@ -101,7 +98,6 @@
       <note pitch="G5">0.1</note>
       <note pitch="C6">0.3</note>
     </sound>
-    <!-- out of lives -->
     <sound name="gameover" wave="triangle">
       <volume>0.4</volume>
       <note pitch="G4">0.25</note>
@@ -114,34 +110,15 @@
     <style name="prompt"><size>32</size></style>
     <style name="hud"><size>30</size></style>
   </styles>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="continue">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to continue</content>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
-    </object>
-  </objects>
   <states>
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>FROGGER</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>FROGGER</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
         </object>
       </objects>
@@ -154,411 +131,331 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- scenery: the river (home row and the five lanes), grass, road, road markings, pavement -->
-        <object name="bayswater">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>cell</height>
-              <color>color.darkblue</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>1 * cell</y></position>
-        </object>
+        <!-- scenery: the river, the bank, the road and the pavement -->
         <object name="water" class="water">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>5 * cell</height>
-              <color>color.darkblue</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>window.right</width><height>5 * cell</height><color>color.darkblue</color></rectangle></sprite>
           <position><x>0</x><y>2 * cell</y></position>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
+          <collisions><enabled>true</enabled></collisions>
         </object>
-        <object name="grass">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>cell</height>
-              <color>color.forestgreen</color>
-            </rectangle>
-          </sprite>
+        <object name="bank">
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
           <position><x>0</x><y>7 * cell</y></position>
         </object>
-        <object name="road">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>5 * cell</height>
-              <color>color.darkgrey</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>8 * cell</y></position>
-        </object>
-        <group name="lines">
-          <columns>13</columns>
-          <rows>4</rows>
-          <padding><x>24</x><y>44</y></padding>
-          <sprite>
-            <rectangle>
-              <width>24</width>
-              <height>4</height>
-              <color>color.yellow</color>
-            </rectangle>
-          </sprite>
-          <position><x>12</x><y>9 * cell - 2</y></position>
-        </group>
         <object name="pavement">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>cell</height>
-              <color>color.lightgrey</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
           <position><x>0</x><y>13 * cell</y></position>
         </object>
 
-        <!-- home: a frog under each pad, then the pads, then the hedges between them -->
-        <group name="homes">
-          <sprite>
-            <rectangle>
-              <width>body</width>
-              <height>body</height>
-              <color>color.green</color>
-            </rectangle>
-          </sprite>
-          <position><y>1 * cell + inset</y></position>
-          <member>
-            <position><x>2 * cell + inset</x></position>
-          </member>
-          <member>
-            <position><x>4 * cell + inset</x></position>
-          </member>
-          <member>
-            <position><x>6 * cell + inset</x></position>
-          </member>
-          <member>
-            <position><x>8 * cell + inset</x></position>
-          </member>
-          <member>
-            <position><x>10 * cell + inset</x></position>
-          </member>
-        </group>
+        <!-- home: five bays in a hedge -->
+        <object name="hedge" class="hazard">
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>0</x><y>1 * cell</y></position>
+          <collisions><enabled>true</enabled></collisions>
+        </object>
         <group name="pads" class="pads">
-          <sprite>
-            <rectangle>
-              <width>body</width>
-              <height>body</height>
-              <color>color.darkgreen</color>
-            </rectangle>
+          <columns>5</columns>
+          <rows>1</rows>
+          <padding><x>2 * cell - 40</x></padding>
+          <sprite name="empty"><rectangle><width>40</width><height>40</height><color>color.darkblue</color></rectangle></sprite>
+          <sprite name="home">
+            <bitmap>
+              <row>.y......y.</row>
+              <row>yyy....yyy</row>
+              <row>.yy****yy.</row>
+              <row>..******..</row>
+              <row>.********.</row>
+              <row>.***yy***.</row>
+              <row>yy******yy</row>
+              <row>.y......y.</row>
+              <scale>4</scale>
+              <color>color.green</color>
+              <color char="y">color.yellow</color>
+            </bitmap>
           </sprite>
-          <position><y>1 * cell + inset</y></position>
+          <position><x>2 * cell + 4</x><y>1 * cell + 4</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision class="frog">
-              <die />
+            <collision object="frog" sprite="home"><trigger object="frog" action="lose" /></collision>
+            <collision object="frog" sprite="empty">
+              <become sprite="home" />
+              <trigger object="frog" action="home" />
             </collision>
           </collisions>
-          <member>
-            <position><x>2 * cell + inset</x></position>
-          </member>
-          <member>
-            <position><x>4 * cell + inset</x></position>
-          </member>
-          <member>
-            <position><x>6 * cell + inset</x></position>
-          </member>
-          <member>
-            <position><x>8 * cell + inset</x></position>
-          </member>
-          <member>
-            <position><x>10 * cell + inset</x></position>
-          </member>
-        </group>
-        <group name="hedges" class="hazard">
-          <sprite>
-            <rectangle>
-              <width>cell</width>
-              <height>cell</height>
-              <color>color.forestgreen</color>
-            </rectangle>
-          </sprite>
-          <position><y>1 * cell</y></position>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
-          <member>
-            <sprite>
-              <rectangle>
-                <width>2 * cell</width>
-                <height>cell</height>
-                <color>color.forestgreen</color>
-              </rectangle>
-            </sprite>
-            <position><x>0 * cell</x></position>
-          </member>
-          <member>
-            <position><x>3 * cell</x></position>
-          </member>
-          <member>
-            <position><x>5 * cell</x></position>
-          </member>
-          <member>
-            <position><x>7 * cell</x></position>
-          </member>
-          <member>
-            <position><x>9 * cell</x></position>
-          </member>
-          <member>
-            <sprite>
-              <rectangle>
-                <width>2 * cell</width>
-                <height>cell</height>
-                <color>color.forestgreen</color>
-              </rectangle>
-            </sprite>
-            <position><x>11 * cell</x></position>
-          </member>
         </group>
 
-        <!-- every lane of the river and the road: what each has in common is
-             that it wraps round at the sides -->
+        <!-- every lane of the river and the road wraps round at the sides -->
         <group name="lanes">
+          <rows>1</rows>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
+            <collision edge="horizontal"><wrap /></collision>
           </collisions>
 
-          <!-- the river: logs, one lane to a row, each lane its own length, speed and direction -->
+          <!-- the river: logs, and turtles -->
           <group name="river" class="logs">
-            <sprite>
-              <rectangle>
-                <width>4 * cell - 2 * inset</width>
-                <height>body</height>
-                <color>color.brown</color>
-              </rectangle>
-            </sprite>
-            <group name="logrow2">
-              <position><y>2 * cell + inset</y></position>
-              <velocity><x>1.5</x></velocity>
-              <member><position><x>100</x></position></member>
-              <member><position><x>502</x></position></member>
+            <group name="logs">
+              <sprite>
+                <bitmap>
+                  <row>.****************************.</row>
+                  <row>******************************</row>
+                  <row>**oo*******oo*********oo******</row>
+                  <row>*******oo********oo*******oo**</row>
+                  <row>******************************</row>
+                  <row>.****************************.</row>
+                  <scale>6</scale>
+                  <color>color.brown</color>
+                  <color char="o">color.orange</color>
+                </bitmap>
+              </sprite>
+              <group name="logrow2">
+                <columns>3</columns>
+                <padding><x>(window.right + 180) / 3 - 180</x></padding>
+                <position><x>20</x><y>2 * cell + 6</y></position>
+                <velocity><x>1.4</x></velocity>
+              </group>
+              <group name="logrow4">
+                <columns>2</columns>
+                <padding><x>(window.right + 228) / 2 - 228</x></padding>
+                <sprite><bitmap><row>.************************************.</row><row>**************************************</row><row>**oo*******oo*********oo*******oo*****</row><row>*******oo********oo*******oo*******oo*</row><row>**************************************</row><row>.************************************.</row></bitmap></sprite>
+                <position><x>100</x><y>4 * cell + 6</y></position>
+                <velocity><x>2</x></velocity>
+              </group>
+              <group name="logrow5">
+                <columns>3</columns>
+                <padding><x>(window.right + 132) / 3 - 132</x></padding>
+                <sprite><bitmap><row>.********************.</row><row>**********************</row><row>**oo*******oo*********</row><row>*******oo********oo***</row><row>**********************</row><row>.********************.</row></bitmap></sprite>
+                <position><x>0</x><y>5 * cell + 6</y></position>
+                <velocity><x>1</x></velocity>
+              </group>
             </group>
-            <group name="logrow3">
-              <sprite><rectangle><width>3 * cell - 2 * inset</width></rectangle></sprite>
-              <position><y>3 * cell + inset</y></position>
-              <velocity><x>-1</x></velocity>
-              <member><position><x>20</x></position></member>
-              <member><position><x>272</x></position></member>
-              <member><position><x>524</x></position></member>
+            <group name="turtlerow3">
+              <columns>4</columns>
+              <padding><x>(window.right + 80) / 4 - 80</x></padding>
+              <sprite name="up">
+                <bitmap>
+                  <row>....**........**....</row>
+                  <row>.gg****gg..gg****gg.</row>
+                  <row>..******....******..</row>
+                  <row>.********..********.</row>
+                  <row>.********..********.</row>
+                  <row>..******....******..</row>
+                  <row>.gg****gg..gg****gg.</row>
+                  <row>....**........**....</row>
+                  <scale>4</scale>
+                  <color>color.red</color>
+                  <color char="g">color.green</color>
+                </bitmap>
+              </sprite>
+              <sprite name="under">
+                <bitmap>
+                  <row>....................</row>
+                  <row>....................</row>
+                  <row>..******....******..</row>
+                  <row>.*......*..*......*.</row>
+                  <row>.*......*..*......*.</row>
+                  <row>..******....******..</row>
+                  <row>....................</row>
+                  <row>....................</row>
+                  <scale>4</scale>
+                  <color>color.blue</color>
+                </bitmap>
+              </sprite>
+              <position><x>60</x><y>3 * cell + 8</y></position>
+              <velocity><x>-1.6</x></velocity>
+              <collisions>
+                <enabled>true</enabled>
+                <collision object="frog" sprite="under"><trigger object="frog" action="drown" /></collision>
+              </collisions>
+              <timers>
+                <timer sprite="up"><after>3.5</after><become sprite="under" /></timer>
+                <timer sprite="under"><after>1.5</after><become sprite="up" /></timer>
+              </timers>
             </group>
-            <group name="logrow4">
-              <sprite><rectangle><width>5 * cell - 2 * inset</width></rectangle></sprite>
-              <position><y>4 * cell + inset</y></position>
-              <velocity><x>2</x></velocity>
-              <member><position><x>60</x></position></member>
-              <member><position><x>486</x></position></member>
-            </group>
-            <group name="logrow5">
-              <sprite><rectangle><width>3 * cell - 2 * inset</width></rectangle></sprite>
-              <position><y>5 * cell + inset</y></position>
-              <velocity><x>-1.5</x></velocity>
-              <member><position><x>150</x></position></member>
-              <member><position><x>402</x></position></member>
-              <member><position><x>-102</x></position></member>
-            </group>
-            <group name="logrow6">
-              <position><y>6 * cell + inset</y></position>
-              <velocity><x>1</x></velocity>
-              <member><position><x>40</x></position></member>
-              <member><position><x>308</x></position></member>
-              <member><position><x>576</x></position></member>
+            <group name="turtlerow6">
+              <columns>3</columns>
+              <padding><x>(window.right + 120) / 3 - 120</x></padding>
+              <sprite>
+                <bitmap>
+                  <row>....**........**........**....</row>
+                  <row>.gg****gg..gg****gg..gg****gg.</row>
+                  <row>..******....******....******..</row>
+                  <row>.********..********..********.</row>
+                  <row>.********..********..********.</row>
+                  <row>..******....******....******..</row>
+                  <row>.gg****gg..gg****gg..gg****gg.</row>
+                  <row>....**........**........**....</row>
+                  <scale>4</scale>
+                  <color>color.red</color>
+                  <color char="g">color.green</color>
+                </bitmap>
+              </sprite>
+              <position><x>30</x><y>6 * cell + 8</y></position>
+              <velocity><x>-1.2</x></velocity>
             </group>
           </group>
 
-          <!-- the road: cars are one cell long, each row its own colour; the trucks two -->
+          <!-- the road: a car is 40 wide, the trucks 88 -->
           <group name="traffic" class="hazard">
             <sprite>
-              <rectangle>
-                <width>body</width>
-                <height>body</height>
-                <color>color.white</color>
-              </rectangle>
+              <bitmap>
+                <row>..kk..kk..</row>
+                <row>**********</row>
+                <row>**ww***ww*</row>
+                <row>**********</row>
+                <row>**********</row>
+                <row>**ww***ww*</row>
+                <row>**********</row>
+                <row>..kk..kk..</row>
+                <scale>4</scale>
+                <color char="k">color.black</color>
+                <color char="w">color.white</color>
+              </bitmap>
             </sprite>
             <group name="truckrow8">
-              <sprite><rectangle><width>2 * cell - 2 * inset</width></rectangle></sprite>
-              <position><y>8 * cell + inset</y></position>
-              <velocity><x>-1</x></velocity>
-              <member><position><x>100</x></position></member>
-              <member><position><x>454</x></position></member>
+              <columns>2</columns>
+              <padding><x>(window.right + 88) / 2 - 88</x></padding>
+              <sprite>
+                <bitmap>
+                  <row>.kk..kk..........kk..kk.</row>
+                  <row>****.***************....</row>
+                  <row>*ww*.***************....</row>
+                  <row>****.***************....</row>
+                  <row>****.***************....</row>
+                  <row>*ww*.***************....</row>
+                  <row>****.***************....</row>
+                  <row>.kk..kk..........kk..kk.</row>
+                  <color>color.white</color>
+                </bitmap>
+              </sprite>
+              <position><x>100</x><y>8 * cell + 8</y></position>
+              <velocity><x>-1.3</x></velocity>
             </group>
+            <!-- the white racing car, fast -->
             <group name="carrow9">
-              <sprite><rectangle><color>color.red</color></rectangle></sprite>
-              <position><y>9 * cell + inset</y></position>
-              <velocity><x>3</x></velocity>
-              <member><position><x>60</x></position></member>
-              <member><position><x>390</x></position></member>
+              <columns>2</columns>
+              <padding><x>(window.right + 40) / 2 - 40</x></padding>
+              <sprite><bitmap><color>color.lightgrey</color></bitmap></sprite>
+              <position><x>60</x><y>9 * cell + 8</y></position>
+              <velocity><x>3.2</x></velocity>
             </group>
             <group name="carrow10">
-              <sprite><rectangle><color>color.yellow</color></rectangle></sprite>
-              <position><y>10 * cell + inset</y></position>
-              <velocity><x>-1.5</x></velocity>
-              <member><position><x>40</x></position></member>
-              <member><position><x>240</x></position></member>
-              <member><position><x>460</x></position></member>
+              <columns>4</columns>
+              <padding><x>(window.right + 40) / 4 - 40</x></padding>
+              <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
+              <position><x>40</x><y>10 * cell + 8</y></position>
+              <velocity><x>-1.6</x></velocity>
             </group>
+            <!-- bulldozers -->
             <group name="carrow11">
-              <sprite><rectangle><color>color.cyan</color></rectangle></sprite>
-              <position><y>11 * cell + inset</y></position>
-              <velocity><x>2</x></velocity>
-              <member><position><x>100</x></position></member>
-              <member><position><x>310</x></position></member>
-              <member><position><x>520</x></position></member>
+              <columns>3</columns>
+              <padding><x>(window.right + 40) / 3 - 40</x></padding>
+              <sprite><bitmap><color>color.green</color></bitmap></sprite>
+              <position><x>100</x><y>11 * cell + 8</y></position>
+              <velocity><x>1.2</x></velocity>
             </group>
             <group name="carrow12">
-              <sprite><rectangle><color>color.orange</color></rectangle></sprite>
-              <position><y>12 * cell + inset</y></position>
+              <columns>3</columns>
+              <padding><x>(window.right + 40) / 3 - 40</x></padding>
+              <sprite><bitmap><color>color.yellow</color></bitmap></sprite>
+              <position><x>30</x><y>12 * cell + 8</y></position>
               <velocity><x>-1</x></velocity>
-              <member><position><x>30</x></position></member>
-              <member><position><x>250</x></position></member>
-              <member><position><x>470</x></position></member>
             </group>
           </group>
         </group>
 
-        <!-- the frog. Lives count down from 3; score is how many are home. -->
+        <!-- the frog. Lives count down from 3; homes is how many are in. -->
         <object name="frog" class="frog">
           <sprite>
-            <rectangle>
-              <width>body</width>
-              <height>body</height>
+            <bitmap>
+              <row>.y......y.</row>
+              <row>yyy....yyy</row>
+              <row>.yy****yy.</row>
+              <row>..*k**k*..</row>
+              <row>.********.</row>
+              <row>.***yy***.</row>
+              <row>yy******yy</row>
+              <row>.y......y.</row>
+              <scale>4</scale>
               <color>color.green</color>
-            </rectangle>
+              <color char="y">color.yellow</color>
+              <color char="k">color.black</color>
+            </bitmap>
           </sprite>
-          <position><x>6 * cell + inset</x><y>13 * cell + inset</y></position>
+          <position><x>6 * cell + 4</x><y>13 * cell + 8</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision class="hazard"><trigger action="lose" /></collision>
-            <collision class="water" unless="logs">
-              <dec variable="frog.lives" />
-              <reset />
-              <play sound="splash" />
-            </collision>
-            <collision class="logs">
-              <ride />
-            </collision>
-            <collision class="pads">
-              <inc variable="frog.score" />
-              <reset />
-              <play sound="pad" />
-            </collision>
+            <collision class="hazard" unless="pads"><trigger action="lose" /></collision>
+            <collision class="water" unless="logs"><trigger action="drown" /></collision>
+            <collision class="logs"><ride /></collision>
             <collision edge="horizontal"><trigger action="lose" /></collision>
           </collisions>
           <actions>
             <action name="lose">
               <dec variable="frog.lives" />
               <reset />
+              <reset object="clock" />
               <play sound="squash" />
             </action>
+            <action name="drown">
+              <dec variable="frog.lives" />
+              <reset />
+              <reset object="clock" />
+              <play sound="splash" />
+            </action>
+            <action name="home">
+              <inc variable="frog.homes" />
+              <inc variable="frog.score">50 + 10 * clock.time</inc>
+              <reset />
+              <reset object="clock" />
+              <play sound="home" />
+            </action>
             <action name="up">
-              <hop direction="up">step</hop>
+              <hop direction="up">cell</hop>
               <play sound="hop" />
             </action>
             <action name="down">
-              <hop direction="down">step</hop>
+              <hop direction="down">cell</hop>
               <play sound="hop" />
             </action>
             <action name="left">
-              <hop direction="left">step</hop>
+              <hop direction="left">cell</hop>
               <play sound="hop" />
             </action>
             <action name="right">
-              <hop direction="right">step</hop>
+              <hop direction="right">cell</hop>
               <play sound="hop" />
             </action>
           </actions>
           <variables>
             <variable name="lives">3</variable>
+            <variable name="homes">0</variable>
             <variable name="score">0</variable>
           </variables>
         </object>
 
-        <!-- the score and lives along the top -->
-        <object name="scorelabel">
-          <sprite>
-            <text style="hud">
-              <content>SCORE</content>
-            </text>
-          </sprite>
+        <!-- the time each frog has, counted down by the state's timer -->
+        <object name="clock">
+          <sprite><text style="hud"><content>TIME</content><number>clock.time</number><color>color.yellow</color></text></sprite>
+          <position><x><centered /></x><y><centered>cell / 2</centered></y></position>
+          <variables>
+            <variable name="time">time</variable>
+          </variables>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><content>SCORE</content><number>frog.score</number></text></sprite>
           <position><x>12</x><y><centered>cell / 2</centered></y></position>
         </object>
-        <object name="scorevalue">
-          <sprite>
-            <text style="hud">
-              <number>frog.score</number>
-              <color>color.green</color>
-            </text>
-          </sprite>
-          <position><x>12 + scorelabel.width + 12</x><y><centered>cell / 2</centered></y></position>
-        </object>
-        <object name="liveslabel">
-          <sprite>
-            <text style="hud">
-              <content>LIVES</content>
-            </text>
-          </sprite>
-          <position><x>window.right - 12 - livesvalue.width - 12 - liveslabel.width</x><y><centered>cell / 2</centered></y></position>
-        </object>
-        <object name="livesvalue">
-          <sprite>
-            <text style="hud">
-              <number>frog.lives</number>
-              <color>color.green</color>
-            </text>
-          </sprite>
-          <position><x>window.right - 12 - livesvalue.width</x><y><centered>cell / 2</centered></y></position>
+        <object name="lives">
+          <sprite><text style="hud"><content>LIVES</content><number>frog.lives</number><color>color.green</color></text></sprite>
+          <position><x>window.right - 12 - lives.width</x><y><centered>cell / 2</centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="up">
-          <trigger object="frog" action="up" />
-        </input>
-        <input button="down">
-          <trigger object="frog" action="down" />
-        </input>
-        <input button="left">
-          <trigger object="frog" action="left" />
-        </input>
-        <input button="right">
-          <trigger object="frog" action="right" />
-        </input>
-        <input button="w">
-          <trigger object="frog" action="up" />
-        </input>
-        <input button="s">
-          <trigger object="frog" action="down" />
-        </input>
-        <input button="a">
-          <trigger object="frog" action="left" />
-        </input>
-        <input button="d">
-          <trigger object="frog" action="right" />
-        </input>
-        <input button="space">
-          <push state="paused" />
-        </input>
-        <input button="p">
-          <push state="paused" />
-        </input>
-        <input button="escape">
-          <push state="paused" />
-        </input>
+        <input button="w up"><trigger object="frog" action="up" /></input>
+        <input button="s down"><trigger object="frog" action="down" /></input>
+        <input button="a left"><trigger object="frog" action="left" /></input>
+        <input button="d right"><trigger object="frog" action="right" /></input>
+        <input button="space p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="frog" variable="lives">
@@ -566,22 +463,27 @@
           <push state="gameover" />
           <play sound="gameover" />
         </condition>
-        <condition class="pads">
-          <remaining>0</remaining>
+        <condition object="frog" variable="homes">
+          <atleast>5</atleast>
           <push state="youwin" />
           <play sound="win" />
         </condition>
+        <condition object="clock" variable="time">
+          <atmost>0</atmost>
+          <trigger object="frog" action="lose" />
+        </condition>
       </conditions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <dec variable="clock.time" />
+        </timer>
+      </timers>
     </state>
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>paused</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -589,48 +491,31 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <pop />
-        </input>
-        <input button="p">
-          <pop />
-        </input>
-        <input button="escape">
-          <pop />
-        </input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
     <state name="gameover">
       <objects>
         <object name="message">
-          <sprite>
-            <text>
-              <content>GAME OVER</content>
-              <size>80</size>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+        <object name="continue">
+          <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
-        <show object="continue" />
       </shows>
       <inputs>
-        <input button="space">
-          <reset />
-        </input>
+        <input button="space"><reset /></input>
       </inputs>
     </state>
     <state name="youwin" from="gameover">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>YOU WIN</content></text></sprite>
         </object>
       </objects>
     </state>
