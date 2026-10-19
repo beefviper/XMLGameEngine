@@ -4,95 +4,66 @@
 <!-- date: Sept 18, 2020 -->
 
 <!--
-  Breakout: a paddle, a ball and a wall of bricks. Clear every brick and
-  keep the ball in play; the ball lost ends the game.
+  Breakout, after Atari's 1976 arcade game: eight rows of bricks, two each
+  of red, orange, green and yellow, a square ball and a paddle. A yellow
+  brick is worth 1, green 3, orange 5 and red 7. Three balls; clear the wall
+  and a second one is built, clear that too and you win.
 
-  A and D or the arrow keys move, Space starts, pauses (or P) and plays
-  again.
+  A and D, the arrow keys, the mouse or a pad move the paddle; Space starts,
+  pauses (or P) and plays again.
 
   How it is written:
-  * Each state has the objects it shows: the title screen its four lines,
-    playing the ball, the paddle and the wall, paused its PAUSED and each
-    ending its line. "spacebar to play again" is the game's own, as both
-    endings show it.
-  * The wall is a group of two groups: the top row, which cracks on the
-    first hit and goes on the second (<become>), and the block under it,
-    which marches side to side as one (lockstep).
-  * Conditions end the game: no bricks left wins, no ball left loses.
-  * Paused and both endings draw the game still underneath (<show state>).
+  * The wall is a group of four groups, a colour each: the wall gives the
+    columns, the gap, the size and the rule every brick has (score its own
+    worth, <inc>'d by self.worth, then go), and each colour its two rows,
+    its worth and its own pitch, higher the further back, as the arcade's.
+  * The ball <deflect>s off the paddle and <bounce>s off a brick. It counts
+    its hits, and the fourth and the twelfth make it faster, and so does the
+    first brick it reaches in the back four rows (a <check> of its own y).
+  * The paddle has two looks: once the ball has broken through to the top
+    wall, it is half as wide (<become>).
+  * A ball lost costs one of three; the next is served from the middle.
+  * The score, the balls and the walls cleared are numbers on an object
+    with no sprite, status, which no reset of the ball touches.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
   <window name="Breakout">
-    <width>1280</width>
+    <width>640</width>
     <height>720</height>
     <background>color.black</background>
     <fullscreen>false</fullscreen>
     <framerate>60</framerate>
   </window>
   <variables>
-    <variable name="margin">80</variable>
-    <variable name="width">120</variable>
-    <variable name="height">30</variable>
+    <variable name="brick">38</variable>
+    <variable name="gap">4</variable>
+    <variable name="line">18</variable>
+    <variable name="top">110</variable>
+    <variable name="paddle">64</variable>
     <variable name="step">8</variable>
   </variables>
   <sounds>
-    <!-- the ball off a wall: a low blip -->
-    <sound name="wall" wave="square">
-      <note pitch="A3">0.04</note>
-    </sound>
-    <!-- the ball off the paddle: a higher blip -->
-    <sound name="paddle" wave="square">
-      <note pitch="A4">0.05</note>
-    </sound>
-    <!-- a brick gone: a bright blip -->
-    <sound name="brick" wave="square">
-      <volume>0.2</volume>
-      <note pitch="E5">0.06</note>
-    </sound>
-    <!-- the top row cracks: a dull tick, as it takes two hits -->
-    <sound name="crack" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="1500" to="600">0.06</note>
-    </sound>
-    <!-- a game started: a rising arpeggio -->
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
-    </sound>
-    <!-- every brick gone -->
-    <sound name="win" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-    <!-- the ball lost -->
-    <sound name="gameover" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G4">0.2</note>
-      <note pitch="F#4">0.2</note>
-      <note pitch="F4">0.2</note>
-      <note pitch="E4" to="D#4">0.5</note>
+    <sound name="wall"><note pitch="A3">0.03</note></sound>
+    <sound name="paddle"><note pitch="A4">0.04</note></sound>
+    <sound name="red"><note pitch="C6">0.05</note></sound>
+    <sound name="orange"><note pitch="G5">0.05</note></sound>
+    <sound name="green"><note pitch="C5">0.05</note></sound>
+    <sound name="yellow"><note pitch="G4">0.05</note></sound>
+    <sound name="lost" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E4" to="E2">0.4</note>
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>128</size><color>color.orange</color></style>
-    <style name="prompt"><size>48</size></style>
+    <style name="banner"><size>100</size><color>color.orange</color></style>
+    <style name="prompt"><size>36</size></style>
+    <style name="help"><size>26</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>64</size></style>
   </styles>
   <objects>
     <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
@@ -100,11 +71,7 @@
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>BREAKOUT</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>BREAKOUT</content></text></sprite>
           <!-- x is window.width.center - title.width / 2 and y is window.height.center - title.height / 2 + (-110), written as <formula>s: one operation, its operands nested inside it -->
           <position>
             <x>
@@ -131,210 +98,178 @@
           </position>
         </object>
         <object name="help">
-          <sprite>
-            <text>
-              <content>clear every brick and keep the ball in play</content>
-              <size>36</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="help"><content>three balls, two walls: yellow 1, green 3, orange 5, red 7</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 10</centered></y></position>
         </object>
         <object name="keys">
-          <sprite>
-            <text>
-              <content>a and d, or the arrow keys, to move</content>
-              <size>32</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <sprite><text style="help"><content>a and d, the arrows or the mouse move the paddle</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space pad1.start">
-          <push state="playing" />
-          <play sound="start" />
-        </input>
+        <input button="space pad1.start"><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
       <objects>
-        <object name="ball">
-          <sprite>
-            <circle>
-              <radius>ball.radius</radius>
-            </circle>
-          </sprite>
-          <position><x>window.width.center - ball.radius</x><y>window.bottom - height * 3</y></position>
-          <velocity>
-            <x><random min="-3" max="3" /></x>
-            <y><random min="-7" max="-5" /></y>
-          </velocity>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all">
-              <bounce />
-              <play sound="wall" />
-            </collision>
-            <collision edge="bottom">
-              <die />
-            </collision>
-            <collision>
-              <bounce />
-            </collision>
-          </collisions>
+        <object name="status">
           <variables>
-            <variable name="radius">10</variable>
+            <variable name="score">0</variable>
+            <variable name="balls">3</variable>
+            <variable name="walls">0</variable>
           </variables>
         </object>
+        <object name="score">
+          <sprite><text style="hud"><number>status.score</number></text></sprite>
+          <position><x>40</x><y>16</y></position>
+        </object>
+        <object name="balls">
+          <sprite><text style="hud"><number>status.balls</number></text></sprite>
+          <position><x>window.right - 40 - balls.width</x><y>16</y></position>
+        </object>
+        <!-- the wall: fourteen bricks across, two rows of each colour -->
+        <group name="wall" class="brick">
+          <columns>14</columns>
+          <rows>2</rows>
+          <padding><x>gap</x><y>gap</y></padding>
+          <sprite><rectangle><width>brick</width><height>line - gap</height></rectangle></sprite>
+          <position><x>(window.right - 14 * brick - 13 * gap) / 2</x></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision object="ball">
+              <inc variable="status.score">self.worth</inc>
+              <die />
+            </collision>
+          </collisions>
+          <group name="red">
+            <sprite><rectangle><color>color.red</color></rectangle></sprite>
+            <position><y>top</y></position>
+            <collisions><enabled>true</enabled><collision object="ball"><play sound="red" /></collision></collisions>
+            <variables><variable name="worth">7</variable></variables>
+          </group>
+          <group name="orange">
+            <sprite><rectangle><color>color.orange</color></rectangle></sprite>
+            <position><y>top + 2 * line</y></position>
+            <collisions><enabled>true</enabled><collision object="ball"><play sound="orange" /></collision></collisions>
+            <variables><variable name="worth">5</variable></variables>
+          </group>
+          <group name="green">
+            <sprite><rectangle><color>color.green</color></rectangle></sprite>
+            <position><y>top + 4 * line</y></position>
+            <collisions><enabled>true</enabled><collision object="ball"><play sound="green" /></collision></collisions>
+            <variables><variable name="worth">3</variable></variables>
+          </group>
+          <group name="yellow">
+            <sprite><rectangle><color>color.yellow</color></rectangle></sprite>
+            <position><y>top + 6 * line</y></position>
+            <collisions><enabled>true</enabled><collision object="ball"><play sound="yellow" /></collision></collisions>
+            <variables><variable name="worth">1</variable></variables>
+          </group>
+        </group>
         <object name="player">
-          <sprite>
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-            </rectangle>
-          </sprite>
-          <position><x>window.width.center</x><y>window.bottom - height * 2</y></position>
+          <sprite name="full"><rectangle><width>paddle</width><height>12</height><color>color.cyan</color></rectangle></sprite>
+          <sprite name="half"><rectangle><width>paddle / 2</width><height>12</height><color>color.cyan</color></rectangle></sprite>
+          <position><x><centered /></x><y>window.bottom - 60</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="horizontal"><stick /></collision>
+          </collisions>
+          <actions>
+            <action name="left"><move direction="left">step</move></action>
+            <action name="right"><move direction="right">step</move></action>
+            <action name="steer"><track /></action>
+          </actions>
+        </object>
+        <!-- served from under the wall, down towards the paddle -->
+        <object name="ball">
+          <sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+          <velocity><x><random min="-3" max="3" /></x><y>4</y></velocity>
           <collisions>
             <enabled>true</enabled>
             <collision edge="horizontal">
-              <stick />
+              <bounce />
+              <play sound="wall" />
             </collision>
-            <collision object="ball">
+            <collision edge="top">
+              <bounce />
+              <play sound="wall" />
+              <become object="player" sprite="half" />
+            </collision>
+            <collision edge="bottom">
+              <dec variable="status.balls" />
+              <play sound="lost" />
+              <reset object="ball" />
+            </collision>
+            <collision object="player">
+              <deflect>60</deflect>
+              <inc variable="ball.hits" />
               <play sound="paddle" />
+            </collision>
+            <collision object="player">
+              <any>
+                <check variable="hits"><equal>4</equal></check>
+                <check variable="hits"><equal>12</equal></check>
+              </any>
+              <trigger action="faster" />
+            </collision>
+            <collision class="brick"><bounce /></collision>
+            <collision class="brick">
+              <all>
+                <check variable="y"><below>top + 4 * line</below></check>
+                <check variable="deep"><equal>0</equal></check>
+              </all>
+              <inc variable="ball.deep" />
+              <trigger action="faster" />
             </collision>
           </collisions>
           <actions>
-            <action name="left">
-              <move direction="left">step</move>
-            </action>
-            <action name="right">
-              <move direction="right">step</move>
-            </action>
-            <action name="steer">
-              <track />
+            <action name="faster">
+              <set variable="ball.velocity.x">ball.velocity.x * 1.25</set>
+              <set variable="ball.velocity.y">ball.velocity.y * 1.25</set>
             </action>
           </actions>
+          <variables>
+            <variable name="hits">0</variable>
+            <variable name="deep">0</variable>
+          </variables>
         </object>
-        <!-- The wall: what every brick shares (nine across, the gap between them,
-             its size, the left edge) is said once, in a group around two. The top
-             row takes two hits: whole, then cracked. A row cannot have rules of
-             its own (a group's rules are every cell's), so it is a group of its
-             own inside the wall. Its rules run in the order written, and a look
-             changed by one is the look the next one sees, so the cracked rule
-             comes first: a whole brick that is hit cracks, and only the next hit
-             takes it out. The block under it marches as one (lockstep). -->
-        <group name="wall" class="bricks">
-          <columns>9</columns>
-          <padding><x>5</x></padding>
-          <sprite name="whole">
-            <rectangle>
-              <width>width</width>
-              <height>height</height>
-              <color>color.red</color>
-            </rectangle>
-          </sprite>
-          <position><x>margin</x></position>
-          <group name="strong">
-            <rows>1</rows>
-            <sprite name="whole"><rectangle><color>color.lightgrey</color></rectangle></sprite>
-            <sprite name="cracked">
-              <rectangle>
-                <width>width</width>
-                <height>height</height>
-                <color>color.darkgrey</color>
-              </rectangle>
-            </sprite>
-            <position><y>margin / 2</y></position>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="ball" sprite="cracked">
-                <die />
-                <play sound="brick" />
-              </collision>
-              <collision object="ball" sprite="whole">
-                <become sprite="cracked" />
-                <play sound="crack" />
-              </collision>
-            </collisions>
-          </group>
-          <group name="bricks">
-            <rows>6</rows>
-            <padding><y>5</y></padding>
-            <position><y>margin / 2 + height + 5</y></position>
-            <collisions>
-              <enabled>true</enabled>
-              <lockstep>true</lockstep>
-              <collision edge="horizontal">
-                <bounce />
-              </collision>
-              <collision>
-                <die />
-                <play sound="brick" />
-              </collision>
-            </collisions>
-            <row number="2"><sprite name="whole"><rectangle><color>color.orange</color></rectangle></sprite></row>
-            <row number="3"><sprite name="whole"><rectangle><color>color.yellow</color></rectangle></sprite></row>
-            <row number="4"><sprite name="whole"><rectangle><color>color.green</color></rectangle></sprite></row>
-            <row number="5"><sprite name="whole"><rectangle><color>color.cyan</color></rectangle></sprite></row>
-            <row number="6"><sprite name="whole"><rectangle><color>color.blue</color></rectangle></sprite></row>
-          </group>
-        </group>
       </objects>
       <inputs>
-        <input button="a">
-          <trigger object="player" action="left" />
-        </input>
-        <input button="left pad1.left">
-          <trigger object="player" action="left" />
-        </input>
-        <input button="d">
-          <trigger object="player" action="right" />
-        </input>
-        <input button="right pad1.right">
-          <trigger object="player" action="right" />
-        </input>
-        <input axis="mouse.x">
-          <trigger object="player" action="steer" />
-        </input>
-        <input button="space pad1.start">
-          <push state="paused" />
-        </input>
-        <input button="p">
-          <push state="paused" />
-        </input>
+        <input button="a left pad1.left"><trigger object="player" action="left" /></input>
+        <input button="d right pad1.right"><trigger object="player" action="right" /></input>
+        <input axis="mouse.x"><trigger object="player" action="steer" /></input>
+        <input button="space p pad1.start"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition class="bricks">
-          <remaining>0</remaining>
+        <condition>
+          <all>
+            <check object="wall"><remaining>0</remaining></check>
+            <check object="status" variable="walls"><atleast>1</atleast></check>
+          </all>
           <push state="youwin" />
-          <play sound="win" />
         </condition>
-        <condition object="ball">
+        <!-- the first wall cleared: a second, and a new ball -->
+        <condition object="wall">
           <remaining>0</remaining>
+          <inc variable="status.walls" />
+          <reset object="wall" />
+          <reset object="ball" />
+        </condition>
+        <condition object="status" variable="balls">
+          <atmost>0</atmost>
           <push state="gameover" />
-          <play sound="gameover" />
         </condition>
       </conditions>
     </state>
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -342,23 +277,13 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space pad1.start">
-          <pop />
-        </input>
-        <input button="p">
-          <pop />
-        </input>
+        <input button="space p pad1.start"><pop /></input>
       </inputs>
     </state>
     <state name="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -367,20 +292,13 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space pad1.start">
-          <reset />
-        </input>
+        <input button="space pad1.start"><reset /></input>
       </inputs>
     </state>
     <state name="gameover" from="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
         </object>
       </objects>
     </state>
