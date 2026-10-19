@@ -6,8 +6,8 @@
 // Catch2 tests for games/descriptions/donkeykong.xml, played through a real xge::Engine
 // with no window and the keys a player would press: Jumpman standing on the
 // girders (<land />), leaping (<leap>) and climbing (<climb>), the barrels
-// Kong throws rolling down to the oil drum, a barrel costing a life, and
-// saving Pauline.
+// Kong throws rolling down to the oil drum, a barrel costing a life, the
+// hammer smashing them, the bonus counting down, and saving Pauline.
 //
 // Window::init() normally measures each object's size once a backend exists;
 // the helper gives every shape the size its sprite implies instead.
@@ -31,6 +31,7 @@ namespace
 {
 	constexpr float kFloor = 660.0f;
 	constexpr float kFirst = 560.0f; // the girder above the floor
+	constexpr float kThird = 360.0f; // the hammer's
 	constexpr float kPerch = 80.0f;  // Pauline's
 
 	class FakeWindow : public Window
@@ -75,6 +76,7 @@ namespace
 			tap(KeyCode::Space);
 			REQUIRE(state() == "playing");
 			kong().variable["wait"] = 1000.0f;
+			kong().timers.at(0).framesLeft = 60000;
 			frames(5);
 		}
 
@@ -201,12 +203,14 @@ TEST_CASE("a ladder takes him up to the next girder and back down, and nothing e
 	CHECK(play.feet() == Approx(kFloor));
 	play.engine.handleKeyReleased(KeyCode::W);
 
-	// At the first ladder (x 560 to 580), up climbs it, lined up with it.
-	play.standAt(554.0f, kFloor);
+	// At the first ladder (x 560 to 580), up climbs it, his middle lined up
+	// with its middle.
+	const float onLadder = 570.0f - play.man().size.x / 2.0f;
+	play.standAt(552.0f, kFloor);
 	play.engine.handleKeyPressed(KeyCode::W);
 	play.frames(10);
 	CHECK(play.man().climbing);
-	CHECK(play.man().position.x == Approx(560.0f));
+	CHECK(play.man().position.x == Approx(onLadder));
 	CHECK(play.feet() == Approx(kFloor - 20.0f));
 
 	// Let go halfway: he stays there, held by nothing.
@@ -217,7 +221,7 @@ TEST_CASE("a ladder takes him up to the next girder and back down, and nothing e
 	// Walking does not take him off it.
 	play.engine.handleKeyPressed(KeyCode::A);
 	play.frames(10);
-	CHECK(play.man().position.x == Approx(560.0f));
+	CHECK(play.man().position.x == Approx(onLadder));
 	play.engine.handleKeyReleased(KeyCode::A);
 
 	// At the top he steps off onto the girder and stands on it.
@@ -280,7 +284,7 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; le
 	barrel.collisionData.enabled = true;
 
 	// Leap as it comes close: it passes under him.
-	while (barrel.position.x > play.man().position.x + play.man().size.x + 8.0f) { play.frames(1); }
+	while (barrel.position.x > play.man().position.x + play.man().size.x + 20.0f) { play.frames(1); }
 	play.tap(KeyCode::Space);
 	play.frames(60);
 	CHECK(play.variable("lives") == 3);
@@ -295,7 +299,7 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; le
 	CHECK(play.man().position.x == Approx(play.man().positionOriginal.x));
 }
 
-TEST_CASE("saving Pauline scores, starts the climb again with Kong quicker, and three saves win", "[donkeykong]")
+TEST_CASE("saving Pauline scores the bonus, starts the climb again with Kong quicker, and three saves win", "[donkeykong]")
 {
 	DonkeyKong play;
 	play.start();
@@ -308,7 +312,8 @@ TEST_CASE("saving Pauline scores, starts the climb again with Kong quicker, and 
 		for (int i = 0; i < 30 && play.variable("rescues") < static_cast<float>(save); ++i) { play.frames(1); }
 		play.engine.handleKeyReleased(KeyCode::A);
 		CHECK(play.variable("rescues") == static_cast<float>(save));
-		CHECK(play.variable("score") == 1000.0f * static_cast<float>(save));
+		CHECK(play.variable("score") == 5000.0f * static_cast<float>(save));
+		CHECK(play.variable("bonus") == 5000.0f);
 		CHECK(play.kong().variable.at("wait") == Approx(1000.0f + static_cast<float>(save) - 0.6f));
 		if (save < 3)
 		{
@@ -343,7 +348,7 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 	CHECK(play.game.isStill(barrel));
 	CHECK(play.game.isStill(play.man()));
 	CHECK(play.game.isStill(play.kong()));
-	CHECK(play.game.isStill(play.game.getObject("floor")));
+	CHECK(play.game.isStill(play.game.getObject("floor.1.1")));
 	CHECK_FALSE(play.game.isShown(barrel));
 	CHECK(play.game.isShown(play.game.getObject("paused")));
 	CHECK_FALSE(play.game.isStill(play.game.getObject("barrels.8"))); // never thrown
@@ -372,4 +377,45 @@ TEST_CASE("each state owns what it draws, and game over draws the girders still 
 	CHECK(play.game.isShown(play.game.getObject("gameover.message")));
 	CHECK(play.game.isShown(play.game.getObject("again")));
 	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin.message")));
+}
+
+TEST_CASE("with the hammer a barrel is smashed for points, and the hammer wears off", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	Object& hammer = play.game.getObject("hammer");
+	// It hangs above the girder: he leaps to take it.
+	play.standAt(hammer.position.x, kThird);
+	play.tap(KeyCode::Space);
+	play.frames(40);
+	REQUIRE(play.variable("hammer") == 1);
+	CHECK_FALSE(hammer.isVisible);
+	CHECK(play.man().lookName() == "hammer");
+
+	Object& barrel = play.game.getObject("barrels.1");
+	barrel.position = { play.man().position.x + 60.0f, kThird - barrel.size.y };
+	barrel.velocity = { -2.5f, 0.0f };
+	barrel.isVisible = true;
+	barrel.collisionData.enabled = true;
+	play.frames(40);
+	CHECK_FALSE(barrel.isVisible);
+	CHECK(play.variable("score") == 300);
+	CHECK(play.variable("lives") == 3);
+
+	play.frames(60 * 9);
+	CHECK(play.variable("hammer") == 0);
+	CHECK(play.man().lookName() == "plain");
+}
+
+TEST_CASE("the bonus counts down, and running out costs a life", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	play.frames(2 * 60 + 5);
+	CHECK(play.variable("bonus") == 4900);
+
+	play.man().variable["bonus"] = 100.0f;
+	play.frames(2 * 60 + 5);
+	CHECK(play.variable("lives") == 2);
+	CHECK(play.variable("bonus") == Approx(5000.0f).margin(100.0f));
 }

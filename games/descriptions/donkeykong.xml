@@ -8,9 +8,14 @@
   girders and throws barrels down at Jumpman, who climbs to the top to save
   Pauline. The barrels roll along each girder, drop off its open end onto the
   one below, turn round at the wall, and burn up in the oil drum at the bottom.
-  A barrel that touches Jumpman costs a life; reaching Pauline scores 1000 and
-  starts the climb again, with Kong throwing faster. Save her three times to
-  win.
+  A barrel that touches Jumpman costs a life, unless he holds the hammer,
+  which smashes it for 300 points. The bonus counts down from 5000 as he
+  climbs: reaching Pauline scores what is left of it and starts the climb
+  again, with Kong throwing faster; let it run out and a life is lost. Save
+  her three times to win. The high score is kept.
+
+  A and D (or the arrows) walk, W and S climb, Space starts and jumps, P or
+  Escape pauses.
 
   It is the game the standing verbs were made for:
   * Jumpman and the barrels fall (an <acceleration> with only a <y>) and
@@ -22,20 +27,18 @@
     one; on it nothing pulls him and he cannot walk off.
   * Kong <fire>s a barrel from his right side (he has <facing>right) every
     `kong.wait` seconds, a variable that each rescue takes some off.
-  Flat girders where the arcade's slope, and no hammer, no fireballs and no
-  points for jumping a barrel: see the notes in docs/designs/23-platforming.md.
+  Flat girders where the arcade's slope, and no fireballs and no points for
+  jumping a barrel: see the notes in docs/designs/23-platforming.md.
 
   How it is written:
-  * Each state owns what it draws: the title texts are the main menu's; the
-    girders, the ladders, the oil drum, Kong, Pauline, the barrels, Jumpman
-    and the score and lives are the playing state's; the PAUSED text and the
-    endings' messages are those states' own.
+  * Each girder is a row of truss pieces, one bitmap, in a group of girders
+    laid out in columns (<columns>), so the girder's length is its count.
+    The ladders are drawings of <line>s, rails and rungs.
+  * The hammer is a look: touching the hammer gives Jumpman the look
+    "hammer" and sets man.hammer, which a barrel's rule <check>s; a timer of
+    that look takes it away again, with the hammer's tune.
   * Paused, won and game over draw the girders still underneath
     (<show state="playing" />), the barrels stopped where they were.
-    "spacebar to play again" is the one object of the game itself, shown by
-    both endings.
-  * The three climbs are one board: a rescue puts Jumpman back at the
-    bottom and takes some off Kong's wait, so there are no scenes.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -47,8 +50,7 @@
     <framerate>60</framerate>
   </window>
   <variables>
-    <variable name="thick">12</variable>
-    <variable name="rung">20</variable>
+    <variable name="piece">16</variable>
     <variable name="pull">0.4</variable>
     <variable name="walk">2.5</variable>
     <variable name="climbstep">2</variable>
@@ -62,22 +64,72 @@
       <volume>0.2</volume>
       <note pitch="C5" to="C6">0.12</note>
     </sound>
-    <sound name="hit" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E4" to="E2">0.5</note>
+    <sound name="smash" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="1500" to="200">0.2</note>
     </sound>
-    <sound name="rescue" wave="square">
-      <volume>0.2</volume>
+    <!-- caught: the arcade's falling notes, then three low ones -->
+    <sound name="hit" wave="square">
+      <volume>0.25</volume>
+      <note pitch="D5">0.08</note>
+      <note pitch="C#5">0.08</note>
       <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.2</note>
+      <note pitch="B4">0.08</note>
+      <note pitch="A#4">0.08</note>
+      <note pitch="A4">0.08</note>
+      <note pitch="G#4">0.08</note>
+      <note pitch="G4">0.08</note>
+      <rest>0.12</rest>
+      <note pitch="C4">0.15</note>
+      <rest>0.05</rest>
+      <note pitch="G3">0.15</note>
+      <rest>0.05</rest>
+      <note pitch="C3">0.3</note>
+    </sound>
+    <sound name="rescue">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="C5">0.1</note>
+        <note pitch="E5">0.1</note>
+        <note pitch="G5">0.1</note>
+        <note pitch="C6">0.1</note>
+        <note pitch="G5">0.1</note>
+        <note pitch="C6">0.3</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="C3">0.2</note>
+        <note pitch="G3">0.2</note>
+        <note pitch="C4">0.4</note>
+      </part>
+    </sound>
+    <!-- play's music: the low beat under the girders -->
+    <sound name="beat" wave="triangle">
+      <loop />
+      <volume>0.25</volume>
+      <note pitch="C3">0.15</note>
+      <rest>0.15</rest>
+      <note pitch="C3">0.15</note>
+      <rest>0.15</rest>
+      <note pitch="G2">0.15</note>
+      <rest>0.15</rest>
+      <note pitch="A#2">0.15</note>
+      <rest>0.15</rest>
+    </sound>
+    <!-- while he holds the hammer -->
+    <sound name="hammertime" wave="square">
+      <loop />
+      <volume>0.1</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="E5">0.1</note>
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>128</size><color>color.red</color></style>
+    <style name="banner"><size>110</size><color>color.red</color></style>
     <style name="prompt"><size>48</size></style>
-    <style name="hud"><size>36</size></style>
+    <style name="help"><size>30</size></style>
+    <style name="hud"><size>30</size></style>
   </styles>
   <objects>
     <!-- after a game, in both endings -->
@@ -89,7 +141,23 @@
       </sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
+    <!-- the best score, kept from game to game -->
+    <object name="best">
+      <sprite>
+        <text style="hud">
+          <content>HIGH SCORE</content>
+          <number>best.score</number>
+        </text>
+      </sprite>
+      <position><x><centered /></x><y>margin</y></position>
+      <variables>
+        <variable name="score">0</variable>
+      </variables>
+    </object>
   </objects>
+  <keeps>
+    <keep object="best" />
+  </keeps>
   <states>
     <state name="mainmenu">
       <objects>
@@ -97,24 +165,21 @@
           <sprite>
             <text style="banner">
               <content>DONKEY KONG</content>
-              <size>110</size>
             </text>
           </sprite>
           <position><x><centered /></x><y><centered>window.height.center - 150</centered></y></position>
         </object>
         <object name="help">
           <sprite>
-            <text>
-              <content>climb to the top and save pauline</content>
-              <size>36</size>
-              <color>color.white</color>
+            <text style="help">
+              <content>how high can you get?</content>
             </text>
           </sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
         </object>
         <object name="keys">
           <sprite>
-            <text>
+            <text style="help">
               <content>a and d walk, w and s climb (or the arrows), space jumps</content>
               <size>24</size>
               <color>color.lightgrey</color>
@@ -131,6 +196,9 @@
           <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
         </object>
       </objects>
+      <shows>
+        <show object="best" />
+      </shows>
       <inputs>
         <input button="space">
           <push state="playing" />
@@ -140,97 +208,118 @@
     <state name="playing">
       <objects>
         <!-- six girders from the floor up, each open at one end in turn, and the
-             short one Pauline stands on -->
+             short one Pauline stands on: rows of red truss -->
         <group name="girders" class="girder">
+          <columns>45</columns>
+          <rows>1</rows>
           <sprite>
-            <rectangle>
-              <width>720</width>
-              <height>thick</height>
+            <bitmap>
+              <row>********</row>
+              <row>.*....*.</row>
+              <row>..*..*..</row>
+              <row>...**...</row>
+              <row>..*..*..</row>
+              <row>********</row>
+              <scale>2</scale>
               <color>color.red</color>
-            </rectangle>
+            </bitmap>
           </sprite>
           <collisions>
             <enabled>true</enabled>
           </collisions>
-          <member name="floor">
-            <sprite>
-              <rectangle>
-                <width>800</width>
-                <height>thick</height>
-                <color>color.red</color>
-              </rectangle>
-            </sprite>
+          <group name="floor">
+            <columns>50</columns>
             <position><x>0</x><y>660</y></position>
-          </member>
-          <member>
-            <position><x>0</x><y>560</y></position>
-          </member>
-          <member>
-            <position><x>80</x><y>460</y></position>
-          </member>
-          <member>
-            <position><x>0</x><y>360</y></position>
-          </member>
-          <member>
-            <position><x>80</x><y>260</y></position>
-          </member>
-          <member name="top">
-            <position><x>0</x><y>160</y></position>
-          </member>
-          <member name="perch">
-            <sprite>
-              <rectangle>
-                <width>200</width>
-                <height>thick</height>
-                <color>color.red</color>
-              </rectangle>
-            </sprite>
+          </group>
+          <group name="first"><position><x>0</x><y>560</y></position></group>
+          <group name="second"><position><x>80</x><y>460</y></position></group>
+          <group name="third"><position><x>0</x><y>360</y></position></group>
+          <group name="fourth"><position><x>80</x><y>260</y></position></group>
+          <group name="top"><position><x>0</x><y>160</y></position></group>
+          <group name="perch">
+            <columns>13</columns>
             <position><x>260</x><y>80</y></position>
-          </member>
+          </group>
         </group>
-        <!-- a ladder runs from the top of one girder to the top of the next -->
+        <!-- a ladder runs from the top of one girder to the top of the next:
+             two rails and the rungs between -->
         <group name="ladders" class="ladder">
           <sprite>
-            <rectangle>
-              <width>rung</width>
-              <height>100</height>
-              <color>color.cyan</color>
-            </rectangle>
+            <line><from><x>0</x><y>0</y></from><to><x>0</x><y>98</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>18</x><y>0</y></from><to><x>18</x><y>98</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>8</y></from><to><x>18</x><y>8</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>32</y></from><to><x>18</x><y>32</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>56</y></from><to><x>18</x><y>56</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>80</y></from><to><x>18</x><y>80</y></to><color>color.cyan</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.cyan</color><thickness>2</thickness></line>
           </sprite>
-          <member>
-            <position><x>560</x><y>560</y></position>
-          </member>
-          <member>
-            <position><x>200</x><y>460</y></position>
-          </member>
-          <member>
-            <position><x>500</x><y>360</y></position>
-          </member>
-          <member>
-            <position><x>180</x><y>260</y></position>
-          </member>
-          <member>
-            <position><x>560</x><y>160</y></position>
-          </member>
+          <member><position><x>560</x><y>560</y></position></member>
+          <member><position><x>200</x><y>460</y></position></member>
+          <member><position><x>500</x><y>360</y></position></member>
+          <member><position><x>180</x><y>260</y></position></member>
+          <member><position><x>560</x><y>160</y></position></member>
+          <!-- the short one up to Pauline -->
           <member>
             <sprite>
-              <rectangle>
-                <width>rung</width>
-                <height>80</height>
-                <color>color.cyan</color>
-              </rectangle>
+              <line><from><x>0</x><y>0</y></from><to><x>0</x><y>78</y></to><color>color.cyan</color><thickness>2</thickness></line>
+              <line><from><x>18</x><y>0</y></from><to><x>18</x><y>78</y></to><color>color.cyan</color><thickness>2</thickness></line>
+              <line><from><x>0</x><y>8</y></from><to><x>18</x><y>8</y></to><color>color.cyan</color><thickness>2</thickness></line>
+              <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.cyan</color><thickness>2</thickness></line>
+              <line><from><x>0</x><y>32</y></from><to><x>18</x><y>32</y></to><color>color.cyan</color><thickness>2</thickness></line>
+              <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.cyan</color><thickness>2</thickness></line>
+              <line><from><x>0</x><y>56</y></from><to><x>18</x><y>56</y></to><color>color.cyan</color><thickness>2</thickness></line>
+              <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.cyan</color><thickness>2</thickness></line>
             </sprite>
             <position><x>420</x><y>80</y></position>
           </member>
         </group>
-        <!-- the barrels: a pool of eight, out of play until Kong throws one -->
+        <!-- the barrels: a pool of eight, out of play until Kong throws one,
+             rolling as they go -->
         <group name="barrels" class="barrel">
-          <sprite>
-            <circle>
-              <radius>11</radius>
+          <sprite name="flat">
+            <bitmap>
+              <row>...*****...</row>
+              <row>.**bbbbb**.</row>
+              <row>.*********.</row>
+              <row>***********</row>
+              <row>*bbbbbbbbb*</row>
+              <row>***********</row>
+              <row>*bbbbbbbbb*</row>
+              <row>***********</row>
+              <row>.*********.</row>
+              <row>.**bbbbb**.</row>
+              <row>...*****...</row>
+              <scale>2</scale>
               <color>color.orange</color>
-            </circle>
+              <color char="b">color.brown</color>
+            </bitmap>
           </sprite>
+          <sprite name="end">
+            <bitmap>
+              <row>...*b*b*...</row>
+              <row>.***b*b***.</row>
+              <row>.***b*b***.</row>
+              <row>****b*b****</row>
+              <row>****b*b****</row>
+              <row>****b*b****</row>
+              <row>****b*b****</row>
+              <row>****b*b****</row>
+              <row>.***b*b***.</row>
+              <row>.***b*b***.</row>
+              <row>...*b*b*...</row>
+              <scale>2</scale>
+              <color>color.orange</color>
+              <color char="b">color.brown</color>
+            </bitmap>
+          </sprite>
+          <animation>
+            <interval>0.15</interval>
+            <frame sprite="flat" />
+            <frame sprite="end" />
+          </animation>
           <position><x>0</x><y>0</y></position>
           <velocity><x>roll</x></velocity>
           <acceleration><x>0</x><y>pull</y></acceleration>
@@ -249,6 +338,13 @@
             <collision object="oil">
               <die />
             </collision>
+            <!-- swung at with the hammer -->
+            <collision object="man">
+              <check object="man" variable="hammer"><atleast>1</atleast></check>
+              <inc variable="man.score">300</inc>
+              <play sound="smash" />
+              <die />
+            </collision>
           </collisions>
           <member />
           <member />
@@ -261,11 +357,31 @@
         </group>
         <object name="oil">
           <sprite>
-            <rectangle>
-              <width>30</width>
-              <height>36</height>
+            <bitmap>
+              <row>...r.....r..r..</row>
+              <row>..ryr...ryrryr.</row>
+              <row>.ryyyr.ryyyyyr.</row>
+              <row>wwwwwwwwwwwwwww</row>
+              <row>***************</row>
+              <row>***************</row>
+              <row>wwwwwwwwwwwwwww</row>
+              <row>***************</row>
+              <row>**www*w*w******</row>
+              <row>**w*w*w*w******</row>
+              <row>**w*w*w*w******</row>
+              <row>**www*w*www****</row>
+              <row>***************</row>
+              <row>wwwwwwwwwwwwwww</row>
+              <row>***************</row>
+              <row>***************</row>
+              <row>***************</row>
+              <row>wwwwwwwwwwwwwww</row>
+              <scale>2</scale>
               <color>color.blue</color>
-            </rectangle>
+              <color char="w">color.white</color>
+              <color char="r">color.red</color>
+              <color char="y">color.yellow</color>
+            </bitmap>
           </sprite>
           <position><x>4</x><y>660 - oil.height</y></position>
           <collisions>
@@ -274,11 +390,32 @@
         </object>
         <object name="kong">
           <sprite>
-            <rectangle>
-              <width>70</width>
-              <height>60</height>
+            <bitmap>
+              <row>........*******........</row>
+              <row>......***********......</row>
+              <row>.....*************.....</row>
+              <row>....***ooooooooo***....</row>
+              <row>....**ow.ooooo.wo**....</row>
+              <row>....**ooooooooooo**....</row>
+              <row>...****oo.....oo****...</row>
+              <row>..******ooooooo******..</row>
+              <row>.*********ooo*********.</row>
+              <row>****ooo*********ooo****</row>
+              <row>***oooo*********oooo***</row>
+              <row>***ooo****ooo****ooo***</row>
+              <row>***oo****ooooo****oo***</row>
+              <row>****.****ooooo****.****</row>
+              <row>***..*****ooo*****..***</row>
+              <row>oo...*************...oo</row>
+              <row>ooo..******.******..ooo</row>
+              <row>.....*****...*****.....</row>
+              <row>....******...******....</row>
+              <row>...ooooo.......ooooo...</row>
+              <scale>3</scale>
               <color>color.brown</color>
-            </rectangle>
+              <color char="o">color.orange</color>
+              <color char="w">color.white</color>
+            </bitmap>
           </sprite>
           <position><x>20</x><y>160 - kong.height</y></position>
           <facing>right</facing>
@@ -297,29 +434,122 @@
         </object>
         <object name="pauline">
           <sprite>
-            <rectangle>
-              <width>20</width>
-              <height>32</height>
+            <bitmap>
+              <row>..kkkkk...</row>
+              <row>.kkkkkkk..</row>
+              <row>.kksssk...</row>
+              <row>.kssssk...</row>
+              <row>..sssk....</row>
+              <row>..*****...</row>
+              <row>.*******..</row>
+              <row>s*******s.</row>
+              <row>..*****...</row>
+              <row>.*******..</row>
+              <row>.*******..</row>
+              <row>*********.</row>
+              <row>*********.</row>
+              <row>.*******..</row>
+              <row>..s...s...</row>
+              <row>.ss..ss...</row>
+              <scale>2</scale>
               <color>color.magenta</color>
-            </rectangle>
+              <color char="k">color.brown</color>
+              <color char="s">color.orange</color>
+            </bitmap>
           </sprite>
           <position><x>300</x><y>80 - pauline.height</y></position>
           <collisions>
             <enabled>true</enabled>
           </collisions>
         </object>
-        <object name="man">
+        <!-- the hammer, on the third girder -->
+        <object name="hammer">
           <sprite>
-            <rectangle>
-              <width>20</width>
-              <height>32</height>
-              <color>color.white</color>
-            </rectangle>
+            <bitmap>
+              <row>.******.</row>
+              <row>********</row>
+              <row>********</row>
+              <row>.******.</row>
+              <row>...bb...</row>
+              <row>...bb...</row>
+              <row>...bb...</row>
+              <row>...bb...</row>
+              <row>...bb...</row>
+              <row>...bb...</row>
+              <scale>2</scale>
+              <color>color.orange</color>
+              <color char="b">color.brown</color>
+            </bitmap>
+          </sprite>
+          <position><x>100</x><y>360 - 40 - hammer.height</y></position>
+          <collisions>
+            <enabled>true</enabled>
+            <collision object="man">
+              <die />
+            </collision>
+          </collisions>
+        </object>
+        <object name="man">
+          <sprite name="plain">
+            <bitmap>
+              <row>...*****....</row>
+              <row>..*********.</row>
+              <row>..kkkssks...</row>
+              <row>.ksksssss...</row>
+              <row>.ksskkkkk...</row>
+              <row>...sssss....</row>
+              <row>..bb*bb.....</row>
+              <row>.bbb*bb*b...</row>
+              <row>bbbb****bb..</row>
+              <row>ssb*s**sbs..</row>
+              <row>sss*****ss..</row>
+              <row>ss.**.**.s..</row>
+              <row>..***.***...</row>
+              <row>.***...***..</row>
+              <row>.kkk...kkk..</row>
+              <row>kkkk...kkkk.</row>
+              <scale>2</scale>
+              <color>color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+            </bitmap>
+          </sprite>
+          <sprite name="hammer">
+            <bitmap>
+              <row>.........ooo</row>
+              <row>...*****.ooo</row>
+              <row>..*******.b.</row>
+              <row>..kkkssksb..</row>
+              <row>.kskssssb...</row>
+              <row>.ksskkkkb...</row>
+              <row>...sssssb...</row>
+              <row>..bb*bbsb...</row>
+              <row>.bbb*bb*b...</row>
+              <row>bbbb****bb..</row>
+              <row>ssb*****bs..</row>
+              <row>ss.**.**.s..</row>
+              <row>..***.***...</row>
+              <row>.***...***..</row>
+              <row>.kkk...kkk..</row>
+              <row>kkkk...kkkk.</row>
+              <scale>2</scale>
+              <color>color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+              <color char="o">color.orange</color>
+            </bitmap>
           </sprite>
           <position><x>100</x><y>660 - man.height</y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
             <enabled>true</enabled>
+            <!-- his body, without the arms -->
+            <hitbox>
+              <rectangle><width>14</width><height>32</height></rectangle>
+              <position><x>5</x><y>0</y></position>
+            </hitbox>
             <collision edge="horizontal">
               <stick />
             </collision>
@@ -327,16 +557,20 @@
               <land />
             </collision>
             <collision class="barrel">
-              <dec variable="man.lives" />
-              <play sound="hit" />
-              <reset />
-              <reset object="barrels" />
+              <check variable="hammer"><equal>0</equal></check>
+              <trigger action="lose" />
+            </collision>
+            <collision object="hammer">
+              <become sprite="hammer" />
+              <set variable="man.hammer">1</set>
+              <play sound="hammertime" />
             </collision>
             <collision object="pauline">
-              <inc variable="man.score">1000</inc>
+              <inc variable="man.score">man.bonus</inc>
               <inc variable="man.rescues" />
               <dec variable="kong.wait">0.6</dec>
               <play sound="rescue" />
+              <set variable="man.bonus">5000</set>
               <reset />
               <reset object="barrels" />
             </collision>
@@ -358,12 +592,31 @@
               <leap>leapheight</leap>
               <play sound="jump" />
             </action>
+            <action name="lose">
+              <dec variable="man.lives" />
+              <play sound="hit" />
+              <silence sound="hammertime" />
+              <set variable="man.hammer">0</set>
+              <set variable="man.bonus">5000</set>
+              <reset />
+              <reset object="barrels" />
+            </action>
           </actions>
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">3</variable>
             <variable name="rescues">0</variable>
+            <variable name="hammer">0</variable>
+            <variable name="bonus">5000</variable>
           </variables>
+          <timers>
+            <timer sprite="hammer">
+              <after>9</after>
+              <become sprite="plain" />
+              <set variable="man.hammer">0</set>
+              <silence sound="hammertime" />
+            </timer>
+          </timers>
         </object>
         <object name="score">
           <sprite>
@@ -373,9 +626,20 @@
           </sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
+        <object name="bonus">
+          <sprite>
+            <text style="hud">
+              <content>BONUS</content>
+              <number>man.bonus</number>
+              <color>color.cyan</color>
+            </text>
+          </sprite>
+          <position><x>window.right - bonus.width - margin</x><y>margin + 36</y></position>
+        </object>
         <object name="lives">
           <sprite>
             <text style="hud">
+              <content>LIVES</content>
               <number>man.lives</number>
               <color>color.red</color>
             </text>
@@ -383,40 +647,17 @@
           <position><x>window.right - lives.width - margin</x><y>margin</y></position>
         </object>
       </objects>
+      <shows>
+        <show object="best" />
+      </shows>
+      <music sound="beat" />
       <inputs>
-        <input button="a">
-          <trigger object="man" action="left" />
-        </input>
-        <input button="left">
-          <trigger object="man" action="left" />
-        </input>
-        <input button="d">
-          <trigger object="man" action="right" />
-        </input>
-        <input button="right">
-          <trigger object="man" action="right" />
-        </input>
-        <input button="w">
-          <trigger object="man" action="up" />
-        </input>
-        <input button="up">
-          <trigger object="man" action="up" />
-        </input>
-        <input button="s">
-          <trigger object="man" action="down" />
-        </input>
-        <input button="down">
-          <trigger object="man" action="down" />
-        </input>
-        <input button="space">
-          <trigger object="man" action="jump" />
-        </input>
-        <input button="p">
-          <push state="paused" />
-        </input>
-        <input button="escape">
-          <push state="paused" />
-        </input>
+        <input button="a left"><trigger object="man" action="left" /></input>
+        <input button="d right"><trigger object="man" action="right" /></input>
+        <input button="w up"><trigger object="man" action="up" /></input>
+        <input button="s down"><trigger object="man" action="down" /></input>
+        <input button="space"><trigger object="man" action="jump" /></input>
+        <input button="p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="man" variable="rescues">
@@ -427,7 +668,22 @@
           <atmost>0</atmost>
           <push state="gameover" />
         </condition>
+        <!-- the bonus run out -->
+        <condition object="man" variable="bonus">
+          <atmost>0</atmost>
+          <trigger object="man" action="lose" />
+        </condition>
+        <condition object="man" variable="score">
+          <above object="best" variable="score" />
+          <copy variable="man.score" into="best.score" />
+        </condition>
       </conditions>
+      <timers>
+        <timer>
+          <every>2</every>
+          <dec variable="man.bonus">100</dec>
+        </timer>
+      </timers>
     </state>
     <state name="paused">
       <objects>
@@ -445,15 +701,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space">
-          <pop />
-        </input>
-        <input button="p">
-          <pop />
-        </input>
-        <input button="escape">
-          <pop />
-        </input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
     <state name="youwin">
@@ -473,9 +721,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
-          <reset />
-        </input>
+        <input button="space"><reset /></input>
       </inputs>
     </state>
     <state name="gameover" from="youwin">

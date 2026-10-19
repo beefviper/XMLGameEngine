@@ -15,7 +15,9 @@
 - A move key now changes only its own axis (it used to recompute both, which stopped a fall whenever a walking key was pressed).
 - `<acceleration>` in a `<group>`, so a pool of barrels can fall.
 
-**Open.** Sloped girders (a platform at an angle: land on a line, not a box top). Barrels that take a ladder at random. Points for jumping a barrel (something has to notice the man passed over it). The hammer. Dying from too long a fall. Other rungs of air control (steer, brake, reverse) and a held, variable-height jump.
+**The game (2026-10).** Rewritten closer to the arcade: truss girders as one bitmap in a group of girder rows (`<columns>` gives each length), ladders as `<line>` drawings, rolling barrels, an oil drum, Kong and Pauline as bitmaps. The hammer is a look plus a variable a barrel's rule `<check>`s, worn off by a timer of that look; the bonus is a variable a state timer counts down, scored on a rescue and costing a life at zero. Jumpman has a `<hitbox>` of his body: at twice the arcade's size his full sprite could not leap a barrel.
+
+**Open.** Sloped girders (a platform at an angle: land on a line, not a box top). Barrels that take a ladder at random. Points for jumping a barrel (something has to notice the man passed over it). Fireballs from the oil drum. Dying from too long a fall. Other rungs of air control (steer, brake, reverse) and a held, variable-height jump.
 
 
 ## Arcing jump (idea; the fixed arc is built as `<leap>`)
