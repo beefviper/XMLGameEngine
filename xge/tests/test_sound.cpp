@@ -476,7 +476,7 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 		{ "frogger", { "hop", "squash", "splash", "home", "start", "win", "gameover" } },
 		{ "spacerace", { "score", "crash", "end" } },
 		{ "freeway", { "hop", "hit", "cross", "start", "end" } },
-		{ "depthcharge", { "drop", "sink", "miss", "start", "win", "gameover" } },
+		{ "depthcharge", { "sonar", "drop", "sink", "boom", "start", "gameover" } },
 		{ "astrosmash", { "pop", "thud", "boom", "shoot", "start", "spare", "gameover" } },
 		{ "lunarlander", { "thrust", "land", "crash", "start" } },
 		{ "asteroids", { "beat", "thrust", "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "saucer", "extra", "gameover" } },

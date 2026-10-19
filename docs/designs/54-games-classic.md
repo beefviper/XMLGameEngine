@@ -11,7 +11,7 @@
 | Space Race | a second game on the same vocabulary | nothing | [rewritten](#the-paddle-and-ball-rewrite) |
 | Kaboom | `<random>` in a `<group>`; states differing only in what they show | nothing at first; when reworked, timers, `<facing>` fire, `<reset object>` in a rule | speed-up inside a wave (eight waves stand in) |
 | Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | (timed round and knock-back built in the 2026-10-19 rewrite) |
-| Depth Charge | limited ammunition without a countdown | nothing | several charges in flight, subs that fire back |
+| Depth Charge | limited ammunition without a countdown; rewritten 2026-10-19 as the arcade game: pairs of charges, mines, a clock | nothing | the time given back for a high score, the charges' depth setting |
 | Astrosmash | Kaboom's pieces plus a gun | nothing | levels, guided missiles, the UFO |
 | Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain; rewritten 2026-10-19 with turning, scored pads and lander after lander | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | the scrolling terrain and close-up, abort, hard landings |
 | Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping and expiring shots, saucer, waves, a safe respawn |
@@ -59,10 +59,9 @@
 
 ## Depth Charge
 
-- Ship stopped by `<stick />`, one charge falling at a time, nine submarines in three lanes looping with `<wrap />`, a charge hit sinks both (`<die />`), win when `<remaining>0</remaining>` on `class="subs"`.
-- **Limited ammunition without a countdown on every shot:** count the other way. `ship.charges` starts at the number of misses allowed and the floor rule does `<dec>` and `<die />`; a hit does not touch it, so a good player never runs out. Eight wasted charges end the game.
-- `<fire>` copies the projectile's own `<velocity>` (positive y falls) and starts inside the ship, leaving in a few frames; no ship rule about the charge, so it is not a collision.
-- Rejected: counting every shot (would need `<dec>` in the ship's fire action; object actions cannot run `<inc>`/`<dec>`), several charges in flight (a different, easier game), submarines worth different amounts (an amount on `inc` exists now).
+- Rewritten 2026-10-19, closer to the arcade game: a destroyer bitmap that rolls a pair of charges off both sides on Space (two `<spawn>`s into a pool of six, at positions read as Space is pressed), ten submarines in four lanes as one group with a group per lane (its color, depth, speed and `worth`, scored with `self.worth`: 20 to 80, deeper is more), mines `<release>`d by the submarines on random timers that rise and cost a ship under the destroyer, a burst pool where a boat goes down, a 90-second clock and three ships, the sonar as the playing state's `<music>`.
+- First version (2026-09-30): one charge at a time and a count of misses (`ship.charges` started at the misses allowed and only the floor rule took one off), nine boats to sink. Replaced because the arcade game is about many charges in the water against the clock.
+- Rejected: two keys, one per side, as the arcade's two buttons (the key convention keeps Space as the one fire key); a sunk boat coming back from the side it came in (a reveal brings it back where it started).
 
 
 ## Astrosmash
