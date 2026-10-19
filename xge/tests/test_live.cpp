@@ -216,38 +216,86 @@ TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever t
 		ContainsSubstring("there is no object named 'hook'"));
 }
 
-TEST_CASE("fishingderby.xml: a fish reeled up to the surface is landed for its worth, and comes back faster", "[live][fishingderby]")
+TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed for its worth, and back in its row", "[live][fishingderby]")
 {
 	Played play("descriptions/fishingderby.xml");
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "playing");
 
-	// Put the hook just over a deep fish and let it bite.
-	// The first of the deep row.
-	Object& fish = play.get("deep.1");
+	// Keep the shark well away, and put the hook just over the first cod.
+	play.get("shark").position = { 700, 195 };
+	play.get("shark").velocity = { 0, 0 };
+	Object& fish = play.get("cod.1");
 	REQUIRE(fish.variable.at("worth") == Approx(6));
-	Object& hook = play.get("hook");
+	const Vector2f start = fish.position;
+	Object& hook = play.get("hook1");
 	hook.position = { fish.position.x + 10, fish.position.y - 6 };
 	play.frames(2);
-	CHECK(play.get("hook").carrying == fish.name);
+	CHECK(play.get("hook1").carrying == fish.name);
+	CHECK(play.get("hook1").variable.at("line") == Approx(2));
+	CHECK(fish.variable.at("by") == Approx(1));
 	CHECK(fish.velocity.x == Approx(0));
 
-	// Keep the shark out of the way, and reel up.
-	play.get("shark").position = { 700, 220 };
-	play.get("shark").velocity = { 0, 0 };
-	const float sharkWas = 2.0f;
-	play.get("shark").velocity.x = sharkWas;
+	// Reel it up.
 	play.engine.handleKeyPressed(KeyCode::W);
-	for (int i = 0; i < 200 && play.get("player").variable.at("score") == 0.0f; ++i) { play.frames(1); }
+	for (int i = 0; i < 400 && play.get("left").variable.at("score") == 0.0f; ++i) { play.frames(1); }
 	play.engine.handleKeyReleased(KeyCode::W);
 
-	CHECK(play.get("player").variable.at("score") == Approx(6));
-	CHECK(std::abs(play.get("shark").velocity.x) == Approx(sharkWas * 1.1f));
-
-	// Back in at the side, at its own depth, going as fast as the score says.
-	const Object& again = play.get("deep.1");
+	CHECK(play.get("left").variable.at("score") == Approx(6));
+	CHECK(play.get("right").variable.at("score") == Approx(0));
+	CHECK(play.get("hook1").carrying.empty());
+	CHECK(play.get("hook1").variable.at("line") == Approx(0));
+	const Object& again = play.get("cod.1");
 	CHECK(again.isVisible);
-	CHECK(again.position.y == Approx(200 + 60 + 6 * 30));
-	CHECK(std::abs(again.velocity.x) == Approx(1 + 6.0f / 30));
-	CHECK(play.get("hook").carrying.empty());
+	CHECK(again.variable.at("by") == Approx(0));
+	CHECK(again.position.y == Approx(start.y).margin(2));
+}
+
+TEST_CASE("fishingderby.xml: a hook on its way up takes no second fish, and the shark eats the one on it", "[live][fishingderby]")
+{
+	Played play("descriptions/fishingderby.xml");
+	play.tap(KeyCode::Space);
+	play.get("shark").position = { 700, 195 };
+	play.get("shark").velocity = { 0, 0 };
+
+	Object& cod = play.get("cod.1");
+	Object& hook = play.get("hook1");
+	hook.position = { cod.position.x + 10, cod.position.y - 6 };
+	play.frames(2);
+	REQUIRE(hook.carrying == cod.name);
+
+	// Reel up through a perch: the hook keeps the cod.
+	Object& perch = play.get("perch.2");
+	perch.position = { hook.position.x - 10, hook.position.y - 30 };
+	perch.velocity = { 0, 0 };
+	play.engine.handleKeyPressed(KeyCode::W);
+	play.frames(20);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(play.get("hook1").carrying == cod.name);
+	CHECK(play.get("perch.2").variable.at("by") == Approx(0));
+
+	// The shark swims into the cod: gone, back in its row, the hook put back.
+	Object& shark = play.get("shark");
+	shark.position = { play.get("cod.1").position.x - 100, play.get("cod.1").position.y - 4 };
+	shark.velocity = { 4, 0 };
+	play.frames(30);
+	CHECK(play.get("hook1").carrying.empty());
+	CHECK(play.get("hook1").variable.at("line") == Approx(0));
+	CHECK(play.get("cod.1").variable.at("by") == Approx(0));
+	CHECK(play.get("cod.1").position.y == Approx(470).margin(2));
+	CHECK(play.get("left").variable.at("score") == Approx(0));
+}
+
+TEST_CASE("fishingderby.xml: the computer takes its hook down and lands what bites", "[live][fishingderby]")
+{
+	Played play("descriptions/fishingderby.xml");
+	play.tap(KeyCode::Space);
+	play.get("shark").velocity = { 0, 0 };
+	play.get("shark").position = { 0, 195 };
+	const float startY = play.get("hook2").position.y;
+	play.frames(30);
+	CHECK(play.get("hook2").position.y > startY);
+	for (int i = 0; i < 3000 && play.get("right").variable.at("score") == 0.0f; ++i) { play.frames(1); }
+	CHECK(play.get("right").variable.at("score") > 0.0f);
+	CHECK(play.get("left").variable.at("score") == Approx(0));
 }

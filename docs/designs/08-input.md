@@ -15,7 +15,7 @@
 - Need: the author saw a ship play its firing sound with its shot already in flight, and Q*bert turn and squeak when pressed in the air: "the engine should be able to work out if a command can trigger or not and then fire off any described responses". About twenty games wrote `<fire>` or a hop and then a `<play>` in one action.
 - **Chosen: an action (on the press), an object's timer or a path step stops at the first verb refused** (`<fire>` with no projectile free, `<hop>`, `<jump>`, hunt by hops, `<leap>`). Each verb already knew; it now says so (`CommandExecutor` returns false) and the list ends. No new tag, and every shipped game already wrote the verb first. Commands before it still run, which Berserk's robots need (`<aim>` before `<fire>`).
 - Looked at: running the verbs first and the rest after (breaks an `<aim>` that must come before), and a wrapper such as `<try><fire/><then>...</then></try>` (the same order said with more tags, and something every author would have to remember).
-- Open: a `<spawn>` with nothing out of play (left running the rest: Fishing Derby's rules spawn after a `<die />`), a sound for a refused press (an empty click), collision rules.
+- Open: a `<spawn>` with nothing out of play (nothing comes in and the rest runs; a game makes sure one is out of play first), a sound for a refused press (an empty click), collision rules.
 
 ### Held keys across state changes
 
