@@ -288,12 +288,12 @@ TEST_CASE("mistakes with paths are turned away when the game loads, saying where
 
 // ---------------------------------------------------------------- Galaxian
 
-TEST_CASE("galaxian.xml loads 36 aliens in five rows, a ship and six paths", "[galaxian]")
+TEST_CASE("galaxian.xml loads 46 aliens in six rows, a ship and six paths", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
 
 	CHECK(play.state() == "mainmenu");
-	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 36);
+	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 46);
 	CHECK(play.game.getPaths().size() == 6);
 	CHECK(play.object("ship").variable["lives"] == 3.0f);
 
@@ -307,7 +307,7 @@ TEST_CASE("galaxian.xml loads 36 aliens in five rows, a ship and six paths", "[g
 		down += step.by.y;
 	}
 	CHECK(across == Approx(0.0f));
-	CHECK(down == Approx(640.0f + play.object("blues.1").size.y));
+	CHECK(down == Approx(640.0f + play.object("blues1.1.1").size.y));
 }
 
 TEST_CASE("galaxian.xml loads with every XML library, so both schema checkers take <paths>", "[galaxian]")
@@ -327,16 +327,17 @@ TEST_CASE("the fleet flies in on its paths, one behind another, and settles into
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "playing");
 
-	// The first frame sends every row off from where its path starts.
+	// The first frame sends five rows off from where their paths start; the
+	// last row of blues follows two seconds later.
 	play.frames(1);
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 36);
-	CHECK(play.object("blues2.10").position.x == Approx(567.0f));
-	CHECK(play.object("blues.10").position.x == Approx(-40.0f));
-	CHECK(play.object("blues.10").followWait > play.object("blues.2").followWait);
+	CHECK(play.object("blues2.10.1").position.x == Approx(567.0f));
+	CHECK(play.object("blues1.10.1").position.x == Approx(-40.0f));
+	CHECK(play.object("blues1.10.1").followWait > play.object("blues1.2.1").followWait);
 
 	play.frames(400);
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 0);
-	CHECK(play.count([](const Object& object) { return isHome(object); }) == 36);
+	CHECK(play.count([](const Object& object) { return isHome(object); }) == 46);
 }
 
 TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back to its place from the top", "[galaxian]")
@@ -345,7 +346,7 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 	play.tap(KeyCode::Space);
 	play.frames(400);
 
-	Object& diver = play.object("escorts.1");
+	Object& diver = play.object("escorts.1.1");
 	REQUIRE(isHome(diver));
 	play.game.follow(diver, "dive");
 
@@ -384,7 +385,7 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 	play.tap(KeyCode::Space);
 	play.frames(400);
 
-	Object& alien = play.object("blues2.5");
+	Object& alien = play.object("blues3.5.1");
 	Object& ship = play.object("ship");
 	ship.position.x = alien.position.x + alien.size.x / 2.0f - ship.size.x / 2.0f;
 	play.tap(KeyCode::Space);
@@ -397,9 +398,9 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 		if (object.objClass == "alien") { object.isVisible = false; object.followPath.clear(); }
 	}
 	play.frames(2);
-	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 36);
+	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 46);
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 36);
-	CHECK(play.object("flagships.1").position.y < 0.0f);
+	CHECK(play.object("flagships.1.1").position.y < 0.0f);
 	// the ship and its score are the state's, not the fleet's: kept
 	CHECK(ship.variable["score"] == 30.0f);
 	CHECK(ship.variable["lives"] == 3.0f);
@@ -409,14 +410,14 @@ TEST_CASE("the fleet is the playing state's scene, and the ship and its shot are
 {
 	Play play("descriptions/galaxian.xml");
 	CHECK(play.game.currentScene("playing") == "playing.fleet");
-	CHECK(play.object("blues2.5").name == "playing.fleet.blues2.5");
+	CHECK(play.object("blues2.5.1").name == "playing.fleet.blues2.5.1");
 	CHECK(play.object("ship").name == "playing.ship");
 	CHECK(play.object("shot").name == "playing.shot");
 	CHECK(play.object("title").name == "mainmenu.title");
 	CHECK_FALSE(play.game.isShown(play.object("ship")));
 	play.tap(KeyCode::Space);
 	CHECK(play.game.isShown(play.object("ship")));
-	CHECK(play.game.isShown(play.object("flagships.1")));
+	CHECK(play.game.isShown(play.object("flagships.1.1")));
 }
 
 TEST_CASE("paused, the fleet is drawn still underneath and stops where it is", "[galaxian]")
@@ -425,7 +426,7 @@ TEST_CASE("paused, the fleet is drawn still underneath and stops where it is", "
 	play.tap(KeyCode::Space);
 	play.frames(30);
 
-	Object& alien = play.object("blues.1");
+	Object& alien = play.object("blues1.1.1");
 	REQUIRE(alien.isFollowing());
 	const Vector2f where = alien.position;
 	play.tap(KeyCode::P);

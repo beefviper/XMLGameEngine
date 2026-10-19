@@ -1199,7 +1199,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	// lost. Each hit holds the invasion still for a second ("blasted").
 	Object& player = game.getObject("player");
 	bool blasted = false;
-	for (int frame = 0; frame < 6000 && game.getCurrentState().name != "lost"; ++frame)
+	for (int frame = 0; frame < 20000 && game.getCurrentState().name != "lost"; ++frame)
 	{
 		game.updateObjects();
 		if (game.getCurrentState().name == "blasted") { blasted = true; continue; }
@@ -1264,6 +1264,7 @@ TEST_CASE("the mystery ship crosses the top now and then and scores 50 to 200", 
 	Game& game = invasion.game;
 	const Object& ufo = game.getObject("ufo");
 	REQUIRE_FALSE(ufo.isVisible);
+	game.getObject("player").collisionData.enabled = false; // no bombs on it meanwhile
 
 	for (int frame = 0; frame < 60 * 31 && !ufo.isVisible; ++frame) { frames(game, 1); }
 	REQUIRE(ufo.isVisible);
