@@ -593,6 +593,29 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(game.getObject("fast.1").position.x == 50.0f);
 }
 
+TEST_CASE("a group's <heading> is where its members face, and a group inside it can give its own", "[group][nested][heading]")
+{
+	// Combat's tanks: one group, each player's a group inside it.
+	const std::string tanks =
+		"<group name=\"tanks\" class=\"tank\">"
+		"<sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<heading>45</heading>"
+		"<group name=\"left\"><position><x>10</x><y>10</y></position><member /></group>"
+		"<group name=\"right\"><position><x>90</x><y>10</y></position><heading>270</heading><member /></group>"
+		"</group>";
+	Loaded loaded{ gameXml(tanks, "<show object=\"tanks\" />") };
+	Game& game = loaded.game;
+	game.setCurrentState("playing");
+
+	CHECK(game.getObject("left.1").heading == 45.0f);
+	CHECK(game.getObject("right.1").heading == 270.0f);
+
+	// A reset turns it back to the group's heading.
+	game.getObject("right.1").heading = 90.0f;
+	game.resetObject("tanks");
+	CHECK(game.getObject("right.1").heading == 270.0f);
+}
+
 TEST_CASE("groups inside a group can each be laid out in cells from the outer's columns", "[group][nested][cells]")
 {
 	// The outer gives the columns, the gap across and the brick; each inner
@@ -653,12 +676,14 @@ TEST_CASE("frogger.xml and spacerace.xml are made of the groups they are written
 	CHECK(frogger.at("hazard") == 14 + 1);
 	CHECK(frogger.at("pads") == 5);
 
+	// Space Race's debris is a group of 8 columns and 12 rows.
 	const auto race = census("descriptions/spacerace.xml");
-	CHECK(race.at("all") == 36);
-	CHECK(race.at("debris") == 27);
+	CHECK(race.at("all") == 107);
+	CHECK(race.at("debris") == 96);
+	CHECK(race.at("rocket") == 2);
 }
 
-TEST_CASE("every lane of frogger and space race is a group of the members it had", "[group][shipped]")
+TEST_CASE("every lane of frogger is a group of the members it had, and space race's debris a cell for each place", "[group][shipped]")
 {
 	// Frogger's lanes are laid out in columns, one row each: playing.logrow2.3.1
 	// is the third log of the lane, inside the river group and the lanes group.
@@ -690,13 +715,13 @@ TEST_CASE("every lane of frogger and space race is a group of the members it had
 	CHECK(lanes == 15 + 14);
 
 	Game race{ "descriptions/spacerace.xml" };
-	for (int lane = 1; lane <= 9; ++lane)
+	for (int row = 1; row <= 12; ++row)
 	{
-		const std::string group = "playing.debris" + std::to_string(lane);
-		const auto members = std::count_if(race.getCurrentObjects().begin(), race.getCurrentObjects().end(),
-			[&](const Object& object) { return object.groupName == group; });
-		INFO(group);
-		CHECK(members == 3);
+		const auto cells = std::count_if(race.getCurrentObjects().begin(), race.getCurrentObjects().end(),
+			[&](const Object& object) { return object.groupName == "playing.debris"
+				&& object.name.substr(object.name.rfind('.') + 1) == std::to_string(row); });
+		INFO(row);
+		CHECK(cells == 8);
 	}
 }
 
@@ -759,7 +784,8 @@ namespace
 TEST_CASE("both schema checkers accept the games written with groups", "[group][schema]")
 {
 	for (const char* file : { "descriptions/frogger.xml", "descriptions/spacerace.xml", "descriptions/kaboom.xml", "descriptions/freeway.xml", "descriptions/depthcharge.xml", "descriptions/astrosmash.xml",
-		"descriptions/breakout.xml", "descriptions/spaceinvaders.xml", "descriptions/spaceinvaders2.xml" })
+		"descriptions/breakout.xml", "descriptions/spaceinvaders.xml", "descriptions/spaceinvaders2.xml", "descriptions/pong.xml", "descriptions/pong_min.xml",
+		"descriptions/combat.xml", "descriptions/tennis.xml", "descriptions/trickshot.xml" })
 	{
 		DYNAMIC_SECTION(file)
 		{
@@ -783,15 +809,15 @@ TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group
 	};
 
 	const Mistake mistakes[] = {
-		{ "a member that gives collisions", "descriptions/spacerace.xml", "<member><position>", "<member><collisions><enabled>true</enabled></collisions><position>", "collisions" },
-		{ "a group with something it cannot hold", "descriptions/spacerace.xml", "<velocity>", "<speed /><velocity>", "speed" },
-		{ "a member with something it cannot hold", "descriptions/spacerace.xml", "<member><position>", "<member><speed /><position>", "speed" },
-		{ "a position that is not an x and a y", "descriptions/spacerace.xml", "<y>75</y>", "<z>75</z>", "z" },
-		{ "a group with no name", "descriptions/spacerace.xml", "<group name=\"debris1\">", "<group>", "missing required attribute 'name'" },
+		{ "a member that gives collisions", "descriptions/combat.xml", "<member><position>", "<member><collisions><enabled>true</enabled></collisions><position>", "collisions" },
+		{ "a group with something it cannot hold", "descriptions/spacerace.xml", "<columns>8</columns>", "<columns>8</columns><speed />", "speed" },
+		{ "a member with something it cannot hold", "descriptions/combat.xml", "<member><position>", "<member><speed /><position>", "speed" },
+		{ "a position that is not an x and a y", "descriptions/spacerace.xml", "<y>50</y>", "<z>50</z>", "z" },
+		{ "a group with no name", "descriptions/combat.xml", "<group name=\"yellow\">", "<group>", "missing required attribute 'name'" },
 		{ "a lockstep flag that is not true or false", "descriptions/spacerace.xml", "<enabled>true</enabled>", "<enabled>true</enabled><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
-		{ "a member in a group of cells", "descriptions/breakout.xml", "<row number=\"2\">", "<member /><row number=\"2\">", "row" },
-		{ "a member beside a group inside a group", "descriptions/spacerace.xml", "<group name=\"debris1\">", "<member /><group name=\"debris1\">", "group" },
-		{ "a cell with no column", "descriptions/breakout.xml", "<row number=\"2\">", "<cell row=\"1\" /><row number=\"2\">", "missing required attribute 'column'" },
+		{ "a member in a group of cells", "descriptions/spacerace.xml", "<row number=\"1 5 9\">", "<member /><row number=\"1 5 9\">", "row" },
+		{ "a member beside a group inside a group", "descriptions/combat.xml", "<group name=\"yellow\">", "<member /><group name=\"yellow\">", "group" },
+		{ "a cell with no column", "descriptions/spacerace.xml", "<row number=\"1 5 9\">", "<cell row=\"1\" /><row number=\"1 5 9\">", "missing required attribute 'column'" },
 	};
 
 	for (const Mistake& mistake : mistakes)

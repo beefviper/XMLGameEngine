@@ -489,7 +489,7 @@ TEST_CASE("Pong's title is placed by an <equation> of its own size", "[equations
 
 	CHECK(title.positionResolved);
 	CHECK(title.position.x == 640.0f - 300.0f); // 1280 wide window, window.width.center - title.width / 2
-	CHECK(title.position.y == 30.0f);
+	CHECK(title.position.y == 120.0f);
 
 	// A different size gives a different place, as it does for text.
 	measure(title, 400.0f, 200.0f);
@@ -509,7 +509,7 @@ TEST_CASE("Breakout's title is placed by <formula>s of its own size", "[equation
 	game.resolveSizeDependentPositions();
 
 	CHECK(title.positionResolved);
-	CHECK(title.position.x == 640.0f - 300.0f);          // window.width.center - title.width / 2
+	CHECK(title.position.x == 320.0f - 300.0f);          // 640 wide: window.width.center - title.width / 2
 	CHECK(title.position.y == 360.0f - 100.0f - 110.0f); // window.height.center - title.height / 2 + (-110)
 }
 

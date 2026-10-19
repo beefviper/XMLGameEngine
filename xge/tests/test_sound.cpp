@@ -159,11 +159,11 @@ namespace
 			paddle1(game.getObject("paddle1"))
 		{
 			game.setCurrentState("playing");
+			for (Object& object : game.getCurrentObjects())
+			{
+				object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+			}
 
-			// The paddles are pictures: without a window nothing has measured
-			// them, so they are given pong.xml's width and height.
-			game.getObject("paddle1").size = { 30, 150 };
-			game.getObject("paddle2").size = { 30, 150 };
 			ball.velocity = { 0, 0 };
 		}
 
@@ -355,7 +355,7 @@ TEST_CASE("Pong's sounds load with every XML library, checked against the schema
 
 		std::vector<std::string> names;
 		for (const auto& sound : game.getSounds()) { names.push_back(sound.name); }
-		CHECK(names == std::vector<std::string>{ "wall", "paddle", "score", "start", "gameover" });
+		CHECK(names == std::vector<std::string>{ "paddle", "wall", "score" });
 	}
 }
 
@@ -372,7 +372,7 @@ TEST_CASE("Pong: the ball off the top wall asks for the wall sound, once", "[sou
 TEST_CASE("Pong: the ball off the bottom wall asks for the wall sound too", "[sound][pong]")
 {
 	PongInPlay pong;
-	pong.ball.position = { 600, 720 - 20 - 2 };
+	pong.ball.position = { 600, 720 - 16 - 2 };
 	pong.ball.velocity = { 0, 3 };
 
 	CHECK(pong.run(10) == std::vector<std::string>{ "wall" });
@@ -382,7 +382,7 @@ TEST_CASE("Pong: the ball off the bottom wall asks for the wall sound too", "[so
 TEST_CASE("Pong: the ball off a paddle asks for the paddle sound", "[sound][pong]")
 {
 	PongInPlay pong;
-	pong.ball.position = { pong.paddle1.position.x + 30 + 10, pong.paddle1.position.y + 60 };
+	pong.ball.position = { pong.paddle1.position.x + 20 + 10, pong.paddle1.position.y + 50 };
 	pong.ball.velocity = { -4, 0 };
 
 	CHECK(pong.run(10) == std::vector<std::string>{ "paddle" });
@@ -420,14 +420,18 @@ TEST_CASE("Engine loads the game's sounds into its Audio and plays what each fra
 	AudioLog log;
 	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));
 
-	CHECK(log.loaded == std::vector<std::string>{ "wall", "paddle", "score", "start", "gameover" });
+	CHECK(log.loaded == std::vector<std::string>{ "paddle", "wall", "score" });
 
-	// Space on the main menu starts the game, with a jingle.
+	// Space on the main menu starts the game; the ball off the top wall asks for its blip.
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
+	engine.step();
+	Object& ball = game.getObject("ball");
+	ball.position = { 600, -1 };
+	ball.velocity = { 0, -3 };
 	CHECK(log.played.empty()); // asked for, played on the frame
 	engine.step();
-	CHECK(log.played == std::vector<std::string>{ "start" });
+	CHECK(log.played == std::vector<std::string>{ "wall" });
 
 	engine.silence();
 	CHECK(log.stops == 1);
@@ -443,7 +447,7 @@ TEST_CASE("Engine without an Audio is silent, and replaceAudio hands the sounds 
 
 	AudioLog log;
 	engine.replaceAudio([&] { return std::make_unique<RecordingAudio>(log); });
-	CHECK(log.loaded.size() == 5);
+	CHECK(log.loaded.size() == 3);
 
 	game.requestSound("score");
 	engine.step();
@@ -468,9 +472,9 @@ TEST_CASE("the silent backend needs no sound device", "[sound][engine]")
 TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids have their sounds, and each is played somewhere", "[sound][games]")
 {
 	const std::vector<std::pair<std::string, std::vector<std::string>>> games = {
-		{ "breakout", { "wall", "paddle", "brick", "crack", "start", "win", "gameover" } },
+		{ "breakout", { "wall", "paddle", "red", "orange", "green", "yellow", "lost" } },
 		{ "frogger", { "hop", "squash", "splash", "home", "start", "win", "gameover" } },
-		{ "spacerace", { "score", "crash", "start", "win" } },
+		{ "spacerace", { "score", "crash", "end" } },
 		{ "freeway", { "hop", "hit", "cross", "start", "end" } },
 		{ "depthcharge", { "drop", "sink", "miss", "start", "win", "gameover" } },
 		{ "astrosmash", { "pop", "thud", "shoot", "start", "win", "gameover" } },

@@ -8,7 +8,7 @@
 |---|---|---|---|
 | Pong, Breakout, Space Invaders | the core: bounce, stick, die, fire, lockstep blocks | `<deflect>` (Pong), bitmaps, animation, SVG sprites, enemy fire (Invaders 1 and 2) | |
 | Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, verbs in object rules, colors | (rewritten 2026-10-19 with diving turtles, a timer and filled bays; crocodiles, lady frog, flies and speed-up still missing) |
-| Space Race | a second game on the same vocabulary | nothing | |
+| Space Race | a second game on the same vocabulary | nothing | [rewritten](#the-paddle-and-ball-rewrite) |
 | Kaboom | `<random>` in a `<group>`; states differing only in what they show | nothing at first; when reworked, timers, `<facing>` fire, `<reset object>` in a rule | speed-up inside a wave (eight waves stand in) |
 | Freeway | Frogger's road is a vocabulary, not a kit; two players | nothing | (timed round and knock-back built in the 2026-10-19 rewrite) |
 | Depth Charge | limited ammunition without a countdown | nothing | several charges in flight, subs that fire back |
@@ -93,3 +93,10 @@
 - A smaller maze of its own (19 by 22 tiles), drawn as a `<map>` in wall characters; the arcade's 28 by 31 would have filled the window with tiny tiles and is not ours to copy.
 - Ghosts: Blinky hunts Pac-Man, Pinky four tiles ahead of him, Inky doubles the point two ahead away from Blinky, Clyde hunts until within eight tiles and then heads for his corner. They leave the house on paths after 1, 5 and 10 seconds (Blinky starts outside). A pellet turns them blue (they wander, slower) for six seconds; an eaten ghost is eyes that hunt the house through the door and turn normal inside.
 - Kept simple: a ghost is a flat 200 points; one maze and no levels; ghosts always chase (no scatter waves); speeds are guesses, unplayed by agents.
+
+## The paddle and ball rewrite
+
+- Asked (2026-10-19): rewrite every game with the vocabulary added since it was written, fewer lines, and closer to the original in graphics, sound and play. Pong, Pong (minimal), Breakout and Space Race here; Combat, Trick Shot and Tennis in [the Atari games](56-games-atari.md).
+- **Pong** follows Atari's arcade: a square ball, a dashed net (a group of one column), big digits by the net, first to eleven, the speed up at the fourth and twelfth hit (a second `class="paddle"` rule with an `<any>` of two `<check>`s). Dropped: the settings screen, the logo and the image paddles; image sprites keep their tests in `test_size_expressions`' own game.
+- **Breakout** follows the arcade: eight rows of fourteen, two of each colour, worth 7, 5, 3, 1, each with its pitch. The wall is one group whose rule scores `self.worth`, and each colour an inner group giving its rows, worth and sound. The ball speeds up at the fourth and twelfth hit and at the first brick in the back four rows (`<all>` of its y and a flag), and the paddle has a `half` look taken when the ball reaches the top. Three balls, two walls. Dropped: the two-hit grey row and the marching block (looks counting hits and lockstep keep their tests in `test_gameplay_verbs` and the Space Invaders tests).
+- **Space Race** follows the arcade: twelve rows of debris as one group of 8 by 12 cells with `<row number="1 5 9">` speeds, a clock bar sinking out of sight in a minute, the most crossings win. The win screen picks its words with its own conditions, since nothing scores the last point.

@@ -113,7 +113,7 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	CHECK(data.find("#include \"game_parts.h\"") != std::string::npos);
 	CHECK(data.find("xge::GameData pongMinGame()\n{") != std::string::npos);
 	CHECK(data.find("\t// <object name=\"ball\">\n\tRawObject playingBallObject()\n\t{\n\t\tRawObject object;\n\t\tobject.name = \"ball\";") != std::string::npos);
-	CHECK(data.find("\t\tobject.sprite = sprite(\"circle\", \"\", [](RawSprite& look)") != std::string::npos);
+	CHECK(data.find("\t\tobject.sprite = sprite(\"rectangle\", \"\", [](RawSprite& look)") != std::string::npos);
 	CHECK(data.find("\t\tobject.rawCollisionData.enabled = true;") != std::string::npos);
 	CHECK(data.find("edge(object.rawCollisionData, \"vertical\", { verb(\"bounce\") });") != std::string::npos);
 	CHECK(data.find("\tgame.objects = objects();") != std::string::npos);
@@ -184,11 +184,11 @@ TEST_CASE("a generated program carries the engine's files unchanged, and none of
 TEST_CASE("a generated program copies the font and pictures its game uses", "[generate]")
 {
 	TempFolder folder("xge_test_generate_assets");
-	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out"));
+	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/spaceinvaders2.xml", folder.path / "out"));
 	const std::set<fs::path> assets(program.assets.begin(), program.assets.end());
 	CHECK(assets.count("assets/tuffy.ttf") == 1);
-	CHECK(assets.count("assets/paddle.jpg") == 1);
-	CHECK(fs::exists(folder.path / "out/assets/paddle.jpg"));
+	CHECK(assets.count("assets/Space Invaders Color Sprites.svg") == 1);
+	CHECK(fs::exists(folder.path / "out/assets/Space Invaders Color Sprites.svg"));
 }
 
 TEST_CASE("a group is written as what it gives its members, then a line for each member or cell", "[generate]")

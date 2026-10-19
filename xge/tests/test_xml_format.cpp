@@ -794,15 +794,15 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 
 	const Mistake mistakes[] = {
 		{ "a direction that is not one", "<move direction=\"up\">step</move>", "<move direction=\"sideways\">step</move>", "direction" },
-		{ "an unknown tag where a value goes", "<x>window.left + margin</x>", "<x><bogus /></x>", "unexpected element <bogus>" },
-		{ "a circle with no radius", "<radius>ball.radius</radius>", "", "expected <radius>" },
+		{ "an unknown tag where a value goes", "<x>margin</x>", "<x><bogus /></x>", "unexpected element <bogus>" },
+		{ "a rectangle with no width", "<width>ball.size</width>", "", "expected <width>" },
 		{ "text in an element that holds elements", "<object name=\"title\">", "<object name=\"title\">oops", "unexpected text \"oops\"" },
 		{ "a flag that is not true or false", "<fullscreen>false</fullscreen>", "<fullscreen>maybe</fullscreen>", "\"maybe\" is not a valid" },
 		{ "a command missing its attribute", "<push state=\"playing\" />", "<push />", "missing required attribute 'state'" },
 		{ "a command that does not exist", "<bounce />", "<explode />", "explode" },
 		{ "a window width that is not a number", "<width>1280</width>", "<width>huge</width>", "not a valid" },
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
-		{ "a condition with no test (only a set=\"...\" condition has none)", "<atleast>15</atleast>", "", "unexpected element <push>" },
+		{ "a condition with no test (only a set=\"...\" condition has none)", "<atleast>11</atleast>", "", "unexpected element <push>" },
 		{ "a <random> with no max", "<random min=\"-30\" max=\"30\" />", "<random min=\"-30\" />", "missing required attribute 'max'" },
 	};
 
