@@ -57,22 +57,10 @@
     <variable name="rayspeed">5</variable>
   </variables>
   <sounds>
-    <sound name="fire" wave="square">
-      <volume>0.15</volume>
-      <note pitch="A5" to="A4">0.08</note>
-    </sound>
-    <sound name="hit" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="2500" to="200">0.3</note>
-    </sound>
-    <sound name="ray" wave="sawtooth">
-      <volume>0.15</volume>
-      <note pitch="C3" to="C2">0.25</note>
-    </sound>
-    <sound name="lost" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E4" to="E2">0.6</note>
-    </sound>
+    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="A5" to="A4">0.08</note></sound>
+    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="2500" to="200">0.3</note></sound>
+    <sound name="ray" wave="sawtooth"><volume>0.15</volume><note pitch="C3" to="C2">0.25</note></sound>
+    <sound name="lost" wave="triangle"><volume>0.4</volume><note pitch="E4" to="E2">0.6</note></sound>
     <sound name="wave" wave="square">
       <volume>0.2</volume>
       <note pitch="C5">0.08</note>
@@ -89,11 +77,7 @@
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
@@ -101,39 +85,19 @@
     <state name="title">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>ATLANTIS</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>ATLANTIS</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
         <object name="help">
-          <sprite>
-            <text>
-              <content>bring down the gorgon ships before they ray the city</content>
-              <size>22</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text><content>bring down the gorgon ships before they ray the city</content><size>22</size><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
         </object>
         <object name="keys">
-          <sprite>
-            <text>
-              <content>a, w and d (or the arrows) fire the left, middle and right posts</content>
-              <size>20</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
+          <sprite><text><content>a, w and d (or the arrows) fire the left, middle and right posts</content><size>20</size><color>color.lightgrey</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
@@ -146,26 +110,20 @@
       <objects>
         <!-- the score; never drawn, only its number -->
         <object name="status">
-          <variables>
-            <variable name="score">0</variable>
-          </variables>
+          <variables><variable name="score">0</variable></variables>
         </object>
         <!-- the ships brought down in this wave; put back for the next one -->
         <object name="tally">
-          <variables>
-            <variable name="downed">0</variable>
-          </variables>
+          <variables><variable name="downed">0</variable></variables>
         </object>
 
         <object name="sea" class="ground">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>window.bottom - ground</height>
-              <color>color.darkblue</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>window.right</width><height>window.bottom - ground</height><color>color.darkblue</color></rectangle></sprite>
           <position><x>0</x><y>ground</y></position>
+        </object>
+        <object name="surf">
+          <sprite><rectangle><width>window.right</width><height>3</height><color>color.blue</color></rectangle></sprite>
+          <position><x>0</x><y>ground + 8</y></position>
         </object>
 
         <!-- the city: domes and towers between the posts -->
@@ -235,10 +193,7 @@
           <position><x>10</x><y>ground - leftpost.height</y></position>
           <heading>45</heading>
           <actions>
-            <action name="fire">
-              <fire object="leftshells" />
-              <play sound="fire" />
-            </action>
+            <action name="fire"><fire object="leftshells" /><play sound="fire" /></action>
           </actions>
         </object>
         <object name="middlepost" class="post">
@@ -257,10 +212,7 @@
           <position><x><centered /></x><y>ground - middlepost.height</y></position>
           <heading>0</heading>
           <actions>
-            <action name="fire">
-              <fire object="middleshells" />
-              <play sound="fire" />
-            </action>
+            <action name="fire"><fire object="middleshells" /><play sound="fire" /></action>
           </actions>
         </object>
         <object name="rightpost" class="post">
@@ -279,84 +231,49 @@
           <position><x>window.right - rightpost.width - 10</x><y>ground - rightpost.height</y></position>
           <heading>315</heading>
           <actions>
-            <action name="fire">
-              <fire object="rightshells" />
-              <play sound="fire" />
-            </action>
+            <action name="fire"><fire object="rightshells" /><play sound="fire" /></action>
           </actions>
         </object>
 
         <!-- two shells for each post, out of play until fired -->
         <group name="shells" class="shell">
-          <sprite>
-            <rectangle>
-              <width>4</width>
-              <height>4</height>
-              <color>color.yellow</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <velocity><y>-shellspeed</y></velocity>
           <hidden>true</hidden>
           <collisions>
             <enabled>false</enabled>
-            <collision edge="all">
-              <die />
-            </collision>
-            <collision class="gorgon">
-              <die />
-            </collision>
+            <collision edge="all"><die /></collision>
+            <collision class="gorgon"><die /></collision>
           </collisions>
           <group name="leftshells">
-            <member />
-            <member />
+            <member /><member />
           </group>
           <group name="middleshells">
-            <member />
-            <member />
+            <member /><member />
           </group>
           <group name="rightshells">
-            <member />
-            <member />
+            <member /><member />
           </group>
         </group>
 
         <!-- the death rays, fired from the lowest lane -->
         <group name="rays" class="ray">
-          <sprite>
-            <rectangle>
-              <width>3</width>
-              <height>16</height>
-              <color>color.magenta</color>
-            </rectangle>
-          </sprite>
+          <sprite><rectangle><width>3</width><height>16</height><color>color.magenta</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <velocity><y>rayspeed</y></velocity>
           <hidden>true</hidden>
           <collisions>
             <enabled>false</enabled>
-            <collision edge="all">
-              <die />
-            </collision>
-            <collision class="building">
-              <die />
-            </collision>
-            <collision class="ground">
-              <die />
-            </collision>
+            <collision edge="all"><die /></collision>
+            <collision class="building"><die /></collision>
+            <collision class="ground"><die /></collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-          <member />
+          <member /><member /><member /><member />
         </group>
 
         <object name="score">
-          <sprite>
-            <text style="hud">
-              <number>status.score</number>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>status.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
       </objects>
@@ -397,9 +314,7 @@
                   <reveal object="lane2" />
                 </collision>
               </collisions>
-              <member />
-              <member />
-              <member />
+              <member /><member /><member />
             </group>
             <group name="lane2">
               <position><y>top + lane</y></position>
@@ -410,9 +325,7 @@
                   <reveal object="lane3" />
                 </collision>
               </collisions>
-              <member />
-              <member />
-              <member />
+              <member /><member /><member />
             </group>
             <group name="lane3">
               <position><y>top + lane * 2</y></position>
@@ -423,9 +336,7 @@
                   <reveal object="lane4" />
                 </collision>
               </collisions>
-              <member />
-              <member />
-              <member />
+              <member /><member /><member />
             </group>
             <!-- the lowest lane: round and round, firing at the city -->
             <group name="lane4">
@@ -433,9 +344,7 @@
               <facing>down</facing>
               <collisions>
                 <enabled>true</enabled>
-                <collision edge="right">
-                  <wrap />
-                </collision>
+                <collision edge="right"><wrap /></collision>
               </collisions>
               <timers>
                 <timer>
@@ -444,28 +353,19 @@
                   <play sound="ray" />
                 </timer>
               </timers>
-              <member />
-              <member />
-              <member />
+              <member /><member /><member />
             </group>
           </group>
           <!-- which wave it is, at the top right -->
           <object name="label">
-            <sprite>
-              <text style="hud">
-                <content>WAVE 1</content>
-                <color>color.green</color>
-              </text>
-            </sprite>
+            <sprite><text style="hud"><content>WAVE 1</content><color>color.green</color></text></sprite>
             <position><x>window.right - label.width - margin</x><y>margin</y></position>
           </object>
         </objects>
 
         <!-- a ship every three seconds; twelve down and on to the next wave -->
         <scene name="wave1">
-          <ways>
-            <way name="next" scene="wave2" />
-          </ways>
+          <ways><way name="next" scene="wave2" /></ways>
           <variables>
             <variable name="speed">2</variable>
             <variable name="gap">3</variable>
@@ -488,18 +388,13 @@
             </condition>
           </conditions>
           <timers>
-            <timer name="launch">
-              <every>gap</every>
-              <reveal object="lane1" />
-            </timer>
+            <timer name="launch"><every>gap</every><reveal object="lane1" /></timer>
           </timers>
         </scene>
 
-        <!-- the first wave, quicker, in orange -->
+        <!-- the first wave, quicker: orange gunships -->
         <scene name="wave2" from="wave1">
-          <ways>
-            <way name="next" scene="wave3" />
-          </ways>
+          <ways><way name="next" scene="wave3" /></ways>
           <variables>
             <variable name="speed">2.8</variable>
             <variable name="gap">2.2</variable>
@@ -511,28 +406,23 @@
             <group name="gorgons">
               <sprite>
                 <bitmap>
-                  <row>....****....</row>
-                  <row>..********..</row>
+                  <row>.....**.....</row>
+                  <row>*...****...*</row>
                   <row>************</row>
-                  <row>.*.*.*.*.*.*</row>
-                  <row>..********..</row>
+                  <row>*...****...*</row>
+                  <row>.....**.....</row>
                   <scale>3</scale>
                   <color>color.orange</color>
                 </bitmap>
               </sprite>
             </group>
             <object name="label">
-              <sprite>
-                <text style="hud">
-                  <content>WAVE 2</content>
-                  <color>color.orange</color>
-                </text>
-              </sprite>
+              <sprite><text style="hud"><content>WAVE 2</content><color>color.orange</color></text></sprite>
             </object>
           </objects>
         </scene>
 
-        <!-- the second, in red, launching two lanes at once; its quota wins -->
+        <!-- the second, with red bandit ships, launching two lanes at once; its quota wins -->
         <scene name="wave3" from="wave2">
           <variables>
             <variable name="speed">3.5</variable>
@@ -543,23 +433,18 @@
             <group name="gorgons">
               <sprite>
                 <bitmap>
-                  <row>....****....</row>
+                  <row>**........**</row>
+                  <row>.**.****.**.</row>
                   <row>..********..</row>
-                  <row>************</row>
-                  <row>.*.*.*.*.*.*</row>
-                  <row>..********..</row>
+                  <row>.**.****.**.</row>
+                  <row>**........**</row>
                   <scale>3</scale>
                   <color>color.red</color>
                 </bitmap>
               </sprite>
             </group>
             <object name="label">
-              <sprite>
-                <text style="hud">
-                  <content>WAVE 3</content>
-                  <color>color.red</color>
-                </text>
-              </sprite>
+              <sprite><text style="hud"><content>WAVE 3</content><color>color.red</color></text></sprite>
             </object>
           </objects>
           <conditions>
@@ -596,12 +481,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -616,12 +496,7 @@
     <state name="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -637,12 +512,7 @@
     <state name="gameover" from="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
         </object>
       </objects>
     </state>
