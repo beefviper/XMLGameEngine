@@ -243,7 +243,7 @@ TEST_CASE("trickshot.xml: the white ball straight into the rack stops, and the r
 	// From 200 to the apex at 500 less a diameter, slowed by the cloth: about
 	// fifty frames. What it carries when it gets there is all the rack gets.
 	float carried = 0.0f;
-	for (int i = 0; i < 70 && play.get("balls.1").velocity.x == 0.0f; ++i)
+	for (int i = 0; i < 70 && play.get("rack.1").velocity.x == 0.0f; ++i)
 	{
 		carried = white.velocity.x;
 		play.frames(1);
@@ -256,7 +256,7 @@ TEST_CASE("trickshot.xml: the white ball straight into the rack stops, and the r
 	const float starts[] = { 500, 521, 521, 542, 542, 542 };
 	for (int i = 0; i < 6; ++i)
 	{
-		CHECK(play.get("balls." + std::to_string(i + 1)).position.x != Approx(starts[i]));
+		CHECK(play.get("rack." + std::to_string(i + 1)).position.x != Approx(starts[i]));
 	}
 	float total = 0.0f;
 	for (const Object& object : play.game.getCurrentObjects())
@@ -289,7 +289,7 @@ TEST_CASE("trickshot.xml: a ball in a pocket scores, and the white one there com
 	Played play("descriptions/trickshot.xml");
 	play.tap(KeyCode::Space);
 
-	Object& ball = play.get("balls.4");
+	Object& ball = play.get("rack.4");
 	ball.position = { 100, 100 };
 	ball.velocity = { -5, -5 };
 	play.frames(30);

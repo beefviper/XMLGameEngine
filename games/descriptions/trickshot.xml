@@ -5,10 +5,10 @@
 
 <!--
   Pool, after Imagic's Trick Shot for the Atari 2600: six balls racked on a
-  table with six pockets, and a cue tip the player steers. Push the white
-  ball with the tip, knock the others into the pockets. Sink all six before
-  the two minutes run out; the white ball in a pocket costs a point and comes
-  back to its spot.
+  green table with brown cushions and six pockets, and a cue tip the player
+  steers. Push the white ball with the tip, knock the others into the
+  pockets. Sink all six before the two minutes run out; the white ball in a
+  pocket costs a point and comes back to its spot.
 
   W A S D or the arrows move the cue tip (two at once go diagonally), P or
   Escape pauses, Space starts, pauses and plays again.
@@ -19,14 +19,15 @@
     they meet, so a straight hit stops the white ball dead and sends the
     other on, a thin cut sends both off at an angle, and a hit into the
     rack runs on through every ball touching the next in the same frame.
+  * The balls are one group: the picture, the cloth's <drag>, the mass and
+    the knocks are said once; the white ball and the rack are groups inside
+    it, each with its own rule for a pocket.
   * The cue tip has no mass: it is as heavy as can be, so its <knock />
     sends the white ball off at up to twice the tip's speed, and the tip
     itself goes on as it was. It knocks only the white ball, and passes
     over the others.
-  * Two circles meet as circles, so a ball glancing off another leaves at
-    the angle the two middles make.
-  * The balls' <drag> slows them to a stop; the cushions are the window's
-    edges, which they <bounce /> off.
+  * The cushions are a group of four along the edges, which the balls
+    <bounce /> off.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -40,16 +41,15 @@
   <variables>
     <variable name="ball">12</variable>
     <variable name="pocket">22</variable>
+    <variable name="rail">20</variable>
     <variable name="tip">7</variable>
     <variable name="push">4</variable>
     <variable name="cloth">0.012</variable>
     <variable name="margin">60</variable>
   </variables>
   <sounds>
-    <sound name="click" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C6">0.03</note>
-    </sound>
+    <sound name="click"><volume>0.2</volume><note pitch="C6">0.03</note></sound>
+    <sound name="cushion"><volume>0.1</volume><note pitch="C4">0.03</note></sound>
     <sound name="drop" wave="triangle">
       <volume>0.4</volume>
       <note pitch="G4" to="C4">0.2</note>
@@ -67,11 +67,7 @@
   </styles>
   <objects>
     <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
@@ -79,211 +75,135 @@
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>TRICK SHOT</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>TRICK SHOT</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
         <object name="help">
-          <sprite>
-            <text style="help">
-              <content>push the white ball, sink all six in two minutes</content>
-            </text>
-          </sprite>
+          <sprite><text style="help"><content>push the white ball, sink all six in two minutes</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
         </object>
         <object name="keys">
-          <sprite>
-            <text style="help">
-              <content>w a s d or the arrows move the cue</content>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
+          <sprite><text style="help"><content>w a s d or the arrows move the cue</content><color>color.lightgrey</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space">
-          <push state="playing" />
-        </input>
+        <input button="space"><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
       <objects>
+        <group name="cushions" class="cushion">
+          <sprite><rectangle><width>window.right</width><height>rail</height><color>color.brown</color></rectangle></sprite>
+          <collisions><enabled>true</enabled></collisions>
+          <member><position><x>0</x><y>0</y></position></member>
+          <member><position><x>0</x><y>window.bottom - rail</y></position></member>
+          <member><sprite><rectangle><width>rail</width><height>window.bottom</height></rectangle></sprite><position><x>0</x><y>0</y></position></member>
+          <member><sprite><rectangle><width>rail</width><height>window.bottom</height></rectangle></sprite><position><x>window.right - rail</x><y>0</y></position></member>
+        </group>
         <!-- the six pockets: the corners and the middle of the long sides -->
         <group name="pockets" class="pocket">
-          <sprite>
-            <circle>
-              <radius>pocket</radius>
-              <color>color.black</color>
-            </circle>
-          </sprite>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
-          <member><position><x>0</x><y>0</y></position></member>
-          <member><position><x><centered /></x><y>0</y></position></member>
-          <member><position><x>window.right - 2 * pocket</x><y>0</y></position></member>
-          <member><position><x>0</x><y>window.bottom - 2 * pocket</y></position></member>
-          <member><position><x><centered /></x><y>window.bottom - 2 * pocket</y></position></member>
-          <member><position><x>window.right - 2 * pocket</x><y>window.bottom - 2 * pocket</y></position></member>
+          <sprite><circle><radius>pocket</radius><color>color.black</color></circle></sprite>
+          <collisions><enabled>true</enabled></collisions>
+          <member><position><x>rail - pocket</x><y>rail - pocket</y></position></member>
+          <member><position><x><centered /></x><y>rail - pocket</y></position></member>
+          <member><position><x>window.right - rail - pocket</x><y>rail - pocket</y></position></member>
+          <member><position><x>rail - pocket</x><y>window.bottom - rail - pocket</y></position></member>
+          <member><position><x><centered /></x><y>window.bottom - rail - pocket</y></position></member>
+          <member><position><x>window.right - rail - pocket</x><y>window.bottom - rail - pocket</y></position></member>
         </group>
-        <object name="score">
-          <sprite>
-            <text style="hud">
-              <number>player.score</number>
-            </text>
-          </sprite>
-          <position><x>margin</x><y>8</y></position>
-        </object>
-        <object name="clock">
-          <sprite>
-            <text style="hud">
-              <number>player.time</number>
-            </text>
-          </sprite>
-          <position><x>window.right - clock.width - margin</x><y>8</y></position>
-        </object>
         <object name="player">
           <variables>
             <variable name="score">0</variable>
             <variable name="time">120</variable>
           </variables>
         </object>
-        <!-- six balls in a triangle, the point towards the white ball -->
-        <group name="balls" class="ball">
-          <sprite>
-            <circle>
-              <radius>ball</radius>
-              <color>color.red</color>
-            </circle>
-          </sprite>
-          <drag>cloth</drag>
-          <mass>1</mass>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all">
-              <bounce />
-            </collision>
-            <collision class="ball">
-              <knock />
-              <play sound="click" />
-            </collision>
-            <collision class="pocket">
-              <inc variable="player.score" />
-              <play sound="drop" />
-              <die />
-            </collision>
-          </collisions>
-          <member><position><x>500</x><y>288</y></position></member>
-          <member>
-            <sprite><circle><color>color.yellow</color></circle></sprite>
-            <position><x>521</x><y>276</y></position>
-          </member>
-          <member>
-            <sprite><circle><color>color.blue</color></circle></sprite>
-            <position><x>521</x><y>300</y></position>
-          </member>
-          <member>
-            <sprite><circle><color>color.orange</color></circle></sprite>
-            <position><x>542</x><y>264</y></position>
-          </member>
-          <member>
-            <sprite><circle><color>color.black</color></circle></sprite>
-            <position><x>542</x><y>288</y></position>
-          </member>
-          <member>
-            <sprite><circle><color>color.purple</color></circle></sprite>
-            <position><x>542</x><y>312</y></position>
-          </member>
-        </group>
-        <object name="cueball" class="ball">
-          <sprite>
-            <circle>
-              <radius>ball</radius>
-              <color>color.white</color>
-            </circle>
-          </sprite>
-          <position><x>200</x><y>288</y></position>
-          <drag>cloth</drag>
-          <mass>1</mass>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all">
-              <bounce />
-            </collision>
-            <collision class="ball">
-              <knock />
-              <play sound="click" />
-            </collision>
-            <collision class="pocket">
-              <dec variable="player.score" />
-              <play sound="scratch" />
-              <reset />
-            </collision>
-          </collisions>
+        <object name="score">
+          <sprite><text style="hud"><number>player.score</number></text></sprite>
+          <position><x>margin</x><y>rail + 4</y></position>
         </object>
-        <!-- the cue tip: no mass, so it knocks the white ball and is not
-             knocked back -->
+        <object name="clock">
+          <sprite><text style="hud"><number>player.time</number></text></sprite>
+          <position><x>window.right - clock.width - margin</x><y>rail + 4</y></position>
+        </object>
+        <group name="balls" class="ball">
+          <sprite><circle><radius>ball</radius><color>color.white</color></circle></sprite>
+          <drag>cloth</drag>
+          <mass>1</mass>
+          <collisions>
+            <enabled>true</enabled>
+            <collision class="cushion">
+              <bounce />
+              <play sound="cushion" />
+            </collision>
+            <collision class="ball">
+              <knock />
+              <play sound="click" />
+            </collision>
+          </collisions>
+          <group name="white">
+            <collisions>
+              <enabled>true</enabled>
+              <collision class="pocket">
+                <dec variable="player.score" />
+                <play sound="scratch" />
+                <reset />
+              </collision>
+            </collisions>
+            <member name="cueball"><position><x>200</x><y>288</y></position></member>
+          </group>
+          <!-- six in a triangle, the point towards the white ball -->
+          <group name="rack">
+            <sprite><circle><color>color.red</color></circle></sprite>
+            <collisions>
+              <enabled>true</enabled>
+              <collision class="pocket">
+                <inc variable="player.score" />
+                <play sound="drop" />
+                <die />
+              </collision>
+            </collisions>
+            <member><position><x>500</x><y>288</y></position></member>
+            <member><sprite><circle><color>color.yellow</color></circle></sprite><position><x>521</x><y>276</y></position></member>
+            <member><sprite><circle><color>color.blue</color></circle></sprite><position><x>521</x><y>300</y></position></member>
+            <member><sprite><circle><color>color.orange</color></circle></sprite><position><x>542</x><y>264</y></position></member>
+            <member><sprite><circle><color>color.black</color></circle></sprite><position><x>542</x><y>288</y></position></member>
+            <member><sprite><circle><color>color.purple</color></circle></sprite><position><x>542</x><y>312</y></position></member>
+          </group>
+        </group>
+        <!-- the cue tip: no mass, so it knocks the white ball and is not knocked back -->
         <object name="cue">
-          <sprite>
-            <circle>
-              <radius>tip</radius>
-              <color>color.brown</color>
-            </circle>
-          </sprite>
+          <sprite><circle><radius>tip</radius><color>color.lightgrey</color></circle></sprite>
           <position><x>150</x><y>293</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="all">
-              <stick />
-            </collision>
+            <collision edge="all"><stick /></collision>
             <collision object="cueball">
               <knock />
               <play sound="click" />
             </collision>
           </collisions>
           <actions>
-            <action name="up">
-              <move direction="up">push</move>
-            </action>
-            <action name="down">
-              <move direction="down">push</move>
-            </action>
-            <action name="left">
-              <move direction="left">push</move>
-            </action>
-            <action name="right">
-              <move direction="right">push</move>
-            </action>
+            <action name="up"><move direction="up">push</move></action>
+            <action name="down"><move direction="down">push</move></action>
+            <action name="left"><move direction="left">push</move></action>
+            <action name="right"><move direction="right">push</move></action>
           </actions>
         </object>
       </objects>
       <inputs>
-        <input button="w"><trigger object="cue" action="up" /></input>
-        <input button="up"><trigger object="cue" action="up" /></input>
-        <input button="s"><trigger object="cue" action="down" /></input>
-        <input button="down"><trigger object="cue" action="down" /></input>
-        <input button="a"><trigger object="cue" action="left" /></input>
-        <input button="left"><trigger object="cue" action="left" /></input>
-        <input button="d"><trigger object="cue" action="right" /></input>
-        <input button="right"><trigger object="cue" action="right" /></input>
-        <input button="space"><push state="paused" /></input>
-        <input button="p"><push state="paused" /></input>
-        <input button="escape"><push state="paused" /></input>
+        <input button="w up"><trigger object="cue" action="up" /></input>
+        <input button="s down"><trigger object="cue" action="down" /></input>
+        <input button="a left"><trigger object="cue" action="left" /></input>
+        <input button="d right"><trigger object="cue" action="right" /></input>
+        <input button="space p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition object="balls">
+        <condition object="rack">
           <remaining>0</remaining>
           <push state="cleared" />
         </condition>
@@ -293,21 +213,13 @@
         </condition>
       </conditions>
       <timers>
-        <timer>
-          <every>1</every>
-          <dec variable="player.time" />
-        </timer>
+        <timer><every>1</every><dec variable="player.time" /></timer>
       </timers>
     </state>
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -315,20 +227,13 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space"><pop /></input>
-        <input button="p"><pop /></input>
-        <input button="escape"><pop /></input>
+        <input button="space p escape"><pop /></input>
       </inputs>
     </state>
     <state name="cleared">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>TABLE CLEARED</content>
-              <size>80</size>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>TABLE CLEARED</content><size>80</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -337,20 +242,13 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space">
-          <reset />
-        </input>
+        <input button="space"><reset /></input>
       </inputs>
     </state>
     <state name="timeup" from="cleared">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>TIME UP</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>TIME UP</content><color>color.red</color></text></sprite>
         </object>
       </objects>
     </state>
