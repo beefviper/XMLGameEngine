@@ -385,8 +385,10 @@ namespace xge
 			if (released >= count) { break; }
 			if (candidate.isVisible || &candidate == &from || !isNamed(candidate, target) || game.isAway(candidate)) { continue; }
 
-			// Back in play is a new start: a <random> in it is drawn again.
+			// Back in play is a new start: a <random> in it is drawn again,
+			// and its timers and animation start over.
 			game.drawStartAgain(candidate);
+			candidate.startOver();
 			candidate.position = middle - sizeOf(candidate) * 0.5f;
 			candidate.velocity = candidate.velocityOriginal;
 			candidate.riding = {};
@@ -682,7 +684,8 @@ namespace xge
 
 	// Heads for the nearest of `chase.target` in play: straight at its middle
 	// at `chase.speed`, or, within `chase.stopWithin` of it, stops. It faces the
-	// way it goes. With none in play it carries on as it was.
+	// way it goes, and a heading turns to it. With none in play it carries on
+	// as it was.
 	void CommandExecutor::chase(Object& object, const CmdChase& command)
 	{
 		const Object* target = game.nearestInPlay(object, command.target);
@@ -691,6 +694,11 @@ namespace xge
 		if (const auto way = xge::chase(middleOf(object), middleOf(*target), command.speed, command.stopWithin, object.velocity))
 		{
 			object.facing = directionOf(*way);
+			if (object.hasHeading)
+			{
+				object.heading = headingOf(*way);
+				object.showHeading();
+			}
 		}
 	}
 
@@ -781,8 +789,10 @@ namespace xge
 		}
 		if (!projectile) { return false; }
 
-		// Fired is a new start: a <random> in the projectile's is drawn again.
+		// Fired is a new start: a <random> in the projectile's is drawn again,
+		// and its timers and animation start over.
 		game.drawStartAgain(*projectile);
+		projectile->startOver();
 
 		const Box from{ shooter.position, sizeOf(shooter) };
 		const Vector2f shotSize = sizeOf(*projectile);
@@ -828,6 +838,7 @@ namespace xge
 			if (candidate.isVisible || !isNamed(candidate, command.target) || game.isAway(candidate)) { continue; }
 
 			game.drawStartAgain(candidate);
+			candidate.startOver();
 			const Vector2f size = sizeOf(candidate);
 			candidate.position = candidate.positionOriginal;
 			candidate.velocity = candidate.velocityOriginal;

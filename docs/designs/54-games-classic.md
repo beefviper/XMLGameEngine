@@ -79,8 +79,7 @@
 
 ## Asteroids
 
-- A four-line triangle ship (turn, thrust, fire), four big rocks that break into two mediums, then two smalls, then nothing (2, 5, 10 points), three ships, wrapping on all four edges, win when none remain. Rocks are pools released where the shot hit; shots are a pool fired along the heading. Decisions in [motion](22-motion.md), [timers](09-timers.md). The ship returns at once at the centre.
-
+- Rewritten 2026-10-19, closer to the arcade game: a three-line arrowhead ship, four big rocks from the edges at random speeds that break into two mediums, then two smalls (20, 50, 100 points), endless waves (a cleared wave puts the rocks back as they started, their `<random>`s drawn again), hyperspace on S, a ship every 10000 points, one aiming saucer (1000 points) on a random timer, the heartbeat as the playing state's `<music>`, and the best score kept. The ship and its shots share the class `breaker`, so each rock size has one rule for being broken by either, and a ship hit is out of play until a two-second state timer `<reveal>`s it at the middle. Rocks are one group with a group per size and per shape. Left out: two saucer sizes, the flame, shots wrapping and running out, a respawn that waits for a clear middle.
 
 ## Space Invaders 1 and 2
 

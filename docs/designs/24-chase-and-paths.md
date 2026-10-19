@@ -9,7 +9,7 @@
 **What we looked at.** (a) A behavior property on the object (`<ai targeting="direct" />`, below): it runs every frame and needs a frame order of its own. (b) Verbs that act once, run by a timer or a rule: the timer says how often the chaser looks again, which is also how sluggish it is. (c) Aiming as a `<fire at="...">` attribute: one verb, but a shooter could not face its target without firing.
 
 **Chosen: (b).**
-- *`<chase object><speed/><near/></chase>`* sets the velocity straight at the middle of the nearest one in play of that name or group, at the speed, or 0 within `near`; it faces that way. Two numbers, so two elements, as `<jump>`. In an object's timer or a collision with another object.
+- *`<chase object><speed/><near/></chase>`* sets the velocity straight at the middle of the nearest one in play of that name or group, at the speed, or 0 within `near`; it faces that way, and a `<heading>` turns to it (2026-10-19, so Missile Command's missiles are streaks that point the way they fly). Two numbers, so two elements, as `<jump>`. In an object's timer or a collision with another object.
 - *`<aim object />`* stores the way to the target's middle; the next `<fire>`s go along it from the shooter's middle, at any angle, at the projectile's own speed; facing (or a heading, exactly) turns too. A key that moves, hops or jumps the shooter, a reset, or another aim replaces it. Same places as `<chase>`.
 - The target is the nearest one of a name or group in play, so a pool of players, or one of several, works the same.
 - Berserk: Otto chases the man ten times a second at 1.1 over the walls; every robot aims before it fires.

@@ -390,7 +390,8 @@ namespace xge
 
 		// A <tether> is a line from one object's middle to another's, drawn
 		// again after the move wherever the two have got to; its own position
-		// and size follow it, so what it touches is where it is now.
+		// and size follow it, so what it touches is where it is now. It is in
+		// play while both ends are.
 		void drawTethers(std::vector<Object>& objects)
 		{
 			for (auto& tether : objects)
@@ -400,6 +401,8 @@ namespace xge
 				const Object* from = named(objects, tether.tetherFrom);
 				const Object* to = named(objects, tether.tetherTo);
 				if (!from || !to) { continue; }
+				tether.isVisible = from->isVisible && to->isVisible;
+				if (!tether.isVisible) { continue; }
 
 				const Vector2f a = from->position + sizeOf(*from) * 0.5f;
 				const Vector2f b = to->position + sizeOf(*to) * 0.5f;

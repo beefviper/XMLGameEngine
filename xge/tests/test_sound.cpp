@@ -479,7 +479,7 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 		{ "depthcharge", { "drop", "sink", "miss", "start", "win", "gameover" } },
 		{ "astrosmash", { "pop", "thud", "shoot", "start", "win", "gameover" } },
 		{ "lunarlander", { "thrust", "jet", "land", "crash", "start" } },
-		{ "asteroids", { "thrust", "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "start", "win", "gameover" } },
+		{ "asteroids", { "beat", "thrust", "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "saucer", "extra", "gameover" } },
 	};
 
 	for (const auto& [name, expected] : games)
@@ -501,7 +501,7 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 		for (const std::string& sound : expected)
 		{
 			INFO(sound);
-			CHECK(text.find("<play sound=\"" + sound + "\" />") != std::string::npos);
+			CHECK((text.find("<play sound=\"" + sound + "\" />") != std::string::npos || text.find("<music sound=\"" + sound + "\" />") != std::string::npos));
 		}
 	}
 }
@@ -614,7 +614,7 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 	CHECK(log.looped == std::vector<std::string>{ "thrust", "thrust" });
 }
 
-TEST_CASE("Asteroids: the ship's engine hums while thrust is held", "[sound][engine][asteroids]")
+TEST_CASE("Asteroids: the heartbeat plays in play, and the ship's engine hums while thrust is held", "[sound][engine][asteroids]")
 {
 	Game game{ "descriptions/asteroids.xml" };
 	AudioLog log;
@@ -624,6 +624,8 @@ TEST_CASE("Asteroids: the ship's engine hums while thrust is held", "[sound][eng
 	engine.handleKeyReleased(KeyCode::Space);
 	engine.step();
 	REQUIRE(game.getCurrentState().name == "playing");
+	CHECK(log.looped == std::vector<std::string>{ "beat" });
+	log.looped.clear();
 
 	engine.handleKeyPressed(KeyCode::Up);
 	engine.step();

@@ -558,6 +558,10 @@ namespace xge
 		// Back to the first picture, from the start of its time.
 		void restartAnimation();
 
+		// Coming back into play (fired, released, revealed, spawned) is a
+		// new start: its animation and its timers start over, as at a reset.
+		void startOver();
+
 		// Points `bitmap` at the picture animationIndex names (turned to the
 		// heading, if it turns) and marks the visual to be rebuilt.
 		void showAnimationFrame();

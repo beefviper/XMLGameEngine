@@ -336,6 +336,16 @@ namespace xge
 		showAnimationFrame();
 	}
 
+	void Object::startOver()
+	{
+		restartAnimation();
+		for (auto& timer : timers)
+		{
+			timer.framesLeft = -1;
+			timer.done = false;
+		}
+	}
+
 	void Object::showAnimationFrame()
 	{
 		if (!turnables.empty()) { showHeading(); }

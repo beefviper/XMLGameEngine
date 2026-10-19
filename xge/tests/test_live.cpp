@@ -216,6 +216,53 @@ TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever t
 		ContainsSubstring("there is no object named 'hook'"));
 }
 
+TEST_CASE("a <tether> is in play only while both its ends are", "[live]")
+{
+	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<hidden>true</hidden>")
+		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\" /></sprite>"
+		"<position><x>0</x><y>0</y></position></object>", "<spawn object=\"hook\" />");
+	Played play(file.path);
+
+	play.frames(1);
+	CHECK_FALSE(play.get("line").isVisible);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("line").isVisible);
+	CHECK(play.get("line").size.x == Approx(201).margin(1));
+}
+
+TEST_CASE("an object brought back into play starts its timers over", "[live]")
+{
+	// A shot that goes out half a second after it comes in.
+	const Scratch file(box("shot", 100, 100, "<hidden>true</hidden><timers><timer><every>0.5</every><die /></timer></timers>"), "<spawn object=\"shot\" />");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(20);
+	REQUIRE(play.get("shot").isVisible);
+
+	// Put out early, and brought in again: it has its whole half second.
+	play.get("shot").isVisible = false;
+	play.tap(KeyCode::Space);
+	play.frames(25);
+	CHECK(play.get("shot").isVisible);
+	play.frames(6);
+	CHECK_FALSE(play.get("shot").isVisible);
+}
+
+TEST_CASE("a <chase> turns the heading of what chases to the way it goes", "[live]")
+{
+	const Scratch file(box("target", 500, 100)
+		+ "<object name=\"missile\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>8</y></to><thickness>2</thickness></line></sprite>"
+		"<position><x>100</x><y>100</y></position><heading>0</heading>"
+		"<timers><timer><every>0.1</every><chase object=\"target\"><speed>2</speed></chase></timer></timers></object>", "<pop />");
+	Played play(file.path);
+
+	play.frames(10);
+	CHECK(play.get("missile").heading == Approx(90).margin(1));
+	CHECK(play.get("missile").velocity.x == Approx(2).margin(0.01));
+}
+
 TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed for its worth, and back in its row", "[live][fishingderby]")
 {
 	Played play("descriptions/fishingderby.xml");

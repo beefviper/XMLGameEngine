@@ -15,6 +15,7 @@
 
 #include "engine/folder.h"
 #include "game/game.h"
+#include "load/expr.h"
 #include "load/xml.h"
 #include "xml/document.h"
 #include "load/xsd.h"
@@ -25,6 +26,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <iterator>
 #include <set>
 #include <sstream>
@@ -685,6 +687,13 @@ namespace
 		const bool drawn = endsWith("ball") || object.objClass == "bombs" || object.objClass == "rocks" || object.objClass == "missile" || object.objClass == "ufo" || halves;
 		return drawn ? object.name : printed(object);
 	}
+
+	// Each library's copy draws its <random>s from the same seed.
+	struct SameSeed
+	{
+		SameSeed() { game_expr::fixRandomSeed(20261019u); }
+		~SameSeed() { game_expr::fixRandomSeed(std::nullopt); }
+	};
 }
 
 TEST_CASE("every shipped game loads the same through all four XML libraries", "[xml_format][backends]")
@@ -697,6 +706,7 @@ TEST_CASE("every shipped game loads the same through all four XML libraries", "[
 	{
 		DYNAMIC_SECTION(file)
 		{
+			const SameSeed seed;
 			std::vector<std::string> expected;
 			{
 				Game xerces{ readGame(file, XmlBackend::Xerces) };

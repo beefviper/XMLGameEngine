@@ -1195,8 +1195,10 @@ namespace xge
 			const bool named = object.name == target || object.inGroup(target);
 			if (!named || object.isVisible || isAway(object)) { continue; }
 
-			// Back in play is a new start: a <random> in it is drawn again.
+			// Back in play is a new start: a <random> in it is drawn again,
+			// and its timers and animation start over.
 			drawStartAgain(object);
+			object.startOver();
 			object.position = object.positionOriginal;
 			object.velocity = object.velocityOriginal;
 			object.isVisible = true;

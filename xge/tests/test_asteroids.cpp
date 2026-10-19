@@ -76,7 +76,7 @@ namespace
 			std::vector<Object*> members;
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == "playing." + name) { members.push_back(&object); }
+				if (object.inGroup("playing." + name)) { members.push_back(&object); }
 			}
 			return members;
 		}
@@ -107,12 +107,24 @@ namespace
 			}
 		}
 
-		// Moves every rock in play out of the way, to the far corner.
+		// Moves every rock in play out of the way, to the far corner, and the
+		// saucer and its shots out of play.
 		void clearTheMiddle()
 		{
 			for (const char* name : { "bigrocks", "mediumrocks", "smallrocks" })
 			{
 				for (Object* rock : group(name)) { rock->position = { 740, 540 }; rock->velocity = {}; }
+			}
+			for (const char* name : { "saucer", "saucershots" })
+			{
+				for (auto& object : game.getCurrentObjects())
+				{
+					if (object.name == "playing." + std::string(name) || object.inGroup("playing." + std::string(name)))
+					{
+						object.isVisible = false;
+						object.collisionData.enabled = false;
+					}
+				}
 			}
 		}
 
@@ -304,7 +316,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 			}
 		}
 
-		CHECK(hidden == 4 + 8 + 16);
+		CHECK(hidden == 4 + 8 + 16 + 1 + 2); // and the saucer and its two shots
 		CHECK(turns == 2);
 		CHECK(thrusts == 1);
 		CHECK(releases == 4 + 8); // every big and medium rock hands out smaller ones
@@ -670,7 +682,7 @@ TEST_CASE("a shot breaks a big rock into two medium ones where it was", "[astero
 	CHECK_FALSE(rock.isVisible);
 	CHECK(field.inPlay("shots") == 0);
 	CHECK(field.inPlay("mediumrocks") == 2);
-	CHECK(field.score() == 2.0f);
+	CHECK(field.score() == 20.0f);
 
 	// Both of them where the big rock was, and moving, each at its own velocity.
 	for (Object* medium : field.group("mediumrocks"))
@@ -728,20 +740,20 @@ TEST_CASE("a medium rock breaks into two small ones, and a small one into none",
 
 	CHECK_FALSE(medium.isVisible);
 	CHECK(field.inPlay("smallrocks") == 2);
-	CHECK(field.score() == 5.0f);
+	CHECK(field.score() == 50.0f);
 
-	// Now a small one: ten points and nothing comes out of it.
+	// Now a small one: a hundred points and nothing comes out of it.
 	Object& small = *field.group("smallrocks")[5];
 	small.isVisible = true;
 	small.collisionData.enabled = true;
 	shoot(field, small);
 
 	CHECK_FALSE(small.isVisible);
-	CHECK(field.score() == 15.0f);
+	CHECK(field.score() == 150.0f);
 	CHECK(field.inPlay("smallrocks") == 2); // the two from before, which clearTheMiddle moved aside
 }
 
-TEST_CASE("every rock can be broken down to nothing, and the pools are never short", "[asteroids][release]")
+TEST_CASE("every rock of a wave can be broken down to nothing, the pools are never short, and the next wave comes", "[asteroids][release]")
 {
 	Field field;
 
@@ -758,16 +770,17 @@ TEST_CASE("every rock can be broken down to nothing, and the pools are never sho
 			}
 			if (next) { break; }
 		}
-		if (!next) { break; }
+		if (!next || (broken == 4 + 8 + 16)) { break; }
 
 		shoot(field, *next);
 		++broken;
 	}
 
 	CHECK(broken == 4 + 8 + 16);
-	CHECK(field.inPlay("bigrocks") + field.inPlay("mediumrocks") + field.inPlay("smallrocks") == 0);
-	CHECK(field.score() == 4 * 2 + 8 * 5 + 16 * 10);
-	CHECK(field.state() == "won");
+	CHECK(field.score() == 4 * 20 + 8 * 50 + 16 * 100);
+	CHECK(field.state() == "playing");
+	CHECK(field.inPlay("bigrocks") == 4); // a new wave
+	CHECK(field.inPlay("mediumrocks") + field.inPlay("smallrocks") == 0);
 }
 
 TEST_CASE("a pool that has fewer rocks than asked for gives what it has", "[asteroids][release]")
@@ -791,7 +804,7 @@ TEST_CASE("a pool that has fewer rocks than asked for gives what it has", "[aste
 
 // ------------------------------------------------------------ the ship is hit
 
-TEST_CASE("a rock hitting the ship costs a ship, and the ship starts again at the middle, at rest, facing up", "[asteroids][ship]")
+TEST_CASE("a rock hitting the ship costs a ship and breaks, and the ship comes back at the middle, at rest, facing up", "[asteroids][ship]")
 {
 	Field field;
 	field.clearTheMiddle();
@@ -812,7 +825,16 @@ TEST_CASE("a rock hitting the ship costs a ship, and the ship starts again at th
 	CHECK(field.ship().velocity == Vector2f{});
 	CHECK(field.ship().heading == 0.0f);
 	CHECK(field.ship().turnedDegrees == 0);
-	CHECK(rock.isVisible); // the rock is not hurt by it
+	CHECK_FALSE(rock.isVisible); // the ship breaks it, as a shot would
+	CHECK(field.inPlay("mediumrocks") == 2);
+	CHECK(field.score() == 20.0f);
+
+	// The ship is out of play for a moment, then back.
+	CHECK_FALSE(field.ship().isVisible);
+	field.clearTheMiddle();
+	field.frames(121);
+	CHECK(field.ship().isVisible);
+	CHECK(field.ship().position == field.ship().positionOriginal);
 }
 
 TEST_CASE("the pixels decide: the boxes overlap long before a rock touches the ship", "[asteroids][ship]")
@@ -839,8 +861,9 @@ TEST_CASE("three ships and then it is game over; space plays again from the star
 
 	for (int hit = 0; hit < 3; ++hit)
 	{
+		field.frames(121); // back after the last hit
 		field.clearTheMiddle();
-		Object& rock = *field.group("bigrocks")[2];
+		Object& rock = *field.group("bigrocks")[static_cast<std::size_t>(hit)];
 		field.ship().position = { 100, 100 }; // it starts again in the middle after each hit
 		field.ship().velocity = { 1.0f, 0.5f }; // contact is found as things move into each other
 		rock.position = { 105, 105 };
@@ -866,7 +889,7 @@ TEST_CASE("three ships and then it is game over; space plays again from the star
 
 // ------------------------------------------------------------ winning
 
-TEST_CASE("when every rock is gone it is all clear", "[asteroids][states]")
+TEST_CASE("when every rock is gone the next wave comes in", "[asteroids][states]")
 {
 	Field field;
 
@@ -876,10 +899,11 @@ TEST_CASE("when every rock is gone it is all clear", "[asteroids][states]")
 	}
 	field.frames(1);
 
-	CHECK(field.state() == "won");
+	CHECK(field.state() == "playing");
+	CHECK(field.inPlay("bigrocks") == 4);
 }
 
-TEST_CASE("with rocks still left, even small ones, it is not yet won", "[asteroids][states]")
+TEST_CASE("with rocks still left, even small ones, the wave goes on", "[asteroids][states]")
 {
 	Field field;
 
@@ -890,6 +914,7 @@ TEST_CASE("with rocks still left, even small ones, it is not yet won", "[asteroi
 	field.frames(1);
 
 	CHECK(field.state() == "playing");
+	CHECK(field.inPlay("bigrocks") == 0);
 }
 
 TEST_CASE("paused, the field is drawn still: the rocks and the ship stop where they are", "[asteroids][states]")
@@ -906,7 +931,7 @@ TEST_CASE("paused, the field is drawn still: the rocks and the ship stop where t
 	CHECK(field.ship().position == shipAt);
 	CHECK(field.game.isStill(rock));
 	CHECK(field.game.isStill(field.ship()));
-	CHECK(field.game.isStill(field.named("scorevalue")));
+	CHECK(field.game.isStill(field.named("score")));
 	CHECK_FALSE(field.game.isShown(rock));
 	CHECK(field.game.isShown(field.named("paused")));
 
@@ -918,27 +943,23 @@ TEST_CASE("paused, the field is drawn still: the rocks and the ship stop where t
 	CHECK(rock.position != rockAt);
 }
 
-TEST_CASE("each state owns what it draws, and the endings draw the field still under their message", "[asteroids][states]")
+TEST_CASE("each state owns what it draws, and game over draws the field still under its message", "[asteroids][states]")
 {
 	Field field;
 	CHECK(field.ship().ownerState == "playing");
 	CHECK(field.group("bigrocks")[0]->ownerState == "playing");
 	CHECK(field.named("title").ownerState == "mainmenu");
-	CHECK(field.named("again").ownerState.empty());
+	CHECK(field.named("again").ownerState == "gameover");
+	CHECK(field.named("best").ownerState.empty());
 	CHECK_FALSE(field.game.isShown(field.named("title")));
+	CHECK(field.game.isShown(field.named("best")));
 
-	for (Object* rock : field.group("bigrocks")) { rock->isVisible = false; }
-	field.group("smallrocks")[0]->isVisible = true;
-	field.group("smallrocks")[0]->velocity = { 1.0f, 0.0f };
+	field.ship().variable["lives"] = 0.0f;
 	field.frames(1);
-	REQUIRE(field.state() == "playing");
-	field.group("smallrocks")[0]->isVisible = false;
-	field.frames(1);
-	REQUIRE(field.state() == "won");
+	REQUIRE(field.state() == "gameover");
 	CHECK(field.game.isStill(field.ship()));
-	CHECK(field.game.isShown(field.named("won.message")));
+	CHECK(field.game.isShown(field.named("gameover.message")));
 	CHECK(field.game.isShown(field.named("again")));
-	CHECK_FALSE(field.game.isShown(field.named("gameover.message")));
 }
 
 TEST_CASE("playing again puts everything back: rocks, pools, shots, score and ships", "[asteroids][states]")
@@ -964,6 +985,82 @@ TEST_CASE("playing again puts everything back: rocks, pools, shots, score and sh
 	CHECK(field.ship().heading == 0.0f);
 	CHECK(field.ship().turnedDegrees == 0);
 	CHECK(field.state() == "mainmenu");
+}
+
+// ------------------------------------------------------------ the saucer, hyperspace, extra ships
+
+TEST_CASE("the saucer comes in from the left now and then, and shoots at the ship", "[asteroids][saucer]")
+{
+	Field field;
+	field.clearTheMiddle();
+	Object& saucer = field.named("saucer");
+	CHECK_FALSE(saucer.isVisible);
+
+	// Within half a minute it is in, coming from the left.
+	int waited = 0;
+	while (!saucer.isVisible && waited < 60 * 30) { field.frames(1); ++waited; }
+	REQUIRE(saucer.isVisible);
+	CHECK(saucer.position.x < 0.0f);
+	CHECK(saucer.velocity.x > 0.0f);
+
+	// A second on, it has aimed and fired a shot at the ship.
+	field.frames(61);
+	int flying = 0;
+	for (Object* shot : field.group("saucershots"))
+	{
+		if (!shot->isVisible) { continue; }
+		++flying;
+		const Vector2f toShip = field.centre(field.ship()) - field.centre(*shot);
+		CHECK(shot->velocity.x * toShip.x + shot->velocity.y * toShip.y > 0.0f);
+	}
+	CHECK(flying >= 1);
+}
+
+TEST_CASE("a shot that hits the saucer is a thousand points", "[asteroids][saucer]")
+{
+	Field field;
+	field.clearTheMiddle();
+	field.ship().position = { 300, 480 };
+	Object& saucer = field.named("saucer");
+	saucer.isVisible = true;
+	saucer.collisionData.enabled = true;
+	saucer.position = { field.centre(field.ship()).x - saucer.size.x / 2, 200 };
+	saucer.velocity = {};
+	field.key("fire", true);
+	field.key("fire", false);
+	field.frames(40);
+
+	CHECK_FALSE(saucer.isVisible);
+	CHECK(field.score() == 1000.0f);
+}
+
+TEST_CASE("hyperspace puts the ship somewhere else at random, inside the window", "[asteroids][ship]")
+{
+	Field field;
+	field.clearTheMiddle();
+	const Vector2f before = field.ship().position;
+	field.key("hyperspace", true);
+	field.key("hyperspace", false);
+
+	const Vector2f after = field.ship().position;
+	CHECK(after != before);
+	CHECK(after.x >= 20.0f);
+	CHECK(after.x <= 740.0f);
+	CHECK(after.y >= 20.0f);
+	CHECK(after.y <= 540.0f);
+}
+
+TEST_CASE("every ten thousand points is another ship, and the best score follows the score", "[asteroids][ship]")
+{
+	Field field;
+	field.clearTheMiddle();
+	field.ship().variable["score"] = 10020.0f;
+	field.frames(1);
+	CHECK(field.lives() == 4.0f);
+	CHECK(field.ship().variable["next"] == 20000.0f);
+	field.frames(1);
+	CHECK(field.lives() == 4.0f);
+	CHECK(field.named("best").variable["score"] == 10020.0f);
 }
 
 // ------------------------------------------------------------ mistakes
