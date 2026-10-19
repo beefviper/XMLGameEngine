@@ -4,40 +4,43 @@
 <!-- date: Sept 30, 2026 -->
 
 <!--
-  Kaboom!, after the 1981 Atari 2600 game. The Mad Bomber paces the rooftop at
-  the top of the screen, changing direction whenever he likes, and drops bombs
-  as he goes; you slide a bucket along the bottom to catch them. Because the
-  bombs leave from wherever he is, they come down in trails and clusters that
-  follow his path: a run to the left, a doubling back, a burst in one place.
-  Every bomb caught scores; one that reaches the ground sets off every bomb
-  still falling and costs a bucket (you start with three), and with none left
-  it is game over. There are three waves, each with a quicker bomber, faster
-  bombs and more of them, worth one, two and three points a bomb. Reach `goal`
-  points to win (the arcade game has no end).
+  Kaboom!, after Activision's 1981 game for the Atari 2600. The Mad Bomber
+  paces the rooftop at the top of the screen, changing direction whenever he
+  likes, and drops bombs as he goes; you move a stack of three buckets along
+  the bottom to catch them. Because the bombs leave from wherever he is, they
+  come down in trails and clusters that follow his path. A bomb that reaches
+  the ground sets off every bomb still falling and takes a bucket off the
+  stack; with none left it is game over. There are eight waves, as on the
+  cartridge, each with a quicker bomber, faster bombs and more of them, and
+  each worth a point more a bomb, one in the first, eight in the last. Get
+  through the eighth to win.
+
+  A and D, the arrows, a pad or the mouse (the Atari's paddle) move the
+  buckets; Space starts and pauses, as does P.
 
   How it is written:
-  * The rooftop, the bucket and the score are the playing state's own
-    objects, there in every wave.
+  * The buckets are one object with three looks, a stack of three, two and
+    one. A bomb on the ground makes the stack one shorter with two
+    <become from=>s, the two of them first, so only one of them changes it.
+    A shorter stack is a smaller picture, so it catches less.
   * The waves are the <scenes> of the playing state. The bomber, his pool of
     bombs and the wave's label are the kit; the first wave takes them, and
-    each later wave is the one before (from=) with its own <variables>: how
-    fast the bomber paces (pace), how often he drops a bomb (drop, seconds),
-    how fast it falls (fall) and what it is worth (points), read by plain
-    names in the kit. A later wave also gives its bombs and its label a
-    sprite of their own.
+    each later wave is the one before (from=) with its own <variables>: its
+    number, the score it ends at, how fast the bomber paces, how often he
+    drops a bomb (drop, seconds), how fast it falls and what it is worth,
+    read by plain names in the kit (the label shows <number>wave</number>).
   * The bomber has two <timers>. One <reverse />s him after a random wait
     (worked out again each time), so his path is never the same; the other
     <fire>s a bomb every `drop` seconds. He has <facing>down</facing>, so a
     bomb leaves from under him and falls at its own speed.
-  * The bombs are a pool, a <group> of hidden bombs that the bomber fires one
-    at a time and that <die /> back into the pool when caught.
-  * A bomb that hits the ground runs <reset object="bombs" />, which puts
-    every bomb of the wave back in the pool at once: the explosion.
-  * A <condition name="reached"> of the first wave on the score <enter>s its
-    way "next" once the score is `upto`. A later wave copies it with the rest
-    (from=), so it says only its own `upto` and where its "next" leads; the
-    last one writes a condition of the same name, which takes the copied
-    one's place and wins.
+  * The bombs are a pool of hidden bombs, their fuses fizzing (an
+    <animation>), that <die /> back into the pool when caught. One that hits
+    the ground runs <reset object="bombs" />, which puts every bomb of the
+    wave back in the pool at once: the explosion.
+  * A <condition name="reached"> of the first wave enters its way "next" once
+    the score is `upto`. Each later wave copies it (from=), saying only its
+    own `upto` and where its "next" leads; the last writes a condition of
+    the same name, which takes the copied one's place and wins.
   * Paused and the two endings draw the game still underneath (<show state>).
 -->
 
@@ -45,31 +48,25 @@
   <window name="Kaboom!">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
+    <background>color.forestgreen</background>
     <fullscreen>false</fullscreen>
     <framerate>60</framerate>
   </window>
   <variables>
-    <variable name="bucketwidth">110</variable>
-    <variable name="bucketheight">18</variable>
-    <variable name="bomb">8</variable>
     <variable name="step">9</variable>
     <variable name="margin">20</variable>
     <variable name="roof">104</variable>
-    <variable name="goal">90</variable>
   </variables>
   <sounds>
-    <!-- a bomb caught: a quick rising blip -->
     <sound name="catch" wave="square">
       <volume>0.2</volume>
       <note pitch="C5" to="G5">0.05</note>
     </sound>
-    <!-- a bomb on the ground: a burst of noise that sinks -->
     <sound name="boom" wave="noise">
       <volume>0.45</volume>
       <note pitch="3000" to="200">0.6</note>
+      <note pitch="600" to="60">0.6</note>
     </sound>
-    <!-- a new wave -->
     <sound name="wave" wave="triangle">
       <volume>0.4</volume>
       <note pitch="C4">0.08</note>
@@ -77,7 +74,6 @@
       <note pitch="G4">0.08</note>
       <note pitch="C5">0.16</note>
     </sound>
-    <!-- out of buckets -->
     <sound name="gameover" wave="square">
       <volume>0.2</volume>
       <note pitch="E4">0.2</note>
@@ -89,56 +85,26 @@
   <styles>
     <style name="banner"><size>128</size><color>color.red</color></style>
     <style name="prompt"><size>48</size></style>
+    <style name="help"><size>34</size></style>
     <style name="hud"><size>30</size><color>color.yellow</color></style>
   </styles>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>KABOOM!</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>KABOOM!</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 110</centered></y></position>
         </object>
         <object name="help">
-          <sprite>
-            <text>
-              <content>the mad bomber drops them; catch every one</content>
-              <size>36</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="help"><content>the mad bomber drops them; catch every one</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 10</centered></y></position>
         </object>
         <object name="keys">
-          <sprite>
-            <text>
-              <content>a and d, or the arrow keys, to move</content>
-              <size>32</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
+          <sprite><text style="help"><content>a and d, the arrows or the mouse move the buckets</content><size>30</size><color>color.lightgrey</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
         </object>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
         </object>
       </objects>
@@ -152,117 +118,105 @@
 
     <state name="playing">
       <objects>
-        <!-- the rooftop the bomber walks along -->
-        <object name="rooftop">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>roof</height>
-              <color>color.darkgrey</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>0</y></position>
-        </object>
-        <object name="ledge">
-          <sprite>
-            <rectangle>
-              <width>window.right</width>
-              <height>6</height>
-              <color>color.lightgrey</color>
-            </rectangle>
-          </sprite>
-          <position><x>0</x><y>roof</y></position>
-        </object>
-        <!-- the bucket -->
+        <!-- the buckets: a stack of three, then two, then one -->
         <object name="bucket">
-          <sprite>
-            <rectangle>
-              <width>bucketwidth</width>
-              <height>bucketheight</height>
+          <sprite name="three">
+            <bitmap>
+              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+              <row>.********************.</row>
+              <row>..******************..</row>
+              <row>......................</row>
+              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+              <row>.********************.</row>
+              <row>..******************..</row>
+              <row>......................</row>
+              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+              <row>.********************.</row>
+              <row>..******************..</row>
+              <scale>5</scale>
               <color>color.cyan</color>
-            </rectangle>
+              <color char="b">color.blue</color>
+            </bitmap>
           </sprite>
-          <position><x><centered /></x><y>window.bottom - bucket.height - margin</y></position>
+          <sprite name="two">
+            <bitmap>
+              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+              <row>.********************.</row>
+              <row>..******************..</row>
+              <row>......................</row>
+              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+              <row>.********************.</row>
+              <row>..******************..</row>
+              <scale>5</scale>
+              <color>color.cyan</color>
+              <color char="b">color.blue</color>
+            </bitmap>
+          </sprite>
+          <sprite name="one">
+            <bitmap>
+              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+              <row>.********************.</row>
+              <row>..******************..</row>
+              <scale>5</scale>
+              <color>color.cyan</color>
+              <color char="b">color.blue</color>
+            </bitmap>
+          </sprite>
+          <position><x><centered /></x><y>420</y></position>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="horizontal">
-              <stick />
-            </collision>
+            <collision edge="horizontal"><stick /></collision>
           </collisions>
           <actions>
-            <action name="left">
-              <move direction="left">step</move>
-            </action>
-            <action name="right">
-              <move direction="right">step</move>
-            </action>
-            <action name="steer">
-              <track />
-            </action>
+            <action name="left"><move direction="left">step</move></action>
+            <action name="right"><move direction="right">step</move></action>
+            <action name="steer"><track /></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
             <variable name="buckets">3</variable>
           </variables>
         </object>
-        <object name="scorelabel">
-          <sprite>
-            <text style="hud">
-              <content>SCORE</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+        <object name="score">
+          <sprite><text style="hud"><content>SCORE</content><number>bucket.score</number><color>color.white</color></text></sprite>
           <position><x>margin</x><y>12</y></position>
-        </object>
-        <object name="scorevalue">
-          <sprite>
-            <text style="hud">
-              <number>bucket.score</number>
-              <color>color.cyan</color>
-            </text>
-          </sprite>
-          <position><x>margin + scorelabel.width + 12</x><y>12</y></position>
-        </object>
-        <object name="bucketsvalue">
-          <sprite>
-            <text style="hud">
-              <number>bucket.buckets</number>
-              <color>color.red</color>
-            </text>
-          </sprite>
-          <position><x>window.right - bucketsvalue.width - margin</x><y>12</y></position>
-        </object>
-        <object name="bucketslabel">
-          <sprite>
-            <text style="hud">
-              <content>BUCKETS</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
-          <position><x>window.right - bucketsvalue.width - bucketslabel.width - margin - 12</x><y>12</y></position>
         </object>
       </objects>
       <scenes>
-        <!-- what every wave takes: the bomber, his bombs and the wave's label -->
+        <!-- what every wave takes: the building (first, so the rest is drawn over it),
+             the bomber, his bombs and the wave's label -->
         <objects>
-          <!-- the Mad Bomber -->
+          <!-- the wall of the building, and the ledge the bomber walks along -->
+          <object name="rooftop">
+            <sprite><rectangle><width>window.right</width><height>roof</height><color>color.darkgrey</color></rectangle></sprite>
+            <position><x>0</x><y>0</y></position>
+          </object>
+          <object name="ledge">
+            <sprite><rectangle><width>window.right</width><height>6</height><color>color.lightgrey</color></rectangle></sprite>
+            <position><x>0</x><y>roof</y></position>
+          </object>
+          <!-- the Mad Bomber: black hat, grin and striped convict's shirt -->
           <object name="bomber" class="bomber">
             <sprite>
               <bitmap>
-                <row>....****....</row>
-                <row>...******...</row>
+                <row>...kkkkkk...</row>
+                <row>...kkkkkk...</row>
+                <row>.kkkkkkkkkk.</row>
+                <row>...ffffff...</row>
+                <row>...fkffkf...</row>
+                <row>...ffffff...</row>
+                <row>...fkkkkf...</row>
+                <row>....ffff....</row>
                 <row>..********..</row>
-                <row>....****....</row>
-                <row>...*.**.*...</row>
-                <row>....****....</row>
+                <row>.kkkkkkkkkk.</row>
+                <row>f**********f</row>
+                <row>.kkkkkkkkkk.</row>
                 <row>..********..</row>
-                <row>.**.****.**.</row>
-                <row>.**.****.**.</row>
-                <row>....****....</row>
-                <row>....*..*....</row>
-                <row>...**..**...</row>
+                <row>...kk..kk...</row>
                 <scale>4</scale>
                 <color>color.white</color>
+                <color char="k">color.black</color>
+                <color char="f">color.orange</color>
               </bitmap>
             </sprite>
             <position><x><centered /></x><y>roof - bomber.height</y></position>
@@ -270,9 +224,7 @@
             <facing>down</facing>
             <collisions>
               <enabled>true</enabled>
-              <collision edge="horizontal">
-                <bounce />
-              </collision>
+              <collision edge="horizontal"><bounce /></collision>
             </collisions>
             <timers>
               <timer>
@@ -287,12 +239,39 @@
           </object>
           <!-- the bombs: ten in a pool, hidden until the bomber drops one -->
           <group name="bombs" class="bombs">
-            <sprite>
-              <circle>
-                <radius>bomb</radius>
-                <color>color.lightgrey</color>
-              </circle>
+            <sprite name="fizz">
+              <bitmap>
+                <row>....y.</row>
+                <row>...o..</row>
+                <row>.kkk..</row>
+                <row>kkkkk.</row>
+                <row>kkkkk.</row>
+                <row>.kkk..</row>
+                <scale>4</scale>
+                <color char="y">color.yellow</color>
+                <color char="o">color.lightgrey</color>
+                <color char="k">color.black</color>
+              </bitmap>
             </sprite>
+            <sprite name="spark">
+              <bitmap>
+                <row>...y.y</row>
+                <row>...oy.</row>
+                <row>.kkk..</row>
+                <row>kkkkk.</row>
+                <row>kkkkk.</row>
+                <row>.kkk..</row>
+                <scale>4</scale>
+                <color char="y">color.red</color>
+                <color char="o">color.lightgrey</color>
+                <color char="k">color.black</color>
+              </bitmap>
+            </sprite>
+            <animation>
+              <interval>0.1</interval>
+              <frame sprite="fizz" />
+              <frame sprite="spark" />
+            </animation>
             <position><x>0</x><y>0</y></position>
             <velocity><y>fall</y></velocity>
             <hidden>true</hidden>
@@ -300,6 +279,8 @@
               <enabled>false</enabled>
               <collision edge="bottom">
                 <dec variable="bucket.buckets" />
+                <become object="bucket" from="two" sprite="one" />
+                <become object="bucket" from="three" sprite="two" />
                 <play sound="boom" />
                 <reset object="bombs" />
               </collision>
@@ -309,39 +290,28 @@
                 <die />
               </collision>
             </collisions>
-            <member />
-            <member />
-            <member />
-            <member />
-            <member />
-            <member />
-            <member />
-            <member />
-            <member />
-            <member />
+            <member /><member /><member /><member /><member />
+            <member /><member /><member /><member /><member />
           </group>
           <object name="wavelabel">
-            <sprite>
-              <text style="hud">
-                <content>WAVE 1</content>
-              </text>
-            </sprite>
-            <position><x><centered /></x><y>12</y></position>
+            <sprite><text style="hud"><content>WAVE</content><number>wave</number></text></sprite>
+            <position><x>window.right - wavelabel.width - margin</x><y>12</y></position>
           </object>
         </objects>
 
         <scene name="wave1">
-          <ways>
-            <way name="next" scene="wave2" />
-          </ways>
+          <ways><way name="next" scene="wave2" /></ways>
           <variables>
-            <variable name="upto">15</variable>
-            <variable name="pace">3</variable>
-            <variable name="drop">0.55</variable>
-            <variable name="fall">3</variable>
+            <variable name="wave">1</variable>
+            <variable name="upto">10</variable>
+            <variable name="pace">2.5</variable>
+            <variable name="drop">0.7</variable>
+            <variable name="fall">2.5</variable>
             <variable name="points">1</variable>
           </variables>
           <objects>
+            <object name="rooftop" />
+            <object name="ledge" />
             <object name="bomber" />
             <group name="bombs" />
             <object name="wavelabel" />
@@ -349,72 +319,92 @@
           <conditions>
             <condition name="reached" object="bucket" variable="score">
               <atleast>upto</atleast>
+              <reset object="bombs" />
               <enter way="next" />
               <play sound="wave" />
             </condition>
           </conditions>
         </scene>
-
-        <!-- the same man, quicker, and dropping faster, orange bombs -->
+        <!-- each wave the same man, quicker, and twice the bombs, worth more each -->
         <scene name="wave2" from="wave1">
-          <ways>
-            <way name="next" scene="wave3" />
-          </ways>
+          <ways><way name="next" scene="wave3" /></ways>
           <variables>
-            <variable name="upto">45</variable>
-            <variable name="pace">4.5</variable>
-            <variable name="drop">0.42</variable>
-            <variable name="fall">4.5</variable>
+            <variable name="wave">2</variable>
+            <variable name="upto">50</variable>
+            <variable name="pace">3</variable>
+            <variable name="drop">0.6</variable>
+            <variable name="fall">3</variable>
             <variable name="points">2</variable>
           </variables>
-          <objects>
-            <group name="bombs">
-              <sprite>
-                <circle>
-                  <radius>bomb</radius>
-                  <color>color.orange</color>
-                </circle>
-              </sprite>
-            </group>
-            <object name="wavelabel">
-              <sprite>
-                <text style="hud">
-                  <content>WAVE 2</content>
-                </text>
-              </sprite>
-            </object>
-          </objects>
         </scene>
-
-        <!-- quicker again, red bombs -->
         <scene name="wave3" from="wave2">
+          <ways><way name="next" scene="wave4" /></ways>
           <variables>
-            <variable name="pace">6</variable>
-            <variable name="drop">0.32</variable>
-            <variable name="fall">6</variable>
+            <variable name="wave">3</variable>
+            <variable name="upto">140</variable>
+            <variable name="pace">3.5</variable>
+            <variable name="drop">0.5</variable>
+            <variable name="fall">3.5</variable>
             <variable name="points">3</variable>
           </variables>
-          <objects>
-            <group name="bombs">
-              <sprite>
-                <circle>
-                  <radius>bomb</radius>
-                  <color>color.red</color>
-                </circle>
-              </sprite>
-            </group>
-            <object name="wavelabel">
-              <sprite>
-                <text style="hud">
-                  <content>WAVE 3</content>
-                </text>
-              </sprite>
-            </object>
-          </objects>
+        </scene>
+        <scene name="wave4" from="wave3">
+          <ways><way name="next" scene="wave5" /></ways>
+          <variables>
+            <variable name="wave">4</variable>
+            <variable name="upto">300</variable>
+            <variable name="pace">4</variable>
+            <variable name="drop">0.42</variable>
+            <variable name="fall">4</variable>
+            <variable name="points">4</variable>
+          </variables>
+        </scene>
+        <scene name="wave5" from="wave4">
+          <ways><way name="next" scene="wave6" /></ways>
+          <variables>
+            <variable name="wave">5</variable>
+            <variable name="upto">550</variable>
+            <variable name="pace">4.5</variable>
+            <variable name="drop">0.36</variable>
+            <variable name="fall">4.5</variable>
+            <variable name="points">5</variable>
+          </variables>
+        </scene>
+        <scene name="wave6" from="wave5">
+          <ways><way name="next" scene="wave7" /></ways>
+          <variables>
+            <variable name="wave">6</variable>
+            <variable name="upto">1000</variable>
+            <variable name="pace">5</variable>
+            <variable name="drop">0.31</variable>
+            <variable name="fall">5</variable>
+            <variable name="points">6</variable>
+          </variables>
+        </scene>
+        <scene name="wave7" from="wave6">
+          <ways><way name="next" scene="wave8" /></ways>
+          <variables>
+            <variable name="wave">7</variable>
+            <variable name="upto">1700</variable>
+            <variable name="pace">5.5</variable>
+            <variable name="drop">0.27</variable>
+            <variable name="fall">5.5</variable>
+            <variable name="points">7</variable>
+          </variables>
+        </scene>
+        <scene name="wave8" from="wave7">
+          <variables>
+            <variable name="wave">8</variable>
+            <variable name="upto">2900</variable>
+            <variable name="pace">6</variable>
+            <variable name="drop">0.24</variable>
+            <variable name="fall">6</variable>
+            <variable name="points">8</variable>
+          </variables>
           <conditions>
             <!-- in place of the copied "reached": the last wave wins -->
             <condition name="reached" object="bucket" variable="score">
-              <atleast>goal</atleast>
+              <atleast>upto</atleast>
               <reset object="bombs" />
               <push state="youwin" />
               <play sound="wave" />
@@ -423,25 +413,14 @@
         </scene>
       </scenes>
       <inputs>
-        <input button="a left pad1.left">
-          <trigger object="bucket" action="left" />
-        </input>
-        <input button="d right pad1.right">
-          <trigger object="bucket" action="right" />
-        </input>
+        <input button="a left pad1.left"><trigger object="bucket" action="left" /></input>
+        <input button="d right pad1.right"><trigger object="bucket" action="right" /></input>
         <!-- the mouse, or a pad's stick, is the Atari's paddle -->
-        <input axis="mouse.x">
-          <trigger object="bucket" action="steer" />
-        </input>
-        <input axis="pad1.x">
-          <trigger object="bucket" action="steer" />
-        </input>
-        <input button="space p pad1.start">
-          <push state="paused" />
-        </input>
+        <input axis="mouse.x"><trigger object="bucket" action="steer" /></input>
+        <input axis="pad1.x"><trigger object="bucket" action="steer" /></input>
+        <input button="space p pad1.start"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <!-- out of buckets -->
         <condition object="bucket" variable="buckets">
           <atmost>0</atmost>
           <push state="gameover" />
@@ -453,12 +432,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -466,41 +440,31 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p pad1.start">
-          <pop />
-        </input>
+        <input button="space p pad1.start"><pop /></input>
       </inputs>
     </state>
     <state name="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>YOU WIN</content><color>color.yellow</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+        <object name="again">
+          <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
-        <show object="again" />
       </shows>
       <inputs>
-        <input button="space pad1.start">
-          <reset />
-        </input>
+        <input button="space pad1.start"><reset /></input>
       </inputs>
     </state>
     <state name="gameover" from="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
         </object>
       </objects>
     </state>

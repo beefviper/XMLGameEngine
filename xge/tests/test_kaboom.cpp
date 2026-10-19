@@ -8,9 +8,9 @@
 // <timer> with a random wait says so, and drops bombs from a pool on another
 // timer, from under himself (<facing>down</facing>). A bomb caught goes back
 // into the pool; one on the ground costs a bucket and puts every bomb of the
-// wave back at once (<reset object>). The three waves are the scenes of the
+// wave back at once (<reset object>). The eight waves are the scenes of the
 // playing state, each taking the bomber and his pool from the kit with its own
-// pace, drop, fall and points, and the bucket is the state's own.
+// pace, drop, fall and points, and the bucket stack (three looks) is the state's own.
 //
 // Window::init() normally measures each object's size once a backend exists;
 // measure() gives every shape the size its sprite implies instead.
@@ -127,14 +127,14 @@ namespace
 	};
 }
 
-TEST_CASE("kaboom.xml loads a rooftop and a bucket, and a bomber and a pool of ten bombs in each of three waves", "[kaboom]")
+TEST_CASE("kaboom.xml loads a stack of buckets, and a bomber and a pool of ten bombs in each of eight waves", "[kaboom]")
 {
 	Table table;
 
 	CHECK(table.bucket().name == "playing.bucket");
 	CHECK(table.wave() == "playing.wave1");
 
-	for (const char* wave : { "wave1", "wave2", "wave3" })
+	for (const char* wave : { "wave1", "wave2", "wave3", "wave4", "wave5", "wave6", "wave7", "wave8" })
 	{
 		const Object& object = table.game.getObject(of(wave, "bomber"));
 		CHECK(object.hasFacing);
@@ -154,6 +154,7 @@ TEST_CASE("kaboom.xml loads a rooftop and a bucket, and a bomber and a pool of t
 	}
 
 	CHECK(table.buckets() == 3);
+	CHECK(table.bucket().lookName() == "three");
 	CHECK(table.score() == 0);
 }
 
@@ -162,7 +163,7 @@ TEST_CASE("the bomber drops a bomb from under himself every so often, and it fal
 	Table table;
 	const Object& bomber = table.game.getObject(of("wave1", "bomber"));
 
-	table.frames(static_cast<int>(0.55f * kFramerate) - 1);
+	table.frames(static_cast<int>(0.7f * kFramerate) - 1);
 	CHECK(table.falling().empty());
 	table.frames(1);
 
@@ -170,13 +171,13 @@ TEST_CASE("the bomber drops a bomb from under himself every so often, and it fal
 	REQUIRE(first.size() == 1);
 	const Object& bomb = *first[0];
 	CHECK(bomb.velocity.x == Approx(0));
-	CHECK(bomb.velocity.y == Approx(3));
+	CHECK(bomb.velocity.y == Approx(2.5));
 
 	// Under the middle of the bomber, below the rooftop.
 	CHECK(std::abs((bomb.position.x + bomb.size.x / 2) - (bomber.position.x + bomber.size.x / 2)) < 8.0f);
 	CHECK(bomb.position.y >= bomber.position.y + bomber.size.y);
 
-	table.frames(static_cast<int>(0.55f * kFramerate) * 3);
+	table.frames(static_cast<int>(0.7f * kFramerate) * 3 + 1);
 	CHECK(table.falling().size() == 4);
 }
 
@@ -221,9 +222,9 @@ TEST_CASE("held keys slide the bucket and it stops at the sides", "[kaboom]")
 	CHECK(table.bucket().position.x + table.bucket().size.x == Approx(kWindowWidth));
 }
 
-TEST_CASE("a caught bomb scores one, two or three by the wave, and goes back into the pool", "[kaboom]")
+TEST_CASE("a caught bomb scores one to eight by the wave, and goes back into the pool", "[kaboom]")
 {
-	for (const auto& [wave, points] : { std::tuple{ "wave1", 1.0f }, std::tuple{ "wave2", 2.0f }, std::tuple{ "wave3", 3.0f } })
+	for (const auto& [wave, points] : { std::tuple{ "wave1", 1.0f }, std::tuple{ "wave2", 2.0f }, std::tuple{ "wave3", 3.0f }, std::tuple{ "wave8", 8.0f } })
 	{
 		Table table(wave);
 		table.keepPlaying();
@@ -243,7 +244,7 @@ TEST_CASE("a caught bomb scores one, two or three by the wave, and goes back int
 TEST_CASE("a bomb on the ground costs a bucket and sets off every bomb in the air", "[kaboom]")
 {
 	Table table;
-	table.frames(static_cast<int>(0.55f * kFramerate) * 3 + 2);
+	table.frames(static_cast<int>(0.7f * kFramerate) * 3 + 2);
 	auto falling = table.falling();
 	REQUIRE(falling.size() == 3);
 
@@ -254,11 +255,12 @@ TEST_CASE("a bomb on the ground costs a bucket and sets off every bomb in the ai
 	table.frames(2); // it lands on the second
 
 	CHECK(table.buckets() == 2);
+	CHECK(table.bucket().lookName() == "two"); // one bucket off the stack
 	CHECK(table.falling().empty());
 	CHECK(table.score() == 0);
 
 	// The bomber goes on dropping.
-	table.frames(static_cast<int>(0.55f * kFramerate) + 1);
+	table.frames(static_cast<int>(0.7f * kFramerate) + 1);
 	CHECK(table.falling().size() == 1);
 }
 
@@ -276,6 +278,7 @@ TEST_CASE("the third bucket lost ends the game", "[kaboom]")
 	}
 
 	CHECK(table.buckets() == 0);
+	CHECK(table.bucket().lookName() == "one");
 	table.frames(1);
 	CHECK(table.state() == "gameover");
 }
@@ -284,16 +287,16 @@ TEST_CASE("the score moves the game on from wave to wave and to a win", "[kaboom
 {
 	Table table;
 
-	table.bucket().variable["score"] = 15;
-	table.frames(1);
-	CHECK(table.state() == "playing");
-	CHECK(table.wave() == "playing.wave2");
+	const float ends[] = { 10, 50, 140, 300, 550, 1000, 1700 };
+	for (int wave = 0; wave < 7; ++wave)
+	{
+		table.bucket().variable["score"] = ends[wave];
+		table.frames(1);
+		CHECK(table.state() == "playing");
+		CHECK(table.wave() == "playing.wave" + std::to_string(wave + 2));
+	}
 
-	table.bucket().variable["score"] = 45;
-	table.frames(1);
-	CHECK(table.wave() == "playing.wave3");
-
-	table.bucket().variable["score"] = 90;
+	table.bucket().variable["score"] = 2900;
 	table.frames(1);
 	CHECK(table.state() == "youwin");
 }
@@ -302,10 +305,10 @@ TEST_CASE("a wave left is away: its bomber stops where he was and drops nothing 
 {
 	Table table;
 	table.keepPlaying();
-	table.frames(static_cast<int>(0.55f * kFramerate) * 2 + 1);
+	table.frames(static_cast<int>(0.7f * kFramerate) * 2 + 1);
 	REQUIRE(table.falling().size() == 2);
 
-	table.bucket().variable["score"] = 15;
+	table.bucket().variable["score"] = 10;
 	table.frames(1);
 	REQUIRE(table.wave() == "playing.wave2");
 
@@ -316,7 +319,7 @@ TEST_CASE("a wave left is away: its bomber stops where he was and drops nothing 
 	CHECK(table.game.isAway(oldBomber));
 	CHECK_FALSE(table.game.isShown(oldBomber));
 	CHECK(oldBomber.position.x == Approx(x));
-	CHECK(table.falling("wave1").size() == 2);
+	CHECK(table.falling("wave1").empty()); // put away as the wave ended
 	CHECK_FALSE(table.falling("wave2").empty());
 }
 
@@ -326,24 +329,25 @@ TEST_CASE("each wave's bomber is quicker and drops faster bombs more often", "[k
 	const float pace1 = std::abs(table.game.getObject(of("wave1", "bomber")).velocity.x);
 	const float pace2 = std::abs(table.game.getObject(of("wave2", "bomber")).velocity.x);
 	const float pace3 = std::abs(table.game.getObject(of("wave3", "bomber")).velocity.x);
-	CHECK(pace1 == Approx(3));
-	CHECK(pace2 == Approx(4.5));
-	CHECK(pace3 == Approx(6));
+	CHECK(pace1 == Approx(2.5));
+	CHECK(pace2 == Approx(3));
+	CHECK(pace3 == Approx(3.5));
+	CHECK(std::abs(table.game.getObject(of("wave8", "bomber")).velocity.x) == Approx(6));
 
 	const float fall1 = table.game.getObject(of("wave1", "bombs.1")).velocity.y;
 	const float fall2 = table.game.getObject(of("wave2", "bombs.1")).velocity.y;
 	const float fall3 = table.game.getObject(of("wave3", "bombs.1")).velocity.y;
-	CHECK(fall1 == Approx(3));
-	CHECK(fall2 == Approx(4.5));
-	CHECK(fall3 == Approx(6));
+	CHECK(fall1 == Approx(2.5));
+	CHECK(fall2 == Approx(3));
+	CHECK(fall3 == Approx(3.5));
 
-	CHECK(table.game.getVariable("playing.wave2.drop") == Approx(0.42));
+	CHECK(table.game.getVariable("playing.wave2.drop") == Approx(0.6));
 
-	// The third wave drops a bomb every 0.32 seconds.
-	Table third("wave3");
-	third.keepPlaying();
-	third.frames(85); // bombs at about 0.32, 0.64, 0.96 and 1.28 seconds
-	CHECK(third.falling("wave3").size() == 4);
+	// The last wave drops a bomb every 0.24 seconds.
+	Table last("wave8");
+	last.keepPlaying();
+	last.frames(85); // bombs at about 0.24, 0.48, 0.72, 0.96 and 1.2 seconds
+	CHECK(last.falling("wave8").size() >= 5);
 }
 
 TEST_CASE("space starts a new game from the end screen with everything back", "[kaboom]")
@@ -356,7 +360,7 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	engine.handleKeyReleased(KeyCode::Space);
 	REQUIRE(game.getCurrentState().name == "playing");
 
-	game.getObject("bucket").variable["score"] = 15;
+	game.getObject("bucket").variable["score"] = 10;
 	for (int i = 0; i < 90; ++i) { engine.step(); }
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
 	game.getObject("bucket").variable["buckets"] = 0;
@@ -392,7 +396,7 @@ TEST_CASE("the keys carry on from wave to wave, and P or Space pauses over the g
 	CHECK(bucket.position.x == Approx(startX + 9));
 
 	// The next wave is the same state: the held key carries on.
-	bucket.variable["score"] = 15;
+	bucket.variable["score"] = 10;
 	game.updateObjects();
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
 	CHECK(bucket.position.x == Approx(startX + 18));
@@ -411,7 +415,7 @@ TEST_CASE("the keys carry on from wave to wave, and P or Space pauses over the g
 	Object& bomber = game.getObject(of("wave2", "bomber"));
 	CHECK(game.isStill(bucket));
 	CHECK(game.isStill(bomber));
-	CHECK(game.isStill(game.getObject("scorevalue")));
+	CHECK(game.isStill(game.getObject("score")));
 	CHECK_FALSE(game.isStill(game.getObject(of("wave1", "bomber"))));
 	const float x = bomber.position.x;
 	for (int i = 0; i < 30; ++i) { engine.step(); }
@@ -442,9 +446,9 @@ TEST_CASE("the first wave can be played: a quick player catches nearly every bom
 TEST_CASE("the last wave is harder: the same player loses buckets in it", "[kaboom][play]")
 {
 	// Not a promise about any one game (the bomber's path is random), but over
-	// a minute of the third wave the bombs come faster than a bucket can always
+	// a minute of the last wave the bombs come faster than a bucket can always
 	// reach them, so it is not the walkover the first wave is for this player.
-	Table table("wave3");
+	Table table("wave8");
 	table.bucket().variable["buckets"] = 1000.0f;
 
 	for (int frame = 0; frame < 60 * kFramerate && table.state() == "playing"; ++frame)
