@@ -222,6 +222,10 @@ namespace xge
 		// stops the load, unless it is a command's (see processCommands).
 		std::map<std::string, float> liveNumbers;
 
+		// The texts already found to name none of liveNumbers while loading,
+		// so a text many objects share (a map's pieces) is looked through once.
+		std::set<std::string> loadCheckedTexts;
+
 		// Whether a value names anything that changes while the game runs: a
 		// variable of an object's, or one of liveNumbers.
 		bool namesLive(const RawValue& value) const;

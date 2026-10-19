@@ -448,17 +448,26 @@ namespace xge
 				Object* second;
 			};
 
+			// Whether each is in play, asked once: a game with many objects out
+			// of play (the other rooms of a state) would otherwise ask it for
+			// every pair.
+			std::vector<char> playing(all.size());
+			for (std::size_t i = 0; i < all.size(); ++i)
+			{
+				playing[i] = rules.inPlay(all[i]) ? 1 : 0;
+			}
+
 			std::vector<Pair> pairs;
 			for (std::size_t i = 0; i < all.size(); ++i)
 			{
-				if (!rules.inPlay(all[i]))
+				if (!playing[i])
 				{
 					continue;
 				}
 
 				for (std::size_t j = i + 1; j < all.size(); ++j)
 				{
-					if (rules.inPlay(all[j]) && canTouch(all[i], all[j], rules))
+					if (playing[j] && canTouch(all[i], all[j], rules))
 					{
 						pairs.push_back({ &all[i], &all[j] });
 					}

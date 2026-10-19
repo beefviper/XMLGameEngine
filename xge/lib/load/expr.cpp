@@ -1763,7 +1763,7 @@ namespace xge
 		}
 
 		// Where things are has no meaning until the game runs.
-		if (loading && !commandValues && !liveNumbers.empty())
+		if (loading && !commandValues && !liveNumbers.empty() && !loadCheckedTexts.count(text))
 		{
 			std::vector<std::string> names;
 			exprtk::collect_variables(text, names);
@@ -1775,6 +1775,7 @@ namespace xge
 						" a command's value can read it, worked out when the command runs");
 				}
 			}
+			loadCheckedTexts.insert(text);
 		}
 		return expression.value();
 	}
