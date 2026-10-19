@@ -715,7 +715,7 @@ TEST_CASE("a state's music names a sound of the game", "[sound][xml][music][erro
 	CHECK_THROWS_WITH(loadSounds(game), ContainsSubstring("state 'playing': <music sound=\"bleep\" /> names no sound of the game"));
 }
 
-TEST_CASE("Pac-Man's music: the siren loops while play is current, and each ending's tune plays once as it begins", "[sound][engine][music][pacman]")
+TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops while play is current, and the loss plays once", "[sound][engine][music][pacman]")
 {
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
@@ -729,14 +729,20 @@ TEST_CASE("Pac-Man's music: the siren loops while play is current, and each endi
 	engine.step();
 	CHECK(log.looped.empty()); // the title is quiet
 
+	// Space: play, with READY! over it and the opening tune; no siren yet.
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
 	engine.step();
-	REQUIRE(game.getCurrentState().name == "playing");
+	REQUIRE(game.getCurrentState().name == "ready");
 	CHECK(log.played == std::vector<std::string>{ "start" });
+	CHECK(log.looped.empty());
+
+	// READY! goes, and the siren starts, once.
+	for (int i = 0; i < 300 && game.getCurrentState().name == "ready"; ++i) { engine.step(); }
+	REQUIRE(game.getCurrentState().name == "playing");
 	CHECK(log.looped == std::vector<std::string>{ "siren" });
 	engine.step();
-	CHECK(log.looped.size() == 1); // started once
+	CHECK(log.looped.size() == 1);
 
 	// Paused: quiet; back: it starts again.
 	engine.handleKeyPressed(KeyCode::P);
@@ -759,11 +765,4 @@ TEST_CASE("Pac-Man's music: the siren loops while play is current, and each endi
 	CHECK(log.played == std::vector<std::string>{ "start", "lose" });
 	engine.step();
 	CHECK(log.played.size() == 2);
-
-	// A won game plays the win.
-	game.resetAll();
-	game.pushState("playing");
-	game.pushState("youwin");
-	engine.step();
-	CHECK(log.played.back() == "win");
 }

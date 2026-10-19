@@ -7,7 +7,8 @@
 // real xge::Game with no window, and for what it is the first game with: a
 // <map> of characters that places the walls, dots, Pac-Man and the ghosts;
 // a bitmap's <color char>; objects that walk the map (<maze>) by <go>,
-// <hunt> and <wander>; timers that follow a look; and <become from>.
+// <hunt> and <wander>; timers that follow a look; and <become from>. Its
+// maze is the arcade's, 28 tiles by 31.
 //
 // Window::init() normally measures each object's size once a backend exists;
 // measure() gives every shape the size its sprite implies instead.
@@ -34,8 +35,8 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
-	constexpr float kTile = 24.0f;
-	constexpr float kTop = 44.0f;
+	constexpr float kTile = 16.0f;
+	constexpr float kTop = 48.0f;
 
 	void measure(Game& game)
 	{
@@ -76,12 +77,26 @@ namespace
 		}
 
 		// Pac-Man, out of the maze's hands, runs into `other` from its left:
-		// touching happens on the move.
+		// touching happens on the move. Both touch with their hitbox if they
+		// have one.
 		void touch(const Object& other)
 		{
+			const auto box = [](const Object& object, Vector2f& middle, float& half)
+			{
+				const bool own = object.collisionData.hasHitbox;
+				const Vector2f size = own ? object.collisionData.hitboxSize : object.size;
+				middle = object.position + (own ? object.collisionData.hitboxOffset : Vector2f{}) + size * 0.5f;
+				half = size.x * 0.5f;
+			};
 			Object& p = pacman();
+			Vector2f mine{};
+			Vector2f theirs{};
+			float myHalf = 0.0f;
+			float theirHalf = 0.0f;
+			box(p, mine, myHalf);
+			box(other, theirs, theirHalf);
 			p.walk = {};
-			p.position = middleOf(other) - p.size * 0.5f - Vector2f{ (p.size.x + other.size.x) * 0.5f + 1.0f, 0.0f };
+			p.position += theirs - mine - Vector2f{ myHalf + theirHalf + 1.0f, 0.0f };
 			p.velocity = { 3.0f, 0.0f };
 			frames(1);
 			p.velocity = {};
@@ -157,27 +172,33 @@ TEST_CASE("pacman: the map puts every piece on its tile", "[pacman][map]")
 {
 	Maze maze;
 
-	// Pac-Man's '@' is on column 8 of row 16, and he sits in the middle of it.
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(8, 16).x));
-	CHECK(middleOf(maze.pacman()).y == Approx(tile(8, 16).y));
+	// Pac-Man's '@' is on column 14 of row 23, and he sits in the middle of it.
+	CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x));
+	CHECK(middleOf(maze.pacman()).y == Approx(tile(14, 23).y));
 	CHECK(maze.pacman().inGroup("playing.maze"));
 
-	// A member on each tile of its character, numbered in reading order.
-	CHECK(maze.count("playing.dots") == 150);
+	// The arcade's maze: 240 dots and four pellets, one group of food.
+	CHECK(maze.count("playing.dots") == 240);
 	CHECK(maze.count("playing.pellets") == 4);
-	CHECK(maze.count("playing.walls") == 192);
-	CHECK(middleOf(maze.game.getObject("playing.pellets.1")).x == Approx(tile(1, 2).x));
-	CHECK(middleOf(maze.game.getObject("playing.pellets.1")).y == Approx(tile(1, 2).y));
-	CHECK(middleOf(maze.game.getObject("playing.door.1")).x == Approx(tile(9, 8).x));
+	CHECK(maze.count("playing.food") == 244);
+	CHECK(maze.count("playing.walls") == 480);
+	CHECK(middleOf(maze.game.getObject("playing.pellets.1")).x == Approx(tile(1, 3).x));
+	CHECK(middleOf(maze.game.getObject("playing.pellets.1")).y == Approx(tile(1, 3).y));
+	CHECK(middleOf(maze.game.getObject("playing.door.1")).x == Approx(tile(13, 12).x));
+	CHECK(maze.game.getObject("playing.door.1").inGroup("playing.walls"));
+	CHECK(maze.game.getObject("playing.door.1").objClass == "door");
 
 	// The ghosts: Blinky above the door, the others in the house.
-	CHECK(middleOf(maze.ghost("blinky")).x == Approx(tile(9, 7).x));
-	CHECK(middleOf(maze.ghost("inky")).x == Approx(tile(8, 9).x));
-	CHECK(middleOf(maze.ghost("clyde")).x == Approx(tile(10, 9).x));
+	CHECK(middleOf(maze.ghost("blinky")).x == Approx(tile(14, 11).x));
+	CHECK(middleOf(maze.ghost("inky")).x == Approx(tile(12, 14).x));
+	CHECK(middleOf(maze.ghost("clyde")).x == Approx(tile(16, 14).x));
 	CHECK(maze.ghost("clyde").inGroup("playing.ghosts"));
-
-	// A ghost's eyes are white on its own color (<color char>).
 	CHECK(maze.ghost("blinky").lookName() == "normal");
+
+	// A wall piece gives only its rows: its scale and colour are the walls'.
+	const Object& corner = maze.game.getObject("playing.topleft.1");
+	CHECK(corner.size.x == Approx(kTile));
+	CHECK(corner.size.y == Approx(kTile));
 }
 
 TEST_CASE("pacman: Pac-Man goes the way pressed, turns at a gap and stops at a wall", "[pacman][maze]")
@@ -185,34 +206,34 @@ TEST_CASE("pacman: Pac-Man goes the way pressed, turns at a gap and stops at a w
 	Maze maze;
 	maze.onlyGhost("");
 
-	// Nothing until a key: then left along row 16 at his speed, in the lane.
+	// Nothing until a key: then left along row 23 at his speed, in the lane.
 	maze.frames(5);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(8, 16).x));
+	CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x));
 	maze.press("left");
 	maze.frames(10);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(8, 16).x - 25.0f));
-	CHECK(middleOf(maze.pacman()).y == Approx(tile(8, 16).y));
+	CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x - 20.0f));
+	CHECK(middleOf(maze.pacman()).y == Approx(tile(14, 23).y));
 	CHECK(maze.pacman().facing == Direction::Left);
 	CHECK(maze.pacman().heading == Approx(270.0f));
 
-	// Row 16 is open from column 4 to 14: he stops in the middle of column 4.
+	// Row 23 is open from column 6 to 21: he stops in the middle of column 6.
 	maze.frames(60);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(4, 16).x));
+	CHECK(middleOf(maze.pacman()).x == Approx(tile(6, 23).x));
 	CHECK(maze.pacman().velocity.x == 0.0f);
 
-	// Up is wished before the gap: column 4 is open above, so he goes up there.
+	// Up is wished before the gap: column 6 is open above, so he goes up there.
 	maze.press("right");
 	maze.press("up");
 	maze.frames(30);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(4, 16).x));
-	CHECK(middleOf(maze.pacman()).y < tile(4, 16).y);
+	CHECK(middleOf(maze.pacman()).x == Approx(tile(6, 23).x));
+	CHECK(middleOf(maze.pacman()).y < tile(6, 23).y);
 	CHECK(maze.pacman().facing == Direction::Up);
 
 	// Straight back at once.
 	const float y = middleOf(maze.pacman()).y;
 	maze.press("down");
 	maze.frames(1);
-	CHECK(middleOf(maze.pacman()).y == Approx(y + 2.5f));
+	CHECK(middleOf(maze.pacman()).y == Approx(y + 2.0f));
 }
 
 TEST_CASE("pacman: a press for a way that is not open waits for the first gap", "[pacman][maze]")
@@ -220,28 +241,29 @@ TEST_CASE("pacman: a press for a way that is not open waits for the first gap", 
 	Maze maze;
 	maze.onlyGhost("");
 
-	// Going right along row 16 with down wished: the first gap below is
-	// column 12 (columns 9 to 11 have walls under them), 96 pixels on.
+	// Going right along row 23 with down wished: the first gap below is
+	// column 18 (columns 15 to 17 have walls under them), 64 pixels on.
 	maze.press("right");
 	maze.frames(2);
 	maze.press("down");
-	maze.frames(30);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(8, 16).x + 80.0f));
-	CHECK(middleOf(maze.pacman()).y == Approx(tile(8, 16).y));
+	maze.frames(24);
+	CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x + 52.0f));
+	CHECK(middleOf(maze.pacman()).y == Approx(tile(14, 23).y));
 	maze.frames(20);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(12, 16).x));
-	CHECK(middleOf(maze.pacman()).y > tile(12, 16).y);
+	CHECK(middleOf(maze.pacman()).x == Approx(tile(18, 23).x));
+	CHECK(middleOf(maze.pacman()).y > tile(18, 23).y);
 	CHECK(maze.pacman().facing == Direction::Down);
 }
 
-TEST_CASE("pacman: dots and pellets are eaten", "[pacman]")
+TEST_CASE("pacman: dots are eaten as he goes", "[pacman]")
 {
 	Maze maze;
 	maze.onlyGhost("");
 	maze.press("left");
-	maze.frames(60);
-	CHECK(maze.count("playing.dots") == 146);
-	CHECK(maze.status("score") == 40.0f);
+	maze.frames(70);
+	// Columns 12 to 6 of row 23: seven dots (column 13 has none).
+	CHECK(maze.count("playing.dots") == 233);
+	CHECK(maze.status("score") == 70.0f);
 }
 
 TEST_CASE("pacman: the tunnel runs off the map and round", "[pacman][maze]")
@@ -249,29 +271,32 @@ TEST_CASE("pacman: the tunnel runs off the map and round", "[pacman][maze]")
 	Maze maze;
 	maze.onlyGhost("");
 	Object& pacman = maze.pacman();
-	pacman.position = tile(4, 9) - pacman.size * 0.5f;
+	pacman.position = tile(6, 14) - pacman.size * 0.5f;
 	maze.press("left");
-	maze.frames(60);
+	maze.frames(70);
 	// Off the map he goes straight on, and wraps round to the right side.
-	CHECK(middleOf(pacman).y == Approx(tile(4, 9).y));
-	CHECK(middleOf(pacman).x > tile(14, 9).x);
+	CHECK(middleOf(pacman).y == Approx(tile(6, 14).y));
+	CHECK(middleOf(pacman).x > tile(21, 14).x);
 	maze.frames(30);
-	CHECK(middleOf(pacman).x == Approx(tile(14, 9).x).margin(30.0f));
+	CHECK(middleOf(pacman).x == Approx(tile(24, 14).x).margin(30.0f));
 	CHECK(pacman.facing == Direction::Left);
 }
 
-TEST_CASE("pacman: Blinky hunts Pac-Man through the maze", "[pacman][hunt]")
+TEST_CASE("pacman: Blinky scatters to his corner, then hunts Pac-Man through the maze", "[pacman][hunt]")
 {
 	Maze maze;
 	maze.onlyGhost("blinky");
 	Object& blinky = maze.ghost("blinky");
 
-	// He sets off at once, along row 7, and never steps onto a wall.
+	// He sets off at once, for the top right corner, and never steps onto a wall.
 	maze.frames(1);
-	CHECK((blinky.velocity.x != 0.0f || blinky.velocity.y != 0.0f));
-	for (int i = 0; i < 600 && maze.state() == "playing"; ++i)
+	CHECK(blinky.walk.mode == Walk::Mode::Hunt);
+	CHECK(blinky.walk.hunt.target == "playing.topright");
+	bool chased = false;
+	for (int i = 0; i < 1500 && maze.state() == "playing"; ++i)
 	{
 		maze.frames(1);
+		chased = chased || blinky.walk.hunt.target == "playing.pacman";
 		const Vector2f middle = middleOf(blinky);
 		const int column = static_cast<int>(middle.x / kTile);
 		const int row = static_cast<int>((middle.y - kTop) / kTile);
@@ -284,8 +309,14 @@ TEST_CASE("pacman: Blinky hunts Pac-Man through the maze", "[pacman][hunt]")
 		}
 	}
 
-	// And he catches him: a life lost, everyone back where they started.
-	CHECK(maze.status("lives") < 3.0f);
+	// After seven seconds he chases, and catches him: a life lost, and READY!
+	// over everyone back where they started.
+	CHECK(chased);
+	CHECK(maze.status("lives") == 2.0f);
+	CHECK(maze.state() == "caught");
+	CHECK(middleOf(blinky).x == Approx(tile(14, 11).x));
+	maze.frames(130);
+	CHECK(maze.state() == "playing");
 }
 
 TEST_CASE("pacman: the ghosts in the house come out one by one", "[pacman][hunt]")
@@ -295,14 +326,15 @@ TEST_CASE("pacman: the ghosts in the house come out one by one", "[pacman][hunt]
 	maze.ghost("inky").isVisible = true;
 	Object& pinky = maze.ghost("pinky");
 	Object& inky = maze.ghost("inky");
+	const float door = tile(13, 12).y;
 	maze.frames(30);
-	CHECK(middleOf(pinky).y > tile(9, 8).y);
-	maze.frames(60);
-	CHECK(pinky.isFollowing());
+	CHECK(middleOf(pinky).y > door);
 	maze.frames(40);
-	CHECK(middleOf(pinky).y < tile(9, 8).y);
+	CHECK(pinky.isFollowing());
+	for (int i = 0; i < 200 && pinky.isFollowing(); ++i) { maze.frames(1); }
 	CHECK_FALSE(pinky.isFollowing());
-	CHECK(middleOf(inky).y > tile(9, 8).y);
+	CHECK(middleOf(pinky).y == Approx(tile(14, 11).y));
+	CHECK(middleOf(inky).y > door);
 }
 
 TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "[pacman][looks]")
@@ -319,7 +351,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	CHECK(blinky.lookName() == "blue");
 	maze.frames(1);
 	CHECK(blinky.walk.mode == Walk::Mode::Wander);
-	CHECK(blinky.walk.speed == Approx(1.25f));
+	CHECK(blinky.walk.speed == Approx(1.0f));
 
 	// The eyes of one not blue stay eyes (<become from>), and a second pellet
 	// starts the blue over (the timer follows the look).
@@ -342,9 +374,11 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	maze.frames(1);
 	const float before = maze.status("score");
 	maze.touch(blinky);
-	// (and maybe a dot on the way in)
-	CHECK(maze.status("score") - before >= 200.0f);
-	CHECK(maze.status("score") - before <= 210.0f);
+	// (Where the ghost wandered to, Pac-Man may eat a dot on the way.)
+	const float scored = maze.status("score") - before;
+	CHECK(scored >= 200.0f);
+	CHECK(scored < 250.0f);
+	CHECK(maze.status("worth") == 400.0f);
 	CHECK(blinky.lookName() == "eyes");
 	CHECK(maze.status("lives") == 3.0f);
 	bool home = false;
@@ -357,11 +391,70 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	CHECK(blinky.isFollowing());
 	maze.frames(50);
 	CHECK_FALSE(blinky.isFollowing());
-	CHECK(middleOf(blinky).y == Approx(tile(9, 7).y));
+	CHECK(middleOf(blinky).y == Approx(tile(14, 11).y));
 	CHECK(blinky.walk.mode == Walk::Mode::Hunt);
 }
 
-TEST_CASE("pacman: caught three times is game over; every dot eaten wins", "[pacman]")
+TEST_CASE("pacman: each ghost eaten on one pellet is worth twice the one before", "[pacman][looks]")
+{
+	Maze maze;
+	maze.touch(maze.game.getObject("playing.pellets.1"));
+	maze.frames(1);
+	const float before = maze.status("score");
+	maze.touch(maze.ghost("pinky"));
+	maze.touch(maze.ghost("inky"));
+	maze.touch(maze.ghost("clyde"));
+	CHECK(maze.status("score") - before == 200.0f + 400.0f + 800.0f);
+	CHECK(maze.status("worth") == 1600.0f);
+
+	// The next pellet starts again at 200.
+	maze.touch(maze.game.getObject("playing.pellets.2"));
+	CHECK(maze.status("worth") == 200.0f);
+}
+
+TEST_CASE("pacman: the cherry shows after 70 dots, for a while, and scores 100", "[pacman][looks]")
+{
+	Maze maze;
+	maze.onlyGhost("");
+	Object& fruit = maze.game.getObject("playing.fruit");
+	CHECK(fruit.lookName() == "none");
+
+	int eaten = 0;
+	for (auto& object : maze.game.getCurrentObjects())
+	{
+		if (object.inGroup("playing.dots") && eaten < 70)
+		{
+			object.isVisible = false;
+			++eaten;
+		}
+	}
+	maze.frames(1);
+	CHECK(fruit.lookName() == "cherry");
+	CHECK(maze.status("fruits") == 1.0f);
+	maze.frames(5);
+	CHECK(fruit.lookName() == "cherry"); // shown once, not over and over
+
+	const float before = maze.status("score");
+	maze.touch(fruit);
+	CHECK(maze.status("score") - before == 100.0f);
+	CHECK(fruit.lookName() == "none");
+
+	// After 170, again, gone by itself in nine and a half seconds.
+	for (auto& object : maze.game.getCurrentObjects())
+	{
+		if (object.inGroup("playing.dots") && object.isVisible && eaten < 170)
+		{
+			object.isVisible = false;
+			++eaten;
+		}
+	}
+	maze.frames(1);
+	CHECK(fruit.lookName() == "cherry");
+	maze.frames(580);
+	CHECK(fruit.lookName() == "none");
+}
+
+TEST_CASE("pacman: caught three times is game over; a cleared maze is the next round", "[pacman]")
 {
 	SECTION("caught")
 	{
@@ -369,22 +462,44 @@ TEST_CASE("pacman: caught three times is game over; every dot eaten wins", "[pac
 		maze.onlyGhost("blinky");
 		for (int i = 0; i < 3; ++i)
 		{
+			REQUIRE(maze.state() == "playing");
 			maze.touch(maze.ghost("blinky"));
+			maze.frames(130);
 		}
 		CHECK(maze.status("lives") == 0.0f);
-		maze.frames(1);
 		CHECK(maze.state() == "gameover");
 	}
-	SECTION("won")
+	SECTION("cleared")
 	{
 		Maze maze;
+		maze.press("left");
+		maze.frames(20);
 		for (auto& object : maze.game.getCurrentObjects())
 		{
 			if (object.objClass == "food") { object.isVisible = false; }
 		}
 		maze.frames(1);
-		CHECK(maze.state() == "youwin");
+		CHECK(maze.state() == "caught");
+		CHECK(maze.count("playing.food") == 244);
+		CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x));
+		CHECK(maze.status("pace") == Approx(1.9375f));
+		CHECK(maze.status("fright") == 5.0f);
+		CHECK(maze.status("lives") == 3.0f);
 	}
+}
+
+TEST_CASE("pacman: a life is won at 10,000 points, once, and the best score is kept", "[pacman]")
+{
+	Maze maze;
+	maze.onlyGhost("");
+	maze.game.getObject("playing.status").variable["score"] = 10000.0f;
+	maze.frames(1);
+	CHECK(maze.status("lives") == 4.0f);
+	maze.frames(5);
+	CHECK(maze.status("lives") == 4.0f);
+	CHECK(maze.game.getObject("best").variable["score"] == 10000.0f);
+	maze.game.resetAll();
+	CHECK(maze.game.getObject("best").variable["score"] == 10000.0f);
 }
 
 TEST_CASE("map: what a <map> turns away", "[map]")

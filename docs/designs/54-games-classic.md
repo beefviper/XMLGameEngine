@@ -15,7 +15,7 @@
 | Astrosmash | Kaboom's pieces plus a gun | nothing | splitting rocks (a pool and `<release>` would now do it, as in Asteroids) |
 | Lunar Lander | gravity, held limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, accelerate/burn, stop, slower/faster | rotation (headings exist now), score by fuel |
 | Asteroids | facing, coasting, shots from a nose, wrapping, breaking | heading, turn, thrust, drag, hidden, release, amounts | wrapping and expiring shots, saucer, waves, a safe respawn |
-| Pac-Man | a tile maze, steering, four ghosts each chasing its own way | `<map>`, `<maze>`, `<go>`, `<hunt>`, `<wander>`, bitmap inks, look timers, `<become from>` | scatter mode, fruit, levels, points doubling per ghost, the dot counters that let ghosts out, the arcade's own maze ([below](#pac-man)) |
+| Pac-Man | a tile maze, steering, four ghosts each chasing its own way | `<map>`, `<maze>`, `<go>`, `<hunt>`, `<wander>`, bitmap inks, look timers, `<become from>` | the arcade's schedule of scatter waves, the dot counters that let ghosts out, the other fruit ([below](#pac-man)) |
 | Berserk, Demon Attack, Frostbite (first written by another AI; all three since rewritten) | can the schema alone be enough for an author | (found gaps) then timers, facing, jump, looks, key sets; later chasing and aiming | |
 | Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania | five Atari 2600 games picked because today's verbs already say them | nothing | see [below](56-games-atari.md#five-atari-2600-games) |
 
@@ -90,9 +90,10 @@
 
 ## Pac-Man
 
-- A smaller maze of its own (19 by 22 tiles), drawn as a `<map>` in wall characters; the arcade's 28 by 31 would have filled the window with tiny tiles and is not ours to copy.
+- The arcade's maze, 28 by 31 tiles of 16 pixels in a 448 by 576 window (the arcade's screen at twice its size), drawn as a `<map>` in wall characters. It was first a smaller maze of its own (19 by 22); in 2026-10 Beef asked for the games to come closer to the originals, and the arcade's own layout is what Pac-Man players know. The pieces were worked out from the arcade's block layout: a line between two wall tiles is drawn unless both sides of it are wall, which outlines every block through the middle of its edge tiles, as the arcade does.
 - Ghosts: Blinky hunts Pac-Man, Pinky four tiles ahead of him, Inky doubles the point two ahead away from Blinky, Clyde hunts until within eight tiles and then heads for his corner. They leave the house on paths after 1, 5 and 10 seconds (Blinky starts outside). A pellet turns them blue (they wander, slower) for six seconds; an eaten ghost is eyes that hunt the house through the door and turn normal inside.
-- Kept simple: a ghost is a flat 200 points; one maze and no levels; ghosts always chase (no scatter waves); speeds are guesses, unplayed by agents.
+- Speeds are the arcade's first level at twice its size (Pac-Man 2 pixels a frame, ghosts 1.875, blue 1). Each time a ghost is itself again it scatters to its own corner (members of a `corners` group off the maze) for seven seconds, then chases; a ghost eaten is worth `status.worth`, which a pellet sets to 200 and each ghost eaten doubles (a `<set>` read as it runs). A cherry (an object of two looks) shows after 70 and 170 dots for 9.5 seconds; a cleared maze is the next round, the ghosts a sixteenth faster up to 2.125 and blue a second less; a life at 10,000; the best score `<keeps>`. READY! is a state over the still maze (`caught`, and `ready`, a copy with the opening tune), popped by an `<every>` timer, since an `<after>` in a state goes off only once a game.
+- Kept simple: one scatter after each fright rather than the arcade's waves; ghosts leave the house on timers; one fruit; no slowing in the tunnel; the ghosts' eyes do not look where they go; speeds unplayed by agents.
 
 ## The paddle and ball rewrite
 
