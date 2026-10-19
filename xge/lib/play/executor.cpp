@@ -547,6 +547,14 @@ namespace xge
 	{
 		Object& object = game.getObject(objectName);
 
+		// An object out of play does not act on a key: a ship that is not
+		// there does not fire, and a cannon not yet brought in does nothing.
+		// Letting go still goes through, so nothing stays held.
+		if (keyPressed && !object.isVisible)
+		{
+			return;
+		}
+
 		for (const auto& written : object.action[actionName])
 		{
 			Command made;

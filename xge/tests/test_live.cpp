@@ -279,6 +279,22 @@ TEST_CASE("a group gives its members a <heading>, each turned on its own", "[liv
 	CHECK(play.get("missiles.2").heading == Approx(270).margin(1));
 }
 
+TEST_CASE("an object out of play does not act on a key", "[live]")
+{
+	const Scratch file(box("gun", 100, 300, "<hidden>true</hidden><actions><action name=\"fire\"><fire object=\"shot\" /></action></actions>")
+		+ box("shot", 0, 0, "<velocity><x>0</x><y>-4</y></velocity><hidden>true</hidden>"), "<trigger object=\"gun\" action=\"fire\" />");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK_FALSE(play.get("shot").isVisible);
+
+	play.get("gun").isVisible = true;
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("shot").isVisible);
+}
+
 TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed for its worth, and back in its row", "[live][fishingderby]")
 {
 	Played play("descriptions/fishingderby.xml");

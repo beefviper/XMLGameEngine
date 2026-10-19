@@ -16,6 +16,7 @@
 - **Chosen: an action (on the press), an object's timer or a path step stops at the first verb refused** (`<fire>` with no projectile free, `<hop>`, `<jump>`, hunt by hops, `<leap>`). Each verb already knew; it now says so (`CommandExecutor` returns false) and the list ends. No new tag, and every shipped game already wrote the verb first. Commands before it still run, which Berserk's robots need (`<aim>` before `<fire>`).
 - Looked at: running the verbs first and the rest after (breaks an `<aim>` that must come before), and a wrapper such as `<try><fire/><then>...</then></try>` (the same order said with more tags, and something every author would have to remember).
 - Open: a `<spawn>` with nothing out of play (nothing comes in and the rest runs; a game makes sure one is out of play first), a sound for a refused press (an empty click), collision rules.
+- **An object out of play does not act (2026-10-19).** Yars' Revenge's Space fires Yar's missile and, once a bite has brought it in, the Zorlon cannon; with the cannon hidden its action fired the blast from where it waited unseen, and the Asteroids ship fired while it was gone. Chosen: a press or a `<trigger>` of an action of a hidden or dead object does nothing; letting go still goes through, so a held move is let go. Looked at: a test inside the action (an action has no conditions, and every game would have to write it), a state per case (a playing state with and without the cannon, the same inputs twice).
 
 ### Held keys across state changes
 

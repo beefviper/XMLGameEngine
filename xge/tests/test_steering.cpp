@@ -433,7 +433,7 @@ TEST_CASE("qbert.xml: a disc carries Q*bert back to the top once, and Coily chas
 	CHECK(play.get("player").variable.at("lives") == Approx(2));
 }
 
-TEST_CASE("yarsrevenge.xml: the missile homes on Yar, the zone keeps him safe, and the cannon leaves level with him", "[steering][yarsrevenge]")
+TEST_CASE("yarsrevenge.xml: the missile homes on Yar, and the neutral zone keeps him safe", "[steering][yarsrevenge]")
 {
 	Played play("descriptions/yarsrevenge.xml");
 	play.tap(KeyCode::Space);
@@ -448,30 +448,114 @@ TEST_CASE("yarsrevenge.xml: the missile homes on Yar, the zone keeps him safe, a
 	play.get("yar").position = { 320, 300 };
 	play.get("missile").position = { 322, 302 };
 	play.frames(2);
-	CHECK(play.get("player").variable.at("lives") == Approx(3));
+	CHECK(play.get("player").variable.at("lives") == Approx(4));
 
 	// Out of it, it costs a Yar and goes back to the Qotile.
 	play.get("yar").position = { 100, 300 };
 	play.get("missile").position = { 104, 304 };
 	play.frames(2);
-	CHECK(play.get("player").variable.at("lives") == Approx(2));
+	CHECK(play.get("player").variable.at("lives") == Approx(3));
 	CHECK(play.get("yar").position.x == Approx(60));
 	CHECK(play.get("missile").position.x > 600.0f);
 
-	// The cannon comes in at the left edge, its middle level with Yar's.
-	play.get("yar").position = { 200, 400 };
+	// Off the top, Yar comes in at the bottom.
+	play.get("missile").position = { 700, 500 };
+	play.get("yar").position = { 100, 4 };
+	play.engine.handleKeyPressed(KeyCode::W);
+	play.frames(12);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(play.get("yar").position.y > 500.0f);
+}
+
+TEST_CASE("yarsrevenge.xml: the shield and the Qotile go up and down together", "[steering][yarsrevenge]")
+{
+	Played play("descriptions/yarsrevenge.xml");
 	play.tap(KeyCode::Space);
-	CHECK(play.get("cannon").isVisible);
-	CHECK(play.get("cannon").position.y + 6 == Approx(412));
-	CHECK(play.get("cannon").position.x == Approx(0));
+	play.get("missile").position = { 10, 10 };
+	const Object& qotile = play.get("qotile");
+	const Object& cell = play.get("cells.1");
+	const float gap = qotile.position.y - cell.position.y;
+	const float top = cell.position.y;
+
+	play.frames(180);
+	CHECK(cell.position.y > top + 100.0f);
+	CHECK(qotile.position.y - cell.position.y == Approx(gap));
+
+	// Past the turn: on the way back up, still together.
+	play.frames(300);
+	CHECK(cell.velocity.y < 0.0f);
+	CHECK(qotile.velocity.y < 0.0f);
+	CHECK(qotile.position.y - cell.position.y == Approx(gap));
+}
+
+TEST_CASE("yarsrevenge.xml: a bite brings the cannon level with Yar, and its blast takes the Qotile", "[steering][yarsrevenge]")
+{
+	Played play("descriptions/yarsrevenge.xml");
+	play.tap(KeyCode::Space);
+	play.get("missile").position = { 10, 10 };
+
+	// With no cannon, Space fires only Yar's energy missile.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("energy").isVisible);
+	CHECK_FALSE(play.get("cannon").isVisible);
+	CHECK_FALSE(play.get("blast").isVisible);
 
 	// Yar eats a cell of the shield.
-	play.get("missile").position = { 10, 10 };
-	Object& cell = play.get("shield.1.1");
+	const Object& cell = play.get("cells.1");
 	play.get("yar").position = cell.position - Vector2f{ 26, 0 };
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(3);
 	play.engine.handleKeyReleased(KeyCode::D);
-	CHECK_FALSE(play.get("shield.1.1").isVisible);
+	CHECK_FALSE(cell.isVisible);
 	CHECK(play.get("player").variable.at("score") >= 69.0f);
+
+	// The cannon is in at the left edge, following him up and down.
+	const Object& cannon = play.get("cannon");
+	REQUIRE(cannon.isVisible);
+	CHECK(cannon.position.x == Approx(0));
+	play.get("yar").position = { 120, 400 };
+	play.frames(2);
+	CHECK(cannon.position.y == Approx(404));
+
+	// Space fires it, and it is gone until the next bite.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("blast").isVisible);
+	CHECK_FALSE(cannon.isVisible);
+
+	// Into the Qotile: 1000, and a moment later the shield is back whole.
+	Object& qotile = play.get("qotile");
+	play.get("blast").position = { qotile.position.x - 25, qotile.position.y + 4 };
+	play.frames(4);
+	CHECK_FALSE(qotile.isVisible);
+	CHECK(play.get("player").variable.at("score") >= 1069.0f);
+	play.frames(1);
+	CHECK(play.state() == "destroyed");
+	play.frames(130);
+	CHECK(play.state() == "playing");
+	CHECK(qotile.isVisible);
+	CHECK(cell.isVisible);
+}
+
+TEST_CASE("yarsrevenge.xml: the Swirl leaves the Qotile and flies at where Yar is", "[steering][yarsrevenge]")
+{
+	Played play("descriptions/yarsrevenge.xml");
+	play.tap(KeyCode::Space);
+	const Object& swirl = play.get("swirl");
+
+	int waited = 0;
+	for (; waited < 600 && !swirl.isVisible; ++waited)
+	{
+		play.get("missile").position = { 10, 10 };
+		play.frames(1);
+	}
+	REQUIRE(swirl.isVisible);
+	CHECK(waited >= 5 * 60 - 1);
+	CHECK(swirl.position.x > 600.0f);
+	CHECK(swirl.velocity.x == 0.0f);
+
+	play.get("missile").position = { 10, 10 };
+	play.frames(61);
+	CHECK(swirl.velocity.x < -3.0f);
 }
