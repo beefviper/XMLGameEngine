@@ -5,27 +5,38 @@
 
 <!--
   Mario Bros., after the 1983 arcade game: Mario in the sewer under four
-  levels of brick floor, with shellcreepers coming out of the pipes at the
-  top. Jump up and bump the floor under one to turn it on its back, then run
-  into it to kick it off for 800 points. A shellcreeper still on its feet
-  costs a life; one left on its back too long gets up and comes out of its
-  pipe at the top again, as does one that walks into a pipe at the bottom.
-  The POW block turns over every shellcreeper on its feet at once, three
-  times. Kick off all six to win. The high score is kept.
+  levels of brick floor. Shellcreepers come out of the pipes at the top, one
+  after another, walk off the ends of the floors down to the bottom and go
+  into the pipes there, to come out at the top again. Jump up and bump the
+  floor under one to turn it on its back, then run into it to kick it off
+  for 800 points; bump it again first and it gets back up. A shellcreeper
+  still on its feet costs a life (Mario comes back pale, safe for two
+  seconds), and one left on its back too long gets up where it lies and
+  walks on faster. The POW block turns over every
+  shellcreeper on its feet at once, three times. Kick off all six to win.
+  The high score is kept.
 
   A or D (or the arrows) walk, Space starts and jumps, P or Escape pauses.
 
   It is the game a <knock> through a floor was made for:
   * Mario has no <mass>, and nor has a floor: his head hitting a floor from
     below is a <knock> that goes through it, to whatever with a mass stands
-    on that piece of floor. That shellcreeper is knocked up off the floor
-    and runs its own rules about Mario as touched on its bottom side, which
-    turn it over (<become sprite="flipped" />).
+    on that piece of floor. That shellcreeper runs its own rules about Mario
+    as touched on its bottom side: a little hop, and it goes over
+    (<become sprite="flipped" />) or gets back up.
   * The floors are bricks, one bitmap in a group of floors laid out in
     columns, so a bump reaches only what stands over the brick Mario hit.
   * Which side of a shellcreeper Mario touches decides what happens:
     side="bottom" is a bump through the floor, side="horizontal" and
     side="top" are Mario walking or falling into it.
+  * On its back a shellcreeper keeps the way it was going (self.way) and
+    lies still; getting up, it sets off that way again. Its down says it
+    has lain there a moment, so the bump that turns it over does not also
+    run the rule that gets it up.
+  * The shellcreepers start out of play and are let out by the state's
+    timers. They are drawn before the pipes, so they come out of them and
+    go into them, and one on the ground deep in a pipe at either side is
+    reset to its start, in its pipe at the top.
   * The POW block's looks are how many bumps it has left; each bump turns
     over the whole group (<become object="creepers" from="walking">).
   * Everything wraps round the sides of the screen.
@@ -45,6 +56,7 @@
     <variable name="pull">0.4</variable>
     <variable name="walk">2.5</variable>
     <variable name="crawl">1.2</variable>
+    <variable name="hop">4</variable>
     <variable name="leapheight">140</variable>
     <variable name="margin">16</variable>
   </variables>
@@ -245,74 +257,6 @@
             <position><x>window.right - 320</x><y>196</y></position>
           </group>
         </group>
-        <!-- the pipes the shellcreepers come out of, up in the corners -->
-        <group name="spouts">
-          <sprite>
-            <bitmap>
-              <row>.................gGGG.</row>
-              <row>.................gGGG.</row>
-              <row>...............gggGGGG</row>
-              <row>...............gggGGGG</row>
-              <row>gggggggggggggggggGGGG.</row>
-              <row>GGGGGGGGGGGGGGGGGGGGG.</row>
-              <row>GGGGGGGGGGGGGGGGGGGGG.</row>
-              <row>......................</row>
-              <row>GGGGGGGGGGGGGGGGGGGGG.</row>
-              <row>.ggggggggggggggggGGGG.</row>
-              <row>...............gggGGGG</row>
-              <row>...............gggGGGG</row>
-              <scale>3</scale>
-              <color char="g">color.green</color>
-              <color char="G">color.darkgreen</color>
-            </bitmap>
-          </sprite>
-          <member><position><x>0</x><y>130</y></position></member>
-          <member>
-            <sprite>
-              <bitmap>
-                <row>.GGGg.................</row>
-                <row>.GGGg.................</row>
-                <row>GGGGggg...............</row>
-                <row>GGGGggg...............</row>
-                <row>.GGGGggggggggggggggggg</row>
-                <row>.GGGGGGGGGGGGGGGGGGGGG</row>
-                <row>.GGGGGGGGGGGGGGGGGGGGG</row>
-                <row>......................</row>
-                <row>.GGGGGGGGGGGGGGGGGGGGG</row>
-                <row>.GGGGggggggggggggggggg</row>
-                <row>GGGGggg...............</row>
-                <row>GGGGggg...............</row>
-              </bitmap>
-            </sprite>
-            <position><x>window.right - 66</x><y>130</y></position>
-          </member>
-        </group>
-        <!-- the pipes at the bottom, which take a shellcreeper back up to its
-             start -->
-        <group name="pipes" class="pipe">
-          <sprite>
-            <bitmap>
-              <row>gggggggggg</row>
-              <row>gGGGGGGGGg</row>
-              <row>gggggggggg</row>
-              <row>.gGGGGGGg.</row>
-              <row>.gGGGGGGg.</row>
-              <row>.gGGGGGGg.</row>
-              <row>.gGGGGGGg.</row>
-              <row>.gGGGGGGg.</row>
-              <row>.gGGGGGGg.</row>
-              <row>.gGGGGGGg.</row>
-              <scale>4</scale>
-              <color char="g">color.green</color>
-              <color char="G">color.darkgreen</color>
-            </bitmap>
-          </sprite>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
-          <member><position><x>0</x><y>544</y></position></member>
-          <member><position><x>window.right - 40</x><y>544</y></position></member>
-        </group>
         <!-- POW: bumped from below, every shellcreeper on its feet goes over;
              it shrinks with each bump, and is gone after three -->
         <object name="pow" class="pow">
@@ -382,6 +326,9 @@
             </collision>
           </collisions>
         </object>
+        <!-- out of play until the state's timers let them out of the top
+             pipes, the odd ones on the left going right, the even ones on
+             the right going left -->
         <group name="creepers" class="enemy">
           <sprite name="walking">
             <bitmap>
@@ -421,8 +368,11 @@
               <color char="w">color.white</color>
             </bitmap>
           </sprite>
+          <position><x>4</x><y>196 - 20</y></position>
+          <velocity><x>crawl</x></velocity>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <mass>1</mass>
+          <hidden>true</hidden>
           <collisions>
             <enabled>true</enabled>
             <collision edge="horizontal">
@@ -431,73 +381,140 @@
             <collision class="floor">
               <land />
             </collision>
-            <!-- on its back it lies where it comes down -->
-            <collision class="floor" sprite="flipped">
-              <stop />
-            </collision>
-            <collision class="pipe">
+            <!-- on the ground and deep in a pipe at either side: back out of
+                 its pipe at the top -->
+            <collision object="ground">
+              <any>
+                <check variable="x"><atmost>4</atmost></check>
+                <check variable="x"><atleast>window.right - 32</atleast></check>
+              </any>
               <reset />
             </collision>
-            <!-- bumped from below: on its back; bumped again, it stays down -->
-            <collision object="mario" side="bottom" sprite="flipped">
-              <stop />
-            </collision>
+            <!-- bumped from below, a little hop: on its feet it goes over,
+                 on its back it gets up -->
             <collision object="mario" side="bottom" sprite="walking">
               <become sprite="flipped" />
+              <set variable="self.velocity.y">0 - hop</set>
               <play sound="flip" />
+            </collision>
+            <collision object="mario" side="bottom" sprite="flipped">
+              <check variable="down"><atleast>1</atleast></check>
+              <trigger action="getup" />
+              <set variable="self.velocity.y">0 - hop</set>
             </collision>
             <!-- touched by Mario: kicked off on its back, deadly on its feet -->
             <collision object="mario" side="horizontal" sprite="flipped">
-              <inc variable="mario.score">800</inc>
-              <play sound="kick" />
-              <die />
+              <trigger action="kicked" />
             </collision>
             <collision object="mario" side="top" sprite="flipped">
-              <inc variable="mario.score">800</inc>
-              <play sound="kick" />
-              <die />
+              <trigger action="kicked" />
             </collision>
             <collision object="mario" side="horizontal" sprite="walking">
+              <check object="mario" variable="safe"><atmost>0</atmost></check>
               <trigger object="mario" action="lose" />
             </collision>
             <collision object="mario" side="top" sprite="walking">
+              <check object="mario" variable="safe"><atmost>0</atmost></check>
               <trigger object="mario" action="lose" />
             </collision>
           </collisions>
+          <actions>
+            <action name="getup">
+              <become sprite="walking" />
+              <set variable="self.velocity.x">self.way * self.speed</set>
+              <set variable="self.down">0</set>
+            </action>
+            <action name="kicked">
+              <inc variable="mario.score">800</inc>
+              <inc variable="mario.kicked" />
+              <play sound="kick" />
+              <die />
+            </action>
+          </actions>
+          <variables>
+            <variable name="speed">crawl</variable>
+            <variable name="way">1</variable>
+            <variable name="down">0</variable>
+          </variables>
           <timers>
+            <!-- let out of its pipe on its feet, whatever a POW did while it
+                 waited -->
+            <timer>
+              <after>0</after>
+              <become sprite="walking" />
+            </timer>
+            <!-- over on its back (bumped, or the POW): it keeps its way and
+                 lies still -->
+            <timer sprite="flipped">
+              <after>0</after>
+              <set variable="self.way">sgn(self.velocity.x)</set>
+              <set variable="self.velocity.x">0</set>
+              <set variable="self.down">1</set>
+            </timer>
+            <!-- left there, it gets up by itself, and faster -->
             <timer sprite="flipped">
               <after>8</after>
-              <become sprite="walking" />
-              <reset />
+              <inc variable="self.speed">crawl / 2</inc>
+              <trigger action="getup" />
             </timer>
           </timers>
+          <member />
           <member>
-            <position><x>40</x><y>196 - 20</y></position>
-            <velocity><x>crawl</x></velocity>
-          </member>
-          <member>
-            <position><x>window.right - 68</x><y>196 - 20</y></position>
+            <position><x>window.right - 32</x></position>
             <velocity><x>0 - crawl</x></velocity>
           </member>
+          <member />
           <member>
-            <position><x>300</x><y>324 - 20</y></position>
-            <velocity><x>crawl</x></velocity>
-          </member>
-          <member>
-            <position><x>480</x><y>324 - 20</y></position>
+            <position><x>window.right - 32</x></position>
             <velocity><x>0 - crawl</x></velocity>
           </member>
+          <member />
           <member>
-            <position><x>100</x><y>452 - 20</y></position>
-            <velocity><x>crawl</x></velocity>
-          </member>
-          <member>
-            <position><x>660</x><y>452 - 20</y></position>
+            <position><x>window.right - 32</x></position>
             <velocity><x>0 - crawl</x></velocity>
           </member>
         </group>
-        <object name="mario">
+        <!-- the pipes, drawn over the shellcreepers: two at the top they come
+             out of, two at the bottom they go into -->
+        <group name="pipes">
           <sprite>
+            <bitmap>
+              <row>................gggggg</row>
+              <row>................gGGGGg</row>
+              <row>ggggggggggggggggGGGGGg</row>
+              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
+              <row>gggggggggggggggGGGGGGg</row>
+              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
+              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
+              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
+              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
+              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
+              <row>ggggggggggggggggGGGGGg</row>
+              <row>gggggggggggggggggggggg</row>
+              <scale>3</scale>
+              <color char="g">color.green</color>
+              <color char="G">color.darkgreen</color>
+            </bitmap>
+          </sprite>
+          <group name="spouts">
+            <position><y>196 - 36</y></position>
+            <member><position><x>0</x></position></member>
+            <member>
+              <sprite><bitmap><flip>horizontal</flip></bitmap></sprite>
+              <position><x>window.right - 66</x></position>
+            </member>
+          </group>
+          <group name="drains">
+            <position><y>window.bottom - 16 - 36</y></position>
+            <member><position><x>0</x></position></member>
+            <member>
+              <sprite><bitmap><flip>horizontal</flip></bitmap></sprite>
+              <position><x>window.right - 66</x></position>
+            </member>
+          </group>
+        </group>
+        <object name="mario">
+          <sprite name="playing">
             <bitmap>
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
@@ -521,6 +538,33 @@
               <color char="s">color.orange</color>
               <color char="k">color.brown</color>
               <color char="y">color.yellow</color>
+            </bitmap>
+          </sprite>
+          <!-- back after a life is lost: pale, and safe for a moment -->
+          <sprite name="safe">
+            <bitmap>
+              <row>...rrrrr....</row>
+              <row>..rrrrrrrrr.</row>
+              <row>..kkksskk...</row>
+              <row>.ksksssskss.</row>
+              <row>.kskksssksss</row>
+              <row>.kksssskkkk.</row>
+              <row>...ssssss...</row>
+              <row>..rrbrrr....</row>
+              <row>.rrrbrrbrrr.</row>
+              <row>rrrrbbbbrrrr</row>
+              <row>ssrbybbybrss</row>
+              <row>sssbbbbbbsss</row>
+              <row>ssbbbbbbbbss</row>
+              <row>..bbb..bbb..</row>
+              <row>.kkk....kkk.</row>
+              <row>kkkk....kkkk</row>
+              <scale>2</scale>
+              <color char="r">color.lightgrey</color>
+              <color char="b">color.grey</color>
+              <color char="s">color.white</color>
+              <color char="k">color.darkgrey</color>
+              <color char="y">color.white</color>
             </bitmap>
           </sprite>
           <position><x><centered /></x><y>window.bottom - 16 - mario.height</y></position>
@@ -561,12 +605,23 @@
               <dec variable="mario.lives" />
               <play sound="hit" />
               <reset />
+              <become sprite="safe" />
+              <set variable="mario.safe">1</set>
             </action>
           </actions>
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">3</variable>
+            <variable name="kicked">0</variable>
+            <variable name="safe">0</variable>
           </variables>
+          <timers>
+            <timer sprite="safe">
+              <after>2</after>
+              <become sprite="playing" />
+              <set variable="mario.safe">0</set>
+            </timer>
+          </timers>
         </object>
         <object name="score">
           <sprite>
@@ -598,8 +653,8 @@
         <input button="p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition class="enemy">
-          <remaining>0</remaining>
+        <condition object="mario" variable="kicked">
+          <atleast>6</atleast>
           <push state="youwin" />
         </condition>
         <condition object="mario" variable="lives">
@@ -611,6 +666,15 @@
           <copy variable="mario.score" into="best.score" />
         </condition>
       </conditions>
+      <!-- the shellcreepers come out of the top pipes one after another -->
+      <timers>
+        <timer><after>1</after><reveal object="creepers.1" /></timer>
+        <timer><after>3</after><reveal object="creepers.2" /></timer>
+        <timer><after>7</after><reveal object="creepers.3" /></timer>
+        <timer><after>9</after><reveal object="creepers.4" /></timer>
+        <timer><after>13</after><reveal object="creepers.5" /></timer>
+        <timer><after>15</after><reveal object="creepers.6" /></timer>
+      </timers>
     </state>
     <state name="paused">
       <objects>
