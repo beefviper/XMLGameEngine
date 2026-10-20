@@ -80,6 +80,10 @@ namespace xge
 		// partners).
 		virtual bool canCollide(const Object& a, const Object& b) { (void)a; (void)b; return false; }
 
+		// Whether the object has any rule for touching others at all: two
+		// with none never answer each other, so canCollide is not asked.
+		virtual bool hasRules(const Object& object) { (void)object; return true; }
+
 		// a and b have met during the move (contact.edgeOfSecond is the edge
 		// of b that was hit, so a's is the opposite one; the rest of the
 		// contact is where and how): both their rules for it.

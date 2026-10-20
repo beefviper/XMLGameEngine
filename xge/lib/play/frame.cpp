@@ -95,6 +95,15 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
+				// Nothing to do for most things (a wall): looked at before
+				// asking whether it is in play.
+				const bool thrusting = object.activeThrust[0] != 0.0f || object.activeThrust[1] != 0.0f
+					|| object.activeThrust[2] != 0.0f || object.activeThrust[3] != 0.0f;
+				if (!thrusting && !object.hasHeading && object.drag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
+				{
+					continue;
+				}
+
 				// On a ladder nothing pulls it (applyClimbing moves it).
 				if (!rules.inPlay(object) || object.climbing) { continue; }
 
@@ -605,12 +614,31 @@ namespace xge
 		keepFor(objects);
 		if (!partnersFound)
 		{
+			// Only a pair with a rule between them is asked about: one with
+			// rules against every later object, one without against the later
+			// ones that have rules.
+			std::vector<char> asks(objects.size());
+			std::vector<std::size_t> askers;
+			for (std::size_t i = 0; i < objects.size(); ++i)
+			{
+				asks[i] = hasRules(objects[i]) ? 1 : 0;
+				if (asks[i]) { askers.push_back(i); }
+			}
+
 			partnerLists.assign(objects.size(), {});
 			for (std::size_t i = 0; i < objects.size(); ++i)
 			{
-				for (std::size_t j = i + 1; j < objects.size(); ++j)
+				const auto ask = [&](std::size_t j)
 				{
 					if (canCollide(objects[i], objects[j])) { partnerLists[i].push_back(j); }
+				};
+				if (asks[i])
+				{
+					for (std::size_t j = i + 1; j < objects.size(); ++j) { ask(j); }
+				}
+				else
+				{
+					for (auto later = std::upper_bound(askers.begin(), askers.end(), i); later != askers.end(); ++later) { ask(*later); }
 				}
 			}
 			partnersFound = true;

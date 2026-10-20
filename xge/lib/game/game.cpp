@@ -59,6 +59,9 @@ namespace xge
 		startScenes();
 		runsInTop.assign(objects.size(), 0);
 		runsInTopStage.assign(objects.size(), 0);
+		// Which objects' rules answer which others, found while loading
+		// rather than in the first frame.
+		partners(objects);
 		// Every object's own visual is built later, by Engine, once a real
 		// Window (and therefore a real backend to build against) exists -
 		// see Window::init() in window/window.h.

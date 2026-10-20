@@ -413,6 +413,7 @@ namespace xge
 		void atEdge(Object& object, Edge edge) override;
 		bool sticksAt(const Object& object, Edge edge) override;
 		bool canCollide(const Object& a, const Object& b) override;
+		bool hasRules(const Object& object) override { return !object.collisionData.others.empty(); }
 		void touched(Object& a, Object& b, const Contact& contact) override;
 		void conditions() override { checkConditions(); }
 

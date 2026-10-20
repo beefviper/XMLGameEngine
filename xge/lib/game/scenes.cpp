@@ -639,7 +639,8 @@ namespace xge
 				made[scene.name] = std::move(local);
 			}
 
-			for (RawObject object : state.objects)
+			// Moved, not copied: the state's list is cleared just below.
+			for (RawObject& object : state.objects)
 			{
 				qualify(object, state.name + ".");
 				object.ownerState = state.name;
