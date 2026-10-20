@@ -877,7 +877,7 @@ namespace xge
 		}
 		for (auto& objectVariable : objectVariables)
 		{
-			symbolTable.add_variable(objectVariable.first, objectVariable.second);
+			bind(objectVariable.first, objectVariable.second);
 		}
 
 		// The ones that draw no random number are worked out now as well, in
@@ -915,7 +915,7 @@ namespace xge
 			}
 		}
 		for (const std::string& name : touchNumberNames()) { liveNumbers[name] = 0.0f; }
-		for (auto& [name, number] : liveNumbers) { symbolTable.add_variable(name, number); }
+		for (auto& [name, number] : liveNumbers) { bind(name, number); }
 
 		// Every object's size as name.width / name.height, so an expression can
 		// place an object by its own size (or another's) the same way it reads
@@ -955,8 +955,8 @@ namespace xge
 		}
 		for (auto& [name, size] : objectSizes)
 		{
-			if (!objectVariables.count(name + ".width")) { symbolTable.add_variable(name + ".width", size.x); }
-			if (!objectVariables.count(name + ".height")) { symbolTable.add_variable(name + ".height", size.y); }
+			if (!objectVariables.count(name + ".width")) { bind(name + ".width", size.x); }
+			if (!objectVariables.count(name + ".height")) { bind(name + ".height", size.y); }
 		}
 
 
@@ -1761,6 +1761,17 @@ namespace xge
 		auto found = compiled.find(text);
 		if (found == compiled.end())
 		{
+			// Only the names it reads go into the symbol table, the first
+			// time any text reads them (see bind).
+			for (const std::string& name : namesIn(text))
+			{
+				if (const auto waiting = unbound.find(name); waiting != unbound.end())
+				{
+					symbolTable.add_variable(name, *waiting->second);
+					unbound.erase(waiting);
+				}
+			}
+
 			exprtk::expression<float> made;
 			made.register_symbol_table(symbolTable);
 			if (!parser.compile(text, made))
@@ -1784,6 +1795,13 @@ namespace xge
 			loadCheckedTexts.insert(text);
 		}
 		return found->second.value();
+	}
+
+	void game_expr::bind(const std::string& name, float& value)
+	{
+		std::string key = name;
+		std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		unbound.emplace(std::move(key), &value);
 	}
 
 	const std::vector<std::string>& game_expr::namesIn(const std::string& text) const

@@ -105,6 +105,14 @@ namespace xge
 		mutable std::unordered_map<std::string, std::vector<std::string>> namesInText;
 		const std::vector<std::string>& namesIn(const std::string& text) const;
 
+		// A number a text may read by name (an object's variable, size or live
+		// number), bound into symbolTable only once a text reads it: a big
+		// game has thousands, and most are never read. Names are as exprtk
+		// sees them, without case; the first bound under a name keeps it, as
+		// exprtk's own table would.
+		void bind(const std::string& name, float& value);
+		std::unordered_map<std::string, float*> unbound;
+
 		// A value's number: its expression worked out, or the number its tag
 		// makes. `where` says whose value it is, for the message if the
 		// expression does not compile (std::runtime_error).
