@@ -1,110 +1,180 @@
 # XMLGameEngine
 
-XMLGameEngine is a VGDL (video game description language) written in XML, plus a C++ engine that loads a game description and runs it. A whole game (window, variables, sounds, objects, screens) lives in one `.xml` file, checked against an XSD. The file is declarative: no loops, no `if`, no function calls. Behavior comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<stick />`, `<die />`, `<hop direction="up">`, ...) that the engine knows how to carry out.
+XMLGameEngine is a video game description language written in XML, plus a C++ engine that runs it. A whole game (window, sounds, objects, screens, rules) is one `.xml` file, checked against a schema, [xge/xgedef.xsd](xge/xgedef.xsd).
 
-The target is to describe the 2D non-scrolling games of the late 1970s and early 1980s with a small, well-chosen vocabulary, and to grow that vocabulary only when a real game cannot be described without a new word.
+The file holds no code: no loops, no `if`, no function calls. What things do comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<die />`, `<hop direction="up">`), and the engine knows how to carry each one out. The aim is to describe the non-scrolling 2D games of the late 1970s and early 1980s with a small vocabulary, and to add a word only when a real game cannot be written without it.
 
-## Games that run today
+## A whole game
 
-| File | Game |
-|---|---|
-| `games/descriptions/pong.xml` | Pong after Atari's arcade game: a square ball, a dashed net, big score digits, first to eleven; the ball comes off a paddle at an angle set by where it hit and goes faster at the fourth and twelfth hit |
-| `games/descriptions/pong_min.xml` | Pong with nothing but the game: two paddles and a ball, no menu, score, text or sound; a point puts the ball back in the middle and serves it again, to either side within 30 degrees of level. The smallest game, the one `--generate windows-cpp` was grown on |
-| `games/descriptions/breakout.xml` | Breakout after Atari's arcade game: eight rows, two each of red, orange, green and yellow, worth 7, 5, 3 and 1 and each with its own pitch; the ball speeds up at the fourth and twelfth hit and in the back rows, the paddle halves once the ball reaches the top, three balls, two walls |
-| `games/descriptions/spaceinvaders.xml` | Space Invaders (three kinds of alien drawn from ASCII bitmaps, two animation frames a second apart, as one group of 11 columns and 5 rows of individually named objects, the rows changing the picture and the worth; the block marches faster as it thins, a mystery ship crosses the top, the march plays as music and a hit leaves a blast; the game is won when none are left; the aliens drop bombs back, three hits or the block reaching the shields and the game is lost; four shields that every shot cuts a `<hole>` in; the best score is kept) |
-| `games/descriptions/spaceinvaders2.xml` | Space Invaders again, drawn from an SVG sprite sheet (`assets/Space Invaders Color Sprites.svg`): the same game, with three-frame animations for the three kinds of alien, a ship, a bolt, the explosion and the saucer cut out of the sheet by `<svg>` sprites, and the aliens firing the sheet's plasma bolts back |
-| `games/descriptions/frogger.xml` | Frogger: lives, one-step hops, looping lanes, logs and diving turtles to ride, five bays to fill against the clock, 50 points a frog home plus the time left |
-| `games/descriptions/spacerace.xml` | Space Race, two players: rockets fly up through twelve rows of drifting debris, and the most crossings when the clock bar runs out win |
-| `games/descriptions/kaboom.xml` | Kaboom!: the Mad Bomber paces the rooftop, changing direction when he likes, and drops bombs as he goes; catch them through eight waves, each faster and worth more; a miss sets off every falling bomb and takes a bucket off the stack |
-| `games/descriptions/freeway.xml` | Freeway, two players: hop a chicken across ten lanes of cars and trucks; a hit knocks it back a lane; most crossings when the 2:16 clock runs out wins |
-| `games/descriptions/depthcharge.xml` | Depth Charge: roll pairs of charges off a destroyer onto submarines in four lanes, worth more the deeper they run; their mines rise under you; 90 seconds or three ships |
-| `games/descriptions/astrosmash.xml` | Astrosmash: shoot the rocks and spinners raining down at a slant; big rocks break in two, a landed rock costs points and a landed spinner a base, a spare base every 1,000 |
-| `games/descriptions/lunarlander.xml` | Lunar Lander: turn the lander and fire its engine to set it down upright and slowly on a 2X, 3X or 5X pad, lander after lander until the fuel is gone; every picture is drawn from `<line>`s and collisions follow the drawn pixels |
-| `games/descriptions/asteroids.xml` | Asteroids: turn, thrust and coast, shoot rocks that break into smaller rocks, wave after wave; a saucer shoots back, hyperspace, a ship every 10000 points and the heartbeat; the screen wraps on every side |
-| `games/descriptions/berserk.xml` | Berserk, after the arcade game Berzerk: four rooms of electrified walls, five cells by three like the arcade's, with robots that come for you, shoot at you and blunder into the walls, a man who shoots the way he faces, Evil Otto coming for you if you linger, exits in every outer wall (see [games-classic](docs/designs/54-games-classic.md); first written by another AI from the schema alone, see [games-classic](docs/designs/54-games-classic.md)) |
-| `games/descriptions/demonattack.xml` | Demon Attack: slide along the bottom and shoot the demons, which flap about the sky and bomb you; three waves, the second splitting its demons in two, the third taking two hits; the shot follows the cannon and a cleared wave gives a spare (rewritten from the first, which another AI wrote) |
-| `games/descriptions/frostbite.xml` | Frostbite: jump Bailey between the snowy shore and four rows of drifting ice; every white row he lands on turns blue and adds a block to his igloo; the water, the cold and the snow geese are against him; finish the igloo and walk in; three nights, the ice faster each |
-| `games/descriptions/donkeykong.xml` | Donkey Kong: climb six girders past the barrels Kong throws, jumping them or dodging up the ladders, to save Pauline before the bonus runs out; the hammer smashes barrels, each rescue Kong throws faster, three rescues win |
-| `games/descriptions/galaxian.xml` | Galaxian: over a drifting, blinking starfield a fleet of 46 flies in on curving paths and settles into formation, then one alien at a time dives at your ship, weaving and dropping bombs, and loops back to its place from the top of the screen; the best score and a table of the best five, with initials, last from one game, and one run, to the next; two players can take turns, and left on the title it plays itself |
-| `games/descriptions/pitfall.xml` | Pitfall!: run Harry through four jungle screens, the scenes of one state built from a kit of pieces, past rolling logs, a tar pit, a crocodile pond, a fire and the scorpions in the tunnel, after a treasure on each, in three minutes with three lives |
-| `games/descriptions/missilecommand.xml` | Missile Command: missile streaks chase the nearest of six cities; steer a sight, and the base fires a counter-missile trailing back to it that bursts there in a swelling fireball; three waves in three colours |
-| `games/descriptions/combat.xml` | Combat, two players: tanks that drive along the way they point and turn on the spot, among walls, one shell in the air each; a hit knocks the tank back, and the most hits in 2:16 win |
-| `games/descriptions/airseabattle.xml` | Air-Sea Battle, two players: point a gun left, up or right and fire at four lanes of planes going round the sky; most hits in 2:16 wins, and the end screen compares the scores to say who |
-| `games/descriptions/megamania.xml` | Megamania: eight waves (hamburgers, cookies, bugs, tires, diamonds, irons, bow ties, dice) wrap round the sides and drop bombs while your energy bar runs down; a steered shot, the energy left a bonus, three blasters |
-| `games/descriptions/atlantis.xml` | Atlantis: Gorgon ships cross the sky over the city, a lane lower each pass, and ray it from the lowest; three gun posts fire at their own angles; three waves, the later ones the first changed (`from=`, named timers and conditions) |
-| `games/descriptions/pacman.xml` | Pac-Man, on the arcade's 28 by 31 maze: the maze is a `<map>` whose rows draw it in wall characters; Pac-Man `<go>`es where the keys say, the four ghosts scatter to their corners and then `<hunt>` him each their own way, and a power pellet turns them blue (looks and timers that follow a look), each ghost eaten worth twice the last; a cherry, rounds that get faster, a life at 10,000 and a kept high score; the opening tune over READY!, and a siren under the game |
-| `games/descriptions/trickshot.xml` | Trick Shot, pool after the Atari 2600 game: steer a cue tip into the white ball and knock the six others into the pockets in two minutes; balls `<knock />` one another by their `<mass>`, slowed by the cloth |
-| `games/descriptions/mariobros.xml` | Mario Bros.: jump up and bump the floor under a shellcreeper, a `<knock>` that goes through the floor and turns it over, then kick it off; one on its feet costs a life, and the POW block turns them all over |
-| `games/descriptions/fishingderby.xml` | Fishing Derby: you on the left pier, the computer on the right, six rows of fish worth 2, 4 or 6 pounds; hook one, reel it up past the shark and land it; first to 99 pounds; the lines are `<tether>`s, a landed fish counts for whichever hook it is on |
-| `games/descriptions/qbert.xml` | Q*bert: diagonal `<hop>`s over a pyramid of cubes, each turned yellow when landed on; the red ball bounces down, Coily hatches at the bottom and hunts Q*bert by hops, a disc carries him back to the top, and a hop off the pyramid costs a life |
-| `games/descriptions/yarsrevenge.xml` | Yars' Revenge: Yar eats through the Qotile's shield, a `<map>` moving up and down with it, while the destroyer missile `<seek>`s him and the Swirl flies at him; a bite brings the Zorlon cannon in level with him; the flickering neutral zone is safe |
-| `games/descriptions/tennis.xml` | Tennis after Activision's: the ball flies with an `<altitude>` and a `<shadow>` under it, a racket reaches it only when it is low, the far end is a `<computer>` player holding keys as a person would, and the points are said in words (`<choose>`) |
-| `games/descriptions/hauntedhouse.xml` | Haunted House: a pair of eyes in a dark mansion of four floors joined by stairs; the walls and creatures are `<dark>` and show only within the eyes' `<light>` or a match's; a master key opens the locked rooms of the three urn pieces, which go back to the front door; a tarantula, a bat and the ghost of Zachary Graves, and the wind upstairs blowing the match out |
-| `games/descriptions/adventure.xml` | Adventure, five rooms of the Atari 2600 game as scenes: the gold castle and its hall, the field, the black castle and its dungeon; walk into a key, the sword or the chalice to `<carry />` it and Space to `<drop />` it; each key raises its own castle's portcullis, the sword slays Yorgle and Grundle, who sleep until the hero comes near; the chalice brought home to the gold castle's hall wins |
-
-## What a game file looks like
+This is all of `pong_min.xml`, two paddles and a ball:
 
 ```xml
-<object name="ball">
-  <sprite>
-    <circle>
-      <radius>ball.radius</radius>
-      <color>color.green</color>
-    </circle>
-  </sprite>
-  <position>
-    <x>window.width.center - ball.radius</x>
-    <y>window.height.center - ball.radius</y>
-  </position>
-  <velocity>
-    <x><random min="-7" max="7" /></x>
-    <y><random min="-3" max="3" /></y>
-  </velocity>
-  <collisions>
-    <enabled>true</enabled>
-    <collision edge="vertical"><bounce /></collision>
-    <collision edge="left">
-      <inc variable="paddle2.score" />
-      <reset />
-    </collision>
-  </collisions>
-</object>
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+  <window name="Pong">
+    <width>1280</width> <height>720</height>
+    <background>color.black</background>
+    <fullscreen>false</fullscreen> <framerate>60</framerate>
+  </window>
+  <variables>
+    <variable name="margin">30</variable>
+    <variable name="size">16</variable>
+    <variable name="width">20</variable>
+    <variable name="height">120</variable>
+    <variable name="step">5</variable>
+  </variables>
+  <states>
+    <state name="playing">
+      <objects>
+        <object name="ball">
+          <sprite><rectangle><width>size</width><height>size</height></rectangle></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+          <velocity>
+            <x>sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)</x>
+            <y>ball.speed * sin(ball.angle * pi / 180)</y>
+          </velocity>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="vertical"><bounce /></collision>
+            <collision edge="horizontal"><reset /></collision>
+            <collision><deflect>45</deflect></collision>
+          </collisions>
+          <variables>
+            <variable name="speed">6</variable>
+            <variable name="angle"><random min="-30" max="30" /></variable>
+            <variable name="side"><random min="-1" max="1" /></variable>
+          </variables>
+        </object>
+        <group name="paddles">
+          <sprite><rectangle><width>width</width><height>height</height></rectangle></sprite>
+          <collisions>
+            <enabled>true</enabled>
+            <collision edge="vertical"><stick /></collision>
+          </collisions>
+          <actions>
+            <action name="up"><move direction="up">step</move></action>
+            <action name="down"><move direction="down">step</move></action>
+          </actions>
+          <member name="paddle1"><position><x>margin</x><y><centered /></y></position></member>
+          <member name="paddle2"><position><x>window.right - margin - width</x><y><centered /></y></position></member>
+        </group>
+      </objects>
+      <inputs>
+        <input button="w"><trigger object="paddle1" action="up" /></input>
+        <input button="s"><trigger object="paddle1" action="down" /></input>
+        <input button="up"><trigger object="paddle2" action="up" /></input>
+        <input button="down"><trigger object="paddle2" action="down" /></input>
+      </inputs>
+    </state>
+  </states>
+</game>
 ```
 
-The one rule of the format: an attribute names or picks something (`name`, `class`, `edge`, `button`, `state`, ...); everything else is element content. Numbers may be plain arithmetic over named values such as `window.width.center` or `ball.radius`, evaluated by exprtk, or the same arithmetic written as `<equation>` (steps) or `<formula>` (nested) tags, which leave nothing in a string for a tool to parse.
+A collision rule reads like a sentence: this ball, when it touches the top or bottom edge, bounces; when it leaves by a side, it starts again; when it touches anything else, it deflects by up to 45 degrees.
 
-## Saying a thing once
+## The language
 
-What many objects or states share is written once, under a name, higher up in the file, and each place below takes it and says only what is different about it. It keeps a game file short without making it look like a program.
+### Grammar
 
-* **Leave out what is nothing.** An object that never moves has no `<velocity>`, and one that never collides has no `<collisions>`.
-* **Groups.** A `<group>` writes the shared parts of its members once: a list of members, or a block of columns and rows where a row, a column or a single cell changes what it needs to (Space Race's rows of debris, Space Invaders' rows of aliens). A group can hold groups (Frogger's lanes), and a group's name means every member in it.
-* **Named sets in `<states>`.** At the top of `<states>`, before the first `<state>`, named `<keys>`, `<shows>` and `<conditions>` sets hold what several states bind, show and check. A state takes one with `set="name"` and adds its own; a set can take a set written before it.
-* **States and scenes own their objects.** A `<state>` is a mode (title, playing, paused, game over) and holds the objects it uses; a pause can draw the game still underneath it (`<show state="playing" />`). A state played in several places holds them as `<scenes>`: shared pieces sit in a kit at the top, and each scene takes what it needs and changes what differs (a speed, a position, a sprite), or starts as a copy of an earlier scene (`from=`). `<enter scene="room2" />` moves on (or `<enter way="east" />`, where each scene says where its ways lead, so an exit is written once in the kit), what the hero carries goes along, and a scene left stays as it was. Inside a scene a plain name means its own (`robots`), and a path reaches anything (`playing.room2.robots`).
+- **Attributes name or pick; everything else is content.** `name`, `class`, `object`, `edge`, `button`, `state`, `sound` are attributes. A size, a color, a position or a flag is element content: `<radius>10</radius>`.
+- **Behavior is a list of verbs, run in the order written.** Lists sit in five places: a collision rule, an object's action, a key, a condition and a timer. Most verbs work in all of them.
+- **A value is a number written one of three ways:** arithmetic as text (`window.width.center - ball.radius`, worked out by exprtk), a `<random min max />`, or the same arithmetic as tags (`<equation>` steps or a nested `<formula>` of `add`, `subtract`, `multiply`, `divide`), which leaves nothing in a string for a tool to parse.
+- **Names are dotted.** `ball.radius` is the ball's variable, `paddle1.x` where it is, `aliens.3.2` a cell of a group, `playing.room2.robots` an object in a scene. `window.right`, `window.width.center` and the `color.` names are built in, and `self.` and `touch.` mean the object running a rule and the touch it answers.
+- **Keys are bound in states, never in objects.** An object has named actions (`up`, `fire`), and a state binds keys to them, so changing a key is one edit.
+- **Mistakes stop the load** with a message that says where: an unknown verb, a misspelled key (`did you mean 'space'?`), a state, sound or look that does not exist, or a verb in a place where it does nothing.
 
-See [docs/readme.md](docs/readme.md#group) and [scenes](docs/readme.md#scenes) for the details.
+### Structure
 
-## How it works
+```
+<game>
+  <window>      size, background, frame rate
+  <variables>   numbers the whole game uses
+  <sounds>      notes, rests and parts of chip music           (optional)
+  <paths>       routes that objects fly                        (optional)
+  <styles>      named text sizes and colors                    (optional)
+  <objects>     what every state shares                        (optional)
+  <keeps>       objects kept from one game to the next         (optional)
+  <states>      title, playing, paused, game over ...
+</game>
+```
 
-1. An XML library parses and validates the file (Xerces by default, with full XSD validation; TinyXML2, PugiXML or RapidXML with a built-in validator for the subset of XSD used here).
-2. exprtk evaluates every value once. Objects, variables and states are built.
-3. A window library draws and reads the keyboard (SFML 3 by default; Raylib, SDL2 or OpenGL), and a sound library plays the game's sounds (SFML 3 by default; Raylib, SDL2, or none). The sounds are written in the game file as notes and made into samples by the engine, like the beeps of an old 8-bit machine: `<sound name="wall" wave="square"><note pitch="A3">0.04</note></sound>`, played by `<play sound="wall" />`; one with `<loop />` plays over and over until `<silence sound="..." />` or, played from a key, until the key is let go (Asteroids' and Lunar Lander's engines).
-4. Each frame: keys run the current state's bindings, objects move, collisions are swept and their rules run, conditions are checked, the sounds asked for are played, and the frame is drawn. The order of a frame and the moving live in one place (`xge/lib/play/frame.cpp`), and what each verb does in another (`xge/lib/play/verbs.cpp`); the engine only decides from the file which of them to call, so a generated game can make the same calls as plain code.
+A **state** is a mode of the game. It owns its objects, can hold **scenes** (the rooms or screens of one state), binds its keys in `<inputs>`, checks `<conditions>` every frame, and can have `<timers>`, `<music>` and a `<computer>` player. States form a stack: `<push>` a pause over play, `<pop />` back.
 
-Collisions are swept, so fast small objects cannot skip over thin ones. States form a stack (menu, playing, paused, game over). Keys are bound to named actions on objects, not to movement, so remapping one key is one edit.
+### Saying a thing once
 
-## Dependencies
+Something many objects or states share is written once under a name, higher up, and each place below takes it and says only what differs.
 
-* Xerces-C   https://github.com/apache/xerces-c
-* exprtk     https://github.com/ArashPartow/exprtk
-* SFML 3     https://github.com/SFML/SFML
-* lunasvg    https://github.com/sammycage/lunasvg (draws SVG sprites inside the engine; it is not a backend)
-* Optional backends, not built unless asked for ([Backends](#backends)): Raylib, SDL2 (with SDL2_image and SDL2_ttf), OpenGL (GLFW, the same one Raylib is built on, and SDL2_image and SDL2_ttf for its pictures and text), TinyXML2, PugiXML, RapidXML
-* Qt 6 (Widgets) for xgegui; found, never fetched
-* libxslt (with libxml2) for `xgecli --generate`; found, never fetched (`vcpkg install libxslt`, or `libxslt1-dev` on Linux). Without it `xgecli` builds and plays games as before and says so when asked to generate
-* Catch2 for the tests
+- **Leave out what is nothing.** An object that never moves has no `<velocity>`; one that never collides has no `<collisions>`.
+- **Groups** write their members' shared parts once. Members are listed, laid out as columns and rows (where a row, a column or a cell changes what it needs), or placed by a **map**: rows of text where each character stands for a group or object (Pac-Man's walls and dots).
+- **Named sets** at the top of `<states>` hold the `<keys>`, `<shows>` and `<conditions>` several states use; a state takes one with `set=` or `keys=`.
+- **Copies.** `<state from="youwin">` and `<scene from="room1">` start as a copy of an earlier one and change what differs.
+- **Scenes** take their pieces from a kit at the top of the state, and an exit names a way (`<enter way="east" />`) that each scene points somewhere different.
 
-Each dependency is found through vcpkg or the system, or fetched and built when it is missing. The `FORCE_LOCAL_<NAME>` options force a fetched copy. Only the libraries of the backends that are built are looked for at all.
+### Vocabulary
+
+**Things**
+
+| Word | What it is |
+|---|---|
+| `object` | anything drawn, moved or touched; `class=` makes it one of a kind |
+| `group`, `member`, `columns`, `rows`, `row`, `column`, `cell` | many objects written once |
+| `map`, `tile` | level data as rows of characters, each character a group or object |
+| `state`, `scene`, `way` | modes of the game; places within a mode; exits between places |
+| `variable` | a number, owned by the game or by an object |
+| `sound`, `note`, `rest`, `part`, `loop` | chip sounds and music, from five waves (`square`, `triangle`, `sawtooth`, `sine`, `noise`) |
+| `path`, `step`, `start`, `home`, `speed` | a route of straight legs, with verbs at its steps |
+| `timer`, `every`, `after` | something done again and again, or once after a while |
+| `keep`, `style`, `demo` | an object kept between games (a best score); a text style; a recorded game for the attract mode |
+
+**Looks.** A `<sprite>` is a `circle`, `rectangle`, `text`, `image`, `bitmap` (ASCII rows, one color per character), `svg`, a set of `line`s, or a `tether` (a line between two objects, redrawn each frame). Text is built from `content`, `number`, `letter` and `choose` pieces. Several named sprites are an object's **looks**, changed by `<become>`, and an `<animation>` of `<frame>`s cycles them.
+
+**Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `hidden` (starts out of play) and `drawn` (in play but never drawn).
+
+**Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>` and `<check>`s.
+
+**Verbs**
+
+| Family | Words |
+|---|---|
+| Moving | `move`, `hop`, `jump`, `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` (follow the mouse or a stick) |
+| Steering | `chase`, `aim`, `follow` a path, and in a maze `go`, `hunt`, `wander` |
+| Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
+| In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn` |
+| Numbers | `inc`, `dec`, `set`, `copy`, `rank` |
+| Look and sound | `become`, `play`, `silence` |
+| Flow | `push`, `pop`, `enter`, `trigger` (run an object's action), `turns` with `pass` and `out`, `demo`, `hold` (a computer player's key) |
+
+**Conditions** test an object's variable, a count, or a distance, and run verbs when the test holds:
+
+```xml
+<condition class="aliens"><remaining>0</remaining><push state="youwin" /></condition>
+```
+
+The tests are `atleast`, `atmost`, `above`, `below`, `equal` (against a number or another variable) and `remaining`. `total=` counts a group or takes its sum, highest or lowest, `distance=` measures to an object, and `<all>`/`<any>` of `<check>`s join tests.
+
+**Input.** `<input button="space">` binds a key, a mouse button (`mouse.left`) or a gamepad button (`pad1.a`); `<input axis="mouse.x">` binds a control that points.
+
+### A frame
+
+Keys run the current state's bindings, timers count, objects move, collisions are swept (so a fast ball cannot pass through a thin paddle) and their rules run, conditions are checked, the sounds asked for play, and the frame is drawn. The frame lives in `xge/lib/play/frame.cpp` and the verbs in `xge/lib/play/verbs.cpp`.
+
+## Games
+
+There are 33 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert and Adventure. Many of them brought a word with them:
+
+| Game | Words it needed |
+|---|---|
+| Pong | `deflect`: the angle off a paddle depends on where the ball hits it |
+| Space Invaders | groups of columns and rows in `lockstep`, `hole` for the shields |
+| Frogger | `ride` a log, `unless=` (the water drowns you unless you are on a log) |
+| Donkey Kong | `leap`, `land` and `climb` for girders and ladders |
+| Pac-Man | `map`, `maze`, and the ghosts' `go`, `hunt` and `wander` |
+| Galaxian | `path`s and `follow`, `turns` for two players, a `demo`, a top-five with `rank` |
+| Trick Shot | `knock` by `mass`, slowed by `drag` |
+| Tennis | `altitude` and `shadow`, a `computer` player |
+| Haunted House | `light` and `dark` |
+| Adventure | scenes and ways, `carry` and `drop` |
+
+The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.
 
 ## Build and run
 
@@ -114,34 +184,42 @@ cmake --build build
 output/Debug/xgecli frogger
 ```
 
-Everything needed to run a game lands in `output/` at the top of the repository (ignored by git), one folder per configuration: `output/Debug`, `output/Release`. Each holds the programs (`xgecli`, `xgegui`, `xgetest`), the `games/` folder (the game files in `games/descriptions/`, their pictures and font in `games/assets/`, and the generators) and the schema, `xgedef.xsd`, copied next to them, and a `libraries/` folder with every DLL the programs load (the `.so` files on Linux) and Qt's plug-ins, so the folder can be run or copied elsewhere as it is. On Windows the programs find `libraries/` through a manifest: each program names a private assembly called `libraries`, and `libraries/libraries.manifest`, written after each build, lists the DLLs in it. A Ninja or Makefile build with no `CMAKE_BUILD_TYPE` is a Debug build. The build directory keeps only the compiler's and linker's own files.
+The build makes `xgelib` (the engine), `xgecli` (command line) and `xgegui` (a Qt 6 app that shows the game beside a tree of its data, built only when Qt is found). Everything needed to run lands in `output/<Config>/`: the programs, the games, the schema and the libraries, so the folder can be copied anywhere.
 
-A bare name gets `.xml` added; the file is looked for in the current directory, then in `games/descriptions/`. `xgecli` finds the `games/` folder in the working directory, next to the program, or one folder above it, and runs from there, so it can be started from anywhere. With no argument it runs Pong. The libraries are chosen on the command line: `-w` the window library, `-x` the XML library and `-a` the sound library (`xgecli pong -w raylib -a sdl2`); Xerces and SFML 3 when they are not given.
+`xgecli frogger` finds `frogger.xml` in `games/descriptions/`; with no name it runs Pong. `-w`, `-x` and `-a` pick the window, XML and sound libraries (`xgecli pong -w raylib -a sdl2`).
 
-The build makes three things: `xgelib`, the engine as a library (static by default; `-DXGE_BUILD_SHARED=ON` for a shared one), `xgecli`, the command line program above, and `xgegui`, the Qt application (built only when Qt 6 is found: `vcpkg install qtbase[widgets]`): the game on the left, drawn by Qt, and on the right play, pause and step controls over a tree of the game's data with editors for its values. `xgegui pong` runs a game (File > Options picks the video library, the XML parser and the sound library, the Qt renderer, Xerces and SFML 3 to start, and can change the video or sound library while a game is loaded; the game waits while the dialog is open). Every video library but the Qt renderer draws in a window of its own, so picking one (or View > Game in Its Own Window) splits xgegui in two: the controls in one window and the game in the other. The question asked before that can be turned off, and the setting is kept in `xgegui.ini` next to the program. With no argument it opens a file dialog in `games/descriptions/`. It finds `games/` the same way `xgecli` does, so it can be started from anywhere. `xgetest` is the test suite and `xgedata` copies the games and assets next to the programs, in `output/Debug` or `output/Release`. Each project has its own folder: `xge/lib/` (the engine, a folder for each part of it), `xge/cli/` and `xge/gui/`, with the tests in `xge/tests/` and the schema, `xge/xgedef.xsd`, beside them.
+**Dependencies.** Each is found through vcpkg or the system, or fetched and built when missing (`FORCE_LOCAL_<NAME>` forces a fetch).
 
-`xgecli pong --generate windows-cpp` does not play the game: it writes it out as a program of its own on SFML 3, `pong-windows-cpp/` (`-o` names another folder). XSLT stylesheets (`games/generators/windows-cpp/`) turn the game file into C++ data in `source/pong.cpp`, the data the engine reads from it, and everything that plays it (the frame, physics and collisions, keys, pictures and sounds) is the engine's own code, copied unchanged into `engine/`: only reading XML and choosing among libraries are left out, so it plays exactly as `xgecli` and `xgegui` do, which the tests check for every game, field by field and frame by frame. The font and pictures go into `assets/`; its `CMakeLists.txt` uses installed SFML 3, exprtk and lunasvg or fetches them. It builds into its own `build/`, and the built game goes to `output/`, both left out of a repository by the `.gitignore`. See [docs/readme.md](docs/readme.md#generating-a-program).
+| Library | For |
+|---|---|
+| [Xerces-C](https://github.com/apache/xerces-c) | parsing and full XSD validation |
+| [exprtk](https://github.com/ArashPartow/exprtk) | arithmetic in values |
+| [SFML 3](https://github.com/SFML/SFML) | window, keys and sound |
+| [lunasvg](https://github.com/sammycage/lunasvg) | drawing SVG sprites |
+| Qt 6 Widgets | `xgegui` (found, never fetched) |
+| libxslt | `xgecli --generate` (found, never fetched) |
+| Catch2 | the tests |
 
-Tests are opt-in: configure with `-DBUILD_TESTING=ON` and run `output/Debug/xgetest`. The generated games have a test program of their own, `xgetest-generated`, which an ordinary build leaves out: building it (`cmake --build build --target xgetest-generated`) generates every game and compiles each one in, and it plays each beside the engine playing the file. On Windows, `scripts\shell\windows\games-run-all.bat [config]` generates every game into `output/<config>/generated/`, builds each one with MSVC at `/W4` and runs those tests (`games-generate-all.bat`, `games-build-all.bat` and `games-test-all.bat` run one step each).
+**Backends.** A plain build has one of each kind. Others are built on request, to choose between and compare:
 
-### Backends
+| Kind | Default | Others |
+|---|---|---|
+| Window | SFML 3 | Raylib, SDL2, OpenGL |
+| Sound | SFML 3 | Raylib, SDL2, none |
+| XML | Xerces | TinyXML2, PugiXML, RapidXML (with a built-in validator for the schema's subset of XSD) |
 
-A default build has one of each: SFML 3 for the window and the sound, and Xerces for the XML. That is all a game needs, and the least to find, fetch and compile. The others are there to choose between and to compare against, and are built when asked for:
+`-DXGE_WITH_<NAME>=ON` adds one and `-DXGE_ALL_BACKENDS=ON` adds all of them.
 
-```
-cmake -B build -DXGE_WITH_RAYLIB=ON -DXGE_WITH_TINYXML2=ON     # these two as well
-cmake -B build -DXGE_ALL_BACKENDS=ON                           # every one
-cmake -B build -DBUILD_TESTING=ON                              # every one, and the tests
-```
+**Tests.** `cmake -B build -DBUILD_TESTING=ON` builds every backend and `xgetest`, which plays the games frame by frame and compares the backends. Run `output/Debug/xgetest`.
 
-The options are `XGE_WITH_SFML3`, `XGE_WITH_RAYLIB`, `XGE_WITH_SDL2`, `XGE_WITH_OPENGL` (windows; all but OpenGL bring their sound library, and OpenGL needs SDL2's image and font libraries, which it brings in) and `XGE_WITH_XERCES`, `XGE_WITH_TINYXML2`, `XGE_WITH_PUGIXML`, `XGE_WITH_RAPIDXML` (XML). At least one window and one XML backend must be on. The tests play the same games through every backend and compare them, so `BUILD_TESTING` turns them all on. `xgecli` and `xgegui` only offer what was built: asking for another says so (`the raylib window library is not built into this program (built with: sfml3)`), and a default build's Options dialog has one entry in each dropdown.
+**Generating a program.** `xgecli pong --generate windows-cpp` writes the game out as a standalone SFML program in `pong-windows-cpp/`. XSLT stylesheets in `games/generators/` turn the game file into C++ data, and the engine's own code plays it, so it plays exactly as `xgecli` does. The `xgetest-generated` target checks this for every game, and on Windows `scripts\shell\windows\games-run-all.bat` generates, builds and tests them all.
 
 ## Status
 
-The engine is still growing; version 1 is non-scrolling games, and a camera for scrolling ones is planned for version 2. Jumps are a step (`hop`, instant or timed), a straight, timed line (`<jump>`) and a fixed arc with no steering in the air (`<leap>`); enemies can `<chase>` and `<aim>`, straight at their target, with no lead; all movement is pixels per frame, and timers count frames. Objects can act on their own on timers (enemies fire back), face a way, change their look, and states share named sets of keys, shows and conditions. Sound is short effects and little tunes made from notes, not music or sound files. The full list of known limits is in [docs/readme.md](docs/readme.md).
+Version 1 is non-scrolling games; a camera for scrolling ones is planned for version 2. Movement is in pixels per frame and timers count frames. Paths are straight legs, maze walkers steer as the arcade's ghosts do (no search of the maze), and sound is chip music made from notes, never sound files. The full list of limits is in [docs/readme.md](docs/readme.md#known-limitations).
 
 ## Documentation
 
-* [docs/readme.md](docs/readme.md): how the engine works today, verb by verb.
-* [docs/designs/00-designs.md](docs/designs/00-designs.md): the design decisions, the options considered, and ideas not built yet.
-* [AGENTS.md](AGENTS.md) and [docs/agents/notes.md](docs/agents/notes.md): gotchas for AI coding agents and new contributors.
+- [docs/readme.md](docs/readme.md): how the engine works today, verb by verb.
+- [docs/designs/00-designs.md](docs/designs/00-designs.md): design decisions, options rejected, and ideas not built yet.
+- [AGENTS.md](AGENTS.md) and [docs/agents/notes.md](docs/agents/notes.md): notes for contributors and AI coding agents.
