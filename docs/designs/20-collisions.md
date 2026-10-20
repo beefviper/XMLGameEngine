@@ -27,7 +27,18 @@
 - A dead object means the same everywhere: not drawn, moved or collided with (an older special case parked a dead circle at -100, -100).
 
 
-## Pixel collisions (Lunar Lander)
+## Fewer checks (2026-10-20)
+
+- **Looked for:** Donkey Kong lagged with a few barrels rolling. The frame compared class and group names for every two of its 319 objects (about 50,000 pairs) every frame, asked whether each was in play for every pair, and swept every pair again after each of the frame's reactions (a barrel landing is one). Debug builds took 14.5 ms a frame there.
+- **Looked at:** a grid of screen chunks, so only objects in the same or a next chunk are paired (Beef's suggestion); sort and sweep along one axis; keeping each pair's sweep and reusing it.
+- **Chose,** keeping every touch, its moment and the order pairs go in exactly as before (the tests and the generated games, which play the same code, show it):
+  1. Which pairs a rule answers for is found once per game (`FrameRules::partners`), since an object's name, class, groups and rules never change; only objects with rules are asked about. Walls never pair with walls.
+  2. Each pair's first look is whether the boxes the two cover over the frame (start to end, half a pixel to spare) meet; each object's box is found once a frame.
+  3. A pair found too far apart sleeps (`playFrame`): it is swept again only after a reaction moves, turns, resizes, shows or hides one of its two, since what is left of the frame only gets shorter. A busy frame sweeps again only the pairs near each other.
+  4. Whether an object is in play is kept per object until the state stack, a scene or an object's scene changes, or a frame starts or ends (`Game::stageChanged`).
+- **Why not a grid:** it would need a cell size per game, and a reaction that moves something still has to wake its neighbours; with the rules pruning most pairs and far ones asleep, what is left is a few hundred cheap box tests a frame.
+- **Open:** a grid if a game ever has thousands of moving objects; `nearest` searches (`<chase>`, `<hunt>`, distance conditions) still look through every object.
+
 
 - Need: a jagged moon in a bounding box is mostly empty; the same need as a fighting game.
 - **Chosen:** `<type>pixel</type>` is opt-in per object. The box/circle sweep runs first; only a pair it reports touching is walked in half-pixel steps and bisected to the first step where a drawn pixel of one lies on a solid pixel of the other. Any other shape counts as solid over its shape (a circle analytically). Refused on text and images (their pixels belong to a backend). The edge reported is the one the motion came in through, so `stick` and `bounce` work unchanged. Any alpha above 0 counts as solid.
