@@ -8,9 +8,10 @@
 // step at its speed, home, a start, a stagger, the commands of a step, what
 // ends a path, the mistakes a game file can make with them, and Galaxian
 // played frame by frame through a real xge::Engine with no window: the fleet
-// flying in to its places, a dive that weaves down, wraps and comes home, a
-// shot alien scoring, a new fleet when the last one is down (the fleet is
-// the playing state's one scene, put back with <reset scene>), the pause
+// flying in to its places (none drawn there first), a dive that weaves down,
+// wraps and comes home, a shot alien scoring, a new fleet when the last one
+// is down (the fleet is the playing state's one scene, put back with
+// <reset scene>), the pause
 // drawing the game still, and the table of the best five: initials asked
 // for, ranked, and kept in a file, two players taking turns, and the demo
 // the title plays when left alone.
@@ -27,6 +28,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -327,13 +329,15 @@ TEST_CASE("the fleet flies in on its paths, one behind another, and settles into
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "playing");
 
-	// The first frame sends five rows off from where their paths start; the
-	// last row of blues follows two seconds later.
+	// The first frame sends all six rows off from where their paths start;
+	// the last row of blues waits there behind the first, a line of twenty.
 	play.frames(1);
-	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 36);
+	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 46);
 	CHECK(play.object("blues2.10.1").position.x == Approx(567.0f));
 	CHECK(play.object("blues1.10.1").position.x == Approx(-40.0f));
+	CHECK(play.object("blues3.1.1").position.x == Approx(-40.0f));
 	CHECK(play.object("blues1.10.1").followWait > play.object("blues1.2.1").followWait);
+	CHECK(play.object("blues3.1.1").followWait > play.object("blues1.10.1").followWait);
 
 	play.frames(400);
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 0);
@@ -397,9 +401,9 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 	{
 		if (object.objClass == "alien") { object.isVisible = false; object.followPath.clear(); }
 	}
-	play.frames(2);
+	play.frames(1);
 	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 46);
-	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 36);
+	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 46);
 	CHECK(play.object("flagships.1.1").position.y < 0.0f);
 	// the ship and its score are the state's, not the fleet's: kept
 	CHECK(ship.variable["score"] == 30.0f);
@@ -810,4 +814,33 @@ TEST_CASE("a key held when the turn passes does not keep moving that player's sh
 	play.frames(10);
 	CHECK(ship.velocity.x == 0.0f);
 	CHECK(ship.position.x == Approx(x));
+}
+
+TEST_CASE("no alien is drawn in its place before it has flown in, at the start or in a new fleet", "[galaxian]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.tap(KeyCode::Space);
+	for (int fleet = 0; fleet < 2; ++fleet)
+	{
+		std::set<std::string> flown;
+		int early = 0;
+		for (int frame = 0; frame < 400; ++frame)
+		{
+			play.frames(1);
+			for (auto& object : play.game.getCurrentObjects())
+			{
+				if (object.objClass != "alien" || !play.game.isShown(object)) { continue; }
+				if (object.isFollowing()) { flown.insert(object.name); }
+				else if (!flown.count(object.name)) { ++early; }
+			}
+		}
+		CHECK(early == 0);
+		CHECK(flown.size() == 46);
+
+		// The fleet shot down: the condition puts the next one back.
+		for (auto& object : play.game.getCurrentObjects())
+		{
+			if (object.objClass == "alien") { object.isVisible = false; object.followPath.clear(); }
+		}
+	}
 }

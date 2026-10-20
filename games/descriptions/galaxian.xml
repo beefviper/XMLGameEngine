@@ -24,13 +24,16 @@
     and score its own worth, dive on a timer) is said once, and each row
     says its picture, its height and its worth. The three rows of blues
     share their picture in a group of their own.
-  * The fleet flies in on <paths>, a row to a path, the aliens of a row
-    <stagger>ed one behind another; <home /> flies each to its <position>.
+  * The fleet flies in on <paths>, a row to a path (the top and bottom
+    blues share one, as a line of twenty), the aliens of a row <stagger>ed
+    one behind another, waiting off screen at the path's start for their
+    turn; <home /> flies each to its <position>.
     The dive's steps add up to no movement across and to the window's
     height plus the alien's down, which is what the <wrap /> takes off, so
     a diver that misses comes back in from the top to its own place.
   * The fleet is the playing state's one scene: when it is shot down a
-    condition <reset scene>s it and the next flies in.
+    condition <reset scene>s it and sends the next in at once, so it is
+    never drawn sitting in its places first.
   * The best score and the table of the best five are <keeps>, written to
     saves/galaxian.xml. A game over above the fifth asks for initials, a
     letter a state; the second and third letters are the first's state
@@ -521,9 +524,12 @@
                   </bitmap>
                 </sprite>
                 <variables><variable name="worth">30</variable></variables>
-                <group name="blues1"><position><x>left</x><y>160</y></position></group>
+                <!-- the top and bottom rows fly in from the left as one line of twenty -->
+                <group name="leftblues">
+                  <group name="blues1"><position><x>left</x><y>160</y></position></group>
+                  <group name="blues3"><position><x>left</x><y>220</y></position></group>
+                </group>
                 <group name="blues2"><position><x>left</x><y>190</y></position></group>
-                <group name="blues3"><position><x>left</x><y>220</y></position></group>
               </group>
             </group>
           </objects>
@@ -532,22 +538,27 @@
             <condition class="alien">
               <remaining>0</remaining>
               <reset scene="fleet" />
+              <follow path="fromtop" object="flagships"><stagger>spacing</stagger></follow>
+              <follow path="fromtopleft" object="escorts"><stagger>spacing</stagger></follow>
+              <follow path="fromtopright" object="purples"><stagger>spacing</stagger></follow>
+              <follow path="fromleft" object="leftblues"><stagger>spacing</stagger></follow>
+              <follow path="fromright" object="blues2"><stagger>spacing</stagger></follow>
             </condition>
           </conditions>
           <timers>
-            <!-- sends the fleet in, row by row, as the scene starts -->
+            <!--
+              Sends the fleet in, row by row, as the scene starts; each row waits
+              off screen, at its path's start, for its turn. A new fleet is sent
+              by the condition above, in the frame it is put back, so it is never
+              drawn sitting in its places first.
+            -->
             <timer>
               <after>0.01</after>
               <follow path="fromtop" object="flagships"><stagger>spacing</stagger></follow>
               <follow path="fromtopleft" object="escorts"><stagger>spacing</stagger></follow>
               <follow path="fromtopright" object="purples"><stagger>spacing</stagger></follow>
-              <follow path="fromleft" object="blues1"><stagger>spacing</stagger></follow>
+              <follow path="fromleft" object="leftblues"><stagger>spacing</stagger></follow>
               <follow path="fromright" object="blues2"><stagger>spacing</stagger></follow>
-            </timer>
-            <!-- the last row once the first blues are on their way -->
-            <timer>
-              <after>2</after>
-              <follow path="fromleft" object="blues3"><stagger>spacing</stagger></follow>
             </timer>
           </timers>
         </scene>
