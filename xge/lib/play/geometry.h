@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <optional>
 #include <vector>
 
@@ -125,11 +126,16 @@ namespace xge
 	// are not a hit.
 	std::optional<SweepHit> sweepShapes(const Box& a, bool aRound, const Vector2f& moveA, const Box& b, bool bRound, const Vector2f& moveB) noexcept;
 
-	// A first look before a sweep: whether the box each covers over the
-	// whole step (from where it starts to where it ends, with a pixel to
-	// spare) meets the other's. Two that do not can never touch in that
-	// step; most pairs in a busy frame are far apart and stop here.
-	bool sweptBoxesMeet(const Box& a, const Vector2f& moveA, const Box& b, const Vector2f& moveB) noexcept;
+	// A first look before a sweep: the box a box covers over a whole step
+	// (from where it starts to where it ends, with half a pixel to spare all
+	// round), and whether two such meet. Two that do not can never touch in
+	// that step; most pairs in a busy frame are far apart and stop here. A
+	// box covered over part of the step is inside the one for all of it.
+	Box sweptBox(const Box& box, const Vector2f& move) noexcept;
+	inline bool boxesMeet(const Box& a, const Box& b) noexcept
+	{
+		return a.left() <= b.right() && b.left() <= a.right() && a.top() <= b.bottom() && b.top() <= a.bottom();
+	}
 
 	// Whether the point local (measured from the box's top left) is inside the
 	// shape: a box, or the circle that fills it.
@@ -236,22 +242,64 @@ namespace xge
 			});
 	}
 
+	// What a sweep says of a pair through what is left of a frame: when it
+	// first touches (`hit`), or that it does not; `far` when it cannot touch
+	// at all until a reaction changes one of the two (they are too far apart).
+	struct PairSweep
+	{
+		std::optional<SweepHit> hit;
+		bool far{ false };
+	};
+
 	// One frame's move, as the engine plays it (playOneFrame): not in one
 	// jump, but from touch to touch. Of `pairs`, the two things in each that
-	// may touch, in order, sweep(pair, left) says when, through what is left
-	// of the frame, they would first touch (none: they would not, or sit this
-	// out); the earliest anywhere is found, advanceTo(played) moves everything
-	// to that far through the frame (0 its start, 1 its end), react(pair, edgeOfSecond, played) runs that pair's
-	// rules, and the rest of the frame carries on from there with whatever
-	// velocities the rules left behind. A ball that hits a brick a third of the
-	// way through its move spends the other two thirds heading back. Each pair
-	// reacts at most once a frame, which also bounds the loop; on a tie the
-	// pair first in `pairs` goes first. react is also told how far through
-	// the frame the touch came (`played`, as advanceTo was).
+	// may touch, in order (each pair names its things by index, .i and .j,
+	// of `things` in all), sweep(pair, left) says when, through what is left
+	// of the frame, they would first touch (none: they would not, or sit
+	// this out); the earliest anywhere is found, advanceTo(played) moves
+	// everything to that far through the frame (0 its start, 1 its end),
+	// react(pair, edgeOfSecond, played, changed) runs that pair's rules and
+	// adds to `changed` every thing it moved, turned, resized, showed or
+	// hid, and the rest of the frame carries on from there with whatever
+	// velocities the rules left behind. A ball that hits a brick a third of
+	// the way through its move spends the other two thirds heading back.
+	// Each pair reacts at most once a frame, which also bounds the loop; on a
+	// tie the pair first in `pairs` goes first. react is also told how far
+	// through the frame the touch came (`played`, as advanceTo was).
+	//
+	// A pair found far apart is not swept again until a reaction changes one
+	// of its two (what is left of the frame only gets shorter), so a busy
+	// frame with many reactions sweeps only the pairs near each other again.
 	template <typename Pair, typename Sweep, typename Advance, typename React>
-	void playFrame(const std::vector<Pair>& pairs, Sweep sweep, Advance advanceTo, React react)
+	void playFrame(const std::vector<Pair>& pairs, std::size_t things, Sweep sweep, Advance advanceTo, React react)
 	{
-		std::vector<bool> handled(pairs.size(), false);
+		// The pairs still to sweep, in order; the far ones are left out of it
+		// until a reaction changes one of their two (pairsOf lists every
+		// pair each thing is in: pairsOf[first[thing]] to pairsOf[first[thing + 1]]).
+		std::vector<std::size_t> awake(pairs.size());
+		for (std::size_t p = 0; p < pairs.size(); ++p) { awake[p] = p; }
+		std::vector<char> asleep(pairs.size(), 0);
+
+		std::vector<std::size_t> first(things + 1, 0);
+		for (const Pair& pair : pairs)
+		{
+			++first[pair.i + 1];
+			++first[pair.j + 1];
+		}
+		for (std::size_t thing = 0; thing < things; ++thing) { first[thing + 1] += first[thing]; }
+		std::vector<std::size_t> pairsOf(first.back());
+		{
+			std::vector<std::size_t> filled(first.begin(), first.end() - 1);
+			for (std::size_t p = 0; p < pairs.size(); ++p)
+			{
+				pairsOf[filled[pairs[p].i]++] = p;
+				pairsOf[filled[pairs[p].j]++] = p;
+			}
+		}
+
+		std::vector<std::size_t> changed;
+		std::vector<std::size_t> woken;
+
 		float played = 0.0f;
 		for (std::size_t reactions = 0; reactions <= pairs.size() && played < 1.0f; ++reactions)
 		{
@@ -259,20 +307,24 @@ namespace xge
 
 			std::optional<std::size_t> next;
 			SweepHit nextHit;
-			for (std::size_t i = 0; i < pairs.size(); ++i)
+			std::size_t kept = 0;
+			for (const std::size_t p : awake)
 			{
-				if (handled[i])
+				const PairSweep swept = sweep(pairs[p], left);
+				if (swept.far)
 				{
+					asleep[p] = 1;
 					continue;
 				}
 
-				const std::optional<SweepHit> hit = sweep(pairs[i], left);
-				if (hit && (!next || hit->time < nextHit.time))
+				awake[kept++] = p;
+				if (swept.hit && (!next || swept.hit->time < nextHit.time))
 				{
-					next = i;
-					nextHit = *hit;
+					next = p;
+					nextHit = *swept.hit;
 				}
 			}
+			awake.resize(kept);
 
 			if (!next)
 			{
@@ -282,8 +334,33 @@ namespace xge
 			const float step = nextHit.time * left;
 			played += step;
 			advanceTo(played);
-			handled[*next] = true;
-			react(pairs[*next], nextHit.edgeOfSecond, played);
+			awake.erase(std::find(awake.begin(), awake.end(), *next));
+
+			changed.clear();
+			react(pairs[*next], nextHit.edgeOfSecond, played, changed);
+
+			// What the reaction changed may now meet what it was far from.
+			woken.clear();
+			for (const std::size_t thing : changed)
+			{
+				for (std::size_t at = first[thing]; at < first[thing + 1]; ++at)
+				{
+					const std::size_t p = pairsOf[at];
+					if (asleep[p])
+					{
+						asleep[p] = 0;
+						woken.push_back(p);
+					}
+				}
+			}
+			if (!woken.empty())
+			{
+				// One thing's pairs are listed in order already.
+				if (changed.size() > 1) { std::sort(woken.begin(), woken.end()); }
+				const auto middle = static_cast<std::ptrdiff_t>(awake.size());
+				awake.insert(awake.end(), woken.begin(), woken.end());
+				std::inplace_merge(awake.begin(), awake.begin() + middle, awake.end());
+			}
 		}
 
 		advanceTo(1.0f);

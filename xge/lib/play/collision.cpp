@@ -98,8 +98,8 @@ namespace xge
 			boxOf(b), isRound(b), [&](const Vector2f& local) { return solidAt(b, local); }, moveB, usesPixels(a, b));
 	}
 
-	bool CollisionDetector::mayTouch(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB) noexcept
+	Box CollisionDetector::reach(const Object& object, const Vector2f& move) noexcept
 	{
-		return sweptBoxesMeet(boxOf(a), moveA, boxOf(b), moveB);
+		return sweptBox(boxOf(object), move);
 	}
 }

@@ -504,44 +504,42 @@ namespace xge
 				}
 			};
 
-			// A pair whose boxes are too far apart to meet over the rest of the
-			// frame stays so until a reaction moves, turns or resizes one of
-			// them (what remains of the frame only gets shorter): `far` holds
-			// how many reactions had run when that was found (or -1), and
-			// `changed` the reaction that last changed each object, so the far
-			// pairs are not looked at again after every reaction.
-			std::vector<std::ptrdiff_t> far(pairs.size(), -1);
-			std::vector<std::ptrdiff_t> changed(all.size(), 0);
-			std::ptrdiff_t reactions = 0;
+			// The box each covers over the rest of the frame, found once: until
+			// a reaction changes it, what it covers over what is left of the
+			// frame later is inside it. A changed one's is found again when
+			// next asked (`fresh`).
+			std::vector<Box> reach(all.size());
+			std::vector<char> fresh(all.size(), 0);
+			const auto reachOf = [&](std::size_t i, const Vector2f& move) -> const Box&
+			{
+				if (!fresh[i])
+				{
+					reach[i] = CollisionDetector::reach(all[i], move);
+					fresh[i] = 1;
+				}
+				return reach[i];
+			};
 
 			// Anything taken out of play by an earlier reaction this frame (a
-			// bullet that just died), or that is not moving, sits out.
-			const auto sweep = [&](const Pair& pair, float left) -> std::optional<SweepHit>
+			// bullet that just died), or that is not moving, sits out. Two too
+			// far apart to meet over the rest of the frame are far (playFrame
+			// leaves them be until a reaction changes one of them).
+			const auto sweep = [&](const Pair& pair, float left) -> PairSweep
 			{
-				// Far apart is looked at first: it is the cheapest, and the
-				// answer for most pairs.
-				std::ptrdiff_t& farSince = far[static_cast<std::size_t>(&pair - pairs.data())];
-				if (farSince >= 0 && changed[pair.i] <= farSince && changed[pair.j] <= farSince)
-				{
-					return std::nullopt;
-				}
-
 				Object& a = *pair.first;
 				Object& b = *pair.second;
 				if (!playing[pair.i] || !playing[pair.j] || !canTouch(a, b) || (!isMoving(a) && !isMoving(b)))
 				{
-					return std::nullopt;
+					return {};
 				}
 
 				const Vector2f moveA = motionOf(a) * left;
 				const Vector2f moveB = motionOf(b) * left;
-				if (!CollisionDetector::mayTouch(a, moveA, b, moveB))
+				if (!boxesMeet(reachOf(pair.i, moveA), reachOf(pair.j, moveB)))
 				{
-					farSince = reactions;
-					return std::nullopt;
+					return { std::nullopt, true };
 				}
-				farSince = -1;
-				return CollisionDetector::sweep(a, moveA, b, moveB);
+				return { CollisionDetector::sweep(a, moveA, b, moveB), false };
 			};
 
 			// A reaction that moved, turned, showed or hid anything starts that
@@ -554,7 +552,7 @@ namespace xge
 			};
 			std::vector<Before> before(all.size());
 
-			playFrame(pairs, sweep, advanceTo, [&](const Pair& pair, Edge edgeOfSecond, float at)
+			playFrame(pairs, all.size(), sweep, advanceTo, [&](const Pair& pair, Edge edgeOfSecond, float at, std::vector<std::size_t>& changed)
 				{
 					// What the touch was, found once, before anything answers it.
 					const Contact contact = CollisionDetector::contact(*pair.first, *pair.second, edgeOfSecond, at);
@@ -565,7 +563,6 @@ namespace xge
 					}
 
 					rules.touched(*pair.first, *pair.second, contact);
-					++reactions;
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
@@ -574,11 +571,13 @@ namespace xge
 						{
 							origin[i] = all[i].position;
 							since[i] = played;
-							changed[i] = reactions;
+							fresh[i] = 0;
+							changed.push_back(i);
 						}
 						else if (all[i].size != before[i].size)
 						{
-							changed[i] = reactions;
+							fresh[i] = 0;
+							changed.push_back(i);
 						}
 						playing[i] = nowPlaying;
 					}
@@ -591,9 +590,20 @@ namespace xge
 		}
 	}
 
+	void FrameRules::keepFor(const std::vector<Object>& objects)
+	{
+		if (keptFor == objects.data() && keptCount == objects.size()) { return; }
+		keptFor = objects.data();
+		keptCount = objects.size();
+		partnersFound = false;
+		partnerLists.clear();
+		mazeGrids.clear();
+	}
+
 	const std::vector<std::vector<std::size_t>>& FrameRules::partners(const std::vector<Object>& objects)
 	{
-		if (partnersOf != objects.data() || partnersCount != objects.size())
+		keepFor(objects);
+		if (!partnersFound)
 		{
 			partnerLists.assign(objects.size(), {});
 			for (std::size_t i = 0; i < objects.size(); ++i)
@@ -603,10 +613,36 @@ namespace xge
 					if (canCollide(objects[i], objects[j])) { partnerLists[i].push_back(j); }
 				}
 			}
-			partnersOf = objects.data();
-			partnersCount = objects.size();
+			partnersFound = true;
 		}
 		return partnerLists;
+	}
+
+	const MazeGrid& FrameRules::mazeGrid(const std::vector<Object>& objects, const std::string& map)
+	{
+		keepFor(objects);
+		auto found = mazeGrids.find(map);
+		if (found != mazeGrids.end()) { return found->second; }
+
+		MazeGrid grid;
+		for (std::size_t i = 0; i < objects.size(); ++i)
+		{
+			const Object& object = objects[i];
+			if (object.mapName != map) { continue; }
+			if (grid.at.empty())
+			{
+				grid.origin = object.mapOrigin;
+				grid.tile = object.mapTile;
+				grid.columns = object.mapColumns;
+				grid.rows = object.mapRows;
+				grid.at.resize(static_cast<std::size_t>(grid.columns) * static_cast<std::size_t>(grid.rows));
+			}
+			if (grid.onMap(object.mapColumn, object.mapRow))
+			{
+				grid.at[static_cast<std::size_t>(object.mapRow) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(object.mapColumn)].push_back(i);
+			}
+		}
+		return mazeGrids.emplace(map, std::move(grid)).first->second;
 	}
 
 	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules)

@@ -383,13 +383,14 @@ namespace xge
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
 
-		// What isShown asks of every object (runsIn the top state), worked
-		// out for all of them at once and kept until the state stack, a
-		// scene or an object's scene changes (stageChanged), or the next
-		// frame starts. Asked several times an object a frame otherwise.
+		// What isShown asks of each object (runsIn the top state), kept
+		// until the state stack, a scene or an object's scene changes
+		// (stageChanged), or a frame starts or ends: `stage` counts those
+		// changes, and runsInTopStage says which one each answer is for.
+		// Asked several times an object a frame otherwise.
 		std::vector<char> runsInTop;
+		std::vector<unsigned long> runsInTopStage;
 		unsigned long stage = 1;
-		unsigned long runsInTopStage = 0;
 		void stageChanged(void) noexcept { ++stage; }
 
 		// tryGetObject's answers: names never change while a game runs.

@@ -10,6 +10,7 @@
 #include "play/geometry.h"
 
 #include <cstddef>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,23 @@ namespace xge
 	// code written from the same file. Everything not asked here (the order,
 	// the moving, the sweep, the pull, the arithmetic) is playOneFrame's own,
 	// so the two cannot play differently except by answering differently.
+	// The tiles of a <map>, as play/maze walks them: which objects (by index)
+	// stand on each tile, row by row. Fixed for the whole game.
+	struct MazeGrid
+	{
+		Vector2f origin;
+		Vector2f tile;
+		int columns{};
+		int rows{};
+		std::vector<std::vector<std::size_t>> at;
+
+		bool onMap(int column, int row) const noexcept { return column >= 0 && row >= 0 && column < columns && row < rows; }
+		Vector2f middle(int column, int row) const noexcept
+		{
+			return origin + Vector2f{ (static_cast<float>(column) + 0.5f) * tile.x, (static_cast<float>(row) + 0.5f) * tile.y };
+		}
+	};
+
 	class FrameRules
 	{
 	public:
@@ -76,10 +94,20 @@ namespace xge
 		// Asked again when `objects` is a different list.
 		const std::vector<std::vector<std::size_t>>& partners(const std::vector<Object>& objects);
 
+		// The tiles of the <map> named `map` (empty when there is none),
+		// found once for the whole game: a map's pieces never move from
+		// their tiles.
+		const MazeGrid& mazeGrid(const std::vector<Object>& objects, const std::string& map);
+
 	private:
+		// What partners and mazeGrid found, for the list `keptFor` (forgotten
+		// when asked about another).
+		void keepFor(const std::vector<Object>& objects);
+		const Object* keptFor{ nullptr };
+		std::size_t keptCount{ 0 };
+		bool partnersFound{ false };
 		std::vector<std::vector<std::size_t>> partnerLists;
-		const Object* partnersOf{ nullptr };
-		std::size_t partnersCount{ 0 };
+		std::map<std::string, MazeGrid> mazeGrids;
 	};
 
 	// Plays one frame of a game, in the one order every game runs in:

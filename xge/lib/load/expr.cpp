@@ -852,9 +852,6 @@ namespace xge
 		symbolTable.add_constant("window.width.center", windowDesc.width / 2);
 		symbolTable.add_constant("window.height.center", windowDesc.height / 2);
 
-		// register symbol table with expression
-		expression.register_symbol_table(symbolTable);
-
 		// add variables from XML file to symbol table, in the order the file
 		// declares them so that one can use the ones before it
 		for (const auto& [name, rawValue] : rawVariables)
@@ -1757,17 +1754,26 @@ namespace xge
 
 	float game_expr::evaluateExpression(const std::string& text, const std::string& where)
 	{
-		if (!parser.compile(text, expression))
+		// Each text is compiled once: a value worked out while the game runs
+		// (a timer starting over, a command made again each time it runs)
+		// only reads the compiled one again. The symbols it reads are bound
+		// by reference, so it always sees the numbers as they are now.
+		auto found = compiled.find(text);
+		if (found == compiled.end())
 		{
-			throw std::runtime_error(where + ": cannot read \"" + text + "\": " + parser.error().c_str());
+			exprtk::expression<float> made;
+			made.register_symbol_table(symbolTable);
+			if (!parser.compile(text, made))
+			{
+				throw std::runtime_error(where + ": cannot read \"" + text + "\": " + parser.error().c_str());
+			}
+			found = compiled.emplace(text, made).first;
 		}
 
 		// Where things are has no meaning until the game runs.
 		if (loading && !commandValues && !liveNumbers.empty() && !loadCheckedTexts.count(text))
 		{
-			std::vector<std::string> names;
-			exprtk::collect_variables(text, names);
-			for (const std::string& name : names)
+			for (const std::string& name : namesIn(text))
 			{
 				if (liveNumbers.count(name))
 				{
@@ -1777,7 +1783,19 @@ namespace xge
 			}
 			loadCheckedTexts.insert(text);
 		}
-		return expression.value();
+		return found->second.value();
+	}
+
+	const std::vector<std::string>& game_expr::namesIn(const std::string& text) const
+	{
+		auto found = namesInText.find(text);
+		if (found == namesInText.end())
+		{
+			std::vector<std::string> names;
+			exprtk::collect_variables(text, names);
+			found = namesInText.emplace(text, std::move(names)).first;
+		}
+		return found->second;
 	}
 
 	bool game_expr::namesLive(const RawValue& value) const
@@ -1785,9 +1803,7 @@ namespace xge
 		for (const std::string* text : value.expressions())
 		{
 			if (text->empty()) { continue; }
-			std::vector<std::string> names;
-			exprtk::collect_variables(*text, names);
-			for (const std::string& name : names)
+			for (const std::string& name : namesIn(*text))
 			{
 				if (objectVariables.count(name) || liveNumbers.count(name)) { return true; }
 			}

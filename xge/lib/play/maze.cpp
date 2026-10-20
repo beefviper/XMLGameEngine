@@ -46,43 +46,7 @@ namespace xge
 
 		// A map's tiles, and the objects on each (by index), as this frame
 		// finds them.
-		struct Grid
-		{
-			Vector2f origin;
-			Vector2f tile;
-			int columns{};
-			int rows{};
-			std::vector<std::vector<std::size_t>> at;
-
-			bool onMap(int column, int row) const noexcept { return column >= 0 && row >= 0 && column < columns && row < rows; }
-			Vector2f middle(int column, int row) const noexcept
-			{
-				return origin + Vector2f{ (static_cast<float>(column) + 0.5f) * tile.x, (static_cast<float>(row) + 0.5f) * tile.y };
-			}
-		};
-
-		Grid gridOf(const std::vector<Object>& objects, const std::string& map)
-		{
-			Grid grid;
-			for (std::size_t i = 0; i < objects.size(); ++i)
-			{
-				const Object& object = objects[i];
-				if (object.mapName != map) { continue; }
-				if (grid.at.empty())
-				{
-					grid.origin = object.mapOrigin;
-					grid.tile = object.mapTile;
-					grid.columns = object.mapColumns;
-					grid.rows = object.mapRows;
-					grid.at.resize(static_cast<std::size_t>(grid.columns) * static_cast<std::size_t>(grid.rows));
-				}
-				if (grid.onMap(object.mapColumn, object.mapRow))
-				{
-					grid.at[static_cast<std::size_t>(object.mapRow) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(object.mapColumn)].push_back(i);
-				}
-			}
-			return grid;
-		}
+		using Grid = MazeGrid;
 
 		// The nearest in play of that name or group, other than `from`.
 		const Object* nearest(const std::vector<Object>& objects, const Object& from, const std::string& name, FrameRules& rules)
@@ -367,7 +331,6 @@ namespace xge
 
 	void walkMazes(std::vector<Object>& objects, FrameRules& rules)
 	{
-		std::map<std::string, Grid> grids;
 		for (Object& object : objects)
 		{
 			if (!object.walksMaze() || object.walk.mode == Walk::Mode::None || object.isFollowing() || object.isAirborne() || !rules.inPlay(object))
@@ -375,9 +338,7 @@ namespace xge
 				continue;
 			}
 
-			auto found = grids.find(object.mazeMap);
-			if (found == grids.end()) { found = grids.emplace(object.mazeMap, gridOf(objects, object.mazeMap)).first; }
-			const Grid& grid = found->second;
+			const Grid& grid = rules.mazeGrid(objects, object.mazeMap);
 			if (grid.at.empty() || !(grid.tile.x > 0.0f) || !(grid.tile.y > 0.0f)) { continue; }
 
 			Walker(object, objects, grid, rules).walk();

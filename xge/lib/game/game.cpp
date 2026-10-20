@@ -262,14 +262,15 @@ namespace xge
 		}
 
 		const auto index = static_cast<std::size_t>(&object - objects.data());
-		if (runsInTopStage != stage || runsInTop.size() != objects.size())
+		if (runsInTop.size() != objects.size())
 		{
-			runsInTop.resize(objects.size());
-			for (std::size_t i = 0; i < objects.size(); ++i)
-			{
-				runsInTop[i] = runsIn(objects[i], currentState.top()) ? 1 : 0;
-			}
-			runsInTopStage = stage;
+			runsInTop.assign(objects.size(), 0);
+			runsInTopStage.assign(objects.size(), 0);
+		}
+		if (runsInTopStage[index] != stage)
+		{
+			runsInTop[index] = runsIn(object, currentState.top()) ? 1 : 0;
+			runsInTopStage[index] = stage;
 		}
 		return runsInTop[index] != 0;
 	}

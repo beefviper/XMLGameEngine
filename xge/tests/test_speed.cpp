@@ -8,8 +8,11 @@
 // `xgetest "[.speed]"` to print the table, and compare a build before and
 // after a change. Each game is started with Space and then played for a
 // while with the movement keys held in turn, so things get going on screen.
+// The random numbers start the same way every run, so two builds play the
+// same games.
 
 #include "played.h"
+#include "game/random.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -18,6 +21,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -43,6 +47,7 @@ TEST_CASE("Every game's load and frame times", "[.speed]")
 	constexpr int kFrames = 3600;
 	const xge::KeyCode keys[] = { xge::KeyCode::D, xge::KeyCode::W, xge::KeyCode::A, xge::KeyCode::S };
 
+	xge::fixRandomSeed(1);
 	std::printf("%-16s %10s %12s %12s %8s\n", "game", "load ms", "frame us", "worst us", "objects");
 	double totalLoad = 0.0;
 	double totalFrame = 0.0;
@@ -76,5 +81,6 @@ TEST_CASE("Every game's load and frame times", "[.speed]")
 		std::printf("%-16s %10.1f %12.1f %12.1f %8zu\n", name.c_str(), load, perFrame, worst * 1000.0, play.game.getCurrentObjects().size());
 	}
 	std::printf("%-16s %10.1f %12.1f\n", "all", totalLoad, totalFrame);
+	xge::fixRandomSeed(std::nullopt);
 	SUCCEED();
 }

@@ -34,6 +34,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -95,8 +96,14 @@ namespace xge
 		std::set<std::string> warnedDivisions;
 
 		exprtk::symbol_table<float> symbolTable;
-		exprtk::expression<float> expression;
 		exprtk::parser<float> parser;
+
+		// Every text compiled so far (evaluateExpression), and the names each
+		// reads (namesIn): exprtk's parser is costly to build and run, and
+		// the same texts are worked out again and again.
+		std::unordered_map<std::string, exprtk::expression<float>> compiled;
+		mutable std::unordered_map<std::string, std::vector<std::string>> namesInText;
+		const std::vector<std::string>& namesIn(const std::string& text) const;
 
 		// A value's number: its expression worked out, or the number its tag
 		// makes. `where` says whose value it is, for the message if the

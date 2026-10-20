@@ -78,9 +78,9 @@ namespace xge
 		// one the motion came in through.
 		static std::optional<SweepHit> sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB);
 
-		// The first look before a sweep (sweptBoxesMeet, by what each touches
-		// with): false when the two cannot touch at all over these moves.
-		static bool mayTouch(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB) noexcept;
+		// The box what the object touches with covers over this move
+		// (sweptBox): two whose boxes do not meet (boxesMeet) cannot touch.
+		static Box reach(const Object& object, const Vector2f& move) noexcept;
 
 		// Everything about a touch just found, `time` through the frame, on
 		// that edge of b, as the two are now (play/geometry.h's contactOf):
