@@ -1809,8 +1809,42 @@ namespace xge
 		auto found = namesInText.find(text);
 		if (found == namesInText.end())
 		{
+			// Read by hand rather than by exprtk::collect_variables, which
+			// builds a whole parser each time: every word that is not a
+			// number (paddle1.score, sin), without case, as exprtk sees it.
+			// A function's or keyword's name among them names nothing a game
+			// can (a variable may not be named like one).
 			std::vector<std::string> names;
-			exprtk::collect_variables(text, names);
+			const auto letter = [](char c) { return std::isalpha(static_cast<unsigned char>(c)) != 0 || c == '_'; };
+			const auto digit = [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; };
+			for (std::size_t at = 0; at < text.size();)
+			{
+				if (letter(text[at]))
+				{
+					std::string name;
+					while (at < text.size() && (letter(text[at]) || digit(text[at]) || text[at] == '.'))
+					{
+						name += static_cast<char>(std::tolower(static_cast<unsigned char>(text[at])));
+						++at;
+					}
+					if (std::find(names.begin(), names.end(), name) == names.end()) { names.push_back(std::move(name)); }
+				}
+				else if (digit(text[at]) || text[at] == '.')
+				{
+					// A number, its exponent too (2e-3).
+					while (at < text.size() && (digit(text[at]) || text[at] == '.')) { ++at; }
+					if (at + 1 < text.size() && (text[at] == 'e' || text[at] == 'E')
+						&& (digit(text[at + 1]) || ((text[at + 1] == '+' || text[at + 1] == '-') && at + 2 < text.size() && digit(text[at + 2]))))
+					{
+						at += 2;
+						while (at < text.size() && digit(text[at])) { ++at; }
+					}
+				}
+				else
+				{
+					++at;
+				}
+			}
 			found = namesInText.emplace(text, std::move(names)).first;
 		}
 		return found->second;
