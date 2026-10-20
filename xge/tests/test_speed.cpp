@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
-#include <cstdlib>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -40,7 +39,7 @@ TEST_CASE("Every game's load and frame times", "[.speed]")
 	std::vector<std::string> games;
 	for (const auto& entry : std::filesystem::directory_iterator("descriptions"))
 	{
-		if (entry.path().extension() == ".xml" && (!std::getenv("ONLY") || entry.path().stem().string() == std::getenv("ONLY"))) { games.push_back(entry.path().stem().string()); }
+		if (entry.path().extension() == ".xml") { games.push_back(entry.path().stem().string()); }
 	}
 	std::sort(games.begin(), games.end());
 
