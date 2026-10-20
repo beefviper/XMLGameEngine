@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <iomanip>
 #include <limits>
 #include <regex>
@@ -56,6 +57,8 @@ namespace xge
 			stateTimers[state.name] = state.timers;
 		}
 		startScenes();
+		runsInTop.assign(objects.size(), 0);
+		runsInTopStage.assign(objects.size(), 0);
 		// Every object's own visual is built later, by Engine, once a real
 		// Window (and therefore a real backend to build against) exists -
 		// see Window::init() in window/window.h.
@@ -86,9 +89,8 @@ namespace xge
 			bool allMeasured = true;
 			for (const auto& dependency : object.sizeDependencies)
 			{
-				const auto measured = std::find_if(objects.begin(), objects.end(),
-					[&](const Object& other) { return other.name == dependency && other.sizeKnown; });
-				if (measured == objects.end())
+				const Object* measured = tryGetObject(dependency);
+				if (!measured || measured->name != dependency || !measured->sizeKnown)
 				{
 					allMeasured = false;
 					break;
@@ -254,19 +256,15 @@ namespace xge
 	{
 		if (!object.isVisible || currentState.empty()) { return false; }
 
-		// One of the game's own objects (not a copy held elsewhere).
-		const std::less<const Object*> before;
-		if (objects.empty() || before(&object, objects.data()) || !before(&object, objects.data() + objects.size()))
+		// One of the game's own objects (not a copy held elsewhere): its
+		// answer is kept (runsInTop).
+		const std::uintptr_t offset = reinterpret_cast<std::uintptr_t>(&object) - reinterpret_cast<std::uintptr_t>(objects.data());
+		const std::size_t index = offset / sizeof(Object);
+		if (offset % sizeof(Object) != 0 || index >= runsInTopStage.size())
 		{
 			return runsIn(object, currentState.top());
 		}
 
-		const auto index = static_cast<std::size_t>(&object - objects.data());
-		if (runsInTop.size() != objects.size())
-		{
-			runsInTop.assign(objects.size(), 0);
-			runsInTopStage.assign(objects.size(), 0);
-		}
 		if (runsInTopStage[index] != stage)
 		{
 			runsInTop[index] = runsIn(object, currentState.top()) ? 1 : 0;

@@ -283,7 +283,7 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
-				if (!rules.inPlay(object) || (object.pulls.empty() && object.seekTarget.empty())) { continue; }
+				if ((object.pulls.empty() && object.seekTarget.empty()) || !rules.inPlay(object)) { continue; }
 
 				const Vector2f middle = object.position + sizeOf(object) * 0.5f;
 				for (const auto& [name, strength] : object.pulls)
@@ -652,7 +652,7 @@ namespace xge
 		// pause or a menu holds it where it was.
 		for (auto& object : objects)
 		{
-			if (rules.inPlay(object)) { object.advanceAnimation(); }
+			if (object.animationBitmaps.size() > 1 && rules.inPlay(object)) { object.advanceAnimation(); }
 		}
 
 		rules.timers();
@@ -673,7 +673,7 @@ namespace xge
 		// Screen-edge checks: independent per object, order doesn't matter.
 		for (auto& object : objects)
 		{
-			if (rules.inPlay(object) && object.collisionData.enabled && isMoving(object))
+			if (object.collisionData.enabled && isMoving(object) && rules.inPlay(object))
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{
@@ -694,11 +694,11 @@ namespace xge
 		// frame poking out past the wall (and stay there once it stopped).
 		for (auto& object : objects)
 		{
-			if (rules.inPlay(object) && object.collisionData.enabled)
+			if (object.collisionData.enabled && rules.inPlay(object))
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{
-					if (rules.sticksAt(object, edge) && CollisionDetector::touchesScreenEdge(object, window, edge))
+					if (CollisionDetector::touchesScreenEdge(object, window, edge) && rules.sticksAt(object, edge))
 					{
 						stick(object, window, edge);
 					}
