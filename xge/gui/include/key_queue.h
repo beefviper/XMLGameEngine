@@ -43,6 +43,7 @@ namespace xge
 		std::vector<std::pair<KeyCode, bool>> pending;
 		std::array<bool, static_cast<std::size_t>(KeyCode::Count)> down{};
 
+		bool queueEvent(const QKeyEvent& event, bool pressed);
 		void queue(KeyCode key, bool pressed);
 	};
 }

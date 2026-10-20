@@ -11,8 +11,39 @@ namespace xge
 {
 	namespace
 	{
-		KeyCode keyCodeFromQt(int key, Qt::KeyboardModifiers modifiers) noexcept
+		// Qt names Shift, Control, Alt and Meta once for both hands; which
+		// one was pressed is only in the code the system sent. Windows gives
+		// the key's scan code (the right Control, Alt and Windows keys with
+		// the extended bit, 0x100), macOS its virtual key, X11 and Wayland
+		// its keysym (Shift_R and the like; AltGr is the right Alt).
+		bool isRightHand(const QKeyEvent& event) noexcept
 		{
+#if defined(Q_OS_WIN)
+			switch (event.nativeScanCode())
+			{
+			case 0x36: case 0x11D: case 0x138: case 0x15C: return true;
+			default: return false;
+			}
+#elif defined(Q_OS_MACOS)
+			switch (event.nativeVirtualKey())
+			{
+			case 0x3C: case 0x3E: case 0x3D: case 0x36: return true;
+			default: return false;
+			}
+#else
+			switch (event.nativeVirtualKey())
+			{
+			case 0xFFE2: case 0xFFE4: case 0xFFEA: case 0xFFEC: case 0xFE03: return true;
+			default: return false;
+			}
+#endif
+		}
+
+		KeyCode keyCodeFromQt(const QKeyEvent& event) noexcept
+		{
+			const int key = event.key();
+			const bool keypad = (event.modifiers() & Qt::KeypadModifier) != 0;
+
 			if (key >= Qt::Key_A && key <= Qt::Key_Z)
 			{
 				return static_cast<KeyCode>(static_cast<int>(KeyCode::A) + (key - Qt::Key_A));
@@ -20,9 +51,8 @@ namespace xge
 
 			if (key >= Qt::Key_0 && key <= Qt::Key_9)
 			{
-				const int digit = key - Qt::Key_0;
-				const KeyCode first = (modifiers & Qt::KeypadModifier) ? KeyCode::Numpad0 : KeyCode::Num0;
-				return static_cast<KeyCode>(static_cast<int>(first) + digit);
+				const KeyCode first = keypad ? KeyCode::Numpad0 : KeyCode::Num0;
+				return static_cast<KeyCode>(static_cast<int>(first) + (key - Qt::Key_0));
 			}
 
 			if (key >= Qt::Key_F1 && key <= Qt::Key_F15)
@@ -33,10 +63,11 @@ namespace xge
 			switch (key)
 			{
 			case Qt::Key_Escape: return KeyCode::Escape;
-			case Qt::Key_Control: return KeyCode::LControl;
-			case Qt::Key_Shift: return KeyCode::LShift;
-			case Qt::Key_Alt: return KeyCode::LAlt;
-			case Qt::Key_Meta: return KeyCode::LSystem;
+			case Qt::Key_Control: return isRightHand(event) ? KeyCode::RControl : KeyCode::LControl;
+			case Qt::Key_Shift: return isRightHand(event) ? KeyCode::RShift : KeyCode::LShift;
+			case Qt::Key_Alt:
+			case Qt::Key_AltGr: return isRightHand(event) ? KeyCode::RAlt : KeyCode::LAlt;
+			case Qt::Key_Meta: return isRightHand(event) ? KeyCode::RSystem : KeyCode::LSystem;
 			case Qt::Key_Menu: return KeyCode::Menu;
 			case Qt::Key_BracketLeft: return KeyCode::LBracket;
 			case Qt::Key_BracketRight: return KeyCode::RBracket;
@@ -44,11 +75,11 @@ namespace xge
 			case Qt::Key_Comma: return KeyCode::Comma;
 			case Qt::Key_Period: return KeyCode::Period;
 			case Qt::Key_Apostrophe: return KeyCode::Apostrophe;
-			case Qt::Key_Slash: return (modifiers & Qt::KeypadModifier) ? KeyCode::Divide : KeyCode::Slash;
+			case Qt::Key_Slash: return keypad ? KeyCode::Divide : KeyCode::Slash;
 			case Qt::Key_Backslash: return KeyCode::Backslash;
 			case Qt::Key_QuoteLeft: return KeyCode::Grave;
 			case Qt::Key_Equal: return KeyCode::Equal;
-			case Qt::Key_Minus: return (modifiers & Qt::KeypadModifier) ? KeyCode::Subtract : KeyCode::Hyphen;
+			case Qt::Key_Minus: return keypad ? KeyCode::Subtract : KeyCode::Hyphen;
 			case Qt::Key_Plus: return KeyCode::Add;
 			case Qt::Key_Asterisk: return KeyCode::Multiply;
 			case Qt::Key_Space: return KeyCode::Space;
@@ -74,7 +105,17 @@ namespace xge
 
 	bool KeyQueue::press(const QKeyEvent& event)
 	{
-		const KeyCode key = keyCodeFromQt(event.key(), event.modifiers());
+		return queueEvent(event, true);
+	}
+
+	bool KeyQueue::release(const QKeyEvent& event)
+	{
+		return queueEvent(event, false);
+	}
+
+	bool KeyQueue::queueEvent(const QKeyEvent& event, bool pressed)
+	{
+		const KeyCode key = keyCodeFromQt(event);
 		if (key == KeyCode::Unknown)
 		{
 			return false;
@@ -83,23 +124,7 @@ namespace xge
 		// Held keys repeat as press events; the engine only wants the first.
 		if (!event.isAutoRepeat())
 		{
-			queue(key, true);
-		}
-
-		return true;
-	}
-
-	bool KeyQueue::release(const QKeyEvent& event)
-	{
-		const KeyCode key = keyCodeFromQt(event.key(), event.modifiers());
-		if (key == KeyCode::Unknown)
-		{
-			return false;
-		}
-
-		if (!event.isAutoRepeat())
-		{
-			queue(key, false);
+			queue(key, pressed);
 		}
 
 		return true;

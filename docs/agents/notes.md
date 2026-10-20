@@ -54,6 +54,7 @@ Reasons and details: [generator](../designs/40-generator.md).
 - No OpenGL through Qt: do not bring back a `QOpenGLWidget` without a guard around every library call ([gui](../designs/53-gui.md)).
 - Anything running while `GameSession` swaps game or window must check its `changing` guard.
 - Do not style `QSpinBox` borders (arrows vanish).
+- Qt's `key()` is one code for both Shifts (and Controls, Alts, Metas): the side comes from `nativeScanCode()`/`nativeVirtualKey()` (`key_queue.cpp`). A game binding `rshift` works in every window library only because of that.
 
 ## Tools and privacy
 
