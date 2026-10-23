@@ -102,7 +102,7 @@ namespace
 			int n = 0;
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == "playing.bombs" && object.isVisible) { ++n; }
+				if (object.groupName == "playing.bomb" && object.isVisible) { ++n; }
 			}
 			return n;
 		}
@@ -137,13 +137,13 @@ TEST_CASE("the wave drops bombs, and a bomb costs a ship", "[megamania]")
 	CHECK(most > 0);
 
 	play.noBombs("wave1");
-	play.game.resetObject("bombs");
+	play.game.despawn("bomb");
+	play.frames(1);
 	const float lives = play.player().variable.at("lives");
-	Object& bomb = play.game.getObject("bombs.1.1");
+	Object& bomb = *play.game.spawn("bomb");
 	bomb.position = { play.player().position.x + 10.0f, play.player().position.y - 30.0f };
 	bomb.velocity = { 0.0f, 4.0f };
-	bomb.isVisible = true;
-	bomb.collisionData.enabled = true;
+	play.game.settleSpawns();
 	play.frames(15);
 	CHECK(play.player().variable.at("lives") == lives - 1);
 	CHECK(play.bombsInPlay() == 0);

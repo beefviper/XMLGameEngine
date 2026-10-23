@@ -159,23 +159,23 @@ TEST_CASE("a counter-missile flies to the sight and bursts there", "[missilecomm
 
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	REQUIRE(play.inPlay("playing.abms") == 1);
-	const Object& abm = play.game.getObject("abms.1");
+	REQUIRE(play.inPlay("playing.abm") == 1);
+	const Object& abm = play.game.getObject("abm.1");
 	CHECK(abm.velocity.x < 0.0f);
 	CHECK(abm.velocity.y < 0.0f);
 	CHECK(std::hypot(abm.velocity.x, abm.velocity.y) == Approx(7.0f));
 
 	play.frames(60);
-	CHECK(play.inPlay("playing.abms") == 0);
-	REQUIRE(play.inPlay("playing.bursts") == 1);
-	const Vector2f burst = middleOf(play.game.getObject("bursts.1"));
+	CHECK(play.inPlay("playing.abm") == 0);
+	REQUIRE(play.inPlay("playing.burst") == 1);
+	const Vector2f burst = middleOf(play.game.getObject("burst.1"));
 	// It goes off where the counter-missile first touches the sight.
 	CHECK(burst.x == Approx(aimedAt.x).margin(12.0f));
 	CHECK(burst.y == Approx(aimedAt.y).margin(12.0f));
 
 	// And it is gone again a moment later.
 	play.frames(45);
-	CHECK(play.inPlay("playing.bursts") == 0);
+	CHECK(play.inPlay("playing.burst") == 0);
 }
 
 TEST_CASE("a missile that flies into a burst scores and starts again above the sky", "[missilecommand]")
@@ -186,8 +186,8 @@ TEST_CASE("a missile that flies into a burst scores and starts again above the s
 
 	play.tap(KeyCode::Space);
 	play.frames(40);
-	REQUIRE(play.inPlay("playing.bursts") == 1);
-	const Object& burst = play.game.getObject("bursts.1");
+	REQUIRE(play.inPlay("playing.burst") == 1);
+	const Object& burst = play.game.getObject("burst.1");
 
 	Object& missile = play.missile("wave1", 1);
 	missile.position = { middleOf(burst).x - 2.0f, burst.position.y - 30.0f };
@@ -324,7 +324,7 @@ TEST_CASE("a counter-missile trails a line back to the base while it flies", "[m
 
 	play.tap(KeyCode::Space);
 	play.frames(5);
-	const Object& abm = play.game.getObject("abms.1");
+	const Object& abm = play.game.getObject("abm.1");
 	REQUIRE(abm.isVisible);
 	const Object& trail = play.game.getObject("trail1");
 	CHECK(trail.isVisible);
@@ -333,7 +333,7 @@ TEST_CASE("a counter-missile trails a line back to the base while it flies", "[m
 
 	// Burst at the sight, the shot and its trail are gone.
 	play.frames(60);
-	CHECK_FALSE(abm.isVisible);
+	CHECK(play.game.tryGetObject("abm.1") == nullptr);
 	CHECK_FALSE(play.game.getObject("trail1").isVisible);
 }
 
@@ -343,18 +343,14 @@ TEST_CASE("a burst swells and shrinks, and goes after three quarters of a second
 	play.start();
 	play.holdMissiles("wave1");
 	play.tap(KeyCode::Space);
-	Object* burst = nullptr;
-	for (int frame = 0; frame < 120 && !burst; ++frame)
-	{
-		play.frames(1);
-		if (play.game.getObject("bursts.1").isVisible) { burst = &play.game.getObject("bursts.1"); }
-	}
-	REQUIRE(burst);
-	CHECK(burst->animationIndex == 0);
+	int frame = 0;
+	for (; frame < 120 && !play.game.tryGetObject("burst.1"); ++frame) { play.frames(1); }
+	REQUIRE(play.game.tryGetObject("burst.1"));
+	CHECK(play.game.getObject("burst.1").animationIndex == 0);
 	play.frames(18);
-	CHECK(burst->animationIndex == 2); // full
+	CHECK(play.game.getObject("burst.1").animationIndex == 2); // full
 	play.frames(30);
-	CHECK_FALSE(burst->isVisible);
+	CHECK(play.game.tryGetObject("burst.1") == nullptr);
 }
 
 TEST_CASE("paused, the game is drawn still underneath and nothing falls", "[missilecommand]")

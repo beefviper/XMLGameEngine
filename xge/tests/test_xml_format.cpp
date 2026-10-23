@@ -681,10 +681,9 @@ namespace
 	// every load, so only its name is compared (Missile Command's missiles, and Demon Attack's small demons, too).
 	std::string comparable(const Object& object)
 	{
-		// Named by their paths where a state or a scene owns them (playing.ball, playing.wave2.halves.1).
+		// Named by their paths where a state or a scene owns them (playing.ball, playing.wave2.half).
 		const auto endsWith = [&](const std::string& end) { return object.name == end || (object.name.size() > end.size() && object.name.compare(object.name.size() - end.size() - 1, end.size() + 1, "." + end) == 0); };
-		const bool halves = object.name.rfind("halves.", 0) == 0 || object.name.find(".halves.") != std::string::npos;
-		const bool drawn = endsWith("ball") || object.objClass == "bombs" || object.objClass == "rocks" || object.objClass == "spinner" || object.objClass == "missile" || object.objClass == "ufo" || halves;
+		const bool drawn = endsWith("ball") || endsWith("half") || object.objClass == "bomb" || object.objClass == "rocks" || object.objClass == "spinner" || object.objClass == "missile" || object.objClass == "ufo";
 		return drawn ? object.name : printed(object);
 	}
 

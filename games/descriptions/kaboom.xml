@@ -23,7 +23,7 @@
     one. A bomb on the ground makes the stack one shorter with two
     <become from=>s, the two of them first, so only one of them changes it.
     A shorter stack is a smaller picture, so it catches less.
-  * The waves are the <scenes> of the playing state. The bomber, his pool of
+  * The waves are the <scenes> of the playing state. The bomber, his
     bombs and the wave's label are the kit; the first wave takes them, and
     each later wave is the one before (from=) with its own <variables>: its
     number, the score it ends at, how fast the bomber paces, how often he
@@ -33,10 +33,10 @@
     (worked out again each time), so his path is never the same; the other
     <fire>s a bomb every `drop` seconds. He has <facing>down</facing>, so a
     bomb leaves from under him and falls at its own speed.
-  * The bombs are a pool of hidden bombs, their fuses fizzing (an
-    <animation>), that <die /> back into the pool when caught. One that hits
-    the ground runs <reset object="bombs" />, which puts every bomb of the
-    wave back in the pool at once: the explosion.
+  * A bomb does not <exists> until the bomber <fire>s one, its fuse fizzing
+    (an <animation>), and it <despawn>s when caught. One that hits the
+    ground runs <despawn object="bomb" />, which takes away every bomb of
+    the wave at once: the explosion.
   * A <condition name="reached"> of the first wave enters its way "next" once
     the score is `upto`. Each later wave copies it (from=), saying only its
     own `upto` and where its "next" leads; the last writes a condition of
@@ -233,12 +233,12 @@
               </timer>
               <timer>
                 <every>drop</every>
-                <fire object="bombs" />
+                <fire object="bomb" />
               </timer>
             </timers>
           </object>
-          <!-- the bombs: ten in a pool, hidden until the bomber drops one -->
-          <group name="bombs" class="bombs">
+          <!-- a bomb, there once the bomber drops it: ten at most -->
+          <object name="bomb" class="bomb">
             <sprite name="fizz">
               <bitmap>
                 <row>....y.</row>
@@ -272,27 +272,25 @@
               <frame sprite="fizz" />
               <frame sprite="spark" />
             </animation>
-            <position><x>0</x><y>0</y></position>
             <velocity><y>fall</y></velocity>
-            <hidden>true</hidden>
+            <exists>false</exists>
+            <most>10</most>
             <collisions>
-              <enabled>false</enabled>
+              <enabled>true</enabled>
               <collision edge="bottom">
                 <dec variable="bucket.buckets" />
                 <become object="bucket" from="two" sprite="one" />
                 <become object="bucket" from="three" sprite="two" />
                 <play sound="boom" />
-                <reset object="bombs" />
+                <despawn object="bomb" />
               </collision>
               <collision object="bucket">
                 <inc variable="bucket.score">points</inc>
                 <play sound="catch" />
-                <die />
+                <despawn />
               </collision>
             </collisions>
-            <member /><member /><member /><member /><member />
-            <member /><member /><member /><member /><member />
-          </group>
+          </object>
           <object name="wavelabel">
             <sprite><text style="hud"><content>WAVE</content><number>wave</number></text></sprite>
             <position><x>window.right - wavelabel.width - margin</x><y>12</y></position>
@@ -313,13 +311,13 @@
             <object name="rooftop" />
             <object name="ledge" />
             <object name="bomber" />
-            <group name="bombs" />
+            <object name="bomb" />
             <object name="wavelabel" />
           </objects>
           <conditions>
             <condition name="reached" object="bucket" variable="score">
               <atleast>upto</atleast>
-              <reset object="bombs" />
+              <despawn object="bomb" />
               <enter way="next" />
               <play sound="wave" />
             </condition>
@@ -405,7 +403,7 @@
             <!-- in place of the copied "reached": the last wave wins -->
             <condition name="reached" object="bucket" variable="score">
               <atleast>upto</atleast>
-              <reset object="bombs" />
+              <despawn object="bomb" />
               <push state="youwin" />
               <play sound="wave" />
             </condition>

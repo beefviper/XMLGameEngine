@@ -24,9 +24,9 @@
   * The base <aim>s at the sight on a timer, all the time, so whatever it
     <fire>s goes straight at where the sight is. Each trail is a <tether>
     from the base to one counter-missile, in play while it is.
-  * A counter-missile that meets the sight <release>s a burst there: a pool
-    whose <animation> grows and shrinks, tested by its pixels, and which
-    <die />s back into the pool on a timer that starts over each time.
+  * A counter-missile that meets the sight <release>s a burst there, whose
+    <animation> grows and shrinks, tested by its pixels, and which
+    <despawn />s on a timer of its own.
   * A missile is a streak of one line with a <heading>; it <chase>s the
     nearest city still standing, worked out again on a timer, and turns
     to point the way it goes. One that is done (shot down, or landed) is
@@ -162,7 +162,7 @@
           <position><x><centered /></x><y>ground - base.height</y></position>
           <actions>
             <action name="launch">
-              <fire object="abms" />
+              <fire object="abm" />
               <play sound="launch" />
             </action>
           </actions>
@@ -171,30 +171,27 @@
           </timers>
         </object>
         <!-- the counter-missiles' trails, back to the base -->
-        <object name="trail1"><sprite><tether from="base" to="abms.1"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
-        <object name="trail2"><sprite><tether from="base" to="abms.2"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
-        <object name="trail3"><sprite><tether from="base" to="abms.3"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <object name="trail1"><sprite><tether from="base" to="abm.1"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <object name="trail2"><sprite><tether from="base" to="abm.2"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <object name="trail3"><sprite><tether from="base" to="abm.3"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
         <!-- the counter-missiles, three in the air at once; each bursts where it meets the sight -->
-        <group name="abms" class="abm">
+        <object name="abm" class="abm">
           <sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>-abmspeed</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>3</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
             <collision object="sight">
-              <release object="bursts" />
+              <release object="burst" />
               <play sound="burst" />
-              <die />
+              <despawn />
             </collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-        </group>
-        <!-- the bursts: a fireball that swells, flashes and shrinks, then goes back in the pool -->
-        <group name="bursts" class="burst">
+        </object>
+        <!-- a burst: a fireball that swells, flashes and shrinks, then is gone -->
+        <object name="burst" class="burst">
           <sprite name="small">
             <bitmap>
               <row>.........</row>
@@ -250,19 +247,16 @@
             <frame sprite="full" />
             <frame sprite="middle" />
           </animation>
-          <position><x>0</x><y>0</y></position>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>3</most>
           <collisions>
             <enabled>true</enabled>
             <type>pixel</type>
           </collisions>
           <timers>
-            <timer><every>0.75</every><die /></timer>
+            <timer><every>0.75</every><despawn /></timer>
           </timers>
-          <member />
-          <member />
-          <member />
-        </group>
+        </object>
         <!-- the sight the player steers -->
         <object name="sight">
           <sprite>

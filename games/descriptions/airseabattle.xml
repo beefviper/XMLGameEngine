@@ -22,8 +22,9 @@
     inside it for each lane: its picture, height, speed and planes.
   * The guns are one group with a <heading>; pointing is <set> on the
     gun's own heading (self.heading), and each player's gun is a group
-    inside it with its color and the shells it fires. The shells are one
-    group too, a pool of two each, whose class says whose they are.
+    inside it with its color and the shell it fires. The shells are one
+    group too, which does not exist until a gun fires: two each at most,
+    and each player's has a name of its own, which says whose it is.
   * The clock is a timer of the battle taking a second off status.time.
   * At time up the two scores are compared (<above object="gun2"
     variable="score" />, <equal>), and the result screen takes the place of
@@ -136,12 +137,12 @@
           <collisions>
             <enabled>true</enabled>
             <collision edge="horizontal"><wrap /></collision>
-            <collision class="shots1">
+            <collision object="shell1">
               <inc variable="gun1.score" />
               <play sound="hit" />
               <die />
             </collision>
-            <collision class="shots2">
+            <collision object="shell2">
               <inc variable="gun2.score" />
               <play sound="hit" />
               <die />
@@ -253,7 +254,7 @@
           <group name="yellow">
             <actions>
               <action name="fire">
-                <fire object="shots1" />
+                <fire object="shell1" />
                 <play sound="fire" />
               </action>
             </actions>
@@ -263,33 +264,26 @@
             <sprite><bitmap><color>color.white</color></bitmap></sprite>
             <actions>
               <action name="fire">
-                <fire object="shots2" />
+                <fire object="shell2" />
                 <play sound="fire" />
               </action>
             </actions>
             <member name="gun2"><position><x><centered>window.width.center * 3 / 2</centered></x></position></member>
           </group>
         </group>
-        <!-- two shells each, out of play until fired -->
+        <!-- each gun's shell, made when it fires: two each in the air at most -->
         <group name="shells">
           <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>-shellspeed</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>2</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="plane"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision class="plane"><despawn /></collision>
           </collisions>
-          <group name="shots1" class="shots1">
-            <member />
-            <member />
-          </group>
-          <group name="shots2" class="shots2">
-            <sprite><rectangle><color>color.white</color></rectangle></sprite>
-            <member />
-            <member />
-          </group>
+          <member name="shell1" />
+          <member name="shell2"><sprite><rectangle><color>color.white</color></rectangle></sprite></member>
         </group>
         <object name="score1">
           <sprite><text style="hud"><number>gun1.score</number></text></sprite>

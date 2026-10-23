@@ -323,18 +323,18 @@ TEST_CASE("a wreck breaks the lander up, costs fuel, and the next one comes afte
 	CHECK(moon.game.isShown(moon.game.getObject("wrecked")));
 	for (int piece = 1; piece <= 4; ++piece)
 	{
-		CHECK(moon.game.isShown(moon.game.getObject("debris." + std::to_string(piece))));
+		CHECK(moon.game.isShown(moon.game.getObject("debris." + std::to_string(piece) + ".1")));
 	}
-	const float pieceY = moon.game.getObject("debris.1").position.y;
+	const float pieceY = moon.game.getObject("debris.1.1").position.y;
 	moon.frames(20);
-	CHECK(moon.game.getObject("debris.1").position.y != pieceY);
+	CHECK(moon.game.getObject("debris.1.1").position.y != pieceY);
 
 	moon.frames(150);
 
 	CHECK_FALSE(moon.wrecked());
 	CHECK(moon.lander().position.y < 45.0f);
 	CHECK_FALSE(moon.game.isShown(moon.game.getObject("wrecked")));
-	CHECK_FALSE(moon.game.isShown(moon.game.getObject("debris.1")));
+	CHECK(moon.game.tryGetObject("debris.1.1") == nullptr); // taken away for the next lander
 	CHECK(moon.fuel() == 800.0f);
 }
 

@@ -5,11 +5,11 @@
 //
 // Catch2 tests for games/descriptions/kaboom.xml, played frame by frame by a real
 // xge::Game with no window. The Mad Bomber paces the rooftop, turning when a
-// <timer> with a random wait says so, and drops bombs from a pool on another
-// timer, from under himself (<facing>down</facing>). A bomb caught goes back
-// into the pool; one on the ground costs a bucket and puts every bomb of the
-// wave back at once (<reset object>). The eight waves are the scenes of the
-// playing state, each taking the bomber and his pool from the kit with its own
+// <timer> with a random wait says so, and drops bombs, copies of one that does
+// not exist, on another timer, from under himself (<facing>down</facing>). A
+// bomb caught is despawned; one on the ground costs a bucket and takes every
+// bomb of the wave away at once (<despawn object>). The eight waves are the
+// scenes of the playing state, each taking the bomber and his bomb from the kit with its own
 // pace, drop, fall and points, and the bucket stack (three looks) is the state's own.
 //
 // Window::init() normally measures each object's size once a backend exists;
@@ -22,6 +22,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -81,13 +82,13 @@ namespace
 			for (int i = 0; i < count; ++i) { game.updateObjects(); }
 		}
 
-		// The bombs of a wave's pool that are falling.
+		// The bombs of a wave that are falling.
 		std::vector<Object*> falling(const std::string& wave = "wave1")
 		{
 			std::vector<Object*> found;
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == of(wave, "bombs") && object.isVisible) { found.push_back(&object); }
+				if (object.groupName == of(wave, "bomb") && object.isVisible) { found.push_back(&object); }
 			}
 			return found;
 		}
@@ -100,7 +101,7 @@ namespace
 			float lowest = -1.0f;
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.objClass != "bombs" || !object.isVisible || !game.isShown(object)) { continue; }
+				if (object.objClass != "bomb" || !object.isVisible || !game.isShown(object)) { continue; }
 				if (object.position.y > lowest && object.position.y < bucket().position.y)
 				{
 					lowest = object.position.y;
@@ -127,7 +128,7 @@ namespace
 	};
 }
 
-TEST_CASE("kaboom.xml loads a stack of buckets, and a bomber and a pool of ten bombs in each of eight waves", "[kaboom]")
+TEST_CASE("kaboom.xml loads a stack of buckets, and a bomber and a bomb that does not exist yet in each of eight waves", "[kaboom]")
 {
 	Table table;
 
@@ -142,15 +143,10 @@ TEST_CASE("kaboom.xml loads a stack of buckets, and a bomber and a pool of ten b
 		CHECK(object.timers.size() == 2);
 		CHECK(object.position.y + object.size.y <= 104.0f + 1.0f);
 
-		int members = 0;
-		for (const auto& bomb : table.game.getCurrentObjects())
-		{
-			if (bomb.groupName != of(wave, "bombs")) { continue; }
-			++members;
-			CHECK_FALSE(bomb.isVisible);
-			CHECK_FALSE(bomb.collisionData.enabled);
-		}
-		CHECK(members == 10);
+		const Object& bomb = table.game.getObject(of(wave, "bomb"));
+		CHECK_FALSE(bomb.exists);
+		CHECK(bomb.most == 10);
+		CHECK(table.falling(wave).empty());
 	}
 
 	CHECK(table.buckets() == 3);
@@ -225,7 +221,7 @@ TEST_CASE("held keys slide the bucket and it stops at the sides", "[kaboom]")
 	CHECK(table.bucket().position.x + table.bucket().size.x == Approx(kWindowWidth));
 }
 
-TEST_CASE("a caught bomb scores one to eight by the wave, and goes back into the pool", "[kaboom]")
+TEST_CASE("a caught bomb scores one to eight by the wave, and is gone", "[kaboom]")
 {
 	for (const auto& [wave, points] : { std::tuple{ "wave1", 1.0f }, std::tuple{ "wave2", 2.0f }, std::tuple{ "wave3", 3.0f }, std::tuple{ "wave8", 8.0f } })
 	{
@@ -235,12 +231,13 @@ TEST_CASE("a caught bomb scores one to eight by the wave, and goes back into the
 		// Wait for the first bomb, then put the bucket under it.
 		while (table.falling(wave).empty()) { table.frames(1); }
 		Object& bomb = *table.falling(wave)[0];
+		const std::string name = bomb.name;
 		bomb.position = { table.bucket().position.x + 20.0f, table.bucket().position.y - bomb.size.y };
 		table.frames(2);
 
 		CHECK(table.score() == points);
-		CHECK_FALSE(bomb.isVisible);
-		CHECK_FALSE(bomb.collisionData.enabled);
+		const auto& objects = table.game.getCurrentObjects();
+		CHECK(std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == name; }));
 	}
 }
 
@@ -337,9 +334,9 @@ TEST_CASE("each wave's bomber is quicker and drops faster bombs more often", "[k
 	CHECK(pace3 == Approx(3.5));
 	CHECK(std::abs(table.game.getObject(of("wave8", "bomber")).velocity.x) == Approx(6));
 
-	const float fall1 = table.game.getObject(of("wave1", "bombs.1")).velocity.y;
-	const float fall2 = table.game.getObject(of("wave2", "bombs.1")).velocity.y;
-	const float fall3 = table.game.getObject(of("wave3", "bombs.1")).velocity.y;
+	const float fall1 = table.game.getObject(of("wave1", "bomb")).velocity.y;
+	const float fall2 = table.game.getObject(of("wave2", "bomb")).velocity.y;
+	const float fall3 = table.game.getObject(of("wave3", "bomb")).velocity.y;
 	CHECK(fall1 == Approx(2.5));
 	CHECK(fall2 == Approx(3));
 	CHECK(fall3 == Approx(3.5));
@@ -378,7 +375,7 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	CHECK(game.getObject("bucket").variable["score"] == 0);
 	for (const auto& object : game.getCurrentObjects())
 	{
-		if (object.objClass == "bombs") { CHECK_FALSE(object.isVisible); }
+		if (object.objClass == "bomb") { CHECK_FALSE(object.isVisible); }
 	}
 }
 

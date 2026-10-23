@@ -111,7 +111,7 @@ TEST_CASE("a gun points left, up or right, and fires along the way it points", "
 
 	play.tap(KeyCode::W);
 	play.frames(1);
-	const Object& straight = play.game.getObject("shots1.1");
+	const Object& straight = play.game.getObject("shell1.1");
 	REQUIRE(straight.isVisible);
 	CHECK(straight.velocity.x == Approx(0.0f).margin(0.01f));
 	CHECK(straight.velocity.y == Approx(-6.0f));
@@ -121,7 +121,7 @@ TEST_CASE("a gun points left, up or right, and fires along the way it points", "
 	CHECK(play.game.getObject("gun1").heading == Approx(45.0f));
 	play.tap(KeyCode::W);
 	play.frames(1);
-	const Object& slanted = play.game.getObject("shots1.2");
+	const Object& slanted = play.game.getObject("shell1.2");
 	REQUIRE(slanted.isVisible);
 	CHECK(slanted.velocity.x == Approx(4.243f).margin(0.01f));
 	CHECK(slanted.velocity.y == Approx(-4.243f).margin(0.01f));
@@ -129,8 +129,9 @@ TEST_CASE("a gun points left, up or right, and fires along the way it points", "
 	// Two in the air is all there is.
 	play.tap(KeyCode::W);
 	play.frames(1);
-	CHECK(play.game.getObject("shots1.1").isVisible);
-	CHECK(play.game.getObject("shots1.2").isVisible);
+	CHECK(play.game.getObject("shell1.1").isVisible);
+	CHECK(play.game.getObject("shell1.2").isVisible);
+	CHECK(play.game.tryGetObject("shell1.3") == nullptr);
 
 	// Left and back up; player two's gun is its own.
 	play.tap(KeyCode::A);
@@ -223,7 +224,7 @@ TEST_CASE("paused, the battle is drawn still: the planes stop and the clock neve
 	CHECK(play.game.isStill(play.game.getObject("clock")));
 	CHECK_FALSE(play.game.isShown(jet));
 	CHECK(play.game.isShown(play.game.getObject("paused")));
-	CHECK_FALSE(play.game.isStill(play.game.getObject("shots1.1"))); // never fired
+	CHECK_FALSE(play.game.isStill(play.game.getObject("shell1"))); // never fired itself
 
 	// The clock's holder runs in the battle but is never drawn.
 	Object& status = play.game.getObject("status");

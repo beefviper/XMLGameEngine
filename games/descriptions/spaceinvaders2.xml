@@ -93,7 +93,7 @@
         <collision class="bomb">
           <dec variable="player.lives" />
           <inc variable="player.struck" />
-          <release object="blasts" />
+          <release object="blast" />
           <play sound="playerhit" />
         </collision>
       </collisions>
@@ -167,8 +167,8 @@
           </collisions>
         </object>
         <!-- the aliens' plasma bolts, the sheet's enemy bolt (0,1) flipped to
-             fly down: a pool of three -->
-        <group name="bombs" class="bomb">
+             fly down: three at most -->
+        <object name="bomb" class="bomb">
           <sprite>
             <svg>
               <path>assets/Space Invaders Color Sprites.svg</path>
@@ -178,21 +178,18 @@
               <flip>vertical</flip>
             </svg>
           </sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>5</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>3</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision object="player"><die /></collision>
-            <collision class="shield"><die /></collision>
-            <collision class="ground"><die /></collision>
-            <collision object="bullet"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision object="player"><despawn /></collision>
+            <collision class="shield"><despawn /></collision>
+            <collision class="ground"><despawn /></collision>
+            <collision object="bullet"><despawn /></collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-        </group>
+        </object>
         <group name="shields" class="shield">
           <columns>4</columns>
           <rows>1</rows>
@@ -266,7 +263,7 @@
             <collision edge="right"><die /></collision>
             <collision object="bullet">
               <inc variable="player.score">50 * ceil(self.worth)</inc>
-              <release object="blasts" />
+              <release object="blast" />
               <play sound="alienhit" />
               <die />
             </collision>
@@ -319,7 +316,7 @@
             </collision>
             <collision object="bullet">
               <inc variable="player.score">self.worth</inc>
-              <release object="blasts" />
+              <release object="blast" />
               <play sound="alienhit" />
               <die />
             </collision>
@@ -328,7 +325,7 @@
           <timers>
             <timer>
               <every><random min="2" max="25" /></every>
-              <fire object="bombs" />
+              <fire object="bomb" />
             </timer>
           </timers>
           <row number="2 3">
@@ -345,7 +342,7 @@
           </row>
         </group>
         <!-- the sheet's four explosion frames, left where a hit was -->
-        <group name="blasts" class="blast">
+        <object name="blast" class="blast">
           <sprite name="a">
             <svg>
               <path>assets/Space Invaders Color Sprites.svg</path>
@@ -385,14 +382,12 @@
             <frame sprite="c" />
             <frame sprite="d" />
           </animation>
-          <position><x>0</x><y>0</y></position>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>2</most>
           <timers>
-            <timer><after>0.32</after><die /></timer>
+            <timer><after>0.32</after><despawn /></timer>
           </timers>
-          <member />
-          <member />
-        </group>
+        </object>
         <object name="pace">
           <variables><variable name="next">28</variable></variables>
         </object>
@@ -476,7 +471,7 @@
              each visit starts the second again -->
         <timer>
           <every>1</every>
-          <reset object="bombs" />
+          <despawn object="bomb" />
           <pop />
         </timer>
       </timers>

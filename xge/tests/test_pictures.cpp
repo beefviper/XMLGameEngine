@@ -174,6 +174,6 @@ TEST_CASE("Space Invaders 2's alien bolts are the sheet's bolt turned upside dow
 	Game game{ "descriptions/spaceinvaders2.xml" };
 	Pictures sheet({ "<svg>" + kSvg + "<scale>1.5</scale></svg>" });
 
-	const Object& bolt = game.getObject("bombs.1");
+	const Object& bolt = game.getObject("bomb");
 	CHECK(samePixels(*bolt.bitmap, flipBitmap(*sheet.object(1).bitmap, false, true)));
 }

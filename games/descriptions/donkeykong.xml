@@ -276,9 +276,9 @@
             <position><x>420</x><y>80</y></position>
           </member>
         </group>
-        <!-- the barrels: a pool of eight, out of play until Kong throws one,
+        <!-- a barrel, there once Kong throws it, eight at most,
              rolling as they go -->
-        <group name="barrels" class="barrel">
+        <object name="barrel" class="barrel">
           <sprite name="flat">
             <bitmap>
               <row>...*****...</row>
@@ -320,41 +320,33 @@
             <frame sprite="flat" />
             <frame sprite="end" />
           </animation>
-          <position><x>0</x><y>0</y></position>
           <velocity><x>roll</x></velocity>
           <acceleration><x>0</x><y>pull</y></acceleration>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>8</most>
           <collisions>
-            <enabled>false</enabled>
+            <enabled>true</enabled>
             <collision edge="horizontal">
               <bounce />
             </collision>
             <collision edge="bottom">
-              <die />
+              <despawn />
             </collision>
             <collision class="girder">
               <land />
             </collision>
             <collision object="oil">
-              <die />
+              <despawn />
             </collision>
             <!-- swung at with the hammer -->
             <collision object="man">
               <check object="man" variable="hammer"><atleast>1</atleast></check>
               <inc variable="man.score">300</inc>
               <play sound="smash" />
-              <die />
+              <despawn />
             </collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
-          <member />
-        </group>
+        </object>
         <object name="oil">
           <sprite>
             <bitmap>
@@ -428,7 +420,7 @@
           <timers>
             <timer>
               <every>kong.wait</every>
-              <fire object="barrels" />
+              <fire object="barrel" />
             </timer>
           </timers>
         </object>
@@ -572,7 +564,7 @@
               <play sound="rescue" />
               <set variable="man.bonus">5000</set>
               <reset />
-              <reset object="barrels" />
+              <despawn object="barrel" />
             </collision>
           </collisions>
           <actions>
@@ -599,7 +591,7 @@
               <set variable="man.hammer">0</set>
               <set variable="man.bonus">5000</set>
               <reset />
-              <reset object="barrels" />
+              <despawn object="barrel" />
             </action>
           </actions>
           <variables>

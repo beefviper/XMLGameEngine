@@ -20,8 +20,8 @@
     their own picture and worth (self.worth, read as the rule runs). Their
     fall speeds, slants and starting heights are <random>, drawn again each
     time one is reset to the top.
-  * The shot's rule about the big rocks <release>s two chips, a hidden pool
-    of small rocks, where it hits one.
+  * The shot's rule about the big rocks <release>s two chips, small rocks
+    that do not exist until then, where it hits one.
   * A hit on the base resets every rock and spinner (<reset object>): the
     sky clears, as it does on the Intellivision.
   * The spare bases: the ship's `spare` is the next 1,000, and a condition
@@ -163,10 +163,8 @@
             <variables><variable name="worth">20</variable></variables>
           </group>
         </group>
-        <!-- what a big rock breaks into: a pool of eight small ones, flying apart -->
-        <group name="chips" class="rocks">
-          <columns>8</columns>
-          <rows>1</rows>
+        <!-- what a big rock breaks into: small ones flying apart, eight at most -->
+        <object name="chip" class="rocks">
           <sprite>
             <bitmap>
               <row>.**.</row>
@@ -176,25 +174,25 @@
               <color>color.yellow</color>
             </bitmap>
           </sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><x><random min="-2.5" max="2.5" /></x><y>2.5</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>8</most>
           <collisions>
             <enabled>true</enabled>
             <collision edge="horizontal"><bounce /></collision>
             <collision object="ground">
               <set variable="ship.score">max(0, ship.score - 10)</set>
-              <die />
+              <despawn />
               <play sound="thud" />
             </collision>
             <collision object="shot">
               <inc variable="ship.score">20</inc>
               <set variable="ship.peak">max(ship.peak, ship.score)</set>
-              <die />
+              <despawn />
               <play sound="pop" />
             </collision>
           </collisions>
-        </group>
+        </object>
         <!-- spinners: two, now and then, that blow up the base if they land -->
         <group name="spinners" class="spinner">
           <columns>2</columns>
@@ -248,7 +246,7 @@
             <enabled>false</enabled>
             <collision edge="all"><die /></collision>
             <!-- a big rock breaks where the shot hits it -->
-            <collision object="boulders"><release object="chips">2</release></collision>
+            <collision object="boulders"><release object="chip">2</release></collision>
             <collision class="rocks"><die /></collision>
             <collision class="spinner"><die /></collision>
           </collisions>
@@ -281,7 +279,7 @@
             <action name="lose">
               <dec variable="ship.lives" />
               <reset object="rocks" />
-              <reset object="chips" />
+              <despawn object="chip" />
               <reset object="spinners" />
               <play sound="boom" />
             </action>

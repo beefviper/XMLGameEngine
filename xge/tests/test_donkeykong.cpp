@@ -91,9 +91,17 @@ namespace
 			int n = 0;
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == "playing.barrels" && object.isVisible) { ++n; }
+				if (object.groupName == "playing.barrel" && object.isVisible) { ++n; }
 			}
 			return n;
+		}
+
+		// A barrel, as if Kong had just thrown one, in the game at once.
+		Object& barrel()
+		{
+			const std::string name = game.spawn("barrel")->name;
+			game.settleSpawns();
+			return game.getObject(name);
 		}
 
 		// Puts Jumpman standing on a girder, `x` from the left.
@@ -252,21 +260,24 @@ TEST_CASE("Kong's barrel rolls down every girder to the oil drum", "[donkeykong]
 	play.frames(2);
 	REQUIRE(play.barrelsInPlay() >= 1);
 
-	Object& barrel = play.game.getObject("barrels.1");
-	REQUIRE(barrel.isVisible);
+	// Followed by its name while it lasts (it is despawned at the end).
+	REQUIRE(play.game.tryGetObject("barrel.1"));
 	float lowest = 0.0f;
+	float lastX = 0.0f;
 	bool wentLeft = false;
-	int frame = 0;
-	for (; frame < 60 * 60 && barrel.isVisible; ++frame)
+	for (int frame = 0; frame < 60 * 60; ++frame)
 	{
 		play.frames(1);
-		lowest = std::max(lowest, barrel.position.y + barrel.size.y);
-		if (barrel.velocity.x < 0.0f) { wentLeft = true; }
+		const Object* barrel = play.game.tryGetObject("barrel.1");
+		if (!barrel) { break; }
+		lowest = std::max(lowest, barrel->position.y + barrel->size.y);
+		lastX = barrel->position.x;
+		if (barrel->velocity.x < 0.0f) { wentLeft = true; }
 	}
-	CHECK_FALSE(barrel.isVisible);
+	CHECK(play.game.tryGetObject("barrel.1") == nullptr);
 	CHECK(lowest == Approx(kFloor).margin(1.0f));
 	CHECK(wentLeft);
-	CHECK(barrel.position.x < 40.0f); // at the oil drum
+	CHECK(lastX < 40.0f); // at the oil drum
 	CHECK(play.variable("lives") == 3);
 }
 
@@ -277,11 +288,9 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; le
 	play.standAt(300.0f, kFloor);
 
 	// A barrel rolling left along the floor, towards him.
-	Object& barrel = play.game.getObject("barrels.1");
+	Object& barrel = play.barrel();
 	barrel.position = { 450.0f, kFloor - barrel.size.y };
 	barrel.velocity = { -2.5f, 0.0f };
-	barrel.isVisible = true;
-	barrel.collisionData.enabled = true;
 
 	// Leap as it comes close: it passes under him.
 	while (barrel.position.x > play.man().position.x + play.man().size.x + 20.0f) { play.frames(1); }
@@ -338,7 +347,7 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 	play.kong().timers.at(0).framesLeft = 1;
 	play.frames(10);
 	REQUIRE(play.barrelsInPlay() >= 1);
-	Object& barrel = play.game.getObject("barrels.1");
+	Object& barrel = play.game.getObject("barrel.1");
 	const Vector2f barrelAt = barrel.position;
 
 	play.tap(KeyCode::P);
@@ -351,7 +360,7 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 	CHECK(play.game.isStill(play.game.getObject("floor.1.1")));
 	CHECK_FALSE(play.game.isShown(barrel));
 	CHECK(play.game.isShown(play.game.getObject("paused")));
-	CHECK_FALSE(play.game.isStill(play.game.getObject("barrels.8"))); // never thrown
+	CHECK_FALSE(play.game.isStill(play.game.getObject("barrel"))); // the one written, never thrown itself
 
 	play.tap(KeyCode::P);
 	REQUIRE(play.state() == "playing");
@@ -392,11 +401,9 @@ TEST_CASE("with the hammer a barrel is smashed for points, and the hammer wears 
 	CHECK_FALSE(hammer.isVisible);
 	CHECK(play.man().lookName() == "hammer");
 
-	Object& barrel = play.game.getObject("barrels.1");
+	Object& barrel = play.barrel();
 	barrel.position = { play.man().position.x + 60.0f, kThird - barrel.size.y };
 	barrel.velocity = { -2.5f, 0.0f };
-	barrel.isVisible = true;
-	barrel.collisionData.enabled = true;
 	play.frames(40);
 	CHECK_FALSE(barrel.isVisible);
 	CHECK(play.variable("score") == 300);

@@ -193,7 +193,7 @@
           <position><x>10</x><y>ground - leftpost.height</y></position>
           <heading>45</heading>
           <actions>
-            <action name="fire"><fire object="leftshells" /><play sound="fire" /></action>
+            <action name="fire"><fire object="leftshell" /><play sound="fire" /></action>
           </actions>
         </object>
         <object name="middlepost" class="post">
@@ -212,7 +212,7 @@
           <position><x><centered /></x><y>ground - middlepost.height</y></position>
           <heading>0</heading>
           <actions>
-            <action name="fire"><fire object="middleshells" /><play sound="fire" /></action>
+            <action name="fire"><fire object="middleshell" /><play sound="fire" /></action>
           </actions>
         </object>
         <object name="rightpost" class="post">
@@ -231,46 +231,37 @@
           <position><x>window.right - rightpost.width - 10</x><y>ground - rightpost.height</y></position>
           <heading>315</heading>
           <actions>
-            <action name="fire"><fire object="rightshells" /><play sound="fire" /></action>
+            <action name="fire"><fire object="rightshell" /><play sound="fire" /></action>
           </actions>
         </object>
 
-        <!-- two shells for each post, out of play until fired -->
+        <!-- each post's shell, made when it fires: two each in the air at most -->
         <group name="shells" class="shell">
           <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>-shellspeed</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>2</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="gorgon"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision class="gorgon"><despawn /></collision>
           </collisions>
-          <group name="leftshells">
-            <member /><member />
-          </group>
-          <group name="middleshells">
-            <member /><member />
-          </group>
-          <group name="rightshells">
-            <member /><member />
-          </group>
+          <member name="leftshell" /><member name="middleshell" /><member name="rightshell" />
         </group>
 
         <!-- the death rays, fired from the lowest lane -->
-        <group name="rays" class="ray">
+        <object name="ray" class="ray">
           <sprite><rectangle><width>3</width><height>16</height><color>color.magenta</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>rayspeed</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>4</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="building"><die /></collision>
-            <collision class="ground"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision class="building"><despawn /></collision>
+            <collision class="ground"><despawn /></collision>
           </collisions>
-          <member /><member /><member /><member />
-        </group>
+        </object>
 
         <object name="score">
           <sprite><text style="hud"><number>status.score</number></text></sprite>
@@ -349,7 +340,7 @@
               <timers>
                 <timer>
                   <every><random min="raygap - 1" max="raygap + 1" /></every>
-                  <fire object="rays" />
+                  <fire object="ray" />
                   <play sound="ray" />
                 </timer>
               </timers>
@@ -382,8 +373,8 @@
               <atleast>quota</atleast>
               <play sound="wave" />
               <reset object="tally" />
-              <reset object="rays" />
-              <reset object="shells" />
+              <despawn object="ray" />
+              <despawn object="shells" />
               <enter way="next" />
             </condition>
           </conditions>

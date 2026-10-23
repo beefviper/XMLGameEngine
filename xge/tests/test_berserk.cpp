@@ -227,7 +227,7 @@ namespace
 
 // ------------------------------------------------------------------ the game
 
-TEST_CASE("berserk.xml loads the man, four rooms of robots, exits, an Otto and a pool of robot shots", "[berserk]")
+TEST_CASE("berserk.xml loads the man, four rooms of robots, exits, an Otto and a robot shot to copy", "[berserk]")
 {
 	Play play;
 
@@ -266,7 +266,8 @@ TEST_CASE("berserk.xml loads the man, four rooms of robots, exits, an Otto and a
 		CHECK_FALSE(play.object(Play::inRoom(room, "level.1")).isDrawn);
 		CHECK_FALSE(play.object(Play::inRoom(room, "side.1")).isDrawn);
 	}
-	CHECK(count(play, "playing.robotshots.") == 4);
+	CHECK(count(play, "playing.robotshot.") == 0); // made when a robot fires
+	CHECK(play.object("playing.robotshot").most == 4);
 }
 
 TEST_CASE("Space starts Berserk, and the man walks the four ways and faces the way he walked", "[berserk]")

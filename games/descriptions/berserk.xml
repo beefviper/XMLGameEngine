@@ -200,7 +200,7 @@
               <play sound="door" />
               <reset />
               <reset object="bullet" />
-              <reset object="robotshots" />
+              <despawn object="robotshot" />
               <reset object="otto" />
             </collision>
             <collision edge="all"><stick /></collision>
@@ -211,7 +211,7 @@
               <play sound="zap" />
               <reset />
               <reset object="bullet" />
-              <reset object="robotshots" />
+              <despawn object="robotshot" />
             </action>
             <action name="up"><move direction="up">walk</move><become sprite="up" /></action>
             <action name="down"><move direction="down">walk</move><become sprite="down" /></action>
@@ -245,23 +245,19 @@
           </collisions>
         </object>
 
-        <!-- the robots' shots, a pool of four shared by every robot in the room -->
-        <group name="robotshots" class="robotshot">
+        <!-- a robot's shot: spawned when one fires, four at most in the room -->
+        <object name="robotshot" class="robotshot">
           <sprite><rectangle><width>5</width><height>5</height><color>color.orange</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>3</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>4</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="wall"><die /></collision>
-            <collision object="player"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision class="wall"><despawn /></collision>
+            <collision object="player"><despawn /></collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-          <member />
-        </group>
+        </object>
 
         <!-- Evil Otto: comes straight for the man over the walls, cannot be shot -->
         <object name="otto" class="otto">
@@ -370,7 +366,7 @@
                 <timer>
                   <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
                   <aim object="player" />
-                  <fire object="robotshots" />
+                  <fire object="robotshot" />
                   <play sound="robotshoot" />
                 </timer>
               </timers>

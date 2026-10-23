@@ -144,11 +144,11 @@ TEST_CASE("astrosmash.xml loads a base, four big rocks, four small, two spinners
 		// The rocks are the playing state's own: playing.boulders.1.1 and so on.
 		if (object.name.rfind("playing.boulders.", 0) == 0) { ++boulders; }
 		if (object.name.rfind("playing.pebbles.", 0) == 0) { ++pebbles; }
-		if (object.name.rfind("playing.chips.", 0) == 0) { ++chips; CHECK_FALSE(object.isVisible); }
+		if (object.name.rfind("playing.chip", 0) == 0) { ++chips; CHECK_FALSE(object.exists); }
 	}
 	CHECK(boulders == 4);
 	CHECK(pebbles == 4);
-	CHECK(chips == 8);
+	CHECK(chips == 1); // only the one written; chips are made as rocks break
 	CHECK(table.game.getObject("spinners.2.1").objClass == "spinner");
 	CHECK(table.score() == 0.0f);
 	CHECK(table.lives() == 4.0f);
@@ -270,19 +270,19 @@ TEST_CASE("a big rock shot scores 10, starts over and breaks into two chips", "[
 	CHECK(table.game.getObject("peak").spriteParams.at(1).find("10") != std::string::npos);
 	CHECK(!table.inFlight());
 	CHECK(table.atStart("boulders.2.1"));
-	CHECK(table.game.getObject("chips.1.1").isVisible);
-	CHECK(table.game.getObject("chips.2.1").isVisible);
-	CHECK_FALSE(table.game.getObject("chips.3.1").isVisible);
-	CHECK(table.game.getObject("chips.1.1").velocity.y > 0.0f);
+	CHECK(table.game.getObject("chip.1").isVisible);
+	CHECK(table.game.getObject("chip.2").isVisible);
+	CHECK(table.game.tryGetObject("chip.3") == nullptr);
+	CHECK(table.game.getObject("chip.1").velocity.y > 0.0f);
 
 	// A chip shot scores 20 and is gone (the other one out of the way).
-	table.game.getObject("chips.2.1").velocity = { 0.0f, 0.0f };
-	table.game.getObject("chips.2.1").position = { 20.0f, 20.0f };
-	table.fireAt("chips.1.1");
-	table.game.getObject("chips.1.1").velocity = { 0.0f, 0.0f };
+	table.game.getObject("chip.2").velocity = { 0.0f, 0.0f };
+	table.game.getObject("chip.2").position = { 20.0f, 20.0f };
+	table.fireAt("chip.1");
+	table.game.getObject("chip.1").velocity = { 0.0f, 0.0f };
 	table.frames(1);
 	CHECK(table.score() == 30.0f);
-	CHECK_FALSE(table.game.getObject("chips.1.1").isVisible);
+	CHECK(table.game.tryGetObject("chip.1") == nullptr);
 }
 
 TEST_CASE("a small rock shot scores 20 and breaks into nothing", "[astrosmash]")
@@ -293,7 +293,7 @@ TEST_CASE("a small rock shot scores 20 and breaks into nothing", "[astrosmash]")
 	table.frames(1);
 	CHECK(table.score() == 20.0f);
 	CHECK(table.atStart("pebbles.3.1"));
-	CHECK_FALSE(table.game.getObject("chips.1.1").isVisible);
+	CHECK(table.game.tryGetObject("chip.1") == nullptr);
 }
 
 TEST_CASE("a rock that lands takes half its worth off the score and starts over", "[astrosmash]")
@@ -413,7 +413,7 @@ TEST_CASE("space starts a new game from game over with everything back", "[astro
 	CHECK(table.game.getObject("score").spriteParams.at(1) == "0");
 	CHECK(table.game.getObject("lives").spriteParams.at(1) == "4");
 	CHECK(!table.inFlight());
-	CHECK_FALSE(table.game.getObject("chips.1.1").isVisible);
+	CHECK(table.game.tryGetObject("chip.1") == nullptr);
 	CHECK(table.game.getObject("boulders.1.1").position.y < 0.0f);
 }
 

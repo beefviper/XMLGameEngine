@@ -20,7 +20,7 @@
     lockstep, so they march, bounce and step down as one block; the squids'
     two pictures and their <animation> are the group's, and rows 2 and 3
     (crabs) and 4 and 5 (octopuses) change the pictures and the worth.
-  * A hit alien leaves a blast, <release>d from a pool where it was, that
+  * A hit alien leaves a blast, <release>d where it was, that
     goes after a quarter of a second.
   * The march speeds up: whenever no more aliens are left than pace.next,
     a condition sets the block's speed half as fast again and halves next.
@@ -101,7 +101,7 @@
         <collision class="bomb">
           <dec variable="player.lives" />
           <inc variable="player.struck" />
-          <release object="blasts" />
+          <release object="blast" />
           <play sound="playerhit" />
         </collision>
       </collisions>
@@ -168,9 +168,9 @@
             <collision class="ufo"><die /></collision>
           </collisions>
         </object>
-        <!-- the bombs: a pool of three, a zigzag that wriggles as it falls,
+        <!-- a bomb, three at most, a zigzag that wriggles as it falls,
              dropped by any alien (each faces down) after a wait of its own -->
-        <group name="bombs" class="bomb">
+        <object name="bomb" class="bomb">
           <sprite name="a">
             <bitmap><row>.*</row><row>*.</row><row>.*</row><row>*.</row><row>.*</row><scale>3</scale></bitmap>
           </sprite>
@@ -178,21 +178,18 @@
             <bitmap><row>*.</row><row>.*</row><row>*.</row><row>.*</row><row>*.</row><scale>3</scale></bitmap>
           </sprite>
           <animation><interval>0.1</interval><frame sprite="a" /><frame sprite="b" /></animation>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>5</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>3</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision object="player"><die /></collision>
-            <collision class="shield"><die /></collision>
-            <collision class="ground"><die /></collision>
-            <collision object="bullet"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision object="player"><despawn /></collision>
+            <collision class="shield"><despawn /></collision>
+            <collision class="ground"><despawn /></collision>
+            <collision object="bullet"><despawn /></collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-        </group>
+        </object>
         <group name="shields" class="shield">
           <columns>4</columns>
           <rows>1</rows>
@@ -254,7 +251,7 @@
             <collision edge="right"><die /></collision>
             <collision object="bullet">
               <inc variable="player.score">50 * ceil(self.worth)</inc>
-              <release object="blasts" />
+              <release object="blast" />
               <play sound="alienhit" />
               <die />
             </collision>
@@ -310,7 +307,7 @@
             </collision>
             <collision object="bullet">
               <inc variable="player.score">self.worth</inc>
-              <release object="blasts" />
+              <release object="blast" />
               <play sound="alienhit" />
               <die />
             </collision>
@@ -319,7 +316,7 @@
           <timers>
             <timer>
               <every><random min="2" max="25" /></every>
-              <fire object="bombs" />
+              <fire object="bomb" />
             </timer>
           </timers>
           <row number="2 3">
@@ -382,7 +379,7 @@
           </row>
         </group>
         <!-- what a hit leaves for a moment -->
-        <group name="blasts" class="blast">
+        <object name="blast" class="blast">
           <sprite>
             <bitmap>
               <row>....*...*....</row>
@@ -396,14 +393,12 @@
               <scale>pixel - 1</scale>
             </bitmap>
           </sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>2</most>
           <timers>
-            <timer><after>0.25</after><die /></timer>
+            <timer><after>0.25</after><despawn /></timer>
           </timers>
-          <member />
-          <member />
-        </group>
+        </object>
         <!-- how many aliens may be left before the march speeds up again -->
         <object name="pace">
           <variables><variable name="next">28</variable></variables>
@@ -490,7 +485,7 @@
              each visit starts the second again -->
         <timer>
           <every>1</every>
-          <reset object="bombs" />
+          <despawn object="bomb" />
           <pop />
         </timer>
       </timers>

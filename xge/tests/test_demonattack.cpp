@@ -205,9 +205,9 @@ TEST_CASE("a demon of the second wave splits in two small ones, which score when
 
 	// three demons and the two small ones where it was
 	CHECK(play.alive("wave2") == 5);
-	CHECK(play.object("playing.wave2.halves.1.1").isVisible);
-	CHECK(play.object("playing.wave2.halves.2.1").isVisible);
-	CHECK(play.object("playing.wave2.halves.1.1").velocity.y > 0.0f);
+	CHECK(play.object("playing.wave2.half.1").isVisible);
+	CHECK(play.object("playing.wave2.half.2").isVisible);
+	CHECK(play.object("playing.wave2.half.1").velocity.y > 0.0f);
 
 	// the wave is not over until the small ones are gone too
 	for (const char* name : { "playing.wave2.demons.2", "playing.wave2.demons.3", "playing.wave2.demons.4" }) { play.object(name).isVisible = false; play.object(name).collisionData.enabled = false; }

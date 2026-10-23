@@ -209,8 +209,6 @@ namespace xge
 		made.existsOriginal = true;
 		made.isVisible = true;
 		made.isVisibleOriginal = true;
-		made.collisionData.enabled = true;
-		made.collisionEnabledOriginal = true;
 		// Its picture is the one it is copied from, and so its size, until
 		// a window measures it again.
 		made.size = original.size;

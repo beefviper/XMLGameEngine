@@ -225,9 +225,8 @@
         <!-- what is left of a wrecked lander, flung out and falling -->
         <group name="debris">
           <sprite><line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line></sprite>
-          <position><x>0</x><y>0</y></position>
           <acceleration><x>0</x><y>gravity * 4</y></acceleration>
-          <hidden>true</hidden>
+          <exists>false</exists>
           <member><velocity><x>-1.6</x><y>-2</y></velocity></member>
           <member><velocity><x>1.4</x><y>-2.4</y></velocity></member>
           <member><velocity><x>-0.6</x><y>-3</y></velocity></member>
@@ -275,7 +274,7 @@
           <copy variable="lander.fuel" into="status.fuel" />
           <reset object="lander" />
           <copy variable="status.fuel" into="lander.fuel" />
-          <reset object="debris" />
+          <despawn object="debris" />
         </condition>
         <condition object="lander" variable="landed">
           <atleast>1</atleast>

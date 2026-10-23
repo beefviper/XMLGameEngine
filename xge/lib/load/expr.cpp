@@ -46,7 +46,18 @@ namespace xge
 				{
 					return object.name == name || object.inGroup(name);
 				});
-			return made == objects.end() ? nullptr : &*made;
+			if (made != objects.end()) { return &*made; }
+
+			// A copy that will be made while the game runs (shot.2): named by
+			// an object that does not exist, with a number after it.
+			const auto dot = name.rfind('.');
+			if (dot == std::string::npos || dot + 1 == name.size()
+				|| !std::all_of(name.begin() + static_cast<std::ptrdiff_t>(dot) + 1, name.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; }))
+			{
+				return nullptr;
+			}
+			const Object* of = findObject(objects, name.substr(0, dot));
+			return of && !of->exists ? of : nullptr;
 		}
 
 		// Every name an object can be called by (its own and its group's),

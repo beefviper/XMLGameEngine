@@ -67,10 +67,15 @@ namespace
 			for (int i = 0; i < count; ++i) { game.updateObjects(); }
 		}
 
-		void fire(const char* post) { executor.executeInput(Command{ CmdTriggerAction{ post, "fire" } }, true); }
+		// A post fires; the shell is in the game at once (not at the next frame).
+		void fire(const char* post)
+		{
+			executor.executeInput(Command{ CmdTriggerAction{ post, "fire" } }, true);
+			game.settleSpawns();
+		}
 		void reveal(const std::string& group, int count = 1) { executor.executeInput(Command{ CmdReveal{ group, count } }, true); }
 
-		// What of a group (a lane, a pool) is in play.
+		// What of a group (a lane, the shells) is in play.
 		std::vector<Object*> inPlay(const std::string& group)
 		{
 			std::vector<Object*> found;
@@ -204,8 +209,8 @@ TEST_CASE("the lowest lane goes round and round and fires death rays that take t
 
 	// A ray from under it, falling.
 	int frames = 0;
-	while (city.inPlay("playing.rays").empty() && frames < 5 * kFramerate) { city.frames(1); ++frames; }
-	const auto rays = city.inPlay("playing.rays");
+	while (city.inPlay("playing.ray").empty() && frames < 5 * kFramerate) { city.frames(1); ++frames; }
+	const auto rays = city.inPlay("playing.ray");
 	REQUIRE(rays.size() == 1);
 	CHECK(rays[0]->velocity.y == Approx(5));
 	CHECK(rays[0]->position.y >= ship.position.y + ship.size.y - 1.0f);
@@ -224,9 +229,9 @@ TEST_CASE("each post fires along its own heading, and a hit ship scores and coun
 	city.fire("leftpost");
 	city.fire("middlepost");
 	city.fire("rightpost");
-	const auto left = city.inPlay("playing.leftshells");
-	const auto middle = city.inPlay("playing.middleshells");
-	const auto right = city.inPlay("playing.rightshells");
+	const auto left = city.inPlay("playing.leftshell");
+	const auto middle = city.inPlay("playing.middleshell");
+	const auto right = city.inPlay("playing.rightshell");
 	REQUIRE(left.size() == 1);
 	REQUIRE(middle.size() == 1);
 	REQUIRE(right.size() == 1);
@@ -241,9 +246,10 @@ TEST_CASE("each post fires along its own heading, and a hit ship scores and coun
 	city.reveal(of("wave1", "lane3"));
 	Object& ship = *city.inPlay(of("wave1", "lane3"))[0];
 	ship.position = { middle[0]->position.x - ship.size.x / 2.0f, middle[0]->position.y - ship.size.y - 4.0f };
+	const std::string shell = middle[0]->name;
 	city.frames(2);
 	CHECK_FALSE(ship.isVisible);
-	CHECK_FALSE(middle[0]->isVisible);
+	CHECK(city.game.tryGetObject(shell) == nullptr); // despawned
 	CHECK(city.score() == 100);
 	CHECK(city.downed() == 1);
 }
@@ -313,6 +319,7 @@ TEST_CASE("the keys fire the posts, and space pauses over the city drawn still",
 	engine.handleKeyReleased(KeyCode::Up);
 	engine.handleKeyPressed(KeyCode::D);
 	engine.handleKeyReleased(KeyCode::D);
+	game.settleSpawns(); // the shells join the game as the next frame starts
 	int shells = 0;
 	for (const auto& object : game.getCurrentObjects())
 	{

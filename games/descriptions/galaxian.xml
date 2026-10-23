@@ -161,9 +161,9 @@
       <speed>divespeed</speed>
       <step><x>-24</x><y>-24</y><play sound="dive" /></step>
       <step><x>-24</x><y>40</y></step>
-      <step><x>80</x><y>120</y><fire object="bombs" /></step>
+      <step><x>80</x><y>120</y><fire object="bomb" /></step>
       <step><x>-80</x><y>120</y></step>
-      <step><x>80</x><y>120</y><fire object="bombs" /></step>
+      <step><x>80</x><y>120</y><fire object="bomb" /></step>
       <step><x>-32</x><y>120</y></step>
       <step><x>0</x><y>window.bottom + alienheight - 496</y></step>
       <home />
@@ -341,20 +341,18 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- the aliens' bombs: a pool of six, dropped by divers -->
-        <group name="bombs" class="bomb">
-          <columns>6</columns>
-          <rows>1</rows>
+        <!-- an alien's bomb, dropped by divers: six at most -->
+        <object name="bomb" class="bomb">
           <sprite><rectangle><width>3</width><height>9</height><color>color.yellow</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>6</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>6</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision object="ship"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision object="ship"><despawn /></collision>
           </collisions>
-        </group>
+        </object>
         <object name="shot" class="projectile">
           <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>

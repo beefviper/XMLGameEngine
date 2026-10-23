@@ -139,7 +139,7 @@
             <action name="lose">
               <dec variable="player.lives" />
               <play sound="lost" />
-              <reset object="bombs" />
+              <despawn object="bomb" />
               <reset object="energy" />
               <reset />
             </action>
@@ -169,20 +169,18 @@
           </timers>
         </object>
 
-        <!-- the bombs: a pool of six -->
-        <group name="bombs" class="bomb">
-          <columns>6</columns>
-          <rows>1</rows>
+        <!-- a bomb: six at most -->
+        <object name="bomb" class="bomb">
           <sprite><rectangle><width>4</width><height>10</height><color>color.red</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>4</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>6</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision object="player"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision object="player"><despawn /></collision>
           </collisions>
-        </group>
+        </object>
 
         <!-- the energy that runs down, and its bar: a green strip, and a black
              cover over what is spent -->
@@ -238,7 +236,7 @@
               </collision>
             </collisions>
             <timers>
-              <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bombs" /></timer>
+              <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bomb" /></timer>
             </timers>
             <member><position><x>40</x><y>row1</y></position></member>
             <member><position><x>200</x><y>row1</y></position></member>
@@ -268,7 +266,7 @@
               <inc variable="player.score">energy.level * 10</inc>
               <play sound="wave" />
               <reset object="energy" />
-              <reset object="bombs" />
+              <despawn object="bomb" />
               <reset object="laser" />
               <enter way="next" />
             </condition>
@@ -487,7 +485,7 @@
           <dec variable="player.lives" />
           <play sound="lost" />
           <reset object="energy" />
-          <reset object="bombs" />
+          <despawn object="bomb" />
         </condition>
       </conditions>
       <timers>

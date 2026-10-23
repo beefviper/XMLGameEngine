@@ -147,6 +147,15 @@ namespace xge
 				if (!context.scene.empty() && all.count(context.scene + "." + name)) { return context.scene + "." + name; }
 				if (!context.state.empty() && all.count(context.state + "." + name)) { return context.state + "." + name; }
 				if (all.count(name)) { return name; }
+
+				// A copy made while the game runs (shot.2) is found by what it
+				// is a copy of.
+				if (const auto dot = name.rfind('.'); dot != std::string::npos && dot + 1 < name.size()
+					&& std::all_of(name.begin() + static_cast<std::ptrdiff_t>(dot) + 1, name.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; }))
+				{
+					const std::string of = object(name.substr(0, dot), context, true);
+					if (objects.count(of)) { return of + name.substr(dot); }
+				}
 				return endOfOnePath(name, all, context, quiet);
 			}
 
