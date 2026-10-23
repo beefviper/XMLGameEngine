@@ -127,7 +127,7 @@ Something many objects or states share is written once under a name, higher up, 
 
 **Looks.** A `<sprite>` is a `circle`, `rectangle`, `text`, `image`, `bitmap` (ASCII rows, one color per character), `svg`, a set of `line`s, or a `tether` (a line between two objects, redrawn each frame). Text is built from `content`, `number`, `letter` and `choose` pieces. Several named sprites are an object's **looks**, changed by `<become>`, and an `<animation>` of `<frame>`s cycles them.
 
-**Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `hidden` (starts out of play) and `drawn` (in play but never drawn).
+**Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `hidden` (starts out of play), `drawn` (in play but never drawn), and `exists` (`false`: only a description, copied by `spawn`) with `most` (how many copies at once).
 
 **Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>` and `<check>`s.
 
@@ -138,7 +138,7 @@ Something many objects or states share is written once under a name, higher up, 
 | Moving | `move`, `hop`, `jump`, `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` (follow the mouse or a stick) |
 | Steering | `chase`, `aim`, `follow` a path, and in a maze `go`, `hunt`, `wander` |
 | Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
-| In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn` |
+| In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn` and `despawn` (objects made and taken away while the game runs) |
 | Numbers | `inc`, `dec`, `set`, `copy`, `rank` |
 | Look and sound | `become`, `play`, `silence` |
 | Flow | `push`, `pop`, `enter`, `trigger` (run an object's action), `turns` with `pass` and `out`, `demo`, `hold` (a computer player's key) |

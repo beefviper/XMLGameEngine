@@ -24,7 +24,7 @@ The vocabulary grew one game at a time ([motion](22-motion.md): a word is added 
 | Moving | `move`, `hop`, `jump`, `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` |
 | Steering | `chase`, `aim`, `follow`; in a maze `go`, `hunt`, `wander` |
 | Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
-| In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn` |
+| In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn`, `despawn`; `exists`, `most` on an object |
 | Numbers | `inc`, `dec`, `set`, `copy`, `rank` |
 | Look and sound | `become`, `play`, `silence` |
 | Flow | `push`, `pop`, `enter`, `trigger`, `turns`, `pass`, `out`, `demo`, `hold` |
@@ -85,13 +85,12 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 | Missing category | Words it would hold | Where it is discussed |
 |---|---|---|
 | **Math** beyond the four operations | `min`, `max`, `negate`, `abs`, `clamp`, `floor`, `sign`, `pick`, an integer `random`; a `<random>` step in an `<equation>` | [arithmetic](03-arithmetic.md), [values-and-names](04-values-and-names.md) |
-| **Creation** | `create`, `destroy`. Nothing is made while a game runs: `fire`, `release`, `reveal` and `spawn` bring members of a pool into play | [pools-and-enemies](10-pools-and-enemies.md) |
 | **Planning** | searching a maze, leading a target, curved paths, paths that aim | [chase-and-paths](24-chase-and-paths.md) |
 | **Queries** | a timer's time left, what is touching what, line of sight; a condition's threshold that follows a variable | [states-and-conditions](07-states-and-conditions.md), [timers](09-timers.md) |
 | **Branching and events** | `if`, `goto`, an event queue. Conditions join tests with `all`/`any` but have no else; keeping control flow out is deliberate | [vision](01-vision.md), [timers](09-timers.md) |
 | **Presentation** | a camera and scrolling (version 2), recolouring a look, per-frame animation intervals, decals | [ideas](57-ideas.md), [pictures](30-pictures.md) |
 
-Time, sound, music, conditions over many objects and maze walking were gaps in earlier versions of this map and are filled now. They show how a gap closes: a game could not be written (Frostbite's cold, Pac-Man's ghosts, Adventure's sleeping dragon), the word was added in the places that already hold commands, and the workaround objects were deleted.
+Time, sound, music, conditions over many objects, maze walking and making objects while a game runs (`spawn`/`despawn`, 2026-10-23) were gaps in earlier versions of this map and are filled now. They show how a gap closes: a game could not be written (Frostbite's cold, Pac-Man's ghosts, Adventure's sleeping dragon), the word was added in the places that already hold commands, and the workaround objects were deleted.
 
 ## The shape this suggests
 

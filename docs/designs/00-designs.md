@@ -19,7 +19,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` and `<conditions>` sets, tests, `<all>`/`<any>`, `total=`, `distance=`, states `from=`, keeps, turns, attract mode | Built; per-state behavior Open |
 | [input](08-input.md) | Actions, held keys, key sets across states | Built |
 | [timers](09-timers.md) | Timers, look timers, commands in every context | Built; event queue Open |
-| [pools-and-enemies](10-pools-and-enemies.md) | Pools instead of spawning, enemies firing back, key sets | Built |
+| [pools-and-enemies](10-pools-and-enemies.md) | Spawn and despawn (`<exists>`, `<most>`), the older pools, enemies firing back, key sets | Built |
 | [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories (checked 2026-10-23) | Reference |
 | [scenes](12-scenes.md) | Scenes inside a state; states and scenes own objects, take and change kit pieces, `<enter>`, dotted paths, `<drawn>`, `<show state>` | Built |
 
