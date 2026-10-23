@@ -16,11 +16,11 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [values-and-names](04-values-and-names.md) | `<random>`, values read when used (`<set>`, `<spawn>`, live numbers), evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
 | [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, groups inside a group | Built |
-| [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` and `<conditions>` sets, `atleast`/`atmost`/`remaining`, states `from=` | Built; per-state behavior Open |
+| [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` and `<conditions>` sets, tests, `<all>`/`<any>`, `total=`, `distance=`, states `from=`, keeps, turns, attract mode | Built; per-state behavior Open |
 | [input](08-input.md) | Actions, held keys, key sets across states | Built |
 | [timers](09-timers.md) | Timers, look timers, commands in every context | Built; event queue Open |
 | [pools-and-enemies](10-pools-and-enemies.md) | Pools instead of spawning, enemies firing back, key sets | Built |
-| [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories | Reference |
+| [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories (checked 2026-10-23) | Reference |
 | [scenes](12-scenes.md) | Scenes inside a state; states and scenes own objects, take and change kit pieces, `<enter>`, dotted paths, `<drawn>`, `<show state>` | Built |
 
 ## Behavior
@@ -40,7 +40,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [pictures](30-pictures.md) | One `Bitmap` path for lines, bitmaps, SVG parts, flip, turning; tethers, holes, light and dark | Built; decals Idea |
 | [animation-and-looks](31-animation-and-looks.md) | Animation, named looks | Built |
 | [text](32-text.md) | Text and the built-in font, `<styles>`, `<centered>`, words (`<choose>`) | Built |
-| [sound](33-sound.md) | Notes made into samples; `<sounds>`, `<play>` | Built |
+| [sound](33-sound.md) | Notes made into samples; `<sounds>`, `<play>`, loops, music in `<part>`s | Built |
 
 ## Code generation
 
@@ -53,7 +53,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | File | Topic | Status |
 |---|---|---|
 | [backends](50-backends.md) | Backend interfaces and factories, library and programs | Built |
-| [build-and-layout](51-build-and-layout.md) | CMake modules, `output/`, source layout, pipeline | Built; `xge/lib/` folders Open |
+| [build-and-layout](51-build-and-layout.md) | CMake modules, `output/`, source layout and `xge/lib/` folders, pipeline | Built |
 | [cli](52-cli.md), [gui](53-gui.md) | `xgecli` options; `xgegui` (Qt renderer, tree, Options, windows) | Built |
 | [games-classic](54-games-classic.md) | What each early game tested and forced | Built |
 | [games-written-by-ai](55-games-written-by-ai.md) | Berserk, Demon Attack, Frostbite from the schema alone, then rewritten | Built |
