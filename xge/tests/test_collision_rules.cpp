@@ -16,6 +16,7 @@
 
 #include "game/game.h"
 #include "load/xml.h"
+#include "played.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
@@ -25,6 +26,7 @@
 #include <fstream>
 #include <optional>
 #include <string>
+#include <tuple>
 
 using namespace xge;
 
@@ -210,4 +212,42 @@ TEST_CASE("a <trigger> with no object= outside an object's own lists stops the l
 	CHECK_THROWS_WITH(Game(readGame(path.string(), XmlBackend::Xerces)), Catch::Matchers::ContainsSubstring("needs object="));
 	std::error_code ignored;
 	std::filesystem::remove(path, ignored);
+}
+
+TEST_CASE("a rule written on a group of groups, with a check about itself, looks at the member it runs for", "[collision_rules][check][group]")
+{
+	// Rocks of two sizes, each a group inside "rocks"; the rule about the
+	// shot is the outer group's, and only a rock worth 10 counts a split.
+	const auto variant = GENERATE(
+		std::tuple{ std::string("worth"), std::string("<member><position><x>100</x><y>100</y></position></member>"), std::string("<member><position><x>300</x><y>100</y></position></member>") },
+		std::tuple{ std::string("self.worth"), std::string("<member><position><x>100</x><y>100</y></position></member>"), std::string("<member><position><x>300</x><y>100</y></position></member>") },
+		std::tuple{ std::string("worth"), std::string("<columns>1</columns><rows>1</rows><position><x>100</x><y>100</y></position>"), std::string("<columns>1</columns><rows>1</rows><position><x>300</x><y>100</y></position>") });
+	const auto& [variable, big, small] = variant;
+	INFO(variable << " " << big);
+	// Members come after the group's variables, columns and rows before.
+	const auto inGroup = [](const std::string& cells, const std::string& worth)
+	{
+		const std::string variables = "<variables><variable name=\"worth\">" + worth + "</variable></variables>";
+		return cells.rfind("<member>", 0) == 0 ? variables + cells : cells + variables;
+	};
+	const played::Scratch file(
+		"<group name=\"rocks\" class=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<collisions><enabled>true</enabled><collision object=\"shot\"><check variable=\"" + variable + "\"><equal>10</equal></check>"
+		"<inc variable=\"tally.splits\" /><die /></collision></collisions>"
+		"<group name=\"big\">" + inGroup(big, "10") + "</group>"
+		"<group name=\"small\">" + inGroup(small, "20") + "</group>"
+		"</group>"
+		+ played::box("shot", 300, 130, "<velocity><x>0</x><y>-4</y></velocity><collisions><enabled>true</enabled></collisions>")
+		+ played::box("tally", 700, 500, "<variables><variable name=\"splits\">0</variable></variables>"),
+		"<pop />");
+	played::Played play(file.path);
+
+	// The shot goes up into the small rock: no split.
+	play.frames(10);
+	CHECK(play.get("tally").variable.at("splits") == 0.0f);
+
+	// Into the big one: a split.
+	play.get("shot").position = { 100, 130 };
+	play.frames(10);
+	CHECK(play.get("tally").variable.at("splits") == 1.0f);
 }

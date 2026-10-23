@@ -138,6 +138,11 @@ TEST_CASE("<most> caps how many copies exist, and a refused spawn stops what com
 	play.frames(1);
 	CHECK(play.count("shot") == 2);
 	CHECK(play.has("shot.1"));
+
+	// By the end of its path, as a test or a front end names it.
+	play.game.despawn("shot");
+	play.frames(1);
+	CHECK(play.count("shot") == 0);
 }
 
 TEST_CASE("<fire> and <release> of an object that does not exist make copies of it", "[spawn]")

@@ -20,8 +20,9 @@
     their own picture and worth (self.worth, read as the rule runs). Their
     fall speeds, slants and starting heights are <random>, drawn again each
     time one is reset to the top.
-  * The shot's rule about the big rocks <release>s two chips, small rocks
-    that do not exist until then, where it hits one.
+  * A big rock (worth 10, a <check> in the rocks' rule about the shot)
+    <release>s two chips where it is hit, small rocks that do not exist
+    until then.
   * A hit on the base resets every rock and spinner (<reset object>): the
     sky clears, as it does on the Intellivision.
   * The spare bases: the ship's `spare` is the next 1,000, and a condition
@@ -122,6 +123,11 @@
               <set variable="ship.score">max(0, ship.score - self.worth / 2)</set>
               <reset />
               <play sound="thud" />
+            </collision>
+            <!-- a big rock breaks where the shot hits it -->
+            <collision object="shot">
+              <check variable="worth"><equal>10</equal></check>
+              <release object="chip">2</release>
             </collision>
             <collision object="shot">
               <inc variable="ship.score">self.worth</inc>
@@ -245,8 +251,6 @@
           <collisions>
             <enabled>false</enabled>
             <collision edge="all"><die /></collision>
-            <!-- a big rock breaks where the shot hits it -->
-            <collision object="boulders"><release object="chip">2</release></collision>
             <collision class="rocks"><die /></collision>
             <collision class="spinner"><die /></collision>
           </collisions>

@@ -140,7 +140,10 @@ TEST_CASE("the wave drops bombs, and a bomb costs a ship", "[megamania]")
 	play.game.despawn("bomb");
 	play.frames(1);
 	const float lives = play.player().variable.at("lives");
-	Object& bomb = *play.game.spawn("bomb");
+	Object* made = play.game.spawn("bomb");
+	INFO("bombs in play " << play.bombsInPlay());
+	REQUIRE(made);
+	Object& bomb = *made;
 	bomb.position = { play.player().position.x + 10.0f, play.player().position.y - 30.0f };
 	bomb.velocity = { 0.0f, 4.0f };
 	play.game.settleSpawns();
@@ -206,6 +209,7 @@ TEST_CASE("each wave cleared is the next with the energy full, and the eighth wi
 {
 	Megamania play;
 	play.start();
+	play.noBombs("wave1"); // a bomb that hits fills the energy again
 	play.frames(300);
 	CHECK(play.energy() < 45.0f);
 

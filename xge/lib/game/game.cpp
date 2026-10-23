@@ -235,7 +235,8 @@ namespace xge
 
 	void Game::despawn(const std::string& target)
 	{
-		const std::string name = tryGetObject(target) ? target : fullName(target);
+		// The name as written, or the end of a path (bomb for playing.bomb).
+		const std::string name = fullName(target);
 		for (auto& object : objects)
 		{
 			if (object.exists && (object.name == name || object.inGroup(name))) { despawn(object); }

@@ -22,7 +22,7 @@
     shapes has a member per shape. The medium and small rocks do not exist
     until a bigger rock breaks: it <release>s two, spawned where it was,
     the shapes in turn, each going its own way (a <random> velocity drawn
-    as it is made), and a broken one <despawn>s.
+    as it is made, never slower than its shape's least up or down), and a broken one <despawn>s.
   * The ship and its shots are both class "breaker", so each size has one
     rule for being broken, by either. A ship that is hit goes out of play,
     and a timer of the playing state brings it back at the middle.
@@ -283,7 +283,7 @@
               <line><from><x>29</x><y>15</y></from><to><x>35</x><y>23</y></to><thickness>2</thickness></line>
               <line><from><x>35</x><y>23</y></from><to><x>27</x><y>28</y></to><thickness>2</thickness></line>
             </sprite>
-            <velocity><x><random min="-1.6" max="1.6" /></x><y><random min="-1.6" max="1.6" /></y></velocity>
+            <velocity><x><random min="-1.6" max="1.6" /></x></velocity>
             <exists>false</exists>
             <collisions>
               <enabled>true</enabled>
@@ -294,7 +294,9 @@
                 <play sound="bangmedium" />
               </collision>
             </collisions>
-            <member name="mediumA" />
+            <member name="mediumA">
+              <velocity><y><random min="0.6" max="1.6" /></y></velocity>
+            </member>
             <member name="mediumB">
               <sprite>
                   <line><from><x>32</x><y>19</y></from><to><x>33</x><y>30</y></to><thickness>2</thickness></line>
@@ -306,6 +308,7 @@
                   <line><from><x>16</x><y>7</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
                   <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
               </sprite>
+              <velocity><y><random min="-1.6" max="-0.6" /></y></velocity>
             </member>
             <member name="mediumC">
               <sprite>
@@ -319,6 +322,7 @@
                   <line><from><x>20</x><y>7</y></from><to><x>32</x><y>16</y></to><thickness>2</thickness></line>
                   <line><from><x>32</x><y>16</y></from><to><x>32</x><y>25</y></to><thickness>2</thickness></line>
               </sprite>
+              <velocity><y><random min="0.6" max="1.6" /></y></velocity>
             </member>
           </group>
           <group name="smallrocks">
@@ -330,7 +334,7 @@
               <line><from><x>12</x><y>3</y></from><to><x>18</x><y>5</y></to><thickness>2</thickness></line>
               <line><from><x>18</x><y>5</y></from><to><x>16</x><y>11</y></to><thickness>2</thickness></line>
             </sprite>
-            <velocity><x><random min="-2.6" max="2.6" /></x><y><random min="-2.6" max="2.6" /></y></velocity>
+            <velocity><x><random min="-2.6" max="2.6" /></x></velocity>
             <exists>false</exists>
             <collisions>
               <enabled>true</enabled>
@@ -340,7 +344,9 @@
                 <play sound="bangsmall" />
               </collision>
             </collisions>
-            <member name="smallA" />
+            <member name="smallA">
+              <velocity><y><random min="1" max="2.6" /></y></velocity>
+            </member>
             <member name="smallB">
               <sprite>
                   <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
@@ -350,6 +356,7 @@
                   <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
                   <line><from><x>15</x><y>5</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
               </sprite>
+              <velocity><y><random min="-2.6" max="-1" /></y></velocity>
             </member>
             <member name="smallC">
               <sprite>
@@ -359,6 +366,7 @@
                   <line><from><x>7</x><y>3</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
                   <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
               </sprite>
+              <velocity><y><random min="1" max="2.6" /></y></velocity>
             </member>
           </group>
         </group>
