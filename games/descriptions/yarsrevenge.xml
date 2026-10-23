@@ -28,8 +28,9 @@
     to Yar's every frame, and its action fires the blast and puts it away.
     An object out of play does not act on a key, so Space without the
     cannon fires only Yar's missile.
-  * The Swirl is <spawn>ed where the Qotile is, waits, then <chase>s
-    where Yar is at that moment, in a straight line.
+  * The Swirl does not exist until the Qotile <spawn>s it where it is
+    (one at a time: <most>1</most>); it waits, then <chase>s where Yar is
+    at that moment, in a straight line, and <despawn>s at an edge or hit.
   * The neutral zone is a column of bands, each an <animation> of two
     bitmaps of colors; the even bands run it the other way round.
   Not in it: the ghost of Yar, the Qotile's ion zone colors, Yar bouncing
@@ -359,16 +360,16 @@
             <frame sprite="one" />
             <frame sprite="two" />
           </animation>
-          <position><x>0</x><y>0</y></position>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>1</most>
           <collisions>
             <enabled>true</enabled>
             <type>pixel</type>
-            <collision edge="all"><die /></collision>
+            <collision edge="all"><despawn /></collision>
             <collision object="blast">
               <inc variable="player.score">6000</inc>
               <play sound="boom" />
-              <die />
+              <despawn />
             </collision>
           </collisions>
           <timers>

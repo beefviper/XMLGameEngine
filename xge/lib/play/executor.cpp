@@ -57,6 +57,7 @@ namespace xge
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { spawn(c); },
+			[&](const CmdDespawn& d) { despawn(&object, d); },
 			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire never
 			                      appear in a collisionData list, and ride() and
 			                      deflect() are about another object, which a screen
@@ -112,6 +113,7 @@ namespace xge
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { spawn(c); },
+			[&](const CmdDespawn& d) { despawn(&object, d); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
@@ -151,6 +153,7 @@ namespace xge
 			[&](const CmdResetScene& r) { if (keyPressed) { game.reset(r); } },
 			[&](const CmdSet& c) { if (keyPressed) { game.setNumber(c.target, c.value); } },
 			[&](const CmdSpawn& c) { if (keyPressed) { spawn(c); } },
+			[&](const CmdDespawn& d) { if (keyPressed) { despawn(nullptr, d); } },
 			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
 			                      directly on a state's <input>; only reachable
 			                      via CmdTriggerAction into an object's own
@@ -224,7 +227,8 @@ namespace xge
 			[&](const CmdHuntHop& h) { if (owner) { done = huntByHop(*owner, h); } },
 			[&](const CmdWander& w) { if (owner) { startWander(*owner, w); } },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
-			[&](const CmdSpawn& c) { spawn(c); },
+			[&](const CmdSpawn& c) { done = spawn(c); },
+			[&](const CmdDespawn& d) { despawn(owner, d); },
 			[&](const auto&) { /* the rest are about a key held, an edge or another
 			                      object touched, none of which a timer has */ }
 		}, now(command, made));
@@ -380,10 +384,23 @@ namespace xge
 		const Vector2f middle = from.position + sizeOf(from) * 0.5f;
 		int released = 0;
 
+		// Of an object that does not exist at the start, new copies.
+		if (game.isDescription(target))
+		{
+			for (; released < count; ++released)
+			{
+				Object* made = game.spawn(target);
+				if (!made) { break; }
+				made->position = middle - sizeOf(*made) * 0.5f;
+				made->velocity = made->velocityOriginal;
+			}
+			return;
+		}
+
 		for (auto& candidate : game.getCurrentObjects())
 		{
 			if (released >= count) { break; }
-			if (candidate.isVisible || &candidate == &from || !isNamed(candidate, target) || game.isAway(candidate)) { continue; }
+			if (candidate.isVisible || !candidate.exists || &candidate == &from || !isNamed(candidate, target) || game.isAway(candidate)) { continue; }
 
 			// Back in play is a new start: a <random> in it is drawn again,
 			// and its timers and animation start over.
@@ -606,7 +623,8 @@ namespace xge
 				[&](const CmdEnterScene& e) { if (keyPressed) { game.enter(e); } },
 				[&](const CmdDie&) { if (keyPressed) { xge::die(object); } },
 				[&](const CmdSet& c) { if (keyPressed) { game.setNumber(c.target, c.value); } },
-				[&](const CmdSpawn& c) { if (keyPressed) { spawn(c); } },
+				[&](const CmdSpawn& c) { if (keyPressed) { done = spawn(c); } },
+				[&](const CmdDespawn& d) { if (keyPressed) { despawn(&object, d); } },
 				[&](const auto&) { /* ruleFor in load/expr lists what an action holds */ }
 			}, keyPressed ? now(written, made) : shapeOf(written));
 
@@ -787,20 +805,30 @@ namespace xge
 	bool CommandExecutor::spawnProjectile(Object& shooter, const std::string& projectileName)
 	{
 		Object* projectile = nullptr;
-		for (auto& candidate : game.getCurrentObjects())
+		if (game.isDescription(projectileName))
 		{
-			if (isNamed(candidate, projectileName) && !candidate.collisionData.enabled && !game.isAway(candidate))
+			// A new one, as many as its <most> allows.
+			projectile = game.spawn(projectileName);
+		}
+		else
+		{
+			for (auto& candidate : game.getCurrentObjects())
 			{
-				projectile = &candidate;
-				break;
+				if (isNamed(candidate, projectileName) && candidate.exists && !candidate.collisionData.enabled && !game.isAway(candidate))
+				{
+					projectile = &candidate;
+					break;
+				}
+			}
+			if (projectile)
+			{
+				// Fired is a new start: a <random> in the projectile's is drawn
+				// again, and its timers and animation start over.
+				game.drawStartAgain(*projectile);
+				projectile->startOver();
 			}
 		}
 		if (!projectile) { return false; }
-
-		// Fired is a new start: a <random> in the projectile's is drawn again,
-		// and its timers and animation start over.
-		game.drawStartAgain(*projectile);
-		projectile->startOver();
 
 		const Box from{ shooter.position, sizeOf(shooter) };
 		const Vector2f shotSize = sizeOf(*projectile);
@@ -836,34 +864,25 @@ namespace xge
 		return true;
 	}
 
-	// The first of `spawn.target` out of play comes in: started again (a
-	// <random> drawn anew, let go by whatever carried it), then put and sent
-	// where the command says.
-	void CommandExecutor::spawn(const CmdSpawn& command)
+	// A new object, a copy of `spawn.target` (Game::spawn), put and sent
+	// where the command says; what it leaves out is as the file says it
+	// starts. False when no more of it may exist.
+	bool CommandExecutor::spawn(const CmdSpawn& command)
 	{
-		for (auto& candidate : game.getCurrentObjects())
-		{
-			if (candidate.isVisible || !isNamed(candidate, command.target) || game.isAway(candidate)) { continue; }
+		Object* made = game.spawn(command.target);
+		if (!made) { return false; }
 
-			game.drawStartAgain(candidate);
-			candidate.startOver();
-			const Vector2f size = sizeOf(candidate);
-			candidate.position = candidate.positionOriginal;
-			candidate.velocity = candidate.velocityOriginal;
-			if (command.x) { candidate.position.x = command.centerX ? *command.x - size.x * 0.5f : *command.x; }
-			if (command.y) { candidate.position.y = command.centerY ? *command.y - size.y * 0.5f : *command.y; }
-			if (command.velocityX) { candidate.velocity.x = *command.velocityX; }
-			if (command.velocityY) { candidate.velocity.y = *command.velocityY; }
-			candidate.riding = {};
-			candidate.isVisible = true;
-			candidate.collisionData.enabled = true;
+		const Vector2f size = sizeOf(*made);
+		if (command.x) { made->position.x = command.centerX ? *command.x - size.x * 0.5f : *command.x; }
+		if (command.y) { made->position.y = command.centerY ? *command.y - size.y * 0.5f : *command.y; }
+		if (command.velocityX) { made->velocity.x = *command.velocityX; }
+		if (command.velocityY) { made->velocity.y = *command.velocityY; }
+		return true;
+	}
 
-			// A new start: whatever held it holds it no longer.
-			for (auto& carrier : game.getCurrentObjects())
-			{
-				if (carrier.carrying == candidate.name) { carrier.carrying.clear(); }
-			}
-			return;
-		}
+	void CommandExecutor::despawn(Object* self, const CmdDespawn& command)
+	{
+		if (!command.target.empty()) { game.despawn(command.target); }
+		else if (self) { game.despawn(*self); }
 	}
 }

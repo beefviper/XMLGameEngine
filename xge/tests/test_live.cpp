@@ -5,7 +5,8 @@
 //
 // Catch2 tests for values read when they are used: a command's numbers
 // worked out as it runs (where things are, how they go, every variable as
-// it is now, the touch a rule answers), <set>, <spawn> and a <tether>;
+// it is now, the touch a rule answers), <set>, <spawn> and a <tether>
+// (more of <spawn> in test_spawn.cpp);
 // then played in games/descriptions/fishingderby.xml.
 
 #include "engine/engine.h"
@@ -148,32 +149,24 @@ TEST_CASE("where things are is only known while the game runs, and <set> names s
 	CHECK_NOTHROW(load(box("ball", 100, 50), "<set variable=\"ball.velocity.x\">ball.x + 1</set>"));
 }
 
-TEST_CASE("<spawn> brings in the first of a group out of play, where and going as it says", "[live]")
+TEST_CASE("<spawn> makes a new object where and going as it says, read as it runs", "[live]")
 {
 	const Scratch file(box("ship", 300, 400, "<velocity><x>3</x><y>0</y></velocity>")
-		+ "<group name=\"shots\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-5</y></velocity><hidden>true</hidden>"
-		"<member><position><x>0</x><y>0</y></position></member><member><position><x>0</x><y>0</y></position></member></group>",
-		"<spawn object=\"shots\"><position><x><centered>ship.x + 5</centered></x><y>ship.y - 8</y></position>"
+		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>-5</y></velocity><exists>false</exists></object>",
+		"<spawn object=\"shot\"><position><x><centered>ship.x + 5</centered></x><y>ship.y - 8</y></position>"
 		"<velocity><x>ship.velocity.x</x></velocity></spawn>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
-	const Object& first = play.get("shots.1");
+	play.game.settleSpawns();
+	const Object& first = play.get("shot.1");
 	CHECK(first.isVisible);
 	CHECK(first.position.x == Approx(303));
 	CHECK(first.position.y == Approx(392));
 	CHECK(first.velocity.x == Approx(3));
-	CHECK(first.velocity.y == Approx(-5)); // left out: its own
-	CHECK_FALSE(play.get("shots.2").isVisible);
-
-	play.tap(KeyCode::Space);
-	CHECK(play.get("shots.2").isVisible);
-
-	// None left out of play: nothing.
-	const Vector2f was = play.get("shots.1").position;
-	play.tap(KeyCode::Space);
-	CHECK(play.get("shots.1").position.x == Approx(was.x));
+	CHECK(first.velocity.y == Approx(-5)); // left out: as the object starts
+	CHECK_FALSE(play.get("shot").exists);
 }
 
 TEST_CASE("a rule's value can read the touch it answers", "[live]")
@@ -220,7 +213,7 @@ TEST_CASE("a <tether> is in play only while both its ends are", "[live]")
 {
 	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<hidden>true</hidden>")
 		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\" /></sprite>"
-		"<position><x>0</x><y>0</y></position></object>", "<spawn object=\"hook\" />");
+		"<position><x>0</x><y>0</y></position></object>", "<reveal object=\"hook\" />");
 	Played play(file.path);
 
 	play.frames(1);
@@ -234,7 +227,7 @@ TEST_CASE("a <tether> is in play only while both its ends are", "[live]")
 TEST_CASE("an object brought back into play starts its timers over", "[live]")
 {
 	// A shot that goes out half a second after it comes in.
-	const Scratch file(box("shot", 100, 100, "<hidden>true</hidden><timers><timer><every>0.5</every><die /></timer></timers>"), "<spawn object=\"shot\" />");
+	const Scratch file(box("shot", 100, 100, "<hidden>true</hidden><timers><timer><every>0.5</every><die /></timer></timers>"), "<reveal object=\"shot\" />");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);

@@ -136,6 +136,7 @@ namespace xge
 				[](const CmdResetScene&) { return std::string("<reset scene>"); },
 				[](const CmdSet&) { return std::string("<set>"); },
 				[](const CmdSpawn&) { return std::string("<spawn>"); },
+				[](const CmdDespawn& d) { return std::string(d.target.empty() ? "<despawn />" : "<despawn object>"); },
 				[](const CmdLive& live) { return tagOf(live.loaded->command); },
 			}, command);
 		}
@@ -191,9 +192,9 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<demo />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<set>", "<spawn>" };
+			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<demo />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<set>", "<spawn>", "<despawn object>" };
 			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
-				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<hunt> by <hop>", "<wander>", "<set>", "<spawn>" };
+				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<hunt> by <hop>", "<wander>", "<set>", "<spawn>", "<despawn />", "<despawn object>" };
 			static std::vector<std::string> objectTimerCommands = [] {
 				std::vector<std::string> tags{ ownerCommands };
 				tags.push_back("<chase>");
@@ -202,15 +203,15 @@ namespace xge
 			}();
 			static const PlaceRule rules[] = {
 				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
+					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>", "<despawn />", "<despawn object>" } },
 				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<knock>", "<hole>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<hunt> by <hop>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>" } },
+					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<hunt> by <hop>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>", "<despawn />", "<despawn object>" } },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimerCommands },
 				{ "an <action>", { "<move>", "<hop>", "<hunt> by <hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>",
-					"<inc>", "<dec>", "<copy>", "<reset object>", "<reset scene>", "<enter>", "<die />", "<set>", "<spawn>" } },
+					"<inc>", "<dec>", "<copy>", "<reset object>", "<reset scene>", "<enter>", "<die />", "<set>", "<spawn>", "<despawn />", "<despawn object>" } },
 				{ "a path's <step>", ownerCommands },
 				{ "a <computer>'s <condition>", { "<hold>" } },
 			};
@@ -525,6 +526,13 @@ namespace xge
 					{
 						throw std::runtime_error(where + ": " + tag + ": '" + owner + "' has no <altitude> to set");
 					}
+				}
+			}
+			else if (const auto* despawn = std::get_if<CmdDespawn>(&shapeOf(command)); despawn && !despawn->target.empty())
+			{
+				if (!findObject(objects, despawn->target))
+				{
+					throw std::runtime_error(where + ": <despawn> names '" + despawn->target + "', and there is no object or group of that name" + didYouMean(despawn->target, objectNames(objects)));
 				}
 			}
 			else if (const auto* spawn = std::get_if<CmdSpawn>(&shapeOf(command)))
@@ -972,49 +980,6 @@ namespace xge
 		// evaluate strings in objects
 		for (auto& rawObject : rawObjects)
 		{
-			const std::string where = "object '" + rawObject.name + "'";
-
-			// Only a text showing a number needs working out again here, for the
-			// value it has by now (see above).
-			std::vector<std::string> tempSpriteParams = (rawObject.sprite.kind == "text" && showsNumbers(rawObject.sprite))
-				? buildSpriteParams(rawObject.sprite, where, nullptr, nullptr, &rawObject)
-				: firstPassSpriteParams.at(rawObject.name);
-			const ShapeKind rawObjectShapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
-
-			// A position that uses the size of a text or image (its own, or
-			// another object's) can only be finished once a backend has measured
-			// it - see Object::positionUsesSize. Sizes of shapes are exact
-			// already (objectSizes above).
-			const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
-
-			// How long each picture of an animation lasts.
-			const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject, windowDesc, where) : 0;
-
-			// The object's looks, if it has several sprites and no animation.
-			std::vector<Object::Look> looks;
-			if (!rawObject.looks.empty())
-			{
-				if (rawObject.hasHeading) { throw std::runtime_error(where + ": an object with a <heading> cannot have several looks"); }
-
-				for (const RawSprite& rawLook : rawObject.looks)
-				{
-					Object::Look look;
-					look.name = rawLook.name;
-					look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap);
-					look.shapeKind = shapeKindFromTag(look.spriteParams.empty() ? std::string{} : look.spriteParams.at(0));
-					if (look.shapeKind == ShapeKind::Text && showsNumbers(rawLook))
-					{
-						throw std::runtime_error(where + ": a look cannot be a text showing a <number> or a <letter>");
-					}
-					looks.push_back(std::move(look));
-				}
-
-				// The first look is the sprite the object starts with; it must be
-				// the very same picture.
-				looks.front().spriteParams = tempSpriteParams;
-				looks.front().bitmap = firstPassBitmaps[rawObject.name];
-			}
-
 			int thisLockstep = 0;
 			if (rawObject.rawCollisionData.lockstep)
 			{
@@ -1030,329 +995,15 @@ namespace xge
 				}
 			}
 
-			Object object{};
+			FirstPass first;
+			first.params = firstPassSpriteParams.at(rawObject.name);
+			first.bitmap = firstPassBitmaps[rawObject.name];
+			first.turned = firstPassTurned[rawObject.name];
+			first.animation = firstPassAnimation[rawObject.name];
+			first.animationTurned = firstPassAnimationTurned[rawObject.name];
+			const auto offset = cellOffsets.find(rawObject.name);
+			objects.push_back(makeObject(rawObject, first, windowDesc, offset == cellOffsets.end() ? Vector2f{} : offset->second, thisLockstep));
 
-			object.spriteParams = tempSpriteParams;
-			object.shapeKind = rawObjectShapeKind;
-			object.bitmap = firstPassBitmaps[rawObject.name];
-			if (firstPassTurned[rawObject.name]) { object.turnables = { firstPassTurned[rawObject.name] }; }
-
-			if (rawObject.hasAnimation)
-			{
-				object.animationBitmaps = firstPassAnimation[rawObject.name];
-				if (!firstPassAnimationTurned[rawObject.name].empty()) { object.turnables = firstPassAnimationTurned[rawObject.name]; }
-				object.animationFrames = animationFrames;
-				object.bitmap = object.animationBitmaps.front();
-			}
-
-			if (object.shapeKind == ShapeKind::Text && showsNumbers(rawObject.sprite))
-			{
-				std::vector<TextPiece> pieces = textPieces(rawObject.sprite, where, &rawObject);
-				if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
-				{
-					object.textPieces = std::move(pieces);
-				}
-			}
-
-			object.groupName = rawObject.groupName;
-			object.outerGroups = rawObject.outerGroups;
-			object.name = rawObject.name;
-			object.objClass = rawObject.objClass;
-			object.isDrawn = rawObject.isDrawn;
-			object.ownerState = rawObject.ownerState;
-			object.ownerScene = rawObject.ownerScene;
-			object.ownerSceneOriginal = rawObject.ownerScene;
-
-			if (rawObject.objClass == "projectile")
-			{
-				rawObject.isVisible = false;
-			}
-
-			object.isVisible = rawObject.isVisible;
-
-			// Its variables first, so its position and velocity can use them
-			// (a serve drawn as an angle: ball.speed * cos(ball.angle)).
-			for (auto& rawVariable : rawObject.variable)
-			{
-				const float value = evaluate(rawVariable.second, where);
-				object.variable[rawVariable.first] = value;
-				object.variableOriginal[rawVariable.first] = value;
-
-				// Keep the cross-object symbol table entry (registered above,
-				// before any expression compiled) up to date with the real
-				// value now that it's known.
-				objectVariables[rawObject.name + "." + rawVariable.first] = value;
-			}
-
-			object.startDrawsRandom = rawObject.rawPosition.x.drawsRandom() || rawObject.rawPosition.y.drawsRandom()
-				|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
-				|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
-
-			object.positionOriginal.x = evaluate(rawObject.rawPosition.x, where);
-			object.positionOriginal.y = evaluate(rawObject.rawPosition.y, where);
-
-			// A cell is its group's position and its place in the
-			// group; positionOriginal keeps both, so a reset puts each
-			// cell (each brick) back in its own place.
-			if (const auto offset = cellOffsets.find(rawObject.name); offset != cellOffsets.end()) { object.cellOffset = offset->second; }
-			object.position = object.positionOriginal + object.cellOffset;
-			object.positionOriginal = object.position;
-
-			object.sizeDependencies = positionSizeDependencies;
-			object.positionUsesSize = !positionSizeDependencies.empty();
-			object.positionResolved = !object.positionUsesSize;
-
-			object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
-			object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
-
-			object.velocityOriginal = object.velocity;
-
-			if (rawObject.hasAcceleration)
-			{
-				object.acceleration.x = evaluate(rawObject.rawAcceleration.x, where);
-				object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
-			}
-			object.accelerationOriginal = object.acceleration;
-
-			if (rawObject.hasHeading)
-			{
-				object.hasHeading = true;
-				float degrees = std::fmod(evaluate(rawObject.rawHeading, where), 360.0f);
-				if (degrees < 0.0f) { degrees += 360.0f; }
-				object.heading = degrees;
-			}
-			object.headingOriginal = object.heading;
-
-			if (rawObject.hasDrag)
-			{
-				object.drag = evaluate(rawObject.rawDrag, where);
-				if (object.drag < 0.0f || object.drag >= 1.0f)
-				{
-					throw std::runtime_error(where + ": <drag> is " + std::to_string(object.drag) + "; expected 0 up to (not including) 1");
-				}
-			}
-
-			if (rawObject.hasMass)
-			{
-				object.mass = evaluate(rawObject.rawMass, where);
-				if (!(object.mass > 0.0f))
-				{
-					throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.mass) + "; expected more than 0");
-				}
-			}
-
-			for (const auto& [name, strength] : rawObject.rawPulls)
-			{
-				object.pulls.emplace_back(name, evaluate(strength, where + " > <pull object=\"" + name + "\">"));
-			}
-			if (!rawObject.seekTarget.empty())
-			{
-				object.seekTarget = rawObject.seekTarget;
-				object.seekRate = evaluate(rawObject.rawSeek, where + " > <seek>");
-				if (object.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(object.seekRate) + " degrees a frame; expected 0 or more"); }
-			}
-
-			if (rawObject.hasLight)
-			{
-				object.light = evaluate(rawObject.rawLight, where + " > <light>");
-				if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
-				object.lightOriginal = object.light;
-			}
-			if (rawObject.dark == "unlit") { object.dark = Object::Darkness::Unlit; }
-			else if (rawObject.dark == "unseen") { object.dark = Object::Darkness::Unseen; }
-			object.inDark = object.dark != Object::Darkness::None;
-
-			if (rawObject.hasAltitude)
-			{
-				const std::string here = where + " > <altitude>";
-				const auto given = [&](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
-				object.hasAltitude = true;
-				object.altitude = given(rawObject.rawAltitude) ? evaluate(rawObject.rawAltitude, here) : 0.0f;
-				object.rise = given(rawObject.rawRise) ? evaluate(rawObject.rawRise, here) : 0.0f;
-				object.fall = given(rawObject.rawFall) ? evaluate(rawObject.rawFall, here) : 0.0f;
-				object.altitudeBounce = given(rawObject.rawAltitudeBounce) ? evaluate(rawObject.rawAltitudeBounce, here) : 0.0f;
-				if (object.altitude < 0.0f) { throw std::runtime_error(here + ": <start> is " + formatDisplayNumber(object.altitude) + "; it cannot start below the ground"); }
-				if (object.fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(object.fall) + "; expected 0 or more"); }
-				if (!(object.altitudeBounce >= 0.0f && object.altitudeBounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(object.altitudeBounce) + "; expected 0 up to 1"); }
-				object.altitudeOriginal = object.altitude;
-				object.riseOriginal = object.rise;
-			}
-			object.shadowOf = rawObject.shadowOf;
-
-			if (rawObject.sprite.kind == "tether")
-			{
-				if (rawObject.hasHeading || !rawObject.looks.empty() || rawObject.hasAnimation)
-				{
-					throw std::runtime_error(where + ": a <tether> is drawn where its ends are; it has no <heading>, other looks or <animation>");
-				}
-				object.tetherFrom = rawObject.sprite.tetherFrom;
-				object.tetherTo = rawObject.sprite.tetherTo;
-				if (!rawObject.sprite.thickness.text.empty() || rawObject.sprite.thickness.kind != RawValue::Kind::Expression)
-				{
-					object.tetherThickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
-					if (object.tetherThickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
-				}
-				object.tetherColor = colorFromName(rawObject.sprite.color.empty() ? "color.white" : rawObject.sprite.color);
-			}
-
-			if (!rawObject.facing.empty())
-			{
-				object.hasFacing = true;
-				object.facing = rawObject.facing == "down" ? Direction::Down
-					: rawObject.facing == "left" ? Direction::Left
-					: rawObject.facing == "right" ? Direction::Right
-					: Direction::Up;
-			}
-			object.facingOriginal = object.facing;
-			object.timers = processTimers(rawObject.timers, where);
-			object.looks = looks;
-			for (const Timer& timer : object.timers)
-			{
-				if (!timer.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == timer.sprite; }))
-				{
-					std::vector<std::string> names;
-					for (const Object::Look& look : looks) { names.push_back(look.name); }
-					throw std::runtime_error(where + " > <timer sprite=\"" + timer.sprite + "\">: the object has no look of that name"
-						+ (names.empty() ? std::string(" (it has no looks: several named <sprite>s and no <animation>)") : didYouMean(timer.sprite, names) + ". Its looks are: " + listOf(names)));
-				}
-			}
-
-			// On a map: which tile, and the map itself, for what walks it.
-			if (rawObject.cell.mapColumn > 0)
-			{
-				object.mapName = rawObject.cell.map;
-				object.mapColumn = rawObject.cell.mapColumn - 1;
-				object.mapRow = rawObject.cell.mapRow - 1;
-				object.mapColumns = rawObject.cell.mapColumns;
-				object.mapRows = rawObject.cell.mapRows;
-				object.mapTile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
-				object.mapOrigin = object.positionOriginal - object.cellOffset;
-			}
-			object.mazeMap = rawObject.maze.map;
-			object.mazeWalls = rawObject.maze.walls;
-			for (const MazeWall& wall : object.mazeWalls)
-			{
-				if (!wall.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == wall.sprite; }))
-				{
-					throw std::runtime_error(where + " > <maze> > <wall class=\"" + wall.objClass + "\" sprite=\"" + wall.sprite + "\">: the object has no look of that name");
-				}
-			}
-
-			object.showHeading();
-
-			object.collisionData.enabled = rawObject.rawCollisionData.enabled;
-			object.isVisibleOriginal = object.isVisible;
-			object.collisionEnabledOriginal = object.collisionData.enabled;
-			object.collisionData.lockstep = thisLockstep;
-			object.collisionData.type = rawObject.rawCollisionData.type;
-
-			// A pixel collision tests the pixels that are drawn; a line
-			// drawing has them from the start, and a circle or rectangle
-			// is solid all over, but what a text or an image looks like
-			// is only known once a window backend has drawn it.
-			if (object.collisionData.type == CollisionType::Pixel
-				&& (object.shapeKind == ShapeKind::Text || object.shapeKind == ShapeKind::Image))
-			{
-				throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
-			}
-
-			// Which of its pixels touch: only for a picture of rows, tested
-			// pixel by pixel.
-			if (!rawObject.rawCollisionData.solid.empty())
-			{
-				if (object.collisionData.type != CollisionType::Pixel)
-				{
-					throw std::runtime_error(where + ": a <solid char> says which pixels touch, so it needs <type>pixel</type>");
-				}
-				const auto rows = [](const RawSprite& sprite) { return sprite.kind == "bitmap"; };
-				if (!rows(rawObject.sprite) || !std::all_of(rawObject.looks.begin(), rawObject.looks.end(), rows)
-					|| !std::all_of(rawObject.animation.frames.begin(), rawObject.animation.frames.end(), rows))
-				{
-					throw std::runtime_error(where + ": a <solid char> names characters of a <bitmap>, and every sprite of the object must be one");
-				}
-			}
-
-			// What it touches with, if not its picture.
-			const RawCollisionData& rawCollisions = rawObject.rawCollisionData;
-			if (!rawCollisions.hitboxKind.empty())
-			{
-				if (object.collisionData.type == CollisionType::Pixel)
-				{
-					throw std::runtime_error(where + ": a <hitbox> is touched as its own shape, not by the pixels of the picture; it cannot go with <type>pixel</type>");
-				}
-				const auto valueOr0 = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where + " > <hitbox>"); };
-				object.collisionData.hasHitbox = true;
-				object.collisionData.hitboxRound = rawCollisions.hitboxKind == "circle";
-				if (object.collisionData.hitboxRound)
-				{
-					const float radius = evaluate(rawCollisions.hitboxRadius, where + " > <hitbox>");
-					object.collisionData.hitboxSize = { radius * 2.0f, radius * 2.0f };
-				}
-				else
-				{
-					object.collisionData.hitboxSize = { evaluate(rawCollisions.hitboxWidth, where + " > <hitbox>"), evaluate(rawCollisions.hitboxHeight, where + " > <hitbox>") };
-				}
-				if (!(object.collisionData.hitboxSize.x > 0.0f) || !(object.collisionData.hitboxSize.y > 0.0f))
-				{
-					throw std::runtime_error(where + ": a <hitbox> must be bigger than nothing; its size is " + formatDisplayNumber(object.collisionData.hitboxSize.x)
-						+ " by " + formatDisplayNumber(object.collisionData.hitboxSize.y));
-				}
-				object.collisionData.hitboxOffset = { valueOr0(rawCollisions.hitboxX), valueOr0(rawCollisions.hitboxY) };
-			}
-
-			object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
-			object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
-			object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
-			object.collisionData.right = processCommands(rawObject.rawCollisionData.right, where);
-			object.collisionData.topGuards = rawObject.rawCollisionData.topGuards;
-			object.collisionData.bottomGuards = rawObject.rawCollisionData.bottomGuards;
-			object.collisionData.leftGuards = rawObject.rawCollisionData.leftGuards;
-			object.collisionData.rightGuards = rawObject.rawCollisionData.rightGuards;
-			for (const auto* edgeGuards : { &object.collisionData.topGuards, &object.collisionData.bottomGuards, &object.collisionData.leftGuards, &object.collisionData.rightGuards })
-			{
-				for (const EdgeGuard& edgeGuard : *edgeGuards)
-				{
-					if (!edgeGuard.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == edgeGuard.sprite; }))
-					{
-						throw std::runtime_error(where + ": a <collision edge sprite=\"" + edgeGuard.sprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
-					}
-				}
-			}
-
-			for (auto& rawRule : rawObject.rawCollisionData.others)
-			{
-				CollisionRule rule;
-				rule.filterClass = rawRule.filterClass;
-				rule.filterObject = rawRule.filterObject;
-				rule.unlessClass = rawRule.unlessClass;
-				rule.whileSprite = rawRule.whileSprite;
-				if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
-				{
-					throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
-				}
-				if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
-				if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
-				const std::string& side = rawRule.side;
-				if (side == "top" || side == "vertical") { rule.sides.push_back(Edge::Top); }
-				if (side == "bottom" || side == "vertical") { rule.sides.push_back(Edge::Bottom); }
-				if (side == "left" || side == "horizontal") { rule.sides.push_back(Edge::Left); }
-				if (side == "right" || side == "horizontal") { rule.sides.push_back(Edge::Right); }
-				rule.commands = processCommands(rawRule.commands, where);
-				object.collisionData.others.push_back(std::move(rule));
-			}
-
-			//object.action = rawObject.action;
-			for (auto& rawAction : rawObject.action)
-			{
-				object.action[rawAction.first] = processCommands(rawAction.second, where);
-			}
-
-
-			// object's visual is built later by whichever Window backend is
-			// running, once one exists (see Window::init() in window/window.h) -
-			// visualDirty starts true (Object's own default), so nothing
-			// needs to happen here.
-			objects.push_back(std::move(object));
 
 			if (rawObject.rawCollisionData.lockstep && rawObject.groupName.empty()) {
 				lockstepNum++;
@@ -1579,6 +1230,428 @@ namespace xge
 		}
 
 		checkReferences(states, objects, sounds, paths);
+	}
+
+	Object game_expr::makeObject(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, Vector2f cellOffset, int thisLockstep)
+	{
+		const std::string where = "object '" + rawObject.name + "'";
+
+		// Only a text showing a number needs working out again here, for the
+		// value it has by now (see above).
+		std::vector<std::string> tempSpriteParams = (rawObject.sprite.kind == "text" && showsNumbers(rawObject.sprite))
+			? buildSpriteParams(rawObject.sprite, where, nullptr, nullptr, &rawObject)
+			: first.params;
+		const ShapeKind rawObjectShapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
+
+		// A position that uses the size of a text or image (its own, or
+		// another object's) can only be finished once a backend has measured
+		// it - see Object::positionUsesSize. Sizes of shapes are exact
+		// already (objectSizes above).
+		const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
+
+		// How long each picture of an animation lasts.
+		const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject, windowDesc, where) : 0;
+
+		// The object's looks, if it has several sprites and no animation.
+		std::vector<Object::Look> looks;
+		if (first.looks)
+		{
+			looks = *first.looks;
+		}
+		else if (!rawObject.looks.empty())
+		{
+			if (rawObject.hasHeading) { throw std::runtime_error(where + ": an object with a <heading> cannot have several looks"); }
+
+			for (const RawSprite& rawLook : rawObject.looks)
+			{
+				Object::Look look;
+				look.name = rawLook.name;
+				look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap);
+				look.shapeKind = shapeKindFromTag(look.spriteParams.empty() ? std::string{} : look.spriteParams.at(0));
+				if (look.shapeKind == ShapeKind::Text && showsNumbers(rawLook))
+				{
+					throw std::runtime_error(where + ": a look cannot be a text showing a <number> or a <letter>");
+				}
+				looks.push_back(std::move(look));
+			}
+
+			// The first look is the sprite the object starts with; it must be
+			// the very same picture.
+			looks.front().spriteParams = tempSpriteParams;
+			looks.front().bitmap = first.bitmap;
+		}
+
+
+		Object object{};
+
+		object.spriteParams = tempSpriteParams;
+		object.shapeKind = rawObjectShapeKind;
+		object.bitmap = first.bitmap;
+		if (first.turned) { object.turnables = { first.turned }; }
+
+		if (rawObject.hasAnimation)
+		{
+			object.animationBitmaps = first.animation;
+			if (!first.animationTurned.empty()) { object.turnables = first.animationTurned; }
+			object.animationFrames = animationFrames;
+			object.bitmap = object.animationBitmaps.front();
+		}
+
+		if (object.shapeKind == ShapeKind::Text && showsNumbers(rawObject.sprite))
+		{
+			std::vector<TextPiece> pieces = textPieces(rawObject.sprite, where, &rawObject);
+			if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
+			{
+				object.textPieces = std::move(pieces);
+			}
+		}
+
+		object.groupName = rawObject.groupName;
+		object.outerGroups = rawObject.outerGroups;
+		object.name = rawObject.name;
+		object.objClass = rawObject.objClass;
+		object.isDrawn = rawObject.isDrawn;
+		object.ownerState = rawObject.ownerState;
+		object.ownerScene = rawObject.ownerScene;
+		object.ownerSceneOriginal = rawObject.ownerScene;
+
+		if (rawObject.objClass == "projectile")
+		{
+			rawObject.isVisible = false;
+		}
+
+		object.isVisible = rawObject.isVisible;
+		object.exists = rawObject.exists;
+		object.existsOriginal = rawObject.exists;
+		// One that does not exist is in nothing that looks for what is out
+		// there, as one taken out of play is not.
+		if (!object.exists) { object.isVisible = false; }
+		object.most = rawObject.most;
+
+		// Its variables first, so its position and velocity can use them
+		// (a serve drawn as an angle: ball.speed * cos(ball.angle)).
+		for (auto& rawVariable : rawObject.variable)
+		{
+			const float value = evaluate(rawVariable.second, where);
+			object.variable[rawVariable.first] = value;
+			object.variableOriginal[rawVariable.first] = value;
+
+			// Keep the cross-object symbol table entry (registered above,
+			// before any expression compiled) up to date with the real
+			// value now that it's known.
+			objectVariables[rawObject.name + "." + rawVariable.first] = value;
+		}
+
+		object.startDrawsRandom = rawObject.rawPosition.x.drawsRandom() || rawObject.rawPosition.y.drawsRandom()
+			|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
+			|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
+
+		object.positionOriginal.x = evaluate(rawObject.rawPosition.x, where);
+		object.positionOriginal.y = evaluate(rawObject.rawPosition.y, where);
+
+		// A cell is its group's position and its place in the
+		// group; positionOriginal keeps both, so a reset puts each
+		// cell (each brick) back in its own place.
+		object.cellOffset = cellOffset;
+		object.position = object.positionOriginal + object.cellOffset;
+		object.positionOriginal = object.position;
+
+		object.sizeDependencies = positionSizeDependencies;
+		object.positionUsesSize = !positionSizeDependencies.empty();
+		object.positionResolved = !object.positionUsesSize;
+
+		object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
+		object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
+
+		object.velocityOriginal = object.velocity;
+
+		if (rawObject.hasAcceleration)
+		{
+			object.acceleration.x = evaluate(rawObject.rawAcceleration.x, where);
+			object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
+		}
+		object.accelerationOriginal = object.acceleration;
+
+		if (rawObject.hasHeading)
+		{
+			object.hasHeading = true;
+			float degrees = std::fmod(evaluate(rawObject.rawHeading, where), 360.0f);
+			if (degrees < 0.0f) { degrees += 360.0f; }
+			object.heading = degrees;
+		}
+		object.headingOriginal = object.heading;
+
+		if (rawObject.hasDrag)
+		{
+			object.drag = evaluate(rawObject.rawDrag, where);
+			if (object.drag < 0.0f || object.drag >= 1.0f)
+			{
+				throw std::runtime_error(where + ": <drag> is " + std::to_string(object.drag) + "; expected 0 up to (not including) 1");
+			}
+		}
+
+		if (rawObject.hasMass)
+		{
+			object.mass = evaluate(rawObject.rawMass, where);
+			if (!(object.mass > 0.0f))
+			{
+				throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.mass) + "; expected more than 0");
+			}
+		}
+
+		for (const auto& [name, strength] : rawObject.rawPulls)
+		{
+			object.pulls.emplace_back(name, evaluate(strength, where + " > <pull object=\"" + name + "\">"));
+		}
+		if (!rawObject.seekTarget.empty())
+		{
+			object.seekTarget = rawObject.seekTarget;
+			object.seekRate = evaluate(rawObject.rawSeek, where + " > <seek>");
+			if (object.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(object.seekRate) + " degrees a frame; expected 0 or more"); }
+		}
+
+		if (rawObject.hasLight)
+		{
+			object.light = evaluate(rawObject.rawLight, where + " > <light>");
+			if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
+			object.lightOriginal = object.light;
+		}
+		if (rawObject.dark == "unlit") { object.dark = Object::Darkness::Unlit; }
+		else if (rawObject.dark == "unseen") { object.dark = Object::Darkness::Unseen; }
+		object.inDark = object.dark != Object::Darkness::None;
+
+		if (rawObject.hasAltitude)
+		{
+			const std::string here = where + " > <altitude>";
+			const auto given = [&](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
+			object.hasAltitude = true;
+			object.altitude = given(rawObject.rawAltitude) ? evaluate(rawObject.rawAltitude, here) : 0.0f;
+			object.rise = given(rawObject.rawRise) ? evaluate(rawObject.rawRise, here) : 0.0f;
+			object.fall = given(rawObject.rawFall) ? evaluate(rawObject.rawFall, here) : 0.0f;
+			object.altitudeBounce = given(rawObject.rawAltitudeBounce) ? evaluate(rawObject.rawAltitudeBounce, here) : 0.0f;
+			if (object.altitude < 0.0f) { throw std::runtime_error(here + ": <start> is " + formatDisplayNumber(object.altitude) + "; it cannot start below the ground"); }
+			if (object.fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(object.fall) + "; expected 0 or more"); }
+			if (!(object.altitudeBounce >= 0.0f && object.altitudeBounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(object.altitudeBounce) + "; expected 0 up to 1"); }
+			object.altitudeOriginal = object.altitude;
+			object.riseOriginal = object.rise;
+		}
+		object.shadowOf = rawObject.shadowOf;
+
+		if (rawObject.sprite.kind == "tether")
+		{
+			if (rawObject.hasHeading || !rawObject.looks.empty() || rawObject.hasAnimation)
+			{
+				throw std::runtime_error(where + ": a <tether> is drawn where its ends are; it has no <heading>, other looks or <animation>");
+			}
+			object.tetherFrom = rawObject.sprite.tetherFrom;
+			object.tetherTo = rawObject.sprite.tetherTo;
+			if (!rawObject.sprite.thickness.text.empty() || rawObject.sprite.thickness.kind != RawValue::Kind::Expression)
+			{
+				object.tetherThickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
+				if (object.tetherThickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
+			}
+			object.tetherColor = colorFromName(rawObject.sprite.color.empty() ? "color.white" : rawObject.sprite.color);
+		}
+
+		if (!rawObject.facing.empty())
+		{
+			object.hasFacing = true;
+			object.facing = rawObject.facing == "down" ? Direction::Down
+				: rawObject.facing == "left" ? Direction::Left
+				: rawObject.facing == "right" ? Direction::Right
+				: Direction::Up;
+		}
+		object.facingOriginal = object.facing;
+		object.timers = processTimers(rawObject.timers, where);
+		object.looks = looks;
+		for (const Timer& timer : object.timers)
+		{
+			if (!timer.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == timer.sprite; }))
+			{
+				std::vector<std::string> names;
+				for (const Object::Look& look : looks) { names.push_back(look.name); }
+				throw std::runtime_error(where + " > <timer sprite=\"" + timer.sprite + "\">: the object has no look of that name"
+					+ (names.empty() ? std::string(" (it has no looks: several named <sprite>s and no <animation>)") : didYouMean(timer.sprite, names) + ". Its looks are: " + listOf(names)));
+			}
+		}
+
+		// On a map: which tile, and the map itself, for what walks it.
+		if (rawObject.cell.mapColumn > 0)
+		{
+			object.mapName = rawObject.cell.map;
+			object.mapColumn = rawObject.cell.mapColumn - 1;
+			object.mapRow = rawObject.cell.mapRow - 1;
+			object.mapColumns = rawObject.cell.mapColumns;
+			object.mapRows = rawObject.cell.mapRows;
+			object.mapTile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
+			object.mapOrigin = object.positionOriginal - object.cellOffset;
+		}
+		object.mazeMap = rawObject.maze.map;
+		object.mazeWalls = rawObject.maze.walls;
+		for (const MazeWall& wall : object.mazeWalls)
+		{
+			if (!wall.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == wall.sprite; }))
+			{
+				throw std::runtime_error(where + " > <maze> > <wall class=\"" + wall.objClass + "\" sprite=\"" + wall.sprite + "\">: the object has no look of that name");
+			}
+		}
+
+		object.showHeading();
+
+		object.collisionData.enabled = rawObject.rawCollisionData.enabled;
+		object.isVisibleOriginal = object.isVisible;
+		object.collisionEnabledOriginal = object.collisionData.enabled;
+		object.collisionData.lockstep = thisLockstep;
+		object.collisionData.type = rawObject.rawCollisionData.type;
+
+		// A pixel collision tests the pixels that are drawn; a line
+		// drawing has them from the start, and a circle or rectangle
+		// is solid all over, but what a text or an image looks like
+		// is only known once a window backend has drawn it.
+		if (object.collisionData.type == CollisionType::Pixel
+			&& (object.shapeKind == ShapeKind::Text || object.shapeKind == ShapeKind::Image))
+		{
+			throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
+		}
+
+		// Which of its pixels touch: only for a picture of rows, tested
+		// pixel by pixel.
+		if (!rawObject.rawCollisionData.solid.empty())
+		{
+			if (object.collisionData.type != CollisionType::Pixel)
+			{
+				throw std::runtime_error(where + ": a <solid char> says which pixels touch, so it needs <type>pixel</type>");
+			}
+			const auto rows = [](const RawSprite& sprite) { return sprite.kind == "bitmap"; };
+			if (!rows(rawObject.sprite) || !std::all_of(rawObject.looks.begin(), rawObject.looks.end(), rows)
+				|| !std::all_of(rawObject.animation.frames.begin(), rawObject.animation.frames.end(), rows))
+			{
+				throw std::runtime_error(where + ": a <solid char> names characters of a <bitmap>, and every sprite of the object must be one");
+			}
+		}
+
+		// What it touches with, if not its picture.
+		const RawCollisionData& rawCollisions = rawObject.rawCollisionData;
+		if (!rawCollisions.hitboxKind.empty())
+		{
+			if (object.collisionData.type == CollisionType::Pixel)
+			{
+				throw std::runtime_error(where + ": a <hitbox> is touched as its own shape, not by the pixels of the picture; it cannot go with <type>pixel</type>");
+			}
+			const auto valueOr0 = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where + " > <hitbox>"); };
+			object.collisionData.hasHitbox = true;
+			object.collisionData.hitboxRound = rawCollisions.hitboxKind == "circle";
+			if (object.collisionData.hitboxRound)
+			{
+				const float radius = evaluate(rawCollisions.hitboxRadius, where + " > <hitbox>");
+				object.collisionData.hitboxSize = { radius * 2.0f, radius * 2.0f };
+			}
+			else
+			{
+				object.collisionData.hitboxSize = { evaluate(rawCollisions.hitboxWidth, where + " > <hitbox>"), evaluate(rawCollisions.hitboxHeight, where + " > <hitbox>") };
+			}
+			if (!(object.collisionData.hitboxSize.x > 0.0f) || !(object.collisionData.hitboxSize.y > 0.0f))
+			{
+				throw std::runtime_error(where + ": a <hitbox> must be bigger than nothing; its size is " + formatDisplayNumber(object.collisionData.hitboxSize.x)
+					+ " by " + formatDisplayNumber(object.collisionData.hitboxSize.y));
+			}
+			object.collisionData.hitboxOffset = { valueOr0(rawCollisions.hitboxX), valueOr0(rawCollisions.hitboxY) };
+		}
+
+		object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
+		object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
+		object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
+		object.collisionData.right = processCommands(rawObject.rawCollisionData.right, where);
+		object.collisionData.topGuards = rawObject.rawCollisionData.topGuards;
+		object.collisionData.bottomGuards = rawObject.rawCollisionData.bottomGuards;
+		object.collisionData.leftGuards = rawObject.rawCollisionData.leftGuards;
+		object.collisionData.rightGuards = rawObject.rawCollisionData.rightGuards;
+		for (const auto* edgeGuards : { &object.collisionData.topGuards, &object.collisionData.bottomGuards, &object.collisionData.leftGuards, &object.collisionData.rightGuards })
+		{
+			for (const EdgeGuard& edgeGuard : *edgeGuards)
+			{
+				if (!edgeGuard.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == edgeGuard.sprite; }))
+				{
+					throw std::runtime_error(where + ": a <collision edge sprite=\"" + edgeGuard.sprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
+				}
+			}
+		}
+
+		for (auto& rawRule : rawObject.rawCollisionData.others)
+		{
+			CollisionRule rule;
+			rule.filterClass = rawRule.filterClass;
+			rule.filterObject = rawRule.filterObject;
+			rule.unlessClass = rawRule.unlessClass;
+			rule.whileSprite = rawRule.whileSprite;
+			if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
+			{
+				throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
+			}
+			if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
+			if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
+			const std::string& side = rawRule.side;
+			if (side == "top" || side == "vertical") { rule.sides.push_back(Edge::Top); }
+			if (side == "bottom" || side == "vertical") { rule.sides.push_back(Edge::Bottom); }
+			if (side == "left" || side == "horizontal") { rule.sides.push_back(Edge::Left); }
+			if (side == "right" || side == "horizontal") { rule.sides.push_back(Edge::Right); }
+			rule.commands = processCommands(rawRule.commands, where);
+			object.collisionData.others.push_back(std::move(rule));
+		}
+
+		//object.action = rawObject.action;
+		for (auto& rawAction : rawObject.action)
+		{
+			object.action[rawAction.first] = processCommands(rawAction.second, where);
+		}
+
+
+		// object's visual is built later by whichever Window backend is
+		// running, once one exists (see Window::init() in window/window.h) -
+		// visualDirty starts true (Object's own default), so nothing
+		// needs to happen here.
+		return object;
+	}
+
+	Object game_expr::spawnObject(RawObject& raw, const Object& from, const WindowDesc& windowDesc)
+	{
+		// What its rules and others' read of it, under its own name, as init
+		// makes them known for every object the file has. A name used
+		// before (a copy despawned, its name taken again) keeps its place.
+		for (const auto& [variable, value] : raw.variable)
+		{
+			const std::string name = raw.name + "." + variable;
+			if (objectVariables.emplace(name, 0.0f).second) { bind(name, objectVariables[name]); }
+		}
+		for (const std::string& part : liveNumberParts())
+		{
+			const std::string name = raw.name + "." + part;
+			if (!objectVariables.count(name) && liveNumbers.emplace(name, 0.0f).second) { bind(name, liveNumbers[name]); }
+		}
+		if (const auto size = objectSizes.find(from.name); size != objectSizes.end() && !objectSizes.count(raw.name))
+		{
+			Vector2f& own = objectSizes[raw.name] = size->second;
+			objectShapeKinds[raw.name] = objectShapeKinds[from.name];
+			if (!objectVariables.count(raw.name + ".width")) { bind(raw.name + ".width", own.x); }
+			if (!objectVariables.count(raw.name + ".height")) { bind(raw.name + ".height", own.y); }
+		}
+
+		// Its pictures are the ones `from` was made with, not drawn again.
+		FirstPass first;
+		first.params = from.looks.empty() ? from.spriteParams : from.looks.front().spriteParams;
+		first.bitmap = from.looks.empty() ? from.bitmap : from.looks.front().bitmap;
+		if (from.animationBitmaps.empty())
+		{
+			if (!from.turnables.empty()) { first.turned = from.turnables.front(); }
+		}
+		else
+		{
+			first.animation = from.animationBitmaps;
+			first.animationTurned = from.turnables;
+		}
+		if (!from.looks.empty()) { first.looks = &from.looks; }
+
+		return makeObject(raw, first, windowDesc, from.cellOffset, from.collisionData.lockstep);
 	}
 
 	SoundDesc game_expr::processSound(const RawSound& raw)

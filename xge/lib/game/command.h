@@ -532,6 +532,15 @@ namespace xge
 		std::optional<float> velocityY;
 	};
 
+	// <despawn /> - the object takes itself out of the game; with object=,
+	// every object of that name or group (Game::despawn). Not the same as
+	// <die />, which leaves it in the game, out of play, for a <reveal> or a
+	// <fire> to bring back: a despawned object is not there at all.
+	struct CmdDespawn
+	{
+		std::string target;
+	};
+
 	// <hold button="up" /> - only in a <condition> of a state's <computer>:
 	// while that condition holds the computer holds the button down, as a
 	// player would, and lets it go when it no longer does. See
@@ -560,7 +569,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdHold, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdDespawn, CmdHold, CmdLive>;
 
 	struct LoadedCommand
 	{

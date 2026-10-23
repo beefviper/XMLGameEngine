@@ -59,6 +59,30 @@ namespace xge
 		// evaluateOperation.
 		void finishLoading() { loading = false; }
 
+		// What an object's sprite was drawn as before it was built (init's
+		// first pass, or the object a copy is spawned from): its sprite's
+		// params, the picture, what turns, an animation's pictures, and,
+		// when given, its looks ready made.
+		struct FirstPass
+		{
+			std::vector<std::string> params;
+			std::shared_ptr<const Bitmap> bitmap;
+			std::shared_ptr<const Turnable> turned;
+			std::vector<std::shared_ptr<const Bitmap>> animation;
+			std::vector<std::shared_ptr<const Turnable>> animationTurned;
+			const std::vector<Object::Look>* looks{ nullptr };
+		};
+
+		// One object, made from what the file says of it (after init's
+		// first pass, or for a copy spawned while the game runs).
+		Object makeObject(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, Vector2f cellOffset, int lockstep);
+
+		// A copy of `from` spawned while the game runs, from `raw` (what
+		// the file says of `from`, under the copy's name): its names
+		// made known to the expressions (its variables, where it is, its
+		// size) and the object made, its pictures shared with `from`'s.
+		Object spawnObject(RawObject& raw, const Object& from, const WindowDesc& windowDesc);
+
 		void init(const WindowDesc& windowDesc,
 			const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 			std::vector<RawState>& rawStates, std::vector<State>& states,

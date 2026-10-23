@@ -542,20 +542,31 @@ TEST_CASE("yarsrevenge.xml: the Swirl leaves the Qotile and flies at where Yar i
 {
 	Played play("descriptions/yarsrevenge.xml");
 	play.tap(KeyCode::Space);
-	const Object& swirl = play.get("swirl");
+	// The Swirls there are: none until the Qotile spawns one.
+	const auto swirls = [&]()
+	{
+		std::vector<const Object*> found;
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (object.exists && object.copyOf == "playing.swirl") { found.push_back(&object); }
+		}
+		return found;
+	};
+	CHECK(swirls().empty());
 
 	int waited = 0;
-	for (; waited < 600 && !swirl.isVisible; ++waited)
+	for (; waited < 600 && swirls().empty(); ++waited)
 	{
 		play.get("missile").position = { 10, 10 };
 		play.frames(1);
 	}
-	REQUIRE(swirl.isVisible);
+	REQUIRE(swirls().size() == 1);
 	CHECK(waited >= 5 * 60 - 1);
-	CHECK(swirl.position.x > 600.0f);
-	CHECK(swirl.velocity.x == 0.0f);
+	CHECK(swirls().front()->position.x > 600.0f);
+	CHECK(swirls().front()->velocity.x == 0.0f);
 
 	play.get("missile").position = { 10, 10 };
 	play.frames(61);
-	CHECK(swirl.velocity.x < -3.0f);
+	REQUIRE(swirls().size() == 1); // one at a time
+	CHECK(swirls().front()->velocity.x < -3.0f);
 }

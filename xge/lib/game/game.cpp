@@ -46,6 +46,9 @@ namespace xge
 		const std::vector<std::string> keeps = std::move(data.keeps);
 		demo = std::move(data.demo);
 
+		// Room for what is spawned, so that the file's objects stay where
+		// they are (and a reference to one good) as copies join.
+		objects.reserve(rawObjects.size() * 2 + 256);
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 		keep(keeps);
@@ -57,6 +60,7 @@ namespace xge
 			stateTimers[state.name] = state.timers;
 		}
 		startScenes();
+		loadedCount = objects.size();
 		runsInTop.assign(objects.size(), 0);
 		runsInTopStage.assign(objects.size(), 0);
 		// Which objects' rules answer which others, found while loading
@@ -127,8 +131,153 @@ namespace xge
 	{
 		// Anything changed from outside since (a test moving an object to
 		// another scene) is seen, and so is anything this frame changes.
+		settleSpawns();
 		stageChanged();
 		playOneFrame(getCurrentObjects(), windowDesc, *this);
+		settleSpawns();
+		stageChanged();
+	}
+
+	bool Game::isDescription(const std::string& name)
+	{
+		const auto known = descriptions.find(name);
+		if (known != descriptions.end()) { return known->second; }
+
+		bool any = false;
+		bool all = true;
+		for (std::size_t i = 0; i < loadedCount && i < objects.size(); ++i)
+		{
+			if (objects[i].name != name && !objects[i].inGroup(name)) { continue; }
+			any = true;
+			all = all && !objects[i].existsOriginal;
+		}
+		return descriptions[name] = any && all;
+	}
+
+	Object* Game::spawn(const std::string& target)
+	{
+		// What it is a copy of: the object of that name, or the group's
+		// members in turn; never a copy (only the file's objects are
+		// spawned from, so a name means the same thing all game).
+		std::vector<std::size_t> from;
+		for (std::size_t i = 0; i < loadedCount && i < objects.size(); ++i)
+		{
+			if (objects[i].name == target || objects[i].inGroup(target)) { from.push_back(i); }
+		}
+		if (from.empty())
+		{
+			const std::string full = fullName(target);
+			if (full != target) { return spawn(full); }
+			return nullptr;
+		}
+		const Object& original = objects[from[spawnTurns[target]++ % from.size()]];
+
+		const auto copyOfIt = [&](const Object& each) { return each.copyOf == original.name && each.exists; };
+		if (original.most > 0)
+		{
+			const auto there = std::count_if(objects.begin(), objects.end(), copyOfIt) + std::count_if(spawned.begin(), spawned.end(), copyOfIt);
+			if (there >= original.most) { return nullptr; }
+		}
+
+		// The first of its numbers that no object has now.
+		std::string name;
+		for (std::size_t number = 1; name.empty(); ++number)
+		{
+			const std::string candidate = original.name + "." + std::to_string(number);
+			const auto taken = [&](const Object& each) { return each.name == candidate; };
+			if (std::none_of(objects.begin(), objects.end(), taken) && std::none_of(spawned.begin(), spawned.end(), taken)) { name = candidate; }
+		}
+
+		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& each) { return each.name == original.name; });
+		if (raw == rawObjects.end()) { return nullptr; }
+		RawObject copy = *raw;
+		renameOwn(copy, original.name, name);
+		copy.outerGroups = original.outerGroups;
+		if (!original.groupName.empty()) { copy.outerGroups.push_back(original.groupName); }
+		copy.groupName = original.name;
+		copy.exists = true;
+		copy.isVisible = true;
+
+		Object made = expr.spawnObject(copy, original, windowDesc);
+		made.copyOf = original.name;
+		made.groupName = copy.groupName;
+		made.outerGroups = copy.outerGroups;
+		made.ownerState = original.ownerState;
+		made.ownerScene = original.ownerScene;
+		made.ownerSceneOriginal = original.ownerScene;
+		made.exists = true;
+		made.existsOriginal = true;
+		made.isVisible = true;
+		made.isVisibleOriginal = true;
+		made.collisionData.enabled = true;
+		made.collisionEnabledOriginal = true;
+		// Its picture is the one it is copied from, and so its size, until
+		// a window measures it again.
+		made.size = original.size;
+		made.sizeKnown = original.sizeKnown;
+		copyRaws[name] = std::move(copy);
+		spawned.push_back(std::move(made));
+		if (!spawned.back().textPieces.empty()) { relabel(spawned.back()); }
+		return &spawned.back();
+	}
+
+	void Game::despawn(Object& object)
+	{
+		object.exists = false;
+		object.isVisible = false;
+		object.collisionData.enabled = false;
+		object.followPath.clear();
+		object.carrying.clear();
+		for (auto& carrier : objects)
+		{
+			if (carrier.carrying == object.name) { carrier.carrying.clear(); }
+		}
+		stageChanged();
+	}
+
+	void Game::despawn(const std::string& target)
+	{
+		const std::string name = tryGetObject(target) ? target : fullName(target);
+		for (auto& object : objects)
+		{
+			if (object.exists && (object.name == name || object.inGroup(name))) { despawn(object); }
+		}
+		for (auto& object : spawned)
+		{
+			if (object.exists && (object.name == name || object.inGroup(name))) { despawn(object); }
+		}
+	}
+
+	void Game::settleSpawns(void)
+	{
+		bool changed = false;
+		const auto gone = [](const Object& object) { return object.isCopy() && !object.exists; };
+		if (std::any_of(objects.begin(), objects.end(), gone))
+		{
+			objects.erase(std::remove_if(objects.begin(), objects.end(), gone), objects.end());
+			changed = true;
+		}
+		if (!spawned.empty())
+		{
+			for (Object& object : spawned)
+			{
+				if (object.exists) { objects.push_back(std::move(object)); }
+			}
+			spawned.clear();
+			changed = true;
+		}
+		if (changed) { rosterChanged(); }
+	}
+
+	void Game::rosterChanged(void)
+	{
+		foundObjects.clear();
+		filtered.clear();
+		liveLinked = false;
+		liveLinks.clear();
+		runsInTop.assign(objects.size(), 0);
+		runsInTopStage.assign(objects.size(), 0);
+		forgetPartners();
 		stageChanged();
 	}
 
@@ -257,7 +406,7 @@ namespace xge
 
 	bool Game::isShown(const Object& object) noexcept
 	{
-		if (!object.isVisible || currentState.empty()) { return false; }
+		if (!object.isVisible || !object.exists || currentState.empty()) { return false; }
 
 		// One of the game's own objects (not a copy held elsewhere): its
 		// answer is kept (runsInTop).
@@ -292,7 +441,7 @@ namespace xge
 	{
 		if (currentState.empty()) { return false; }
 		const State& top = currentState.top();
-		if (top.showStates.empty() || !object.isVisible || runsIn(object, top)) { return false; }
+		if (top.showStates.empty() || !object.isVisible || !object.exists || runsIn(object, top)) { return false; }
 
 		for (const std::string& name : top.showStates)
 		{
@@ -515,8 +664,16 @@ namespace xge
 			return;
 		}
 
-		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& candidate) { return candidate.name == object.name; });
-		if (raw == rawObjects.end())
+		const RawObject* raw = nullptr;
+		if (const auto copy = copyRaws.find(object.name); object.isCopy() && copy != copyRaws.end())
+		{
+			raw = &copy->second;
+		}
+		else if (const auto written = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& candidate) { return candidate.name == object.name; }); written != rawObjects.end())
+		{
+			raw = &*written;
+		}
+		if (!raw)
 		{
 			return;
 		}
@@ -720,12 +877,22 @@ namespace xge
 
 	void Game::takeTurnUp(const Turn& from)
 	{
+		// The file's objects as the player left them, then the copies
+		// spawned in their game.
+		spawned.clear();
+		objects.resize(std::min(objects.size(), loadedCount));
 		for (std::size_t i = 0; i < objects.size() && i < from.objects.size(); ++i)
 		{
 			if (objects[i].kept) { continue; }
 			objects[i] = from.objects[i];
 			objects[i].visualDirty = true;
 		}
+		for (std::size_t i = loadedCount; i < from.objects.size(); ++i)
+		{
+			objects.push_back(from.objects[i]);
+			objects.back().visualDirty = true;
+		}
+		rosterChanged();
 		stateTimers = from.stateTimers;
 		currentScenes = from.currentScenes;
 		sceneTimers = from.sceneTimers;
@@ -1107,6 +1274,7 @@ namespace xge
 			// as it started (a bullet in flight is put away, an alien is back).
 			object.isVisible = object.isVisibleOriginal;
 			object.collisionData.enabled = object.collisionEnabledOriginal;
+			object.exists = object.existsOriginal;
 
 			// Also drop any directions CommandExecutor::applyActionVelocity
 			// currently has recorded as held: velocity above is reset to rest,
@@ -1193,6 +1361,8 @@ namespace xge
 		{
 			if (candidate.name == name || candidate.inGroup(name))
 			{
+				// A copy did not exist when the game started.
+				if (candidate.isCopy()) { despawn(candidate); continue; }
 				drawStartAgain(candidate);
 				resetObjectState(candidate);
 				stageChanged();
@@ -1240,7 +1410,7 @@ namespace xge
 			if (count <= 0) { break; }
 
 			const bool named = object.name == target || object.inGroup(target);
-			if (!named || object.isVisible || isAway(object)) { continue; }
+			if (!named || object.isVisible || !object.exists || isAway(object)) { continue; }
 
 			// Back in play is a new start: a <random> in it is drawn again,
 			// and its timers and animation start over.
@@ -1366,6 +1536,15 @@ namespace xge
 		turns.clear();
 		turnHandedOver = false;
 
+		// What was spawned since the game began is gone.
+		spawned.clear();
+		for (auto& object : objects)
+		{
+			if (object.isCopy()) { object.exists = false; }
+		}
+		settleSpawns();
+		spawnTurns.clear();
+
 		for (auto& object : objects)
 		{
 			if (object.kept) { continue; }
@@ -1486,6 +1665,7 @@ namespace xge
 		for (auto& object : objects)
 		{
 			if (object.ownerSceneOriginal != scene) { continue; }
+			if (object.isCopy()) { despawn(object); continue; }
 			drawStartAgain(object);
 			resetObjectState(object);
 			stageChanged();

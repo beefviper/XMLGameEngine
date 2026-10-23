@@ -243,6 +243,71 @@ namespace xge
 		}
 	}
 
+	void renameOwn(RawObject& object, const std::string& from, const std::string& to)
+	{
+		const std::function<void(RawValue&)> value = [&](RawValue& each)
+		{
+			each.text = renameStart(each.text, from, to);
+			each.min = renameStart(each.min, from, to);
+			each.max = renameStart(each.max, from, to);
+			if (each.operations)
+			{
+				auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
+				for (RawOperation& operation : *operations)
+				{
+					for (RawOperand& operand : operation.operands) { value(operand.value); }
+				}
+				each.operations = std::move(operations);
+			}
+		};
+		const auto commands = [&](std::vector<RawCommand>& list)
+		{
+			for (RawCommand& command : list)
+			{
+				if (command.verb == "trigger" && command.object == from) { command.object = to; }
+				command.variable = renameStart(command.variable, from, to);
+				command.into = renameStart(command.into, from, to);
+				for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
+					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY })
+				{
+					value(*each);
+				}
+			}
+		};
+		const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
+		{
+			for (RawCondition& part : condition.parts) { check(part); }
+			if (condition.filterObject == from) { condition.filterObject = to; }
+		};
+
+		object.name = to;
+		for (RawValue* each : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y,
+			&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawDrag, &object.rawMass, &object.rawSeek, &object.rawLight,
+			&object.rawAltitude, &object.rawRise, &object.rawFall, &object.rawAltitudeBounce })
+		{
+			value(*each);
+		}
+		for (auto& [name, each] : object.rawPulls) { value(each); }
+		for (auto& [name, each] : object.variable) { value(each); }
+		for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
+
+		RawCollisionData& collisions = object.rawCollisionData;
+		for (auto* edge : { &collisions.top, &collisions.bottom, &collisions.left, &collisions.right }) { commands(*edge); }
+		for (RawCollisionRule& rule : collisions.others)
+		{
+			commands(rule.commands);
+			if (rule.check.join != RawCondition::Join::None) { check(rule.check); }
+			if (rule.slower) { value(*rule.slower); }
+			if (rule.faster) { value(*rule.faster); }
+		}
+		for (RawTimer& timer : object.timers)
+		{
+			value(timer.interval);
+			commands(timer.commands);
+		}
+		for (auto& [name, list] : object.action) { commands(list); }
+	}
+
 	void centerOnOwnSize(std::vector<RawObject>& objects)
 	{
 		for (RawObject& object : objects)

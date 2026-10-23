@@ -77,8 +77,13 @@ namespace xge
 		// made again into `made` (see Game::makeNow).
 		const Command& now(const Command& command, Command& made);
 
-		// <spawn>: see CmdSpawn.
-		void spawn(const CmdSpawn& command);
+		// <spawn>: see CmdSpawn; false, and nothing made, when no more of
+		// it may exist (<most>).
+		bool spawn(const CmdSpawn& command);
+
+		// <despawn />: `self` (none in a state's list), or with object= the
+		// objects it names.
+		void despawn(Object* self, const CmdDespawn& command);
 
 		// <carry />: see CmdCarry.
 		void carry(Object& object, const Object& item);

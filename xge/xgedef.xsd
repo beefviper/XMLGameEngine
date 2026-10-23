@@ -840,10 +840,18 @@
            owner.velocity.x, owner.velocity.y or owner.heading, takes the
            value, worked out as it runs -->
       <xs:element name="set" type="setType" />
-      <!-- spawn: one of the object or group out of play comes in, where the
-           <position> says and going as the <velocity> says (a half left out
-           is its own start), worked out as it runs -->
+      <!-- spawn: a new copy of the object (of a group, its members in
+           turn) comes into the game, where the <position> says and going as
+           the <velocity> says (a half left out is as the object starts),
+           worked out as it runs -->
       <xs:element name="spawn" type="spawnType" />
+      <!-- despawn: the object running it, or object= every one of that
+           name or group, is taken out of the game -->
+      <xs:element name="despawn">
+        <xs:complexType>
+          <xs:attribute name="object" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
       <!-- copy: the variable into= takes the number variable= holds now (both owner.variable) -->
       <xs:element name="copy">
         <xs:complexType>
@@ -1262,6 +1270,9 @@
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
+      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
@@ -1374,6 +1385,9 @@
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
+      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
@@ -1445,6 +1459,9 @@
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
+      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
@@ -1472,6 +1489,9 @@
       <xs:group ref="sightParts" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
+      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
@@ -1546,6 +1566,9 @@
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
+      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />

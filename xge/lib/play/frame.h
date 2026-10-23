@@ -103,6 +103,11 @@ namespace xge
 		// their tiles.
 		const MazeGrid& mazeGrid(const std::vector<Object>& objects, const std::string& map);
 
+		// Objects have joined or left the list: partners and mazeGrid are
+		// worked out again when next asked, even for a list at the same
+		// place and of the same size.
+		void forgetPartners(void) noexcept { keptFor = nullptr; }
+
 	private:
 		// What partners and mazeGrid found, for the list `keptFor` (forgotten
 		// when asked about another).

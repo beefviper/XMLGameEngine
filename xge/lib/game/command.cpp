@@ -263,6 +263,7 @@ namespace xge
 		}
 
 		if (verb == "set") { return CmdSet{ raw.variable, evaluate(raw.amount) }; }
+		if (verb == "despawn") { return CmdDespawn{ raw.object }; }
 
 		if (verb == "spawn")
 		{
@@ -405,6 +406,7 @@ namespace xge
 			[&](const CmdStick&) { o << "stick"; },
 			[&](const CmdReset&) { o << "reset"; },
 			[&](const CmdDie&) { o << "die"; },
+			[&](const CmdDespawn& d) { o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")"); },
 			[&](const CmdStop&) { o << "stop"; },
 			[&](const CmdWrap&) { o << "wrap"; },
 			[&](const CmdRide&) { o << "ride"; },
@@ -709,7 +711,7 @@ namespace xge
 		{
 			o << "(" << command.amount << ")";
 		}
-		else if (command.verb == "fire" || command.verb == "aim" || (command.verb == "reset" && !command.object.empty()))
+		else if (command.verb == "fire" || command.verb == "aim" || (command.verb == "reset" && !command.object.empty()) || (command.verb == "despawn" && !command.object.empty()))
 		{
 			o << "(" << command.object << ")";
 		}

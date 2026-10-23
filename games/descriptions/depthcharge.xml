@@ -14,15 +14,17 @@
   side, P or Escape pauses.
 
   How it is written:
-  * The charges are a pool of six, each pair <spawn>ed at the two sides of
-    the destroyer (positions read as Space is pressed), sinking slowly.
+  * A charge does not exist until the destroyer <spawn>s a pair of them at
+    its two sides (positions read as Space is pressed); six at most are in
+    the water, and one that hits a boat or the bottom is <despawn>ed.
   * The submarines are one group, which says once what every submarine
     does (wrap round, lay a mine now and then with <release>, sink to a
     charge for its lane's worth, self.worth), with a group inside it for
     each lane: its color, depth, speed, worth and boats. A sunk boat comes
     back where it started, on a timer of the playing state.
-  * A sunk boat <release>s a burst, a pool of animated pictures that
-    <die /> on their own timer.
+  * A sunk boat <release>s a burst, an animated picture spawned where it
+    sank, which <despawn>s itself on its own timer. Mines are spawned the
+    same way.
   * The sonar ping is the playing state's <music>.
   Not in it: the time given back for a high score, the charges' depth
   setting.
@@ -147,12 +149,12 @@
             <collision class="charge">
               <inc variable="status.score">self.worth</inc>
               <play sound="sink" />
-              <release object="bursts" />
+              <release object="burst" />
               <die />
             </collision>
           </collisions>
           <timers>
-            <timer><every><random min="3" max="9" /></every><release object="mines" /></timer>
+            <timer><every><random min="3" max="9" /></every><release object="mine" /></timer>
           </timers>
           <group name="lane1">
             <position><y>170</y></position>
@@ -217,14 +219,14 @@
             <action name="left"><move direction="left">step</move></action>
             <action name="right"><move direction="right">step</move></action>
             <action name="drop">
-              <spawn object="charges"><position><x><centered>ship.x + 6</centered></x><y>ship.y + 12</y></position></spawn>
-              <spawn object="charges"><position><x><centered>ship.x + ship.width - 6</centered></x><y>ship.y + 12</y></position></spawn>
+              <spawn object="charge"><position><x><centered>ship.x + 6</centered></x><y>ship.y + 12</y></position></spawn>
+              <spawn object="charge"><position><x><centered>ship.x + ship.width - 6</centered></x><y>ship.y + 12</y></position></spawn>
               <play sound="drop" />
             </action>
           </actions>
         </object>
-        <!-- six charges, sinking slowly -->
-        <group name="charges" class="charge">
+        <!-- a charge, sinking slowly; six at most in the water -->
+        <object name="charge" class="charge">
           <sprite>
             <bitmap>
               <row>.**.</row>
@@ -235,18 +237,17 @@
               <color>color.orange</color>
             </bitmap>
           </sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>2</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>6</most>
           <collisions>
             <enabled>true</enabled>
-            <collision edge="bottom"><die /></collision>
-            <collision class="sub"><die /></collision>
+            <collision edge="bottom"><despawn /></collision>
+            <collision class="sub"><despawn /></collision>
           </collisions>
-          <member /><member /><member /><member /><member /><member />
-        </group>
+        </object>
         <!-- the mines the submarines lay: they rise, and go off at the top of the water or under the destroyer -->
-        <group name="mines" class="mine">
+        <object name="mine" class="mine">
           <sprite>
             <bitmap>
               <row>*.*.*</row>
@@ -258,18 +259,17 @@
               <color>color.white</color>
             </bitmap>
           </sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>-1.2</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>6</most>
           <collisions>
             <enabled>true</enabled>
-            <collision object="ship"><die /></collision>
-            <collision object="waterline"><die /></collision>
+            <collision object="ship"><despawn /></collision>
+            <collision object="waterline"><despawn /></collision>
           </collisions>
-          <member /><member /><member /><member /><member /><member />
-        </group>
+        </object>
         <!-- a submarine going down -->
-        <group name="bursts">
+        <object name="burst">
           <sprite name="flash">
             <bitmap>
               <row>.*..*..*.</row>
@@ -297,13 +297,11 @@
             <frame sprite="flash" />
             <frame sprite="spray" />
           </animation>
-          <position><x>0</x><y>0</y></position>
-          <hidden>true</hidden>
+          <exists>false</exists>
           <timers>
-            <timer><every>0.6</every><die /></timer>
+            <timer><every>0.6</every><despawn /></timer>
           </timers>
-          <member /><member /><member />
-        </group>
+        </object>
         <object name="score">
           <sprite><text style="hud"><content>SCORE </content><number>status.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>

@@ -61,6 +61,42 @@ namespace played
 
 		std::string state() { return game.getCurrentState().name; }
 		xge::Object& get(const std::string& name) { return game.getObject(name); }
+
+		// Whether an object of that name is in the game (a spawned copy,
+		// shot.1, is there from the end of the frame it was spawned in).
+		bool has(const std::string& name)
+		{
+			for (const auto& object : game.getCurrentObjects())
+			{
+				if (object.exists && calls(object.name, name)) { return true; }
+			}
+			return false;
+		}
+
+		// Whether a full name (playing.charge.1) is that name, or ends with
+		// it after a dot (charge.1).
+		static bool calls(const std::string& full, const std::string& name)
+		{
+			return full == name || (full.size() > name.size() && full.compare(full.size() - name.size(), name.size(), name) == 0
+				&& full[full.size() - name.size() - 1] == '.');
+		}
+
+		// How many of that name or group are in the game: what was spawned
+		// of it, and is still there. The name may be the end of a path
+		// (charge for playing.charge).
+		int count(const std::string& name)
+		{
+			const auto is = [&](const std::string& full) { return calls(full, name); };
+			int found = 0;
+			for (const auto& object : game.getCurrentObjects())
+			{
+				if (!object.exists) { continue; }
+				bool named = is(object.name) || is(object.groupName);
+				for (const std::string& group : object.outerGroups) { named = named || is(group); }
+				if (named) { ++found; }
+			}
+			return found;
+		}
 	};
 
 	// A game of one state, "playing", with these objects, these commands on

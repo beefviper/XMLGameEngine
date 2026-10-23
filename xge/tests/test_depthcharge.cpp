@@ -43,7 +43,7 @@ namespace
 	};
 }
 
-TEST_CASE("depthcharge.xml loads a destroyer, ten submarines in four lanes, six charges and six mines", "[depthcharge]")
+TEST_CASE("depthcharge.xml loads a destroyer, ten submarines in four lanes, and no charges or mines until they are spawned", "[depthcharge]")
 {
 	Hunt hunt;
 
@@ -53,8 +53,9 @@ TEST_CASE("depthcharge.xml loads a destroyer, ten submarines in four lanes, six 
 		if (object.objClass == "sub") { ++subs; }
 	}
 	CHECK(subs == 10);
-	CHECK(hunt.get("charges.6").objClass == "charge");
-	CHECK(hunt.get("mines.6").objClass == "mine");
+	CHECK(hunt.count("charge") == 0);
+	CHECK(hunt.count("mine") == 0);
+	CHECK_FALSE(hunt.get("charge").exists);
 	CHECK(hunt.status("time") == 90.0f);
 	CHECK(hunt.status("ships") == 3.0f);
 
@@ -72,10 +73,10 @@ TEST_CASE("Space drops a pair, one off each side of the destroyer, sinking slowl
 	hunt.tap(KeyCode::Space);
 	hunt.frames(1);
 
-	const Object& left = hunt.get("charges.1");
-	const Object& right = hunt.get("charges.2");
-	REQUIRE(left.isVisible);
-	REQUIRE(right.isVisible);
+	REQUIRE(hunt.count("charge") == 2);
+	const Object& left = hunt.get("charge.1");
+	const Object& right = hunt.get("charge.2");
+	CHECK(left.objClass == "charge");
 	CHECK(left.position.x + left.size.x / 2 == Approx(ship.position.x + 6));
 	CHECK(right.position.x + right.size.x / 2 == Approx(ship.position.x + ship.size.x - 6));
 	CHECK(left.velocity.y == Approx(2));
@@ -85,7 +86,9 @@ TEST_CASE("Space drops a pair, one off each side of the destroyer, sinking slowl
 	hunt.tap(KeyCode::Space);
 	hunt.tap(KeyCode::Space);
 	hunt.frames(1);
-	CHECK(hunt.get("charges.6").isVisible);
+	CHECK(hunt.count("charge") == 6);
+	CHECK(hunt.has("charge.6"));
+	CHECK_FALSE(hunt.has("charge.7"));
 }
 
 TEST_CASE("held keys slide the destroyer, and it stops at the sides", "[depthcharge]")
@@ -111,19 +114,17 @@ TEST_CASE("a charge sinks a submarine for its lane's worth, with a burst where i
 
 	hunt.tap(KeyCode::Space);
 	hunt.frames(1);
-	Object& charge = hunt.get("charges.1");
-	charge.position = { deep.position.x + deep.size.x / 2, deep.position.y - 10 };
-	Object& other = hunt.get("charges.2"); // out of the way
-	other.isVisible = false;
-	other.collisionData.enabled = false;
+	hunt.get("charge.1").position = { deep.position.x + deep.size.x / 2, deep.position.y - 10 };
+	hunt.game.despawn(hunt.get("charge.2")); // out of the way
 	hunt.frames(10);
 
 	CHECK_FALSE(deep.isVisible);
 	CHECK(hunt.status("score") == 80.0f);
-	CHECK_FALSE(charge.isVisible);
-	CHECK(hunt.get("bursts.1").isVisible);
+	CHECK_FALSE(hunt.has("charge.1"));
+	CHECK(hunt.count("charge") == 0);
+	CHECK(hunt.has("burst.1"));
 	hunt.frames(40);
-	CHECK_FALSE(hunt.get("bursts.1").isVisible);
+	CHECK_FALSE(hunt.has("burst.1"));
 
 	// It comes back into its lane, on the playing state's timer at two seconds.
 	hunt.frames(80);
@@ -138,21 +139,25 @@ TEST_CASE("a mine laid by a submarine rises, and one under the destroyer costs a
 	const Object& ship = hunt.get("ship");
 
 	// Out in the open it goes off at the top of the water.
-	Object& mine = hunt.get("mines.1");
-	mine.isVisible = true;
-	mine.collisionData.enabled = true;
-	mine.velocity = { 0, -1.2f };
-	mine.position = { 20, 130 };
+	const auto lay = [&](float x)
+	{
+		Object* mine = hunt.game.spawn("mine");
+		REQUIRE(mine);
+		mine->position = { x, 130 };
+		const std::string name = mine->name;
+		hunt.game.settleSpawns();
+		return name;
+	};
+	const std::string open = lay(20);
+	CHECK(hunt.get(open).velocity.y == Approx(-1.2f));
 	hunt.frames(40);
-	CHECK_FALSE(mine.isVisible);
+	CHECK_FALSE(hunt.has(open));
 	CHECK(hunt.status("ships") == 3.0f);
 
 	// Under the destroyer it costs a ship.
-	mine.isVisible = true;
-	mine.collisionData.enabled = true;
-	mine.position = { ship.position.x + ship.size.x / 2, 130 };
+	const std::string under = lay(ship.position.x + ship.size.x / 2);
 	hunt.frames(40);
-	CHECK_FALSE(mine.isVisible);
+	CHECK_FALSE(hunt.has(under));
 	CHECK(hunt.status("ships") == 2.0f);
 
 	// The boats lay them on their own.
@@ -160,10 +165,7 @@ TEST_CASE("a mine laid by a submarine rises, and one under the destroyer costs a
 	for (int frame = 0; frame < 600 && laid == 0; ++frame)
 	{
 		hunt.frames(1);
-		for (int i = 1; i <= 6; ++i)
-		{
-			if (hunt.get("mines." + std::to_string(i)).isVisible) { ++laid; }
-		}
+		laid = hunt.count("mine");
 	}
 	CHECK(laid > 0);
 }

@@ -349,6 +349,13 @@ namespace xge
 		// <drawn>false</drawn>: in play, moving and colliding, but never drawn
 		// (an exit, a trigger zone).
 		bool isDrawn{ true };
+
+		// <exists>false</exists>: written, so rules and spawns can name it,
+		// but not in the game until a <spawn> makes one (Object::exists).
+		bool exists{ true };
+
+		// <most>: how many spawned of it can exist at once (0: no limit).
+		int most{ 0 };
 		RawVector2 rawPosition;
 		RawVector2 rawVelocity;
 		RawVector2 rawAcceleration;  // only when hasAcceleration
@@ -485,6 +492,24 @@ namespace xge
 
 		// Whether it is drawn while in play (see RawObject::isDrawn).
 		bool isDrawn{ true };
+
+		// Whether it is in the game at all. One that does not exist is never
+		// in play, and nothing (a <reveal>, a <fire>) brings it back; it is
+		// a description that a <spawn> makes copies of. <despawn /> takes an
+		// object out of the game; a spawned one is gone for good when the
+		// frame ends, one the file wrote stays, not existing, until a reset.
+		// existsOriginal is how it started (<exists>false</exists>).
+		bool exists{ true };
+		bool existsOriginal{ true };
+
+		// A spawned copy: the name of the object it was spawned from, which
+		// is also its group, so whatever names that object names it too
+		// (shot.1, shot.2 for copies of shot). Empty for an object the file
+		// wrote. `most` is how many copies of this one may exist at once (0:
+		// no limit), from <most>.
+		std::string copyOf;
+		int most{ 0 };
+		bool isCopy() const noexcept { return !copyOf.empty(); }
 
 		// Named in the game's <keeps>: a full <reset /> passes it over, so it
 		// keeps what it holds (a best score) from one game to the next.
@@ -922,6 +947,12 @@ namespace xge
 	// self. at the start of a name in a command's value or variable=
 	// (self.x, self.score).
 	void nameSelf(std::vector<RawObject>& objects);
+
+	// A copy of an object, named `to` where it was `from`: what its own
+	// rules, timers, actions and values said of `from` (by its name, or by
+	// self., which nameSelf made its name) they now say of `to`. What a
+	// <spawn> makes a copy from.
+	void renameOwn(RawObject& object, const std::string& from, const std::string& to);
 
 	// The numbers every object has while the game runs, read and set as
 	// owner.part (ball.x, ship.velocity.y): its top left, its velocity, its

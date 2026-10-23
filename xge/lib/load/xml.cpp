@@ -913,7 +913,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
-				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter" || name == "set" || name == "spawn";
+				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter" || name == "set" || name == "spawn" || name == "despawn";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1567,6 +1567,15 @@ namespace xge
 			}
 		}
 
+		int readCount(const XmlNode& node, const std::string& where);
+
+		// <exists>false</exists>: whether the object is in the game at the start.
+		bool readExists(const XmlNode& object, const std::string& where)
+		{
+			const auto exists = findChild(&object, "exists");
+			return !exists || readBool(*exists, where);
+		}
+
 		// An <object>; on a <map> (`map`), one that starts on the one tile of
 		// the character it picks, with no <position> of its own.
 		RawObject readObject(const XmlNode& object, const MapLayout* map = nullptr)
@@ -1605,7 +1614,7 @@ namespace xge
 			{
 				if (!object.getAttribute("char").empty()) { fail(where, "char=\"" + object.getAttribute("char") + "\" picks a character of a <map>'s rows; this object is on no <map>"); }
 				if (auto position = findChild(&object, "position")) { rawObject.rawPosition = readVector2(*position, where); }
-				else if (holder) { rawObject.rawPosition = { zeroValue(), zeroValue() }; }
+				else if (holder || !readExists(object, where)) { rawObject.rawPosition = { zeroValue(), zeroValue() }; }
 				else { fail(where, "missing <position>"); }
 			}
 			// What a game leaves out is nothing: no <velocity> (or no half of
@@ -1650,6 +1659,8 @@ namespace xge
 				if (readBool(*hidden, where)) { rawObject.isVisible = false; }
 			}
 			if (auto drawn = findChild(&object, "drawn")) { rawObject.isDrawn = readBool(*drawn, where); }
+			rawObject.exists = readExists(object, where);
+			if (auto most = findChild(&object, "most")) { rawObject.most = readCount(*most, where); }
 			if (auto collisions = findChild(&object, "collisions")) { rawObject.rawCollisionData = readCollisions(*collisions, where); }
 			readActions(object, where, rawObject.action);
 			readObjectVariables(object, where, rawObject.variable);
@@ -1848,6 +1859,8 @@ namespace xge
 
 				if (tag == "hidden") { shared.isVisible = !readBool(*child, where); }
 				else if (tag == "drawn") { shared.isDrawn = readBool(*child, where); }
+				else if (tag == "exists") { shared.exists = readBool(*child, where); }
+				else if (tag == "most") { shared.most = readCount(*child, where); }
 				else if (tag == "columns") { own.columns = readCount(*child, where); }
 				else if (tag == "rows") { own.rows = readCount(*child, where); }
 				else if (tag == "padding")
@@ -1891,7 +1904,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <maze>, <hidden>, <drawn>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <maze>, <hidden>, <drawn>, <exists>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -1963,6 +1976,13 @@ namespace xge
 				if (used.empty()) { fail(here, "has no <sprite>, and neither does its group"); }
 				chooseSprite(used, usedAnimation, here, rawObject);
 
+				// One that does not exist at the start is placed by the <spawn>
+				// that makes it, so its <position> may be left out (0, 0).
+				if (!rawObject.exists)
+				{
+					if (!positionX) { positionX = zeroValue(); }
+					if (!positionY) { positionY = zeroValue(); }
+				}
 				rawObject.rawPosition.x = pickValue(positionX, std::nullopt, here, "<position><x>");
 				rawObject.rawPosition.y = pickValue(positionY, std::nullopt, here, "<position><y>");
 				rawObject.rawVelocity.x = velocityX.value_or(zeroValue());

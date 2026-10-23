@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <deque>
 #include <assert.h>
 
 namespace xge
@@ -320,6 +321,43 @@ namespace xge
 		// that name or group that are out of play come back where they started.
 		void reveal(const std::string& target, int count);
 
+		// <spawn object="name">: a new object, a copy of the one of that name
+		// as the file says it starts (or, for a group, of its members in
+		// turn), named after it and a number (shot.1, shot.2), and in the
+		// group of its name, so whatever names that one names the copy too.
+		// Its own rules, timers and values that named the one it is copied
+		// from (or self) name the copy. It is made now, its <random>s drawn,
+		// and joins the game's objects when this frame is over (or the next
+		// one starts): until then it is not in play. The caller puts it where
+		// it goes. Null, and nothing made, when the object has a <most> and
+		// that many copies of it exist, or when no object has that name.
+		Object* spawn(const std::string& target);
+
+		// <despawn />: the object is no longer in the game. A copy that was
+		// spawned is gone for good when the frame is over; one the file wrote
+		// stays among the objects, not existing (Object::exists), until a
+		// reset. Whatever carried it lets go.
+		void despawn(Object& object);
+
+		// <despawn object="name" />: every object of that name or group.
+		void despawn(const std::string& target);
+
+		// Whether the objects of that name (or group) are all ones the file
+		// says do not exist at the start (<exists>false</exists>): what a
+		// <fire> or a <release> makes copies of, rather than taking from a
+		// pool of them.
+		bool isDescription(const std::string& name);
+
+		// The objects spawned and not yet joined (spawn), for a front end or
+		// a test that wants to see one before the frame is over.
+		const std::deque<Object>& justSpawned(void) const noexcept { return spawned; }
+
+		// Joins the objects spawned to the game's, and takes out the copies
+		// despawned: what updateObjects does before and after a frame. A
+		// caller that spawns or despawns between frames and wants it seen at
+		// once calls it too.
+		void settleSpawns(void);
+
 		// <follow path="..." />: the object sets off along that path, unless it
 		// is on one already (it finishes that first), after waiting `wait`
 		// frames. Throws std::out_of_range for a path the game does not have
@@ -392,6 +430,25 @@ namespace xge
 		std::vector<unsigned long> runsInTopStage;
 		unsigned long stage = 1;
 		void stageChanged(void) noexcept { ++stage; }
+
+		// How many objects the file wrote: these keep their places in
+		// `objects` for the whole game, and the copies spawned come after.
+		std::size_t loadedCount{ 0 };
+
+		// Copies spawned this frame, waiting to join (settleSpawns); a deque,
+		// so the one handed back by spawn stays where it is as more come.
+		std::deque<Object> spawned;
+
+		// What the file says of each copy, under the copy's name (what
+		// drawStartAgain draws a <random> from), and, for a group spawned
+		// from, which of its members is next.
+		std::map<std::string, RawObject> copyRaws;
+		std::map<std::string, std::size_t> spawnTurns;
+		std::map<std::string, bool> descriptions;
+
+		// After objects have joined or left: every answer kept by an
+		// object's place in `objects` is worked out again.
+		void rosterChanged(void);
 
 		// tryGetObject's answers: names never change while a game runs.
 		std::unordered_map<std::string, Object*> foundObjects;
