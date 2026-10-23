@@ -45,6 +45,9 @@ namespace xge
 		void display() override;
 
 	private:
+		// <window><scale>: window pixels to one of the game's.
+		float scale{ 1.0f };
+
 		// What SFMLWindow keeps a RenderTexture+Sprite pair for, raylib only
 		// needs the RenderTexture2D itself for - draw() blits its .texture
 		// straight at object.position, no separate sprite object needed.

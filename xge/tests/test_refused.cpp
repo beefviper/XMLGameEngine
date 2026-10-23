@@ -46,14 +46,14 @@ TEST_CASE("qbert.xml: a key pressed in the air changes neither Q*bert's look nor
 	(void)play.game.takeSoundRequests();
 
 	play.tap(KeyCode::D);
-	CHECK(play.get("qbert").lookName() == "downright");
+	CHECK(play.get("qbert").lookName() == "front");
 	CHECK(play.game.takeSoundRequests().size() == 1);
 
 	play.frames(4);
 	REQUIRE(play.get("qbert").isAirborne());
 	(void)play.game.takeSoundRequests();
 	play.tap(KeyCode::A);
-	CHECK(play.get("qbert").lookName() == "downright");
+	CHECK(play.get("qbert").lookName() == "front");
 	CHECK(play.game.takeSoundRequests().empty());
 }
 

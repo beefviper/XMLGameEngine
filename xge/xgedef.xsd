@@ -507,7 +507,37 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
+    <!-- named: a look that moves, which <become> and <poses> pick like a sprite -->
+    <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
+
+  <!-- poses: the look for each way an object moves, picked each frame while it shows one of them. -->
+  <xs:complexType name="poseType">
+    <xs:attribute name="sprite" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="posesType">
+    <xs:sequence>
+      <xs:element name="standing" type="poseType" />
+      <xs:element name="walking" type="poseType" minOccurs="0" />
+      <xs:element name="skidding" type="poseType" minOccurs="0" />
+      <xs:element name="rising" type="poseType" minOccurs="0" />
+      <xs:element name="falling" type="poseType" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="mirrorType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="left" />
+      <xs:enumeration value="right" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- How its looks and steps follow its moves: poses, a mirror going one way across, and how quickly it gets to the speed its moves ask for (0 up to 1, 1 at once). -->
+  <xs:group name="moveParts">
+    <xs:sequence>
+      <xs:element name="poses" type="posesType" minOccurs="0" />
+      <xs:element name="mirror" type="mirrorType" minOccurs="0" />
+      <xs:element name="grip" type="valueType" minOccurs="0" />
+    </xs:sequence>
+  </xs:group>
 
   <!-- Commands: what a collision rule, an object action, a key or a condition does. -->
   <!-- inc and dec: which variable, and by how much (1 when there is nothing between the tags). -->
@@ -573,7 +603,7 @@
       <xs:enumeration value="down-right" />
     </xs:restriction>
   </xs:simpleType>
-  <!-- hop: how far, as its value, or as a <distance> or an <x> and a <y>, then how long it takes. -->
+  <!-- hop: how far, as its value, or as a <distance> or an <x> and a <y>, then how long it takes, and how high it goes on the way (an <arc>, which needs <seconds>). -->
   <xs:complexType name="hopType" mixed="true">
     <xs:group ref="hopParts" minOccurs="0" />
     <xs:attribute name="direction" type="hopDirectionType" use="required" />
@@ -590,6 +620,7 @@
           </xs:sequence>
         </xs:choice>
         <xs:element name="seconds" type="valueType" minOccurs="0" />
+        <xs:element name="arc" type="valueType" minOccurs="0" />
       </xs:sequence>
     </xs:choice>
   </xs:group>
@@ -679,11 +710,12 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- jump: a direction, how far, and how many seconds it takes (0.3 if left out). -->
+  <!-- jump: a direction, how far, how many seconds it takes (0.3 if left out), and how high it goes on the way (none if left out). -->
   <xs:complexType name="jumpType">
     <xs:sequence>
       <xs:element name="distance" type="valueType" />
       <xs:element name="seconds" type="valueType" minOccurs="0" />
+      <xs:element name="arc" type="valueType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="direction" type="directionType" use="required" />
   </xs:complexType>
@@ -1252,7 +1284,7 @@
   <xs:complexType name="objectType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <!-- both halves, unless it changes an object in a state from= another -->
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
@@ -1267,6 +1299,7 @@
       <xs:element name="seek" type="targetValueType" minOccurs="0" />
       <xs:group ref="sightParts" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:group ref="moveParts" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
@@ -1303,7 +1336,7 @@
   <xs:complexType name="memberType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
@@ -1338,7 +1371,7 @@
   <xs:complexType name="lineOfCellsType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="padding" type="partialVector2Type" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
@@ -1350,7 +1383,7 @@
   <xs:complexType name="cellType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
     </xs:sequence>
@@ -1371,7 +1404,7 @@
   <!-- What a group gives after its sprites. -->
   <xs:group name="groupParts">
     <xs:sequence>
-      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
@@ -1382,6 +1415,7 @@
       <xs:element name="seek" type="targetValueType" minOccurs="0" />
       <xs:group ref="sightParts" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:group ref="moveParts" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
@@ -1443,7 +1477,7 @@
   <xs:complexType name="mapObjectType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
@@ -1456,6 +1490,7 @@
       <xs:element name="seek" type="targetValueType" minOccurs="0" />
       <xs:group ref="sightParts" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:group ref="moveParts" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
@@ -1481,10 +1516,11 @@
   <xs:complexType name="mapGroupType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:group ref="moveParts" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:group ref="sightParts" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
@@ -1549,7 +1585,7 @@
   <xs:complexType name="sceneObjectType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
@@ -1563,6 +1599,7 @@
       <xs:element name="seek" type="targetValueType" minOccurs="0" />
       <xs:group ref="sightParts" />
       <xs:element name="facing" type="directionType" minOccurs="0" />
+      <xs:group ref="moveParts" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
@@ -1640,6 +1677,8 @@
             <xs:sequence>
               <xs:element name="width" type="xs:unsignedShort" />
               <xs:element name="height" type="xs:unsignedShort" />
+              <!-- scale: each of the game's pixels drawn as a square this many window pixels across -->
+              <xs:element name="scale" type="xs:positiveInteger" minOccurs="0" />
               <xs:element name="background" type="xs:string" />
               <xs:element name="fullscreen" type="xs:boolean" />
               <xs:element name="framerate" type="xs:unsignedByte" />

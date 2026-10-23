@@ -107,8 +107,9 @@ namespace xge
 
 		// Through the air by `whole` over `seconds`, touching nothing until it
 		// lands: a <jump>, or a <hop> that takes time. Not when it is in the
-		// air already, nor when it would land outside the window.
-		bool startFlight(Object& object, Vector2f whole, float seconds);
+		// air already, nor when it would land outside the window. With an
+		// arc it is drawn that high above its way halfway there.
+		bool startFlight(Object& object, Vector2f whole, float seconds, float arc);
 		void land(Object& object, const Object& other, Edge edge);
 
 		// <knock>: see CmdKnock. Into a thing with no mass, through it, to

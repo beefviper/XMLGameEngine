@@ -59,7 +59,34 @@ namespace xge
 		look = index;
 		spriteParams = looks[index].spriteParams;
 		shapeKind = looks[index].shapeKind;
-		bitmap = looks[index].bitmap;
+		bitmap = facingPicture(looks[index].bitmap);
+		animationBitmaps = looks[index].frames;
+		animationFrames = looks[index].frameTicks;
+		animationTick = 0;
+		animationIndex = 0;
+		visualDirty = true;
+	}
+
+	std::shared_ptr<const Bitmap> Object::facingPicture(const std::shared_ptr<const Bitmap>& picture) const
+	{
+		if (!mirrored || !flips || !picture) { return picture; }
+		const auto found = flips->find(picture.get());
+		return found == flips->end() ? picture : found->second;
+	}
+
+	void Object::faceMirror()
+	{
+		if (!mirrors) { return; }
+		const bool want = goingLeft == (mirrorWay == Direction::Left);
+		if (want == mirrored) { return; }
+
+		// Flipping twice is no flip, so what shows now flips back the same way.
+		mirrored = want;
+		if (bitmap && flips)
+		{
+			const auto found = flips->find(bitmap.get());
+			if (found != flips->end()) { bitmap = found->second; }
+		}
 		visualDirty = true;
 	}
 
@@ -129,21 +156,69 @@ namespace xge
 			const std::string& solid = object.rawCollisionData.solid;
 			if (solid.empty()) { continue; }
 			object.sprite.solid = solid;
-			for (RawSprite& look : object.looks) { look.solid = solid; }
+			for (RawSprite& look : object.looks)
+			{
+				look.solid = solid;
+				for (RawSprite& frame : look.frames) { frame.solid = solid; }
+			}
 			for (RawSprite& frame : object.animation.frames) { frame.solid = solid; }
 		}
 	}
 
+	void lookWithAnimations(RawObject& object, const std::vector<RawSprite>& sprites, const std::vector<RawFrames>& animations, const std::string& where)
+	{
+		std::vector<RawSprite> looks;
+		for (const RawFrames& animation : animations)
+		{
+			if (animation.frames.size() < 2) { throw std::runtime_error(where + ": <animation name=\"" + animation.name + "\"> needs at least two <frame>s"); }
+
+			RawSprite look;
+			for (const std::string& name : animation.frames)
+			{
+				const auto found = std::find_if(sprites.begin(), sprites.end(), [&](const RawSprite& sprite) { return sprite.name == name; });
+				if (found == sprites.end())
+				{
+					throw std::runtime_error(where + ": <animation name=\"" + animation.name + "\"> > <frame sprite=\"" + name + "\">: no <sprite name=\"" + name + "\"> to show");
+				}
+				look.frames.push_back(*found);
+			}
+			// Its first picture, in the look's own name.
+			std::vector<RawSprite> frames = std::move(look.frames);
+			look = frames.front();
+			look.name = animation.name;
+			look.frames = std::move(frames);
+			look.interval = animation.interval;
+			looks.push_back(std::move(look));
+		}
+		for (const RawSprite& sprite : sprites)
+		{
+			if (sprite.name.empty()) { throw std::runtime_error(where + ": has <animation name=\"...\">s, so its sprites are looks too, and every one needs a name"); }
+			looks.push_back(sprite);
+		}
+		for (std::size_t i = 0; i < looks.size(); ++i)
+		{
+			for (std::size_t j = i + 1; j < looks.size(); ++j)
+			{
+				if (looks[i].name == looks[j].name) { throw std::runtime_error(where + ": two looks are called \"" + looks[i].name + "\" (a <sprite> and an <animation>, or two of one)"); }
+			}
+		}
+
+		object.hasAnimation = false;
+		object.animation = {};
+		object.sprite = looks.front();
+		object.looks = std::move(looks);
+	}
+
 	const std::vector<std::string>& liveNumberParts()
 	{
-		static const std::vector<std::string> parts{ "x", "y", "velocity.x", "velocity.y", "heading", "altitude", "rise", "light" };
+		static const std::vector<std::string> parts{ "x", "y", "velocity.x", "velocity.y", "heading", "altitude", "rise", "light", "blink" };
 		return parts;
 	}
 
 	std::string liveNumberPart(const std::string& name)
 	{
 		// The longest first: ball.velocity.x is velocity.x, not x.
-		for (const char* part : { "velocity.x", "velocity.y", "heading", "altitude", "rise", "light", "x", "y" })
+		for (const char* part : { "velocity.x", "velocity.y", "heading", "altitude", "rise", "light", "blink", "x", "y" })
 		{
 			const std::string tail = std::string(".") + part;
 			if (name.size() > tail.size() && name.compare(name.size() - tail.size(), tail.size(), tail) == 0) { return part; }
@@ -162,6 +237,7 @@ namespace xge
 		if (name == "altitude") { return object.altitude; }
 		if (name == "rise") { return object.rise; }
 		if (name == "light") { return object.light; }
+		if (name == "blink") { return object.blink; }
 		return std::nullopt;
 	}
 
@@ -433,7 +509,7 @@ namespace xge
 	void Object::showAnimationFrame()
 	{
 		if (!turnables.empty()) { showHeading(); }
-		else { bitmap = animationBitmaps[animationIndex]; }
+		else { bitmap = facingPicture(animationBitmaps[animationIndex]); }
 		visualDirty = true;
 	}
 

@@ -81,6 +81,8 @@ namespace xge
 		bool fontMissing{ false };
 		int width{ 0 };
 		int height{ 0 };
+		// <window><scale>: window pixels to one of the game's.
+		int scale{ 1 };
 
 		// Keys the GLFW callback has seen since pollEvents() last looked.
 		std::vector<std::pair<KeyCode, bool>> pendingKeys;

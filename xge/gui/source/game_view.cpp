@@ -27,8 +27,9 @@ namespace xge
 		setAutoFillBackground(false);
 	}
 
-	void GameView::setGameSize(int width, int height)
+	void GameView::setGameSize(int width, int height, int scale)
 	{
+		shownScale = std::max(scale, 1);
 		backBuffer = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
 		backBuffer.fill(Qt::black);
 		updateGeometry();
@@ -37,7 +38,7 @@ namespace xge
 
 	QSize GameView::sizeHint() const
 	{
-		return backBuffer.isNull() ? QSize(640, 360) : backBuffer.size();
+		return backBuffer.isNull() ? QSize(640, 360) : backBuffer.size() * shownScale;
 	}
 
 	QSize GameView::minimumSizeHint() const

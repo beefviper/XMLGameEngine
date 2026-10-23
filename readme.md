@@ -125,9 +125,9 @@ Something many objects or states share is written once under a name, higher up, 
 | `timer`, `every`, `after` | something done again and again, or once after a while |
 | `keep`, `style`, `demo` | an object kept between games (a best score); a text style; a recorded game for the attract mode |
 
-**Looks.** A `<sprite>` is a `circle`, `rectangle`, `text`, `image`, `bitmap` (ASCII rows, one color per character), `svg`, a set of `line`s, or a `tether` (a line between two objects, redrawn each frame). Text is built from `content`, `number`, `letter` and `choose` pieces. Several named sprites are an object's **looks**, changed by `<become>`, and an `<animation>` of `<frame>`s cycles them.
+**Looks.** A `<sprite>` is a `circle`, `rectangle`, `text`, `image`, `bitmap` (ASCII rows, one color per character), `svg`, a set of `line`s, or a `tether` (a line between two objects, redrawn each frame). Text is built from `content`, `number`, `letter` and `choose` pieces. Several named sprites are an object's **looks**, changed by `<become>`, and an `<animation>` of `<frame>`s cycles them; a named animation is a look that moves. `<poses>` picks the look for standing, walking, skidding, rising and falling by itself, and `<mirror>` flips the pictures for the other way. The `<window>` can have a `<scale>`, so a game is written at the size of the original screen and drawn bigger.
 
-**Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `hidden` (starts out of play), `drawn` (in play but never drawn), and `exists` (`false`: only a description, copied by `spawn`) with `most` (how many copies at once).
+**Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `grip` (how fast the speed follows the keys, so it slides), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `hidden` (starts out of play), `drawn` (in play but never drawn), and `exists` (`false`: only a description, copied by `spawn`) with `most` (how many copies at once).
 
 **Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>` and `<check>`s.
 
@@ -135,7 +135,7 @@ Something many objects or states share is written once under a name, higher up, 
 
 | Family | Words |
 |---|---|
-| Moving | `move`, `hop`, `jump`, `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` (follow the mouse or a stick) |
+| Moving | `move`, `hop` and `jump` (with an `arc` to go up and over), `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` (follow the mouse or a stick) |
 | Steering | `chase`, `aim`, `follow` a path, and in a maze `go`, `hunt`, `wander` |
 | Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
 | In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn` and `despawn` (objects made and taken away while the game runs) |
@@ -168,6 +168,8 @@ There are 33 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Frogger | `ride` a log, `unless=` (the water drowns you unless you are on a log) |
 | Donkey Kong | `leap`, `land` and `climb` for girders and ladders |
 | Pac-Man | `map`, `maze`, and the ghosts' `go`, `hunt` and `wander` |
+| Mario Bros. | `poses`, `mirror`, `grip` and the window's `scale` |
+| Q\*bert | hops with an `arc`, `hunt` by hops, `solid` characters and a `hitbox` |
 | Galaxian | `path`s and `follow`, `turns` for two players, a `demo`, a top-five with `rank` |
 | Trick Shot | `knock` by `mass`, slowed by `drag` |
 | Tennis | `altitude` and `shadow`, a `computer` player |

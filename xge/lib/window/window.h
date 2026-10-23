@@ -86,11 +86,11 @@ namespace xge
 		virtual void display() = 0;
 	};
 
-	// Draws one object, unless it is <dark> and unlit, raised off the ground
-	// by its <altitude> (its own position stays on the ground).
+	// Draws one object, unless it is <dark> and unlit or blinked out, raised
+	// off the ground by its <altitude> (its own position stays on the ground).
 	inline void drawObject(Window& window, Object& object)
 	{
-		if (object.inDark) { return; }
+		if (object.inDark || object.blinkedOut()) { return; }
 		if (object.altitude == 0.0f)
 		{
 			window.draw(object);

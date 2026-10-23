@@ -8,6 +8,7 @@
 #include "picture/font.h"
 #include "picture/color.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -89,7 +90,8 @@ namespace xge
 	{
 		// raylib logs every texture it makes; only problems are worth printing.
 		SetTraceLogLevel(LOG_WARNING);
-		InitWindow(static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height), windowDesc.name.c_str());
+		scale = static_cast<float>(std::max(1, windowDesc.scale));
+		InitWindow(static_cast<int>(windowDesc.width * scale), static_cast<int>(windowDesc.height * scale), windowDesc.name.c_str());
 
 		if (!IsWindowReady())
 		{
@@ -204,8 +206,8 @@ namespace xge
 
 		const Vector2 at = GetMousePosition();
 		controls.pointerInside = IsCursorOnScreen();
-		controls.pointerX = at.x;
-		controls.pointerY = at.y;
+		controls.pointerX = at.x / scale;
+		controls.pointerY = at.y / scale;
 		controls.mouse = { IsMouseButtonDown(MOUSE_BUTTON_LEFT), IsMouseButtonDown(MOUSE_BUTTON_RIGHT), IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) };
 
 		constexpr int buttons[padButtonCount] = {
@@ -259,9 +261,11 @@ namespace xge
 		// screen; a negative source height flips it back on the way out -
 		// this is raylib's own documented convention, not a mistake.
 		const ::Rectangle source{ 0.0f, 0.0f, static_cast<float>(texture.width), -static_cast<float>(texture.height) };
-		const ::Vector2 position{ object.position.x, object.position.y };
+		// Drawn scale window pixels to each of the game's (<window><scale>).
+		const ::Rectangle where{ object.position.x * scale, object.position.y * scale,
+			static_cast<float>(texture.width) * scale, static_cast<float>(texture.height) * scale };
 
-		DrawTextureRec(texture, source, position, kWhite);
+		DrawTexturePro(texture, source, where, ::Vector2{ 0.0f, 0.0f }, 0.0f, kWhite);
 	}
 
 	void RaylibWindow::display()

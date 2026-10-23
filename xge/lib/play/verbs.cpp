@@ -269,15 +269,18 @@ namespace xge
 	{
 		object.activeMoveStep[static_cast<std::size_t>(direction)] = step;
 
+		// With a <grip> below 1 the velocity goes there a frame at a time
+		// (playOneFrame), on the ground; a pull still has the up and down.
+		const bool slides = object.grip < 1.0f;
 		if (direction == Direction::Left || direction == Direction::Right)
 		{
-			if (!object.leaping)
+			if (!object.leaping && !slides)
 			{
 				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
 					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
 			}
 		}
-		else
+		else if (!slides || object.acceleration.y != 0.0f)
 		{
 			object.velocity.y = object.activeMoveStep[static_cast<std::size_t>(Direction::Down)]
 				- object.activeMoveStep[static_cast<std::size_t>(Direction::Up)];

@@ -43,10 +43,10 @@ namespace xge
 		delete gameWindow;
 	}
 
-	GameView& GameStage::showView(int width, int height, const QString& windowTitle)
+	GameView& GameStage::showView(int width, int height, int scale, const QString& windowTitle)
 	{
 		keys.clear();
-		view->setGameSize(width, height);
+		view->setGameSize(width, height, scale);
 		title = windowTitle;
 		shown = true;
 		place();

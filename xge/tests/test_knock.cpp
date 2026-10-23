@@ -316,7 +316,7 @@ namespace
 			// One let out early, onto the low left floor; the others are still
 			// in their pipe when the tests are done.
 			game.reveal(creeper().name, 1);
-			creeper().position = { 100.0f, 452.0f - creeper().size.y };
+			creeper().position = { 40.0f, 160.0f - creeper().size.y };
 			creeper().velocity.x = 0.0f;
 			frames(5);
 		}
@@ -344,7 +344,7 @@ TEST_CASE("mariobros.xml: a bump under the floor turns over what stands on it, a
 		highest = std::min(highest, play.creeper().position.y);
 	}
 	CHECK(play.creeper().lookName() == "flipped");
-	CHECK(highest < standing - 10.0f);     // knocked up off the floor
+	CHECK(highest < standing - 6.0f);     // knocked up off the floor
 	CHECK(play.mario().variable.at("lives") == Approx(3.0f));
 
 	// It comes down where it was and lies there.
@@ -354,11 +354,11 @@ TEST_CASE("mariobros.xml: a bump under the floor turns over what stands on it, a
 	CHECK(play.creeper().velocity.y == Approx(0.0f));
 
 	// Up on its floor and into it: kicked off.
-	play.mario().position = { play.creeper().position.x - 60.0f, 452.0f - play.mario().size.y };
+	play.mario().position = { play.creeper().position.x - 30.0f, 160.0f - play.mario().size.y };
 	play.mario().velocity = {};
 	play.frames(2);
 	play.engine.handleKeyPressed(KeyCode::D);
-	play.frames(40);
+	play.frames(50);
 	play.engine.handleKeyReleased(KeyCode::D);
 	CHECK_FALSE(play.creeper().isVisible);
 	CHECK(play.mario().variable.at("score") == Approx(800.0f));
@@ -370,30 +370,30 @@ TEST_CASE("mariobros.xml: a shellcreeper on its feet costs a life, and a bump re
 	Mario play;
 
 	// A bump two tiles along does not reach it.
-	play.mario().position.x = play.creeper().position.x + 90.0f;
+	play.mario().position.x = play.creeper().position.x + 40.0f;
 	play.frames(2);
 	play.tap(KeyCode::Space);
 	play.frames(80);
 	CHECK(play.creeper().lookName() == "walking");
 
 	// Walked into on its feet.
-	play.mario().position = { play.creeper().position.x - 60.0f, 452.0f - play.mario().size.y };
+	play.mario().position = { play.creeper().position.x - 30.0f, 160.0f - play.mario().size.y };
 	play.mario().velocity = {};
 	play.frames(2);
 	play.engine.handleKeyPressed(KeyCode::D);
-	play.frames(40);
+	play.frames(50);
 	play.engine.handleKeyReleased(KeyCode::D);
 	CHECK(play.creeper().isVisible);
 	CHECK(play.mario().variable.at("lives") == Approx(2.0f));
 
-	// Back at his start, pale and safe for a moment: walked into again, nothing.
-	CHECK(play.mario().lookName() == "safe");
-	play.mario().position = { play.creeper().position.x - 30.0f, 452.0f - play.mario().size.y };
+	// Back at his start, blinking and safe for a moment: walked into again, nothing.
+	CHECK(play.mario().blink > 0.0f);
+	play.mario().position = { play.creeper().position.x - 14.0f, 160.0f - play.mario().size.y };
 	play.mario().velocity = {};
 	play.frames(30);
 	CHECK(play.mario().variable.at("lives") == Approx(2.0f));
 	play.frames(120);
-	CHECK(play.mario().lookName() == "playing");
+	CHECK(play.mario().blink == 0.0f);
 }
 
 TEST_CASE("mariobros.xml: the POW block turns over every shellcreeper on its feet, three times", "[knock][mariobros]")
@@ -404,7 +404,7 @@ TEST_CASE("mariobros.xml: the POW block turns over every shellcreeper on its fee
 
 	for (const char* left : { "two", "one" })
 	{
-		play.mario().position.x = pow.position.x + 12.0f;
+		play.mario().position.x = pow.position.x + 2.0f;
 		play.frames(2);
 		play.tap(KeyCode::Space);
 		play.frames(80);
@@ -417,7 +417,7 @@ TEST_CASE("mariobros.xml: the POW block turns over every shellcreeper on its fee
 		play.frames(60);
 		REQUIRE(play.creeper().lookName() == "walking");
 	}
-	play.mario().position.x = pow.position.x + 12.0f;
+	play.mario().position.x = pow.position.x + 2.0f;
 	play.frames(2);
 	play.tap(KeyCode::Space);
 	play.frames(80);
@@ -441,12 +441,12 @@ TEST_CASE("mariobros.xml: the shellcreepers come out of the top pipes, fall floo
 	play.frames(45);
 	REQUIRE(first.isVisible);                // out of the left pipe, going right
 	CHECK(first.position.x < 30.0f);
-	CHECK(first.position.y == Approx(196.0f - first.size.y));
+	CHECK(first.position.y == Approx(64.0f - first.size.y));
 	CHECK(first.velocity.x > 0.0f);
 	CHECK_FALSE(second.isVisible);
 	play.frames(120);
 	REQUIRE(second.isVisible);               // out of the right pipe, going left
-	CHECK(second.position.x > 700.0f);
+	CHECK(second.position.x > 220.0f);
 	CHECK(second.velocity.x < 0.0f);
 
 	// Off the end of each floor onto the next, down to the ground, into a
@@ -462,12 +462,12 @@ TEST_CASE("mariobros.xml: the shellcreepers come out of the top pipes, fall floo
 		{
 			floorsStoodOn.push_back(first.position.y);
 		}
-		backAtTop = floorsStoodOn.size() > 1 && first.position.y == Approx(196.0f - first.size.y) && first.position.x < 30.0f;
+		backAtTop = floorsStoodOn.size() > 1 && first.position.y == Approx(64.0f - first.size.y) && first.position.x < 30.0f;
 	}
 	CHECK(backAtTop);
 	REQUIRE(floorsStoodOn.size() >= 4);
-	CHECK(floorsStoodOn.front() == Approx(196.0f - first.size.y));
-	CHECK(std::find_if(floorsStoodOn.begin(), floorsStoodOn.end(), [&](float y) { return y == Approx(584.0f - first.size.y); }) != floorsStoodOn.end());
+	CHECK(floorsStoodOn.front() == Approx(64.0f - first.size.y));
+	CHECK(std::find_if(floorsStoodOn.begin(), floorsStoodOn.end(), [&](float y) { return y == Approx(208.0f - first.size.y); }) != floorsStoodOn.end());
 	CHECK(first.lookName() == "walking");
 	CHECK(first.velocity.x > 0.0f);
 }
@@ -475,7 +475,7 @@ TEST_CASE("mariobros.xml: the shellcreepers come out of the top pipes, fall floo
 TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor, and a second bump gets it up going its way", "[knock][mariobros]")
 {
 	Mario play;
-	play.creeper().velocity.x = 1.2f;
+	play.creeper().velocity.x = 0.5f;
 	play.frames(2);
 	const float standing = play.creeper().position.y;
 
@@ -489,8 +489,8 @@ TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor
 		highest = std::min(highest, play.creeper().position.y);
 	}
 	REQUIRE(play.creeper().lookName() == "flipped");
-	CHECK(highest < standing - 10.0f);
-	CHECK(highest > 324.0f + 12.0f);         // a hop, nowhere near the floor above
+	CHECK(highest < standing - 6.0f);
+	CHECK(highest > 112.0f + 8.0f);          // a hop, nowhere near the floor above
 	const float lying = play.creeper().position.x;
 	play.frames(60);
 	CHECK(play.creeper().position.y == Approx(standing));
@@ -503,7 +503,7 @@ TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor
 	play.tap(KeyCode::Space);
 	play.frames(40);
 	CHECK(play.creeper().lookName() == "walking");
-	CHECK(play.creeper().velocity.x == Approx(1.2f));
+	CHECK(play.creeper().velocity.x == Approx(0.5f));
 	CHECK(play.creeper().position.x > lying);
 	play.frames(40);
 	CHECK(play.creeper().position.y == Approx(standing));
@@ -512,7 +512,7 @@ TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor
 TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies and goes on faster", "[knock][mariobros]")
 {
 	Mario play;
-	play.creeper().velocity.x = -1.2f;
+	play.creeper().velocity.x = -0.5f;
 	play.mario().position.x = play.creeper().position.x;
 	play.frames(2);
 	play.tap(KeyCode::Space);
@@ -520,10 +520,10 @@ TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies
 	REQUIRE(play.creeper().lookName() == "flipped");
 	const float lying = play.creeper().position.x;
 
-	play.mario().position.x = 600.0f;        // out from under it
+	play.mario().position.x = 200.0f;        // out from under it
 	play.frames(8 * 60 - 40);                // eight seconds after it went over
 	CHECK(play.creeper().lookName() == "walking");
-	CHECK(play.creeper().velocity.x == Approx(-1.8f));
+	CHECK(play.creeper().velocity.x == Approx(-0.75f));
 	CHECK(play.creeper().position.x < lying);
-	CHECK(play.creeper().position.x > lying - 60.0f);
+	CHECK(play.creeper().position.x > lying - 30.0f);
 }

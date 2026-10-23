@@ -10,6 +10,7 @@
 
 // GLFW's own header brings in OpenGL 1.1: what the system's OpenGL library
 // exports as it is. It has to come before SDL's, which only want their own.
+#include <algorithm>
 #include <GLFW/glfw3.h>
 
 #include <SDL.h>
@@ -94,7 +95,8 @@ namespace xge
 
 	OpenGLWindow::OpenGLWindow(const WindowDesc& windowDesc) :
 		width(static_cast<int>(windowDesc.width)),
-		height(static_cast<int>(windowDesc.height))
+		height(static_cast<int>(windowDesc.height)),
+		scale(std::max(1, windowDesc.scale))
 	{
 		if (!glfwInit())
 		{
@@ -105,7 +107,7 @@ namespace xge
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 		GLFWmonitor* monitor = (windowDesc.fullscreen == "true") ? glfwGetPrimaryMonitor() : nullptr;
-		window = glfwCreateWindow(width, height, windowDesc.name.c_str(), monitor, nullptr);
+		window = glfwCreateWindow(width * scale, height * scale, windowDesc.name.c_str(), monitor, nullptr);
 
 		if (!window)
 		{
@@ -263,9 +265,9 @@ namespace xge
 
 	void OpenGLWindow::setUpProjection() const
 	{
-		glViewport(0, 0, width, height);
+		glViewport(0, 0, width * scale, height * scale);
 
-		// One unit is one pixel, with 0, 0 at the top left like everywhere
+		// One unit is one of the game's pixels (scale window pixels across), with 0, 0 at the top left like everywhere
 		// else in the engine.
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();

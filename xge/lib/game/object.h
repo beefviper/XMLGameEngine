@@ -27,6 +27,11 @@ namespace xge
 		std::string name;
 		float width{};
 		float height{};
+		// <scale>: the window is this many times the game's width and
+		// height, each of the game's pixels drawn as a square of them. The
+		// game itself never sees it: positions, sizes and the mouse are in
+		// the game's own pixels.
+		int scale{ 1 };
 		std::string background;
 		std::string fullscreen;
 		int framerate{};
@@ -266,6 +271,22 @@ namespace xge
 		// bitmap: the characters whose pixels a pixel collision touches with,
 		// copied from the object's <solid char>s (see markSolid); empty, all.
 		std::string solid;
+
+		// A look that moves, a named <animation>: the sprites its <frame>s
+		// pick, in order, each shown `interval` seconds, round and round.
+		// The fields above are its first frame's. Empty for a still look.
+		std::vector<RawSprite> frames;
+		RawValue interval;
+	};
+
+	// An <animation> as written: its name (empty for an object's one
+	// animation, a look's name for a look that moves), how long each picture
+	// is shown, and the names of the sprites it shows, in order.
+	struct RawFrames
+	{
+		std::string name;
+		RawValue interval;
+		std::vector<std::string> frames;
 	};
 
 	// A game's <style name="...">: a size and a color a <text> can take by
@@ -387,6 +408,16 @@ namespace xge
 		// <shadow object="ball" />: what it is the shadow of; "" for nothing.
 		std::string shadowOf;
 		std::string facing;          // "" when the object has no <facing>
+		// <poses>: the look for each way it can be moving, by the pose's
+		// name (standing, walking, skidding, rising, falling); empty for none.
+		std::map<std::string, std::string> poses;
+		// <mirror>left</mirror>: going that way, its pictures are drawn
+		// flipped left to right; "" for never.
+		std::string mirror;
+		// <grip>: how much of the way to what its moves ask for its velocity
+		// goes each frame, only when hasGrip; otherwise 1, all of it.
+		RawValue rawGrip;
+		bool hasGrip{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
 		std::vector<RawTimer> timers;
 		RawCollisionData rawCollisionData;
@@ -637,9 +668,13 @@ namespace xge
 		// A <jump> under way: how far the object travels each frame, and how
 		// many frames are left. While framesLeft is above 0 the object is in
 		// the air: it touches no other object (playOneFrame). A reset
-		// lands it where it starts.
+		// lands it where it starts. jumpArc is how high it is drawn at the
+		// halfway point (its altitude, up then down), jumpFrames the whole
+		// flight's frames.
 		Vector2f jumpStep{};
 		int jumpFramesLeft{ 0 };
+		int jumpFrames{ 0 };
+		float jumpArc{};
 		bool isAirborne() const noexcept { return jumpFramesLeft > 0; }
 
 		// Standing, leaping and climbing. `grounded` is true for the frame
@@ -678,22 +713,68 @@ namespace xge
 		// backends draw it (spriteParams, and the picture for a bitmap or a
 		// drawing of lines), shared by every object made from the definition.
 		// `look` is the one showing; a reset shows the first again. An object
-		// with one sprite, or an animation, has none.
+		// with one sprite, or one unnamed animation, has none. A look that
+		// moves (a named <animation>) has its pictures in `frames`, each
+		// shown `frameTicks` frames of the game, and `bitmap` the first.
 		struct Look
 		{
 			std::string name;
 			std::vector<std::string> spriteParams;
 			ShapeKind shapeKind{ ShapeKind::Unknown };
 			std::shared_ptr<const Bitmap> bitmap;
+			std::vector<std::shared_ptr<const Bitmap>> frames;
+			int frameTicks{};
 		};
 		std::vector<Look> looks;
 		std::size_t look{ 0 };
+		// The look it starts as, and a reset brings back: the first, or
+		// for one with <poses> its standing look.
+		std::size_t firstLook{ 0 };
 
 		// The name of the look showing ("" for an object with none).
 		const std::string& lookName() const;
 
-		// Shows looks[index], and marks the visual to be built again.
+		// Shows looks[index], from its first picture if it moves, and marks
+		// the visual to be built again.
 		void showLook(std::size_t index);
+
+		// <poses>: the look (an index into looks) for each Pose, every one
+		// filled in (a pose left out takes another's, see load/expr), when
+		// hasPoses. The pose is picked each frame from how it moves, while it
+		// shows one of these looks (playOneFrame).
+		enum class Pose { Standing, Walking, Skidding, Rising, Falling };
+		std::array<std::size_t, 5> poseLooks{};
+		bool hasPoses{ false };
+
+		// <mirror>: going `mirrorWay` (left or right) its pictures are drawn
+		// flipped left to right, when `mirrors`; `mirrored` is whether they
+		// are now. `goingLeft` is the way across it last went: what keys it
+		// holds say, else the hop or jump it is making, else its velocity
+		// (a stop leaves it as it was). `flips` has each of its pictures and
+		// that picture flipped, both ways round, made as the game loads and
+		// shared by its copies.
+		bool mirrors{ false };
+		Direction mirrorWay{ Direction::Left };
+		bool mirrored{ false };
+		bool goingLeft{ false };
+		std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flips;
+
+		// The picture to show for `picture`: flipped while mirrored.
+		std::shared_ptr<const Bitmap> facingPicture(const std::shared_ptr<const Bitmap>& picture) const;
+
+		// Flips its picture, if it now goes the other way to the one it
+		// is drawn for (see goingLeft).
+		void faceMirror();
+
+		// <grip>: how much of the way to the velocity its held moves ask for
+		// it goes each frame (1: all of it, at once). Below 1 it slides
+		// into a walk and out of one.
+		float grip{ 1.0f };
+
+		// Seconds of blinking left (owner.blink): while above 0 it is drawn
+		// only every other fifteenth of a second. It is in play all the while.
+		float blink{};
+		bool blinkedOut() const noexcept { return blink > 0.0f && static_cast<int>(blink * 15.0f) % 2 == 1; }
 
 		// The object's <timers>, which count while it is shown and in play
 		// (see Timer, Game::updateTimers).
@@ -936,6 +1017,13 @@ namespace xge
 	// size and its color. A style no <style> has, or a text left with no
 	// size, stops the load.
 	void applyStyles(std::vector<RawObject>& objects, const std::vector<RawStyle>& styles);
+
+	// The looks of an object with named <animation>s, from its `sprites`
+	// (each named) and `animations` (each named): first each animation, a
+	// look that moves (RawSprite::frames), then each sprite; it starts as
+	// the first. A frame naming no sprite, or a look named twice, throws,
+	// saying `where`.
+	void lookWithAnimations(RawObject& object, const std::vector<RawSprite>& sprites, const std::vector<RawFrames>& animations, const std::string& where);
 
 	// Gives every sprite of an object (its looks and animation frames too)
 	// the characters its <collisions> say are solid (RawSprite::solid).

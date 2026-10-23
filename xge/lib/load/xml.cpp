@@ -699,20 +699,16 @@ namespace xge
 			return sprites;
 		}
 
-		// An <animation> as written: how long each picture is shown, and the
-		// names of the sprites it shows, in order. Which sprites those are is
-		// settled by chooseSprite, once the sprites it can pick from are known
-		// (a group's member can bring its own).
-		struct AnimationSpec
-		{
-			RawValue interval;
-			std::vector<std::string> frames;
-		};
+		// An <animation> as written (RawFrames). Which sprites its frames are
+		// is settled by chooseSprite, once the sprites it can pick from are
+		// known (a group's member can bring its own).
+		using AnimationSpec = RawFrames;
 
 		AnimationSpec readAnimation(const XmlNode& animation, const std::string& where)
 		{
-			const std::string here = where + " > <animation>";
 			AnimationSpec spec;
+			spec.name = animation.getAttribute("name");
+			const std::string here = where + " > <animation" + (spec.name.empty() ? std::string{} : " name=\"" + spec.name + "\"") + ">";
 
 			spec.interval = readValueOf(animation, "interval", here);
 
@@ -725,16 +721,61 @@ namespace xge
 			return spec;
 		}
 
+		// All of `given` added to `animations`, each in place of the one of
+		// its name (the unnamed one in place of the unnamed one).
+		void mergeAnimations(std::vector<AnimationSpec>& animations, const std::vector<AnimationSpec>& given)
+		{
+			for (const AnimationSpec& animation : given)
+			{
+				const auto same = std::find_if(animations.begin(), animations.end(), [&](const AnimationSpec& each) { return each.name == animation.name; });
+				if (same == animations.end()) { animations.push_back(animation); }
+				else { *same = animation; }
+			}
+		}
+
+		// Every <animation> of `node`, in the order written; two of one name
+		// (or two with none) stop the load.
+		std::vector<AnimationSpec> readAnimations(const XmlNode& node, const std::string& where)
+		{
+			std::vector<AnimationSpec> animations;
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "animation") { continue; }
+				AnimationSpec animation = readAnimation(*child, where);
+				if (std::any_of(animations.begin(), animations.end(), [&](const AnimationSpec& each) { return each.name == animation.name; }))
+				{
+					fail(where, animation.name.empty() ? std::string("has two <animation>s; it has one, or each is named as a look") : "two <animation>s are called \"" + animation.name + "\"");
+				}
+				animations.push_back(std::move(animation));
+			}
+			return animations;
+		}
+
 		// Settles what `object` looks like from the <sprite>s it has and its
-		// <animation>, if any. One sprite and no animation is the ordinary case.
-		// With an animation, each <frame> names one of the sprites, and the
-		// object is the first of them until it moves on. Anything that cannot
-		// be settled, such as several sprites and nothing to say which is shown
-		// when, or a frame naming a sprite that is not there, stops the load.
-		void chooseSprite(const std::vector<RawSprite>& sprites, const std::optional<AnimationSpec>& animation,
+		// <animation>s, if any. One sprite and no animation is the ordinary
+		// case. With one unnamed animation, each <frame> names one of the
+		// sprites, and the object is the first of them until it moves on. With
+		// named animations, each is a look that moves (lookWithAnimations).
+		// Anything that cannot be settled, such as several sprites and nothing
+		// to say which is shown when, or a frame naming a sprite that is not
+		// there, stops the load.
+		void chooseSprite(const std::vector<RawSprite>& sprites, const std::vector<AnimationSpec>& animations,
 			const std::string& where, RawObject& object)
 		{
 			if (sprites.empty()) { fail(where, "missing <sprite>"); }
+
+			const bool named = std::any_of(animations.begin(), animations.end(), [](const AnimationSpec& each) { return !each.name.empty(); });
+			if (named)
+			{
+				if (std::any_of(animations.begin(), animations.end(), [](const AnimationSpec& each) { return each.name.empty(); }))
+				{
+					fail(where, "has an <animation> with no name beside named ones; name it, as a look that moves, or leave the names off for one animation of the whole object");
+				}
+				lookWithAnimations(object, sprites, animations, where);
+				return;
+			}
+			if (animations.size() > 1) { fail(where, "has two <animation>s; it has one, or each is named as a look"); }
+			const std::optional<AnimationSpec> animation = animations.empty() ? std::nullopt : std::optional<AnimationSpec>(animations.front());
 
 			for (std::size_t i = 0; i < sprites.size(); ++i)
 			{
@@ -878,7 +919,7 @@ namespace xge
 		bool readHop(const XmlNode& node, const std::string& where, RawCommand& command)
 		{
 			const std::string here = where + " > <hop>";
-			const bool parts = findChild(&node, "x") || findChild(&node, "y") || findChild(&node, "distance") || findChild(&node, "seconds");
+			const bool parts = findChild(&node, "x") || findChild(&node, "y") || findChild(&node, "distance") || findChild(&node, "seconds") || findChild(&node, "arc");
 			if (!parts)
 			{
 				command.amount = readValue(node, where);
@@ -888,12 +929,13 @@ namespace xge
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
-				if (tag != "x" && tag != "y" && tag != "distance" && tag != "seconds")
+				if (tag != "x" && tag != "y" && tag != "distance" && tag != "seconds" && tag != "arc")
 				{
-					fail(here, "unknown <" + tag + ">; expected a <distance>, or an <x> and a <y>, then <seconds> if wanted");
+					fail(here, "unknown <" + tag + ">; expected a <distance>, or an <x> and a <y>, then <seconds> and <arc> if wanted");
 				}
 			}
 			if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+			if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
 
 			const PartialVector2 step = readPartialVector2(node, where);
 			if (!step.x && !step.y)
@@ -1026,13 +1068,14 @@ namespace xge
 				const std::string here = where + " > <jump>";
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
-					if (child->getName() != "distance" && child->getName() != "seconds")
+					if (child->getName() != "distance" && child->getName() != "seconds" && child->getName() != "arc")
 					{
-						fail(here, "unknown <" + child->getName() + ">; expected <distance> and <seconds>");
+						fail(here, "unknown <" + child->getName() + ">; expected <distance>, <seconds> and <arc>");
 					}
 				}
 				command.amount = readValueOf(node, "distance", here);
 				if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+				if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
 			}
 			if (verb == "aim") { requireAttribute(node, "object", where); }
 			if (verb == "chase")
@@ -1249,6 +1292,41 @@ namespace xge
 			if (path.speed.kind == RawValue::Kind::Expression && path.speed.text.empty()) { fail(where, "missing <speed>"); }
 			if (path.steps.empty()) { fail(where, "has no <step> or <home />"); }
 			return path;
+		}
+
+		// What an object's looks and steps do as it moves, as far as `node`
+		// says: its <poses>, <mirror> and <grip>.
+		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
+		{
+			if (auto poses = findChild(&node, "poses"))
+			{
+				const std::string here = where + " > <poses>";
+				object.poses.clear();
+				for (std::unique_ptr<XmlNode> pose = poses->getFirstChild(); pose != nullptr; pose = pose->getNextSibling())
+				{
+					const std::string tag = pose->getName();
+					if (tag != "standing" && tag != "walking" && tag != "skidding" && tag != "rising" && tag != "falling")
+					{
+						fail(here, "unknown <" + tag + ">; expected <standing>, then any of <walking>, <skidding>, <rising> and <falling>");
+					}
+					if (object.poses.count(tag)) { fail(here, "has two <" + tag + ">s"); }
+					object.poses[tag] = requireAttribute(*pose, "sprite", here + " > <" + tag + ">");
+				}
+				if (!object.poses.count("standing")) { fail(here, "missing <standing>: the look when it is not moving, which the others fall back to"); }
+			}
+			if (auto mirror = findChild(&node, "mirror"))
+			{
+				object.mirror = readText(*mirror);
+				if (object.mirror != "left" && object.mirror != "right")
+				{
+					fail(where, "<mirror> is \"" + object.mirror + "\"; expected left or right, the way that shows its pictures flipped");
+				}
+			}
+			if (auto grip = findChild(&node, "grip"))
+			{
+				object.hasGrip = true;
+				object.rawGrip = readValue(*grip, where + " > <grip>");
+			}
 		}
 
 		std::string readFacing(const XmlNode& node, const std::string& where)
@@ -1586,13 +1664,12 @@ namespace xge
 
 			const std::string where = "object '" + rawObject.name + "'";
 
-			std::optional<AnimationSpec> animation;
-			if (auto node = findChild(&object, "animation")) { animation = readAnimation(*node, where); }
+			std::vector<AnimationSpec> animations = readAnimations(object, where);
 			std::vector<RawSprite> sprites = readSprites(object, where);
 
 			// No <sprite>: an object that only holds numbers (a score, the
 			// lives, the clock), never drawn and, unless it says, at 0, 0.
-			const bool holder = sprites.empty() && !animation && !map;
+			const bool holder = sprites.empty() && animations.empty() && !map;
 			if (holder)
 			{
 				rawObject.sprite = nothingSprite();
@@ -1602,7 +1679,7 @@ namespace xge
 			}
 			else
 			{
-				chooseSprite(std::move(sprites), animation, where, rawObject);
+				chooseSprite(std::move(sprites), animations, where, rawObject);
 			}
 
 			if (map)
@@ -1652,6 +1729,7 @@ namespace xge
 			readPullAndSeek(object, rawObject, where);
 			readSight(object, rawObject, where);
 			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readFacing(*facing, where); }
+			readMoves(object, rawObject, where);
 			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
 			if (auto hidden = findChild(&object, "hidden"))
@@ -1734,7 +1812,7 @@ namespace xge
 			int row{ 0 };                           // <cell>
 			int column{ 0 };                        // <cell>
 			std::set<std::string> sprites;          // the names of the sprites it changes
-			std::optional<AnimationSpec> animation;
+			std::vector<AnimationSpec> animations;
 			PartialVector2 position;
 			PartialVector2 velocity;
 			PartialVector2 padding;
@@ -1755,12 +1833,13 @@ namespace xge
 				if (!allowed.count(tag)) { fail(where, "unknown <" + tag + ">; " + expected); }
 
 				if (tag == "sprite") { part.sprites.insert(child->getAttribute("name")); }
-				else if (tag == "animation") { part.animation = readAnimation(*child, where); }
+				else if (tag == "animation") { /* below, all at once */ }
 				else if (tag == "position") { part.position = readPartialVector2(*child, where); }
 				else if (tag == "velocity") { part.velocity = readPartialVector2(*child, where); }
 				else if (tag == "padding") { part.padding = readPartialVector2(*child, where); }
 			}
 			readObjectVariables(*node, where, part.variables);
+			part.animations = readAnimations(*node, where);
 
 			part.node = std::move(node);
 			return part;
@@ -1781,7 +1860,13 @@ namespace xge
 			{
 				if (other.sprites.count(name)) { clash(name.empty() ? std::string("<sprite>") : "<sprite name=\"" + name + "\">"); }
 			}
-			if (one.animation && other.animation) { clash("<animation>"); }
+			for (const AnimationSpec& animation : one.animations)
+			{
+				if (std::any_of(other.animations.begin(), other.animations.end(), [&](const AnimationSpec& each) { return each.name == animation.name; }))
+				{
+					clash(animation.name.empty() ? std::string("<animation>") : "<animation name=\"" + animation.name + "\">");
+				}
+			}
 			if (one.velocity.x && other.velocity.x) { clash("<velocity><x>"); }
 			if (one.velocity.y && other.velocity.y) { clash("<velocity><y>"); }
 			if (one.padding.x && other.padding.x) { clash("<padding><x>"); }
@@ -1797,7 +1882,7 @@ namespace xge
 		struct GroupShared
 		{
 			std::vector<RawSprite> sprites;
-			std::optional<AnimationSpec> animation;
+			std::vector<AnimationSpec> animations;
 			PartialVector2 position;
 			PartialVector2 velocity;
 			PartialVector2 padding;
@@ -1869,7 +1954,7 @@ namespace xge
 					if (given.x) { own.padding.x = given.x; }
 					if (given.y) { own.padding.y = given.y; }
 				}
-				else if (tag == "animation") { own.animation = readAnimation(*child, where); }
+				else if (tag == "animation") { /* below, all at once */ }
 				else if (tag == "position" || tag == "velocity")
 				{
 					PartialVector2& into = tag == "position" ? own.position : own.velocity;
@@ -1900,20 +1985,23 @@ namespace xge
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
+				else if (tag == "poses" || tag == "mirror" || tag == "grip") { /* below, all at once */ }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <maze>, <hidden>, <drawn>, <exists>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <maze>, <hidden>, <drawn>, <exists>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
 			own.sprites = changeSprites(own.sprites, group, where);
+			mergeAnimations(own.animations, readAnimations(group, where));
 			for (RawTimer& timer : readTimers(findChild(&group, "timers").get(), where)) { shared.timers.push_back(std::move(timer)); }
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
 			readPullAndSeek(group, shared, where);
 			readSight(group, shared, where);
+			readMoves(group, shared, where);
 			if (const std::string objClass = getAttribute(&group, "class"); !objClass.empty()) { shared.objClass = objClass; }
 
 			if (inner)
@@ -1933,7 +2021,7 @@ namespace xge
 			}
 
 			const std::vector<RawSprite>& sprites = own.sprites;
-			const std::optional<AnimationSpec>& animation = own.animation;
+			const std::vector<AnimationSpec>& animations = own.animations;
 			const PartialVector2& position = own.position;
 			const PartialVector2& velocity = own.velocity;
 			const PartialVector2& padding = own.padding;
@@ -1957,7 +2045,7 @@ namespace xge
 				rawObject.name = memberName;
 
 				std::vector<RawSprite> used = sprites;
-				std::optional<AnimationSpec> usedAnimation = animation;
+				std::vector<AnimationSpec> usedAnimations = animations;
 				std::optional<RawValue> positionX = position.x;
 				std::optional<RawValue> positionY = position.y;
 				std::optional<RawValue> velocityX = velocity.x;
@@ -1965,7 +2053,7 @@ namespace xge
 				for (const GroupPart* part : parts)
 				{
 					used = changeSprites(used, *part->node, part->where);
-					if (part->animation) { usedAnimation = part->animation; }
+					mergeAnimations(usedAnimations, part->animations);
 					if (part->position.x) { positionX = part->position.x; }
 					if (part->position.y) { positionY = part->position.y; }
 					if (part->velocity.x) { velocityX = part->velocity.x; }
@@ -1974,7 +2062,7 @@ namespace xge
 				}
 
 				if (used.empty()) { fail(here, "has no <sprite>, and neither does its group"); }
-				chooseSprite(used, usedAnimation, here, rawObject);
+				chooseSprite(used, usedAnimations, here, rawObject);
 
 				// One that does not exist at the start is placed by the <spawn>
 				// that makes it, so its <position> may be left out (0, 0).
@@ -2818,6 +2906,11 @@ namespace xge
 		windowDesc.name = requireAttribute(*window, "name", windowHere);
 		windowDesc.width = std::stof(readText(*requireChild(*window, "width", windowHere)));
 		windowDesc.height = std::stof(readText(*requireChild(*window, "height", windowHere)));
+		if (std::unique_ptr<XmlNode> scale = findChild(window.get(), "scale"))
+		{
+			windowDesc.scale = std::stoi(readText(*scale));
+			if (windowDesc.scale < 1) { fail(windowHere, "<scale> is a whole number, 1 or more"); }
+		}
 		windowDesc.background = readText(*requireChild(*window, "background", windowHere));
 		windowDesc.fullscreen = readBool(*requireChild(*window, "fullscreen", windowHere), windowHere) ? "true" : "false";
 		windowDesc.framerate = std::stoi(readText(*requireChild(*window, "framerate", windowHere)));

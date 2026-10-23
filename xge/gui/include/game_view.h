@@ -31,8 +31,9 @@ namespace xge
 		GameView(KeyQueue& keys, QWidget* parent = nullptr);
 
 		// Sizes the picture to the game's window (WindowDesc). The widget itself
-		// can be any size: the picture is scaled to fit it.
-		void setGameSize(int width, int height);
+		// can be any size: the picture is scaled to fit it. scale is the
+		// window's <scale>: how many times larger the widget asks to be.
+		void setGameSize(int width, int height, int scale);
 
 		QSize sizeHint() const override;
 		QSize minimumSizeHint() const override;
@@ -63,5 +64,6 @@ namespace xge
 	private:
 		KeyQueue& keys;
 		QImage backBuffer;
+		int shownScale{ 1 };
 	};
 }

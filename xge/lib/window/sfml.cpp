@@ -8,6 +8,7 @@
 #include "picture/font.h"
 #include "picture/color.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -18,9 +19,10 @@ namespace xge
 {
 	SFMLWindow::SFMLWindow(const WindowDesc& windowDesc)
 	{
+		const auto scale = static_cast<unsigned int>(std::max(1, windowDesc.scale));
 		const auto width = static_cast<unsigned int>(windowDesc.width);
 		const auto height = static_cast<unsigned int>(windowDesc.height);
-		const sf::VideoMode videoMode({ width, height });
+		const sf::VideoMode videoMode({ width * scale, height * scale });
 
 		const auto windowState = (windowDesc.fullscreen == "true") ? sf::State::Fullscreen : sf::State::Windowed;
 
@@ -31,6 +33,9 @@ namespace xge
 			throw std::runtime_error("SFML could not make a window");
 		}
 
+		// The game's own pixels, each drawn scale window pixels across (the
+		// mouse is mapped back through the same view).
+		window.setView(sf::View(sf::FloatRect({ 0.0f, 0.0f }, { windowDesc.width, windowDesc.height })));
 		window.setFramerateLimit(static_cast<unsigned int>(windowDesc.framerate));
 	}
 

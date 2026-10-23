@@ -1321,6 +1321,8 @@ namespace xge
 			object.hopped = false;
 			object.jumpStep = {};
 			object.jumpFramesLeft = 0;
+			object.jumpFrames = 0;
+			object.jumpArc = 0.0f;
 			object.grounded = false;
 			object.leaping = false;
 			object.climbing = false;
@@ -1330,7 +1332,10 @@ namespace xge
 			object.followPath.clear();
 			object.walk = {};
 			object.ownerScene = object.ownerSceneOriginal;
-			if (!object.looks.empty()) { object.showLook(0); }
+			object.blink = 0.0f;
+			object.goingLeft = object.facingOriginal == Direction::Left;
+			object.faceMirror();
+			if (!object.looks.empty()) { object.showLook(object.firstLook); }
 			for (auto& timer : object.timers)
 			{
 				timer.framesLeft = -1;
@@ -1920,7 +1925,8 @@ namespace xge
 			case 4: *link.number = object.heading; break;
 			case 5: *link.number = object.altitude; break;
 			case 6: *link.number = object.rise; break;
-			default: *link.number = object.light; break;
+			case 7: *link.number = object.light; break;
+			default: *link.number = object.blink; break;
 			}
 		}
 	}
@@ -1975,6 +1981,7 @@ namespace xge
 			else if (part == "altitude") { object.altitude = std::max(0.0f, value); }
 			else if (part == "rise") { object.rise = value; }
 			else if (part == "light") { object.light = std::max(0.0f, value); }
+			else if (part == "blink") { object.blink = std::max(0.0f, value); }
 			else if (object.hasHeading)
 			{
 				object.heading = value;

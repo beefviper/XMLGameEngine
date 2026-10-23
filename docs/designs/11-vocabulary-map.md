@@ -12,7 +12,7 @@ The vocabulary grew one game at a time ([motion](22-motion.md): a word is added 
 
 - Containers: `game`, `window`, `variables`, `sounds`, `paths`, `styles`, `objects`, `keeps`, `states`, `scenes`, `ways`, `timers`, `actions`, `inputs`, `conditions`, `shows`.
 - Things: `object`, `group` and its `member`s or cells (`columns`, `rows`, `padding`, changed by `row`, `column`, `cell`), `map` (`tile`, `row`s of characters, pieces picked by `char=`), `variable`, `state`, `scene`, `way`, `sound`, `path`, `style`, `timer`, `action`, `keep`, `demo`, `computer`, `turns` and its `player`s.
-- Sprite shapes: `circle`, `rectangle`, `text`, `image`, `line`, `bitmap`, `svg`, `tether`. Text pieces: `content`, `number`, `letter`, `choose` (`by`, `word`). Several named `sprite`s on one object are its **looks** (`become`) or the frames of an `animation` (`frame`).
+- Sprite shapes: `circle`, `rectangle`, `text`, `image`, `line`, `bitmap`, `svg`, `tether`. Text pieces: `content`, `number`, `letter`, `choose` (`by`, `word`). Several named `sprite`s on one object are its **looks** (`become`) or the frames of an `animation` (`frame`); a named animation is a look that moves. `poses` (`standing`, `walking`, `skidding`, `rising`, `falling`) picks a look by how the object moves, `mirror` flips it for the other way. The `window` has a `scale`.
 - Sound parts: `note`, `rest`, `part` (one voice of music), `loop`.
 - Path parts: `step`, `start`, `home`, `speed`.
 - Recorded play: `demo` with `seed`, `press`, `frames`.
@@ -21,7 +21,7 @@ The vocabulary grew one game at a time ([motion](22-motion.md): a word is added 
 
 | Family | Words |
 |---|---|
-| Moving | `move`, `hop`, `jump`, `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` |
+| Moving | `move`, `hop` and `jump` (with `arc`), `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` |
 | Steering | `chase`, `aim`, `follow`; in a maze `go`, `hunt`, `wander` |
 | Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
 | In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn`, `despawn`; `exists`, `most` on an object |
@@ -48,7 +48,7 @@ Most verbs work wherever they make sense (a collision, an action, a key, a condi
 
 **Pronouns: names that can be pointed at**
 
-- Dotted references (`ball.radius`, `paddle1.score`), built-in names (`window.right`, `window.width.center`), generated names (`aliens.3.2`, `dots.17`), scene paths (`playing.room2.robots`), live numbers (`x`, `y`, `velocity.x`, `heading`, `altitude`, `light`), `self.` (the object running a rule) and `touch.` (the touch a rule answers), colors (`color.red`) and key names (`space`, `mouse.left`, `pad1.a`).
+- Dotted references (`ball.radius`, `paddle1.score`), built-in names (`window.right`, `window.width.center`), generated names (`aliens.3.2`, `dots.17`), scene paths (`playing.room2.robots`), live numbers (`x`, `y`, `velocity.x`, `heading`, `altitude`, `light`, `blink`), `self.` (the object running a rule) and `touch.` (the touch a rule answers), colors (`color.red`) and key names (`space`, `mouse.left`, `pad1.a`).
 
 **Adverbs: how, how much, how long**
 
@@ -68,8 +68,8 @@ A note on pictures: an `<image>` is a file loaded by the window backend; an `<sv
 | Layer | Vocabulary | How complete |
 |---|---|---|
 | Data model: what exists | objects, groups, maps, variables, states (`from=`), scenes (kit, `from=`, ways), keeps | solid |
-| Appearance | eight shapes, multi-color bitmaps, animation, looks and `become`, `flip`, `heading`, `light`/`dark`, `shadow`, `hole` | solid; no recolouring a look |
-| Kinematics | velocity, acceleration, heading, facing, drag, mass, pull, seek, altitude, and the moving verbs | good; `leap` has no air control |
+| Appearance | eight shapes, multi-color bitmaps, animation, looks (moving ones too) and `become`, `poses`, `mirror`, blinking, the window's `scale`, `flip`, `heading`, `light`/`dark`, `shadow`, `hole` | solid; no recolouring a look |
+| Kinematics | velocity, acceleration, heading, facing, drag, mass, pull, seek, altitude, grip, a hop's or jump's arc, and the moving verbs | good; `leap` has no air control |
 | Steering | `chase`, `aim`, paths with `follow`, maze walking with `go`, `hunt`, `wander`, `hunt` by hops | good; no search of a maze, straight path legs only |
 | Collision | edges, `class`, `object`, `side`, `unless`, `sprite`, `slower`, `faster`, checks, `type`, `solid`, `hitbox`, and the touching verbs | the largest layer: where verbs, adjectives and prepositions meet |
 | Time | timers with `every` and `after` (on objects, states, scenes, looks), animation `interval`, `seconds` | built; counts frames, no time left shown |

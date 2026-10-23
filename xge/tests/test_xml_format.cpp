@@ -190,6 +190,24 @@ TEST_CASE("a value tag works anywhere a value does", "[xml_format][random]")
 	CHECK(loaded.game.getVariable("g") == 9.0f);
 }
 
+TEST_CASE("a window's <scale> shows it that many times larger; with none it is 1", "[xml_format][window]")
+{
+	const std::string plain = gameXml("", objectXml({}));
+	std::string scaled = plain;
+	scaled.replace(scaled.find("<background>"), 0, "<scale>3</scale>");
+
+	Loaded one(plain);
+	CHECK(one.game.getWindowDesc().scale == 1);
+
+	Loaded three(scaled, "xge_test_scaled.xml");
+	CHECK(three.game.getWindowDesc().scale == 3);
+	CHECK(three.game.getWindowDesc().width == 800.0f); // the game's own size, in its own pixels
+
+	std::string zero = plain;
+	zero.replace(zero.find("<background>"), 0, "<scale>0</scale>");
+	CHECK_THROWS_WITH(Loaded(zero, "xge_test_scale_zero.xml"), ContainsSubstring("<scale>"));
+}
+
 TEST_CASE("a variable can use the ones declared before it", "[xml_format]")
 {
 	Loaded loaded(gameXml("<variable name=\"a\">10</variable><variable name=\"b\">a * 2</variable>", objectXml({})));
@@ -810,6 +828,7 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "a command missing its attribute", "<push state=\"playing\" />", "<push />", "missing required attribute 'state'" },
 		{ "a command that does not exist", "<bounce />", "<explode />", "explode" },
 		{ "a window width that is not a number", "<width>1280</width>", "<width>huge</width>", "not a valid" },
+		{ "a window scale of nothing", "<height>720</height>", "<height>720</height><scale>0</scale>", "not a valid" },
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
 		{ "a condition with no test (only a set=\"...\" condition has none)", "<atleast>11</atleast>", "", "unexpected element <push>" },
 		{ "a <random> with no max", "<random min=\"-30\" max=\"30\" />", "<random min=\"-30\" />", "missing required attribute 'max'" },

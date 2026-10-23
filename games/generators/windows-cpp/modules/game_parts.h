@@ -235,8 +235,22 @@ namespace xge::parts
 		object.sprite = object.animation.frames.front();
 	}
 
+	// A named <animation>: a look that moves, its pictures the sprites named.
+	inline RawFrames frames(std::string name, RawValue interval, std::vector<std::string> names)
+	{
+		return RawFrames{ std::move(name), std::move(interval), std::move(names) };
+	}
+
+	// What an object with named <animation>s looks like: each a look that
+	// moves, then its sprites, starting as the first.
+	inline void moving(RawObject& object, const std::vector<RawSprite>& sprites, const std::vector<RawFrames>& animations)
+	{
+		lookWithAnimations(object, sprites, animations, "object '" + object.name + "'");
+	}
+
 	// A member of a <group>, or a cell of one, as it is made: the object, and
-	// the sprites and <animation> it will look by.
+	// the sprites and <animation> (or named ones, looks that move) it will
+	// look by.
 	struct Member
 	{
 		RawObject object;
@@ -244,7 +258,17 @@ namespace xge::parts
 		bool animated{ false };
 		RawValue interval;
 		std::vector<std::string> frames;
+		std::vector<RawFrames> moving;
 	};
+
+	// A named <animation> of a group or a part of one, in place of the one
+	// of its name it had, if any.
+	inline void moves(Member& member, RawFrames animation)
+	{
+		const auto same = std::find_if(member.moving.begin(), member.moving.end(), [&](const RawFrames& each) { return each.name == animation.name; });
+		if (same == member.moving.end()) { member.moving.push_back(std::move(animation)); }
+		else { *same = std::move(animation); }
+	}
 
 	// What a <member>, <row>, <column> or <cell> changes of what its group gives.
 	using Part = void (*)(Member&);
@@ -293,7 +317,11 @@ namespace xge::parts
 			if (object.rawPosition.x.kind == RawValue::Kind::Expression && object.rawPosition.x.text.empty()) { object.rawPosition.x = value("0"); }
 			if (object.rawPosition.y.kind == RawValue::Kind::Expression && object.rawPosition.y.text.empty()) { object.rawPosition.y = value("0"); }
 		}
-		if (member.animated)
+		if (!member.moving.empty())
+		{
+			lookWithAnimations(object, member.sprites, member.moving, "object '" + object.name + "'");
+		}
+		else if (member.animated)
 		{
 			animate(object, member.sprites, member.interval, member.frames);
 		}

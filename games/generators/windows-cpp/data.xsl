@@ -226,7 +226,7 @@
           <xsl:text>;</xsl:text>
         </xsl:when>
         <!-- a hop's step: one distance, or across and up or down, and how long -->
-        <xsl:when test="$verb = 'hop' and ($node/x or $node/distance or $node/seconds)">
+        <xsl:when test="$verb = 'hop' and ($node/x or $node/distance or $node/seconds or $node/arc)">
           <xsl:call-template name="hop-parts">
             <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
@@ -235,7 +235,7 @@
         <xsl:when test="$verb = 'hunt' and $node/hop">
           <xsl:text> command.byHops = true;</xsl:text>
           <xsl:choose>
-            <xsl:when test="$node/hop/x or $node/hop/distance or $node/hop/seconds">
+            <xsl:when test="$node/hop/x or $node/hop/distance or $node/hop/seconds or $node/hop/arc">
               <xsl:call-template name="hop-parts">
                 <xsl:with-param name="node" select="$node/hop" />
               </xsl:call-template>
@@ -272,6 +272,10 @@
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.seconds'" />
             <xsl:with-param name="node" select="$node/seconds" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.arc'" />
+            <xsl:with-param name="node" select="$node/arc" />
           </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'chase'">
@@ -372,7 +376,7 @@
     <xsl:text>)</xsl:text>
   </xsl:template>
 
-  <!-- A <hop>'s <distance>, or <x> and <y>, and <seconds> (readHop). -->
+  <!-- A <hop>'s <distance>, or <x> and <y>, and <seconds> and <arc> (readHop). -->
   <xsl:template name="hop-parts">
     <xsl:param name="node" />
     <xsl:call-template name="field">
@@ -390,6 +394,10 @@
     <xsl:call-template name="field">
       <xsl:with-param name="name" select="'command.seconds'" />
       <xsl:with-param name="node" select="$node/seconds" />
+    </xsl:call-template>
+    <xsl:call-template name="field">
+      <xsl:with-param name="name" select="'command.arc'" />
+      <xsl:with-param name="node" select="$node/arc" />
     </xsl:call-template>
   </xsl:template>
 
@@ -739,6 +747,24 @@
     <xsl:value-of select="concat($indent, '}')" />
   </xsl:template>
 
+  <!-- A named <animation>, a look that moves: frames("walk", interval, { "a", "b" }). -->
+  <xsl:template name="named-frames">
+    <xsl:param name="animation" />
+    <xsl:text>frames(</xsl:text>
+    <xsl:call-template name="string">
+      <xsl:with-param name="text" select="$animation/@name" />
+    </xsl:call-template>
+    <xsl:text>, </xsl:text>
+    <xsl:call-template name="value">
+      <xsl:with-param name="node" select="$animation/interval" />
+    </xsl:call-template>
+    <xsl:text>, </xsl:text>
+    <xsl:call-template name="frames">
+      <xsl:with-param name="animation" select="$animation" />
+    </xsl:call-template>
+    <xsl:text>)</xsl:text>
+  </xsl:template>
+
   <!-- The names of an <animation>'s frames: { "a", "b" }. -->
   <xsl:template name="frames">
     <xsl:param name="animation" />
@@ -1032,6 +1058,22 @@
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
     <xsl:choose>
+      <xsl:when test="animation[@name]">
+        <xsl:value-of select="concat($in, 'moving(object, ')" />
+        <xsl:call-template name="sprites">
+          <xsl:with-param name="nodes" select="sprite" />
+          <xsl:with-param name="indent" select="$in" />
+        </xsl:call-template>
+        <xsl:text>, {</xsl:text>
+        <xsl:for-each select="animation">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="named-frames">
+            <xsl:with-param name="animation" select="." />
+          </xsl:call-template>
+        </xsl:for-each>
+        <xsl:text> });&#10;</xsl:text>
+      </xsl:when>
       <xsl:when test="animation">
         <xsl:value-of select="concat($in, 'animate(object, ')" />
         <xsl:call-template name="sprites">
@@ -1203,7 +1245,7 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- What an <object> and a <group> both have: <facing>, <timers>,
+  <!-- What an <object> and a <group> both have: <facing>, <poses>, <mirror>, <grip>, <timers>,
        <hidden>, <collisions>, <actions> and <variables>, into $to. -->
   <xsl:template name="shared">
     <xsl:param name="node" />
@@ -1215,6 +1257,37 @@
         <xsl:with-param name="node" select="$node/facing" />
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$node/poses">
+      <xsl:value-of select="concat($indent, $to, '.poses = {')" />
+      <xsl:for-each select="$node/poses/*">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:text> { </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="local-name()" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@sprite" />
+        </xsl:call-template>
+        <xsl:text> }</xsl:text>
+      </xsl:for-each>
+      <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$node/mirror">
+      <xsl:value-of select="concat($indent, $to, '.mirror = ')" />
+      <xsl:call-template name="text">
+        <xsl:with-param name="node" select="$node/mirror" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$node/grip">
+      <xsl:value-of select="concat($indent, $to, '.hasGrip = true;&#10;')" />
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$indent" />
+        <xsl:with-param name="to" select="concat($to, '.rawGrip')" />
+        <xsl:with-param name="node" select="$node/grip" />
+      </xsl:call-template>
     </xsl:if>
     <xsl:if test="$node/maze">
       <xsl:value-of select="concat($indent, $to, '.maze = maze(')" />
@@ -1387,7 +1460,8 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:call-template name="part-animation">
-      <xsl:with-param name="node" select="animation[last()]" />
+      <xsl:with-param name="node" select="animation[not(@name)][last()]" />
+      <xsl:with-param name="named" select="animation[@name]" />
       <xsl:with-param name="to" select="'group'" />
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
@@ -1679,11 +1753,19 @@
     <xsl:value-of select="concat(local-name(), count(preceding-sibling::*[local-name() = local-name(current())]) + 1)" />
   </xsl:template>
 
-  <!-- An <animation>, into $to's. -->
+  <!-- An <animation>, and named ones (looks that move), into $to's. -->
   <xsl:template name="part-animation">
     <xsl:param name="node" />
+    <xsl:param name="named" />
     <xsl:param name="to" />
     <xsl:param name="indent" />
+    <xsl:for-each select="$named">
+      <xsl:value-of select="concat($indent, 'moves(', $to, ', ')" />
+      <xsl:call-template name="named-frames">
+        <xsl:with-param name="animation" select="." />
+      </xsl:call-template>
+      <xsl:text>);&#10;</xsl:text>
+    </xsl:for-each>
     <xsl:if test="$node">
       <xsl:value-of select="concat($indent, $to, '.animated = true;&#10;', $indent, $to, '.interval = ')" />
       <xsl:call-template name="value">
@@ -1742,7 +1824,8 @@
       <xsl:text>);&#10;</xsl:text>
     </xsl:for-each>
     <xsl:call-template name="part-animation">
-      <xsl:with-param name="node" select="animation[last()]" />
+      <xsl:with-param name="node" select="animation[not(@name)][last()]" />
+      <xsl:with-param name="named" select="animation[@name]" />
       <xsl:with-param name="to" select="'member'" />
       <xsl:with-param name="indent" select="$indent" />
     </xsl:call-template>
@@ -2739,6 +2822,10 @@
     <xsl:call-template name="float">
       <xsl:with-param name="node" select="$game/window/height" />
     </xsl:call-template>
+    <xsl:if test="$game/window/scale">
+      <xsl:text>;&#10;&#9;game.window.scale = </xsl:text>
+      <xsl:value-of select="normalize-space($game/window/scale)" />
+    </xsl:if>
     <xsl:text>;&#10;&#9;game.window.background = </xsl:text>
     <xsl:call-template name="text">
       <xsl:with-param name="node" select="$game/window/background" />

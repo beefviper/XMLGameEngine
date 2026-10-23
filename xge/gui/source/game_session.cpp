@@ -232,7 +232,7 @@ namespace xge
 
 		libraryWindow = false;
 		return std::make_unique<QtWindow>(
-			stage.showView(static_cast<int>(desc.width), static_cast<int>(desc.height), QString::fromStdString(desc.name)));
+			stage.showView(static_cast<int>(desc.width), static_cast<int>(desc.height), desc.scale, QString::fromStdString(desc.name)));
 	}
 
 	std::unique_ptr<Audio> GameSession::makeAudio()

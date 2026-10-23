@@ -205,6 +205,8 @@ namespace
 			text(at + ".tetherFrom", s.tetherFrom);
 			text(at + ".tetherTo", s.tetherTo);
 			value(at + ".thickness", s.thickness);
+			value(at + ".interval", s.interval);
+			for (std::size_t i = 0; i < s.frames.size(); ++i) { sprite(at + ".frame" + std::to_string(i), s.frames[i]); }
 		}
 
 		void guards(const std::string& at, const std::vector<EdgeGuard>& list)
@@ -248,6 +250,10 @@ namespace
 			value(at + ".altitude.bounce", o.rawAltitudeBounce);
 			text(at + ".shadowOf", o.shadowOf);
 			text(at + ".facing", o.facing);
+			for (const auto& [pose, look] : o.poses) { text(at + ".pose." + pose, look); }
+			text(at + ".mirror", o.mirror);
+			flag(at + ".hasGrip", o.hasGrip);
+			value(at + ".grip", o.rawGrip);
 			timers(at + ".timers", o.timers);
 			const RawCollisionData& c = o.rawCollisionData;
 			flag(at + ".collisions.enabled", c.enabled);
@@ -325,7 +331,7 @@ namespace
 
 		void game(const GameData& g)
 		{
-			out << "window [" << g.window.name << "] " << g.window.width << " " << g.window.height << " [" << g.window.background << "] ["
+			out << "window [" << g.window.name << "] " << g.window.width << " " << g.window.height << " x" << g.window.scale << " [" << g.window.background << "] ["
 				<< g.window.fullscreen << "] " << g.window.framerate << "\n";
 			for (const auto& [name, v] : g.variables) { value("variable " + name, v); }
 			for (const RawObject& o : g.objects) { object("object " + o.name, o); }

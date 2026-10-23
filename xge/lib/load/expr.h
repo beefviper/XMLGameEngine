@@ -218,20 +218,27 @@ namespace xge
 		}
 		std::map<std::string, std::shared_ptr<const Bitmap>> drawnPictures;
 
+		// Each picture an object with a <mirror> shows, and it flipped left
+		// to right, both ways round: made once, whoever shows it.
+		std::map<const Bitmap*, std::shared_ptr<const Bitmap>> flippedPictures;
+
+		// The flips (Object::flips) of every picture `object` can show.
+		std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flipsOf(const Object& object);
+
 		// The pictures of an object's <animation>, each drawn once, in the order
 		// of its <frame>s. Throws std::runtime_error (saying whose) when a frame
 		// is not a <bitmap> or a drawing of <line>s, or when the frames are not
 		// all the same size. `turned`, when given, is for an
 		// object with a <heading>: it gets what each frame turns from,
 		// and every frame must turn in the same size of square.
-		std::vector<std::shared_ptr<const Bitmap>> buildAnimationBitmaps(const RawObject& rawObject, const std::string& where,
+		std::vector<std::shared_ptr<const Bitmap>> buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
 			std::vector<std::shared_ptr<const Turnable>>* turnables = nullptr);
 
 		// How many frames of the game each picture of the animation is shown
 		// for: its <interval> in seconds times the window's <framerate>, at
 		// least 1. Throws std::runtime_error for an interval that is not above
 		// 0, or for a window with no framerate to count seconds in.
-		int animationFramesOf(const RawObject& rawObject, const WindowDesc& windowDesc, const std::string& where);
+		int animationFramesOf(const RawValue& interval, const WindowDesc& windowDesc, const std::string& where);
 
 		std::vector<Command> processCommands(const std::vector<RawCommand>& raw, const std::string& where);
 

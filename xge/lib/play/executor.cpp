@@ -465,17 +465,18 @@ namespace xge
 	// the later one, so a hop is always a single step in one direction.
 	bool CommandExecutor::startJump(Object& object, const CmdJump& jump)
 	{
-		if (!startFlight(object, stepToward(jump.direction, jump.distance), jump.seconds))
+		if (!startFlight(object, stepToward(jump.direction, jump.distance), jump.seconds, jump.arc))
 		{
 			return false;
 		}
 
 		object.facing = jump.direction;
+		if (jump.direction == Direction::Left || jump.direction == Direction::Right) { object.goingLeft = jump.direction == Direction::Left; }
 		object.hasAim = false;
 		return true;
 	}
 
-	bool CommandExecutor::startFlight(Object& object, Vector2f whole, float seconds)
+	bool CommandExecutor::startFlight(Object& object, Vector2f whole, float seconds, float arc)
 	{
 		if (object.isAirborne())
 		{
@@ -494,6 +495,8 @@ namespace xge
 		const int frames = game.framesFor(seconds);
 		object.jumpStep = whole * (1.0f / static_cast<float>(frames));
 		object.jumpFramesLeft = frames;
+		object.jumpFrames = frames;
+		object.jumpArc = arc;
 		return true;
 	}
 
@@ -504,7 +507,7 @@ namespace xge
 
 		if (command.seconds > 0.0f)
 		{
-			if (!startFlight(object, command.step, command.seconds)) { return false; }
+			if (!startFlight(object, command.step, command.seconds, command.arc)) { return false; }
 		}
 		else
 		{
@@ -515,6 +518,7 @@ namespace xge
 			queueHop(object, command.step);
 		}
 		object.facing = command.direction;
+		if (command.step.x != 0.0f) { object.goingLeft = command.step.x < 0.0f; }
 		object.hasAim = false;
 		return true;
 	}
@@ -552,7 +556,7 @@ namespace xge
 		}
 		if (!best) { return false; }
 
-		return hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds });
+		return hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds, hunt.arc });
 	}
 
 	void CommandExecutor::queueHop(Object& object, Vector2f step)
@@ -695,8 +699,12 @@ namespace xge
 		if (object.leaping)
 		{
 			object.leaping = false;
-			object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
-				- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+			// One with a <grip> below 1 slides on from the speed it landed at.
+			if (object.grip >= 1.0f)
+			{
+				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
+					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+			}
 		}
 	}
 

@@ -60,7 +60,7 @@ namespace xge
 
 		// Shows the picture, sized for a game window of this size, in whichever
 		// window the layout says; any key held is forgotten.
-		GameView& showView(int width, int height, const QString& title);
+		GameView& showView(int width, int height, int scale, const QString& title);
 
 		// Hides the picture, and the game window with it.
 		void hideView();

@@ -5,12 +5,13 @@
 
 <!--
   Q*bert, after the 1982 arcade game: a pyramid of 28 cubes, and Q*bert
-  hopping from cube to cube on the diagonals. Every cube he lands on turns
-  from blue to yellow, for 25 points; turn them all to win. Hop off the
-  pyramid, or meet the red ball or Coily, and he curses and a life is lost.
-  A flying disc on each side carries him back to the top, once; Coily, if
-  he is chasing him by then, leaps after him and falls, for 500 points. The
-  high score is kept.
+  hopping from cube to cube on the diagonals, on the arcade's own small
+  screen (256 by 240) shown three times as big. Every cube he lands on
+  turns from blue to yellow, for 25 points; turn them all to win. Hop off
+  the pyramid, or meet the red ball or Coily, and he curses and a life is
+  lost. A flying disc on each side carries him back to the top, once;
+  Coily, if he is chasing him by then, leaps after him and falls, for 500
+  points. The high score is kept.
 
   W or Up hops up and right, D or Right down and right, S or Down down and
   left, A or Left up and left (the four diagonals, as the arcade's stick
@@ -20,8 +21,13 @@
   * Each key is a <hop direction="down-right"> with an <x> across and a <y>
     down: half a cube across and a whole row down, so the cubes of one row
     sit between those of the next. A hop takes its <seconds>, through the
-    air, and lands. Each hop also turns Q*bert to face it (four looks of one
-    bitmap, two of them flipped).
+    air, and lands; its <arc> lifts him up off the straight line and drops
+    him onto the cube, as the arcade's hop does. The ball and Coily hop
+    the same way.
+  * Q*bert has two looks, facing down and facing up, both drawn turned to
+    the right; his <mirror>left</mirror> draws them the other way round
+    when he hops to the left. Coily's pictures face left, so his mirror is
+    right.
   * The pyramid is a <map>, drawn as it stands, on tiles half a cube across.
     A cube is one bitmap of three inks, a top and two sides, so it looks
     solid; its pixels touch, and of them only the top's (<solid char>).
@@ -30,29 +36,34 @@
     landed on it (a rule only for the unlit look, so it scores once).
   * Around the pyramid is the void: unseen tiles where a hop off the
     pyramid lands, which cost a life and put Q*bert back on top. Two of
-    them are the discs, whose looks say whether they have been used.
+    them are the discs, which spin (a look that moves, a named
+    <animation>) until they have been used.
   * The red ball hops down on its own, a <trigger> from its own <timer>s
     with <random> waits, and back to the top once it falls off. Coily is an
-    egg that does the same until it reaches the bottom row, then a snake
-    whose timer hunts Q*bert by hops (<hunt> with a <hop>): each time, the
-    diagonal that lands nearest him.
+    egg that does the same until it reaches the bottom row (a look that
+    squashes and rounds again, the first of his, so the one he starts as),
+    then a snake that coils and rears (another look that moves) and whose timer hunts
+    Q*bert by hops (<hunt> with a <hop>): each time, the diagonal that
+    lands nearest him.
   No Slick and Sam, Ugg and Wrongway or green ball, and one round: see
   docs/designs/56-games-atari.md.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
   <window name="Q*bert">
-    <width>800</width>
-    <height>600</height>
+    <width>256</width>
+    <height>240</height>
+    <scale>3</scale>
     <background>color.black</background>
     <fullscreen>false</fullscreen>
     <framerate>60</framerate>
   </window>
   <variables>
-    <variable name="across">32</variable>
-    <variable name="down">48</variable>
-    <variable name="flight">0.25</variable>
-    <variable name="bounce">0.3</variable>
+    <variable name="across">16</variable>
+    <variable name="down">24</variable>
+    <variable name="flight">0.3</variable>
+    <variable name="bounce">0.35</variable>
+    <variable name="height">10</variable>
   </variables>
   <sounds>
     <sound name="hop" wave="square">
@@ -102,29 +113,27 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>110</size><color>color.orange</color></style>
-    <style name="prompt"><size>40</size></style>
-    <style name="help"><size>28</size></style>
-    <style name="hud"><size>32</size><color>color.white</color></style>
+    <style name="banner"><size>48</size><color>color.orange</color></style>
+    <style name="text"><size>16</size><color>color.white</color></style>
   </styles>
   <objects>
     <object name="again">
       <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
+        <text style="text">
+          <content>space to play again</content>
         </text>
       </sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
     </object>
     <!-- the best score, kept from game to game -->
     <object name="best">
       <sprite>
-        <text style="hud">
+        <text style="text">
           <content>TOP</content>
           <number>best.score</number>
         </text>
       </sprite>
-      <position><x><centered /></x><y>12</y></position>
+      <position><x><centered /></x><y>4</y></position>
       <variables>
         <variable name="score">0</variable>
       </variables>
@@ -142,32 +151,32 @@
               <content>Q*BERT</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 56</centered></y></position>
         </object>
         <object name="help">
           <sprite>
-            <text style="help">
-              <content>hop on every cube to turn it yellow</content>
+            <text style="text">
+              <content>turn every cube yellow</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 12</centered></y></position>
         </object>
         <object name="keys">
           <sprite>
-            <text style="help">
-              <content>w d s a or the arrows hop up right, down right, down left, up left</content>
+            <text style="text">
+              <content>w d s a or arrows hop</content>
               <color>color.lightgrey</color>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 8</centered></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
+            <text style="text">
+              <content>space to start</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
         </object>
       </objects>
       <shows>
@@ -183,20 +192,20 @@
       <objects>
         <object name="score">
           <sprite>
-            <text style="hud">
+            <text style="text">
               <number>player.score</number>
             </text>
           </sprite>
-          <position><x>40</x><y>12</y></position>
+          <position><x>8</x><y>4</y></position>
         </object>
         <object name="lives">
           <sprite>
-            <text style="hud">
+            <text style="text">
               <content>lives</content>
               <number>player.lives</number>
             </text>
           </sprite>
-          <position><x>window.right - lives.width - 40</x><y>12</y></position>
+          <position><x>window.right - lives.width - 8</x><y>4</y></position>
         </object>
         <object name="player">
           <variables>
@@ -211,69 +220,69 @@
              hop off the pyramid lands on, and the discs (d) two of them -->
         <map name="pyramid">
           <tile><width>across</width><height>down</height></tile>
-          <position><x>128</x><y>74</y></position>
-          <row>.......o.o.......</row>
-          <row>......o.#.o......</row>
-          <row>.....o.#.#.o.....</row>
-          <row>....o.#.#.#.o....</row>
-          <row>...o.#.#.#.#.o...</row>
-          <row>..d.#.#.#.#.#.d..</row>
-          <row>.o.#.#.#.#.#.#.o.</row>
-          <row>o.=.=.=.=.=.=.=.o</row>
-          <row>.o.o.o.o.o.o.o.o.</row>
+          <position><x>8</x><y>24</y></position>
+          <row>......o.o......</row>
+          <row>.....o.#.o.....</row>
+          <row>....o.#.#.o....</row>
+          <row>...o.#.#.#.o...</row>
+          <row>..o.#.#.#.#.o..</row>
+          <row>.d.#.#.#.#.#.d.</row>
+          <row>o.#.#.#.#.#.#.o</row>
+          <row>.=.=.=.=.=.=.=.</row>
+          <row>o.o.o.o.o.o.o.o</row>
           <!-- a cube is three faces of one bitmap; its middle is the tile's, so its
-               top face is centred 16 above it, where Q*bert and the ball stand.
+               top face is centred 8 above it, where Q*bert and the ball stand.
                Pixel collisions, and of those only the top (*) is solid: what
                stands on a cube touches it, not the cube behind -->
           <group name="cubes" class="cube">
-            <sprite name="unlit">
-              <bitmap>
-                <row>.......**.......</row>
-                <row>.....******.....</row>
-                <row>...**********...</row>
-                <row>.**************.</row>
-                <row>l**************r</row>
-                <row>lll**********rrr</row>
-                <row>lllll******rrrrr</row>
-                <row>lllllll**rrrrrrr</row>
-                <row>llllllllrrrrrrrr</row>
-                <row>llllllllrrrrrrrr</row>
-                <row>llllllllrrrrrrrr</row>
-                <row>llllllllrrrrrrrr</row>
-                <row>.lllllllrrrrrrr.</row>
-                <row>...lllllrrrrr...</row>
-                <row>.....lllrrr.....</row>
-                <row>.......lr.......</row>
-                <scale>4</scale>
-                <color>color.blue</color>
-                <color char="l">color.brown</color>
-                <color char="r">color.darkgrey</color>
-              </bitmap>
-            </sprite>
-            <sprite name="lit">
-              <bitmap>
-                <row>.......**.......</row>
-                <row>.....******.....</row>
-                <row>...**********...</row>
-                <row>.**************.</row>
-                <row>l**************r</row>
-                <row>lll**********rrr</row>
-                <row>lllll******rrrrr</row>
-                <row>lllllll**rrrrrrr</row>
-                <row>llllllllrrrrrrrr</row>
-                <row>llllllllrrrrrrrr</row>
-                <row>llllllllrrrrrrrr</row>
-                <row>llllllllrrrrrrrr</row>
-                <row>.lllllllrrrrrrr.</row>
-                <row>...lllllrrrrr...</row>
-                <row>.....lllrrr.....</row>
-                <row>.......lr.......</row>
-                <scale>4</scale>
-                <color>color.yellow</color>
-                <color char="l">color.brown</color>
-                <color char="r">color.darkgrey</color>
-              </bitmap>
-            </sprite>
+              <sprite name="unlit">
+                <bitmap>
+                  <row>.......**.......</row>
+                  <row>.....******.....</row>
+                  <row>...**********...</row>
+                  <row>.**************.</row>
+                  <row>l**************r</row>
+                  <row>lll**********rrr</row>
+                  <row>lllll******rrrrr</row>
+                  <row>lllllll**rrrrrrr</row>
+                  <row>llllllllrrrrrrrr</row>
+                  <row>llllllllrrrrrrrr</row>
+                  <row>llllllllrrrrrrrr</row>
+                  <row>llllllllrrrrrrrr</row>
+                  <row>.lllllllrrrrrrr.</row>
+                  <row>...lllllrrrrr...</row>
+                  <row>.....lllrrr.....</row>
+                  <row>.......lr.......</row>
+                  <scale>2</scale>
+                  <color>color.blue</color>
+                  <color char="l">color.brown</color>
+                  <color char="r">color.darkgrey</color>
+                </bitmap>
+              </sprite>
+              <sprite name="lit">
+                <bitmap>
+                  <row>.......**.......</row>
+                  <row>.....******.....</row>
+                  <row>...**********...</row>
+                  <row>.**************.</row>
+                  <row>l**************r</row>
+                  <row>lll**********rrr</row>
+                  <row>lllll******rrrrr</row>
+                  <row>lllllll**rrrrrrr</row>
+                  <row>llllllllrrrrrrrr</row>
+                  <row>llllllllrrrrrrrr</row>
+                  <row>llllllllrrrrrrrr</row>
+                  <row>llllllllrrrrrrrr</row>
+                  <row>.lllllllrrrrrrr.</row>
+                  <row>...lllllrrrrr...</row>
+                  <row>.....lllrrr.....</row>
+                  <row>.......lr.......</row>
+                  <scale>2</scale>
+                  <color>color.yellow</color>
+                  <color char="l">color.brown</color>
+                  <color char="r">color.darkgrey</color>
+                </bitmap>
+              </sprite>
             <collisions>
               <enabled>true</enabled>
               <type>pixel</type>
@@ -292,8 +301,8 @@
           <group name="void" char="o" class="void">
             <sprite>
               <rectangle>
-                <width>24</width>
-                <height>56</height>
+                <width>12</width>
+                <height>28</height>
               </rectangle>
             </sprite>
             <drawn>false</drawn>
@@ -302,10 +311,10 @@
             </collisions>
           </group>
           <!-- a disc floats where Q*bert's feet land, in a box as tall as the
-               void's; used, it is void too. Its rules go last look first, so a
-               landing changes the look only once -->
+               void's, spinning until it is used; used, it is void too. Its
+               rules go last look first, so a landing changes the look only once -->
           <group name="discs" char="d" class="disc">
-            <sprite name="ready">
+            <sprite name="spina">
               <bitmap>
                 <row>............</row>
                 <row>............</row>
@@ -335,7 +344,76 @@
                 <row>............</row>
                 <row>............</row>
                 <row>............</row>
-                <scale>2</scale>
+                <color char="c">color.cyan</color>
+                <color char="m">color.magenta</color>
+                <color char="y">color.yellow</color>
+              </bitmap>
+            </sprite>
+            <sprite name="spinb">
+              <bitmap>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>...myyyym...</row>
+                <row>.myyccccyym.</row>
+                <row>..mmyyyymm..</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <color char="c">color.cyan</color>
+                <color char="m">color.magenta</color>
+                <color char="y">color.yellow</color>
+              </bitmap>
+            </sprite>
+            <sprite name="spinc">
+              <bitmap>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>...yccccy...</row>
+                <row>.yccmmmmccy.</row>
+                <row>..yyccccyy..</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
+                <row>............</row>
                 <color char="c">color.cyan</color>
                 <color char="m">color.magenta</color>
                 <color char="y">color.yellow</color>
@@ -343,11 +421,17 @@
             </sprite>
             <sprite name="used">
               <rectangle>
-                <width>24</width>
-                <height>56</height>
+                <width>12</width>
+                <height>28</height>
                 <color>color.black</color>
               </rectangle>
             </sprite>
+            <animation name="ready">
+              <interval>0.12</interval>
+              <frame sprite="spina" />
+              <frame sprite="spinb" />
+              <frame sprite="spinc" />
+            </animation>
             <collisions>
               <enabled>true</enabled>
               <collision object="qbert" sprite="used">
@@ -368,80 +452,62 @@
             </collisions>
           </group>
         </map>
+        <!-- Q*bert: facing down or up, drawn turned to the right -->
         <object name="qbert">
-          <sprite name="downright">
+          <sprite name="front">
             <bitmap>
-              <row>..****..</row>
-              <row>.******.</row>
-              <row>.*wk*wk.</row>
-              <row>.*wk*wk*</row>
-              <row>.*******</row>
-              <row>..****.*</row>
-              <row>...*.*..</row>
-              <row>..**.**.</row>
-              <scale>3</scale>
-              <color>color.orange</color>
+              <row>.....oooooo.....</row>
+              <row>...oooooooooo...</row>
+              <row>..oowwooowwooo..</row>
+              <row>..owkwoowkwooo..</row>
+              <row>.oowwoooowwoooo.</row>
+              <row>.oooooooooooooo.</row>
+              <row>.oooooooooooooo.</row>
+              <row>..oooooooooooooo</row>
+              <row>..ooooooooookkoo</row>
+              <row>...ooooooooko.ko</row>
+              <row>....ooooooo.ooo.</row>
+              <row>......o..o......</row>
+              <row>.....oo..oo.....</row>
+              <row>.....o...o......</row>
+              <row>....kkk..kkk....</row>
+              <row>...kkkk..kkkk...</row>
+              <color char="o">color.orange</color>
               <color char="w">color.white</color>
               <color char="k">color.black</color>
             </bitmap>
           </sprite>
-          <sprite name="downleft">
+          <sprite name="back">
             <bitmap>
-              <row>..****..</row>
-              <row>.******.</row>
-              <row>.*wk*wk.</row>
-              <row>.*wk*wk*</row>
-              <row>.*******</row>
-              <row>..****.*</row>
-              <row>...*.*..</row>
-              <row>..**.**.</row>
-              <scale>3</scale>
-              <color>color.orange</color>
+              <row>..........okko..</row>
+              <row>.....oooooko.o..</row>
+              <row>...oooooooooo...</row>
+              <row>..oooooooooooo..</row>
+              <row>.oooooooooooooo.</row>
+              <row>.oooooooooooooo.</row>
+              <row>.oooooooooooooo.</row>
+              <row>.oooooooooooooo.</row>
+              <row>..oooooooooooo..</row>
+              <row>...oooooooooo...</row>
+              <row>....oooooooo....</row>
+              <row>......o..o......</row>
+              <row>.....oo..oo.....</row>
+              <row>.....o...o......</row>
+              <row>....kkk..kkk....</row>
+              <row>...kkkk..kkkk...</row>
+              <color char="o">color.orange</color>
               <color char="w">color.white</color>
               <color char="k">color.black</color>
-              <flip>horizontal</flip>
-            </bitmap>
-          </sprite>
-          <sprite name="upright">
-            <bitmap>
-              <row>......**</row>
-              <row>..*****.</row>
-              <row>.******.</row>
-              <row>.******.</row>
-              <row>.******.</row>
-              <row>..****..</row>
-              <row>...*.*..</row>
-              <row>..**.**.</row>
-              <scale>3</scale>
-              <color>color.orange</color>
-              <color char="w">color.white</color>
-              <color char="k">color.black</color>
-            </bitmap>
-          </sprite>
-          <sprite name="upleft">
-            <bitmap>
-              <row>......**</row>
-              <row>..*****.</row>
-              <row>.******.</row>
-              <row>.******.</row>
-              <row>.******.</row>
-              <row>..****..</row>
-              <row>...*.*..</row>
-              <row>..**.**.</row>
-              <scale>3</scale>
-              <color>color.orange</color>
-              <color char="w">color.white</color>
-              <color char="k">color.black</color>
-              <flip>horizontal</flip>
             </bitmap>
           </sprite>
           <!-- standing on a top: his feet, all he touches with, on its middle -->
-          <position><x>388</x><y>109</y></position>
+          <position><x>120</x><y>38</y></position>
+          <mirror>left</mirror>
           <collisions>
             <enabled>true</enabled>
             <hitbox>
-              <rectangle><width>12</width><height>6</height></rectangle>
-              <position><x>6</x><y>18</y></position>
+              <rectangle><width>8</width><height>4</height></rectangle>
+              <position><x>4</x><y>12</y></position>
             </hitbox>
             <collision class="void">
               <play sound="fall" />
@@ -454,23 +520,23 @@
           </collisions>
           <actions>
             <action name="upright">
-              <hop direction="up-right"><x>across</x><y>down</y><seconds>flight</seconds></hop>
-              <become sprite="upright" />
+              <hop direction="up-right"><x>across</x><y>down</y><seconds>flight</seconds><arc>height</arc></hop>
+              <become sprite="back" />
               <play sound="hop" />
             </action>
             <action name="downright">
-              <hop direction="down-right"><x>across</x><y>down</y><seconds>flight</seconds></hop>
-              <become sprite="downright" />
+              <hop direction="down-right"><x>across</x><y>down</y><seconds>flight</seconds><arc>height</arc></hop>
+              <become sprite="front" />
               <play sound="hop" />
             </action>
             <action name="downleft">
-              <hop direction="down-left"><x>across</x><y>down</y><seconds>flight</seconds></hop>
-              <become sprite="downleft" />
+              <hop direction="down-left"><x>across</x><y>down</y><seconds>flight</seconds><arc>height</arc></hop>
+              <become sprite="front" />
               <play sound="hop" />
             </action>
             <action name="upleft">
-              <hop direction="up-left"><x>across</x><y>down</y><seconds>flight</seconds></hop>
-              <become sprite="upleft" />
+              <hop direction="up-left"><x>across</x><y>down</y><seconds>flight</seconds><arc>height</arc></hop>
+              <become sprite="back" />
               <play sound="hop" />
             </action>
             <action name="lose">
@@ -488,11 +554,11 @@
             <rectangle><width>1</width><height>1</height><color>color.black</color></rectangle>
           </sprite>
           <sprite name="said">
-            <text style="hud">
+            <text style="text">
               <content>@!#?@!</content>
             </text>
           </sprite>
-          <position><x>window.width.center + 30</x><y>60</y></position>
+          <position><x>window.width.center + 16</x><y>20</y></position>
           <timers>
             <timer sprite="said">
               <after>1.5</after>
@@ -512,12 +578,11 @@
               <row>********</row>
               <row>.******.</row>
               <row>..****..</row>
-              <scale>2</scale>
               <color>color.red</color>
               <color char="w">color.white</color>
             </bitmap>
           </sprite>
-          <position><x>424</x><y>170</y></position>
+          <position><x>140</x><y>70</y></position>
           <collisions>
             <enabled>true</enabled>
             <collision class="void">
@@ -529,11 +594,11 @@
           </collisions>
           <actions>
             <action name="left">
-              <hop direction="down-left"><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+              <hop direction="down-left"><x>across</x><y>down</y><seconds>bounce</seconds><arc>height</arc></hop>
               <play sound="thud" />
             </action>
             <action name="right">
-              <hop direction="down-right"><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+              <hop direction="down-right"><x>across</x><y>down</y><seconds>bounce</seconds><arc>height</arc></hop>
               <play sound="thud" />
             </action>
           </actions>
@@ -549,54 +614,155 @@
           </timers>
         </object>
         <!-- Coily: an egg that bounces down as the ball does, and on the bottom
-             row hatches into a snake that hunts Q*bert, a hop at a time -->
+             row hatches into a snake that hunts Q*bert, a hop at a time,
+             coiling and rearing as he goes -->
         <object name="coily" class="enemy">
-          <sprite name="egg">
+          <sprite name="round">
             <bitmap>
-              <row>........</row>
-              <row>........</row>
-              <row>........</row>
-              <row>........</row>
-              <row>..****..</row>
-              <row>.*ww***.</row>
-              <row>**w*****</row>
-              <row>********</row>
-              <row>********</row>
-              <row>********</row>
-              <row>.******.</row>
-              <row>..****..</row>
-              <scale>2</scale>
-              <color>color.purple</color>
-              <color char="w">color.white</color>
-            </bitmap>
-          </sprite>
-          <sprite name="snake">
-            <bitmap>
-              <row>..****..</row>
-              <row>.*w**w*.</row>
-              <row>.*k**k*.</row>
-              <row>.******.</row>
-              <row>..*rr*..</row>
-              <row>...**...</row>
-              <row>..**....</row>
-              <row>.**.....</row>
-              <row>.**..**.</row>
-              <row>..****..</row>
-              <row>...**...</row>
-              <row>.******.</row>
-              <scale>2</scale>
-              <color>color.purple</color>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>.....pppppp.....</row>
+              <row>....pwwppppp....</row>
+              <row>...pwwppppppp...</row>
+              <row>...pwppppppppp..</row>
+              <row>..pppppppppppp..</row>
+              <row>..pppppppppppp..</row>
+              <row>..pppppppppppp..</row>
+              <row>...pppppppppp...</row>
+              <row>...pppppppppp...</row>
+              <row>....pppppppp....</row>
+              <row>.....pppppp.....</row>
+              <row>................</row>
+              <color char="p">color.purple</color>
               <color char="w">color.white</color>
               <color char="k">color.black</color>
               <color char="r">color.red</color>
             </bitmap>
           </sprite>
-          <position><x>360</x><y>162</y></position>
+          <sprite name="squashed">
+            <bitmap>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>................</row>
+              <row>....pppppppp....</row>
+              <row>...pwwppppppp...</row>
+              <row>..pwwppppppppp..</row>
+              <row>..pwpppppppppp..</row>
+              <row>..pppppppppppp..</row>
+              <row>..pppppppppppp..</row>
+              <row>...pppppppppp...</row>
+              <row>....pppppppp....</row>
+              <row>................</row>
+              <row>................</row>
+              <color char="p">color.purple</color>
+              <color char="w">color.white</color>
+              <color char="k">color.black</color>
+              <color char="r">color.red</color>
+            </bitmap>
+          </sprite>
+          <sprite name="coiled">
+            <bitmap>
+              <row>................</row>
+              <row>................</row>
+              <row>....pppppp......</row>
+              <row>...pwwppwwp.....</row>
+              <row>...pwkppwkp.....</row>
+              <row>...pppppppp.....</row>
+              <row>....pprrpp......</row>
+              <row>.....pppp.......</row>
+              <row>.....pp.........</row>
+              <row>....pp..........</row>
+              <row>....pp..........</row>
+              <row>.....pp.........</row>
+              <row>......pp........</row>
+              <row>.......pp.......</row>
+              <row>........pp......</row>
+              <row>........pp......</row>
+              <row>.......pp.......</row>
+              <row>......pp........</row>
+              <row>.....pp...pp....</row>
+              <row>......pppppp....</row>
+              <row>.......pppp.....</row>
+              <row>................</row>
+              <row>....pppppppp....</row>
+              <row>...pppppppppp...</row>
+              <color char="p">color.purple</color>
+              <color char="w">color.white</color>
+              <color char="k">color.black</color>
+              <color char="r">color.red</color>
+            </bitmap>
+          </sprite>
+          <sprite name="raised">
+            <bitmap>
+              <row>....pppppp......</row>
+              <row>...pwwppwwp.....</row>
+              <row>...pwkppwkp.....</row>
+              <row>...pppppppp.....</row>
+              <row>....pprrpp......</row>
+              <row>.....pppp.......</row>
+              <row>......pp........</row>
+              <row>.....pp.........</row>
+              <row>....pp..........</row>
+              <row>....pp..........</row>
+              <row>.....pp.........</row>
+              <row>......pp........</row>
+              <row>.......pp.......</row>
+              <row>........pp......</row>
+              <row>........pp......</row>
+              <row>.......pp.......</row>
+              <row>......pp........</row>
+              <row>.....pp.........</row>
+              <row>.....pp...pp....</row>
+              <row>......pppppp....</row>
+              <row>.......pppp.....</row>
+              <row>................</row>
+              <row>....pppppppp....</row>
+              <row>...pppppppppp...</row>
+              <color char="p">color.purple</color>
+              <color char="w">color.white</color>
+              <color char="k">color.black</color>
+              <color char="r">color.red</color>
+            </bitmap>
+          </sprite>
+          <!-- first the egg, which it starts as, squashing as it lands -->
+          <animation name="egg">
+            <interval>0.35</interval>
+            <frame sprite="round" />
+            <frame sprite="squashed" />
+          </animation>
+          <animation name="snake">
+            <interval>0.25</interval>
+            <frame sprite="coiled" />
+            <frame sprite="raised" />
+          </animation>
+          <position><x>104</x><y>54</y></position>
+          <mirror>right</mirror>
           <collisions>
             <enabled>true</enabled>
             <hitbox>
-              <rectangle><width>12</width><height>8</height></rectangle>
-              <position><x>2</x><y>12</y></position>
+              <rectangle><width>8</width><height>4</height></rectangle>
+              <position><x>4</x><y>20</y></position>
             </hitbox>
             <collision class="bottom" sprite="egg">
               <become sprite="snake" />
@@ -608,11 +774,11 @@
           </collisions>
           <actions>
             <action name="left">
-              <hop direction="down-left"><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+              <hop direction="down-left"><x>across</x><y>down</y><seconds>bounce</seconds><arc>height</arc></hop>
               <play sound="thud" />
             </action>
             <action name="right">
-              <hop direction="down-right"><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+              <hop direction="down-right"><x>across</x><y>down</y><seconds>bounce</seconds><arc>height</arc></hop>
               <play sound="thud" />
             </action>
           </actions>
@@ -631,7 +797,7 @@
             <timer sprite="snake">
               <every>1</every>
               <hunt object="qbert">
-                <hop><x>across</x><y>down</y><seconds>bounce</seconds></hop>
+                <hop><x>across</x><y>down</y><seconds>bounce</seconds><arc>height</arc></hop>
               </hunt>
             </timer>
           </timers>
@@ -688,10 +854,10 @@
           <sprite>
             <text style="banner">
               <content>PYRAMID DONE</content>
-              <size>80</size>
+              <size>32</size>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
       </objects>
       <shows>

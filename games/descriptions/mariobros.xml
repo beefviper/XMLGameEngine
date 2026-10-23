@@ -4,21 +4,30 @@
 <!-- date: Oct 16, 2026 -->
 
 <!--
-  Mario Bros., after the 1983 arcade game: Mario in the sewer under four
-  levels of brick floor. Shellcreepers come out of the pipes at the top, one
-  after another, walk off the ends of the floors down to the bottom and go
-  into the pipes there, to come out at the top again. Jump up and bump the
-  floor under one to turn it on its back, then run into it to kick it off
-  for 800 points; bump it again first and it gets back up. A shellcreeper
-  still on its feet costs a life (Mario comes back pale, safe for two
-  seconds), and one left on its back too long gets up where it lies and
-  walks on faster. The POW block turns over every
-  shellcreeper on its feet at once, three times. Kick off all six to win.
-  The high score is kept.
+  Mario Bros., after the 1983 arcade game: Mario in the sewer under three
+  levels of brick floor, on the arcade's own small screen (256 by 224),
+  shown three times as big. Shellcreepers come out of the pipes at the top,
+  one after another, walk off the ends of the floors down to the bottom and
+  go into the pipes there, to come out at the top again. Jump up and bump
+  the floor under one to turn it on its back, then run into it to kick it
+  off for 800 points; bump it again first and it gets back up. A
+  shellcreeper still on its feet costs a life (Mario comes back blinking,
+  safe for two seconds), and one left on its back too long gets up where it
+  lies and walks on faster. The POW block turns over every shellcreeper on
+  its feet at once, three times. Kick off all six to win. The high score is
+  kept.
 
   A or D (or the arrows) walk, Space starts and jumps, P or Escape pauses.
 
-  It is the game a <knock> through a floor was made for:
+  It is the game a <knock> through a floor was made for, and the one Mario's
+  poses were made for:
+  * Mario has looks for each way he moves (<poses>): standing, a walk of
+    three steps (a look that moves, a named <animation>), skidding, rising
+    and falling. The engine picks one each frame from how he moves. His
+    pictures face right, and <mirror>left</mirror> draws them the other way
+    round when he goes left.
+  * His <grip> is low, so he takes a moment to get up to speed and slides
+    when he lets go or turns: that slide is when he skids, as in the arcade.
   * Mario has no <mass>, and nor has a floor: his head hitting a floor from
     below is a <knock> that goes through it, to whatever with a mass stands
     on that piece of floor. That shellcreeper runs its own rules about Mario
@@ -29,14 +38,18 @@
   * Which side of a shellcreeper Mario touches decides what happens:
     side="bottom" is a bump through the floor, side="horizontal" and
     side="top" are Mario walking or falling into it.
-  * On its back a shellcreeper keeps the way it was going (self.way) and
-    lies still; getting up, it sets off that way again. Its down says it
-    has lain there a moment, so the bump that turns it over does not also
-    run the rule that gets it up.
+  * A shellcreeper walks (two steps) and lies on its back kicking (two
+    more), each a look that moves, and is drawn turned the way it goes.
+    On its back it keeps the way it was going (self.way) and lies still;
+    getting up, it sets off that way again. Its down says it has lain there
+    a moment, so the bump that turns it over does not also run the rule
+    that gets it up.
   * The shellcreepers start out of play and are let out by the state's
     timers. They are drawn before the pipes, so they come out of them and
     go into them, and one on the ground deep in a pipe at either side is
     reset to its start, in its pipe at the top.
+  * Mario blinks for two seconds after losing a life (mario.blink), and a
+    shellcreeper does him no harm while he does.
   * The POW block's looks are how many bumps it has left; each bump turns
     over the whole group (<become object="creepers" from="walking">).
   * Everything wraps round the sides of the screen.
@@ -46,19 +59,24 @@
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
   <window name="Mario Bros.">
-    <width>800</width>
-    <height>600</height>
+    <width>256</width>
+    <height>224</height>
+    <scale>3</scale>
     <background>color.black</background>
     <fullscreen>false</fullscreen>
     <framerate>60</framerate>
   </window>
   <variables>
-    <variable name="pull">0.4</variable>
-    <variable name="walk">2.5</variable>
-    <variable name="crawl">1.2</variable>
-    <variable name="hop">4</variable>
-    <variable name="leapheight">140</variable>
-    <variable name="margin">16</variable>
+    <variable name="pull">0.3</variable>
+    <variable name="walk">1.25</variable>
+    <variable name="crawl">0.5</variable>
+    <variable name="hop">2.5</variable>
+    <variable name="leapheight">56</variable>
+    <!-- the top of each level of floor -->
+    <variable name="top">64</variable>
+    <variable name="middle">112</variable>
+    <variable name="low">160</variable>
+    <variable name="ground">208</variable>
   </variables>
   <sounds>
     <!-- the arcade's start: the opening of Eine kleine Nachtmusik -->
@@ -113,29 +131,27 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>110</size><color>color.red</color></style>
-    <style name="prompt"><size>40</size></style>
-    <style name="help"><size>28</size></style>
-    <style name="hud"><size>32</size></style>
+    <style name="banner"><size>48</size><color>color.red</color></style>
+    <style name="text"><size>16</size></style>
   </styles>
   <objects>
     <object name="again">
       <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
+        <text style="text">
+          <content>space to play again</content>
         </text>
       </sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
     </object>
     <!-- the best score, kept from game to game -->
     <object name="best">
       <sprite>
-        <text style="hud">
+        <text style="text">
           <content>TOP</content>
           <number>best.score</number>
         </text>
       </sprite>
-      <position><x><centered /></x><y>margin</y></position>
+      <position><x><centered /></x><y>4</y></position>
       <variables>
         <variable name="score">0</variable>
       </variables>
@@ -153,32 +169,40 @@
               <content>MARIO BROS.</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 56</centered></y></position>
         </object>
         <object name="help">
           <sprite>
-            <text style="help">
-              <content>bump the floor under a shellcreeper, then kick it off</content>
+            <text style="text">
+              <content>bump a shellcreeper from below</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 12</centered></y></position>
+        </object>
+        <object name="help2">
+          <sprite>
+            <text style="text">
+              <content>then kick it off</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
         </object>
         <object name="keys">
           <sprite>
-            <text style="help">
-              <content>a and d (or the arrows) walk, space jumps</content>
+            <text style="text">
+              <content>a d or arrows walk, space jumps</content>
               <color>color.lightgrey</color>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 20</centered></y></position>
         </object>
         <object name="start">
           <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
+            <text style="text">
+              <content>space to start</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 48</centered></y></position>
         </object>
       </objects>
       <shows>
@@ -196,17 +220,18 @@
         <!-- the floors, in bricks, so that a bump is felt only over the brick
              that was hit: the ground, then three levels of blue -->
         <group name="floors" class="floor">
-          <columns>8</columns>
+          <columns>6</columns>
           <rows>1</rows>
           <sprite>
             <bitmap>
-              <row>********************</row>
-              <row>***.*******.*******.</row>
-              <row>********************</row>
-              <row>.*******.*******.***</row>
-              <row>********************</row>
-              <row>.*.*.*.*.*.*.*.*.*.*</row>
-              <scale>2</scale>
+              <row>****************</row>
+              <row>***.*******.****</row>
+              <row>****************</row>
+              <row>.*******.*******</row>
+              <row>****************</row>
+              <row>**.*****.****.**</row>
+              <row>****************</row>
+              <row>.*.*.*.*.*.*.*.*</row>
               <color>color.blue</color>
             </bitmap>
           </sprite>
@@ -214,47 +239,53 @@
             <enabled>true</enabled>
           </collisions>
           <group name="ground">
-            <columns>20</columns>
+            <columns>16</columns>
             <sprite>
               <bitmap>
-                <row>********************</row>
-                <row>****.********.******</row>
-                <row>****.********.******</row>
-                <row>********************</row>
-                <row>*********.*********.</row>
-                <row>*********.*********.</row>
-                <row>********************</row>
-                <row>********************</row>
+                <row>****************</row>
+                <row>****.*******.***</row>
+                <row>****.*******.***</row>
+                <row>****************</row>
+                <row>********.*******</row>
+                <row>********.*******</row>
+                <row>****************</row>
+                <row>****************</row>
+                <row>**.*******.*****</row>
+                <row>**.*******.*****</row>
+                <row>****************</row>
+                <row>****************</row>
+                <row>******.*******.*</row>
+                <row>******.*******.*</row>
+                <row>****************</row>
+                <row>****************</row>
                 <color>color.orange</color>
               </bitmap>
             </sprite>
-            <position><x>0</x><y>window.bottom - 16</y></position>
+            <position><x>0</x><y>ground</y></position>
           </group>
           <group name="lowleft">
-            <columns>7</columns>
-            <position><x>0</x><y>452</y></position>
+            <position><x>0</x><y>low</y></position>
           </group>
           <group name="lowright">
-            <columns>7</columns>
-            <position><x>window.right - 280</x><y>452</y></position>
+            <position><x>window.right - 96</x><y>low</y></position>
           </group>
           <group name="middle">
-            <columns>10</columns>
-            <position><x>200</x><y>324</y></position>
+            <columns>8</columns>
+            <position><x>64</x><y>middle</y></position>
           </group>
           <group name="midleft">
-            <columns>3</columns>
-            <position><x>0</x><y>324</y></position>
+            <columns>2</columns>
+            <position><x>0</x><y>middle</y></position>
           </group>
           <group name="midright">
-            <columns>3</columns>
-            <position><x>window.right - 120</x><y>324</y></position>
+            <columns>2</columns>
+            <position><x>window.right - 32</x><y>middle</y></position>
           </group>
           <group name="topleft">
-            <position><x>0</x><y>196</y></position>
+            <position><x>0</x><y>top</y></position>
           </group>
           <group name="topright">
-            <position><x>window.right - 320</x><y>196</y></position>
+            <position><x>window.right - 96</x><y>top</y></position>
           </group>
         </group>
         <!-- POW: bumped from below, every shellcreeper on its feet goes over;
@@ -263,49 +294,58 @@
           <sprite name="three">
             <bitmap>
               <row>bbbbbbbbbbbbbbbb</row>
-              <row>b..............b</row>
-              <row>b.ww..ww..w..w.b</row>
-              <row>b.w.w.w.w.w..w.b</row>
-              <row>b.ww..w.w.w..w.b</row>
-              <row>b.w...w.w.w.ww.b</row>
-              <row>b.w...ww..ww.w.b</row>
-              <row>b..............b</row>
-              <row>b..............b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
+              <row>b*www*www*w***wb</row>
+              <row>b*w*w*w*w*w***wb</row>
+              <row>b*www*w*w*w*w*wb</row>
+              <row>b*w***w*w*w*w*wb</row>
+              <row>b*w***www**w*w*b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
               <row>bbbbbbbbbbbbbbbb</row>
-              <scale>3</scale>
               <color>color.cyan</color>
               <color char="b">color.blue</color>
-              <color char="w">color.black</color>
+              <color char="w">color.darkblue</color>
             </bitmap>
           </sprite>
           <sprite name="two">
             <bitmap>
               <row>bbbbbbbbbbbbbbbb</row>
-              <row>b.ww..ww..w..w.b</row>
-              <row>b.w.w.w.w.w..w.b</row>
-              <row>b.ww..w.w.w.ww.b</row>
-              <row>b.w...ww..ww.w.b</row>
-              <row>b..............b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
+              <row>b*www*www*w***wb</row>
+              <row>b*w*w*w*w*w***wb</row>
+              <row>b*www*w*w*w*w*wb</row>
+              <row>b*w***w*w*w*w*wb</row>
+              <row>b*w***www**w*w*b</row>
+              <row>b**************b</row>
+              <row>b**************b</row>
               <row>bbbbbbbbbbbbbbbb</row>
-              <scale>3</scale>
               <color>color.cyan</color>
               <color char="b">color.blue</color>
-              <color char="w">color.black</color>
+              <color char="w">color.darkblue</color>
             </bitmap>
           </sprite>
           <sprite name="one">
             <bitmap>
               <row>bbbbbbbbbbbbbbbb</row>
-              <row>b.ww..ww..w.ww.b</row>
-              <row>b.w...ww..ww.w.b</row>
+              <row>b*www*www*w***wb</row>
+              <row>b*www*w*w*w*w*wb</row>
+              <row>b*w***www**w*w*b</row>
+              <row>b**************b</row>
               <row>bbbbbbbbbbbbbbbb</row>
-              <scale>3</scale>
               <color>color.cyan</color>
               <color char="b">color.blue</color>
-              <color char="w">color.black</color>
+              <color char="w">color.darkblue</color>
             </bitmap>
           </sprite>
-          <position><x>window.width.center - 24</x><y>470</y></position>
+          <position><x>window.width.center - 8</x><y>low</y></position>
           <collisions>
             <enabled>true</enabled>
             <!-- last look first, so one bump changes it only once -->
@@ -330,48 +370,93 @@
              pipes, the odd ones on the left going right, the even ones on
              the right going left -->
         <group name="creepers" class="enemy">
-          <sprite name="walking">
+          <sprite name="wa">
             <bitmap>
-              <row>....GGGG......</row>
-              <row>..GGgGGgGG....</row>
-              <row>.GgggGGgggG...</row>
-              <row>GGGGGGGGGGGG..</row>
-              <row>GgggGGGGgggGoo</row>
-              <row>GGGGGGGGGGGGow</row>
-              <row>.wwwwwwwwwwwoo</row>
-              <row>..oo....oooo..</row>
-              <row>.ooo.....ooo..</row>
-              <row>.oo.......oo..</row>
-              <scale>2</scale>
+              <row>......GGGG......</row>
+              <row>....GGgGGgGG....</row>
+              <row>...GgggGGgggG...</row>
+              <row>..GGGGGGGGGGGG..</row>
+              <row>..GgggGGGGgggGoo</row>
+              <row>..GGGGGGGGGGGGow</row>
+              <row>...wwwwwwwwwwwoo</row>
+              <row>....oo....oooo..</row>
+              <row>...ooo.....ooo..</row>
+              <row>...oo.......oo..</row>
               <color char="G">color.darkgreen</color>
               <color char="g">color.green</color>
               <color char="o">color.orange</color>
               <color char="w">color.white</color>
             </bitmap>
           </sprite>
-          <sprite name="flipped">
+          <sprite name="wb">
             <bitmap>
-              <row>..o..o..o..o..</row>
-              <row>..o..o..o..o..</row>
-              <row>.wwwwwwwwwwww.</row>
-              <row>GGGGGGGGGGGGGG</row>
-              <row>GgggGGGGGgggGG</row>
-              <row>GGGGGGGGGGGGGG</row>
-              <row>.GGgggGGgggGG.</row>
-              <row>..GGGGGGGGGG..</row>
-              <row>....GGGGGG....</row>
-              <row>..............</row>
-              <scale>2</scale>
+              <row>......GGGG......</row>
+              <row>....GGgGGgGG....</row>
+              <row>...GgggGGgggG...</row>
+              <row>..GGGGGGGGGGGG..</row>
+              <row>..GgggGGGGgggGoo</row>
+              <row>..GGGGGGGGGGGGow</row>
+              <row>...wwwwwwwwwwwoo</row>
+              <row>.....oooo.ooo...</row>
+              <row>.....ooo..ooo...</row>
+              <row>......oo...oo...</row>
               <color char="G">color.darkgreen</color>
               <color char="g">color.green</color>
               <color char="o">color.orange</color>
               <color char="w">color.white</color>
             </bitmap>
           </sprite>
-          <position><x>4</x><y>196 - 20</y></position>
+          <sprite name="fa">
+            <bitmap>
+              <row>................</row>
+              <row>...o..o..o..o...</row>
+              <row>...o..o..o..o...</row>
+              <row>..wwwwwwwwwwww..</row>
+              <row>.GGGGGGGGGGGGGG.</row>
+              <row>.GgggGGGGGgggGG.</row>
+              <row>.GGGGGGGGGGGGGG.</row>
+              <row>..GGgggGGgggGG..</row>
+              <row>...GGGGGGGGGG...</row>
+              <row>.....GGGGGG.....</row>
+              <color char="G">color.darkgreen</color>
+              <color char="g">color.green</color>
+              <color char="o">color.orange</color>
+              <color char="w">color.white</color>
+            </bitmap>
+          </sprite>
+          <sprite name="fb">
+            <bitmap>
+              <row>................</row>
+              <row>....o..o..o..o..</row>
+              <row>..o..o..o..o....</row>
+              <row>..wwwwwwwwwwww..</row>
+              <row>.GGGGGGGGGGGGGG.</row>
+              <row>.GgggGGGGGgggGG.</row>
+              <row>.GGGGGGGGGGGGGG.</row>
+              <row>..GGgggGGgggGG..</row>
+              <row>...GGGGGGGGGG...</row>
+              <row>.....GGGGGG.....</row>
+              <color char="G">color.darkgreen</color>
+              <color char="g">color.green</color>
+              <color char="o">color.orange</color>
+              <color char="w">color.white</color>
+            </bitmap>
+          </sprite>
+          <animation name="walking">
+            <interval>0.2</interval>
+            <frame sprite="wa" />
+            <frame sprite="wb" />
+          </animation>
+          <animation name="flipped">
+            <interval>0.15</interval>
+            <frame sprite="fa" />
+            <frame sprite="fb" />
+          </animation>
+          <position><x>2</x><y>top - 10</y></position>
           <velocity><x>crawl</x></velocity>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <mass>1</mass>
+          <mirror>left</mirror>
           <hidden>true</hidden>
           <collisions>
             <enabled>true</enabled>
@@ -385,8 +470,8 @@
                  its pipe at the top -->
             <collision object="ground">
               <any>
-                <check variable="x"><atmost>4</atmost></check>
-                <check variable="x"><atleast>window.right - 32</atleast></check>
+                <check variable="x"><atmost>2</atmost></check>
+                <check variable="x"><atleast>window.right - 18</atleast></check>
               </any>
               <reset />
             </collision>
@@ -402,7 +487,8 @@
               <trigger action="getup" />
               <set variable="self.velocity.y">0 - hop</set>
             </collision>
-            <!-- touched by Mario: kicked off on its back, deadly on its feet -->
+            <!-- touched by Mario: kicked off on its back, deadly on its feet
+                 unless he is blinking -->
             <collision object="mario" side="horizontal" sprite="flipped">
               <trigger action="kicked" />
             </collision>
@@ -410,11 +496,11 @@
               <trigger action="kicked" />
             </collision>
             <collision object="mario" side="horizontal" sprite="walking">
-              <check object="mario" variable="safe"><atmost>0</atmost></check>
+              <check object="mario" variable="blink"><atmost>0</atmost></check>
               <trigger object="mario" action="lose" />
             </collision>
             <collision object="mario" side="top" sprite="walking">
-              <check object="mario" variable="safe"><atmost>0</atmost></check>
+              <check object="mario" variable="blink"><atmost>0</atmost></check>
               <trigger object="mario" action="lose" />
             </collision>
           </collisions>
@@ -460,17 +546,17 @@
           </timers>
           <member />
           <member>
-            <position><x>window.right - 32</x></position>
+            <position><x>window.right - 18</x></position>
             <velocity><x>0 - crawl</x></velocity>
           </member>
           <member />
           <member>
-            <position><x>window.right - 32</x></position>
+            <position><x>window.right - 18</x></position>
             <velocity><x>0 - crawl</x></velocity>
           </member>
           <member />
           <member>
-            <position><x>window.right - 32</x></position>
+            <position><x>window.right - 18</x></position>
             <velocity><x>0 - crawl</x></velocity>
           </member>
         </group>
@@ -479,42 +565,46 @@
         <group name="pipes">
           <sprite>
             <bitmap>
-              <row>................gggggg</row>
-              <row>................gGGGGg</row>
-              <row>ggggggggggggggggGGGGGg</row>
-              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
-              <row>gggggggggggggggGGGGGGg</row>
-              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
-              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
-              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
-              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
-              <row>GGGGGGGGGGGGGGGgGGGGGg</row>
-              <row>ggggggggggggggggGGGGGg</row>
-              <row>gggggggggggggggggggggg</row>
-              <scale>3</scale>
+              <row>..................gggggg</row>
+              <row>..................gGGGGg</row>
+              <row>..................gGGGGg</row>
+              <row>gggggggggggggggggggGGGGg</row>
+              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+              <row>gggggggggggggggggggGGGGg</row>
+              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+              <row>gggggggggggggggggggGGGGg</row>
+              <row>..................gGGGGg</row>
+              <row>..................gGGGGg</row>
+              <row>..................gggggg</row>
               <color char="g">color.green</color>
               <color char="G">color.darkgreen</color>
             </bitmap>
           </sprite>
           <group name="spouts">
-            <position><y>196 - 36</y></position>
+            <position><y>top - 16</y></position>
             <member><position><x>0</x></position></member>
             <member>
               <sprite><bitmap><flip>horizontal</flip></bitmap></sprite>
-              <position><x>window.right - 66</x></position>
+              <position><x>window.right - 24</x></position>
             </member>
           </group>
           <group name="drains">
-            <position><y>window.bottom - 16 - 36</y></position>
+            <position><y>ground - 16</y></position>
             <member><position><x>0</x></position></member>
             <member>
               <sprite><bitmap><flip>horizontal</flip></bitmap></sprite>
-              <position><x>window.right - 66</x></position>
+              <position><x>window.right - 24</x></position>
             </member>
           </group>
         </group>
+        <!-- Mario: a look for each way he moves, all facing right -->
         <object name="mario">
-          <sprite name="playing">
+          <sprite name="stand">
             <bitmap>
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
@@ -532,7 +622,6 @@
               <row>..bbb..bbb..</row>
               <row>.kkk....kkk.</row>
               <row>kkkk....kkkk</row>
-              <scale>2</scale>
               <color char="r">color.red</color>
               <color char="b">color.blue</color>
               <color char="s">color.orange</color>
@@ -540,8 +629,7 @@
               <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
-          <!-- back after a life is lost: pale, and safe for a moment -->
-          <sprite name="safe">
+          <sprite name="stepa">
             <bitmap>
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
@@ -551,24 +639,165 @@
               <row>.kksssskkkk.</row>
               <row>...ssssss...</row>
               <row>..rrbrrr....</row>
-              <row>.rrrbrrbrrr.</row>
-              <row>rrrrbbbbrrrr</row>
-              <row>ssrbybbybrss</row>
-              <row>sssbbbbbbsss</row>
-              <row>ssbbbbbbbbss</row>
-              <row>..bbb..bbb..</row>
-              <row>.kkk....kkk.</row>
-              <row>kkkk....kkkk</row>
-              <scale>2</scale>
-              <color char="r">color.lightgrey</color>
-              <color char="b">color.grey</color>
-              <color char="s">color.white</color>
-              <color char="k">color.darkgrey</color>
-              <color char="y">color.white</color>
+              <row>.rrrbrrbrr..</row>
+              <row>.rrrbbbbrrs.</row>
+              <row>.ssbybbybss.</row>
+              <row>.ssbbbbbbss.</row>
+              <row>..bbbbbbbb..</row>
+              <row>.bbb....bbb.</row>
+              <row>kkk......kkk</row>
+              <row>kk........kk</row>
+              <color char="r">color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
-          <position><x><centered /></x><y>window.bottom - 16 - mario.height</y></position>
+          <sprite name="stepb">
+            <bitmap>
+              <row>...rrrrr....</row>
+              <row>..rrrrrrrrr.</row>
+              <row>..kkksskk...</row>
+              <row>.ksksssskss.</row>
+              <row>.kskksssksss</row>
+              <row>.kksssskkkk.</row>
+              <row>...ssssss...</row>
+              <row>...rrbrr....</row>
+              <row>..rrrbbrr...</row>
+              <row>..rrbbbbrr..</row>
+              <row>..sbybbybs..</row>
+              <row>..sbbbbbbs..</row>
+              <row>...bbbbbb...</row>
+              <row>....bbbb....</row>
+              <row>...kkkkkk...</row>
+              <row>...kkkkkk...</row>
+              <color char="r">color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+              <color char="y">color.yellow</color>
+            </bitmap>
+          </sprite>
+          <sprite name="stepc">
+            <bitmap>
+              <row>...rrrrr....</row>
+              <row>..rrrrrrrrr.</row>
+              <row>..kkksskk...</row>
+              <row>.ksksssskss.</row>
+              <row>.kskksssksss</row>
+              <row>.kksssskkkk.</row>
+              <row>...ssssss...</row>
+              <row>..rrbrrr....</row>
+              <row>.rrrbrrbrr..</row>
+              <row>rrrrbbbbrs..</row>
+              <row>ssrbybbybs..</row>
+              <row>ssbbbbbbbb..</row>
+              <row>..bbbbbbbbk.</row>
+              <row>..bbb..kkkk.</row>
+              <row>.kkkk..kkk..</row>
+              <row>.kkk........</row>
+              <color char="r">color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+              <color char="y">color.yellow</color>
+            </bitmap>
+          </sprite>
+          <sprite name="skid">
+            <bitmap>
+              <row>...rrrrr....</row>
+              <row>..rrrrrrrrr.</row>
+              <row>..kkksskk...</row>
+              <row>.ksksssskss.</row>
+              <row>.kskksssksss</row>
+              <row>.kksssskkkk.</row>
+              <row>...ssssss...</row>
+              <row>...rrbrrr...</row>
+              <row>..rrrbbrrrr.</row>
+              <row>..rrbbbbrrss</row>
+              <row>...bybbybsss</row>
+              <row>..bbbbbbbbss</row>
+              <row>.bbbbbbbbb..</row>
+              <row>kbbbb..bbb..</row>
+              <row>kkk....kkkk.</row>
+              <row>kk.....kkkkk</row>
+              <color char="r">color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+              <color char="y">color.yellow</color>
+            </bitmap>
+          </sprite>
+          <sprite name="rising">
+            <bitmap>
+              <row>...rrrrr..s.</row>
+              <row>..rrrrrrrrs.</row>
+              <row>..kkksskk.r.</row>
+              <row>.ksksssskrr.</row>
+              <row>.kskksssksss</row>
+              <row>.kksssskkkk.</row>
+              <row>...ssssssr..</row>
+              <row>..rrbrrrr...</row>
+              <row>.rrrbbrr....</row>
+              <row>rrrrbbbb....</row>
+              <row>ssrbybbyb...</row>
+              <row>sssbbbbbbb..</row>
+              <row>ssbbbbbbbbk.</row>
+              <row>..bbbb.bbkk.</row>
+              <row>.kkk....kkk.</row>
+              <row>kkk.........</row>
+              <color char="r">color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+              <color char="y">color.yellow</color>
+            </bitmap>
+          </sprite>
+          <sprite name="falling">
+            <bitmap>
+              <row>...rrrrr....</row>
+              <row>..rrrrrrrrr.</row>
+              <row>..kkksskk...</row>
+              <row>.ksksssskss.</row>
+              <row>.kskksssksss</row>
+              <row>.kksssskkkk.</row>
+              <row>...ssssss...</row>
+              <row>s.rrbrrr..s.</row>
+              <row>srrrbrrbrrs.</row>
+              <row>.rrrbbbbrr..</row>
+              <row>..rbybbybr..</row>
+              <row>..bbbbbbbb..</row>
+              <row>.bbbbbbbbbb.</row>
+              <row>.bbb....bbb.</row>
+              <row>kkk......kkk</row>
+              <row>kk........kk</row>
+              <color char="r">color.red</color>
+              <color char="b">color.blue</color>
+              <color char="s">color.orange</color>
+              <color char="k">color.brown</color>
+              <color char="y">color.yellow</color>
+            </bitmap>
+          </sprite>
+          <animation name="walking">
+            <interval>0.08</interval>
+            <frame sprite="stepa" />
+            <frame sprite="stepb" />
+            <frame sprite="stepc" />
+            <frame sprite="stepb" />
+          </animation>
+          <position><x><centered /></x><y>ground - mario.height</y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
+          <facing>right</facing>
+          <poses>
+            <standing sprite="stand" />
+            <walking sprite="walking" />
+            <skidding sprite="skid" />
+            <rising sprite="rising" />
+            <falling sprite="falling" />
+          </poses>
+          <mirror>left</mirror>
+          <grip>0.15</grip>
           <collisions>
             <enabled>true</enabled>
             <collision edge="horizontal">
@@ -605,42 +834,33 @@
               <dec variable="mario.lives" />
               <play sound="hit" />
               <reset />
-              <become sprite="safe" />
-              <set variable="mario.safe">1</set>
+              <set variable="mario.blink">2</set>
             </action>
           </actions>
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">3</variable>
             <variable name="kicked">0</variable>
-            <variable name="safe">0</variable>
           </variables>
-          <timers>
-            <timer sprite="safe">
-              <after>2</after>
-              <become sprite="playing" />
-              <set variable="mario.safe">0</set>
-            </timer>
-          </timers>
         </object>
         <object name="score">
           <sprite>
-            <text style="hud">
+            <text style="text">
               <content>I</content>
               <number>mario.score</number>
             </text>
           </sprite>
-          <position><x>margin</x><y>margin</y></position>
+          <position><x>8</x><y>4</y></position>
         </object>
         <object name="lives">
           <sprite>
-            <text style="hud">
-              <content>MARIO x</content>
+            <text style="text">
+              <content>M x</content>
               <number>mario.lives</number>
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <position><x>window.right - lives.width - 8</x><y>4</y></position>
         </object>
       </objects>
       <shows>
@@ -704,7 +924,7 @@
               <color>color.green</color>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
       </objects>
       <shows>

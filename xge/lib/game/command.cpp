@@ -61,6 +61,15 @@ namespace xge
 			if (!(seconds > 0.0f)) { throw std::runtime_error("<hop> has <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
 			return seconds;
 		};
+		// How high a timed <hop> or <jump> goes: no <arc>, not at all.
+		const auto arcOf = [&](const char* what, float seconds)
+		{
+			if (raw.arc.kind == RawValue::Kind::Expression && raw.arc.text.empty()) { return 0.0f; }
+			if (!(seconds > 0.0f)) { throw std::runtime_error(std::string("<") + what + "> has an <arc> but no <seconds>: only a hop that takes time leaves the ground"); }
+			const float arc = evaluate(raw.arc);
+			if (arc < 0.0f) { throw std::runtime_error(std::string("<") + what + "> has an <arc> of " + formatDisplayNumber(arc) + "; expected 0 or more"); }
+			return arc;
+		};
 
 		if (verb == "hop")
 		{
@@ -70,6 +79,7 @@ namespace xge
 			if (dash == std::string::npos)
 			{
 				CmdHop hop{ directionFromName(name, verb), evaluate(raw.amount), {}, hopSeconds() };
+				hop.arc = arcOf("hop", hop.seconds);
 				hop.step = stepToward(hop.direction, hop.distance);
 				return hop;
 			}
@@ -85,6 +95,7 @@ namespace xge
 			const float across = split ? evaluate(raw.positionX) : distance;
 			const float down = split ? evaluate(raw.positionY) : distance;
 			CmdHop hop{ upDown, distance, {}, hopSeconds() };
+			hop.arc = arcOf("hop", hop.seconds);
 			hop.step = { leftRight == Direction::Left ? -across : across, upDown == Direction::Up ? -down : down };
 			return hop;
 		}
@@ -95,6 +106,7 @@ namespace xge
 			const bool noSeconds = raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty();
 			if (!noSeconds) { jump.seconds = evaluate(raw.seconds); }
 			if (!(jump.seconds > 0.0f)) { throw std::runtime_error("<jump> has <seconds> of " + std::to_string(jump.seconds) + "; expected more than 0"); }
+			jump.arc = arcOf("jump", jump.seconds);
 			return jump;
 		}
 
@@ -149,7 +161,8 @@ namespace xge
 		{
 			const bool diagonal = !raw.positionX.text.empty() || raw.positionX.kind != RawValue::Kind::Expression;
 			const float distance = diagonal ? 0.0f : evaluate(raw.amount);
-			return CmdHuntHop{ raw.object, diagonal ? evaluate(raw.positionX) : distance, diagonal ? evaluate(raw.positionY) : distance, diagonal, hopSeconds() };
+			const float seconds = hopSeconds();
+			return CmdHuntHop{ raw.object, diagonal ? evaluate(raw.positionX) : distance, diagonal ? evaluate(raw.positionY) : distance, diagonal, seconds, arcOf("hop", seconds) };
 		}
 		if (verb == "hunt")
 		{
@@ -434,12 +447,14 @@ namespace xge
 					: "right";
 				if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y; }
 				else { o << "hop." << direction << "(" << h.distance; }
-				o << (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{}) << ")";
+				o << (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
+					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
 			},
 			[&](const CmdHuntHop& h)
 			{
 				o << "hunt(" << h.target << ", by " << (h.diagonal ? "diagonal " : "") << "hops of " << h.across << ", " << h.down
-					<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{}) << ")";
+					<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
+					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
 			},
 			[&](const CmdJump& j)
 			{
@@ -447,7 +462,8 @@ namespace xge
 					: (j.direction == Direction::Down) ? "down"
 					: (j.direction == Direction::Left) ? "left"
 					: "right";
-				o << "jump." << direction << "(" << j.distance << ", " << j.seconds << "s)";
+				o << "jump." << direction << "(" << j.distance << ", " << j.seconds << "s"
+					<< (j.arc > 0.0f ? ", arc " + formatDisplayNumber(j.arc) : std::string{}) << ")";
 			},
 			[&](const CmdLand&) { o << "land()"; },
 			[&](const CmdLeap& l) { o << "leap(" << l.height << ")"; },

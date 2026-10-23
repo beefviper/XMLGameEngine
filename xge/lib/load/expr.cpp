@@ -773,9 +773,9 @@ namespace xge
 					for (const Command& command : rule.commands)
 					{
 						if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
-						if (!object.bitmap || object.hasHeading || !object.animationBitmaps.empty() || !object.looks.empty())
+						if (!object.bitmap || object.hasHeading || !object.animationBitmaps.empty() || !object.looks.empty() || object.mirrors)
 						{
-							throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or a <bitmap>, with no <heading>, <animation> or second <sprite>");
+							throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
 						}
 					}
 				}
@@ -968,7 +968,7 @@ namespace xge
 
 			if (rawObject.hasAnimation)
 			{
-				firstPassAnimation[rawObject.name] = buildAnimationBitmaps(rawObject, "object '" + rawObject.name + "'",
+				firstPassAnimation[rawObject.name] = buildAnimationBitmaps(rawObject.animation.frames, "object '" + rawObject.name + "' > <animation>",
 					rawObject.hasHeading ? &firstPassAnimationTurned[rawObject.name] : nullptr);
 			}
 		}
@@ -1261,7 +1261,7 @@ namespace xge
 		const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
 
 		// How long each picture of an animation lasts.
-		const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject, windowDesc, where) : 0;
+		const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject.animation.interval, windowDesc, where + " > <animation>") : 0;
 
 		// The object's looks, if it has several sprites and no animation.
 		std::vector<Object::Look> looks;
@@ -1278,6 +1278,13 @@ namespace xge
 				Object::Look look;
 				look.name = rawLook.name;
 				look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap);
+				if (!rawLook.frames.empty())
+				{
+					// A look that moves: its pictures, all one size, and how long each shows.
+					const std::string here = where + " > <animation name=\"" + rawLook.name + "\">";
+					look.frames = buildAnimationBitmaps(rawLook.frames, here);
+					look.frameTicks = animationFramesOf(rawLook.interval, windowDesc, here);
+				}
 				look.shapeKind = shapeKindFromTag(look.spriteParams.empty() ? std::string{} : look.spriteParams.at(0));
 				if (look.shapeKind == ShapeKind::Text && showsNumbers(rawLook))
 				{
@@ -1290,6 +1297,7 @@ namespace xge
 			// the very same picture.
 			looks.front().spriteParams = tempSpriteParams;
 			looks.front().bitmap = first.bitmap;
+			if (!looks.front().frames.empty()) { looks.front().frames.front() = first.bitmap; }
 		}
 
 
@@ -1475,6 +1483,60 @@ namespace xge
 		object.facingOriginal = object.facing;
 		object.timers = processTimers(rawObject.timers, where);
 		object.looks = looks;
+		if (!looks.empty() && !looks.front().frames.empty())
+		{
+			// It starts as a look that moves.
+			object.animationBitmaps = looks.front().frames;
+			object.animationFrames = looks.front().frameTicks;
+		}
+
+		// The look for each way it moves; one left out is another's.
+		if (!rawObject.poses.empty())
+		{
+			const auto lookOf = [&](const std::string& pose) -> std::optional<std::size_t>
+			{
+				const auto named = rawObject.poses.find(pose);
+				if (named == rawObject.poses.end()) { return std::nullopt; }
+				for (std::size_t i = 0; i < looks.size(); ++i)
+				{
+					if (looks[i].name == named->second) { return i; }
+				}
+				std::vector<std::string> names;
+				for (const Object::Look& look : looks) { names.push_back(look.name); }
+				throw std::runtime_error(where + " > <poses> > <" + pose + " sprite=\"" + named->second + "\">: the object has no look of that name"
+					+ (names.empty() ? std::string(" (it has no looks)") : didYouMean(named->second, names) + ". Its looks are: " + listOf(names)));
+			};
+			const std::size_t standing = *lookOf("standing");
+			const std::size_t walking = lookOf("walking").value_or(standing);
+			const std::size_t falling = lookOf("falling").value_or(standing);
+			object.poseLooks[static_cast<std::size_t>(Object::Pose::Standing)] = standing;
+			object.poseLooks[static_cast<std::size_t>(Object::Pose::Walking)] = walking;
+			object.poseLooks[static_cast<std::size_t>(Object::Pose::Skidding)] = lookOf("skidding").value_or(walking);
+			object.poseLooks[static_cast<std::size_t>(Object::Pose::Falling)] = falling;
+			object.poseLooks[static_cast<std::size_t>(Object::Pose::Rising)] = lookOf("rising").value_or(falling);
+			object.hasPoses = true;
+			object.firstLook = standing;
+			if (standing != 0) { object.showLook(standing); }
+		}
+
+		if (!rawObject.mirror.empty())
+		{
+			if (rawObject.hasHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }
+			object.mirrors = true;
+			object.mirrorWay = rawObject.mirror == "right" ? Direction::Right : Direction::Left;
+			object.goingLeft = object.facing == Direction::Left;
+			object.flips = flipsOf(object);
+			object.faceMirror();
+		}
+
+		if (rawObject.hasGrip)
+		{
+			object.grip = evaluate(rawObject.rawGrip, where + " > <grip>");
+			if (!(object.grip > 0.0f && object.grip <= 1.0f))
+			{
+				throw std::runtime_error(where + " > <grip> is " + formatDisplayNumber(object.grip) + "; expected above 0, up to 1 (1: it goes at once at the speed its moves ask for)");
+			}
+		}
 		for (const Timer& timer : object.timers)
 		{
 			if (!timer.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == timer.sprite; }))
@@ -2225,15 +2287,15 @@ namespace xge
 		return params;
 	}
 
-	std::vector<std::shared_ptr<const Bitmap>> game_expr::buildAnimationBitmaps(const RawObject& rawObject, const std::string& where,
+	std::vector<std::shared_ptr<const Bitmap>> game_expr::buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
 		std::vector<std::shared_ptr<const Turnable>>* turnables)
 	{
 		std::vector<std::shared_ptr<const Bitmap>> pictures;
 
-		for (std::size_t i = 0; i < rawObject.animation.frames.size(); ++i)
+		for (std::size_t i = 0; i < frames.size(); ++i)
 		{
-			const RawSprite& frame = rawObject.animation.frames[i];
-			const std::string here = where + " > <animation> > frame " + std::to_string(i + 1)
+			const RawSprite& frame = frames[i];
+			const std::string here = where + " > frame " + std::to_string(i + 1)
 				+ (frame.name.empty() ? std::string{} : " (\"" + frame.name + "\")");
 
 			if (frame.kind != "bitmap" && frame.kind != "svg" && frame.kind != "line")
@@ -2262,17 +2324,43 @@ namespace xge
 		return pictures;
 	}
 
-	int game_expr::animationFramesOf(const RawObject& rawObject, const WindowDesc& windowDesc, const std::string& where)
+	std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> game_expr::flipsOf(const Object& object)
 	{
-		const float seconds = evaluate(rawObject.animation.interval, where + " > <animation> > <interval>");
+		auto flips = std::make_shared<std::map<const Bitmap*, std::shared_ptr<const Bitmap>>>();
+		const auto add = [&](const std::shared_ptr<const Bitmap>& picture)
+		{
+			if (!picture || flips->count(picture.get())) { return; }
+			auto made = flippedPictures.find(picture.get());
+			if (made == flippedPictures.end())
+			{
+				auto flipped = std::make_shared<const Bitmap>(flipBitmap(*picture, true, false));
+				flippedPictures[flipped.get()] = picture;
+				made = flippedPictures.emplace(picture.get(), std::move(flipped)).first;
+			}
+			(*flips)[picture.get()] = made->second;
+			(*flips)[made->second.get()] = picture;
+		};
+		add(object.bitmap);
+		for (const auto& picture : object.animationBitmaps) { add(picture); }
+		for (const Object::Look& look : object.looks)
+		{
+			add(look.bitmap);
+			for (const auto& picture : look.frames) { add(picture); }
+		}
+		return flips;
+	}
+
+	int game_expr::animationFramesOf(const RawValue& interval, const WindowDesc& windowDesc, const std::string& where)
+	{
+		const float seconds = evaluate(interval, where + " > <interval>");
 
 		if (!(seconds > 0.0f))
 		{
-			throw std::runtime_error(where + ": <animation> > <interval> is " + std::to_string(seconds) + "; expected a number of seconds above 0");
+			throw std::runtime_error(where + " > <interval> is " + std::to_string(seconds) + "; expected a number of seconds above 0");
 		}
 		if (windowDesc.framerate < 1)
 		{
-			throw std::runtime_error(where + ": <animation> > <interval> is in seconds, so the <window> needs a <framerate> above 0 to count them in");
+			throw std::runtime_error(where + " > <interval> is in seconds, so the <window> needs a <framerate> above 0 to count them in");
 		}
 
 		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(windowDesc.framerate))));

@@ -64,6 +64,8 @@ namespace xge
 
 		SDL_Window* window{ nullptr };
 		SDL_Renderer* renderer{ nullptr };
+		// <window><scale>: window pixels to one of the game's.
+		float scale{ 1.0f };
 
 		// The pads opened so far (controls()), and whether SDL's game
 		// controller part started.

@@ -105,8 +105,9 @@ namespace xge
 			flags |= SDL_WINDOW_FULLSCREEN;
 		}
 
+		scale = static_cast<float>(std::max(1, windowDesc.scale));
 		window = SDL_CreateWindow(windowDesc.name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-			static_cast<int>(windowDesc.width), static_cast<int>(windowDesc.height), flags);
+			static_cast<int>(windowDesc.width * scale), static_cast<int>(windowDesc.height * scale), flags);
 
 		if (!window)
 		{
@@ -206,8 +207,8 @@ namespace xge
 		int y = 0;
 		const Uint32 mouse = SDL_GetMouseState(&x, &y);
 		controls.pointerInside = SDL_GetMouseFocus() == window;
-		controls.pointerX = static_cast<float>(x);
-		controls.pointerY = static_cast<float>(y);
+		controls.pointerX = static_cast<float>(x) / scale;
+		controls.pointerY = static_cast<float>(y) / scale;
 		controls.mouse = { (mouse & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0, (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0, (mouse & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0 };
 
 		if (!padsInitialized)
@@ -298,6 +299,9 @@ namespace xge
 	void SDL2Window::clear(const std::string& colorName)
 	{
 		const Color c = colorFromName(colorName);
+		// The game's pixels, scale window pixels each (set again each frame:
+		// drawing into a texture uses a scale of its own).
+		SDL_RenderSetScale(renderer, scale, scale);
 		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
 		SDL_RenderClear(renderer);
 	}

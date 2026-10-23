@@ -198,13 +198,16 @@ namespace xge
 	// faces (the up or down of a diagonal), `step` the whole of the hop.
 	// With <seconds> (then the one distance is a <distance>) it takes that
 	// long, through the air as a <jump> does: touching nothing until it
-	// lands, and a second hop waits for the landing. 0: at once.
+	// lands, and a second hop waits for the landing. 0: at once. Its <arc>
+	// is how high it is drawn above its way at the halfway point (a parabola
+	// through its altitude, up then down): a timed hop that leaves the ground.
 	struct CmdHop
 	{
 		Direction direction{};
 		float distance{};
 		Vector2f step{};
 		float seconds{};
+		float arc{};
 	};
 
 	// <hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>
@@ -222,6 +225,7 @@ namespace xge
 		float down{};
 		bool diagonal{ false };
 		float seconds{};
+		float arc{};
 	};
 
 	// <jump direction="down"><distance>40</distance><seconds>0.4</seconds></jump>
@@ -236,6 +240,7 @@ namespace xge
 		Direction direction{};
 		float distance{};
 		float seconds{ 0.3f };
+		float arc{};
 	};
 
 	// <land /> - in a collision rule about another object: coming down onto
@@ -731,6 +736,7 @@ namespace xge
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0)
+		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its <distance> the amount, or its <x> and <y> positionX and positionY; its <seconds>)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)

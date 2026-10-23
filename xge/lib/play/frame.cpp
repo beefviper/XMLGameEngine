@@ -86,6 +86,86 @@ namespace xge
 			}
 		}
 
+		// <grip>: what an object's held moves ask for, it goes a part of the way
+		// to each frame, so it slides into a walk and out of one. Across,
+		// unless a leap holds it; up and down too, when nothing pulls it.
+		void applyGrip(std::vector<Object>& objects, FrameRules& rules)
+		{
+			for (auto& object : objects)
+			{
+				if (object.grip >= 1.0f || object.climbing || !rules.inPlay(object)) { continue; }
+
+				const auto ease = [&](float& velocity, float wanted)
+				{
+					velocity += (wanted - velocity) * object.grip;
+					if (std::abs(wanted - velocity) < 0.05f) { velocity = wanted; }
+				};
+				const auto& step = object.activeMoveStep;
+				if (!object.leaping)
+				{
+					ease(object.velocity.x, step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)]);
+				}
+				if (object.acceleration.y == 0.0f)
+				{
+					ease(object.velocity.y, step[static_cast<std::size_t>(Direction::Down)] - step[static_cast<std::size_t>(Direction::Up)]);
+				}
+			}
+		}
+
+		// How an object is moving, for its <poses>: in the air (a jump under
+		// way, or nothing under it while something pulls it) rising or
+		// falling; on the ground standing, walking, or, with a <grip> below 1,
+		// skidding while it slides another way to the one its keys ask for.
+		Object::Pose poseOf(const Object& object)
+		{
+			if (object.isAirborne())
+			{
+				return object.jumpFramesLeft * 2 > object.jumpFrames ? Object::Pose::Rising : Object::Pose::Falling;
+			}
+			const bool pulled = object.acceleration.y != 0.0f;
+			if (pulled && !object.grounded)
+			{
+				return object.velocity.y < 0.0f ? Object::Pose::Rising : Object::Pose::Falling;
+			}
+			if (object.velocity.x == 0.0f && (pulled || object.velocity.y == 0.0f)) { return Object::Pose::Standing; }
+
+			const auto& step = object.activeMoveStep;
+			const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
+			const auto sign = [](float value) { return (value > 0.0f) - (value < 0.0f); };
+			if (object.grip < 1.0f && object.velocity.x != 0.0f && sign(wanted) != sign(object.velocity.x)) { return Object::Pose::Skidding; }
+			return Object::Pose::Walking;
+		}
+
+		// After the frame's move: which way each object with a <mirror> is
+		// going, and the look each with <poses> takes for how it moves, while
+		// it shows one of them (a <become> to another look takes it out of
+		// its poses until one brings it back).
+		void takePoses(std::vector<Object>& objects, FrameRules& rules)
+		{
+			for (auto& object : objects)
+			{
+				if (!object.mirrors && !object.hasPoses) { continue; }
+				if (!rules.inPlay(object)) { continue; }
+
+				if (object.mirrors)
+				{
+					const auto& step = object.activeMoveStep;
+					const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
+					if (wanted != 0.0f) { object.goingLeft = wanted < 0.0f; }
+					else if (object.isAirborne() && object.jumpStep.x != 0.0f) { object.goingLeft = object.jumpStep.x < 0.0f; }
+					else if (object.velocity.x != 0.0f) { object.goingLeft = object.velocity.x < 0.0f; }
+					object.faceMirror();
+				}
+
+				if (!object.hasPoses) { continue; }
+				const auto& poses = object.poseLooks;
+				if (std::find(poses.begin(), poses.end(), object.look) == poses.end()) { continue; }
+
+				const std::size_t look = poses[static_cast<std::size_t>(poseOf(object))];
+				if (look != object.look) { object.showLook(look); }
+			}
+		}
+
 		// A constant pull (<acceleration>, gravity being one with only a y)
 		// and held thrust (<accelerate>) both change an object's velocity,
 		// once a frame, before it is moved. Thrust that burns a variable takes
@@ -195,6 +275,14 @@ namespace xge
 					}
 					--object.jumpFramesLeft;
 					object.hopped = true;
+
+					// An arc: drawn up off its way and back down, highest
+					// halfway, on the ground again as it lands.
+					if (object.jumpArc > 0.0f)
+					{
+						const float t = 1.0f - static_cast<float>(object.jumpFramesLeft) / static_cast<float>(object.jumpFrames);
+						object.altitude = object.jumpFramesLeft > 0 ? 4.0f * object.jumpArc * t * (1.0f - t) : 0.0f;
+					}
 				}
 
 				if (object.hopPending.x == 0 && object.hopPending.y == 0)
@@ -677,9 +765,11 @@ namespace xge
 		// A picture that changes with time (an <animation>) counts this frame
 		// whether or not the object is moving; only what is in play does, so a
 		// pause or a menu holds it where it was.
+		const float second = 1.0f / static_cast<float>(window.framerate > 0 ? window.framerate : 60);
 		for (auto& object : objects)
 		{
 			if (object.animationBitmaps.size() > 1 && rules.inPlay(object)) { object.advanceAnimation(); }
+			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - second); }
 		}
 
 		rules.timers();
@@ -690,6 +780,8 @@ namespace xge
 		walkMazes(objects, rules);
 
 		applyClimbing(objects, rules);
+
+		applyGrip(objects, rules);
 
 		applyAcceleration(objects, rules);
 
@@ -740,6 +832,8 @@ namespace xge
 		castShadows(objects);
 
 		lightAndDark(objects, rules);
+
+		takePoses(objects, rules);
 
 		rules.conditions();
 	}

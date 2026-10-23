@@ -30,7 +30,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [collisions](20-collisions.md) | Detection, dispatch, swept and pixel collision, speed filters, `<deflect>`, `side=`, checks and `<trigger>` in rules | Built |
 | [collisions-open](21-collisions-open.md) | Weaknesses, response alternatives, escalation, reference Pong | Open / Idea |
 | [motion](22-motion.md) | Verb principle, gravity, thrust, headings, hop (diagonals too), jump, facing, pull, seek, altitude and shadows | Built |
-| [platforming](23-platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump | Built; air control Idea |
+| [platforming](23-platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump; `arc` and `grip` | Built; air control Idea |
 | [chase-and-paths](24-chase-and-paths.md) | `<chase>`, `<aim>`, paths and formations (Galaxian), maze walking (`<go>`, `<hunt>`, `<wander>`), AI targeting, computer players | Built; curved paths Idea |
 
 ## Pictures and sound
@@ -38,7 +38,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | File | Topic | Status |
 |---|---|---|
 | [pictures](30-pictures.md) | One `Bitmap` path for lines, bitmaps, SVG parts, flip, turning; tethers, holes, light and dark | Built; decals Idea |
-| [animation-and-looks](31-animation-and-looks.md) | Animation, named looks | Built |
+| [animation-and-looks](31-animation-and-looks.md) | Animation, named looks, looks that move, `poses`, `mirror`, blinking | Built |
 | [text](32-text.md) | Text and the built-in font, `<styles>`, `<centered>`, words (`<choose>`) | Built |
 | [sound](33-sound.md) | Notes made into samples; `<sounds>`, `<play>`, loops, music in `<part>`s | Built |
 
@@ -52,7 +52,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 
 | File | Topic | Status |
 |---|---|---|
-| [backends](50-backends.md) | Backend interfaces and factories, library and programs | Built |
+| [backends](50-backends.md) | Backend interfaces and factories, window `scale`, library and programs | Built |
 | [build-and-layout](51-build-and-layout.md) | CMake modules, `output/`, source layout and `xge/lib/` folders, pipeline | Built |
 | [cli](52-cli.md), [gui](53-gui.md) | `xgecli` options; `xgegui` (Qt renderer, tree, Options, windows) | Built |
 | [games-classic](54-games-classic.md) | What each early game tested and forced | Built |
