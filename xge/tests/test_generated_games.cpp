@@ -223,6 +223,8 @@ namespace
 			for (std::size_t i = 0; i < o.looks.size(); ++i) { sprite(at + ".look" + std::to_string(i), o.looks[i]); }
 			flag(at + ".isVisible", o.isVisible);
 			flag(at + ".isDrawn", o.isDrawn);
+			flag(at + ".exists", o.exists);
+			text(at + ".most", std::to_string(o.most));
 			vector2(at + ".position", o.rawPosition);
 			vector2(at + ".velocity", o.rawVelocity);
 			vector2(at + ".acceleration", o.rawAcceleration);

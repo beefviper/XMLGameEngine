@@ -1271,6 +1271,25 @@
         </xsl:when>
       </xsl:choose>
     </xsl:if>
+    <xsl:if test="$node/exists">
+      <xsl:variable name="exists">
+        <xsl:call-template name="is-true">
+          <xsl:with-param name="node" select="$node/exists[last()]" />
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:choose>
+        <xsl:when test="$exists = ''">
+          <xsl:value-of select="concat($indent, $to, '.exists = false;&#10;')" />
+        </xsl:when>
+        <!-- an inner group that exists, inside one that does not -->
+        <xsl:when test="$node/parent::group">
+          <xsl:value-of select="concat($indent, $to, '.exists = true;&#10;')" />
+        </xsl:when>
+      </xsl:choose>
+    </xsl:if>
+    <xsl:if test="$node/most">
+      <xsl:value-of select="concat($indent, $to, '.most = ', normalize-space($node/most), ';&#10;')" />
+    </xsl:if>
     <xsl:call-template name="collisions">
       <xsl:with-param name="node" select="$node/collisions" />
       <xsl:with-param name="to" select="$to" />

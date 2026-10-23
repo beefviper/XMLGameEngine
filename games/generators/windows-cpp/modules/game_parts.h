@@ -287,6 +287,12 @@ namespace xge::parts
 	inline RawObject finish(const Member& member)
 	{
 		RawObject object = member.object;
+		// One that does not exist at the start may leave out where it is.
+		if (!object.exists)
+		{
+			if (object.rawPosition.x.kind == RawValue::Kind::Expression && object.rawPosition.x.text.empty()) { object.rawPosition.x = value("0"); }
+			if (object.rawPosition.y.kind == RawValue::Kind::Expression && object.rawPosition.y.text.empty()) { object.rawPosition.y = value("0"); }
+		}
 		if (member.animated)
 		{
 			animate(object, member.sprites, member.interval, member.frames);

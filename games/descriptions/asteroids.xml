@@ -19,8 +19,10 @@
   * The rocks are one group: what every rock is (a hazard, tested by
     pixel, wrapping) is said once, and each size says its picture and how
     it breaks: its points and what it breaks into. A size with several
-    shapes holds a group per shape. The medium and small rocks are pools,
-    <release>d two at a time where a bigger rock broke.
+    shapes has a member per shape. The medium and small rocks do not exist
+    until a bigger rock breaks: it <release>s two, spawned where it was,
+    the shapes in turn, each going its own way (a <random> velocity drawn
+    as it is made), and a broken one <despawn>s.
   * The ship and its shots are both class "breaker", so each size has one
     rule for being broken, by either. A ship that is hit goes out of play,
     and a timer of the playing state brings it back at the middle.
@@ -171,7 +173,7 @@
               <play sound="thrust" />
             </action>
             <action name="fire">
-              <fire object="shots" />
+              <fire object="shot" />
               <play sound="shoot" />
             </action>
             <action name="hyperspace">
@@ -186,22 +188,18 @@
           </variables>
         </object>
         <!-- four shots in the air at most -->
-        <group name="shots" class="breaker">
+        <object name="shot" class="breaker">
           <sprite><rectangle><width>3</width><height>3</height></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>-shotspeed</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>4</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="hazard"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision class="hazard"><despawn /></collision>
           </collisions>
-          <member />
-          <member />
-          <member />
-          <member />
-        </group>
-        <!-- Four big rocks come in from the edges each wave; 4 big make 8 medium make 16 small, so the pools are never short. -->
+        </object>
+        <!-- Four big rocks come in from the edges each wave; a broken one releases two of the next size. -->
         <group name="rocks" class="hazard">
           <position><x>0</x><y>0</y></position>
           <collisions>
@@ -272,6 +270,7 @@
               <velocity><x><random min="-0.8" max="0.8" /></x><y><random min="-1.2" max="-0.6" /></y></velocity>
             </member>
           </group>
+          <!-- what a big rock breaks into: two of these, spawned where it was, each going its own way -->
           <group name="mediumrocks">
             <sprite>
               <line><from><x>27</x><y>28</y></from><to><x>20</x><y>35</y></to><thickness>2</thickness></line>
@@ -284,51 +283,43 @@
               <line><from><x>29</x><y>15</y></from><to><x>35</x><y>23</y></to><thickness>2</thickness></line>
               <line><from><x>35</x><y>23</y></from><to><x>27</x><y>28</y></to><thickness>2</thickness></line>
             </sprite>
-            <hidden>true</hidden>
+            <velocity><x><random min="-1.6" max="1.6" /></x><y><random min="-1.6" max="1.6" /></y></velocity>
+            <exists>false</exists>
             <collisions>
               <enabled>true</enabled>
               <collision class="breaker">
-                <die />
+                <despawn />
                 <inc variable="ship.score">50</inc>
                 <release object="smallrocks">2</release>
                 <play sound="bangmedium" />
               </collision>
             </collisions>
-            <group name="mediumA">
-              <member><velocity><x>0.9</x><y>1.29</y></velocity></member>
-              <member><velocity><x>0.69</x><y>1.46</y></velocity></member>
-              <member><velocity><x>-0.68</x><y>-0.77</y></velocity></member>
-            </group>
-            <group name="mediumB">
+            <member name="mediumA" />
+            <member name="mediumB">
               <sprite>
-                <line><from><x>32</x><y>19</y></from><to><x>33</x><y>30</y></to><thickness>2</thickness></line>
-                <line><from><x>33</x><y>30</y></from><to><x>14</x><y>34</y></to><thickness>2</thickness></line>
-                <line><from><x>14</x><y>34</y></from><to><x>5</x><y>29</y></to><thickness>2</thickness></line>
-                <line><from><x>5</x><y>29</y></from><to><x>8</x><y>19</y></to><thickness>2</thickness></line>
-                <line><from><x>8</x><y>19</y></from><to><x>7</x><y>9</y></to><thickness>2</thickness></line>
-                <line><from><x>7</x><y>9</y></from><to><x>16</x><y>7</y></to><thickness>2</thickness></line>
-                <line><from><x>16</x><y>7</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
-                <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
+                  <line><from><x>32</x><y>19</y></from><to><x>33</x><y>30</y></to><thickness>2</thickness></line>
+                  <line><from><x>33</x><y>30</y></from><to><x>14</x><y>34</y></to><thickness>2</thickness></line>
+                  <line><from><x>14</x><y>34</y></from><to><x>5</x><y>29</y></to><thickness>2</thickness></line>
+                  <line><from><x>5</x><y>29</y></from><to><x>8</x><y>19</y></to><thickness>2</thickness></line>
+                  <line><from><x>8</x><y>19</y></from><to><x>7</x><y>9</y></to><thickness>2</thickness></line>
+                  <line><from><x>7</x><y>9</y></from><to><x>16</x><y>7</y></to><thickness>2</thickness></line>
+                  <line><from><x>16</x><y>7</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
+                  <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
               </sprite>
-              <member><velocity><x>-0.4</x><y>-1.75</y></velocity></member>
-              <member><velocity><x>-0.7</x><y>-1.13</y></velocity></member>
-              <member><velocity><x>0.2</x><y>1.2</y></velocity></member>
-            </group>
-            <group name="mediumC">
+            </member>
+            <member name="mediumC">
               <sprite>
-                <line><from><x>32</x><y>25</y></from><to><x>28</x><y>35</y></to><thickness>2</thickness></line>
-                <line><from><x>28</x><y>35</y></from><to><x>18</x><y>31</y></to><thickness>2</thickness></line>
-                <line><from><x>18</x><y>31</y></from><to><x>7</x><y>32</y></to><thickness>2</thickness></line>
-                <line><from><x>7</x><y>32</y></from><to><x>8</x><y>21</y></to><thickness>2</thickness></line>
-                <line><from><x>8</x><y>21</y></from><to><x>5</x><y>13</y></to><thickness>2</thickness></line>
-                <line><from><x>5</x><y>13</y></from><to><x>12</x><y>7</y></to><thickness>2</thickness></line>
-                <line><from><x>12</x><y>7</y></from><to><x>20</x><y>7</y></to><thickness>2</thickness></line>
-                <line><from><x>20</x><y>7</y></from><to><x>32</x><y>16</y></to><thickness>2</thickness></line>
-                <line><from><x>32</x><y>16</y></from><to><x>32</x><y>25</y></to><thickness>2</thickness></line>
+                  <line><from><x>32</x><y>25</y></from><to><x>28</x><y>35</y></to><thickness>2</thickness></line>
+                  <line><from><x>28</x><y>35</y></from><to><x>18</x><y>31</y></to><thickness>2</thickness></line>
+                  <line><from><x>18</x><y>31</y></from><to><x>7</x><y>32</y></to><thickness>2</thickness></line>
+                  <line><from><x>7</x><y>32</y></from><to><x>8</x><y>21</y></to><thickness>2</thickness></line>
+                  <line><from><x>8</x><y>21</y></from><to><x>5</x><y>13</y></to><thickness>2</thickness></line>
+                  <line><from><x>5</x><y>13</y></from><to><x>12</x><y>7</y></to><thickness>2</thickness></line>
+                  <line><from><x>12</x><y>7</y></from><to><x>20</x><y>7</y></to><thickness>2</thickness></line>
+                  <line><from><x>20</x><y>7</y></from><to><x>32</x><y>16</y></to><thickness>2</thickness></line>
+                  <line><from><x>32</x><y>16</y></from><to><x>32</x><y>25</y></to><thickness>2</thickness></line>
               </sprite>
-              <member><velocity><x>0.36</x><y>-1.27</y></velocity></member>
-              <member><velocity><x>1.48</x><y>0.79</y></velocity></member>
-            </group>
+            </member>
           </group>
           <group name="smallrocks">
             <sprite>
@@ -339,52 +330,36 @@
               <line><from><x>12</x><y>3</y></from><to><x>18</x><y>5</y></to><thickness>2</thickness></line>
               <line><from><x>18</x><y>5</y></from><to><x>16</x><y>11</y></to><thickness>2</thickness></line>
             </sprite>
-            <hidden>true</hidden>
+            <velocity><x><random min="-2.6" max="2.6" /></x><y><random min="-2.6" max="2.6" /></y></velocity>
+            <exists>false</exists>
             <collisions>
               <enabled>true</enabled>
               <collision class="breaker">
-                <die />
+                <despawn />
                 <inc variable="ship.score">100</inc>
                 <play sound="bangsmall" />
               </collision>
             </collisions>
-            <group name="smallA">
-              <member><velocity><x>2.64</x><y>-0.44</y></velocity></member>
-              <member><velocity><x>2.09</x><y>0.58</y></velocity></member>
-              <member><velocity><x>1.59</x><y>1.83</y></velocity></member>
-              <member><velocity><x>-1.56</x><y>-0.07</y></velocity></member>
-              <member><velocity><x>1.55</x><y>1.79</y></velocity></member>
-              <member><velocity><x>1.96</x><y>-0.47</y></velocity></member>
-            </group>
-            <group name="smallB">
+            <member name="smallA" />
+            <member name="smallB">
               <sprite>
-                <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
-                <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
-                <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
-                <line><from><x>5</x><y>12</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
-                <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
-                <line><from><x>15</x><y>5</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
+                  <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
+                  <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
+                  <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+                  <line><from><x>5</x><y>12</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
+                  <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
+                  <line><from><x>15</x><y>5</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
               </sprite>
-              <member><velocity><x>-1.11</x><y>1.05</y></velocity></member>
-              <member><velocity><x>-0.39</x><y>-2.01</y></velocity></member>
-              <member><velocity><x>-0.15</x><y>-1.59</y></velocity></member>
-              <member><velocity><x>-1.76</x><y>1.93</y></velocity></member>
-              <member><velocity><x>-1.99</x><y>-1.04</y></velocity></member>
-            </group>
-            <group name="smallC">
+            </member>
+            <member name="smallC">
               <sprite>
-                <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
-                <line><from><x>15</x><y>18</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
-                <line><from><x>6</x><y>14</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
-                <line><from><x>7</x><y>3</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
-                <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
+                  <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
+                  <line><from><x>15</x><y>18</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
+                  <line><from><x>6</x><y>14</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
+                  <line><from><x>7</x><y>3</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
+                  <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
               </sprite>
-              <member><velocity><x>-2.41</x><y>0.66</y></velocity></member>
-              <member><velocity><x>1.16</x><y>1.34</y></velocity></member>
-              <member><velocity><x>2.57</x><y>0.16</y></velocity></member>
-              <member><velocity><x>1.9</x><y>-1.83</y></velocity></member>
-              <member><velocity><x>-1.68</x><y>-0.48</y></velocity></member>
-            </group>
+            </member>
           </group>
         </group>
         <!-- The saucer crosses now and then, wandering up and down and shooting at the ship. -->
@@ -420,7 +395,7 @@
             <timer>
               <every>1</every>
               <aim object="ship" />
-              <fire object="saucershots" />
+              <fire object="saucershot" />
             </timer>
             <timer>
               <every>1.5</every>
@@ -428,19 +403,17 @@
             </timer>
           </timers>
         </object>
-        <group name="saucershots" class="hazard">
+        <object name="saucershot" class="hazard">
           <sprite><rectangle><width>3</width><height>3</height></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
           <velocity><y>5</y></velocity>
-          <hidden>true</hidden>
+          <exists>false</exists>
+          <most>2</most>
           <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="breaker"><die /></collision>
+            <enabled>true</enabled>
+            <collision edge="all"><despawn /></collision>
+            <collision class="breaker"><despawn /></collision>
           </collisions>
-          <member />
-          <member />
-        </group>
+        </object>
         <object name="score">
           <sprite><text style="hud"><number>ship.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>

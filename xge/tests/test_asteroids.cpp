@@ -8,9 +8,9 @@
 // <heading> that turns (<turn>), is pushed along the way it faces (<thrust>)
 // and loses speed to <drag>; a drawing of lines made at every heading
 // (rasterizeTurned, whole degrees) and the picture for the current heading
-// being the one that is shown and tested; <fire> along the heading from a pool of shots; <hidden>
-// objects and <release>, which is how a rock that breaks hands out the smaller
-// rocks of a pool; and wrapping round the screen.
+// being the one that is shown and tested; <fire> along the heading, each shot
+// a copy of a shot that does not <exist>; <release>, which is how a rock that
+// breaks spawns two smaller ones; and wrapping round the screen.
 //
 // Window::init() normally measures each object's size once a backend exists;
 // a Game built on its own has {0, 0}, so measure() gives every shape the size
@@ -69,16 +69,31 @@ namespace
 		float lives() { return ship().variable["lives"]; }
 		std::string state() { return game.getCurrentState().name; }
 
-		// The members of one of the playing state's groups (its full name is
-		// playing.<name>).
+		// The members of one of the playing state's groups that exist (its
+		// full name is playing.<name>), copies made at run time among them.
 		std::vector<Object*> group(const std::string& name)
 		{
 			std::vector<Object*> members;
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.inGroup("playing." + name)) { members.push_back(&object); }
+				if (object.exists && object.inGroup("playing." + name)) { members.push_back(&object); }
 			}
 			return members;
+		}
+
+		// A copy of a rock or shot, made as a <release> or <fire> would make it,
+		// in the game at once.
+		Object& spawn(const std::string& name)
+		{
+			const std::string made = game.spawn(name)->name;
+			game.settleSpawns();
+			return game.getObject(made);
+		}
+
+		bool has(const std::string& name)
+		{
+			const auto& objects = game.getCurrentObjects();
+			return std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == name; });
 		}
 
 		int inPlay(const std::string& name)
@@ -91,6 +106,7 @@ namespace
 		void key(const char* action, bool down)
 		{
 			executor.executeInput(Command{ CmdTriggerAction{ "ship", action } }, down);
+			game.settleSpawns(); // what a key spawns joins the game at once, not at the next frame
 		}
 
 		void frames(int count)
@@ -115,7 +131,7 @@ namespace
 			{
 				for (Object* rock : group(name)) { rock->position = { 740, 540 }; rock->velocity = {}; }
 			}
-			for (const char* name : { "saucer", "saucershots" })
+			for (const char* name : { "saucer", "saucershot" })
 			{
 				for (auto& object : game.getCurrentObjects())
 				{
@@ -264,17 +280,17 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	CHECK_THAT(field.centre(ship).x, WithinAbs(400.0f, 1.0f));
 	CHECK_THAT(field.centre(ship).y, WithinAbs(300.0f, 1.0f));
 
-	CHECK(field.group("shots").size() == 4);
 	CHECK(field.group("bigrocks").size() == 4);
-	CHECK(field.group("mediumrocks").size() == 8);
-	CHECK(field.group("smallrocks").size() == 16);
 
-	// Only the big rocks are in play to begin with; the shots and the smaller
-	// rocks wait, hidden.
+	// Only the big rocks exist to begin with; the shots and the smaller rocks
+	// are descriptions, copied when they are fired or released.
+	CHECK_FALSE(field.named("shot").exists);
+	CHECK_FALSE(field.named("mediumA").exists);
+	CHECK_FALSE(field.named("smallC").exists);
 	CHECK(field.inPlay("bigrocks") == 4);
 	CHECK(field.inPlay("mediumrocks") == 0);
 	CHECK(field.inPlay("smallrocks") == 0);
-	CHECK(field.inPlay("shots") == 0);
+	CHECK(field.inPlay("shot") == 0);
 
 	CHECK(field.lives() == 3.0f);
 	CHECK(field.score() == 0.0f);
@@ -292,13 +308,13 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 		CHECK_THAT(ship.drag, WithinAbs(0.02f, 1e-6f));
 		CHECK(ship.turnables.size() == 1);
 
-		int hidden = 0;
+		int descriptions = 0;
 		int turns = 0;
 		int thrusts = 0;
 		int releases = 0;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (!object.isVisible) { ++hidden; }
+			if (!object.exists) { ++descriptions; }
 			for (const auto& [name, commands] : object.action)
 			{
 				for (const Command& command : commands)
@@ -316,10 +332,10 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 			}
 		}
 
-		CHECK(hidden == 4 + 8 + 16 + 1 + 2); // and the saucer and its two shots
+		CHECK(descriptions == 3 + 3 + 2); // three shapes of each smaller rock, and the two shots
 		CHECK(turns == 2);
 		CHECK(thrusts == 1);
-		CHECK(releases == 4 + 8); // every big and medium rock hands out smaller ones
+		CHECK(releases == 4 + 3); // every big rock and medium shape hands out smaller ones
 	}
 }
 
@@ -584,8 +600,8 @@ TEST_CASE("a shot leaves the nose along the heading, at the shot's own speed", "
 	field.key("fire", true);
 	field.key("fire", false);
 
-	REQUIRE(field.inPlay("shots") == 1);
-	Object& shot = *field.group("shots")[0];
+	REQUIRE(field.inPlay("shot") == 1);
+	Object& shot = *field.group("shot")[0];
 	CHECK(shot.isVisible);
 	CHECK(shot.collisionData.enabled);
 	CHECK_THAT(shot.velocity.x, WithinAbs(0.0f, 1e-4f));
@@ -598,8 +614,8 @@ TEST_CASE("a shot leaves the nose along the heading, at the shot's own speed", "
 	field.key("fire", true);
 	field.key("fire", false);
 
-	REQUIRE(field.inPlay("shots") == 2);
-	Object& second = *field.group("shots")[1];
+	REQUIRE(field.inPlay("shot") == 2);
+	Object& second = *field.group("shot")[1];
 	CHECK_THAT(second.velocity.x, WithinAbs(8.0f, 1e-3f));
 	CHECK_THAT(second.velocity.y, WithinAbs(0.0f, 1e-3f));
 	CHECK(second.position.x + second.size.x / 2 > field.centre(field.ship()).x + 10.0f);
@@ -615,38 +631,37 @@ TEST_CASE("only four shots can be in the air; a fifth does nothing until one is 
 		field.key("fire", true);
 		field.key("fire", false);
 	}
-	CHECK(field.inPlay("shots") == 4);
+	CHECK(field.inPlay("shot") == 4);
 
 	// The fifth press: still four, and none of them was moved or relaunched.
-	const Vector2f first = field.group("shots")[0]->position;
+	const Vector2f first = field.group("shot")[0]->position;
 	field.key("fire", true);
 	field.key("fire", false);
-	CHECK(field.inPlay("shots") == 4);
-	CHECK(field.group("shots")[0]->position == first);
+	CHECK(field.inPlay("shot") == 4);
+	CHECK(field.group("shot")[0]->position == first);
 
-	// They fly up to the top of the screen and are put away; then there is room.
+	// They fly up to the top of the screen and are despawned; then there is room.
 	field.frames(80);
-	CHECK(field.inPlay("shots") == 0);
+	CHECK(field.inPlay("shot") == 0);
 
 	field.key("fire", true);
 	field.key("fire", false);
-	CHECK(field.inPlay("shots") == 1);
+	CHECK(field.inPlay("shot") == 1);
 }
 
-TEST_CASE("a shot that has left the screen has no collisions left", "[asteroids][fire]")
+TEST_CASE("a shot that has left the screen is gone from the game", "[asteroids][fire]")
 {
 	Field field;
 	field.clearTheMiddle();
+	const std::size_t before = field.game.getCurrentObjects().size();
 
 	field.key("fire", true);
 	field.key("fire", false);
+	CHECK(field.game.getCurrentObjects().size() == before + 1);
 	field.frames(80);
 
-	for (Object* shot : field.group("shots"))
-	{
-		CHECK_FALSE(shot->isVisible);
-		CHECK_FALSE(shot->collisionData.enabled);
-	}
+	CHECK(field.group("shot").empty());
+	CHECK(field.game.getCurrentObjects().size() == before);
 }
 
 // ------------------------------------------------------------ breaking rocks
@@ -680,7 +695,7 @@ TEST_CASE("a shot breaks a big rock into two medium ones where it was", "[astero
 	const Vector2f from = field.centre(rock); // it stood still, so this is where it was hit
 
 	CHECK_FALSE(rock.isVisible);
-	CHECK(field.inPlay("shots") == 0);
+	CHECK(field.inPlay("shot") == 0);
 	CHECK(field.inPlay("mediumrocks") == 2);
 	CHECK(field.score() == 20.0f);
 
@@ -706,11 +721,9 @@ TEST_CASE("the two medium rocks are released the moment of the hit, centred on t
 	rock.velocity = {};
 	const Vector2f from = field.centre(rock);
 
-	Object& shot = *field.group("shots")[0];
+	Object& shot = field.spawn("shot");
 	shot.position = { from.x - 1.0f, from.y + rock.size.y / 2 + 6.0f }; // just below the rock's edge
 	shot.velocity = { 0.0f, -4.0f };
-	shot.isVisible = true;
-	shot.collisionData.enabled = true;
 
 	field.frames(4);
 
@@ -731,29 +744,26 @@ TEST_CASE("the two medium rocks are released the moment of the hit, centred on t
 TEST_CASE("a medium rock breaks into two small ones, and a small one into none", "[asteroids][release]")
 {
 	Field field;
-	Object& medium = *field.group("mediumrocks")[0];
-
 	// Bring one medium rock into play (as a hit on a big rock would) and shoot it.
-	medium.isVisible = true;
-	medium.collisionData.enabled = true;
+	Object& medium = field.spawn("mediumrocks");
+	const std::string mediumName = medium.name;
 	shoot(field, medium);
 
-	CHECK_FALSE(medium.isVisible);
+	CHECK_FALSE(field.has(mediumName)); // despawned, and gone
 	CHECK(field.inPlay("smallrocks") == 2);
 	CHECK(field.score() == 50.0f);
 
 	// Now a small one: a hundred points and nothing comes out of it.
-	Object& small = *field.group("smallrocks")[5];
-	small.isVisible = true;
-	small.collisionData.enabled = true;
+	Object& small = field.spawn("smallrocks");
+	const std::string smallName = small.name;
 	shoot(field, small);
 
-	CHECK_FALSE(small.isVisible);
+	CHECK_FALSE(field.has(smallName));
 	CHECK(field.score() == 150.0f);
 	CHECK(field.inPlay("smallrocks") == 2); // the two from before, which clearTheMiddle moved aside
 }
 
-TEST_CASE("every rock of a wave can be broken down to nothing, the pools are never short, and the next wave comes", "[asteroids][release]")
+TEST_CASE("every rock of a wave can be broken down to nothing, and the next wave comes", "[asteroids][release]")
 {
 	Field field;
 
@@ -783,23 +793,20 @@ TEST_CASE("every rock of a wave can be broken down to nothing, the pools are nev
 	CHECK(field.inPlay("mediumrocks") + field.inPlay("smallrocks") == 0);
 }
 
-TEST_CASE("a pool that has fewer rocks than asked for gives what it has", "[asteroids][release]")
+TEST_CASE("there is no limit to the smaller rocks: a break always releases two more", "[asteroids][release]")
 {
 	Field field;
 
-	// Every medium rock but one already in play: the next break can only
-	// release the one that is left.
-	std::vector<Object*> mediums = field.group("mediumrocks");
-	for (std::size_t i = 0; i + 1 < mediums.size(); ++i)
-	{
-		mediums[i]->isVisible = true;
-		mediums[i]->collisionData.enabled = true;
-	}
+	// Eight medium rocks already out: a break adds two more, the shapes in turn.
+	for (int i = 0; i < 8; ++i) { field.spawn("mediumrocks"); }
+	CHECK(field.has("playing.mediumA.3"));
+	CHECK(field.has("playing.mediumB.3"));
+	CHECK(field.has("playing.mediumC.2"));
 
 	Object& big = *field.group("bigrocks")[0];
 	shoot(field, big);
 
-	CHECK(field.inPlay("mediumrocks") == 8);
+	CHECK(field.inPlay("mediumrocks") == 10);
 }
 
 // ------------------------------------------------------------ the ship is hit
@@ -908,9 +915,9 @@ TEST_CASE("with rocks still left, even small ones, the wave goes on", "[asteroid
 	Field field;
 
 	for (Object* rock : field.group("bigrocks")) { rock->isVisible = false; }
-	field.group("smallrocks")[0]->isVisible = true;
-	field.group("smallrocks")[0]->velocity = {};
-	field.group("smallrocks")[0]->position = { 700, 500 };
+	Object& small = field.spawn("smallrocks");
+	small.velocity = {};
+	small.position = { 700, 500 };
 	field.frames(1);
 
 	CHECK(field.state() == "playing");
@@ -935,8 +942,8 @@ TEST_CASE("paused, the field is drawn still: the rocks and the ship stop where t
 	CHECK_FALSE(field.game.isShown(rock));
 	CHECK(field.game.isShown(field.named("paused")));
 
-	// A rock not yet released is not drawn, even still.
-	CHECK_FALSE(field.game.isStill(*field.group("mediumrocks")[0]));
+	// A rock that does not exist is not drawn, even still.
+	CHECK_FALSE(field.game.isStill(field.named("mediumA")));
 
 	field.game.popState();
 	field.frames(1);
@@ -962,14 +969,13 @@ TEST_CASE("each state owns what it draws, and game over draws the field still un
 	CHECK(field.game.isShown(field.named("again")));
 }
 
-TEST_CASE("playing again puts everything back: rocks, pools, shots, score and ships", "[asteroids][states]")
+TEST_CASE("playing again puts everything back: rocks, shots, score and ships", "[asteroids][states]")
 {
 	Field field;
 
 	field.group("bigrocks")[0]->isVisible = false;
-	field.group("mediumrocks")[0]->isVisible = true;
-	field.group("shots")[0]->isVisible = true;
-	field.group("shots")[0]->collisionData.enabled = true;
+	field.spawn("mediumrocks");
+	field.spawn("shot");
 	field.ship().variable["score"] = 55.0f;
 	field.ship().variable["lives"] = 0.0f;
 	field.ship().heading = 90.0f;
@@ -978,8 +984,7 @@ TEST_CASE("playing again puts everything back: rocks, pools, shots, score and sh
 	CHECK(field.inPlay("bigrocks") == 4);
 	CHECK(field.inPlay("mediumrocks") == 0);
 	CHECK(field.inPlay("smallrocks") == 0);
-	CHECK(field.inPlay("shots") == 0);
-	CHECK_FALSE(field.group("shots")[0]->collisionData.enabled);
+	CHECK(field.group("shot").empty()); // the copies are gone
 	CHECK(field.score() == 0.0f);
 	CHECK(field.lives() == 3.0f);
 	CHECK(field.ship().heading == 0.0f);
@@ -1006,7 +1011,7 @@ TEST_CASE("the saucer comes in from the left now and then, and shoots at the shi
 	// A second on, it has aimed and fired a shot at the ship.
 	field.frames(61);
 	int flying = 0;
-	for (Object* shot : field.group("saucershots"))
+	for (Object* shot : field.group("saucershot"))
 	{
 		if (!shot->isVisible) { continue; }
 		++flying;
@@ -1144,7 +1149,7 @@ TEST_CASE("a heading, a drag and a hidden are read from the file", "[asteroids][
 
 	for (const Object& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "playing.mediumrocks" || object.groupName == "playing.smallrocks" || object.groupName == "playing.shots")
+		if (object.groupName == "playing.mediumrocks" || object.groupName == "playing.smallrocks" || object.groupName == "playing.shot")
 		{
 			CHECK_FALSE(object.isVisible);
 		}
