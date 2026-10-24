@@ -122,7 +122,7 @@ Something many objects or states share is written once under a name, higher up, 
 | `variable` | a number, owned by the game or by an object |
 | `sound`, `note`, `rest`, `part`, `loop` | chip sounds and music, from five waves (`square`, `triangle`, `sawtooth`, `sine`, `noise`) |
 | `path`, `step`, `start`, `home`, `speed` | a route of straight legs, with verbs at its steps |
-| `timer`, `every`, `after` | something done again and again, or once after a while |
+| `timer`, `every`, `after` | something done again and again, or once after a while; a named one's time left is a number of its object |
 | `keep`, `style`, `demo` | an object kept between games (a best score); a text style; a recorded game for the attract mode |
 
 **Looks.** A `<sprite>` is a `circle`, `rectangle`, `text`, `image`, `bitmap` (ASCII rows, one color per character), `svg`, a set of `line`s, or a `tether` (a line between two objects, redrawn each frame). Text is built from `content`, `number`, `letter` and `choose` pieces. Several named sprites are an object's **looks**, changed by `<become>`, and an `<animation>` of `<frame>`s cycles them; a named animation is a look that moves. `<poses>` picks the look for standing, walking, skidding, rising and falling by itself, and `<mirror>` flips the pictures for the other way. The `<window>` can have a `<scale>`, so a game is written at the size of the original screen and drawn bigger.

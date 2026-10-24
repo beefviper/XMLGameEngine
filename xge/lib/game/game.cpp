@@ -1145,6 +1145,17 @@ namespace xge
 		return true;
 	}
 
+	void Game::showTimeLeft(Object& object, const Timer& timer)
+	{
+		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
+		const float left = timer.done || timer.framesLeft < 0 ? 0.0f
+			: std::ceil(static_cast<float>(timer.framesLeft) / static_cast<float>(framerate));
+		const auto found = object.variable.find(timer.name);
+		if (found == object.variable.end() || found->second == left) { return; }
+		found->second = left;
+		refreshBoundTexts(object.name, timer.name, left);
+	}
+
 	void Game::updateTimers(void)
 	{
 		CommandExecutor executor(*this);
@@ -1168,7 +1179,9 @@ namespace xge
 					continue;
 				}
 
-				if (tickTimer(objects[i].timers[t], "object '" + objects[i].name + "' > <timer>"))
+				const bool goesOff = tickTimer(objects[i].timers[t], "object '" + objects[i].name + "' > <timer>");
+				if (!objects[i].timers[t].name.empty()) { showTimeLeft(objects[i], objects[i].timers[t]); }
+				if (goesOff)
 				{
 					// A copy: a command may reset the object, and its timers with it.
 					const std::vector<Command> commands = objects[i].timers[t].commands;

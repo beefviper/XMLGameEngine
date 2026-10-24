@@ -880,6 +880,28 @@ namespace xge
 			symbolTable.add_constant(name, value);
 		}
 
+		// An object's named timer is a number of the object's (bomb.fuse), its
+		// time left, so a text shows it and a rule or a value reads it as it
+		// does any variable; its value is given when the object is made.
+		for (auto& rawObject : rawObjects)
+		{
+			for (const RawTimer& timer : rawObject.timers)
+			{
+				if (timer.name.empty()) { continue; }
+				const std::string here = "object '" + rawObject.name + "' > <timer name=\"" + timer.name + "\">";
+				if (rawObject.variable.count(timer.name))
+				{
+					throw std::runtime_error(here + ": the object has a <variable> of that name too, and " + rawObject.name + "." + timer.name + " is the timer's time left");
+				}
+				const auto& parts = liveNumberParts();
+				if (std::find(parts.begin(), parts.end(), timer.name) != parts.end())
+				{
+					throw std::runtime_error(here + ": " + rawObject.name + "." + timer.name + " is already where the object is or how it moves; give the timer another name");
+				}
+				rawObject.variable[timer.name] = RawValue::expression("0");
+			}
+		}
+
 		// Pre-register every object's own <variable> entries, keyed
 		// "ownerName.variableName", so any expression evaluated below can refer
 		// to another object's variable regardless of which object appears first
@@ -1482,6 +1504,15 @@ namespace xge
 		}
 		object.facingOriginal = object.facing;
 		object.timers = processTimers(rawObject.timers, where);
+		for (const Timer& timer : object.timers)
+		{
+			if (timer.name.empty()) { continue; }
+			// A named timer's time left (see init): where it starts.
+			const float left = std::ceil(timer.seconds);
+			object.variable[timer.name] = left;
+			object.variableOriginal[timer.name] = left;
+			objectVariables[rawObject.name + "." + timer.name] = left;
+		}
 		object.looks = looks;
 		if (!looks.empty() && !looks.front().frames.empty())
 		{
@@ -2047,6 +2078,8 @@ namespace xge
 					: "<after> is " + std::to_string(seconds) + "; expected a number of seconds, 0 or more"));
 			}
 			timer.sprite = rawTimer.sprite;
+			timer.name = rawTimer.name;
+			timer.seconds = seconds;
 
 			timers.push_back(std::move(timer));
 		}

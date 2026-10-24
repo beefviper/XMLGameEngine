@@ -182,8 +182,11 @@ TEST_CASE("the energy runs down a second at a time, and running out costs a ship
 	play.frames(120);
 	CHECK(play.energy() == Approx(full - 2.0f));
 
-	play.game.getObject("energy").variable["level"] = 1;
-	play.frames(61);
+	// Nearly out: the energy's timer a second from going off.
+	play.game.getObject("energy").timers.at(0).framesLeft = 60;
+	play.frames(1);
+	CHECK(play.energy() == Approx(1));
+	play.frames(60);
 	CHECK(play.player().variable.at("lives") == 2);
 	CHECK(play.energy() == Approx(full));
 }

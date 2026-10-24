@@ -72,7 +72,7 @@ A note on pictures: an `<image>` is a file loaded by the window backend; an `<sv
 | Kinematics | velocity, acceleration, heading, facing, drag, mass, pull, seek, altitude, grip, a hop's or jump's arc, and the moving verbs | good; `leap` has no air control |
 | Steering | `chase`, `aim`, paths with `follow`, maze walking with `go`, `hunt`, `wander`, `hunt` by hops | good; no search of a maze, straight path legs only |
 | Collision | edges, `class`, `object`, `side`, `unless`, `sprite`, `slower`, `faster`, checks, `type`, `solid`, `hitbox`, and the touching verbs | the largest layer: where verbs, adjectives and prepositions meet |
-| Time | timers with `every` and `after` (on objects, states, scenes, looks), animation `interval`, `seconds` | built; counts frames, no time left shown |
+| Time | timers with `every` and `after` (on objects, states, scenes, looks), animation `interval`, `seconds` | built; counts frames; a named object timer's time left is its object's number |
 | Sound | `sounds`, `note`, `rest`, `part`, `wave`, `pitch`, `to`, `volume`, `loop`, `play`, `silence`, `music` | built; no envelope, no stereo |
 | Input | `input` (`button`, `axis`), `keys` sets, `trigger`, `track`, mouse and pads, `computer` with `hold` | small and clean |
 | Game flow | states, `push`, `pop`, scenes with `enter` and `reset scene`/`way`, `show state`, conditions with `all`/`any`, `turns`, `demo`, `keeps`, `rank` | enough for the shipped games |
@@ -86,7 +86,7 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 |---|---|---|
 | **Math** beyond the four operations | `min`, `max`, `negate`, `abs`, `clamp`, `floor`, `sign`, `pick`, an integer `random`; a `<random>` step in an `<equation>` | [arithmetic](03-arithmetic.md), [values-and-names](04-values-and-names.md) |
 | **Planning** | searching a maze, leading a target, curved paths, paths that aim | [chase-and-paths](24-chase-and-paths.md) |
-| **Queries** | a timer's time left, what is touching what, line of sight; a condition's threshold that follows a variable | [states-and-conditions](07-states-and-conditions.md), [timers](09-timers.md) |
+| **Queries** | what is touching what, line of sight; a condition's threshold that follows a variable | [states-and-conditions](07-states-and-conditions.md), [timers](09-timers.md) |
 | **Branching and events** | `if`, `goto`, an event queue. Conditions join tests with `all`/`any` but have no else; keeping control flow out is deliberate | [vision](01-vision.md), [timers](09-timers.md) |
 | **Presentation** | a camera and scrolling (version 2), recolouring a look, per-frame animation intervals, decals | [ideas](57-ideas.md), [pictures](30-pictures.md) |
 

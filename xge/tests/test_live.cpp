@@ -371,3 +371,59 @@ TEST_CASE("fishingderby.xml: the computer takes its hook down and lands what bit
 	CHECK(play.get("right").variable.at("score") > 0.0f);
 	CHECK(play.get("left").variable.at("score") == Approx(0));
 }
+
+TEST_CASE("a named timer's time left is a number of its object: whole seconds, rounded up", "[live][timers]")
+{
+	const Scratch file(box("bomb", 100, 50, "<variables><variable name=\"bangs\">0</variable><variable name=\"read\">0</variable></variables>"
+		"<timers><timer name=\"fuse\"><after>3</after><inc variable=\"bomb.bangs\" /></timer>"
+		"<timer name=\"tick\"><every>0.5</every></timer></timers>")
+		+ "<object name=\"clock\"><sprite><text><content>LEFT</content><number>bomb.fuse</number><size>16</size><color>color.white</color></text></sprite>"
+		"<position><x>0</x><y>0</y></position></object>",
+		"<set variable=\"bomb.read\">bomb.fuse * 10</set>");
+	Played play(file.path);
+	Object& bomb = play.get("bomb");
+
+	// It starts at its whole time, before it has counted.
+	CHECK(bomb.variable.at("fuse") == Approx(3));
+	CHECK(bomb.variable.at("tick") == Approx(1));
+
+	play.frames(1);
+	CHECK(bomb.variable.at("fuse") == Approx(3));
+	CHECK(play.get("clock").spriteParams.at(1) == "LEFT 3");
+
+	// 179 frames counted of 180: under a second left still shows 1.
+	play.frames(178);
+	CHECK(bomb.variable.at("fuse") == Approx(1));
+	CHECK(play.get("clock").spriteParams.at(1) == "LEFT 1");
+	play.tap(KeyCode::Space);
+	CHECK(bomb.variable.at("read") == Approx(10));
+	CHECK(bomb.variable.at("bangs") == Approx(0));
+
+	// Gone off: 0 from then on.
+	play.frames(1);
+	CHECK(bomb.variable.at("bangs") == Approx(1));
+	CHECK(bomb.variable.at("fuse") == Approx(0));
+	play.frames(30);
+	CHECK(bomb.variable.at("fuse") == Approx(0));
+	CHECK(play.get("clock").spriteParams.at(1) == "LEFT 0");
+
+	// A reset gives it its whole time again.
+	play.game.resetObject("bomb");
+	CHECK(bomb.variable.at("fuse") == Approx(3));
+	play.frames(1);
+	CHECK(bomb.variable.at("fuse") == Approx(3));
+}
+
+TEST_CASE("a named timer's name cannot be a variable of its object or where it is", "[live][timers]")
+{
+	const auto load = [](const std::string& objects)
+	{
+		const Scratch file(objects, "<stop />");
+		Game game(file.path);
+	};
+
+	CHECK_THROWS_WITH(load(box("bomb", 0, 0, "<variables><variable name=\"fuse\">1</variable></variables><timers><timer name=\"fuse\"><after>3</after></timer></timers>")),
+		ContainsSubstring("bomb.fuse is the timer's time left"));
+	CHECK_THROWS_WITH(load(box("bomb", 0, 0, "<timers><timer name=\"x\"><after>3</after></timer></timers>")),
+		ContainsSubstring("give the timer another name"));
+}

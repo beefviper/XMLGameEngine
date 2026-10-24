@@ -34,4 +34,4 @@
 
 ## Open
 
-Only the front invader of a column firing, an event queue, `<goto state>`, mutable game-wide variables (object variables did the job in every game), a timer's time left on screen, timers whose numbers follow variables beyond the interval.
+Only the front invader of a column firing, an event queue, `<goto state>`, mutable game-wide variables (object variables did the job in every game), timers whose numbers follow variables beyond the interval.

@@ -782,6 +782,13 @@ namespace xge
 		// Empty: it counts whatever the object shows.
 		std::string sprite;
 
+		// name="fuse": on an object, its time left is the object's number of
+		// that name (bomb.fuse), whole seconds rounded up, kept by
+		// Game::updateTimers; `seconds` is what it starts at. In a state or a
+		// scene the name only lets a from= copy replace it.
+		std::string name;
+		float seconds{};
+
 		// Frames until it goes off; -1 means not started yet (worked out on
 		// the first frame it counts). `done` is a once-only timer that has
 		// gone off.

@@ -29,9 +29,10 @@
     on a timer of its own, every few seconds, the wait drawn again each time.
   * As on the 2600, the shot is steered: a timer that runs every frame while
     it flies keeps it over the blaster.
-  * The energy is a variable of its own object, which a timer of the state
-    takes down a second at a time and a <reset object="energy" /> fills
-    again: at the start of each wave and when a blaster is lost. The bar is
+  * The energy is a timer of its own object, named "level", so energy.level
+    is the seconds it has left; when it goes off a blaster is lost, and a
+    <reset object="energy" /> fills it again at the start of each wave and
+    when a blaster is lost another way. The bar is
     drawn as a green strip with a black cover laid over it, which another
     timer slides along to where the energy has got to.
   * A wave's condition that none of it is left (a class counts the wave in
@@ -185,7 +186,16 @@
         <!-- the energy that runs down, and its bar: a green strip, and a black
              cover over what is spent -->
         <object name="energy">
-          <variables><variable name="level">full</variable></variables>
+          <timers>
+            <!-- out of energy: a blaster lost, and the energy filled again -->
+            <timer name="level">
+              <after>full</after>
+              <dec variable="player.lives" />
+              <play sound="lost" />
+              <despawn object="bomb" />
+              <reset object="energy" />
+            </timer>
+          </timers>
         </object>
         <object name="bar">
           <sprite><rectangle><width>barwidth</width><height>12</height><color>color.green</color></rectangle></sprite>
@@ -479,17 +489,8 @@
           <atmost>0</atmost>
           <push state="gameover" />
         </condition>
-        <!-- out of energy: a blaster lost, and the energy filled again -->
-        <condition object="energy" variable="level">
-          <atmost>0</atmost>
-          <dec variable="player.lives" />
-          <play sound="lost" />
-          <reset object="energy" />
-          <despawn object="bomb" />
-        </condition>
       </conditions>
       <timers>
-        <timer><every>1</every><dec variable="energy.level" /></timer>
         <timer><every>0.1</every><set variable="cover.x">barleft + barwidth * energy.level / full</set></timer>
       </timers>
     </state>
