@@ -17,8 +17,9 @@
 
   How it is written:
   * The eight waves are the <scenes> of the playing state. The blaster, its
-    shot, the bombs, the energy bar and the numbers along the top are the
-    state's own objects, there in every wave.
+    shot, the energy bar and the numbers along the top are the state's own
+    objects, there in every wave. The bomb is the kit's, so each wave has
+    the bombs its enemies drop.
   * A wave is the kit's <group> of eight, moving with one velocity and
     <wrap />ping round the sides, so the formation goes off one side and
     comes back on the other, and <bounce />ing off the top and bottom (only
@@ -80,6 +81,56 @@
     <style name="line"><size>24</size><color>color.white</color></style>
     <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
+  <kit>
+    <group name="enemies" class="enemy">
+      <sprite>
+        <bitmap>
+          <row>..******..</row>
+          <row>.********.</row>
+          <row>**********</row>
+          <row>..........</row>
+          <row>**********</row>
+          <row>.********.</row>
+          <scale>3</scale>
+          <color>color.orange</color>
+        </bitmap>
+      </sprite>
+      <velocity><x>2</x></velocity>
+      <facing>down</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal"><wrap /></collision>
+        <collision edge="vertical"><bounce /></collision>
+        <collision object="laser">
+          <inc variable="player.score">points</inc>
+          <play sound="hit" />
+          <die />
+        </collision>
+      </collisions>
+      <timers>
+        <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bomb" /></timer>
+      </timers>
+      <member><position><x>40</x><y>row1</y></position></member>
+      <member><position><x>200</x><y>row1</y></position></member>
+      <member><position><x>360</x><y>row1</y></position></member>
+      <member><position><x>520</x><y>row1</y></position></member>
+      <member><position><x>120</x><y>row2</y></position></member>
+      <member><position><x>280</x><y>row2</y></position></member>
+      <member><position><x>440</x><y>row2</y></position></member>
+      <member><position><x>600</x><y>row2</y></position></member>
+    </group>
+    <!-- a bomb: six at most -->
+    <object name="bomb" class="bomb">
+      <sprite><rectangle><width>4</width><height>10</height><color>color.red</color></rectangle></sprite>
+      <velocity><y>4</y></velocity>
+      <most>6</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision object="player"><despawn /></collision>
+      </collisions>
+    </object>
+  </kit>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
@@ -170,19 +221,6 @@
           </timers>
         </object>
 
-        <!-- a bomb: six at most -->
-        <object name="bomb" class="bomb">
-          <sprite><rectangle><width>4</width><height>10</height><color>color.red</color></rectangle></sprite>
-          <velocity><y>4</y></velocity>
-          <exists>false</exists>
-          <most>6</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision object="player"><despawn /></collision>
-          </collisions>
-        </object>
-
         <!-- the energy that runs down, and its bar: a green strip, and a black
              cover over what is spent -->
         <object name="energy">
@@ -216,48 +254,6 @@
         </object>
       </objects>
       <scenes>
-        <!-- a wave: two rows of four that wrap round the sides and drop
-             bombs on a timer of their own; row1, row2 and points are the
-             wave's -->
-        <objects>
-          <group name="enemies" class="enemy">
-            <sprite>
-              <bitmap>
-                <row>..******..</row>
-                <row>.********.</row>
-                <row>**********</row>
-                <row>..........</row>
-                <row>**********</row>
-                <row>.********.</row>
-                <scale>3</scale>
-                <color>color.orange</color>
-              </bitmap>
-            </sprite>
-            <velocity><x>2</x></velocity>
-            <facing>down</facing>
-            <collisions>
-              <enabled>true</enabled>
-              <collision edge="horizontal"><wrap /></collision>
-              <collision edge="vertical"><bounce /></collision>
-              <collision object="laser">
-                <inc variable="player.score">points</inc>
-                <play sound="hit" />
-                <die />
-              </collision>
-            </collisions>
-            <timers>
-              <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bomb" /></timer>
-            </timers>
-            <member><position><x>40</x><y>row1</y></position></member>
-            <member><position><x>200</x><y>row1</y></position></member>
-            <member><position><x>360</x><y>row1</y></position></member>
-            <member><position><x>520</x><y>row1</y></position></member>
-            <member><position><x>120</x><y>row2</y></position></member>
-            <member><position><x>280</x><y>row2</y></position></member>
-            <member><position><x>440</x><y>row2</y></position></member>
-            <member><position><x>600</x><y>row2</y></position></member>
-          </group>
-        </objects>
 
         <!-- hamburgers, crossing straight over -->
         <scene name="wave1">

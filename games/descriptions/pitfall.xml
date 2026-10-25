@@ -118,6 +118,322 @@
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size></style>
   </styles>
+  <kit>
+    <!-- what Harry stands on: the whole path, the banks of a pond, or a
+         path with a ladder hole too narrow to fall down -->
+    <object name="path" class="ground">
+      <sprite>
+        <rectangle>
+          <width>window.right</width>
+          <height>thick</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>surface</y></position>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+    <group name="banks" class="ground">
+      <sprite>
+        <rectangle>
+          <width>220</width>
+          <height>thick</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position><y>surface</y></position>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <member><position><x>0</x></position></member>
+      <member>
+        <sprite>
+          <rectangle>
+            <width>150</width>
+            <height>thick</height>
+            <color>color.yellow</color>
+          </rectangle>
+        </sprite>
+        <position><x>490</x></position>
+      </member>
+    </group>
+    <group name="holepath" class="ground">
+      <sprite>
+        <rectangle>
+          <width>314</width>
+          <height>thick</height>
+          <color>color.yellow</color>
+        </rectangle>
+      </sprite>
+      <position><y>surface</y></position>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+      <member><position><x>0</x></position></member>
+      <member><position><x>326</x></position></member>
+    </group>
+    <!-- the ladder from the path down to the tunnel -->
+    <object name="ladder" class="ladder">
+      <sprite>
+        <line><from><x>0</x><y>0</y></from><to><x>0</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+        <line><from><x>18</x><y>0</y></from><to><x>18</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+        <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+        <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+        <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+        <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+        <line><from><x>0</x><y>116</y></from><to><x>18</x><y>116</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      </sprite>
+      <position><x>310</x><y>surface</y></position>
+    </object>
+
+    <!-- two logs rolling along the path -->
+    <group name="logs" class="log">
+      <sprite>
+        <bitmap>
+          <row>...******...</row>
+          <row>.*******ooo.</row>
+          <row>**.***.*obbo</row>
+          <row>***.***obbbo</row>
+          <row>**.***.*obbo</row>
+          <row>.*******ooo.</row>
+          <row>...******...</row>
+          <scale>3</scale>
+          <color>color.brown</color>
+          <color char="o">color.orange</color>
+          <color char="b">color.yellow</color>
+        </bitmap>
+      </sprite>
+      <position><y>surface - 21</y></position>
+      <velocity><x>-roll</x></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+      </collisions>
+      <member><position><x>330</x></position></member>
+      <member><position><x>560</x></position></member>
+    </group>
+
+    <!-- a tar pit on the path -->
+    <object name="tar" class="hazard">
+      <sprite>
+        <bitmap>
+          <row>...******************...</row>
+          <row>************************</row>
+          <row>.**********************.</row>
+          <row>....****************....</row>
+          <scale>2</scale>
+          <color>color.black</color>
+        </bitmap>
+      </sprite>
+      <position><x>300</x><y>surface - 1</y></position>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+
+    <!-- the pond, and three crocodiles to cross it on: shut, a head to
+         stand on; open, they bite, every three seconds for one -->
+    <object name="pond" class="water">
+      <sprite>
+        <rectangle>
+          <width>270</width>
+          <height>32</height>
+          <color>color.blue</color>
+        </rectangle>
+      </sprite>
+      <position><x>220</x><y>surface + 4</y></position>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+    <group name="crocs" class="croc">
+      <sprite name="shut">
+        <bitmap>
+          <row>....g..g.......</row>
+          <row>.ggwkggwkgggggg</row>
+          <row>ggggggggggggggg</row>
+          <row>.ggggggggggggg.</row>
+          <scale>2</scale>
+          <color char="g">color.darkgreen</color>
+          <color char="w">color.white</color>
+          <color char="k">color.black</color>
+        </bitmap>
+      </sprite>
+      <sprite name="open">
+        <bitmap>
+          <row>....g..g...gggg</row>
+          <row>.ggwkggwkggrrrr</row>
+          <row>ggggggggggrrrrr</row>
+          <row>.ggggggggggwwww</row>
+          <scale>2</scale>
+          <color char="g">color.darkgreen</color>
+          <color char="w">color.white</color>
+          <color char="k">color.black</color>
+          <color char="r">color.red</color>
+        </bitmap>
+      </sprite>
+      <position><y>surface - 2</y></position>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="harry" sprite="open">
+          <trigger object="harry" action="lose" />
+        </collision>
+      </collisions>
+      <timers>
+        <timer sprite="shut">
+          <after>3</after>
+          <become sprite="open" />
+          <play sound="snap" />
+        </timer>
+        <timer sprite="open">
+          <after>1</after>
+          <become sprite="shut" />
+        </timer>
+      </timers>
+      <member><position><x>260</x></position></member>
+      <member><position><x>340</x></position></member>
+      <member><position><x>420</x></position></member>
+    </group>
+
+    <!-- a fire on the path -->
+    <object name="fire" class="hazard">
+      <sprite name="high">
+        <bitmap>
+          <row>...r....</row>
+          <row>..rr..r.</row>
+          <row>..ror.r.</row>
+          <row>.roooor.</row>
+          <row>.rooyor.</row>
+          <row>rooyyoor</row>
+          <row>royyyyor</row>
+          <row>.kkkkkk.</row>
+          <scale>2</scale>
+          <color char="r">color.red</color>
+          <color char="o">color.orange</color>
+          <color char="y">color.yellow</color>
+          <color char="k">color.brown</color>
+        </bitmap>
+      </sprite>
+      <sprite name="low">
+        <bitmap>
+          <row>........</row>
+          <row>....r...</row>
+          <row>.r..rr..</row>
+          <row>.rr.ror.</row>
+          <row>.roooor.</row>
+          <row>rooyyoor</row>
+          <row>royyyyor</row>
+          <row>.kkkkkk.</row>
+          <scale>2</scale>
+          <color char="r">color.red</color>
+          <color char="o">color.orange</color>
+          <color char="y">color.yellow</color>
+          <color char="k">color.brown</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.12</interval>
+        <frame sprite="high" />
+        <frame sprite="low" />
+      </animation>
+      <position><x>170</x><y>surface - fire.height</y></position>
+      <collisions>
+        <enabled>true</enabled>
+      </collisions>
+    </object>
+
+    <!-- a scorpion pacing the tunnel -->
+    <object name="scorpion" class="hazard">
+      <sprite>
+        <bitmap>
+          <row>.......**.</row>
+          <row>........*.</row>
+          <row>.**.....*.</row>
+          <row>*..******.</row>
+          <row>.********.</row>
+          <row>*.*.*.*.*.</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <position><x>200</x><y>tunnel - 12</y></position>
+      <velocity><x>crawl</x></velocity>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <bounce />
+        </collision>
+      </collisions>
+    </object>
+
+    <!-- the screen's treasure, a money bag unless the screen says
+         otherwise, worth the screen's `worth` -->
+    <object name="treasure" class="treasure">
+      <sprite>
+        <bitmap>
+          <row>..k**k..</row>
+          <row>...kk...</row>
+          <row>.******.</row>
+          <row>***dd***</row>
+          <row>**d*****</row>
+          <row>***dd***</row>
+          <row>*****d**</row>
+          <row>.**dd**.</row>
+          <scale>2</scale>
+          <color>color.lightgrey</color>
+          <color char="k">color.brown</color>
+          <color char="d">color.darkgrey</color>
+        </bitmap>
+      </sprite>
+      <position><x>580</x><y>surface - treasure.height</y></position>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="harry">
+          <inc variable="status.score">worth</inc>
+          <inc variable="status.found" />
+          <play sound="treasure" />
+          <die />
+        </collision>
+      </collisions>
+    </object>
+    <object name="east" class="eastside">
+      <sprite>
+        <rectangle>
+          <width>4</width>
+          <height>window.bottom</height>
+          <color>color.black</color>
+        </rectangle>
+      </sprite>
+      <position><x>window.right - 4</x><y>0</y></position>
+      <drawn>false</drawn>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="harry">
+          <enter way="east" />
+        </collision>
+      </collisions>
+    </object>
+    <object name="west" class="westside">
+      <sprite>
+        <rectangle>
+          <width>4</width>
+          <height>window.bottom</height>
+          <color>color.black</color>
+        </rectangle>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <drawn>false</drawn>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="harry">
+          <enter way="west" />
+        </collision>
+      </collisions>
+    </object>
+  </kit>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
@@ -385,323 +701,6 @@
         </object>
       </objects>
       <scenes>
-        <!-- what a jungle screen is made of -->
-        <objects>
-          <!-- what Harry stands on: the whole path, the banks of a pond, or a
-               path with a ladder hole too narrow to fall down -->
-          <object name="path" class="ground">
-            <sprite>
-              <rectangle>
-                <width>window.right</width>
-                <height>thick</height>
-                <color>color.yellow</color>
-              </rectangle>
-            </sprite>
-            <position><x>0</x><y>surface</y></position>
-            <collisions>
-              <enabled>true</enabled>
-            </collisions>
-          </object>
-          <group name="banks" class="ground">
-            <sprite>
-              <rectangle>
-                <width>220</width>
-                <height>thick</height>
-                <color>color.yellow</color>
-              </rectangle>
-            </sprite>
-            <position><y>surface</y></position>
-            <collisions>
-              <enabled>true</enabled>
-            </collisions>
-            <member><position><x>0</x></position></member>
-            <member>
-              <sprite>
-                <rectangle>
-                  <width>150</width>
-                  <height>thick</height>
-                  <color>color.yellow</color>
-                </rectangle>
-              </sprite>
-              <position><x>490</x></position>
-            </member>
-          </group>
-          <group name="holepath" class="ground">
-            <sprite>
-              <rectangle>
-                <width>314</width>
-                <height>thick</height>
-                <color>color.yellow</color>
-              </rectangle>
-            </sprite>
-            <position><y>surface</y></position>
-            <collisions>
-              <enabled>true</enabled>
-            </collisions>
-            <member><position><x>0</x></position></member>
-            <member><position><x>326</x></position></member>
-          </group>
-          <!-- the ladder from the path down to the tunnel -->
-          <object name="ladder" class="ladder">
-            <sprite>
-              <line><from><x>0</x><y>0</y></from><to><x>0</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-              <line><from><x>18</x><y>0</y></from><to><x>18</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>116</y></from><to><x>18</x><y>116</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            </sprite>
-            <position><x>310</x><y>surface</y></position>
-          </object>
-
-          <!-- two logs rolling along the path -->
-          <group name="logs" class="log">
-            <sprite>
-              <bitmap>
-                <row>...******...</row>
-                <row>.*******ooo.</row>
-                <row>**.***.*obbo</row>
-                <row>***.***obbbo</row>
-                <row>**.***.*obbo</row>
-                <row>.*******ooo.</row>
-                <row>...******...</row>
-                <scale>3</scale>
-                <color>color.brown</color>
-                <color char="o">color.orange</color>
-                <color char="b">color.yellow</color>
-              </bitmap>
-            </sprite>
-            <position><y>surface - 21</y></position>
-            <velocity><x>-roll</x></velocity>
-            <collisions>
-              <enabled>true</enabled>
-              <collision edge="horizontal">
-                <wrap />
-              </collision>
-            </collisions>
-            <member><position><x>330</x></position></member>
-            <member><position><x>560</x></position></member>
-          </group>
-
-          <!-- a tar pit on the path -->
-          <object name="tar" class="hazard">
-            <sprite>
-              <bitmap>
-                <row>...******************...</row>
-                <row>************************</row>
-                <row>.**********************.</row>
-                <row>....****************....</row>
-                <scale>2</scale>
-                <color>color.black</color>
-              </bitmap>
-            </sprite>
-            <position><x>300</x><y>surface - 1</y></position>
-            <collisions>
-              <enabled>true</enabled>
-            </collisions>
-          </object>
-
-          <!-- the pond, and three crocodiles to cross it on: shut, a head to
-               stand on; open, they bite, every three seconds for one -->
-          <object name="pond" class="water">
-            <sprite>
-              <rectangle>
-                <width>270</width>
-                <height>32</height>
-                <color>color.blue</color>
-              </rectangle>
-            </sprite>
-            <position><x>220</x><y>surface + 4</y></position>
-            <collisions>
-              <enabled>true</enabled>
-            </collisions>
-          </object>
-          <group name="crocs" class="croc">
-            <sprite name="shut">
-              <bitmap>
-                <row>....g..g.......</row>
-                <row>.ggwkggwkgggggg</row>
-                <row>ggggggggggggggg</row>
-                <row>.ggggggggggggg.</row>
-                <scale>2</scale>
-                <color char="g">color.darkgreen</color>
-                <color char="w">color.white</color>
-                <color char="k">color.black</color>
-              </bitmap>
-            </sprite>
-            <sprite name="open">
-              <bitmap>
-                <row>....g..g...gggg</row>
-                <row>.ggwkggwkggrrrr</row>
-                <row>ggggggggggrrrrr</row>
-                <row>.ggggggggggwwww</row>
-                <scale>2</scale>
-                <color char="g">color.darkgreen</color>
-                <color char="w">color.white</color>
-                <color char="k">color.black</color>
-                <color char="r">color.red</color>
-              </bitmap>
-            </sprite>
-            <position><y>surface - 2</y></position>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="harry" sprite="open">
-                <trigger object="harry" action="lose" />
-              </collision>
-            </collisions>
-            <timers>
-              <timer sprite="shut">
-                <after>3</after>
-                <become sprite="open" />
-                <play sound="snap" />
-              </timer>
-              <timer sprite="open">
-                <after>1</after>
-                <become sprite="shut" />
-              </timer>
-            </timers>
-            <member><position><x>260</x></position></member>
-            <member><position><x>340</x></position></member>
-            <member><position><x>420</x></position></member>
-          </group>
-
-          <!-- a fire on the path -->
-          <object name="fire" class="hazard">
-            <sprite name="high">
-              <bitmap>
-                <row>...r....</row>
-                <row>..rr..r.</row>
-                <row>..ror.r.</row>
-                <row>.roooor.</row>
-                <row>.rooyor.</row>
-                <row>rooyyoor</row>
-                <row>royyyyor</row>
-                <row>.kkkkkk.</row>
-                <scale>2</scale>
-                <color char="r">color.red</color>
-                <color char="o">color.orange</color>
-                <color char="y">color.yellow</color>
-                <color char="k">color.brown</color>
-              </bitmap>
-            </sprite>
-            <sprite name="low">
-              <bitmap>
-                <row>........</row>
-                <row>....r...</row>
-                <row>.r..rr..</row>
-                <row>.rr.ror.</row>
-                <row>.roooor.</row>
-                <row>rooyyoor</row>
-                <row>royyyyor</row>
-                <row>.kkkkkk.</row>
-                <scale>2</scale>
-                <color char="r">color.red</color>
-                <color char="o">color.orange</color>
-                <color char="y">color.yellow</color>
-                <color char="k">color.brown</color>
-              </bitmap>
-            </sprite>
-            <animation>
-              <interval>0.12</interval>
-              <frame sprite="high" />
-              <frame sprite="low" />
-            </animation>
-            <position><x>170</x><y>surface - fire.height</y></position>
-            <collisions>
-              <enabled>true</enabled>
-            </collisions>
-          </object>
-
-          <!-- a scorpion pacing the tunnel -->
-          <object name="scorpion" class="hazard">
-            <sprite>
-              <bitmap>
-                <row>.......**.</row>
-                <row>........*.</row>
-                <row>.**.....*.</row>
-                <row>*..******.</row>
-                <row>.********.</row>
-                <row>*.*.*.*.*.</row>
-                <scale>2</scale>
-                <color>color.white</color>
-              </bitmap>
-            </sprite>
-            <position><x>200</x><y>tunnel - 12</y></position>
-            <velocity><x>crawl</x></velocity>
-            <collisions>
-              <enabled>true</enabled>
-              <collision edge="horizontal">
-                <bounce />
-              </collision>
-            </collisions>
-          </object>
-
-          <!-- the screen's treasure, a money bag unless the screen says
-               otherwise, worth the screen's `worth` -->
-          <object name="treasure" class="treasure">
-            <sprite>
-              <bitmap>
-                <row>..k**k..</row>
-                <row>...kk...</row>
-                <row>.******.</row>
-                <row>***dd***</row>
-                <row>**d*****</row>
-                <row>***dd***</row>
-                <row>*****d**</row>
-                <row>.**dd**.</row>
-                <scale>2</scale>
-                <color>color.lightgrey</color>
-                <color char="k">color.brown</color>
-                <color char="d">color.darkgrey</color>
-              </bitmap>
-            </sprite>
-            <position><x>580</x><y>surface - treasure.height</y></position>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="harry">
-                <inc variable="status.score">worth</inc>
-                <inc variable="status.found" />
-                <play sound="treasure" />
-                <die />
-              </collision>
-            </collisions>
-          </object>
-          <object name="east" class="eastside">
-            <sprite>
-              <rectangle>
-                <width>4</width>
-                <height>window.bottom</height>
-                <color>color.black</color>
-              </rectangle>
-            </sprite>
-            <position><x>window.right - 4</x><y>0</y></position>
-            <drawn>false</drawn>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="harry">
-                <enter way="east" />
-              </collision>
-            </collisions>
-          </object>
-          <object name="west" class="westside">
-            <sprite>
-              <rectangle>
-                <width>4</width>
-                <height>window.bottom</height>
-                <color>color.black</color>
-              </rectangle>
-            </sprite>
-            <position><x>0</x><y>0</y></position>
-            <drawn>false</drawn>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="harry">
-                <enter way="west" />
-              </collision>
-            </collisions>
-          </object>
-        </objects>
 
         <!-- screen 1: rolling logs, and the money bag -->
         <scene name="screen1">

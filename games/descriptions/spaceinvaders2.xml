@@ -76,6 +76,77 @@
     <style name="banner"><size>128</size><color>color.green</color></style>
     <style name="hud"><size>36</size><color>color.white</color></style>
   </styles>
+  <kit>
+    <!-- the aliens' plasma bolts, the sheet's enemy bolt (0,1) flipped to
+         fly down: three at most -->
+    <object name="bomb" class="bomb">
+      <sprite>
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>11</x><y>37</y><width>10</width><height>23</height>
+          <scale>boltzoom</scale>
+          <hide>backdrop</hide>
+          <flip>vertical</flip>
+        </svg>
+      </sprite>
+      <velocity><y>5</y></velocity>
+      <most>3</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision object="player"><despawn /></collision>
+        <collision class="shield"><despawn /></collision>
+        <collision class="ground"><despawn /></collision>
+        <collision object="bullet"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- the sheet's four explosion frames, left where a hit was -->
+    <object name="blast" class="blast">
+      <sprite name="a">
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>66</x><y>34</y><width>28</width><height>28</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <sprite name="b">
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>98</x><y>34</y><width>28</width><height>28</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <sprite name="c">
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>130</x><y>34</y><width>28</width><height>28</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <sprite name="d">
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>162</x><y>34</y><width>28</width><height>28</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <animation>
+        <interval>0.08</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d" />
+      </animation>
+      <most>2</most>
+      <timers>
+        <timer><after>0.32</after><despawn /></timer>
+      </timers>
+    </object>
+  </kit>
   <objects>
     <object name="player">
       <sprite>
@@ -164,30 +235,6 @@
             <collision class="shield"><die /></collision>
             <collision class="bomb"><die /></collision>
             <collision class="ufo"><die /></collision>
-          </collisions>
-        </object>
-        <!-- the aliens' plasma bolts, the sheet's enemy bolt (0,1) flipped to
-             fly down: three at most -->
-        <object name="bomb" class="bomb">
-          <sprite>
-            <svg>
-              <path>assets/Space Invaders Color Sprites.svg</path>
-              <x>11</x><y>37</y><width>10</width><height>23</height>
-              <scale>boltzoom</scale>
-              <hide>backdrop</hide>
-              <flip>vertical</flip>
-            </svg>
-          </sprite>
-          <velocity><y>5</y></velocity>
-          <exists>false</exists>
-          <most>3</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision object="player"><despawn /></collision>
-            <collision class="shield"><despawn /></collision>
-            <collision class="ground"><despawn /></collision>
-            <collision object="bullet"><despawn /></collision>
           </collisions>
         </object>
         <group name="shields" class="shield">
@@ -341,53 +388,6 @@
             <variables><variable name="worth">10</variable></variables>
           </row>
         </group>
-        <!-- the sheet's four explosion frames, left where a hit was -->
-        <object name="blast" class="blast">
-          <sprite name="a">
-            <svg>
-              <path>assets/Space Invaders Color Sprites.svg</path>
-              <x>66</x><y>34</y><width>28</width><height>28</height>
-              <scale>zoom</scale>
-              <hide>backdrop</hide>
-            </svg>
-          </sprite>
-          <sprite name="b">
-            <svg>
-              <path>assets/Space Invaders Color Sprites.svg</path>
-              <x>98</x><y>34</y><width>28</width><height>28</height>
-              <scale>zoom</scale>
-              <hide>backdrop</hide>
-            </svg>
-          </sprite>
-          <sprite name="c">
-            <svg>
-              <path>assets/Space Invaders Color Sprites.svg</path>
-              <x>130</x><y>34</y><width>28</width><height>28</height>
-              <scale>zoom</scale>
-              <hide>backdrop</hide>
-            </svg>
-          </sprite>
-          <sprite name="d">
-            <svg>
-              <path>assets/Space Invaders Color Sprites.svg</path>
-              <x>162</x><y>34</y><width>28</width><height>28</height>
-              <scale>zoom</scale>
-              <hide>backdrop</hide>
-            </svg>
-          </sprite>
-          <animation>
-            <interval>0.08</interval>
-            <frame sprite="a" />
-            <frame sprite="b" />
-            <frame sprite="c" />
-            <frame sprite="d" />
-          </animation>
-          <exists>false</exists>
-          <most>2</most>
-          <timers>
-            <timer><after>0.32</after><despawn /></timer>
-          </timers>
-        </object>
         <object name="pace">
           <variables><variable name="next">28</variable></variables>
         </object>

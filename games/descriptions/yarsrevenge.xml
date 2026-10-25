@@ -87,6 +87,58 @@
     <style name="help"><size>28</size><color>color.white</color></style>
     <style name="hud"><size>32</size><color>color.white</color></style>
   </styles>
+  <kit>
+    <!-- the Swirl: a spinning Qotile that waits a moment, then flies at where Yar is -->
+    <object name="swirl">
+      <sprite name="one">
+        <bitmap>
+          <row>..**....</row>
+          <row>...**...</row>
+          <row>*...**.*</row>
+          <row>**.**.**</row>
+          <row>**.**.**</row>
+          <row>*.**...*</row>
+          <row>...**...</row>
+          <row>....**..</row>
+          <scale>3</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <sprite name="two">
+        <bitmap>
+          <row>....**..</row>
+          <row>...**...</row>
+          <row>*.**...*</row>
+          <row>**.**.**</row>
+          <row>**.**.**</row>
+          <row>*...**.*</row>
+          <row>...**...</row>
+          <row>..**....</row>
+          <scale>3</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.06</interval>
+        <frame sprite="one" />
+        <frame sprite="two" />
+      </animation>
+      <most>1</most>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+        <collision edge="all"><despawn /></collision>
+        <collision object="blast">
+          <inc variable="player.score">6000</inc>
+          <play sound="boom" />
+          <despawn />
+        </collision>
+      </collisions>
+      <timers>
+        <timer><after>1</after><chase object="yar"><speed>4</speed></chase></timer>
+      </timers>
+    </object>
+  </kit>
   <states>
     <state name="mainmenu">
       <objects>
@@ -324,57 +376,6 @@
           <velocity><x>-1.6</x><y>0</y></velocity>
           <seek object="yar">2</seek>
           <collisions><enabled>true</enabled></collisions>
-        </object>
-        <!-- the Swirl: a spinning Qotile that waits a moment, then flies at where Yar is -->
-        <object name="swirl">
-          <sprite name="one">
-            <bitmap>
-              <row>..**....</row>
-              <row>...**...</row>
-              <row>*...**.*</row>
-              <row>**.**.**</row>
-              <row>**.**.**</row>
-              <row>*.**...*</row>
-              <row>...**...</row>
-              <row>....**..</row>
-              <scale>3</scale>
-              <color>color.magenta</color>
-            </bitmap>
-          </sprite>
-          <sprite name="two">
-            <bitmap>
-              <row>....**..</row>
-              <row>...**...</row>
-              <row>*.**...*</row>
-              <row>**.**.**</row>
-              <row>**.**.**</row>
-              <row>*...**.*</row>
-              <row>...**...</row>
-              <row>..**....</row>
-              <scale>3</scale>
-              <color>color.magenta</color>
-            </bitmap>
-          </sprite>
-          <animation>
-            <interval>0.06</interval>
-            <frame sprite="one" />
-            <frame sprite="two" />
-          </animation>
-          <exists>false</exists>
-          <most>1</most>
-          <collisions>
-            <enabled>true</enabled>
-            <type>pixel</type>
-            <collision edge="all"><despawn /></collision>
-            <collision object="blast">
-              <inc variable="player.score">6000</inc>
-              <play sound="boom" />
-              <despawn />
-            </collision>
-          </collisions>
-          <timers>
-            <timer><after>1</after><chase object="yar"><speed>4</speed></chase></timer>
-          </timers>
         </object>
         <!-- the Zorlon cannon at the left edge, level with Yar while it is there -->
         <object name="cannon">

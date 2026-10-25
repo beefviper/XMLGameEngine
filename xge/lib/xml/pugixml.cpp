@@ -24,6 +24,16 @@ namespace xge
 		return node.attribute(name.c_str()).value();
 	}
 
+	std::vector<std::pair<std::string, std::string>> PugiXmlNode::getAttributes() const
+	{
+		std::vector<std::pair<std::string, std::string>> attributes;
+		for (pugi::xml_attribute attribute = node.first_attribute(); attribute; attribute = attribute.next_attribute())
+		{
+			attributes.emplace_back(attribute.name(), attribute.value());
+		}
+		return attributes;
+	}
+
 	std::string PugiXmlNode::getText() const
 	{
 		std::string text;

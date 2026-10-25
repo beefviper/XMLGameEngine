@@ -106,8 +106,9 @@ Something many objects or states share is written once under a name, higher up, 
 - **Leave out what is nothing.** An object that never moves has no `<velocity>`; one that never collides has no `<collisions>`.
 - **Groups** write their members' shared parts once. Members are listed, laid out as columns and rows (where a row, a column or a cell changes what it needs), or placed by a **map**: rows of text where each character stands for a group or object (Pac-Man's walls and dots).
 - **Named sets** at the top of `<states>` hold the `<keys>`, `<shows>` and `<conditions>` several states use; a state takes one with `set=` or `keys=`.
-- **Copies.** `<state from="youwin">` and `<scene from="room1">` start as a copy of an earlier one and change what differs.
-- **Scenes** take their pieces from a kit at the top of the state, and an exit names a way (`<enter way="east" />`) that each scene points somewhere different.
+- **The kit** at the top of the game holds objects and groups written once. Nothing in it is in play until an `<objects>` takes it (`<object name="paddle2" from="paddle">`, or just by the piece's name) or a `spawn` copies it; where it is taken says how long it lasts: the game, a state or a scene.
+- **Copies.** `<state from="youwin">` and `<scene from="room1">` start as a copy of an earlier one and change what differs, by the same rule a take of a kit piece follows.
+- **Scenes** take their pieces from the kit, and an exit names a way (`<enter way="east" />`) that each scene points somewhere different.
 
 ### Vocabulary
 
@@ -127,7 +128,7 @@ Something many objects or states share is written once under a name, higher up, 
 
 **Looks.** A `<sprite>` is a `circle`, `rectangle`, `text`, `image`, `bitmap` (ASCII rows, one color per character), `svg`, a set of `line`s, or a `tether` (a line between two objects, redrawn each frame). Text is built from `content`, `number`, `letter` and `choose` pieces. Several named sprites are an object's **looks**, changed by `<become>`, and an `<animation>` of `<frame>`s cycles them; a named animation is a look that moves. `<poses>` picks the look for standing, walking, skidding, rising and falling by itself, and `<mirror>` flips the pictures for the other way. The `<window>` can have a `<scale>`, so a game is written at the size of the original screen and drawn bigger.
 
-**Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `grip` (how fast the speed follows the keys, so it slides), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `hidden` (starts out of play), `drawn` (in play but never drawn), and `exists` (`false`: only a description, copied by `spawn`) with `most` (how many copies at once).
+**Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `grip` (how fast the speed follows the keys, so it slides), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `hidden` (starts out of play), `drawn` (in play but never drawn), and `most` (how many copies a `spawn` may have made of it at once).
 
 **Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>` and `<check>`s.
 

@@ -121,6 +121,112 @@
     <style name="help"><size>22</size><color>color.lightgrey</color></style>
     <style name="hud"><size>28</size></style>
   </styles>
+  <kit>
+    <!-- every robot of every room: each room takes its own by name -->
+    <group name="robots" class="robot">
+      <sprite name="a">
+        <bitmap>
+          <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>*******</row><row>*.***.*</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+          <scale>2</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>.*****.</row><row>*.***.*</row><row>.*...*.</row><row>.*...*.</row><row>**...**</row>
+          <scale>2</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.25</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="wall"><trigger action="destroyed" /></collision>
+        <collision class="robot"><trigger action="destroyed" /></collision>
+        <collision class="exit"><reverse /></collision>
+        <collision object="bullet">
+          <trigger action="destroyed" />
+          <reset object="bullet" />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="destroyed">
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="player.kills" />
+          <play sound="boom" />
+        </action>
+      </actions>
+      <timers>
+        <timer>
+          <every><random min="1" max="2.5" /></every>
+          <chase object="player"><speed>0.25 + player.depth * 0.05</speed></chase>
+        </timer>
+      </timers>
+      <!-- room one's: they do not fire -->
+      <group name="quiet">
+        <member name="y1" />
+        <member name="y2" />
+        <member name="y3" />
+      </group>
+      <!-- the rest aim at the man and fire, sooner the deeper he is -->
+      <group name="armed">
+        <timers>
+          <timer>
+            <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+            <aim object="player" />
+            <fire object="robotshot" />
+            <play sound="robotshoot" />
+          </timer>
+        </timers>
+        <group name="red">
+          <sprite name="a"><bitmap><color>color.red</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>color.red</color></bitmap></sprite>
+          <member name="r1" />
+          <member name="r2" />
+          <member name="r3" />
+          <member name="r4" />
+        </group>
+        <group name="cyan">
+          <sprite name="a"><bitmap><color>color.cyan</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>color.cyan</color></bitmap></sprite>
+          <member name="c1" />
+          <member name="c2" />
+          <member name="c3" />
+          <member name="c4" />
+          <member name="c5" />
+        </group>
+        <group name="green">
+          <sprite name="a"><bitmap><color>color.green</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>color.green</color></bitmap></sprite>
+          <member name="g1" />
+          <member name="g2" />
+          <member name="g3" />
+          <member name="g4" />
+          <member name="g5" />
+          <member name="g6" />
+        </group>
+      </group>
+    </group>
+    <!-- a robot's shot: spawned when one fires, four at most in the room -->
+    <object name="robotshot" class="robotshot">
+      <sprite><rectangle><width>5</width><height>5</height><color>color.orange</color></rectangle></sprite>
+      <velocity><y>3</y></velocity>
+      <most>4</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision class="wall"><despawn /></collision>
+        <collision object="player"><despawn /></collision>
+      </collisions>
+    </object>
+  </kit>
   <states>
     <state name="title">
       <objects>
@@ -245,20 +351,6 @@
           </collisions>
         </object>
 
-        <!-- a robot's shot: spawned when one fires, four at most in the room -->
-        <object name="robotshot" class="robotshot">
-          <sprite><rectangle><width>5</width><height>5</height><color>color.orange</color></rectangle></sprite>
-          <velocity><y>3</y></velocity>
-          <exists>false</exists>
-          <most>4</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision class="wall"><despawn /></collision>
-            <collision object="player"><despawn /></collision>
-          </collisions>
-        </object>
-
         <!-- Evil Otto: comes straight for the man over the walls, cannot be shot -->
         <object name="otto" class="otto">
           <sprite>
@@ -306,100 +398,6 @@
       </objects>
 
       <scenes>
-        <objects>
-          <!-- every robot of every room: each room takes its own by name -->
-          <group name="robots" class="robot">
-            <sprite name="a">
-              <bitmap>
-                <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>*******</row><row>*.***.*</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-                <scale>2</scale>
-                <color>color.yellow</color>
-              </bitmap>
-            </sprite>
-            <sprite name="b">
-              <bitmap>
-                <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>.*****.</row><row>*.***.*</row><row>.*...*.</row><row>.*...*.</row><row>**...**</row>
-                <scale>2</scale>
-                <color>color.yellow</color>
-              </bitmap>
-            </sprite>
-            <animation>
-              <interval>0.25</interval>
-              <frame sprite="a" />
-              <frame sprite="b" />
-            </animation>
-            <position><x>0</x><y>0</y></position>
-            <collisions>
-              <enabled>true</enabled>
-              <collision class="wall"><trigger action="destroyed" /></collision>
-              <collision class="robot"><trigger action="destroyed" /></collision>
-              <collision class="exit"><reverse /></collision>
-              <collision object="bullet">
-                <trigger action="destroyed" />
-                <reset object="bullet" />
-              </collision>
-            </collisions>
-            <actions>
-              <action name="destroyed">
-                <die />
-                <inc variable="player.score">50</inc>
-                <inc variable="player.lifepoints">50</inc>
-                <inc variable="player.kills" />
-                <play sound="boom" />
-              </action>
-            </actions>
-            <timers>
-              <timer>
-                <every><random min="1" max="2.5" /></every>
-                <chase object="player"><speed>0.25 + player.depth * 0.05</speed></chase>
-              </timer>
-            </timers>
-            <!-- room one's: they do not fire -->
-            <group name="quiet">
-              <member name="y1" />
-              <member name="y2" />
-              <member name="y3" />
-            </group>
-            <!-- the rest aim at the man and fire, sooner the deeper he is -->
-            <group name="armed">
-              <timers>
-                <timer>
-                  <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
-                  <aim object="player" />
-                  <fire object="robotshot" />
-                  <play sound="robotshoot" />
-                </timer>
-              </timers>
-              <group name="red">
-                <sprite name="a"><bitmap><color>color.red</color></bitmap></sprite>
-                <sprite name="b"><bitmap><color>color.red</color></bitmap></sprite>
-                <member name="r1" />
-                <member name="r2" />
-                <member name="r3" />
-                <member name="r4" />
-              </group>
-              <group name="cyan">
-                <sprite name="a"><bitmap><color>color.cyan</color></bitmap></sprite>
-                <sprite name="b"><bitmap><color>color.cyan</color></bitmap></sprite>
-                <member name="c1" />
-                <member name="c2" />
-                <member name="c3" />
-                <member name="c4" />
-                <member name="c5" />
-              </group>
-              <group name="green">
-                <sprite name="a"><bitmap><color>color.green</color></bitmap></sprite>
-                <sprite name="b"><bitmap><color>color.green</color></bitmap></sprite>
-                <member name="g1" />
-                <member name="g2" />
-                <member name="g3" />
-                <member name="g4" />
-                <member name="g5" />
-                <member name="g6" />
-              </group>
-            </group>
-          </group>
-        </objects>
 
         <!-- ======================================================== room 1 -->
         <scene name="room1">

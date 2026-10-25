@@ -67,7 +67,7 @@ A note on pictures: an `<image>` is a file loaded by the window backend; an `<sv
 
 | Layer | Vocabulary | How complete |
 |---|---|---|
-| Data model: what exists | objects, groups, maps, variables, states (`from=`), scenes (kit, `from=`, ways), keeps | solid |
+| Data model: what exists | objects, groups, maps, variables, states (`from=`), the `<kit>` and `from=`, scenes (`from=`, ways), keeps | solid |
 | Appearance | eight shapes, multi-color bitmaps, animation, looks (moving ones too) and `become`, `poses`, `mirror`, blinking, the window's `scale`, `flip`, `heading`, `light`/`dark`, `shadow`, `hole` | solid; no recolouring a look |
 | Kinematics | velocity, acceleration, heading, facing, drag, mass, pull, seek, altitude, grip, a hop's or jump's arc, and the moving verbs | good; `leap` has no air control |
 | Steering | `chase`, `aim`, paths with `follow`, maze walking with `go`, `hunt`, `wander`, `hunt` by hops | good; no search of a maze, straight path legs only |

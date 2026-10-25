@@ -83,6 +83,17 @@
     <style name="line"><size>28</size><color>color.white</color></style>
     <style name="hud"><size>26</size><color>color.white</color></style>
   </styles>
+  <kit>
+    <!-- what is left of a wrecked lander, flung out and falling -->
+    <group name="debris">
+      <sprite><line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line></sprite>
+      <acceleration><x>0</x><y>gravity * 4</y></acceleration>
+      <member><velocity><x>-1.6</x><y>-2</y></velocity></member>
+      <member><velocity><x>1.4</x><y>-2.4</y></velocity></member>
+      <member><velocity><x>-0.6</x><y>-3</y></velocity></member>
+      <member><velocity><x>0.8</x><y>-1.6</y></velocity></member>
+    </group>
+  </kit>
   <states>
     <state name="mainmenu">
       <objects>
@@ -222,16 +233,6 @@
             <variable name="ready">0</variable>
           </variables>
         </object>
-        <!-- what is left of a wrecked lander, flung out and falling -->
-        <group name="debris">
-          <sprite><line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line></sprite>
-          <acceleration><x>0</x><y>gravity * 4</y></acceleration>
-          <exists>false</exists>
-          <member><velocity><x>-1.6</x><y>-2</y></velocity></member>
-          <member><velocity><x>1.4</x><y>-2.4</y></velocity></member>
-          <member><velocity><x>-0.6</x><y>-3</y></velocity></member>
-          <member><velocity><x>0.8</x><y>-1.6</y></velocity></member>
-        </group>
         <object name="wrecked">
           <sprite><text style="line"><content>YOU JUST DESTROYED A 100 MEGABUCK LANDER</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y>window.height.center - 140</y></position>

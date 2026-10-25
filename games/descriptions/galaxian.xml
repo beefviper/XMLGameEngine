@@ -175,6 +175,19 @@
     <style name="hud"><size>36</size><color>color.white</color></style>
     <style name="letter"><size>60</size><color>color.cyan</color></style>
   </styles>
+  <kit>
+    <!-- an alien's bomb, dropped by divers: six at most -->
+    <object name="bomb" class="bomb">
+      <sprite><rectangle><width>3</width><height>9</height><color>color.yellow</color></rectangle></sprite>
+      <velocity><y>6</y></velocity>
+      <most>6</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision object="ship"><despawn /></collision>
+      </collisions>
+    </object>
+  </kit>
   <objects>
     <!-- the stars, drifting down behind everything, each colour blinking at its own pace -->
     <map name="sky">
@@ -341,18 +354,6 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- an alien's bomb, dropped by divers: six at most -->
-        <object name="bomb" class="bomb">
-          <sprite><rectangle><width>3</width><height>9</height><color>color.yellow</color></rectangle></sprite>
-          <velocity><y>6</y></velocity>
-          <exists>false</exists>
-          <most>6</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision object="ship"><despawn /></collision>
-          </collisions>
-        </object>
         <object name="shot" class="projectile">
           <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>

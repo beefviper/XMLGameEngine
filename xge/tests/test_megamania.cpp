@@ -102,7 +102,9 @@ namespace
 			int n = 0;
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.groupName == "playing.bomb" && object.isVisible) { ++n; }
+				// a bomb is the wave's, beside the enemies that drop it
+				const std::string& group = object.groupName;
+				if (group.size() > 5 && group.compare(group.size() - 5, 5, ".bomb") == 0 && object.isVisible && game.isShown(object)) { ++n; }
 			}
 			return n;
 		}

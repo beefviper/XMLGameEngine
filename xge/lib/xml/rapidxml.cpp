@@ -32,6 +32,17 @@ namespace xge
 		return attribute ? attribute->value() : std::string{};
 	}
 
+	std::vector<std::pair<std::string, std::string>> RapidXmlNode::getAttributes() const
+	{
+		std::vector<std::pair<std::string, std::string>> attributes;
+		if (!node) { return attributes; }
+		for (const rapidxml::xml_attribute<>* attribute = node->first_attribute(); attribute != nullptr; attribute = attribute->next_attribute())
+		{
+			attributes.emplace_back(std::string(attribute->name(), attribute->name_size()), std::string(attribute->value(), attribute->value_size()));
+		}
+		return attributes;
+	}
+
 	std::string RapidXmlNode::getText() const
 	{
 		std::string text;

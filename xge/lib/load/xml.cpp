@@ -8,6 +8,7 @@
 #include "engine/folder.h"
 #include "game/game.h"
 #include "engine/keys.h"
+#include "load/merge.h"
 #include "load/spelling.h"
 #include "load/xsd.h"
 
@@ -2586,70 +2587,59 @@ namespace xge
 			}
 		}
 
-		// The <object>s, <group>s and <map>s of an <objects>, in order: the
-		// game's, a state's, or a kit's.
-		void readObjects(const XmlNode& objects, std::vector<RawObject>& out)
+		// Objects laid out by load/merge, each read as if it had been written
+		// out whole there: an <object>, a <group> or a <map>.
+		void readAll(const std::vector<ElementPtr>& list, std::vector<RawObject>& out)
 		{
-			for (std::unique_ptr<XmlNode> object = objects.getFirstChild(); object != nullptr; object = object->getNextSibling())
+			for (const ElementPtr& element : list)
 			{
-				if (object->getName() == "group") { readGroup(*object, out); }
-				else if (object->getName() == "map") { readMap(*object, out); }
-				else { out.push_back(readObject(*object)); }
+				const std::unique_ptr<XmlNode> node = viewOf(element);
+				if (element->name == "group") { readGroup(*node, out); }
+				else if (element->name == "map") { readMap(*node, out); }
+				else { out.push_back(readObject(*node)); }
 			}
 		}
 
-		// Every name the objects can be called by: their own, and their groups'.
-		std::set<std::string> namesOf(const std::vector<RawObject>& objects)
+		// What a <spawn>, <fire> or <release> in those children of a state or
+		// scene names (load/merge spawnedIn): a piece of the <kit> named so
+		// comes into the list they run beside (addWaiting).
+		std::set<std::string> spawnedBy(const XmlNode& node, const std::vector<std::string>& tags, const Kit& kit)
 		{
 			std::set<std::string> names;
-			for (const RawObject& object : objects)
+			for (const std::string& tag : tags)
 			{
-				names.insert(object.name);
-				if (!object.groupName.empty()) { names.insert(object.groupName); }
-				names.insert(object.outerGroups.begin(), object.outerGroups.end());
+				if (std::unique_ptr<XmlNode> child = findChild(&node, tag))
+				{
+					const std::set<std::string> more = spawnedIn(copyElement(*child), kit);
+					names.insert(more.begin(), more.end());
+				}
 			}
 			return names;
 		}
 
-		// What a piece a scene takes changes: whole <sprite>s by name, either
-		// half of the <position> and the <velocity>, <hidden>, <drawn> and
-		// <variables>.
-		RawSceneChange readSceneChange(const XmlNode& node, const std::string& where)
+		std::set<std::string> namesOf(const std::vector<ElementPtr>& list, std::set<std::string> names)
 		{
-			RawSceneChange change;
-			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			for (const ElementPtr& element : list)
 			{
-				const std::string tag = child->getName();
-				if (tag == "sprite") { change.sprites.push_back(readSprite(*child, where)); }
-				else if (tag == "position" || tag == "velocity")
-				{
-					const PartialVector2 given = readPartialVector2(*child, where);
-					if (tag == "position") { change.positionX = given.x; change.positionY = given.y; }
-					else { change.velocityX = given.x; change.velocityY = given.y; }
-				}
-				else if (tag == "hidden") { change.hidden = readBool(*child, where); }
-				else if (tag == "drawn") { change.drawn = readBool(*child, where); }
-				else if (tag != "variables")
-				{
-					fail(where, "takes a piece, and a piece taken can change only its <sprite>s, <position>, <velocity>, <hidden>, <drawn> and <variables>, not its <" + tag
-						+ ">; give the kit another piece for that");
-				}
+				const std::set<std::string> own = namesIn(element);
+				names.insert(own.begin(), own.end());
 			}
-			readObjectVariables(node, where, change.variables);
-			return change;
+			return names;
 		}
 
-		// <scenes>: the kit (an <objects> of pieces), then each <scene>. An
-		// object or group in a scene named after a piece of the kit, or of an
-		// object the scene it is from= has, takes it; anything else is the
-		// scene's own and must be complete.
-		void readScenes(const XmlNode& scenes, const std::string& stateWhere, const ConditionSets& conditionSets, RawState& state)
+		// <scenes>: each <scene>, its objects laid out by load/merge: those of
+		// the scene it is from=, changed by its own of the same names, then its
+		// own and the <kit> pieces it takes. `seen` is every name of its state's
+		// objects and the game's.
+		void readScenes(const XmlNode& scenes, const std::string& stateWhere, const ConditionSets& conditionSets, const Kit& kit, const std::set<std::string>& seen, RawState& state)
 		{
-			if (std::unique_ptr<XmlNode> kit = findChild(&scenes, "objects")) { readObjects(*kit, state.kit); }
-			const std::set<std::string> kitNames = namesOf(state.kit);
+			if (findChild(&scenes, "objects"))
+			{
+				fail(stateWhere + " > <scenes>", "has an <objects>, a kit of its own: the pieces the scenes take go in the game's <kit>");
+			}
 
-			// What each scene so far can be taken from: its own names and those it took.
-			std::map<std::string, std::set<std::string>> sceneNames;
+			// Each scene so far, laid out, for a scene that is from= it.
+			std::map<std::string, std::vector<ElementPtr>> lists;
 
 			for (std::unique_ptr<XmlNode> node = scenes.getFirstChild(); node != nullptr; node = node->getNextSibling())
 			{
@@ -2659,15 +2649,15 @@ namespace xge
 				scene.name = requireAttribute(*node, "name", stateWhere + " > <scenes>");
 				scene.from = node->getAttribute("from");
 				const std::string where = stateWhere + " > scene '" + scene.name + "'";
-				if (sceneNames.count(scene.name)) { fail(stateWhere, "has two scenes called '" + scene.name + "'"); }
+				if (lists.count(scene.name)) { fail(stateWhere, "has two scenes called '" + scene.name + "'"); }
 				if (scene.name.find('.') != std::string::npos) { fail(where, "a scene's name has no dots: they join the parts of a path (" + state.name + "." + scene.name + ")"); }
 
-				std::set<std::string> names;
+				std::vector<ElementPtr> list;
 				if (!scene.from.empty())
 				{
-					const auto from = sceneNames.find(scene.from);
-					if (from == sceneNames.end()) { fail(where, "from=\"" + scene.from + "\" names no scene before it"); }
-					names = from->second;
+					const auto from = lists.find(scene.from);
+					if (from == lists.end()) { fail(where, "from=\"" + scene.from + "\" names no scene before it"); }
+					list = from->second;
 				}
 
 				if (std::unique_ptr<XmlNode> ways = findChild(node.get(), "ways"))
@@ -2688,38 +2678,7 @@ namespace xge
 
 				if (std::unique_ptr<XmlNode> objects = findChild(node.get(), "objects"))
 				{
-					for (std::unique_ptr<XmlNode> child = objects->getFirstChild(); child != nullptr; child = child->getNextSibling())
-					{
-						const std::string name = requireAttribute(*child, "name", where + " > <objects>");
-						RawSceneEntry entry;
-						if (kitNames.count(name) || names.count(name))
-						{
-							// A piece is taken by a name written in the file (an object, a
-							// group, a named member), the one the generated program sees too.
-							if (name.find('.') != std::string::npos)
-							{
-								fail(where, "takes '" + name + "', a numbered member of a group: take the whole group, or give the member a name= in the kit and take that");
-							}
-							entry.take = name;
-							entry.change = readSceneChange(*child, where + " > <" + child->getName() + " name=\"" + name + "\">");
-							std::vector<RawObject> taken;
-							for (const RawObject& piece : state.kit)
-							{
-								if (piece.name == name || piece.inGroup(name)) { taken.push_back(piece); }
-							}
-							const std::set<std::string> more = namesOf(taken);
-							names.insert(more.begin(), more.end());
-						}
-						else
-						{
-							if (child->getName() == "group") { readGroup(*child, entry.objects); }
-							else if (child->getName() == "map") { readMap(*child, entry.objects); }
-							else { entry.objects.push_back(readObject(*child)); }
-							const std::set<std::string> own = namesOf(entry.objects);
-							names.insert(own.begin(), own.end());
-						}
-						scene.entries.push_back(std::move(entry));
-					}
+					list = layOut(*objects, std::move(list), kit, where + " > <objects>");
 				}
 
 				if (std::unique_ptr<XmlNode> conditions = findChild(node.get(), "conditions"))
@@ -2728,7 +2687,10 @@ namespace xge
 				}
 				scene.timers = readTimers(findChild(node.get(), "timers").get(), where, false);
 
-				sceneNames[scene.name] = std::move(names);
+				addWaiting(list, spawnedBy(*node, { "conditions", "timers" }, kit), seen, kit, where);
+				readAll(list, scene.objects);
+
+				lists[scene.name] = std::move(list);
 				state.scenes.push_back(std::move(scene));
 			}
 		}
@@ -2750,18 +2712,11 @@ namespace xge
 			return rawState;
 		}
 
-		// Every name the objects of a state can be called by, with those of
-		// the state it is a copy of, and so on.
-		void stateNames(const RawState& state, const std::vector<RawState>& earlier, std::set<std::string>& names)
-		{
-			const std::set<std::string> own = namesOf(state.objects);
-			names.insert(own.begin(), own.end());
-			if (state.from.empty()) { return; }
-			const auto from = std::find_if(earlier.begin(), earlier.end(), [&](const RawState& each) { return each.name == state.from; });
-			if (from != earlier.end()) { stateNames(*from, earlier, names); }
-		}
-
-		RawState readState(const XmlNode& state, const std::vector<RawState>& earlier, const std::map<std::string, KeyBindings>& keySets, const ShowSets& showSets, const ConditionSets& conditionSets)
+		// A <state>. Its objects are laid out by load/merge: those of the state
+		// it is from= (`lists`, each state so far laid out), changed by its own
+		// of the same names, then its own and the <kit> pieces it takes.
+		RawState readState(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists, const std::map<std::string, KeyBindings>& keySets,
+			const ShowSets& showSets, const ConditionSets& conditionSets, const Kit& kit, const std::set<std::string>& gameNames)
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");
@@ -2769,40 +2724,18 @@ namespace xge
 
 			const std::string where = "state '" + rawState.name + "'";
 
-			// from="...": what the earlier state's objects are called, so that
-			// an <object> of one of those names is a change to it
-			std::set<std::string> copied;
+			std::vector<ElementPtr> list;
 			if (!rawState.from.empty())
 			{
-				const auto from = std::find_if(earlier.begin(), earlier.end(), [&](const RawState& each) { return each.name == rawState.from; });
-				if (from == earlier.end()) { fail(where, "from=\"" + rawState.from + "\" names no state before it"); }
-				stateNames(*from, earlier, copied);
+				const auto from = lists.find(rawState.from);
+				if (from == lists.end()) { fail(where, "from=\"" + rawState.from + "\" names no state before it"); }
+				list = from->second;
 			}
 
-			// <objects>: its own, in play in every scene of it; in a copy, an
-			// object or group the copy has is what it changes in it
+			// <objects>: its own, in play in every scene of it
 			if (std::unique_ptr<XmlNode> objects = findChild(&state, "objects"))
 			{
-				for (std::unique_ptr<XmlNode> object = objects->getFirstChild(); object != nullptr; object = object->getNextSibling())
-				{
-					const std::string name = object->getAttribute("name");
-					if (copied.count(name) && object->getName() != "map")
-					{
-						RawSceneEntry entry;
-						entry.take = name;
-						entry.change = readSceneChange(*object, where + " > <" + object->getName() + " name=\"" + name + "\">");
-						rawState.changes.push_back(std::move(entry));
-					}
-					else if (object->getName() == "group") { readGroup(*object, rawState.objects); }
-					else if (object->getName() == "map") { readMap(*object, rawState.objects); }
-					else { rawState.objects.push_back(readObject(*object)); }
-				}
-			}
-
-			// <scenes>: the kit, then the scenes
-			if (std::unique_ptr<XmlNode> scenes = findChild(&state, "scenes"))
-			{
-				readScenes(*scenes, where, conditionSets, rawState);
+				list = layOut(*objects, std::move(list), kit, where + " > <objects>");
 			}
 
 			// <shows> (optional): objects of the game's, named <shows> sets
@@ -2822,21 +2755,35 @@ namespace xge
 			// order, each over the one before, then its own <input>s over those: a
 			// state can use a set and still give one of its keys a job of its own.
 			std::unique_ptr<XmlNode> inputs = rawState.from.empty() ? requireChild(state, "inputs", where) : findChild(&state, "inputs");
-			if (!inputs) { return finishState(state, where, conditionSets, std::move(rawState)); }
-			std::istringstream setNames(inputs->getAttribute("keys"));
-			for (std::string setName; setNames >> setName;)
+			if (inputs)
 			{
-				const auto set = keySets.find(setName);
-				if (set == keySets.end()) { fail(where + " > <inputs>", "keys=\"" + setName + "\" names no <keys> set"); }
-				for (const auto& [button, commands] : set->second.buttons) { rawState.input[button] = commands; }
-				for (const auto& [axis, commands] : set->second.axes) { rawState.axes[axis] = commands; }
+				std::istringstream setNames(inputs->getAttribute("keys"));
+				for (std::string setName; setNames >> setName;)
+				{
+					const auto set = keySets.find(setName);
+					if (set == keySets.end()) { fail(where + " > <inputs>", "keys=\"" + setName + "\" names no <keys> set"); }
+					for (const auto& [button, commands] : set->second.buttons) { rawState.input[button] = commands; }
+					for (const auto& [axis, commands] : set->second.axes) { rawState.axes[axis] = commands; }
+				}
+				KeyBindings own;
+				readInputs(*inputs, where + " > <inputs>", own);
+				for (auto& [button, commands] : own.buttons) { rawState.input[button] = std::move(commands); }
+				for (auto& [axis, commands] : own.axes) { rawState.axes[axis] = std::move(commands); }
 			}
-			KeyBindings own;
-			readInputs(*inputs, where + " > <inputs>", own);
-			for (auto& [button, commands] : own.buttons) { rawState.input[button] = std::move(commands); }
-			for (auto& [axis, commands] : own.axes) { rawState.axes[axis] = std::move(commands); }
+			rawState = finishState(state, where, conditionSets, std::move(rawState));
 
-			return finishState(state, where, conditionSets, std::move(rawState));
+			// What its own inputs, conditions and timers spawn (a <kit> piece
+			// comes into its objects), then its scenes, then its objects read.
+			addWaiting(list, spawnedBy(state, { "inputs", "conditions", "computer", "timers" }, kit), gameNames, kit, where);
+
+			if (std::unique_ptr<XmlNode> scenes = findChild(&state, "scenes"))
+			{
+				readScenes(*scenes, where, conditionSets, kit, namesOf(list, gameNames), rawState);
+			}
+
+			readAll(list, rawState.objects);
+			lists[rawState.name] = std::move(list);
+			return rawState;
 		}
 	}
 
@@ -2896,6 +2843,7 @@ namespace xge
 		const std::string where = "game";
 		std::unique_ptr<XmlNode> window = requireChild(*root, "window", where);
 		std::unique_ptr<XmlNode> variablesNode = requireChild(*root, "variables", where);
+		std::unique_ptr<XmlNode> kitNode = findChild(root.get(), "kit");         // none: nothing is taken
 		std::unique_ptr<XmlNode> objectsNode = findChild(root.get(), "objects"); // none: every object is a state's own
 		std::unique_ptr<XmlNode> states = requireChild(*root, "states", where);
 
@@ -2954,8 +2902,30 @@ namespace xge
 			}
 		}
 
-		// load objects
-		if (objectsNode) { readObjects(*objectsNode, rawObjects); }
+		// load the kit: pieces written once, in play only where something
+		// takes them (load/merge)
+		Kit kit;
+		if (kitNode)
+		{
+			for (std::unique_ptr<XmlNode> piece = kitNode->getFirstChild(); piece != nullptr; piece = piece->getNextSibling())
+			{
+				kit.add(copyElement(*piece), "<kit>");
+			}
+		}
+		if (std::unique_ptr<XmlNode> pathsNode = findChild(root.get(), "paths"))
+		{
+			for (std::unique_ptr<XmlNode> path = pathsNode->getFirstChild(); path != nullptr; path = path->getNextSibling())
+			{
+				kit.addSet("path", path->getAttribute("name"), copyElement(*path));
+			}
+		}
+
+		// load objects: the game's own, in play in every state that shows them
+		std::vector<ElementPtr> gameList;
+		if (objectsNode) { gameList = layOut(*objectsNode, {}, kit, "the game's <objects>"); }
+		addWaiting(gameList, {}, {}, kit, "the game's <objects>");
+		readAll(gameList, rawObjects);
+		const std::set<std::string> gameNames = namesOf(gameList, {});
 
 		// load keeps (optional: what a full reset passes over)
 		if (std::unique_ptr<XmlNode> keepsNode = findChild(root.get(), "keeps"))
@@ -3012,6 +2982,7 @@ namespace xge
 				const std::string name = requireAttribute(*node, "name", "<states> > <keys>");
 				if (keySets.count(name)) { fail("<states>", "two <keys> sets are called '" + name + "'"); }
 				readInputs(*node, "<keys name=\"" + name + "\">", keySets[name]);
+				kit.addSet("keys", name, copyElement(*node));
 				if (!keySets[name].axes.empty())
 				{
 					fail("<keys name=\"" + name + "\">", "an <input axis=\"...\"> goes in a state's own <inputs>, not in a <keys> set");
@@ -3032,13 +3003,15 @@ namespace xge
 				std::vector<RawCondition> conditions;
 				readConditions(*node, "<conditions name=\"" + name + "\">", conditionSets, conditions);
 				conditionSets[name] = std::move(conditions);
+				kit.addSet("conditions", name, copyElement(*node));
 			}
 		}
 
+		std::map<std::string, std::vector<ElementPtr>> stateLists;
 		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
 		{
 			if (state->getName() != "state") { continue; }
-			rawStates.push_back(readState(*state, rawStates, keySets, showSets, conditionSets));
+			rawStates.push_back(readState(*state, stateLists, keySets, showSets, conditionSets, kit, gameNames));
 		}
 	}
 

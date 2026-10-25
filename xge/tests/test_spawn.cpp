@@ -26,19 +26,19 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
-	// A shot that does not exist at the start, going up, counting its own
-	// frames in a variable of its own, and gone at the top.
+	// A shot of the kit, so not in play at the start, going up, counting its
+	// own frames in a variable of its own, and gone at the top.
 	const std::string kShot = "<object name=\"shot\" class=\"bullet\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-5</y></velocity><exists>false</exists>"
+		"<velocity><x>0</x><y>-5</y></velocity>"
 		"<collisions><enabled>true</enabled><collision edge=\"top\"><despawn /></collision></collisions>"
 		"<variables><variable name=\"age\">0</variable></variables>"
 		"<timers><timer><every>0.01</every><inc variable=\"self.age\" /></timer></timers></object>";
 }
 
-TEST_CASE("an object that does not exist is not in play until a copy of it is spawned", "[spawn]")
+TEST_CASE("a piece of the kit is not in play until a copy of it is spawned", "[spawn]")
 {
-	const Scratch file(box("ship", 300, 400) + kShot,
-		"<spawn object=\"shot\"><position><x>ship.x</x><y>ship.y</y></position></spawn>");
+	const Scratch file(box("ship", 300, 400),
+		"<spawn object=\"shot\"><position><x>ship.x</x><y>ship.y</y></position></spawn>", {}, kShot);
 	Played play(file.path);
 
 	CHECK_FALSE(play.get("shot").exists);
@@ -62,12 +62,12 @@ TEST_CASE("an object that does not exist is not in play until a copy of it is sp
 	play.frames(1);
 	CHECK(play.has("shot.2"));
 	CHECK(play.count("shot") == 2);
-	CHECK_FALSE(play.get("shot").exists); // the one written is still only a description
+	CHECK_FALSE(play.get("shot").exists); // the one the kit's makes copies of, never in play
 }
 
 TEST_CASE("a copy's own rules and values are about the copy, not the object it was copied from", "[spawn]")
 {
-	const Scratch file(box("ship", 300, 400) + kShot, "<spawn object=\"shot\"><position><y>500</y></position></spawn>");
+	const Scratch file(box("ship", 300, 400), "<spawn object=\"shot\"><position><y>500</y></position></spawn>", {}, kShot);
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -83,8 +83,8 @@ TEST_CASE("a copy's own rules and values are about the copy, not the object it w
 
 TEST_CASE("<despawn /> takes a copy out for good, and its name is used again", "[spawn]")
 {
-	const Scratch file(box("ship", 300, 100) + kShot,
-		"<spawn object=\"shot\"><position><x>ship.x</x><y>ship.y</y></position></spawn>");
+	const Scratch file(box("ship", 300, 100),
+		"<spawn object=\"shot\"><position><x>ship.x</x><y>ship.y</y></position></spawn>", {}, kShot);
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -122,9 +122,9 @@ TEST_CASE("<despawn object> takes out an object the file wrote, until a reset", 
 TEST_CASE("<most> caps how many copies exist, and a refused spawn stops what comes after", "[spawn]")
 {
 	const Scratch file(box("ship", 300, 400, "<actions><action name=\"shoot\"><spawn object=\"shot\" /><inc variable=\"self.shots\" /></action></actions>"
-		"<variables><variable name=\"shots\">0</variable></variables>")
-		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite><exists>false</exists><most>2</most></object>",
-		"<trigger object=\"ship\" action=\"shoot\" />");
+		"<variables><variable name=\"shots\">0</variable></variables>"),
+		"<trigger object=\"ship\" action=\"shoot\" />", {},
+		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite><most>2</most></object>");
 	Played play(file.path);
 
 	for (int i = 0; i < 4; ++i) { play.tap(KeyCode::Space); }
@@ -145,16 +145,16 @@ TEST_CASE("<most> caps how many copies exist, and a refused spawn stops what com
 	CHECK(play.count("shot") == 0);
 }
 
-TEST_CASE("<fire> and <release> of an object that does not exist make copies of it", "[spawn]")
+TEST_CASE("<fire> and <release> of a piece of the kit make copies of it", "[spawn]")
 {
 	const Scratch file(box("ship", 300, 400, "<collisions><enabled>true</enabled></collisions>"
 		"<actions><action name=\"shoot\"><fire object=\"shot\" /></action></actions>")
-		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-6</y></velocity><exists>false</exists><most>1</most></object>"
-		+ "<object name=\"piece\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite>"
-		"<velocity><x>1</x><y>1</y></velocity><exists>false</exists></object>"
 		+ box("rock", 300, 380, "<collisions><enabled>true</enabled><collision object=\"ship\"><release object=\"piece\">3</release><despawn /></collision></collisions>"),
-		"<trigger object=\"ship\" action=\"shoot\" />");
+		"<trigger object=\"ship\" action=\"shoot\" />", {},
+		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>-6</y></velocity><most>1</most></object>"
+		"<object name=\"piece\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite>"
+		"<velocity><x>1</x><y>1</y></velocity></object>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -174,11 +174,11 @@ TEST_CASE("<fire> and <release> of an object that does not exist make copies of 
 TEST_CASE("other rules and conditions see the copies by the name of what they were copied from", "[spawn]")
 {
 	const Scratch file(box("ship", 300, 400, "<collisions><enabled>true</enabled></collisions>")
-		+ "<object name=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite><exists>false</exists>"
-		"<collisions><enabled>true</enabled><collision object=\"ship\"><despawn /></collision></collisions></object>"
 		+ box("target", 0, 0, "<collisions><enabled>true</enabled></collisions><variables><variable name=\"done\">0</variable></variables>"),
 		"<spawn object=\"rock\"><position><x>300</x><y>380</y></position><velocity><y>4</y></velocity></spawn>",
-		"<conditions><condition object=\"rock\"><remaining>0</remaining><set variable=\"target.done\">1</set></condition></conditions>");
+		"<conditions><condition object=\"rock\"><remaining>0</remaining><set variable=\"target.done\">1</set></condition></conditions>",
+		"<object name=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<collisions><enabled>true</enabled><collision object=\"ship\"><despawn /></collision></collisions></object>");
 	Played play(file.path);
 
 	// None yet: none remaining.
@@ -200,10 +200,9 @@ TEST_CASE("other rules and conditions see the copies by the name of what they we
 
 TEST_CASE("a group spawned from makes its members in turn", "[spawn]")
 {
-	const Scratch file(box("ship", 300, 400)
-		+ "<group name=\"rocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite><exists>false</exists>"
-		"<member name=\"big\"><velocity><x>1</x></velocity></member><member name=\"small\"><velocity><x>2</x></velocity></member></group>",
-		"<spawn object=\"rocks\" />");
+	const Scratch file(box("ship", 300, 400), "<spawn object=\"rocks\" />", {},
+		"<group name=\"rocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<member name=\"big\"><velocity><x>1</x></velocity></member><member name=\"small\"><velocity><x>2</x></velocity></member></group>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -233,17 +232,17 @@ TEST_CASE("a new game takes away every copy, and a spawned object can be of one 
 	CHECK(play.count("ball") == 1);
 }
 
-TEST_CASE("a <despawn object> must name an object, and one that does not exist may leave out its <position>", "[spawn]")
+TEST_CASE("a <despawn object> must name an object, and a piece of the kit may leave out its <position>", "[spawn]")
 {
-	const auto load = [](const std::string& objects, const std::string& onSpace)
+	const auto load = [](const std::string& objects, const std::string& onSpace, const std::string& kit = {})
 	{
-		const Scratch file(objects, onSpace);
+		const Scratch file(objects, onSpace, {}, kit);
 		Game game(file.path);
 	};
 
 	CHECK_THROWS_WITH(load(box("ship", 0, 0), "<despawn object=\"shots\" />"), ContainsSubstring("<despawn> names 'shots'"));
 	CHECK_THROWS_WITH(load(box("ship", 0, 0), "<despawn />"), ContainsSubstring("<despawn />"));
-	CHECK_NOTHROW(load(box("ship", 0, 0) + kShot, "<spawn object=\"shot\" />"));
+	CHECK_NOTHROW(load(box("ship", 0, 0), "<spawn object=\"shot\" />", kShot));
 	CHECK_THROWS_WITH(load(box("ship", 0, 0) + "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite></object>", "<pop />"),
 		ContainsSubstring("missing <position>"));
 }

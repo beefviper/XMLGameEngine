@@ -29,6 +29,7 @@ namespace xge
 
 		std::string getName() const override;
 		std::string getAttribute(const std::string& name) const override;
+		std::vector<std::pair<std::string, std::string>> getAttributes() const override;
 		std::string getText() const override;
 		std::unique_ptr<XmlNode> getFirstChild() const override;
 		std::unique_ptr<XmlNode> getNextSibling() const override;

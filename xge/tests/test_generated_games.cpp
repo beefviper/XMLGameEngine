@@ -299,22 +299,6 @@ namespace
 			value(at + ".cell.gapAbove", o.cell.gapAbove);
 		}
 
-		// A piece a scene takes, and what it changes, or its own objects.
-		void entry(const std::string& at, const RawSceneEntry& e)
-		{
-			text(at + ".take", e.take);
-			const RawSceneChange& c = e.change;
-			if (c.positionX) { value(at + ".positionX", *c.positionX); }
-			if (c.positionY) { value(at + ".positionY", *c.positionY); }
-			if (c.velocityX) { value(at + ".velocityX", *c.velocityX); }
-			if (c.velocityY) { value(at + ".velocityY", *c.velocityY); }
-			if (c.hidden) { flag(at + ".hidden", *c.hidden); }
-			if (c.drawn) { flag(at + ".drawn", *c.drawn); }
-			for (const auto& [name, v] : c.variables) { value(at + ".variable " + name, v); }
-			for (std::size_t j = 0; j < c.sprites.size(); ++j) { sprite(at + ".sprite" + std::to_string(j), c.sprites[j]); }
-			for (const RawObject& o : e.objects) { object(at + ".object " + o.name, o); }
-		}
-
 		void conditions(const std::string& at, const std::vector<RawCondition>& list)
 		{
 			for (std::size_t i = 0; i < list.size(); ++i)
@@ -347,16 +331,14 @@ namespace
 				conditions(at + ".computer", s.computer);
 				timers(at + ".timers", s.timers);
 				for (const RawObject& o : s.objects) { object(at + ".object " + o.name, o); }
-				for (const RawObject& o : s.kit) { object(at + ".kit " + o.name, o); }
 				text(at + ".from", s.from);
-				for (std::size_t i = 0; i < s.changes.size(); ++i) { entry(at + ".change" + std::to_string(i), s.changes[i]); }
 				for (const RawScene& scene : s.scenes)
 				{
 					const std::string here = at + ".scene " + scene.name;
 					text(here + ".from", scene.from);
 					for (const auto& [way, to] : scene.ways) { text(here + ".way " + way, to); }
 					for (const auto& [name, v] : scene.variables) { value(here + ".variable " + name, v); }
-					for (std::size_t i = 0; i < scene.entries.size(); ++i) { entry(here + ".entry" + std::to_string(i), scene.entries[i]); }
+					for (const RawObject& o : scene.objects) { object(here + ".object " + o.name, o); }
 					conditions(here, scene.conditions);
 					timers(here + ".timers", scene.timers);
 				}

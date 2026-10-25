@@ -8,6 +8,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace xge
@@ -44,6 +45,10 @@ namespace xge
 		// backend's own C++ library convention (XPath-less flat attributes,
 		// no distinction needed here between "empty value" and "missing").
 		virtual std::string getAttribute(const std::string& name) const = 0;
+
+		// Every attribute it has, name and value, in the order written: what
+		// load/merge needs to copy an element.
+		virtual std::vector<std::pair<std::string, std::string>> getAttributes() const = 0;
 
 		// The element's own text: every text and CDATA child joined together,
 		// exactly as written - not trimmed, so an element that only holds

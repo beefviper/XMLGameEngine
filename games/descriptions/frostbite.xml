@@ -103,6 +103,110 @@
     <style name="help"><size>30</size></style>
     <style name="hud"><size>26</size><color>color.darkblue</color></style>
   </styles>
+  <kit>
+    <!-- the snowy shore along the top; below it all is water -->
+    <object name="snow">
+      <sprite><rectangle><width>window.right</width><height>shore</height><color>color.white</color></rectangle></sprite>
+      <position><x>0</x><y>0</y></position>
+    </object>
+    <object name="water" class="water">
+      <sprite><rectangle><width>window.right</width><height>window.bottom - shore</height><color>color.darkblue</color></rectangle></sprite>
+      <position><x>0</x><y>shore</y></position>
+      <collisions><enabled>true</enabled></collisions>
+    </object>
+    <!-- four rows of three floes, white until landed on -->
+    <group name="ice" class="floe">
+      <columns>3</columns>
+      <rows>1</rows>
+      <padding><x>(window.right + 115) / 3 - 115</x></padding>
+      <sprite name="white">
+        <bitmap>
+          <row>.******..******..*****.</row>
+          <row>*******.*******.*******</row>
+          <row>ccccccc.ccccccc.ccccccc</row>
+          <row>.ccccc...ccccc...ccccc.</row>
+          <scale>5</scale>
+          <color>color.white</color>
+          <color char="c">color.cyan</color>
+        </bitmap>
+      </sprite>
+      <sprite name="blue">
+        <bitmap>
+          <row>.******..******..*****.</row>
+          <row>*******.*******.*******</row>
+          <row>ccccccc.ccccccc.ccccccc</row>
+          <row>.ccccc...ccccc...ccccc.</row>
+          <scale>5</scale>
+          <color>color.blue</color>
+          <color char="c">color.darkblue</color>
+        </bitmap>
+      </sprite>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal"><wrap /></collision>
+      </collisions>
+      <actions>
+        <action name="block">
+          <inc variable="bailey.score">points</inc>
+          <inc variable="bailey.blocks" />
+          <inc variable="bailey.blue" />
+          <reveal object="igloo" />
+          <play sound="block" />
+        </action>
+      </actions>
+      <group name="row1">
+        <position><x>0</x><y>row1</y></position>
+        <velocity><x>1.2 * drift</x></velocity>
+        <collisions>
+          <enabled>true</enabled>
+          <collision object="bailey" sprite="white"><become object="row1" sprite="blue" /><trigger action="block" /></collision>
+        </collisions>
+      </group>
+      <group name="row2">
+        <position><x>60</x><y>row1 + rowgap</y></position>
+        <velocity><x>-1.6 * drift</x></velocity>
+        <collisions>
+          <enabled>true</enabled>
+          <collision object="bailey" sprite="white"><become object="row2" sprite="blue" /><trigger action="block" /></collision>
+        </collisions>
+      </group>
+      <group name="row3">
+        <position><x>120</x><y>row1 + 2 * rowgap</y></position>
+        <velocity><x>2 * drift</x></velocity>
+        <collisions>
+          <enabled>true</enabled>
+          <collision object="bailey" sprite="white"><become object="row3" sprite="blue" /><trigger action="block" /></collision>
+        </collisions>
+      </group>
+      <group name="row4">
+        <position><x>30</x><y>row1 + 3 * rowgap</y></position>
+        <velocity><x>-1.4 * drift</x></velocity>
+        <collisions>
+          <enabled>true</enabled>
+          <collision object="bailey" sprite="white"><become object="row4" sprite="blue" /><trigger action="block" /></collision>
+        </collisions>
+      </group>
+    </group>
+    <!-- the igloo: fifteen blocks hidden until earned, laid a course at a time from the ground up -->
+    <group name="igloo" class="igloo">
+      <columns>4</columns>
+      <rows>1</rows>
+      <padding><x>2</x></padding>
+      <sprite><rectangle><width>30</width><height>14</height><color>color.lightgrey</color></rectangle></sprite>
+      <hidden>true</hidden>
+      <group name="course1"><position><x>igloox</x><y>iglooground - 14</y></position></group>
+      <group name="course2"><position><x>igloox</x><y>iglooground - 30</y></position></group>
+      <group name="course3"><position><x>igloox</x><y>iglooground - 46</y></position></group>
+      <group name="dome"><columns>3</columns><position><x>igloox + 16</x><y>iglooground - 62</y></position></group>
+    </group>
+    <!-- the door, which appears once the igloo is finished -->
+    <object name="door" class="door">
+      <sprite><rectangle><width>24</width><height>30</height><color>color.black</color></rectangle></sprite>
+      <position><x>igloox + 51</x><y>iglooground - 30</y></position>
+      <hidden>true</hidden>
+      <collisions><enabled>true</enabled></collisions>
+    </object>
+  </kit>
   <states>
     <state name="mainmenu">
       <objects>
@@ -290,112 +394,6 @@
         </object>
       </objects>
       <scenes>
-        <!-- what every night takes: the shore and the water (first, so that
-             everything else is drawn over them), the ice, the igloo and its door -->
-        <objects>
-          <!-- the snowy shore along the top; below it all is water -->
-          <object name="snow">
-            <sprite><rectangle><width>window.right</width><height>shore</height><color>color.white</color></rectangle></sprite>
-            <position><x>0</x><y>0</y></position>
-          </object>
-          <object name="water" class="water">
-            <sprite><rectangle><width>window.right</width><height>window.bottom - shore</height><color>color.darkblue</color></rectangle></sprite>
-            <position><x>0</x><y>shore</y></position>
-            <collisions><enabled>true</enabled></collisions>
-          </object>
-          <!-- four rows of three floes, white until landed on -->
-          <group name="ice" class="floe">
-            <columns>3</columns>
-            <rows>1</rows>
-            <padding><x>(window.right + 115) / 3 - 115</x></padding>
-            <sprite name="white">
-              <bitmap>
-                <row>.******..******..*****.</row>
-                <row>*******.*******.*******</row>
-                <row>ccccccc.ccccccc.ccccccc</row>
-                <row>.ccccc...ccccc...ccccc.</row>
-                <scale>5</scale>
-                <color>color.white</color>
-                <color char="c">color.cyan</color>
-              </bitmap>
-            </sprite>
-            <sprite name="blue">
-              <bitmap>
-                <row>.******..******..*****.</row>
-                <row>*******.*******.*******</row>
-                <row>ccccccc.ccccccc.ccccccc</row>
-                <row>.ccccc...ccccc...ccccc.</row>
-                <scale>5</scale>
-                <color>color.blue</color>
-                <color char="c">color.darkblue</color>
-              </bitmap>
-            </sprite>
-            <collisions>
-              <enabled>true</enabled>
-              <collision edge="horizontal"><wrap /></collision>
-            </collisions>
-            <actions>
-              <action name="block">
-                <inc variable="bailey.score">points</inc>
-                <inc variable="bailey.blocks" />
-                <inc variable="bailey.blue" />
-                <reveal object="igloo" />
-                <play sound="block" />
-              </action>
-            </actions>
-            <group name="row1">
-              <position><x>0</x><y>row1</y></position>
-              <velocity><x>1.2 * drift</x></velocity>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="bailey" sprite="white"><become object="row1" sprite="blue" /><trigger action="block" /></collision>
-              </collisions>
-            </group>
-            <group name="row2">
-              <position><x>60</x><y>row1 + rowgap</y></position>
-              <velocity><x>-1.6 * drift</x></velocity>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="bailey" sprite="white"><become object="row2" sprite="blue" /><trigger action="block" /></collision>
-              </collisions>
-            </group>
-            <group name="row3">
-              <position><x>120</x><y>row1 + 2 * rowgap</y></position>
-              <velocity><x>2 * drift</x></velocity>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="bailey" sprite="white"><become object="row3" sprite="blue" /><trigger action="block" /></collision>
-              </collisions>
-            </group>
-            <group name="row4">
-              <position><x>30</x><y>row1 + 3 * rowgap</y></position>
-              <velocity><x>-1.4 * drift</x></velocity>
-              <collisions>
-                <enabled>true</enabled>
-                <collision object="bailey" sprite="white"><become object="row4" sprite="blue" /><trigger action="block" /></collision>
-              </collisions>
-            </group>
-          </group>
-          <!-- the igloo: fifteen blocks hidden until earned, laid a course at a time from the ground up -->
-          <group name="igloo" class="igloo">
-            <columns>4</columns>
-            <rows>1</rows>
-            <padding><x>2</x></padding>
-            <sprite><rectangle><width>30</width><height>14</height><color>color.lightgrey</color></rectangle></sprite>
-            <hidden>true</hidden>
-            <group name="course1"><position><x>igloox</x><y>iglooground - 14</y></position></group>
-            <group name="course2"><position><x>igloox</x><y>iglooground - 30</y></position></group>
-            <group name="course3"><position><x>igloox</x><y>iglooground - 46</y></position></group>
-            <group name="dome"><columns>3</columns><position><x>igloox + 16</x><y>iglooground - 62</y></position></group>
-          </group>
-          <!-- the door, which appears once the igloo is finished -->
-          <object name="door" class="door">
-            <sprite><rectangle><width>24</width><height>30</height><color>color.black</color></rectangle></sprite>
-            <position><x>igloox + 51</x><y>iglooground - 30</y></position>
-            <hidden>true</hidden>
-            <collisions><enabled>true</enabled></collisions>
-          </object>
-        </objects>
         <scene name="night1">
           <ways>
             <way name="next" scene="night2" />

@@ -5,7 +5,8 @@
 <!-- date: Oct 5, 2026 -->
 
 <!-- The windows-cpp target: a game file in, a program of its own out, that
-     plays the game as xgecli and xgegui play it, on SFML 3. The game is
+     plays the game as xgecli and xgegui play it, on SFML 3. The game, its
+     <kit> and from= worked out as the engine works them out (merge.xsl), is
      written out as the engine's own data (data.xsl), and everything that
      plays it is the engine's own code, copied in unchanged.
 
@@ -29,6 +30,7 @@
     extension-element-prefixes="exsl">
 
   <xsl:include href="text.xsl" />
+  <xsl:include href="merge.xsl" />
   <xsl:include href="data.xsl" />
   <xsl:include href="program.xsl" />
 
@@ -61,8 +63,14 @@
       <xsl:message terminate="yes">windows-cpp: this is not a game file (no &lt;game&gt;)</xsl:message>
     </xsl:if>
 
+    <!-- the game with its <kit> and from= worked out (merge.xsl), written out -->
+    <xsl:variable name="merged">
+      <xsl:call-template name="merge-game" />
+    </xsl:variable>
     <exsl:document href="source/{$name}.cpp" method="text" encoding="UTF-8">
-      <xsl:call-template name="data-file" />
+      <xsl:for-each select="exsl:node-set($merged)">
+        <xsl:call-template name="data-file" />
+      </xsl:for-each>
     </exsl:document>
 
     <exsl:document href="source/main.cpp" method="text" encoding="UTF-8">

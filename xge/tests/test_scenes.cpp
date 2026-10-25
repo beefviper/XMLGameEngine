@@ -3,8 +3,8 @@
 // author: beefviper
 // date: Oct 15, 2026
 //
-// Catch2 tests for objects a state owns and for <scenes>: a kit of pieces,
-// scenes that take them and change them, from=, names looked for from the
+// Catch2 tests for objects a state owns and for <scenes>: the game's <kit>,
+// scenes that take its pieces and change them, from=, names looked for from the
 // inside out, <enter>, <reset scene>, what is carried going along, <drawn>
 // and <show state>. Each game is written beside the shipped ones so that
 // its schema path resolves, and loaded with Xerces (full validation) and
@@ -55,14 +55,16 @@ namespace
 			+ (velocity.empty() ? std::string{} : "<velocity>" + velocity + "</velocity>") + after + "</object>";
 	}
 
-	// A whole game file: 800 by 600 at 60 frames a second, the game's own
-	// objects (one, `marker`, when none are given) and the states given.
-	std::string gameXml(const std::string& states, const std::string& objects = {}, const std::string& variables = {})
+	// A whole game file: 800 by 600 at 60 frames a second, the pieces of its
+	// <kit> given, the game's own objects (one, `marker`, when none are
+	// given) and the states given.
+	std::string gameXml(const std::string& states, const std::string& objects = {}, const std::string& variables = {}, const std::string& kit = {})
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
 			"<window name=\"scenes\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable>" + variables + "</variables>"
+			+ (kit.empty() ? std::string{} : "<kit>" + kit + "</kit>") +
 			"<objects>" + (objects.empty() ? box("marker", 0, 0) : objects) + "</objects>"
 			"<states>" + states + "</states>"
 			"</game>";
@@ -116,14 +118,14 @@ namespace
 
 	const std::string kSpace = "<inputs><input button=\"space\"><pop /></input></inputs>";
 
-	// A state with a kit of one rock that drifts right, and three rooms: the
+	// A kit of one rock that drifts right, and a state of three rooms: the
 	// first takes it as it is, the second changes its speed, the third is
 	// the second with a sign of its own.
+	const std::string kRock = box("rock", 100, 100, "<x>1</x>");
 	const std::string kRooms =
 		"<state name=\"playing\">"
 		"<objects>" + box("hero", 400, 500) + "</objects>"
 		"<scenes>"
-		"<objects>" + box("rock", 100, 100, "<x>1</x>") + "</objects>"
 		"<scene name=\"room1\"><objects><object name=\"rock\" /></objects></scene>"
 		"<scene name=\"room2\"><objects><object name=\"rock\"><velocity><x>3</x></velocity></object></objects></scene>"
 		"<scene name=\"room3\" from=\"room2\"><objects>" + box("sign", 700, 50) + "</objects></scene>"
@@ -169,7 +171,7 @@ TEST_CASE("an object with no <sprite> only holds numbers: it is never drawn and 
 TEST_CASE("each scene that takes a piece gets its own copy, named by its path, and only the current scene runs", "[scenes]")
 {
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
-	Loaded loaded(gameXml(kRooms), backend);
+	Loaded loaded(gameXml(kRooms, {}, {}, kRock), backend);
 
 	REQUIRE(loaded.has("playing.hero"));
 	REQUIRE(loaded.has("playing.room1.rock"));
@@ -213,13 +215,14 @@ TEST_CASE("names inside a scene mean its own first, then its state's, then the g
 	const std::string states =
 		"<state name=\"playing\">"
 		"<objects>" + box("hero", 400, 500, {}, "<variables><variable name=\"score\">0</variable></variables>") + shot + "</objects>"
-		"<scenes><objects>" + rock + box("tally", 0, 0, {}, tally) + "</objects>"
+		"<scenes>"
 		"<scene name=\"room1\"><objects><object name=\"rock\" /><object name=\"tally\" /></objects></scene>"
 		"<scene name=\"room2\" from=\"room1\" />"
 		"</scenes>" + kSpace + "</state>";
 	const std::string label = "<object name=\"label\"><sprite><text><number>room2.tally.hits</number><size>10</size></text></sprite>"
 		"<position><x>playing.room1.rock.width</x><y>0</y></position></object>";
-	Loaded loaded(gameXml("<state name=\"top\"><shows><show object=\"label\" /></shows><inputs><input button=\"space\"><push state=\"playing\" /></input></inputs></state>" + states, label));
+	Loaded loaded(gameXml("<state name=\"top\"><shows><show object=\"label\" /></shows><inputs><input button=\"space\"><push state=\"playing\" /></input></inputs></state>" + states, label,
+		{}, rock + box("tally", 0, 0, {}, tally)));
 
 	loaded.game.pushState("playing");
 	loaded.frames(30);
@@ -245,12 +248,11 @@ TEST_CASE("a scene's variables are read inside it by their plain names, and a pi
 {
 	const std::string states =
 		"<state name=\"playing\"><scenes>"
-		"<objects>" + box("bomb", 100, 0, "<y>pace</y>", "<variables><variable name=\"drop\">pace * 2</variable></variables>") + "</objects>"
 		"<scene name=\"wave1\"><variables><variable name=\"pace\">1</variable></variables><objects><object name=\"bomb\" /></objects></scene>"
 		"<scene name=\"wave2\" from=\"wave1\"><variables><variable name=\"pace\">3</variable></variables></scene>"
 		"<scene name=\"wave3\" from=\"wave1\"><objects><object name=\"bomb\"><variables><variable name=\"drop\">7</variable></variables></object></objects></scene>"
 		"</scenes>" + kSpace + "</state>";
-	Loaded loaded(gameXml(states));
+	Loaded loaded(gameXml(states, {}, {}, box("bomb", 100, 0, "<y>pace</y>", "<variables><variable name=\"drop\">pace * 2</variable></variables>")));
 
 	CHECK(loaded.game.getVariable("playing.wave2.pace") == Approx(3));
 	CHECK(loaded.game.getObject("playing.wave1.bomb").velocity.y == Approx(1));
@@ -265,13 +267,13 @@ TEST_CASE("a condition that names no object looks only at the current scene, and
 	const std::string aliens = "<group name=\"aliens\" class=\"alien\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<member><position><x>10</x><y>10</y></position></member><member><position><x>30</x><y>10</y></position></member></group>";
 	const std::string states =
-		"<state name=\"playing\"><scenes><objects>" + aliens + "</objects>"
+		"<state name=\"playing\"><scenes>"
 		"<scene name=\"wave1\"><objects><group name=\"aliens\" /></objects>"
 		"<conditions><condition name=\"cleared\" class=\"alien\"><remaining>0</remaining><enter scene=\"wave2\" /></condition></conditions></scene>"
 		"<scene name=\"wave2\" from=\"wave1\"><conditions><condition name=\"cleared\" class=\"alien\"><remaining>0</remaining><pop state=\"won\" /></condition></conditions></scene>"
 		"</scenes>" + kSpace + "</state>"
 		"<state name=\"won\"><inputs><input button=\"space\"><reset /></input></inputs></state>";
-	Loaded loaded(gameXml(states));
+	Loaded loaded(gameXml(states, {}, {}, aliens));
 
 	loaded.frames(2);
 	CHECK(loaded.game.currentScene("playing") == "playing.wave1");
@@ -303,7 +305,7 @@ TEST_CASE("from= copies the conditions, timers and ways of the scene it is from;
 		"<member><position><x>10</x><y>10</y></position></member><member><position><x>30</x><y>10</y></position></member></group>";
 	const std::string states =
 		"<state name=\"playing\"><objects>" + box("clock", 0, 500, {}, "<variables><variable name=\"ticks\">0</variable></variables>") + "</objects>"
-		"<scenes><objects>" + aliens + "</objects>"
+		"<scenes>"
 		"<scene name=\"wave1\"><ways><way name=\"next\" scene=\"wave2\" /><way name=\"back\" scene=\"wave1\" /></ways>"
 		"<objects><group name=\"aliens\" /></objects>"
 		"<conditions><condition name=\"cleared\" class=\"alien\"><remaining>0</remaining><enter way=\"next\" /></condition></conditions>"
@@ -313,7 +315,7 @@ TEST_CASE("from= copies the conditions, timers and ways of the scene it is from;
 		"<timers><timer><after>100</after><inc variable=\"clock.ticks\" /></timer><timer name=\"tick\"><every>0.5</every><inc variable=\"clock.ticks\">10</inc></timer></timers></scene>"
 		"</scenes>" + kSpace + "</state>"
 		"<state name=\"won\"><inputs><input button=\"space\"><reset /></input></inputs></state>";
-	Loaded loaded(gameXml(states), backend);
+	Loaded loaded(gameXml(states, {}, {}, aliens), backend);
 
 	const State& playing = loaded.game.getStates().front();
 	REQUIRE(playing.scenes.size() == 3);
@@ -350,11 +352,11 @@ TEST_CASE("a class, or a name every scene has, counts the scene in play; a name 
 		"<member><position><x>10</x><y>10</y></position></member><member><position><x>30</x><y>10</y></position></member></group>";
 	const auto game = [&](const std::string& condition)
 	{
-		return gameXml("<state name=\"playing\"><scenes><objects>" + robots + "</objects>"
+		return gameXml("<state name=\"playing\"><scenes>"
 			"<scene name=\"room1\"><objects><group name=\"robots\" /></objects></scene>"
 			"<scene name=\"room2\"><objects><group name=\"robots\" /></objects></scene>"
 			"</scenes>" + kSpace + "<conditions>" + condition + "</conditions></state>"
-			"<state name=\"won\">" + kSpace + "</state>");
+			"<state name=\"won\">" + kSpace + "</state>", {}, {}, robots);
 	};
 	const auto clearRoom2 = [](Loaded& loaded)
 	{
@@ -394,7 +396,7 @@ TEST_CASE("a class, or a name every scene has, counts the scene in play; a name 
 
 TEST_CASE("<reset scene> puts back what started in it, and leaves the other scenes alone", "[scenes]")
 {
-	Loaded loaded(gameXml(kRooms));
+	Loaded loaded(gameXml(kRooms, {}, {}, kRock));
 	loaded.frames(10);
 	loaded.game.enterScene("playing.room2");
 	loaded.frames(10);
@@ -495,13 +497,18 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 	SECTION("a name that is the end of two paths")
 	{
 		fails(gameXml(kRooms + "<state name=\"practice\"><objects>" + box("rock", 0, 0) + "</objects>" + kSpace + "</state>",
-			box("label", 0, 0, "<x>rock.width</x>")), "'rock' could be");
+			box("label", 0, 0, "<x>rock.width</x>"), {}, kRock), "'rock' could be");
+	}
+	SECTION("a scene from= one there is not")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes>"
+			"<scene name=\"room1\" /><scene name=\"room2\" from=\"room9\" /></scenes>" + kSpace + "</state>"),
+			"from=\"room9\" names no scene before it");
 	}
 	SECTION("a take of a piece the kit does not have")
 	{
-		fails(gameXml("<state name=\"playing\"><scenes><objects>" + box("rock", 0, 0) + "</objects>"
-			"<scene name=\"room1\" /><scene name=\"room2\" from=\"room9\" /></scenes>" + kSpace + "</state>"),
-			"from=\"room9\" names no scene before it");
+		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><objects><object name=\"stone\" from=\"rocks\" /></objects></scene></scenes>" + kSpace + "</state>",
+			{}, {}, kRock), "from=\"rocks\" names no piece of the <kit>");
 	}
 	SECTION("an own object that is not complete")
 	{
@@ -517,9 +524,9 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 	{
 		const std::string rocks = "<group name=\"rocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 			"<member><position><x>0</x><y>0</y></position></member><member><position><x>20</x><y>0</y></position></member></group>";
-		fails(gameXml("<state name=\"playing\"><scenes><objects>" + rocks + "</objects>"
-			"<scene name=\"room1\"><objects><object name=\"rocks.2\"><hidden>true</hidden></object></objects></scene></scenes>" + kSpace + "</state>"),
-			"a numbered member of a group");
+		fails(gameXml("<state name=\"playing\"><scenes>"
+			"<scene name=\"room1\"><objects><object name=\"rocks.2\"><hidden>true</hidden></object></objects></scene></scenes>" + kSpace + "</state>",
+			{}, {}, rocks), "a numbered member of a group");
 	}
 	SECTION("a scene no state has")
 	{
@@ -556,7 +563,7 @@ TEST_CASE("a game whose states own every object has no <objects> of its own", "[
 TEST_CASE("a scene's <ways> say where its <enter way> and <reset way> lead, so one shared door serves every room", "[scenes][ways]")
 {
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
-	// One door in the kit, taken by every room; walking into it enters the
+	// One door of the kit, taken by every room; walking into it enters the
 	// room its way leads to, and that room starts again first.
 	const std::string door = box("door", 200, 100, {}, "<drawn>false</drawn><collisions><enabled>true</enabled>"
 		"<collision object=\"hero\"><reset way=\"on\" /><enter way=\"on\" /></collision></collisions>");
@@ -564,10 +571,10 @@ TEST_CASE("a scene's <ways> say where its <enter way> and <reset way> lead, so o
 	Loaded loaded(gameXml(
 		"<state name=\"playing\"><objects>" + box("hero", 100, 100, "<x>4</x>",
 			"<collisions><enabled>true</enabled><collision object=\"door\"><move direction=\"left\">150</move></collision></collisions>") + "</objects>"
-		"<scenes><objects>" + door + rock + "</objects>"
+		"<scenes>"
 		"<scene name=\"room1\"><ways><way name=\"on\" scene=\"room2\" /></ways><objects><object name=\"door\" /><object name=\"rock\" /></objects></scene>"
 		"<scene name=\"room2\"><ways><way name=\"on\" scene=\"playing.room1\" /></ways><objects><object name=\"door\" /><object name=\"rock\" /></objects></scene>"
-		"</scenes>" + kSpace + "</state>"), backend);
+		"</scenes>" + kSpace + "</state>", {}, {}, door + rock), backend);
 	loaded.game.pushState("playing");
 
 	REQUIRE(loaded.game.currentScene("playing") == "playing.room1");

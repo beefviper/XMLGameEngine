@@ -27,6 +27,17 @@ namespace xge
 		return value ? value : std::string{};
 	}
 
+	std::vector<std::pair<std::string, std::string>> TinyXml2Node::getAttributes() const
+	{
+		std::vector<std::pair<std::string, std::string>> attributes;
+		if (!element) { return attributes; }
+		for (const tinyxml2::XMLAttribute* attribute = element->FirstAttribute(); attribute != nullptr; attribute = attribute->Next())
+		{
+			attributes.emplace_back(attribute->Name(), attribute->Value());
+		}
+		return attributes;
+	}
+
 	std::string TinyXml2Node::getText() const
 	{
 		std::string text;

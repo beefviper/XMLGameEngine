@@ -74,6 +74,114 @@
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size></style>
   </styles>
+  <kit>
+    <!-- the Gorgon ships: four lanes of hidden ships, a lane lower
+         each pass; speed and points are the wave's -->
+    <group name="gorgons" class="gorgon">
+      <sprite>
+        <bitmap>
+          <row>....****....</row>
+          <row>..********..</row>
+          <row>************</row>
+          <row>.*.*.*.*.*.*</row>
+          <row>..********..</row>
+          <scale>3</scale>
+          <color>color.green</color>
+        </bitmap>
+      </sprite>
+      <position><x>-50</x></position>
+      <velocity><x>speed</x></velocity>
+      <hidden>true</hidden>
+      <collisions>
+        <enabled>true</enabled>
+        <collision class="shell">
+          <inc variable="status.score">points</inc>
+          <inc variable="tally.downed" />
+          <play sound="hit" />
+          <die />
+        </collision>
+      </collisions>
+      <group name="lane1">
+        <position><y>top</y></position>
+        <collisions>
+          <enabled>true</enabled>
+          <collision edge="right">
+            <die />
+            <reveal object="lane2" />
+          </collision>
+        </collisions>
+        <member /><member /><member />
+      </group>
+      <group name="lane2">
+        <position><y>top + lane</y></position>
+        <collisions>
+          <enabled>true</enabled>
+          <collision edge="right">
+            <die />
+            <reveal object="lane3" />
+          </collision>
+        </collisions>
+        <member /><member /><member />
+      </group>
+      <group name="lane3">
+        <position><y>top + lane * 2</y></position>
+        <collisions>
+          <enabled>true</enabled>
+          <collision edge="right">
+            <die />
+            <reveal object="lane4" />
+          </collision>
+        </collisions>
+        <member /><member /><member />
+      </group>
+      <!-- the lowest lane: round and round, firing at the city -->
+      <group name="lane4">
+        <position><y>top + lane * 3</y></position>
+        <facing>down</facing>
+        <collisions>
+          <enabled>true</enabled>
+          <collision edge="right"><wrap /></collision>
+        </collisions>
+        <timers>
+          <timer>
+            <every><random min="raygap - 1" max="raygap + 1" /></every>
+            <fire object="ray" />
+            <play sound="ray" />
+          </timer>
+        </timers>
+        <member /><member /><member />
+      </group>
+    </group>
+    <!-- which wave it is, at the top right -->
+    <object name="label">
+      <sprite><text style="hud"><content>WAVE 1</content><color>color.green</color></text></sprite>
+      <position><x>window.right - label.width - margin</x><y>margin</y></position>
+    </object>
+    <!-- each post's shell, made when it fires: two each in the air at most -->
+    <group name="shells" class="shell">
+      <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+      <velocity><y>-shellspeed</y></velocity>
+      <most>2</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision class="gorgon"><despawn /></collision>
+      </collisions>
+      <member name="leftshell" /><member name="middleshell" /><member name="rightshell" />
+    </group>
+    <!-- the death rays, fired from the lowest lane -->
+    <object name="ray" class="ray">
+      <sprite><rectangle><width>3</width><height>16</height><color>color.magenta</color></rectangle></sprite>
+      <velocity><y>rayspeed</y></velocity>
+      <most>4</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision class="building"><despawn /></collision>
+        <collision class="ground"><despawn /></collision>
+      </collisions>
+    </object>
+  </kit>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
@@ -235,124 +343,12 @@
           </actions>
         </object>
 
-        <!-- each post's shell, made when it fires: two each in the air at most -->
-        <group name="shells" class="shell">
-          <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
-          <velocity><y>-shellspeed</y></velocity>
-          <exists>false</exists>
-          <most>2</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision class="gorgon"><despawn /></collision>
-          </collisions>
-          <member name="leftshell" /><member name="middleshell" /><member name="rightshell" />
-        </group>
-
-        <!-- the death rays, fired from the lowest lane -->
-        <object name="ray" class="ray">
-          <sprite><rectangle><width>3</width><height>16</height><color>color.magenta</color></rectangle></sprite>
-          <velocity><y>rayspeed</y></velocity>
-          <exists>false</exists>
-          <most>4</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision class="building"><despawn /></collision>
-            <collision class="ground"><despawn /></collision>
-          </collisions>
-        </object>
-
         <object name="score">
           <sprite><text style="hud"><number>status.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
       </objects>
       <scenes>
-        <objects>
-          <!-- the Gorgon ships: four lanes of hidden ships, a lane lower
-               each pass; speed and points are the wave's -->
-          <group name="gorgons" class="gorgon">
-            <sprite>
-              <bitmap>
-                <row>....****....</row>
-                <row>..********..</row>
-                <row>************</row>
-                <row>.*.*.*.*.*.*</row>
-                <row>..********..</row>
-                <scale>3</scale>
-                <color>color.green</color>
-              </bitmap>
-            </sprite>
-            <position><x>-50</x></position>
-            <velocity><x>speed</x></velocity>
-            <hidden>true</hidden>
-            <collisions>
-              <enabled>true</enabled>
-              <collision class="shell">
-                <inc variable="status.score">points</inc>
-                <inc variable="tally.downed" />
-                <play sound="hit" />
-                <die />
-              </collision>
-            </collisions>
-            <group name="lane1">
-              <position><y>top</y></position>
-              <collisions>
-                <enabled>true</enabled>
-                <collision edge="right">
-                  <die />
-                  <reveal object="lane2" />
-                </collision>
-              </collisions>
-              <member /><member /><member />
-            </group>
-            <group name="lane2">
-              <position><y>top + lane</y></position>
-              <collisions>
-                <enabled>true</enabled>
-                <collision edge="right">
-                  <die />
-                  <reveal object="lane3" />
-                </collision>
-              </collisions>
-              <member /><member /><member />
-            </group>
-            <group name="lane3">
-              <position><y>top + lane * 2</y></position>
-              <collisions>
-                <enabled>true</enabled>
-                <collision edge="right">
-                  <die />
-                  <reveal object="lane4" />
-                </collision>
-              </collisions>
-              <member /><member /><member />
-            </group>
-            <!-- the lowest lane: round and round, firing at the city -->
-            <group name="lane4">
-              <position><y>top + lane * 3</y></position>
-              <facing>down</facing>
-              <collisions>
-                <enabled>true</enabled>
-                <collision edge="right"><wrap /></collision>
-              </collisions>
-              <timers>
-                <timer>
-                  <every><random min="raygap - 1" max="raygap + 1" /></every>
-                  <fire object="ray" />
-                  <play sound="ray" />
-                </timer>
-              </timers>
-              <member /><member /><member />
-            </group>
-          </group>
-          <!-- which wave it is, at the top right -->
-          <object name="label">
-            <sprite><text style="hud"><content>WAVE 1</content><color>color.green</color></text></sprite>
-            <position><x>window.right - label.width - margin</x><y>margin</y></position>
-          </object>
-        </objects>
 
         <!-- a ship every three seconds; twelve down and on to the next wave -->
         <scene name="wave1">

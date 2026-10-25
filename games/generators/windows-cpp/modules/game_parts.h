@@ -464,38 +464,4 @@ namespace xge::parts
 		back.home = true;
 		return back;
 	}
-
-	// A piece a <scene> takes from its state's kit (or from the scene it is
-	// from=), as it is.
-	inline RawSceneEntry take(std::string name)
-	{
-		RawSceneEntry entry;
-		entry.take = std::move(name);
-		return entry;
-	}
-
-	// A piece a <scene> takes, and what it changes in it (`fill`).
-	template <typename Fill>
-	RawSceneEntry take(std::string name, Fill fill)
-	{
-		RawSceneEntry entry = take(std::move(name));
-		fill(entry.change);
-		return entry;
-	}
-
-	// An <object> of a <scene>'s own.
-	inline RawSceneEntry own(RawObject object)
-	{
-		RawSceneEntry entry;
-		entry.objects.push_back(std::move(object));
-		return entry;
-	}
-
-	// A <group> of a <scene>'s own: its members, as its function adds them.
-	inline RawSceneEntry own(void (*group)(std::vector<RawObject>&))
-	{
-		RawSceneEntry entry;
-		group(entry.objects);
-		return entry;
-	}
 }

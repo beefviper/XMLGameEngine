@@ -76,6 +76,21 @@
     <style name="keys"><size>22</size><color>color.yellow</color></style>
     <style name="hud"><size>40</size><color>color.yellow</color></style>
   </styles>
+  <kit>
+    <!-- each gun's shell, made when it fires: two each in the air at most -->
+    <group name="shells">
+      <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+      <velocity><y>-shellspeed</y></velocity>
+      <most>2</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision class="plane"><despawn /></collision>
+      </collisions>
+      <member name="shell1" />
+      <member name="shell2"><sprite><rectangle><color>color.white</color></rectangle></sprite></member>
+    </group>
+  </kit>
   <objects>
     <!-- on every end screen -->
     <object name="timeup">
@@ -270,20 +285,6 @@
             </actions>
             <member name="gun2"><position><x><centered>window.width.center * 3 / 2</centered></x></position></member>
           </group>
-        </group>
-        <!-- each gun's shell, made when it fires: two each in the air at most -->
-        <group name="shells">
-          <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
-          <velocity><y>-shellspeed</y></velocity>
-          <exists>false</exists>
-          <most>2</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision class="plane"><despawn /></collision>
-          </collisions>
-          <member name="shell1" />
-          <member name="shell2"><sprite><rectangle><color>color.white</color></rectangle></sprite></member>
         </group>
         <object name="score1">
           <sprite><text style="hud"><number>gun1.score</number></text></sprite>

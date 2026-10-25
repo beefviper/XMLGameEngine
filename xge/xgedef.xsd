@@ -1280,12 +1280,22 @@
     Anything that can be drawn, moved or collided with. One with no sprite only
     holds numbers (a score, the lives): it is never drawn, and its position,
     0, 0 if left out, is only where it is.
+
+    from= starts it as a copy of a piece of the game's <kit> (or of a named
+    member of a group piece), changed by what it gives; one named after a
+    piece takes it the same way without from=. In a state or scene from=
+    another, one named after an object the other has changes that object.
+    What is given goes over what it starts from: sprites and animations by
+    name, either half of a position or velocity, variables, actions and
+    timers by name, collision rules after the piece's, anything else in its
+    place. So everything here may be left out, and the engine checks that
+    the object made is complete.
   -->
   <xs:complexType name="objectType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
-      <!-- both halves, unless it changes an object in a state from= another -->
+      <!-- both halves, unless it starts from something that has them -->
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
@@ -1303,8 +1313,7 @@
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
-      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
-      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <!-- most: how many copies a <spawn> may have made of it at once -->
       <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
@@ -1313,6 +1322,7 @@
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="from" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!--
@@ -1419,8 +1429,7 @@
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
-      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
-      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <!-- most: how many copies a <spawn> may have made of it at once -->
       <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
@@ -1441,18 +1450,22 @@
     </xs:choice>
   </xs:group>
 
+  <!-- A group, as an object can be, can start from a piece of the <kit>
+       (from=, or named after it); then its members may be left out, and
+       given, they replace the piece's. -->
   <xs:complexType name="groupType">
     <xs:sequence>
       <xs:group ref="groupLayout" />
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
       <xs:group ref="groupParts" />
-      <xs:choice>
+      <xs:choice minOccurs="0">
         <xs:group ref="groupMembers" />
         <xs:element name="group" type="innerGroupType" maxOccurs="unbounded" />
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="from" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!-- A group inside another: the same, except that a sprite of the outer group's (by name) need only give what changes. -->
@@ -1494,8 +1507,7 @@
       <xs:element name="maze" type="mazeType" minOccurs="0" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
-      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
-      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <!-- most: how many copies a <spawn> may have made of it at once -->
       <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
@@ -1525,8 +1537,7 @@
       <xs:group ref="sightParts" />
       <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
-      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
-      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
+      <!-- most: how many copies a <spawn> may have made of it at once -->
       <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
@@ -1565,59 +1576,10 @@
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- Objects and groups: the game's, a state's, or the kit of its scenes. -->
+  <!-- Objects and groups: the game's, a state's or a scene's. -->
   <xs:complexType name="objectsType">
     <xs:choice maxOccurs="unbounded">
       <xs:element name="object" type="objectType" />
-      <xs:element name="group" type="groupType" />
-      <xs:element name="map" type="mapType" />
-    </xs:choice>
-  </xs:complexType>
-
-  <!--
-    An object in a scene: the same as any other, or, when it is named after
-    a piece of the kit (or one of the scene it is from=), that piece taken,
-    changed by what it gives: whole <sprite>s by name, either half of the
-    <position> or the <velocity>, <hidden>, <drawn> and <variables>. So
-    everything here may be left out, and the engine checks that an object of
-    the scene's own is complete.
-  -->
-  <xs:complexType name="sceneObjectType">
-    <xs:sequence>
-      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="position" type="partialPositionType" minOccurs="0" />
-      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
-      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
-      <xs:element name="heading" type="valueType" minOccurs="0" />
-      <xs:element name="drag" type="valueType" minOccurs="0" />
-      <!-- how hard it is to knock; left out, a knock does not move it -->
-      <xs:element name="mass" type="valueType" minOccurs="0" />
-      <!-- pulled toward the nearest of each, that much speed a frame -->
-      <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
-      <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->
-      <xs:element name="seek" type="targetValueType" minOccurs="0" />
-      <xs:group ref="sightParts" />
-      <xs:element name="facing" type="directionType" minOccurs="0" />
-      <xs:group ref="moveParts" />
-      <xs:element name="maze" type="mazeType" minOccurs="0" />
-      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
-      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
-      <!-- exists: false for one not in the game until a <spawn> makes a copy; most: how many copies at once -->
-      <xs:element name="exists" type="xs:boolean" minOccurs="0" />
-      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
-      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
-      <xs:element name="actions" type="actionsType" minOccurs="0" />
-      <xs:element name="variables" type="variablesType" minOccurs="0" />
-      <xs:element name="timers" type="timersType" minOccurs="0" />
-    </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="class" type="xs:string" use="optional" />
-  </xs:complexType>
-
-  <xs:complexType name="sceneObjectsType">
-    <xs:choice maxOccurs="unbounded">
-      <xs:element name="object" type="sceneObjectType" />
       <xs:element name="group" type="groupType" />
       <xs:element name="map" type="mapType" />
     </xs:choice>
@@ -1633,8 +1595,8 @@
     One place of a state: its own numbers (read inside it by their plain
     names), its objects, and the conditions and timers that run while it is
     its state's current scene. from= starts it as a copy of an earlier
-    scene: its objects, variables and ways, changed by its own, and its
-    conditions and timers, unless it has its own.
+    scene: its objects, variables, ways, conditions and timers, changed by
+    its own of the same names, and with its own added.
   -->
   <!-- Where a scene's ways lead: <way name="east" scene="screen2" />, a
        scene of the same state, gone to by <enter way="east" />. -->
@@ -1653,7 +1615,7 @@
     <xs:sequence>
       <xs:element name="ways" type="waysType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
-      <xs:element name="objects" type="sceneObjectsType" minOccurs="0" />
+      <xs:element name="objects" type="objectsType" minOccurs="0" />
       <xs:element name="conditions" type="conditionsType" minOccurs="0" />
       <xs:element name="timers" type="timersType" minOccurs="0" />
     </xs:sequence>
@@ -1661,12 +1623,25 @@
     <xs:attribute name="from" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <!-- The kit of pieces the scenes take, then the scenes; the first is current when the game starts. -->
+  <!-- The scenes; the first is current when the game starts. -->
   <xs:complexType name="scenesType">
     <xs:sequence>
-      <xs:element name="objects" type="objectsType" minOccurs="0" />
       <xs:element name="scene" type="sceneType" maxOccurs="unbounded" />
     </xs:sequence>
+  </xs:complexType>
+
+  <!--
+    The kit: objects and groups written once, in play only where something
+    takes them: an object or group of the game's, a state's or a scene's
+    that is from= one (or named after one), or a <spawn>, <fire> or
+    <release> that names one, whose copies come into the game beside what
+    spawns them. A piece can be from= an earlier piece.
+  -->
+  <xs:complexType name="kitType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="object" type="objectType" />
+      <xs:element name="group" type="groupType" />
+    </xs:choice>
   </xs:complexType>
 
   <xs:element name="game">
@@ -1726,6 +1701,7 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
+        <xs:element name="kit" type="kitType" minOccurs="0" />
         <xs:element name="objects" type="objectsType" minOccurs="0" />
         <!--
           What a full <reset /> passes over: each <keep> names an object or a

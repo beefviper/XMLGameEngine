@@ -37,11 +37,6 @@ The name: `room` fits Berserk and Adventure, `screen` Pitfall, `wave` Kaboom. **
     <object name="harry">...</object>             <!-- in play in every scene -->
   </objects>
   <scenes>
-    <objects>                                     <!-- the kit: pieces scenes take -->
-      <group name="logs" class="log">...</group>
-      <object name="tar" class="hazard">...</object>
-      <group name="crocs" class="croc">...</group>
-    </objects>
     <scene name="screen1">
       <objects>
         <group name="logs" />                     <!-- taken as it is -->
@@ -59,7 +54,7 @@ The name: `room` fits Berserk and Adventure, `screen` Pitfall, `wave` Kaboom. **
 
 - **States and scenes both own objects.** A state's `<objects>` are in play whenever the state is current, in every scene of it (Harry, the HUD of the main game). A scene's are in play only while it is the state's current scene. The game's own top-level `<objects>` stay as they are (below).
 - **Objects are made the same way everywhere.** Any `<objects>`, in the game, a state or a scene, holds `<object>`s and `<group>`s with all their rules (members, columns and rows, groups inside a group).
-- **The kit sits at the top of `<scenes>`**, as named `<keys>`, `<shows>` and `<conditions>` sets sit at the top of `<states>`: the shared part named higher up. Kit pieces are not in play by themselves. A scene takes one by naming it in its own `<objects>`: with nothing inside, as it is; with parts inside, changed as a member changes its group (a sprite of the same shape changes only what it gives). A name the kit does not have must be complete. Each scene that takes a piece gets its own copy, so Pitfall's logs on screen 1 and screen 3 roll on their own.
+- **The kit sat at the top of `<scenes>`** (until 2026-10-25, when it moved to the game, [kit](13-kit.md)), as named `<keys>`, `<shows>` and `<conditions>` sets sit at the top of `<states>`: the shared part named higher up. Kit pieces are not in play by themselves. A scene takes one by naming it in its own `<objects>`: with nothing inside, as it is; with parts inside, changed as a member changes its group (a sprite of the same shape changes only what it gives). A name the kit does not have must be complete. Each scene that takes a piece gets its own copy, so Pitfall's logs on screen 1 and screen 3 roll on their own.
 - **A scene can take another scene and change parts** (`from=`), and a scene's own `<variables>` are its parameters (`screen3.logspeed`, read by the objects it holds). Each copy is a real object made at load, so values worked out at load see their own scene's numbers with no change to evaluation. Kaboom's waves become one wave and two that change the pace and the drop.
 - **Going to a scene is a command, `<enter scene="room2" />`**, run wherever commands run: Berserk's exit objects in a collision rule, Pitfall's edge rules (with `<wrap />`, which already puts Harry on the far side), Kaboom's score condition, Adventure's gate. A verb rather than a map, because every game here already has the place where the move happens. (Built later: the command can name a way of the current scene instead, below.)
 - **What is carried goes along.** On `<enter>`, an object carried by one of the state's objects moves to the new scene with it.
@@ -89,8 +84,8 @@ Kept, since every game depends on them. With states and scenes owning objects, t
 
 ## How it was built
 
-- **One layout pass, before anything is worked out.** `layOutScenes` (`game/scenes.cpp`) turns the states' and scenes' objects into ordinary objects among the game's, each with its owner (state, scene) and its path as its name, and writes every name the file uses out in full. Everything after it (evaluation, the frame, the generated programs) sees plain objects with owners, so a generated game gets scenes from the same code: `data.xsl` writes the state's objects, the kit and each scene as data (`take(...)`, `own(...)` in `game_parts.h`), not the layout.
-- **Takes change whole sprites.** The note above said a sprite of the same shape changes only what it gives, as in a group. A take replaces the sprite of that name instead: a piece's sprite is already finished, and a whole sprite reads plainly (the field's walls in green are a green wall). Only the parts listed in the readme can change (position and velocity halves, `<hidden>`, `<drawn>`, `<variables>`, sprites); a scene that needs more owns its own object.
+- **One layout pass, before anything is worked out.** `layOutScenes` (`game/scenes.cpp`) turns the states' and scenes' objects into ordinary objects among the game's, each with its owner (state, scene) and its path as its name, and writes every name the file uses out in full. Everything after it (evaluation, the frame, the generated programs) sees plain objects with owners, so a generated game gets scenes from the same code. Since 2026-10-25 the takes and `from=` are worked out on the XML first ([kit](13-kit.md)), and `data.xsl` writes each state's and scene's objects whole.
+- **Takes change whole sprites.** The note above said a sprite of the same shape changes only what it gives, as in a group. A take replaces the sprite of that name instead: a piece's sprite is already finished, and a whole sprite reads plainly (the field's walls in green are a green wall). As first built only position and velocity halves, `<hidden>`, `<drawn>`, `<variables>` and sprites could change; since 2026-10-25 a take follows the one change rule of the [kit](13-kit.md), collision rules and timers included.
 - **`state.name` names a piece in every scene.** Each scene object also answers to `playing.rock`, so a rule of the state (the hero's shot) can say `rock` and mean whichever room's rock it meets. Where a short name is the end of several paths, the shortest wins; two as short stop the load.
 - **Shadowing stops the load.** A scene object named like one of its state's, or a state's or scene's like one of the game's, would make a plain name read two ways, so it is refused rather than ruled on.
 - **Running, drawn and seen:** running is owned by the current state (and its current scene) or shown by it; `<drawn>false</drawn>` runs unseen; `<show state="...">` draws another state still, under the current one (the first of the open questions, settled: a tag in `<shows>`, and a still state's timers do not count).
@@ -105,5 +100,5 @@ Kept, since every game depends on them. With states and scenes owning objects, t
 - **Drawing again on entry**: whether entering a scene fresh should draw its `<random>`s again (today only `<reset scene>` does), and whether a command should draw again without moving the object back.
 - **Grid-map level data** ([ideas](57-ideas.md)) would sit inside a scene; with ways, a map of screens is each screen's `<ways>`, which is enough for four screens and may not be for Pitfall's 255.
 - **Who entered, and from which side**, beyond what the state's own objects already carry.
-- **Taking a copied condition or timer away**, and **changing a kit piece's named timer in a take**: not built, since no game needs either yet.
+- **Taking a copied condition or timer away**: not built, since no game needs it yet. (Changing a piece's named timer in a take is built, [kit](13-kit.md).)
 - **The game's own objects**: kept; whether a game still needs any once states own their objects is left for later.

@@ -10,8 +10,8 @@
   - *A separate list of templates* that only spawns could use: rejected, since then two kinds of thing would do the same job, and any object should be spawnable.
   - *Words:* create/destroy, spawn/despawn; `<template>`, `<inplay>`, `<exists>`. Chosen: `spawn`/`despawn` and `<exists>`, since what a rule cares about is whether something exists.
 - **Chosen:**
-  - `<exists>false</exists>` makes an object (or a group) a description: in the file, never in the game. Its position may be left out.
-  - `<spawn>`, `<fire>` and `<release>` of a description make a new copy, named `name.N` with the lowest free N; a group's members are copied in turn. A copy's `<random>`s are drawn for it, its variables and timers are its own, and its own name and `self` in its rules mean the copy. `<spawn>` of an object that exists copies it too.
+  - `<exists>false</exists>` made an object (or a group) a description: in the file, never in the game. Its position may be left out. Since 2026-10-25 a description is a piece of the game's `<kit>` that a spawn names, and `<exists>` is gone from the file ([kit](13-kit.md)); the engine still marks the piece it puts in beside the spawner as not existing.
+  - `<spawn>`, `<fire>` and `<release>` of a description (now a kit piece) make a new copy, named `name.N` with the lowest free N; a group's members are copied in turn. A copy's `<random>`s are drawn for it, its variables and timers are its own, and its own name and `self` in its rules mean the copy. `<spawn>` of an object that exists copies it too.
   - `<most>` caps how many copies exist at once; at the cap the verb is refused (and the rest of the press, as for any refused verb).
   - `<despawn />` takes a copy away for good (its name free again) and puts one the file wrote out until a reset.
   - **Storage:** objects stay in one `std::vector`; copies made during a frame wait in a `std::deque` and join when the frame ends, and despawned copies are erased then, so nothing a frame is iterating moves under it. Caches keyed by position or pointer (names found, live numbers, collision partners, run-in-top) are rebuilt when the list changes. The vector reserves room at load so references to loaded objects stay good.
@@ -23,7 +23,7 @@
 
 ## Enemies fire back
 
-- Enemies use the same `<fire>`: an enemy is a shooter with a facing and a timer; its shots are copies of one that does not exist. No aiming. Space Invaders (both) and Demon Attack fire this way (Berserk's robots now `<aim>` first); the aliens' catch-all rule (`<collision><die /></collision>`) had to name the cannon's bullet so their own bombs do not kill them.
+- Enemies use the same `<fire>`: an enemy is a shooter with a facing and a timer; its shots are copies of a piece of the kit. No aiming. Space Invaders (both) and Demon Attack fire this way (Berserk's robots now `<aim>` first); the aliens' catch-all rule (`<collision><die /></collision>`) had to name the cannon's bullet so their own bombs do not kill them.
 - Limits: an invader behind others fires through them (the arcade fires only the bottom one of a column); a Berserk robot aims at the man through walls (its shot dies on the wall). Aiming and chasing: [chase-and-paths](24-chase-and-paths.md#chasing-and-aiming-berserk).
 
 

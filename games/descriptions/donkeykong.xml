@@ -131,6 +131,78 @@
     <style name="help"><size>30</size></style>
     <style name="hud"><size>30</size></style>
   </styles>
+  <kit>
+    <!-- a barrel, there once Kong throws it, eight at most,
+         rolling as they go -->
+    <object name="barrel" class="barrel">
+      <sprite name="flat">
+        <bitmap>
+          <row>...*****...</row>
+          <row>.**bbbbb**.</row>
+          <row>.*********.</row>
+          <row>***********</row>
+          <row>*bbbbbbbbb*</row>
+          <row>***********</row>
+          <row>*bbbbbbbbb*</row>
+          <row>***********</row>
+          <row>.*********.</row>
+          <row>.**bbbbb**.</row>
+          <row>...*****...</row>
+          <scale>2</scale>
+          <color>color.orange</color>
+          <color char="b">color.brown</color>
+        </bitmap>
+      </sprite>
+      <sprite name="end">
+        <bitmap>
+          <row>...*b*b*...</row>
+          <row>.***b*b***.</row>
+          <row>.***b*b***.</row>
+          <row>****b*b****</row>
+          <row>****b*b****</row>
+          <row>****b*b****</row>
+          <row>****b*b****</row>
+          <row>****b*b****</row>
+          <row>.***b*b***.</row>
+          <row>.***b*b***.</row>
+          <row>...*b*b*...</row>
+          <scale>2</scale>
+          <color>color.orange</color>
+          <color char="b">color.brown</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.15</interval>
+        <frame sprite="flat" />
+        <frame sprite="end" />
+      </animation>
+      <velocity><x>roll</x></velocity>
+      <acceleration><x>0</x><y>pull</y></acceleration>
+      <most>8</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal">
+          <bounce />
+        </collision>
+        <collision edge="bottom">
+          <despawn />
+        </collision>
+        <collision class="girder">
+          <land />
+        </collision>
+        <collision object="oil">
+          <despawn />
+        </collision>
+        <!-- swung at with the hammer -->
+        <collision object="man">
+          <check object="man" variable="hammer"><atleast>1</atleast></check>
+          <inc variable="man.score">300</inc>
+          <play sound="smash" />
+          <despawn />
+        </collision>
+      </collisions>
+    </object>
+  </kit>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
@@ -276,77 +348,6 @@
             <position><x>420</x><y>80</y></position>
           </member>
         </group>
-        <!-- a barrel, there once Kong throws it, eight at most,
-             rolling as they go -->
-        <object name="barrel" class="barrel">
-          <sprite name="flat">
-            <bitmap>
-              <row>...*****...</row>
-              <row>.**bbbbb**.</row>
-              <row>.*********.</row>
-              <row>***********</row>
-              <row>*bbbbbbbbb*</row>
-              <row>***********</row>
-              <row>*bbbbbbbbb*</row>
-              <row>***********</row>
-              <row>.*********.</row>
-              <row>.**bbbbb**.</row>
-              <row>...*****...</row>
-              <scale>2</scale>
-              <color>color.orange</color>
-              <color char="b">color.brown</color>
-            </bitmap>
-          </sprite>
-          <sprite name="end">
-            <bitmap>
-              <row>...*b*b*...</row>
-              <row>.***b*b***.</row>
-              <row>.***b*b***.</row>
-              <row>****b*b****</row>
-              <row>****b*b****</row>
-              <row>****b*b****</row>
-              <row>****b*b****</row>
-              <row>****b*b****</row>
-              <row>.***b*b***.</row>
-              <row>.***b*b***.</row>
-              <row>...*b*b*...</row>
-              <scale>2</scale>
-              <color>color.orange</color>
-              <color char="b">color.brown</color>
-            </bitmap>
-          </sprite>
-          <animation>
-            <interval>0.15</interval>
-            <frame sprite="flat" />
-            <frame sprite="end" />
-          </animation>
-          <velocity><x>roll</x></velocity>
-          <acceleration><x>0</x><y>pull</y></acceleration>
-          <exists>false</exists>
-          <most>8</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal">
-              <bounce />
-            </collision>
-            <collision edge="bottom">
-              <despawn />
-            </collision>
-            <collision class="girder">
-              <land />
-            </collision>
-            <collision object="oil">
-              <despawn />
-            </collision>
-            <!-- swung at with the hammer -->
-            <collision object="man">
-              <check object="man" variable="hammer"><atleast>1</atleast></check>
-              <inc variable="man.score">300</inc>
-              <play sound="smash" />
-              <despawn />
-            </collision>
-          </collisions>
-        </object>
         <object name="oil">
           <sprite>
             <bitmap>

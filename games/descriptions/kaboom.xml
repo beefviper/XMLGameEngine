@@ -24,7 +24,7 @@
     <become from=>s, the two of them first, so only one of them changes it.
     A shorter stack is a smaller picture, so it catches less.
   * The waves are the <scenes> of the playing state. The bomber, his
-    bombs and the wave's label are the kit; the first wave takes them, and
+    bombs and the wave's label are in the <kit>; the first wave takes them, and
     each later wave is the one before (from=) with its own <variables>: its
     number, the score it ends at, how fast the bomber paces, how often he
     drops a bomb (drop, seconds), how fast it falls and what it is worth,
@@ -33,7 +33,7 @@
     (worked out again each time), so his path is never the same; the other
     <fire>s a bomb every `drop` seconds. He has <facing>down</facing>, so a
     bomb leaves from under him and falls at its own speed.
-  * A bomb does not <exists> until the bomber <fire>s one, its fuse fizzing
+  * A bomb is not in play until the bomber <fire>s one, its fuse fizzing
     (an <animation>), and it <despawn>s when caught. One that hits the
     ground runs <despawn object="bomb" />, which takes away every bomb of
     the wave at once: the explosion.
@@ -88,6 +88,116 @@
     <style name="help"><size>34</size></style>
     <style name="hud"><size>30</size><color>color.yellow</color></style>
   </styles>
+  <kit>
+    <!-- the wall of the building, and the ledge the bomber walks along -->
+    <object name="rooftop">
+      <sprite><rectangle><width>window.right</width><height>roof</height><color>color.darkgrey</color></rectangle></sprite>
+      <position><x>0</x><y>0</y></position>
+    </object>
+    <object name="ledge">
+      <sprite><rectangle><width>window.right</width><height>6</height><color>color.lightgrey</color></rectangle></sprite>
+      <position><x>0</x><y>roof</y></position>
+    </object>
+    <!-- the Mad Bomber: black hat, grin and striped convict's shirt -->
+    <object name="bomber" class="bomber">
+      <sprite>
+        <bitmap>
+          <row>...kkkkkk...</row>
+          <row>...kkkkkk...</row>
+          <row>.kkkkkkkkkk.</row>
+          <row>...ffffff...</row>
+          <row>...fkffkf...</row>
+          <row>...ffffff...</row>
+          <row>...fkkkkf...</row>
+          <row>....ffff....</row>
+          <row>..********..</row>
+          <row>.kkkkkkkkkk.</row>
+          <row>f**********f</row>
+          <row>.kkkkkkkkkk.</row>
+          <row>..********..</row>
+          <row>...kk..kk...</row>
+          <scale>4</scale>
+          <color>color.white</color>
+          <color char="k">color.black</color>
+          <color char="f">color.orange</color>
+        </bitmap>
+      </sprite>
+      <position><x><centered /></x><y>roof - bomber.height</y></position>
+      <velocity><x>pace</x></velocity>
+      <facing>down</facing>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal"><bounce /></collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every><random min="0.3" max="1.4" /></every>
+          <reverse />
+        </timer>
+        <timer>
+          <every>drop</every>
+          <fire object="bomb" />
+        </timer>
+      </timers>
+    </object>
+    <!-- a bomb, there once the bomber drops it: ten at most -->
+    <object name="bomb" class="bomb">
+      <sprite name="fizz">
+        <bitmap>
+          <row>....y.</row>
+          <row>...o..</row>
+          <row>.kkk..</row>
+          <row>kkkkk.</row>
+          <row>kkkkk.</row>
+          <row>.kkk..</row>
+          <scale>4</scale>
+          <color char="y">color.yellow</color>
+          <color char="o">color.lightgrey</color>
+          <color char="k">color.black</color>
+        </bitmap>
+      </sprite>
+      <sprite name="spark">
+        <bitmap>
+          <row>...y.y</row>
+          <row>...oy.</row>
+          <row>.kkk..</row>
+          <row>kkkkk.</row>
+          <row>kkkkk.</row>
+          <row>.kkk..</row>
+          <scale>4</scale>
+          <color char="y">color.red</color>
+          <color char="o">color.lightgrey</color>
+          <color char="k">color.black</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.1</interval>
+        <frame sprite="fizz" />
+        <frame sprite="spark" />
+      </animation>
+      <velocity><y>fall</y></velocity>
+      <most>10</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom">
+          <dec variable="bucket.buckets" />
+          <become object="bucket" from="two" sprite="one" />
+          <become object="bucket" from="three" sprite="two" />
+          <play sound="boom" />
+          <despawn object="bomb" />
+        </collision>
+        <collision object="bucket">
+          <inc variable="bucket.score">points</inc>
+          <play sound="catch" />
+          <despawn />
+        </collision>
+      </collisions>
+    </object>
+    <object name="wavelabel">
+      <sprite><text style="hud"><content>WAVE</content><number>wave</number></text></sprite>
+      <position><x>window.right - wavelabel.width - margin</x><y>12</y></position>
+    </object>
+  </kit>
   <states>
     <state name="mainmenu">
       <objects>
@@ -183,119 +293,6 @@
         </object>
       </objects>
       <scenes>
-        <!-- what every wave takes: the building (first, so the rest is drawn over it),
-             the bomber, his bombs and the wave's label -->
-        <objects>
-          <!-- the wall of the building, and the ledge the bomber walks along -->
-          <object name="rooftop">
-            <sprite><rectangle><width>window.right</width><height>roof</height><color>color.darkgrey</color></rectangle></sprite>
-            <position><x>0</x><y>0</y></position>
-          </object>
-          <object name="ledge">
-            <sprite><rectangle><width>window.right</width><height>6</height><color>color.lightgrey</color></rectangle></sprite>
-            <position><x>0</x><y>roof</y></position>
-          </object>
-          <!-- the Mad Bomber: black hat, grin and striped convict's shirt -->
-          <object name="bomber" class="bomber">
-            <sprite>
-              <bitmap>
-                <row>...kkkkkk...</row>
-                <row>...kkkkkk...</row>
-                <row>.kkkkkkkkkk.</row>
-                <row>...ffffff...</row>
-                <row>...fkffkf...</row>
-                <row>...ffffff...</row>
-                <row>...fkkkkf...</row>
-                <row>....ffff....</row>
-                <row>..********..</row>
-                <row>.kkkkkkkkkk.</row>
-                <row>f**********f</row>
-                <row>.kkkkkkkkkk.</row>
-                <row>..********..</row>
-                <row>...kk..kk...</row>
-                <scale>4</scale>
-                <color>color.white</color>
-                <color char="k">color.black</color>
-                <color char="f">color.orange</color>
-              </bitmap>
-            </sprite>
-            <position><x><centered /></x><y>roof - bomber.height</y></position>
-            <velocity><x>pace</x></velocity>
-            <facing>down</facing>
-            <collisions>
-              <enabled>true</enabled>
-              <collision edge="horizontal"><bounce /></collision>
-            </collisions>
-            <timers>
-              <timer>
-                <every><random min="0.3" max="1.4" /></every>
-                <reverse />
-              </timer>
-              <timer>
-                <every>drop</every>
-                <fire object="bomb" />
-              </timer>
-            </timers>
-          </object>
-          <!-- a bomb, there once the bomber drops it: ten at most -->
-          <object name="bomb" class="bomb">
-            <sprite name="fizz">
-              <bitmap>
-                <row>....y.</row>
-                <row>...o..</row>
-                <row>.kkk..</row>
-                <row>kkkkk.</row>
-                <row>kkkkk.</row>
-                <row>.kkk..</row>
-                <scale>4</scale>
-                <color char="y">color.yellow</color>
-                <color char="o">color.lightgrey</color>
-                <color char="k">color.black</color>
-              </bitmap>
-            </sprite>
-            <sprite name="spark">
-              <bitmap>
-                <row>...y.y</row>
-                <row>...oy.</row>
-                <row>.kkk..</row>
-                <row>kkkkk.</row>
-                <row>kkkkk.</row>
-                <row>.kkk..</row>
-                <scale>4</scale>
-                <color char="y">color.red</color>
-                <color char="o">color.lightgrey</color>
-                <color char="k">color.black</color>
-              </bitmap>
-            </sprite>
-            <animation>
-              <interval>0.1</interval>
-              <frame sprite="fizz" />
-              <frame sprite="spark" />
-            </animation>
-            <velocity><y>fall</y></velocity>
-            <exists>false</exists>
-            <most>10</most>
-            <collisions>
-              <enabled>true</enabled>
-              <collision edge="bottom">
-                <dec variable="bucket.buckets" />
-                <become object="bucket" from="two" sprite="one" />
-                <become object="bucket" from="three" sprite="two" />
-                <play sound="boom" />
-                <despawn object="bomb" />
-              </collision>
-              <collision object="bucket">
-                <inc variable="bucket.score">points</inc>
-                <play sound="catch" />
-                <despawn />
-              </collision>
-            </collisions>
-          </object>
-          <object name="wavelabel">
-            <sprite><text style="hud"><content>WAVE</content><number>wave</number></text></sprite>
-            <position><x>window.right - wavelabel.width - margin</x><y>12</y></position>
-          </object>
-        </objects>
 
         <scene name="wave1">
           <ways><way name="next" scene="wave2" /></ways>
@@ -311,7 +308,6 @@
             <object name="rooftop" />
             <object name="ledge" />
             <object name="bomber" />
-            <object name="bomb" />
             <object name="wavelabel" />
           </objects>
           <conditions>

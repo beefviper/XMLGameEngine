@@ -100,18 +100,19 @@ namespace played
 	};
 
 	// A game of one state, "playing", with these objects, these commands on
-	// the space bar and whatever else the state is given, written out to be
-	// loaded and played, and taken away again.
+	// the space bar and whatever else the state is given, and these pieces in
+	// its <kit>, written out to be loaded and played, and taken away again.
 	class Scratch
 	{
 	public:
-		Scratch(const std::string& objects, const std::string& onSpace, const std::string& more = "")
+		Scratch(const std::string& objects, const std::string& onSpace, const std::string& more = "", const std::string& kit = "")
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
 				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
 				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
+				<< (kit.empty() ? std::string{} : "<kit>" + kit + "</kit>") <<
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>"
 				"<inputs><input button=\"space\">" << onSpace << "</input></inputs>" << more << "</state></states></game>";
 		}

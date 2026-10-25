@@ -78,6 +78,37 @@
     <style name="line"><size>32</size><color>color.white</color></style>
     <style name="hud"><size>40</size><color>color.white</color></style>
   </styles>
+  <kit>
+    <!-- what a big rock breaks into: small ones flying apart, eight at most -->
+    <object name="chip" class="rocks">
+      <sprite>
+        <bitmap>
+          <row>.**.</row>
+          <row>****</row>
+          <row>.**.</row>
+          <scale>5</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <velocity><x><random min="-2.5" max="2.5" /></x><y>2.5</y></velocity>
+      <most>8</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal"><bounce /></collision>
+        <collision object="ground">
+          <set variable="ship.score">max(0, ship.score - 10)</set>
+          <despawn />
+          <play sound="thud" />
+        </collision>
+        <collision object="shot">
+          <inc variable="ship.score">20</inc>
+          <set variable="ship.peak">max(ship.peak, ship.score)</set>
+          <despawn />
+          <play sound="pop" />
+        </collision>
+      </collisions>
+    </object>
+  </kit>
   <states>
     <state name="mainmenu">
       <objects>
@@ -169,36 +200,6 @@
             <variables><variable name="worth">20</variable></variables>
           </group>
         </group>
-        <!-- what a big rock breaks into: small ones flying apart, eight at most -->
-        <object name="chip" class="rocks">
-          <sprite>
-            <bitmap>
-              <row>.**.</row>
-              <row>****</row>
-              <row>.**.</row>
-              <scale>5</scale>
-              <color>color.yellow</color>
-            </bitmap>
-          </sprite>
-          <velocity><x><random min="-2.5" max="2.5" /></x><y>2.5</y></velocity>
-          <exists>false</exists>
-          <most>8</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="horizontal"><bounce /></collision>
-            <collision object="ground">
-              <set variable="ship.score">max(0, ship.score - 10)</set>
-              <despawn />
-              <play sound="thud" />
-            </collision>
-            <collision object="shot">
-              <inc variable="ship.score">20</inc>
-              <set variable="ship.peak">max(ship.peak, ship.score)</set>
-              <despawn />
-              <play sound="pop" />
-            </collision>
-          </collisions>
-        </object>
         <!-- spinners: two, now and then, that blow up the base if they land -->
         <group name="spinners" class="spinner">
           <columns>2</columns>

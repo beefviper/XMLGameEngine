@@ -77,13 +77,14 @@ namespace
 	class Scratch
 	{
 	public:
-		Scratch(const std::string& objects, const std::string& onSpace)
+		Scratch(const std::string& objects, const std::string& onSpace, const std::string& kit = {})
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
 				"<window name=\"live\"><width>800</width><height>600</height><background>color.black</background>"
 				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
+				<< (kit.empty() ? std::string{} : "<kit>" + kit + "</kit>") <<
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>"
 				"<inputs><input button=\"space\">" << onSpace << "</input></inputs></state></states></game>";
 		}
@@ -151,11 +152,11 @@ TEST_CASE("where things are is only known while the game runs, and <set> names s
 
 TEST_CASE("<spawn> makes a new object where and going as it says, read as it runs", "[live]")
 {
-	const Scratch file(box("ship", 300, 400, "<velocity><x>3</x><y>0</y></velocity>")
-		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-5</y></velocity><exists>false</exists></object>",
+	const Scratch file(box("ship", 300, 400, "<velocity><x>3</x><y>0</y></velocity>"),
 		"<spawn object=\"shot\"><position><x><centered>ship.x + 5</centered></x><y>ship.y - 8</y></position>"
-		"<velocity><x>ship.velocity.x</x></velocity></spawn>");
+		"<velocity><x>ship.velocity.x</x></velocity></spawn>",
+		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>-5</y></velocity></object>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);

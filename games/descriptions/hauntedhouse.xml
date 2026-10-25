@@ -94,6 +94,113 @@
     <style name="banner"><size>90</size><color>color.orange</color></style>
     <style name="hud"><size>28</size><color>color.lightgrey</color></style>
   </styles>
+  <kit>
+    <!-- the tarantula: runs along the halls straight for the eyes -->
+    <object name="spider" class="creature">
+      <sprite>
+        <bitmap>
+          <row>*.*..*.*</row><row>.******.</row><row>********</row><row>.******.</row><row>*.*..*.*</row>
+          <scale>3</scale>
+          <color>color.orange</color>
+        </bitmap>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <dark>unlit</dark>
+      <maze map="house"><wall class="wall" /></maze>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="player"><reset /></collision>
+      </collisions>
+      <timers>
+        <timer><after>0</after><hunt object="player"><speed>0.9</speed></hunt></timer>
+      </timers>
+    </object>
+    <!-- the vampire bat: flits about the halls this way and that -->
+    <object name="bat" class="creature">
+      <sprite>
+        <bitmap>
+          <row>*......*</row><row>**.**.**</row><row>.******.</row><row>...**...</row>
+          <scale>3</scale>
+          <color>color.magenta</color>
+        </bitmap>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <dark>unlit</dark>
+      <maze map="house"><wall class="wall" /></maze>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="player"><reset /></collision>
+      </collisions>
+      <timers>
+        <timer><after>0</after><wander><speed>1.6</speed></wander></timer>
+      </timers>
+    </object>
+    <!-- the ghost of Zachary Graves: drifts through the walls toward the eyes -->
+    <object name="ghost" class="creature">
+      <sprite>
+        <bitmap>
+          <row>..****..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>********</row><row>*.*..*.*</row>
+          <scale>3</scale>
+        </bitmap>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <dark>unlit</dark>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="player"><reset /></collision>
+      </collisions>
+      <timers>
+        <timer>
+          <every>0.1</every>
+          <chase object="player"><speed>0.6</speed></chase>
+        </timer>
+      </timers>
+    </object>
+    <!-- a locked door: opens to the eyes while the key is by them -->
+    <object name="door" class="door">
+      <sprite><rectangle><width>tile / 4</width><height>tile</height><color>color.cyan</color></rectangle></sprite>
+      <position><x>0</x><y>0</y></position>
+      <dark>unseen</dark>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="player">
+          <check object="key" distance="player"><below>tile</below></check>
+          <die />
+          <play sound="unlock" />
+        </collision>
+      </collisions>
+    </object>
+    <!-- the wind upstairs: blows out the match now and then -->
+    <object name="wind">
+      <position><x>0</x><y>0</y></position>
+      <timers>
+        <timer>
+          <every><random min="5" max="10" /></every>
+          <set variable="player.light">near</set>
+          <play sound="wind" />
+        </timer>
+      </timers>
+    </object>
+    <!-- the pieces of the urn, one on each upper floor -->
+    <group name="urn" class="urn">
+      <sprite>
+        <bitmap>
+          <row>.****.</row><row>******</row><row>.****.</row><row>..**..</row><row>.****.</row>
+          <scale>3</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <position><x>0</x><y>0</y></position>
+      <dark>unseen</dark>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="player"><die /></collision>
+      </collisions>
+      <member name="piece1" />
+      <member name="piece2" />
+      <member name="piece3" />
+    </group>
+  </kit>
   <objects>
     <object name="continue">
       <sprite><text><content>spacebar to play</content><size>40</size></text></sprite>
@@ -192,113 +299,6 @@
       </objects>
 
       <scenes>
-        <objects>
-          <!-- the tarantula: runs along the halls straight for the eyes -->
-          <object name="spider" class="creature">
-            <sprite>
-              <bitmap>
-                <row>*.*..*.*</row><row>.******.</row><row>********</row><row>.******.</row><row>*.*..*.*</row>
-                <scale>3</scale>
-                <color>color.orange</color>
-              </bitmap>
-            </sprite>
-            <position><x>0</x><y>0</y></position>
-            <dark>unlit</dark>
-            <maze map="house"><wall class="wall" /></maze>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="player"><reset /></collision>
-            </collisions>
-            <timers>
-              <timer><after>0</after><hunt object="player"><speed>0.9</speed></hunt></timer>
-            </timers>
-          </object>
-          <!-- the vampire bat: flits about the halls this way and that -->
-          <object name="bat" class="creature">
-            <sprite>
-              <bitmap>
-                <row>*......*</row><row>**.**.**</row><row>.******.</row><row>...**...</row>
-                <scale>3</scale>
-                <color>color.magenta</color>
-              </bitmap>
-            </sprite>
-            <position><x>0</x><y>0</y></position>
-            <dark>unlit</dark>
-            <maze map="house"><wall class="wall" /></maze>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="player"><reset /></collision>
-            </collisions>
-            <timers>
-              <timer><after>0</after><wander><speed>1.6</speed></wander></timer>
-            </timers>
-          </object>
-          <!-- the ghost of Zachary Graves: drifts through the walls toward the eyes -->
-          <object name="ghost" class="creature">
-            <sprite>
-              <bitmap>
-                <row>..****..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>********</row><row>*.*..*.*</row>
-                <scale>3</scale>
-              </bitmap>
-            </sprite>
-            <position><x>0</x><y>0</y></position>
-            <dark>unlit</dark>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="player"><reset /></collision>
-            </collisions>
-            <timers>
-              <timer>
-                <every>0.1</every>
-                <chase object="player"><speed>0.6</speed></chase>
-              </timer>
-            </timers>
-          </object>
-          <!-- a locked door: opens to the eyes while the key is by them -->
-          <object name="door" class="door">
-            <sprite><rectangle><width>tile / 4</width><height>tile</height><color>color.cyan</color></rectangle></sprite>
-            <position><x>0</x><y>0</y></position>
-            <dark>unseen</dark>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="player">
-                <check object="key" distance="player"><below>tile</below></check>
-                <die />
-                <play sound="unlock" />
-              </collision>
-            </collisions>
-          </object>
-          <!-- the wind upstairs: blows out the match now and then -->
-          <object name="wind">
-            <position><x>0</x><y>0</y></position>
-            <timers>
-              <timer>
-                <every><random min="5" max="10" /></every>
-                <set variable="player.light">near</set>
-                <play sound="wind" />
-              </timer>
-            </timers>
-          </object>
-          <!-- the pieces of the urn, one on each upper floor -->
-          <group name="urn" class="urn">
-            <sprite>
-              <bitmap>
-                <row>.****.</row><row>******</row><row>.****.</row><row>..**..</row><row>.****.</row>
-                <scale>3</scale>
-                <color>color.yellow</color>
-              </bitmap>
-            </sprite>
-            <position><x>0</x><y>0</y></position>
-            <dark>unseen</dark>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="player"><die /></collision>
-            </collisions>
-            <member name="piece1" />
-            <member name="piece2" />
-            <member name="piece3" />
-          </group>
-        </objects>
 
         <!-- ================================================ the ground floor -->
         <scene name="floor1">

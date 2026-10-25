@@ -82,6 +82,82 @@
     <style name="line"><size>30</size><color>color.white</color></style>
     <style name="hud"><size>30</size><color>color.white</color></style>
   </styles>
+  <kit>
+    <!-- a charge, sinking slowly; six at most in the water -->
+    <object name="charge" class="charge">
+      <sprite>
+        <bitmap>
+          <row>.**.</row>
+          <row>****</row>
+          <row>****</row>
+          <row>.**.</row>
+          <scale>3</scale>
+          <color>color.orange</color>
+        </bitmap>
+      </sprite>
+      <velocity><y>2</y></velocity>
+      <most>6</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="bottom"><despawn /></collision>
+        <collision class="sub"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- the mines the submarines lay: they rise, and go off at the top of the water or under the destroyer -->
+    <object name="mine" class="mine">
+      <sprite>
+        <bitmap>
+          <row>*.*.*</row>
+          <row>.***.</row>
+          <row>*****</row>
+          <row>.***.</row>
+          <row>*.*.*</row>
+          <scale>2</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <velocity><y>-1.2</y></velocity>
+      <most>6</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="ship"><despawn /></collision>
+        <collision object="waterline"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- a submarine going down -->
+    <object name="burst">
+      <sprite name="flash">
+        <bitmap>
+          <row>.*..*..*.</row>
+          <row>..*.*.*..</row>
+          <row>*..***..*</row>
+          <row>..*.*.*..</row>
+          <row>.*..*..*.</row>
+          <scale>4</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <sprite name="spray">
+        <bitmap>
+          <row>*...*...*</row>
+          <row>.*.....*.</row>
+          <row>...*.*...</row>
+          <row>.*.....*.</row>
+          <row>*...*...*</row>
+          <scale>4</scale>
+          <color>color.cyan</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.1</interval>
+        <frame sprite="flash" />
+        <frame sprite="spray" />
+      </animation>
+      <timers>
+        <timer><every>0.6</every><despawn /></timer>
+      </timers>
+    </object>
+  </kit>
   <states>
     <state name="mainmenu">
       <objects>
@@ -224,83 +300,6 @@
               <play sound="drop" />
             </action>
           </actions>
-        </object>
-        <!-- a charge, sinking slowly; six at most in the water -->
-        <object name="charge" class="charge">
-          <sprite>
-            <bitmap>
-              <row>.**.</row>
-              <row>****</row>
-              <row>****</row>
-              <row>.**.</row>
-              <scale>3</scale>
-              <color>color.orange</color>
-            </bitmap>
-          </sprite>
-          <velocity><y>2</y></velocity>
-          <exists>false</exists>
-          <most>6</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="bottom"><despawn /></collision>
-            <collision class="sub"><despawn /></collision>
-          </collisions>
-        </object>
-        <!-- the mines the submarines lay: they rise, and go off at the top of the water or under the destroyer -->
-        <object name="mine" class="mine">
-          <sprite>
-            <bitmap>
-              <row>*.*.*</row>
-              <row>.***.</row>
-              <row>*****</row>
-              <row>.***.</row>
-              <row>*.*.*</row>
-              <scale>2</scale>
-              <color>color.white</color>
-            </bitmap>
-          </sprite>
-          <velocity><y>-1.2</y></velocity>
-          <exists>false</exists>
-          <most>6</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision object="ship"><despawn /></collision>
-            <collision object="waterline"><despawn /></collision>
-          </collisions>
-        </object>
-        <!-- a submarine going down -->
-        <object name="burst">
-          <sprite name="flash">
-            <bitmap>
-              <row>.*..*..*.</row>
-              <row>..*.*.*..</row>
-              <row>*..***..*</row>
-              <row>..*.*.*..</row>
-              <row>.*..*..*.</row>
-              <scale>4</scale>
-              <color>color.white</color>
-            </bitmap>
-          </sprite>
-          <sprite name="spray">
-            <bitmap>
-              <row>*...*...*</row>
-              <row>.*.....*.</row>
-              <row>...*.*...</row>
-              <row>.*.....*.</row>
-              <row>*...*...*</row>
-              <scale>4</scale>
-              <color>color.cyan</color>
-            </bitmap>
-          </sprite>
-          <animation>
-            <interval>0.1</interval>
-            <frame sprite="flash" />
-            <frame sprite="spray" />
-          </animation>
-          <exists>false</exists>
-          <timers>
-            <timer><every>0.6</every><despawn /></timer>
-          </timers>
         </object>
         <object name="score">
           <sprite><text style="hud"><content>SCORE </content><number>status.score</number></text></sprite>

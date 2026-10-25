@@ -112,6 +112,173 @@
     <style name="prompt"><size>36</size></style>
     <style name="help"><size>22</size><color>color.white</color></style>
   </styles>
+  <kit>
+    <!-- the walls a room can have, taken a member at a time -->
+    <group name="walls" class="wall">
+      <sprite><rectangle><width>window.right</width><height>wall</height><color>color.yellow</color></rectangle></sprite>
+      <collisions><enabled>true</enabled></collisions>
+      <member name="top"><position><x>0</x><y>0</y></position></member>
+      <member name="bottom"><position><x>0</x><y>window.bottom - wall</y></position></member>
+      <member name="west">
+        <sprite><rectangle><width>wall</width><height>window.bottom</height></rectangle></sprite>
+        <position><x>0</x><y>0</y></position>
+      </member>
+      <member name="east">
+        <sprite><rectangle><width>wall</width><height>window.bottom</height></rectangle></sprite>
+        <position><x>window.right - wall</x><y>0</y></position>
+      </member>
+      <!-- a hall's bottom wall, either side of its way out -->
+      <member name="lowleft">
+        <sprite><rectangle><width>(window.right - gap) / 2</width></rectangle></sprite>
+        <position><x>0</x><y>window.bottom - wall</y></position>
+      </member>
+      <member name="lowright">
+        <sprite><rectangle><width>(window.right - gap) / 2</width></rectangle></sprite>
+        <position><x>(window.right + gap) / 2</x><y>window.bottom - wall</y></position>
+      </member>
+    </group>
+
+    <!-- the castles: towers, a keep, and an arch for the gate -->
+    <group name="castles" class="wall">
+      <sprite>
+        <bitmap>
+          <row>*.*.*.*..................*.*.*.*</row>
+          <row>*******..................*******</row>
+          <row>*******..................*******</row>
+          <row>*******..................*******</row>
+          <row>********.*.*.*.*.*.*.*.*.*******</row>
+          <row>********************************</row>
+          <row>********************************</row>
+          <row>********************************</row>
+          <row>********************************</row>
+          <row>********************************</row>
+          <row>********************************</row>
+          <row>********************************</row>
+          <row>************........************</row>
+          <row>************........************</row>
+          <row>************........************</row>
+          <row>************........************</row>
+          <row>************........************</row>
+          <row>************........************</row>
+          <row>************........************</row>
+          <row>************........************</row>
+          <scale>8</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <position><x>window.width.center - 128</x><y>40</y></position>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+      </collisions>
+      <member name="gold" />
+      <member name="black"><sprite><bitmap><color>color.darkgrey</color></bitmap></sprite></member>
+    </group>
+
+    <!-- the dragons: asleep until the hero comes near, then after him -->
+    <group name="dragons" class="dragon">
+      <sprite name="asleep">
+        <bitmap>
+          <row>....***.</row>
+          <row>....*.**</row>
+          <row>....****</row>
+          <row>....*...</row>
+          <row>*...**..</row>
+          <row>**..***.</row>
+          <row>.*****..</row>
+          <row>..****..</row>
+          <row>...**...</row>
+          <row>...*.*..</row>
+          <row>..**.**.</row>
+          <scale>5</scale>
+        </bitmap>
+      </sprite>
+      <sprite name="awake">
+        <bitmap>
+          <row>....***.</row>
+          <row>....*.**</row>
+          <row>....****</row>
+          <row>....*...</row>
+          <row>*...**..</row>
+          <row>**..***.</row>
+          <row>.*****..</row>
+          <row>..****..</row>
+          <row>...**...</row>
+          <row>...*.*..</row>
+          <row>..**.**.</row>
+          <scale>5</scale>
+        </bitmap>
+      </sprite>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><stick /></collision>
+        <collision class="wall"><stop /></collision>
+        <collision object="sword">
+          <die />
+          <play sound="slay" />
+        </collision>
+      </collisions>
+      <variables>
+        <variable name="awake">0</variable>
+      </variables>
+      <timers>
+        <timer sprite="awake">
+          <every>0.3</every>
+          <chase object="hero"><speed>dragonspeed</speed></chase>
+        </timer>
+      </timers>
+      <member name="yorgle">
+        <sprite name="asleep"><bitmap><color>color.orange</color></bitmap></sprite>
+        <sprite name="awake"><bitmap><color>color.yellow</color></bitmap></sprite>
+        <position><x>420</x><y>160</y></position>
+      </member>
+      <member name="grundle">
+        <sprite name="asleep"><bitmap><color>color.darkgreen</color></bitmap></sprite>
+        <sprite name="awake"><bitmap><color>color.green</color></bitmap></sprite>
+        <position><x>460</x><y>240</y></position>
+      </member>
+    </group>
+
+    <!-- the ways out, never drawn -->
+    <object name="eastexit" class="eastside">
+      <sprite><rectangle><width>4</width><height>window.bottom</height><color>color.black</color></rectangle></sprite>
+      <position><x>window.right - 4</x><y>0</y></position>
+      <drawn>false</drawn>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="hero"><enter way="east" /></collision>
+      </collisions>
+    </object>
+    <object name="westexit" class="westside">
+      <sprite><rectangle><width>4</width><height>window.bottom</height><color>color.black</color></rectangle></sprite>
+      <position><x>0</x><y>0</y></position>
+      <drawn>false</drawn>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="hero"><enter way="west" /></collision>
+      </collisions>
+    </object>
+    <!-- just inside a castle's arch -->
+    <object name="doorway" class="inside">
+      <sprite><rectangle><width>64</width><height>6</height><color>color.black</color></rectangle></sprite>
+      <position><x>window.width.center - 32</x><y>136</y></position>
+      <drawn>false</drawn>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="hero"><enter way="in" /></collision>
+      </collisions>
+    </object>
+    <!-- the bottom of a hall -->
+    <object name="doorout" class="outside">
+      <sprite><rectangle><width>gap</width><height>6</height><color>color.black</color></rectangle></sprite>
+      <position><x>(window.right - gap) / 2</x><y>window.bottom - 6</y></position>
+      <drawn>false</drawn>
+      <collisions>
+        <enabled>true</enabled>
+        <collision object="hero"><enter way="out" /></collision>
+      </collisions>
+    </object>
+  </kit>
   <states>
     <state name="title">
       <objects>
@@ -182,173 +349,6 @@
         </object>
       </objects>
       <scenes>
-        <objects>
-          <!-- the walls a room can have, taken a member at a time -->
-          <group name="walls" class="wall">
-            <sprite><rectangle><width>window.right</width><height>wall</height><color>color.yellow</color></rectangle></sprite>
-            <collisions><enabled>true</enabled></collisions>
-            <member name="top"><position><x>0</x><y>0</y></position></member>
-            <member name="bottom"><position><x>0</x><y>window.bottom - wall</y></position></member>
-            <member name="west">
-              <sprite><rectangle><width>wall</width><height>window.bottom</height></rectangle></sprite>
-              <position><x>0</x><y>0</y></position>
-            </member>
-            <member name="east">
-              <sprite><rectangle><width>wall</width><height>window.bottom</height></rectangle></sprite>
-              <position><x>window.right - wall</x><y>0</y></position>
-            </member>
-            <!-- a hall's bottom wall, either side of its way out -->
-            <member name="lowleft">
-              <sprite><rectangle><width>(window.right - gap) / 2</width></rectangle></sprite>
-              <position><x>0</x><y>window.bottom - wall</y></position>
-            </member>
-            <member name="lowright">
-              <sprite><rectangle><width>(window.right - gap) / 2</width></rectangle></sprite>
-              <position><x>(window.right + gap) / 2</x><y>window.bottom - wall</y></position>
-            </member>
-          </group>
-
-          <!-- the castles: towers, a keep, and an arch for the gate -->
-          <group name="castles" class="wall">
-            <sprite>
-              <bitmap>
-                <row>*.*.*.*..................*.*.*.*</row>
-                <row>*******..................*******</row>
-                <row>*******..................*******</row>
-                <row>*******..................*******</row>
-                <row>********.*.*.*.*.*.*.*.*.*******</row>
-                <row>********************************</row>
-                <row>********************************</row>
-                <row>********************************</row>
-                <row>********************************</row>
-                <row>********************************</row>
-                <row>********************************</row>
-                <row>********************************</row>
-                <row>************........************</row>
-                <row>************........************</row>
-                <row>************........************</row>
-                <row>************........************</row>
-                <row>************........************</row>
-                <row>************........************</row>
-                <row>************........************</row>
-                <row>************........************</row>
-                <scale>8</scale>
-                <color>color.yellow</color>
-              </bitmap>
-            </sprite>
-            <position><x>window.width.center - 128</x><y>40</y></position>
-            <collisions>
-              <enabled>true</enabled>
-              <type>pixel</type>
-            </collisions>
-            <member name="gold" />
-            <member name="black"><sprite><bitmap><color>color.darkgrey</color></bitmap></sprite></member>
-          </group>
-
-          <!-- the dragons: asleep until the hero comes near, then after him -->
-          <group name="dragons" class="dragon">
-            <sprite name="asleep">
-              <bitmap>
-                <row>....***.</row>
-                <row>....*.**</row>
-                <row>....****</row>
-                <row>....*...</row>
-                <row>*...**..</row>
-                <row>**..***.</row>
-                <row>.*****..</row>
-                <row>..****..</row>
-                <row>...**...</row>
-                <row>...*.*..</row>
-                <row>..**.**.</row>
-                <scale>5</scale>
-              </bitmap>
-            </sprite>
-            <sprite name="awake">
-              <bitmap>
-                <row>....***.</row>
-                <row>....*.**</row>
-                <row>....****</row>
-                <row>....*...</row>
-                <row>*...**..</row>
-                <row>**..***.</row>
-                <row>.*****..</row>
-                <row>..****..</row>
-                <row>...**...</row>
-                <row>...*.*..</row>
-                <row>..**.**.</row>
-                <scale>5</scale>
-              </bitmap>
-            </sprite>
-            <collisions>
-              <enabled>true</enabled>
-              <collision edge="all"><stick /></collision>
-              <collision class="wall"><stop /></collision>
-              <collision object="sword">
-                <die />
-                <play sound="slay" />
-              </collision>
-            </collisions>
-            <variables>
-              <variable name="awake">0</variable>
-            </variables>
-            <timers>
-              <timer sprite="awake">
-                <every>0.3</every>
-                <chase object="hero"><speed>dragonspeed</speed></chase>
-              </timer>
-            </timers>
-            <member name="yorgle">
-              <sprite name="asleep"><bitmap><color>color.orange</color></bitmap></sprite>
-              <sprite name="awake"><bitmap><color>color.yellow</color></bitmap></sprite>
-              <position><x>420</x><y>160</y></position>
-            </member>
-            <member name="grundle">
-              <sprite name="asleep"><bitmap><color>color.darkgreen</color></bitmap></sprite>
-              <sprite name="awake"><bitmap><color>color.green</color></bitmap></sprite>
-              <position><x>460</x><y>240</y></position>
-            </member>
-          </group>
-
-          <!-- the ways out, never drawn -->
-          <object name="eastexit" class="eastside">
-            <sprite><rectangle><width>4</width><height>window.bottom</height><color>color.black</color></rectangle></sprite>
-            <position><x>window.right - 4</x><y>0</y></position>
-            <drawn>false</drawn>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="hero"><enter way="east" /></collision>
-            </collisions>
-          </object>
-          <object name="westexit" class="westside">
-            <sprite><rectangle><width>4</width><height>window.bottom</height><color>color.black</color></rectangle></sprite>
-            <position><x>0</x><y>0</y></position>
-            <drawn>false</drawn>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="hero"><enter way="west" /></collision>
-            </collisions>
-          </object>
-          <!-- just inside a castle's arch -->
-          <object name="doorway" class="inside">
-            <sprite><rectangle><width>64</width><height>6</height><color>color.black</color></rectangle></sprite>
-            <position><x>window.width.center - 32</x><y>136</y></position>
-            <drawn>false</drawn>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="hero"><enter way="in" /></collision>
-            </collisions>
-          </object>
-          <!-- the bottom of a hall -->
-          <object name="doorout" class="outside">
-            <sprite><rectangle><width>gap</width><height>6</height><color>color.black</color></rectangle></sprite>
-            <position><x>(window.right - gap) / 2</x><y>window.bottom - 6</y></position>
-            <drawn>false</drawn>
-            <collisions>
-              <enabled>true</enabled>
-              <collision object="hero"><enter way="out" /></collision>
-            </collisions>
-          </object>
-        </objects>
 
         <!-- in front of the gold castle, the sword by the moat -->
         <scene name="castle">

@@ -25,8 +25,8 @@
     off the sides, turning round on a timer drawn anew each time and dropping
     bombs from under it (<facing>down</facing>, <fire>) on another.
   * The second wave's demons <release> two small demons where they were
-    shot, copies of one that does not <exists> until then. A wave is over when none of the class is left in play,
-    small ones too.
+    shot, copies of a piece of the <kit> that is not in play until then. A
+    wave is over when none of the class is left in play, small ones too.
   * The third wave's demons have two looks, whole and hurt: a hit turns the
     first into the second, and the next takes it out (Breakout's bricks).
   * Every demon is of one class, so the cannon and the shot each have one
@@ -78,6 +78,48 @@
     <style name="line"><size>24</size><color>color.white</color></style>
     <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
+  <kit>
+    <!-- a demon's bomb, there once one is dropped: eight at most -->
+    <object name="bomb" class="bomb">
+      <sprite><rectangle><width>4</width><height>12</height><color>color.red</color></rectangle></sprite>
+      <velocity><y>4</y></velocity>
+      <most>8</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision object="player"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- what a split demon leaves: small demons, eight at most, two
+         released where it was, which fall at the cannon, swaying from side
+         to side, and are gone at the ground -->
+    <object name="half" class="demon">
+      <sprite>
+        <bitmap>
+          <row>.*...*.</row>
+          <row>*******</row>
+          <row>*.***.*</row>
+          <row>*******</row>
+          <row>.*...*.</row>
+          <scale>3</scale>
+          <color>color.yellow</color>
+        </bitmap>
+      </sprite>
+      <velocity><x><random min="-sway" max="sway" /></x><y>dive</y></velocity>
+      <most>8</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="horizontal"><bounce /></collision>
+        <collision edge="bottom"><despawn /></collision>
+        <collision object="laser">
+          <inc variable="player.score">25</inc>
+          <play sound="hit" />
+          <despawn />
+        </collision>
+        <collision object="player"><despawn /></collision>
+      </collisions>
+    </object>
+  </kit>
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
@@ -175,19 +217,6 @@
           <timers>
             <timer><every>0.01</every><set variable="laser.x">player.x + 18</set></timer>
           </timers>
-        </object>
-
-        <!-- a demon's bomb, there once one is dropped: eight at most -->
-        <object name="bomb" class="bomb">
-          <sprite><rectangle><width>4</width><height>12</height><color>color.red</color></rectangle></sprite>
-          <velocity><y>4</y></velocity>
-          <exists>false</exists>
-          <most>8</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision object="player"><despawn /></collision>
-          </collisions>
         </object>
 
         <object name="score">
@@ -333,36 +362,6 @@
               <member><position><x>520</x><y>140</y></position><velocity><x>speed * 0.8</x></velocity></member>
             </group>
 
-            <!-- what a split demon leaves: small demons, eight at most, two
-                 released where it was, which fall at the cannon, swaying from side
-                 to side, and are gone at the ground -->
-            <object name="half" class="demon">
-              <sprite>
-                <bitmap>
-                  <row>.*...*.</row>
-                  <row>*******</row>
-                  <row>*.***.*</row>
-                  <row>*******</row>
-                  <row>.*...*.</row>
-                  <scale>3</scale>
-                  <color>color.yellow</color>
-                </bitmap>
-              </sprite>
-              <velocity><x><random min="-sway" max="sway" /></x><y>dive</y></velocity>
-              <exists>false</exists>
-              <most>8</most>
-              <collisions>
-                <enabled>true</enabled>
-                <collision edge="horizontal"><bounce /></collision>
-                <collision edge="bottom"><despawn /></collision>
-                <collision object="laser">
-                  <inc variable="player.score">25</inc>
-                  <play sound="hit" />
-                  <despawn />
-                </collision>
-                <collision object="player"><despawn /></collision>
-              </collisions>
-            </object>
           </objects>
           <conditions>
             <!-- the demons and the small ones they leave are one class -->

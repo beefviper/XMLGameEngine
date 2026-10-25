@@ -22,11 +22,6 @@ namespace xge
 {
 	namespace
 	{
-		bool named(const RawObject& object, const std::string& name)
-		{
-			return object.name == name || object.inGroup(name);
-		}
-
 		// Every name the objects can be called by: their own, and their groups'.
 		std::set<std::string> namesOf(const std::vector<RawObject>& objects)
 		{
@@ -49,44 +44,6 @@ namespace xge
 			if (!object.cell.map.empty()) { object.cell.map = prefix + object.cell.map; }
 		}
 
-		// A whole sprite in place of the one of its name, wherever the object
-		// keeps it: what it shows, its looks, the pictures of its animation,
-		// and its cell's slot.
-		void replaceSprite(RawObject& object, const RawSprite& sprite, const std::string& where)
-		{
-			bool replaced = false;
-			const auto swap = [&](RawSprite& into)
-			{
-				if (into.name == sprite.name)
-				{
-					into = sprite;
-					replaced = true;
-				}
-			};
-			swap(object.sprite);
-			for (RawSprite& look : object.looks) { swap(look); }
-			for (RawSprite& frame : object.animation.frames) { swap(frame); }
-			if (object.cell.column > 0) { swap(object.cell.slot); }
-
-			if (!replaced)
-			{
-				throw std::runtime_error(where + ": '" + object.name + "' has no <sprite> "
-					+ (sprite.name.empty() ? std::string("without a name") : "called \"" + sprite.name + "\"") + " to change");
-			}
-		}
-
-		void applyChange(RawObject& object, const RawSceneChange& change, const std::string& where)
-		{
-			if (change.positionX) { object.rawPosition.x = *change.positionX; }
-			if (change.positionY) { object.rawPosition.y = *change.positionY; }
-			if (change.velocityX) { object.rawVelocity.x = *change.velocityX; }
-			if (change.velocityY) { object.rawVelocity.y = *change.velocityY; }
-			if (change.hidden) { object.isVisible = !*change.hidden; }
-			if (change.drawn) { object.isDrawn = *change.drawn; }
-			for (const auto& [name, value] : change.variables) { object.variable[name] = value; }
-			for (const RawSprite& sprite : change.sprites) { replaceSprite(object, sprite, where); }
-		}
-
 		// The copied list with the own one's added: one named like a copied
 		// one takes its place there, the rest go after, in the order written.
 		template <typename Item>
@@ -103,13 +60,9 @@ namespace xge
 			return merged;
 		}
 
-		// What a scene is made of, its names as written (before its path is
-		// put in front), for a scene that is from= it.
-		struct Made
-		{
-			std::vector<RawObject> objects;
-			std::vector<std::pair<std::string, RawValue>> variables;
-		};
+		// A scene's variables, as written (before its path is put in front),
+		// for a scene that is from= it.
+		using Made = std::vector<std::pair<std::string, RawValue>>;
 
 		// Where a name is used: its state and scene (a path), either or both
 		// empty, and what to say in a message.
@@ -462,31 +415,17 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": from=\"" + state.from + "\" names no state before it");
 			}
-			if (!earlier->kit.empty() || !earlier->scenes.empty())
+			if (!earlier->scenes.empty())
 			{
 				throw std::runtime_error(where + ": from=\"" + state.from + "\" names a state with scenes, and a copy of one is not built yet");
 			}
 
+			// Its objects are the earlier state's already, changed by its own
+			// (load/merge, as the file was read).
 			RawState made = *earlier;
 			made.name = state.name;
 			made.from = state.from;
-			made.changes.clear();
-
-			// The copied objects with what it changes in them, then its own.
-			for (const RawSceneEntry& entry : state.changes)
-			{
-				bool changed = false;
-				for (RawObject& object : made.objects)
-				{
-					const bool named = object.name == entry.take || object.groupName == entry.take
-						|| std::find(object.outerGroups.begin(), object.outerGroups.end(), entry.take) != object.outerGroups.end();
-					if (!named) { continue; }
-					applyChange(object, entry.change, where);
-					changed = true;
-				}
-				if (!changed) { throw std::runtime_error(where + ": changes '" + entry.take + "', which state '" + state.from + "' has not got"); }
-			}
-			made.objects.insert(made.objects.end(), state.objects.begin(), state.objects.end());
+			made.objects = std::move(state.objects);
 
 			const auto add = [](std::vector<std::string>& to, const std::vector<std::string>& own)
 			{
@@ -503,7 +442,6 @@ namespace xge
 			made.computer = mergedByName(earlier->computer, state.computer);
 			made.timers = mergedByName(earlier->timers, state.timers);
 			if (!state.music.empty()) { made.music = state.music; }
-			made.kit = std::move(state.kit);
 			made.scenes = std::move(state.scenes);
 
 			state = std::move(made);
@@ -514,7 +452,7 @@ namespace xge
 	{
 		const bool owns = std::any_of(data.states.begin(), data.states.end(), [](const RawState& state)
 			{
-				return !state.objects.empty() || !state.kit.empty() || !state.scenes.empty();
+				return !state.objects.empty() || !state.scenes.empty();
 			});
 		if (!owns) { return; }
 
@@ -530,7 +468,7 @@ namespace xge
 		for (RawState& state : data.states)
 		{
 			const std::string where = "state '" + state.name + "'";
-			const bool stateOwns = !state.objects.empty() || !state.kit.empty() || !state.scenes.empty();
+			const bool stateOwns = !state.objects.empty() || !state.scenes.empty();
 			if (stateOwns && state.name.find('.') != std::string::npos)
 			{
 				throw std::runtime_error(where + ": a state that has objects or scenes has no dots in its name: they join the parts of a path");
@@ -544,6 +482,8 @@ namespace xge
 				const std::string path = state.name + "." + scene.name;
 				if (made.count(scene.name)) { throw std::runtime_error(where + ": has two scenes called '" + scene.name + "'"); }
 
+				// Its objects are made already (load/merge); its variables are
+				// those of the scene it is from=, its own over them.
 				Made local;
 				if (!scene.from.empty())
 				{
@@ -569,67 +509,21 @@ namespace xge
 
 				for (const auto& [name, value] : scene.variables)
 				{
-					const auto existing = std::find_if(local.variables.begin(), local.variables.end(), [&](const auto& entry) { return entry.first == name; });
-					if (existing != local.variables.end()) { existing->second = value; }
-					else { local.variables.emplace_back(name, value); }
-				}
-
-				for (const RawSceneEntry& entry : scene.entries)
-				{
-					if (entry.take.empty())
-					{
-						for (const RawObject& object : entry.objects)
-						{
-							if (std::any_of(local.objects.begin(), local.objects.end(), [&](const RawObject& other) { return other.name == object.name; }))
-							{
-								throw std::runtime_error(sceneWhere + ": has two objects called '" + object.name + "'");
-							}
-							local.objects.push_back(object);
-						}
-						continue;
-					}
-
-					// A piece it has already (from the scene it is from=) is
-					// changed where it is; one of the kit's is copied in.
-					const std::string entryWhere = sceneWhere + " > '" + entry.take + "'";
-					bool changed = false;
-					for (RawObject& object : local.objects)
-					{
-						if (named(object, entry.take))
-						{
-							applyChange(object, entry.change, entryWhere);
-							changed = true;
-						}
-					}
-					if (changed) { continue; }
-
-					bool taken = false;
-					for (const RawObject& piece : state.kit)
-					{
-						if (!named(piece, entry.take)) { continue; }
-						RawObject copy = piece;
-						applyChange(copy, entry.change, entryWhere);
-						local.objects.push_back(std::move(copy));
-						taken = true;
-					}
-					if (!taken)
-					{
-						const std::set<std::string> kitNames = namesOf(state.kit);
-						throw std::runtime_error(entryWhere + ": takes '" + entry.take + "', and neither the kit of " + where + " nor the scene it is from has a piece of that name"
-							+ didYouMean(entry.take, { kitNames.begin(), kitNames.end() }));
-					}
+					const auto existing = std::find_if(local.begin(), local.end(), [&](const auto& entry) { return entry.first == name; });
+					if (existing != local.end()) { existing->second = value; }
+					else { local.emplace_back(name, value); }
 				}
 
 				names.scenes.insert(path);
 				for (const auto& way : scene.ways) { names.sceneWays[path].insert(way.first); }
-				for (const auto& [name, value] : local.variables)
+				for (const auto& [name, value] : local)
 				{
 					names.sceneVariables[path].insert(name);
 					sceneVariables.emplace_back(data.variables.size(), Context{ state.name, path, sceneWhere + " > <variable name=\"" + name + "\">" });
 					data.variables.emplace_back(path + "." + name, value);
 				}
 
-				for (RawObject object : local.objects)
+				for (RawObject object : scene.objects)
 				{
 					// Each name it has inside its scene is also a name in its
 					// state for the same thing in every scene (playing.rock), so
@@ -658,8 +552,7 @@ namespace xge
 
 			// Laid out: what is left of them is the scenes' names, conditions and timers.
 			state.objects.clear();
-			state.kit.clear();
-			for (RawScene& scene : state.scenes) { scene.entries.clear(); }
+			for (RawScene& scene : state.scenes) { scene.objects.clear(); }
 		}
 
 		// Every name, and no name twice where both can be seen.

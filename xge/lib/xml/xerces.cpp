@@ -82,6 +82,19 @@ namespace xge
 		return xmlChToStr(element->getAttribute(attr.value()));
 	}
 
+	std::vector<std::pair<std::string, std::string>> XercesXmlNode::getAttributes() const
+	{
+		std::vector<std::pair<std::string, std::string>> attributes;
+		if (!element) { return attributes; }
+		const xc::DOMNamedNodeMap* map = element->getAttributes();
+		for (XMLSize_t i = 0; map != nullptr && i < map->getLength(); ++i)
+		{
+			const xc::DOMNode* attribute = map->item(i);
+			attributes.emplace_back(xmlChToStr(attribute->getNodeName()), xmlChToStr(attribute->getNodeValue()));
+		}
+		return attributes;
+	}
+
 	std::string XercesXmlNode::getText() const
 	{
 		std::string text;

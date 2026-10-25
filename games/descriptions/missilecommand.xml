@@ -85,6 +85,116 @@
     <style name="prompt"><size>40</size><color>color.white</color></style>
     <style name="hud"><size>24</size><color>color.lightgrey</color></style>
   </styles>
+  <kit>
+    <!-- the missiles: streaks that start somewhere above the sky and make for the nearest city, at the wave's speed -->
+    <group name="missiles" class="missile">
+      <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.red</color><thickness>2</thickness></line></sprite>
+      <position>
+        <x><random min="margin" max="window.right - margin" /></x>
+        <y><random min="-sky" max="-10" /></y>
+      </position>
+      <velocity><y>speed</y></velocity>
+      <heading>180</heading>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+        <collision class="city"><inc variable="status.spent" /><reset /></collision>
+        <collision class="burst">
+          <inc variable="status.score">25</inc>
+          <inc variable="status.spent" />
+          <reset />
+        </collision>
+        <collision edge="bottom"><inc variable="status.spent" /><reset /></collision>
+      </collisions>
+      <timers>
+        <timer><every>0.25</every><chase object="cities"><speed>speed</speed></chase></timer>
+      </timers>
+      <group name="salvo"><member /><member /><member /><member /></group>
+      <group name="more"><member /><member /></group>
+      <group name="most"><member /><member /></group>
+    </group>
+    <!-- the counter-missiles, three in the air at once; each bursts where it meets the sight -->
+    <object name="abm" class="abm">
+      <sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>
+      <velocity><y>-abmspeed</y></velocity>
+      <most>3</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision object="sight">
+          <release object="burst" />
+          <play sound="burst" />
+          <despawn />
+        </collision>
+      </collisions>
+    </object>
+    <!-- a burst: a fireball that swells, flashes and shrinks, then is gone -->
+    <object name="burst" class="burst">
+      <sprite name="small">
+        <bitmap>
+          <row>.........</row>
+          <row>.........</row>
+          <row>.........</row>
+          <row>...***...</row>
+          <row>...***...</row>
+          <row>...***...</row>
+          <row>.........</row>
+          <row>.........</row>
+          <row>.........</row>
+          <scale>6</scale>
+          <color>color.white</color>
+        </bitmap>
+      </sprite>
+      <sprite name="middle">
+        <bitmap>
+          <row>.........</row>
+          <row>...***...</row>
+          <row>..*****..</row>
+          <row>.***o***.</row>
+          <row>.**ooo**.</row>
+          <row>.***o***.</row>
+          <row>..*****..</row>
+          <row>...***...</row>
+          <row>.........</row>
+          <scale>6</scale>
+          <color>color.orange</color>
+          <color char="o">color.yellow</color>
+        </bitmap>
+      </sprite>
+      <sprite name="full">
+        <bitmap>
+          <row>...***...</row>
+          <row>.*******.</row>
+          <row>.**ooo**.</row>
+          <row>**ooooo**</row>
+          <row>**ooooo**</row>
+          <row>**ooooo**</row>
+          <row>.**ooo**.</row>
+          <row>.*******.</row>
+          <row>...***...</row>
+          <scale>6</scale>
+          <color>color.red</color>
+          <color char="o">color.magenta</color>
+        </bitmap>
+      </sprite>
+      <animation>
+        <interval>0.15</interval>
+        <frame sprite="small" />
+        <frame sprite="middle" />
+        <frame sprite="full" />
+        <frame sprite="full" />
+        <frame sprite="middle" />
+      </animation>
+      <most>3</most>
+      <collisions>
+        <enabled>true</enabled>
+        <type>pixel</type>
+      </collisions>
+      <timers>
+        <timer><every>0.75</every><despawn /></timer>
+      </timers>
+    </object>
+  </kit>
   <states>
     <state name="title">
       <objects>
@@ -174,89 +284,6 @@
         <object name="trail1"><sprite><tether from="base" to="abm.1"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
         <object name="trail2"><sprite><tether from="base" to="abm.2"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
         <object name="trail3"><sprite><tether from="base" to="abm.3"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
-        <!-- the counter-missiles, three in the air at once; each bursts where it meets the sight -->
-        <object name="abm" class="abm">
-          <sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>
-          <velocity><y>-abmspeed</y></velocity>
-          <exists>false</exists>
-          <most>3</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision object="sight">
-              <release object="burst" />
-              <play sound="burst" />
-              <despawn />
-            </collision>
-          </collisions>
-        </object>
-        <!-- a burst: a fireball that swells, flashes and shrinks, then is gone -->
-        <object name="burst" class="burst">
-          <sprite name="small">
-            <bitmap>
-              <row>.........</row>
-              <row>.........</row>
-              <row>.........</row>
-              <row>...***...</row>
-              <row>...***...</row>
-              <row>...***...</row>
-              <row>.........</row>
-              <row>.........</row>
-              <row>.........</row>
-              <scale>6</scale>
-              <color>color.white</color>
-            </bitmap>
-          </sprite>
-          <sprite name="middle">
-            <bitmap>
-              <row>.........</row>
-              <row>...***...</row>
-              <row>..*****..</row>
-              <row>.***o***.</row>
-              <row>.**ooo**.</row>
-              <row>.***o***.</row>
-              <row>..*****..</row>
-              <row>...***...</row>
-              <row>.........</row>
-              <scale>6</scale>
-              <color>color.orange</color>
-              <color char="o">color.yellow</color>
-            </bitmap>
-          </sprite>
-          <sprite name="full">
-            <bitmap>
-              <row>...***...</row>
-              <row>.*******.</row>
-              <row>.**ooo**.</row>
-              <row>**ooooo**</row>
-              <row>**ooooo**</row>
-              <row>**ooooo**</row>
-              <row>.**ooo**.</row>
-              <row>.*******.</row>
-              <row>...***...</row>
-              <scale>6</scale>
-              <color>color.red</color>
-              <color char="o">color.magenta</color>
-            </bitmap>
-          </sprite>
-          <animation>
-            <interval>0.15</interval>
-            <frame sprite="small" />
-            <frame sprite="middle" />
-            <frame sprite="full" />
-            <frame sprite="full" />
-            <frame sprite="middle" />
-          </animation>
-          <exists>false</exists>
-          <most>3</most>
-          <collisions>
-            <enabled>true</enabled>
-            <type>pixel</type>
-          </collisions>
-          <timers>
-            <timer><every>0.75</every><despawn /></timer>
-          </timers>
-        </object>
         <!-- the sight the player steers -->
         <object name="sight">
           <sprite>
@@ -293,35 +320,6 @@
         </object>
       </objects>
       <scenes>
-        <objects>
-          <!-- the missiles: streaks that start somewhere above the sky and make for the nearest city, at the wave's speed -->
-          <group name="missiles" class="missile">
-            <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.red</color><thickness>2</thickness></line></sprite>
-            <position>
-              <x><random min="margin" max="window.right - margin" /></x>
-              <y><random min="-sky" max="-10" /></y>
-            </position>
-            <velocity><y>speed</y></velocity>
-            <heading>180</heading>
-            <collisions>
-              <enabled>true</enabled>
-              <type>pixel</type>
-              <collision class="city"><inc variable="status.spent" /><reset /></collision>
-              <collision class="burst">
-                <inc variable="status.score">25</inc>
-                <inc variable="status.spent" />
-                <reset />
-              </collision>
-              <collision edge="bottom"><inc variable="status.spent" /><reset /></collision>
-            </collisions>
-            <timers>
-              <timer><every>0.25</every><chase object="cities"><speed>speed</speed></chase></timer>
-            </timers>
-            <group name="salvo"><member /><member /><member /><member /></group>
-            <group name="more"><member /><member /></group>
-            <group name="most"><member /><member /></group>
-          </group>
-        </objects>
 
         <!-- four missiles at a time, twelve in all -->
         <scene name="wave1">

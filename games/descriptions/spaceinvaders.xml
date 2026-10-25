@@ -79,6 +79,49 @@
     <style name="banner"><size>128</size><color>color.green</color></style>
     <style name="hud"><size>36</size><color>color.white</color></style>
   </styles>
+  <kit>
+    <!-- a bomb, three at most, a zigzag that wriggles as it falls,
+         dropped by any alien (each faces down) after a wait of its own -->
+    <object name="bomb" class="bomb">
+      <sprite name="a">
+        <bitmap><row>.*</row><row>*.</row><row>.*</row><row>*.</row><row>.*</row><scale>3</scale></bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap><row>*.</row><row>.*</row><row>*.</row><row>.*</row><row>*.</row><scale>3</scale></bitmap>
+      </sprite>
+      <animation><interval>0.1</interval><frame sprite="a" /><frame sprite="b" /></animation>
+      <velocity><y>5</y></velocity>
+      <most>3</most>
+      <collisions>
+        <enabled>true</enabled>
+        <collision edge="all"><despawn /></collision>
+        <collision object="player"><despawn /></collision>
+        <collision class="shield"><despawn /></collision>
+        <collision class="ground"><despawn /></collision>
+        <collision object="bullet"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- what a hit leaves for a moment -->
+    <object name="blast" class="blast">
+      <sprite>
+        <bitmap>
+          <row>....*...*....</row>
+          <row>.*...*.*...*.</row>
+          <row>..*.......*..</row>
+          <row>...*.....*...</row>
+          <row>**.........**</row>
+          <row>...*.....*...</row>
+          <row>..*..*.*..*..</row>
+          <row>.*..*...*..*.</row>
+          <scale>pixel - 1</scale>
+        </bitmap>
+      </sprite>
+      <most>2</most>
+      <timers>
+        <timer><after>0.25</after><despawn /></timer>
+      </timers>
+    </object>
+  </kit>
   <objects>
     <object name="player">
       <sprite>
@@ -166,28 +209,6 @@
             <collision class="shield"><die /></collision>
             <collision class="bomb"><die /></collision>
             <collision class="ufo"><die /></collision>
-          </collisions>
-        </object>
-        <!-- a bomb, three at most, a zigzag that wriggles as it falls,
-             dropped by any alien (each faces down) after a wait of its own -->
-        <object name="bomb" class="bomb">
-          <sprite name="a">
-            <bitmap><row>.*</row><row>*.</row><row>.*</row><row>*.</row><row>.*</row><scale>3</scale></bitmap>
-          </sprite>
-          <sprite name="b">
-            <bitmap><row>*.</row><row>.*</row><row>*.</row><row>.*</row><row>*.</row><scale>3</scale></bitmap>
-          </sprite>
-          <animation><interval>0.1</interval><frame sprite="a" /><frame sprite="b" /></animation>
-          <velocity><y>5</y></velocity>
-          <exists>false</exists>
-          <most>3</most>
-          <collisions>
-            <enabled>true</enabled>
-            <collision edge="all"><despawn /></collision>
-            <collision object="player"><despawn /></collision>
-            <collision class="shield"><despawn /></collision>
-            <collision class="ground"><despawn /></collision>
-            <collision object="bullet"><despawn /></collision>
           </collisions>
         </object>
         <group name="shields" class="shield">
@@ -378,27 +399,6 @@
             <variables><variable name="worth">10</variable></variables>
           </row>
         </group>
-        <!-- what a hit leaves for a moment -->
-        <object name="blast" class="blast">
-          <sprite>
-            <bitmap>
-              <row>....*...*....</row>
-              <row>.*...*.*...*.</row>
-              <row>..*.......*..</row>
-              <row>...*.....*...</row>
-              <row>**.........**</row>
-              <row>...*.....*...</row>
-              <row>..*..*.*..*..</row>
-              <row>.*..*...*..*.</row>
-              <scale>pixel - 1</scale>
-            </bitmap>
-          </sprite>
-          <exists>false</exists>
-          <most>2</most>
-          <timers>
-            <timer><after>0.25</after><despawn /></timer>
-          </timers>
-        </object>
         <!-- how many aliens may be left before the march speeds up again -->
         <object name="pace">
           <variables><variable name="next">28</variable></variables>

@@ -62,6 +62,7 @@ set(data_assets
 set(data_generators
 	"games/generators/windows-cpp/generate.xsl"
 	"games/generators/windows-cpp/text.xsl"
+	"games/generators/windows-cpp/merge.xsl"
 	"games/generators/windows-cpp/data.xsl"
 	"games/generators/windows-cpp/program.xsl"
 	"games/generators/windows-cpp/engine.xml"
