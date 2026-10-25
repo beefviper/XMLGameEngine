@@ -276,6 +276,22 @@
     <xs:attribute name="wave" type="waveType" use="optional" />
   </xs:complexType>
 
+  <xs:complexType name="tetherType">
+    <xs:sequence>
+      <xs:element name="thickness" type="valueType" minOccurs="0" />
+      <xs:element name="color" type="xs:string" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="from" type="xs:string" use="required" />
+    <xs:attribute name="to" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="chooseWordType">
+    <xs:sequence>
+      <xs:element name="by" type="valueType" />
+      <xs:element name="word" type="xs:string" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
   <!-- Sprites: one shape. -->
   <xs:group name="shape">
     <xs:choice>
@@ -308,14 +324,7 @@
               <!-- a number shown as a letter, 0 is A and 25 is Z, live the same way -->
               <xs:element name="letter" type="valueType" />
               <!-- one of its words, picked by a number (0 the first), live the same way -->
-              <xs:element name="choose">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="by" type="valueType" />
-                    <xs:element name="word" type="xs:string" maxOccurs="unbounded" />
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
+              <xs:element name="choose" type="chooseWordType" />
             </xs:choice>
             <!-- left out, the style's -->
             <xs:element name="size" type="valueType" minOccurs="0" />
@@ -326,16 +335,7 @@
         </xs:complexType>
       </xs:element>
       <!-- a line from the middle of one object to the middle of another, drawn again every frame wherever they are -->
-      <xs:element name="tether">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="thickness" type="valueType" minOccurs="0" />
-            <xs:element name="color" type="xs:string" minOccurs="0" />
-          </xs:sequence>
-          <xs:attribute name="from" type="xs:string" use="required" />
-          <xs:attribute name="to" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
+      <xs:element name="tether" type="tetherType" />
       <xs:element name="image">
         <xs:complexType>
           <xs:sequence>
@@ -446,6 +446,7 @@
               <xs:element name="content" type="xs:string" />
               <xs:element name="number" type="valueType" />
               <xs:element name="letter" type="valueType" />
+              <xs:element name="choose" type="chooseWordType" />
             </xs:choice>
             <xs:element name="size" type="valueType" minOccurs="0" />
             <xs:element name="color" type="xs:string" minOccurs="0" />
@@ -454,6 +455,8 @@
           <xs:attribute name="style" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
+      <!-- of a tether, from= and to= again, and the <thickness> or <color> that changes -->
+      <xs:element name="tether" type="tetherType" />
       <xs:element name="image">
         <xs:complexType>
           <xs:sequence>
@@ -1291,12 +1294,13 @@
     place. So everything here may be left out, and the engine checks that
     the object made is complete.
   -->
-  <xs:complexType name="objectType">
+  <!--
+    What every object-like thing may have after its sprites, animations and
+    position: an object, a group (for all its members), a piece of the <kit>,
+    an object or group on a <map>. Written once so they cannot drift apart.
+  -->
+  <xs:group name="objectParts">
     <xs:sequence>
-      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
-      <!-- both halves, unless it starts from something that has them -->
-      <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
@@ -1319,6 +1323,16 @@
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
       <xs:element name="timers" type="timersType" minOccurs="0" />
+    </xs:sequence>
+  </xs:group>
+
+  <xs:complexType name="objectType">
+    <xs:sequence>
+      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
+      <!-- both halves, unless it starts from something that has them -->
+      <xs:element name="position" type="partialPositionType" minOccurs="0" />
+      <xs:group ref="objectParts" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="class" type="xs:string" use="optional" />
@@ -1416,25 +1430,7 @@
     <xs:sequence>
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
-      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
-      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
-      <xs:element name="heading" type="valueType" minOccurs="0" />
-      <xs:element name="drag" type="valueType" minOccurs="0" />
-      <xs:element name="mass" type="valueType" minOccurs="0" />
-      <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="seek" type="targetValueType" minOccurs="0" />
-      <xs:group ref="sightParts" />
-      <xs:element name="facing" type="directionType" minOccurs="0" />
-      <xs:group ref="moveParts" />
-      <xs:element name="maze" type="mazeType" minOccurs="0" />
-      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
-      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
-      <!-- most: how many copies a <spawn> may have made of it at once -->
-      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
-      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
-      <xs:element name="actions" type="actionsType" minOccurs="0" />
-      <xs:element name="variables" type="variablesType" minOccurs="0" />
-      <xs:element name="timers" type="timersType" minOccurs="0" />
+      <xs:group ref="objectParts" />
     </xs:sequence>
   </xs:group>
 
@@ -1491,28 +1487,7 @@
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
-      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
-      <xs:element name="heading" type="valueType" minOccurs="0" />
-      <xs:element name="drag" type="valueType" minOccurs="0" />
-      <!-- how hard it is to knock; left out, a knock does not move it -->
-      <xs:element name="mass" type="valueType" minOccurs="0" />
-      <!-- pulled toward the nearest of each, that much speed a frame -->
-      <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
-      <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->
-      <xs:element name="seek" type="targetValueType" minOccurs="0" />
-      <xs:group ref="sightParts" />
-      <xs:element name="facing" type="directionType" minOccurs="0" />
-      <xs:group ref="moveParts" />
-      <xs:element name="maze" type="mazeType" minOccurs="0" />
-      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
-      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
-      <!-- most: how many copies a <spawn> may have made of it at once -->
-      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
-      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
-      <xs:element name="actions" type="actionsType" minOccurs="0" />
-      <xs:element name="variables" type="variablesType" minOccurs="0" />
-      <xs:element name="timers" type="timersType" minOccurs="0" />
+      <xs:group ref="objectParts" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="class" type="xs:string" use="optional" />
@@ -1529,20 +1504,7 @@
     <xs:sequence>
       <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
-      <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
-      <xs:element name="facing" type="directionType" minOccurs="0" />
-      <xs:group ref="moveParts" />
-      <xs:element name="maze" type="mazeType" minOccurs="0" />
-      <xs:group ref="sightParts" />
-      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
-      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
-      <!-- most: how many copies a <spawn> may have made of it at once -->
-      <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
-      <xs:element name="collisions" type="collisionsType" minOccurs="0" />
-      <xs:element name="actions" type="actionsType" minOccurs="0" />
-      <xs:element name="variables" type="variablesType" minOccurs="0" />
-      <xs:element name="timers" type="timersType" minOccurs="0" />
+      <xs:group ref="objectParts" />
       <xs:element name="group" type="mapGroupType" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />

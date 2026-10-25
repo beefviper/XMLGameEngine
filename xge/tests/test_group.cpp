@@ -464,6 +464,26 @@ TEST_CASE("a member's sprite of the same shape as its group's gives only what ch
 	CHECK(game.getObject("round").spriteParams == std::vector<std::string>{ "circle", "4.000000", "0", "color.white" });
 }
 
+TEST_CASE("a member's tether names its two ends again and keeps the rest; a member's text can choose", "[group]")
+{
+	Loaded loaded{ gameXml(
+		"<object name=\"a\">" + kSprite + kPosition + "</object><object name=\"b\">" + kSprite + kPosition + "</object>"
+		"<group name=\"lines\"><sprite><tether from=\"a\" to=\"b\"><thickness>3</thickness><color>color.red</color></tether></sprite>" + kPosition +
+		"<member name=\"one\" /><member name=\"two\"><sprite><tether from=\"b\" to=\"a\" /></sprite></member></group>"
+		"<group name=\"signs\"><sprite><text><content>go</content><size>10</size></text></sprite>" + kPosition +
+		"<member name=\"sign\"><sprite><text><choose><by>1</by><word>left</word><word>right</word></choose></text></sprite></member></group>",
+		"<show object=\"lines\" /><show object=\"signs\" /><show object=\"a\" /><show object=\"b\" />") };
+	Game& game = loaded.game;
+
+	const Object& two = game.getObject("two");
+	CHECK(two.tetherFrom == "b");
+	CHECK(two.tetherTo == "a");
+	CHECK(two.tetherThickness == 3);
+	CHECK(two.tetherColor.r == 255);
+	CHECK(two.tetherColor.g == 0);
+	CHECK(game.getObject("sign").spriteParams == std::vector<std::string>{ "text", "right", "10.000000", "color.white" });
+}
+
 TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where", "[group][cells][errors]")
 {
 	const auto refused = [](const std::string& group) { Loaded loaded(gameXml(group, kShowWall)); };
@@ -797,6 +817,16 @@ TEST_CASE("both schema checkers accept the games written with groups", "[group][
 	}
 }
 
+TEST_CASE("both schema checkers take every object part on a group on a map", "[group][schema][map]")
+{
+	const Verdict verdict = judge(gameWith("descriptions/pacman.xml", "<color>color.magenta</color></bitmap></sprite>",
+		"<color>color.magenta</color></bitmap></sprite><heading>0</heading><drag>1</drag><mass>1</mass>"
+		"<pull object=\"pacman\">0</pull><seek object=\"pacman\">0</seek><facing>left</facing>"));
+
+	CHECK(verdict.weakAccepts);
+	CHECK(verdict.strongAccepts);
+}
+
 TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group][schema]")
 {
 	struct Mistake
@@ -817,6 +847,8 @@ TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group
 		{ "a lockstep flag that is not true or false", "descriptions/spacerace.xml", "<enabled>true</enabled>", "<enabled>true</enabled><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
 		{ "a member in a group of cells", "descriptions/spacerace.xml", "<row number=\"1 5 9\">", "<member /><row number=\"1 5 9\">", "row" },
 		{ "a member beside a group inside a group", "descriptions/combat.xml", "<group name=\"yellow\">", "<member /><group name=\"yellow\">", "group" },
+		{ "a member's tether that leaves out an end", "descriptions/fishingderby.xml", "<member name=\"rod1\"><position><x>206</x></position></member>",
+			"<member name=\"rod1\"><sprite><tether from=\"rod1\" /></sprite><position><x>206</x></position></member>", "missing required attribute 'to'" },
 		{ "a cell with no column", "descriptions/spacerace.xml", "<row number=\"1 5 9\">", "<cell row=\"1\" /><row number=\"1 5 9\">", "missing required attribute 'column'" },
 	};
 

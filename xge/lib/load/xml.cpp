@@ -596,6 +596,14 @@ namespace xge
 				change("width", sprite.width);
 				change("height", sprite.height);
 			}
+			else if (base.kind == "tether")
+			{
+				// The two it joins are named again; only the line's look carries over.
+				sprite.tetherFrom = shape->getAttribute("from");
+				sprite.tetherTo = shape->getAttribute("to");
+				if (sprite.tetherFrom.empty() || sprite.tetherTo.empty()) { fail(here, "names the two objects it joins, from=\"...\" and to=\"...\""); }
+				change("thickness", sprite.thickness);
+			}
 			else if (base.kind == "text")
 			{
 				// Pieces given are the whole text; none, and it is kept.

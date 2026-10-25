@@ -536,6 +536,35 @@ TEST_CASE("maze: what a walker's verbs and a look's timer turn away", "[map][maz
 		ContainsSubstring("needs an object="));
 }
 
+TEST_CASE("map: a group on a map has every part an object has, heading to seek", "[map]")
+{
+	const std::string xml = mapGame("<map name=\"maze\"><tile><width>tile</width><height>tile</height></tile><position><x>0</x><y>0</y></position><row>#oo@</row>"
+		"<group name=\"walls\" char=\"#\" class=\"wall\">" + kWallSprite + "</group>"
+		"<group name=\"mines\" char=\"o\">" + kDotSprite + "<heading>90</heading><drag>0.5</drag><mass>2</mass><pull object=\"p\">0.25</pull><seek object=\"p\">3</seek></group>"
+		"<object name=\"p\" char=\"@\">" + kDotSprite + "</object></map>");
+	const std::filesystem::path path = "descriptions/pacman_scratch.xml";
+	{
+		std::ofstream out(path);
+		out << xml;
+	}
+	struct Gone
+	{
+		std::filesystem::path file;
+		~Gone() { std::error_code ignored; std::filesystem::remove(file, ignored); }
+	} gone{ path };
+
+	Game game(path.string());
+	for (const char* name : { "mines.1", "mines.2" })
+	{
+		const Object& mine = game.getObject(name);
+		CHECK(mine.heading == Approx(90));
+		CHECK(mine.drag == Approx(0.5));
+		CHECK(mine.mass == Approx(2));
+		CHECK(mine.seekTarget == "playing.p");
+		CHECK(mine.seekRate == Approx(3));
+	}
+}
+
 TEST_CASE("bitmap: a <color char> draws that character in its own color", "[map][bitmap]")
 {
 	const std::vector<std::string> rows{ "*w.", "w**" };
