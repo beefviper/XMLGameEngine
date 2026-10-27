@@ -166,7 +166,7 @@
       <timers>
         <timer>
           <every><random min="1" max="2.5" /></every>
-          <chase object="player"><speed>0.25 + player.depth * 0.05</speed></chase>
+          <chase object="player">0.25 + player.depth * 0.05</chase>
         </timer>
       </timers>
       <!-- room one's: they do not fire -->
@@ -371,7 +371,7 @@
           <timers>
             <timer>
               <every>0.1</every>
-              <chase object="player"><speed>1.1</speed></chase>
+              <chase object="player">1.1</chase>
             </timer>
           </timers>
         </object>

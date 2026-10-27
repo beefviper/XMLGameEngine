@@ -132,7 +132,7 @@ namespace xge
 			const float speed = evaluate(raw.amount);
 			const bool noNear = raw.distance.kind == RawValue::Kind::Expression && raw.distance.text.empty();
 			const float stopWithin = noNear ? 0.0f : evaluate(raw.distance);
-			if (speed < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: the <speed> is below 0"); }
+			if (speed < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: its speed is below 0"); }
 			if (stopWithin < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: the <near> is below 0"); }
 			return CmdChase{ raw.object, speed, stopWithin };
 		}
@@ -220,7 +220,7 @@ namespace xge
 			const float radius = evaluate(raw.amount);
 			const bool smooth = raw.distance.kind == RawValue::Kind::Expression && raw.distance.text.empty();
 			const float rough = smooth ? 0.0f : evaluate(raw.distance);
-			if (!(radius > 0.0f)) { throw std::runtime_error("<hole> has a <radius> of " + formatDisplayNumber(radius) + "; expected above 0"); }
+			if (!(radius > 0.0f)) { throw std::runtime_error("<hole> has a radius of " + formatDisplayNumber(radius) + "; expected above 0"); }
 			if (!(rough >= 0.0f && rough <= 1.0f)) { throw std::runtime_error("<hole> has a <rough> of " + formatDisplayNumber(rough) + "; expected 0 up to 1"); }
 			return CmdHole{ radius, rough };
 		}

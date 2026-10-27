@@ -48,7 +48,7 @@
 ## Steps, jumps and facing
 
 - **`<hop>`**: one instant step per key press, judged where it lands. Not repeated while held, not resumed after a pause.
-- **`<jump>`**: a straight timed move (`<distance>` over `<seconds>`) that touches nothing in the air and meets what it lands on; refused if it would land off screen. No arc, no air control. Exactly Frostbite's "land on the ice or in the water".
+- **`<jump>`**: a straight timed move (a distance, its content, over `<seconds>`) that touches nothing in the air and meets what it lands on; refused if it would land off screen. No arc, no air control. Exactly Frostbite's "land on the ice or in the water".
 - **`<facing>`** (up/down/left/right, follows the last move, hop or jump, never turns the picture): `<fire>` leaves the middle of that side at the projectile's own speed. An object with no facing fires from its top as before. Chosen over a heading in 90 degree steps, which would turn the picture.
 
 

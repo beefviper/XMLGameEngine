@@ -25,7 +25,9 @@
        inside it (readValue). -->
   <xsl:template name="value">
     <xsl:param name="node" />
-    <xsl:variable name="tag" select="$node/*[1]" />
+    <!-- a value tag, or the text, beside the named parts of a verb whose
+         number is its content (readLeadValue): <jump>rowgap<seconds>... -->
+    <xsl:variable name="tag" select="$node/*[self::random or self::equation or self::formula or self::centered][1]" />
     <xsl:choose>
       <xsl:when test="$tag[self::random]">
         <xsl:call-template name="random">
@@ -57,7 +59,7 @@
       <xsl:otherwise>
         <xsl:text>value(</xsl:text>
         <xsl:call-template name="text">
-          <xsl:with-param name="node" select="$node" />
+          <xsl:with-param name="node" select="$node/text()[normalize-space()][1]" />
         </xsl:call-template>
         <xsl:text>)</xsl:text>
       </xsl:otherwise>
@@ -226,7 +228,7 @@
           <xsl:text>;</xsl:text>
         </xsl:when>
         <!-- a hop's step: one distance, or across and up or down, and how long -->
-        <xsl:when test="$verb = 'hop' and ($node/x or $node/distance or $node/seconds or $node/arc)">
+        <xsl:when test="$verb = 'hop' and ($node/x or $node/seconds or $node/arc)">
           <xsl:call-template name="hop-parts">
             <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
@@ -235,7 +237,7 @@
         <xsl:when test="$verb = 'hunt' and $node/hop">
           <xsl:text> command.byHops = true;</xsl:text>
           <xsl:choose>
-            <xsl:when test="$node/hop/x or $node/hop/distance or $node/hop/seconds or $node/hop/arc">
+            <xsl:when test="$node/hop/x or $node/hop/seconds or $node/hop/arc">
               <xsl:call-template name="hop-parts">
                 <xsl:with-param name="node" select="$node/hop" />
               </xsl:call-template>
@@ -267,7 +269,7 @@
         <xsl:when test="$verb = 'jump'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.amount'" />
-            <xsl:with-param name="node" select="$node/distance" />
+            <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.seconds'" />
@@ -281,7 +283,7 @@
         <xsl:when test="$verb = 'chase'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.amount'" />
-            <xsl:with-param name="node" select="$node/speed" />
+            <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.distance'" />
@@ -291,7 +293,7 @@
         <xsl:when test="$verb = 'hole'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.amount'" />
-            <xsl:with-param name="node" select="$node/radius" />
+            <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.distance'" />
@@ -301,13 +303,13 @@
         <xsl:when test="$verb = 'wander'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.amount'" />
-            <xsl:with-param name="node" select="$node/speed" />
+            <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'hunt'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.amount'" />
-            <xsl:with-param name="node" select="$node/speed" />
+            <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.ahead'" />
@@ -376,12 +378,12 @@
     <xsl:text>)</xsl:text>
   </xsl:template>
 
-  <!-- A <hop>'s <distance>, or <x> and <y>, and <seconds> and <arc> (readHop). -->
+  <!-- A <hop>'s distance (its content), or <x> and <y>, and <seconds> and <arc> (readHop). -->
   <xsl:template name="hop-parts">
     <xsl:param name="node" />
     <xsl:call-template name="field">
       <xsl:with-param name="name" select="'command.amount'" />
-      <xsl:with-param name="node" select="$node/distance" />
+      <xsl:with-param name="node" select="$node[not(x)]" />
     </xsl:call-template>
     <xsl:call-template name="field">
       <xsl:with-param name="name" select="'command.positionX'" />

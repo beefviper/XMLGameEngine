@@ -303,7 +303,7 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 
 TEST_CASE("a jump takes its time, passes over what is in the way, and meets what it lands on", "[jump]")
 {
-	const std::string actions = "<actions><action name=\"down\"><jump direction=\"down\"><distance>60</distance><seconds>0.5</seconds></jump></action></actions>"
+	const std::string actions = "<actions><action name=\"down\"><jump direction=\"down\">60<seconds>0.5</seconds></jump></action></actions>"
 		"<variables><variable name=\"hits\">0</variable></variables>";
 	const std::string rules = "<enabled>true</enabled><collision class=\"hazard\"><inc variable=\"man.hits\" /></collision>";
 
@@ -336,7 +336,7 @@ TEST_CASE("a jump takes its time, passes over what is in the way, and meets what
 
 TEST_CASE("nothing is touched in the air: a jump over a hazard and clear of it costs nothing", "[jump]")
 {
-	const std::string actions = "<actions><action name=\"down\"><jump direction=\"down\"><distance>80</distance></jump></action></actions>"
+	const std::string actions = "<actions><action name=\"down\"><jump direction=\"down\">80</jump></action></actions>"
 		"<variables><variable name=\"hits\">0</variable></variables>";
 
 	Loaded loaded(gameXml(
@@ -474,8 +474,12 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><after>1</after><push state=\"nowhere\" /></timer></timers>"), plain,
 		"<push state=\"nowhere\" /> names no state");
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\"><seconds>1</seconds></jump></action></actions>"),
-		plain, "missing <distance>");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\"><distance>5</distance><seconds>0</seconds></jump></action></actions>"),
+		plain, "has no value; its number goes between its tags");
+	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\"><speed>2</speed></chase></action></actions>"),
+		plain, "unknown <speed>; expected its speed, then <near> if wanted");
+	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\">2<random min=\"1\" max=\"3\" /></chase></action></actions>"),
+		plain, "holds both the text \"2\" and a <random> tag");
+	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\">5<seconds>0</seconds></jump></action></actions>"),
 		plain, "<jump> has <seconds> of 0");
 	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, {}, {}, " keys=\"nothing\""), "keys=\"nothing\" names no <keys> set");
 	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
@@ -715,7 +719,7 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 TEST_CASE("<chase> heads straight for the nearest one in play, and stops when near enough", "[chase]")
 {
 	const std::string chaser = box("hunter", 100, 100, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>",
-		"<timers><timer><every>0.1</every><chase object=\"prey\"><speed>2</speed><near>50</near></chase></timer></timers>");
+		"<timers><timer><every>0.1</every><chase object=\"prey\">2<near>50</near></chase></timer></timers>");
 	Loaded loaded(gameXml(chaser + box("prey", 400, 500, 20, 20) + box("prey2", 0, 0, 20, 20, "<enabled>false</enabled>", "<active>false</active>"),
 		state("playing", { "hunter", "prey", "prey2" })));
 
@@ -764,7 +768,7 @@ TEST_CASE("<aim> sends the next shots straight at the target, at any angle, unti
 
 TEST_CASE("<chase> and <aim> that name nothing are turned away when the game loads", "[chase][aim][errors]")
 {
-	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>1</every><chase object=\"playr\"><speed>1</speed></chase></timer></timers>")
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>1</every><chase object=\"playr\">1</chase></timer></timers>")
 		+ box("player", 0, 0, 1, 1), state("playing", { "o" }))), ContainsSubstring("<chase> names 'playr', and there is no object of that name (did you mean 'player'?)"));
 	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>1</every><aim object=\"nobody\" /></timer></timers>"),
 		state("playing", { "o" }))), ContainsSubstring("<aim> names 'nobody'"));

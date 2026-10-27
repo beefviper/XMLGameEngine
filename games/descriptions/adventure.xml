@@ -224,7 +224,7 @@
       <timers>
         <timer sprite="awake">
           <every>0.3</every>
-          <chase object="hero"><speed>dragonspeed</speed></chase>
+          <chase object="hero">dragonspeed</chase>
         </timer>
       </timers>
       <member name="yorgle">

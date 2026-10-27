@@ -135,7 +135,7 @@
         </collision>
       </collisions>
       <timers>
-        <timer><after>1</after><chase object="yar"><speed>4</speed></chase></timer>
+        <timer><after>1</after><chase object="yar">4</chase></timer>
       </timers>
     </object>
   </kit>

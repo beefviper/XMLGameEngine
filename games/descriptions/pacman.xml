@@ -819,7 +819,7 @@
                 <after>0</after>
                 <reverse />
                 <wander>
-                  <speed>frightspeed</speed>
+                  frightspeed
                 </wander>
               </timer>
               <timer sprite="blue">
@@ -830,7 +830,7 @@
               <timer sprite="eyes">
                 <after>0</after>
                 <hunt object="pen">
-                  <speed>eyesspeed</speed>
+                  eyesspeed
                 </hunt>
               </timer>
             </timers>
@@ -842,12 +842,12 @@
               <timers>
                 <timer sprite="normal">
                   <after>0</after>
-                  <hunt object="topright"><speed>status.pace</speed></hunt>
+                  <hunt object="topright">status.pace</hunt>
                 </timer>
                 <timer sprite="normal">
                   <after>scatter</after>
                   <reverse />
-                  <hunt object="pacman"><speed>status.pace</speed></hunt>
+                  <hunt object="pacman">status.pace</hunt>
                 </timer>
               </timers>
             </group>
@@ -860,12 +860,12 @@
               <timers>
                 <timer sprite="normal">
                   <after>0</after>
-                  <hunt object="topleft"><speed>status.pace</speed></hunt>
+                  <hunt object="topleft">status.pace</hunt>
                 </timer>
                 <timer sprite="normal">
                   <after>scatter</after>
                   <reverse />
-                  <hunt object="pacman"><speed>status.pace</speed><ahead>4</ahead></hunt>
+                  <hunt object="pacman">status.pace<ahead>4</ahead></hunt>
                 </timer>
                 <timer>
                   <after>1</after>
@@ -882,12 +882,12 @@
               <timers>
                 <timer sprite="normal">
                   <after>0</after>
-                  <hunt object="bottomright"><speed>status.pace</speed></hunt>
+                  <hunt object="bottomright">status.pace</hunt>
                 </timer>
                 <timer sprite="normal">
                   <after>scatter</after>
                   <reverse />
-                  <hunt object="pacman"><speed>status.pace</speed><ahead>2</ahead><with object="blinky" /></hunt>
+                  <hunt object="pacman">status.pace<ahead>2</ahead><with object="blinky" /></hunt>
                 </timer>
                 <timer>
                   <after>5</after>
@@ -904,12 +904,12 @@
               <timers>
                 <timer sprite="normal">
                   <after>0</after>
-                  <hunt object="bottomleft"><speed>status.pace</speed></hunt>
+                  <hunt object="bottomleft">status.pace</hunt>
                 </timer>
                 <timer sprite="normal">
                   <after>scatter</after>
                   <reverse />
-                  <hunt object="pacman"><speed>status.pace</speed><retreat object="bottomleft">8</retreat></hunt>
+                  <hunt object="pacman">status.pace<retreat object="bottomleft">8</retreat></hunt>
                 </timer>
                 <timer>
                   <after>10</after>

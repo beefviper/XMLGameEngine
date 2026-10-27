@@ -16,6 +16,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
+#include <initializer_list>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -304,6 +305,37 @@ namespace xge
 		RawValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where)
 		{
 			return readValue(*requireChild(parent, name, where), where);
+		}
+
+		// The one number a verb holds as its content, as text or a value tag,
+		// beside the named parts it may also have (`parts`, with `expected`
+		// saying them for the message): <chase object="ship">2<near>40</near></chase>.
+		RawValue readLeadValue(const XmlNode& node, std::initializer_list<const char*> parts, const std::string& expected, const std::string& where)
+		{
+			const std::string here = where + " > <" + node.getName() + ">";
+			std::string valueTagName;
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag == "random" || tag == "equation" || tag == "formula")
+				{
+					if (!valueTagName.empty()) { fail(here, "holds more than one value tag"); }
+					valueTagName = tag;
+				}
+				else if (std::none_of(parts.begin(), parts.end(), [&](const char* part) { return tag == part; }))
+				{
+					fail(here, "unknown <" + tag + ">; expected " + expected);
+				}
+			}
+			const std::unique_ptr<XmlNode> valueTag = valueTagName.empty() ? nullptr : findChild(&node, valueTagName);
+
+			const std::string text = readText(node);
+			if (valueTag && !text.empty()) { fail(here, "holds both the text \"" + text + "\" and a <" + valueTag->getName() + "> tag; use one or the other"); }
+			if (!valueTag && text.empty()) { fail(here, "has no value; its number goes between its tags"); }
+			if (!valueTag) { return RawValue::expression(text); }
+			if (valueTag->getName() == "random") { return readRandom(*valueTag, here); }
+			if (valueTag->getName() == "equation") { return readEquation(*valueTag, here); }
+			return readFormula(*valueTag, here);
 		}
 
 		RawVector2 readVector2(const XmlNode& node, const std::string& where)
@@ -921,38 +953,32 @@ namespace xge
 			}
 		}
 
-		// What a <hop> says besides its direction: one distance as its value,
-		// or as a <distance>; or an <x> across and a <y> up or down; and with
-		// either of those elements, how long it takes, its <seconds>. True for
-		// an <x> and a <y>.
+		// What a <hop> says besides its direction: one distance as its
+		// content, or an <x> across and a <y> up or down; then how long it
+		// takes, its <seconds>, and how high it goes, its <arc>. True for an
+		// <x> and a <y>.
 		bool readHop(const XmlNode& node, const std::string& where, RawCommand& command)
 		{
 			const std::string here = where + " > <hop>";
-			const bool parts = findChild(&node, "x") || findChild(&node, "y") || findChild(&node, "distance") || findChild(&node, "seconds") || findChild(&node, "arc");
-			if (!parts)
+			if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+			if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
+
+			if (!findChild(&node, "x") && !findChild(&node, "y"))
 			{
-				command.amount = readValue(node, where);
+				command.amount = readLeadValue(node, { "seconds", "arc" }, "its distance, or an <x> and a <y>, then <seconds> and <arc> if wanted", where);
 				return false;
 			}
 
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
-				if (tag != "x" && tag != "y" && tag != "distance" && tag != "seconds" && tag != "arc")
+				if (tag != "x" && tag != "y" && tag != "seconds" && tag != "arc")
 				{
-					fail(here, "unknown <" + tag + ">; expected a <distance>, or an <x> and a <y>, then <seconds> and <arc> if wanted");
+					fail(here, "unknown <" + tag + ">; expected its distance, or an <x> and a <y>, then <seconds> and <arc> if wanted");
 				}
 			}
-			if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
-			if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
-
 			const PartialVector2 step = readPartialVector2(node, where);
-			if (!step.x && !step.y)
-			{
-				command.amount = readValueOf(node, "distance", here);
-				return false;
-			}
-			if (!step.x || !step.y || findChild(&node, "distance")) { fail(where, "<hop> gives one distance, or an <x> across and a <y> up or down, both"); }
+			if (!step.x || !step.y || !readText(node).empty()) { fail(where, "<hop> gives one distance, or an <x> across and a <y> up or down, both"); }
 			command.positionX = *step.x;
 			command.positionY = *step.y;
 			return true;
@@ -1072,34 +1098,20 @@ namespace xge
 			}
 			if (verb == "jump")
 			{
-				// A distance and a time: two values, so two elements.
+				// How far as its content, then how long and how high.
 				requireAttribute(node, "direction", where);
 				const std::string here = where + " > <jump>";
-				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
-				{
-					if (child->getName() != "distance" && child->getName() != "seconds" && child->getName() != "arc")
-					{
-						fail(here, "unknown <" + child->getName() + ">; expected <distance>, <seconds> and <arc>");
-					}
-				}
-				command.amount = readValueOf(node, "distance", here);
+				command.amount = readLeadValue(node, { "seconds", "arc" }, "its distance, then <seconds> and <arc>, each if wanted", where);
 				if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
 				if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
 			}
 			if (verb == "aim") { requireAttribute(node, "object", where); }
 			if (verb == "chase")
 			{
-				// A speed and how near is near enough: two values, so two elements.
+				// Its speed as its content, then how near is near enough.
 				requireAttribute(node, "object", where);
 				const std::string here = where + " > <chase>";
-				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
-				{
-					if (child->getName() != "speed" && child->getName() != "near")
-					{
-						fail(here, "unknown <" + child->getName() + ">; expected <speed> and <near>");
-					}
-				}
-				command.amount = readValueOf(node, "speed", here);
+				command.amount = readLeadValue(node, { "near" }, "its speed, then <near> if wanted", where);
 				if (auto nearNode = findChild(&node, "near")) { command.distance = readValue(*nearNode, here); }
 			}
 			if (verb == "go")
@@ -1110,22 +1122,14 @@ namespace xge
 			if (verb == "hold") { command.button = requireAttribute(node, "button", where); }
 			if (verb == "hole")
 			{
+				// Its radius as its content, then how rough its edge is.
 				const std::string here = where + " > <hole>";
-				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
-				{
-					if (child->getName() != "radius" && child->getName() != "rough") { fail(here, "unknown <" + child->getName() + ">; expected <radius> or <rough>"); }
-				}
-				command.amount = readValueOf(node, "radius", here);
+				command.amount = readLeadValue(node, { "rough" }, "its radius, then <rough> if wanted", where);
 				if (auto roughNode = findChild(&node, "rough")) { command.distance = readValue(*roughNode, here); }
 			}
 			if (verb == "wander")
 			{
-				const std::string here = where + " > <wander>";
-				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
-				{
-					if (child->getName() != "speed") { fail(here, "unknown <" + child->getName() + ">; expected <speed>"); }
-				}
-				command.amount = readValueOf(node, "speed", here);
+				command.amount = readValue(node, where);
 			}
 			if (verb == "turns")
 			{
@@ -1145,9 +1149,9 @@ namespace xge
 				requireAttribute(node, "object", where);
 				const std::string here = where + " > <hunt>";
 				std::unique_ptr<XmlNode> hop = node.getFirstChild();
-				if (hop->getName() != "hop" || hop->getNextSibling())
+				if (hop->getName() != "hop" || hop->getNextSibling() || !readText(node).empty())
 				{
-					fail(here, "a hunt by hops has its <hop> and nothing else (no <speed>, <ahead>, <with> or <retreat>: those are for a maze)");
+					fail(here, "a hunt by hops has its <hop> and nothing else (no speed, <ahead>, <with> or <retreat>: those are for a maze)");
 				}
 				if (!hop->getAttribute("direction").empty()) { fail(here + " > <hop>", "has a direction=; the hunt chooses the way"); }
 				command.byHops = true;
@@ -1168,12 +1172,8 @@ namespace xge
 						command.retreat = requireAttribute(*child, "object", here + " > <retreat>");
 						command.distance = readValue(*child, here + " > <retreat>");
 					}
-					else if (tag != "speed" && tag != "ahead")
-					{
-						fail(here, "unknown <" + tag + ">; expected <speed>, then <ahead>, <with> and <retreat>, each if wanted");
-					}
 				}
-				command.amount = readValueOf(node, "speed", here);
+				command.amount = readLeadValue(node, { "ahead", "with", "retreat" }, "its speed, then <ahead>, <with> and <retreat>, each if wanted", where);
 				if (auto ahead = findChild(&node, "ahead")) { command.ahead = readValue(*ahead, here); }
 			}
 			if (verb == "follow")

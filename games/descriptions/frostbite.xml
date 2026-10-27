@@ -362,11 +362,11 @@
             <action name="left"><move direction="left">walk</move></action>
             <action name="right"><move direction="right">walk</move></action>
             <action name="up">
-              <jump direction="up"><distance>rowgap</distance><seconds>leap</seconds></jump>
+              <jump direction="up">rowgap<seconds>leap</seconds></jump>
               <play sound="jump" />
             </action>
             <action name="down">
-              <jump direction="down"><distance>rowgap</distance><seconds>leap</seconds></jump>
+              <jump direction="down">rowgap<seconds>leap</seconds></jump>
               <play sound="jump" />
             </action>
             <action name="home"><reset /></action>

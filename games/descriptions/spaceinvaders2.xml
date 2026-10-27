@@ -267,8 +267,8 @@
           <collisions>
             <enabled>true</enabled>
             <type>pixel</type>
-            <collision object="bullet"><hole><radius>10</radius><rough>0.6</rough></hole></collision>
-            <collision class="bomb"><hole><radius>8</radius><rough>0.6</rough></hole></collision>
+            <collision object="bullet"><hole>10<rough>0.6</rough></hole></collision>
+            <collision class="bomb"><hole>8<rough>0.6</rough></hole></collision>
           </collisions>
         </group>
         <object name="ground" class="ground">

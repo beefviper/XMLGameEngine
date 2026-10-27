@@ -48,7 +48,7 @@ TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes 
 {
 	const std::string shot = box("shot", 115, 300, "<velocity><x>0</x><y>-8</y></velocity><collisions><enabled>true</enabled>"
 		"<collision object=\"wall\"><reset /></collision></collisions>");
-	const Scratch file(wall("<collision object=\"shot\"><hole><radius>8</radius></hole></collision>") + shot
+	const Scratch file(wall("<collision object=\"shot\"><hole>8</hole></collision>") + shot
 		+ box("other", 600, 100), "<reset object=\"wall\" />");
 	Played play(file.path);
 	const auto whole = play.get("wall").bitmap;
@@ -89,7 +89,7 @@ TEST_CASE("a rough hole keeps some pixels at its edge, never more than it would 
 {
 	const auto cut = [](const std::string& rough)
 	{
-		const Scratch file(wall("<collision object=\"shot\"><hole><radius>12</radius>" + rough + "</hole></collision>")
+		const Scratch file(wall("<collision object=\"shot\"><hole>12" + rough + "</hole></collision>")
 			+ box("shot", 115, 115, "<velocity><x>0</x><y>-1</y></velocity><collisions><enabled>true</enabled></collisions>"), "<pop />");
 		Played play(file.path);
 		play.frames(1);
@@ -111,11 +111,11 @@ TEST_CASE("a <hole> is cut only in a picture that stays as it is", "[hole]")
 		Game game(file.path);
 	};
 
-	CHECK_THROWS_WITH(load(box("wall", 0, 0, "<collisions><enabled>true</enabled><collision object=\"shot\"><hole><radius>4</radius></hole></collision></collisions>") + box("shot", 50, 50)),
+	CHECK_THROWS_WITH(load(box("wall", 0, 0, "<collisions><enabled>true</enabled><collision object=\"shot\"><hole>4</hole></collision></collisions>") + box("shot", 50, 50)),
 		ContainsSubstring("<hole> cuts a picture that stays as it is"));
-	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole><radius>0</radius></hole></collision>") + box("shot", 300, 300)), ContainsSubstring("<radius> of 0"));
-	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole><radius>3</radius><rough>2</rough></hole></collision>") + box("shot", 300, 300)), ContainsSubstring("<rough> of 2"));
-	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole><radius>3</radius></hole></collision>", "<heading>0</heading>") + box("shot", 300, 300)),
+	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole>0</hole></collision>") + box("shot", 300, 300)), ContainsSubstring("a radius of 0"));
+	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole>3<rough>2</rough></hole></collision>") + box("shot", 300, 300)), ContainsSubstring("<rough> of 2"));
+	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole>3</hole></collision>", "<heading>0</heading>") + box("shot", 300, 300)),
 		ContainsSubstring("<hole> cuts a picture"));
 }
 

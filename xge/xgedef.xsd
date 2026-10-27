@@ -606,26 +606,23 @@
       <xs:enumeration value="down-right" />
     </xs:restriction>
   </xs:simpleType>
-  <!-- hop: how far, as its value, or as a <distance> or an <x> and a <y>, then how long it takes, and how high it goes on the way (an <arc>, which needs <seconds>). -->
+  <!-- hop: how far, as its value, or an <x> and a <y>, then how long it takes, and how high it goes on the way (an <arc>, which needs <seconds>). -->
   <xs:complexType name="hopType" mixed="true">
     <xs:group ref="hopParts" minOccurs="0" />
     <xs:attribute name="direction" type="hopDirectionType" use="required" />
   </xs:complexType>
   <xs:group name="hopParts">
-    <xs:choice>
-      <xs:group ref="valueTag" />
-      <xs:sequence>
-        <xs:choice>
-          <xs:element name="distance" type="valueType" />
-          <xs:sequence>
-            <xs:element name="x" type="valueType" />
-            <xs:element name="y" type="valueType" />
-          </xs:sequence>
-        </xs:choice>
-        <xs:element name="seconds" type="valueType" minOccurs="0" />
-        <xs:element name="arc" type="valueType" minOccurs="0" />
-      </xs:sequence>
-    </xs:choice>
+    <xs:sequence>
+      <xs:choice minOccurs="0">
+        <xs:group ref="valueTag" />
+        <xs:sequence>
+          <xs:element name="x" type="valueType" />
+          <xs:element name="y" type="valueType" />
+        </xs:sequence>
+      </xs:choice>
+      <xs:element name="seconds" type="valueType" minOccurs="0" />
+      <xs:element name="arc" type="valueType" minOccurs="0" />
+    </xs:sequence>
   </xs:group>
   <!-- the hop of a hunt by hops: the hunt chooses the way. -->
   <xs:complexType name="huntHopType" mixed="true">
@@ -704,19 +701,19 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- hole: cut in the object's own picture where what it touched struck it;
-       rough, 0 up to 1, gives it a ragged edge. -->
-  <xs:complexType name="holeType">
+  <!-- hole: cut in the object's own picture where what it touched struck it,
+       its radius as its value; rough, 0 up to 1, gives it a ragged edge. -->
+  <xs:complexType name="holeType" mixed="true">
     <xs:sequence>
-      <xs:element name="radius" type="valueType" />
+      <xs:group ref="valueTag" minOccurs="0" />
       <xs:element name="rough" type="valueType" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <!-- jump: a direction, how far, how many seconds it takes (0.3 if left out), and how high it goes on the way (none if left out). -->
-  <xs:complexType name="jumpType">
+  <!-- jump: a direction, how far as its value, how many seconds it takes (0.3 if left out), and how high it goes on the way (none if left out). -->
+  <xs:complexType name="jumpType" mixed="true">
     <xs:sequence>
-      <xs:element name="distance" type="valueType" />
+      <xs:group ref="valueTag" minOccurs="0" />
       <xs:element name="seconds" type="valueType" minOccurs="0" />
       <xs:element name="arc" type="valueType" minOccurs="0" />
     </xs:sequence>
@@ -786,17 +783,17 @@
   </xs:complexType>
 
   <!--
-    hunt: what to hunt, how fast, and how the target is found from it: tiles
+    hunt: what to hunt, how fast as its value, and how the target is found from it: tiles
     in front of it (ahead), as far again past that as a partner is short of
     it (with), and, within that many tiles of it, another object instead
     (retreat). Or, for an object that walks no maze, a hunt by hops: one
     <hop>, toward it.
   -->
-  <xs:complexType name="huntType">
+  <xs:complexType name="huntType" mixed="true">
     <xs:choice>
       <xs:element name="hop" type="huntHopType" />
       <xs:sequence>
-        <xs:element name="speed" type="valueType" />
+        <xs:group ref="valueTag" minOccurs="0" />
         <xs:element name="ahead" type="valueType" minOccurs="0" />
         <xs:element name="with" minOccurs="0">
           <xs:complexType>
@@ -816,17 +813,17 @@
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- wander: how fast. -->
-  <xs:complexType name="wanderType">
+  <!-- wander: how fast, as its value. -->
+  <xs:complexType name="wanderType" mixed="true">
     <xs:sequence>
-      <xs:element name="speed" type="valueType" />
+      <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <!-- chase: the object to head for, how fast, and (if given) how near is near enough to stop. -->
-  <xs:complexType name="chaseType">
+  <!-- chase: the object to head for, how fast as its value, and (if given) how near is near enough to stop. -->
+  <xs:complexType name="chaseType" mixed="true">
     <xs:sequence>
-      <xs:element name="speed" type="valueType" />
+      <xs:group ref="valueTag" minOccurs="0" />
       <xs:element name="near" type="valueType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="object" type="xs:string" use="required" />

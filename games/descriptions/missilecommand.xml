@@ -107,7 +107,7 @@
         <collision edge="bottom"><inc variable="status.spent" /><reset /></collision>
       </collisions>
       <timers>
-        <timer><every>0.25</every><chase object="cities"><speed>speed</speed></chase></timer>
+        <timer><every>0.25</every><chase object="cities">speed</chase></timer>
       </timers>
       <group name="salvo"><member /><member /><member /><member /></group>
       <group name="more"><member /><member /></group>

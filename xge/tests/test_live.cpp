@@ -249,7 +249,7 @@ TEST_CASE("a <chase> turns the heading of what chases to the way it goes", "[liv
 	const Scratch file(box("target", 500, 100)
 		+ "<object name=\"missile\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>8</y></to><thickness>2</thickness></line></sprite>"
 		"<position><x>100</x><y>100</y></position><heading>0</heading>"
-		"<timers><timer><every>0.1</every><chase object=\"target\"><speed>2</speed></chase></timer></timers></object>", "<pop />");
+		"<timers><timer><every>0.1</every><chase object=\"target\">2</chase></timer></timers></object>", "<pop />");
 	Played play(file.path);
 
 	play.frames(10);
@@ -262,7 +262,7 @@ TEST_CASE("a group gives its members a <heading>, each turned on its own", "[liv
 	const Scratch file(box("target", 500, 100)
 		+ "<group name=\"missiles\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>8</y></to><thickness>2</thickness></line></sprite>"
 		"<position><y>100</y></position><heading>180</heading>"
-		"<timers><timer><every>0.1</every><chase object=\"target\"><speed>2</speed></chase></timer></timers>"
+		"<timers><timer><every>0.1</every><chase object=\"target\">2</chase></timer></timers>"
 		"<member><position><x>100</x></position></member><member><position><x>900</x></position></member></group>", "<pop />");
 	Played play(file.path);
 

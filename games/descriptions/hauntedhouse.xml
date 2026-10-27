@@ -112,7 +112,7 @@
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
-        <timer><after>0</after><hunt object="player"><speed>0.9</speed></hunt></timer>
+        <timer><after>0</after><hunt object="player">0.9</hunt></timer>
       </timers>
     </object>
     <!-- the vampire bat: flits about the halls this way and that -->
@@ -132,7 +132,7 @@
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
-        <timer><after>0</after><wander><speed>1.6</speed></wander></timer>
+        <timer><after>0</after><wander>1.6</wander></timer>
       </timers>
     </object>
     <!-- the ghost of Zachary Graves: drifts through the walls toward the eyes -->
@@ -152,7 +152,7 @@
       <timers>
         <timer>
           <every>0.1</every>
-          <chase object="player"><speed>0.6</speed></chase>
+          <chase object="player">0.6</chase>
         </timer>
       </timers>
     </object>

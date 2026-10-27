@@ -102,7 +102,7 @@ namespace xge
 		float bounce{ 1.0f };
 	};
 
-	// <hole><radius>6</radius><rough>0.5</rough></hole> - in a collision
+	// <hole>6<rough>0.5</rough></hole> - in a collision
 	// rule about another object: a round hole is cut in the object's own
 	// picture (a sprite of <line>s or a <bitmap>), centered where what it
 	// touched struck it: a shot through a bunker, a bomb crater. `rough` (0 to
@@ -196,7 +196,7 @@ namespace xge
 	// goes `distance` along both, or <x> across and <y> up or down: a hop
 	// from cube to cube of Q*bert's pyramid. `direction` is the way it then
 	// faces (the up or down of a diagonal), `step` the whole of the hop.
-	// With <seconds> (then the one distance is a <distance>) it takes that
+	// With <seconds> after the distance it takes that
 	// long, through the air as a <jump> does: touching nothing until it
 	// lands, and a second hop waits for the landing. 0: at once. Its <arc>
 	// is how high it is drawn above its way at the halfway point (a parabola
@@ -213,7 +213,7 @@ namespace xge
 	// <hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>
 	// - a hunt by hops, for an object that walks no maze: of the four hops
 	// it could make (the diagonals with an <x> and a <y>, else up, down,
-	// left and right by its <distance>), the one that lands nearest the
+	// left and right by its distance), the one that lands nearest the
 	// middle of the nearest in play of that name or <group>, among those that
 	// stay in the window; a tie goes up before down, then left before right.
 	// One hop each time it runs (a timer), so it hunts at its own pace:
@@ -228,7 +228,7 @@ namespace xge
 		float arc{};
 	};
 
-	// <jump direction="down"><distance>40</distance><seconds>0.4</seconds></jump>
+	// <jump direction="down">40<seconds>0.4</seconds></jump>
 	// (also up, left, right) - only ever in an object's own <action>: once for
 	// each press, the object travels `distance` pixels that way over `seconds`
 	// (0.3 when left out), through the air: while it is in the air it touches
@@ -273,7 +273,7 @@ namespace xge
 		std::string ladderClass;
 	};
 
-	// <chase object="player"><speed>1.5</speed><near>100</near></chase> - the
+	// <chase object="player">1.5<near>100</near></chase> - the
 	// object heads straight for the middle of the nearest one in play of that
 	// name or <group>, at `speed` pixels a frame; within `near` pixels of it
 	// (0 when left out: never) it stops instead. Once: a timer that repeats
@@ -296,7 +296,7 @@ namespace xge
 		float speed{};
 	};
 
-	// <hunt object="pacman"><speed>2</speed><ahead>4</ahead><with object="blinky"
+	// <hunt object="pacman">2<ahead>4</ahead><with object="blinky"
 	// /><retreat object="corner">8</retreat></hunt> - for an object that walks
 	// a <maze>: from now on, at every tile, it takes the open way (never back
 	// the way it came) whose next tile is nearest its target, as the arcade's
@@ -317,7 +317,7 @@ namespace xge
 		float retreatWithin{};
 	};
 
-	// <wander><speed>1</speed></wander> - for an object that walks a <maze>:
+	// <wander>1</wander> - for an object that walks a <maze>:
 	// at every tile it takes an open way at random, never back the way it
 	// came: a frightened ghost. Kept as a <hunt> is.
 	struct CmdWander
@@ -737,7 +737,7 @@ namespace xge
 		RawValue amount;       // set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
-		bool byHops{ false };  // hunt: by a <hop> (its <distance> the amount, or its <x> and <y> positionX and positionY; its <seconds>)
+		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
 		// spawn: its <position> and <velocity>, each half empty text when

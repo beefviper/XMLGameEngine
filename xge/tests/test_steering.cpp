@@ -200,7 +200,7 @@ TEST_CASE("a diagonal <hop> goes one distance along both, or its own across and 
 
 TEST_CASE("a <hop> with <seconds> goes through the air that long, and a second waits for the landing", "[steering]")
 {
-	const Scratch file(box("frog", 100, 300, "<actions><action name=\"right\"><hop direction=\"right\"><distance>40</distance><seconds>0.5</seconds></hop></action>"
+	const Scratch file(box("frog", 100, 300, "<actions><action name=\"right\"><hop direction=\"right\">40<seconds>0.5</seconds></hop></action>"
 		"<action name=\"up\"><hop direction=\"up-right\"><x>10</x><y>20</y><seconds>0.25</seconds></hop></action></actions>"),
 		"<trigger object=\"frog\" action=\"right\" />");
 	Played play(file.path);
@@ -228,14 +228,14 @@ TEST_CASE("a <hop> with <seconds> goes through the air that long, and a second w
 		const Scratch bad(box("frog", 0, 0, "<actions><action name=\"go\">" + hop + "</action></actions>"), "<pop />");
 		Game game(bad.path);
 	};
-	CHECK_THROWS_WITH(load("<hop direction=\"up\"><distance>4</distance><seconds>0</seconds></hop>"), ContainsSubstring("expected more than 0"));
+	CHECK_THROWS_WITH(load("<hop direction=\"up\">4<seconds>0</seconds></hop>"), ContainsSubstring("expected more than 0"));
 	CHECK_THROWS_WITH(load("<hop direction=\"up\"><x>4</x><y>4</y></hop>"), ContainsSubstring("is not diagonal"));
 }
 
 TEST_CASE("a timed <hop> or <jump> with an <arc> is drawn up off its way and back down, highest halfway", "[steering]")
 {
 	const Scratch file(box("ball", 100, 300, "<actions><action name=\"hop\"><hop direction=\"down-right\"><x>40</x><y>20</y><seconds>0.5</seconds><arc>12</arc></hop></action>"
-		"<action name=\"jump\"><jump direction=\"left\"><distance>40</distance><seconds>0.5</seconds><arc>8</arc></jump></action></actions>"),
+		"<action name=\"jump\"><jump direction=\"left\">40<seconds>0.5</seconds><arc>8</arc></jump></action></actions>"),
 		"<trigger object=\"ball\" action=\"hop\" />");
 	Played play(file.path);
 	Object& ball = play.get("ball");
@@ -267,15 +267,15 @@ TEST_CASE("a timed <hop> or <jump> with an <arc> is drawn up off its way and bac
 		const Scratch bad(box("frog", 0, 0, "<actions><action name=\"go\">" + hop + "</action></actions>"), "<pop />");
 		Game game(bad.path);
 	};
-	CHECK_THROWS_WITH(load("<hop direction=\"up\"><distance>4</distance><arc>3</arc></hop>"), ContainsSubstring("has an <arc> but no <seconds>"));
-	CHECK_THROWS_WITH(load("<jump direction=\"up\"><distance>4</distance><arc>-1</arc></jump>"), ContainsSubstring("expected 0 or more"));
+	CHECK_THROWS_WITH(load("<hop direction=\"up\">4<arc>3</arc></hop>"), ContainsSubstring("has an <arc> but no <seconds>"));
+	CHECK_THROWS_WITH(load("<jump direction=\"up\">4<arc>-1</arc></jump>"), ContainsSubstring("expected 0 or more"));
 }
 
 TEST_CASE("a <hunt> by <hop>s makes the one hop that lands nearest what it hunts", "[steering]")
 {
 	const std::string hunts = "<actions>"
 		"<action name=\"diagonal\"><hunt object=\"prey\"><hop><x>20</x><y>30</y></hop></hunt></action>"
-		"<action name=\"straight\"><hunt object=\"prey\"><hop><distance>20</distance><seconds>0.1</seconds></hop></hunt></action></actions>";
+		"<action name=\"straight\"><hunt object=\"prey\"><hop>20<seconds>0.1</seconds></hop></hunt></action></actions>";
 	const Scratch file(box("hunter", 100, 100, hunts) + box("prey", 300, 160), "<pop />");
 	Played play(file.path);
 	Object& hunter = play.get("hunter");
