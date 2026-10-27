@@ -16,7 +16,7 @@
 | `bounce`, `stick`, `die`, `reset`, `inc` | Pong, Breakout, Invaders | |
 | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, more verbs in object rules, more colors | Frogger | lives count down; hop is one instant step per press; wrap puts an object back only once fully off screen; riding and exceptions in [collisions](20-collisions.md) |
 | `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, `slower`/`faster` | Lunar Lander | below |
-| `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<hidden>`, `<release>`, `<fire>` along a heading, amount on `inc`/`dec` | Asteroids | below |
+| `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<hidden>` (now `<active>`), `<release>`, `<fire>` along a heading, amount on `inc`/`dec` | Asteroids | below |
 | `<deflect>` | Pong | [collisions](20-collisions.md) |
 | `<knock>`, `<mass>`, `<drag>` in a group, circles against circles | Trick Shot, Mario Bros. | [collisions](20-collisions.md#contacts-and-knocks-2026-10-16) |
 | `<timers>`, `<facing>`, `<jump>`, `<reverse />`, looks, `<reveal>`, key sets | a read of every game for workarounds | [timers](09-timers.md) |

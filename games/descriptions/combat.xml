@@ -180,7 +180,7 @@
           <position><x>0</x><y>0</y></position>
           <velocity><y>-shellspeed</y></velocity>
           <mass>1</mass>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>false</enabled>
             <collision edge="all"><die /></collision>

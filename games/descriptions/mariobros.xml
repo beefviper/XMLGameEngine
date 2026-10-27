@@ -457,7 +457,7 @@
           <acceleration><x>0</x><y>pull</y></acceleration>
           <mass>1</mass>
           <mirror>left</mirror>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>true</enabled>
             <collision edge="horizontal">

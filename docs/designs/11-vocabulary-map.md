@@ -34,7 +34,7 @@ Most verbs work wherever they make sense (a collision, an action, a key, a condi
 **Adjectives: properties of a noun**
 
 - Place and motion: `position`, `velocity`, `acceleration`, `heading`, `facing`, `drag`, `mass`, `pull`, `seek`, `altitude` (`start`, `rise`, `fall`, `bounce`), `shadow`, `maze` (`wall`), `centered`.
-- Being in play: `hidden`, `drawn`, `light`, `dark` (`unlit` or `unseen`).
+- Being in play: `active`, `drawn`, `light`, `dark` (`unlit` or `unseen`).
 - Look: `color`, `size`, `radius`, `width`, `height`, `thickness`, `scale`, `flip`, `hide` (parts of an SVG left out), `background`, `style=`.
 - Collision settings: `enabled`, `lockstep`, `type` (`box` or `pixel`), `solid` (which bitmap characters touch), `hitbox`.
 - Sound: `wave` (`square`, `triangle`, `sawtooth`, `sine`, `noise`), `pitch`, `to`, `volume`, `music` (a state's own sound).

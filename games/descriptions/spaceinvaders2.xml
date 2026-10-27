@@ -304,7 +304,7 @@
           <animation><interval>0.15</interval><frame sprite="a" /><frame sprite="b" /><frame sprite="c" /></animation>
           <position><x>0 - ufo.width</x><y>55</y></position>
           <velocity><x>2.5</x></velocity>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>true</enabled>
             <collision edge="right"><die /></collision>

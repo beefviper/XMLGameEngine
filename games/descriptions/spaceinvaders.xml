@@ -266,7 +266,7 @@
           </sprite>
           <position><x>0 - ufo.width</x><y>60</y></position>
           <velocity><x>2.5</x></velocity>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>true</enabled>
             <collision edge="right"><die /></collision>

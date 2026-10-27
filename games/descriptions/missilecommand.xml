@@ -330,8 +330,8 @@
           </variables>
           <objects>
             <group name="missiles" />
-            <group name="more"><hidden>true</hidden></group>
-            <group name="most"><hidden>true</hidden></group>
+            <group name="more"><active>false</active></group>
+            <group name="most"><active>false</active></group>
           </objects>
           <conditions>
             <condition name="cleared" object="status" variable="spent">
@@ -355,7 +355,7 @@
             <group name="missiles">
               <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.magenta</color><thickness>2</thickness></line></sprite>
             </group>
-            <group name="more"><hidden>false</hidden></group>
+            <group name="more"><active>true</active></group>
           </objects>
         </scene>
 
@@ -369,7 +369,7 @@
             <group name="missiles">
               <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.green</color><thickness>2</thickness></line></sprite>
             </group>
-            <group name="most"><hidden>false</hidden></group>
+            <group name="most"><active>true</active></group>
           </objects>
           <conditions>
             <condition name="cleared" object="status" variable="spent">

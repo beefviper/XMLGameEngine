@@ -362,7 +362,7 @@
           <sprite><rectangle><width>6</width><height>4</height><color>color.white</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <velocity><x>7</x><y>0</y></velocity>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>false</enabled>
             <collision edge="all"><die /></collision>
@@ -391,7 +391,7 @@
           </sprite>
           <position><x>0</x><y>292</y></position>
           <facing>right</facing>
-          <hidden>true</hidden>
+          <active>false</active>
           <actions>
             <action name="fire">
               <fire object="blast" />
@@ -407,7 +407,7 @@
           <sprite><rectangle><width>24</width><height>10</height><color>color.yellow</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <velocity><x>8</x><y>0</y></velocity>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>false</enabled>
             <collision edge="right"><die /></collision>

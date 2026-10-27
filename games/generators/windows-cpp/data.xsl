@@ -1246,7 +1246,7 @@
   </xsl:template>
 
   <!-- What an <object> and a <group> both have: <facing>, <poses>, <mirror>, <grip>, <timers>,
-       <hidden>, <collisions>, <actions> and <variables>, into $to. -->
+       <active>, <collisions>, <actions> and <variables>, into $to. -->
   <xsl:template name="shared">
     <xsl:param name="node" />
     <xsl:param name="to" />
@@ -1314,17 +1314,17 @@
       <xsl:with-param name="list" select="concat($to, '.timers')" />
       <xsl:with-param name="indent" select="$indent" />
     </xsl:call-template>
-    <xsl:variable name="hidden">
+    <xsl:variable name="active">
       <xsl:call-template name="is-true">
-        <xsl:with-param name="node" select="$node/hidden[last()]" />
+        <xsl:with-param name="node" select="$node/active[last()]" />
       </xsl:call-template>
     </xsl:variable>
     <xsl:choose>
-      <xsl:when test="$hidden != ''">
+      <xsl:when test="$node/active and $active = ''">
         <xsl:value-of select="concat($indent, $to, '.isVisible = false;&#10;')" />
       </xsl:when>
-      <!-- an inner group that says it is not hidden, inside one that is -->
-      <xsl:when test="$node/parent::group and $node/hidden">
+      <!-- an inner group that says it is active, inside one that is not -->
+      <xsl:when test="$node/parent::group and $node/active">
         <xsl:value-of select="concat($indent, $to, '.isVisible = true;&#10;')" />
       </xsl:when>
     </xsl:choose>

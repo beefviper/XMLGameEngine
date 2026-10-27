@@ -358,7 +358,7 @@
           <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <velocity><y>-10</y></velocity>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>false</enabled>
             <collision edge="all"><die /></collision>

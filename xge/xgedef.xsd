@@ -1315,7 +1315,8 @@
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:group ref="moveParts" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
-      <xs:element name="hidden" type="xs:boolean" minOccurs="0" />
+      <!-- false: out of play (not drawn, touching nothing, not counted) until a <reveal>, <release> or <fire> brings it in -->
+      <xs:element name="active" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
       <!-- most: how many copies a <spawn> may have made of it at once -->
       <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />

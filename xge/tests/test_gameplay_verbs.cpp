@@ -62,7 +62,7 @@ namespace
 			"</game>";
 	}
 
-	// A rectangle object; `extra` goes after <velocity> (facing, hidden), and
+	// A rectangle object; `extra` goes after <velocity> (facing, active), and
 	// `after` after <collisions> (actions, variables, timers).
 	std::string box(const std::string& name, float x, float y, float w, float h, const std::string& collisions = "<enabled>false</enabled>",
 		const std::string& extra = {}, const std::string& after = {}, const std::string& velocity = "<x>0</x><y>0</y>", const std::string& attributes = {})
@@ -242,7 +242,7 @@ TEST_CASE("a timer on an enemy fires its shots the way it faces", "[timers][faci
 {
 	Loaded loaded(gameXml(
 		box("enemy", 100, 100, 20, 10, "<enabled>true</enabled>", "<facing>down</facing>", "<timers><timer><every>0.5</every><fire object=\"bomb\" /></timer></timers>")
-		+ box("bomb", 0, 0, 4, 6, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<hidden>true</hidden>", {}, "<x>0</x><y>-3</y>"),
+		+ box("bomb", 0, 0, 4, 6, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<active>false</active>", {}, "<x>0</x><y>-3</y>"),
 		state("playing", { "enemy", "bomb" })));
 
 	Object& bomb = loaded.game.getObject("bomb");
@@ -267,7 +267,7 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 
 	Loaded loaded(gameXml(
 		box("man", 100, 100, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>", actions)
-		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled>", "<hidden>true</hidden>", {}, "<x>0</x><y>-6</y>"),
+		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled>", "<active>false</active>", {}, "<x>0</x><y>-6</y>"),
 		state("playing", { "man", "shot" })));
 
 	CommandExecutor executor(loaded.game);
@@ -585,7 +585,7 @@ TEST_CASE("an edge rule with unless= is passed over while the object touches som
 TEST_CASE("<reveal> brings hidden members of a pool back where they started, as many as asked", "[reveal]")
 {
 	const std::string pool = "<group name=\"blocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>0</y></velocity><hidden>true</hidden><collisions><enabled>false</enabled></collisions>"
+		"<velocity><x>0</x><y>0</y></velocity><active>false</active><collisions><enabled>false</enabled></collisions>"
 		"<member><position><x>10</x><y>10</y></position></member>"
 		"<member><position><x>30</x><y>10</y></position></member>"
 		"<member><position><x>50</x><y>10</y></position></member></group>";
@@ -622,7 +622,7 @@ TEST_CASE("coming back into play draws a <random> again: a reveal, a release and
 {
 	// A rock that dies a moment after it is back, so it comes back again and
 	// again; what it comes back with is noted each time.
-	const std::string rock = box("rock", 0, 0, 10, 10, "<enabled>false</enabled>", "<hidden>true</hidden>",
+	const std::string rock = box("rock", 0, 0, 10, 10, "<enabled>false</enabled>", "<active>false</active>",
 		"<timers><timer><every>0.05</every><die /></timer></timers>",
 		"<x><random min=\"-50\" max=\"50\" /></x><y>0</y>", " class=\"projectile\"");
 	const auto distinctSpeeds = [](Loaded& loaded)
@@ -716,7 +716,7 @@ TEST_CASE("<chase> heads straight for the nearest one in play, and stops when ne
 {
 	const std::string chaser = box("hunter", 100, 100, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>",
 		"<timers><timer><every>0.1</every><chase object=\"prey\"><speed>2</speed><near>50</near></chase></timer></timers>");
-	Loaded loaded(gameXml(chaser + box("prey", 400, 500, 20, 20) + box("prey2", 0, 0, 20, 20, "<enabled>false</enabled>", "<hidden>true</hidden>"),
+	Loaded loaded(gameXml(chaser + box("prey", 400, 500, 20, 20) + box("prey2", 0, 0, 20, 20, "<enabled>false</enabled>", "<active>false</active>"),
 		state("playing", { "hunter", "prey", "prey2" })));
 
 	Object& hunter = loaded.game.getObject("hunter");
@@ -742,7 +742,7 @@ TEST_CASE("<aim> sends the next shots straight at the target, at any angle, unti
 		"<actions><action name=\"left\"><move direction=\"left\">1</move></action></actions>"
 		"<timers><timer><every>0.5</every><aim object=\"target\" /><fire object=\"shot\" /></timer></timers>");
 	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20)
-		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<hidden>true</hidden>", {}, "<x>0</x><y>-5</y>"),
+		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<active>false</active>", {}, "<x>0</x><y>-5</y>"),
 		state("playing", { "gun", "target", "shot" })));
 
 	Object& shot = loaded.game.getObject("shot");

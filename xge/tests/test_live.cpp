@@ -212,7 +212,7 @@ TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever t
 
 TEST_CASE("a <tether> is in play only while both its ends are", "[live]")
 {
-	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<hidden>true</hidden>")
+	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<active>false</active>")
 		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\" /></sprite>"
 		"<position><x>0</x><y>0</y></position></object>", "<reveal object=\"hook\" />");
 	Played play(file.path);
@@ -228,7 +228,7 @@ TEST_CASE("a <tether> is in play only while both its ends are", "[live]")
 TEST_CASE("an object brought back into play starts its timers over", "[live]")
 {
 	// A shot that goes out half a second after it comes in.
-	const Scratch file(box("shot", 100, 100, "<hidden>true</hidden><timers><timer><every>0.5</every><die /></timer></timers>"), "<reveal object=\"shot\" />");
+	const Scratch file(box("shot", 100, 100, "<active>false</active><timers><timer><every>0.5</every><die /></timer></timers>"), "<reveal object=\"shot\" />");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -275,8 +275,8 @@ TEST_CASE("a group gives its members a <heading>, each turned on its own", "[liv
 
 TEST_CASE("an object out of play does not act on a key", "[live]")
 {
-	const Scratch file(box("gun", 100, 300, "<hidden>true</hidden><actions><action name=\"fire\"><fire object=\"shot\" /></action></actions>")
-		+ box("shot", 0, 0, "<velocity><x>0</x><y>-4</y></velocity><hidden>true</hidden>"), "<trigger object=\"gun\" action=\"fire\" />");
+	const Scratch file(box("gun", 100, 300, "<active>false</active><actions><action name=\"fire\"><fire object=\"shot\" /></action></actions>")
+		+ box("shot", 0, 0, "<velocity><x>0</x><y>-4</y></velocity><active>false</active>"), "<trigger object=\"gun\" action=\"fire\" />");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);

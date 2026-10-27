@@ -236,7 +236,7 @@
         <object name="wrecked">
           <sprite><text style="line"><content>YOU JUST DESTROYED A 100 MEGABUCK LANDER</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y>window.height.center - 140</y></position>
-          <hidden>true</hidden>
+          <active>false</active>
           <timers>
             <timer><every>2.5</every><inc variable="lander.ready" /><die /></timer>
           </timers>

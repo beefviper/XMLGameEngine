@@ -351,7 +351,7 @@ namespace xge
 
 	// <reveal object="igloo">count</reveal> - brings back the first `count`
 	// (1 when left out) objects of that name or <group> that are out of play
-	// (hidden at the start, or taken out by <die />), each where it started
+	// (inactive at the start, or taken out by <die />), each where it started
 	// and at its own starting velocity. Where <release> puts them in the
 	// middle of the object running it (rocks breaking), this puts them where
 	// they belong: an igloo built a block at a time, a door that appears.
@@ -402,7 +402,7 @@ namespace xge
 
 	// <release object="mediumrocks">2</release> - in a collision rule: puts
 	// `count` (1 if it is left out) of the objects of that name that are out of
-	// play - hidden at the start, or taken out with <die /> - back in play, in
+	// play - inactive at the start, or taken out with <die /> - back in play, in
 	// the middle of the object that is running the rule, at their own starting
 	// velocity. A group is how a pool of them is named: a rock that breaks
 	// into smaller rocks releases them from the pool of smaller rocks.

@@ -1741,9 +1741,9 @@ namespace xge
 			readMoves(object, rawObject, where);
 			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
-			if (auto hidden = findChild(&object, "hidden"))
+			if (auto active = findChild(&object, "active"))
 			{
-				if (readBool(*hidden, where)) { rawObject.isVisible = false; }
+				if (!readBool(*active, where)) { rawObject.isVisible = false; }
 			}
 			if (auto drawn = findChild(&object, "drawn")) { rawObject.isDrawn = readBool(*drawn, where); }
 			rawObject.exists = readExists(object, where);
@@ -1951,7 +1951,7 @@ namespace xge
 					fail(where, "is on map '" + own.map->name + "', whose rows say where its members are, so it has no <" + tag + ">");
 				}
 
-				if (tag == "hidden") { shared.isVisible = !readBool(*child, where); }
+				if (tag == "active") { shared.isVisible = readBool(*child, where); }
 				else if (tag == "drawn") { shared.isDrawn = readBool(*child, where); }
 				else if (tag == "exists") { shared.exists = readBool(*child, where); }
 				else if (tag == "most") { shared.most = readCount(*child, where); }
@@ -1999,7 +1999,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <maze>, <hidden>, <drawn>, <exists>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <maze>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 

@@ -47,7 +47,7 @@ namespace
 	};
 
 	// A small rectangle object; `velocity` its <velocity>, `after` what comes
-	// after <velocity> (hidden, drawn, collisions, variables, timers).
+	// after <velocity> (active, drawn, collisions, variables, timers).
 	std::string box(const std::string& name, float x, float y, const std::string& velocity = {}, const std::string& after = {}, const std::string& attributes = {})
 	{
 		return "<object name=\"" + name + "\"" + attributes + "><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
@@ -525,7 +525,7 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 		const std::string rocks = "<group name=\"rocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 			"<member><position><x>0</x><y>0</y></position></member><member><position><x>20</x><y>0</y></position></member></group>";
 		fails(gameXml("<state name=\"playing\"><scenes>"
-			"<scene name=\"room1\"><objects><object name=\"rocks.2\"><hidden>true</hidden></object></objects></scene></scenes>" + kSpace + "</state>",
+			"<scene name=\"room1\"><objects><object name=\"rocks.2\"><active>false</active></object></objects></scene></scenes>" + kSpace + "</state>",
 			{}, {}, rocks), "a numbered member of a group");
 	}
 	SECTION("a scene no state has")

@@ -193,7 +193,7 @@
       <rows>1</rows>
       <padding><x>2</x></padding>
       <sprite><rectangle><width>30</width><height>14</height><color>color.lightgrey</color></rectangle></sprite>
-      <hidden>true</hidden>
+      <active>false</active>
       <group name="course1"><position><x>igloox</x><y>iglooground - 14</y></position></group>
       <group name="course2"><position><x>igloox</x><y>iglooground - 30</y></position></group>
       <group name="course3"><position><x>igloox</x><y>iglooground - 46</y></position></group>
@@ -203,7 +203,7 @@
     <object name="door" class="door">
       <sprite><rectangle><width>24</width><height>30</height><color>color.black</color></rectangle></sprite>
       <position><x>igloox + 51</x><y>iglooground - 30</y></position>
-      <hidden>true</hidden>
+      <active>false</active>
       <collisions><enabled>true</enabled></collisions>
     </object>
   </kit>

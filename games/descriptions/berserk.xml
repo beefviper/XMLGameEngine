@@ -342,7 +342,7 @@
           <sprite><rectangle><width>5</width><height>5</height><color>color.green</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <velocity><y>-8</y></velocity>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>false</enabled>
             <collision edge="all"><die /></collision>
@@ -362,7 +362,7 @@
           </sprite>
           <position><x>504</x><y>72</y></position>
           <velocity><x>-1.2</x><y>0.9</y></velocity>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>true</enabled>
             <collision edge="all"><bounce /></collision>

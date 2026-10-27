@@ -399,7 +399,7 @@
           </sprite>
           <position><x>-30</x><y><random min="80" max="window.bottom - 80" /></y></position>
           <velocity><x>2</x></velocity>
-          <hidden>true</hidden>
+          <active>false</active>
           <collisions>
             <enabled>true</enabled>
             <type>pixel</type>

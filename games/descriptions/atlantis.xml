@@ -91,7 +91,7 @@
       </sprite>
       <position><x>-50</x></position>
       <velocity><x>speed</x></velocity>
-      <hidden>true</hidden>
+      <active>false</active>
       <collisions>
         <enabled>true</enabled>
         <collision class="shell">

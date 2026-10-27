@@ -1137,7 +1137,7 @@ TEST_CASE("both schema checkers turn away a turn that is not left or right", "[a
 	CHECK_FALSE(strong->load(scratch.path.string()));
 }
 
-TEST_CASE("a heading, a drag and a hidden are read from the file", "[asteroids][parsing]")
+TEST_CASE("a heading, a drag and an active are read from the file", "[asteroids][parsing]")
 {
 	Game game{ "descriptions/asteroids.xml" };
 
