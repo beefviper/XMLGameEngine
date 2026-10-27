@@ -92,11 +92,24 @@ TEST_CASE("a <hold> is only for a <computer>, and holds a key there is", "[compu
 		const Written file(gameWith(box("ball", 100, 100), more));
 		Game game(file.path);
 	};
+	// The schema turns these away first; written naming no schema, the loader does.
+	const auto loose = [](const std::string& more)
+	{
+		std::string text = gameWith(box("ball", 100, 100), more);
+		const std::string named = " xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\"";
+		text.erase(text.find(named), named.size());
+		const Written file(text);
+		Game game(file.path);
+	};
 	CHECK_THROWS_WITH(load("<conditions><condition object=\"bat\" variable=\"x\"><above>0</above><hold button=\"j\" /></condition></conditions>"),
+		ContainsSubstring("'hold'"));
+	CHECK_THROWS_WITH(loose("<conditions><condition object=\"bat\" variable=\"x\"><above>0</above><hold button=\"j\" /></condition></conditions>"),
 		ContainsSubstring("<hold> does nothing in a <condition>"));
 	CHECK_THROWS_WITH(load("<computer><condition object=\"bat\" variable=\"x\"><above>0</above><hold button=\"joystick\" /></condition></computer>"),
 		ContainsSubstring("no key named 'joystick'"));
 	CHECK_THROWS_WITH(load("<computer><condition object=\"bat\" variable=\"x\"><above>0</above><pop /></condition></computer>"),
+		ContainsSubstring("'pop'"));
+	CHECK_THROWS_WITH(loose("<computer><condition object=\"bat\" variable=\"x\"><above>0</above><pop /></condition></computer>"),
 		ContainsSubstring("<pop> does nothing in a <computer>'s <condition>"));
 }
 

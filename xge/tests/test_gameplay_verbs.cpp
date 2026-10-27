@@ -772,8 +772,8 @@ TEST_CASE("<chase> and <aim> that name nothing are turned away when the game loa
 		+ box("player", 0, 0, 1, 1), state("playing", { "o" }))), ContainsSubstring("<chase> names 'playr', and there is no object of that name (did you mean 'player'?)"));
 	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>1</every><aim object=\"nobody\" /></timer></timers>"),
 		state("playing", { "o" }))), ContainsSubstring("<aim> names 'nobody'"));
-	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><aim object=\"o\" /></input></inputs></state>")),
-		ContainsSubstring("<aim> does nothing in an <input>"));
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><aim object=\"o\" /></input></inputs></state>"), XmlBackend::PugiXml),
+		ContainsSubstring("unexpected element <aim>"));
 }
 
 TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes objects over on a full reset", "[keeps][copy]")
@@ -974,8 +974,8 @@ TEST_CASE("<turns> names the players' states, and goes only where a state's comm
 	CHECK_NOTHROW(load("<input button=\"space\"><turns><player state=\"s\" /><player /></turns></input><input button=\"p\"><pass /><out /></input>"));
 	CHECK_THROWS_WITH(load("<input button=\"space\"><turns><player state=\"t\" /></turns></input>"), ContainsSubstring("<player state=\"t\" /> names no state"));
 	CHECK_THROWS_WITH(load("<input button=\"space\"><turns /></input>", XmlBackend::PugiXml), ContainsSubstring("expected <player>"));
-	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"all\"><pass /></collision>"), state("s", { "o" }))),
-		ContainsSubstring("<pass />"));
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"all\"><pass /></collision>"), state("s", { "o" })), XmlBackend::PugiXml),
+		ContainsSubstring("unexpected element <pass>"));
 }
 
 TEST_CASE("withDemo writes a <demo> in before </game>, in place of the one there, as the file's lines end", "[demo]")

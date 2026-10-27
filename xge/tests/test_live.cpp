@@ -419,7 +419,7 @@ TEST_CASE("a named timer's name cannot be a variable of its object or where it i
 {
 	const auto load = [](const std::string& objects)
 	{
-		const Scratch file(objects, "<stop />");
+		const Scratch file(objects, "<pop />");
 		Game game(file.path);
 	};
 

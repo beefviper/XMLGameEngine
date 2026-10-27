@@ -58,10 +58,10 @@ namespace xge
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { spawn(c); },
 			[&](const CmdDespawn& d) { despawn(&object, d); },
-			[&](const auto&) { /* CmdPushState/CmdPopState/CmdFire never
-			                      appear in a collisionData list, and ride() and
-			                      deflect() are about another object, which a screen
-			                      edge is not; ignore defensively. */ }
+			[&](const CmdFire& f) { spawnProjectile(object, f.projectileName); },
+			[&](const auto&) { /* the loader lets only a rule's commands
+			                      (load/expr ruleFor) into a collisionData list;
+			                      the rest are about another object or a key. */ }
 		}, now(command, made));
 	}
 
@@ -114,6 +114,7 @@ namespace xge
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { spawn(c); },
 			[&](const CmdDespawn& d) { despawn(&object, d); },
+			[&](const CmdFire& f) { spawnProjectile(object, f.projectileName); },
 			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
 			                      only make sense on a state's input or an object's
 			                      own action; ignore. */ }
@@ -629,6 +630,18 @@ namespace xge
 				[&](const CmdSet& c) { if (keyPressed) { game.setNumber(c.target, c.value); } },
 				[&](const CmdSpawn& c) { if (keyPressed) { done = spawn(c); } },
 				[&](const CmdDespawn& d) { if (keyPressed) { despawn(&object, d); } },
+				[&](const CmdRank& c) { if (keyPressed) { game.rank(c.entry, c.table); } },
+				[&](const CmdRelease& r) { if (keyPressed) { release(object, r.target, r.count); } },
+				[&](const CmdReverse&) { if (keyPressed) { reverse(object); } },
+				[&](const CmdStop&) { if (keyPressed) { xge::stop(object); } },
+				// Steering, as from a timer: the press sets it going.
+				[&](const CmdChase& c) { if (keyPressed) { chase(object, c); } },
+				[&](const CmdAim& a) { if (keyPressed) { aim(object, a.target); } },
+				[&](const CmdHunt& h) { if (keyPressed) { startHunt(object, h); } },
+				[&](const CmdWander& w) { if (keyPressed) { startWander(object, w); } },
+				// Another action, of this object or another, run as part of this
+				// one; the loader turns away an action that runs itself again.
+				[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed); },
 				[&](const auto&) { /* ruleFor in load/expr lists what an action holds */ }
 			}, keyPressed ? now(written, made) : shapeOf(written));
 

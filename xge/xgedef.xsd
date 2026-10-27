@@ -829,25 +829,61 @@
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
-  <xs:group name="command">
+  <!--
+    Commands, in groups by what they need to mean something; each place
+    that runs commands names the groups it takes (below).
+  -->
+  <!-- changes: what can be done from anywhere: a variable, a look, a sound, a scene, an object put back, made or taken away, or another object's action run -->
+  <xs:group name="changesCommands">
     <xs:choice>
-      <xs:element name="bounce" type="emptyType" />
-      <xs:element name="deflect" type="deflectType" />
-      <xs:element name="knock" type="knockType" />
-      <xs:element name="hole" type="holeType" />
-      <xs:element name="stick" type="emptyType" />
-      <xs:element name="wrap" type="emptyType" />
-      <xs:element name="ride" type="emptyType" />
-      <xs:element name="carry" type="emptyType" />
-      <xs:element name="drop" type="emptyType" />
-      <!-- track: where a control points; path= along that path instead of across the window -->
-      <xs:element name="track">
+      <xs:element name="inc" type="variableReferenceType" />
+      <xs:element name="dec" type="variableReferenceType" />
+      <!-- set: the variable (owner.variable), or owner.x, owner.y,
+           owner.velocity.x, owner.velocity.y or owner.heading, takes the
+           value, worked out as it runs -->
+      <xs:element name="set" type="setType" />
+      <!-- copy: the variable into= takes the number variable= holds now (both owner.variable) -->
+      <xs:element name="copy">
         <xs:complexType>
-          <xs:attribute name="path" type="xs:string" use="optional" />
+          <xs:attribute name="variable" type="xs:string" use="required" />
+          <xs:attribute name="into" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <xs:element name="die" type="emptyType" />
-      <xs:element name="stop" type="emptyType" />
+      <!-- rank: the entry variable= is of goes into the group into= (the best first), in place by that variable -->
+      <xs:element name="rank">
+        <xs:complexType>
+          <xs:attribute name="variable" type="xs:string" use="required" />
+          <xs:attribute name="into" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="play">
+        <xs:complexType>
+          <xs:attribute name="sound" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="silence">
+        <xs:complexType>
+          <xs:attribute name="sound" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="become">
+        <xs:complexType>
+          <xs:attribute name="sprite" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:string" use="optional" />
+          <!-- only those showing this look change -->
+          <xs:attribute name="from" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="reveal" type="releaseType" />
+      <xs:element name="follow" type="followType" />
+      <!-- <enter scene="room2" />: that scene becomes its state's current one;
+           <enter way="east" />: the scene the current scene's way leads to. -->
+      <xs:element name="enter">
+        <xs:complexType>
+          <xs:attribute name="scene" type="xs:string" use="optional" />
+          <xs:attribute name="way" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
       <!-- <reset /> puts back the object running it; object= that object
            or group; scene= every object of that scene, as it started; way=
            the scene that way of the current scene leads to. -->
@@ -858,20 +894,6 @@
           <xs:attribute name="way" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- <enter scene="room2" />: that scene becomes its state's current one;
-           <enter way="east" />: the scene the current scene's way leads to. -->
-      <xs:element name="enter">
-        <xs:complexType>
-          <xs:attribute name="scene" type="xs:string" use="optional" />
-          <xs:attribute name="way" type="xs:string" use="optional" />
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="inc" type="variableReferenceType" />
-      <xs:element name="dec" type="variableReferenceType" />
-      <!-- set: the variable (owner.variable), or owner.x, owner.y,
-           owner.velocity.x, owner.velocity.y or owner.heading, takes the
-           value, worked out as it runs -->
-      <xs:element name="set" type="setType" />
       <!-- spawn: a new copy of the object (of a group, its members in
            turn) comes into the game, where the <position> says and going as
            the <velocity> says (a half left out is as the object starts),
@@ -884,11 +906,29 @@
           <xs:attribute name="object" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- copy: the variable into= takes the number variable= holds now (both owner.variable) -->
-      <xs:element name="copy">
+      <xs:element name="trigger">
         <xs:complexType>
-          <xs:attribute name="variable" type="xs:string" use="required" />
-          <xs:attribute name="into" type="xs:string" use="required" />
+          <!-- left out in an object's own collision, action or timer: that object -->
+          <xs:attribute name="object" type="xs:string" use="optional" />
+          <xs:attribute name="action" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+
+  <!-- flow: the running order of the game: its states, its players' turns, its demo -->
+  <xs:group name="flowCommands">
+    <xs:choice>
+      <xs:element name="push">
+        <xs:complexType>
+          <xs:attribute name="state" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <!-- <pop /> goes back to the state underneath; <pop state="..." /> puts
+           that state in place of this one. -->
+      <xs:element name="pop">
+        <xs:complexType>
+          <xs:attribute name="state" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
       <!-- turns: a <player> for each player taking turns, each with the state that says whose turn it is -->
@@ -905,88 +945,140 @@
       </xs:element>
       <!-- pass: the next player's turn; out: this player is out, and the next player's turn -->
       <xs:element name="pass" type="emptyType" />
+      <xs:element name="out" type="emptyType" />
       <!-- demo: the game's recorded <demo> plays, until a key is pressed -->
       <xs:element name="demo" type="emptyType" />
-      <xs:element name="out" type="emptyType" />
-      <!-- rank: the entry variable= is of goes into the group into= (the best first), in place by that variable -->
-      <xs:element name="rank">
+    </xs:choice>
+  </xs:group>
+
+  <!-- self: what an object does to itself -->
+  <xs:group name="selfCommands">
+    <xs:choice>
+      <xs:element name="die" type="emptyType" />
+      <xs:element name="drop" type="emptyType" />
+      <xs:element name="move" type="stepType" />
+      <xs:element name="release" type="releaseType" />
+      <xs:element name="reverse" type="emptyType" />
+      <xs:element name="stop" type="emptyType" />
+      <xs:element name="fire">
         <xs:complexType>
-          <xs:attribute name="variable" type="xs:string" use="required" />
-          <xs:attribute name="into" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <xs:element name="move" type="stepType" />
-      <xs:element name="hop" type="hopType" />
-      <xs:element name="jump" type="jumpType" />
-      <!-- land: stand on top of the object touched; leap: a jump of that height under the object's own pull -->
-      <xs:element name="land" type="emptyType" />
-      <xs:element name="leap" type="valueType" />
-      <xs:element name="climb" type="climbType" />
-      <!-- chase: head for an object; aim: face it, so the next <fire> goes straight at it -->
-      <xs:element name="chase" type="chaseType" />
-      <xs:element name="go" type="goType" />
-      <xs:element name="hunt" type="huntType" />
-      <xs:element name="wander" type="wanderType" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- steering: an object steering itself toward or around another -->
+  <xs:group name="steeringCommands">
+    <xs:choice>
       <xs:element name="aim">
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- chase: head for an object; aim: face it, so the next <fire> goes straight at it -->
+      <xs:element name="chase" type="chaseType" />
+      <xs:element name="hunt" type="huntType" />
+      <xs:element name="wander" type="wanderType" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- touch: what needs another object, touched -->
+  <xs:group name="touchCommands">
+    <xs:choice>
+      <xs:element name="carry" type="emptyType" />
+      <xs:element name="deflect" type="deflectType" />
+      <xs:element name="hole" type="holeType" />
+      <xs:element name="knock" type="knockType" />
+      <!-- land: stand on top of the object touched; leap: a jump of that height under the object's own pull -->
+      <xs:element name="land" type="emptyType" />
+      <xs:element name="ride" type="emptyType" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- edge: what needs a screen edge -->
+  <xs:group name="edgeCommands">
+    <xs:choice>
+      <xs:element name="stick" type="emptyType" />
+      <xs:element name="wrap" type="emptyType" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- bounce: off a screen edge or another object -->
+  <xs:group name="bounceCommands">
+    <xs:choice>
+      <xs:element name="bounce" type="emptyType" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- controls: how an object moves when its action is asked for -->
+  <xs:group name="controlsCommands">
+    <xs:choice>
+      <xs:element name="accelerate" type="thrustType" />
+      <xs:element name="climb" type="climbType" />
+      <xs:element name="go" type="goType" />
+      <xs:element name="hop" type="hopType" />
+      <xs:element name="jump" type="jumpType" />
+      <xs:element name="leap" type="valueType" />
+      <xs:element name="thrust" type="aheadType" />
+      <xs:element name="turn" type="turnType" />
+      <!-- track: where a control points; path= along that path instead of across the window -->
+      <xs:element name="track">
+        <xs:complexType>
+          <xs:attribute name="path" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+
+  <!-- press: a button held down, as a computer player does -->
+  <xs:group name="pressCommands">
+    <xs:choice>
       <!-- hold: only in a <computer>'s condition: the button held down while it holds -->
       <xs:element name="hold">
         <xs:complexType>
           <xs:attribute name="button" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <xs:element name="reverse" type="emptyType" />
-      <xs:element name="become">
-        <xs:complexType>
-          <xs:attribute name="sprite" type="xs:string" use="required" />
-          <xs:attribute name="object" type="xs:string" use="optional" />
-          <!-- only those showing this look change -->
-          <xs:attribute name="from" type="xs:string" use="optional" />
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="reveal" type="releaseType" />
-      <xs:element name="accelerate" type="thrustType" />
-      <xs:element name="turn" type="turnType" />
-      <xs:element name="thrust" type="aheadType" />
-      <xs:element name="release" type="releaseType" />
-      <xs:element name="push">
-        <xs:complexType>
-          <xs:attribute name="state" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
-      <!-- <pop /> goes back to the state underneath; <pop state="..." /> puts
-           that state in place of this one. -->
-      <xs:element name="pop">
-        <xs:complexType>
-          <xs:attribute name="state" type="xs:string" use="optional" />
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="fire">
-        <xs:complexType>
-          <xs:attribute name="object" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="trigger">
-        <xs:complexType>
-          <!-- left out in an object's own collision, action or timer: that object -->
-          <xs:attribute name="object" type="xs:string" use="optional" />
-          <xs:attribute name="action" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="play">
-        <xs:complexType>
-          <xs:attribute name="sound" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="silence">
-        <xs:complexType>
-          <xs:attribute name="sound" type="xs:string" use="required" />
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="follow" type="followType" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- a collision rule: about another object (touch, steering) or about a screen edge (edge); the loader holds each kind to its own -->
+  <xs:group name="ruleCommands">
+    <xs:choice>
+      <xs:group ref="changesCommands" />
+      <xs:group ref="selfCommands" />
+      <xs:group ref="steeringCommands" />
+      <xs:group ref="touchCommands" />
+      <xs:group ref="edgeCommands" />
+      <xs:group ref="bounceCommands" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- an object's action -->
+  <xs:group name="actionCommands">
+    <xs:choice>
+      <xs:group ref="changesCommands" />
+      <xs:group ref="selfCommands" />
+      <xs:group ref="steeringCommands" />
+      <xs:group ref="controlsCommands" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- an object's timer, and a step of a path an object follows -->
+  <xs:group name="objectTimeCommands">
+    <xs:choice>
+      <xs:group ref="changesCommands" />
+      <xs:group ref="selfCommands" />
+      <xs:group ref="steeringCommands" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- a state's keys, conditions and timers, and a scene's -->
+  <xs:group name="stateCommands">
+    <xs:choice>
+      <xs:group ref="changesCommands" />
+      <xs:group ref="flowCommands" />
     </xs:choice>
   </xs:group>
 
@@ -1013,7 +1105,7 @@
     <xs:sequence>
       <xs:element name="x" type="valueType" />
       <xs:element name="y" type="valueType" />
-      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+      <xs:group ref="objectTimeCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
 
@@ -1050,7 +1142,7 @@
         <xs:element name="all" type="joinType" />
         <xs:element name="any" type="joinType" />
       </xs:choice>
-      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+      <xs:group ref="ruleCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="edge" type="edgeType" use="optional" />
     <!-- the side of this object the other touched: top, bottom, left, right, horizontal or vertical -->
@@ -1064,7 +1156,7 @@
   <!-- A named thing an object can do, run by a <trigger>. -->
   <xs:complexType name="actionType">
     <xs:sequence>
-      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+      <xs:group ref="actionCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
@@ -1075,7 +1167,7 @@
        the two, which the engine checks. -->
   <xs:complexType name="inputType">
     <xs:sequence>
-      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
+      <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="button" type="xs:string" use="optional" />
     <xs:attribute name="axis" type="xs:string" use="optional" />
@@ -1134,15 +1226,14 @@
     commands to run when it holds. Or, with set="name" and nothing else, a
     named <conditions> set's conditions in its place.
   -->
-  <xs:complexType name="conditionType">
-    <xs:sequence minOccurs="0">
-      <xs:choice>
-        <xs:group ref="conditionTest" />
-        <xs:element name="all" type="joinType" />
-        <xs:element name="any" type="joinType" />
-      </xs:choice>
-      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
-    </xs:sequence>
+  <xs:group name="conditionHead">
+    <xs:choice>
+      <xs:group ref="conditionTest" />
+      <xs:element name="all" type="joinType" />
+      <xs:element name="any" type="joinType" />
+    </xs:choice>
+  </xs:group>
+  <xs:attributeGroup name="conditionAttributes">
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="variable" type="xs:string" use="optional" />
@@ -1153,6 +1244,26 @@
     <xs:attribute name="set" type="xs:string" use="optional" />
     <!-- a scene from= this one's can put a condition of the same name in its place -->
     <xs:attribute name="name" type="xs:string" use="optional" />
+  </xs:attributeGroup>
+  <xs:complexType name="conditionType">
+    <xs:sequence minOccurs="0">
+      <xs:group ref="conditionHead" />
+      <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attributeGroup ref="conditionAttributes" />
+  </xs:complexType>
+  <!-- A computer player's condition: a state's test, then the buttons it holds down while it holds. -->
+  <xs:complexType name="computerConditionType">
+    <xs:sequence minOccurs="0">
+      <xs:group ref="conditionHead" />
+      <xs:group ref="pressCommands" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attributeGroup ref="conditionAttributes" />
+  </xs:complexType>
+  <xs:complexType name="computerType">
+    <xs:sequence>
+      <xs:element name="condition" type="computerConditionType" maxOccurs="unbounded" />
+    </xs:sequence>
   </xs:complexType>
 
   <!--
@@ -1161,23 +1272,42 @@
     once - and runs its commands. An object's count while it is shown and in
     play; a state's while it is the current state. A reset starts them over.
   -->
-  <xs:complexType name="timerType">
-    <xs:sequence>
-      <xs:choice>
-        <xs:element name="every" type="valueType" />
-        <xs:element name="after" type="valueType" />
-      </xs:choice>
-      <xs:group ref="command" minOccurs="0" maxOccurs="unbounded" />
-    </xs:sequence>
+  <xs:group name="timerHead">
+    <xs:choice>
+      <xs:element name="every" type="valueType" />
+      <xs:element name="after" type="valueType" />
+    </xs:choice>
+  </xs:group>
+  <xs:attributeGroup name="timerAttributes">
     <!-- a scene from= this one's can put a timer of the same name in its place -->
     <xs:attribute name="name" type="xs:string" use="optional" />
     <!-- an object's timer that counts only while it shows this look -->
     <xs:attribute name="sprite" type="xs:string" use="optional" />
+  </xs:attributeGroup>
+  <xs:complexType name="objectTimerType">
+    <xs:sequence>
+      <xs:group ref="timerHead" />
+      <xs:group ref="objectTimeCommands" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attributeGroup ref="timerAttributes" />
+  </xs:complexType>
+  <xs:complexType name="stateTimerType">
+    <xs:sequence>
+      <xs:group ref="timerHead" />
+      <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attributeGroup ref="timerAttributes" />
   </xs:complexType>
 
-  <xs:complexType name="timersType">
+  <!-- An object's timers, and a state's or a scene's: the same timer, each running the commands of its place. -->
+  <xs:complexType name="objectTimersType">
     <xs:sequence>
-      <xs:element name="timer" type="timerType" maxOccurs="unbounded" />
+      <xs:element name="timer" type="objectTimerType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="stateTimersType">
+    <xs:sequence>
+      <xs:element name="timer" type="stateTimerType" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
 
@@ -1320,7 +1450,7 @@
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
       <xs:element name="actions" type="actionsType" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
-      <xs:element name="timers" type="timersType" minOccurs="0" />
+      <xs:element name="timers" type="objectTimersType" minOccurs="0" />
     </xs:sequence>
   </xs:group>
 
@@ -1577,7 +1707,7 @@
       <xs:element name="variables" type="variablesType" minOccurs="0" />
       <xs:element name="objects" type="objectsType" minOccurs="0" />
       <xs:element name="conditions" type="conditionsType" minOccurs="0" />
-      <xs:element name="timers" type="timersType" minOccurs="0" />
+      <xs:element name="timers" type="stateTimersType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="from" type="xs:string" use="optional" />
@@ -1760,8 +1890,8 @@
                       its conditions is tested every frame, and while one
                       holds, the buttons its <hold>s name are held down.
                     -->
-                    <xs:element name="computer" type="conditionsType" minOccurs="0" />
-                    <xs:element name="timers" type="timersType" minOccurs="0" />
+                    <xs:element name="computer" type="computerType" minOccurs="0" />
+                    <xs:element name="timers" type="stateTimersType" minOccurs="0" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />
                   <!--

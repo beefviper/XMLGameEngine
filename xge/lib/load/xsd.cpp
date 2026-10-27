@@ -121,6 +121,7 @@ namespace xge
 		// and what has been built from them.
 		std::map<std::string, std::unique_ptr<XmlNode>> complexTypeNodes;
 		std::map<std::string, std::unique_ptr<XmlNode>> groupNodes;
+		std::map<std::string, std::unique_ptr<XmlNode>> attributeGroupNodes;
 		std::map<std::string, std::shared_ptr<ComplexType>> complexTypes;
 		std::map<std::string, Particle> groups;
 		std::set<std::string> inProgress;
@@ -309,6 +310,20 @@ namespace xge
 
 				out.attributes.push_back(std::move(attribute));
 			}
+			else if (kind == "attributeGroup")
+			{
+				// Attributes several types share, written once: its xs:attributes are this type's.
+				const std::string name = child->getAttribute("ref");
+				const auto group = attributeGroupNodes.find(name);
+				if (group == attributeGroupNodes.end())
+				{
+					error = "xs:attributeGroup ref='" + name + "' names no attribute group";
+					return false;
+				}
+				const bool mixed = out.mixed;
+				if (!buildComplexType(*group->second, out, error)) { return false; }
+				out.mixed = mixed;
+			}
 		}
 
 		return true;
@@ -448,6 +463,10 @@ namespace xge
 			else if (kind == "group")
 			{
 				groupNodes[top->getAttribute("name")] = std::move(top);
+			}
+			else if (kind == "attributeGroup")
+			{
+				attributeGroupNodes[top->getAttribute("name")] = std::move(top);
 			}
 			else if (kind == "element" && !topElement)
 			{

@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <initializer_list>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -201,32 +202,70 @@ namespace xge
 			std::vector<std::string> tags;
 		};
 
+		// The commands in the groups the schema has them in (xgedef.xsd,
+		// changesCommands and the rest), and the groups each place takes.
+		std::vector<std::string> commandsOf(std::initializer_list<const std::vector<std::string>*> groups)
+		{
+			std::vector<std::string> tags;
+			for (const auto* group : groups) { tags.insert(tags.end(), group->begin(), group->end()); }
+			return tags;
+		}
+
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> stateCommands{ "<turns>", "<pass />", "<out />", "<demo />", "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<set>", "<spawn>", "<despawn object>" };
-			static const std::vector<std::string> ownerCommands{ "<push>", "<pop>", "<reset />", "<reset object>", "<reset scene>", "<enter>", "<trigger>", "<inc>", "<dec>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>",
-				"<fire>", "<reverse />", "<die />", "<stop />", "<move>", "<release>", "<drop />", "<hunt>", "<hunt> by <hop>", "<wander>", "<set>", "<spawn>", "<despawn />", "<despawn object>" };
-			static std::vector<std::string> objectTimerCommands = [] {
-				std::vector<std::string> tags{ ownerCommands };
-				tags.push_back("<chase>");
-				tags.push_back("<aim>");
-				return tags;
-			}();
+			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<enter>",
+				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<despawn object>", "<trigger>" };
+			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
+			static const std::vector<std::string> self{ "<die />", "<drop />", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />" };
+			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
+			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />" };
+			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
+			static const std::vector<std::string> bounce{ "<bounce />" };
+			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<hop>", "<jump>", "<leap>", "<thrust>", "<turn>", "<track />" };
+			static const std::vector<std::string> press{ "<hold>" };
+
+			static const std::vector<std::string> stateCommands = commandsOf({ &changes, &flow });
+			static const std::vector<std::string> objectTimeCommands = commandsOf({ &changes, &self, &steering });
 			static const PlaceRule rules[] = {
-				{ "a screen-edge <collision>", { "<bounce />", "<stick />", "<reset />", "<die />", "<stop />", "<wrap />", "<drop />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>", "<despawn />", "<despawn object>" } },
-				{ "a <collision> with another object", { "<bounce />", "<deflect>", "<knock>", "<hole>", "<die />", "<stop />", "<reset />", "<release>", "<move>", "<inc>", "<dec>", "<copy>",
-					"<ride />", "<carry />", "<drop />", "<land />", "<chase>", "<aim>", "<hunt>", "<hunt> by <hop>", "<wander>", "<play>", "<silence>", "<reverse />", "<reset object>", "<reset scene>", "<enter>", "<become>", "<reveal>", "<follow>", "<trigger>", "<set>", "<spawn>", "<despawn />", "<despawn object>" } },
+				{ "a screen-edge <collision>", commandsOf({ &changes, &self, &edge, &bounce }) },
+				{ "a <collision> with another object", commandsOf({ &changes, &self, &steering, &touch, &bounce }) },
 				{ "an <input>", stateCommands },
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
-				{ "an object's <timer>", objectTimerCommands },
-				{ "an <action>", { "<move>", "<hop>", "<hunt> by <hop>", "<jump>", "<leap>", "<climb>", "<go>", "<reset />", "<become>", "<reveal>", "<follow>", "<accelerate>", "<turn>", "<thrust>", "<fire>", "<drop />", "<track />", "<play>", "<silence>",
-					"<inc>", "<dec>", "<copy>", "<reset object>", "<reset scene>", "<enter>", "<die />", "<set>", "<spawn>", "<despawn />", "<despawn object>" } },
-				{ "a path's <step>", ownerCommands },
-				{ "a <computer>'s <condition>", { "<hold>" } },
+				{ "an object's <timer>", objectTimeCommands },
+				{ "an <action>", commandsOf({ &changes, &self, &steering, &controls }) },
+				{ "a path's <step>", objectTimeCommands },
+				{ "a <computer>'s <condition>", press },
 			};
 			return rules[static_cast<std::size_t>(place)];
+		}
+
+		// An action that runs another (<trigger>) must not come round to
+		// itself again, or one press would never end.
+		void checkTriggerLoop(const std::vector<Object>& objects, const std::string& objectName, const std::string& actionName,
+			std::vector<std::string>& path, const std::string& where)
+		{
+			const std::string step = objectName + " " + actionName;
+			if (std::find(path.begin(), path.end(), step) != path.end())
+			{
+				std::string round;
+				for (const std::string& each : path) { round += each + " -> "; }
+				throw std::runtime_error(where + ": its <trigger>s run actions in a circle (" + round + step + "), so a press would never end");
+			}
+			const Object* object = findObject(objects, objectName);
+			if (!object) { return; }
+			const auto found = object->action.find(actionName);
+			if (found == object->action.end()) { return; }
+
+			path.push_back(step);
+			for (const Command& command : found->second)
+			{
+				if (const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command)))
+				{
+					checkTriggerLoop(objects, trigger->object, trigger->action, path, where);
+				}
+			}
+			path.pop_back();
 		}
 
 		// A command the schema lets through where the engine does nothing with
@@ -799,6 +838,8 @@ namespace xge
 				{
 					checkAll(commands, where);
 					checkPlace(commands, Place::Action, where + " > <action name=\"" + name + "\">");
+					std::vector<std::string> path;
+					checkTriggerLoop(objects, object.name, name, path, where + " > <action name=\"" + name + "\">");
 
 					// Turning and thrust along the heading mean nothing to an object
 					// that does not face any way.
