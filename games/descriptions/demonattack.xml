@@ -105,7 +105,7 @@
           <color>color.yellow</color>
         </bitmap>
       </sprite>
-      <velocity><x><random min="-sway" max="sway" /></x><y>dive</y></velocity>
+      <velocity><x><random><min>-sway</min><max>sway</max></random></x><y>dive</y></velocity>
       <most>8</most>
       <collisions>
         <enabled>true</enabled>
@@ -279,8 +279,8 @@
                 </collision>
               </collisions>
               <timers>
-                <timer><every><random min="1" max="3" /></every><reverse /></timer>
-                <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bomb" /></timer>
+                <timer><every><random><min>1</min><max>3</max></random></every><reverse /></timer>
+                <timer><every><random><min>drop - 1</min><max>drop + 2</max></random></every><fire object="bomb" /></timer>
               </timers>
               <member><position><x>70</x><y>70</y></position></member>
               <member><position><x>260</x><y>70</y></position><velocity><x>-speed * 1.25</x></velocity></member>
@@ -353,8 +353,8 @@
                 </collision>
               </collisions>
               <timers>
-                <timer><every><random min="1" max="3" /></every><reverse /></timer>
-                <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bomb" /></timer>
+                <timer><every><random><min>1</min><max>3</max></random></every><reverse /></timer>
+                <timer><every><random><min>drop - 1</min><max>drop + 2</max></random></every><fire object="bomb" /></timer>
               </timers>
               <member><position><x>100</x><y>70</y></position></member>
               <member><position><x>380</x><y>70</y></position><velocity><x>-speed</x></velocity></member>
@@ -429,8 +429,8 @@
                 </collision>
               </collisions>
               <timers>
-                <timer><every><random min="1" max="2.5" /></every><reverse /></timer>
-                <timer><every><random min="drop - 2" max="drop" /></every><fire object="bomb" /></timer>
+                <timer><every><random><min>1</min><max>2.5</max></random></every><reverse /></timer>
+                <timer><every><random><min>drop - 2</min><max>drop</max></random></every><fire object="bomb" /></timer>
               </timers>
               <member><position><x>120</x><y>70</y></position></member>
               <member><position><x>300</x><y>130</y></position><velocity><x>-speed</x></velocity></member>

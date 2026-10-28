@@ -251,7 +251,6 @@ namespace xge
 					value.min = names_.expression(value.min, context);
 					value.max = names_.expression(value.max, context);
 					break;
-				case RawValue::Kind::Equation:
 				case RawValue::Kind::Formula:
 					if (value.operations)
 					{

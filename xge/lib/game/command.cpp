@@ -594,22 +594,6 @@ namespace xge
 		case RawValue::Kind::Formula:
 			return value.operations && !value.operations->empty() ? operationText(value.operations->front()) : "";
 
-		case RawValue::Kind::Equation:
-		{
-			std::string text = "equation{ ";
-			if (value.operations)
-			{
-				for (std::size_t i = 0; i < value.operations->size(); ++i)
-				{
-					const RawOperation& step = (*value.operations)[i];
-					if (i > 0) { text += "; "; }
-					if (!step.name.empty()) { text += step.name + " = "; }
-					text += operationText(step);
-				}
-			}
-			return text + " }";
-		}
-
 		case RawValue::Kind::Expression:
 			break;
 		}
@@ -621,7 +605,7 @@ namespace xge
 	{
 		if (kind == Kind::Random) { return { &min, &max }; }
 
-		if (kind == Kind::Equation || kind == Kind::Formula)
+		if (kind == Kind::Formula)
 		{
 			std::vector<const std::string*> all;
 			if (operations)

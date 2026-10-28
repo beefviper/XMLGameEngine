@@ -339,7 +339,7 @@ TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
 	SECTION("a value that is both text and a tag, in a member")
 	{
 		REQUIRE_THROWS_WITH(Loaded(gameXml(groupWith(kSprite + kPosition + kVelocity + kCollisions,
-			"<member><position><x>5 <random min=\"1\" max=\"2\" /></x></position></member>"))),
+			"<member><position><x>5 <random><min>1</min><max>2</max></random></x></position></member>"))),
 			ContainsSubstring("holds both the text"));
 	}
 }

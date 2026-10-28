@@ -144,7 +144,7 @@
         </collisions>
         <timers>
           <timer>
-            <every><random min="raygap - 1" max="raygap + 1" /></every>
+            <every><random><min>raygap - 1</min><max>raygap + 1</max></random></every>
             <fire object="ray" />
             <play sound="ray" />
           </timer>

@@ -432,7 +432,7 @@
               </collisions>
               <timers>
                 <timer>
-                  <every><random min="15" max="90" /></every>
+                  <every><random><min>15</min><max>90</max></random></every>
                   <follow path="dive" />
                 </timer>
               </timers>

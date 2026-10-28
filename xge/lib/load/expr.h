@@ -154,10 +154,8 @@ namespace xge
 			bool late{ false };
 		};
 
-		// One <add>, <subtract>, <multiply> or <divide> of an <equation> or a
-		// <formula>: its first operand combined with each of the others in turn.
-		// `steps` holds the answers of the equation's named steps so far (a
-		// formula has none); an operand that names one is that answer.
+		// One <add>, <subtract>, <multiply> or <divide> of a <formula>: its
+		// first operand combined with each of the others in turn.
 		//
 		// A divisor of 0 is a load error (std::runtime_error saying which
 		// <divide>) when it is certainly 0 - a number, a global variable, or
@@ -167,7 +165,7 @@ namespace xge
 		// Worked out again while the game runs, where throwing would end it, a
 		// divisor of 0 gives the answer 0 and a warning, printed once for each
 		// place it happens.
-		Answer evaluateOperation(const RawOperation& operation, const std::map<std::string, Answer>& steps, const std::string& where);
+		Answer evaluateOperation(const RawOperation& operation, const std::string& where);
 
 		// Whether an operand's name is something that is `late` while loading.
 		bool isLate(const std::string& name) const;

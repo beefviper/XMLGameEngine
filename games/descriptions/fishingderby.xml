@@ -246,7 +246,7 @@
           </collisions>
           <timers>
             <timer>
-              <every><random min="1" max="4" /></every>
+              <every><random><min>1</min><max>4</max></random></every>
               <reverse />
               <become object="shark" from="right" sprite="turning" />
               <become object="shark" from="left" sprite="right" />

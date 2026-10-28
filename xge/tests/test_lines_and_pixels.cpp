@@ -424,7 +424,7 @@ TEST_CASE("the size of a sprite of lines can be used in an expression like any s
 TEST_CASE("a random coordinate is drawn once, so the picture and its size agree", "[lines][xml]")
 {
 	const std::string sprite =
-		"<line><from><x>0</x><y>0</y></from><to><x><random min=\"10\" max=\"60\" /></x><y>4</y></to></line>";
+		"<line><from><x>0</x><y>0</y></from><to><x><random><min>10</min><max>60</max></random></x><y>4</y></to></line>";
 
 	for (int i = 0; i < 5; ++i)
 	{

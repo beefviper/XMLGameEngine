@@ -315,7 +315,7 @@
               <die />
             </collision>
           </collisions>
-          <variables><variable name="worth"><random min="0.01" max="4" /></variable></variables>
+          <variables><variable name="worth"><random><min>0.01</min><max>4</max></random></variable></variables>
         </object>
         <group name="aliens" class="aliens">
           <columns>11</columns>
@@ -371,7 +371,7 @@
           <variables><variable name="worth">30</variable></variables>
           <timers>
             <timer>
-              <every><random min="2" max="25" /></every>
+              <every><random><min>2</min><max>25</max></random></every>
               <fire object="bomb" />
             </timer>
           </timers>
@@ -441,7 +441,7 @@
       </conditions>
       <timers>
         <timer>
-          <every><random min="20" max="30" /></every>
+          <every><random><min>20</min><max>30</max></random></every>
           <reveal object="ufo" />
           <play sound="ufo" />
         </timer>

@@ -90,8 +90,8 @@
     <group name="missiles" class="missile">
       <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.red</color><thickness>2</thickness></line></sprite>
       <position>
-        <x><random min="margin" max="window.right - margin" /></x>
-        <y><random min="-sky" max="-10" /></y>
+        <x><random><min>margin</min><max>window.right - margin</max></random></x>
+        <y><random><min>-sky</min><max>-10</max></random></y>
       </position>
       <velocity><y>speed</y></velocity>
       <heading>180</heading>

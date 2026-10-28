@@ -108,7 +108,7 @@
         </collision>
       </collisions>
       <timers>
-        <timer><every><random min="drop - 1" max="drop + 2" /></every><fire object="bomb" /></timer>
+        <timer><every><random><min>drop - 1</min><max>drop + 2</max></random></every><fire object="bomb" /></timer>
       </timers>
       <member><position><x>40</x><y>row1</y></position></member>
       <member><position><x>200</x><y>row1</y></position></member>

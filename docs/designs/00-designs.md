@@ -12,7 +12,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 |---|---|---|
 | [vision](01-vision.md) | What we want, declarative with triggers, the VGDL landscape | Built |
 | [file-format](02-file-format.md) | Why XML + XSD, one file; attributes name, content computes; lists packed in strings | Built; lists in strings Open |
-| [arithmetic](03-arithmetic.md) | Math as text, `<equation>`, `<formula>` | Built |
+| [arithmetic](03-arithmetic.md) | Math as text, `<formula>` | Built |
 | [values-and-names](04-values-and-names.md) | `<random>`, values read when used (`<set>`, `<spawn>`, live numbers), evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
 | [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, groups inside a group | Built |

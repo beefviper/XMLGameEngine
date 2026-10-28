@@ -90,7 +90,7 @@
           <color>color.yellow</color>
         </bitmap>
       </sprite>
-      <velocity><x><random min="-2.5" max="2.5" /></x><y>2.5</y></velocity>
+      <velocity><x><random><min>-2.5</min><max>2.5</max></random></x><y>2.5</y></velocity>
       <most>8</most>
       <collisions>
         <enabled>true</enabled>
@@ -145,8 +145,8 @@
         <group name="rocks" class="rocks">
           <columns>4</columns>
           <rows>1</rows>
-          <position><y><random min="-600" max="-40" /></y></position>
-          <velocity><x><random min="-slant" max="slant" /></x><y><random min="1" max="2.5" /></y></velocity>
+          <position><y><random><min>-600</min><max>-40</max></random></y></position>
+          <velocity><x><random><min>-slant</min><max>slant</max></random></x><y><random><min>1</min><max>2.5</max></random></y></velocity>
           <collisions>
             <enabled>true</enabled>
             <collision edge="horizontal"><bounce /></collision>
@@ -195,8 +195,8 @@
                 <color>color.orange</color>
               </bitmap>
             </sprite>
-            <position><x>140</x><y><random min="-800" max="-40" /></y></position>
-            <velocity><y><random min="2" max="3.5" /></y></velocity>
+            <position><x>140</x><y><random><min>-800</min><max>-40</max></random></y></position>
+            <velocity><y><random><min>2</min><max>3.5</max></random></y></velocity>
             <variables><variable name="worth">20</variable></variables>
           </group>
         </group>
@@ -232,8 +232,8 @@
             <frame sprite="a" />
             <frame sprite="b" />
           </animation>
-          <position><x>200</x><y><random min="-2400" max="-900" /></y></position>
-          <velocity><x>0</x><y><random min="1.5" max="2.5" /></y></velocity>
+          <position><x>200</x><y><random><min>-2400</min><max>-900</max></random></y></position>
+          <velocity><x>0</x><y><random><min>1.5</min><max>2.5</max></random></y></velocity>
           <collisions>
             <enabled>true</enabled>
             <collision object="ground"><trigger object="ship" action="lose" /></collision>

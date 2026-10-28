@@ -98,7 +98,7 @@ namespace xge::parts
 		return RawStyle{ std::move(name), std::move(size), std::move(color) };
 	}
 
-	// <random min="..." max="..." />
+	// <random><min>...</min><max>...</max></random>
 	inline RawValue random(std::string min, std::string max)
 	{
 		RawValue drawn;
@@ -108,19 +108,10 @@ namespace xge::parts
 		return drawn;
 	}
 
-	// One operation of an <equation> or a <formula>: <subtract>, its name, its operands.
-	inline RawOperation operation(std::string op, std::string name, std::vector<RawOperand> operands)
+	// One operation of a <formula>: <subtract>, and its operands.
+	inline RawOperation operation(std::string op, std::vector<RawOperand> operands)
 	{
-		return RawOperation{ std::move(op), std::move(name), std::move(operands) };
-	}
-
-	// An <equation>'s steps.
-	inline RawValue equation(std::vector<RawOperation> steps)
-	{
-		RawValue worked;
-		worked.kind = RawValue::Kind::Equation;
-		worked.operations = std::make_shared<const std::vector<RawOperation>>(std::move(steps));
-		return worked;
+		return RawOperation{ std::move(op), std::move(operands) };
 	}
 
 	// A <formula>'s one operation, or an operation standing in for an operand of one.

@@ -109,7 +109,7 @@ namespace
 				{
 					const RawOperation& op = (*v.operations)[i];
 					const std::string here = at + ".op" + std::to_string(i);
-					out << here << " " << op.op << " [" << op.name << "]\n";
+					out << here << " " << op.op << "\n";
 					for (std::size_t j = 0; j < op.operands.size(); ++j)
 					{
 						value(here + "." + op.operands[j].role + std::to_string(j), op.operands[j].value);

@@ -159,8 +159,8 @@ TEST_CASE("<random> gives a number between its two ends, and a different one eac
 	{
 		ObjectXml o;
 		o.name = "r" + std::to_string(i);
-		o.velocityX = "<random min=\"-7\" max=\"7\" />";
-		o.velocityY = "<random min=\"window.width.center\" max=\"window.width.center - 10\" />"; // expressions, either order
+		o.velocityX = "<random><min>-7</min><max>7</max></random>";
+		o.velocityY = "<random><min>window.width.center</min><max>window.width.center - 10</max></random>"; // expressions, either order
 		objects += objectXml(o);
 	}
 	Loaded loaded(gameXml("", objects));
@@ -181,9 +181,9 @@ TEST_CASE("<random> gives a number between its two ends, and a different one eac
 TEST_CASE("a value tag works anywhere a value does", "[xml_format][random]")
 {
 	ObjectXml o;
-	o.sprite = "<rectangle><width><random min=\"30\" max=\"30\" /></width><height>10</height></rectangle>";
-	o.extra = "<variables><variable name=\"score\"><random min=\"4\" max=\"4\" /></variable></variables>";
-	Loaded loaded(gameXml("<variable name=\"g\"><random min=\"9\" max=\"9\" /></variable>", objectXml(o)));
+	o.sprite = "<rectangle><width><random><min>30</min><max>30</max></random></width><height>10</height></rectangle>";
+	o.extra = "<variables><variable name=\"score\"><random><min>4</min><max>4</max></random></variable></variables>";
+	Loaded loaded(gameXml("<variable name=\"g\"><random><min>9</min><max>9</max></random></variable>", objectXml(o)));
 
 	CHECK(loaded.game.getObject("o").spriteParams.at(1) == "30.000000");
 	CHECK(loaded.game.getObject("o").variable.at("score") == 4.0f);
@@ -225,7 +225,7 @@ TEST_CASE("a variable declared twice keeps the later value", "[xml_format]")
 TEST_CASE("a value with both text and a tag, or an unknown tag, is turned away", "[xml_format][errors]")
 {
 	ObjectXml both;
-	both.x = "5 <random min=\"1\" max=\"2\" />";
+	both.x = "5 <random><min>1</min><max>2</max></random>";
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(both))),
 		ContainsSubstring("object 'o' > <position> > <x>") && ContainsSubstring("both the text \"5\" and a <random> tag"));
 
@@ -238,8 +238,8 @@ TEST_CASE("a value with both text and a tag, or an unknown tag, is turned away",
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(empty))), ContainsSubstring("has no value"));
 
 	ObjectXml incomplete;
-	incomplete.x = "<random min=\"1\" />";
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(incomplete))), ContainsSubstring("<random> needs max="));
+	incomplete.x = "<random><min>1</min></random>";
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(incomplete))), ContainsSubstring("missing <max>"));
 }
 
 TEST_CASE("an expression that does not compile says whose it is", "[xml_format][errors]")
@@ -315,7 +315,7 @@ TEST_CASE("move and hop take a direction and a value", "[xml_format][commands]")
 {
 	ObjectXml o;
 	o.extra = "<actions>"
-		"<action name=\"go\"><move direction=\"left\">step * 2</move><hop direction=\"up\"><random min=\"7\" max=\"7\" /></hop></action>"
+		"<action name=\"go\"><move direction=\"left\">step * 2</move><hop direction=\"up\"><random><min>7</min><max>7</max></random></hop></action>"
 		"</actions>";
 	Loaded loaded(gameXml("<variable name=\"step\">3</variable>", objectXml(o)));
 
@@ -831,7 +831,7 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "a window scale of nothing", "<height>720</height>", "<height>720</height><scale>0</scale>", "not a valid" },
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
 		{ "a condition with no test (only a set=\"...\" condition has none)", "<atleast>11</atleast>", "", "unexpected element <push>" },
-		{ "a <random> with no max", "<random min=\"-30\" max=\"30\" />", "<random min=\"-30\" />", "missing required attribute 'max'" },
+		{ "a <random> with no max", "<random><min>-30</min><max>30</max></random>", "<random><min>-30</min></random>", "max" },
 	};
 
 	for (const Mistake& mistake : mistakes)

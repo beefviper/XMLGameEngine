@@ -40,8 +40,8 @@ This is all of `pong_min.xml`, two paddles and a ball:
           </collisions>
           <variables>
             <variable name="speed">6</variable>
-            <variable name="angle"><random min="-30" max="30" /></variable>
-            <variable name="side"><random min="-1" max="1" /></variable>
+            <variable name="angle"><random><min>-30</min><max>30</max></random></variable>
+            <variable name="side"><random><min>-1</min><max>1</max></random></variable>
           </variables>
         </object>
         <group name="paddles">
@@ -77,7 +77,7 @@ A collision rule reads like a sentence: this ball, when it touches the top or bo
 
 - **Attributes name or pick; everything else is content.** `name`, `class`, `object`, `edge`, `button`, `state`, `sound` are attributes. A size, a color, a position or a flag is element content: `<radius>10</radius>`.
 - **Behavior is a list of verbs, run in the order written.** Lists sit in five places: a collision rule, an object's action, a key, a condition and a timer. Most verbs work in all of them.
-- **A value is a number written one of three ways:** arithmetic as text (`window.width.center - ball.radius`, worked out by exprtk), a `<random min max />`, or the same arithmetic as tags (`<equation>` steps or a nested `<formula>` of `add`, `subtract`, `multiply`, `divide`), which leaves nothing in a string for a tool to parse.
+- **A value is a number written one of three ways:** arithmetic as text (`window.width.center - ball.radius`, worked out by exprtk), a `<random>` with a `<min>` and a `<max>`, or the same arithmetic as tags (a nested `<formula>` of `add`, `subtract`, `multiply`, `divide`), which leaves nothing in a string for a tool to parse.
 - **Names are dotted.** `ball.radius` is the ball's variable, `paddle1.x` where it is, `aliens.3.2` a cell of a group, `playing.room2.robots` an object in a scene. `window.right`, `window.width.center` and the `color.` names are built in, and `self.` and `touch.` mean the object running a rule and the touch it answers.
 - **Keys are bound in states, never in objects.** An object has named actions (`up`, `fire`), and a state binds keys to them, so changing a key is one edit.
 - **Mistakes stop the load** with a message that says where: an unknown verb, a misspelled key (`did you mean 'space'?`), a state, sound or look that does not exist, or a verb in a place where it does nothing.

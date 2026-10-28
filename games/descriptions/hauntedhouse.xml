@@ -175,7 +175,7 @@
       <position><x>0</x><y>0</y></position>
       <timers>
         <timer>
-          <every><random min="5" max="10" /></every>
+          <every><random><min>5</min><max>10</max></random></every>
           <set variable="player.light">near</set>
           <play sound="wind" />
         </timer>

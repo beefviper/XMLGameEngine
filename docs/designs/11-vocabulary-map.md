@@ -56,7 +56,7 @@ Time words: `every` and `after` (timers), `interval` (an animation's pictures), 
 
 **Values**
 
-- Text expressions evaluated by exprtk; one value tag that draws a number, `<random min max>`; and arithmetic as tags, `<equation>` (flat steps, operands as attributes, a step's `name` for the ones after it) and `<formula>` (one operation, operands as nested elements).
+- Text expressions evaluated by exprtk; one value tag that draws a number, `<random>` (`<min>`, `<max>`); and arithmetic as tags, `<formula>` (one operation, operands as nested elements).
 - Both arithmetic forms use four operation words, each with operands named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`). An operand is a name or a number, never an expression.
 - A command's values are read when it runs, so they can name live numbers; every other value is worked out once at load ([values-and-names](04-values-and-names.md)).
 - exprtk's own functions work in the text form (Berserk uses `max` to keep a wait above a floor), but the format does not depend on them, and the tags have no `min`, `max` or the like.
@@ -76,7 +76,7 @@ A note on pictures: an `<image>` is a file loaded by the window backend; an `<sv
 | Sound | `sounds`, `note`, `rest`, `part`, `wave`, `pitch`, `to`, `volume`, `loop`, `play`, `silence`, `music` | built; no envelope, no stereo |
 | Input | `input` (`button`, `axis`), `keys` sets, `trigger`, `track`, mouse and pads, `computer` with `hold` | small and clean |
 | Game flow | states, `push`, `pop`, scenes with `enter` and `reset scene`/`way`, `show state`, conditions with `all`/`any`, `turns`, `demo`, `keeps`, `rank` | enough for the shipped games |
-| Values | expressions, `random`, `equation`, `formula` with four operations, live numbers in commands | thin; no `min`, `max`, `clamp`, `negate` as tags |
+| Values | expressions, `random`, `formula` with four operations, live numbers in commands | thin; no `min`, `max`, `clamp`, `negate` as tags |
 
 A collision rule reads like a sentence: *this object* (noun), *when it touches* (preposition) *that class* (noun), *on its top* (`side`), *unless* (conjunction) *it is on a log*, *do this* (verb).
 
@@ -84,7 +84,7 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 
 | Missing category | Words it would hold | Where it is discussed |
 |---|---|---|
-| **Math** beyond the four operations | `min`, `max`, `negate`, `abs`, `clamp`, `floor`, `sign`, `pick`, an integer `random`; a `<random>` step in an `<equation>` | [arithmetic](03-arithmetic.md), [values-and-names](04-values-and-names.md) |
+| **Math** beyond the four operations | `min`, `max`, `negate`, `abs`, `clamp`, `floor`, `sign`, `pick`, an integer `random`; a `<formula>` inside a `<random>`'s ends | [arithmetic](03-arithmetic.md), [values-and-names](04-values-and-names.md) |
 | **Planning** | searching a maze, leading a target, curved paths, paths that aim | [chase-and-paths](24-chase-and-paths.md) |
 | **Queries** | what is touching what, line of sight; a condition's threshold that follows a variable | [states-and-conditions](07-states-and-conditions.md), [timers](09-timers.md) |
 | **Branching and events** | `if`, `goto`, an event queue. Conditions join tests with `all`/`any` but have no else; keeping control flow out is deliberate | [vision](01-vision.md), [timers](09-timers.md) |

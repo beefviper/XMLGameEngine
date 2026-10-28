@@ -593,10 +593,8 @@ namespace xge
 	// It is one of
 	//   * a math expression written out as text (`window.width.center -
 	//     title.width / 2`);
-	//   * one tag that makes the number, such as <random min="-7" max="7"/>;
-	//   * an <equation>: arithmetic as a list of steps, each one operation on
-	//     two names or numbers, a step able to name its answer for the steps
-	//     after it (Equation);
+	//   * one tag that makes the number, such as
+	//     <random><min>-7</min><max>7</max></random>;
 	//   * a <formula>: arithmetic as one operation whose operands are
 	//     themselves numbers, operations included (Formula);
 	//   * in a <position> only, <centered>: the object's middle at the
@@ -608,7 +606,7 @@ namespace xge
 	// more in load/expr's evaluate.
 	struct RawValue
 	{
-		enum class Kind { Expression, Random, Equation, Formula, Centered };
+		enum class Kind { Expression, Random, Formula, Centered };
 
 		Kind kind{ Kind::Expression };
 
@@ -620,7 +618,6 @@ namespace xge
 		std::string min;
 		std::string max;
 
-		// Equation: its steps in the order written, the last being the answer.
 		// Formula: the one operation it is. Shared, not copied, when a value
 		// is.
 		std::shared_ptr<const std::vector<RawOperation>> operations;
@@ -634,12 +631,12 @@ namespace xge
 
 		// Every expression written inside this value, for the ones that only
 		// need to look at what the expressions name (see
-		// load/expr::sizeDependenciesOf). The operands of an equation or a
-		// formula are names and numbers, and are listed the same way.
+		// load/expr::sizeDependenciesOf). The operands of a formula are names
+		// and numbers, and are listed the same way.
 		std::vector<const std::string*> expressions() const;
 
-		// Whether working it out draws a <random> (itself, or one inside an
-		// equation or formula), so it comes out different each time.
+		// Whether working it out draws a <random> (itself, or one inside a
+		// formula), so it comes out different each time.
 		bool drawsRandom() const;
 	};
 
@@ -651,21 +648,18 @@ namespace xge
 		RawValue value;
 	};
 
-	// One arithmetic operation from an <equation> or a <formula>: `op` is the
-	// tag (add, subtract, multiply, divide). The first operand is combined
-	// with each of the others in turn, left to right, so that `a - b - c` is
-	// one subtract with two subtrahends. `name` is only for an equation's
-	// step, and what later steps call its answer.
+	// One arithmetic operation of a <formula>: `op` is the tag (add,
+	// subtract, multiply, divide). The first operand is combined with each of
+	// the others in turn, left to right, so that `a - b - c` is one subtract
+	// with two subtrahends.
 	struct RawOperation
 	{
 		std::string op;
-		std::string name;
 		std::vector<RawOperand> operands;
 	};
 
 	// What an arithmetic tag is: its name, the role of its first operand and of
-	// the others (a formula wants one of the first and one or more of the
-	// second; an equation's step has one of each, as attributes), and the
+	// the others (one of the first and one or more of the second), and the
 	// symbol it is printed with.
 	struct OperationShape
 	{
@@ -766,7 +760,7 @@ namespace xge
 	// frames of the game (seconds times the window's <framerate>), so like
 	// everything else it runs slow on a machine that cannot keep up. The
 	// interval is kept as written and worked out again each time the timer
-	// starts over, so <every><random min="1" max="3" /></every> waits a
+	// starts over, so <every><random><min>1</min><max>3</max></random></every> waits a
 	// different time each round. An object's timers count while it is shown
 	// and in play; a state's while it is the current state. A reset starts
 	// them over. See Game::updateTimers.

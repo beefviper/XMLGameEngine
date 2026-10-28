@@ -144,7 +144,7 @@
         <line><from><x>29</x><y>15</y></from><to><x>35</x><y>23</y></to><thickness>2</thickness></line>
         <line><from><x>35</x><y>23</y></from><to><x>27</x><y>28</y></to><thickness>2</thickness></line>
       </sprite>
-      <velocity><x><random min="-1.6" max="1.6" /></x></velocity>
+      <velocity><x><random><min>-1.6</min><max>1.6</max></random></x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision class="breaker">
@@ -155,7 +155,7 @@
         </collision>
       </collisions>
       <member name="mediumA">
-        <velocity><y><random min="0.6" max="1.6" /></y></velocity>
+        <velocity><y><random><min>0.6</min><max>1.6</max></random></y></velocity>
       </member>
       <member name="mediumB">
         <sprite>
@@ -168,7 +168,7 @@
             <line><from><x>16</x><y>7</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
             <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
         </sprite>
-        <velocity><y><random min="-1.6" max="-0.6" /></y></velocity>
+        <velocity><y><random><min>-1.6</min><max>-0.6</max></random></y></velocity>
       </member>
       <member name="mediumC">
         <sprite>
@@ -182,7 +182,7 @@
             <line><from><x>20</x><y>7</y></from><to><x>32</x><y>16</y></to><thickness>2</thickness></line>
             <line><from><x>32</x><y>16</y></from><to><x>32</x><y>25</y></to><thickness>2</thickness></line>
         </sprite>
-        <velocity><y><random min="0.6" max="1.6" /></y></velocity>
+        <velocity><y><random><min>0.6</min><max>1.6</max></random></y></velocity>
       </member>
     </group>
     <group name="smallrocks" from="rock">
@@ -194,7 +194,7 @@
         <line><from><x>12</x><y>3</y></from><to><x>18</x><y>5</y></to><thickness>2</thickness></line>
         <line><from><x>18</x><y>5</y></from><to><x>16</x><y>11</y></to><thickness>2</thickness></line>
       </sprite>
-      <velocity><x><random min="-2.6" max="2.6" /></x></velocity>
+      <velocity><x><random><min>-2.6</min><max>2.6</max></random></x></velocity>
       <collisions>
         <enabled>true</enabled>
         <collision class="breaker">
@@ -204,7 +204,7 @@
         </collision>
       </collisions>
       <member name="smallA">
-        <velocity><y><random min="1" max="2.6" /></y></velocity>
+        <velocity><y><random><min>1</min><max>2.6</max></random></y></velocity>
       </member>
       <member name="smallB">
         <sprite>
@@ -215,7 +215,7 @@
             <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
             <line><from><x>15</x><y>5</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
         </sprite>
-        <velocity><y><random min="-2.6" max="-1" /></y></velocity>
+        <velocity><y><random><min>-2.6</min><max>-1</max></random></y></velocity>
       </member>
       <member name="smallC">
         <sprite>
@@ -225,7 +225,7 @@
             <line><from><x>7</x><y>3</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
             <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
         </sprite>
-        <velocity><y><random min="1" max="2.6" /></y></velocity>
+        <velocity><y><random><min>1</min><max>2.6</max></random></y></velocity>
       </member>
     </group>
     <object name="saucershot" class="hazard">
@@ -307,8 +307,8 @@
               <play sound="shoot" />
             </action>
             <action name="hyperspace">
-              <set variable="ship.x"><random min="margin" max="window.right - 60" /></set>
-              <set variable="ship.y"><random min="margin" max="window.bottom - 60" /></set>
+              <set variable="ship.x"><random><min>margin</min><max>window.right - 60</max></random></set>
+              <set variable="ship.y"><random><min>margin</min><max>window.bottom - 60</max></random></set>
             </action>
           </actions>
           <variables>
@@ -343,8 +343,8 @@
               </collision>
             </collisions>
             <member>
-              <position><x><random min="0" max="window.right" /></x></position>
-              <velocity><x><random min="0.6" max="1.2" /></x><y><random min="-0.8" max="0.8" /></y></velocity>
+              <position><x><random><min>0</min><max>window.right</max></random></x></position>
+              <velocity><x><random><min>0.6</min><max>1.2</max></random></x><y><random><min>-0.8</min><max>0.8</max></random></y></velocity>
             </member>
             <member>
               <sprite>
@@ -359,8 +359,8 @@
                 <line><from><x>46</x><y>15</y></from><to><x>58</x><y>38</y></to><thickness>2</thickness></line>
                 <line><from><x>58</x><y>38</y></from><to><x>47</x><y>48</y></to><thickness>2</thickness></line>
               </sprite>
-              <position><x>window.right - 60</x><y><random min="0" max="window.bottom" /></y></position>
-              <velocity><x><random min="-0.8" max="0.8" /></x><y><random min="0.6" max="1.2" /></y></velocity>
+              <position><x>window.right - 60</x><y><random><min>0</min><max>window.bottom</max></random></y></position>
+              <velocity><x><random><min>-0.8</min><max>0.8</max></random></x><y><random><min>0.6</min><max>1.2</max></random></y></velocity>
             </member>
             <member>
               <sprite>
@@ -374,12 +374,12 @@
                 <line><from><x>36</x><y>4</y></from><to><x>58</x><y>21</y></to><thickness>2</thickness></line>
                 <line><from><x>58</x><y>21</y></from><to><x>53</x><y>35</y></to><thickness>2</thickness></line>
               </sprite>
-              <position><x><random min="0" max="window.right" /></x><y>window.bottom - 60</y></position>
-              <velocity><x><random min="-1.2" max="-0.6" /></x><y><random min="-0.8" max="0.8" /></y></velocity>
+              <position><x><random><min>0</min><max>window.right</max></random></x><y>window.bottom - 60</y></position>
+              <velocity><x><random><min>-1.2</min><max>-0.6</max></random></x><y><random><min>-0.8</min><max>0.8</max></random></y></velocity>
             </member>
             <member>
-              <position><y><random min="0" max="window.bottom" /></y></position>
-              <velocity><x><random min="-0.8" max="0.8" /></x><y><random min="-1.2" max="-0.6" /></y></velocity>
+              <position><y><random><min>0</min><max>window.bottom</max></random></y></position>
+              <velocity><x><random><min>-0.8</min><max>0.8</max></random></x><y><random><min>-1.2</min><max>-0.6</max></random></y></velocity>
             </member>
           </group>
         </group>
@@ -397,7 +397,7 @@
             <line><from><x>8</x><y>13</y></from><to><x>20</x><y>13</y></to><thickness>2</thickness></line>
             <line><from><x>20</x><y>13</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
           </sprite>
-          <position><x>-30</x><y><random min="80" max="window.bottom - 80" /></y></position>
+          <position><x>-30</x><y><random><min>80</min><max>window.bottom - 80</max></random></y></position>
           <velocity><x>2</x></velocity>
           <active>false</active>
           <collisions>
@@ -420,7 +420,7 @@
             </timer>
             <timer>
               <every>1.5</every>
-              <set variable="saucer.velocity.y"><random min="-1.5" max="1.5" /></set>
+              <set variable="saucer.velocity.y"><random><min>-1.5</min><max>1.5</max></random></set>
             </timer>
           </timers>
         </object>
@@ -474,7 +474,7 @@
       <timers>
         <!-- a ship that was hit comes back at the middle -->
         <timer><every>2</every><reveal object="ship" /></timer>
-        <timer><every><random min="12" max="24" /></every><reveal object="saucer" /></timer>
+        <timer><every><random><min>12</min><max>24</max></random></every><reveal object="saucer" /></timer>
       </timers>
     </state>
     <state name="paused">

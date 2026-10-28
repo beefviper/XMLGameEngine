@@ -101,8 +101,14 @@ namespace xge
 		{
 			RawValue value;
 			value.kind = RawValue::Kind::Random;
-			value.min = requireAttribute(tag, "min", here);
-			value.max = requireAttribute(tag, "max", here);
+			const std::string there = here + " > <random>";
+			for (std::unique_ptr<XmlNode> child = tag.getFirstChild(); child; child = child->getNextSibling())
+			{
+				if (child->getName() != "min" && child->getName() != "max") { fail(there, "unknown <" + child->getName() + ">; expected <min> and <max>"); }
+			}
+			value.min = readText(*requireChild(tag, "min", there));
+			value.max = readText(*requireChild(tag, "max", there));
+			if (value.min.empty() || value.max.empty()) { fail(there, "a <min> or <max> with nothing in it; each is a number or an expression"); }
 			return value;
 		}
 
@@ -130,7 +136,7 @@ namespace xge
 			});
 		}
 
-		// An operand of an equation or formula is a name or a number and
+		// An operand of a formula is a name or a number and
 		// nothing else: anything more is an operation of its own.
 		std::string requireTerm(const std::string& text, const std::string& here)
 		{
@@ -139,56 +145,6 @@ namespace xge
 				fail(here, "\"" + text + "\" is not a name or a number; an operand is one or the other, so write anything more than that as an operation of its own");
 			}
 			return text;
-		}
-
-		// One step of an <equation>: <divide name="half" dividend="title.width"
-		// divisor="2" />. The operands are attributes, a name or a number each;
-		// a name is an earlier step's, or one the game's expressions can use.
-		RawOperation readEquationStep(const XmlNode& node, const OperationShape& shape, const std::string& where)
-		{
-			const std::string here = where + " > <" + shape.tag + ">";
-
-			if (node.getFirstChild()) { fail(here, "is a step of an <equation>, which takes its operands as attributes (" + std::string(shape.first) + "=\"...\" " + shape.rest + "=\"...\"); operands written as elements belong in a <formula>"); }
-
-			RawOperation step;
-			step.op = shape.tag;
-			step.name = trim(node.getAttribute("name"));
-
-			if (!step.name.empty() && !isName(step.name, false)) { fail(here, "name=\"" + step.name + "\" is not a name; a step's name is letters, digits and underscores, with no dots"); }
-
-			for (const char* role : { shape.first, shape.rest })
-			{
-				RawOperand operand;
-				operand.role = role;
-				operand.value = RawValue::expression(requireTerm(trim(requireAttribute(node, role, here)), here + " " + role));
-				step.operands.push_back(std::move(operand));
-			}
-
-			return step;
-		}
-
-		RawValue readEquation(const XmlNode& node, const std::string& where)
-		{
-			const std::string here = where + " > <equation>";
-			auto steps = std::make_shared<std::vector<RawOperation>>();
-			std::set<std::string> names;
-
-			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
-			{
-				const OperationShape* shape = operationShape(child->getName());
-				if (!shape) { fail(here, "has <" + child->getName() + ">, which is not a step; a step is <add>, <subtract>, <multiply> or <divide>"); }
-
-				RawOperation step = readEquationStep(*child, *shape, here);
-				if (!step.name.empty() && !names.insert(step.name).second) { fail(here, "two steps are called \"" + step.name + "\""); }
-				steps->push_back(std::move(step));
-			}
-
-			if (steps->empty()) { fail(here, "has no steps"); }
-
-			RawValue value;
-			value.kind = RawValue::Kind::Equation;
-			value.operations = std::move(steps);
-			return value;
 		}
 
 		RawOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where);
@@ -228,7 +184,6 @@ namespace xge
 		{
 			const std::string here = where + " > <" + shape.tag + ">";
 
-			if (!node.getAttribute("name").empty()) { fail(here, "has a name; only a step of an <equation> is named, and an operation nested in a <formula> is used where it stands"); }
 
 			RawOperation operation;
 			operation.op = shape.tag;
@@ -289,7 +244,6 @@ namespace xge
 			const std::string tagName = tag->getName();
 
 			if (tagName == "random") { return readRandom(*tag, here); }
-			if (tagName == "equation") { return readEquation(*tag, here); }
 			if (tagName == "formula") { return readFormula(*tag, here); }
 			if (tagName == "centered")
 			{
@@ -317,7 +271,7 @@ namespace xge
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
-				if (tag == "random" || tag == "equation" || tag == "formula")
+				if (tag == "random" || tag == "formula")
 				{
 					if (!valueTagName.empty()) { fail(here, "holds more than one value tag"); }
 					valueTagName = tag;
@@ -334,7 +288,6 @@ namespace xge
 			if (!valueTag && text.empty()) { fail(here, "has no value; its number goes between its tags"); }
 			if (!valueTag) { return RawValue::expression(text); }
 			if (valueTag->getName() == "random") { return readRandom(*valueTag, here); }
-			if (valueTag->getName() == "equation") { return readEquation(*valueTag, here); }
 			return readFormula(*valueTag, here);
 		}
 

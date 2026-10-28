@@ -282,7 +282,7 @@
             <timers>
               <timer><every>turnround</every><reverse /></timer>
               <timer>
-                <every><random min="5" max="9" /></every>
+                <every><random><min>5</min><max>9</max></random></every>
                 <spawn object="swirl"><position><x>qotile.x</x><y>qotile.y</y></position></spawn>
                 <play sound="swirl" />
               </timer>

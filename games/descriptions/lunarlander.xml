@@ -189,8 +189,8 @@
             <line><from><x>0</x><y>28</y></from><to><x>5</x><y>28</y></to><thickness>2</thickness></line>
             <line><from><x>25</x><y>28</y></from><to><x>30</x><y>28</y></to><thickness>2</thickness></line>
           </sprite>
-          <position><x><random min="40" max="300" /></x><y>40</y></position>
-          <velocity><x><random min="0.5" max="1.2" /></x></velocity>
+          <position><x><random><min>40</min><max>300</max></random></x><y>40</y></position>
+          <velocity><x><random><min>0.5</min><max>1.2</max></random></x></velocity>
           <acceleration><x>0</x><y>gravity</y></acceleration>
           <heading>0</heading>
           <collisions>

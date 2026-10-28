@@ -188,7 +188,7 @@
         <object name="ball">
           <sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>
           <position><x><centered /></x><y><centered /></y></position>
-          <velocity><x><random min="-3" max="3" /></x><y>4</y></velocity>
+          <velocity><x><random><min>-3</min><max>3</max></random></x><y>4</y></velocity>
           <collisions>
             <enabled>true</enabled>
             <collision edge="horizontal">

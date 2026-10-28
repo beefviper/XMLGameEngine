@@ -27,20 +27,12 @@
     <xsl:param name="node" />
     <!-- a value tag, or the text, beside the named parts of a verb whose
          number is its content (readLeadValue): <jump>rowgap<seconds>... -->
-    <xsl:variable name="tag" select="$node/*[self::random or self::equation or self::formula or self::centered][1]" />
+    <xsl:variable name="tag" select="$node/*[self::random or self::formula or self::centered][1]" />
     <xsl:choose>
       <xsl:when test="$tag[self::random]">
         <xsl:call-template name="random">
           <xsl:with-param name="node" select="$tag" />
         </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="$tag[self::equation]">
-        <xsl:text>equation({ </xsl:text>
-        <xsl:for-each select="$tag/*">
-          <xsl:if test="position() &gt; 1">, </xsl:if>
-          <xsl:call-template name="equation-step" />
-        </xsl:for-each>
-        <xsl:text> })</xsl:text>
       </xsl:when>
       <xsl:when test="$tag[self::centered]">
         <xsl:text>centered(</xsl:text>
@@ -100,68 +92,20 @@
   <xsl:template name="random">
     <xsl:param name="node" />
     <xsl:text>random(</xsl:text>
-    <xsl:call-template name="string">
-      <xsl:with-param name="text" select="$node/@min" />
+    <xsl:call-template name="text">
+      <xsl:with-param name="node" select="$node/min" />
     </xsl:call-template>
     <xsl:text>, </xsl:text>
-    <xsl:call-template name="string">
-      <xsl:with-param name="text" select="$node/@max" />
+    <xsl:call-template name="text">
+      <xsl:with-param name="node" select="$node/max" />
     </xsl:call-template>
     <xsl:text>)</xsl:text>
-  </xsl:template>
-
-  <!-- What an operation's operands are called: the first, then the rest. -->
-  <xsl:template name="first-operand">
-    <xsl:param name="op" />
-    <xsl:choose>
-      <xsl:when test="$op = 'add'">augend</xsl:when>
-      <xsl:when test="$op = 'subtract'">minuend</xsl:when>
-      <xsl:when test="$op = 'multiply'">multiplicand</xsl:when>
-      <xsl:when test="$op = 'divide'">dividend</xsl:when>
-    </xsl:choose>
-  </xsl:template>
-
-  <xsl:template name="other-operand">
-    <xsl:param name="op" />
-    <xsl:choose>
-      <xsl:when test="$op = 'add'">addend</xsl:when>
-      <xsl:when test="$op = 'subtract'">subtrahend</xsl:when>
-      <xsl:when test="$op = 'multiply'">multiplier</xsl:when>
-      <xsl:when test="$op = 'divide'">divisor</xsl:when>
-    </xsl:choose>
-  </xsl:template>
-
-  <!-- A step of an <equation>: <divide name="half" dividend="title.width" divisor="2" />. -->
-  <xsl:template name="equation-step">
-    <xsl:variable name="first">
-      <xsl:call-template name="first-operand">
-        <xsl:with-param name="op" select="local-name()" />
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:variable name="other">
-      <xsl:call-template name="other-operand">
-        <xsl:with-param name="op" select="local-name()" />
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:value-of select="concat('operation(&quot;', local-name(), '&quot;, ')" />
-    <xsl:call-template name="text">
-      <xsl:with-param name="node" select="@name" />
-    </xsl:call-template>
-    <xsl:value-of select="concat(', { { &quot;', $first, '&quot;, value(')" />
-    <xsl:call-template name="text">
-      <xsl:with-param name="node" select="@*[local-name() = $first]" />
-    </xsl:call-template>
-    <xsl:value-of select="concat(') }, { &quot;', $other, '&quot;, value(')" />
-    <xsl:call-template name="text">
-      <xsl:with-param name="node" select="@*[local-name() = $other]" />
-    </xsl:call-template>
-    <xsl:text>) } })</xsl:text>
   </xsl:template>
 
   <!-- An operation of a <formula>: its operands, each a name, a number, a
        <random> or an operation of its own. -->
   <xsl:template name="formula-operation">
-    <xsl:value-of select="concat('operation(&quot;', local-name(), '&quot;, &quot;&quot;, { ')" />
+    <xsl:value-of select="concat('operation(&quot;', local-name(), '&quot;, { ')" />
     <xsl:for-each select="*">
       <xsl:if test="position() &gt; 1">, </xsl:if>
       <xsl:value-of select="concat('{ &quot;', local-name(), '&quot;, ')" />

@@ -52,13 +52,15 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>PONG</content></text></sprite>
-          <!-- x is window.width.center - title.width / 2, written as an <equation>: steps, each naming its answer for the next -->
+          <!-- x is window.width.center - title.width / 2, written as a <formula>: one operation, its operands nested inside it -->
           <position>
             <x>
-              <equation>
-                <divide name="half" dividend="title.width" divisor="2" />
-                <subtract minuend="window.width.center" subtrahend="half" />
-              </equation>
+              <formula>
+                <subtract>
+                  <minuend>window.width.center</minuend>
+                  <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
+                </subtract>
+              </formula>
             </x>
             <y>margin * 4</y>
           </position>
@@ -148,8 +150,8 @@
             <variable name="size">16</variable>
             <variable name="speed">6</variable>
             <variable name="hits">0</variable>
-            <variable name="angle"><random min="-30" max="30" /></variable>
-            <variable name="side"><random min="-1" max="1" /></variable>
+            <variable name="angle"><random><min>-30</min><max>30</max></random></variable>
+            <variable name="side"><random><min>-1</min><max>1</max></random></variable>
           </variables>
         </object>
       </objects>

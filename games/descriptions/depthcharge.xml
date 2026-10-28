@@ -230,7 +230,7 @@
             </collision>
           </collisions>
           <timers>
-            <timer><every><random min="3" max="9" /></every><release object="mine" /></timer>
+            <timer><every><random><min>3</min><max>9</max></random></every><release object="mine" /></timer>
           </timers>
           <group name="lane1">
             <position><y>170</y></position>

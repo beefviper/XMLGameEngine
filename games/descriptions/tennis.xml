@@ -152,7 +152,7 @@
         <object name="ball">
           <sprite><circle><radius>6</radius><color>color.yellow</color></circle></sprite>
           <position><x>394</x><y>90</y></position>
-          <velocity><x><random min="-1.5" max="1.5" /></x><y>3</y></velocity>
+          <velocity><x><random><min>-1.5</min><max>1.5</max></random></x><y>3</y></velocity>
           <altitude>
             <start>80</start>
             <fall>0.25</fall>

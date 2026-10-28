@@ -1,18 +1,16 @@
-// test_equations.cpp
+// test_formulas.cpp
 // XML Game Engine
 // author: beefviper
 // date: Oct 4, 2026
 //
-// Catch2 tests for the two ways to write arithmetic as tags instead of as text:
-// an <equation> (steps, each one operation on two names or numbers, a step able
-// to name its answer for the ones after it) and a <formula> (one operation whose
-// operands are themselves numbers, operations included). Both are value tags,
-// like <random>, so the text form (exprtk) still works beside them, and all
-// three must give the same number. Then what each mistake says, the printed
-// form, a divisor of 0 (a load error, and a warning instead once the game is
-// running), both schema checkers against the same good and bad files, and the two
-// shipped games that are written with them (Pong's title with an <equation>,
-// Breakout's with <formula>s), against real xge::Games.
+// Catch2 tests for arithmetic written as tags instead of as text: a <formula>,
+// one operation whose operands are themselves numbers, operations included. It
+// is a value tag, like <random>, so the text form (exprtk) still works beside
+// it, and both must give the same number. Then what each mistake says, the
+// printed form, a divisor of 0 (a load error, and a warning instead once the
+// game is running), both schema checkers against the same good and bad files,
+// and the two shipped games written with it (Pong's and Breakout's titles),
+// against real xge::Games.
 //
 // Small games are written to a scratch file and loaded by a real xge::Game;
 // none of it needs a window.
@@ -94,7 +92,7 @@ namespace
 		Game game;
 
 		explicit Loaded(const std::string& xml) :
-			file(writeScratch("xge_equations_game.xml", xml)),
+			file(writeScratch("xge_formulas_game.xml", xml)),
 			game(file.path.string())
 		{
 		}
@@ -108,18 +106,11 @@ namespace
 		return Loaded(gameXml(x, "0", variables)).x();
 	}
 
-	// The same arithmetic in the three spellings, for the tests that want to
-	// see them agree. Window width is 800, w is 100 and xoffset is 7.
+	// The same arithmetic in both spellings, for the tests that want to see
+	// them agree. Window width is 800, w is 100 and xoffset is 7.
 	const std::string kVariables = "<variable name=\"w\">100</variable><variable name=\"xoffset\">7</variable>";
 
 	const std::string kText = "window.width.center - w / 2 - xoffset";
-
-	const std::string kEquation =
-		"<equation>"
-		"<divide name=\"half\" dividend=\"w\" divisor=\"2\" />"
-		"<subtract name=\"centered\" minuend=\"window.width.center\" subtrahend=\"half\" />"
-		"<subtract minuend=\"centered\" subtrahend=\"xoffset\" />"
-		"</equation>";
 
 	const std::string kFormula =
 		"<formula><subtract>"
@@ -130,14 +121,13 @@ namespace
 }
 
 // --------------------------------------------------------------- the forms
-TEST_CASE("text, an <equation> and a <formula> give the same number", "[equations]")
+TEST_CASE("text and a <formula> give the same number", "[formulas]")
 {
 	CHECK(xOf(kText, kVariables) == 343.0f);
-	CHECK(xOf(kEquation, kVariables) == 343.0f);
 	CHECK(xOf(kFormula, kVariables) == 343.0f);
 }
 
-TEST_CASE("each operation works in both forms", "[equations]")
+TEST_CASE("each operation works", "[formulas]")
 {
 	struct Case
 	{
@@ -163,13 +153,12 @@ TEST_CASE("each operation works in both forms", "[equations]")
 			const std::string first = c.first;
 			const std::string rest = c.rest;
 
-			CHECK(xOf("<equation><" + tag + " " + first + "=\"12\" " + rest + "=\"4\" /></equation>") == c.expected);
 			CHECK(xOf("<formula><" + tag + "><" + first + ">12</" + first + "><" + rest + ">4</" + rest + "></" + tag + "></formula>") == c.expected);
 		}
 	}
 }
 
-TEST_CASE("a formula takes the first operand, then each of the others in turn", "[equations]")
+TEST_CASE("a formula takes the first operand, then each of the others in turn", "[formulas]")
 {
 	const auto formula = [](const std::string& tag, const std::string& first, const std::string& rest, const std::vector<std::string>& numbers)
 	{
@@ -184,7 +173,7 @@ TEST_CASE("a formula takes the first operand, then each of the others in turn", 
 	CHECK(xOf(formula("multiply", "multiplicand", "multiplier", { "2", "3", "4" })) == 24.0f);
 }
 
-TEST_CASE("operations nest as deep as they are written, and a <random> is an operand", "[equations]")
+TEST_CASE("operations nest as deep as they are written, and a <random> is an operand", "[formulas]")
 {
 	// (((6 + 4) * 3) - (20 / 5)) + 1 = 27
 	CHECK(xOf(
@@ -196,38 +185,16 @@ TEST_CASE("operations nest as deep as they are written, and a <random> is an ope
 		"<addend>1</addend>"
 		"</add></formula>") == 27.0f);
 
-	CHECK(xOf("<formula><add><augend><random min=\"5\" max=\"5\" /></augend><addend>1</addend></add></formula>") == 6.0f);
+	CHECK(xOf("<formula><add><augend><random><min>5</min><max>5</max></random></augend><addend>1</addend></add></formula>") == 6.0f);
 }
 
-TEST_CASE("an equation's steps use the names of the steps before them, and the last step is the answer", "[equations]")
-{
-	// a = 2 + 3, b = a * a, then b - a
-	CHECK(xOf(
-		"<equation>"
-		"<add name=\"a\" augend=\"2\" addend=\"3\" />"
-		"<multiply name=\"b\" multiplicand=\"a\" multiplier=\"a\" />"
-		"<subtract minuend=\"b\" subtrahend=\"a\" />"
-		"</equation>") == 20.0f);
-
-	// A named last step is still the answer.
-	CHECK(xOf("<equation><add name=\"only\" augend=\"1\" addend=\"1\" /></equation>") == 2.0f);
-}
-
-TEST_CASE("a step's name is its own, and goes before a variable of the same name", "[equations]")
-{
-	// The variable w is 100; the step called w is 3 + 4 for the steps after it.
-	CHECK(xOf(
-		"<equation><add name=\"w\" augend=\"3\" addend=\"4\" /><multiply multiplicand=\"w\" multiplier=\"2\" /></equation>",
-		kVariables) == 14.0f);
-}
-
-TEST_CASE("variables can hold an equation or a formula, and an expression can use them", "[equations]")
+TEST_CASE("variables can hold a formula, and an expression can use them", "[formulas]")
 {
 	Loaded loaded(gameXml(
 		"r * 2 + 1", "s",
 		kVariables +
 		"<variable name=\"r\">" + kFormula + "</variable>"
-		"<variable name=\"s\">" + kEquation + "</variable>"));
+		"<variable name=\"s\">r</variable>"));
 
 	CHECK(loaded.game.getVariable("r") == 343.0f);
 	CHECK(loaded.game.getVariable("s") == 343.0f);
@@ -235,23 +202,23 @@ TEST_CASE("variables can hold an equation or a formula, and an expression can us
 	CHECK(loaded.y() == 343.0f);
 }
 
-TEST_CASE("an operation follows the order its operands are written in", "[equations]")
+TEST_CASE("an operation follows the order its operands are written in", "[formulas]")
 {
 	// Not commutative: 10 - 4 is not 4 - 10, and 10 / 4 is not 4 / 10.
-	CHECK(xOf("<equation><subtract minuend=\"10\" subtrahend=\"4\" /></equation>") == 6.0f);
-	CHECK(xOf("<equation><subtract minuend=\"4\" subtrahend=\"10\" /></equation>") == -6.0f);
+	CHECK(xOf("<formula><subtract><minuend>10</minuend><subtrahend>4</subtrahend></subtract></formula>") == 6.0f);
+	CHECK(xOf("<formula><subtract><minuend>4</minuend><subtrahend>10</subtrahend></subtract></formula>") == -6.0f);
 	CHECK(xOf("<formula><divide><dividend>10</dividend><divisor>4</divisor></divide></formula>") == 2.5f);
 	CHECK(xOf("<formula><divide><dividend>4</dividend><divisor>10</divisor></divide></formula>") == 0.4f);
 }
 
-TEST_CASE("a negative number and a decimal are numbers", "[equations]")
+TEST_CASE("a negative number and a decimal are numbers", "[formulas]")
 {
-	CHECK(xOf("<equation><add augend=\"-110\" addend=\"0.5\" /></equation>") == -109.5f);
+	CHECK(xOf("<formula><add><augend>-110</augend><addend>0.5</addend></add></formula>") == -109.5f);
 	CHECK(xOf("<formula><add><augend>-110</augend><addend>1e2</addend></add></formula>") == -10.0f);
 }
 
 // --------------------------------------------------------------- the print
-TEST_CASE("a value prints as infix with its brackets", "[equations]")
+TEST_CASE("a value prints as infix with its brackets", "[formulas]")
 {
 	const auto operand = [](const std::string& text) { RawOperand o; o.value = RawValue::expression(text); return o; };
 
@@ -275,50 +242,11 @@ TEST_CASE("a value prints as infix with its brackets", "[equations]")
 	formula.operations = std::make_shared<std::vector<RawOperation>>(1, subtract);
 
 	CHECK(valueText(formula) == "(window.width.center - (title.width / 2))");
-
-	divide.name = "half";
-	subtract.operands = { operand("window.width.center"), operand("half") };
-	RawValue equation;
-	equation.kind = RawValue::Kind::Equation;
-	equation.operations = std::make_shared<std::vector<RawOperation>>(std::vector<RawOperation>{ divide, subtract });
-
-	CHECK(valueText(equation) == "equation{ half = (title.width / 2); (window.width.center - half) }");
 	CHECK(valueText(RawValue::expression("a + b")) == "a + b");
 }
 
 // --------------------------------------------------------------- mistakes
-TEST_CASE("an equation that is wrong says which step and what", "[equations][errors]")
-{
-	struct Mistake
-	{
-		const char* what;
-		std::string value;
-		const char* says;
-		const char* where = "object 'o' > <position> > <x>";
-	};
-
-	const Mistake mistakes[] = {
-		{ "no steps", "<equation></equation>", "has no steps" },
-		{ "a tag that is not a step", "<equation><modulo dividend=\"7\" divisor=\"2\" /></equation>", "<modulo>, which is not a step" },
-		{ "an operand that is an expression", "<equation><add augend=\"a + b\" addend=\"1\" /></equation>", "\"a + b\" is not a name or a number" },
-		{ "a missing operand", "<equation><subtract minuend=\"1\" /></equation>", "<subtract> needs subtrahend=" },
-		{ "operands written as elements", "<equation><add><augend>1</augend><addend>2</addend></add></equation>", "takes its operands as attributes" },
-		{ "two steps with one name", "<equation><add name=\"a\" augend=\"1\" addend=\"1\" /><add name=\"a\" augend=\"2\" addend=\"2\" /></equation>", "two steps are called \"a\"" },
-		{ "a name with a dot", "<equation><add name=\"a.b\" augend=\"1\" addend=\"1\" /></equation>", "is not a name" },
-		{ "a name used before its step", "<equation><add augend=\"later\" addend=\"1\" /><add name=\"later\" augend=\"1\" addend=\"1\" /></equation>", "later", "object 'o'" },
-		{ "text beside the tag", "5 <equation><add augend=\"1\" addend=\"1\" /></equation>", "both the text \"5\" and a <equation> tag" },
-	};
-
-	for (const Mistake& mistake : mistakes)
-	{
-		DYNAMIC_SECTION(mistake.what)
-		{
-			REQUIRE_THROWS_WITH(Loaded(gameXml(mistake.value)), ContainsSubstring(mistake.where) && ContainsSubstring(mistake.says));
-		}
-	}
-}
-
-TEST_CASE("a formula that is wrong says which operation and what", "[equations][errors]")
+TEST_CASE("a formula that is wrong says which operation and what", "[formulas][errors]")
 {
 	struct Mistake
 	{
@@ -335,11 +263,10 @@ TEST_CASE("a formula that is wrong says which operation and what", "[equations][
 		{ "one operand", "<formula><subtract><minuend>1</minuend></subtract></formula>", "needs a <minuend> and at least one <subtrahend>" },
 		{ "the first operand twice", "<formula><subtract><minuend>1</minuend><minuend>2</minuend></subtract></formula>", "<minuend> where <subtrahend> belongs" },
 		{ "an expression as an operand", "<formula><add><augend>a + b</augend><addend>1</addend></add></formula>", "\"a + b\" is not a name or a number" },
-		{ "an operand with text and a tag", "<formula><add><augend>2 <random min=\"1\" max=\"2\" /></augend><addend>1</addend></add></formula>", "both the text \"2\" and a <random> tag" },
+		{ "an operand with text and a tag", "<formula><add><augend>2 <random><min>1</min><max>2</max></random></augend><addend>1</addend></add></formula>", "both the text \"2\" and a <random> tag" },
 		{ "an operand with a tag that is not an operation", "<formula><add><augend><dice /></augend><addend>1</addend></add></formula>", "<dice>, which is not an operation" },
 		{ "an operand with nothing in it", "<formula><add><augend></augend><addend>1</addend></add></formula>", "has no value" },
-		{ "a named operation", "<formula><add name=\"a\"><augend>1</augend><addend>1</addend></add></formula>", "has a name" },
-		{ "an equation inside a formula", "<formula><add><augend><equation><add augend=\"1\" addend=\"1\" /></equation></augend><addend>1</addend></add></formula>", "<equation>, which is not an operation" },
+		{ "text beside the tag", "5 <formula><add><augend>1</augend><addend>1</addend></add></formula>", "both the text \"5\" and a <formula> tag" },
 	};
 
 	for (const Mistake& mistake : mistakes)
@@ -375,7 +302,7 @@ namespace
 	// relative schema path resolves.
 	Verdict judge(const std::string& xml)
 	{
-		const ScratchFile scratch{ "descriptions/equations_scratch.xml" };
+		const ScratchFile scratch{ "descriptions/formulas_scratch.xml" };
 		{
 			std::ofstream out(scratch.path);
 			out << xml;
@@ -396,14 +323,14 @@ namespace
 		return verdict;
 	}
 
-	// pong.xml with its title's <equation> replaced by `value` (the whole
+	// pong.xml with its title's <formula> replaced by `value` (the whole
 	// <x>...</x> element's inner text). The title is the main menu's own, so
 	// it is written inside that state.
 	std::string pongTitleX(const std::string& value)
 	{
 		std::string xml = readFile("descriptions/pong.xml");
-		const std::string open = "<x>\n              <equation>";
-		const std::string close = "</equation>\n            </x>";
+		const std::string open = "<x>\n              <formula>";
+		const std::string close = "</formula>\n            </x>";
 		const auto from = xml.find(open);
 		const auto to = xml.find(close);
 		REQUIRE(from != std::string::npos);
@@ -413,11 +340,11 @@ namespace
 	}
 }
 
-TEST_CASE("both schema checkers accept every spelling", "[equations][schema]")
+TEST_CASE("both schema checkers accept every spelling", "[formulas][schema]")
 {
-	for (const std::string& value : { std::string("window.width.center - title.width / 2"), kEquation, kFormula })
+	for (const std::string& value : { std::string("window.width.center - title.width / 2"), kFormula })
 	{
-		// kEquation and kFormula use the variables w and xoffset, which pong does not have; the
+		// kFormula uses the variables w and xoffset, which pong does not have; the
 		// schema does not look at names, only at shape.
 		const Verdict verdict = judge(pongTitleX(value));
 		CHECK(verdict.weakAccepts);
@@ -432,7 +359,7 @@ TEST_CASE("both schema checkers accept every spelling", "[equations][schema]")
 	}
 }
 
-TEST_CASE("both schema checkers turn away the same mistakes in an equation or formula", "[equations][schema]")
+TEST_CASE("both schema checkers turn away the same mistakes in a formula", "[formulas][schema]")
 {
 	struct Mistake
 	{
@@ -442,9 +369,8 @@ TEST_CASE("both schema checkers turn away the same mistakes in an equation or fo
 	};
 
 	const Mistake mistakes[] = {
-		{ "a step with no divisor", "<equation><divide dividend=\"1\" /></equation>", "missing required attribute 'divisor'" },
-		{ "a tag that is not a step", "<equation><modulo dividend=\"1\" divisor=\"2\" /></equation>", "unexpected element <modulo>" },
-		{ "an empty equation", "<equation></equation>", "expected one of <add>, <subtract>, <multiply>, <divide>" },
+		{ "the old <equation>", "<equation><divide dividend=\"1\" divisor=\"2\" /></equation>", "unexpected element <equation>" },
+		{ "a tag that is not an operation", "<formula><modulo><dividend>1</dividend><divisor>2</divisor></modulo></formula>", "unexpected element <modulo>" },
 		{ "operands out of order", "<formula><subtract><subtrahend>1</subtrahend><minuend>2</minuend></subtract></formula>", "expected <minuend>" },
 		{ "a formula with no operation", "<formula></formula>", "expected one of <add>, <subtract>, <multiply>, <divide>" },
 		{ "two operations in a formula", "<formula><add><augend>1</augend><addend>1</addend></add><add><augend>1</augend><addend>1</addend></add></formula>", "unexpected element <add>" },
@@ -475,7 +401,7 @@ namespace
 	}
 }
 
-TEST_CASE("Pong's title is placed by an <equation> of its own size", "[equations][games]")
+TEST_CASE("Pong's title is placed by a <formula> of its own size", "[formulas][games]")
 {
 	Game game{ "descriptions/pong.xml" };
 	Object& title = game.getObject("title");
@@ -497,7 +423,7 @@ TEST_CASE("Pong's title is placed by an <equation> of its own size", "[equations
 	CHECK(title.position.x == 640.0f - 200.0f);
 }
 
-TEST_CASE("Breakout's title is placed by <formula>s of its own size", "[equations][games]")
+TEST_CASE("Breakout's title is placed by <formula>s of its own size", "[formulas][games]")
 {
 	Game game{ "descriptions/breakout.xml" };
 	Object& title = game.getObject("title");
@@ -551,7 +477,7 @@ namespace
 	}
 }
 
-TEST_CASE("a divisor of 0 stops the load, and says which divide", "[equations][errors][zero]")
+TEST_CASE("a divisor of 0 stops the load, and says which divide", "[formulas][errors][zero]")
 {
 	struct Mistake
 	{
@@ -561,11 +487,8 @@ TEST_CASE("a divisor of 0 stops the load, and says which divide", "[equations][e
 	};
 
 	const Mistake mistakes[] = {
-		{ "a number, in an equation", "<equation><divide dividend=\"1\" divisor=\"0\" /></equation>", "<equation> > <divide>" },
-		{ "a variable that is 0, in an equation", "<equation><divide dividend=\"1\" divisor=\"zero\" /></equation>", "<equation> > <divide>" },
-		{ "a step that works out to 0", "<equation><subtract name=\"gone\" minuend=\"3\" subtrahend=\"3\" /><divide dividend=\"1\" divisor=\"gone\" /></equation>", "<equation> > <divide>" },
-		{ "a number, in a formula", "<formula><divide><dividend>1</dividend><divisor>0</divisor></divide></formula>", "<formula> > <divide>" },
-		{ "a variable that is 0, in a formula", "<formula><divide><dividend>1</dividend><divisor>zero</divisor></divide></formula>", "<formula> > <divide>" },
+		{ "a number", "<formula><divide><dividend>1</dividend><divisor>0</divisor></divide></formula>", "<formula> > <divide>" },
+		{ "a variable that is 0", "<formula><divide><dividend>1</dividend><divisor>zero</divisor></divide></formula>", "<formula> > <divide>" },
 		{ "a later divisor of a chain", "<formula><divide><dividend>100</dividend><divisor>5</divisor><divisor>0</divisor></divide></formula>", "<formula> > <divide>" },
 		{ "an operation that works out to 0, nested", "<formula><divide><dividend>1</dividend><divisor><subtract><minuend>2</minuend><subtrahend>2</subtrahend></subtract></divisor></divide></formula>", "<formula> > <divide>" },
 	};
@@ -580,28 +503,27 @@ TEST_CASE("a divisor of 0 stops the load, and says which divide", "[equations][e
 	}
 }
 
-TEST_CASE("only a divisor matters: 0 as a dividend, or in other operations, is fine", "[equations][zero]")
+TEST_CASE("only a divisor matters: 0 as a dividend, or in other operations, is fine", "[formulas][zero]")
 {
-	CHECK(xOf("<equation><divide dividend=\"0\" divisor=\"5\" /></equation>") == 0.0f);
 	CHECK(xOf("<formula><divide><dividend>0</dividend><divisor>5</divisor></divide></formula>") == 0.0f);
-	CHECK(xOf("<equation><multiply multiplicand=\"7\" multiplier=\"0\" /></equation>") == 0.0f);
-	CHECK(xOf("<equation><add augend=\"0\" addend=\"0\" /></equation>") == 0.0f);
-	CHECK(xOf("<equation><subtract minuend=\"4\" subtrahend=\"0\" /></equation>") == 4.0f);
+	CHECK(xOf("<formula><multiply><multiplicand>7</multiplicand><multiplier>0</multiplier></multiply></formula>") == 0.0f);
+	CHECK(xOf("<formula><add><augend>0</augend><addend>0</addend></add></formula>") == 0.0f);
+	CHECK(xOf("<formula><subtract><minuend>4</minuend><subtrahend>0</subtrahend></subtract></formula>") == 4.0f);
 }
 
-TEST_CASE("the exprtk text is left alone: it divides by 0 as it always did", "[equations][zero]")
+TEST_CASE("the exprtk text is left alone: it divides by 0 as it always did", "[formulas][zero]")
 {
 	// Not an error, as before; the tags are where the engine looks.
 	Loaded loaded(gameXml("1 / zero", "0", "<variable name=\"zero\">0</variable>"));
 	CHECK(std::isinf(loaded.x()));
 }
 
-TEST_CASE("a position finished once a text is measured warns, once, instead of ending the game", "[equations][zero]")
+TEST_CASE("a position finished once a text is measured warns, once, instead of ending the game", "[formulas][zero]")
 {
 	// The text's width is unknown until a window measures it, so nothing is
 	// divided at load; a text measured as 0 wide is the divisor of 0.
 	const std::string xml = gameWithObject("t", "<text><content>hi</content><size>20</size></text>",
-		"<equation><divide dividend=\"100\" divisor=\"t.width\" /></equation>");
+		"<formula><divide><dividend>100</dividend><divisor>t.width</divisor></divide></formula>");
 
 	Loaded loaded(xml);
 	Object& text = loaded.game.getObject("t");
@@ -629,7 +551,7 @@ TEST_CASE("a position finished once a text is measured warns, once, instead of e
 	CHECK(text.position.x == 2.0f);
 }
 
-TEST_CASE("a timer whose interval reaches a divisor of 0 keeps going, with one warning", "[equations][zero]")
+TEST_CASE("a timer whose interval reaches a divisor of 0 keeps going, with one warning", "[formulas][zero]")
 {
 	// Every 1 / rate seconds; each time it goes off it takes 1 off rate, so the
 	// second interval divides by 0.
@@ -655,7 +577,7 @@ TEST_CASE("a timer whose interval reaches a divisor of 0 keeps going, with one w
 	CHECK(countOf(captured.text.str(), "the divisor is 0") == 1);
 }
 
-TEST_CASE("a divisor that is 0 only because it is not known yet is not refused at load", "[equations][zero]")
+TEST_CASE("a divisor that is 0 only because it is not known yet is not refused at load", "[formulas][zero]")
 {
 	// b is built after a, so b.w reads 0 while a is being built; and the width of
 	// a text reads 0 until a window has measured it. Neither is a mistake.
@@ -670,7 +592,7 @@ TEST_CASE("a divisor that is 0 only because it is not known yet is not refused a
 		"<collisions><enabled>false</enabled></collisions>"
 		"<variables><variable name=\"v\"><formula><divide><dividend>1</dividend><divisor>b.w</divisor></divide></formula></variable></variables></object>"
 		"<object name=\"b\"><sprite><text><content>hi</content><size>20</size></text></sprite>"
-		"<position><x><equation><divide dividend=\"100\" divisor=\"b.width\" /></equation></x><y>0</y></position>"
+		"<position><x><formula><divide><dividend>100</dividend><divisor>b.width</divisor></divide></formula></x><y>0</y></position>"
 		"<velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
 		"<variables><variable name=\"w\">4</variable></variables></object>"
 		"</objects>"

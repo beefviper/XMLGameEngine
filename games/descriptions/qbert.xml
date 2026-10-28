@@ -604,11 +604,11 @@
           </actions>
           <timers>
             <timer>
-              <every><random min="0.6" max="1.4" /></every>
+              <every><random><min>0.6</min><max>1.4</max></random></every>
               <trigger action="left" />
             </timer>
             <timer>
-              <every><random min="0.6" max="1.4" /></every>
+              <every><random><min>0.6</min><max>1.4</max></random></every>
               <trigger action="right" />
             </timer>
           </timers>
@@ -787,11 +787,11 @@
           </variables>
           <timers>
             <timer sprite="egg">
-              <every><random min="0.8" max="1.6" /></every>
+              <every><random><min>0.8</min><max>1.6</max></random></every>
               <trigger action="left" />
             </timer>
             <timer sprite="egg">
-              <every><random min="0.8" max="1.6" /></every>
+              <every><random><min>0.8</min><max>1.6</max></random></every>
               <trigger action="right" />
             </timer>
             <timer sprite="snake">

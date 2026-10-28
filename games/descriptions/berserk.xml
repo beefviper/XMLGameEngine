@@ -165,7 +165,7 @@
       </actions>
       <timers>
         <timer>
-          <every><random min="1" max="2.5" /></every>
+          <every><random><min>1</min><max>2.5</max></random></every>
           <chase object="player">0.25 + player.depth * 0.05</chase>
         </timer>
       </timers>
@@ -179,7 +179,7 @@
       <group name="armed">
         <timers>
           <timer>
-            <every><random min="max(0.8, 3 - player.depth * 0.25)" max="max(2, 7 - player.depth * 0.5)" /></every>
+            <every><random><min>max(0.8, 3 - player.depth * 0.25)</min><max>max(2, 7 - player.depth * 0.5)</max></random></every>
             <aim object="player" />
             <fire object="robotshot" />
             <play sound="robotshoot" />

@@ -1879,23 +1879,8 @@ namespace xge
 			return randomBetween(min, max);
 		}
 
-		case RawValue::Kind::Equation:
-		{
-			std::map<std::string, Answer> steps;
-			Answer answer;
-			const std::string here = where + " > <equation>";
-
-			for (const RawOperation& step : *value.operations)
-			{
-				answer = evaluateOperation(step, steps, here);
-				if (!step.name.empty()) { steps[step.name] = answer; }
-			}
-
-			return answer.value;
-		}
-
 		case RawValue::Kind::Formula:
-			return evaluateOperation(value.operations->front(), {}, where + " > <formula>").value;
+			return evaluateOperation(value.operations->front(), where + " > <formula>").value;
 
 		case RawValue::Kind::Centered:
 			throw std::runtime_error(where + ": <centered> is only for an object's <position>");
@@ -1924,7 +1909,7 @@ namespace xge
 		return false;
 	}
 
-	game_expr::Answer game_expr::evaluateOperation(const RawOperation& operation, const std::map<std::string, Answer>& steps, const std::string& where)
+	game_expr::Answer game_expr::evaluateOperation(const RawOperation& operation, const std::string& where)
 	{
 		const std::string here = where + " > <" + operation.op + ">";
 
@@ -1932,12 +1917,11 @@ namespace xge
 		{
 			if (operand.value.kind == RawValue::Kind::Expression)
 			{
-				if (const auto step = steps.find(operand.value.text); step != steps.end()) { return step->second; }
 				return Answer{ evaluate(operand.value, here), isLate(operand.value.text) };
 			}
 
 			// An operation nested in a formula is part of the same formula.
-			if (operand.value.kind == RawValue::Kind::Formula) { return evaluateOperation(operand.value.operations->front(), {}, here); }
+			if (operand.value.kind == RawValue::Kind::Formula) { return evaluateOperation(operand.value.operations->front(), here); }
 
 			return Answer{ evaluate(operand.value, here), false };
 		};

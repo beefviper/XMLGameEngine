@@ -216,7 +216,7 @@ TEST_CASE("an interval is worked out again every round, so it can follow a varia
 	{
 		Loaded loaded(gameXml(
 			box("clock", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter
-				+ "<timers><timer><every><random min=\"0.1\" max=\"1\" /></every><inc variable=\"clock.n\" /></timer></timers>"),
+				+ "<timers><timer><every><random><min>0.1</min><max>1</max></random></every><inc variable=\"clock.n\" /></timer></timers>"),
 			state("playing", { "clock" })));
 
 		std::set<int> gaps;
@@ -477,7 +477,7 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 		plain, "has no value; its number goes between its tags");
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\"><speed>2</speed></chase></action></actions>"),
 		plain, "unknown <speed>; expected its speed, then <near> if wanted");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\">2<random min=\"1\" max=\"3\" /></chase></action></actions>"),
+	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\">2<random><min>1</min><max>3</max></random></chase></action></actions>"),
 		plain, "holds both the text \"2\" and a <random> tag");
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\">5<seconds>0</seconds></jump></action></actions>"),
 		plain, "<jump> has <seconds> of 0");
@@ -628,7 +628,7 @@ TEST_CASE("coming back into play draws a <random> again: a reveal, a release and
 	// again; what it comes back with is noted each time.
 	const std::string rock = box("rock", 0, 0, 10, 10, "<enabled>false</enabled>", "<active>false</active>",
 		"<timers><timer><every>0.05</every><die /></timer></timers>",
-		"<x><random min=\"-50\" max=\"50\" /></x><y>0</y>", " class=\"projectile\"");
+		"<x><random><min>-50</min><max>50</max></random></x><y>0</y>", " class=\"projectile\"");
 	const auto distinctSpeeds = [](Loaded& loaded)
 	{
 		std::set<int> seen;

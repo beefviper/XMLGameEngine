@@ -57,7 +57,7 @@ add_executable(xgetest
 	"xge/tests/test_new_verbs.cpp"
 	"xge/tests/test_deflect.cpp"
 	"xge/tests/test_xml_format.cpp"
-	"xge/tests/test_equations.cpp"
+	"xge/tests/test_formulas.cpp"
 	"xge/tests/test_backends.cpp"
 	"xge/tests/test_group.cpp"
 	"xge/tests/test_pong.cpp"

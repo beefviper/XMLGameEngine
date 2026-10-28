@@ -131,7 +131,7 @@
       </collisions>
       <timers>
         <timer>
-          <every><random min="0.3" max="1.4" /></every>
+          <every><random><min>0.3</min><max>1.4</max></random></every>
           <reverse />
         </timer>
         <timer>
