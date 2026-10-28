@@ -10,6 +10,7 @@
 // command out of its place.
 
 #include "played.h"
+#include "engine/folder.h"
 #include "load/xml.h"
 #include "load/xsd.h"
 #include "xml/document.h"
@@ -65,7 +66,7 @@ namespace
 		auto document = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 		REQUIRE(document->load(file.path));
 		XsdLiteValidator validator;
-		REQUIRE(validator.loadSchema("../xge/xgedef.xsd", XmlBackend::TinyXml2));
+		REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../../xge/xgedef.xsd").string(), XmlBackend::TinyXml2));
 		return validator.validate(*document->getRootElement());
 	}
 }
