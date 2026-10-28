@@ -11,6 +11,8 @@
 
 #include <array>
 #include <cstddef>
+#include <optional>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -78,15 +80,13 @@ namespace xge
 		bool manualFrameControl{ false };
 		double frameTarget{ 0.0 };
 		double frameStart{ 0.0 };
-		Font font{};
-		bool fontLoaded{ false };
-		bool customFont{ false };
-		// Set when the font file could not be loaded: text is then drawn from
-		// the engine's built-in font (see picture/font.h).
-		bool fontMissing{ false };
+		// Each font file opened, by its name; null for one that could not be
+		// loaded, whose text is then drawn from the engine's built-in font
+		// (see picture/font.h).
+		std::unordered_map<std::string, std::optional<Font>> fonts;
 		std::unordered_map<std::string, CachedVisual> visuals;
 
-		const Font& getFont();
+		const Font* getFont(const std::string& file);
 		static void reloadTexture(CachedVisual& visual, int width, int height);
 
 		void buildShapeOnly(Object& object, CachedVisual& visual);

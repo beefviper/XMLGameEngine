@@ -2454,6 +2454,7 @@ namespace xge
 			// are, with no decimal point, the way someone typing the label
 			// would, and letters.
 			params = { "text", joinText(textPieces(sprite, where, self)), std::to_string(evaluate(sprite.size, where)), color };
+			if (!sprite.font.empty()) { params.push_back(sprite.font); }
 		}
 		else if (sprite.kind == "image")
 		{

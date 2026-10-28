@@ -53,6 +53,8 @@ set(data_xml
 
 set(data_assets
 	"games/assets/tuffy.ttf"
+	"games/assets/pressstart2p.ttf"
+	"games/assets/pressstart2p-ofl.txt"
 	"games/assets/paddle.jpg"
 	"games/assets/Space Invaders Color Sprites.svg")
 

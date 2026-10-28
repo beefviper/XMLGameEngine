@@ -12,6 +12,7 @@
 #include <chrono>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -78,7 +79,6 @@ namespace xge
 		bool ttfInitialized{ false };
 		bool imgInitialized{ false };
 		bool imgTried{ false };
-		bool fontMissing{ false };
 		int width{ 0 };
 		int height{ 0 };
 		// <window><scale>: window pixels to one of the game's.
@@ -93,14 +93,16 @@ namespace xge
 		std::chrono::steady_clock::duration framePeriod{};
 		std::chrono::steady_clock::time_point lastFrame{};
 
-		std::unordered_map<int, TTF_Font*> fontsBySize;
+		std::unordered_map<std::string, TTF_Font*> fontsBySize;   // by file@size
+		// The font files that could not be loaded, said once each.
+		std::unordered_set<std::string> fontsMissing;
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		static KeyCode glfwKeyToKeyCode(int key) noexcept;
 
 		void setUpProjection() const;
-		TTF_Font* getFont(int pointSize);
+		TTF_Font* getFont(const std::string& file, int pointSize);
 
 		// Starts SDL2_image on first use; false if it cannot read PNG.
 		bool ensureImages();

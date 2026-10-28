@@ -133,8 +133,8 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>36</size><color>color.red</color></style>
-    <style name="text"><size>16</size></style>
+    <style name="banner"><size>16</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="text"><size>8</size><font>assets/pressstart2p.ttf</font></style>
     <style name="mario">
       <color char="r">color.red</color>
       <color char="b">color.blue</color>

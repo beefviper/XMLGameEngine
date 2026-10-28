@@ -196,6 +196,7 @@ namespace xge
 					}
 					if (noSize) { sprite.size = style->size; }
 					if (sprite.color.empty()) { sprite.color = style->color; }
+					if (sprite.font.empty()) { sprite.font = style->font; }
 				}
 				if (sprite.size.kind == RawValue::Kind::Expression && sprite.size.text.empty())
 				{

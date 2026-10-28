@@ -113,6 +113,13 @@ namespace xge::parts
 		return made;
 	}
 
+	// A style with a text's <font> file as well.
+	inline RawStyle font(RawStyle style, std::string file)
+	{
+		style.font = std::move(file);
+		return style;
+	}
+
 	// <random><min>...</min><max>...</max></random>
 	inline RawValue random(std::string min, std::string max)
 	{

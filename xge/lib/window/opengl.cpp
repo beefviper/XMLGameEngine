@@ -150,7 +150,7 @@ namespace xge
 		glfwMakeContextCurrent(window);
 		visuals.clear();
 
-		for (auto& [size, loadedFont] : fontsBySize)
+		for (auto& [key, loadedFont] : fontsBySize)
 		{
 			if (loadedFont) { TTF_CloseFont(loadedFont); }
 		}
@@ -472,26 +472,26 @@ namespace xge
 		return imgInitialized;
 	}
 
-	TTF_Font* OpenGLWindow::getFont(int pointSize)
+	TTF_Font* OpenGLWindow::getFont(const std::string& file, int pointSize)
 	{
-		auto it = fontsBySize.find(pointSize);
+		const std::string key = file + "@" + std::to_string(pointSize);
+		auto it = fontsBySize.find(key);
 		if (it != fontsBySize.end())
 		{
 			return it->second;
 		}
 
-		TTF_Font* loaded = ttfInitialized ? TTF_OpenFont("assets/tuffy.ttf", pointSize) : nullptr;
+		TTF_Font* loaded = ttfInitialized ? TTF_OpenFont(file.c_str(), pointSize) : nullptr;
 		if (!loaded)
 		{
 			// Said once, not once for every size asked for.
-			if (!fontMissing)
+			if (fontsMissing.insert(file).second)
 			{
-				std::cout << "error: failed to load font: assets/tuffy.ttf - drawing text with the built-in 8x8 font instead" << std::endl;
+				std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
 			}
-			fontMissing = true;
 		}
 
-		fontsBySize.emplace(pointSize, loaded);
+		fontsBySize.emplace(key, loaded);
 		return loaded;
 	}
 
@@ -583,7 +583,7 @@ namespace xge
 		const int requestedSize = std::stoi(object.spriteParams.at(2));
 		const Color c = colorFromName(object.spriteParams.at(3));
 
-		TTF_Font* font = getFont(requestedSize);
+		TTF_Font* font = getFont(textFontFile(object.spriteParams), requestedSize);
 		if (!font)
 		{
 			upload(visual, rasterizeText(text, requestedSize, c));

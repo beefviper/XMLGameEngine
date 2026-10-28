@@ -217,6 +217,10 @@ The build makes `xgelib` (the engine), `xgecli` (command line) and `xgegui` (a Q
 
 Version 1 is non-scrolling games; a camera for scrolling ones is planned for version 2. Movement is in pixels per frame and timers count frames. Paths are straight legs, maze walkers steer as the arcade's ghosts do (no search of the maze), and sound is chip music made from notes, never sound files. The full list of limits is in [docs/readme.md](docs/readme.md#known-limitations).
 
+## Licence
+
+MIT, in [LICENSE](LICENSE); a program `--generate` writes carries a copy. The fonts in `games/assets/` keep their own: Tuffy is public domain, and Press Start 2P is under the SIL Open Font License (`pressstart2p-ofl.txt` beside it).
+
 ## Documentation
 
 - [docs/readme.md](docs/readme.md): how the engine works today, verb by verb.

@@ -54,15 +54,14 @@ namespace xge
 		};
 
 		sf::RenderWindow window;
-		sf::Font font;
-		bool fontLoaded{ false };
-		// Set when the font file could not be loaded: text is then drawn from
-		// the engine's built-in font (see picture/font.h).
-		bool fontMissing{ false };
+		// Each font file opened, by its name; null for one that could not be
+		// loaded, whose text is then drawn from the engine's built-in font
+		// (see picture/font.h).
+		std::unordered_map<std::string, std::unique_ptr<sf::Font>> fonts;
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static KeyCode sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept;
-		const sf::Font& getFont();
+		const sf::Font* getFont(const std::string& file);
 
 		// Resizes/draws visual.renderTexture from object.spriteParams alone -
 		// no position math, no sprite (re)creation. Shared by init() and

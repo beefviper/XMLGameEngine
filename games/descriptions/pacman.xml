@@ -211,9 +211,9 @@
     </path>
   </paths>
   <styles>
-    <style name="banner"><size>64</size><color>color.yellow</color></style>
-    <style name="prompt"><size>24</size></style>
-    <style name="hud"><size>18</size></style>
+    <style name="banner"><size>32</size><color>color.yellow</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="prompt"><size>16</size><font>assets/pressstart2p.ttf</font></style>
+    <style name="hud"><size>16</size><font>assets/pressstart2p.ttf</font></style>
   </styles>
   <objects>
     <!-- the best score, kept from game to game -->

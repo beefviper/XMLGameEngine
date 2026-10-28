@@ -658,6 +658,13 @@
         <xsl:with-param name="node" select="$shape/color[not(@char)]" />
       </xsl:call-template>
     </xsl:if>
+    <xsl:if test="$kind = 'text'">
+      <xsl:call-template name="look-text">
+        <xsl:with-param name="indent" select="$indent" />
+        <xsl:with-param name="name" select="'font'" />
+        <xsl:with-param name="node" select="$shape/font" />
+      </xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- The kind, the name and the fill of a <sprite>, as the arguments of
@@ -2643,7 +2650,9 @@
     <xsl:if test="$game/styles/style">
       <xsl:text>&#9;game.styles = {&#10;</xsl:text>
       <xsl:for-each select="$game/styles/style">
-        <xsl:text>&#9;&#9;style(</xsl:text>
+        <xsl:text>&#9;&#9;</xsl:text>
+        <xsl:if test="font">font(</xsl:if>
+        <xsl:text>style(</xsl:text>
         <xsl:call-template name="string">
           <xsl:with-param name="text" select="@name" />
         </xsl:call-template>
@@ -2686,7 +2695,16 @@
           </xsl:for-each>
           <xsl:text> }</xsl:text>
         </xsl:if>
-        <xsl:text>),&#10;</xsl:text>
+        <xsl:text>)</xsl:text>
+        <!-- a text's font file -->
+        <xsl:if test="font">
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="text">
+            <xsl:with-param name="node" select="font" />
+          </xsl:call-template>
+          <xsl:text>)</xsl:text>
+        </xsl:if>
+        <xsl:text>,&#10;</xsl:text>
       </xsl:for-each>
       <xsl:text>&#9;};&#10;</xsl:text>
     </xsl:if>

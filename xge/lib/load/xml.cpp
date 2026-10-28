@@ -491,6 +491,7 @@ namespace xge
 				sprite.style = shape.getAttribute("style");
 				if (auto size = findChild(&shape, "size")) { sprite.size = readValue(*size, here); }
 				else if (sprite.style.empty()) { fail(here, "needs a <size>, or a style= whose <style> has one"); }
+				if (auto font = findChild(&shape, "font")) { sprite.font = readText(*font); }
 			}
 			else
 			{
@@ -598,6 +599,7 @@ namespace xge
 					sprite.text = std::move(text);
 				}
 				change("size", sprite.size);
+				if (auto font = findChild(shape.get(), "font")) { sprite.font = readText(*font); }
 				if (const std::string style = shape->getAttribute("style"); !style.empty()) { sprite.style = style; }
 			}
 			else if (base.kind == "image")
@@ -2875,6 +2877,7 @@ namespace xge
 				}
 				if (auto color = findPlainColor(*style)) { raw.color = readText(*color); }
 				readBitmapColors(*style, here, raw.bitmapColors);
+				if (auto font = findChild(style.get(), "font")) { raw.font = readText(*font); }
 				rawStyles.push_back(std::move(raw));
 			}
 		}

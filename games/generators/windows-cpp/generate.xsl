@@ -53,10 +53,12 @@
   </xsl:variable>
 
   <!-- The engine's files the program compiles, and the game's assets: the
-       font if it shows text, and every picture and drawing it names. -->
+       font if it shows text, the fonts it names, and every picture and
+       drawing it names; and the engine's licence. -->
   <xsl:variable name="engine" select="document('engine.xml')/engine/file" />
   <xsl:variable name="pictures" select="//sprite/image/path | //sprite/svg/path" />
   <xsl:variable name="texts" select="//sprite/text" />
+  <xsl:variable name="fonts" select="//text/font | //styles/style/font" />
 
   <xsl:template match="/">
     <xsl:if test="not(game)">
@@ -102,9 +104,20 @@ output/
       <xsl:for-each select="$engine">
         <engine path="engine/{substring-after(., '/')}" from="{.}" />
       </xsl:for-each>
+      <license path="LICENSE" from="LICENSE" />
       <xsl:if test="$texts">
         <asset path="assets/tuffy.ttf" />
       </xsl:if>
+      <!-- a font's licence (assets/pressstart2p-ofl.txt) goes with it -->
+      <xsl:for-each select="$fonts">
+        <asset>
+          <xsl:attribute name="path">
+            <xsl:call-template name="trim">
+              <xsl:with-param name="text" select="string(.)" />
+            </xsl:call-template>
+          </xsl:attribute>
+        </asset>
+      </xsl:for-each>
       <xsl:for-each select="$pictures">
         <asset>
           <xsl:attribute name="path">

@@ -285,6 +285,8 @@
             <!-- left out, the style's -->
             <xs:element name="size" type="valueType" minOccurs="0" />
             <xs:element name="color" type="xs:string" minOccurs="0" />
+            <!-- a font file (assets/pressstart2p.ttf); left out, the style's, or assets/tuffy.ttf -->
+            <xs:element name="font" type="xs:string" minOccurs="0" />
           </xs:sequence>
           <!-- a <style> of the game's <styles>, for the <size> and <color> left out -->
           <xs:attribute name="style" type="xs:string" use="optional" />
@@ -408,6 +410,7 @@
             </xs:choice>
             <xs:element name="size" type="valueType" minOccurs="0" />
             <xs:element name="color" type="xs:string" minOccurs="0" />
+            <xs:element name="font" type="xs:string" minOccurs="0" />
           </xs:sequence>
           <!-- a <style> of the game's <styles>, for the <size> and <color> left out -->
           <xs:attribute name="style" type="xs:string" use="optional" />
@@ -1765,6 +1768,8 @@
                     <xs:element name="scale" type="valueType" minOccurs="0" />
                     <!-- either's: the one with no char=; a bitmap's, each char= -->
                     <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
+                    <!-- a <text>'s font file -->
+                    <xs:element name="font" type="xs:string" minOccurs="0" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />
                 </xs:complexType>

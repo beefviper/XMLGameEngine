@@ -298,20 +298,23 @@ namespace xge
 		}
 	}
 
-	const sf::Font& SFMLWindow::getFont()
+	const sf::Font* SFMLWindow::getFont(const std::string& file)
 	{
-		if (!fontLoaded)
-		{
-			const std::string fontFile{ "assets/tuffy.ttf" };
-			if (!font.openFromFile(fontFile))
-			{
-				std::cout << "error: failed to load font: " << fontFile << " - drawing text with the built-in 8x8 font instead" << std::endl;
-				fontMissing = true;
-			}
-			fontLoaded = true;
-		}
+		const auto found = fonts.find(file);
+		if (found != fonts.end()) { return found->second.get(); }
 
-		return font;
+		auto font = std::make_unique<sf::Font>();
+		if (font->openFromFile(file))
+		{
+			// A pixel font stays pixels when the game is drawn bigger.
+			font->setSmooth(false);
+		}
+		else
+		{
+			std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
+			font.reset();
+		}
+		return (fonts[file] = std::move(font)).get();
 	}
 
 	void SFMLWindow::buildShapeOnly(Object& object, CachedVisual& visual)
@@ -377,15 +380,15 @@ namespace xge
 
 	void SFMLWindow::buildText(Object& object, CachedVisual& visual)
 	{
-		const sf::Font& f = getFont();
+		const sf::Font* f = getFont(textFontFile(object.spriteParams));
 
-		if (fontMissing)
+		if (!f)
 		{
 			buildBitmap(object, visual, rasterizeText(object.spriteParams.at(1), std::stoi(object.spriteParams.at(2)), colorFromName(object.spriteParams.at(3))));
 			return;
 		}
 
-		sf::Text text(f);
+		sf::Text text(*f);
 		text.setString(object.spriteParams.at(1));
 		text.setCharacterSize(static_cast<unsigned int>(std::stoi(object.spriteParams.at(2))));
 

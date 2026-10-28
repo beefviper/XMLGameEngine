@@ -148,29 +148,30 @@ namespace xge
 		return image;
 	}
 
-	void QtWindow::loadFont()
+	const QString& QtWindow::loadFont(const std::string& file)
 	{
-		if (fontLoaded)
+		const auto found = fontFamilies.find(file);
+		if (found != fontFamilies.end())
 		{
-			return;
+			return found->second;
 		}
-		fontLoaded = true;
 
-		const std::string fontFile{ "assets/tuffy.ttf" };
-		const int id = QFontDatabase::addApplicationFont(QString::fromStdString(fontFile));
+		QString& family = fontFamilies[file];
+		const int id = QFontDatabase::addApplicationFont(QString::fromStdString(file));
 		if (id >= 0 && !QFontDatabase::applicationFontFamilies(id).isEmpty())
 		{
-			fontFamily = QFontDatabase::applicationFontFamilies(id).first();
+			family = QFontDatabase::applicationFontFamilies(id).first();
 		}
 		else
 		{
-			std::cout << "error: failed to load font: " << fontFile << " - drawing text with the built-in 8x8 font instead" << std::endl;
+			std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
 		}
+		return family;
 	}
 
 	QImage QtWindow::buildText(const Object& object)
 	{
-		loadFont();
+		const QString& fontFamily = loadFont(textFontFile(object.spriteParams));
 
 		const std::string& content = object.spriteParams.at(1);
 		const int size = std::stoi(object.spriteParams.at(2));

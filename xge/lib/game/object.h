@@ -270,6 +270,7 @@ namespace xge
 
 		std::string flip;            // image: "", "horizontal" or "vertical"
 		std::string color;           // "" means color.white (or the style's)
+		std::string font;            // text: a font file; "" means the style's, or assets/tuffy.ttf
 
 		// text and bitmap: style="...", a <style> of the game's <styles>,
 		// which gives what the sprite leaves out (see applyStyles).
@@ -308,6 +309,7 @@ namespace xge
 		std::string name;
 		RawValue size;               // empty: the style gives no size
 		std::string color;           // empty: the style gives no color
+		std::string font;            // a text's font file; empty: the style gives none
 		// A bitmap's: its <scale>, and its other colors, a character each.
 		bool hasScale{ false };
 		RawValue scale;

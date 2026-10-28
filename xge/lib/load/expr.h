@@ -167,7 +167,8 @@ namespace xge
 
 		// The spriteParams for a sprite, in the shape the window backends read:
 		// {"circle", radius, "0", color}, {"rectangle", width, height, color},
-		// {"text", label, size, color}, {"image", path, flip-or-color}, and for
+		// {"text", label, size, color} (then the font file, when not the
+		// default), {"image", path, flip-or-color}, and for
 		// a drawing of lines, {"line", width, height} - the size of the
 		// picture - and the picture itself is handed back through `bitmap` when
 		// that is given (see Object::bitmap). A bitmap (a picture in rows of

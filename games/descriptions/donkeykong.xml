@@ -123,10 +123,10 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>110</size><color>color.red</color></style>
-    <style name="prompt"><size>48</size></style>
-    <style name="help"><size>30</size></style>
-    <style name="hud"><size>30</size></style>
+    <style name="banner"><size>48</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="prompt"><size>24</size><font>assets/pressstart2p.ttf</font></style>
+    <style name="help"><size>16</size><font>assets/pressstart2p.ttf</font></style>
+    <style name="hud"><size>24</size><font>assets/pressstart2p.ttf</font></style>
     <style name="wood">
       <scale>2</scale>
       <color>color.orange</color>
@@ -247,8 +247,7 @@
         <object name="keys">
           <sprite>
             <text style="help">
-              <content>a and d walk, w and s climb (or the arrows), space jumps</content>
-              <size>24</size>
+              <content>a d walk, w s climb (or arrows), space jumps</content>
               <color>color.lightgrey</color>
             </text>
           </sprite>

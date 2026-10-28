@@ -13,6 +13,7 @@
 
 #include <array>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace xge
 {
@@ -76,9 +77,6 @@ namespace xge
 		// nothing is torn down until close() (the destructor), because the
 		// frame that read the event is still going to clear and draw.
 		bool closeRequested{ false };
-		// Set when the font file could not be loaded: text is then drawn from
-		// the engine's built-in font (see picture/font.h).
-		bool fontMissing{ false };
 		bool ttfInitialized{ false };
 		bool imgInitialized{ false };
 		bool imgTried{ false };
@@ -87,12 +85,14 @@ namespace xge
 		// raylib's Font, either of which can be measured/drawn at any size
 		// from one loaded font) - cached per size actually used, opened once
 		// on first use rather than reopened on every buildText() call.
-		std::unordered_map<int, TTF_Font*> fontsBySize;
+		std::unordered_map<std::string, TTF_Font*> fontsBySize;   // by file@size
+		// The font files that could not be loaded, said once each.
+		std::unordered_set<std::string> fontsMissing;
 
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static KeyCode sdlKeyToKeyCode(SDL_Keycode key) noexcept;
-		TTF_Font* getFont(int pointSize);
+		TTF_Font* getFont(const std::string& file, int pointSize);
 
 		// Starts SDL2_image on first use; false if it cannot read PNG.
 		bool ensureImages();

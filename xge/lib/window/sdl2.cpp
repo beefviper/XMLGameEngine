@@ -155,7 +155,7 @@ namespace xge
 
 		visuals.clear();
 
-		for (auto& [size, loadedFont] : fontsBySize)
+		for (auto& [key, loadedFont] : fontsBySize)
 		{
 			if (loadedFont) { TTF_CloseFont(loadedFont); }
 		}
@@ -376,26 +376,26 @@ namespace xge
 		return imgInitialized;
 	}
 
-	TTF_Font* SDL2Window::getFont(int pointSize)
+	TTF_Font* SDL2Window::getFont(const std::string& file, int pointSize)
 	{
-		auto it = fontsBySize.find(pointSize);
+		const std::string key = file + "@" + std::to_string(pointSize);
+		auto it = fontsBySize.find(key);
 		if (it != fontsBySize.end())
 		{
 			return it->second;
 		}
 
-		TTF_Font* loaded = TTF_OpenFont("assets/tuffy.ttf", pointSize);
+		TTF_Font* loaded = TTF_OpenFont(file.c_str(), pointSize);
 		if (!loaded)
 		{
 			// Said once, not once for every size asked for.
-			if (!fontMissing)
+			if (fontsMissing.insert(file).second)
 			{
-				std::cout << "error: failed to load font: assets/tuffy.ttf: " << TTF_GetError() << " - drawing text with the built-in 8x8 font instead" << std::endl;
+				std::cout << "error: failed to load font: " << file << ": " << TTF_GetError() << " - drawing text with the built-in 8x8 font instead" << std::endl;
 			}
-			fontMissing = true;
 		}
 
-		fontsBySize.emplace(pointSize, loaded);
+		fontsBySize.emplace(key, loaded);
 		return loaded;
 	}
 
@@ -484,7 +484,7 @@ namespace xge
 		visual.flip = SDL_FLIP_NONE;
 
 		const int requestedSize = std::stoi(object.spriteParams.at(2));
-		TTF_Font* font = getFont(requestedSize);
+		TTF_Font* font = getFont(textFontFile(object.spriteParams), requestedSize);
 		if (!font)
 		{
 			buildBitmap(object, visual, rasterizeText(object.spriteParams.at(1), requestedSize, colorFromName(object.spriteParams.at(3))));

@@ -51,10 +51,9 @@ namespace xge
 		// visualDirty flag says it changed (same pattern as the other backends).
 		std::map<std::string, QImage> visuals;
 
-		// The name of the font loaded from assets/tuffy.ttf, empty if that
-		// failed (text is then drawn with the built-in 8x8 font).
-		QString fontFamily;
-		bool fontLoaded{ false };
+		// The family of each font file loaded, by its name, empty for one
+		// that failed (its text is then drawn with the built-in 8x8 font).
+		std::map<std::string, QString> fontFamilies;
 
 		void build(Object& object, QImage& visual);
 		QImage buildCircle(const Object& object);
@@ -62,6 +61,6 @@ namespace xge
 		QImage buildText(const Object& object);
 		QImage buildImage(const Object& object);
 		static QImage fromBitmap(const Bitmap& bitmap);
-		void loadFont();
+		const QString& loadFont(const std::string& file);
 	};
 }

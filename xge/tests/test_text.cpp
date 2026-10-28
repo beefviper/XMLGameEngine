@@ -14,6 +14,7 @@
 #include "scratch.h"
 #include "game/game.h"
 #include "load/xml.h"
+#include "picture/font.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -137,6 +138,23 @@ TEST_CASE("a bitmap takes the scale and colors it leaves out from its style", "[
 		REQUIRE_THROWS_WITH(load("<object name=\"thing\"><sprite><bitmap style=\"wod\"><row>*</row></bitmap></sprite>"
 			"<position><x>0</x><y>0</y></position></object>", styles), ContainsSubstring("style=\"wod\" names no <style>"));
 	}
+}
+
+TEST_CASE("a text's font file is its own <font>, its style's, or the standard one", "[text]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	const std::string styles = "<styles><style name=\"arcade\"><size>8</size><font>assets/pressstart2p.ttf</font></style>"
+		"<style name=\"plain\"><size>20</size></style></styles>";
+	Game game = load(
+		"<object name=\"styled\"><sprite><text style=\"arcade\"><content>HI</content></text></sprite><position><x>0</x><y>0</y></position></object>"
+		"<object name=\"own\"><sprite><text style=\"arcade\"><content>HI</content><font>assets/other.ttf</font></text></sprite><position><x>0</x><y>0</y></position></object>"
+		"<object name=\"standard\"><sprite><text style=\"plain\"><content>HI</content></text></sprite><position><x>0</x><y>0</y></position></object>",
+		styles, backend);
+
+	CHECK(textFontFile(game.getObject("styled").spriteParams) == "assets/pressstart2p.ttf");
+	CHECK(textFontFile(game.getObject("own").spriteParams) == "assets/other.ttf");
+	CHECK(game.getObject("standard").spriteParams.size() == 4);
+	CHECK(textFontFile(game.getObject("standard").spriteParams) == "assets/tuffy.ttf");
 }
 
 TEST_CASE("<become style> puts another style's colors on an object's bitmaps, and a reset the first", "[text]")

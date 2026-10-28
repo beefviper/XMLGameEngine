@@ -130,10 +130,11 @@ namespace xge
 		{
 			visuals.clear();
 
-			if (customFont)
+			for (auto& [file, font] : fonts)
 			{
-				UnloadFont(font);
+				if (font) { UnloadFont(*font); }
 			}
+			fonts.clear();
 
 			CloseWindow();
 			isOpenFlag = false;
@@ -305,26 +306,24 @@ namespace xge
 	}
 
 
-	const Font& RaylibWindow::getFont()
+	const Font* RaylibWindow::getFont(const std::string& file)
 	{
-		if (!fontLoaded)
-		{
-			const Font loaded = LoadFontEx("assets/tuffy.ttf", 96, nullptr, 0);
-			if (loaded.texture.id != 0)
-			{
-				font = loaded;
-				customFont = true;
-			}
-			else
-			{
-				std::cout << "error: failed to load font: assets/tuffy.ttf - drawing text with the built-in 8x8 font instead" << std::endl;
-				font = GetFontDefault();
-				fontMissing = true;
-			}
-			fontLoaded = true;
-		}
+		const auto found = fonts.find(file);
+		if (found != fonts.end()) { return found->second ? &*found->second : nullptr; }
 
-		return font;
+		std::optional<Font>& font = fonts[file];
+		const Font loaded = LoadFontEx(file.c_str(), 96, nullptr, 0);
+		if (loaded.texture.id != 0)
+		{
+			// A pixel font stays pixels when it is drawn smaller or bigger.
+			SetTextureFilter(loaded.texture, TEXTURE_FILTER_POINT);
+			font = loaded;
+		}
+		else
+		{
+			std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
+		}
+		return font ? &*font : nullptr;
 	}
 
 	void RaylibWindow::reloadTexture(CachedVisual& visual, int width, int height)
@@ -391,16 +390,17 @@ namespace xge
 
 	void RaylibWindow::buildText(Object& object, CachedVisual& visual)
 	{
-		const Font& f = getFont();
+		const Font* font = getFont(textFontFile(object.spriteParams));
 		const std::string& text = object.spriteParams.at(1);
 		const float fontSize = std::stof(object.spriteParams.at(2));
 
-		if (fontMissing)
+		if (!font)
 		{
 			buildBitmap(object, visual, rasterizeText(text, static_cast<int>(std::lround(fontSize)), colorFromName(object.spriteParams.at(3))));
 			return;
 		}
 
+		const Font& f = *font;
 		const ::Vector2 measured = MeasureTextEx(f, text.c_str(), fontSize, 1.0f);
 		const int width = static_cast<int>(std::ceil(measured.x));
 		const int height = static_cast<int>(std::ceil(measured.y));

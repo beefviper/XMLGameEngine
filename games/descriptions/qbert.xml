@@ -110,8 +110,8 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>40</size><color>color.orange</color></style>
-    <style name="text"><size>16</size><color>color.white</color></style>
+    <style name="banner"><size>16</size><color>color.orange</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="text"><size>8</size><color>color.white</color><font>assets/pressstart2p.ttf</font></style>
     <style name="coily">
       <color char="p">color.purple</color>
       <color char="w">color.white</color>
@@ -830,7 +830,6 @@
           <sprite>
             <text style="banner">
               <content>PYRAMID DONE</content>
-              <size>32</size>
             </text>
           </sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>

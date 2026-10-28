@@ -274,10 +274,35 @@ namespace xge
 					copyFile(request.engineFolder / attribute(node, "from"), output / path);
 					program.files.push_back(path);
 				}
+				else if (element == "license")
+				{
+					// the engine's licence, from the folder above the engine's
+					copyFile((request.engineFolder / ".." / attribute(node, "from")).lexically_normal(), output / path);
+					program.files.push_back(path);
+				}
 				else if (element == "asset")
 				{
 					copyFile(request.dataFolder / path, output / path);
 					program.assets.push_back(path);
+
+					// A font's licence beside it, named after it
+					// (pressstart2p.ttf, pressstart2p-ofl.txt), goes with it.
+					const std::string extension = path.extension().string();
+					const std::filesystem::path folder = (request.dataFolder / path).parent_path();
+					if ((extension == ".ttf" || extension == ".otf") && std::filesystem::is_directory(folder))
+					{
+						const std::string prefix = path.stem().string() + "-";
+						for (const auto& entry : std::filesystem::directory_iterator(folder))
+						{
+							const std::string file = entry.path().filename().string();
+							const std::filesystem::path licence = path.parent_path() / file;
+							if (entry.is_regular_file() && file.rfind(prefix, 0) == 0 && entry.path().extension() == ".txt" && copied.insert(licence).second)
+							{
+								copyFile(entry.path(), output / licence);
+								program.assets.push_back(licence);
+							}
+						}
+					}
 				}
 			}
 
