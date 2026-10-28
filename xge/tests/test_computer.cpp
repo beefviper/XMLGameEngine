@@ -32,8 +32,8 @@ namespace
 	const std::string keys = "<input button=\"j\"><trigger object=\"bat\" action=\"left\" /></input>"
 		"<input button=\"l\"><trigger object=\"bat\" action=\"right\" /></input>";
 	const std::string follows = "<computer>"
-		"<condition object=\"bat\" variable=\"x\"><below object=\"ball\" variable=\"x\" /><hold button=\"l\" /></condition>"
-		"<condition object=\"bat\" variable=\"x\"><above object=\"ball\" variable=\"x\" /><hold button=\"j\" /></condition>"
+		"<condition object=\"bat\" variable=\"x\"><below>ball.x</below><hold button=\"l\" /></condition>"
+		"<condition object=\"bat\" variable=\"x\"><above>ball.x</above><hold button=\"j\" /></condition>"
 		"</computer>";
 
 	// A game with the bat, a ball and the keys, and what else the state has.
@@ -117,7 +117,7 @@ TEST_CASE("a <hold> is only for a <computer>, and holds a key there is", "[compu
 TEST_CASE("a condition can test where an object is and how it goes, against a number or another's", "[computer][conditions]")
 {
 	const Written file(gameWith(box("ball", 100, 100, "<velocity><x>3</x><y>0</y></velocity>"),
-		"<conditions><condition object=\"ball\" variable=\"x\"><above object=\"bat\" variable=\"x\" /><set variable=\"bat.y\">0</set></condition>"
+		"<conditions><condition object=\"ball\" variable=\"x\"><above>bat.x</above><set variable=\"bat.y\">0</set></condition>"
 		"<condition object=\"ball\" variable=\"velocity.x\"><atleast>3</atleast><set variable=\"ball.y\">ball.y + 1</set></condition></conditions>"));
 	Played play(file.path);
 

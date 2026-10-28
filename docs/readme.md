@@ -564,7 +564,7 @@ A look is also how one state is told something by the state before it. Space Rac
 
 ```xml
 <condition object="rocket2" variable="score">
-  <above object="rocket1" variable="score" />
+  <above>rocket1.score</above>
   <become object="winner" sprite="player2" />
 </condition>
 ```
@@ -761,14 +761,14 @@ Galaxian keeps its best score this way. `best` is an object of the game's own, s
 </keeps>
 ...
 <condition object="ship" variable="score">
-  <above object="best" variable="score" />
+  <above>best.score</above>
   <copy variable="ship.score" into="best.score" />
 </condition>
 ```
 
 **Kept on disk.** `xgecli`, `xgegui` and a generated program write what a game keeps (each kept object's variables and look) to `saves/<game>.xml` in the games folder whenever a new game starts and when the program closes, and read it when the game is loaded (`Engine::keepIn`), so a best score or a table lasts from one run to the next. A game that keeps nothing writes nothing; the tests write nothing unless they ask. Delete the file to start again.
 
-**A table of the best.** A group whose members are the places, the best first, and `<rank variable="entry.score" into="table" />`: the entry (an object with a `score` and whatever else a place holds, its initials) takes the first place whose `score` is below its own, all its variables going into that place, and the places from there move down, the last one falling off; a tie goes below. Whether a score makes the table is a condition, `<above object="table.5" variable="score" />`. Galaxian keeps its best five: a game over above the fifth asks for initials, one state a letter (W and S, or Up and Down, change it, Space goes on), then ranks the entry and starts a new game:
+**A table of the best.** A group whose members are the places, the best first, and `<rank variable="entry.score" into="table" />`: the entry (an object with a `score` and whatever else a place holds, its initials) takes the first place whose `score` is below its own, all its variables going into that place, and the places from there move down, the last one falling off; a tie goes below. Whether a score makes the table is a condition, `<above>table.5.score</above>`. Galaxian keeps its best five: a game over above the fifth asks for initials, one state a letter (W and S, or Up and Down, change it, Space goes on), then ranks the entry and starts a new game:
 
 ```xml
 <group name="table">
@@ -986,12 +986,12 @@ An object with an `<altitude>` is in the air over where it is: its position is t
 
 ### Computer players
 
-A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would. It is a list of `<condition>`s, written as a state's are, whose commands are `<hold button="key" />`s; every frame **every** condition is tested (not only the first that holds), the keys of those that hold are held down and the rest let go. The engine presses and lets go of them as it does a person's keys (a [demo](#attract-mode) the same way) and does not record them. A condition can compare where things are (`variable="x"`, `<below object="ball" variable="x" />`), so following a ball is two lines. Tennis's far end is the computer's, on J and L, the keys a second player would use:
+A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would. It is a list of `<condition>`s, written as a state's are, whose commands are `<hold button="key" />`s; every frame **every** condition is tested (not only the first that holds), the keys of those that hold are held down and the rest let go. The engine presses and lets go of them as it does a person's keys (a [demo](#attract-mode) the same way) and does not record them. A condition can compare where things are (`variable="x"`, `<below>ball.x</below>`), so following a ball is two lines. Tennis's far end is the computer's, on J and L, the keys a second player would use:
 
 ```xml
 <computer>
-  <condition object="cpu" variable="x"><below object="ball" variable="x" /><hold button="l" /></condition>
-  <condition object="cpu" variable="x"><above object="ball" variable="x" /><hold button="j" /></condition>
+  <condition object="cpu" variable="x"><below>ball.x</below><hold button="l" /></condition>
+  <condition object="cpu" variable="x"><above>ball.x</above><hold button="j" /></condition>
 </computer>
 ```
 
@@ -1112,21 +1112,21 @@ The other forms:
 
 `<remaining>` counts objects instead of reading a variable. It fires when no more than that many of the matching objects are still in play, that is still visible (`<die />` hides an object). `0` means they are all gone, which is how Space Invaders is won: `class="aliens"` covers every cell of the group, and `object="aliens.3.2"` would watch a single one. `<atmost>` reads a variable from above: `<condition object="frog" variable="lives"><atmost>0</atmost>...</condition>` fires when the variable has fallen to that value or below, which is how a lives counter that goes down with `<dec>` ends the game (Frogger). `<above>`, `<below>` and `<equal>` are more than, less than and the same as. A condition uses exactly one of `<atleast>`, `<atmost>`, `<above>`, `<below>`, `<equal>` or `<remaining>` (the schema enforces this), or an `<all>` or `<any>` (below).
 
-**Comparing two variables.** Each of the five tests on a variable can compare it with another variable instead of a number: `variable=` on the test names it and `object=` whose, and it is read every frame. Without `object=` it is the tested object's own, so `<condition class="player" variable="score"><above variable="best" />` compares each player with themselves. Air-Sea Battle says who won this way:
+**Comparing with what changes.** A test's number is a value like any other, and when it names something that changes as the game runs (an object's variable, where something is: `gun2.score`, `ship.x + 10`) it is worked out again each time the condition is tested, so a condition follows it. A number that names nothing that changes is worked out once, at load. In a collision rule's `<condition>`, `self` is the object running the rule (`<atleast>self.worth</atleast>`); a state's condition has no `self`, so it names the object. Air-Sea Battle says who won this way:
 
 ```xml
 <condition object="gun1" variable="score">
-  <above object="gun2" variable="score" />
+  <above>gun2.score</above>
   <become object="result.outcome" sprite="yellow" />
   <pop state="result" />
 </condition>
 <condition object="gun2" variable="score">
-  <above object="gun1" variable="score" />
+  <above>gun1.score</above>
   <become object="result.outcome" sprite="white" />
   <pop state="result" />
 </condition>
 <condition object="gun1" variable="score">
-  <equal object="gun2" variable="score" />
+  <equal>gun2.score</equal>
   <become object="result.outcome" sprite="draw" />
   <pop state="result" />
 </condition>
@@ -1255,7 +1255,7 @@ The library is static by default: each program has the engine's code copied into
 - A maze walker finds its way only as the arcade's ghosts do, by the next tile nearest a target: there is no search of the maze, so a target behind a wall can leave it going round. Pac-Man's ghosts scatter once each time they are themselves again, not on the arcade's schedule of waves, and leave the house on timers, not on how many dots have been eaten. A map's tiles are one character each, and a map cannot be taken from a scene's kit and changed.
 - A path is straight steps, not curves: a loop is a few steps round it, and the steps are flown at one speed, with no easing. A path cannot aim (a dive weaves the same way whatever the ship does) and its numbers are fixed when the game loads. Home is the object's place in the game file; a formation that moves (Galaxian's sways from side to side) would need home to move with it. A follower that is stopped or pushed on the way (a `<stick />`) still counts the step as flown.
 - Enemies fire on timers from wherever they are: an invader behind others fires through them (in the arcade game only the bottom one of a column fires). `<chase>` goes straight at its target and `<aim>` straight at where it is, through walls and with no lead; a Berserk robot heads for the man every second or two, whatever wall is in the way, and is destroyed by it. Firing makes a copy of the projectile, up to its `<most>`, or takes one of hidden ones; with all of them in flight a timer that goes off does nothing.
-- A condition's number (`<atleast>`, `<atmost>`, `<above>`, `<below>`, `<equal>`, `<remaining>`) is a value worked out once when the game loads, so it cannot follow a variable (a command's values can: see [Values](#values)) (`<atleast>player.nextlife</atleast>` is a constant, and a condition written to move its own goalposts fires every frame); to follow one, compare with it: `<atleast object="player" variable="nextlife" />`, and to set one variable to another's number as it is now, `<copy>` it. A timer's `<every>` and `<after>`, and the ends of a `<random>` in them, are worked out again each round and can; a count that has to start again is kept in a variable of its own object, which `<reset object>` of that object puts back (Berserk's score since the last extra man; its count of the robots destroyed in a room is put back by the rule for going through an exit).
+- A condition's number follows what it names as the game runs ([comparing with what changes](#conditions)), but a class condition cannot compare each object it tests with that object's own other variable: there is no `self` in a state's condition, so it names one object. To set one variable to another's number as it is now, `<copy>` it. A timer's `<every>` and `<after>`, and the ends of a `<random>` in them, are worked out again each round and can; a count that has to start again is kept in a variable of its own object, which `<reset object>` of that object puts back (Berserk's score since the last extra man; its count of the robots destroyed in a room is put back by the rule for going through an exit).
 - Timers count frames, like everything else, so a machine that cannot keep up slows the clock with the game. There is no way to show how long a timer has left, other than a timer that counts a variable down.
 - A look is a whole picture; there is no way to recolour one. An object with a `<heading>` or an `<animation>` has no looks, and looks do not combine with an animation (an animated object that changes look).
 - Players taking turns see only their own game: the other player's score is in their game, put away, so a screen cannot show both scores at once, and the table only hears of a score through the condition of the player whose game is current.

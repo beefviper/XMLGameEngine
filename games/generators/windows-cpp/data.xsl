@@ -2086,30 +2086,11 @@
           </xsl:choose>
           <xsl:text>;&#10;</xsl:text>
         </xsl:if>
-        <xsl:choose>
-          <!-- against another variable, read every frame -->
-          <xsl:when test="$test/@variable">
-            <xsl:if test="$test/@object != ''">
-              <xsl:value-of select="concat($inner, $var, '.otherObject = ')" />
-              <xsl:call-template name="string">
-                <xsl:with-param name="text" select="$test/@object" />
-              </xsl:call-template>
-              <xsl:text>;&#10;</xsl:text>
-            </xsl:if>
-            <xsl:value-of select="concat($inner, $var, '.otherVariable = ')" />
-            <xsl:call-template name="string">
-              <xsl:with-param name="text" select="$test/@variable" />
-            </xsl:call-template>
-            <xsl:text>;&#10;</xsl:text>
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:call-template name="assign-value">
-              <xsl:with-param name="indent" select="$inner" />
-              <xsl:with-param name="to" select="concat($var, '.threshold')" />
-              <xsl:with-param name="node" select="$test" />
-            </xsl:call-template>
-          </xsl:otherwise>
-        </xsl:choose>
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$inner" />
+          <xsl:with-param name="to" select="concat($var, '.threshold')" />
+          <xsl:with-param name="node" select="$test" />
+        </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

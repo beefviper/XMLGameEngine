@@ -59,8 +59,8 @@ namespace xge
 			text << (what.empty() ? "" : what + ".") << condition.variableName;
 		}
 		text << signs[static_cast<std::size_t>(condition.compare)];
-		if (condition.otherVariable.empty()) { text << condition.value; }
-		else { text << (condition.otherObject.empty() ? "" : condition.otherObject + ".") << condition.otherVariable; }
+		if (condition.live) { text << valueText(*condition.live); }
+		else { text << condition.value; }
 		if (!condition.filterClass.empty() && !condition.filterObject.empty()) { text << " (class " << condition.filterClass << ")"; }
 		return text.str();
 	}
@@ -99,10 +99,6 @@ namespace xge
 			else if (condition.test == RawCondition::Test::Remaining)
 			{
 				o << "remaining=" << condition.threshold;
-			}
-			else if (!condition.otherVariable.empty())
-			{
-				o << "variable=" << condition.variableName << ", " << test << "=" << (condition.otherObject.empty() ? "" : condition.otherObject + ".") << condition.otherVariable;
 			}
 			else
 			{

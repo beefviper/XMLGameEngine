@@ -306,7 +306,7 @@ namespace xge
 				// self, as a name or in front of a variable (self.worth), is
 				// the object running the rule, as it is in its commands.
 				const std::string own = "self.";
-				for (std::string* name : { &condition.filterObject, &condition.otherObject, &condition.distance })
+				for (std::string* name : { &condition.filterObject, &condition.distance })
 				{
 					if (*name == "self") { *name = object.name; }
 				}
@@ -315,11 +315,7 @@ namespace xge
 				{
 					condition.variableName.erase(0, own.size());
 				}
-				if (condition.otherVariable.compare(0, own.size(), own) == 0 && condition.otherObject.empty())
-				{
-					condition.otherObject = object.name;
-					condition.otherVariable.erase(0, own.size());
-				}
+				value(condition.threshold);
 				if (condition.filterClass.empty() && condition.filterObject.empty())
 				{
 					condition.filterObject = object.name;

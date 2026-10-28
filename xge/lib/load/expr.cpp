@@ -180,43 +180,6 @@ namespace xge
 			}, command);
 		}
 
-		// A condition compared with another variable: the object named has
-		// it, or, with no object named, every object the condition tests that
-		// has its variable has the other one too.
-		void checkOtherVariable(const Condition& condition, const std::vector<Object>& objects, const std::string& where)
-		{
-			const auto has = [&](const Object& object) { return numberOf(object, condition.otherVariable).has_value(); };
-
-			if (!condition.otherObject.empty())
-			{
-				const auto other = std::find_if(objects.begin(), objects.end(), [&](const Object& object) { return object.name == condition.otherObject; });
-				if (other == objects.end())
-				{
-					std::vector<std::string> names;
-					for (const Object& object : objects) { names.push_back(object.name); }
-					throw std::runtime_error(where + ": compares with object=\"" + condition.otherObject + "\", and there is no object of that name" + didYouMean(condition.otherObject, names));
-				}
-				if (!has(*other))
-				{
-					std::vector<std::string> names;
-					for (const auto& [name, value] : other->variable) { names.push_back(name); }
-					throw std::runtime_error(where + ": compares with " + condition.otherObject + "." + condition.otherVariable + ", and " + condition.otherObject + " has no variable of that name" + didYouMean(condition.otherVariable, names));
-				}
-				return;
-			}
-
-			for (const Object& object : objects)
-			{
-				const bool tested = (condition.filterClass.empty() || condition.filterClass == object.objClass)
-					&& (condition.filterObject.empty() || condition.filterObject == object.name || object.inGroup(condition.filterObject))
-					&& numberOf(object, condition.variableName);
-				if (tested && !has(object))
-				{
-					throw std::runtime_error(where + ": compares " + object.name + "." + condition.variableName + " with its own " + condition.otherVariable + ", and " + object.name + " has no variable of that name");
-				}
-			}
-		}
-
 		// Where a list of commands runs, and what each place does something
 		// with. These mirror the dispatchers in play/executor.cpp (a command
 		// one of them leaves to its catch-all does nothing there); change one
@@ -1145,9 +1108,36 @@ namespace xge
 			else if (rawCondition.total == "highest") { condition.total = Total::Highest; }
 			else if (rawCondition.total == "lowest") { condition.total = Total::Lowest; }
 
-			condition.otherObject = rawCondition.otherObject;
-			condition.otherVariable = rawCondition.otherVariable;
-			const float threshold = rawCondition.otherVariable.empty() ? evaluate(rawCondition.threshold, where) : 0.0f;
+			// A number that names something that changes is worked out again
+			// each time the condition is tested (Game::testCondition); now, it
+			// may read where things are as 0, as a command's values may.
+			const bool live = namesLive(rawCondition.threshold);
+			commandValues = live;
+			const float threshold = evaluate(rawCondition.threshold, where);
+			commandValues = false;
+			if (live)
+			{
+				condition.live = std::make_shared<const RawValue>(rawCondition.threshold);
+				condition.where = where;
+				const auto sameName = [](const std::string& a, const std::string& b)
+				{
+					return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(),
+						[](char x, char y) { return std::tolower(static_cast<unsigned char>(x)) == std::tolower(static_cast<unsigned char>(y)); });
+				};
+				for (const std::string* text : rawCondition.threshold.expressions())
+				{
+					for (const std::string& name : namesIn(*text))
+					{
+						for (auto& [key, slot] : objectVariables)
+						{
+							if (!sameName(key, name)) { continue; }
+							const std::size_t dot = key.rfind('.');
+							condition.reads.push_back({ key.substr(0, dot), key.substr(dot + 1), &slot });
+							break;
+						}
+					}
+				}
+			}
 			switch (rawCondition.test)
 			{
 			case RawCondition::Test::AtLeast:   condition.compare = Compare::AtLeast; break;
@@ -1158,11 +1148,6 @@ namespace xge
 			case RawCondition::Test::Remaining: condition.remaining = threshold; break;
 			}
 			condition.value = threshold;
-
-			if (!condition.otherVariable.empty())
-			{
-				checkOtherVariable(condition, objects, where + " > <condition variable=\"" + condition.variableName + "\">");
-			}
 
 			if (!condition.distanceTo.empty() && !findObject(objects, condition.distanceTo))
 			{

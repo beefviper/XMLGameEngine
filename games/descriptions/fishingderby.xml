@@ -379,21 +379,21 @@
         <condition>
           <all>
             <condition object="hook2" variable="line"><equal>0</equal></condition>
-            <condition object="hook2" variable="y"><below object="cod.2" variable="y" /></condition>
+            <condition object="hook2" variable="y"><below>cod.2.y</below></condition>
           </all>
           <hold button="k" />
         </condition>
         <condition>
           <all>
             <condition object="hook2" variable="line"><equal>0</equal></condition>
-            <condition object="hook2" variable="x"><below object="cod.2" variable="x" /></condition>
+            <condition object="hook2" variable="x"><below>cod.2.x</below></condition>
           </all>
           <hold button="l" />
         </condition>
         <condition>
           <all>
             <condition object="hook2" variable="line"><equal>0</equal></condition>
-            <condition object="hook2" variable="x"><above object="cod.2" variable="x" /></condition>
+            <condition object="hook2" variable="x"><above>cod.2.x</above></condition>
           </all>
           <hold button="j" />
         </condition>

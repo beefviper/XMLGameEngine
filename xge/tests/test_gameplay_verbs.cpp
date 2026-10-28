@@ -1103,7 +1103,7 @@ TEST_CASE("a condition can test a total over what it matches: how many, the sum,
 	CHECK(count.fires());
 
 	// Against another variable, read as it is now.
-	Coins against("class=\"coin\" variable=\"v\" total=\"sum\"><atleast object=\"flag\" variable=\"gap\" />");
+	Coins against("class=\"coin\" variable=\"v\" total=\"sum\"><atleast>flag.gap</atleast>");
 	CHECK(against.fires());
 	against.object("flag").variable["gap"] = 17.0f;
 	CHECK_FALSE(against.fires());
@@ -1178,8 +1178,6 @@ TEST_CASE("mistakes in totals, distances, <all> and <any> stop the load, saying 
 	fails("class=\"coin\" total=\"count\" variable=\"v\"><atleast>1</atleast>", "reads no variable=");
 	fails("class=\"coin\" total=\"sum\"><atleast>1</atleast>", "needs variable=");
 	fails("class=\"coin\" total=\"sum\" variable=\"w\"><atleast>1</atleast>", "no object it looks at has a variable of that name");
-	fails("class=\"coin\" total=\"sum\" variable=\"v\"><atleast variable=\"gap\" /></condition><condition object=\"x\">"
-		"<atleast>1</atleast>", "needs object= as well as variable=");
 	fails("object=\"ball\" distance=\"coins\"><below>5</below>", "distance=\"coins\" names no object or group");
 	fails("object=\"ball\" distance=\"coin1\" variable=\"v\"><below>5</below>", "reads no variable=");
 	fails("object=\"ball\" distance=\"coin1\" total=\"count\"><below>5</below>", "has total= and distance=");

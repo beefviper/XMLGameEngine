@@ -347,11 +347,11 @@
       </inputs>
       <conditions>
         <condition object="chicken1" variable="score">
-          <above object="chicken2" variable="score" />
+          <above>chicken2.score</above>
           <become object="wins.winner" sprite="player1" />
         </condition>
         <condition object="chicken2" variable="score">
-          <above object="chicken1" variable="score" />
+          <above>chicken1.score</above>
           <become object="wins.winner" sprite="player2" />
         </condition>
       </conditions>

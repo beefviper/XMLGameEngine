@@ -170,8 +170,8 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 	SECTION("player 1")
 	{
 		Table table;
-		table.rocket(1).variable["score"] = 3.0f;
-		table.rocket(2).variable["score"] = 2.0f;
+		table.game.setVariable("rocket1", "score", 3.0f);
+		table.game.setVariable("rocket2", "score", 2.0f);
 		table.timeUp();
 		REQUIRE(table.game.getCurrentState().name == "wins");
 		table.frames(1);
@@ -181,7 +181,7 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 	SECTION("player 2, then a new game from the menu")
 	{
 		Table table;
-		table.rocket(2).variable["score"] = 1.0f;
+		table.game.setVariable("rocket2", "score", 1.0f);
 		table.timeUp();
 		table.frames(1);
 		CHECK(table.game.getObject("wins.winner").lookName() == "player2");
@@ -197,8 +197,8 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 	SECTION("a draw")
 	{
 		Table table;
-		table.rocket(1).variable["score"] = 2.0f;
-		table.rocket(2).variable["score"] = 2.0f;
+		table.game.setVariable("rocket1", "score", 2.0f);
+		table.game.setVariable("rocket2", "score", 2.0f);
 		table.timeUp();
 		table.frames(1);
 		CHECK(table.game.getObject("wins.winner").lookName() == "draw");
@@ -284,7 +284,7 @@ TEST_CASE("paused and the win screen draw the race still underneath", "[spacerac
 	CHECK(debris.position.x == Catch::Approx(x + 3.0f));
 	CHECK(table.game.isShown(debris));
 
-	table.rocket(2).variable["score"] = 2.0f;
+	table.game.setVariable("rocket2", "score", 2.0f);
 	table.timeUp();
 	REQUIRE(table.game.getCurrentState().name == "wins");
 	table.frames(1);

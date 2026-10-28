@@ -26,8 +26,8 @@
     group too, which does not exist until a gun fires: two each at most,
     and each player's has a name of its own, which says whose it is.
   * The clock is a timer of the battle taking a second off status.time.
-  * At time up the two scores are compared (<above object="gun2"
-    variable="score" />, <equal>), and the result screen takes the place of
+  * At time up the two scores are compared (<above>gun2.score</above>,
+    <equal>), and the result screen takes the place of
     time up, its words picked to say who won, or a draw (<become
     object="result.outcome" sprite="white" />).
   Not in it: the planes falling as they are hit, and the other games on the
@@ -350,17 +350,17 @@
       </inputs>
       <conditions>
         <condition object="gun1" variable="score">
-          <above object="gun2" variable="score" />
+          <above>gun2.score</above>
           <become object="result.outcome" sprite="yellow" />
           <pop state="result" />
         </condition>
         <condition object="gun2" variable="score">
-          <above object="gun1" variable="score" />
+          <above>gun1.score</above>
           <become object="result.outcome" sprite="white" />
           <pop state="result" />
         </condition>
         <condition object="gun1" variable="score">
-          <equal object="gun2" variable="score" />
+          <equal>gun2.score</equal>
           <become object="result.outcome" sprite="draw" />
           <pop state="result" />
         </condition>

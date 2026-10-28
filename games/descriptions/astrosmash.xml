@@ -310,7 +310,7 @@
       </inputs>
       <conditions>
         <condition object="ship" variable="score">
-          <atleast object="ship" variable="spare" />
+          <atleast>ship.spare</atleast>
           <inc variable="ship.lives" />
           <inc variable="ship.spare">1000</inc>
           <play sound="spare" />

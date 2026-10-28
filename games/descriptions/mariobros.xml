@@ -874,7 +874,7 @@
           <push state="gameover" />
         </condition>
         <condition object="mario" variable="score">
-          <above object="best" variable="score" />
+          <above>best.score</above>
           <copy variable="mario.score" into="best.score" />
         </condition>
       </conditions>

@@ -656,28 +656,30 @@ TEST_CASE("a condition compares with a number or with another variable, in five 
 			"<conditions><condition object=\"o\" variable=\"score\">" + test + "<push state=\"won\" /></condition></conditions>",
 			idleState("won")));
 		loaded.game.setCurrentState("playing");
-		loaded.game.getObject("o").variable["score"] = a;
-		loaded.game.getObject("p").variable["score"] = b;
-		loaded.game.getObject("o").variable["best"] = best;
+		loaded.game.setVariable("o", "score", a);
+		loaded.game.setVariable("p", "score", b);
+		loaded.game.setVariable("o", "best", best);
 		loaded.game.updateObjects();
 		return loaded.game.getCurrentState().name == "won";
 	};
 
-	const std::string other = "object=\"p\" variable=\"score\" />";
-	CHECK(finish("<above " + other, 3, 2, 0));
-	CHECK_FALSE(finish("<above " + other, 2, 2, 0));
-	CHECK(finish("<below " + other, 1, 2, 0));
-	CHECK_FALSE(finish("<below " + other, 2, 2, 0));
-	CHECK(finish("<equal " + other, 2, 2, 0));
-	CHECK_FALSE(finish("<equal " + other, 2, 3, 0));
-	CHECK(finish("<atleast " + other, 2, 2, 0));
-	CHECK_FALSE(finish("<atleast " + other, 1, 2, 0));
-	CHECK(finish("<atmost " + other, 2, 2, 0));
-	CHECK_FALSE(finish("<atmost " + other, 3, 2, 0));
+	// Another object's variable, as it is when the condition is tested.
+	CHECK(finish("<above>p.score</above>", 3, 2, 0));
+	CHECK_FALSE(finish("<above>p.score</above>", 2, 2, 0));
+	CHECK(finish("<below>p.score</below>", 1, 2, 0));
+	CHECK_FALSE(finish("<below>p.score</below>", 2, 2, 0));
+	CHECK(finish("<equal>p.score</equal>", 2, 2, 0));
+	CHECK_FALSE(finish("<equal>p.score</equal>", 2, 3, 0));
+	CHECK(finish("<atleast>p.score</atleast>", 2, 2, 0));
+	CHECK_FALSE(finish("<atleast>p.score</atleast>", 1, 2, 0));
+	CHECK(finish("<atmost>p.score</atmost>", 2, 2, 0));
+	CHECK_FALSE(finish("<atmost>p.score</atmost>", 3, 2, 0));
 
-	// With no object=, the tested object's own other variable.
-	CHECK(finish("<above variable=\"best\" />", 5, 0, 4));
-	CHECK_FALSE(finish("<above variable=\"best\" />", 4, 0, 4));
+	// The tested object's own other variable, and arithmetic on one.
+	CHECK(finish("<above>o.best</above>", 5, 0, 4));
+	CHECK_FALSE(finish("<above>o.best</above>", 4, 0, 4));
+	CHECK(finish("<atleast>p.score + 2</atleast>", 5, 3, 0));
+	CHECK_FALSE(finish("<atleast>p.score + 2</atleast>", 4, 3, 0));
 
 	// And the new tests with a plain number.
 	CHECK(finish("<above>2</above>", 3, 0, 0));
@@ -698,12 +700,10 @@ TEST_CASE("a comparison with a variable the game does not have is turned away", 
 			ContainsSubstring(expected));
 	};
 
-	fails("<above object=\"q\" variable=\"score\" />", "compares with object=\"q\", and there is no object of that name");
-	fails("<above object=\"o\" variable=\"scroe\" />", "o has no variable of that name (did you mean 'score'?)");
-	fails("<above variable=\"best\" />", "compares o.score with its own best");
-	fails("<above object=\"o\" />", "<above> names object=\"o\" but no variable=");
-	fails("<above variable=\"score\">1</above>", "so it has no number as well");
-	fails("<remaining variable=\"score\" />", "<remaining> counts objects");
+	fails("<above>q.score</above>", "q.score");
+	fails("<above>o.scroe</above>", "o.scroe");
+	fails("<above object=\"o\" variable=\"score\" />", "takes its number as content, which may name a variable: <above>o.score</above>");
+	fails("<remaining variable=\"score\" />", "takes its number as content");
 	fails("<over>1</over>", "expected <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>");
 }
 

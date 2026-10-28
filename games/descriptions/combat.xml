@@ -254,11 +254,11 @@
       </inputs>
       <conditions>
         <condition object="shell1" variable="hits">
-          <above object="shell2" variable="hits" />
+          <above>shell2.hits</above>
           <become object="winner" sprite="yellow" />
         </condition>
         <condition object="shell2" variable="hits">
-          <above object="shell1" variable="hits" />
+          <above>shell1.hits</above>
           <become object="winner" sprite="blue" />
         </condition>
       </conditions>

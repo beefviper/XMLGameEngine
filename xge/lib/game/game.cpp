@@ -2094,22 +2094,31 @@ namespace xge
 			return inScope(object) || namedByPath(object, condition.filterObject);
 		};
 
-		// Against a number, or another variable as it is now (of the
-		// object tested, when the test names no object). Nothing to compare
-		// with: does not hold.
-		const auto against = [&](const Object* tested) -> std::optional<float>
+		// The number compared with: as it was at load, or, when it names
+		// something that changes, as it is now. One that cannot be worked out
+		// now stays as it was at load, with one warning.
+		float against = condition.value;
+		if (condition.live)
 		{
-			if (condition.otherVariable.empty())
+			for (const Condition::Read& read : condition.reads)
 			{
-				return condition.value;
+				if (const Object* owner = tryGetObject(read.owner))
+				{
+					if (const auto found = owner->variable.find(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
+				}
 			}
-			const Object* other = condition.otherObject.empty() ? tested : tryGetObject(condition.otherObject);
-			if (!other)
+			try
 			{
-				return std::nullopt;
+				against = evaluateNow(*condition.live, condition.where);
 			}
-			return numberOf(*other, condition.otherVariable);
-		};
+			catch (const std::runtime_error& error)
+			{
+				if (liveWarned.insert(condition.where + error.what()).second)
+				{
+					std::cout << "warning: " << error.what() << "; the condition compares with what it was as the game loaded\n";
+				}
+			}
+		}
 
 		// "No more than N of them left": everything that matches, still
 		// in play.
@@ -2119,7 +2128,7 @@ namespace xge
 				{
 					return objects[index].isVisible && considers(objects[index]);
 				});
-			return static_cast<float>(stillIn) <= *condition.remaining;
+			return static_cast<float>(stillIn) <= (condition.live ? against : *condition.remaining);
 		}
 
 		// A total over everything that matches and is in play.
@@ -2153,8 +2162,7 @@ namespace xge
 			{
 				return false; // no highest or lowest of nothing
 			}
-			const std::optional<float> other = against(nullptr);
-			return other && passes(condition.compare, total, *other);
+			return passes(condition.compare, total, against);
 		}
 
 		for (const std::size_t index : candidates)
@@ -2186,8 +2194,7 @@ namespace xge
 				tested = *number;
 			}
 
-			const std::optional<float> other = against(&object);
-			if (other && passes(condition.compare, tested, *other))
+			if (passes(condition.compare, tested, against))
 			{
 				return true;
 			}

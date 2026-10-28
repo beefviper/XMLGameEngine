@@ -145,16 +145,13 @@
 
   <!--
     What a condition's variable is compared with: a number, as content
-    (<atleast>15</atleast>), or another variable, read every frame:
-    variable= names it, and object= whose (the tested object's own when left
-    out): <above object="gun2" variable="score" />.
+    (<atleast>15</atleast>), which may name another variable, read as the game
+    runs: <above>gun2.score</above>.
   -->
   <xs:complexType name="compareType" mixed="true">
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="object" type="xs:string" use="optional" />
-    <xs:attribute name="variable" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!-- A number with a name, for <variable name="score">0</variable>. -->

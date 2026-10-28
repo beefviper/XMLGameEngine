@@ -2493,25 +2493,14 @@ namespace xge
 				fail(here, "<" + testName + "> reads a variable, so it needs variable=\"...\"");
 			}
 
-			// Against another variable (<above object="gun2" variable="score" />),
-			// or a number.
-			raw.otherObject = test->getAttribute("object");
-			raw.otherVariable = test->getAttribute("variable");
-			if (!raw.otherVariable.empty() || !raw.otherObject.empty())
+			// The number compared with, which may name another variable
+			// (<above>gun2.score</above>), read as the game runs.
+			if (!test->getAttribute("object").empty() || !test->getAttribute("variable").empty())
 			{
-				const std::string tag = "<" + testName + ">";
-				if (remaining) { fail(here, "<remaining> counts objects, so it takes a number, not a variable"); }
-				if (raw.otherVariable.empty()) { fail(here, tag + " names object=\"" + raw.otherObject + "\" but no variable= of it to compare with"); }
-				if (raw.otherObject.empty() && (!raw.total.empty() || !raw.distance.empty()))
-				{
-					fail(here, tag + " compares a total or a distance, which has no variables of its own, so it needs object= as well as variable=");
-				}
-				if (test->getFirstChild() || !readText(*test).empty()) { fail(here, tag + " compares with variable=\"" + raw.otherVariable + "\", so it has no number as well"); }
+				fail(here, "<" + testName + "> takes its number as content, which may name a variable: <" + testName + ">"
+					+ (test->getAttribute("object").empty() ? "self" : test->getAttribute("object")) + "." + test->getAttribute("variable") + "</" + testName + ">");
 			}
-			else
-			{
-				raw.threshold = readValue(*test, here);
-			}
+			raw.threshold = readValue(*test, here);
 			return test->getNextSibling();
 		}
 

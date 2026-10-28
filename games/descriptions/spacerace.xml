@@ -196,11 +196,11 @@
       </inputs>
       <conditions>
         <condition object="rocket1" variable="score">
-          <above object="rocket2" variable="score" />
+          <above>rocket2.score</above>
           <become object="winner" sprite="player1" />
         </condition>
         <condition object="rocket2" variable="score">
-          <above object="rocket1" variable="score" />
+          <above>rocket1.score</above>
           <become object="winner" sprite="player2" />
         </condition>
       </conditions>

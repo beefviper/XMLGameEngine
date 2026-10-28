@@ -422,12 +422,12 @@
           <push state="blasted" />
         </condition>
         <condition class="aliens" total="count">
-          <atmost object="pace" variable="next" />
+          <atmost>pace.next</atmost>
           <set variable="aliens.velocity.x">aliens.1.1.velocity.x * 1.3</set>
           <set variable="pace.next">pace.next / 2</set>
         </condition>
         <condition object="player" variable="score">
-          <above object="best" variable="score" />
+          <above>best.score</above>
           <copy variable="player.score" into="best.score" />
         </condition>
       </conditions>

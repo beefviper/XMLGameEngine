@@ -260,11 +260,11 @@
       <!-- the computer keeps its racket under the ball -->
       <computer>
         <condition object="cpu" variable="x">
-          <below object="ball" variable="x" />
+          <below>ball.x</below>
           <hold button="l" />
         </condition>
         <condition object="cpu" variable="x">
-          <above object="ball" variable="x" />
+          <above>ball.x</above>
           <hold button="j" />
         </condition>
       </computer>

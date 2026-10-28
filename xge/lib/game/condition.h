@@ -46,9 +46,7 @@ namespace xge
 		std::string total;    // total="...": "" (each object), count, sum, highest, lowest
 		std::string distance; // distance="...": the object or group measured to, or ""
 		Test test{ Test::AtLeast };
-		RawValue threshold;      // when otherVariable is empty
-		std::string otherObject;  // the test tag's object=, or empty
-		std::string otherVariable; // the test tag's variable=, or empty
+		RawValue threshold;      // the test tag's number
 		Join join{ Join::None };
 		std::vector<RawCondition> parts; // <all> or <any>: its <condition>s, <all>s and <any>s
 		std::vector<RawCommand> commands;
@@ -76,10 +74,21 @@ namespace xge
 		std::vector<Condition> parts;
 		Compare compare{ Compare::AtLeast };
 		float value{};
-		// Compared with this variable instead of value, read every frame: of
-		// otherObject, or, when that is empty, of the object being tested.
-		std::string otherObject;
-		std::string otherVariable;
+		// A number that names something that changes as the game runs (an
+		// object's variable, where it is: ship.next) is worked out again each
+		// time the condition is tested, from this; value is what it was at load.
+		std::shared_ptr<const RawValue> live;
+		std::string where;
+		// The objects' variables it names, each with where the expressions
+		// read it from: brought up to date from the object before it is
+		// worked out, so a variable changed in any way is seen.
+		struct Read
+		{
+			std::string owner;
+			std::string variable;
+			float* slot{ nullptr };
+		};
+		std::vector<Read> reads;
 		std::optional<float> remaining;
 		std::vector<Command> commands;
 	};

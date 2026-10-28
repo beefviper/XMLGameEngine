@@ -306,7 +306,7 @@ namespace
 				const RawCondition& c = list[i];
 				const std::string here = at + ".condition" + std::to_string(i);
 				out << here << " [" << c.filterClass << "|" << c.filterObject << "|" << c.variableName << "|" << c.total << "|" << c.distance << "] "
-					<< static_cast<int>(c.test) << " [" << c.otherObject << "|" << c.otherVariable << "] join " << static_cast<int>(c.join) << " name " << c.name << "\n";
+					<< static_cast<int>(c.test) << " join " << static_cast<int>(c.join) << " name " << c.name << "\n";
 				value(here + ".threshold", c.threshold);
 				conditions(here + ".parts", c.parts);
 				commands(here + ".commands", c.commands);
