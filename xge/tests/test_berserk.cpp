@@ -449,6 +449,40 @@ TEST_CASE("robots stand a while, then come for the man, and one that walks into 
 	CHECK(again.robotsLeft(1) == 2);
 }
 
+TEST_CASE("a robot fires only when lined up with the man, across, up or down or on a diagonal", "[berserk]")
+{
+	Play play;
+	play.begin(false);
+	play.leaveByTheLeft();
+	REQUIRE(play.room() == 2);
+
+	// Off every robot's eight ways (room two's stand at 165,107, 389,235,
+	// 165,363 and 389,363): nothing fires.
+	const auto still = [&](const Vector2f& at, int frames)
+	{
+		bool fired = false;
+		for (int frame = 0; frame < frames && !fired; ++frame)
+		{
+			play.man().position = at;
+			play.standingFrame();
+			fired = play.alive("robotshot") > 0;
+		}
+		return fired;
+	};
+	CHECK_FALSE(still({ 53.0f, 263.0f }, 600));
+
+	// Level with the first, in the top middle cell: it fires straight across.
+	REQUIRE(still({ 277.0f, 105.0f }, 600));
+	for (auto& object : play.game.getCurrentObjects())
+	{
+		if (object.objClass == "robotshot" && object.isVisible)
+		{
+			CHECK(object.velocity.y == Approx(0.0f).margin(0.001f));
+			CHECK(object.velocity.x > 0.0f);
+		}
+	}
+}
+
 TEST_CASE("the first room's robots never fire; the next room's fire at the man, and a shot that reaches him costs a life", "[berserk]")
 {
 	Play play;
@@ -467,7 +501,8 @@ TEST_CASE("the first room's robots never fire; the next room's fire at the man, 
 	}
 	REQUIRE(fired);
 
-	// Straight at him (<aim>), at any angle: towards his middle.
+	// Straight at him (<aim>), along one of the eight ways he is lined up on:
+	// towards his middle.
 	Object* shot = nullptr;
 	for (auto& object : play.game.getCurrentObjects())
 	{
@@ -736,7 +771,7 @@ TEST_CASE("each room's wait for Otto starts when the man comes in", "[berserk]")
 	CHECK(frame == Approx(13 * 60).margin(6));
 }
 
-TEST_CASE("Otto comes at once when every robot is gone, goes when the man leaves, and cannot be shot", "[berserk]")
+TEST_CASE("Otto comes at once and faster when every robot is gone, goes when the man leaves, and cannot be shot", "[berserk]")
 {
 	Play play;
 	play.begin();
@@ -745,10 +780,12 @@ TEST_CASE("Otto comes at once when every robot is gone, goes when the man leaves
 	play.killRobots(1);
 	play.frames(2);
 	REQUIRE(play.object("otto").isVisible);
+	CHECK(play.object("otto").variable["speed"] == Approx(2.0f)); // and faster than when he lingers
 
 	// He goes when the man leaves the room, and room two's robots keep him away.
 	play.leaveByTheLeft();
 	CHECK(play.room() == 2);
+	CHECK(play.object("otto").variable["speed"] == Approx(1.1f)); // and he is slow again
 	CHECK_FALSE(play.object("otto").isVisible);
 	play.frames(2);
 	CHECK_FALSE(play.object("otto").isVisible);

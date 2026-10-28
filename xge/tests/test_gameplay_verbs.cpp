@@ -15,6 +15,7 @@
 
 #include "scratch.h"
 #include "play/executor.h"
+#include "play/geometry.h"
 #include "game/game.h"
 #include "load/xml.h"
 
@@ -24,6 +25,7 @@
 
 #include <cmath>
 #include <filesystem>
+#include <optional>
 #include <fstream>
 #include <set>
 #include <string>
@@ -764,6 +766,59 @@ TEST_CASE("<aim> sends the next shots straight at the target, at any angle, unti
 	// A key that moves the gun drops the aim: from its top again.
 	CommandExecutor executor(loaded.game);
 	executor.executeInput(CmdTriggerAction{ "gun", "left" }, true);
+	CHECK_FALSE(loaded.game.getObject("gun").hasAim);
+}
+
+TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the target is lined up", "[aim]")
+{
+	const std::string gun = box("gun", 100, 100, 20, 20, "<enabled>true</enabled>", {}, 
+		"<timers><timer><every>0.5</every><aim object=\"target\"><lined>8</lined></aim><fire object=\"shot\" /></timer></timers>");
+	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20)
+		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<active>false</active>", {}, "<x>0</x><y>-5</y>"),
+		state("playing", { "gun", "target", "shot" })));
+
+	// 300 across and 400 down lies along none of the eight: the aim is
+	// refused, and the <fire> after it with it.
+	Object& shot = loaded.game.getObject("shot");
+	loaded.frames(40);
+	CHECK_FALSE(shot.isVisible);
+
+	// 300 and 304: on the diagonal, within 8. The shot goes down it exactly.
+	loaded.game.getObject("target").position = { 400.0f, 404.0f };
+	loaded.frames(40);
+	REQUIRE(shot.isVisible);
+	CHECK(shot.velocity.x == Approx(5.0f / std::sqrt(2.0f)));
+	CHECK(shot.velocity.y == Approx(5.0f / std::sqrt(2.0f)));
+
+	CHECK(linedUp({ -200.0f, 6.0f }, 8.0f) == std::optional<Vector2f>(Vector2f{ -1.0f, 0.0f }));
+	CHECK(linedUp({ 3.0f, -90.0f }, 8.0f) == std::optional<Vector2f>(Vector2f{ 0.0f, -1.0f }));
+	CHECK_FALSE(linedUp({ 50.0f, 70.0f }, 8.0f));
+	CHECK_FALSE(linedUp({ 0.0f, 0.0f }, 8.0f));
+}
+
+TEST_CASE("two move keys held across each other face the diagonal, and a <fire> goes along it", "[aim][facing]")
+{
+	const std::string gun = box("gun", 300, 300, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>",
+		"<actions><action name=\"up\"><move direction=\"up\">1</move></action>"
+		"<action name=\"right\"><move direction=\"right\">1</move></action>"
+		"<action name=\"gun\"><fire object=\"shot\" /></action></actions>");
+	Loaded loaded(gameXml(gun
+		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<active>false</active>", {}, "<x>0</x><y>-5</y>"),
+		state("playing", { "gun", "shot" })));
+	CommandExecutor executor(loaded.game);
+	Object& shot = loaded.game.getObject("shot");
+
+	executor.executeInput(CmdTriggerAction{ "gun", "up" }, true);
+	executor.executeInput(CmdTriggerAction{ "gun", "right" }, true);
+	executor.executeInput(CmdTriggerAction{ "gun", "gun" }, true);
+	loaded.frames(1);
+	REQUIRE(shot.isVisible);
+	CHECK(shot.velocity.x == Approx(5.0f / std::sqrt(2.0f)));
+	CHECK(shot.velocity.y == Approx(-5.0f / std::sqrt(2.0f)));
+
+	// Up let go, right still held: straight right.
+	executor.executeInput(CmdTriggerAction{ "gun", "up" }, false);
+	CHECK(loaded.game.getObject("gun").facing == Direction::Right);
 	CHECK_FALSE(loaded.game.getObject("gun").hasAim);
 }
 

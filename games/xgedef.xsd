@@ -933,6 +933,11 @@
     <xs:choice>
       <xs:element name="aim">
         <xs:complexType>
+          <xs:sequence>
+            <!-- only when lined up with it, across, up or down or on a true
+                 diagonal, within this many pixels; otherwise refused -->
+            <xs:element name="lined" type="valueType" minOccurs="0" />
+          </xs:sequence>
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>

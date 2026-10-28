@@ -436,6 +436,13 @@ namespace xge
 	// The way from one point to another, one pixel long; none at the point.
 	std::optional<Vector2f> wayTo(const Vector2f& from, const Vector2f& to) noexcept;
 
+	// Of the eight ways (across, up or down, or a true diagonal), one pixel
+	// long, the one `apart` lies along to within `within` pixels: straight
+	// across when it is that near level, up or down when that near above or
+	// below, a diagonal when its two halves differ by no more. None when it
+	// lies along none, or is no way at all.
+	std::optional<Vector2f> linedUp(const Vector2f& apart, float within) noexcept;
+
 	// A <heading> (degrees clockwise from straight up) as a way one pixel
 	// long, and back.
 	Vector2f ahead(float heading) noexcept;

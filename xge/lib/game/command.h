@@ -328,10 +328,15 @@ namespace xge
 	// <aim object="player" /> - the object turns to the nearest one in play
 	// of that name or <group>: its next <fire>s go straight at where that was,
 	// at any angle, and its <facing> (or <heading>) turns that way. Kept until
-	// it aims again, is reset, or a key moves it. See CommandExecutor::aim.
+	// it aims again, is reset, or a key moves it. With <lined>8</lined>, only
+	// along one of the eight ways (across, up or down, or a true diagonal),
+	// when that one is within 8 pixels of one; otherwise it is refused, and
+	// what follows it in the timer does not run. See CommandExecutor::aim.
 	struct CmdAim
 	{
 		std::string target;
+		bool lined{ false };
+		float within{};
 	};
 
 	// <become sprite="blue" /> - the object shows another of its named
@@ -732,7 +737,7 @@ namespace xge
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
-		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat)
+		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
 		// spawn: its <position> and <velocity>, each half empty text when
 		// left out; a position half may be <centered>.

@@ -117,7 +117,7 @@ namespace xge
 		void knock(Object& object, Object& other, const Touch& touch, float bounce);
 		bool leap(Object& object, float height);
 		void chase(Object& object, const CmdChase& chase);
-		void aim(Object& object, const std::string& target);
+		bool aim(Object& object, const CmdAim& command);
 		void reverse(Object& object);
 
 		// <become>: the object running it (self, which a state's commands do

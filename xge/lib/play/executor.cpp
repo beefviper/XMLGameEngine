@@ -97,7 +97,7 @@ namespace xge
 			[&](const CmdDrop&) { xge::drop(object); },
 			[&](const CmdLand&) { land(object, other, edge); },
 			[&](const CmdChase& c) { chase(object, c); },
-			[&](const CmdAim& a) { aim(object, a.target); },
+			[&](const CmdAim& a) { aim(object, a); },
 			[&](const CmdHunt& h) { startHunt(object, h); },
 			[&](const CmdHuntHop& h) { huntByHop(object, h); },
 			[&](const CmdWander& w) { startWander(object, w); },
@@ -223,7 +223,7 @@ namespace xge
 			[&](const CmdMove& m) { if (owner) { moveByStep(*owner, m.direction, m.step); } },
 			[&](const CmdRelease& r) { if (owner) { release(*owner, r.target, r.count); } },
 			[&](const CmdChase& c) { if (owner) { chase(*owner, c); } },
-			[&](const CmdAim& a) { if (owner) { aim(*owner, a.target); } },
+			[&](const CmdAim& a) { if (owner) { done = aim(*owner, a); } },
 			[&](const CmdHunt& h) { if (owner) { startHunt(*owner, h); } },
 			[&](const CmdHuntHop& h) { if (owner) { done = huntByHop(*owner, h); } },
 			[&](const CmdWander& w) { if (owner) { startWander(*owner, w); } },
@@ -636,7 +636,7 @@ namespace xge
 				[&](const CmdStop&) { if (keyPressed) { xge::stop(object); } },
 				// Steering, as from a timer: the press sets it going.
 				[&](const CmdChase& c) { if (keyPressed) { chase(object, c); } },
-				[&](const CmdAim& a) { if (keyPressed) { aim(object, a.target); } },
+				[&](const CmdAim& a) { if (keyPressed) { aim(object, a); } },
 				[&](const CmdHunt& h) { if (keyPressed) { startHunt(object, h); } },
 				[&](const CmdWander& w) { if (keyPressed) { startWander(object, w); } },
 				// Another action, of this object or another, run as part of this
@@ -751,14 +751,20 @@ namespace xge
 
 	// Turns to the nearest of `target` in play: the next shots go straight at
 	// where its middle is now, and the object faces that way (to the nearest
-	// of the four, or exactly, if it has a heading).
-	void CommandExecutor::aim(Object& object, const std::string& target)
+	// of the four, or exactly, if it has a heading). Lined, only along one of
+	// the eight ways, and refused (false) when none is near enough.
+	bool CommandExecutor::aim(Object& object, const CmdAim& command)
 	{
-		const Object* other = game.nearestInPlay(object, target);
-		if (!other) { return; }
+		const Object* other = game.nearestInPlay(object, command.target);
+		if (!other) { return !command.lined; }
 
-		const auto way = wayTo(middleOf(object), middleOf(*other));
-		if (!way) { return; }
+		auto way = wayTo(middleOf(object), middleOf(*other));
+		if (!way) { return !command.lined; }
+		if (command.lined)
+		{
+			way = linedUp(middleOf(*other) - middleOf(object), command.within);
+			if (!way) { return false; }
+		}
 
 		object.aim = *way;
 		object.hasAim = true;
@@ -768,6 +774,7 @@ namespace xge
 			object.heading = headingOf(object.aim);
 			object.showHeading();
 		}
+		return true;
 	}
 
 	// Up off the ground at the speed that, under the object's own pull, rises

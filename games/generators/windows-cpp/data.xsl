@@ -234,6 +234,12 @@
             <xsl:with-param name="node" select="$node/near" />
           </xsl:call-template>
         </xsl:when>
+        <xsl:when test="$verb = 'aim'">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.distance'" />
+            <xsl:with-param name="node" select="$node/lined" />
+          </xsl:call-template>
+        </xsl:when>
         <xsl:when test="$verb = 'hole'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.amount'" />

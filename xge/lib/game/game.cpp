@@ -1232,6 +1232,15 @@ namespace xge
 		}
 	}
 
+	void Game::holdVariablesForExpressions(const Object& object)
+	{
+		for (const auto& [variableName, value] : object.variable)
+		{
+			const auto held = expr.objectVariables.find(object.name + "." + variableName);
+			if (held != expr.objectVariables.end()) { held->second = value; }
+		}
+	}
+
 	void Game::refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value)
 	{
 		// Expressions read the variable too (a timer's <every>, worked out again
@@ -1382,6 +1391,7 @@ namespace xge
 				if (candidate.isCopy()) { despawn(candidate); continue; }
 				drawStartAgain(candidate);
 				resetObjectState(candidate);
+				holdVariablesForExpressions(candidate);
 				stageChanged();
 			}
 		}
@@ -1567,6 +1577,7 @@ namespace xge
 			if (object.kept) { continue; }
 			drawStartAgain(object);
 			resetObjectState(object);
+			holdVariablesForExpressions(object);
 			stageChanged();
 		}
 
@@ -1685,6 +1696,7 @@ namespace xge
 			if (object.isCopy()) { despawn(object); continue; }
 			drawStartAgain(object);
 			resetObjectState(object);
+			holdVariablesForExpressions(object);
 			stageChanged();
 
 			// Back where it started, it is no longer carried.

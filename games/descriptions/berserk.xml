@@ -17,8 +17,8 @@
   fire and Otto to arrive the more rooms he has been through. The
   first room's yellow robots do not fire at all.
 
-  W A S D or the arrow keys walk, Space fires the way he last walked. P or
-  Escape pauses.
+  W A S D or the arrow keys walk, two at once on a diagonal, and Space
+  fires the way he last walked, diagonals too. P or Escape pauses.
 
   How it is written:
   * The rooms are the <scenes> of the playing state. The man, his shot, the
@@ -46,6 +46,8 @@
     inner group gives each room's robots their colour, and every group but
     the first room's an <aim> and <fire> timer, whose wait is drawn again
     after every shot, between ends that shrink as player.depth grows.
+  * A robot fires only when lined up with the man, across, up or down or
+    on a diagonal, within 8 pixels (<aim> with <lined>), as the arcade's do.
   * Now and then (every 1 to 2.5 seconds, so it stands a while first) a
     robot turns to <chase> the man, a little faster the deeper he has gone; a
     robot that touches a wall or another robot is destroyed (its action
@@ -60,7 +62,8 @@
     another brings Otto at once. player.lifepoints is the score since the
     last extra man.
   * Evil Otto is revealed by a timer of each room whose wait is an
-    expression of player.depth; he <chase>s the man over the walls.
+    expression of player.depth; he <chase>s the man over the walls, at his
+    variable speed, which the room's last robot going doubles.
   * Paused and game over draw the room and the score still underneath
     (<show state>).
 -->
@@ -189,7 +192,7 @@
         <timers>
           <timer>
             <every><random><min>max(0.8, 3 - player.depth * 0.25)</min><max>max(2, 7 - player.depth * 0.5)</max></random></every>
-            <aim object="player" />
+            <aim object="player"><lined>8</lined></aim>
             <fire object="robotshot" />
             <play sound="robotshoot" />
           </timer>
@@ -442,10 +445,14 @@
             <collision edge="all"><bounce /></collision>
             <collision object="player"><die /></collision>
           </collisions>
+          <!-- faster once the room has no robot left (a reset puts it back) -->
+          <variables>
+            <variable name="speed">1.1</variable>
+          </variables>
           <timers>
             <timer>
               <every>0.1</every>
-              <chase object="player">1.1</chase>
+              <chase object="player">otto.speed</chase>
             </timer>
           </timers>
         </object>
@@ -641,10 +648,11 @@
           <set variable="player.kills">0</set>
           <play sound="bonus" />
         </condition>
-        <!-- and Otto comes at once -->
+        <!-- and Otto comes at once, and faster -->
         <condition class="robot">
           <remaining>0</remaining>
           <reveal object="otto" />
+          <set variable="otto.speed">2</set>
         </condition>
       </conditions>
     </state>

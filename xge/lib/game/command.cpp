@@ -136,7 +136,13 @@ namespace xge
 			if (stopWithin < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: the <near> is below 0"); }
 			return CmdChase{ raw.object, speed, stopWithin };
 		}
-		if (verb == "aim") { return CmdAim{ raw.object }; }
+		if (verb == "aim")
+		{
+			const bool lined = !(raw.distance.kind == RawValue::Kind::Expression && raw.distance.text.empty());
+			const float within = lined ? evaluate(raw.distance) : 0.0f;
+			if (within < 0.0f) { throw std::runtime_error("<aim object=\"" + raw.object + "\">: the <lined> is below 0"); }
+			return CmdAim{ raw.object, lined, within };
+		}
 		if (verb == "hold")
 		{
 			const KeyCode button = keyCodeFromString(raw.button);
@@ -486,7 +492,7 @@ namespace xge
 				o << ")";
 			},
 			[&](const CmdWander& w) { o << "wander(" << w.speed << ")"; },
-			[&](const CmdAim& a) { o << "aim(" << a.target << ")"; },
+			[&](const CmdAim& a) { o << "aim(" << a.target << (a.lined ? ", lined " + std::to_string(a.within) : std::string()) << ")"; },
 			[&](const CmdAccelerate& a)
 			{
 				const char* direction = (a.direction == Direction::Up) ? "up"

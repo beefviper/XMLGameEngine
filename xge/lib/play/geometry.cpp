@@ -674,6 +674,23 @@ namespace xge
 		return apart * (1.0f / distance);
 	}
 
+	std::optional<Vector2f> linedUp(const Vector2f& apart, float within) noexcept
+	{
+		const float across = std::abs(apart.x);
+		const float upDown = std::abs(apart.y);
+		if (across == 0.0f && upDown == 0.0f) { return std::nullopt; }
+		const float sideways = apart.x < 0.0f ? -1.0f : 1.0f;
+		const float vertical = apart.y < 0.0f ? -1.0f : 1.0f;
+		if (upDown <= within && across >= upDown) { return Vector2f{ sideways, 0.0f }; }
+		if (across <= within) { return Vector2f{ 0.0f, vertical }; }
+		if (std::abs(across - upDown) <= within)
+		{
+			const float half = 1.0f / std::sqrt(2.0f);
+			return Vector2f{ sideways * half, vertical * half };
+		}
+		return std::nullopt;
+	}
+
 	Vector2f ahead(float heading) noexcept
 	{
 		const float radians = heading * pi / 180.0f;

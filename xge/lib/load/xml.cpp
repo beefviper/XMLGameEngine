@@ -1063,7 +1063,12 @@ namespace xge
 				if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
 				if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
 			}
-			if (verb == "aim") { requireAttribute(node, "object", where); }
+			if (verb == "aim")
+			{
+				// Optionally only when lined up, within so many pixels.
+				requireAttribute(node, "object", where);
+				if (auto lined = findChild(&node, "lined")) { command.distance = readValue(*lined, where + " > <aim>"); }
+			}
 			if (verb == "chase")
 			{
 				// Its speed as its content, then how near is near enough.

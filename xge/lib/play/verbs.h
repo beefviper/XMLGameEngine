@@ -108,6 +108,7 @@ namespace xge
 
 	// A <move> in an action, as its key goes down (pressed) or up: that
 	// direction held at `step`, recombined with the others held into the
-	// velocity, and the object faces that way.
+	// velocity, and the object faces that way: with a key of the other axis
+	// held too, the diagonal between them, which its <fire>s follow.
 	void holdMove(Object& object, Direction direction, float step, bool pressed);
 }
