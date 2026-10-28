@@ -66,3 +66,4 @@ Reasons and details: [generator](../designs/40-generator.md).
 `scan_export.py` (Claude chat export) and `scan_chatgpt_export.py` (ChatGPT export) rank and dump conversations by keyword. The first design write-ups were mined from the author's exports; the JSON stays in the author's folder.
 
 This repository is public. Nothing personal from a chat export goes in it: no health, identity, contact or business details, no conversation titles, and no names beyond the `beefviper` handle in the code headers.
+- exprtk is included by `load/expr.cpp` alone: `game_expr` keeps its table, parser and compiled texts behind a pointer (`game_expr::Exprtk`), so the files that include `game/game.h` do not compile it. Keep it out of headers; it is the slowest thing in the build.

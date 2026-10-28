@@ -13,21 +13,6 @@
 #include "audio/sound.h"
 #include "game/states.h"
 
-// exprtk is a third-party header. MSVC reports C4702 (unreachable code) from
-// inside it during code generation, which /external:W0 does not cover, so the
-// warning is turned off just around the include. Other compilers do not
-// understand this pragma, hence the _MSC_VER test.
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4702)
-#endif
-
-#include <exprtk.hpp>
-
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-
 #include <iostream>
 #include <map>
 #include <memory>
@@ -49,6 +34,16 @@ namespace xge
 	class game_expr
 	{
 	public:
+		// exprtk's table, parser and compiled texts live in expr.cpp alone
+		// (Exprtk): exprtk is a very large header, and every file that
+		// includes game/game.h would otherwise compile it again.
+		game_expr();
+		~game_expr();
+		game_expr(game_expr&&) noexcept;
+		game_expr& operator=(game_expr&&) noexcept;
+		game_expr(const game_expr&) = delete;
+		game_expr& operator=(const game_expr&) = delete;
+
 		// Fills `variables` from rawVariables (in order, so a variable's value
 		// can use the ones declared before it), then builds every object, state
 		// and sound. A wave, pitch or length a sound cannot use, and a <play>
@@ -119,13 +114,12 @@ namespace xge
 		bool commandValues{ false };
 		std::set<std::string> warnedDivisions;
 
-		exprtk::symbol_table<float> symbolTable;
-		exprtk::parser<float> parser;
-
-		// Every text compiled so far (evaluateExpression), and the names each
-		// reads (namesIn): exprtk's parser is costly to build and run, and
-		// the same texts are worked out again and again.
-		std::unordered_map<std::string, exprtk::expression<float>> compiled;
+		// The symbol table, the parser, and every text compiled so far
+		// (evaluateExpression); with the names each text reads (namesIn):
+		// exprtk's parser is costly to build and run, and the same texts are
+		// worked out again and again.
+		struct Exprtk;
+		std::unique_ptr<Exprtk> math;
 		mutable std::unordered_map<std::string, std::vector<std::string>> namesInText;
 		const std::vector<std::string>& namesIn(const std::string& text) const;
 
