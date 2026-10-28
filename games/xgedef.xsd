@@ -1117,6 +1117,9 @@
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="unless" type="xs:string" use="optional" />
+    <!-- only a touch felt through something of this class (a knock through
+         a floor); a rule without it, only a touch itself -->
+    <xs:attribute name="through" type="xs:string" use="optional" />
     <xs:attribute name="sprite" type="xs:string" use="optional" />
   </xs:complexType>
 

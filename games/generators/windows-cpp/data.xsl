@@ -850,13 +850,14 @@
         <xsl:otherwise>
           <xsl:variable name="inner" select="concat($indent, $tab)" />
           <xsl:value-of select="concat($indent, $data, '.others.push_back(make&lt;RawCollisionRule&gt;([](RawCollisionRule&amp; rule)&#10;', $indent, '{&#10;')" />
-          <xsl:for-each select="@class | @object | @unless | @sprite | @side">
+          <xsl:for-each select="@class | @object | @unless | @through | @sprite | @side">
             <xsl:if test=". != ''">
               <xsl:value-of select="$inner" />
               <xsl:choose>
                 <xsl:when test="local-name() = 'class'">rule.filterClass</xsl:when>
                 <xsl:when test="local-name() = 'object'">rule.filterObject</xsl:when>
                 <xsl:when test="local-name() = 'unless'">rule.unlessClass</xsl:when>
+                <xsl:when test="local-name() = 'through'">rule.throughClass</xsl:when>
                 <xsl:when test="local-name() = 'side'">rule.side</xsl:when>
                 <xsl:otherwise>rule.whileSprite</xsl:otherwise>
               </xsl:choose>

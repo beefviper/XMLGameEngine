@@ -125,9 +125,9 @@
   </sounds>
 
   <styles>
-    <style name="banner"><size>110</size></style>
+    <style name="banner"><size>96</size></style>
     <style name="prompt"><size>32</size><color>color.green</color></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="help"><size>20</size><color>color.lightgrey</color></style>
     <style name="hud"><size>28</size></style>
     <style name="player"><scale>2</scale><color>color.green</color></style>
   </styles>

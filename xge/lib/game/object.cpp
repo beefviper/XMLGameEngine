@@ -618,6 +618,7 @@ namespace xge
 			if (!rawRule.filterClass.empty()) { o << " (class=" << rawRule.filterClass << ")"; }
 			if (!rawRule.filterObject.empty()) { o << " (object=" << rawRule.filterObject << ")"; }
 			if (!rawRule.unlessClass.empty()) { o << " (unless=" << rawRule.unlessClass << ")"; }
+			if (!rawRule.throughClass.empty()) { o << " (through=" << rawRule.throughClass << ")"; }
 			if (rawRule.slower) { o << " (slower=" << *rawRule.slower << ")"; }
 			if (rawRule.faster) { o << " (faster=" << *rawRule.faster << ")"; }
 		}
@@ -740,6 +741,7 @@ namespace xge
 			if (!rule.filterClass.empty()) { o << " (class=" << rule.filterClass << ")"; }
 			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
 			if (!rule.unlessClass.empty()) { o << " (unless=" << rule.unlessClass << ")"; }
+			if (!rule.throughClass.empty()) { o << " (through=" << rule.throughClass << ")"; }
 			if (rule.slower) { o << " (slower=" << *rule.slower << ")"; }
 			if (rule.faster) { o << " (faster=" << *rule.faster << ")"; }
 		}

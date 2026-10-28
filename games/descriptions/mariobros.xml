@@ -35,9 +35,9 @@
     (<become sprite="flipped" />) or gets back up.
   * The floors are bricks, one bitmap in a group of floors laid out in
     columns, so a bump reaches only what stands over the brick Mario hit.
-  * Which side of a shellcreeper Mario touches decides what happens:
-    side="bottom" is a bump through the floor, side="horizontal" and
-    side="top" are Mario walking or falling into it.
+  * How Mario touches a shellcreeper decides what happens: through="floor"
+    is a bump through the floor; any other touch is Mario himself running,
+    jumping or falling into it.
   * A shellcreeper walks (two steps) and lies on its back kicking (two
     more), each a look that moves, and is drawn turned the way it goes.
     On its back it keeps the way it was going (self.way) and lies still;
@@ -133,7 +133,7 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>48</size><color>color.red</color></style>
+    <style name="banner"><size>36</size><color>color.red</color></style>
     <style name="text"><size>16</size></style>
     <style name="mario">
       <color char="r">color.red</color>
@@ -481,31 +481,24 @@
             <collision class="enemy" side="horizontal" sprite="walking">
               <bounce />
             </collision>
-            <!-- bumped from below, a little hop: on its feet it goes over,
-                 on its back it gets up -->
-            <collision object="mario" side="bottom" sprite="walking">
+            <!-- bumped from below through a floor, a little hop: on its feet
+                 it goes over, on its back it gets up -->
+            <collision object="mario" through="floor" sprite="walking">
               <become sprite="flipped" />
               <set variable="self.velocity.y">0 - hop</set>
               <play sound="flip" />
             </collision>
-            <collision object="mario" side="bottom" sprite="flipped">
+            <collision object="mario" through="floor" sprite="flipped">
               <condition variable="down"><atleast>1</atleast></condition>
               <trigger action="getup" />
               <set variable="self.velocity.y">0 - hop</set>
             </collision>
-            <!-- touched by Mario: kicked off on its back, deadly on its feet
-                 unless he is blinking -->
-            <collision object="mario" side="horizontal" sprite="flipped">
+            <!-- touched by Mario himself, from any side: kicked off on its
+                 back, deadly on its feet unless he is blinking -->
+            <collision object="mario" sprite="flipped">
               <trigger action="kicked" />
             </collision>
-            <collision object="mario" side="top" sprite="flipped">
-              <trigger action="kicked" />
-            </collision>
-            <collision object="mario" side="horizontal" sprite="walking">
-              <condition object="mario" variable="blink"><atmost>0</atmost></condition>
-              <trigger object="mario" action="lose" />
-            </collision>
-            <collision object="mario" side="top" sprite="walking">
+            <collision object="mario" sprite="walking">
               <condition object="mario" variable="blink"><atmost>0</atmost></condition>
               <trigger object="mario" action="lose" />
             </collision>

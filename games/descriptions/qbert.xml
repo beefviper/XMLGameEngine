@@ -110,7 +110,7 @@
     </sound>
   </sounds>
   <styles>
-    <style name="banner"><size>48</size><color>color.orange</color></style>
+    <style name="banner"><size>40</size><color>color.orange</color></style>
     <style name="text"><size>16</size><color>color.white</color></style>
     <style name="coily">
       <color char="p">color.purple</color>

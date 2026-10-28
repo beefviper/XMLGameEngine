@@ -570,3 +570,36 @@ TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies
 	CHECK(play.creeper().position.x < lying);
 	CHECK(play.creeper().position.x > lying - 30.0f);
 }
+
+TEST_CASE("mariobros.xml: only a bump through a floor turns a shellcreeper over; Mario himself hitting it does not", "[knock][mariobros]")
+{
+	Mario play;
+	const float lives = play.mario().variable.at("lives");
+
+	// Walking off the end of the low left floor, half over the edge, and
+	// Mario jumping straight up into it from beside the floor.
+	play.creeper().position.x = 96.0f - 8.0f;
+	play.mario().position.x = 98.0f;
+	play.frames(3);
+	play.tap(KeyCode::Space);
+	int turns = 0;
+	std::string last = play.creeper().lookName();
+	for (int i = 0; i < 30; ++i)
+	{
+		play.frames(1);
+		if (play.creeper().lookName() != last) { ++turns; last = play.creeper().lookName(); }
+	}
+	CHECK(turns == 0);
+	CHECK(play.mario().variable.at("lives") == Approx(lives - 1.0f));
+
+	// On its back over the edge, the same jump kicks it off.
+	Mario again;
+	again.creeper().position.x = 96.0f - 8.0f;
+	again.game.become(again.creeper().name, "flipped");
+	again.mario().position.x = 98.0f;
+	again.frames(3);
+	again.tap(KeyCode::Space);
+	again.frames(30);
+	CHECK_FALSE(again.creeper().isVisible);
+	CHECK(again.mario().variable.at("kicked") == Approx(1.0f));
+}

@@ -54,6 +54,12 @@ namespace xge
 		// frog, unless it is also on a log". Empty means no exception.
 		std::string unlessClass;
 
+		// through="class": the rule runs only for a touch felt through
+		// something of that class (a <knock> through a floor, see
+		// CommandExecutor::knock), and a rule without it only for a touch
+		// itself. Empty means a touch itself.
+		std::string throughClass;
+
 		// <slower>N</slower> / <faster>N</faster> before the commands: the
 		// rule only runs while the object's own speed is under N (slower) or
 		// N or more (faster) at the moment of the touch - a landing pad that
@@ -141,6 +147,7 @@ namespace xge
 		std::string filterClass;
 		std::string filterObject;
 		std::string unlessClass;
+		std::string throughClass;          // see RawCollisionRule
 
 		// The numbers of <slower>/<faster> (see RawCollisionRule).
 		std::optional<float> slower;

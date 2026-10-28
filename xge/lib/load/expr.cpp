@@ -1855,6 +1855,7 @@ namespace xge
 			rule.filterClass = rawRule.filterClass;
 			rule.filterObject = rawRule.filterObject;
 			rule.unlessClass = rawRule.unlessClass;
+			rule.throughClass = rawRule.throughClass;
 			rule.whileSprite = rawRule.whileSprite;
 			if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
 			{

@@ -1907,6 +1907,7 @@ namespace xge
 			if (!collisionRuleMatches(rule, other)) { continue; }
 			if (!rule.whileSprite.empty() && self.lookName() != rule.whileSprite) { continue; }
 			if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
+			if (touch.through ? *touch.through != rule.throughClass : !rule.throughClass.empty()) { continue; }
 			if (rule.slower && !(speed < *rule.slower)) { continue; }
 			if (rule.faster && !(speed >= *rule.faster)) { continue; }
 			if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), touch.edge) == rule.sides.end()) { continue; }

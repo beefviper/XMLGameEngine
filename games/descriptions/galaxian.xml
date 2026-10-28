@@ -318,7 +318,7 @@
           <position><x><centered /></x><y><centered>window.height.center - 115</centered></y></position>
         </object>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start, 2 for two players</content></text></sprite>
+          <sprite><text style="prompt"><content>spacebar to start, 2 for two players</content><size>32</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 230</centered></y></position>
         </object>
       </objects>

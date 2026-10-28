@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace xge
@@ -110,6 +111,9 @@ namespace xge
 		float along{};
 		float depth{};
 		float time{};
+		// Felt through another thing (a <knock> through a floor): that
+		// thing's class; null for a touch itself.
+		const std::string* through{ nullptr };
 	};
 
 	// The touch as the first or the second of the pair sees it.

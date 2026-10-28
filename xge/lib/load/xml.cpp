@@ -1509,9 +1509,9 @@ namespace xge
 					// silently winning.
 					// class= and object= pick the other object of a touch; an
 					// edge is no object, so there is nothing for them to pick
-					if (!collision->getAttribute("class").empty() || !collision->getAttribute("object").empty())
+					if (!collision->getAttribute("class").empty() || !collision->getAttribute("object").empty() || !collision->getAttribute("through").empty())
 					{
-						fail(ruleHere, "edge= with class= or object=; a rule about a screen edge is about no other object"
+						fail(ruleHere, "edge= with class=, object= or through=; a rule about a screen edge is about no other object"
 							" (unless=\"class\" passes it over while touching that class)");
 					}
 
@@ -1528,6 +1528,7 @@ namespace xge
 					rule.filterClass = collision->getAttribute("class");
 					rule.filterObject = collision->getAttribute("object");
 					rule.unlessClass = collision->getAttribute("unless");
+					rule.throughClass = collision->getAttribute("through");
 					rule.whileSprite = collision->getAttribute("sprite");
 					rule.slower = std::move(slower);
 					rule.faster = std::move(faster);
