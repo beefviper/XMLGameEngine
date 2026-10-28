@@ -83,6 +83,14 @@
     <style name="banner"><size>90</size><color>color.green</color></style>
     <style name="help"><size>28</size><color>color.white</color></style>
     <style name="hud"><size>32</size><color>color.white</color></style>
+    <style name="zone">
+      <scale>20</scale>
+      <color char="r">color.red</color>
+      <color char="g">color.green</color>
+      <color char="b">color.blue</color>
+      <color char="m">color.magenta</color>
+      <color char="y">color.yellow</color>
+    </style>
   </styles>
   <kit>
     <!-- the Swirl: a spinning Qotile that waits a moment, then flies at where Yar is -->
@@ -166,29 +174,17 @@
           <columns>1</columns>
           <rows>10</rows>
           <sprite name="a">
-            <bitmap>
+            <bitmap style="zone">
               <row>rbgm</row>
               <row>gmrb</row>
               <row>bryg</row>
-              <scale>20</scale>
-              <color char="r">color.red</color>
-              <color char="g">color.green</color>
-              <color char="b">color.blue</color>
-              <color char="m">color.magenta</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <sprite name="b">
-            <bitmap>
+            <bitmap style="zone">
               <row>ygbr</row>
               <row>rbmg</row>
               <row>gmrb</row>
-              <scale>20</scale>
-              <color char="r">color.red</color>
-              <color char="g">color.green</color>
-              <color char="b">color.blue</color>
-              <color char="m">color.magenta</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <animation>

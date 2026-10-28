@@ -436,6 +436,7 @@ namespace xge
 				}
 				readBitmapColors(shape, here, sprite.bitmapColors);
 				sprite.flip = readPictureFlip(shape, here);
+				sprite.style = shape.getAttribute("style");
 			}
 			else if (kind == "svg")
 			{
@@ -641,7 +642,11 @@ namespace xge
 					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, here);
 				}
-				if (base.kind == "bitmap") { readBitmapColors(*shape, here, sprite.bitmapColors); }
+				if (base.kind == "bitmap")
+				{
+					readBitmapColors(*shape, here, sprite.bitmapColors);
+					if (const std::string style = shape->getAttribute("style"); !style.empty()) { sprite.style = style; }
+				}
 				if (findChild(shape.get(), "flip")) { sprite.flip = readPictureFlip(*shape, here); }
 			}
 
@@ -2840,7 +2845,7 @@ namespace xge
 			}
 		}
 
-		// load styles (optional: what a <text> can take by style="...")
+		// load styles (optional: what a <text> or a <bitmap> can take by style="...")
 		if (std::unique_ptr<XmlNode> stylesNode = findChild(root.get(), "styles"))
 		{
 			for (std::unique_ptr<XmlNode> style = stylesNode->getFirstChild(); style != nullptr; style = style->getNextSibling())
@@ -2853,7 +2858,13 @@ namespace xge
 					fail("<styles>", "two <style>s are called '" + raw.name + "'");
 				}
 				if (auto size = findChild(style.get(), "size")) { raw.size = readValue(*size, here); }
-				if (auto color = findChild(style.get(), "color")) { raw.color = readText(*color); }
+				if (auto scale = findChild(style.get(), "scale"))
+				{
+					raw.hasScale = true;
+					raw.scale = readValue(*scale, here);
+				}
+				if (auto color = findPlainColor(*style)) { raw.color = readText(*color); }
+				readBitmapColors(*style, here, raw.bitmapColors);
 				rawStyles.push_back(std::move(raw));
 			}
 		}

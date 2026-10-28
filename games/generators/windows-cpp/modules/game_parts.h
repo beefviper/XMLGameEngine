@@ -95,7 +95,22 @@ namespace xge::parts
 	// A <style> of the game's <styles>: a size (value("") for none) and a color.
 	inline RawStyle style(std::string name, RawValue size, std::string color)
 	{
-		return RawStyle{ std::move(name), std::move(size), std::move(color) };
+		RawStyle made;
+		made.name = std::move(name);
+		made.size = std::move(size);
+		made.color = std::move(color);
+		return made;
+	}
+
+	// One that a <bitmap> takes as well: its scale (value("") for none) and
+	// its other colors, a character each.
+	inline RawStyle style(std::string name, RawValue size, std::string color, RawValue scale, std::initializer_list<std::pair<std::string, std::string>> inks)
+	{
+		RawStyle made = style(std::move(name), std::move(size), std::move(color));
+		made.hasScale = !(scale.kind == RawValue::Kind::Expression && scale.text.empty());
+		made.scale = std::move(scale);
+		for (const auto& [character, ink] : inks) { made.bitmapColors.emplace_back(character.front(), ink); }
+		return made;
 	}
 
 	// <random><min>...</min><max>...</max></random>

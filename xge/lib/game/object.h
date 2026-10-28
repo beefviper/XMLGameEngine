@@ -264,8 +264,8 @@ namespace xge
 		std::string flip;            // image: "", "horizontal" or "vertical"
 		std::string color;           // "" means color.white (or the style's)
 
-		// text: style="...", a <style> of the game's <styles>, which gives the
-		// <size> and <color> the text leaves out (see applyStyles).
+		// text and bitmap: style="...", a <style> of the game's <styles>,
+		// which gives what the sprite leaves out (see applyStyles).
 		std::string style;
 
 		// bitmap: the characters whose pixels a pixel collision touches with,
@@ -289,13 +289,18 @@ namespace xge
 		std::vector<std::string> frames;
 	};
 
-	// A game's <style name="...">: a size and a color a <text> can take by
-	// style="..." instead of saying them. Either may be left out.
+	// A game's <style name="...">: what a <text> (a size and a color) or a
+	// <bitmap> (a scale and colors) can take by style="..." instead of saying
+	// them. Any may be left out.
 	struct RawStyle
 	{
 		std::string name;
 		RawValue size;               // empty: the style gives no size
 		std::string color;           // empty: the style gives no color
+		// A bitmap's: its <scale>, and its other colors, a character each.
+		bool hasScale{ false };
+		RawValue scale;
+		std::vector<std::pair<char, std::string>> bitmapColors;
 	};
 
 	// An object's <animation>: the sprites it shows one after the other, each
@@ -1013,8 +1018,9 @@ namespace xge
 	// its names.
 	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row);
 
-	// Gives every text with a style= what it leaves out of that style: its
-	// size and its color. A style no <style> has, or a text left with no
+	// Gives every text and bitmap with a style= what it leaves out of that
+	// style: a text's size and color, a bitmap's scale and colors (each char=
+	// it does not give). A style no <style> has, or a text left with no
 	// size, stops the load.
 	void applyStyles(std::vector<RawObject>& objects, const std::vector<RawStyle>& styles);
 

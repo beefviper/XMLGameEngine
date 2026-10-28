@@ -84,6 +84,12 @@
     <style name="prompt"><size>36</size></style>
     <style name="help"><size>26</size></style>
     <style name="hud"><size>40</size></style>
+    <style name="shark">
+      <scale>4</scale>
+      <color>color.darkgrey</color>
+      <color char="w">color.lightgrey</color>
+      <color char="k">color.black</color>
+    </style>
   </styles>
   <states>
     <state name="mainmenu">
@@ -213,21 +219,13 @@
 
         <object name="shark">
           <sprite name="right">
-            <bitmap>
+            <bitmap style="shark">
               <row>..........*.........</row><row>.........**.........</row><row>*.......*******.....</row><row>***.**************..</row><row>****************k***</row><row>***.wwwwwwwwwwwww*..</row><row>*.......**....**....</row>
-              <scale>4</scale>
-              <color>color.darkgrey</color>
-              <color char="w">color.lightgrey</color>
-              <color char="k">color.black</color>
             </bitmap>
           </sprite>
           <sprite name="left">
-            <bitmap>
+            <bitmap style="shark">
               <row>..........*.........</row><row>.........**.........</row><row>*.......*******.....</row><row>***.**************..</row><row>****************k***</row><row>***.wwwwwwwwwwwww*..</row><row>*.......**....**....</row>
-              <scale>4</scale>
-              <color>color.darkgrey</color>
-              <color char="w">color.lightgrey</color>
-              <color char="k">color.black</color>
               <flip>horizontal</flip>
             </bitmap>
           </sprite>

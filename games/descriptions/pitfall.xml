@@ -114,6 +114,13 @@
     <style name="banner"><size>100</size><color>color.yellow</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size></style>
+    <style name="fire">
+      <scale>2</scale>
+      <color char="r">color.red</color>
+      <color char="o">color.orange</color>
+      <color char="y">color.yellow</color>
+      <color char="k">color.brown</color>
+    </style>
   </styles>
   <kit>
     <!-- what Harry stands on: the whole path, the banks of a pond, or a
@@ -286,7 +293,7 @@
     <!-- a fire on the path -->
     <object name="fire" class="hazard">
       <sprite name="high">
-        <bitmap>
+        <bitmap style="fire">
           <row>...r....</row>
           <row>..rr..r.</row>
           <row>..ror.r.</row>
@@ -295,15 +302,10 @@
           <row>rooyyoor</row>
           <row>royyyyor</row>
           <row>.kkkkkk.</row>
-          <scale>2</scale>
-          <color char="r">color.red</color>
-          <color char="o">color.orange</color>
-          <color char="y">color.yellow</color>
-          <color char="k">color.brown</color>
         </bitmap>
       </sprite>
       <sprite name="low">
-        <bitmap>
+        <bitmap style="fire">
           <row>........</row>
           <row>....r...</row>
           <row>.r..rr..</row>
@@ -312,11 +314,6 @@
           <row>rooyyoor</row>
           <row>royyyyor</row>
           <row>.kkkkkk.</row>
-          <scale>2</scale>
-          <color char="r">color.red</color>
-          <color char="o">color.orange</color>
-          <color char="y">color.yellow</color>
-          <color char="k">color.brown</color>
         </bitmap>
       </sprite>
       <animation>

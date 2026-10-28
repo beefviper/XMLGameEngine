@@ -112,6 +112,17 @@
   <styles>
     <style name="banner"><size>48</size><color>color.orange</color></style>
     <style name="text"><size>16</size><color>color.white</color></style>
+    <style name="coily">
+      <color char="p">color.purple</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+      <color char="r">color.red</color>
+    </style>
+    <style name="disc">
+      <color char="c">color.cyan</color>
+      <color char="m">color.magenta</color>
+      <color char="y">color.yellow</color>
+    </style>
   </styles>
   <objects>
     <object name="again">
@@ -309,7 +320,7 @@
                rules go last look first, so a landing changes the look only once -->
           <group name="discs" char="d" class="disc">
             <sprite name="spina">
-              <bitmap>
+              <bitmap style="disc">
                 <row>............</row>
                 <row>............</row>
                 <row>............</row>
@@ -338,13 +349,10 @@
                 <row>............</row>
                 <row>............</row>
                 <row>............</row>
-                <color char="c">color.cyan</color>
-                <color char="m">color.magenta</color>
-                <color char="y">color.yellow</color>
               </bitmap>
             </sprite>
             <sprite name="spinb">
-              <bitmap>
+              <bitmap style="disc">
                 <row>............</row>
                 <row>............</row>
                 <row>............</row>
@@ -373,13 +381,10 @@
                 <row>............</row>
                 <row>............</row>
                 <row>............</row>
-                <color char="c">color.cyan</color>
-                <color char="m">color.magenta</color>
-                <color char="y">color.yellow</color>
               </bitmap>
             </sprite>
             <sprite name="spinc">
-              <bitmap>
+              <bitmap style="disc">
                 <row>............</row>
                 <row>............</row>
                 <row>............</row>
@@ -408,9 +413,6 @@
                 <row>............</row>
                 <row>............</row>
                 <row>............</row>
-                <color char="c">color.cyan</color>
-                <color char="m">color.magenta</color>
-                <color char="y">color.yellow</color>
               </bitmap>
             </sprite>
             <sprite name="used">
@@ -609,7 +611,7 @@
              coiling and rearing as he goes -->
         <object name="coily" class="enemy">
           <sprite name="round">
-            <bitmap>
+            <bitmap style="coily">
               <row>................</row>
               <row>................</row>
               <row>................</row>
@@ -634,14 +636,10 @@
               <row>....pppppppp....</row>
               <row>.....pppppp.....</row>
               <row>................</row>
-              <color char="p">color.purple</color>
-              <color char="w">color.white</color>
-              <color char="k">color.black</color>
-              <color char="r">color.red</color>
             </bitmap>
           </sprite>
           <sprite name="squashed">
-            <bitmap>
+            <bitmap style="coily">
               <row>................</row>
               <row>................</row>
               <row>................</row>
@@ -666,14 +664,10 @@
               <row>....pppppppp....</row>
               <row>................</row>
               <row>................</row>
-              <color char="p">color.purple</color>
-              <color char="w">color.white</color>
-              <color char="k">color.black</color>
-              <color char="r">color.red</color>
             </bitmap>
           </sprite>
           <sprite name="coiled">
-            <bitmap>
+            <bitmap style="coily">
               <row>................</row>
               <row>................</row>
               <row>....pppppp......</row>
@@ -698,14 +692,10 @@
               <row>................</row>
               <row>....pppppppp....</row>
               <row>...pppppppppp...</row>
-              <color char="p">color.purple</color>
-              <color char="w">color.white</color>
-              <color char="k">color.black</color>
-              <color char="r">color.red</color>
             </bitmap>
           </sprite>
           <sprite name="raised">
-            <bitmap>
+            <bitmap style="coily">
               <row>....pppppp......</row>
               <row>...pwwppwwp.....</row>
               <row>...pwkppwkp.....</row>
@@ -730,10 +720,6 @@
               <row>................</row>
               <row>....pppppppp....</row>
               <row>...pppppppppp...</row>
-              <color char="p">color.purple</color>
-              <color char="w">color.white</color>
-              <color char="k">color.black</color>
-              <color char="r">color.red</color>
             </bitmap>
           </sprite>
           <!-- first the egg, which it starts as, squashing as it lands -->

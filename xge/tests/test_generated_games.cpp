@@ -362,6 +362,8 @@ namespace
 			{
 				value("style " + style.name + ".size", style.size);
 				text("style " + style.name + ".color", style.color);
+				if (style.hasScale) { value("style " + style.name + ".scale", style.scale); }
+				for (const auto& [character, color] : style.bitmapColors) { text("style " + style.name + ".ink." + std::string(1, character), color); }
 			}
 			flag("demo", g.demo.recorded);
 			text("demo.seed", std::to_string(g.demo.seed));

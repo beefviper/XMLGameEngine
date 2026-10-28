@@ -30,7 +30,7 @@ namespace xge
 		// among the game's objects and named in full.
 		takeStates(data.states);
 		layOutScenes(data);
-		// Then, with every object's name final, its text styles, what it
+		// Then, with every object's name final, its styles, what it
 		// leaves to mean itself, and its centering.
 		applyStyles(data.objects, data.styles);
 		markSolid(data.objects);

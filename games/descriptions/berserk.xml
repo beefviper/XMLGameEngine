@@ -117,6 +117,7 @@
     <style name="prompt"><size>32</size><color>color.green</color></style>
     <style name="help"><size>22</size><color>color.lightgrey</color></style>
     <style name="hud"><size>28</size></style>
+    <style name="player"><scale>2</scale><color>color.green</color></style>
   </styles>
   <kit>
     <!-- every robot of every room: each room takes its own by name -->
@@ -257,31 +258,23 @@
              four looks, and shoots that way. -->
         <object name="player" class="player">
           <sprite name="down">
-            <bitmap>
+            <bitmap style="player">
               <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-              <scale>2</scale>
-              <color>color.green</color>
             </bitmap>
           </sprite>
           <sprite name="up">
-            <bitmap>
+            <bitmap style="player">
               <row>..***..</row><row>.*****.</row><row>..***..</row><row>*..*..*</row><row>*.***.*</row><row>*..*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-              <scale>2</scale>
-              <color>color.green</color>
             </bitmap>
           </sprite>
           <sprite name="left">
-            <bitmap>
+            <bitmap style="player">
               <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>*****..</row><row>*..*...</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-              <scale>2</scale>
-              <color>color.green</color>
             </bitmap>
           </sprite>
           <sprite name="right">
-            <bitmap>
+            <bitmap style="player">
               <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>..*****</row><row>...*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-              <scale>2</scale>
-              <color>color.green</color>
             </bitmap>
           </sprite>
           <position><x>21</x><y>233</y></position>
@@ -380,10 +373,8 @@
         </object>
         <object name="liveicon">
           <sprite>
-            <bitmap>
+            <bitmap style="player">
               <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-              <scale>2</scale>
-              <color>color.green</color>
             </bitmap>
           </sprite>
           <position><x>window.right - lives.width - margin * 2 - 14</x><y>margin</y></position>

@@ -3,7 +3,8 @@
 // author: beefviper
 // date: Oct 16, 2026
 //
-// Catch2 tests for the game's <styles>, a <text style="...">, and
+// Catch2 tests for the game's <styles>, a <text style="..."> and a
+// <bitmap style="...">, and
 // <centered> in a <position>. Each game is written beside the shipped ones
 // so that its schema path resolves, and loaded with Xerces (full
 // validation) and TinyXml2 (the built-in validator). Nothing needs a
@@ -98,6 +99,42 @@ TEST_CASE("a style that is not there, or a text with no size at all, stops the l
 		REQUIRE_THROWS_WITH(load("<object name=\"heading\"><sprite><text style=\"bare\"><content>HI</content></text></sprite>"
 			"<position><x>0</x><y>0</y></position></object>", "<styles><style name=\"bare\"><color>color.red</color></style></styles>"),
 			ContainsSubstring("needs a <size>"));
+	}
+}
+
+TEST_CASE("a bitmap takes the scale and colors it leaves out from its style", "[text]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	const std::string styles = "<styles><style name=\"wood\"><scale>2</scale><color>color.red</color>"
+		"<color char=\"b\">color.blue</color><color char=\"g\">color.green</color></style></styles>";
+	Game game = load(
+		"<object name=\"plain\"><sprite><bitmap style=\"wood\"><row>*bg</row></bitmap></sprite><position><x>0</x><y>0</y></position></object>"
+		"<object name=\"own\"><sprite><bitmap style=\"wood\"><row>*bg</row><scale>1</scale>"
+		"<color>color.white</color><color char=\"b\">color.black</color></bitmap></sprite><position><x>0</x><y>0</y></position></object>",
+		styles, backend);
+
+	// The pixel at (x, 0) of an object's picture: red, green, blue.
+	const auto rgb = [&](const std::string& name, int x)
+	{
+		const auto& rgba = game.getObject(name).bitmap->rgba;
+		const std::size_t at = static_cast<std::size_t>(x) * 4;
+		return std::vector<int>{ rgba[at], rgba[at + 1], rgba[at + 2] };
+	};
+
+	CHECK(game.getObject("plain").bitmap->width == 6);   // the style's scale
+	CHECK(rgb("plain", 0) == std::vector<int>{ 255, 0, 0 });
+	CHECK(rgb("plain", 2) == std::vector<int>{ 0, 0, 255 });
+	CHECK(rgb("plain", 4) == std::vector<int>{ 0, 255, 0 });
+
+	CHECK(game.getObject("own").bitmap->width == 3);     // its own scale wins
+	CHECK(rgb("own", 0) == std::vector<int>{ 255, 255, 255 });
+	CHECK(rgb("own", 1) == std::vector<int>{ 0, 0, 0 }); // its own b
+	CHECK(rgb("own", 2) == std::vector<int>{ 0, 255, 0 }); // the style's g
+
+	SECTION("a style that is not there stops the load")
+	{
+		REQUIRE_THROWS_WITH(load("<object name=\"thing\"><sprite><bitmap style=\"wod\"><row>*</row></bitmap></sprite>"
+			"<position><x>0</x><y>0</y></position></object>", styles), ContainsSubstring("style=\"wod\" names no <style>"));
 	}
 }
 

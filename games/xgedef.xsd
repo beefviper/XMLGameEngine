@@ -315,6 +315,8 @@
             <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
+          <!-- a <style> of the game's <styles>, for the <scale> and <color>s left out -->
+          <xs:attribute name="style" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
       <!--
@@ -429,6 +431,8 @@
             <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
+          <!-- a <style> of the game's <styles>, for the <scale> and <color>s left out -->
+          <xs:attribute name="style" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="svg">
@@ -1740,8 +1744,12 @@
               <xs:element name="style" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:sequence>
+                    <!-- a <text>'s -->
                     <xs:element name="size" type="valueType" minOccurs="0" />
-                    <xs:element name="color" type="xs:string" minOccurs="0" />
+                    <!-- a <bitmap>'s -->
+                    <xs:element name="scale" type="valueType" minOccurs="0" />
+                    <!-- either's: the one with no char=; a bitmap's, each char= -->
+                    <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />
                 </xs:complexType>

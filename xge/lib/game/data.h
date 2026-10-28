@@ -49,7 +49,7 @@ namespace xge
 		std::vector<RawSound> sounds;
 		std::vector<RawPath> paths;
 
-		// <styles>: what a <text> can take by style="..." (see applyStyles).
+		// <styles>: what a <text> or a <bitmap> can take by style="..." (see applyStyles).
 		std::vector<RawStyle> styles;
 
 		// <keeps>: the objects (or groups) a full <reset /> passes over, as

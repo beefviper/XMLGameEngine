@@ -554,13 +554,6 @@
           <xsl:with-param name="name" select="'size'" />
           <xsl:with-param name="node" select="$shape/size" />
         </xsl:call-template>
-        <xsl:if test="$shape/@style">
-          <xsl:value-of select="concat($indent, 'look.style = ')" />
-          <xsl:call-template name="string">
-            <xsl:with-param name="text" select="$shape/@style" />
-          </xsl:call-template>
-          <xsl:text>;&#10;</xsl:text>
-        </xsl:if>
       </xsl:when>
       <xsl:when test="$kind = 'image'">
         <xsl:call-template name="look-text">
@@ -644,6 +637,14 @@
         </xsl:for-each>
       </xsl:when>
     </xsl:choose>
+    <!-- a text's or a bitmap's <style> -->
+    <xsl:if test="$shape/@style">
+      <xsl:value-of select="concat($indent, 'look.style = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="$shape/@style" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
     <xsl:if test="$kind != 'image' and $kind != 'svg' and $kind != 'line'">
       <xsl:call-template name="look-text">
         <xsl:with-param name="indent" select="$indent" />
@@ -2650,8 +2651,34 @@
         </xsl:choose>
         <xsl:text>, </xsl:text>
         <xsl:call-template name="text">
-          <xsl:with-param name="node" select="color" />
+          <xsl:with-param name="node" select="color[not(@char)]" />
         </xsl:call-template>
+        <!-- a bitmap's scale and other colors -->
+        <xsl:if test="scale or color[@char]">
+          <xsl:text>, </xsl:text>
+          <xsl:choose>
+            <xsl:when test="scale">
+              <xsl:call-template name="value">
+                <xsl:with-param name="node" select="scale" />
+              </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>value("")</xsl:otherwise>
+          </xsl:choose>
+          <xsl:text>, {</xsl:text>
+          <xsl:for-each select="color[@char]">
+            <xsl:if test="position() &gt; 1">,</xsl:if>
+            <xsl:text> { </xsl:text>
+            <xsl:call-template name="string">
+              <xsl:with-param name="text" select="@char" />
+            </xsl:call-template>
+            <xsl:text>, </xsl:text>
+            <xsl:call-template name="text">
+              <xsl:with-param name="node" select="." />
+            </xsl:call-template>
+            <xsl:text> }</xsl:text>
+          </xsl:for-each>
+          <xsl:text> }</xsl:text>
+        </xsl:if>
         <xsl:text>),&#10;</xsl:text>
       </xsl:for-each>
       <xsl:text>&#9;};&#10;</xsl:text>

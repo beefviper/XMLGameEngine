@@ -125,6 +125,28 @@ namespace xge
 		{
 			const auto apply = [&](RawSprite& sprite)
 			{
+				if (sprite.kind == "bitmap")
+				{
+					if (sprite.style.empty()) { return; }
+					const auto style = std::find_if(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == sprite.style; });
+					if (style == styles.end())
+					{
+						throw std::runtime_error("object '" + object.name + "': style=\"" + sprite.style + "\" names no <style> of the game's <styles>");
+					}
+					// Its own scale and colors first; the style's for the rest.
+					if (!sprite.hasScale && style->hasScale)
+					{
+						sprite.hasScale = true;
+						sprite.scale = style->scale;
+					}
+					if (sprite.color.empty()) { sprite.color = style->color; }
+					for (const auto& [character, color] : style->bitmapColors)
+					{
+						const bool own = std::any_of(sprite.bitmapColors.begin(), sprite.bitmapColors.end(), [&](const auto& each) { return each.first == character; });
+						if (!own) { sprite.bitmapColors.emplace_back(character, color); }
+					}
+					return;
+				}
 				if (sprite.kind != "text") { return; }
 				const bool noSize = sprite.size.kind == RawValue::Kind::Expression && sprite.size.text.empty();
 				if (!sprite.style.empty())
@@ -143,7 +165,11 @@ namespace xge
 				}
 			};
 			apply(object.sprite);
-			for (RawSprite& look : object.looks) { apply(look); }
+			for (RawSprite& look : object.looks)
+			{
+				apply(look);
+				for (RawSprite& frame : look.frames) { apply(frame); }
+			}
 			for (RawSprite& frame : object.animation.frames) { apply(frame); }
 			apply(object.cell.slot);
 		}

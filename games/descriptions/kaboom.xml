@@ -85,6 +85,11 @@
     <style name="prompt"><size>48</size></style>
     <style name="help"><size>34</size></style>
     <style name="hud"><size>30</size><color>color.yellow</color></style>
+    <style name="bucket">
+      <scale>5</scale>
+      <color>color.cyan</color>
+      <color char="b">color.blue</color>
+    </style>
   </styles>
   <kit>
     <!-- the wall of the building, and the ledge the bomber walks along -->
@@ -227,7 +232,7 @@
         <!-- the buckets: a stack of three, then two, then one -->
         <object name="bucket">
           <sprite name="three">
-            <bitmap>
+            <bitmap style="bucket">
               <row>bbbbbbbbbbbbbbbbbbbbbb</row>
               <row>.********************.</row>
               <row>..******************..</row>
@@ -239,13 +244,10 @@
               <row>bbbbbbbbbbbbbbbbbbbbbb</row>
               <row>.********************.</row>
               <row>..******************..</row>
-              <scale>5</scale>
-              <color>color.cyan</color>
-              <color char="b">color.blue</color>
             </bitmap>
           </sprite>
           <sprite name="two">
-            <bitmap>
+            <bitmap style="bucket">
               <row>bbbbbbbbbbbbbbbbbbbbbb</row>
               <row>.********************.</row>
               <row>..******************..</row>
@@ -253,19 +255,13 @@
               <row>bbbbbbbbbbbbbbbbbbbbbb</row>
               <row>.********************.</row>
               <row>..******************..</row>
-              <scale>5</scale>
-              <color>color.cyan</color>
-              <color char="b">color.blue</color>
             </bitmap>
           </sprite>
           <sprite name="one">
-            <bitmap>
+            <bitmap style="bucket">
               <row>bbbbbbbbbbbbbbbbbbbbbb</row>
               <row>.********************.</row>
               <row>..******************..</row>
-              <scale>5</scale>
-              <color>color.cyan</color>
-              <color char="b">color.blue</color>
             </bitmap>
           </sprite>
           <position><x><centered /></x><y>420</y></position>

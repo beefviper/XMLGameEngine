@@ -127,13 +127,18 @@
     <style name="prompt"><size>48</size></style>
     <style name="help"><size>30</size></style>
     <style name="hud"><size>30</size></style>
+    <style name="wood">
+      <scale>2</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+    </style>
   </styles>
   <kit>
     <!-- a barrel, there once Kong throws it, eight at most,
          rolling as they go -->
     <object name="barrel" class="barrel">
       <sprite name="flat">
-        <bitmap>
+        <bitmap style="wood">
           <row>...*****...</row>
           <row>.**bbbbb**.</row>
           <row>.*********.</row>
@@ -145,13 +150,10 @@
           <row>.*********.</row>
           <row>.**bbbbb**.</row>
           <row>...*****...</row>
-          <scale>2</scale>
-          <color>color.orange</color>
-          <color char="b">color.brown</color>
         </bitmap>
       </sprite>
       <sprite name="end">
-        <bitmap>
+        <bitmap style="wood">
           <row>...*b*b*...</row>
           <row>.***b*b***.</row>
           <row>.***b*b***.</row>
@@ -163,9 +165,6 @@
           <row>.***b*b***.</row>
           <row>.***b*b***.</row>
           <row>...*b*b*...</row>
-          <scale>2</scale>
-          <color>color.orange</color>
-          <color char="b">color.brown</color>
         </bitmap>
       </sprite>
       <animation>
@@ -446,7 +445,7 @@
         <!-- the hammer, on the third girder -->
         <object name="hammer">
           <sprite>
-            <bitmap>
+            <bitmap style="wood">
               <row>.******.</row>
               <row>********</row>
               <row>********</row>
@@ -457,9 +456,6 @@
               <row>...bb...</row>
               <row>...bb...</row>
               <row>...bb...</row>
-              <scale>2</scale>
-              <color>color.orange</color>
-              <color char="b">color.brown</color>
             </bitmap>
           </sprite>
           <position><x>100</x><y>360 - 40 - hammer.height</y></position>

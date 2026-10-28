@@ -130,6 +130,24 @@
   <styles>
     <style name="banner"><size>48</size><color>color.red</color></style>
     <style name="text"><size>16</size></style>
+    <style name="mario">
+      <color char="r">color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+      <color char="y">color.yellow</color>
+    </style>
+    <style name="creeper">
+      <color char="G">color.darkgreen</color>
+      <color char="g">color.green</color>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+    </style>
+    <style name="pow">
+      <color>color.cyan</color>
+      <color char="b">color.blue</color>
+      <color char="w">color.darkblue</color>
+    </style>
   </styles>
   <objects>
     <object name="again">
@@ -287,7 +305,7 @@
              it shrinks with each bump, and is gone after three -->
         <object name="pow" class="pow">
           <sprite name="three">
-            <bitmap>
+            <bitmap style="pow">
               <row>bbbbbbbbbbbbbbbb</row>
               <row>b**************b</row>
               <row>b**************b</row>
@@ -304,13 +322,10 @@
               <row>b**************b</row>
               <row>b**************b</row>
               <row>bbbbbbbbbbbbbbbb</row>
-              <color>color.cyan</color>
-              <color char="b">color.blue</color>
-              <color char="w">color.darkblue</color>
             </bitmap>
           </sprite>
           <sprite name="two">
-            <bitmap>
+            <bitmap style="pow">
               <row>bbbbbbbbbbbbbbbb</row>
               <row>b**************b</row>
               <row>b**************b</row>
@@ -322,22 +337,16 @@
               <row>b**************b</row>
               <row>b**************b</row>
               <row>bbbbbbbbbbbbbbbb</row>
-              <color>color.cyan</color>
-              <color char="b">color.blue</color>
-              <color char="w">color.darkblue</color>
             </bitmap>
           </sprite>
           <sprite name="one">
-            <bitmap>
+            <bitmap style="pow">
               <row>bbbbbbbbbbbbbbbb</row>
               <row>b*www*www*w***wb</row>
               <row>b*www*w*w*w*w*wb</row>
               <row>b*w***www**w*w*b</row>
               <row>b**************b</row>
               <row>bbbbbbbbbbbbbbbb</row>
-              <color>color.cyan</color>
-              <color char="b">color.blue</color>
-              <color char="w">color.darkblue</color>
             </bitmap>
           </sprite>
           <position><x>window.width.center - 8</x><y>low</y></position>
@@ -365,7 +374,7 @@
              the right going left -->
         <group name="creepers" class="enemy">
           <sprite name="wa">
-            <bitmap>
+            <bitmap style="creeper">
               <row>......GGGG......</row>
               <row>....GGgGGgGG....</row>
               <row>...GgggGGgggG...</row>
@@ -376,14 +385,10 @@
               <row>....oo....oooo..</row>
               <row>...ooo.....ooo..</row>
               <row>...oo.......oo..</row>
-              <color char="G">color.darkgreen</color>
-              <color char="g">color.green</color>
-              <color char="o">color.orange</color>
-              <color char="w">color.white</color>
             </bitmap>
           </sprite>
           <sprite name="wb">
-            <bitmap>
+            <bitmap style="creeper">
               <row>......GGGG......</row>
               <row>....GGgGGgGG....</row>
               <row>...GgggGGgggG...</row>
@@ -394,14 +399,10 @@
               <row>.....oooo.ooo...</row>
               <row>.....ooo..ooo...</row>
               <row>......oo...oo...</row>
-              <color char="G">color.darkgreen</color>
-              <color char="g">color.green</color>
-              <color char="o">color.orange</color>
-              <color char="w">color.white</color>
             </bitmap>
           </sprite>
           <sprite name="fa">
-            <bitmap>
+            <bitmap style="creeper">
               <row>................</row>
               <row>...o..o..o..o...</row>
               <row>...o..o..o..o...</row>
@@ -412,14 +413,10 @@
               <row>..GGgggGGgggGG..</row>
               <row>...GGGGGGGGGG...</row>
               <row>.....GGGGGG.....</row>
-              <color char="G">color.darkgreen</color>
-              <color char="g">color.green</color>
-              <color char="o">color.orange</color>
-              <color char="w">color.white</color>
             </bitmap>
           </sprite>
           <sprite name="fb">
-            <bitmap>
+            <bitmap style="creeper">
               <row>................</row>
               <row>....o..o..o..o..</row>
               <row>..o..o..o..o....</row>
@@ -430,10 +427,6 @@
               <row>..GGgggGGgggGG..</row>
               <row>...GGGGGGGGGG...</row>
               <row>.....GGGGGG.....</row>
-              <color char="G">color.darkgreen</color>
-              <color char="g">color.green</color>
-              <color char="o">color.orange</color>
-              <color char="w">color.white</color>
             </bitmap>
           </sprite>
           <animation name="walking">
@@ -598,7 +591,7 @@
         <!-- Mario: a look for each way he moves, all facing right -->
         <object name="mario">
           <sprite name="stand">
-            <bitmap>
+            <bitmap style="mario">
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
               <row>..kkksskk...</row>
@@ -615,15 +608,10 @@
               <row>..bbb..bbb..</row>
               <row>.kkk....kkk.</row>
               <row>kkkk....kkkk</row>
-              <color char="r">color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <sprite name="stepa">
-            <bitmap>
+            <bitmap style="mario">
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
               <row>..kkksskk...</row>
@@ -640,15 +628,10 @@
               <row>.bbb....bbb.</row>
               <row>kkk......kkk</row>
               <row>kk........kk</row>
-              <color char="r">color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <sprite name="stepb">
-            <bitmap>
+            <bitmap style="mario">
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
               <row>..kkksskk...</row>
@@ -665,15 +648,10 @@
               <row>....bbbb....</row>
               <row>...kkkkkk...</row>
               <row>...kkkkkk...</row>
-              <color char="r">color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <sprite name="stepc">
-            <bitmap>
+            <bitmap style="mario">
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
               <row>..kkksskk...</row>
@@ -690,15 +668,10 @@
               <row>..bbb..kkkk.</row>
               <row>.kkkk..kkk..</row>
               <row>.kkk........</row>
-              <color char="r">color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <sprite name="skid">
-            <bitmap>
+            <bitmap style="mario">
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
               <row>..kkksskk...</row>
@@ -715,15 +688,10 @@
               <row>kbbbb..bbb..</row>
               <row>kkk....kkkk.</row>
               <row>kk.....kkkkk</row>
-              <color char="r">color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <sprite name="rising">
-            <bitmap>
+            <bitmap style="mario">
               <row>...rrrrr..s.</row>
               <row>..rrrrrrrrs.</row>
               <row>..kkksskk.r.</row>
@@ -740,15 +708,10 @@
               <row>..bbbb.bbkk.</row>
               <row>.kkk....kkk.</row>
               <row>kkk.........</row>
-              <color char="r">color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <sprite name="falling">
-            <bitmap>
+            <bitmap style="mario">
               <row>...rrrrr....</row>
               <row>..rrrrrrrrr.</row>
               <row>..kkksskk...</row>
@@ -765,11 +728,6 @@
               <row>.bbb....bbb.</row>
               <row>kkk......kkk</row>
               <row>kk........kk</row>
-              <color char="r">color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-              <color char="y">color.yellow</color>
             </bitmap>
           </sprite>
           <animation name="walking">
