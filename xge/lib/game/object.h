@@ -267,6 +267,10 @@ namespace xge
 		// text and bitmap: style="...", a <style> of the game's <styles>,
 		// which gives what the sprite leaves out (see applyStyles).
 		std::string style;
+		// bitmap: what applyStyles took from the style, the plain color and
+		// the characters, which a <become style> swaps for another's.
+		bool styleColor{ false };
+		std::string styleChars;
 
 		// bitmap: the characters whose pixels a pixel collision touches with,
 		// copied from the object's <solid char>s (see markSolid); empty, all.
@@ -739,6 +743,27 @@ namespace xge
 		// The name of the look showing ("" for an object with none).
 		const std::string& lookName() const;
 
+		// The palettes a <become style="..."> can give it: its pictures
+		// drawn again with the colors that style gives, its bitmaps that
+		// take a style taking that one instead. The first is as loaded (its
+		// name empty); the others, one for each style= that can reach it,
+		// are drawn as the game loads and shared by its copies. `palette`
+		// is the one worn; a reset puts the first back on. Empty when
+		// nothing changes its colors.
+		struct Palette
+		{
+			std::string name;
+			std::shared_ptr<const Bitmap> bitmap;
+			std::vector<std::shared_ptr<const Bitmap>> animation;
+			std::vector<Look> looks;
+		};
+		std::vector<Palette> palettes;
+		std::size_t palette{ 0 };
+
+		// Puts on palettes[index], keeping the look and where its animation
+		// is, and marks the visual to be built again.
+		void wearPalette(std::size_t index);
+
 		// Shows looks[index], from its first picture if it moves, and marks
 		// the visual to be built again.
 		void showLook(std::size_t index);
@@ -1085,4 +1110,8 @@ namespace xge
 	// follow it (Timer::sprite); false (and nothing changes) if it has none
 	// of that name.
 	bool showLookNamed(Object& object, const std::string& name);
+
+	// Puts on the object's palette of that name (Object::palettes); false
+	// (and nothing changes) if it has none of that name.
+	bool wearPaletteNamed(Object& object, const std::string& name);
 }

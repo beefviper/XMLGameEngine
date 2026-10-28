@@ -346,12 +346,15 @@ namespace xge
 	// rule with sprite="..." runs only while its object shows that sprite, so
 	// a look is also a simple state. With from="normal", only an object
 	// showing that look changes: the ghosts turn blue, but not the eyes of
-	// one already eaten. See Object::looks.
+	// one already eaten. See Object::looks. With style="angry" (beside or
+	// instead of sprite=) its bitmaps that take a style take that one instead:
+	// the same pictures in other colors, a palette swap (Object::palettes).
 	struct CmdBecome
 	{
-		std::string sprite;
+		std::string sprite; // empty: the look stays
 		std::string target; // empty: the object running the command
 		std::string from;   // from="normal": only one showing that look; empty: any
+		std::string style;  // empty: the colors stay
 	};
 
 	// <reveal object="igloo">count</reveal> - brings back the first `count`
@@ -724,6 +727,7 @@ namespace xge
 		std::string burn;      // accelerate, thrust
 		std::string sound;     // play
 		std::string sprite;    // become
+		std::string style;     // become: the palette its bitmaps take
 		std::string path;      // follow
 		std::string objClass;  // climb (what it climbs)
 		std::string scene;     // enter, reset

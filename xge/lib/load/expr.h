@@ -214,6 +214,15 @@ namespace xge
 		// to right, both ways round: made once, whoever shows it.
 		std::map<const Bitmap*, std::shared_ptr<const Bitmap>> flippedPictures;
 
+		// The game's <styles>, for the palettes a <become style> asks for.
+		std::vector<RawStyle> styles;
+
+		// Each object's palettes (Object::palettes), for the styles `wanted`
+		// names for it by its name, drawn from what the file says of it.
+		// Throws std::runtime_error for one with a <heading>, or with no
+		// bitmap that takes a style.
+		void makePalettes(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted);
+
 		// The flips (Object::flips) of every picture `object` can show.
 		std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flipsOf(const Object& object);
 

@@ -550,7 +550,7 @@ TEST_CASE("mariobros.xml: the POW leaves a shellcreeper in the air alone, and tw
 	CHECK(two.position.x - one.position.x > 10.0f);
 }
 
-TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies and goes on faster", "[knock][mariobros]")
+TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies and goes on faster, red", "[knock][mariobros]")
 {
 	Mario play;
 	play.creeper().velocity.x = -0.5f;
@@ -565,6 +565,8 @@ TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies
 	play.frames(8 * 60 - 40);                // eight seconds after it went over
 	CHECK(play.creeper().lookName() == "walking");
 	CHECK(play.creeper().velocity.x == Approx(-0.75f));
+	REQUIRE_FALSE(play.creeper().palettes.empty());
+	CHECK(play.creeper().palettes.at(play.creeper().palette).name == "angry");   // and red
 	CHECK(play.creeper().position.x < lying);
 	CHECK(play.creeper().position.x > lying - 30.0f);
 }

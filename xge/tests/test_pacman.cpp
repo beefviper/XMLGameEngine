@@ -371,7 +371,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 
 	// Blue and touched: two hundred points, and its eyes head home through
 	// the door, where it is a ghost again and comes back out.
-	maze.executor.executeInput(Command{ CmdBecome{ "blue", "playing.ghosts", "normal" } }, true);
+	maze.executor.executeInput(Command{ CmdBecome{ "blue", "playing.ghosts", "normal", {} } }, true);
 	maze.frames(1);
 	const float before = maze.status("score");
 	maze.touch(blinky);

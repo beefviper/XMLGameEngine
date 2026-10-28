@@ -828,7 +828,9 @@
       </xs:element>
       <xs:element name="become">
         <xs:complexType>
-          <xs:attribute name="sprite" type="xs:string" use="required" />
+          <!-- a look, a palette (a style its bitmaps take instead), or both -->
+          <xs:attribute name="sprite" type="xs:string" use="optional" />
+          <xs:attribute name="style" type="xs:string" use="optional" />
           <xs:attribute name="object" type="xs:string" use="optional" />
           <!-- only those showing this look change -->
           <xs:attribute name="from" type="xs:string" use="optional" />

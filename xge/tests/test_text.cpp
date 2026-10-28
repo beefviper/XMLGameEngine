@@ -4,12 +4,13 @@
 // date: Oct 16, 2026
 //
 // Catch2 tests for the game's <styles>, a <text style="..."> and a
-// <bitmap style="...">, and
-// <centered> in a <position>. Each game is written beside the shipped ones
+// <bitmap style="...">, a <become style="..."> putting another style's
+// colors on (a palette swap), and <centered> in a <position>. Each game is written beside the shipped ones
 // so that its schema path resolves, and loaded with Xerces (full
 // validation) and TinyXml2 (the built-in validator). Nothing needs a
 // window.
 
+#include "played.h"
 #include "scratch.h"
 #include "game/game.h"
 #include "load/xml.h"
@@ -135,6 +136,64 @@ TEST_CASE("a bitmap takes the scale and colors it leaves out from its style", "[
 	{
 		REQUIRE_THROWS_WITH(load("<object name=\"thing\"><sprite><bitmap style=\"wod\"><row>*</row></bitmap></sprite>"
 			"<position><x>0</x><y>0</y></position></object>", styles), ContainsSubstring("style=\"wod\" names no <style>"));
+	}
+}
+
+TEST_CASE("<become style> puts another style's colors on an object's bitmaps, and a reset the first", "[text]")
+{
+	const std::string styles = "<styles><style name=\"green\"><color>color.green</color>"
+		"<color char=\"b\">color.blue</color><color char=\"w\">color.white</color></style>"
+		"<style name=\"angry\"><color>color.red</color><color char=\"b\">color.yellow</color><color char=\"w\">color.black</color></style></styles>";
+	Written file(
+		"<object name=\"thing\">"
+		"<sprite name=\"a\"><bitmap style=\"green\"><row>*bw</row></bitmap></sprite>"
+		"<sprite name=\"b\"><bitmap style=\"green\"><row>*bw</row><color char=\"w\">color.grey</color></bitmap></sprite>"
+		"<position><x>0</x><y>0</y></position>"
+		"<timers><timer><after>0.5</after><become sprite=\"b\" style=\"angry\" /><become object=\"lamp\" style=\"angry\" /></timer></timers></object>"
+		"<object name=\"lamp\"><sprite><bitmap style=\"green\"><row>*</row></bitmap></sprite><position><x>0</x><y>0</y></position></object>",
+		styles);
+	played::Played play(file.path.string());
+	Object& thing = play.get("thing");
+	Object& lamp = play.get("lamp");
+
+	// The pixel at (x, 0) of what an object shows: red, green, blue.
+	const auto rgb = [](const Object& object, int x)
+	{
+		const auto& rgba = object.bitmap->rgba;
+		const std::size_t at = static_cast<std::size_t>(x) * 4;
+		return std::vector<int>{ rgba[at], rgba[at + 1], rgba[at + 2] };
+	};
+	REQUIRE(thing.palettes.size() == 2);
+	CHECK(rgb(thing, 0) == std::vector<int>{ 0, 255, 0 });
+	CHECK(rgb(lamp, 0) == std::vector<int>{ 0, 255, 0 });
+
+	// What the timer's two <become>s do (the objects are in no state's
+	// <shows>, so their timers do not run).
+	play.game.become("thing", "b", {}, "angry");
+	play.game.become("lamp", {}, {}, "angry");
+	CHECK(thing.lookName() == "b");
+	CHECK(rgb(thing, 0) == std::vector<int>{ 255, 0, 0 });       // the new style's
+	CHECK(rgb(thing, 1) == std::vector<int>{ 255, 255, 0 });
+	CHECK(rgb(thing, 2) == std::vector<int>{ 128, 128, 128 });   // its own stays
+	CHECK(rgb(lamp, 0) == std::vector<int>{ 255, 0, 0 });
+
+	// Another look keeps the palette on.
+	play.game.become("thing", "a");
+	CHECK(rgb(thing, 2) == std::vector<int>{ 0, 0, 0 });
+
+	play.game.resetObject("thing");
+	CHECK(thing.lookName() == "a");
+	CHECK(rgb(thing, 0) == std::vector<int>{ 0, 255, 0 });
+	CHECK(rgb(thing, 2) == std::vector<int>{ 255, 255, 255 });
+
+	SECTION("a style that is not there, or nothing to recolor, stops the load")
+	{
+		const std::string timer = "<timers><timer><after>1</after><become style=\"angri\" /></timer></timers>";
+		REQUIRE_THROWS_WITH(load("<object name=\"x\"><sprite><bitmap style=\"green\"><row>*</row></bitmap></sprite>"
+			"<position><x>0</x><y>0</y></position>" + timer + "</object>", styles), ContainsSubstring("<become style=\"angri\" /> names no <style>"));
+		REQUIRE_THROWS_WITH(load("<object name=\"x\"><sprite><bitmap><row>*</row></bitmap></sprite>"
+			"<position><x>0</x><y>0</y></position><timers><timer><after>1</after><become style=\"angry\" /></timer></timers></object>", styles),
+			ContainsSubstring("no <bitmap style="));
 	}
 }
 

@@ -240,11 +240,12 @@ namespace xge
 	{
 		if (!command.target.empty())
 		{
-			game.become(command.target, command.sprite, command.from);
+			game.become(command.target, command.sprite, command.from, command.style);
 		}
 		else if (self && (command.from.empty() || self->lookName() == command.from))
 		{
-			showLookNamed(*self, command.sprite);
+			if (!command.sprite.empty()) { showLookNamed(*self, command.sprite); }
+			if (!command.style.empty()) { wearPaletteNamed(*self, command.style); }
 		}
 	}
 

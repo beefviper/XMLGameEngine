@@ -318,8 +318,25 @@ namespace xge
 			}
 		}
 
+		// The palettes the game's <become style>s can give each object, by
+		// its name, each style once (see game_expr::makePalettes).
+		using WantedPalettes = std::map<std::string, std::vector<std::string>>;
+
+		void wantPalette(WantedPalettes& wanted, const std::vector<RawStyle>& styles, const Object& object, const std::string& style, const std::string& where)
+		{
+			if (std::none_of(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == style; }))
+			{
+				std::vector<std::string> names;
+				for (const RawStyle& each : styles) { names.push_back(each.name); }
+				throw std::runtime_error(where + ": <become style=\"" + style + "\" /> names no <style> of the game's <styles>" + didYouMean(style, names));
+			}
+			std::vector<std::string>& list = wanted[object.name];
+			if (std::find(list.begin(), list.end(), style) == list.end()) { list.push_back(style); }
+		}
+
 		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
-			const std::vector<SoundDesc>& sounds, const std::map<std::string, Path>& paths, const std::string& where)
+			const std::vector<SoundDesc>& sounds, const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles,
+			WantedPalettes& wanted, const std::string& where)
 		{
 			if (std::holds_alternative<CmdEnterScene>(shapeOf(command)) || std::holds_alternative<CmdResetScene>(shapeOf(command)))
 			{
@@ -393,7 +410,8 @@ namespace xge
 							|| object.inGroup(become->target);
 						if (!named) { continue; }
 						any = true;
-						if (std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+						if (!become->style.empty()) { wantPalette(wanted, styles, object, become->style, where); }
+						if (!become->sprite.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
 						{
 							throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
 						}
@@ -610,9 +628,12 @@ namespace xge
 			}
 		}
 
-		void checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
-			const std::map<std::string, Path>& paths)
+		// Hands back the palettes the <become style>s ask for.
+		WantedPalettes checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
+			const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles)
 		{
+			WantedPalettes wanted;
+
 			// A <tether> joins two objects the game has, and a <pull> and a
 			// <seek> name ones it has.
 			for (const Object& object : objects)
@@ -656,7 +677,7 @@ namespace xge
 			{
 				for (const auto& command : commands)
 				{
-					checkCommand(command, states, objects, sounds, paths, where);
+					checkCommand(command, states, objects, sounds, paths, styles, wanted, where);
 				}
 			};
 
@@ -682,6 +703,14 @@ namespace xge
 				{
 					checkAll(step.commands, "path '" + name + "' > <step>");
 					checkPlace(step.commands, Place::PathStep, "path '" + name + "' > <step>");
+					for (const auto& command : step.commands)
+					{
+						const auto* become = std::get_if<CmdBecome>(&shapeOf(command));
+						if (become && become->target.empty() && !become->style.empty())
+						{
+							throw std::runtime_error("path '" + name + "' > <step>: <become style=\"" + become->style + "\" /> needs object=\"...\" here; which palettes a path's flier has is not known");
+						}
+					}
 				}
 			}
 
@@ -695,9 +724,10 @@ namespace xge
 					if (!become || !become->target.empty()) { continue; }
 					if (!self)
 					{
-						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
+						throw std::runtime_error(where + ": <become> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
 					}
-					if (std::none_of(self->looks.begin(), self->looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+					if (!become->style.empty()) { wantPalette(wanted, styles, *self, become->style, where); }
+					if (!become->sprite.empty() && std::none_of(self->looks.begin(), self->looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
 					{
 						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");
 					}
@@ -875,6 +905,7 @@ namespace xge
 					checkPlace(*edge, Place::Edge, where + " > <collision edge>");
 				}
 			}
+			return wanted;
 		}
 	}
 
@@ -1311,7 +1342,95 @@ namespace xge
 			paths[path.name] = std::move(path);
 		}
 
-		checkReferences(states, objects, sounds, paths);
+		makePalettes(rawObjects, objects, checkReferences(states, objects, sounds, paths, styles));
+	}
+
+	namespace
+	{
+		// A sprite as it is with another style's colors in place of the
+		// ones it took from its own (see RawSprite::styleChars); its own stay.
+		void restyle(RawSprite& sprite, const RawStyle& style)
+		{
+			if (sprite.kind == "bitmap" && !sprite.style.empty())
+			{
+				if (sprite.styleColor && !style.color.empty()) { sprite.color = style.color; }
+				for (auto& [character, color] : sprite.bitmapColors)
+				{
+					if (sprite.styleChars.find(character) == std::string::npos) { continue; }
+					const auto given = std::find_if(style.bitmapColors.begin(), style.bitmapColors.end(), [&](const auto& each) { return each.first == character; });
+					if (given != style.bitmapColors.end()) { color = given->second; }
+				}
+			}
+			for (RawSprite& frame : sprite.frames) { restyle(frame, style); }
+		}
+
+		bool takesStyle(const RawSprite& sprite)
+		{
+			return (sprite.kind == "bitmap" && !sprite.style.empty()) || std::any_of(sprite.frames.begin(), sprite.frames.end(), takesStyle);
+		}
+	}
+
+	void game_expr::makePalettes(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted)
+	{
+		for (Object& object : objects)
+		{
+			const auto asked = wanted.find(object.name);
+			if (asked == wanted.end()) { continue; }
+			const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& each) { return each.name == object.name; });
+			if (raw == rawObjects.end()) { continue; }
+
+			const std::string where = "object '" + object.name + "'";
+			if (!object.turnables.empty())
+			{
+				throw std::runtime_error(where + ": <become style=\"" + asked->second.front() + "\" />: a palette is for a picture that does not turn; it has a <heading>");
+			}
+			if (!takesStyle(raw->sprite) && std::none_of(raw->looks.begin(), raw->looks.end(), takesStyle)
+				&& std::none_of(raw->animation.frames.begin(), raw->animation.frames.end(), takesStyle))
+			{
+				throw std::runtime_error(where + ": <become style=\"" + asked->second.front() + "\" />: it has no <bitmap style=\"...\"> whose colors another style could change");
+			}
+			if (object.looks.size() != raw->looks.size()) { continue; }
+
+			// As loaded: the colors it starts in, and a reset puts back.
+			Object::Palette loaded;
+			loaded.looks = object.looks;
+			loaded.bitmap = object.looks.empty() ? object.facingPicture(object.bitmap) : object.looks.front().bitmap;
+			if (object.looks.empty()) { loaded.animation = object.animationBitmaps; }
+			object.palettes.push_back(std::move(loaded));
+
+			for (const std::string& name : asked->second)
+			{
+				const RawStyle& style = *std::find_if(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == name; });
+				const auto restyled = [&](RawSprite sprite) { restyle(sprite, style); return sprite; };
+				const std::string here = where + " in style '" + name + "'";
+
+				Object::Palette palette;
+				palette.name = name;
+				if (!object.looks.empty())
+				{
+					palette.looks = object.looks;
+					for (std::size_t i = 0; i < palette.looks.size(); ++i)
+					{
+						const RawSprite look = restyled(raw->looks[i]);
+						buildSpriteParams(look, here, &palette.looks[i].bitmap);
+						if (!look.frames.empty()) { palette.looks[i].frames = buildAnimationBitmaps(look.frames, here); }
+					}
+					palette.bitmap = palette.looks.front().bitmap;
+				}
+				else
+				{
+					buildSpriteParams(restyled(raw->sprite), here, &palette.bitmap);
+					if (!object.animationBitmaps.empty())
+					{
+						std::vector<RawSprite> frames;
+						for (const RawSprite& frame : raw->animation.frames) { frames.push_back(restyled(frame)); }
+						palette.animation = buildAnimationBitmaps(frames, here);
+					}
+				}
+				object.palettes.push_back(std::move(palette));
+			}
+			if (object.mirrors) { object.flips = flipsOf(object); }
+		}
 	}
 
 	Object game_expr::makeObject(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, Vector2f cellOffset, int thisLockstep)
@@ -1804,7 +1923,12 @@ namespace xge
 		}
 		if (!from.looks.empty()) { first.looks = &from.looks; }
 
-		return makeObject(raw, first, windowDesc, from.cellOffset, from.collisionData.lockstep);
+		// Its palettes too, wearing the one `from` is (its looks are those).
+		Object made = makeObject(raw, first, windowDesc, from.cellOffset, from.collisionData.lockstep);
+		made.palettes = from.palettes;
+		made.palette = from.palette;
+		if (made.mirrors) { made.flips = from.flips; }
+		return made;
 	}
 
 	SoundDesc game_expr::processSound(const RawSound& raw)
@@ -2406,12 +2530,22 @@ namespace xge
 			(*flips)[picture.get()] = made->second;
 			(*flips)[made->second.get()] = picture;
 		};
+		const auto addLooks = [&](const std::vector<Object::Look>& looks)
+		{
+			for (const Object::Look& look : looks)
+			{
+				add(look.bitmap);
+				for (const auto& picture : look.frames) { add(picture); }
+			}
+		};
 		add(object.bitmap);
 		for (const auto& picture : object.animationBitmaps) { add(picture); }
-		for (const Object::Look& look : object.looks)
+		addLooks(object.looks);
+		for (const Object::Palette& palette : object.palettes)
 		{
-			add(look.bitmap);
-			for (const auto& picture : look.frames) { add(picture); }
+			add(palette.bitmap);
+			for (const auto& picture : palette.animation) { add(picture); }
+			addLooks(palette.looks);
 		}
 		return flips;
 	}

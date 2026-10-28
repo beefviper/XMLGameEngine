@@ -966,6 +966,7 @@ namespace xge
 			command.burn = node.getAttribute("burn");
 			command.sound = node.getAttribute("sound");
 			command.sprite = node.getAttribute("sprite");
+			command.style = node.getAttribute("style");
 			command.path = node.getAttribute("path");
 			command.objClass = node.getAttribute("class");
 			command.scene = node.getAttribute("scene");
@@ -1023,7 +1024,10 @@ namespace xge
 			}
 			if (verb == "fire") { requireAttribute(node, "object", where); }
 			if (verb == "play" || verb == "silence") { requireAttribute(node, "sound", where); }
-			if (verb == "become") { requireAttribute(node, "sprite", where); }
+			if (verb == "become" && command.sprite.empty() && command.style.empty())
+			{
+				fail(where, "<become> needs a sprite= (a look), a style= (a palette), or both");
+			}
 			if (verb == "reveal")
 			{
 				requireAttribute(node, "object", where);

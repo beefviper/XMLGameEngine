@@ -143,7 +143,7 @@
     <xsl:param name="node" select="." />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
-      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button">
+      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@style | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button">
         <xsl:if test=". != ''">
           <xsl:text> command.</xsl:text>
           <xsl:choose>

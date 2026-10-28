@@ -13,7 +13,7 @@
   off for 800 points; bump it again first and it gets back up. A
   shellcreeper still on its feet costs a life (Mario comes back blinking,
   safe for two seconds), and one left on its back too long gets up where it
-  lies and walks on faster. The POW block turns over every shellcreeper on
+  lies and walks on faster, turned red (a palette swap: <become style>). The POW block turns over every shellcreeper on
   its feet at once, three times. Kick off all six to win. The high score is
   kept.
 
@@ -147,6 +147,11 @@
       <color char="g">color.green</color>
       <color char="o">color.orange</color>
       <color char="w">color.white</color>
+    </style>
+    <!-- a shellcreeper that got up by itself: the same pictures in red -->
+    <style name="angry">
+      <color char="G">color.brown</color>
+      <color char="g">color.red</color>
     </style>
     <style name="pow">
       <color>color.cyan</color>
@@ -543,11 +548,12 @@
               <set variable="self.way">sgn(self.velocity.x)</set>
               <set variable="self.down">1</set>
             </timer>
-            <!-- left there, it gets up by itself, and faster -->
+            <!-- left there, it gets up by itself, faster and red -->
             <timer sprite="flipped">
               <after>8</after>
               <inc variable="self.speed">crawl / 2</inc>
               <trigger action="getup" />
+              <become style="angry" />
             </timer>
           </timers>
           <member />

@@ -67,6 +67,36 @@ namespace xge
 		visualDirty = true;
 	}
 
+	void Object::wearPalette(std::size_t index)
+	{
+		if (index >= palettes.size() || index == palette)
+		{
+			return;
+		}
+
+		palette = index;
+		const Palette& worn = palettes[index];
+		const int tick = animationTick;
+		const std::size_t at = animationIndex;
+		if (looks.empty())
+		{
+			animationBitmaps = worn.animation;
+			bitmap = facingPicture(worn.bitmap);
+		}
+		else
+		{
+			looks = worn.looks;
+			showLook(look);
+		}
+		if (!animationBitmaps.empty())
+		{
+			animationTick = tick;
+			animationIndex = at % animationBitmaps.size();
+			showAnimationFrame();
+		}
+		visualDirty = true;
+	}
+
 	std::shared_ptr<const Bitmap> Object::facingPicture(const std::shared_ptr<const Bitmap>& picture) const
 	{
 		if (!mirrored || !flips || !picture) { return picture; }
@@ -139,11 +169,19 @@ namespace xge
 						sprite.hasScale = true;
 						sprite.scale = style->scale;
 					}
-					if (sprite.color.empty()) { sprite.color = style->color; }
+					if (sprite.color.empty() && !style->color.empty())
+					{
+						sprite.color = style->color;
+						sprite.styleColor = true;
+					}
 					for (const auto& [character, color] : style->bitmapColors)
 					{
 						const bool own = std::any_of(sprite.bitmapColors.begin(), sprite.bitmapColors.end(), [&](const auto& each) { return each.first == character; });
-						if (!own) { sprite.bitmapColors.emplace_back(character, color); }
+						if (!own)
+						{
+							sprite.bitmapColors.emplace_back(character, color);
+							sprite.styleChars += character;
+						}
 					}
 					return;
 				}
@@ -448,6 +486,19 @@ namespace xge
 		sprite.height = RawValue::expression("0");
 		sprite.color = "color.black";
 		return sprite;
+	}
+
+	bool wearPaletteNamed(Object& object, const std::string& name)
+	{
+		for (std::size_t i = 0; i < object.palettes.size(); ++i)
+		{
+			if (object.palettes[i].name == name)
+			{
+				object.wearPalette(i);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	bool showLookNamed(Object& object, const std::string& name)

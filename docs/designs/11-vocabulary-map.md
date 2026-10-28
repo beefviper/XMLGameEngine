@@ -68,7 +68,7 @@ A note on pictures: an `<image>` is a file loaded by the window backend; an `<sv
 | Layer | Vocabulary | How complete |
 |---|---|---|
 | Data model: what exists | objects, groups, maps, variables, states (`from=`), the `<kit>` and `from=`, scenes (`from=`, ways), keeps | solid |
-| Appearance | eight shapes, multi-color bitmaps, animation, looks (moving ones too) and `become`, `poses`, `mirror`, blinking, the window's `scale`, `flip`, `heading`, `light`/`dark`, `shadow`, `hole` | solid; no recolouring a look |
+| Appearance | eight shapes, multi-color bitmaps, animation, looks (moving ones too) and `become`, `poses`, `mirror`, blinking, the window's `scale`, `flip`, `heading`, `light`/`dark`, `shadow`, `hole` | solid; palette swap (`<become style>`) |
 | Kinematics | velocity, acceleration, heading, facing, drag, mass, pull, seek, altitude, grip, a hop's or jump's arc, and the moving verbs | good; `leap` has no air control |
 | Steering | `chase`, `aim`, paths with `follow`, maze walking with `go`, `hunt`, `wander`, `hunt` by hops | good; no search of a maze, straight path legs only |
 | Collision | edges, `class`, `object`, `side`, `unless`, `sprite`, `slower`, `faster`, checks, `type`, `solid`, `hitbox`, and the touching verbs | the largest layer: where verbs, adjectives and prepositions meet |
@@ -88,7 +88,7 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 | **Planning** | searching a maze, leading a target, curved paths, paths that aim | [chase-and-paths](24-chase-and-paths.md) |
 | **Queries** | what is touching what, line of sight; a condition's threshold that follows a variable | [states-and-conditions](07-states-and-conditions.md), [timers](09-timers.md) |
 | **Branching and events** | `if`, `goto`, an event queue. Conditions join tests with `all`/`any` but have no else; keeping control flow out is deliberate | [vision](01-vision.md), [timers](09-timers.md) |
-| **Presentation** | a camera and scrolling (version 2), recolouring a look, per-frame animation intervals, decals | [ideas](57-ideas.md), [pictures](30-pictures.md) |
+| **Presentation** | a camera and scrolling (version 2), per-frame animation intervals, decals | [ideas](57-ideas.md), [pictures](30-pictures.md) |
 
 Time, sound, music, conditions over many objects, maze walking and making objects while a game runs (`spawn`/`despawn`, 2026-10-23) were gaps in earlier versions of this map and are filled now. They show how a gap closes: a game could not be written (Frostbite's cold, Pac-Man's ghosts, Adventure's sleeping dragon), the word was added in the places that already hold commands, and the workaround objects were deleted.
 

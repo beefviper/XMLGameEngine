@@ -49,6 +49,7 @@ namespace xge
 		// Room for what is spawned, so that the file's objects stay where
 		// they are (and a reference to one good) as copies join.
 		objects.reserve(rawObjects.size() * 2 + 256);
+		expr.styles = data.styles;
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 		keep(keeps);
@@ -1357,6 +1358,7 @@ namespace xge
 			object.blink = 0.0f;
 			object.goingLeft = object.facingOriginal == Direction::Left;
 			object.faceMirror();
+			object.wearPalette(0);
 			if (!object.looks.empty()) { object.showLook(object.firstLook); }
 			for (auto& timer : object.timers)
 			{
@@ -1419,13 +1421,14 @@ namespace xge
 		}
 	}
 
-	void Game::become(const std::string& target, const std::string& sprite, const std::string& from)
+	void Game::become(const std::string& target, const std::string& sprite, const std::string& from, const std::string& style)
 	{
 		for (auto& object : objects)
 		{
 			if ((object.name == target || object.inGroup(target)) && (from.empty() || object.lookName() == from))
 			{
-				showLookNamed(object, sprite);
+				if (!sprite.empty()) { showLookNamed(object, sprite); }
+				if (!style.empty()) { wearPaletteNamed(object, style); }
 			}
 		}
 	}
