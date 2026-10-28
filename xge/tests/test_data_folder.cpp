@@ -202,21 +202,22 @@ TEST_CASE("a game that is nowhere is not found", "[data_folder]")
 TEST_CASE("a game's schema is found where the game names it", "[data_folder]")
 {
 	TempRoot temp;
-	temp.touch("xge/xgedef.xsd");
-	temp.touch("output/xgedef.xsd");
+	temp.touch("games/xgedef.xsd");
+	temp.touch("xgedef.xsd");
 	temp.touch("games/descriptions/pong.xml");
 
-	CHECK(findSchema(temp.path() / "games/descriptions/pong.xml", "../../xge/xgedef.xsd") == temp.path() / "games/descriptions/../../xge/xgedef.xsd");
+	CHECK(findSchema(temp.path() / "games/descriptions/pong.xml", "../xgedef.xsd") == temp.path() / "games/descriptions/../xgedef.xsd");
 }
 
 TEST_CASE("a game's schema is found by its file name in a folder above the game", "[data_folder]")
 {
-	// As in output/<config>: the schema at the top, two folders above the game.
+	// A game named with an old path, or kept in a folder of its own: the
+	// nearest schema of that name above it.
 	TempRoot temp;
-	temp.touch("output/xgedef.xsd");
-	temp.touch("output/games/descriptions/pong.xml");
+	temp.touch("output/games/xgedef.xsd");
+	temp.touch("output/games/descriptions/mine/pong.xml");
 
-	CHECK(findSchema(temp.path() / "output/games/descriptions/pong.xml", "../../xge/xgedef.xsd") == temp.path() / "output/xgedef.xsd");
+	CHECK(findSchema(temp.path() / "output/games/descriptions/mine/pong.xml", "../../xge/xgedef.xsd") == temp.path() / "output/games/xgedef.xsd");
 }
 
 TEST_CASE("a game's schema that is nowhere is the path the game names", "[data_folder]")

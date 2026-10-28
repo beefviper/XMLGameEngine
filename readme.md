@@ -1,6 +1,6 @@
 # XMLGameEngine
 
-XMLGameEngine is a video game description language written in XML, plus a C++ engine that runs it. A whole game (window, sounds, objects, screens, rules) is one `.xml` file, checked against a schema, [xge/xgedef.xsd](xge/xgedef.xsd).
+XMLGameEngine is a video game description language written in XML, plus a C++ engine that runs it. A whole game (window, sounds, objects, screens, rules) is one `.xml` file, checked against a schema, [games/xgedef.xsd](games/xgedef.xsd).
 
 The file holds no code: no loops, no `if`, no function calls. What things do comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<die />`, `<hop direction="up">`), and the engine knows how to carry each one out. The aim is to describe the non-scrolling 2D games of the late 1970s and early 1980s with a small vocabulary, and to add a word only when a real game cannot be written without it.
 
@@ -9,7 +9,7 @@ The file holds no code: no loops, no `if`, no function calls. What things do com
 This is all of `pong_min.xml`, two paddles and a ball:
 
 ```xml
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pong">
     <width>1280</width> <height>720</height>
   </window>

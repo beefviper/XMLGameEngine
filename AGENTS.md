@@ -1,6 +1,6 @@
 # AGENTS.md
 
-XMLGameEngine is a video game description language in XML plus a C++ engine that runs it. A game is one `.xml` file (`games/descriptions/`), checked against `xge/xgedef.xsd`; behavior comes from a closed vocabulary of verb tags, never from code in the file.
+XMLGameEngine is a video game description language in XML plus a C++ engine that runs it. A game is one `.xml` file (`games/descriptions/`), checked against `games/xgedef.xsd`; behavior comes from a closed vocabulary of verb tags, never from code in the file.
 
 ## Read in this order
 
@@ -17,7 +17,7 @@ The root [readme.md](readme.md) is the short public overview.
 | `xge/lib/` | `xgelib`, the engine, a folder per part (`game/`, `play/`, `load/`, `xml/`, `window/`, `audio/`, `picture/`, `engine/`), each header beside its source, included as `"game/game.h"`. Throws, never `exit()`s |
 | `xge/cli/`, `xge/gui/` | `xgecli`; `xgegui` (Qt 6, built only when Qt is found) |
 | `xge/tests/` | Catch2 (`xgetest`), one `test_<topic>.cpp` per area; games are played frame by frame |
-| `xge/xgedef.xsd` | the schema, the definition of the language |
+| `games/xgedef.xsd` | the schema, the definition of the language; games name it `../xgedef.xsd` |
 | `games/descriptions/`, `games/assets/` | the games; their media |
 | `games/generators/` | the XSLT stylesheets `xgecli --generate` runs, a folder per target |
 | `scripts/cmake/`, `scripts/shell/` | CMake modules; `shell/linux/` prerequisite installers, `shell/windows/games-run-all.bat [config]` runs `games-generate-all.bat` (every game into `output/<config>/generated/<game>/`), `games-build-all.bat` (each with MSVC at `/W4`) and `games-test-all.bat` (builds and runs `xgetest-generated`) |

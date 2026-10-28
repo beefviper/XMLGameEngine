@@ -780,7 +780,7 @@ namespace
 		auto weak = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 		REQUIRE(weak->load(scratch.path.string()));
 		XsdLiteValidator validator;
-		REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../../xge/xgedef.xsd").string(), XmlBackend::TinyXml2));
+		REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../xgedef.xsd").string(), XmlBackend::TinyXml2));
 		verdict.weakAccepts = validator.validate(*weak->getRootElement());
 		verdict.weakMessage = validator.getErrorMessage();
 

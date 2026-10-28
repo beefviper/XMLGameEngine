@@ -38,7 +38,7 @@ namespace
 	// A game with the bat, a ball and the keys, and what else the state has.
 	std::string gameWith(const std::string& ball, const std::string& more)
 	{
-		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
+		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"computer\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><states><state name=\"playing\"><objects>" + bat + ball + "</objects>"
@@ -96,7 +96,7 @@ TEST_CASE("a <hold> is only for a <computer>, and holds a key there is", "[compu
 	const auto loose = [](const std::string& more)
 	{
 		std::string text = gameWith(box("ball", 100, 100), more);
-		const std::string named = " xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\"";
+		const std::string named = " xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\"";
 		text.erase(text.find(named), named.size());
 		const Written file(text);
 		Game game(file.path);

@@ -53,7 +53,7 @@ namespace
 	// states given, and the <keys> sets given before the states.
 	std::string gameXml(const std::string& objects, const std::string& states, const std::string& keys = {})
 	{
-		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
+		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
@@ -785,7 +785,7 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 		  "<position><x>0</x><y>40</y></position></object>"
 		+ "<group name=\"lamps\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		  "<position><x>0</x><y>60</y></position><member><position><x>0</x></position></member><member><position><x>10</x></position></member></group>";
-	const std::string xml = "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
+	const std::string xml = "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 		"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 		"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 		"<variables><variable name=\"unused\">0</variable></variables>"
@@ -1057,7 +1057,7 @@ namespace
 		// engine itself checks is checked.
 		static std::string withSchema(bool schema, std::string xml)
 		{
-			const std::string named = " xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\"";
+			const std::string named = " xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\"";
 			if (!schema) { xml.erase(xml.find(named), named.size()); }
 			return xml;
 		}

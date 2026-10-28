@@ -42,7 +42,7 @@ namespace
 			std::ifstream in(file.path);
 			text.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 		}
-		const std::string named = " xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\"";
+		const std::string named = " xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\"";
 		text.erase(text.find(named), named.size());
 		{
 			std::ofstream out(file.path);
@@ -66,7 +66,7 @@ namespace
 		auto document = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 		REQUIRE(document->load(file.path));
 		XsdLiteValidator validator;
-		REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../../xge/xgedef.xsd").string(), XmlBackend::TinyXml2));
+		REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../xgedef.xsd").string(), XmlBackend::TinyXml2));
 		return validator.validate(*document->getRootElement());
 	}
 }

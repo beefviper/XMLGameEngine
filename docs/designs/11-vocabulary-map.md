@@ -1,6 +1,6 @@
 # Vocabulary map
 
-**Status:** A reference, not a decision. Read from `xge/xgedef.xsd` and [../readme.md](../readme.md) on `working`, 2026-10-23.
+**Status:** A reference, not a decision. Read from `games/xgedef.xsd` and [../readme.md](../readme.md) on `working`, 2026-10-23.
 
 ## Why
 

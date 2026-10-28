@@ -8,7 +8,7 @@
      play goes on. The smallest game the windows-cpp generator is tried on. Its
      one state owns everything, so the game has no objects of its own; the
      paddles are one group, each saying only where it is. -->
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pong">
     <width>1280</width>
     <height>720</height>

@@ -1130,7 +1130,7 @@ TEST_CASE("both schema checkers turn away a turn that is not left or right", "[a
 	auto weak = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 	REQUIRE(weak->load(scratch.path.string()));
 	XsdLiteValidator validator;
-	REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../../xge/xgedef.xsd").string(), XmlBackend::TinyXml2));
+	REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../xgedef.xsd").string(), XmlBackend::TinyXml2));
 	CHECK_FALSE(validator.validate(*weak->getRootElement()));
 
 	auto strong = XmlDocumentFactory::create(XmlBackend::Xerces);

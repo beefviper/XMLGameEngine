@@ -119,7 +119,7 @@ namespace
 		{
 			{
 				std::ofstream out(path);
-				out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
+				out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 					"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
 					"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 					"<variables><variable name=\"unused\">0</variable></variables><objects>"
@@ -201,7 +201,7 @@ TEST_CASE("a <trigger> with no object= outside an object's own lists stops the l
 	const std::filesystem::path path = "descriptions/rules_scratch.xml";
 	{
 		std::ofstream out(path);
-		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../xge/xgedef.xsd\">"
+		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><objects>"

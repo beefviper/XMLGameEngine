@@ -7,15 +7,14 @@ add_dependencies(xgelib xgedata)
 
 # The games are copied into output/<config> (output.cmake), next to the
 # programs, in the same folders as in the repository: games/descriptions/,
-# games/assets/ and games/generators/. The schema goes at the top of
-# output/<config> (xgedef.xsd): a game names it as ../../xge/xgedef.xsd, which
-# is right in the repository, and the engine looks for it by its file name in
-# the folders above a game when it is not there (findSchema, engine/folder.h).
+# games/assets/ and games/generators/, and the schema, games/xgedef.xsd, which
+# a game names as ../xgedef.xsd (the engine also looks for it by its file name
+# in the folders above a game when it is not there: findSchema, engine/folder.h).
 # Each file is its own copy step, so a build copies only the files that
 # changed. The engine's own files are not copied: --generate takes them from
 # xge/lib/ in the repository (xge_link_xslt, targets.cmake).
 set(data_xsd
-	"xge/xgedef.xsd")
+	"games/xgedef.xsd")
 
 set(data_xml
 	"games/descriptions/pong.xml"
@@ -69,16 +68,7 @@ set(data_generators
 	"games/generators/windows-cpp/modules/game_parts.h")
 
 set(data_outputs "")
-foreach(item IN LISTS data_xsd)
-	get_filename_component(name "${item}" NAME)
-	add_custom_command(
-		OUTPUT "${XGE_OUTPUT_DIR}/${name}"
-		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${item}" "${XGE_OUTPUT_DIR}/${name}"
-		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${item}")
-	list(APPEND data_outputs "${XGE_OUTPUT_DIR}/${name}")
-endforeach()
-
-foreach(item IN LISTS data_xml data_assets data_generators)
+foreach(item IN LISTS data_xsd data_xml data_assets data_generators)
 	message(STATUS ${item})
 	add_custom_command(
 		OUTPUT "${XGE_OUTPUT_DIR}/${item}"

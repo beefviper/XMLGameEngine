@@ -582,7 +582,7 @@ TEST_CASE("pacman: both schema checkers take the game", "[pacman][schema]")
 	auto weak = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 	REQUIRE(weak->load("descriptions/pacman.xml"));
 	XsdLiteValidator validator;
-	REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../../xge/xgedef.xsd").string(), XmlBackend::TinyXml2));
+	REQUIRE(validator.loadSchema(findSchema("descriptions/pong.xml", "../xgedef.xsd").string(), XmlBackend::TinyXml2));
 	CHECK(validator.validate(*weak->getRootElement()));
 
 	auto strong = XmlDocumentFactory::create(XmlBackend::Xerces);

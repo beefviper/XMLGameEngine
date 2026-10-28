@@ -41,7 +41,7 @@
     (<show state="playing" />), the barrels stopped where they were.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Donkey Kong">
     <width>800</width>
     <height>700</height>
