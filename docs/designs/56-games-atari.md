@@ -16,7 +16,7 @@ The author listed about thirty non-scrolling Atari 2600 games (2026-10-07) and a
 | [Atlantis](#atlantis) | named timers and conditions | the bandit bomber, rebuilding the city |
 | [Adventure](#adventure) | carrying, rooms as scenes | most of the kingdom, Rhindle, the bat, the magnet |
 | [Trick Shot](#trick-shot) | `<knock>` and `<mass>` | a cue to aim, spin |
-| [Mario Bros.](#mario-bros) | a knock through a floor | sidesteppers, fighter flies, coins, fireballs, a second player |
+| [Mario Bros.](#mario-bros) | a knock through a floor | fireballs, icicles, the later phases |
 | [Q*bert](#qbert) | diagonal hops, a map pyramid | Slick and Sam, Ugg and Wrongway, more rounds |
 | [Yars' Revenge](#yars-revenge) | `<seek>` | the ghost of Yar, harder levels |
 | [Tennis](#tennis) | altitude, shadows, a computer player | serving, the net stopping a low ball |
@@ -81,11 +81,16 @@ The author listed about thirty non-scrolling Atari 2600 games (2026-10-07) and a
 ### Mario Bros.
 
 - **The knock through a floor:** Mario and the floors have no mass, so his head against a floor tile from below is a `<knock>0</knock>` that goes through the tile to the shellcreeper standing on it, whose rule `side="bottom" through="floor"` flips it. Floors are tiles in groups inside a group, so a bump reaches only its tile. Through-only rules mean Mario jumping into a creeper hanging off a ledge is a touch (deadly or a kick), not a flip.
-- **Coming in:** the shellcreepers start out of play and state `<after>` timers `<reveal>` them inside the top pipes; on the ground deep in a bottom pipe they are `<reset />` into their top pipe.
+- **Coming in:** the pests start out of play and each phase's `<after>` timers `<reveal>` them inside the top pipes; on the ground deep in a bottom pipe they are `<reset />` into their top pipe.
+- **Six phases (2026-10-28)** as the scenes of `playing`: shellcreepers twice, TEST YOUR SKILL! (ten coins, a named timer `clock.left` of twenty seconds), sidesteppers, sidesteppers with shellcreepers, fighter flies. Each counts `tally.kicked` up to its `upto` and enters the next; the last pushes `youwin`. The arcade's phases go on and mix in fireballs and icicles; six show every kind once.
+- **One kit piece per kind, from one `pest`** that holds what they share (landing, wrapping, the bottom pipes, lying still once down, kicked by either brother, deadly on its feet, getting up after eight seconds). Each kind adds its pictures and its bump rules, last look first: a **sidestepper** goes `mad` (claws up, twice as fast) on the first bump and over on the second, the POW counting as one; a **fighter fly** hops (`<leap>` on a look timer every second, refused in the air), so a bump reaches it only between hops. Looked at: one group of all kinds with each member's own pictures, which fails because the bump rules differ by kind while timers and rules are the group's.
+- **The third colour** needs no new word: the 8-second timer counts `self.ups` and puts on `angry`; a rule on the floor, `sprite="walking"` with `ups` at least 2, puts on `furious` (blue) each frame it stands. Looked at: `from=` on a style-only `<become>` naming the style worn (a second meaning for `from=`, which names a look).
+- **Coins:** each pest kicked `<spawn>`s a coin piece at the top left pipe; it walks the floors like a pest and goes down a bottom pipe, 800 to the brother who touches it.
+- **Luigi (two players at once):** Mario and Luigi are one kit piece, `brother`, taken twice; Luigi wears Mario's pictures with `<become style="luigi">` (red to green) on a timer `<after>0</after>`. The title's 2 key sets `players.count` to 2, and a playing-state condition reveals Luigi and his score and lives and sets the count to 3, so it runs once. Mario walks on A and D and jumps on W or Space; Luigi on the arrows and Up (so one player no longer has the arrows). A brother out of lives is despawned and the other plays on; both out is game over. A pest's rules about a brother are written once per brother (kicked, deadly): a rule cannot name "whoever touched me" as a command's object, so each brother's score is its own rule. That would be a word worth having (`other`) if more two-player games need it.
 - **A flip** is a hop that keeps its sideways way, so one bumped near a floor's end comes down a floor lower; it stops sliding once down. A second bump or the 8-second timer gets it up; one that gets up by itself turns red, a palette swap (`<become style="angry">`). Two walking into each other `<bounce />` apart.
 - **The POW block's** looks count its bumps left; it triggers an action on the whole group that starts with a `<leap>`, so one in the air is spared. Its rules are written last look first.
 - **Drawn** at the arcade's 256 by 224 with `<scale>3</scale>` and Press Start 2P: Mario's `<poses>` with `<mirror>`, a `<grip>` of 0.15 so he gets going and slides, a pull of his own so his jump is floaty; after a hit he blinks (`mario.blink`) and is safe for two seconds.
-- Open: a third colour (blue) for a shellcreeper that gets up twice.
+- Open: fireballs, icicles, the later phases, the POW refilling; a word for the object touched, so rules about either brother are written once.
 
 ### Q*bert
 

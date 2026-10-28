@@ -323,7 +323,7 @@ namespace
 		}
 
 		Object& mario() { return get("mario"); }
-		Object& creeper() { return get("creepers.5"); }
+		Object& creeper() { return get("phase1.shellcreepers.3"); }
 	};
 }
 
@@ -434,8 +434,8 @@ TEST_CASE("mariobros.xml: the shellcreepers come out of the top pipes, fall floo
 	play.tap(KeyCode::Space);
 	play.get("mario").isVisible = false;     // out of their way
 	play.get("mario").collisionData.enabled = false;
-	Object& first = play.get("creepers.1");
-	Object& second = play.get("creepers.2");
+	Object& first = play.get("phase1.shellcreepers.1");
+	Object& second = play.get("phase1.shellcreepers.2");
 
 	play.frames(30);
 	CHECK_FALSE(first.isVisible);
@@ -536,8 +536,8 @@ TEST_CASE("mariobros.xml: the POW leaves a shellcreeper in the air alone, and tw
 	Played meet("descriptions/mariobros.xml");
 	meet.tap(KeyCode::Space);
 	meet.get("mario").position.x = 200.0f;
-	Object& one = meet.get("creepers.5");
-	Object& two = meet.get("creepers.6");
+	Object& one = meet.get("phase1.shellcreepers.3");
+	Object& two = meet.get("phase1.shellcreepers.4");
 	meet.game.reveal(one.name, 1);
 	meet.game.reveal(two.name, 1);
 	one.position = { 40.0f, 160.0f - one.size.y };
@@ -601,5 +601,5 @@ TEST_CASE("mariobros.xml: only a bump through a floor turns a shellcreeper over;
 	again.tap(KeyCode::Space);
 	again.frames(30);
 	CHECK_FALSE(again.creeper().isVisible);
-	CHECK(again.mario().variable.at("kicked") == Approx(1.0f));
+	CHECK(again.get("tally").variable.at("kicked") == Approx(1.0f));
 }

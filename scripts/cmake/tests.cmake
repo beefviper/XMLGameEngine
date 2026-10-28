@@ -110,6 +110,7 @@ add_executable(xgetest
 	"xge/tests/test_spawn.cpp"
 	"xge/tests/test_poses.cpp"
 	"xge/tests/test_qbert.cpp"
+	"xge/tests/test_mariobros.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 )

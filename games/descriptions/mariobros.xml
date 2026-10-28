@@ -4,62 +4,60 @@
 <!-- date: Oct 16, 2026 -->
 
 <!--
-  Mario Bros., after the 1983 arcade game: Mario in the sewer under three
-  levels of brick floor, on the arcade's own small screen (256 by 224),
-  shown three times as big. Shellcreepers come out of the pipes at the top,
-  one after another, walk off the ends of the floors down to the bottom and
-  go into the pipes there, to come out at the top again. Jump up and bump
-  the floor under one to turn it on its back, then run into it to kick it
-  off for 800 points; bump it again first and it gets back up. A
-  shellcreeper still on its feet costs a life (Mario comes back blinking,
-  safe for two seconds), and one left on its back too long gets up where it
-  lies and walks on faster, turned red (a palette swap: <become style>). The POW block turns over every shellcreeper on
-  its feet at once, three times. Kick off all six to win. The high score is
-  kept.
+  Mario Bros., after the 1983 arcade game: Mario, and Luigi for a second
+  player, in the sewer under three levels of brick floor, on the arcade's
+  own small screen (256 by 224), shown three times as big. Pests come out
+  of the pipes at the top, one after another, walk off the ends of the
+  floors down to the bottom and go into the pipes there, to come out at the
+  top again. Jump up and bump the floor under one to turn it on its back,
+  then run into it to kick it off for 800 points; bump it again first and
+  it gets back up. One still on its feet costs a life (the brother comes
+  back blinking, safe for two seconds). Each pest kicked off sends a coin
+  out of a top pipe, 800 more for whoever catches it.
 
-  A or D (or the arrows) walk, Space starts and jumps, P or Escape pauses.
+  Six phases: shellcreepers (two phases), a bonus phase, sidesteppers, then
+  sidesteppers with shellcreepers, then fighter flies; clear the last to
+  win. The high score is kept.
+  * A shellcreeper goes over with one bump.
+  * A sidestepper takes two: the first only makes it mad (claws up, twice
+    as fast), the second turns it over.
+  * A fighter fly hops along, and can be turned over only when it has
+    landed: a bump reaches only what stands on the floor.
+  * Left on its back too long, any pest gets up where it lies, faster and
+    in other colours: red the first time, blue the second (palette swaps,
+    <become style>).
+  * The POW block turns over every pest standing on a floor, three times
+    (a sidestepper only gets mad).
+  * TEST YOUR SKILL!: ten coins on the floors and twenty seconds to catch
+    them.
 
-  It is the game a <knock> through a floor was made for, and the one Mario's
-  poses were made for:
-  * Mario has looks for each way he moves (<poses>): standing, a walk of
-    three steps (a look that moves, a named <animation>), skidding, rising
-    and falling. The engine picks one each frame from how he moves. His
-    pictures face right, and <mirror>left</mirror> draws them the other way
-    round when he goes left.
-  * His <grip> is low, so he takes a moment to get up to speed and slides
-    when he lets go or turns: that slide is when he skids, as in the arcade.
+  Space starts one player, 2 starts two. Mario: A and D walk, W or Space
+  jumps. Luigi: the left and right arrows walk, Up jumps. P or Escape
+  pauses.
+
+  How it is written:
+  * Mario and Luigi are one kit piece, the brother, taken twice; Luigi
+    wears the same pictures in green (<become style="luigi">). He is out of
+    play until the title's 2 key sets players.count to 2, and a condition
+    of the playing state brings him in.
+  * Every pest is a kit group from one piece, the pest, which holds what
+    they share: landing, wrapping, the pipes at the bottom, lying still
+    once down, kicked off by a brother, deadly to one on its feet, getting
+    up by itself after eight seconds, the third colour once it has got up
+    twice. Each kind adds the pictures and the bump rules of its own. A
+    pest's rules for one touch run in order and see a look an earlier rule
+    gave, so each kind writes the look a bump leads to last first.
   * Mario has no <mass>, and nor has a floor: his head hitting a floor from
     below is a <knock> that goes through it, to whatever with a mass stands
-    on that piece of floor. That shellcreeper runs its own rules about Mario
-    as touched on its bottom side: a little hop, and it goes over
-    (<become sprite="flipped" />) or gets back up.
+    on that piece of floor, which runs its rules about him with
+    through="floor". Any other touch is a brother himself running, jumping
+    or falling into it.
   * The floors are bricks, one bitmap in a group of floors laid out in
-    columns, so a bump reaches only what stands over the brick Mario hit.
-  * How Mario touches a shellcreeper decides what happens: through="floor"
-    is a bump through the floor; any other touch is Mario himself running,
-    jumping or falling into it.
-  * A shellcreeper walks (two steps) and lies on its back kicking (two
-    more), each a look that moves, and is drawn turned the way it goes.
-    On its back it keeps the way it was going (self.way) and lies still;
-    getting up, it sets off that way again. Its down says it has lain there
-    a moment, so the bump that turns it over does not also run the rule
-    that gets it up.
-  * The shellcreepers start out of play and are let out by the state's
-    timers. They are drawn before the pipes, so they come out of them and
-    go into them, and one on the ground deep in a pipe at either side is
-    reset to its start, in its pipe at the top.
-  * Mario blinks for two seconds after losing a life (mario.blink), and a
-    shellcreeper does him no harm while he does.
-  * The POW block's looks are how many bumps it has left; each bump runs
-    every shellcreeper's action "powed" (a <trigger> of the group): one on
-    a floor hops (<leap>) and, on its feet, goes over; one in the air
-    cannot leap, so the rest of the action is refused and it is left alone.
-  * A shellcreeper turned over keeps going sideways through its hop, so one
-    bumped near the end of a floor sails off it and lands below, still on
-    its back. Two on their feet that meet turn round (<bounce />).
+    columns, so a bump reaches only what stands over the brick hit.
+  * The phases are the scenes of the playing state; each counts the pests
+    kicked (tally.kicked) up to its own `upto`, then enters the next.
   * Everything wraps round the sides of the screen.
-  No fighter flies, sidesteppers, coins or second player: see
-  docs/designs/56-games-atari.md.
+  No fireballs or icicles: see docs/designs/56-games-atari.md.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -76,6 +74,8 @@
     <variable name="walk">1.25</variable>
     <variable name="crawl">0.5</variable>
     <variable name="hop">2.5</variable>
+    <!-- a fighter fly's hop -->
+    <variable name="flyhop">18</variable>
     <variable name="leapheight">56</variable>
     <!-- the top of each level of floor -->
     <variable name="top">64</variable>
@@ -134,6 +134,25 @@
         <note pitch="E4" to="E2">0.6</note>
       </part>
     </sound>
+    <sound name="coin" wave="square">
+      <volume>0.15</volume>
+      <note pitch="B5">0.05</note>
+      <note pitch="E6">0.15</note>
+    </sound>
+    <sound name="mad" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C4" to="C5">0.1</note>
+      <note pitch="C4" to="C5">0.1</note>
+    </sound>
+    <sound name="phase" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
   </sounds>
   <styles>
     <style name="banner"><size>16</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
@@ -145,16 +164,45 @@
       <color char="k">color.brown</color>
       <color char="y">color.yellow</color>
     </style>
+    <!-- Luigi: Mario's pictures, green where Mario's are red -->
+    <style name="luigi">
+      <color char="r">color.green</color>
+    </style>
     <style name="creeper">
       <color char="G">color.darkgreen</color>
       <color char="g">color.green</color>
       <color char="o">color.orange</color>
       <color char="w">color.white</color>
     </style>
-    <!-- a shellcreeper that got up by itself: the same pictures in red -->
+    <style name="sidestepper">
+      <color char="C">color.red</color>
+      <color char="c">color.orange</color>
+      <color char="e">color.white</color>
+    </style>
+    <style name="fly">
+      <color char="F">color.grey</color>
+      <color char="f">color.lightgrey</color>
+      <color char="e">color.red</color>
+    </style>
+    <!-- a pest that got up by itself: the same pictures in other colours,
+         the first time and the second (every kind's characters in one) -->
     <style name="angry">
       <color char="G">color.brown</color>
       <color char="g">color.red</color>
+      <color char="C">color.purple</color>
+      <color char="c">color.magenta</color>
+      <color char="F">color.brown</color>
+    </style>
+    <style name="furious">
+      <color char="G">color.darkblue</color>
+      <color char="g">color.blue</color>
+      <color char="C">color.darkblue</color>
+      <color char="c">color.cyan</color>
+      <color char="F">color.darkblue</color>
+    </style>
+    <style name="coin">
+      <color char="y">color.orange</color>
+      <color char="Y">color.yellow</color>
     </style>
     <style name="pow">
       <color>color.cyan</color>
@@ -162,6 +210,705 @@
       <color char="w">color.darkblue</color>
     </style>
   </styles>
+  <kit>
+    <!-- Mario or Luigi: a look for each way he moves, all facing right -->
+    <object name="brother" class="brother">
+      <sprite name="stand">
+        <bitmap style="mario">
+          <row>...rrrrr....</row>
+          <row>..rrrrrrrrr.</row>
+          <row>..kkksskk...</row>
+          <row>.ksksssskss.</row>
+          <row>.kskksssksss</row>
+          <row>.kksssskkkk.</row>
+          <row>...ssssss...</row>
+          <row>..rrbrrr....</row>
+          <row>.rrrbrrbrrr.</row>
+          <row>rrrrbbbbrrrr</row>
+          <row>ssrbybbybrss</row>
+          <row>sssbbbbbbsss</row>
+          <row>ssbbbbbbbbss</row>
+          <row>..bbb..bbb..</row>
+          <row>.kkk....kkk.</row>
+          <row>kkkk....kkkk</row>
+        </bitmap>
+      </sprite>
+      <sprite name="stepa">
+        <bitmap style="mario">
+          <row>...rrrrr....</row>
+          <row>..rrrrrrrrr.</row>
+          <row>..kkksskk...</row>
+          <row>.ksksssskss.</row>
+          <row>.kskksssksss</row>
+          <row>.kksssskkkk.</row>
+          <row>...ssssss...</row>
+          <row>..rrbrrr....</row>
+          <row>.rrrbrrbrr..</row>
+          <row>.rrrbbbbrrs.</row>
+          <row>.ssbybbybss.</row>
+          <row>.ssbbbbbbss.</row>
+          <row>..bbbbbbbb..</row>
+          <row>.bbb....bbb.</row>
+          <row>kkk......kkk</row>
+          <row>kk........kk</row>
+        </bitmap>
+      </sprite>
+      <sprite name="stepb">
+        <bitmap style="mario">
+          <row>...rrrrr....</row>
+          <row>..rrrrrrrrr.</row>
+          <row>..kkksskk...</row>
+          <row>.ksksssskss.</row>
+          <row>.kskksssksss</row>
+          <row>.kksssskkkk.</row>
+          <row>...ssssss...</row>
+          <row>...rrbrr....</row>
+          <row>..rrrbbrr...</row>
+          <row>..rrbbbbrr..</row>
+          <row>..sbybbybs..</row>
+          <row>..sbbbbbbs..</row>
+          <row>...bbbbbb...</row>
+          <row>....bbbb....</row>
+          <row>...kkkkkk...</row>
+          <row>...kkkkkk...</row>
+        </bitmap>
+      </sprite>
+      <sprite name="stepc">
+        <bitmap style="mario">
+          <row>...rrrrr....</row>
+          <row>..rrrrrrrrr.</row>
+          <row>..kkksskk...</row>
+          <row>.ksksssskss.</row>
+          <row>.kskksssksss</row>
+          <row>.kksssskkkk.</row>
+          <row>...ssssss...</row>
+          <row>..rrbrrr....</row>
+          <row>.rrrbrrbrr..</row>
+          <row>rrrrbbbbrs..</row>
+          <row>ssrbybbybs..</row>
+          <row>ssbbbbbbbb..</row>
+          <row>..bbbbbbbbk.</row>
+          <row>..bbb..kkkk.</row>
+          <row>.kkkk..kkk..</row>
+          <row>.kkk........</row>
+        </bitmap>
+      </sprite>
+      <sprite name="skid">
+        <bitmap style="mario">
+          <row>...rrrrr....</row>
+          <row>..rrrrrrrrr.</row>
+          <row>..kkksskk...</row>
+          <row>.ksksssskss.</row>
+          <row>.kskksssksss</row>
+          <row>.kksssskkkk.</row>
+          <row>...ssssss...</row>
+          <row>...rrbrrr...</row>
+          <row>..rrrbbrrrr.</row>
+          <row>..rrbbbbrrss</row>
+          <row>...bybbybsss</row>
+          <row>..bbbbbbbbss</row>
+          <row>.bbbbbbbbb..</row>
+          <row>kbbbb..bbb..</row>
+          <row>kkk....kkkk.</row>
+          <row>kk.....kkkkk</row>
+        </bitmap>
+      </sprite>
+      <sprite name="rising">
+        <bitmap style="mario">
+          <row>...rrrrr..s.</row>
+          <row>..rrrrrrrrs.</row>
+          <row>..kkksskk.r.</row>
+          <row>.ksksssskrr.</row>
+          <row>.kskksssksss</row>
+          <row>.kksssskkkk.</row>
+          <row>...ssssssr..</row>
+          <row>..rrbrrrr...</row>
+          <row>.rrrbbrr....</row>
+          <row>rrrrbbbb....</row>
+          <row>ssrbybbyb...</row>
+          <row>sssbbbbbbb..</row>
+          <row>ssbbbbbbbbk.</row>
+          <row>..bbbb.bbkk.</row>
+          <row>.kkk....kkk.</row>
+          <row>kkk.........</row>
+        </bitmap>
+      </sprite>
+      <sprite name="falling">
+        <bitmap style="mario">
+          <row>...rrrrr....</row>
+          <row>..rrrrrrrrr.</row>
+          <row>..kkksskk...</row>
+          <row>.ksksssskss.</row>
+          <row>.kskksssksss</row>
+          <row>.kksssskkkk.</row>
+          <row>...ssssss...</row>
+          <row>s.rrbrrr..s.</row>
+          <row>srrrbrrbrrs.</row>
+          <row>.rrrbbbbrr..</row>
+          <row>..rbybbybr..</row>
+          <row>..bbbbbbbb..</row>
+          <row>.bbbbbbbbbb.</row>
+          <row>.bbb....bbb.</row>
+          <row>kkk......kkk</row>
+          <row>kk........kk</row>
+        </bitmap>
+      </sprite>
+      <animation name="walking">
+        <interval>0.08</interval>
+        <frame sprite="stepa" />
+        <frame sprite="stepb" />
+        <frame sprite="stepc" />
+        <frame sprite="stepb" />
+      </animation>
+      <position><x>0</x><y>ground - 16</y></position>
+      <acceleration><x>0</x><y>float</y></acceleration>
+      <facing>right</facing>
+      <poses>
+        <standing sprite="stand" />
+        <walking sprite="walking" />
+        <skidding sprite="skid" />
+        <rising sprite="rising" />
+        <falling sprite="falling" />
+      </poses>
+      <mirror>left</mirror>
+      <grip>0.15</grip>
+      <collisions>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision class="floor">
+          <land />
+        </collision>
+        <collision class="pow">
+          <land />
+        </collision>
+        <!-- his head against a floor from below: the bump goes through it -->
+        <collision class="floor" side="top">
+          <knock>0</knock>
+          <bounce />
+          <play sound="bump" />
+        </collision>
+        <collision class="pow" side="top">
+          <bounce />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="left">
+          <move direction="left">walk</move>
+        </action>
+        <action name="right">
+          <move direction="right">walk</move>
+        </action>
+        <action name="jump">
+          <leap>leapheight</leap>
+          <play sound="jump" />
+        </action>
+        <action name="lose">
+          <dec variable="self.lives" />
+          <play sound="hit" />
+          <reset />
+          <set variable="self.blink">2</set>
+        </action>
+      </actions>
+      <variables>
+        <variable name="score">0</variable>
+        <variable name="lives">3</variable>
+      </variables>
+    </object>
+    <!-- What every pest shares; each kind is a group from it, adding its
+         pictures and how a bump from below turns it over. Out of play until
+         its phase lets it out of a top pipe. -->
+    <group name="pest" class="enemy">
+      <sprite name="a">
+        <bitmap style="creeper">
+          <row>......GGGG......</row>
+          <row>....GGgGGgGG....</row>
+          <row>...GgggGGgggG...</row>
+          <row>..GGGGGGGGGGGG..</row>
+          <row>..GgggGGGGgggGoo</row>
+          <row>..GGGGGGGGGGGGow</row>
+          <row>...wwwwwwwwwwwoo</row>
+          <row>....oo....oooo..</row>
+          <row>...ooo.....ooo..</row>
+          <row>...oo.......oo..</row>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap style="creeper">
+          <row>......GGGG......</row>
+          <row>....GGgGGgGG....</row>
+          <row>...GgggGGgggG...</row>
+          <row>..GGGGGGGGGGGG..</row>
+          <row>..GgggGGGGgggGoo</row>
+          <row>..GGGGGGGGGGGGow</row>
+          <row>...wwwwwwwwwwwoo</row>
+          <row>.....oooo.ooo...</row>
+          <row>.....ooo..ooo...</row>
+          <row>......oo...oo...</row>
+        </bitmap>
+      </sprite>
+      <sprite name="fa">
+        <bitmap style="creeper">
+          <row>................</row>
+          <row>...o..o..o..o...</row>
+          <row>...o..o..o..o...</row>
+          <row>..wwwwwwwwwwww..</row>
+          <row>.GGGGGGGGGGGGGG.</row>
+          <row>.GgggGGGGGgggGG.</row>
+          <row>.GGGGGGGGGGGGGG.</row>
+          <row>..GGgggGGgggGG..</row>
+          <row>...GGGGGGGGGG...</row>
+          <row>.....GGGGGG.....</row>
+        </bitmap>
+      </sprite>
+      <sprite name="fb">
+        <bitmap style="creeper">
+          <row>................</row>
+          <row>....o..o..o..o..</row>
+          <row>..o..o..o..o....</row>
+          <row>..wwwwwwwwwwww..</row>
+          <row>.GGGGGGGGGGGGGG.</row>
+          <row>.GgggGGGGGgggGG.</row>
+          <row>.GGGGGGGGGGGGGG.</row>
+          <row>..GGgggGGgggGG..</row>
+          <row>...GGGGGGGGGG...</row>
+          <row>.....GGGGGG.....</row>
+        </bitmap>
+      </sprite>
+      <animation name="walking">
+        <interval>0.2</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <animation name="flipped">
+        <interval>0.15</interval>
+        <frame sprite="fa" />
+        <frame sprite="fb" />
+      </animation>
+      <position><x>2</x><y>top - 10</y></position>
+      <velocity><x>crawl</x></velocity>
+      <acceleration><x>0</x><y>pull</y></acceleration>
+      <mass>1</mass>
+      <mirror>left</mirror>
+      <active>false</active>
+      <collisions>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision class="floor">
+          <land />
+        </collision>
+        <!-- on the ground and deep in a pipe at either side: back out of
+             its pipe at the top -->
+        <collision object="ground">
+          <any>
+            <condition variable="x"><atmost>2</atmost></condition>
+            <condition variable="x"><atleast>window.right - 18</atleast></condition>
+          </any>
+          <reset />
+        </collision>
+        <!-- on its back it slides on with the hop that turned it over
+             (off a ledge, bumped near one), and lies still once down -->
+        <collision class="floor" sprite="flipped">
+          <condition variable="down"><atleast>1</atleast></condition>
+          <set variable="self.velocity.x">0</set>
+        </collision>
+        <!-- got up by itself twice: the third colours -->
+        <collision class="floor" sprite="walking">
+          <condition variable="ups"><atleast>2</atleast></condition>
+          <become style="furious" />
+        </collision>
+        <!-- two on their feet that meet turn round -->
+        <collision class="enemy" side="horizontal" sprite="walking">
+          <bounce />
+        </collision>
+        <!-- touched by a brother himself, from any side: kicked off on its
+             back, deadly on its feet unless he is blinking -->
+        <collision object="mario" sprite="flipped">
+          <inc variable="mario.score">800</inc>
+          <trigger action="kicked" />
+        </collision>
+        <collision object="luigi" sprite="flipped">
+          <inc variable="luigi.score">800</inc>
+          <trigger action="kicked" />
+        </collision>
+        <collision object="mario" sprite="walking">
+          <condition object="mario" variable="blink"><atmost>0</atmost></condition>
+          <trigger object="mario" action="lose" />
+        </collision>
+        <collision object="luigi" sprite="walking">
+          <condition object="luigi" variable="blink"><atmost>0</atmost></condition>
+          <trigger object="luigi" action="lose" />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="getup">
+          <become sprite="walking" />
+          <set variable="self.velocity.x">self.way * self.speed</set>
+          <set variable="self.down">0</set>
+        </action>
+        <!-- the POW: one standing on a floor hops, and on its feet goes
+             over; one in the air cannot leap, and is left alone -->
+        <action name="powed">
+          <leap>10</leap>
+          <become sprite="flipped" from="walking" />
+        </action>
+        <!-- off for good, and a coin comes out of a top pipe -->
+        <action name="kicked">
+          <inc variable="tally.kicked" />
+          <play sound="kick" />
+          <spawn object="coin" />
+          <die />
+        </action>
+      </actions>
+      <variables>
+        <variable name="speed">crawl</variable>
+        <variable name="way">1</variable>
+        <variable name="down">0</variable>
+        <variable name="ups">0</variable>
+      </variables>
+      <timers>
+        <!-- let out of its pipe on its feet, whatever a POW did while it
+             waited -->
+        <timer>
+          <after>0</after>
+          <become sprite="walking" />
+        </timer>
+        <!-- over on its back (bumped, or the POW): it keeps its way, and
+             once down lies still (the rule for a floor) -->
+        <timer sprite="flipped">
+          <after>0</after>
+          <set variable="self.way">sgn(self.velocity.x)</set>
+          <set variable="self.down">1</set>
+        </timer>
+        <!-- left there, it gets up by itself, faster and red (blue the
+             second time, the rule for a floor) -->
+        <timer sprite="flipped">
+          <after>8</after>
+          <inc variable="self.speed">crawl / 2</inc>
+          <inc variable="self.ups" />
+          <trigger action="getup" />
+          <become style="angry" />
+        </timer>
+      </timers>
+      <member />
+    </group>
+    <!-- shellcreepers: one bump turns one over -->
+    <group name="shellcreepers" from="pest">
+      <collisions>
+        <!-- bumped from below through a floor, a little hop: on its feet
+             it goes over, on its back it gets up -->
+        <collision class="brother" through="floor" sprite="walking">
+          <become sprite="flipped" />
+          <set variable="self.velocity.y">0 - hop</set>
+          <play sound="flip" />
+        </collision>
+        <collision class="brother" through="floor" sprite="flipped">
+          <condition variable="down"><atleast>1</atleast></condition>
+          <trigger action="getup" />
+          <set variable="self.velocity.y">0 - hop</set>
+        </collision>
+      </collisions>
+    </group>
+    <!-- sidesteppers: the first bump makes one mad (claws up, twice as
+         fast), the second turns it over -->
+    <group name="sidesteppers" from="pest">
+      <sprite name="a">
+        <bitmap style="sidestepper">
+          <row>................</row>
+          <row>...e........e...</row>
+          <row>...C........C...</row>
+          <row>..cC.CCCCCC.Cc..</row>
+          <row>.cc.CCCCCCCC.cc.</row>
+          <row>.c.CCCCCCCCCC.c.</row>
+          <row>...CCcCCCCcCC...</row>
+          <row>..C.CCCCCCCC.C..</row>
+          <row>.C..C......C..C.</row>
+          <row>C..C........C..C</row>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap style="sidestepper">
+          <row>................</row>
+          <row>...e........e...</row>
+          <row>...C........C...</row>
+          <row>..cC.CCCCCC.Cc..</row>
+          <row>.cc.CCCCCCCC.cc.</row>
+          <row>.c.CCCCCCCCCC.c.</row>
+          <row>...CCcCCCCcCC...</row>
+          <row>...CCCCCCCCCC...</row>
+          <row>..C.C......C.C..</row>
+          <row>.C..C......C..C.</row>
+        </bitmap>
+      </sprite>
+      <sprite name="ma">
+        <bitmap style="sidestepper">
+          <row>.cc..........cc.</row>
+          <row>.c.e........e.c.</row>
+          <row>.c.C........C.c.</row>
+          <row>..cC.CCCCCC.Cc..</row>
+          <row>....CCCCCCCC....</row>
+          <row>...CCCCCCCCCC...</row>
+          <row>...CCeCCCCeCC...</row>
+          <row>..C.CCCCCCCC.C..</row>
+          <row>.C..C......C..C.</row>
+          <row>C..C........C..C</row>
+        </bitmap>
+      </sprite>
+      <sprite name="mb">
+        <bitmap style="sidestepper">
+          <row>.cc..........cc.</row>
+          <row>.c.e........e.c.</row>
+          <row>.c.C........C.c.</row>
+          <row>..cC.CCCCCC.Cc..</row>
+          <row>....CCCCCCCC....</row>
+          <row>...CCCCCCCCCC...</row>
+          <row>...CCeCCCCeCC...</row>
+          <row>...CCCCCCCCCC...</row>
+          <row>..C.C......C.C..</row>
+          <row>.C..C......C..C.</row>
+        </bitmap>
+      </sprite>
+      <sprite name="fa">
+        <bitmap style="sidestepper">
+          <row>................</row>
+          <row>C..C........C..C</row>
+          <row>.C..C......C..C.</row>
+          <row>..C.CCCCCCCC.C..</row>
+          <row>...CCcCCCCcCC...</row>
+          <row>...CCCCCCCCCC...</row>
+          <row>.c..CCCCCCCC..c.</row>
+          <row>.cc..CCCCCC..cc.</row>
+          <row>..cC........Cc..</row>
+          <row>...e........e...</row>
+        </bitmap>
+      </sprite>
+      <sprite name="fb">
+        <bitmap style="sidestepper">
+          <row>................</row>
+          <row>.C..C......C..C.</row>
+          <row>..C.C......C.C..</row>
+          <row>...CCCCCCCCCC...</row>
+          <row>...CCcCCCCcCC...</row>
+          <row>...CCCCCCCCCC...</row>
+          <row>.c..CCCCCCCC..c.</row>
+          <row>.cc..CCCCCC..cc.</row>
+          <row>..cC........Cc..</row>
+          <row>...e........e...</row>
+        </bitmap>
+      </sprite>
+      <animation name="mad">
+        <interval>0.1</interval>
+        <frame sprite="ma" />
+        <frame sprite="mb" />
+      </animation>
+      <collisions>
+        <!-- mad: on its feet, as deadly and as quick to turn round -->
+        <collision class="enemy" side="horizontal" sprite="mad">
+          <bounce />
+        </collision>
+        <collision object="mario" sprite="mad">
+          <condition object="mario" variable="blink"><atmost>0</atmost></condition>
+          <trigger object="mario" action="lose" />
+        </collision>
+        <collision object="luigi" sprite="mad">
+          <condition object="luigi" variable="blink"><atmost>0</atmost></condition>
+          <trigger object="luigi" action="lose" />
+        </collision>
+        <!-- bumped from below through a floor, the look it leads to first:
+             mad goes over, on its feet goes mad, on its back gets up -->
+        <collision class="brother" through="floor" sprite="mad">
+          <become sprite="flipped" />
+          <set variable="self.velocity.y">0 - hop</set>
+          <play sound="flip" />
+        </collision>
+        <collision class="brother" through="floor" sprite="walking">
+          <become sprite="mad" />
+          <set variable="self.velocity.x">sgn(self.velocity.x) * self.speed * 2</set>
+          <set variable="self.velocity.y">0 - hop</set>
+          <play sound="mad" />
+        </collision>
+        <collision class="brother" through="floor" sprite="flipped">
+          <condition variable="down"><atleast>1</atleast></condition>
+          <trigger action="getup" />
+          <set variable="self.velocity.y">0 - hop</set>
+        </collision>
+      </collisions>
+      <actions>
+        <!-- the POW counts as a bump: mad goes over, on its feet goes mad -->
+        <action name="powed">
+          <leap>10</leap>
+          <become sprite="flipped" from="mad" />
+          <become sprite="mad" from="walking" />
+        </action>
+      </actions>
+    </group>
+    <!-- fighter flies: hop along, and can be turned over only between
+         hops, standing on a floor -->
+    <group name="fighterflies" from="pest">
+      <sprite name="a">
+        <bitmap style="fly">
+          <row>..ff........ff..</row>
+          <row>.ffff......ffff.</row>
+          <row>.fffff.FF.fffff.</row>
+          <row>..ffffFFFFffff..</row>
+          <row>.....FFeeFF.....</row>
+          <row>.....FFFFFF.....</row>
+          <row>......FFFF......</row>
+          <row>.....F.FF.F.....</row>
+          <row>....F..FF..F....</row>
+          <row>...F...FF...F...</row>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap style="fly">
+          <row>................</row>
+          <row>................</row>
+          <row>.......FF.......</row>
+          <row>......FFFF......</row>
+          <row>..fffFFeeFFfff..</row>
+          <row>.ffffFFFFFFffff.</row>
+          <row>.fffffFFFFfffff.</row>
+          <row>..ff.F.FF.F.ff..</row>
+          <row>....F..FF..F....</row>
+          <row>...F...FF...F...</row>
+        </bitmap>
+      </sprite>
+      <sprite name="fa">
+        <bitmap style="fly">
+          <row>...F...FF...F...</row>
+          <row>....F..FF..F....</row>
+          <row>.....F.FF.F.....</row>
+          <row>......FFFF......</row>
+          <row>.....FFFFFF.....</row>
+          <row>.....FFeeFF.....</row>
+          <row>..ffffFFFFffff..</row>
+          <row>.fffff.FF.fffff.</row>
+          <row>.ffff......ffff.</row>
+          <row>..ff........ff..</row>
+        </bitmap>
+      </sprite>
+      <sprite name="fb">
+        <bitmap style="fly">
+          <row>....F..FF..F....</row>
+          <row>...F...FF...F...</row>
+          <row>.....F.FF.F.....</row>
+          <row>......FFFF......</row>
+          <row>.....FFFFFF.....</row>
+          <row>.....FFeeFF.....</row>
+          <row>..ffffFFFFffff..</row>
+          <row>.fffff.FF.fffff.</row>
+          <row>.ffff......ffff.</row>
+          <row>..ff........ff..</row>
+        </bitmap>
+      </sprite>
+      <collisions>
+        <!-- bumped from below through a floor, a little hop: on its feet
+             it goes over, on its back it gets up -->
+        <collision class="brother" through="floor" sprite="walking">
+          <become sprite="flipped" />
+          <set variable="self.velocity.y">0 - hop</set>
+          <play sound="flip" />
+        </collision>
+        <collision class="brother" through="floor" sprite="flipped">
+          <condition variable="down"><atleast>1</atleast></condition>
+          <trigger action="getup" />
+          <set variable="self.velocity.y">0 - hop</set>
+        </collision>
+      </collisions>
+      <actions>
+        <action name="hop">
+          <leap>flyhop</leap>
+        </action>
+      </actions>
+      <timers>
+        <!-- on its feet, a hop every second (refused in the air) -->
+        <timer name="hop" sprite="walking">
+          <every>1</every>
+          <trigger action="hop" />
+        </timer>
+      </timers>
+    </group>
+    <!-- a coin out of a top pipe after each pest kicked off: it walks the
+         floors like a pest, into a pipe at the bottom and gone -->
+    <object name="coin" class="coin">
+      <sprite name="a">
+        <bitmap style="coin">
+          <row>..yyyy..</row>
+          <row>.yYYYYy.</row>
+          <row>yYYyyYYy</row>
+          <row>yYyYYyYy</row>
+          <row>yYyYYyYy</row>
+          <row>yYyYYyYy</row>
+          <row>yYYyyYYy</row>
+          <row>.yYYYYy.</row>
+          <row>..yyyy..</row>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap style="coin">
+          <row>...yy...</row>
+          <row>..yYYy..</row>
+          <row>..yYYy..</row>
+          <row>..yYYy..</row>
+          <row>..yYYy..</row>
+          <row>..yYYy..</row>
+          <row>..yYYy..</row>
+          <row>..yYYy..</row>
+          <row>...yy...</row>
+        </bitmap>
+      </sprite>
+      <animation name="spinning">
+        <interval>0.12</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>6</x><y>top - 9</y></position>
+      <velocity><x>crawl</x></velocity>
+      <acceleration><x>0</x><y>pull</y></acceleration>
+      <collisions>
+        <collision edge="horizontal">
+          <wrap />
+        </collision>
+        <collision class="floor">
+          <land />
+        </collision>
+        <collision object="ground">
+          <any>
+            <condition variable="x"><atmost>2</atmost></condition>
+            <condition variable="x"><atleast>window.right - 14</atleast></condition>
+          </any>
+          <despawn />
+        </collision>
+        <collision object="mario">
+          <inc variable="mario.score">800</inc>
+          <play sound="coin" />
+          <despawn />
+        </collision>
+        <collision object="luigi">
+          <inc variable="luigi.score">800</inc>
+          <play sound="coin" />
+          <despawn />
+        </collision>
+      </collisions>
+    </object>
+    <!-- PHASE n, for a moment as a phase starts -->
+    <object name="label">
+      <sprite>
+        <text style="text">
+          <content>PHASE</content>
+          <number>phase</number>
+        </text>
+      </sprite>
+      <position><x><centered /></x><y><centered>window.height.center - 24</centered></y></position>
+      <timers>
+        <timer>
+          <after>2.5</after>
+          <despawn />
+        </timer>
+      </timers>
+    </object>
+  </kit>
   <objects>
     <object name="again">
       <sprite>
@@ -182,6 +929,13 @@
       <position><x><centered /></x><y>4</y></position>
       <variables>
         <variable name="score">0</variable>
+      </variables>
+    </object>
+    <!-- how many play: the title's 2 key makes it 2, and the playing
+         state brings Luigi in (then 3, so only once) -->
+    <object name="players">
+      <variables>
+        <variable name="count">1</variable>
       </variables>
     </object>
   </objects>
@@ -218,7 +972,7 @@
         <object name="keys">
           <sprite>
             <text style="text">
-              <content>a d or arrows walk, space jumps</content>
+              <content>a d walk, w or space jumps</content>
               <color>color.lightgrey</color>
             </text>
           </sprite>
@@ -227,7 +981,7 @@
         <object name="start">
           <sprite>
             <text style="text">
-              <content>space to start</content>
+              <content>space 1 player  2 two</content>
             </text>
           </sprite>
           <position><x><centered /></x><y><centered>window.height.center + 48</centered></y></position>
@@ -238,6 +992,11 @@
       </shows>
       <inputs>
         <input button="space">
+          <play sound="start" />
+          <push state="playing" />
+        </input>
+        <input button="num2">
+          <set variable="players.count">2</set>
           <play sound="start" />
           <push state="playing" />
         </input>
@@ -314,7 +1073,7 @@
             <position><x>window.right - 96</x><y>top</y></position>
           </group>
         </group>
-        <!-- POW: bumped from below, every shellcreeper on its feet goes over;
+        <!-- POW: bumped from below, every pest on a floor goes over;
              it shrinks with each bump, and is gone after three -->
         <object name="pow" class="pow">
           <sprite name="three">
@@ -365,209 +1124,29 @@
           <position><x>window.width.center - 8</x><y>low</y></position>
           <collisions>
             <!-- last look first, so one bump changes it only once -->
-            <collision object="mario" side="bottom" sprite="one">
-              <trigger object="creepers" action="powed" />
+            <collision class="brother" side="bottom" sprite="one">
+              <trigger object="shellcreepers" action="powed" />
+              <trigger object="sidesteppers" action="powed" />
+              <trigger object="fighterflies" action="powed" />
               <play sound="pow" />
               <die />
             </collision>
-            <collision object="mario" side="bottom" sprite="two">
+            <collision class="brother" side="bottom" sprite="two">
               <become sprite="one" />
-              <trigger object="creepers" action="powed" />
+              <trigger object="shellcreepers" action="powed" />
+              <trigger object="sidesteppers" action="powed" />
+              <trigger object="fighterflies" action="powed" />
               <play sound="pow" />
             </collision>
-            <collision object="mario" side="bottom" sprite="three">
+            <collision class="brother" side="bottom" sprite="three">
               <become sprite="two" />
-              <trigger object="creepers" action="powed" />
+              <trigger object="shellcreepers" action="powed" />
+              <trigger object="sidesteppers" action="powed" />
+              <trigger object="fighterflies" action="powed" />
               <play sound="pow" />
             </collision>
           </collisions>
         </object>
-        <!-- out of play until the state's timers let them out of the top
-             pipes, the odd ones on the left going right, the even ones on
-             the right going left -->
-        <group name="creepers" class="enemy">
-          <sprite name="wa">
-            <bitmap style="creeper">
-              <row>......GGGG......</row>
-              <row>....GGgGGgGG....</row>
-              <row>...GgggGGgggG...</row>
-              <row>..GGGGGGGGGGGG..</row>
-              <row>..GgggGGGGgggGoo</row>
-              <row>..GGGGGGGGGGGGow</row>
-              <row>...wwwwwwwwwwwoo</row>
-              <row>....oo....oooo..</row>
-              <row>...ooo.....ooo..</row>
-              <row>...oo.......oo..</row>
-            </bitmap>
-          </sprite>
-          <sprite name="wb">
-            <bitmap style="creeper">
-              <row>......GGGG......</row>
-              <row>....GGgGGgGG....</row>
-              <row>...GgggGGgggG...</row>
-              <row>..GGGGGGGGGGGG..</row>
-              <row>..GgggGGGGgggGoo</row>
-              <row>..GGGGGGGGGGGGow</row>
-              <row>...wwwwwwwwwwwoo</row>
-              <row>.....oooo.ooo...</row>
-              <row>.....ooo..ooo...</row>
-              <row>......oo...oo...</row>
-            </bitmap>
-          </sprite>
-          <sprite name="fa">
-            <bitmap style="creeper">
-              <row>................</row>
-              <row>...o..o..o..o...</row>
-              <row>...o..o..o..o...</row>
-              <row>..wwwwwwwwwwww..</row>
-              <row>.GGGGGGGGGGGGGG.</row>
-              <row>.GgggGGGGGgggGG.</row>
-              <row>.GGGGGGGGGGGGGG.</row>
-              <row>..GGgggGGgggGG..</row>
-              <row>...GGGGGGGGGG...</row>
-              <row>.....GGGGGG.....</row>
-            </bitmap>
-          </sprite>
-          <sprite name="fb">
-            <bitmap style="creeper">
-              <row>................</row>
-              <row>....o..o..o..o..</row>
-              <row>..o..o..o..o....</row>
-              <row>..wwwwwwwwwwww..</row>
-              <row>.GGGGGGGGGGGGGG.</row>
-              <row>.GgggGGGGGgggGG.</row>
-              <row>.GGGGGGGGGGGGGG.</row>
-              <row>..GGgggGGgggGG..</row>
-              <row>...GGGGGGGGGG...</row>
-              <row>.....GGGGGG.....</row>
-            </bitmap>
-          </sprite>
-          <animation name="walking">
-            <interval>0.2</interval>
-            <frame sprite="wa" />
-            <frame sprite="wb" />
-          </animation>
-          <animation name="flipped">
-            <interval>0.15</interval>
-            <frame sprite="fa" />
-            <frame sprite="fb" />
-          </animation>
-          <position><x>2</x><y>top - 10</y></position>
-          <velocity><x>crawl</x></velocity>
-          <acceleration><x>0</x><y>pull</y></acceleration>
-          <mass>1</mass>
-          <mirror>left</mirror>
-          <active>false</active>
-          <collisions>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-            <collision class="floor">
-              <land />
-            </collision>
-            <!-- on the ground and deep in a pipe at either side: back out of
-                 its pipe at the top -->
-            <collision object="ground">
-              <any>
-                <condition variable="x"><atmost>2</atmost></condition>
-                <condition variable="x"><atleast>window.right - 18</atleast></condition>
-              </any>
-              <reset />
-            </collision>
-            <!-- on its back it slides on with the hop that turned it over
-                 (off a ledge, bumped near one), and lies still once down -->
-            <collision class="floor" sprite="flipped">
-              <condition variable="down"><atleast>1</atleast></condition>
-              <set variable="self.velocity.x">0</set>
-            </collision>
-            <!-- two on their feet that meet turn round -->
-            <collision class="enemy" side="horizontal" sprite="walking">
-              <bounce />
-            </collision>
-            <!-- bumped from below through a floor, a little hop: on its feet
-                 it goes over, on its back it gets up -->
-            <collision object="mario" through="floor" sprite="walking">
-              <become sprite="flipped" />
-              <set variable="self.velocity.y">0 - hop</set>
-              <play sound="flip" />
-            </collision>
-            <collision object="mario" through="floor" sprite="flipped">
-              <condition variable="down"><atleast>1</atleast></condition>
-              <trigger action="getup" />
-              <set variable="self.velocity.y">0 - hop</set>
-            </collision>
-            <!-- touched by Mario himself, from any side: kicked off on its
-                 back, deadly on its feet unless he is blinking -->
-            <collision object="mario" sprite="flipped">
-              <trigger action="kicked" />
-            </collision>
-            <collision object="mario" sprite="walking">
-              <condition object="mario" variable="blink"><atmost>0</atmost></condition>
-              <trigger object="mario" action="lose" />
-            </collision>
-          </collisions>
-          <actions>
-            <action name="getup">
-              <become sprite="walking" />
-              <set variable="self.velocity.x">self.way * self.speed</set>
-              <set variable="self.down">0</set>
-            </action>
-            <!-- the POW: one standing on a floor hops, and on its feet goes
-                 over; one in the air cannot leap, and is left alone -->
-            <action name="powed">
-              <leap>10</leap>
-              <become sprite="flipped" from="walking" />
-            </action>
-            <action name="kicked">
-              <inc variable="mario.score">800</inc>
-              <inc variable="mario.kicked" />
-              <play sound="kick" />
-              <die />
-            </action>
-          </actions>
-          <variables>
-            <variable name="speed">crawl</variable>
-            <variable name="way">1</variable>
-            <variable name="down">0</variable>
-          </variables>
-          <timers>
-            <!-- let out of its pipe on its feet, whatever a POW did while it
-                 waited -->
-            <timer>
-              <after>0</after>
-              <become sprite="walking" />
-            </timer>
-            <!-- over on its back (bumped, or the POW): it keeps its way, and
-                 once down lies still (the rule for a floor) -->
-            <timer sprite="flipped">
-              <after>0</after>
-              <set variable="self.way">sgn(self.velocity.x)</set>
-              <set variable="self.down">1</set>
-            </timer>
-            <!-- left there, it gets up by itself, faster and red -->
-            <timer sprite="flipped">
-              <after>8</after>
-              <inc variable="self.speed">crawl / 2</inc>
-              <trigger action="getup" />
-              <become style="angry" />
-            </timer>
-          </timers>
-          <member />
-          <member>
-            <position><x>window.right - 18</x></position>
-            <velocity><x>0 - crawl</x></velocity>
-          </member>
-          <member />
-          <member>
-            <position><x>window.right - 18</x></position>
-            <velocity><x>0 - crawl</x></velocity>
-          </member>
-          <member />
-          <member>
-            <position><x>window.right - 18</x></position>
-            <velocity><x>0 - crawl</x></velocity>
-          </member>
-        </group>
         <!-- the pipes, drawn over the shellcreepers: two at the top they come
              out of, two at the bottom they go into -->
         <group name="pipes">
@@ -610,208 +1189,26 @@
             </member>
           </group>
         </group>
-        <!-- Mario: a look for each way he moves, all facing right -->
-        <object name="mario">
-          <sprite name="stand">
-            <bitmap style="mario">
-              <row>...rrrrr....</row>
-              <row>..rrrrrrrrr.</row>
-              <row>..kkksskk...</row>
-              <row>.ksksssskss.</row>
-              <row>.kskksssksss</row>
-              <row>.kksssskkkk.</row>
-              <row>...ssssss...</row>
-              <row>..rrbrrr....</row>
-              <row>.rrrbrrbrrr.</row>
-              <row>rrrrbbbbrrrr</row>
-              <row>ssrbybbybrss</row>
-              <row>sssbbbbbbsss</row>
-              <row>ssbbbbbbbbss</row>
-              <row>..bbb..bbb..</row>
-              <row>.kkk....kkk.</row>
-              <row>kkkk....kkkk</row>
-            </bitmap>
-          </sprite>
-          <sprite name="stepa">
-            <bitmap style="mario">
-              <row>...rrrrr....</row>
-              <row>..rrrrrrrrr.</row>
-              <row>..kkksskk...</row>
-              <row>.ksksssskss.</row>
-              <row>.kskksssksss</row>
-              <row>.kksssskkkk.</row>
-              <row>...ssssss...</row>
-              <row>..rrbrrr....</row>
-              <row>.rrrbrrbrr..</row>
-              <row>.rrrbbbbrrs.</row>
-              <row>.ssbybbybss.</row>
-              <row>.ssbbbbbbss.</row>
-              <row>..bbbbbbbb..</row>
-              <row>.bbb....bbb.</row>
-              <row>kkk......kkk</row>
-              <row>kk........kk</row>
-            </bitmap>
-          </sprite>
-          <sprite name="stepb">
-            <bitmap style="mario">
-              <row>...rrrrr....</row>
-              <row>..rrrrrrrrr.</row>
-              <row>..kkksskk...</row>
-              <row>.ksksssskss.</row>
-              <row>.kskksssksss</row>
-              <row>.kksssskkkk.</row>
-              <row>...ssssss...</row>
-              <row>...rrbrr....</row>
-              <row>..rrrbbrr...</row>
-              <row>..rrbbbbrr..</row>
-              <row>..sbybbybs..</row>
-              <row>..sbbbbbbs..</row>
-              <row>...bbbbbb...</row>
-              <row>....bbbb....</row>
-              <row>...kkkkkk...</row>
-              <row>...kkkkkk...</row>
-            </bitmap>
-          </sprite>
-          <sprite name="stepc">
-            <bitmap style="mario">
-              <row>...rrrrr....</row>
-              <row>..rrrrrrrrr.</row>
-              <row>..kkksskk...</row>
-              <row>.ksksssskss.</row>
-              <row>.kskksssksss</row>
-              <row>.kksssskkkk.</row>
-              <row>...ssssss...</row>
-              <row>..rrbrrr....</row>
-              <row>.rrrbrrbrr..</row>
-              <row>rrrrbbbbrs..</row>
-              <row>ssrbybbybs..</row>
-              <row>ssbbbbbbbb..</row>
-              <row>..bbbbbbbbk.</row>
-              <row>..bbb..kkkk.</row>
-              <row>.kkkk..kkk..</row>
-              <row>.kkk........</row>
-            </bitmap>
-          </sprite>
-          <sprite name="skid">
-            <bitmap style="mario">
-              <row>...rrrrr....</row>
-              <row>..rrrrrrrrr.</row>
-              <row>..kkksskk...</row>
-              <row>.ksksssskss.</row>
-              <row>.kskksssksss</row>
-              <row>.kksssskkkk.</row>
-              <row>...ssssss...</row>
-              <row>...rrbrrr...</row>
-              <row>..rrrbbrrrr.</row>
-              <row>..rrbbbbrrss</row>
-              <row>...bybbybsss</row>
-              <row>..bbbbbbbbss</row>
-              <row>.bbbbbbbbb..</row>
-              <row>kbbbb..bbb..</row>
-              <row>kkk....kkkk.</row>
-              <row>kk.....kkkkk</row>
-            </bitmap>
-          </sprite>
-          <sprite name="rising">
-            <bitmap style="mario">
-              <row>...rrrrr..s.</row>
-              <row>..rrrrrrrrs.</row>
-              <row>..kkksskk.r.</row>
-              <row>.ksksssskrr.</row>
-              <row>.kskksssksss</row>
-              <row>.kksssskkkk.</row>
-              <row>...ssssssr..</row>
-              <row>..rrbrrrr...</row>
-              <row>.rrrbbrr....</row>
-              <row>rrrrbbbb....</row>
-              <row>ssrbybbyb...</row>
-              <row>sssbbbbbbb..</row>
-              <row>ssbbbbbbbbk.</row>
-              <row>..bbbb.bbkk.</row>
-              <row>.kkk....kkk.</row>
-              <row>kkk.........</row>
-            </bitmap>
-          </sprite>
-          <sprite name="falling">
-            <bitmap style="mario">
-              <row>...rrrrr....</row>
-              <row>..rrrrrrrrr.</row>
-              <row>..kkksskk...</row>
-              <row>.ksksssskss.</row>
-              <row>.kskksssksss</row>
-              <row>.kksssskkkk.</row>
-              <row>...ssssss...</row>
-              <row>s.rrbrrr..s.</row>
-              <row>srrrbrrbrrs.</row>
-              <row>.rrrbbbbrr..</row>
-              <row>..rbybbybr..</row>
-              <row>..bbbbbbbb..</row>
-              <row>.bbbbbbbbbb.</row>
-              <row>.bbb....bbb.</row>
-              <row>kkk......kkk</row>
-              <row>kk........kk</row>
-            </bitmap>
-          </sprite>
-          <animation name="walking">
-            <interval>0.08</interval>
-            <frame sprite="stepa" />
-            <frame sprite="stepb" />
-            <frame sprite="stepc" />
-            <frame sprite="stepb" />
-          </animation>
-          <position><x><centered /></x><y>ground - mario.height</y></position>
-          <acceleration><x>0</x><y>float</y></acceleration>
-          <facing>right</facing>
-          <poses>
-            <standing sprite="stand" />
-            <walking sprite="walking" />
-            <skidding sprite="skid" />
-            <rising sprite="rising" />
-            <falling sprite="falling" />
-          </poses>
-          <mirror>left</mirror>
-          <grip>0.15</grip>
-          <collisions>
-            <collision edge="horizontal">
-              <wrap />
-            </collision>
-            <collision class="floor">
-              <land />
-            </collision>
-            <collision class="pow">
-              <land />
-            </collision>
-            <!-- his head against a floor from below: the bump goes through it -->
-            <collision class="floor" side="top">
-              <knock>0</knock>
-              <bounce />
-              <play sound="bump" />
-            </collision>
-            <collision class="pow" side="top">
-              <bounce />
-            </collision>
-          </collisions>
-          <actions>
-            <action name="left">
-              <move direction="left">walk</move>
-            </action>
-            <action name="right">
-              <move direction="right">walk</move>
-            </action>
-            <action name="jump">
-              <leap>leapheight</leap>
-              <play sound="jump" />
-            </action>
-            <action name="lose">
-              <dec variable="mario.lives" />
-              <play sound="hit" />
-              <reset />
-              <set variable="mario.blink">2</set>
-            </action>
-          </actions>
+        <object name="mario" from="brother">
+          <position><x>window.width.center - 40</x></position>
+        </object>
+        <!-- in play only for two players -->
+        <object name="luigi" from="brother">
+          <position><x>window.width.center + 28</x></position>
+          <active>false</active>
           <variables>
-            <variable name="score">0</variable>
-            <variable name="lives">3</variable>
+            <variable name="lives">0</variable>
+          </variables>
+          <timers>
+            <timer>
+              <after>0</after>
+              <become style="luigi" />
+            </timer>
+          </timers>
+        </object>
+        <!-- pests kicked off so far, for the phases -->
+        <object name="tally">
+          <variables>
             <variable name="kicked">0</variable>
           </variables>
         </object>
@@ -832,41 +1229,335 @@
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x>window.right - lives.width - 8</x><y>4</y></position>
+          <position><x>8</x><y>14</y></position>
+        </object>
+        <object name="score2">
+          <sprite>
+            <text style="text">
+              <content>II</content>
+              <number>luigi.score</number>
+            </text>
+          </sprite>
+          <position><x>window.right - score2.width - 8</x><y>4</y></position>
+          <active>false</active>
+        </object>
+        <object name="lives2">
+          <sprite>
+            <text style="text">
+              <content>L x</content>
+              <number>luigi.lives</number>
+              <color>color.green</color>
+            </text>
+          </sprite>
+          <position><x>window.right - lives2.width - 8</x><y>14</y></position>
+          <active>false</active>
         </object>
       </objects>
+      <scenes>
+        <scene name="phase1">
+          <ways><way name="next" scene="phase2" /></ways>
+          <variables>
+            <variable name="phase">1</variable>
+            <variable name="upto">4</variable>
+          </variables>
+          <objects>
+            <object name="label" />
+            <!-- the odd ones out of the left pipe going right, the even ones
+                 out of the right pipe going left -->
+            <group name="shellcreepers">
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+            </group>
+          </objects>
+          <conditions>
+            <condition name="cleared" object="tally" variable="kicked">
+              <atleast>upto</atleast>
+              <play sound="phase" />
+              <enter way="next" />
+            </condition>
+          </conditions>
+          <timers>
+            <timer><after>1</after><reveal object="shellcreepers.1" /></timer>
+            <timer><after>3</after><reveal object="shellcreepers.2" /></timer>
+            <timer><after>7</after><reveal object="shellcreepers.3" /></timer>
+            <timer><after>9</after><reveal object="shellcreepers.4" /></timer>
+          </timers>
+        </scene>
+        <scene name="phase2" from="phase1">
+          <ways><way name="next" scene="phase3" /></ways>
+          <variables>
+            <variable name="phase">2</variable>
+            <variable name="upto">10</variable>
+          </variables>
+          <objects>
+            <group name="shellcreepers">
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+            </group>
+          </objects>
+          <timers>
+            <timer><after>13</after><reveal object="shellcreepers.5" /></timer>
+            <timer><after>15</after><reveal object="shellcreepers.6" /></timer>
+          </timers>
+        </scene>
+        <!-- TEST YOUR SKILL!: ten coins and twenty seconds -->
+        <scene name="phase3">
+          <ways><way name="next" scene="phase4" /></ways>
+          <objects>
+            <object name="label">
+              <sprite>
+                <text style="text">
+                  <content>TEST YOUR SKILL!</content>
+                </text>
+              </sprite>
+              <position><x><centered /></x><y><centered>window.height.center - 24</centered></y></position>
+            </object>
+            <!-- the time left, a named timer read as clock.left -->
+            <object name="clock">
+              <sprite>
+                <text style="text">
+                  <number>clock.left</number>
+                </text>
+              </sprite>
+              <position><x><centered /></x><y>28</y></position>
+              <timers>
+                <timer name="left">
+                  <after>20</after>
+                  <play sound="phase" />
+                  <enter way="next" />
+                </timer>
+              </timers>
+            </object>
+            <group name="coins" class="coin">
+              <sprite name="a">
+                <bitmap style="coin">
+                  <row>..yyyy..</row>
+                  <row>.yYYYYy.</row>
+                  <row>yYYyyYYy</row>
+                  <row>yYyYYyYy</row>
+                  <row>yYyYYyYy</row>
+                  <row>yYyYYyYy</row>
+                  <row>yYYyyYYy</row>
+                  <row>.yYYYYy.</row>
+                  <row>..yyyy..</row>
+                </bitmap>
+              </sprite>
+              <sprite name="b">
+                <bitmap style="coin">
+                  <row>...yy...</row>
+                  <row>..yYYy..</row>
+                  <row>..yYYy..</row>
+                  <row>..yYYy..</row>
+                  <row>..yYYy..</row>
+                  <row>..yYYy..</row>
+                  <row>..yYYy..</row>
+                  <row>..yYYy..</row>
+                  <row>...yy...</row>
+                </bitmap>
+              </sprite>
+              <animation name="spinning">
+                <interval>0.12</interval>
+                <frame sprite="a" />
+                <frame sprite="b" />
+              </animation>
+              <collisions>
+                <collision object="mario">
+                  <inc variable="mario.score">800</inc>
+                  <play sound="coin" />
+                  <despawn />
+                </collision>
+                <collision object="luigi">
+                  <inc variable="luigi.score">800</inc>
+                  <play sound="coin" />
+                  <despawn />
+                </collision>
+              </collisions>
+              <member><position><x>20</x><y>top - 22</y></position></member>
+              <member><position><x>60</x><y>top - 22</y></position></member>
+              <member><position><x>window.right - 28</x><y>top - 22</y></position></member>
+              <member><position><x>window.right - 68</x><y>top - 22</y></position></member>
+              <member><position><x>16</x><y>middle - 22</y></position></member>
+              <member><position><x>window.width.center - 4</x><y>middle - 22</y></position></member>
+              <member><position><x>window.right - 24</x><y>middle - 22</y></position></member>
+              <member><position><x>40</x><y>low - 22</y></position></member>
+              <member><position><x>window.right - 48</x><y>low - 22</y></position></member>
+              <member><position><x>window.width.center - 4</x><y>ground - 22</y></position></member>
+            </group>
+          </objects>
+          <conditions>
+            <!-- all ten caught: on at once -->
+            <condition object="coins" total="count">
+              <atmost>0</atmost>
+              <play sound="phase" />
+              <enter way="next" />
+            </condition>
+          </conditions>
+        </scene>
+        <scene name="phase4">
+          <ways><way name="next" scene="phase5" /></ways>
+          <variables>
+            <variable name="phase">4</variable>
+            <variable name="upto">14</variable>
+          </variables>
+          <objects>
+            <object name="label" />
+            <group name="sidesteppers">
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+            </group>
+          </objects>
+          <conditions>
+            <condition name="cleared" object="tally" variable="kicked">
+              <atleast>upto</atleast>
+              <play sound="phase" />
+              <enter way="next" />
+            </condition>
+          </conditions>
+          <timers>
+            <timer><after>1</after><reveal object="sidesteppers.1" /></timer>
+            <timer><after>3</after><reveal object="sidesteppers.2" /></timer>
+            <timer><after>7</after><reveal object="sidesteppers.3" /></timer>
+            <timer><after>9</after><reveal object="sidesteppers.4" /></timer>
+          </timers>
+        </scene>
+        <!-- sidesteppers, and two shellcreepers after them -->
+        <scene name="phase5" from="phase4">
+          <ways><way name="next" scene="phase6" /></ways>
+          <variables>
+            <variable name="phase">5</variable>
+            <variable name="upto">20</variable>
+          </variables>
+          <objects>
+            <group name="shellcreepers">
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+            </group>
+          </objects>
+          <timers>
+            <timer><after>13</after><reveal object="shellcreepers.1" /></timer>
+            <timer><after>15</after><reveal object="shellcreepers.2" /></timer>
+          </timers>
+        </scene>
+        <!-- fighter flies; the last pest kicked off wins -->
+        <scene name="phase6">
+          <variables>
+            <variable name="phase">6</variable>
+            <variable name="upto">24</variable>
+          </variables>
+          <objects>
+            <object name="label" />
+            <group name="fighterflies">
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+              <member />
+              <member>
+                <position><x>window.right - 18</x></position>
+                <velocity><x>0 - crawl</x></velocity>
+              </member>
+            </group>
+          </objects>
+          <conditions>
+            <condition name="cleared" object="tally" variable="kicked">
+              <atleast>upto</atleast>
+              <push state="youwin" />
+            </condition>
+          </conditions>
+          <timers>
+            <timer><after>1</after><reveal object="fighterflies.1" /></timer>
+            <timer><after>3</after><reveal object="fighterflies.2" /></timer>
+            <timer><after>7</after><reveal object="fighterflies.3" /></timer>
+            <timer><after>9</after><reveal object="fighterflies.4" /></timer>
+          </timers>
+        </scene>
+      </scenes>
       <shows>
         <show object="best" />
       </shows>
       <inputs>
-        <input button="a left"><trigger object="mario" action="left" /></input>
-        <input button="d right"><trigger object="mario" action="right" /></input>
-        <input button="space"><trigger object="mario" action="jump" /></input>
+        <input button="a"><trigger object="mario" action="left" /></input>
+        <input button="d"><trigger object="mario" action="right" /></input>
+        <input button="w space"><trigger object="mario" action="jump" /></input>
+        <input button="left"><trigger object="luigi" action="left" /></input>
+        <input button="right"><trigger object="luigi" action="right" /></input>
+        <input button="up"><trigger object="luigi" action="jump" /></input>
         <input button="p escape"><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition object="mario" variable="kicked">
-          <atleast>6</atleast>
-          <push state="youwin" />
-        </condition>
-        <condition object="mario" variable="lives">
-          <atmost>0</atmost>
+        <condition>
+          <all>
+            <condition object="mario" variable="lives"><atmost>0</atmost></condition>
+            <condition object="luigi" variable="lives"><atmost>0</atmost></condition>
+          </all>
           <push state="gameover" />
+        </condition>
+        <!-- two players: Luigi comes in, once -->
+        <condition object="players" variable="count">
+          <equal>2</equal>
+          <set variable="luigi.lives">3</set>
+          <reveal object="luigi" />
+          <reveal object="score2" />
+          <reveal object="lives2" />
+          <set variable="players.count">3</set>
+        </condition>
+        <!-- a brother with no lives left is out; the other plays on -->
+        <condition>
+          <all>
+            <condition object="mario" variable="lives"><atmost>0</atmost></condition>
+            <condition object="mario" total="count"><atleast>1</atleast></condition>
+          </all>
+          <despawn object="mario" />
+        </condition>
+        <condition>
+          <all>
+            <condition object="luigi" variable="lives"><atmost>0</atmost></condition>
+            <condition object="luigi" total="count"><atleast>1</atleast></condition>
+          </all>
+          <despawn object="luigi" />
         </condition>
         <condition object="mario" variable="score">
           <above>best.score</above>
           <copy variable="mario.score" into="best.score" />
         </condition>
+        <condition object="luigi" variable="score">
+          <above>best.score</above>
+          <copy variable="luigi.score" into="best.score" />
+        </condition>
       </conditions>
-      <!-- the shellcreepers come out of the top pipes one after another -->
-      <timers>
-        <timer><after>1</after><reveal object="creepers.1" /></timer>
-        <timer><after>3</after><reveal object="creepers.2" /></timer>
-        <timer><after>7</after><reveal object="creepers.3" /></timer>
-        <timer><after>9</after><reveal object="creepers.4" /></timer>
-        <timer><after>13</after><reveal object="creepers.5" /></timer>
-        <timer><after>15</after><reveal object="creepers.6" /></timer>
-      </timers>
     </state>
     <state name="paused">
       <objects>

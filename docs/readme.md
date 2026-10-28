@@ -126,7 +126,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `pacman` | W A S D steer | the arcade maze as a [map](#maps), four ghosts each hunting their own way ([walking a map](#walking-a-map)) |
 | `adventure` | W A S D walk, Space drops | five rooms, keys, castles, dragons; [`<carry />`](#touching) |
 | `trickshot` | W A S D move the cue tip | pool: balls that [`<knock>`](#knocks) one another, slowed by `<drag>` |
-| `mariobros` | A/D walk, Space jumps | bump the floor under a shellcreeper to flip it; [`<poses>`](#poses-mirror-grip-and-blinking), a window [`<scale>`](#window), a [palette swap](#palette-swap) |
+| `mariobros` | A/D walk, W or Space jumps; 2 on the title for Luigi on the arrows | bump the floor under a pest to flip it, six phases (shellcreepers, sidesteppers, fighter flies, a bonus phase of coins); [`<poses>`](#poses-mirror-grip-and-blinking), a window [`<scale>`](#window), [palette swaps](#palette-swap), [scenes](#scenes) |
 | `fishingderby` | W A S D move the hook | you against a [computer](#computer-players) fisherman: tethers for the lines, values [read when used](#values-read-when-used) |
 | `qbert` | W D S A hop up-right, down-right, down-left, up-left | a pyramid of cubes as a map, timed hops with an `<arc>`, Coily hunting by hops |
 | `yarsrevenge` | W A S D fly, Space fires | the shield a moving map, a destroyer missile that [`<seek>`](#parts-of-an-object)s, the neutral zone |
@@ -339,7 +339,7 @@ What a text or bitmap gives itself wins over its style. A `style=` naming no sty
 - colors a bitmap gives itself stay, and so does any color the new style leaves out, so a swap style names only what changes;
 - the look stays (with `sprite=` as well, both change), a moving look goes on where it was, and a reset puts the first colors back.
 
-The pictures for each style a `<become>` can give the object are drawn as the game loads, so a swap costs nothing while playing. Mario Bros.' shellcreepers are drawn once, in green; one that gets up by itself does `<become style="angry" />`, a style giving only the two greens as red. A style naming nothing, an object with no bitmap that takes a style, or one with a `<heading>`, stops the load.
+The pictures for each style a `<become>` can give the object are drawn as the game loads, so a swap costs nothing while playing. Mario Bros.' pests are drawn once, each kind in its own style; one that gets up by itself does `<become style="angry" />`, and the second time a rule puts on `furious`. One `angry` style recolours every kind, since a style's characters that a bitmap does not use are passed over. A style naming nothing, an object with no bitmap that takes a style, or one with a `<heading>`, stops the load.
 
 ## Objects
 
@@ -1014,7 +1014,7 @@ A rule about another object can be narrowed; most filters work on edge rules too
 - Along the way straight apart they share out what they carry by their `<mass>`es; across it each keeps its own, so a ball hit off its middle goes off at an angle.
 - The content, 0 to 1 (1 when left out), is how bouncy: 1 is pool balls, 0 sends them on together. Nothing happens unless they are closing, so a second `<knock />` for the same touch does nothing.
 - **No `<mass>` is as heavy as can be:** never moved by a knock, and its own knock sends a thing off at up to twice its speed (Trick Shot's cue tip).
-- **Through a thing with no mass.** A knock on something with no mass goes through it to whatever with a mass rests against its far side, as from something as heavy as can be; that thing then runs its own rules about the knocker that say `through="class"` of what it came through. Mario's head hitting a floor tile from below is a `<knock>0</knock>` that reaches the shellcreeper standing on it, whose `<collision object="mario" through="floor">` flips it. A knock goes through one thing, not a pile.
+- **Through a thing with no mass.** A knock on something with no mass goes through it to whatever with a mass rests against its far side, as from something as heavy as can be; that thing then runs its own rules about the knocker that say `through="class"` of what it came through. Mario's head hitting a floor tile from below is a `<knock>0</knock>` that reaches the shellcreeper standing on it, whose `<collision class="brother" through="floor">` flips it. A knock goes through one thing, not a pile.
 - A row of balls passes a knock on by itself, each pair meeting in turn within the frame.
 
 ## Input
