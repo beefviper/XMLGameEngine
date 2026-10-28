@@ -534,7 +534,7 @@ TEST_CASE("maze: what a walker's verbs and a look's timer turn away", "[map][maz
 	CHECK(loadError(mapGame(map + piece + "<maze map=\"maze\"><wall class=\"wall\" /></maze><actions><action name=\"l\"><go direction=\"left\">1</go></action></actions></object>")).empty());
 	CHECK_THAT(loadError(mapGame(map + piece + "<timers><timer sprite=\"blue\"><after>1</after><die /></timer></timers></object>")), ContainsSubstring("no look of that name"));
 	CHECK_THAT(loadError(mapGame(map + "<object name=\"p\">" + kDotSprite + "<position><x>0</x><y>0</y></position><timers><timer><after>1</after><become sprite=\"a\" from=\"b\" /></timer></timers></object>")),
-		ContainsSubstring("needs an object="));
+		ContainsSubstring("no look of that name"));
 }
 
 TEST_CASE("map: a group on a map has every part an object has, heading to seek", "[map]")

@@ -242,7 +242,7 @@ namespace xge
 		{
 			game.become(command.target, command.sprite, command.from);
 		}
-		else if (self)
+		else if (self && (command.from.empty() || self->lookName() == command.from))
 		{
 			showLookNamed(*self, command.sprite);
 		}
@@ -567,7 +567,25 @@ namespace xge
 
 	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed)
 	{
-		Object& object = game.getObject(objectName);
+		Object& first = game.getObject(objectName);
+		if (first.name == objectName || !first.inGroup(objectName))
+		{
+			runAction(first, actionName, keyPressed);
+			return;
+		}
+
+		// A group's name: every member, each its own press (by place, since an
+		// action may spawn and so grow the list).
+		std::vector<Object>& objects = game.getCurrentObjects();
+		const std::size_t count = objects.size();
+		for (std::size_t i = 0; i < count; ++i)
+		{
+			if (objects[i].inGroup(objectName)) { runAction(objects[i], actionName, keyPressed); }
+		}
+	}
+
+	void CommandExecutor::runAction(Object& object, const std::string& actionName, bool keyPressed)
+	{
 
 		// An object out of play does not act on a key: a ship that is not
 		// there does not fire, and a cannon not yet brought in does nothing.

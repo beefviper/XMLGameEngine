@@ -139,6 +139,9 @@ namespace xge
 		// the action there: what it would have done after (a sound, a look)
 		// is not done.
 		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed);
+		// One object's action of that name, as triggerObjectAction runs it
+		// for that object or for each member of a group.
+		void runAction(Object& object, const std::string& actionName, bool keyPressed);
 
 		// False when every one of the projectiles is in flight.
 		bool spawnProjectile(Object& shooter, const std::string& projectileName);

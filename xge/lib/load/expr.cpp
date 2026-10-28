@@ -384,10 +384,6 @@ namespace xge
 			}
 			else if (const auto* become = std::get_if<CmdBecome>(&shapeOf(command)))
 			{
-				if (!become->from.empty() && become->target.empty())
-				{
-					throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" from=\"" + become->from + "\" /> picks which of several change, so it needs an object=\"...\"");
-				}
 				if (!become->target.empty())
 				{
 					bool any = false;

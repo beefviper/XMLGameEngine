@@ -50,8 +50,13 @@
     reset to its start, in its pipe at the top.
   * Mario blinks for two seconds after losing a life (mario.blink), and a
     shellcreeper does him no harm while he does.
-  * The POW block's looks are how many bumps it has left; each bump turns
-    over the whole group (<become object="creepers" from="walking">).
+  * The POW block's looks are how many bumps it has left; each bump runs
+    every shellcreeper's action "powed" (a <trigger> of the group): one on
+    a floor hops (<leap>) and, on its feet, goes over; one in the air
+    cannot leap, so the rest of the action is refused and it is left alone.
+  * A shellcreeper turned over keeps going sideways through its hop, so one
+    bumped near the end of a floor sails off it and lands below, still on
+    its back. Two on their feet that meet turn round (<bounce />).
   * Everything wraps round the sides of the screen.
   No fighter flies, sidesteppers, coins or second player: see
   docs/designs/56-games-atari.md.
@@ -353,18 +358,18 @@
           <collisions>
             <!-- last look first, so one bump changes it only once -->
             <collision object="mario" side="bottom" sprite="one">
-              <become object="creepers" sprite="flipped" from="walking" />
+              <trigger object="creepers" action="powed" />
               <play sound="pow" />
               <die />
             </collision>
             <collision object="mario" side="bottom" sprite="two">
               <become sprite="one" />
-              <become object="creepers" sprite="flipped" from="walking" />
+              <trigger object="creepers" action="powed" />
               <play sound="pow" />
             </collision>
             <collision object="mario" side="bottom" sprite="three">
               <become sprite="two" />
-              <become object="creepers" sprite="flipped" from="walking" />
+              <trigger object="creepers" action="powed" />
               <play sound="pow" />
             </collision>
           </collisions>
@@ -461,6 +466,16 @@
               </any>
               <reset />
             </collision>
+            <!-- on its back it slides on with the hop that turned it over
+                 (off a ledge, bumped near one), and lies still once down -->
+            <collision class="floor" sprite="flipped">
+              <condition variable="down"><atleast>1</atleast></condition>
+              <set variable="self.velocity.x">0</set>
+            </collision>
+            <!-- two on their feet that meet turn round -->
+            <collision class="enemy" side="horizontal" sprite="walking">
+              <bounce />
+            </collision>
             <!-- bumped from below, a little hop: on its feet it goes over,
                  on its back it gets up -->
             <collision object="mario" side="bottom" sprite="walking">
@@ -496,6 +511,12 @@
               <set variable="self.velocity.x">self.way * self.speed</set>
               <set variable="self.down">0</set>
             </action>
+            <!-- the POW: one standing on a floor hops, and on its feet goes
+                 over; one in the air cannot leap, and is left alone -->
+            <action name="powed">
+              <leap>10</leap>
+              <become sprite="flipped" from="walking" />
+            </action>
             <action name="kicked">
               <inc variable="mario.score">800</inc>
               <inc variable="mario.kicked" />
@@ -515,12 +536,11 @@
               <after>0</after>
               <become sprite="walking" />
             </timer>
-            <!-- over on its back (bumped, or the POW): it keeps its way and
-                 lies still -->
+            <!-- over on its back (bumped, or the POW): it keeps its way, and
+                 once down lies still (the rule for a floor) -->
             <timer sprite="flipped">
               <after>0</after>
               <set variable="self.way">sgn(self.velocity.x)</set>
-              <set variable="self.velocity.x">0</set>
               <set variable="self.down">1</set>
             </timer>
             <!-- left there, it gets up by itself, and faster -->

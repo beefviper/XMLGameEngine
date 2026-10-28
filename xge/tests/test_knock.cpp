@@ -482,6 +482,7 @@ TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor
 
 	play.mario().position.x = play.creeper().position.x;
 	play.frames(2);
+	const float bumpedAt = play.creeper().position.x;
 	play.tap(KeyCode::Space);
 	float highest = standing;
 	for (int i = 0; i < 40; ++i)
@@ -492,7 +493,9 @@ TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor
 	REQUIRE(play.creeper().lookName() == "flipped");
 	CHECK(highest < standing - 6.0f);
 	CHECK(highest > 112.0f + 8.0f);          // a hop, nowhere near the floor above
+	play.frames(20);
 	const float lying = play.creeper().position.x;
+	CHECK(lying > bumpedAt + 4.0f);          // carried on along through the hop
 	play.frames(60);
 	CHECK(play.creeper().position.y == Approx(standing));
 	CHECK(play.creeper().position.x == Approx(lying));
@@ -508,6 +511,43 @@ TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor
 	CHECK(play.creeper().position.x > lying);
 	play.frames(40);
 	CHECK(play.creeper().position.y == Approx(standing));
+}
+
+TEST_CASE("mariobros.xml: the POW leaves a shellcreeper in the air alone, and two that meet turn round", "[knock][mariobros]")
+{
+	Mario play;
+	Object& pow = play.get("pow");
+
+	// In the air (falling off a floor) when the POW is bumped: still on its feet.
+	const float standing = play.creeper().position.y;
+	play.mario().position.x = pow.position.x + 2.0f;
+	play.frames(2);
+	play.tap(KeyCode::Space);
+	for (int i = 0; i < 80 && pow.lookName() == "three"; ++i)
+	{
+		play.creeper().position.y = standing - 30.0f;
+		play.creeper().velocity = { 0.0f, -1.0f };
+		play.frames(1);
+	}
+	CHECK(pow.lookName() == "two");
+	CHECK(play.creeper().lookName() == "walking");
+
+	// Two on their feet walking at each other on one floor turn round.
+	Played meet("descriptions/mariobros.xml");
+	meet.tap(KeyCode::Space);
+	meet.get("mario").position.x = 200.0f;
+	Object& one = meet.get("creepers.5");
+	Object& two = meet.get("creepers.6");
+	meet.game.reveal(one.name, 1);
+	meet.game.reveal(two.name, 1);
+	one.position = { 40.0f, 160.0f - one.size.y };
+	two.position = { 70.0f, 160.0f - two.size.y };
+	one.velocity.x = 0.5f;
+	two.velocity.x = -0.5f;
+	meet.frames(60);
+	CHECK(one.velocity.x < 0.0f);
+	CHECK(two.velocity.x > 0.0f);
+	CHECK(two.position.x - one.position.x > 10.0f);
 }
 
 TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies and goes on faster", "[knock][mariobros]")
