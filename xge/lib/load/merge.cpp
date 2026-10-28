@@ -372,7 +372,7 @@ namespace xge
 	{
 		const std::string name = piece->attribute("name");
 		const std::string here = where + " > <" + piece->name + " name=\"" + name + "\">";
-		if (piece->name != "object" && piece->name != "group") { fail(where, "holds <object>s and <group>s, not a <" + piece->name + ">"); }
+		if (piece->name != "object" && piece->name != "group" && piece->name != "map") { fail(where, "holds <object>s, <group>s and <map>s, not a <" + piece->name + ">"); }
 		if (name.empty()) { fail(where, "has a <" + piece->name + "> with no name=\"...\""); }
 		if (name.find('.') != std::string::npos) { fail(here, "a piece's name has no dots: they join the parts of a path"); }
 		if (has(name)) { fail(here, "the <kit> has another piece (or a member of one) called '" + name + "'"); }
@@ -381,6 +381,7 @@ namespace xge
 		if (const std::string from = piece->attribute("from"); !from.empty())
 		{
 			if (!isPiece(from)) { fail(here, "from=\"" + from + "\" names no piece of the <kit> before it" + didYouMean(from, names())); }
+			if (isMap(from) != (piece->name == "map")) { fail(here, "from=\"" + from + "\": a <map> is from= a <map>, and an object or a group from= an object or a group"); }
 			made = take(from, piece, here);
 		}
 
@@ -401,7 +402,7 @@ namespace xge
 				else if (child->name == "group") { self(self, child); }
 			}
 		};
-		if (made->name == "group") { walk(walk, made); }
+		if (made->name == "group" || made->name == "map") { walk(walk, made); }
 
 		pieces[name] = made;
 		order.push_back(name);
@@ -416,6 +417,12 @@ namespace xge
 	bool Kit::isPiece(const std::string& name) const
 	{
 		return pieces.count(name) > 0;
+	}
+
+	bool Kit::isMap(const std::string& name) const
+	{
+		const auto piece = pieces.find(name);
+		return piece != pieces.end() && piece->second->name == "map";
 	}
 
 	ElementPtr Kit::take(const std::string& name, const ElementPtr& over, const std::string& where) const
@@ -475,8 +482,12 @@ namespace xge
 			const auto same = std::find_if(list.begin(), list.end(), [&](const ElementPtr& each) { return each->attribute("name") == name; });
 			if (!from.empty())
 			{
-				if (tag == "map") { fail(here, "a <map> is never from= anything"); }
 				if (!kit.has(from)) { fail(here, "from=\"" + from + "\" names no piece of the <kit>" + didYouMean(from, kit.names())); }
+				if (kit.isMap(from) != (tag == "map"))
+				{
+					fail(here, tag == "map" ? "from=\"" + from + "\" names a piece that is not a <map>; a <map> takes a <map> of the kit"
+						: "from=\"" + from + "\" names a <map> of the kit, which only a <map> takes");
+				}
 				if (same != list.end()) { fail(here, "there is already an object or group called '" + name + "' here"); }
 				list.push_back(kit.take(from, written, here));
 				continue;
@@ -498,7 +509,9 @@ namespace xge
 				*outer = changedInner(*outer, name, written, here);
 				continue;
 			}
-			if (kit.has(name) && tag != "map")
+			// by its name: a map a map of the kit, anything else an object
+			// or a group (or a member)
+			if (kit.has(name) && kit.isMap(name) == (tag == "map"))
 			{
 				list.push_back(kit.take(name, written, here));
 				continue;

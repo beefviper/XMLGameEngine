@@ -1605,11 +1605,14 @@
     Level data: the size of a tile, where the top left of the map is, its
     <row>s of characters (a character a tile, every row as wide), and the
     groups and objects that say what each character is. A character nothing
-    picks is an empty tile. The map's name means everything on it.
+    picks is an empty tile. The map's name means everything on it. A map that
+    takes a map of the kit (from=, or by its name) gives only what it changes,
+    most often its <row>s; each part is then left out here, and the loader
+    asks for any the map still lacks.
   -->
   <xs:complexType name="mapType">
     <xs:sequence>
-      <xs:element name="tile">
+      <xs:element name="tile" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="width" type="valueType" />
@@ -1617,14 +1620,15 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="position" type="vector2Type" />
-      <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
-      <xs:choice maxOccurs="unbounded">
+      <xs:element name="position" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="row" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="group" type="mapGroupType" />
         <xs:element name="object" type="mapObjectType" />
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="from" type="xs:string" use="optional" />
   </xs:complexType>
 
   <!-- Objects and groups: the game's, a state's or a scene's. -->
@@ -1682,7 +1686,7 @@
   </xs:complexType>
 
   <!--
-    The kit: objects and groups written once, in play only where something
+    The kit: objects, groups and maps written once, in play only where something
     takes them: an object or group of the game's, a state's or a scene's
     that is from= one (or named after one), or a <spawn>, <fire> or
     <release> that names one, whose copies come into the game beside what
@@ -1692,6 +1696,7 @@
     <xs:choice maxOccurs="unbounded">
       <xs:element name="object" type="objectType" />
       <xs:element name="group" type="groupType" />
+      <xs:element name="map" type="mapType" />
     </xs:choice>
   </xs:complexType>
 

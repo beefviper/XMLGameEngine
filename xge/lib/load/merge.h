@@ -67,8 +67,9 @@ namespace xge
 	// <conditions> set a <condition set> takes.
 	std::set<std::string> spawnedIn(const ElementPtr& element, const Kit& kit);
 
-	// The game's <kit>: pieces written once, which are in play only where
-	// something takes them. A piece can be from= an earlier one.
+	// The game's <kit>: pieces written once (objects, groups and maps), which
+	// are in play only where something takes them. A piece can be from= an
+	// earlier one.
 	class Kit
 	{
 	public:
@@ -77,6 +78,8 @@ namespace xge
 		// A piece, or a member of a group piece that has a name of its own.
 		bool has(const std::string& name) const;
 		bool isPiece(const std::string& name) const;
+		// A piece that is a <map>, which only a <map> takes.
+		bool isMap(const std::string& name) const;
 
 		// The piece a name is (or the group piece a member is of); "" for none.
 		std::string pieceOf(const std::string& name) const;

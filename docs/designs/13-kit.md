@@ -20,7 +20,7 @@ Names looked at for the list: `kit`, `blueprints`, `kinds`. `kit` was already th
 
 ## Chosen
 
-- **`<kit>`**, after `<styles>`, holds objects and groups; nothing in it is in play. A piece can be `from=` an earlier piece.
+- **`<kit>`**, after `<styles>`, holds objects and groups (and, since 2026-10-28, maps); nothing in it is in play. A piece can be `from=` an earlier piece.
 - **In any `<objects>`, `from="piece"` takes a piece**, under the name written; an object or group named after a piece (or after a named member of a group piece) takes it by that name.
 - **One change rule** for a take, a state `from=` and a scene `from=`: sprites and animations by name, whole; the x and y halves of position, velocity, acceleration and padding each on their own; variables, actions and timers by name; collision rules added after, solids in place of all; members, rows, columns and cells in place of all; inner groups and objects by name, the same way; anything else in place of its tag. The old take could change only sprites, position and velocity halves, `<hidden>` (now `<active>`), `<drawn>` and variables.
 - **Lifetime is where a thing is placed**: the game's for the game, a state's while it is current, a scene's in its scene.
@@ -39,9 +39,15 @@ Decided while building, not by the author (to be confirmed):
 - **What is spawned is read from the XML too**: the `<spawn>`, `<fire>` and `<release>` inside an object, or a state's inputs, conditions, computer and timers, or a scene's conditions and timers, and inside a path they follow, a `<keys>` set their inputs take and a `<conditions>` set a condition takes. Waiting copies are added round by round, alphabetically, so a piece whose copies release another (Asteroids' medium rocks the small ones) brings that one in too.
 - **The games** (20 used scene kits or `<exists>`) were converted: scene kits and descriptions moved to the game's kit. Asteroids' rocks, which were one group with the medium and small ones inside, became a `rock` piece the three sizes are `from=`, and the wave-cleared condition an `<all>` of the three.
 
+## Maps in the kit (2026-10-28)
+
+- Need: Berserk's four rooms each wrote the same tile, place, walls and exits (27 lines a room) around 7 rows; Haunted House's floors the same tile, place and walls.
+- **Chosen: a `<map>` is a piece too.** A map in play takes it by its name or by `from=` and gives what differs, by the one rule unchanged: rows are "all in place of all" like a group's rows, the tile in place of its tag, position by halves, pieces by name. A map takes only a map piece and an object or group never one (the loader says so; by name, a map named like an object piece is its own, as before). The schema leaves each part of a map optional, and the loader asks for what is still missing after the take. Berserk lost 85 lines, Haunted House 28; their generated programs are byte for byte what they were.
+- Looked at: a scene `from=` the first room changing only the map's rows (it copies the first room's robots too, and there is no way to drop a copied object); a group on a map taking a kit piece (what each character is, piece by piece; open below).
+
 ## Open
 
 - **Placing a waiting piece somewhere other than beside its spawner** (Megamania's bombs in the state): no way to say it yet.
 - **Generated code size**: each take is written out whole in each scene (Berserk 3,173 lines generated), where the kit was written once before.
-- **A map taking pieces from the kit** ([groups](06-groups.md)).
+- **A map's pieces taken from the kit** one by one ([groups](06-groups.md)); a whole map in the kit (below) covers the rooms and floors that share all their pieces.
 - **Changing a numbered member** (`rocks.2`) without naming it.

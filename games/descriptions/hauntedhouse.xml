@@ -22,10 +22,12 @@
   How it is written:
   * The floors are the <scenes> of the playing state, each a <map>: # is a
     wall, ^ the stairs up and v the stairs down (a way of the floor's own,
-    <enter way>), and D marks where a locked door of the kit is put. The eyes pick the key up by touching it
-    (<carry />, so it goes with them up and down the stairs), and a door
-    opens to the eyes while the key is by them (its rule's <check
-    distance>).
+    <enter way>), and D marks where a locked door of the kit is put. Each
+    floor's map takes the kit's map "house" (its tile, place and walls) and
+    gives its rows, its stairs and the colour of its walls. The eyes pick
+    the key up by touching it (<carry />, so it goes with them up and down
+    the stairs), and a door opens to the eyes while the key is by them (its
+    rule's <condition distance>).
     The stairs of one floor are a few tiles from where the next floor's
     lead back, so the eyes do not arrive on them.
   * The creatures are the kit's, each floor taking the ones it has and
@@ -192,6 +194,17 @@
       <member name="piece2" />
       <member name="piece3" />
     </group>
+    <!-- a floor: the size of a tile, where the floor starts, and its walls;
+         each floor gives its <row>s, its stairs and the colour of its walls -->
+    <map name="house">
+      <tile><width>tile</width><height>tile</height></tile>
+      <position><x>0</x><y>tile</y></position>
+      <group name="walls" char="#" class="wall">
+        <sprite><rectangle><width>tile</width><height>tile</height><color>color.purple</color></rectangle></sprite>
+        <dark>unlit</dark>
+        <collisions />
+      </group>
+    </map>
   </kit>
   <objects>
     <object name="continue">
@@ -298,8 +311,6 @@
           </ways>
           <objects>
             <map name="house">
-              <tile><width>tile</width><height>tile</height></tile>
-              <position><x>0</x><y>tile</y></position>
               <row>####################</row>
               <row>#      #          ^#</row>
               <row>#      #           #</row>
@@ -314,11 +325,6 @@
               <row>#      #     #     #</row>
               <row>#E     #     #     #</row>
               <row>####################</row>
-              <group name="walls" char="#" class="wall">
-                <sprite><rectangle><width>tile</width><height>tile</height><color>color.purple</color></rectangle></sprite>
-                <dark>unlit</dark>
-                <collisions />
-              </group>
               <group name="stairs" char="^" class="up">
                 <sprite><bitmap><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
@@ -353,8 +359,6 @@
           </ways>
           <objects>
             <map name="house">
-              <tile><width>tile</width><height>tile</height></tile>
-              <position><x>0</x><y>tile</y></position>
               <row>####################</row>
               <row>#^             v   #</row>
               <row>#                  #</row>
@@ -369,11 +373,7 @@
               <row>#        ##        #</row>
               <row>#    #         #   #</row>
               <row>####################</row>
-              <group name="walls" char="#" class="wall">
-                <sprite><rectangle><width>tile</width><height>tile</height><color>color.blue</color></rectangle></sprite>
-                <dark>unlit</dark>
-                <collisions />
-              </group>
+              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.blue</color></rectangle></sprite></group>
               <group name="upstairs" char="^" class="up">
                 <sprite><bitmap><row>*...</row><row>**..</row><row>***.</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
@@ -400,8 +400,6 @@
           </ways>
           <objects>
             <map name="house">
-              <tile><width>tile</width><height>tile</height></tile>
-              <position><x>0</x><y>tile</y></position>
               <row>####################</row>
               <row>#   v             ^#</row>
               <row>#                  #</row>
@@ -416,11 +414,7 @@
               <row>#      #       #   #</row>
               <row>#      #       #   #</row>
               <row>####################</row>
-              <group name="walls" char="#" class="wall">
-                <sprite><rectangle><width>tile</width><height>tile</height><color>color.forestgreen</color></rectangle></sprite>
-                <dark>unlit</dark>
-                <collisions />
-              </group>
+              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.forestgreen</color></rectangle></sprite></group>
               <group name="upstairs" char="^" class="up">
                 <sprite><bitmap><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
@@ -447,8 +441,6 @@
           </ways>
           <objects>
             <map name="house">
-              <tile><width>tile</width><height>tile</height></tile>
-              <position><x>0</x><y>tile</y></position>
               <row>####################</row>
               <row>#              v   #</row>
               <row>#                  #</row>
@@ -463,11 +455,7 @@
               <row>#                  #</row>
               <row>#   #     ##     # #</row>
               <row>####################</row>
-              <group name="walls" char="#" class="wall">
-                <sprite><rectangle><width>tile</width><height>tile</height><color>color.red</color></rectangle></sprite>
-                <dark>unlit</dark>
-                <collisions />
-              </group>
+              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.red</color></rectangle></sprite></group>
               <group name="downstairs" char="v" class="down">
                 <sprite><bitmap><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>

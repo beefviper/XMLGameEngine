@@ -26,7 +26,8 @@
   * Each room is the arcade's five cells across and three down, written as
     a <map>: a pillar (+) at every corner of a cell and a wall (- or |)
     between two, on tiles half a cell across, so the file shows the room as
-    it looks; x and y are the gaps of the outer wall, the exits, never
+    it looks. The kit's map "maze" says what each character is, and each
+    room takes it and gives only its <row>s. x and y are the gaps of the outer wall, the exits, never
     drawn. Each room's <ways> name the room its way "out" leads
     to; walking into an exit puts that room back as it started (<reset
     way="out" />), with its robots, and <enter>s it. The man's own rule for
@@ -222,6 +223,30 @@
         <collision object="player"><despawn /></collision>
       </collisions>
     </object>
+    <!-- a room: what each character of its <row>s is; each room gives its rows -->
+    <map name="maze">
+      <tile><width>wide / 2</width><height>tall / 2</height></tile>
+      <position><x>margin / 2 - wide / 4</x><y>top + margin / 2 - tall / 4</y></position>
+      <group name="walls" class="wall">
+        <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
+        <collisions />
+        <group name="post" char="+" />
+        <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
+        <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
+      </group>
+      <group name="exits" class="exit">
+        <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
+        <drawn>false</drawn>
+        <collisions>
+          <collision object="player">
+            <reset way="out" />
+            <enter way="out" />
+          </collision>
+        </collisions>
+        <group name="level" char="x" />
+        <group name="side" char="y"><sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite></group>
+      </group>
+    </map>
   </kit>
   <states>
     <state name="title">
@@ -390,8 +415,6 @@
           </ways>
           <objects>
             <map name="maze">
-              <tile><width>wide / 2</width><height>tall / 2</height></tile>
-              <position><x>margin / 2 - wide / 4</x><y>top + margin / 2 - tall / 4</y></position>
               <row>+-+-+x+-+-+</row>
               <row>|         |</row>
               <row>+ +-+ + + +</row>
@@ -399,25 +422,6 @@
               <row>+ + + +-+ +</row>
               <row>|     |   |</row>
               <row>+-+-+x+-+-+</row>
-              <group name="walls" class="wall">
-                <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-                <collisions />
-                <group name="post" char="+" />
-                <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
-                <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
-              </group>
-              <group name="exits" class="exit">
-                <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
-                <drawn>false</drawn>
-                <collisions>
-                  <collision object="player">
-                    <reset way="out" />
-                    <enter way="out" />
-                  </collision>
-                </collisions>
-                <group name="level" char="x" />
-                <group name="side" char="y"><sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite></group>
-              </group>
             </map>
             <!-- 3 robots, yellow, and they do not fire -->
             <object name="y1"><position><x>277</x><y>107</y></position></object>
@@ -441,8 +445,6 @@
           </ways>
           <objects>
             <map name="maze">
-              <tile><width>wide / 2</width><height>tall / 2</height></tile>
-              <position><x>margin / 2 - wide / 4</x><y>top + margin / 2 - tall / 4</y></position>
               <row>+-+-+x+-+-+</row>
               <row>|   |     |</row>
               <row>+ + +-+ +-+</row>
@@ -450,25 +452,6 @@
               <row>+-+ + + + +</row>
               <row>|       | |</row>
               <row>+-+-+x+-+-+</row>
-              <group name="walls" class="wall">
-                <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-                <collisions />
-                <group name="post" char="+" />
-                <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
-                <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
-              </group>
-              <group name="exits" class="exit">
-                <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
-                <drawn>false</drawn>
-                <collisions>
-                  <collision object="player">
-                    <reset way="out" />
-                    <enter way="out" />
-                  </collision>
-                </collisions>
-                <group name="level" char="x" />
-                <group name="side" char="y"><sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite></group>
-              </group>
             </map>
             <!-- 4 robots, red -->
             <object name="r1"><position><x>277</x><y>107</y></position></object>
@@ -493,8 +476,6 @@
           </ways>
           <objects>
             <map name="maze">
-              <tile><width>wide / 2</width><height>tall / 2</height></tile>
-              <position><x>margin / 2 - wide / 4</x><y>top + margin / 2 - tall / 4</y></position>
               <row>+-+-+x+-+-+</row>
               <row>|     |   |</row>
               <row>+-+ + + + +</row>
@@ -502,25 +483,6 @@
               <row>+ + +-+ + +</row>
               <row>|   |     |</row>
               <row>+-+-+x+-+-+</row>
-              <group name="walls" class="wall">
-                <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-                <collisions />
-                <group name="post" char="+" />
-                <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
-                <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
-              </group>
-              <group name="exits" class="exit">
-                <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
-                <drawn>false</drawn>
-                <collisions>
-                  <collision object="player">
-                    <reset way="out" />
-                    <enter way="out" />
-                  </collision>
-                </collisions>
-                <group name="level" char="x" />
-                <group name="side" char="y"><sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite></group>
-              </group>
             </map>
             <!-- 5 robots, cyan -->
             <object name="c1"><position><x>165</x><y>107</y></position></object>
@@ -546,8 +508,6 @@
           </ways>
           <objects>
             <map name="maze">
-              <tile><width>wide / 2</width><height>tall / 2</height></tile>
-              <position><x>margin / 2 - wide / 4</x><y>top + margin / 2 - tall / 4</y></position>
               <row>+-+-+x+-+-+</row>
               <row>| |       |</row>
               <row>+ + +-+-+ +</row>
@@ -555,25 +515,6 @@
               <row>+ +-+ + +-+</row>
               <row>|   |     |</row>
               <row>+-+-+x+-+-+</row>
-              <group name="walls" class="wall">
-                <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-                <collisions />
-                <group name="post" char="+" />
-                <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
-                <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
-              </group>
-              <group name="exits" class="exit">
-                <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
-                <drawn>false</drawn>
-                <collisions>
-                  <collision object="player">
-                    <reset way="out" />
-                    <enter way="out" />
-                  </collision>
-                </collisions>
-                <group name="level" char="x" />
-                <group name="side" char="y"><sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite></group>
-              </group>
             </map>
             <!-- 6 robots, green -->
             <object name="g1"><position><x>277</x><y>107</y></position></object>

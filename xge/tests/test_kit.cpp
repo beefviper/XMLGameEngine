@@ -7,6 +7,7 @@
 // only where an <objects> takes them (by from= or by a piece's name), each
 // take changing the piece by the one rule every start-from follows; a piece
 // from= an earlier one; a named member of a group piece taken on its own;
+// a map of the kit taken by a map that gives only its rows;
 // what a <spawn>, <fire> or <release> names coming in beside what runs it;
 // and the mistakes that stop the load. Small games are written out and
 // played with no window (played.h).
@@ -154,8 +155,56 @@ TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads it
 	CHECK(play.get("wave2.bomb.1").velocity.y == Approx(5));
 }
 
+TEST_CASE("a map of the kit is taken by a map, which gives its rows and changes what it will", "[kit][map]")
+{
+	// A tile 10 across at 100, 50; # a wall, picked by the piece.
+	const std::string maze = "<map name=\"maze\"><tile><width>10</width><height>10</height></tile>"
+		"<position><x>100</x><y>50</y></position>"
+		"<group name=\"walls\" char=\"#\" class=\"wall\"><sprite><rectangle><width>10</width><height>10</height>"
+		"<color>color.blue</color></rectangle></sprite></group></map>";
+	SECTION("by its name, giving only its rows")
+	{
+		const Scratch file("<map name=\"maze\"><row>##.</row><row>#..</row></map>", "<pop />", {}, maze);
+		Played play(file.path);
+
+		CHECK(play.count("walls") == 3);
+		const Object& first = play.get("walls.1");
+		CHECK(first.position.x == Approx(100));
+		CHECK(first.position.y == Approx(50));
+		CHECK(first.objClass == "wall");
+		CHECK(first.spriteParams.back() == "color.blue");
+	}
+	SECTION("by from=, changing its place and its walls")
+	{
+		const Scratch file("<map name=\"other\" from=\"maze\"><position><y>200</y></position><row>.#</row>"
+			"<group name=\"walls\"><sprite><rectangle><width>10</width><height>10</height><color>color.red</color></rectangle></sprite></group></map>",
+			"<pop />", {}, maze);
+		Played play(file.path);
+
+		// its own y and its own walls' color, the piece's x, tile and class
+		CHECK(play.count("walls") == 1);
+		const Object& other = play.get("walls.1");
+		CHECK(other.position.x == Approx(110));
+		CHECK(other.position.y == Approx(200));
+		CHECK(other.objClass == "wall");
+		CHECK(other.spriteParams.back() == "color.red");
+	}
+}
+
 TEST_CASE("mistakes with the kit and from= stop the load", "[kit][errors]")
 {
+	SECTION("an object from= a map, or a map from= an object")
+	{
+		const std::string maze = "<map name=\"maze\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position>"
+			"<group name=\"walls\" char=\"#\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite></group></map>";
+		fails("<object name=\"bat\" from=\"maze\" />", maze, "names a <map> of the kit, which only a <map> takes");
+		fails("<map name=\"room\" from=\"paddle\"><row>#</row></map>", kPaddle, "names a piece that is not a <map>");
+	}
+	SECTION("a map that, with the piece it takes, still has no tile")
+	{
+		fails("<map name=\"maze\"><row>#</row></map>",
+			"<map name=\"maze\"><position><x>0</x><y>0</y></position><group name=\"walls\" char=\"#\" /></map>", "<tile>");
+	}
 	SECTION("from= a piece there is not")
 	{
 		fails("<object name=\"bat\" from=\"padle\" />", kPaddle, "from=\"padle\" names no piece of the <kit>");

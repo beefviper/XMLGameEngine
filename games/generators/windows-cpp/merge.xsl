@@ -422,7 +422,7 @@
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$changing != ''" />
-      <xsl:when test="not($written/self::map) and ($merge-pieces[@name = $name] or $merge-pieces[self::group]//member[@name = $name])">
+      <xsl:when test="($written/self::map and $merge-pieces[self::map][@name = $name]) or (not($written/self::map) and ($merge-pieces[not(self::map)][@name = $name] or $merge-pieces[self::group]//member[@name = $name]))">
         <xsl:call-template name="merge-take">
           <xsl:with-param name="name" select="$name" />
           <xsl:with-param name="over" select="$written" />

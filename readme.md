@@ -102,7 +102,7 @@ Something many objects or states share is written once under a name, higher up, 
 - **Leave out what is nothing.** An object that never moves has no `<velocity>`; one that never collides has no `<collisions>`.
 - **Groups** write their members' shared parts once. Members are listed, laid out as columns and rows (where a row, a column or a cell changes what it needs), or placed by a **map**: rows of text where each character stands for a group or object (Pac-Man's walls and dots).
 - **Named sets** at the top of `<states>` hold the `<keys>`, `<shows>` and `<conditions>` several states use; a state takes one with `set=` or `keys=`.
-- **The kit** at the top of the game holds objects and groups written once. Nothing in it is in play until an `<objects>` takes it (`<object name="paddle2" from="paddle">`, or just by the piece's name) or a `spawn` copies it; where it is taken says how long it lasts: the game, a state or a scene.
+- **The kit** at the top of the game holds objects, groups and maps written once. Nothing in it is in play until an `<objects>` takes it (`<object name="paddle2" from="paddle">`, or just by the piece's name) or a `spawn` copies it; where it is taken says how long it lasts: the game, a state or a scene.
 - **Copies.** `<state from="youwin">` and `<scene from="room1">` start as a copy of an earlier one and change what differs, by the same rule a take of a kit piece follows.
 - **Scenes** take their pieces from the kit, and an exit names a way (`<enter way="east" />`) that each scene points somewhere different.
 

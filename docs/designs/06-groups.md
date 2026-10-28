@@ -51,7 +51,7 @@
 - Need: Pac-Man's maze is a few hundred wall pieces, dots and pellets. As groups in columns and rows it would be dozens of groups, and the file would not show the maze.
 - **Chosen: `<map>`, level data drawn as text.** Each `<row>` is a row of tiles, one character a tile; the pieces that follow pick their character with `char=`. A group gets a member on every tile of its character (numbered in reading order); an object picks a character found once, its starting place. So any character can be any shape (Pac-Man's 14 wall pieces are 14 inner groups of a `walls` group sharing its class) and objects are placed by the same picture. An attribute picking a character fits the format's rule; the rows are data the author draws, not values packed into a string.
 - Members are ordinary objects; the map only places them, and leaves each its tile (`mapColumn`/`mapRow`) for the maze walkers. The expansion is shared code (`RawMap`, `tilesOf`, `placeOnMap`) so a generated game lays a map out exactly as the engine does.
-- Rejected: one map element per piece kind, a legend block separate from the pieces (the piece already says what it looks like), and taking a map's pieces from the game's kit for now (open).
+- Rejected: one map element per piece kind, a legend block separate from the pieces (the piece already says what it looks like), and taking a map's pieces one by one from the game's kit for now (open; a whole map in the kit, taken by maps that give their rows, was built 2026-10-28, [kit](13-kit.md)).
 
 ## Groups inside a group
 
