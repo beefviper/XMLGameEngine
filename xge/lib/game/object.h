@@ -362,12 +362,22 @@ namespace xge
 		std::string sprite;
 	};
 
+	// A <slow class="tunnel">0.5</slow> of a <maze>: on a tile holding
+	// something of that class, the walker goes at that share of its speed.
+	struct MazeSlow
+	{
+		std::string objClass;
+		float share{ 1.0f };
+	};
+
 	// An object's <maze map="maze">: the <map> whose tiles it walks ("" for
-	// an object that walks none), and what is a wall to it. See play/maze.h.
+	// an object that walks none), what is a wall to it, and where it goes
+	// slower. See play/maze.h.
 	struct RawMaze
 	{
 		std::string map;
 		std::vector<MazeWall> walls;
+		std::vector<MazeSlow> slows{};
 	};
 
 	struct RawObject
@@ -674,12 +684,14 @@ namespace xge
 		int mapRows{};
 
 		// A maze walker (<maze>): the map it walks (its name, and where it is
-		// among the game's mazes), what stops it, and where it is headed now:
+		// among the game's mazes), what stops it, what slows it, and where it
+		// is headed now:
 		// what its last <go>, <hunt> or <wander> said (Walk). It keeps to the
 		// middle of a lane, stops at a wall and turns only where there is a
 		// gap; a reset stops it. See play/maze.h.
 		std::string mazeMap;
 		std::vector<MazeWall> mazeWalls;
+		std::vector<MazeSlow> mazeSlows;
 		std::size_t mazeIndex{};
 		Walk walk;
 		bool walksMaze() const noexcept { return !mazeMap.empty(); }

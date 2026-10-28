@@ -141,7 +141,8 @@ namespace xge
 		// <leap> or hunt by hops that cannot be made) and is refused ends
 		// the action there: what it would have done after (a sound, a look)
 		// is not done.
-		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed);
+		// With `from`, only those showing that look run it.
+		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, const std::string& from = {});
 		// One object's action of that name, as triggerObjectAction runs it
 		// for that object or for each member of a group.
 		void runAction(Object& object, const std::string& actionName, bool keyPressed);

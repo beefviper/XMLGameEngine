@@ -1292,7 +1292,20 @@
         </xsl:call-template>
         <xsl:text> }</xsl:text>
       </xsl:for-each>
-      <xsl:text> });&#10;</xsl:text>
+      <xsl:text> }</xsl:text>
+      <xsl:if test="$node/maze/slow">
+        <xsl:text>, {</xsl:text>
+        <xsl:for-each select="$node/maze/slow">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> { </xsl:text>
+          <xsl:call-template name="string">
+            <xsl:with-param name="text" select="@class" />
+          </xsl:call-template>
+          <xsl:value-of select="concat(', ', normalize-space(.), ' }')" />
+        </xsl:for-each>
+        <xsl:text> }</xsl:text>
+      </xsl:if>
+      <xsl:text>);&#10;</xsl:text>
     </xsl:if>
     <xsl:call-template name="timers">
       <xsl:with-param name="node" select="$node/timers" />

@@ -414,10 +414,11 @@ namespace xge::parts
 		return object;
 	}
 
-	// <maze map="..."> and its <wall>s: { class, sprite }.
-	inline RawMaze maze(std::string map, std::vector<MazeWall> walls)
+	// <maze map="..."> and its <wall>s: { class, sprite }, and <slow>s:
+	// { class, share }.
+	inline RawMaze maze(std::string map, std::vector<MazeWall> walls, std::vector<MazeSlow> slows = {})
 	{
-		return RawMaze{ std::move(map), std::move(walls) };
+		return RawMaze{ std::move(map), std::move(walls), std::move(slows) };
 	}
 
 	// A bitmap's <color char="w">: in place of an earlier one of that

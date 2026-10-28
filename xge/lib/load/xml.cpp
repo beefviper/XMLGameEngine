@@ -1627,7 +1627,8 @@ namespace xge
 			return value;
 		}
 
-		// <maze map="maze"> and its <wall class="..." sprite="..." />s.
+		// <maze map="maze">, its <wall class="..." sprite="..." />s and its
+		// <slow class="...">share</slow>s.
 		RawMaze readMaze(const XmlNode& node, const std::string& where)
 		{
 			const std::string here = where + " > <maze>";
@@ -1635,7 +1636,19 @@ namespace xge
 			maze.map = requireAttribute(node, "map", here);
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
-				if (child->getName() != "wall") { fail(here, "unknown <" + child->getName() + ">; expected <wall>s"); }
+				if (child->getName() == "slow")
+				{
+					const std::string there = here + " > <slow>";
+					MazeSlow slow;
+					slow.objClass = requireAttribute(*child, "class", there);
+					const std::string text = readText(*child);
+					if (!isNumber(text)) { fail(there, "is \"" + text + "\"; expected a share of the speed, a number above 0"); }
+					slow.share = std::stof(text);
+					if (!(slow.share > 0.0f)) { fail(there, "is " + text + "; a walker slowed to nothing would stop for good, so give a share above 0"); }
+					maze.slows.push_back(std::move(slow));
+					continue;
+				}
+				if (child->getName() != "wall") { fail(here, "unknown <" + child->getName() + ">; expected <wall>s and <slow>s"); }
 				MazeWall wall;
 				wall.objClass = requireAttribute(*child, "class", here + " > <wall>");
 				wall.sprite = child->getAttribute("sprite");

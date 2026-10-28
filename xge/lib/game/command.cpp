@@ -272,7 +272,7 @@ namespace xge
 			return CmdReveal{ raw.object, count };
 		}
 		if (verb == "fire")    { return CmdFire{ raw.object }; }
-		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action }; }
+		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action, raw.from }; }
 		if (verb == "follow")
 		{
 			const bool none = raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty();
@@ -520,7 +520,7 @@ namespace xge
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
 			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
-			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << ")"; },
+			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << ")"; },
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
 			[&](const CmdSilence& s) { o << "silence(" << s.sound << ")"; },

@@ -33,7 +33,7 @@ Each verb belongs to one of nine command groups, and each place (a collision, an
 
 **Adjectives: properties of a noun**
 
-- Place and motion: `position`, `velocity`, `acceleration`, `heading`, `facing`, `drag`, `mass`, `grip`, `pull`, `seek`, `altitude` (`start`, `rise`, `fall`, `bounce`), `shadow`, `maze` (`wall`), `centered`.
+- Place and motion: `position`, `velocity`, `acceleration`, `heading`, `facing`, `drag`, `mass`, `grip`, `pull`, `seek`, `altitude` (`start`, `rise`, `fall`, `bounce`), `shadow`, `maze` (`wall`, `slow`), `centered`.
 - Being in play: `active`, `drawn`, `light`, `dark` (`unlit` or `unseen`).
 - Look: `color`, `size`, `radius`, `width`, `height`, `thickness`, `scale`, `flip`, `hide` (parts of an SVG left out), `background`, `font`, `style=` (and `<become style>` puts a style's colours on a bitmap).
 - Collision settings: `enabled`, `lockstep`, `type` (`box` or `pixel`), `solid` (which bitmap characters touch), `hitbox`.

@@ -495,6 +495,7 @@ An object with `<maze map="maze">` walks that map's tiles: it keeps to the middl
 
 - **Walls** are the `<wall>`s inside: `<wall class="wall" />` is every object of that class on the map that is in play; `<wall class="door" sprite="normal" />` is one only while the walker shows its `normal` [look](#looks), which is how a ghost's eyes go in through a door that stops the ghost.
 - Off the map (a tunnel) it goes straight on, and the window's edge can `<wrap />` it round.
+- **Slow ground** is a `<slow class="tunnel">0.5</slow>` inside: on a tile with an object of that class (in play, drawn or not) it goes at that share of its speed. Pac-Man's ghosts go at half speed on the tunnel's tiles.
 - **How it chooses** comes from the last of three [steering verbs](#steering) it was given: `<go>` (a player's stick), `<hunt>` (the arcade's targeting, no search of the maze) or `<wander>` (at random).
 - It faces the way it goes and turns its `<heading>` if it has one. `<reverse />` turns it round; `<stop />` or a reset stops it until it is told again; on a path or in a jump, that moves it, and it carries on from the tile it is left on.
 - A tile is found from the walker's middle, so a walker of any size works; it should go less than half a tile a frame.
@@ -931,7 +932,7 @@ The variable named must belong to an object; one no object has stops the load, l
 | `<push state="paused" />` | puts that state over the current one |
 | `<pop />` | back to the state below; with only the first state left it does nothing |
 | `<pop state="result" />` | this state goes and that one takes its place, so moving on does not grow the stack |
-| `<trigger object="ship" action="fire" />` | runs one of an object's actions, as one press of its key (a `<move>` in it stays on). `object=` naming a group runs it on each member, each one's refused verbs stopping only its own run. In an object's own rules, actions and timers `object=` may be left out (itself): one death written once as an action and triggered by each rule that kills. Actions that trigger one another in a circle stop the load |
+| `<trigger object="ship" action="fire" />` | runs one of an object's actions, as one press of its key (a `<move>` in it stays on). `object=` naming a group runs it on each member, each one's refused verbs stopping only its own run. `from="normal"` runs it only on those showing that [look](#looks): Pac-Man's mode object sends `scatter` and `chase` to the normal ghosts, leaving the blue ones and the eyes alone, and a ghost normal again asks the mode, `<trigger object="mode" action="chase" from="chase" />`. In an object's own rules, actions and timers `object=` may be left out (itself): one death written once as an action and triggered by each rule that kills. Actions that trigger one another in a circle stop the load |
 | `<turns>`, `<pass />`, `<out />` | players [taking turns](#taking-turns) |
 | `<demo />` | plays the game's recorded `<demo>`, the [attract mode](#attract-mode) |
 | `<hold button="l" />` | a computer player holds that key while its condition holds |
@@ -1450,7 +1451,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 
 - The jumps are an instant step (`<hop>`), a timed straight line with an optional drawn arc (a timed `<hop>` or `<jump>`), and a fixed arc under a pull (`<leap>`). There is no air control.
 - `<chase>` goes straight at its target and `<aim>` straight at where it is, through walls and with no lead.
-- A maze walker steers as the arcade's ghosts do, by the next tile nearest a target: there is no search, so a target behind a wall can leave it going round. Pac-Man's ghosts scatter once each time they are themselves again and leave the house on timers, not on the arcade's schedule.
+- A maze walker steers as the arcade's ghosts do, by the next tile nearest a target: there is no search, so a target behind a wall can leave it going round. Pac-Man's ghosts follow the arcade's first-level schedule of scatter and chase on every level, and the four-second idle rule counts thirty dots rather than letting the next ghost out at once.
 - A path is straight legs at one speed, with numbers fixed at load; home is the object's place in the file, so a formation cannot sway. A path cannot aim.
 - Enemies fire on timers from wherever they are: an invader behind others fires through them.
 - `<facing>` is one of four ways (diagonals come only from two held keys), and never turns the picture.

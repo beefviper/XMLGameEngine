@@ -32,12 +32,19 @@
     eaten ghost go in through it.
   * Pac-Man's keys say <go>; he turns that way at the first gap there is.
   * Each ghost <hunt>s as in the arcade: at every tile it takes the way whose
-    next tile is nearest its target, and never turns back. Whenever it is
-    itself again (the start of a round, after blue, out of the house) it
-    first scatters to its own corner for seven seconds, then chases: Blinky
-    makes for Pac-Man; Pinky for four tiles in front of him; Inky for two in
-    front of him, doubled from Blinky (<with>), so the two close in from both
-    sides; Clyde for Pac-Man until he is within eight tiles, then his corner.
+    next tile is nearest its target, and never turns back. Each has two
+    actions, scatter (to its own corner) and chase: Blinky makes for
+    Pac-Man; Pinky for four tiles in front of him; Inky for two in front of
+    him, doubled from Blinky (<with>), so the two close in from both sides;
+    Clyde for Pac-Man until he is within eight tiles, then his corner.
+  * Which of the two is the mode object's look: scatter 7, chase 20,
+    scatter 7, chase 20, scatter 5, chase 20, scatter 5, then chase for
+    good, as the arcade's first level. Each switch turns the normal ghosts
+    round and sends them the new mode (<trigger from="normal">); a ghost
+    normal again asks the mode which it is (<trigger from="scatter">).
+  * Blinky starts out; Pinky comes out at once, Inky after 30 dots and
+    Clyde after 60 more. Four seconds with no dot eaten counts as 30.
+  * The ghosts go at half speed in the tunnel (<slow class="tunnel">).
   * The ghosts' modes are their looks, and timers that follow a look
     (<timer sprite="blue">) count only while the ghost shows it. A power
     pellet turns the normal ghosts blue and keeps the blue ones blue; blue, a
@@ -67,7 +74,6 @@
     <variable name="frightspeed">1</variable>
     <variable name="eyesspeed">4</variable>
     <variable name="pathspeed">1</variable>
-    <variable name="scatter">7</variable>
     <!-- where the ghost house's way out ends, above the door -->
     <variable name="out">3 * tile</variable>
   </variables>
@@ -308,7 +314,57 @@
             <variable name="fruits">0</variable>
             <variable name="pace">1.875</variable>
             <variable name="fright">6</variable>
+            <!-- dots eaten since the round began or a life was lost, and how
+                 many of Pinky, Inky and Clyde they have let out -->
+            <variable name="eaten">0</variable>
+            <variable name="released">1</variable>
           </variables>
+        </object>
+        <!-- scatter or chase: the arcade's first-level schedule, scatter for
+             7, 7, 5 and 5 seconds with 20 of chase between, then chase for
+             good. Its look is the mode; each switch turns the ghosts round
+             and sends the new one to every normal ghost -->
+        <object name="mode">
+          <sprite name="scatter"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="chase"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
+          <actions>
+            <action name="scatter"><trigger object="ghosts" action="scatter" from="normal" /></action>
+            <action name="chase"><trigger object="ghosts" action="chase" from="normal" /></action>
+          </actions>
+          <variables>
+            <variable name="waves">0</variable>
+            <variable name="scatterfor">7</variable>
+            <variable name="chasefor">20</variable>
+          </variables>
+          <timers>
+            <timer sprite="scatter">
+              <after>mode.scatterfor</after>
+              <inc variable="mode.waves" />
+              <set variable="mode.chasefor">20 + 100000 * (mode.waves &gt;= 4)</set>
+              <become sprite="chase" />
+              <trigger object="ghosts" action="turn" from="normal" />
+              <trigger action="chase" />
+            </timer>
+            <timer sprite="chase">
+              <after>mode.chasefor</after>
+              <set variable="mode.scatterfor">7 - 2 * (mode.waves &gt;= 2)</set>
+              <become sprite="scatter" />
+              <trigger object="ghosts" action="turn" from="normal" />
+              <trigger action="scatter" />
+            </timer>
+          </timers>
+        </object>
+        <!-- four seconds with no dot eaten counts as thirty, so a ghost
+             still comes out (each dot puts it back to the start) -->
+        <object name="nudge">
+          <timers>
+            <timer>
+              <every>4</every>
+              <set variable="status.eaten">status.eaten + 30</set>
+            </timer>
+          </timers>
         </object>
         <!-- the corners the ghosts scatter to, off the maze -->
         <group name="corners">
@@ -339,7 +395,7 @@
           <row>,,,,,|.||     B    ||.|,,,,,</row>
           <row>,,,,,|.|| r-]==[-7 ||.|,,,,,</row>
           <row>-----J.LJ |   h  | LJ.L-----</row>
-          <row>,,,,,,.   | I P C|   .,,,,,,</row>
+          <row>tttttt.   | I P C|   .tttttt</row>
           <row>-----7.r7 |      | r7.r-----</row>
           <row>,,,,,|.|| L------J ||.|,,,,,</row>
           <row>,,,,,|.||     f    ||.|,,,,,</row>
@@ -512,6 +568,8 @@
               <collisions>
                 <collision object="pacman">
                   <inc variable="status.score">10</inc>
+                  <inc variable="status.eaten" />
+                  <reset object="nudge" />
                   <play sound="chomp" />
                   <die />
                 </collision>
@@ -553,6 +611,8 @@
               <collisions>
                 <collision object="pacman">
                   <inc variable="status.score">50</inc>
+                  <inc variable="status.eaten" />
+                  <reset object="nudge" />
                   <set variable="status.worth">200</set>
                   <play sound="power" />
                   <!-- the blue ones first, so the ones turning blue now turn round once -->
@@ -562,6 +622,11 @@
                 </collision>
               </collisions>
             </group>
+          </group>
+          <!-- the tunnel at the sides, where a ghost goes at half speed -->
+          <group name="tunnel" char="t" class="tunnel">
+            <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+            <drawn>false</drawn>
           </group>
           <!-- what the eyes of an eaten ghost make for, inside the ghost house -->
           <object name="pen" char="h">
@@ -775,6 +840,7 @@
               <wall class="wall" />
               <wall class="door" sprite="normal" />
               <wall class="door" sprite="blue" />
+              <slow class="tunnel">0.5</slow>
             </maze>
             <collisions>
               <hitbox>
@@ -791,6 +857,9 @@
                 <reset object="pacman" />
                 <reset object="ghosts" />
                 <become object="fruit" sprite="none" />
+                <set variable="status.eaten">0</set>
+                <set variable="status.released">1</set>
+                <reset object="mode" />
               </collision>
               <collision object="pacman" sprite="blue">
                 <inc variable="status.score">status.worth</inc>
@@ -803,7 +872,16 @@
                 <trigger action="out" />
               </collision>
             </collisions>
+            <actions>
+              <action name="turn"><reverse /></action>
+            </actions>
             <timers>
+              <!-- normal again (or at the start): back to what the mode says -->
+              <timer sprite="normal">
+                <after>0</after>
+                <trigger object="mode" action="scatter" from="scatter" />
+                <trigger object="mode" action="chase" from="chase" />
+              </timer>
               <!-- blue: it turns round and wanders, and in time is normal again -->
               <timer sprite="blue">
                 <after>0</after>
@@ -828,35 +906,19 @@
             <group name="blinky" char="B">
               <actions>
                 <action name="out"><follow path="blinkyout" /></action>
+                <action name="scatter"><hunt object="topright">status.pace</hunt></action>
+                <action name="chase"><hunt object="pacman">status.pace</hunt></action>
               </actions>
-              <timers>
-                <timer sprite="normal">
-                  <after>0</after>
-                  <hunt object="topright">status.pace</hunt>
-                </timer>
-                <timer sprite="normal">
-                  <after>scatter</after>
-                  <reverse />
-                  <hunt object="pacman">status.pace</hunt>
-                </timer>
-              </timers>
             </group>
             <!-- Pinky makes for four tiles in front of him -->
             <group name="pinky" char="P">
               <sprite name="normal"><bitmap><color>color.magenta</color></bitmap></sprite>
               <actions>
                 <action name="out"><follow path="pinkyout" /></action>
+                <action name="scatter"><hunt object="topleft">status.pace</hunt></action>
+                <action name="chase"><hunt object="pacman">status.pace<ahead>4</ahead></hunt></action>
               </actions>
               <timers>
-                <timer sprite="normal">
-                  <after>0</after>
-                  <hunt object="topleft">status.pace</hunt>
-                </timer>
-                <timer sprite="normal">
-                  <after>scatter</after>
-                  <reverse />
-                  <hunt object="pacman">status.pace<ahead>4</ahead></hunt>
-                </timer>
                 <timer>
                   <after>1</after>
                   <trigger action="out" />
@@ -868,44 +930,18 @@
               <sprite name="normal"><bitmap><color>color.cyan</color></bitmap></sprite>
               <actions>
                 <action name="out"><follow path="inkyout" /></action>
+                <action name="scatter"><hunt object="bottomright">status.pace</hunt></action>
+                <action name="chase"><hunt object="pacman">status.pace<ahead>2</ahead><with object="blinky" /></hunt></action>
               </actions>
-              <timers>
-                <timer sprite="normal">
-                  <after>0</after>
-                  <hunt object="bottomright">status.pace</hunt>
-                </timer>
-                <timer sprite="normal">
-                  <after>scatter</after>
-                  <reverse />
-                  <hunt object="pacman">status.pace<ahead>2</ahead><with object="blinky" /></hunt>
-                </timer>
-                <timer>
-                  <after>5</after>
-                  <trigger action="out" />
-                </timer>
-              </timers>
             </group>
             <!-- Clyde backs off to his corner when he gets near -->
             <group name="clyde" char="C">
               <sprite name="normal"><bitmap><color>color.orange</color></bitmap></sprite>
               <actions>
                 <action name="out"><follow path="clydeout" /></action>
+                <action name="scatter"><hunt object="bottomleft">status.pace</hunt></action>
+                <action name="chase"><hunt object="pacman">status.pace<retreat object="bottomleft">8</retreat></hunt></action>
               </actions>
-              <timers>
-                <timer sprite="normal">
-                  <after>0</after>
-                  <hunt object="bottomleft">status.pace</hunt>
-                </timer>
-                <timer sprite="normal">
-                  <after>scatter</after>
-                  <reverse />
-                  <hunt object="pacman">status.pace<retreat object="bottomleft">8</retreat></hunt>
-                </timer>
-                <timer>
-                  <after>10</after>
-                  <trigger action="out" />
-                </timer>
-              </timers>
             </group>
           </group>
         </map>
@@ -976,10 +1012,30 @@
           <reset object="pacman" />
           <reset object="ghosts" />
           <become object="fruit" sprite="none" />
+          <set variable="status.eaten">0</set>
+          <set variable="status.released">1</set>
+          <reset object="mode" />
           <set variable="status.fruits">0</set>
           <set variable="status.pace">min(2.125, status.pace + 0.0625)</set>
           <set variable="status.fright">max(1, status.fright - 1)</set>
           <push state="caught" />
+        </condition>
+        <!-- Inky comes out after thirty dots, Clyde after sixty more -->
+        <condition>
+          <all>
+            <condition object="status" variable="eaten"><atleast>30</atleast></condition>
+            <condition object="status" variable="released"><equal>1</equal></condition>
+          </all>
+          <inc variable="status.released" />
+          <trigger object="inky" action="out" />
+        </condition>
+        <condition>
+          <all>
+            <condition object="status" variable="eaten"><atleast>90</atleast></condition>
+            <condition object="status" variable="released"><equal>2</equal></condition>
+          </all>
+          <inc variable="status.released" />
+          <trigger object="clyde" action="out" />
         </condition>
         <!-- the cherry, after 70 dots and after 170 -->
         <condition>
@@ -1037,8 +1093,7 @@
           <push state="paused" />
         </input>
       </inputs>
-      <!-- every, not after: an after goes off once a game, and this state
-           comes back -->
+      <!-- a push starts the state's timers over, so it waits each time -->
       <timers>
         <timer name="wait">
           <after>2</after>

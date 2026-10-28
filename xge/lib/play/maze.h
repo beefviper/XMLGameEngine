@@ -34,7 +34,9 @@ namespace xge
 	// - <wander>: of the same ways, one at random.
 	//
 	// It faces the way it goes (and turns its heading, if it has one), and
-	// keeps the speed it was told; a stopped walker chooses again at once,
+	// keeps the speed it was told, times the share of a <slow> for a tile
+	// that holds something of its class (Pac-Man's ghosts in the tunnel);
+	// a stopped walker chooses again at once,
 	// any way open. A <reverse /> turns it round where it is, and it then
 	// chooses again at the next tile. While it follows a <path> or is in the
 	// air, the path or the jump moves it instead.

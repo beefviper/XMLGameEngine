@@ -55,7 +55,7 @@ namespace xge
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
+			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true, a.from); },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { done = spawn(c); },
 			[&](const CmdDespawn& d) { despawn(&object, d); },
@@ -113,7 +113,7 @@ namespace xge
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
+			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true, a.from); },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { done = spawn(c); },
 			[&](const CmdDespawn& d) { despawn(&object, d); },
@@ -132,7 +132,7 @@ namespace xge
 		std::visit(overload{
 			[&](const CmdPushState& s) { if (keyPressed) { game.pushState(s.name); } },
 			[&](const CmdPopState& s) { if (keyPressed) { game.popState(s.name); } },
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed); },
+			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed, a.from); },
 			[&](const CmdResetObject& r) { if (keyPressed) { game.resetObject(r.target); } },
 			// Bare reset() means something different here than it does inside a
 			// collision (executeScreenEdgeCollision resets just the colliding
@@ -202,7 +202,7 @@ namespace xge
 			[&](const CmdPushState& s) { game.pushState(s.name); },
 			[&](const CmdPopState& s) { game.popState(s.name); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true); },
+			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true, a.from); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdCopy& c) { game.copyVariable(c.from, c.into); },
@@ -572,12 +572,13 @@ namespace xge
 		object.hopPending = step;
 	}
 
-	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed)
+	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, const std::string& from)
 	{
+		const auto showing = [&](const Object& object) { return from.empty() || object.lookName() == from; };
 		Object& first = game.getObject(objectName);
 		if (first.name == objectName || !first.inGroup(objectName))
 		{
-			runAction(first, actionName, keyPressed);
+			if (showing(first)) { runAction(first, actionName, keyPressed); }
 			return;
 		}
 
@@ -587,7 +588,7 @@ namespace xge
 		const std::size_t count = objects.size();
 		for (std::size_t i = 0; i < count; ++i)
 		{
-			if (objects[i].inGroup(objectName)) { runAction(objects[i], actionName, keyPressed); }
+			if (objects[i].inGroup(objectName) && showing(objects[i])) { runAction(objects[i], actionName, keyPressed); }
 		}
 	}
 
@@ -666,7 +667,7 @@ namespace xge
 				[&](const CmdWander& w) { if (keyPressed) { startWander(object, w); } },
 				// Another action, of this object or another, run as part of this
 				// one; the loader turns away an action that runs itself again.
-				[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed); },
+				[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed, a.from); },
 				[&](const auto&) { /* ruleFor in load/expr lists what an action holds */ }
 			}, keyPressed ? now(written, made) : shapeOf(written));
 

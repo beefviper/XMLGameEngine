@@ -770,6 +770,16 @@
           <xs:attribute name="sprite" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
+      <!-- slow: on a tile holding something of this class, the walker goes at this share of its speed -->
+      <xs:element name="slow" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:decimal">
+              <xs:attribute name="class" type="xs:string" use="required" />
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
     <xs:attribute name="map" type="xs:string" use="required" />
   </xs:complexType>
@@ -913,6 +923,8 @@
           <!-- left out in an object's own collision, action or timer: that object -->
           <xs:attribute name="object" type="xs:string" use="optional" />
           <xs:attribute name="action" type="xs:string" use="required" />
+          <!-- only those of them showing this look -->
+          <xs:attribute name="from" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
     </xs:choice>

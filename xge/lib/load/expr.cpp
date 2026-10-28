@@ -1760,6 +1760,7 @@ namespace xge
 		}
 		object.mazeMap = rawObject.maze.map;
 		object.mazeWalls = rawObject.maze.walls;
+		object.mazeSlows = rawObject.maze.slows;
 		for (const MazeWall& wall : object.mazeWalls)
 		{
 			if (!wall.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == wall.sprite; }))

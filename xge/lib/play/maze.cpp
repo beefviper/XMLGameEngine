@@ -85,6 +85,7 @@ namespace xge
 				const int column = static_cast<int>(std::floor((middle.x - grid.origin.x) / grid.tile.x));
 				const int row = static_cast<int>(std::floor((middle.y - grid.origin.y) / grid.tile.y));
 				const bool onMap = grid.onMap(column, row);
+				speed = onMap ? walk.speed * shareAt(column, row) : walk.speed;
 
 				// Standing still: on a tile, it starts from the middle of it,
 				// any way open (a <go>: only the way wished).
@@ -137,7 +138,7 @@ namespace xge
 				// middle of the tile.
 				constexpr float slack = 0.01f;
 				const float ahead = (lane.x - middle.x) * unit(going).x + (lane.y - middle.y) * unit(going).y;
-				if (ahead < -slack || ahead >= walk.speed - slack)
+				if (ahead < -slack || ahead >= speed - slack)
 				{
 					head(going);
 					return;
@@ -170,6 +171,26 @@ namespace xge
 			std::vector<Object>& objects;
 			const Grid& grid;
 			FrameRules& rules;
+
+			// Its speed this frame: what it was told, times the share of a
+			// <slow> for the tile it is on.
+			float speed{};
+
+			// The share of its speed on this tile: the first of its <slow>s
+			// whose class something in play on the tile has, or the whole.
+			float shareAt(int column, int row) const
+			{
+				if (walker.mazeSlows.empty()) { return 1.0f; }
+				const auto& here = grid.at[static_cast<std::size_t>(row) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(column)];
+				for (const MazeSlow& slow : walker.mazeSlows)
+				{
+					for (const std::size_t index : here)
+					{
+						if (objects[index].objClass == slow.objClass && rules.inPlay(objects[index])) { return slow.share; }
+					}
+				}
+				return 1.0f;
+			}
 
 			// Whether a tile holds a wall to this walker.
 			bool blocked(int column, int row) const
@@ -284,7 +305,7 @@ namespace xge
 			// Going that way at its speed, facing it.
 			void head(Direction way)
 			{
-				walker.velocity = unit(way) * walker.walk.speed;
+				walker.velocity = unit(way) * speed;
 				walker.walk.going = way;
 				face(way);
 			}
