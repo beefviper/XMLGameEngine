@@ -9,6 +9,7 @@
 // (more of <spawn> in test_spawn.cpp);
 // then played in games/descriptions/fishingderby.xml.
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "play/collision.h"
@@ -92,7 +93,7 @@ namespace
 		Scratch(const Scratch&) = delete;
 		Scratch& operator=(const Scratch&) = delete;
 
-		const std::string path = "descriptions/live_scratch.xml";
+		const std::string path = scratchName("descriptions/live_scratch.xml");
 	};
 
 	std::string box(const std::string& name, float x, float y, const std::string& rest = "")

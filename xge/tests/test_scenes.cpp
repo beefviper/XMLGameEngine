@@ -11,6 +11,7 @@
 // TinyXml2 (the built-in validator). Frames are played with
 // Game::updateObjects(); nothing needs a window.
 
+#include "scratch.h"
 #include "play/executor.h"
 #include "game/game.h"
 #include "load/xml.h"
@@ -90,7 +91,7 @@ namespace
 
 		static std::filesystem::path write(const std::string& xml)
 		{
-			const std::filesystem::path path = "descriptions/scenes_scratch.xml";
+			const std::filesystem::path path = scratchName("descriptions/scenes_scratch.xml");
 			std::ofstream out(path);
 			out << xml;
 			return path;

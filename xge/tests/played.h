@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "play/collision.h"
@@ -124,7 +125,7 @@ namespace played
 		Scratch(const Scratch&) = delete;
 		Scratch& operator=(const Scratch&) = delete;
 
-		const std::string path = "descriptions/played_scratch.xml";
+		const std::string path = scratchName("descriptions/played_scratch.xml");
 	};
 
 	// An object of a 10 by 10 rectangle at x, y, and whatever else it is given.

@@ -16,6 +16,7 @@
 // a Game built on its own has {0, 0}, so measure() gives every shape the size
 // its sprite implies, which is what the backends would measure too.
 
+#include "scratch.h"
 #include "picture/bitmap.h"
 #include "play/executor.h"
 #include "engine/folder.h"
@@ -1088,7 +1089,7 @@ namespace
 	// Game, and removes it again.
 	struct Scratch
 	{
-		std::filesystem::path path{ "descriptions/asteroids_scratch.xml" };
+		std::filesystem::path path{ scratchName("descriptions/asteroids_scratch.xml") };
 
 		explicit Scratch(const std::string& xml)
 		{

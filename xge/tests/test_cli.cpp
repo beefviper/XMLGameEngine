@@ -10,6 +10,7 @@
 // Test names must not start with "-" or contain a comma: ctest hands the name to
 // Catch2 on its command line, which reads them as an option or a list.
 
+#include "scratch.h"
 #include "cli.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -32,7 +33,7 @@ namespace
 	public:
 		TempWorkingDirectory() :
 			previous(std::filesystem::current_path()),
-			directory(std::filesystem::temp_directory_path() / "xge_test_cli")
+			directory(std::filesystem::temp_directory_path() / scratchName("xge_test_cli"))
 		{
 			std::filesystem::remove_all(directory);
 			std::filesystem::create_directories(directory);

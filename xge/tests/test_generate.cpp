@@ -11,6 +11,7 @@
 // the file, field by field and frame by frame, is in
 // test_generated_games.cpp, which compiles it.
 
+#include "scratch.h"
 #include "game/game.h"
 #include "load/xml.h"
 #include "generate.h"
@@ -34,7 +35,7 @@ namespace
 	{
 	public:
 		explicit TempFolder(const std::string& name) :
-			path(fs::temp_directory_path() / name)
+			path(fs::temp_directory_path() / scratchName(name))
 		{
 			fs::remove_all(path);
 		}

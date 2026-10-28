@@ -13,6 +13,7 @@
 // validator), so every test also checks that the schema takes the new tags.
 // Frames are played with Game::updateObjects(); nothing needs a window.
 
+#include "scratch.h"
 #include "play/executor.h"
 #include "game/game.h"
 #include "load/xml.h"
@@ -102,7 +103,7 @@ namespace
 
 		static std::filesystem::path write(const std::string& xml)
 		{
-			const std::filesystem::path path = "descriptions/verbs_scratch.xml";
+			const std::filesystem::path path = scratchName("descriptions/verbs_scratch.xml");
 			std::ofstream out(path);
 			out << xml;
 			return path;
@@ -458,7 +459,7 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<objects>" + objects + "</objects><states>" + states + "</states></game>";
-		ScratchFile scratch{ std::filesystem::temp_directory_path() / "xge_verbs_errors.xml" };
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
 			std::ofstream out(scratch.path);
 			out << xml;
@@ -688,7 +689,7 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<objects>" + objects + "</objects><states>" + states + "</states></game>";
-		ScratchFile scratch{ std::filesystem::temp_directory_path() / "xge_verbs_errors.xml" };
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
 			std::ofstream out(scratch.path);
 			out << xml;
@@ -838,7 +839,7 @@ TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game lo
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<objects>" + box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
 			+ "</objects>" + keeps + "<states>" + state("playing", { "o" }, inputs) + "</states></game>";
-		ScratchFile scratch{ std::filesystem::temp_directory_path() / "xge_verbs_errors.xml" };
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
 			std::ofstream out(scratch.path);
 			out << xml;

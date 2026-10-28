@@ -10,6 +10,7 @@
 // mass) and games/descriptions/mariobros.xml (a knock through a floor turns
 // over what walks on it).
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "play/collision.h"
@@ -200,7 +201,7 @@ TEST_CASE("a mass is more than 0, and a knock's bounce 0 up to 1", "[knock]")
 {
 	const auto load = [](const std::string& object)
 	{
-		const std::filesystem::path path = "descriptions/knock_scratch.xml";
+		const std::filesystem::path path = scratchName("descriptions/knock_scratch.xml");
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"

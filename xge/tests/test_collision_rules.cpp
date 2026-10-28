@@ -14,6 +14,7 @@
 // Regression covered: Space Invaders' bullet used an unfiltered collision
 // rule, so it died the moment it overlapped the ship that fired it.
 
+#include "scratch.h"
 #include "game/game.h"
 #include "load/xml.h"
 #include "played.h"
@@ -112,7 +113,7 @@ namespace
 	// written beside the shipped ones for as long as it lives.
 	struct Falling
 	{
-		std::filesystem::path path = "descriptions/rules_scratch.xml";
+		std::filesystem::path path = scratchName("descriptions/rules_scratch.xml");
 		std::optional<Game> game;
 
 		Falling(const std::string& rule, const std::string& armed, XmlBackend backend = XmlBackend::Xerces)
@@ -198,7 +199,7 @@ TEST_CASE("a collision rule with side= runs only when touched on that side of it
 
 TEST_CASE("a <trigger> with no object= outside an object's own lists stops the load", "[collision_rules]")
 {
-	const std::filesystem::path path = "descriptions/rules_scratch.xml";
+	const std::filesystem::path path = scratchName("descriptions/rules_scratch.xml");
 	{
 		std::ofstream out(path);
 		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"

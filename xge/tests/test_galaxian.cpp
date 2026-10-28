@@ -16,6 +16,7 @@
 // for, ranked, and kept in a file, two players taking turns, and the demo
 // the title plays when left alone.
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "load/xml.h"
@@ -131,7 +132,7 @@ namespace
 
 		static std::filesystem::path write(const std::string& paths, const std::string& objects, const std::string& stateExtra)
 		{
-			const std::filesystem::path path = std::filesystem::temp_directory_path() / "xge_paths_scratch.xml";
+			const std::filesystem::path path = std::filesystem::temp_directory_path() / scratchName("xge_paths_scratch.xml");
 			std::ofstream out(path);
 			out << "<game><window name=\"paths\"><width>200</width><height>100</height><background>color.black</background>"
 				"<fullscreen>false</fullscreen><framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
@@ -552,7 +553,7 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 
 TEST_CASE("what Galaxian keeps lasts in a file from one run to the next", "[galaxian][scores][keeps]")
 {
-	const std::filesystem::path file = "saves/galaxian_test.xml";
+	const std::filesystem::path file = scratchName("saves/galaxian_test.xml");
 	std::filesystem::remove(file);
 	{
 		Play play("descriptions/galaxian.xml");

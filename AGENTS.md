@@ -32,6 +32,7 @@ Flow: `load/xml` (parse, validate) → `load/expr` (evaluate with exprtk) → `O
 cmake -B build -DBUILD_TESTING=ON
 cmake --build build
 output/Debug/xgetest            # Catch2 filters work, e.g. "[kaboom]"
+cd build && ctest -j16          # each case its own run, side by side
 cmake --build build --target xgetest-generated && output/Debug/xgetest-generated   # generated games, separate
 output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
 ```

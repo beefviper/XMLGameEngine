@@ -17,6 +17,7 @@
 // backend by setting Object::size and sizeKnown themselves, or by using a
 // fake Window whose init() measures every text.
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 
@@ -187,7 +188,7 @@ namespace
 			xml.replace(at, from.size(), to);
 		}
 
-		ScratchFile scratch{ "descriptions/size_expressions_scratch.xml" };
+		ScratchFile scratch{ scratchName("descriptions/size_expressions_scratch.xml") };
 		std::ofstream out(scratch.path);
 		out << xml;
 		return scratch;

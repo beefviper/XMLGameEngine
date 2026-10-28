@@ -9,6 +9,7 @@
 // mouse, as the Atari's paddle). Engine::handleControls is given what a
 // window would report.
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "engine/keys.h"
@@ -65,7 +66,7 @@ namespace
 	// A file that is removed again when the test ends.
 	struct ScratchGame
 	{
-		std::filesystem::path path{ "descriptions/controls_scratch.xml" };
+		std::filesystem::path path{ scratchName("descriptions/controls_scratch.xml") };
 
 		explicit ScratchGame(const std::string& xml)
 		{

@@ -13,6 +13,7 @@
 // Objects for the geometry tests are built by hand; small games are written to
 // a scratch file and loaded by a real xge::Game. None of it needs a window.
 
+#include "scratch.h"
 #include "picture/bitmap.h"
 #include "play/collision.h"
 #include "play/executor.h"
@@ -109,7 +110,7 @@ namespace
 
 	ScratchFile writeScratch(const std::string& name, const std::string& xml)
 	{
-		ScratchFile scratch{ std::filesystem::temp_directory_path() / name };
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName(name) };
 		std::ofstream out(scratch.path);
 		out << xml;
 		return scratch;
@@ -755,7 +756,7 @@ namespace
 	// relative schema path resolves.
 	Verdict judge(const std::string& xml)
 	{
-		const ScratchFile scratch{ "descriptions/lines_scratch.xml" };
+		const ScratchFile scratch{ scratchName("descriptions/lines_scratch.xml") };
 		{
 			std::ofstream out(scratch.path);
 			out << xml;

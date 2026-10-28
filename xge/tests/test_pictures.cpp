@@ -10,6 +10,7 @@
 // written to a scratch file and loaded by a real xge::Game; nothing needs a
 // window.
 
+#include "scratch.h"
 #include "picture/bitmap.h"
 #include "game/game.h"
 
@@ -44,7 +45,7 @@ namespace
 	// goes after each one's <velocity> (a <heading>).
 	struct Pictures
 	{
-		ScratchFile file{ std::filesystem::temp_directory_path() / "xge_test_pictures.xml" };
+		ScratchFile file{ std::filesystem::temp_directory_path() / scratchName("xge_test_pictures.xml") };
 		std::unique_ptr<Game> game;
 
 		Pictures(const std::vector<std::string>& sprites, const std::string& extra = {})

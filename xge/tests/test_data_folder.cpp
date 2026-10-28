@@ -11,6 +11,7 @@
 // Test names must not start with "-" or contain a comma: ctest hands the name to
 // Catch2 on its command line, which reads them as an option or a list.
 
+#include "scratch.h"
 #include "engine/folder.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -32,7 +33,7 @@ namespace
 	{
 	public:
 		TempRoot() :
-			root(fs::weakly_canonical(fs::temp_directory_path()) / "xge_test_data_folder")
+			root(fs::weakly_canonical(fs::temp_directory_path()) / scratchName("xge_test_data_folder"))
 		{
 			fs::remove_all(root);
 			fs::create_directories(root);

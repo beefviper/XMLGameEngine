@@ -11,6 +11,7 @@
 // and the mistakes that stop the load. Small games are written out and
 // played with no window (played.h).
 
+#include "scratch.h"
 #include "played.h"
 
 #include <catch2/catch_approx.hpp>
@@ -120,7 +121,7 @@ TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads it
 {
 	const std::string kit = "<object name=\"bomb\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
 		"<velocity><x>0</x><y>pace</y></velocity><most>3</most></object>";
-	const std::string path = "descriptions/kit_scratch.xml";
+	const std::string path = scratchName("descriptions/kit_scratch.xml");
 	{
 		std::ofstream out(path);
 		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"

@@ -10,6 +10,7 @@
 // handing what was asked for to its Audio (audio/audio.h). No
 // test opens a sound device: Engine is given a recording Audio instead.
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "load/xml.h"
@@ -117,7 +118,7 @@ namespace
 	// Loads the game, or rethrows what loading it threw.
 	std::vector<SoundDesc> loadSounds(const std::string& xml)
 	{
-		ScratchFile scratch{ std::filesystem::temp_directory_path() / "xge_test_sound.xml" };
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_test_sound.xml") };
 		{
 			std::ofstream out(scratch.path);
 			out << xml;

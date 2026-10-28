@@ -13,6 +13,7 @@
 // Window::init() normally measures each object's size once a backend exists;
 // measure() gives every shape the size its sprite implies instead.
 
+#include "scratch.h"
 #include "play/executor.h"
 #include "engine/folder.h"
 #include "game/game.h"
@@ -128,7 +129,7 @@ namespace
 
 	std::string loadError(const std::string& xml)
 	{
-		const std::filesystem::path path = "descriptions/pacman_scratch.xml";
+		const std::filesystem::path path = scratchName("descriptions/pacman_scratch.xml");
 		{
 			std::ofstream out(path);
 			out << xml;
@@ -542,7 +543,7 @@ TEST_CASE("map: a group on a map has every part an object has, heading to seek",
 		"<group name=\"walls\" char=\"#\" class=\"wall\">" + kWallSprite + "</group>"
 		"<group name=\"mines\" char=\"o\">" + kDotSprite + "<heading>90</heading><drag>0.5</drag><mass>2</mass><pull object=\"p\">0.25</pull><seek object=\"p\">3</seek></group>"
 		"<object name=\"p\" char=\"@\">" + kDotSprite + "</object></map>");
-	const std::filesystem::path path = "descriptions/pacman_scratch.xml";
+	const std::filesystem::path path = scratchName("descriptions/pacman_scratch.xml");
 	{
 		std::ofstream out(path);
 		out << xml;

@@ -8,6 +8,7 @@
 // take time and hunting by hops (Coily), and a control moving an object
 // along a path (<track path>).
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "play/collision.h"
@@ -93,7 +94,7 @@ namespace
 		Scratch(const Scratch&) = delete;
 		Scratch& operator=(const Scratch&) = delete;
 
-		const std::string path = "descriptions/steering_scratch.xml";
+		const std::string path = scratchName("descriptions/steering_scratch.xml");
 	};
 
 	std::string box(const std::string& name, float x, float y, const std::string& rest = "")

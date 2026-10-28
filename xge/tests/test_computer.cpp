@@ -8,6 +8,7 @@
 // what a condition compares can be where things are and how they go. Then
 // the far player of games/descriptions/tennis.xml.
 
+#include "scratch.h"
 #include "played.h"
 
 #include <catch2/catch_approx.hpp>
@@ -47,7 +48,7 @@ namespace
 
 	struct Written
 	{
-		const std::string path = "descriptions/computer_scratch.xml";
+		const std::string path = scratchName("descriptions/computer_scratch.xml");
 		explicit Written(const std::string& text) { std::ofstream(path) << text; }
 		~Written()
 		{

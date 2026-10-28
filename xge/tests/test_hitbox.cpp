@@ -7,6 +7,7 @@
 // its bitmap (<solid char>), or a shape of its own (<hitbox>), as Q*bert's
 // cubes touch by their tops and Q*bert by his feet.
 
+#include "scratch.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "picture/bitmap.h"
@@ -87,7 +88,7 @@ namespace
 		Scratch(const Scratch&) = delete;
 		Scratch& operator=(const Scratch&) = delete;
 
-		const std::string path = "descriptions/hitbox_scratch.xml";
+		const std::string path = scratchName("descriptions/hitbox_scratch.xml");
 	};
 
 	// A 10 by 10 box at 105, 200 that hops straight up by each of `hops`

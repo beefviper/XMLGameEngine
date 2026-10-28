@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include "scratch.h"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -338,7 +339,7 @@ namespace invaders_fixture
 			std::string file;
 
 			Written() :
-				file((std::filesystem::temp_directory_path() / "xge_invaders_fixture.xml").string())
+				file((std::filesystem::temp_directory_path() / scratchName("xge_invaders_fixture.xml")).string())
 			{
 				std::ofstream out(file);
 				out << xml();

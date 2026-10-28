@@ -13,6 +13,7 @@
 // Small games are written to a scratch file and loaded by a real xge::Game;
 // none of it needs a window.
 
+#include "scratch.h"
 #include "engine/folder.h"
 #include "game/game.h"
 #include "load/expr.h"
@@ -61,7 +62,7 @@ namespace
 
 	ScratchFile writeScratch(const std::string& name, const std::string& xml)
 	{
-		ScratchFile scratch{ std::filesystem::temp_directory_path() / name };
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName(name) };
 		std::ofstream out(scratch.path);
 		out << xml;
 		return scratch;
@@ -805,7 +806,7 @@ namespace
 	// relative schema path resolves.
 	Verdict judge(const std::string& xml)
 	{
-		const ScratchFile scratch{ "descriptions/xml_format_scratch.xml" };
+		const ScratchFile scratch{ scratchName("descriptions/xml_format_scratch.xml") };
 		{
 			std::ofstream out(scratch.path);
 			out << xml;

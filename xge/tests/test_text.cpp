@@ -9,6 +9,7 @@
 // validation) and TinyXml2 (the built-in validator). Nothing needs a
 // window.
 
+#include "scratch.h"
 #include "game/game.h"
 #include "load/xml.h"
 
@@ -30,7 +31,7 @@ namespace
 	// The game file `objects` and `styles` make, written for as long as it lives.
 	struct Written
 	{
-		std::filesystem::path path = "descriptions/text_scratch.xml";
+		std::filesystem::path path = scratchName("descriptions/text_scratch.xml");
 
 		Written(const std::string& objects, const std::string& styles)
 		{

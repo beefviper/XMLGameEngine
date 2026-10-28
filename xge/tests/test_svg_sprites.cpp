@@ -13,6 +13,7 @@
 // Small games and SVG files are written to scratch files and loaded by a real
 // xge::Game; none of it needs a window.
 
+#include "scratch.h"
 #include "picture/bitmap.h"
 #include "play/executor.h"
 #include "engine/folder.h"
@@ -60,7 +61,7 @@ namespace
 
 	ScratchFile writeScratch(const std::string& name, const std::string& text)
 	{
-		ScratchFile scratch{ std::filesystem::temp_directory_path() / name };
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName(name) };
 		std::ofstream out(scratch.path, std::ios::binary);
 		out << text;
 		return scratch;
@@ -303,7 +304,7 @@ TEST_CASE("mistakes in an svg are reported, naming the file", "[svg]")
 	SECTION("a file that is not an svg")
 	{
 		const ScratchFile notSvg = writeScratch("xge_test_not_an_svg.svg", "this is not a drawing at all");
-		CHECK_THROWS_WITH(rasterizeSvg(pathOf(notSvg), SvgRegion{}, 1.0f), ContainsSubstring("xge_test_not_an_svg.svg"));
+		CHECK_THROWS_WITH(rasterizeSvg(pathOf(notSvg), SvgRegion{}, 1.0f), ContainsSubstring("xge_test_not_an_svg"));
 	}
 
 	SECTION("a scale that is not above 0")
@@ -698,7 +699,7 @@ namespace
 	// relative schema path resolves.
 	Verdict judge(const std::string& xml)
 	{
-		const ScratchFile scratch{ "descriptions/svg_scratch.xml" };
+		const ScratchFile scratch{ scratchName("descriptions/svg_scratch.xml") };
 		{
 			std::ofstream out(scratch.path);
 			out << xml;
