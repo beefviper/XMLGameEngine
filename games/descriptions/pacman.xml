@@ -1041,7 +1041,7 @@
            comes back -->
       <timers>
         <timer name="wait">
-          <every>2</every>
+          <after>2</after>
           <pop />
         </timer>
       </timers>
@@ -1050,7 +1050,7 @@
       <music sound="start" />
       <timers>
         <timer name="wait">
-          <every>4.3</every>
+          <after>4.3</after>
           <pop />
         </timer>
       </timers>

@@ -560,6 +560,12 @@ namespace xge
 			{ "subtract", "minuend", "subtrahend", '-' },
 			{ "multiply", "multiplicand", "multiplier", '*' },
 			{ "divide", "dividend", "divisor", '/' },
+			{ "smallest", "of", "of", 0, "min" },
+			{ "largest", "of", "of", 0, "max" },
+			{ "absolute", "of", "of", 0, "abs", 1, 1 },
+			{ "clamp", "of", "atleast", 0, "clamp", 3, 3, "atmost" },
+			// A <random> with a <formula> end (RawValue::operations).
+			{ "random", "min", "max", 0, "random", 2, 2 },
 		};
 
 		for (const OperationShape& shape : shapes)
@@ -575,12 +581,13 @@ namespace xge
 		std::string operationText(const RawOperation& operation)
 		{
 			const OperationShape* shape = operationShape(operation.op);
-			const std::string symbol = shape ? std::string(1, shape->symbol) : operation.op;
+			const bool infix = shape && shape->symbol != 0;
+			const std::string between = infix ? " " + std::string(1, shape->symbol) + " " : ", ";
 
-			std::string text = "(";
+			std::string text = infix ? "(" : (shape ? shape->function : operation.op) + std::string("(");
 			for (std::size_t i = 0; i < operation.operands.size(); ++i)
 			{
-				if (i > 0) { text += " " + symbol + " "; }
+				if (i > 0) { text += between; }
 				text += valueText(operation.operands[i].value);
 			}
 			return text + ")";
@@ -592,6 +599,7 @@ namespace xge
 		switch (value.kind)
 		{
 		case RawValue::Kind::Random:
+			if (value.operations && !value.operations->empty()) { return operationText(value.operations->front()); }
 			return "random(" + value.min + ", " + value.max + ")";
 
 		case RawValue::Kind::Centered:
@@ -609,9 +617,9 @@ namespace xge
 
 	std::vector<const std::string*> RawValue::expressions() const
 	{
-		if (kind == Kind::Random) { return { &min, &max }; }
+		if (kind == Kind::Random && !operations) { return { &min, &max }; }
 
-		if (kind == Kind::Formula)
+		if (kind == Kind::Formula || kind == Kind::Random)
 		{
 			std::vector<const std::string*> all;
 			if (operations)

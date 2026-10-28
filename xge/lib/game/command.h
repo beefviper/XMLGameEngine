@@ -627,7 +627,9 @@ namespace xge
 		std::string max;
 
 		// Formula: the one operation it is. Shared, not copied, when a value
-		// is.
+		// is. Random with an end that is a <formula>: one operation "random"
+		// of two operands, `min` and `max` (each an expression or a formula),
+		// and min and max above left empty.
 		std::shared_ptr<const std::vector<RawOperation>> operations;
 
 		static RawValue expression(std::string text)
@@ -657,9 +659,10 @@ namespace xge
 	};
 
 	// One arithmetic operation of a <formula>: `op` is the tag (add,
-	// subtract, multiply, divide). The first operand is combined with each of
-	// the others in turn, left to right, so that `a - b - c` is one subtract
-	// with two subtrahends.
+	// subtract, multiply, divide, smallest, largest, absolute, clamp). The
+	// first operand of the four arithmetic ones is combined with each of the
+	// others in turn, left to right, so that `a - b - c` is one subtract with
+	// two subtrahends.
 	struct RawOperation
 	{
 		std::string op;
@@ -667,14 +670,27 @@ namespace xge
 	};
 
 	// What an arithmetic tag is: its name, the role of its first operand and of
-	// the others (one of the first and one or more of the second), and the
-	// symbol it is printed with.
+	// the others, how many operands it takes (`most` 0 for no limit), the role
+	// of its last when that differs (clamp's <atmost>), and how it is printed:
+	// infix with `symbol`, or as `function(a, b)` when symbol is 0.
 	struct OperationShape
 	{
 		const char* tag;
 		const char* first;
 		const char* rest;
 		char symbol;
+		const char* function{ nullptr };
+		std::size_t fewest{ 2 };
+		std::size_t most{ 0 };
+		const char* last{ nullptr };
+
+		// The role the operand at `index` plays.
+		const char* roleAt(std::size_t index) const noexcept
+		{
+			if (index == 0) { return first; }
+			if (last && most > 0 && index + 1 == most) { return last; }
+			return rest;
+		}
 	};
 
 	// The shape of an arithmetic tag, or null when the tag is not one.

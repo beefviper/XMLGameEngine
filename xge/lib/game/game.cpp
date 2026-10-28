@@ -628,6 +628,9 @@ namespace xge
 			throw std::out_of_range("no state named '" + name + "'");
 		}
 
+		// Each visit starts its timers over: an <after> goes off once a
+		// visit, not once a game. A pop back to a state carries on its own.
+		stateTimers[name] = result->timers;
 		currentState.push(*result);
 		++stateChanges;
 		stageChanged();
@@ -719,6 +722,7 @@ namespace xge
 		{
 			currentState.pop();
 		}
+		stateTimers[name] = result->timers;
 		currentState.push(*result);
 		++stateChanges;
 		stageChanged();
@@ -913,8 +917,6 @@ namespace xge
 		const std::string& state = turns[turn].state;
 		if (!state.empty())
 		{
-			const auto found = std::find_if(states.begin(), states.end(), [&](const State& each) { return each.name == state; });
-			if (found != states.end()) { stateTimers[state] = found->timers; }
 			pushState(state);
 		}
 		++stateChanges;
@@ -1812,8 +1814,10 @@ namespace xge
 				i += guard->count;
 				continue;
 			}
-			executor.executeScreenEdgeCollision(commands[i], object, edge);
-			++i;
+			// A verb refused ends its rule there; the next rule still runs.
+			const std::size_t end = guard != guards.end() ? guard->first + guard->count : i + 1;
+			while (i < end && executor.executeScreenEdgeCollision(commands[i], object, edge)) { ++i; }
+			i = end;
 		}
 	}
 
@@ -1913,9 +1917,10 @@ namespace xge
 			if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), touch.edge) == rule.sides.end()) { continue; }
 			if (rule.check && !holds(*rule.check)) { continue; }
 
+			// A verb refused ends the rule there, as it ends an action.
 			for (const auto& command : rule.commands)
 			{
-				executor.executeObjectCollision(command, self, other, touch);
+				if (!executor.executeObjectCollision(command, self, other, touch)) { break; }
 			}
 		}
 	}
@@ -2227,8 +2232,7 @@ namespace xge
 		takeTurnStop();
 		for (const auto& command : commands)
 		{
-			executor.executeCondition(command);
-			if (takeTurnStop()) { break; }
+			if (!executor.executeCondition(command) || takeTurnStop()) { break; }
 		}
 	}
 }

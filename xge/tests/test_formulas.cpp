@@ -189,6 +189,28 @@ TEST_CASE("operations nest as deep as they are written, and a <random> is an ope
 	CHECK(xOf("<formula><add><augend><random><min>5</min><max>5</max></random></augend><addend>1</addend></add></formula>") == 6.0f);
 }
 
+TEST_CASE("smallest, largest, absolute and clamp", "[formulas]")
+{
+	CHECK(xOf("<formula><smallest><of>12</of><of>4</of><of>9</of></smallest></formula>") == 4.0f);
+	CHECK(xOf("<formula><largest><of>12</of><of>4</of><of>w</of></largest></formula>", kVariables) == 100.0f);
+	CHECK(xOf("<formula><absolute><of><subtract><minuend>4</minuend><subtrahend>w</subtrahend></subtract></of></absolute></formula>", kVariables) == 96.0f);
+	CHECK(xOf("<formula><clamp><of>w</of><atleast>10</atleast><atmost>50</atmost></clamp></formula>", kVariables) == 50.0f);
+	CHECK(xOf("<formula><clamp><of>-3</of><atleast>10</atleast><atmost>50</atmost></clamp></formula>") == 10.0f);
+	CHECK(xOf("<formula><clamp><of>xoffset</of><atleast>0</atleast><atmost>50</atmost></clamp></formula>", kVariables) == 7.0f);
+
+	// Too many operands, too few, or in the wrong order.
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><absolute><of>1</of><of>2</of></absolute></formula>")), ContainsSubstring("after all it holds: it holds one <of>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><smallest><of>1</of></smallest></formula>")), ContainsSubstring("needs two or more <of>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><clamp><of>1</of><atmost>2</atmost><atleast>0</atleast></clamp></formula>")), ContainsSubstring("<atmost> where <atleast> belongs"));
+}
+
+TEST_CASE("a <random>'s ends can be formulas", "[formulas]")
+{
+	CHECK(xOf("<random><min><formula><multiply><multiplicand>w</multiplicand><multiplier>2</multiplier></multiply></formula></min><max>200</max></random>", kVariables) == 200.0f);
+	CHECK(xOf("<random><min>xoffset</min><max><formula><smallest><of>w</of><of>7</of></smallest></formula></max></random>", kVariables) == 7.0f);
+	CHECK_THROWS_WITH(Loaded(gameXml("<random><min><dice /></min><max>2</max></random>")), ContainsSubstring("an end is a number, an expression or a <formula>"));
+}
+
 TEST_CASE("variables can hold a formula, and an expression can use them", "[formulas]")
 {
 	Loaded loaded(gameXml(
@@ -261,7 +283,7 @@ TEST_CASE("a formula that is wrong says which operation and what", "[formulas][e
 		{ "two operations", "<formula><add><augend>1</augend><addend>1</addend></add><add><augend>1</augend><addend>1</addend></add></formula>", "more than one operation" },
 		{ "a tag that is not an operation", "<formula><modulo><dividend>7</dividend><divisor>2</divisor></modulo></formula>", "<modulo>, which is not an operation" },
 		{ "operands in the wrong order", "<formula><subtract><subtrahend>1</subtrahend><minuend>2</minuend></subtract></formula>", "<subtrahend> where <minuend> belongs" },
-		{ "one operand", "<formula><subtract><minuend>1</minuend></subtract></formula>", "needs a <minuend> and at least one <subtrahend>" },
+		{ "one operand", "<formula><subtract><minuend>1</minuend></subtract></formula>", "needs a <minuend>, then one or more <subtrahend>" },
 		{ "the first operand twice", "<formula><subtract><minuend>1</minuend><minuend>2</minuend></subtract></formula>", "<minuend> where <subtrahend> belongs" },
 		{ "an expression as an operand", "<formula><add><augend>a + b</augend><addend>1</addend></add></formula>", "\"a + b\" is not a name or a number" },
 		{ "an operand with text and a tag", "<formula><add><augend>2 <random><min>1</min><max>2</max></random></augend><addend>1</addend></add></formula>", "both the text \"2\" and a <random> tag" },
@@ -343,7 +365,10 @@ namespace
 
 TEST_CASE("both schema checkers accept every spelling", "[formulas][schema]")
 {
-	for (const std::string& value : { std::string("window.width.center - title.width / 2"), kFormula })
+	const std::string picked = "<formula><clamp><of><largest><of>1</of><of>2</of><of><absolute><of>-3</of></absolute></of></largest></of>"
+		"<atleast><smallest><of>0</of><of>1</of></smallest></atleast><atmost>9</atmost></clamp></formula>";
+	const std::string drawn = "<random><min><formula><add><augend>1</augend><addend>2</addend></add></formula></min><max>9</max></random>";
+	for (const std::string& value : { std::string("window.width.center - title.width / 2"), kFormula, picked, drawn })
 	{
 		// kFormula uses the variables w and xoffset, which pong does not have; the
 		// schema does not look at names, only at shape.
@@ -376,6 +401,8 @@ TEST_CASE("both schema checkers turn away the same mistakes in a formula", "[for
 		{ "a formula with no operation", "<formula></formula>", "expected one of <add>, <subtract>, <multiply>, <divide>" },
 		{ "two operations in a formula", "<formula><add><augend>1</augend><addend>1</addend></add><add><augend>1</augend><addend>1</addend></add></formula>", "unexpected element <add>" },
 		{ "a formula with one operand", "<formula><subtract><minuend>1</minuend></subtract></formula>", "expected <subtrahend>" },
+		{ "an absolute of two", "<formula><absolute><of>1</of><of>2</of></absolute></formula>", "unexpected element <of>" },
+		{ "a clamp out of order", "<formula><clamp><of>1</of><atmost>2</atmost><atleast>0</atleast></clamp></formula>", "expected <atleast>" },
 		{ "an unknown tag deep inside", "<formula><add><augend><add><augend>1</augend><addend><dice /></addend></add></augend><addend>1</addend></add></formula>", "unexpected element <dice>" },
 	};
 

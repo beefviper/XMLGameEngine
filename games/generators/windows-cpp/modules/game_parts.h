@@ -130,6 +130,16 @@ namespace xge::parts
 		return drawn;
 	}
 
+	// A <random> with an end that is a <formula>: its two ends, `min` and
+	// `max`, as one operation "random" (see RawValue::operations).
+	inline RawValue random(RawOperation ends)
+	{
+		RawValue drawn;
+		drawn.kind = RawValue::Kind::Random;
+		drawn.operations = std::make_shared<const std::vector<RawOperation>>(1, std::move(ends));
+		return drawn;
+	}
+
 	// One operation of a <formula>: <subtract>, and its operands.
 	inline RawOperation operation(std::string op, std::vector<RawOperand> operands)
 	{
@@ -192,14 +202,15 @@ namespace xge::parts
 	}
 
 	// A <collision edge="...">: its commands added to each screen edge it
-	// names, noting where they are when it holds only to a look (sprite=) or
-	// is passed over while touching a class (unless=).
+	// names, noting where they are: the rule ends at a refused verb, may hold
+	// only to a look (sprite=) and may be passed over while touching a class
+	// (unless=).
 	inline void edge(RawCollisionData& collisions, const std::string& which, const std::vector<RawCommand>& commands,
 		const std::string& look = {}, const std::string& unlessClass = {})
 	{
 		const auto add = [&](std::vector<RawCommand>& list, std::vector<EdgeGuard>& guards)
 		{
-			if ((!look.empty() || !unlessClass.empty()) && !commands.empty())
+			if (!commands.empty())
 			{
 				guards.push_back(EdgeGuard{ list.size(), commands.size(), look, unlessClass });
 			}

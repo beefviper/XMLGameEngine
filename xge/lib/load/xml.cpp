@@ -97,6 +97,11 @@ namespace xge
 			fail(where, "<" + node.getName() + "> is \"" + text + "\"; expected true or false");
 		}
 
+		RawValue readFormula(const XmlNode& node, const std::string& where);
+
+		// <random><min>..</min><max>..</max></random>: each end an expression
+		// or a <formula>. With a formula end, the two ends are kept as one
+		// operation "random" (see RawValue::operations).
 		RawValue readRandom(const XmlNode& tag, const std::string& here)
 		{
 			RawValue value;
@@ -106,9 +111,43 @@ namespace xge
 			{
 				if (child->getName() != "min" && child->getName() != "max") { fail(there, "unknown <" + child->getName() + ">; expected <min> and <max>"); }
 			}
-			value.min = readText(*requireChild(tag, "min", there));
-			value.max = readText(*requireChild(tag, "max", there));
-			if (value.min.empty() || value.max.empty()) { fail(there, "a <min> or <max> with nothing in it; each is a number or an expression"); }
+
+			RawOperation ends;
+			ends.op = "random";
+			bool worked = false;
+			for (const char* end : { "min", "max" })
+			{
+				const std::unique_ptr<XmlNode> node = requireChild(tag, end, there);
+				const std::string text = readText(*node);
+				const std::unique_ptr<XmlNode> inside = node->getFirstChild();
+				RawOperand operand;
+				operand.role = end;
+				if (inside)
+				{
+					const std::string at = there + " > <" + end + ">";
+					if (inside->getName() != "formula") { fail(at, "holds <" + inside->getName() + ">; an end is a number, an expression or a <formula>"); }
+					if (!text.empty()) { fail(at, "holds both the text \"" + text + "\" and a <formula>; use one or the other"); }
+					if (inside->getNextSibling()) { fail(at, "holds more than one tag"); }
+					operand.value = readFormula(*inside, at);
+					worked = true;
+				}
+				else
+				{
+					if (text.empty()) { fail(there, "a <min> or <max> with nothing in it; each is a number, an expression or a <formula>"); }
+					operand.value = RawValue::expression(text);
+				}
+				ends.operands.push_back(std::move(operand));
+			}
+
+			if (worked)
+			{
+				value.operations = std::make_shared<std::vector<RawOperation>>(1, std::move(ends));
+			}
+			else
+			{
+				value.min = ends.operands[0].value.text;
+				value.max = ends.operands[1].value.text;
+			}
 			return value;
 		}
 
@@ -169,7 +208,7 @@ namespace xge
 			if (tag->getName() == "random") { return readRandom(*tag, here); }
 
 			const OperationShape* shape = operationShape(tag->getName());
-			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected a name, a number, <random>, <add>, <subtract>, <multiply> or <divide>"); }
+			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected a name, a number, <random>, <add>, <subtract>, <multiply>, <divide>, <smallest>, <largest>, <absolute> or <clamp>"); }
 
 			RawValue value;
 			value.kind = RawValue::Kind::Formula;
@@ -188,12 +227,24 @@ namespace xge
 			RawOperation operation;
 			operation.op = shape.tag;
 
+			// What it holds, in words, for a mistake: "a <minuend>, then one
+			// or more <subtrahend>", "one <of>", "an <of>, an <atleast> and an <atmost>".
+			std::string wanted;
+			if (shape.most == 1) { wanted = std::string("one <") + shape.first + ">"; }
+			else if (shape.last) { wanted = std::string("an <") + shape.first + ">, an <" + shape.rest + "> and an <" + shape.last + ">, in that order"; }
+			else if (std::string(shape.first) == shape.rest) { wanted = std::string("two or more <") + shape.first + ">"; }
+			else { wanted = std::string("a <") + shape.first + ">, then one or more <" + shape.rest + ">"; }
+
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
 			{
-				const char* expected = operation.operands.empty() ? shape.first : shape.rest;
+				const char* expected = shape.roleAt(operation.operands.size());
+				if (shape.most > 0 && operation.operands.size() == shape.most)
+				{
+					fail(here, "has <" + child->getName() + "> after all it holds: it holds " + wanted);
+				}
 				if (child->getName() != expected)
 				{
-					fail(here, "has <" + child->getName() + "> where <" + expected + "> belongs: " + shape.first + " first, then one or more " + shape.rest);
+					fail(here, "has <" + child->getName() + "> where <" + expected + "> belongs: it holds " + wanted);
 				}
 
 				RawOperand operand;
@@ -202,7 +253,7 @@ namespace xge
 				operation.operands.push_back(std::move(operand));
 			}
 
-			if (operation.operands.size() < 2) { fail(here, "needs a <" + std::string(shape.first) + "> and at least one <" + shape.rest + ">"); }
+			if (operation.operands.size() < shape.fewest) { fail(here, "needs " + wanted); }
 
 			return operation;
 		}
@@ -215,8 +266,8 @@ namespace xge
 			if (!tag) { fail(here, "has no operation"); }
 			if (tag->getNextSibling()) { fail(here, "holds more than one operation; a formula is one, with the others inside it"); }
 
-			const OperationShape* shape = operationShape(tag->getName());
-			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected <add>, <subtract>, <multiply> or <divide>"); }
+			const OperationShape* shape = tag->getName() == "random" ? nullptr : operationShape(tag->getName());
+			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected <add>, <subtract>, <multiply>, <divide>, <smallest>, <largest>, <absolute> or <clamp>"); }
 
 			RawValue value;
 			value.kind = RawValue::Kind::Formula;
@@ -1323,12 +1374,12 @@ namespace xge
 		}
 
 		// An edge rule's commands appended to one edge's list, noting where
-		// they are when the rule holds to a look (sprite=) or is passed over
-		// while touching a class (unless=).
+		// they are: the rule ends at a refused verb, may hold to a look
+		// (sprite=) and may be passed over while touching a class (unless=).
 		void appendEdgeRule(std::vector<RawCommand>& existing, std::vector<EdgeGuard>& guards,
 			const std::vector<RawCommand>& more, const std::string& sprite, const std::string& unlessClass)
 		{
-			if ((!sprite.empty() || !unlessClass.empty()) && !more.empty())
+			if (!more.empty())
 			{
 				guards.push_back(EdgeGuard{ existing.size(), more.size(), sprite, unlessClass });
 			}

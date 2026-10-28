@@ -57,7 +57,7 @@ Time words: `every` and `after` (timers), `interval` (an animation's pictures), 
 **Values**
 
 - Text expressions evaluated by exprtk; one value tag that draws a number, `<random>` (`<min>`, `<max>`); and arithmetic as tags, `<formula>` (one operation, operands as nested elements).
-- Both arithmetic forms use four operation words, each with operands named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`). An operand is a name or a number, never an expression.
+- `<formula>` uses four arithmetic words, each with operands named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`); and four more whose operands are `<of>`: `smallest`, `largest` (two or more), `absolute` (one) and `clamp` (an `<of>`, then `<atleast>` and `<atmost>`). An operand is a name or a number, never an expression. A `<random>`'s ends may be formulas.
 - A command's values are read when it runs, so they can name live numbers; every other value is worked out once at load ([values-and-names](04-values-and-names.md)).
 - exprtk's own functions work in the text form (Berserk uses `max` to keep a wait above a floor), but the format does not depend on them, and the tags have no `min`, `max` or the like.
 
@@ -76,7 +76,7 @@ A note on pictures: an `<image>` is a file loaded by the window backend; an `<sv
 | Sound | `sounds`, `note`, `rest`, `part`, `wave`, `pitch`, `to`, `volume`, `loop`, `play`, `silence`, `music` | built; no envelope, no stereo |
 | Input | `input` (`button`, `axis`), `keys` sets, `trigger`, `track`, mouse and pads, `computer` with `hold` | small and clean |
 | Game flow | states, `push`, `pop`, scenes with `enter` and `reset scene`/`way`, `show state`, conditions with `all`/`any`, `turns`, `demo`, `keeps`, `rank` | enough for the shipped games |
-| Values | expressions, `random`, `formula` with four operations, live numbers in commands | thin; no `min`, `max`, `clamp`, `negate` as tags |
+| Values | expressions, `random`, `formula` with eight operations, live numbers in commands | thin; no `negate`, `floor`, `sign` as tags |
 
 A collision rule reads like a sentence: *this object* (noun), *when it touches* (preposition) *that class* (noun), *on its top* (`side`), *unless* (conjunction) *it is on a log*, *do this* (verb).
 
@@ -84,7 +84,7 @@ A collision rule reads like a sentence: *this object* (noun), *when it touches* 
 
 | Missing category | Words it would hold | Where it is discussed |
 |---|---|---|
-| **Math** beyond the four operations | `min`, `max`, `negate`, `abs`, `clamp`, `floor`, `sign`, `pick`, an integer `random`; a `<formula>` inside a `<random>`'s ends | [arithmetic](03-arithmetic.md), [values-and-names](04-values-and-names.md) |
+| **Math** beyond the eight operations | `negate`, `floor`, `sign`, `pick`, an integer `random` | [arithmetic](03-arithmetic.md), [values-and-names](04-values-and-names.md) |
 | **Planning** | searching a maze, leading a target, curved paths, paths that aim | [chase-and-paths](24-chase-and-paths.md) |
 | **Queries** | what is touching what, line of sight; a total or distance inside an expression | [states-and-conditions](07-states-and-conditions.md) |
 | **Branching and events** | `if`, `goto`, an event queue. Conditions join tests with `all`/`any` but have no else; keeping control flow out is deliberate | [vision](01-vision.md), [timers](09-timers.md) |
@@ -94,7 +94,7 @@ Time, sound, music, conditions over many objects, maze walking and making object
 
 ## The shape this suggests
 
-Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which has a small vocabulary of its own (`random` and four arithmetic words in two spellings) beside exprtk text. Each further word (`min`, `max`, `pick`) is a tag in the XSD and one case in the evaluator.
+Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which has a small vocabulary of its own (`random` and eight arithmetic words) beside exprtk text. Each further word (`negate`, `pick`) is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
 
 A word is added only when a real game cannot be described without it, and a verb that means "behave like one particular game" shows that its parameters were not found ([motion](22-motion.md)). Of the gaps above, `min` and `max` are the likeliest to pass that test next (Berserk already reaches for `max` in text).
 

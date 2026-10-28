@@ -476,7 +476,7 @@
         <!-- every, not after: it counts only while this state is current, so
              each visit starts the second again -->
         <timer>
-          <every>1</every>
+          <after>1</after>
           <despawn object="bomb" />
           <pop />
         </timer>

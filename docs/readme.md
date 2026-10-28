@@ -198,7 +198,7 @@ Wherever an element holds a number (a position, a speed, a size, a variable, a t
 | Form | Example | Notes |
 |---|---|---|
 | arithmetic as text | `window.width.center - title.width / 2` | worked out by exprtk; the everyday form |
-| `<random>` | `<random><min>-7</min><max>7</max></random>` | a number from min to max (either order; each end a value) |
+| `<random>` | `<random><min>-7</min><max>7</max></random>` | a number from min to max (either order; each end an expression or a `<formula>`) |
 | `<formula>` | see [below](#arithmetic-as-tags) | the same arithmetic as tags, nothing left in a string for a tool to parse |
 
 **When a value is worked out.** Once, when the game loads, with three exceptions:
@@ -241,6 +241,10 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 | `<subtract>` | `<minuend>` | `<subtrahend>` | first - second |
 | `<multiply>` | `<multiplicand>` | `<multiplier>` | first * second |
 | `<divide>` | `<dividend>` | `<divisor>` | first / second |
+| `<smallest>` | `<of>` | `<of>` | the smallest of two or more |
+| `<largest>` | `<of>` | `<of>` | the largest of two or more |
+| `<absolute>` | `<of>` | | the one `<of>` without its sign |
+| `<clamp>` | `<of>` | `<atleast>`, then `<atmost>` | the `<of>`, kept from `<atleast>` up to `<atmost>` |
 
 ```xml
 <x>
@@ -255,6 +259,7 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 
 - An operand is a **name or a number**, never an expression; anything more is an operation of its own.
 - Several second operands chain left to right: `a - b - c` is one `<subtract>` with two `<subtrahend>`s.
+- A `<random>`'s `<min>` or `<max>` can be a `<formula>` in place of its text: `<random><min><formula><smallest><of>w</of><of>7</of></smallest></formula></min><max>20</max></random>`.
 - **Dividing by 0.** A divisor certainly 0 at load (a number, a game variable, or an operation of only those) stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable, a text not yet measured) gives 0 quietly, and a position or interval made from it is worked out again later. While the game runs a divisor of 0 gives 0 and one warning per place. Expression text divides by 0 as it always did.
 
 ### Names
@@ -834,7 +839,7 @@ The schema cannot tell the two kinds of `<collision>` apart (that is in the attr
 
 ### A press that cannot be done
 
-In an object's `<action>` and in its `<timer>`s and path steps, **a verb that is refused ends the list there**: what is written after it is not done either. Refused are a `<fire>` or `<spawn>` with every copy already out, a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window, a `<leap>` off the ground, and an `<aim>` with `<lined>` that is not lined up. What is written before it has run.
+In an object's `<action>`, its `<timer>`s and path steps, a collision rule (about an edge or another object), a state's key and a condition, **a verb that is refused ends the list there**: what is written after it is not done either. A collision rule's later rules still run; only the rest of the one rule is dropped. Refused are a `<fire>` or `<spawn>` with every copy already out, a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window, a `<leap>` off the ground, and an `<aim>` with `<lined>` that is not lined up. What is written before it has run.
 
 So the verb goes first and its answers after: `<fire object="bullet" /><play sound="shoot" />` sounds only when a shot leaves. Collision rules and a state's commands run every command as before.
 
@@ -1078,7 +1083,7 @@ An axis input runs only `<trigger>`s and goes in a state's own `<inputs>`, not a
 A `<timer>` goes off `<every>` so many seconds, again and again, or once `<after>` that long, and runs the commands after it.
 
 - **Whose clock.** An object's timers (a group's are every member's) count while it is in play; a state's while it is the current state; a scene's while it is the current scene. So a pause stops them and they carry on afterwards.
-- **Starting over.** A reset starts a timer over, and so does the object coming back into play (fired, released, revealed or spawned), so a shot that dies on a timer has its whole time each time. A push does not: a state that pops itself after a while (Space Invaders' `blasted`) uses `<every>`, since an `<after>` there fires on its first visit only.
+- **Starting over.** A reset starts a timer over, and so does the object coming back into play (fired, released, revealed or spawned), so a shot that dies on a timer has its whole time each time. So does a push: a state's timers start over each time it is pushed, so a state that pops itself after a while (Space Invaders' `blasted`, Pac-Man's READY!) says `<after>`. A pop back to a state lets its timers carry on where they were (a pause does not restart them).
 - **The interval is worked out again each round**, after the commands have run, so a `<random>` waits a new time each time (Kaboom's bomber turns whenever he likes) and an expression can follow a variable the commands change.
 - Seconds become frames with the window's `<framerate>`; a timer never waits less than one frame, and `<after>0</after>` goes off on the first frame it counts.
 - A visible clock is a timer that `<inc>`s or `<dec>`s a variable a text shows, or a named timer's time left (below).
@@ -1462,7 +1467,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 **Values**
 
 - Values not in a command or a condition's test are fixed at load. A class condition cannot compare each object with that object's own other variable (a state's condition has no `self`).
-- `<formula>` has four operations: no `min`, `max`, `abs`, `clamp` (the text form has them through exprtk). A `<random>`'s ends cannot be a formula. Only Pong and Breakout use formulas.
+- `<formula>` has no `negate`, `floor` or `sign` (the text form has them through exprtk). Only Pong and Breakout use formulas.
 - A `<divide>` by something not known while loading gives 0, and only a position or a timer's interval is worked out again later.
 - Expressions are text to the schema, so a typo in one is found when the game loads, not by validation. The weak validator covers only the XSD the schema uses.
 - The window's size and framerate are plain numbers, read once; the size cannot change while a game runs.

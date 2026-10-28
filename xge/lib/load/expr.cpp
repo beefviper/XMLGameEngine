@@ -2007,6 +2007,13 @@ namespace xge
 		{
 		case RawValue::Kind::Random:
 		{
+			if (value.operations)
+			{
+				const RawOperation& ends = value.operations->front();
+				const float low = evaluate(ends.operands[0].value, where + " > <random> > <min>");
+				const float high = evaluate(ends.operands[1].value, where + " > <random> > <max>");
+				return randomBetween(low, high);
+			}
 			const float min = evaluateExpression(value.min, where);
 			const float max = evaluateExpression(value.max, where);
 			return randomBetween(min, max);
@@ -2061,6 +2068,21 @@ namespace xge
 
 		Answer answer = operandAnswer(operation.operands.front());
 
+		if (operation.op == "absolute")
+		{
+			answer.value = std::fabs(answer.value);
+			return answer;
+		}
+
+		if (operation.op == "clamp")
+		{
+			const Answer low = operandAnswer(operation.operands[1]);
+			const Answer high = operandAnswer(operation.operands[2]);
+			answer.late = answer.late || low.late || high.late;
+			answer.value = std::min(std::max(answer.value, low.value), high.value);
+			return answer;
+		}
+
 		for (std::size_t i = 1; i < operation.operands.size(); ++i)
 		{
 			const Answer operand = operandAnswer(operation.operands[i]);
@@ -2078,7 +2100,9 @@ namespace xge
 				return Answer{ 0.0f, answer.late };
 			}
 
-			if (operation.op == "add") { answer.value += operand.value; }
+			if (operation.op == "smallest") { answer.value = std::min(answer.value, operand.value); }
+			else if (operation.op == "largest") { answer.value = std::max(answer.value, operand.value); }
+			else if (operation.op == "add") { answer.value += operand.value; }
 			else if (operation.op == "subtract") { answer.value -= operand.value; }
 			else if (operation.op == "multiply") { answer.value *= operand.value; }
 			else { answer.value /= operand.value; }

@@ -90,10 +90,11 @@ namespace xge
 	// (Pixel) - see CollisionDetector.
 	enum class CollisionType { Box, Pixel };
 
-	// A <collision edge="..."> with sprite= or unless=, as its commands in an
-	// edge's list: `count` of them from `first`, run only while the object
-	// shows that look and is not touching anything of that class, looked at
-	// once as the rule comes (as for a rule about another object).
+	// A <collision edge="...">, as its commands in an edge's list: `count` of
+	// them from `first`. A verb refused ends the rule there. With sprite= or
+	// unless= it runs only while the object shows that look and is not
+	// touching anything of that class, looked at once as the rule comes (as
+	// for a rule about another object).
 	struct EdgeGuard
 	{
 		std::size_t first{ 0 };
@@ -127,7 +128,7 @@ namespace xge
 		std::vector<RawCommand> bottom;
 		std::vector<RawCommand> left;
 		std::vector<RawCommand> right;
-		// The rules among them with sprite= or unless= (see EdgeGuard).
+		// Where each rule's commands are among them (see EdgeGuard).
 		std::vector<EdgeGuard> topGuards;
 		std::vector<EdgeGuard> bottomGuards;
 		std::vector<EdgeGuard> leftGuards;
@@ -176,7 +177,7 @@ namespace xge
 		std::vector<Command> bottom;
 		std::vector<Command> left;
 		std::vector<Command> right;
-		// The rules among them with sprite= or unless= (see EdgeGuard).
+		// Where each rule's commands are among them (see EdgeGuard).
 		std::vector<EdgeGuard> topGuards;
 		std::vector<EdgeGuard> bottomGuards;
 		std::vector<EdgeGuard> leftGuards;

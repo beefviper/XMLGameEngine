@@ -43,7 +43,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 ### Frames, timers and touches
 
-- Timers count frames (`Game::framesFor`); object timers run only while `isShown`; state timers live in `Game::stateTimers`, scene timers in `Game::sceneTimers`. A push does not start a state's timers over, so a state that pops itself after a while uses `<every>`, not `<after>` (which fires once a game; Space Invaders' `blasted`).
+- Timers count frames (`Game::framesFor`); object timers run only while `isShown`; state timers live in `Game::stateTimers`, scene timers in `Game::sceneTimers`. A push starts that state's timers over (`Game::pushState`); a pop back to a state does not.
 - A named object timer adds a variable of that name to its RawObject in `game_expr::init`, and `Game::showTimeLeft` writes it each frame it counts.
 - Galaxian: `Game::applyPaths` runs after timers, before acceleration, and a path ignores pushes on the way. Anything ending a path clears `Object::followPath`. Its dive relies on `<wrap />` taking exactly the window's height plus the object's.
 - An object mid-`<jump>` (`isAirborne()`) is in no collision pair and ignored by `unless=`. `Object::grounded` is set by `CommandExecutor::land` and cleared in `applyHops` (`play/frame.cpp`); a resting object stays touching its platform only because its pull moves it every frame, so `<stop />` ends that ([platforming](../designs/23-platforming.md)).

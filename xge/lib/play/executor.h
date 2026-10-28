@@ -26,8 +26,11 @@ namespace xge
 		explicit CommandExecutor(Game& gameToRun) noexcept : game(gameToRun) {}
 
 		// object.collisionData.{top,bottom,left,right}, driven by
-		// CollisionDetector::touchesScreenEdge.
-		void executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
+		// CollisionDetector::touchesScreenEdge. Each of these returns false
+		// when the verb is refused (a <spawn> or <fire> with every copy out,
+		// an <aim> not lined up, a hop that cannot be made), which ends the
+		// rule, key or condition there, as it ends an action.
+		bool executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
 
 		// object.collisionData.others, driven by Game::reactTo. `other` is
 		// the object being touched. `touch` must already be self-relative to
@@ -35,19 +38,19 @@ namespace xge
 		// touch.normal the way out of `other` towards it) - see the comment
 		// on CollisionDetector for why that's not simply the detector's raw
 		// result.
-		void executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch);
+		bool executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch);
 
 		// The same with only the edge known: a touch straight across it.
-		void executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge);
+		bool executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge);
 
 		// A command bound to a key in the current State's <input> list: push or
 		// pop a state, or trigger a named action on another object.
-		void executeInput(const Command& command, bool keyPressed);
+		bool executeInput(const Command& command, bool keyPressed);
 
 		// A State's <condition> action, once Game::checkConditions decides it's
 		// met: same command set as an <input> (in practice just push/pop a
 		// state), so this is just executeInput as an always-"pressed" input.
-		void executeCondition(const Command& command);
+		bool executeCondition(const Command& command);
 
 		// A <timer> that has gone off: on an object (owner) or in a state (no
 		// owner). The state commands, inc, dec, play and trigger work in both;

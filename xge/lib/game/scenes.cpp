@@ -248,9 +248,14 @@ namespace xge
 					value.text = names_.expression(value.text, context);
 					break;
 				case RawValue::Kind::Random:
-					value.min = names_.expression(value.min, context);
-					value.max = names_.expression(value.max, context);
-					break;
+					// with a formula end, its ends are an operation (below)
+					if (!value.operations)
+					{
+						value.min = names_.expression(value.min, context);
+						value.max = names_.expression(value.max, context);
+						break;
+					}
+					[[fallthrough]];
 				case RawValue::Kind::Formula:
 					if (value.operations)
 					{

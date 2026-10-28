@@ -67,12 +67,19 @@
     </xs:choice>
   </xs:group>
 
-  <!-- random: a number from <min> up to <max>, each an expression, drawn each time it is worked out. -->
+  <!-- random: a number from <min> up to <max>, each an expression or a <formula>, drawn each time it is worked out. -->
   <xs:complexType name="randomType">
     <xs:sequence>
-      <xs:element name="min" type="xs:string" />
-      <xs:element name="max" type="xs:string" />
+      <xs:element name="min" type="randomEndType" />
+      <xs:element name="max" type="randomEndType" />
     </xs:sequence>
+  </xs:complexType>
+
+  <!-- An end of a <random>: text (an expression) or a <formula>, not both. -->
+  <xs:complexType name="randomEndType" mixed="true">
+    <xs:choice minOccurs="0">
+      <xs:element name="formula" type="formulaType" />
+    </xs:choice>
   </xs:complexType>
 
   <!-- Arithmetic without a string to parse: <formula> is one operation whose
@@ -86,7 +93,9 @@
            </subtract>
          </formula>
        A value tag, so it goes anywhere an expression or <random> does.
-       Operations, one per arithmetic word: add, subtract, multiply, divide. -->
+       Operations, one per arithmetic word: add, subtract, multiply, divide;
+       and smallest and largest of two or more <of>, absolute of one <of>,
+       and clamp, an <of> kept from <atleast> up to <atmost>. -->
 
   <xs:complexType name="formulaType">
     <xs:choice>
@@ -94,6 +103,10 @@
       <xs:element name="subtract" type="subtractType" />
       <xs:element name="multiply" type="multiplyType" />
       <xs:element name="divide" type="divideType" />
+      <xs:element name="smallest" type="extremeType" />
+      <xs:element name="largest" type="extremeType" />
+      <xs:element name="absolute" type="absoluteType" />
+      <xs:element name="clamp" type="clampType" />
     </xs:choice>
   </xs:complexType>
 
@@ -105,7 +118,31 @@
       <xs:element name="subtract" type="subtractType" />
       <xs:element name="multiply" type="multiplyType" />
       <xs:element name="divide" type="divideType" />
+      <xs:element name="smallest" type="extremeType" />
+      <xs:element name="largest" type="extremeType" />
+      <xs:element name="absolute" type="absoluteType" />
+      <xs:element name="clamp" type="clampType" />
     </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="extremeType">
+    <xs:sequence>
+      <xs:element name="of" type="operandType" minOccurs="2" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="absoluteType">
+    <xs:sequence>
+      <xs:element name="of" type="operandType" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="clampType">
+    <xs:sequence>
+      <xs:element name="of" type="operandType" />
+      <xs:element name="atleast" type="operandType" />
+      <xs:element name="atmost" type="operandType" />
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="addType">

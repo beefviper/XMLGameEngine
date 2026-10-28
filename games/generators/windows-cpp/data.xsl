@@ -89,17 +89,35 @@
     <xsl:text> }</xsl:text>
   </xsl:template>
 
+  <!-- A <random>: two texts, or, with an end that is a <formula>, its two
+       ends as one operation (readRandom). -->
   <xsl:template name="random">
     <xsl:param name="node" />
-    <xsl:text>random(</xsl:text>
-    <xsl:call-template name="text">
-      <xsl:with-param name="node" select="$node/min" />
-    </xsl:call-template>
-    <xsl:text>, </xsl:text>
-    <xsl:call-template name="text">
-      <xsl:with-param name="node" select="$node/max" />
-    </xsl:call-template>
-    <xsl:text>)</xsl:text>
+    <xsl:choose>
+      <xsl:when test="$node/*/formula">
+        <xsl:text>random(operation("random", { </xsl:text>
+        <xsl:for-each select="$node/min | $node/max">
+          <xsl:if test="position() &gt; 1">, </xsl:if>
+          <xsl:value-of select="concat('{ &quot;', local-name(), '&quot;, ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="." />
+          </xsl:call-template>
+          <xsl:text> }</xsl:text>
+        </xsl:for-each>
+        <xsl:text> }))</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>random(</xsl:text>
+        <xsl:call-template name="text">
+          <xsl:with-param name="node" select="$node/min" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="text">
+          <xsl:with-param name="node" select="$node/max" />
+        </xsl:call-template>
+        <xsl:text>)</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- An operation of a <formula>: its operands, each a name, a number, a
