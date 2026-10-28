@@ -179,7 +179,7 @@ The games share one key convention: Space starts, pauses and restarts, player on
 
 ```
 cmake -B build
-cmake --build build
+cmake --build build --parallel
 output/Debug/xgecli frogger
 ```
 

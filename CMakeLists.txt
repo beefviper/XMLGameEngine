@@ -7,6 +7,10 @@ cmake_minimum_required(VERSION 3.28)
 
 project("XMLGameEngine")
 
+# Visual Studio compiles a project's files one at a time unless told /MP. Set
+# before the dependencies are fetched, so they build that way too.
+add_compile_options($<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/MP> $<$<COMPILE_LANG_AND_ID:C,MSVC>:/MP>)
+
 include(scripts/cmake/options.cmake)
 include(scripts/cmake/output.cmake)
 
