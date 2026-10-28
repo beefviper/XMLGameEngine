@@ -27,12 +27,15 @@
     a <map>: a pillar (+) at every corner of a cell and a wall (- or |)
     between two, on tiles half a cell across, so the file shows the room as
     it looks. The kit's map "maze" says what each character is, and each
-    room takes it and gives only its <row>s. x and y are the gaps of the outer wall, the exits, never
-    drawn. Each room's <ways> name the room its way "out" leads
-    to; walking into an exit puts that room back as it started (<reset
-    way="out" />), with its robots, and <enter>s it. The man's own rule for
-    class exit puts him back at the start and counts the room in
-    player.depth.
+    room takes it and gives only its <row>s. n, s, w and e are the gaps of
+    the outer wall, the exits, never drawn, each a class of its side. Each
+    room's <ways> name the room its way "out" leads to; walking into an exit
+    puts that room back as it started (<reset way="out" />), with its
+    robots, and <enter>s it. The man's own rule for each side's exit counts
+    the room in player.depth, puts him in at the side opposite, as the
+    arcade does, and shuts that doorway behind him: the state's group
+    "doors" has one just inside each gap, out of play until revealed, and
+    electrified like the walls. No robot starts where he comes in.
   * The robots are one group of the kit, a member for every robot of every
     room, each room taking its own by name and saying where it stands. An
     inner group gives each room's robots their colour, and every group but
@@ -146,7 +149,10 @@
       <collisions>
         <collision class="wall"><trigger action="destroyed" /></collision>
         <collision class="robot"><trigger action="destroyed" /></collision>
-        <collision class="exit"><reverse /></collision>
+        <collision class="northexit"><reverse /></collision>
+        <collision class="southexit"><reverse /></collision>
+        <collision class="westexit"><reverse /></collision>
+        <collision class="eastexit"><reverse /></collision>
         <collision object="bullet">
           <trigger action="destroyed" />
           <reset object="bullet" />
@@ -234,7 +240,9 @@
         <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
         <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
       </group>
-      <group name="exits" class="exit">
+      <!-- the gaps, a class for each side, so the man knows which side to
+           come in at in the next room -->
+      <group name="exits">
         <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
         <drawn>false</drawn>
         <collisions>
@@ -243,8 +251,13 @@
             <enter way="out" />
           </collision>
         </collisions>
-        <group name="level" char="x" />
-        <group name="side" char="y"><sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite></group>
+        <group name="north" char="n" class="northexit" />
+        <group name="south" char="s" class="southexit" />
+        <group name="sides">
+          <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
+          <group name="west" char="w" class="westexit" />
+          <group name="east" char="e" class="eastexit" />
+        </group>
       </group>
     </map>
   </kit>
@@ -311,15 +324,27 @@
             <collision class="otto"><trigger action="lose" /></collision>
             <collision class="robot"><trigger action="lose" /></collision>
             <!-- through an exit (the exit's own rule goes on to the next room):
-                 back at the start, one room deeper, and the room tidied -->
-            <collision class="exit">
-              <inc variable="player.depth">1</inc>
-              <set variable="player.kills">0</set>
-              <play sound="door" />
-              <reset />
-              <reset object="bullet" />
-              <despawn object="robotshot" />
-              <reset object="otto" />
+                 in at the side opposite, with that doorway shut behind him -->
+            <collision class="northexit">
+              <trigger action="through" />
+              <set variable="player.x">277</set>
+              <set variable="player.y">395</set>
+              <reveal object="southdoor" />
+            </collision>
+            <collision class="southexit">
+              <trigger action="through" />
+              <set variable="player.x">277</set>
+              <set variable="player.y">66</set>
+              <reveal object="northdoor" />
+            </collision>
+            <collision class="westexit">
+              <trigger action="through" />
+              <set variable="player.x">533</set>
+              <reveal object="eastdoor" />
+            </collision>
+            <collision class="eastexit">
+              <trigger action="through" />
+              <reveal object="westdoor" />
             </collision>
             <collision edge="all"><stick /></collision>
           </collisions>
@@ -330,6 +355,18 @@
               <reset />
               <reset object="bullet" />
               <despawn object="robotshot" />
+            </action>
+            <!-- one room deeper, and the room tidied: the man back at the
+                 start, the doorways open, until a rule shuts the one he came by -->
+            <action name="through">
+              <inc variable="player.depth">1</inc>
+              <set variable="player.kills">0</set>
+              <play sound="door" />
+              <reset />
+              <reset object="bullet" />
+              <despawn object="robotshot" />
+              <reset object="otto" />
+              <reset object="doors" />
             </action>
             <action name="up"><move direction="up">walk</move><become sprite="up" /></action>
             <action name="down"><move direction="down">walk</move><become sprite="down" /></action>
@@ -348,6 +385,25 @@
             <variable name="kills">0</variable>
           </variables>
         </object>
+
+        <!-- the doorway he came in by, shut behind him: electrified like
+             the walls, out of play until he goes through an exit; just
+             inside the gap, so he touches it before the way out -->
+        <group name="doors" class="wall">
+          <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
+          <active>false</active>
+          <collisions />
+          <member name="northdoor"><position><x>232</x><y>56</y></position></member>
+          <member name="southdoor"><position><x>232</x><y>424</y></position></member>
+          <member name="westdoor">
+            <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
+            <position><x>8</x><y>184</y></position>
+          </member>
+          <member name="eastdoor">
+            <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
+            <position><x>552</x><y>184</y></position>
+          </member>
+        </group>
 
         <!-- his shot: one at a time, like the arcade game -->
         <object name="bullet" class="bullet">
@@ -415,16 +471,16 @@
           </ways>
           <objects>
             <map name="maze">
-              <row>+-+-+x+-+-+</row>
+              <row>+-+-+n+-+-+</row>
               <row>|         |</row>
               <row>+ +-+ + + +</row>
-              <row>y   | |   y</row>
+              <row>w   | |   e</row>
               <row>+ + + +-+ +</row>
               <row>|     |   |</row>
-              <row>+-+-+x+-+-+</row>
+              <row>+-+-+s+-+-+</row>
             </map>
             <!-- 3 robots, yellow, and they do not fire -->
-            <object name="y1"><position><x>277</x><y>107</y></position></object>
+            <object name="y1"><position><x>389</x><y>107</y></position></object>
             <object name="y2"><position><x>501</x><y>363</y></position></object>
             <object name="y3"><position><x>389</x><y>235</y></position></object>
           </objects>
@@ -445,17 +501,17 @@
           </ways>
           <objects>
             <map name="maze">
-              <row>+-+-+x+-+-+</row>
+              <row>+-+-+n+-+-+</row>
               <row>|   |     |</row>
               <row>+ + +-+ +-+</row>
-              <row>y   |     y</row>
+              <row>w   |     e</row>
               <row>+-+ + + + +</row>
               <row>|       | |</row>
-              <row>+-+-+x+-+-+</row>
+              <row>+-+-+s+-+-+</row>
             </map>
             <!-- 4 robots, red -->
-            <object name="r1"><position><x>277</x><y>107</y></position></object>
-            <object name="r2"><position><x>501</x><y>235</y></position></object>
+            <object name="r1"><position><x>165</x><y>107</y></position></object>
+            <object name="r2"><position><x>389</x><y>235</y></position></object>
             <object name="r3"><position><x>165</x><y>363</y></position></object>
             <object name="r4"><position><x>389</x><y>363</y></position></object>
           </objects>
@@ -476,13 +532,13 @@
           </ways>
           <objects>
             <map name="maze">
-              <row>+-+-+x+-+-+</row>
+              <row>+-+-+n+-+-+</row>
               <row>|     |   |</row>
               <row>+-+ + + + +</row>
-              <row>y   |   | y</row>
+              <row>w   |   | e</row>
               <row>+ + +-+ + +</row>
               <row>|   |     |</row>
-              <row>+-+-+x+-+-+</row>
+              <row>+-+-+s+-+-+</row>
             </map>
             <!-- 5 robots, cyan -->
             <object name="c1"><position><x>165</x><y>107</y></position></object>
@@ -508,19 +564,19 @@
           </ways>
           <objects>
             <map name="maze">
-              <row>+-+-+x+-+-+</row>
+              <row>+-+-+n+-+-+</row>
               <row>| |       |</row>
               <row>+ + +-+-+ +</row>
-              <row>y     |   y</row>
+              <row>w     |   e</row>
               <row>+ +-+ + +-+</row>
               <row>|   |     |</row>
-              <row>+-+-+x+-+-+</row>
+              <row>+-+-+s+-+-+</row>
             </map>
             <!-- 6 robots, green -->
-            <object name="g1"><position><x>277</x><y>107</y></position></object>
+            <object name="g1"><position><x>165</x><y>107</y></position></object>
             <object name="g2"><position><x>501</x><y>107</y></position></object>
             <object name="g3"><position><x>277</x><y>235</y></position></object>
-            <object name="g4"><position><x>501</x><y>235</y></position></object>
+            <object name="g4"><position><x>389</x><y>235</y></position></object>
             <object name="g5"><position><x>165</x><y>363</y></position></object>
             <object name="g6"><position><x>389</x><y>363</y></position></object>
           </objects>

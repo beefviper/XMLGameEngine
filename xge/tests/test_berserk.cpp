@@ -51,7 +51,8 @@ namespace
 	// pixel wall, starting 48 pixels down the window (below the score); the
 	// exits are the middle of each side. The man is 14 by 22 and the robots
 	// 14 by 18. Every room keeps the cell of the left exit and the one
-	// beside it (cells 0 and 1 of row 1) open between them.
+	// beside it (cells 0 and 1 of row 1) open between them, and no robot
+	// stands in a cell the man comes in at (the middle of each side).
 	constexpr float cellWidth = 112.0f;
 	constexpr float cellHeight = 128.0f;
 	constexpr float mazeTop = 48.0f;
@@ -262,9 +263,11 @@ TEST_CASE("berserk.xml loads the man, four rooms of robots, exits, an Otto and a
 		CHECK(play.object(Play::inRoom(room, "down.1")).size.y == cellHeight - 8.0f);
 		CHECK(play.object(Play::inRoom(room, "down.1")).isDrawn);
 		CHECK(play.robotsLeft(room) == room + 2);
-		CHECK(play.alive("exit", Play::inRoom(room, "")) == 4);
-		CHECK_FALSE(play.object(Play::inRoom(room, "level.1")).isDrawn);
-		CHECK_FALSE(play.object(Play::inRoom(room, "side.1")).isDrawn);
+		for (const char* side : { "north", "south", "west", "east" })
+		{
+			CHECK(play.alive(std::string(side) + "exit", Play::inRoom(room, "")) == 1);
+			CHECK_FALSE(play.object(Play::inRoom(room, std::string(side) + ".1")).isDrawn);
+		}
 	}
 	CHECK(count(play, "playing.robotshot.") == 0); // made when a robot fires
 	CHECK(play.object("playing.robotshot").most == 4);
@@ -527,26 +530,50 @@ TEST_CASE("robots fire more often, and Otto comes sooner, the deeper the man has
 
 // ------------------------------------------------------------ rooms and exits
 
-TEST_CASE("walking through a gap leaves the room: the next room, the man back at its door", "[berserk]")
+TEST_CASE("walking through a gap leaves the room: the next room, the man in at the side opposite, that doorway shut", "[berserk]")
 {
 	Play play;
 	play.begin();
 	REQUIRE(play.room() == 1);
+	const auto shut = [&](const char* door) { return play.object(door).isVisible; };
+	for (const char* door : { "northdoor", "southdoor", "westdoor", "eastdoor" }) { CHECK_FALSE(shut(door)); }
 
+	// Out by the left, in at the right, with the right-hand doorway shut.
 	play.leaveByTheLeft();
 	CHECK(play.room() == 2);
 	CHECK(play.variable("depth") == 1.0f);
 	CHECK(play.lives() == 3.0f);
-	CHECK(play.man().position.x < 40.0f);
+	CHECK(play.man().position.x > 500.0f);
+	CHECK(play.man().position.y == Approx(233));
+	CHECK(shut("eastdoor"));
+	CHECK_FALSE(shut("westdoor"));
 
-	// The other exits do the same, and after room four comes room one.
+	// Out by the top, in at the bottom; the doorway before opens again.
 	play.leaveByTheTop();
 	CHECK(play.room() == 3);
+	CHECK(play.man().position.x == Approx(277));
+	CHECK(play.man().position.y > 380.0f);
+	CHECK(shut("southdoor"));
+	CHECK_FALSE(shut("eastdoor"));
+
 	play.leaveByTheRight();
 	CHECK(play.room() == 4);
+	CHECK(play.man().position.x < 40.0f);
+	CHECK(shut("westdoor"));
+
+	// After room four comes room one.
 	play.leaveByTheBottom();
 	CHECK(play.room() == 1);
+	CHECK(play.man().position.y < 100.0f);
+	CHECK(shut("northdoor"));
 	CHECK(play.variable("depth") == 4.0f);
+	CHECK(play.lives() == 3.0f);
+
+	// The shut doorway is electrified like the walls.
+	play.man().position.y = mazeTop + 20.0f;
+	play.walk(KeyCode::W, 4);
+	CHECK(play.lives() == 2.0f);
+	CHECK(play.room() == 1);
 }
 
 TEST_CASE("only the room the man is in plays: the others' robots are away and stand still", "[berserk]")
