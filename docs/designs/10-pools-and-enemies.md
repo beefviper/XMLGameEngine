@@ -1,4 +1,4 @@
-# Spawning, pools, enemy fire and key sets
+# Spawning and enemy fire
 
 **Status:** Built.
 
@@ -17,7 +17,7 @@
   - **Storage:** objects stay in one `std::vector`; copies made during a frame wait in a `std::deque` and join when the frame ends, and despawned copies are erased then, so nothing a frame is iterating moves under it. Caches keyed by position or pointer (names found, live numbers, collision partners, run-in-top) are rebuilt when the list changes. The vector reserves room at load so references to loaded objects stay good.
   - The name of the description means all its copies (rules, conditions, `<despawn object>`); a copy's own name can be written too (`abm.1`), found by what it copies, so a tether can join a copy that comes and goes.
 - **Games moved onto it:** Depth Charge, Yars' Revenge, Asteroids, Berserk, Galaxian, Megamania, Demon Attack, Atlantis, Missile Command, both Space Invaders, Kaboom, Donkey Kong, Astrosmash, Air-Sea Battle, Lunar Lander. About 85 lines shorter in all, mostly `<member />` lines and the comments explaining pools.
-- **Pools still work** for hidden objects that come back to where they were (`<reveal>`: Frostbite's igloo, a door, Atlantis' and Air-Sea Battle's planes). Show/hide as verbs were an earlier idea; `<reveal>` and `<die />` are that pair.
+- **Waiting out of play still works** for objects that come back to where they were (`<reveal>`: Frostbite's igloo, a door, Atlantis' and Air-Sea Battle's planes). Show/hide as verbs were an earlier idea; `<reveal>` and `<die />` are that pair.
 - **Fixed sets that cycle:** things that fall and come back (Astrosmash's rocks, Missile Command's missiles) are a fixed set reset to the top, and stay so where that is the game.
 - **Open:** each copy's names are registered with the expression engine and live numbers and kept (bounded by reuse of names, so `<most>`-less descriptions that pile up grow them). The collision partner table is rebuilt for every list change, O(n²) in objects; fine at these sizes, worth a measure if a game spawns every frame.
 
@@ -27,11 +27,6 @@
 - Limits: an invader behind others fires through them (the arcade fires only the bottom one of a column); a Berserk robot aims at the man through walls (its shot dies on the wall). Aiming and chasing: [chase-and-paths](24-chase-and-paths.md#chasing-and-aiming-berserk).
 
 
-## Key sets
-
-- A named `<keys name="...">` set at the top of `<states>` holds `<input>`s; `<inputs keys="a b">` takes one or more (each over the one before) and the state's own `<input>`s go over them, key by key. One `button=` can name several keys, so W A S D and the arrows are one line each. Chosen over copying bindings.
-
-
 ## Open
 
-Only the front invader of a column firing, an event queue, `<goto state>`, mutable game-wide variables (object variables did the job in every game), timers whose numbers follow variables beyond the interval.
+Only the front invader of a column firing, an event queue, mutable game-wide variables (object variables did the job in every game), timers whose numbers follow variables beyond the interval.

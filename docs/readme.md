@@ -1,149 +1,246 @@
-# XMLGameEngine: current design
+# XMLGameEngine: how it works
 
-This document describes what the engine does **today**, as read from the source on 2026-10-04 (before that, games were written as function-call attribute strings; see [designs/01](designs/01-vision.md)). For the reasoning behind these choices, the alternatives that were considered, and ideas that are not built yet, see [designs/00-designs.md](designs/00-designs.md).
+This is the reference for what the engine does **today**: the game file, every element and verb, the programs, the backends and the source. When it disagrees with the code, the code is right and this file is fixed. Why things are the way they are, what was rejected and what is still an idea is in [designs/00-designs.md](designs/00-designs.md); the short public overview is the [root readme](../readme.md).
 
-XMLGameEngine is a video game description language (VGDL) written in XML, plus a C++ engine that loads a game description and runs it. A game is one `.xml` file. The description is declarative: there are no loops and no `if` statements in it, and no function calls either. Behavior comes from a fixed vocabulary of verbs (the tags `<bounce />`, `<stick />`, `<die />`, ...) that the engine knows how to carry out. In this document, and in the design notes, a verb is sometimes written as `bounce()` for short; in a game file it is always the tag.
+## Contents
 
-## Running a game
+- [The idea](#the-idea): a game file in one page, and the six words to know
+- [Running games](#running-games): `xgecli`, `xgegui`, the shipped games, generating a program
+- [The game file](#the-game-file): layout, the format's one rule, values, names
+- [Window, variables and styles](#window-variables-and-styles)
+- [Objects](#objects): parts, groups, maps, the kit, spawning
+- [Pictures](#pictures): sprites, bitmaps, text, animation, looks, poses
+- [Sounds](#sounds)
+- [Commands](#commands): where they go and what each does
+- [Collisions](#collisions): rules, filters, how a touch is found, knocks
+- [Input](#input): keys, mouse, pads, held keys
+- [Timers and paths](#timers-and-paths)
+- [States and scenes](#states-and-scenes): the stack, scenes, conditions, keeps, turns, demos, computer players
+- [What happens when a game runs](#what-happens-when-a-game-runs)
+- [Backends](#backends), [Building](#building), [Source map](#source-map)
+- [Known limitations](#known-limitations)
+
+## The idea
+
+A game is one `.xml` file, checked against the schema [games/xgedef.xsd](../games/xgedef.xsd). The file is declarative: it has no loops, no `if` and no function calls. Behavior comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<die />`, `<hop direction="up">`), and the engine knows how to carry out each one. In this file and the design notes a verb is sometimes written `bounce()` for short; in a game file it is always the tag.
+
+Six words carry most of the language:
+
+| Word | What it is | Example |
+|---|---|---|
+| **object** | anything drawn, moved or touched: a ball, a paddle, a score | `<object name="ball" class="ball">` |
+| **rule** | what an object does when it touches a screen edge or another object | `<collision edge="vertical"><bounce /></collision>` |
+| **action** | a named thing an object can do, which a key or a rule runs | `<action name="up"><move direction="up">step</move></action>` |
+| **state** | a mode of the game (title, playing, paused, game over): its keys, its objects, its conditions | `<input button="w"><trigger object="paddle1" action="up" /></input>` |
+| **condition** | a test checked every frame, with what to do when it holds | `<condition object="ball" variable="misses"><atleast>3</atleast> ... </condition>` |
+| **value** | a number: plain arithmetic text, a `<random>`, or a `<formula>` | `window.width.center - ball.radius` |
+
+Put together, a ball that bounces off the top and bottom, starts again when it leaves by a side, and turns off a paddle by where it hits:
+
+```xml
+<object name="ball">
+  <sprite><rectangle><width>size</width><height>size</height></rectangle></sprite>
+  <position><x><centered /></x><y><centered /></y></position>
+  <velocity><x>ball.speed</x><y>2</y></velocity>
+  <collisions>
+    <collision edge="vertical"><bounce /></collision>      <!-- top or bottom: bounce -->
+    <collision edge="horizontal"><reset /></collision>     <!-- out by a side: serve again -->
+    <collision><deflect>45</deflect></collision>          <!-- anything else: off at up to 45 degrees -->
+  </collisions>
+  <variables>
+    <variable name="speed">6</variable>
+  </variables>
+</object>
+```
+
+A rule reads as a sentence: *this ball, when it touches the top or bottom edge, bounces*. The whole of `pong_min.xml`, two paddles and a ball, is in the [root readme](../readme.md#a-whole-game).
+
+Each frame the engine reads the keys and runs the current state's bindings, counts the timers, moves everything (finding every touch on the way and running its rules), checks the conditions, plays the sounds asked for and draws the picture ([the frame in full](#each-frame)).
+
+## Running games
+
+### xgecli
 
 ```
 xgecli                       # loads "pong"
-xgecli breakout              # a bare name gets ".xml" appended
-xgecli pong.xml              # a name with an extension is used as given
-xgecli -g pong -w sdl2 -x tinyxml2
+xgecli breakout              # a bare name gets ".xml" added
+xgecli path/to/pong.xml      # a name with an extension is used as given
+xgecli pong -w sdl2 -x tinyxml2 -a none
 xgecli --game pong --window raylib --xml pugixml
-xgecli pong -a sdl2          # sounds played by SDL2 (or -a none for silence)
 xgecli galaxian --record     # play, and write what was played into the file as its <demo>
+xgecli pong --generate windows-cpp -o out/pong
 ```
 
-The game is a bare argument or `-g` / `--game`; both are looked for the same way: as given (a path, or a name in the current directory), then its file name in the working directory, then its file name in `descriptions/` of the games folder (the first folder with both `descriptions/` and `assets/` in it, looking at the working directory, the program's folder and the folder above it, each itself and then its `games/`; the program then runs from the games folder, so it can be started from anywhere, and a game's asset paths are relative to it). If it is not found the program prints an error and exits. `-w` / `--window` picks the window library (`sfml3`, `raylib`, `sdl2`, `opengl`; default `sfml3`) `-x` / `--xml` the XML library (`xerces`, `tinyxml2`, `pugixml`, `rapidxml`; default `xerces`) and `-a` / `--audio` the sound library (`sfml3`, `raylib`, `sdl2`, `none`; default `sfml3`), not case sensitive. Only the libraries the program was built with can be named ([Backends](#backends)): a default build has `sfml3` and `xerces` (and `none` for sound), `--help` lists what there is, and another is an error that says which there are. Any sound library goes with any window library. A short option takes its value attached or after a space (`-gpong`, `-g pong`); a long option needs the space (`--game pong`, not `--game=pong`). Each option can be given once, the game only once (bare or with `-g`), and `-h` / `--help` prints the usage. `--record` (long form only) plays the game as usual and, when the window is closed, writes what was played into the game file as its [`<demo>`](#attract-mode), replacing the one it had; it cannot go with `--generate`. The program starts by printing the file, window library, XML library and sound library it chose, one to a line. See [cli](designs/52-cli.md). Shipped games: `games/descriptions/pong.xml`, `games/descriptions/breakout.xml`, `games/descriptions/spaceinvaders.xml`, `games/descriptions/spaceinvaders2.xml` (the same game drawn from an SVG sprite sheet), `games/descriptions/frogger.xml` (W A S D or the arrows hop, Space, P or Escape pauses; logs and diving turtles across the river, five bays to fill against the clock, three lives), `games/descriptions/spacerace.xml` (two players, W/S and Up/Down, the most crossings in a minute), `games/descriptions/kaboom.xml` (A/D or Left/Right; the Mad Bomber paces the rooftop and drops bombs as he goes, catch them through eight waves, each faster and worth more; three missed bombs end the game), `games/descriptions/freeway.xml` (two players, W/S and Up/Down; a hit knocks a chicken back a lane; most crossings in 2:16 wins), `games/descriptions/depthcharge.xml` (A/D or Left/Right to move, Space drops a pair of charges, one off each side, P or Escape pauses; submarines in four lanes worth more the deeper they run, laying mines that rise under the destroyer, 90 seconds or three ships) `games/descriptions/astrosmash.xml` (A/D or Left/Right to move, Space to fire, Space to start; shoot 20 rocks before five land) and `games/descriptions/lunarlander.xml` (Left/Right or A/D turn the lander, Up or W fires the engine the way it points, P or Escape pauses; set it down upright and slowly on one of three pads worth 2X, 3X and 5X, lander after lander until the fuel is gone, a wreck costing fuel), `games/descriptions/asteroids.xml` (Left/Right or A/D turn, Up or W thrusts, Space fires, Down or S jumps into hyperspace, P or Escape pauses; rocks break into smaller ones, a cleared wave brings the next, a saucer crosses and shoots at the ship, a ship every 10000 points, the heartbeat as the playing state's music and the best score kept), `games/descriptions/berserk.xml` (W A S D or the arrows walk the man and set the way he faces, Space fires that way, one shot at a time, P or Escape pauses, Space starts; four mazes of electrified walls with robots that patrol and fire at the man, a bonus for clearing a room, Evil Otto coming for him if he lingers, and an exit in each outer wall for the next room; after the arcade game Berzerk, see [games-classic](designs/54-games-classic.md)), `games/descriptions/demonattack.xml` (A/D or Left/Right, Space to start and to fire; a small game first written by another AI from the schema alone, see [games-classic](designs/54-games-classic.md); the demons fire back), `games/descriptions/pong_min.xml` (Pong with nothing but two paddles and a ball, W/S and Up/Down, a point puts the ball back in the middle; the game [`--generate windows-cpp`](#generating-a-program) was grown on), `games/descriptions/frostbite.xml` (W/S or Up/Down jump between the shore and four rows of drifting ice, A/D or Left/Right walk; land on white ice to build the igloo before the cold gets you, then walk in; three nights, the ice faster each; see [timers](designs/09-timers.md)), `games/descriptions/galaxian.xml` (A/D or Left/Right, Space to start and to fire, P or Escape pauses; the fleet flies in on [paths](#paths) and dives at you, three ships; a new fleet when one is shot down; the best score and a table of the best five, with initials, are [kept](#keeps) from game to game and on disk; 2 on the title for two players [taking turns](#taking-turns); left on the title it plays itself, its [attract mode](#attract-mode)), `games/descriptions/donkeykong.xml` (A/D or Left/Right walk, W/S or Up/Down climb the ladders, Space starts and jumps, P or Escape pauses; climb past Kong's barrels to Pauline, three times, with three lives), and six after Atari 2600 games ([games-atari](designs/56-games-atari.md#five-atari-2600-games)): `games/descriptions/pitfall.xml` (A/D or Left/Right run, Space starts and jumps, W/S climb, P or Escape pauses; four jungle screens, the scenes of one state built from a kit of pieces, with logs, a tar pit, a crocodile pond, a fire, scorpions in the tunnel and a treasure on each, three minutes and three lives), `games/descriptions/missilecommand.xml` (W A S D or the arrows move the sight, Space launches, P or Escape pauses; the base `<aim>`s at the sight, a counter-missile trails a `<tether>` back to the base and bursts there in a fireball that swells and shrinks, missiles are streaks with a `<heading>` that `<chase>` the nearest city, three waves in three colours), `games/descriptions/combat.xml` (two players: W/S drive, A/D turn, F or Left Shift fires; Up/Down, Left/Right, Right Shift or Right Control; Space pauses; tanks with headings among walls, a hit knocks the tank back, the most hits in 2:16 win), `games/descriptions/airseabattle.xml` (two players: A, S and D point the gun left, up and right and W fires; Left, Down and Right and Up; Space pauses; four lanes of planes, 2:16, most hits wins, and the end screen says who) and `games/descriptions/megamania.xml` (A/D or Left/Right slide, Space fires, P or Escape pauses; three waves that wrap round the sides and drop bombs while the energy runs down, three ships), and `games/descriptions/atlantis.xml` (A or Left fires the left post, W or Up the middle one, D or Right the right one; Space, P or Escape pauses, Space starts; Gorgon ships drop a lane each pass and ray the city from the lowest, three waves, the city gone is game over); `games/descriptions/pacman.xml` (W A S D or the arrows steer, Space or P pauses, Space starts; the maze is a [map](#maps), four ghosts hunt Pac-Man each their own way, a power pellet turns them blue, eat every dot to win, three lives); `games/descriptions/adventure.xml` (W A S D or the arrows walk, Space puts down what is carried, P or Escape pauses, Space starts; five rooms of Adventure: `<carry />` the gold key to the gold castle, the black key from its hall to the black castle, the sword to the dragons and the chalice from the dungeon home to the gold castle's hall; a dragon sleeps until the hero comes near); `games/descriptions/trickshot.xml` (W A S D or the arrows move the cue tip, P or Escape pauses, Space starts; pool: push the white ball into the six others with the tip and sink them all in two minutes, the balls [knocking](#knocks) one another); `games/descriptions/mariobros.xml` (A/D or the arrows walk, Space starts and jumps, P or Escape pauses; shellcreepers come out of the pipes at the top, walk off the floors down to the bottom and go back in; bump the floor under one to turn it over, a knock through the floor, bump it again to set it back up, or run into it to kick it off; six of them, three lives); `games/descriptions/fishingderby.xml` (W A S D or the arrows move the hook, Space, P or Escape pauses, Space starts; you against a [computer](#computer-players) fisherman on I J K L: hook a fish, reel it up past the shark and land it, sunfish 2 pounds, perch 4, cod 6, first to 99; [tethers](#sprites) for the lines, values [read when used](#values), `<set>`); `games/descriptions/qbert.xml` (W D S A or the arrows hop up right, down right, down left, up left; P or Escape pauses, Space starts; diagonal hops over a pyramid of 21 cubes drawn as a [map](#maps) of three-faced bitmaps, each turned yellow when landed on, touched by their tops ([solid characters](#collisions)) and by Q*bert's feet (a [hitbox](#collisions)), hops that take time, the red ball bouncing down, Coily hatching on the bottom row and hunting Q*bert by hops, a hop off the pyramid costs a life); `games/descriptions/yarsrevenge.xml` (W A S D or the arrows fly, Space fires Yar's missile and the cannon, P or Escape pauses; the shield is a [map](#maps) moving up and down with the Qotile, a bite brings the Zorlon cannon in level with Yar, the destroyer missile `<seek>`s him, the Swirl flies at him, the flickering neutral zone keeps him safe from the missile); `games/descriptions/tennis.xml` (W A S D or the arrows walk, Space starts, P or Escape pauses; the ball has an [altitude](#height-and-shadows) and a shadow, a racket reaches it only when it is low, the far end is played by a [computer](#computer-players), the score in words, with deuce and advantage; six games take the set); and `games/descriptions/hauntedhouse.xml` (W A S D or the arrows walk, Space strikes a match, P or Escape pauses; a dark house whose walls show only near the eyes or by a match's [light](#light-and-dark), ghosts seen only in the light, three pieces of an urn to find, which stay on the map once seen).
+| Option | Means |
+|---|---|
+| *game*, `-g`, `--game` | the game, bare or with `-g` (not both). Default `pong` |
+| `-w`, `--window` | window library: `sfml3` (default), `raylib`, `sdl2`, `opengl` |
+| `-x`, `--xml` | XML library: `xerces` (default), `tinyxml2`, `pugixml`, `rapidxml` |
+| `-a`, `--audio` | sound library: `sfml3` (default), `raylib`, `sdl2`, `none` |
+| `--record` | play as usual from a new seed, and when the window closes write what was played into the game file as its [`<demo>`](#attract-mode) |
+| `--generate <target>` | write the game out as a program of its own instead of playing it ([below](#generating-a-program)) |
+| `-o`, `--output <dir>` | where `--generate` writes (default `<game>-<target>`); an error without `--generate` |
+| `-h`, `--help` | the usage, listing the libraries this build has |
 
-The XML, window and sound libraries are chosen in C++ with `Game(file, XmlBackend)` and `Engine(game, WindowBackend, AudioBackend)`; `xgecli` passes what `-x`, `-w` and `-a` named, Xerces, SFML3 and SFML3 when they are not given. `xgegui` (the Qt application) takes the game the same way, `xgegui pong`, or opens a file dialog in `games/descriptions/` when none is named; its Options dialog picks the video library, the XML parser and the sound library. See [Backends](#backends).
+- **Finding the game.** As given (a path, or a name in the working directory), then its file name in the working directory, then in `descriptions/` of the **games folder**: the first folder holding both `descriptions/` and `assets/`, looked for in the working directory, the program's folder and the folder above it, each itself and then its `games/`. The program then makes the games folder its working directory, so it starts from anywhere and a game's asset paths (`assets/paddle.jpg`) are relative to it (`engine/folder.h`).
+- **Options.** A short option takes its value attached or after a space (`-gpong`, `-g pong`); a long one needs the space (`--game pong`, never `--game=pong`). Names are not case sensitive. Each option may be given once. Only the libraries the program was built with can be named ([Backends](#backends)); a default build has `sfml3`, `xerces` and `none`. `--record` and `--generate` are long only and do not go together.
+- The program prints the file, window, XML and sound library it chose, one to a line, then the game.
+- A game file that is wrong (it does not match the schema, an expression will not evaluate, a command names something the game does not have) stops the load with a message saying where; `xgecli` prints it and exits. See [cli](designs/52-cli.md).
 
-A game file that is wrong (it does not match the schema, an expression will not evaluate, a command names a state or object the game does not have) stops the load with a message saying where; `xgecli` prints it and exits, `xgegui` shows it and carries on.
+### xgegui
 
-## Generating a program
+The Qt 6 application, built only when Qt is found. `xgegui pong` opens a game the same way, or a file dialog in `games/descriptions/` when none is named. The game is drawn beside a tree of its data, which can be edited while it runs; Play, Pause, Step and Reset drive it, and the Options dialog picks the video, XML and sound libraries. A game that will not load is shown as a message, and the program carries on. See [gui](designs/53-gui.md).
+
+In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, WindowBackend, AudioBackend)`.
+
+### The shipped games
+
+33 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+
+| Game | Keys besides the convention | What it is, and what it shows |
+|---|---|---|
+| `pong` | W/S, Up/Down | Atari's arcade Pong: a square ball, a dashed net, first to eleven, [`<deflect>`](#touching) off the paddles |
+| `pong_min` | W/S, Up/Down | two paddles and a ball, nothing else: the game [`--generate`](#generating-a-program) was grown on |
+| `breakout` | A/D, the mouse | eight rows of bricks, the ball speeding up, a half paddle at the top; the paddle follows the mouse ([`<track />`](#pointing-controls)) |
+| `spaceinvaders` | A/D, Space fires | the march speeding up, bombs, a mystery ship, shields worn away by [`<hole>`](#touching) |
+| `spaceinvaders2` | as Space Invaders | the same game drawn from an SVG sprite sheet ([SVG pictures](#svg-pictures)) |
+| `frogger` | W A S D hop | logs and diving turtles across the river, five bays against the clock, [`<ride />`](#touching) and [`unless=`](#rule-filters) |
+| `spacerace` | W/S, Up/Down | two rockets through drifting debris, the most crossings in a minute |
+| `kaboom` | A/D, the mouse | the Mad Bomber's eight waves as [scenes](#scenes); catch the bombs |
+| `freeway` | W/S, Up/Down | two chickens across ten lanes; a hit knocks one back a lane; 2:16 |
+| `depthcharge` | A/D, Space drops | charges off both sides, submarines in four lanes laying mines, 90 seconds |
+| `astrosmash` | A/D, Space fires | falling rocks that split, spinners, a spare base each 1,000 |
+| `lunarlander` | Left/Right turn, Up thrusts | land upright and slowly on pads worth 2X, 3X, 5X until the fuel is gone; [`<line>`](#lines) pictures, `pixel` collisions |
+| `asteroids` | Left/Right turn, Up thrusts, Space fires, Down hyperspace | rocks that break, waves, a saucer, the heartbeat as music, the best score kept |
+| `berserk` | W A S D walk and face, Space fires | four rooms as [maps](#maps), robots that patrol, line up and fire, Evil Otto, the exit shut behind you |
+| `demonattack` | A/D, Space fires | three waves of demons that fire back and split |
+| `frostbite` | W/S jump between rows, A/D walk | build the igloo by landing on white ice; three nights |
+| `galaxian` | A/D, Space fires; 2 on the title for two players | the fleet flies in on [paths](#paths) and dives, a top five with initials, [turns](#taking-turns), an [attract mode](#attract-mode) |
+| `donkeykong` | A/D walk, W/S climb, Space jumps | girders, ladders and barrels, three times to Pauline |
+| `pitfall` | A/D run, Space jumps, W/S climb | four jungle screens built from a [kit](#the-kit-and-from), logs, tar, crocodiles, treasure |
+| `missilecommand` | W A S D move the sight, Space launches | counter-missiles trailing a [`<tether>`](#sprites), fireballs, three waves |
+| `combat` | W/S drive, A/D turn, F or Left Shift fires; Up/Down, Left/Right, Right Shift or Right Control | two tanks among walls, a hit knocks the tank back |
+| `airseabattle` | A S D point, W fires; Left Down Right, Up | two guns, four lanes of planes, 2:16 |
+| `megamania` | A/D, Space fires | eight waves that wrap round, the energy as a [timer's time left](#time-left) |
+| `atlantis` | A, W, D fire the three posts | Gorgon ships dropping a lane each pass; named timers and conditions copied by [`from=`](#scenes) |
+| `pacman` | W A S D steer | the arcade maze as a [map](#maps), four ghosts each hunting their own way ([walking a map](#walking-a-map)) |
+| `adventure` | W A S D walk, Space drops | five rooms, keys, castles, dragons; [`<carry />`](#touching) |
+| `trickshot` | W A S D move the cue tip | pool: balls that [`<knock>`](#knocks) one another, slowed by `<drag>` |
+| `mariobros` | A/D walk, Space jumps | bump the floor under a shellcreeper to flip it; [`<poses>`](#poses-mirror-grip-and-blinking), a window [`<scale>`](#window), a [palette swap](#palette-swap) |
+| `fishingderby` | W A S D move the hook | you against a [computer](#computer-players) fisherman: tethers for the lines, values [read when used](#values-read-when-used) |
+| `qbert` | W D S A hop up-right, down-right, down-left, up-left | a pyramid of cubes as a map, timed hops with an `<arc>`, Coily hunting by hops |
+| `yarsrevenge` | W A S D fly, Space fires | the shield a moving map, a destroyer missile that [`<seek>`](#parts-of-an-object)s, the neutral zone |
+| `tennis` | W A S D walk | a ball with an [altitude](#height-and-shadows) and a shadow, a computer at the far end, the score in words |
+| `hauntedhouse` | W A S D walk, Space strikes a match | a dark house seen only by [light](#light-and-dark), four floors, three pieces of an urn |
+
+What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
+
+### Generating a program
 
 ```
 xgecli pong --generate windows-cpp                     # writes pong-windows-cpp/
-xgecli pong --generate windows-cpp -o out/pong         # or into a folder named
+xgecli pong --generate windows-cpp -o out/pong         # or into the folder named
 ```
 
-`--generate <target>` does not play the game: it turns the game file into a program of its own that plays it, and exits. `-o` / `--output` names the folder (default `<game>-<target>` in the directory `xgecli` was started from) and is an error without `--generate`. `-g` stays the game. The target, `windows-cpp`, writes a C++ program on SFML 3 that is the engine with the game built in. The work is done by XSLT stylesheets in `games/generators/windows-cpp/`, run by libxslt (EXSLT's `exsl:document` writes the files), once the engine has loaded the game as it would to play it (a game it will not load is not generated); `xgecli` runs them and copies in the files they list:
+`--generate windows-cpp` does not play the game: it writes a C++ program on SFML 3 that is **the engine with the game built in**, so it plays exactly as `xgecli` does. The engine first loads the game as it would to play it (a game it will not load is not generated), then XSLT stylesheets in `games/generators/windows-cpp/` (run by libxslt) write the program:
 
-- `source/<game>.cpp` (`merge.xsl`, then `data.xsl`): the game, its [kit and from=](#the-kit-and-from) first worked out as the engine works them out, written out as the engine's own data, the `GameData` (`game/data.h`) `readGame` makes of the file, each tag the line of C++ that makes what the engine makes of it: the window, the variables, every object, every state, the sounds and the paths, with the expressions as written. A `<group>` is written as the file has it: what the group gives, a function for each `<member>`, `<row>`, `<column>` or `<cell>` that changes something, and a line for each member or cell naming the parts that change it. One function returns the game, `<game>Game()` (`pongMinGame()` for `pong_min.xml`). The lines call the small functions of `source/game_parts.h` (`modules/game_parts.h`, copied unchanged).
-- `source/main.cpp`: makes the `Game` from it, an `SFMLWindow` and an `SFMLAudio` (silent if there is no sound device), and runs `Engine::loop`, as `xgecli` does.
-- `engine/` (listed in `engine.xml`): the engine's own files, copied unchanged from `xge/lib/` in the repository `xgecli` was built from: `Game`, `Engine`, `load/expr` (with exprtk), the collisions, commands, objects, states, keys, geometry, pictures (`bitmap`, `svg` with lunasvg) and sounds, and SFML's window and audio. Left out: reading XML (`load/xml`, the XML libraries, `load/xsd`), the other window and sound libraries, and the factories that choose among them (`window/window.cpp`, `audio/audio.cpp`, `engine/backends.cpp`).
-- `assets/`: the font, if it shows text, and the pictures and drawings it names. `CMakeLists.txt` finds SFML 3, exprtk and lunasvg or fetches them, compiles with the engine's warnings, makes the game Visual Studio's startup project, and puts the built game, its DLLs and its `assets/` in `output/`. Also `README.md` and a `.gitignore` (`build/` and `output/`).
+| Written | By | What |
+|---|---|---|
+| `source/<game>.cpp` | `merge.xsl`, then `data.xsl` | the game as the engine's own data, the `GameData` (`game/data.h`) `readGame` makes of the file, a line of C++ for each tag. The [kit and every `from=`](#the-kit-and-from) are worked out first, as the engine works them out. One function returns the game (`pongMinGame()`) |
+| `source/game_parts.h` | copied from `modules/` | the small functions those lines call |
+| `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | makes the `Game`, an `SFMLWindow` and an `SFMLAudio` (silent with no sound device) and runs `Engine::loop`; the build finds or fetches SFML 3, exprtk and lunasvg |
+| `engine/` | listed in `engine.xml` | the engine's own files, copied unchanged from `xge/lib/` of the repository `xgecli` was built from. Left out: reading XML, the other libraries and the factories that choose among them |
+| `assets/`, `LICENSE` | `xgecli` | the font if it shows text (and a font's licence beside it), the pictures it names, the repository's licence |
 
-So it plays as `xgecli` and `xgegui` do: the data is the engine's reading of the file, and from the data on it is the same code. `xge/tests/test_generated_games.cpp` checks every game: building its test program, `xgetest-generated` (left out of an ordinary build; `cmake --build build --target xgetest-generated`, or `scripts/shell/windows/games-test-all.bat`), generates each one, compiles its data in, compares it with what `readGame` reads from the file, every field, and plays it beside the game read from its file, frame by frame. A folder made for a game that cannot be generated is removed. Without libxslt `xgecli` is built without `--generate` and says so. See [generator](designs/40-generator.md).
+`xgetest-generated` (left out of an ordinary build; `cmake --build build --target xgetest-generated`) generates every game, compiles its data in, compares it with what `readGame` reads from the file, field by field, and plays the two side by side, frame by frame. Without libxslt `xgecli` is built without `--generate` and says so. See [generator](designs/40-generator.md).
 
-## Game file layout
+## The game file
 
-A game file has one `<game>` root with three children, and six optional ones (`<sounds>`, `<paths>`, [`<styles>`](#styles), the [`<kit>`](#the-kit-and-from), `<objects>`, which a game whose states own all its objects leaves out, and [`<keeps>`](#keeps)), in this order, as enforced by [xgedef.xsd](../games/xgedef.xsd):
+### Layout
+
+One `<game>` root, its children in this order (the schema enforces it):
 
 ```xml
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="../xgedef.xsd">
-  <window name="..."> ... </window>
-  <variables> <variable name="...">...</variable> ... </variables>
-  <sounds>    <sound name="..."> ... </sound> ... </sounds>   (optional)
-  <paths>     <path name="..."> ... </path> ... </paths>      (optional)
-  <styles>    <style name="..."> ... </style> ... </styles>   (optional)
-  <kit>       <object name="..."> ... </object> <group name="..."> ... </group> ... </kit>   (optional)
-  <objects>   <object name="..."> ... </object> <group name="..."> ... </group> ... </objects>   (optional)
-  <keeps>     <keep object="..." /> ... </keeps>              (optional)
-  <states>    <state name="..."> ... </state> ... </states>
+  <window name="Pong"> ... </window>            <!-- size, scale, background, frame rate -->
+  <variables> ... </variables>                  <!-- numbers the whole game uses -->
+  <sounds> ... </sounds>                        <!-- optional: notes and music -->
+  <paths> ... </paths>                          <!-- optional: routes objects fly -->
+  <styles> ... </styles>                        <!-- optional: named text and bitmap looks -->
+  <kit> ... </kit>                              <!-- optional: pieces written once, taken below -->
+  <objects> ... </objects>                      <!-- optional: what every state shares -->
+  <keeps> ... </keeps>                          <!-- optional: what a new game passes over -->
+  <states> ... </states>                        <!-- title, playing, paused, game over ... -->
+  <demo> ... </demo>                            <!-- optional: a recorded game -->
 </game>
 ```
 
-The game's `<objects>` are seen by every state. A [`<state>`](#state) can own objects of its own, and hold [`<scenes>`](#scenes) that own theirs; the game's own objects are kept for what several states share (a game may need none of them once its states own their objects, which is left for later). Where an object is written says how long it lasts: the game's for the whole game, a state's while the state is, a scene's in its scene. What is written once and used in several places, or only spawned, goes in the [`<kit>`](#the-kit-and-from).
+**Where an object is written says how long it lasts:** the game's `<objects>` for the whole game, a [state](#states)'s while it is the current state, a [scene](#scenes)'s while it is the current scene. What is written once and used in several places, or only ever spawned, goes in the [`<kit>`](#the-kit-and-from). A game whose states own all their objects has no game-level `<objects>`.
 
-### The kit and from=
+A game with no `xsi:noNamespaceSchemaLocation` is not validated. The schema checks shape and where each command may go; the loader checks names and meaning once everything is read.
 
-The `<kit>` holds objects, groups and [maps](#maps) written once, called pieces. A piece is never in play itself: it comes into play where an `<objects>` (the game's, a state's or a scene's) takes it, and as copies a [`<spawn>`](#spawn-and-despawn) makes.
+### The format's one rule
 
-```xml
-<kit>
-  <object name="paddle" class="paddle"> ... </object>
-  <object name="bomb" class="bomb"> ... <most>6</most> </object>   <!-- only ever spawned -->
-  <group name="robots" class="robot"> ... <member name="boss"> ... </member> ... </group>
-</kit>
-<objects>
-  <object name="paddle1" from="paddle"><position><x>10</x></position></object>
-  <object name="paddle2" from="paddle"><position><x>780</x></position></object>
-</objects>
-```
+**An attribute names or picks something; everything else is the content of an element.**
 
-- **`from="piece"`** in any `<objects>` takes that piece: the object or group written is the piece, changed by what it writes, and called by its own name. An object or group with no `from=` that has a piece's name takes that piece the same way (`<object name="topwall" />` is the kit's `topwall`, as it is). A group piece's member with a `name` of its own can be taken alone, by that name: the group with that member only, so it keeps the group's class, rules and picture.
-- **A piece can be `from=` an earlier piece**: Asteroids' medium and small rocks are each `from="rock"`, which says once that a rock is a hazard, hit by its outline, wrapping round.
-- **One rule for every change.** A take changes its piece, a state `from=` another changes the objects it copies, and a scene `from=` another changes the objects of that one, all the same way. Over what it starts from, what is written: puts its attributes (its `class`) in place of those it has; puts each `<sprite>` and `<animation>` in place of the one of the same name, whole, or adds it; puts the `<x>` and the `<y>` of a `<position>`, `<velocity>`, `<acceleration>` or `<padding>` each in place of its own; puts each `<variable>`, `<action>` and `<timer>` in place of the one of the same name, or adds it (an unnamed timer is added); adds its `<collision>` rules after those it has, and its `<solid>`s in place of all of them; puts its `<member>`s, `<row>`s, `<column>`s and `<cell>`s in place of all of them; changes an inner group, or a map's object, of the same name the same way, or adds it; and puts anything else in place of what it has of that tag. An object or group written with a name the list already has changes it this way, and so does one named after a member or an inner group of a group in the list (Missile Command's later waves change the group `more` inside `missiles`); a member changed so says only its `<sprite>`s, `<animation>`s, `<position>` and `<velocity>`.
-- **What is only ever spawned** is written in the kit, with nothing taking it. A piece that a `<spawn>`, `<fire>` or `<release>` names comes into the list of what spawns it (the object whose rule, action or timer it is, or the state or scene whose input, condition or timer it is, or what follows a path whose step it is) as the one its copies are made from, never in play itself; so a copy belongs where its spawner does, and reads that scene's variables (Kaboom's bombs fall at their wave's speed). A piece spawned by another piece's copies comes in beside them.
-- A `from=` naming no piece, a take of a name the list already has, a `<map>` `from=` an object or a group (or the other way round), two pieces of one name, a piece `from=` one after it, and a name with a dot (a numbered member, `rocks.2`, is changed by giving it a `name`) stop the load.
-
-The engine works out the kit and every `from=` on the XML before it reads the objects (`load/merge.cpp`), and a [generated program](#generating-a-program) does the same in XSLT (`merge.xsl`), so both read the same objects.
-
-### Attributes and content
-
-The rule the whole format follows: **an attribute names or picks something; everything else is the content of an element.**
-
-- Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`, and for sounds `sound`, `wave`, `pitch` and `to`. `<inc variable="paddle1.score" />`, `<collision edge="left">`, `<input button="space">`.
-- Everything else, a size, a color, a position, a flag, is written between tags. `<radius>10</radius>`, `<fullscreen>true</fullscreen>`.
+- Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`, `sound`, `wave`, `pitch`, `to`. `<inc variable="paddle1.score" />`, `<collision edge="left">`, `<input button="space">`.
+- Everything else, a size, a color, a position, a flag, a verb's number, is written between tags: `<radius>10</radius>`, `<fullscreen>true</fullscreen>`, `<chase object="hero">2</chase>`.
+- A verb with one number has it as its content; anything more follows as named tags: `<jump direction="up">rowgap<seconds>leap</seconds></jump>`.
 - What something *does* is a list of command tags, run in the order written. There are no `;`-separated strings.
+
+A few attributes still pack several words into one string (`button="a left"`, `keys="a b"`, `number="2 4 6"`, `pitch="F#4"`); they are known exceptions, open in [file-format](designs/02-file-format.md).
 
 ### Values
 
-Wherever the content of an element is a number (a position, a velocity, a size, a variable's value, a threshold, a step) it is a **value**, and a value is one of three things:
+Wherever an element holds a number (a position, a speed, a size, a variable, a threshold) it is a **value**, written one of three ways. A value holds text or one tag, never both and never two tags.
 
-- **An expression written out as text.** Ordinary arithmetic, with the names below: `window.width.center - title.width / 2`, `margin`, `ball.radius * 2`, `30`. It is evaluated by exprtk at load time.
-- **One value tag**, which makes the number: `<random><min>-7</min><max>7</max></random>`, a random number from `min` to `max` (in either order; both ends are themselves expressions). Any place that takes a value takes it:
+| Form | Example | Notes |
+|---|---|---|
+| arithmetic as text | `window.width.center - title.width / 2` | worked out by exprtk; the everyday form |
+| `<random>` | `<random><min>-7</min><max>7</max></random>` | a number from min to max (either order; each end a value) |
+| `<formula>` | see [below](#arithmetic-as-tags) | the same arithmetic as tags, nothing left in a string for a tool to parse |
 
-```xml
-<velocity>
-  <x><random><min>-7</min><max>7</max></random></x>
-  <y><random><min>-3</min><max>3</max></random></y>
-</velocity>
-```
+**When a value is worked out.** Once, when the game loads, with three exceptions:
 
-A value holds text or a tag, not both, and not two tags (`<x>5 <random .../></x>` is an error naming the element). A `<random>` is drawn at load and drawn again whenever its object comes back into play: it is reset (a `<reset />` in a collision, `<reset object>`, `<reset scene>` of its scene, or a reset of the whole game), revealed (`<reveal>`), released (`<release>`) or fired (`<fire>`). So each Pong serve is new, and each rock released falls its own way (a [copy](#spawn-and-despawn) draws its own when it is made). A `<random>` in a game-level variable is drawn once.
+- a timer's `<every>` and `<after>`, worked out again each time the timer starts over;
+- a position that names a text's or an image's size, finished once the window has measured it and again whenever that size changes;
+- the values of a **command** and of a **condition's test**, read as they run ([below](#values-read-when-used)).
 
-- **Arithmetic written as tags**, a `<formula>`: the same sums as the expression text, with nothing left in a string for a tool to parse. It is a value tag too, so it goes wherever `<random>` does. See [Arithmetic as tags](#arithmetic-as-tags).
+A `<random>` is drawn at load and again whenever its object comes back into play: a reset (of it, of its scene or of the game), a `<reveal>`, `<release>` or `<fire>`, or a new copy made. So each Pong serve is new. A `<random>` in a game-level variable is drawn once; entering a scene draws nothing.
 
-The names an expression can use:
+#### Names a value can use
 
 | Name | Value |
 |---|---|
 | `window.top`, `window.left` | 0 |
-| `window.bottom`, `window.right` | window height, window width |
+| `window.bottom`, `window.right` | the window's height, its width |
 | `window.width.center`, `window.height.center` | half the width, half the height |
-| any global `<variable>` | its value. They are worked out in the order written, so a variable can use the ones above it |
-| any `objectName.variableName` | that object's variable (available regardless of the order objects appear in the file) |
-| `objectName.timerName` | a named object timer's time left, whole seconds rounded up ([time left](#timers)) |
-| `objectName.x`, `objectName.y`, `objectName.velocity.x`, `objectName.velocity.y`, `objectName.heading`, `objectName.altitude`, `objectName.rise`, `objectName.light`, `objectName.blink` | where an object is (its top left), how it is going, how high and how fast rising ([altitude](#height-and-shadows)), how far it lights ([light](#light-and-dark)) and how many seconds it has left blinking ([blinking](#poses-mirror-and-grip)), **as the game runs**: only a command's value can read them (see below), and a condition can test them by their short names (`variable="x"`). An object's own `<variable>` of that name wins |
-| `self.` before any of these | in an object's own rules, actions and timers, the object running it (`self.worth`, `self.x`) |
-| `touch.x`, `touch.y`, `touch.along`, `touch.depth`, `touch.normal.x`, `touch.normal.y` | in a collision rule about another object, the touch it answers: the point, where along the object's own side (0 to 1), how far they went into each other, and the way out of the other thing toward it |
-| `objectName.width`, `objectName.height` | the width and height of any object (its sprite's footprint); an object refers to itself by its own name, like any other field. Meant for `<position>`. An object's own `<variable>` named `width` or `height` wins over its size. A circle's or rectangle's size is known from its sprite, so the position is exact at load. A text's or image's size is only known once the window has measured it, so its position is finished then, and worked out again whenever the size changes (a score gaining a digit); until then `printGame` shows it as unknown. |
+| a game `<variable>` | its value (worked out in the order written, so one can use those above it) |
+| `object.variable` | that object's variable, wherever the object is in the file |
+| `object.width`, `object.height` | the object's size (its sprite's footprint); meant for `<position>`. An object names itself by its own name |
+| `object.timer` | a named object timer's [time left](#time-left), whole seconds rounded up |
+| `object.x`, `.y`, `.velocity.x`, `.velocity.y`, `.heading`, `.altitude`, `.rise`, `.light`, `.blink` | **live numbers**: where it is (its top left), how it goes, its [height](#height-and-shadows), its [light](#light-and-dark), its [blinking](#poses-mirror-grip-and-blinking). Only a command's or a test's value can read them |
+| `self.` before any of these | in an object's own rules, actions and timers, the object running it (`self.worth`) |
+| `touch.x`, `touch.y`, `touch.along`, `touch.depth`, `touch.normal.x`, `touch.normal.y` | in a rule about another object: the point of the touch, where along the object's own side (0 to 1), how far they went into each other, the way out of the other toward it |
+| `pi`, and exprtk's functions | `min`, `max`, `abs`, `sqrt`, `sin`, `cos`, `sgn`, `ceil`, ... (Berserk keeps a wait above a floor with `max(6, 14 - player.depth)`) |
 
-**A command's values are read when it runs.** A command whose numbers name something that changes (an object's variable, where an object is, how it is going, the touch) is worked out again every time it runs, from what is so then: `<inc variable="player.score">self.worth</inc>` adds the worth of the fish that was landed, as it is now. Everything else is worked out once, when the game loads, and a value that is not a command's (a position, a size) that names where something is stops the load, since nothing is anywhere yet. A value that cannot be worked out as it runs leaves the command as it was made at load, with one warning.
+An object's own `<variable>` named like a size or a live number (`width`, `x`) wins over it. A variable named like an exprtk function (`floor`, `min`) stops the load (`Expected a '(' at start of function call to 'floor'`), which is why Pitfall's tunnel floor is `tunnel`.
 
-The other exprtk math functions (`min`, `max`, `sqrt`, ...) work too, because exprtk brings them; Berserk uses `max` to keep its waits from shrinking below a floor (`max(6, 14 - player.depth)`). Nothing else about the format depends on them. (`<formula>` has no `min` or `max` yet; see [Arithmetic as tags](#arithmetic-as-tags).)
+#### Values read when used
 
-### Arithmetic as tags
+A command whose numbers name something that changes (an object's variable, a live number, the touch) is worked out again every time it runs, from what is so then: `<inc variable="player.score">self.worth</inc>` adds the worth of the fish just landed, and `<set variable="shark.velocity.x">shark.velocity.x * 1.1</set>` speeds the shark up. A condition's test works the same way: `<above>gun2.score</above>` follows gun 2's score. Every other number is fixed at load, and a value that is not a command's (a position, a size) naming a live number stops the load, since nothing is anywhere yet.
 
-The same arithmetic has two spellings, and both give the same number: expression text (`window.width.center - title.width / 2`) and a `<formula>`. They sit side by side in one game, even in one object; text is the everyday form, and a `<formula>` is for where a tool should see the sum. Pong's and Breakout's titles are placed with `<formula>`s, so it is played by real games.
+#### Arithmetic as tags
 
-A formula is built from four operations, each with a first operand and a second, named for what they are:
+A `<formula>` is one operation whose operands are elements, each a name, a number, a `<random>` or another operation. Precedence is the nesting, so there is nothing to parse; text and formula give the same number and sit side by side in one game. Pong's and Breakout's titles are placed with them.
 
-| Operation | First operand | Second operand | Means |
+| Operation | First operand | Second operand(s) | Means |
 |---|---|---|---|
-| `<add>` | `augend` | `addend` | first + second |
-| `<subtract>` | `minuend` | `subtrahend` | first - second |
-| `<multiply>` | `multiplicand` | `multiplier` | first * second |
-| `<divide>` | `dividend` | `divisor` | first / second |
-
-An operand is a **name or a number**, never an expression: `window.width.center`, `title.width`, `xoffset`, `2`, `-110`, `0.5`. Anything more is an operation of its own, which is how precedence is written: the operations are worked out in the order they are given, innermost first, so there is nothing to parse.
-
-**`<formula>`** is one operation whose operands are elements, each holding a name, a number, a `<random>` or another operation. The first operand is combined with each of the others in turn, left to right, so `a - b - c` is one `<subtract>` with a `<minuend>` and two `<subtrahend>`s, and `a / b / c` one `<divide>` with two `<divisor>`s. There must be a first operand and at least one second.
+| `<add>` | `<augend>` | `<addend>` | first + second |
+| `<subtract>` | `<minuend>` | `<subtrahend>` | first - second |
+| `<multiply>` | `<multiplicand>` | `<multiplier>` | first * second |
+| `<divide>` | `<dividend>` | `<divisor>` | first / second |
 
 ```xml
 <x>
@@ -156,246 +253,211 @@ An operand is a **name or a number**, never an expression: `window.width.center`
 </x>
 ```
 
-Which operations may sit where is checked by the schema (both validators), and what an operand may be, and the names, by the loader, with a message that names the element (`object 'title' > <position> > <x> > <formula> > <add>: "a + b" is not a name or a number; ...`). Everything is worked out when the game loads, like any value, and a size-dependent position (a text centered by its own width) is finished once the window has measured it, as it is for text. `printGame` shows a formula as infix with its brackets. (An `<equation>`, a list of flat steps with named answers, was a second spelling of the same thing and was dropped: one structured form is enough.)
-**Division by 0.** A divisor that is certainly 0 when the game loads (a number, a global variable, or an operation made only of those) stops the load, with a message that names the operation (`object 'o' > <formula> > <divide>: the divisor is 0`). A divisor that is 0 only because its value is not known yet (another object's variable, which reads 0 until that object is built, or the size of a text or image before the window has measured it) gives 0 for the answer and says nothing; a position or a timer's interval that depends on it is worked out again when it is known. While the game runs (a timer's interval worked out again, a position finished once a text is measured) a divisor of 0 gives 0 and a warning on standard error, once for each place, and the game carries on. The schema cannot see what a name holds, so it cannot refuse a divisor; only the engine does. The expression text is unchanged and divides by 0 as it always did.
+- An operand is a **name or a number**, never an expression; anything more is an operation of its own.
+- Several second operands chain left to right: `a - b - c` is one `<subtract>` with two `<subtrahend>`s.
+- **Dividing by 0.** A divisor certainly 0 at load (a number, a game variable, or an operation of only those) stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable, a text not yet measured) gives 0 quietly, and a position or interval made from it is worked out again later. While the game runs a divisor of 0 gives 0 and one warning per place. Expression text divides by 0 as it always did.
 
-### `<window>`
+### Names
+
+Names are dotted, and every dot means "inside":
+
+| Name | Is |
+|---|---|
+| `ball.radius` | the ball's variable `radius` |
+| `logrow3.2`, `aliens.3.2`, `dots.17` | a [group](#groups)'s member, a cell (column 3, row 2), a [map](#maps)'s piece |
+| `playing.hero` | the state `playing`'s own object |
+| `playing.room2.robots.3` | a member of a scene's group |
+| `playing.room2.pace` | a scene's variable |
+| `shot.1` | a [copy](#spawn-and-despawn) made while the game runs |
+
+- A name written in the file is looked for **from the inside out**, from where it is written: the scene's own, then its state's, then the game's, and last as the end of exactly one path. So the rules inside a scene say `robots` and mean their own, and `hero` means `playing.hero` anywhere.
+- A scene's object also answers to `state.name` (`playing.robots`): the robots of every scene of the state, so a state-level rule saying `robots` means whichever room's it meets. Where a short name could mean two things, the shortest path wins; two as short stop the load (`'rock' could be playing.rock, practice.rock; write the path of the one meant`).
+- A name given twice where both can be seen (a scene's object named like its state's, a state's like the game's), and two scenes of one name, stop the load.
+- A reference is split at its **last** dot into owner and variable, and exprtk sees every name as one plain symbol.
+- `class="..."` puts an object in a kind that rules and conditions can match, like a CSS class; one object can be named alone, a class names all of its kind.
+
+## Window, variables and styles
+
+### Window
 
 `<window name="Pong">` (the title), then in this order:
 
-| Element | Meaning |
-|---|---|
-| `<width>`, `<height>` | Size in pixels. Plain whole numbers: the expressions in the rest of the file are worked out against the window's size, so these cannot be expressions themselves |
-| `<scale>` | Optional, a whole number 1 or more (1 when left out): each of the game's pixels is drawn as a square this many window pixels across. The game is written and played at `<width>` by `<height>`; only the window is bigger. Mario Bros. is 256 by 224 at `<scale>3</scale>`, the size of the arcade screen with its sprites in proportion. Every backend draws it so, and the mouse is read back in the game's own pixels |
-| `<background>` | Optional, a color name (`color.black` when left out) |
-| `<fullscreen>` | Optional, `true` or `false` (`false` when left out) |
-| `<framerate>` | Optional, frames per second, up to 255 (60 when left out). It is how often the whole engine runs, keys and timers included, so a slow game such as Snake keeps 60 and moves on a timer (`<every>0.5</every>`) rather than lowering it |
+| Element | Default | Meaning |
+|---|---|---|
+| `<width>`, `<height>` | required | the game's size in pixels. Plain whole numbers, since everything else is worked out against them |
+| `<scale>` | 1 | each of the game's pixels is drawn as a square this many window pixels across. The game is written and played at its own size; only the window is bigger. Mario Bros. is 256 by 224 at `<scale>3</scale>`, the arcade's screen. The mouse is read back in game pixels |
+| `<background>` | `color.black` | a [color](#colors) name |
+| `<fullscreen>` | `false` | `true` or `false` |
+| `<framerate>` | 60 | frames a second, up to 255. It is how often the whole engine runs, keys and timers included, so a slow game keeps 60 and steps on a timer rather than lowering it |
 
-### `<variables>`
-
-Global named numbers. Each `<variable name="margin">30</variable>` becomes a constant that any expression in the file can use (for example `margin`, `ball.radius`). Names may contain dots, and a name written so is always that variable, even where its first part names an object (a state's `ball` and the game's `ball.radius`). A name exprtk already has for a function (`floor`, `min`, `max`, `abs`, `sqrt`, ...) cannot be used: an expression reads it as the function and the load stops (`Expected a '(' at start of function call to 'floor'`), which is why Pitfall's tunnel floor is the variable `tunnel`. The content is a value, so `<variable name="b">a * 2</variable>` and `<variable name="start"><random><min>1</min><max>3</max></random></variable>` both work. Declaring a name twice keeps the later value.
-
-### `<styles>`
-
-A style is a size, a color and a font for text, named once and taken by any `<text style="...">`, so the title, the prompts and the score are each said once: `<style name="banner"><size>128</size><color>color.red</color></style>`. Each of `<size>` (a value, worked out with the game's names), `<color>` and `<font>` may be left out. `<font>` names a font file, relative to the games folder as an image's path is: `games/assets/` has `tuffy.ttf` (the font when none is named) and `pressstart2p.ttf`, Press Start 2P, an arcade font whose letters are 8 by 8 pixels at `<size>8</size>` (use multiples of 8 for sharp letters), which Mario Bros., Q*bert, Pac-Man and Donkey Kong use; its licence (the SIL Open Font License) is `pressstart2p-ofl.txt` beside it. A text with a style= takes what it leaves out from the style, and its own `<size>`, `<color>` or `<font>` wins. A style= that names no `<style>`, or a text left with no size at all, stops the load. The shipped games use `banner` (titles and endings), `prompt` (press Space), `help`, `keys` and `hud` (the score and lives).
-
-A style is also the scale and colors of a [bitmap](#bitmaps), taken by any `<bitmap style="...">`, so the pictures of one character (Mario's seven poses, Coily's four) say their palette once: a style's `<scale>` and its `<color>`s, the plain one and each `<color char="r">`, in that order after `<size>`. A bitmap takes the scale, the plain color and each char= color it does not give itself; its own win. A text ignores a style's scale and char= colors, a bitmap its size.
-
-**Palette swap.** `<become style="angry" />` puts another style's colors on an object's bitmaps: each bitmap that takes a style takes that one instead, for the colors it took from its own; colors a bitmap gives itself stay, and so does any color the new style leaves out, so a swap style names only what changes. The look stays (with `sprite=` as well, both change), a moving look goes on where it was, and a reset puts the first colors back. The pictures for each style a `<become>` can give the object are drawn as the game loads, so a swap costs nothing while it plays. Mario Bros.' shellcreepers are drawn once, in green, and one that gets up by itself does `<become style="angry" />`, a style giving only the two greens as red. A style= naming no style, an object with no bitmap that takes a style, or one with a `<heading>`, stops the load.
-
-### `<sounds>`
-
-Optional. The bleeps, bloops and little tunes of an old 8-bit machine, written as notes: nothing is loaded from a sound file. Each `<sound name="...">` is something a `<play sound="..." />` command (see [Commands](#commands)) or a state's [`<music>`](#state) can start. Its children, in this order: an optional `<loop />`, an optional `<volume>` (a value, 0 for silent to 1 for the loudest; 0.3 if left out), then any mix of `<note>`s and `<rest>`s, played one after the other, or `<part>`s that play together.
+### Variables
 
 ```xml
-<sounds>
-  <sound name="wall" wave="square">
-    <note pitch="A3">0.04</note>
-  </sound>
-  <sound name="score" wave="triangle">
-    <volume>0.4</volume>
-    <note pitch="E5" to="E3">0.35</note>
-  </sound>
-  <sound name="gameover" wave="square">
-    <note pitch="G4">0.2</note>
-    <note pitch="F#4">0.2</note>
-    <note pitch="E4" to="D#4">0.5</note>
-    <rest>0.1</rest>
-    <note pitch="2000" wave="noise">0.15</note>
-  </sound>
-</sounds>
+<variables>
+  <variable name="margin">30</variable>
+  <variable name="paddle">margin * 4</variable>
+  <variable name="start"><random><min>1</min><max>3</max></random></variable>
+</variables>
 ```
 
-- **`<note pitch="..." to="..." wave="...">seconds</note>`**: a tone. The content is how long it lasts, a value in seconds (so `<note pitch="C5">beat / 2</note>` works with a variable `beat`), more than 0 and at most 10. `pitch` is a note name with an octave, a letter `A` to `G`, an optional `#` (sharp) or `b` (flat), then the octave: `C4` is middle C and `A4` is 440 Hz, as on a piano; or a plain number of hertz (`440`, `97.5`). `to` (optional) is a pitch to slide to while the note plays, evenly in semitones: a bloop that falls, a laser that rises. `wave` (optional) is the note's own wave instead of the sound's.
-- **`<rest>seconds</rest>`**: silence that long, between notes.
-- **`<part wave="...">`**: a voice, like a channel of a sound chip. A sound written in parts plays them all at once, each its own `<note>`s and `<rest>`s one after another: a tune over its bass, or a chord as several parts of one note. The sound lasts as long as its longest part. `wave` (optional) is the wave of the part's notes that do not give their own; without it they take the sound's. The parts are added together, so two parts at full volume can be too loud and are cut off at the loudest a sample can be: keep the `<volume>` down. A sound has either `<part>`s or notes of its own, not both.
+Game-level variables are **named constants** any value can use. They are worked out in the order written. A name may hold dots, and is then always that variable. Declaring a name twice keeps the later value. Numbers that change belong to objects (`paddle1.score`); an object with no picture can hold them ([numbers only](#parts-of-an-object)).
 
-  ```xml
-  <sound name="start">
-    <volume>0.2</volume>
-    <part wave="square">
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      ...
-    </part>
-    <part wave="triangle">
-      <note pitch="C3">0.2</note>
-      <note pitch="G3">0.2</note>
-      ...
-    </part>
-  </sound>
-  ```
-- **`<loop />`**: the sound plays over and over, from its end straight back to its start, instead of once. A `<play>` of it switches it on, and it stays on until a `<silence sound="..." />` (anywhere a `<play>` can go), the reset of the whole game, or, when the `<play>` is on a key or in the action a key triggers, until that key is let go, as a `<move>` is held: Asteroids' and Lunar Lander's engines hum while thrust is held. Asking for a loop that is already on leaves it playing; one silenced and asked for again in the same frame (one of two keys for it let go, the other still down) plays on. A state change lets go of what the held keys were driving, so a pause is quiet, and the new state's held keys start their loops again.
+### Styles
 
-  ```xml
-  <sound name="thrust" wave="noise">
-    <loop />
-    <volume>0.15</volume>
-    <note pitch="150">1</note>
-  </sound>
-  ...
-  <action name="thrust">
-    <accelerate direction="up" burn="fuel">thrust</accelerate>
-    <play sound="thrust" />
-  </action>
-  ...
-  <condition object="lander" variable="fuel">
-    <atmost>0</atmost>
-    <silence sound="thrust" />
-  </condition>
-  ```
+A style is a named look, said once and taken by any `<text style="...">` or `<bitmap style="...">`:
 
-- **`wave`** on a `<sound>` is the wave of every note that does not give its own: `square` (the default; the classic beep), `triangle` (softer, the bass of an old console), `sawtooth` (buzzy), `sine` (pure and soft, which no 8-bit chip had) or `noise` (hiss and crashes: a new random level every half cycle of the pitch, so a high pitch is a hiss and a low one a rumble).
+```xml
+<styles>
+  <style name="banner"><size>64</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
+  <style name="mario">
+    <scale>3</scale>
+    <color>color.red</color>              <!-- the * pixels -->
+    <color char="b">color.blue</color>    <!-- each b pixel -->
+  </style>
+</styles>
+```
 
-Every sound is made into samples (16 bit, one channel, 44100 a second) by the engine when the window opens, the same for every sound library ([sound](designs/33-sound.md)). Each note fades in and out over a couple of milliseconds so it does not click. Each sound has one voice, like a channel of a sound chip: playing a sound that is still playing starts it again from the beginning, and different sounds play over each other. A sound asked for more than once in one frame is played once.
-
-A wave, pitch or length the engine cannot use, a `<volume>` outside 0 to 1 or after a note, a `<loop />` after anything, a sound with no notes, a `<part>` with none, notes beside `<part>`s, two sounds of one name, and a `<play>`, `<silence>` or `<music>` naming no sound all stop the game loading with a message saying where (`sound 'wall' > <note> 1: pitch="H2" is not a pitch; ...`).
-
-### `<object>`
-
-An object is anything that can be drawn, moved, or collided with: a ball, a paddle, a score readout, a title. Attributes: `name` (required, how other elements refer to it) and `class` (optional, a group label that collision rules and conditions can match, like a CSS class).
-
-Children, in this order:
-
-| Element | Required | What it does |
+| Part | For | Meaning |
 |---|---|---|
-| `<sprite>` | no | What the object looks like: one shape (see [Sprites](#sprites)). An object with an `<animation>` has several, each with a `name`; so does one with several [looks](#looks). An object with none only holds numbers (a `status` with the score, a `tally`): it is never drawn, needs no `<position>` (it is at 0, 0) and must have `<variables>` or `<timers>`; a `<drawn>` on it is an error |
-| `<animation>` | no | Which of the object's sprites are shown, in what order, and for how many seconds each: see [Animation](#animation). Objects, and groups and their members |
-| `<position>` | yes, unless it has no `<sprite>` | Starting position, in pixels from the top-left: `<x>` and `<y>`, each a value. May use an object's own size by its name, `title.width` and `title.height`, to place it by its size. Or `<centered>`: the object's middle goes where it says, less half its own width (in `<x>`) or height (in `<y>`), and an empty `<centered />` is the window's middle: `<x><centered /></x><y><centered>window.height.center - 110</centered></y>` is a title in the middle, 110 above it. It works for groups and their members (each on its own size) and in a scene's change, not in a map's position |
-| `<velocity>` | no | Starting velocity, in pixels per frame: `<x>` and `<y>`, each a value. Left out, the object stands still; a half left out is 0 (`<velocity><y>3</y></velocity>` falls straight down) |
-| `<acceleration>` | no | A constant pull: `<x>` and `<y>`, each a value, added to the velocity once every frame before anything moves, for as long as the object is shown. Gravity is an acceleration with only a `<y>`. `<stop />` takes it away and a reset gives it back. Objects and groups (Donkey Kong's barrels fall); `<land />` is how a falling object stands on something |
-| `<heading>` | no | The way the object faces, in degrees clockwise from straight up (0 is up, 90 is right). It lets `<turn>` and `<thrust>` work, and the sprite (of lines, a `<bitmap>` or an `<svg>`) is then drawn turned to the heading, to the nearest whole degree, so a `pixel` collision follows it; a `<chase>` turns it the way it goes. A collision `<reset />` puts it back. Objects and groups (each member turns on its own) |
-| `<drag>` | no | A value from 0 up to (not including) 1: the fraction of its velocity the object loses every frame, after its thrust is added (a pool ball on the cloth). Objects and groups |
-| `<mass>` | no | A value above 0: how hard the object is to [knock](#knocks). Left out, a `<knock>` does not move it, as though it were as heavy as can be: a wall, a floor, a paddle. Objects and groups |
-| `<pull object="name">strength</pull>` | no | Pulled toward the middle of the nearest of that object or group in play: `strength` (a value) more speed that way every frame, gravity toward a sun, a tractor beam, a magnet. Several `<pull>`s add up. Objects and groups |
-| `<seek object="name">degrees</seek>` | no | A homing missile: every frame the way it goes turns toward the middle of the nearest of that object or group in play, by at most `degrees` (0 or more), at the same speed; a `<heading>` turns with it. Still, it stays still. Objects and groups. Yars' Revenge's destroyer missile |
-| `<light>` | no | A value, 0 or more: how far round its middle, in pixels, it lights what is `<dark>`, while it is in play. `<set variable="name.light">` changes it (a match). See [light and dark](#light-and-dark). Objects and groups |
-| `<dark>` | no | `unlit`: drawn only while a light reaches some part of it; `unseen`: drawn from the first time one does until it is reset, a fog of war. It moves and touches as ever when not drawn. Objects and groups |
-| `<altitude>` | no | How high it is off the ground: `<start>`, `<rise>` (how fast it goes up), `<fall>` (how much less the rise is each frame) and `<bounce>` (0 to 1, how much of the speed it came down at it goes back up with), each optional and 0 when left out. See [height and shadows](#height-and-shadows). Objects and groups |
-| `<shadow object="name" />` | no | Kept under that object every frame, middle to middle, on the ground, and in play while it is. See [height and shadows](#height-and-shadows) |
-| `<facing>` | no | `up`, `down`, `left` or `right`: the way the object faces, without turning its picture. It follows the last `<move>`, `<hop>` or `<jump>` it makes, and a `<fire>` leaves the middle of that side moving that way, at the projectile's own speed: a man in a maze shoots the way he last walked, and an alien with `<facing>down</facing>` drops its bombs below it. A reset faces it the way it started. Objects and groups |
-| `<maze>` | no | `<maze map="maze">` and its `<wall>`s: the object walks that [map](#maps)'s tiles, steered by `<go>`, `<hunt>` and `<wander>`. Objects and groups |
-| `<active>` | no | `false`: the object starts out of play (not drawn, no collisions, not counted by a condition's `remaining`) until a `<release>`, a `<reveal>` or a `<fire>` brings it in. Objects, and groups (after `<velocity>`) |
-| `<drawn>` | no | `false`: the object is in play (moves, collides, counts its timers) but is never drawn: an exit, a trigger zone. An object that only holds variables has no `<sprite>` instead. Objects and groups (after `<active>`); a [scene](#scenes) can change it on a piece it takes |
-| `<most>` | no | How many copies a [`<spawn>`](#spawn-and-despawn), `<fire>` or `<release>` may have made of it at once (a whole number, 1 or more); at that many one makes none. Left out, no limit. Objects and groups (after `<drawn>`) |
-| `<collisions>` | no | Left out, the object touches nothing (as `<enabled>false</enabled>`). Written, it is on: `<collisions />` alone is an object others touch. Then an optional `<enabled>` (`false` turns it off; `true`, the default, need not be written), an optional `<lockstep>` (`true`), an optional `<type>` (`box`, the default, or `pixel`), any `<solid char>`s and a `<hitbox>` (what touches: [solid characters](#collisions), [hitbox](#collisions)), then zero or more `<collision>` rules. See [Collisions](#collisions) |
-| `<actions>` | no | Named actions the object can perform, each `<action name="up"><move direction="up">step</move></action>`: the commands are what it does. States bind keys to these names |
-| `<variables>` | no | Variables owned by this object, each `<variable name="score">0</variable>`. Other expressions refer to them as `objectName.variableName`, e.g. `paddle1.score`. A sprite can use them for its size (Pong's ball is a square of side `ball.size`), except one that draws a `<random>` |
-| `<timers>` | no | Things the object does on its own, every so many seconds or once after a while: see [Timers](#timers). Objects and groups |
+| `<size>` | text | a value, worked out with the game's names |
+| `<scale>` | bitmap | how many pixels each character is |
+| `<color>`, `<color char="x">` | text takes the plain one; a bitmap takes all | colors |
+| `<font>` | text | a font file, relative to the games folder. `assets/tuffy.ttf` is the font when none is named; `assets/pressstart2p.ttf` (Press Start 2P, letters 8 by 8 at size 8, so use multiples of 8) is used by Mario Bros., Q*bert, Pac-Man and Donkey Kong. Its licence, the SIL Open Font License, is `pressstart2p-ofl.txt` beside it |
 
-An object with `class="projectile"` starts invisible (used for bullets).
+What a text or bitmap gives itself wins over its style. A `style=` naming no style, or a text left with no size at all, stops the load. The shipped games name styles by role: `banner` (titles and endings), `prompt` (press Space), `help`, `keys`, `hud` (score and lives).
 
-### `<group>`
+#### Palette swap
 
-A `<group>` is several objects that share a description, written once: a lane of logs, a row of debris, the pads along the top of Frogger, a wall of bricks. It sits beside `<object>` under `<objects>`. It holds the parts its members have in common, in the same order as an object (`<sprite>`s, an `<animation>`, `<position>`, `<velocity>`, `<acceleration>`, `<heading>`, `<drag>`, `<mass>`, `<facing>`, `<active>`, `<collisions>`, `<actions>`, `<variables>`, `<timers>`, each optional), then one or more `<member>`s, or, laid out in [columns and rows](#columns-and-rows), the `<row>`s, `<column>`s and `<cell>`s that change them, or one or more [groups inside it](#groups-inside-a-group). A `<heading>` on a group (or a group inside it) is where its members face: Combat's two tanks are one group, each player's a group inside it giving its own. Attributes: `name` (required) and `class` (optional, and every member's class).
+`<become style="angry" />` puts another style's colors on an object's bitmaps:
 
-A `<member>` says only what is its own: its `<sprite>`s and `<animation>`, a `<position>` and a `<velocity>`, and an optional `name`. **Whatever a member leaves out it takes from its group**, and after that it must be as complete as an `<object>` (a missing part is a load error that names the member). A `<position>` or `<velocity>` can give just an `<x>` or just a `<y>`, so a lane gives its row once and each member gives where along it it starts:
+- each bitmap that takes a style takes that one instead, for the colors it took from its own style;
+- colors a bitmap gives itself stay, and so does any color the new style leaves out, so a swap style names only what changes;
+- the look stays (with `sprite=` as well, both change), a moving look goes on where it was, and a reset puts the first colors back.
+
+The pictures for each style a `<become>` can give the object are drawn as the game loads, so a swap costs nothing while playing. Mario Bros.' shellcreepers are drawn once, in green; one that gets up by itself does `<become style="angry" />`, a style giving only the two greens as red. A style naming nothing, an object with no bitmap that takes a style, or one with a `<heading>`, stops the load.
+
+## Objects
+
+An object is anything that can be drawn, moved or collided with. `name` is required (how everything else refers to it) and `class` optional (a kind that rules and conditions can match). `from=` takes a piece of the [kit](#the-kit-and-from).
+
+### Parts of an object
+
+Every part but the position is optional, and **what is left out is nothing**: no velocity stands still, no `<collisions>` touches nothing. In this order:
+
+| Part | What it does |
+|---|---|
+| `<sprite>` | what it looks like: one [shape](#sprites). Several named sprites are [looks](#looks) or the frames of an [animation](#animation) |
+| `<animation>` | which sprites are shown, in what order, for how long |
+| `<position>` | where it starts, `<x>` and `<y>` from the top left, each a value. `<centered>value</centered>` puts its middle there instead (empty: the window's middle). Required, unless it has no sprite |
+| `<velocity>` | pixels a frame, `<x>` and `<y>`; a half left out is 0 |
+| `<acceleration>` | added to the velocity every frame before anything moves: gravity is a `<y>`. `<stop />` takes it away, a reset gives it back |
+| `<heading>` | degrees clockwise from straight up. Lets `<turn>` and `<thrust>` work, and turns the picture |
+| `<drag>` | 0 up to 1: the share of its speed lost each frame (a pool ball on the cloth) |
+| `<mass>` | above 0: how hard it is to [knock](#knocks). Left out, a knock does not move it |
+| `<pull object="sun">strength</pull>` | that much more speed toward the nearest of that name each frame; several add up |
+| `<seek object="ship">degrees</seek>` | a homing missile: the way it goes turns toward the nearest of that name, at most that many degrees a frame, at the same speed |
+| `<light>`, `<dark>` | how far round it lights; `unlit` or `unseen`: drawn only when lit ([light and dark](#light-and-dark)) |
+| `<altitude>`, `<shadow object>` | how high off the ground; kept under another object ([height and shadows](#height-and-shadows)) |
+| `<facing>` | `up`, `down`, `left` or `right`, without turning the picture: follows its last move, and a `<fire>` leaves that way |
+| `<poses>`, `<mirror>`, `<grip>` | looks picked by how it moves, pictures flipped going one way, how quickly its speed follows the keys ([poses](#poses-mirror-grip-and-blinking)) |
+| `<maze map="maze">` | walks that map's tiles ([walking a map](#walking-a-map)) |
+| `<active>` | `false`: starts out of play (not drawn, touching nothing, not counted) until a `<reveal>`, `<release>` or `<fire>` brings it in |
+| `<drawn>` | `false`: in play (moves, touches, counts its timers) but never drawn: an exit, a trigger zone |
+| `<most>` | how many [copies](#spawn-and-despawn) of it may be out at once |
+| `<collisions>` | how and what it touches ([collisions](#collisions)). Written, it is on (`<collisions />` alone is something others touch) unless it says `<enabled>false</enabled>` |
+| `<actions>` | named `<action>`s: what it does when a key or a rule runs that name |
+| `<variables>` | its own numbers, read anywhere as `name.variable` |
+| `<timers>` | what it does on its own, every so often or once after a while ([timers](#timers)) |
+
+- **Numbers only.** An object with no `<sprite>` only holds numbers: a `status` with the score and lives, a `tally`. It is never drawn, needs no position, and must have `<variables>` or `<timers>`. Keep score, lives and clock on such an object that no state draws (Pitfall's `status`), so a reset of the player does not touch them.
+- **Projectiles.** An object with `class="projectile"` starts out of play, waiting to be fired.
+- A member of a group, an object on a map and a piece of the kit have the same parts (the schema's `objectParts`), so they cannot drift apart.
+
+### Groups
+
+A `<group>` is several objects written once: a lane of logs, a wall of bricks, the pads of Frogger. It sits beside `<object>` in any `<objects>`, gives the parts its members share, then lists its members. **Whatever a member leaves out it takes from its group**; after that it must be as complete as an object.
 
 ```xml
 <group name="logrow3" class="logs">
-  <sprite>
-    <rectangle>
-      <width>3 * cell - 2 * inset</width>
-      <height>body</height>
-      <color>color.brown</color>
-    </rectangle>
-  </sprite>
-  <position>
-    <y>3 * cell + inset</y>
-  </position>
-  <velocity>
-    <x>-1</x>
-  </velocity>
+  <sprite><rectangle><width>3 * cell</width><height>body</height><color>color.brown</color></rectangle></sprite>
+  <position><y>3 * cell</y></position>                 <!-- the row, once -->
+  <velocity><x>-1</x></velocity>
   <collisions>
-    <collision edge="horizontal">
-      <wrap />
-    </collision>
+    <collision edge="horizontal"><wrap /></collision>
   </collisions>
-  <member><position><x>20</x></position></member>
+  <member><position><x>20</x></position></member>      <!-- where along it each starts -->
   <member><position><x>272</x></position></member>
-  <member><position><x>524</x></position></member>
+  <member name="last"><position><x>524</x></position></member>
 </group>
 ```
 
-A member is an ordinary object: it is loaded as one object of its own (`logrow3.1`, `logrow3.2`, `logrow3.3`: the group's name, a dot, and its number counting from 1 in the order written, unless the member says `name="..."`), it is drawn, moved and collided with on its own, and each `<wrap />` or `<die />` happens to that one member. A group only shares what is written. Members are drawn in the order written, at the place in the file where the group stands. The group's name means every member wherever the file names an object (`<show object="logrow3" />`, `object="pads"` in a rule or condition, `<reset object="pads" />`), and a member can be named on its own (`object="logrow3.2"`). A group with `<lockstep>true</lockstep>` in its `<collisions>` moves as one block (the invaders).
-
-A `<sprite>` a member gives changes the group's sprite of the same `name` (or, with no name, the group's with none). Of the same shape it need give only what changes, and keeps the rest: `<sprite><rectangle><width>10</width></rectangle></sprite>` is the group's rectangle, 10 wide; a `<text>` of new pieces (any of them, `<choose>` too) is new words in the group's size and color; a `<tether>` names its two ends again, `from=` and `to=`, and keeps the group's thickness and color unless it gives them. Of another shape, or as `<line>`s, it is a sprite of its own and must be complete. A name the group has not got adds a sprite.
+- **Members are ordinary objects**, named after the group with a number from 1 in the order written (`logrow3.1`, `logrow3.2`), or by their own `name`. Each is drawn, moved and touched on its own; each `<wrap />` or `<die />` happens to one member.
+- **The group's name means every member** wherever a name is taken: `<reset object="logrow3" />`, `object="logrow3"` in a rule or a condition. The group's `class` is every member's.
+- **A member gives only** its `<sprite>`s, `<animation>`s, `<position>` and `<velocity>`; a position or velocity can give just its `<x>` or `<y>`. Rules, actions, variables and timers are the group's, so every member acts the same way; one that acts differently is an object beside the group.
+- **A member's sprite changes the group's of the same name.** Of the same shape it gives only what changes: `<sprite><rectangle><width>10</width></rectangle></sprite>` is the group's rectangle, 10 wide; a text's pieces are new words in the group's size and color; a tether names its two ends again. Of another shape it must be complete. A new name adds a sprite.
+- Members are drawn in the order written, where the group stands in the file.
 
 #### Groups inside a group
 
-A group can hold `<group>`s instead of members or cells, and they take from it the same way a member takes from its group: **whatever an inner group leaves out it takes from the one around it**. Frogger's ten lanes all wrap round at the sides, so the `<wrap />` (and `<rows>1</rows>`) is written once, in a group of all ten; the river's log lanes share a log and the road's lanes a car, each said once in a group between, and each lane gives its own `<columns>` and gap:
+A group can hold groups instead of members, and **an inner group takes from the one around it** the same way. Frogger's ten lanes all wrap, so the `<wrap />` is written once, in a group of all ten; the river's log lanes share a log, each lane giving its own row, gap and speed:
 
 ```xml
 <group name="lanes">
   <rows>1</rows>
-  <collisions>
-    <collision edge="horizontal"><wrap /></collision>
-  </collisions>
+  <collisions><collision edge="horizontal"><wrap /></collision></collisions>
   <group name="river" class="logs">
-    <group name="logs">
-      <sprite><bitmap> ... <scale>6</scale><color>color.brown</color></bitmap></sprite>
-      <group name="logrow2">
-        <columns>3</columns>
-        <padding><x>(window.right + 180) / 3 - 180</x></padding>
-        <position><x>20</x><y>2 * cell + 6</y></position>
-        <velocity><x>1.4</x></velocity>
-      </group>
-      <group name="logrow4">
-        <columns>2</columns>
-        <sprite><bitmap><row>...</row> ... </bitmap></sprite>
-        ...
-      </group>
+    <sprite><bitmap> ... </bitmap></sprite>
+    <group name="logrow2">
+      <columns>3</columns>
+      <padding><x>(window.right + 180) / 3 - 180</x></padding>
+      <position><x>20</x><y>2 * cell + 6</y></position>
+      <velocity><x>1.4</x></velocity>
     </group>
-    <group name="turtlerow3"> ... </group>
+    <group name="logrow4"> ... </group>
   </group>
   <group name="traffic" class="hazard"> ... </group>
 </group>
 ```
 
-- **What replaces, what adds.** One thing (a half of the `<position>`, `<velocity>` or `<padding>`, `<columns>`, `<rows>`, the `<animation>`, `<acceleration>`, `<facing>`, `<active>`, the `class`) is replaced by the inner group's. A `<sprite>` changes the outer's of its name, as a member's does, so `logrow4` above gives only its longer rows. A list adds: the inner group's collision rules run after the outer's, and its `<actions>`, `<variables>` and `<timers>` join the outer's (an action or variable of the same name replaces it). An inner `<collisions>` is on unless it says `<enabled>false</enabled>`, and says `<lockstep>` and `<type>` when it changes them.
-- **Names.** The members are named after their own group (`logrow4.2.1`, or `top.3.1` for a cell), and every group's name means all the members inside it: `<show object="lanes" />` shows all ten lanes, `object="river"` in a rule is every log. A group with `<lockstep>` makes a block of the members of each innermost group, which moves and turns as one: Space Invaders' march.
-- A group that holds groups has no `<member>`s, `<row>`s, `<column>`s or `<cell>`s of its own (a load error otherwise). Groups nest as deep as is wanted.
+- **A single thing is replaced** by the inner group's (a half of the position, velocity or padding, `<columns>`, `<rows>`, the animation, acceleration, heading, facing, `<active>`, the class). A sprite changes the outer's of its name, as a member's does.
+- **A list adds:** the inner group's collision rules run after the outer's; its actions, variables and timers join the outer's (one of the same name replaces it).
+- **Names.** Members are named after their innermost group (`logrow4.2.1`), and every group around them names them too: `object="river"` is every log.
+- A group holds members, cells or groups, never two of these. Groups nest as deep as wanted.
 
 #### Columns and rows
 
-A group can lay its members out instead of listing them: `<columns>` and `<rows>` (whole numbers) make a cell for each place, and an optional `<padding>` (`<x>` and `<y>`) is the gap between them. They come first in the group, before what the cells share, and the group's `<position>` is the top left of the first cell. A cell is a slot the size of its row's sprite; the cells of a row follow one another left to right, and the rows follow one another down, each as tall as its sprite.
+Instead of listing members, a group can lay out a block: `<columns>` and `<rows>` (whole numbers) make a cell for each place, and `<padding>` is the gap between them. They come first in the group; its `<position>` is the top left of the first cell.
 
 ```xml
 <group name="bricks" class="bricks">
-  <columns>9</columns>
-  <rows>6</rows>
-  <padding><x>5</x><y>5</y></padding>
-  <sprite>
-    <rectangle>
-      <width>width</width>
-      <height>height</height>
-      <color>color.red</color>
-    </rectangle>
-  </sprite>
-  <position><x>margin</x><y>margin / 2</y></position>
-  <velocity><x>0</x><y>0</y></velocity>
-  <collisions>...</collisions>
-  <row number="2"><sprite><rectangle><color>color.orange</color></rectangle></sprite></row>
-  <row number="3"><sprite><rectangle><color>color.yellow</color></rectangle></sprite></row>
-  ...
+  <columns>14</columns>
+  <rows>8</rows>
+  <padding><x>4</x><y>4</y></padding>
+  <sprite><rectangle><width>brick</width><height>12</height><color>color.red</color></rectangle></sprite>
+  <position><x>margin</x><y>top</y></position>
+  <collisions> ... </collisions>
+  <row number="3 4"><sprite><rectangle><color>color.orange</color></rectangle></sprite></row>
+  <row number="5 6"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>
+  <cell row="1" column="7" name="boss"> ... </cell>
 </group>
 ```
 
-Each cell is an ordinary object named after the group, its column and its row, counting from 1 (`bricks.5.3`), and they are made the top row first, left to right. After what the group says, three tags change what the cells they pick have, from the general to the particular:
+- Each cell is an ordinary object named after the group, its column and its row (`bricks.5.3`), made the top row first, left to right.
+- Three tags change what the cells they pick have, from the general to the particular:
 
 | Tag | Picks | Can change |
 |---|---|---|
-| `<row number="...">` | rows: `2`, several (`2 4 6`), `odd` or `even` | `<sprite>`s, `<animation>`, `<velocity>`, `<padding>`, `<variables>` |
-| `<column number="...">` | columns, the same way | the same; its `<padding>` gives only an `<x>` |
-| `<cell row="..." column="..." name="...">` | one cell, and may name it (`name` optional) | `<sprite>`s, `<animation>`, `<velocity>`, `<variables>` |
+| `<row number="...">` | rows: `2`, several (`2 4 6`), `odd` or `even` | sprites, animation, velocity, padding (`<y>` the gap above it, `<x>` between its cells), variables |
+| `<column number="...">` | columns, the same way | the same; its padding's `<x>` is the gap to its left |
+| `<cell row="..." column="..." name="...">` | one cell, and may name it | sprites, animation, velocity, variables |
 
-A row's `<padding>` is its own gap: `<y>` the gap above it, `<x>` the gaps between its cells. A column's `<x>` is the gap to its left. The first row and column have no gap before them. A sprite changes the group's as a member's does (above), so a row of another color says just `<color>`; a cell whose sprite is another size than its row's sits in the middle of its slot, and its neighbours stay where they are. A variable a row gives is that row's (a top row that scores more). A `<cell>` wins over the rows and columns that pick it, but a row and a column (or two rows) that pick one cell must not change the same thing in it: which should win is not something to guess, so the game does not load, and the message says to change it in one of them, or in a `<cell>`. `<collisions>`, `<actions>` and `<timers>` stay the group's, so every cell acts the same way. Space Invaders is one group of 11 columns and 5 rows: the squids' two sprites and animation are the group's, and `<row number="2 3">` and `<row number="4 5">` give the crabs' and octopuses' rows of text and color. Frogger's lane markings are a group of 13 by 4 with no changes at all.
-
-A group either lists `<member>`s or has `<columns>` and `<rows>`, not both. Whole numbers are needed because they say how many cells there are and what they are called, which is settled as the file is read.
+- A cell is a slot the size of its row's sprite; a cell of another size sits in the middle of its slot and its neighbours stay put.
+- A `<cell>` wins over the rows and columns that pick it, but a row and a column (or two rows) that change the same thing in one cell stop the load: which should win is not something to guess.
+- Space Invaders is one group of 11 columns and 5 rows: the squids' two sprites and animation are the group's, and two `<row>`s give the crabs' and octopuses' pictures.
 
 ### Maps
 
-A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one character to a tile, so the file shows the level as it looks. It stands in any `<objects>` (the game's, a state's or a scene's) beside objects and groups, or in the kit:
+A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one character to a tile, so the file shows the level as it looks. It stands in any `<objects>`, or in the kit.
 
 ```xml
 <map name="maze">
@@ -414,41 +476,121 @@ A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one chara
 </map>
 ```
 
-`<tile>` is the size of a tile (each a value above 0), `<position>` the map's top left, and the rows must all be as wide. Then come the groups and objects that say what each character is, each picking one with `char="x"`:
+- `<tile>` is a tile's size and `<position>` the map's top left; the rows must all be as wide.
+- **A group** picking a character with `char="x"` has a member in the middle of every tile of it, numbered in reading order (`dots.1`, `dots.2`). It has no position, layout or members of its own, but everything else a group has, inner groups included: Pac-Man's walls are one group of class `wall` whose bitmap each piece changes.
+- **An object** picks a character found on exactly one tile, where it starts.
+- A character nothing picks is an empty tile; two pieces may not pick one character. Rows are trimmed like any text, so an empty tile at either end is a character nobody picks (Pac-Man's `,`), not a space.
+- The map's name means everything on it (`<reset object="maze" />`).
 
-- **A group** has a member on every tile of its character, in the middle of the tile, named by number in reading order (row by row, each left to right): `dots.1`, `dots.2`, ... A group on a map has no `<position>`, layout, `<member>`s, rows, columns or cells (the map says where), but everything else a group has. It can hold groups, which pick characters themselves and change its sprites by name, as [inner groups](#groups-inside-a-group) do: Pac-Man's walls are one group, class `wall`, whose bitmap (its scale and color) each piece takes, giving only its own rows: a line through the middle of the tile, joined to the walls beside it, so a block of wall is drawn as the arcade draws it, outlined through the middle of its edge tiles (`-` `|`, the round corners `r` `7` `L` `J`, the tees `T` `E` `3`, the ends `[` `]`, and the door `=`, a piece of class `door` in pink).
-- **An object** picks a character that is on exactly one tile, where it starts, in the middle; it has no `<position>`.
+**A map in the kit.** Where several maps share their tile, place and pieces (Berserk's four rooms, Haunted House's four floors), the kit holds a `<map>` that says them once, and each map in play takes it by name or by `from=` and gives only what differs, most often its rows: `<map name="maze"><row>+-+-+x+-+-+</row> ... </map>`. A map takes only a map piece; what it still lacks once taken (a tile, a row) stops the load.
 
-A character nothing picks is an empty tile; two pieces may not pick one character. Rows are trimmed like any text, so an empty tile at either end of a row is a character nobody picks (Pac-Man's `,`), not a space. The map's name means everything on it, as a group's does (`<show object="maze" />`), outermost of its names. A mistake says where: a row of the wrong width, a character picked twice, a group whose character is on no tile, an object whose character is on more than one, a `char=` outside a map or a `<position>` on one.
+#### Walking a map
 
-**A map in the kit.** Where several maps share their tile, place and pieces (Berserk's four rooms, Haunted House's four floors), the [kit](#the-kit-and-from) holds a `<map>` that says them once, and each map in play takes it, by its name or by `from=`, and gives what differs, most often only its rows: `<map name="maze"><row>+-+-+x+-+-+</row> ... </map>`. The [one rule](#the-kit-and-from) makes the take: the map's `<row>`s all in place of the piece's, its `<tile>` in place of the piece's, either half of its `<position>`, and a group or object of a piece's name changing that one (Haunted House's floors each give their walls' colour). A map takes only a map of the kit, and an object or group never one; whatever the map still lacks once taken (a `<tile>`, a `<row>`) stops the load as it would with no kit.
+An object with `<maze map="maze">` walks that map's tiles: it keeps to the middle of its lane, chooses its way only in the middle of a tile, and never goes onto a tile that is a wall to it.
 
-**Walking a map.** An object with `<maze map="maze">` (after `<facing>`; objects and groups) walks that map's tiles: it keeps to the middle of its lane, chooses its way only in the middle of a tile, and never goes onto a tile that holds a wall to it. What is a wall is the `<wall>`s inside: `<wall class="wall" />` is every object of that class on the map that is in play; `<wall class="door" sprite="normal" />` is one only while the walker shows its `normal` [look](#looks), which is how a ghost's eyes go in through the door of the ghost house that stops the ghost. Off the map (a tunnel to the window's edge) it goes straight on, and the window's edge can `<wrap />` it round. How it chooses comes from the last of three commands it was given:
+- **Walls** are the `<wall>`s inside: `<wall class="wall" />` is every object of that class on the map that is in play; `<wall class="door" sprite="normal" />` is one only while the walker shows its `normal` [look](#looks), which is how a ghost's eyes go in through a door that stops the ghost.
+- Off the map (a tunnel) it goes straight on, and the window's edge can `<wrap />` it round.
+- **How it chooses** comes from the last of three [steering verbs](#steering) it was given: `<go>` (a player's stick), `<hunt>` (the arcade's targeting, no search of the maze) or `<wander>` (at random).
+- It faces the way it goes and turns its `<heading>` if it has one. `<reverse />` turns it round; `<stop />` or a reset stops it until it is told again; on a path or in a jump, that moves it, and it carries on from the tile it is left on.
+- A tile is found from the walker's middle, so a walker of any size works; it should go less than half a tile a frame.
 
-- `<go direction="left">speed</go>`, on a key (in an object's action, on the press): it turns that way at the first tile where it can, carrying on straight until then, stops in the middle of a tile when a wall is ahead, and turns straight round at once. Pac-Man.
-- `<hunt object="pacman">`: at every tile, of the ways open other than back, the one whose next tile is nearest a target; a dead end turns it round. That is how the arcade's ghosts chase, with no search of the maze, and how they get stuck is part of how they play. The target is the middle of the nearest one in play of that name or group; `<ahead>4</ahead>` tiles in front of the way that one faces; with `<with object="blinky" />`, as far past that point again as the partner is short of it (Inky closing in from the other side to Blinky); and with `<retreat object="corner">8</retreat>`, while the hunter is within 8 tiles of what it hunts, the middle of the corner instead (Clyde). The speed, its content, is required, the rest optional, in that order. A tie goes up, then left, then down, then right.
-- `<wander>1.25</wander>`: of the same ways, one at random (a frightened ghost).
+### The kit and from=
 
-The walker faces the way it goes, and turns its `<heading>` if it has one (Pac-Man's mouth). `<hunt>` and `<wander>` work on an object's timer, a path's step or a collision with another object. A `<reverse />` turns it round where it is; a `<stop />` or a reset stops it, and it stands until told again; on a [path](#paths) or in a jump it is the path or the jump that moves it, and it goes on choosing from the tile it is left on. `<go>`, `<hunt>` and `<wander>` on an object that walks no map stop the load, except a `<hunt>` by `<hop>`s ([commands](#commands)), which is for objects that walk none. A tile is found from the middle of the walker, so a walker of any size works; it should go less than half a tile a frame.
+The `<kit>` holds objects, groups and maps written once, called **pieces**. A piece is never in play itself: it comes into play where an `<objects>` takes it, and as copies a [`<spawn>`](#spawn-and-despawn) makes.
+
+```xml
+<kit>
+  <object name="paddle" class="paddle"> ... </object>
+  <object name="bomb" class="bomb"> ... <most>6</most> </object>   <!-- only ever spawned -->
+  <group name="robots" class="robot"> ... <member name="boss"> ... </member> ... </group>
+</kit>
+<objects>
+  <object name="paddle1" from="paddle"><position><x>10</x></position></object>
+  <object name="paddle2" from="paddle"><position><x>780</x></position></object>
+</objects>
+```
+
+- **Taking a piece.** `from="piece"` in any `<objects>` takes it, under the name written, changed by what is written. An object or group with no `from=` that has a piece's name takes it as it is (`<object name="topwall" />`).
+- A named member of a group piece can be taken alone, by its name: the group with that member only, so it keeps the group's class, rules and picture.
+- A piece can be `from=` an earlier piece: Asteroids' medium and small rocks are each `from="rock"`.
+- **Where it is taken says how long it lasts:** the game's, a state's or a scene's `<objects>`.
+- **Only ever spawned.** A piece that a `<spawn>`, `<fire>` or `<release>` names, and nothing takes, is put beside what spawns it (the object whose rule, action or timer it is, or the state or scene whose input, condition or timer it is), as the description its copies are made from. So a copy belongs where its spawner does and reads that scene's variables (Kaboom's bombs fall at their wave's speed).
+
+**The one change rule.** A take changes its piece, a state `from=` another changes the objects it copies, and a scene `from=` another changes that one's objects, all the same way. Over what it starts from, what is written:
+
+| What is written | Does |
+|---|---|
+| attributes (its `class`) | replace those it has |
+| a `<sprite>` or `<animation>` | replaces the one of the same name, whole, or is added |
+| `<x>` or `<y>` of a position, velocity, acceleration or padding | replaces that half |
+| a `<variable>`, `<action>`, `<timer>` | replaces the one of the same name, or is added (an unnamed timer is added) |
+| `<collision>` rules | are added after those it has |
+| `<solid>`s | replace all of them |
+| `<member>`s, `<row>`s, `<column>`s, `<cell>`s | replace all of them |
+| an inner group, or a map's piece, of the same name | is changed the same way, or added |
+| anything else | replaces what it has of that tag |
+
+An object or group written with a name the list already has changes it this way (Missile Command's later waves change the group `more` inside `missiles`); a changed member says only its sprites, animations, position and velocity.
+
+A `from=` naming no piece, a take of a name the list already has, a map `from=` an object (or the other way round), two pieces of one name, a piece `from=` a later one, and a dotted name (`rocks.2`; give the member a `name` instead) stop the load.
+
+The engine works all of this out on the XML before reading any object (`load/merge.cpp`), and a [generated program](#generating-a-program) does the same in XSLT (`merge.xsl`), step for step.
+
+### Spawn and despawn
+
+Objects can be made and taken away while the game runs, and **a copy is no different to any part of the engine from an object the file wrote.**
+
+```xml
+<action name="fire">
+  <fire object="shot" />                 <!-- a new copy of the kit's shot, from the ship -->
+  <play sound="zap" />                   <!-- only if a shot left: see refused presses -->
+</action>
+...
+<object name="shot" class="shot">        <!-- in the kit -->
+  <sprite> ... </sprite>
+  <velocity><y>-8</y></velocity>
+  <most>3</most>                         <!-- three in flight at most -->
+  <collisions>
+    <collision edge="all"><despawn /></collision>
+    <collision class="rock"><despawn /></collision>
+  </collisions>
+</object>
+```
+
+- `<spawn object="shot">`, `<fire object="shot" />` and `<release object="shot">` each make a new copy, named for what it copies with the first number no copy has now (`shot.1`, `shot.2`, and `shot.1` again once that one is gone).
+- A copy moves, touches, counts its own timers, holds its own variables and draws its own `<random>`s. Inside its own rules, `self` and its own name are the copy.
+- **The description's name means every copy:** `<collision object="shot">`, a condition counting `object="shot"`, `<despawn object="shot" />`. A copy's own name can be written too (`<tether from="base" to="abm.1">` draws while there is an `abm.1`).
+- **A group piece** spawns its members in turn (Asteroids' medium rocks in their three shapes), and a member with a name is spawned by it.
+- **`<most>`** caps how many copies of it are out at once; at the cap a spawn makes none, and, as for any [refused press](#a-press-that-cannot-be-done), the rest of the action or timer is not done.
+- **`<despawn />`** takes an object out: a copy is gone when the frame ends (its name free again); one the file wrote stays out until a reset brings it back.
+- A copy made during a frame joins the game when the frame is over, so it is first moved the frame after it is made.
+- A full reset takes every copy away; `<reset object>` and `<reset scene>` take away the copies of what they reset. A scene's copies are away with their scene.
+- Any object can be spawned, not only kit pieces: `<spawn object="ball">` makes a second ball.
+
+Before spawning, a group of members with `<active>false</active>` was a **pool** that `<fire>`, `<release>` and `<reveal>` took from. Pools still work, and suit things that come back to where they were (Frostbite's igloo blocks, a door).
+
+## Pictures
 
 ### Sprites
 
-A `<sprite>` holds one shape. Colors are named (`color.red`, below); a `<color>` left out is `color.white`. A sprite may be given a `name`, which an object needs only when it has several sprites: for an [`<animation>`](#animation) to choose between, or as [looks](#looks) for `<become>`.
+A `<sprite>` holds one shape. A `name` is needed only when an object has several (for an [animation](#animation) or as [looks](#looks)). A `<color>` left out is `color.white`.
 
 | Shape | Contents | Draws |
 |---|---|---|
-| `<circle>` | `<radius>`, `<color>` | A filled circle |
-| `<rectangle>` | `<width>`, `<height>`, `<color>` | A filled rectangle |
-| `<text>` | one or more pieces, `<content>` (a fixed label), `<number>` and `<letter>` (values) and `<choose>`, in any order, then `<size>`, `<color>`; `style=` names a [style](#styles) for the size and color left out | Text. `<content>PONG</content>` is written as is. `<number>paddle1.score</number>` shows a number: when the value is exactly one `owner.variable` it is live and redraws when that variable changes; any other value (`paddle1.score + 1`, a `<random>`) is worked out once. `<letter>` shows a number as a letter, 0 is A and 25 is Z, and round again either way (26 is A, -1 is Z), live the same way: initials are three variables an `<inc>` and a `<dec>` change. `<choose><by>value</by><word>LOVE</word><word>15</word>...</choose>` shows one of its words, the first for 0, the second for 1 and so on (a fraction goes down, and past either end it is the word at that end), live the same way: Tennis says its points in words. The pieces are put together with a space between them, except that letters side by side make one word: `<content>SCORE</content><number>ship.score</number>` reads `SCORE 120`, three `<letter>`s and a `<number>` `ABC 120`. In a [group](#group), a piece that names the group's variable (`table.score` in the group `table`) shows each member's own |
-| `<tether from="a" to="b">` | `<thickness>` (1 when left out) and `<color>`, both optional | A line from the middle of object `a` to the middle of object `b`, drawn again every frame after the move wherever they are; the object's position and size follow it, and it is in play only while both ends are (a trail to a shot that is in flight). A fishing line from the rod to the hook. It has no `<heading>`, other looks or `<animation>` |
-| `<image>` | `<path>`, then `<flip>` (`horizontal` or `vertical`, optional) | An image file |
-| `<line>` (one or more) | `<from>` and `<to>` (each an `<x>` and a `<y>`), then `<color>` and `<thickness>` (both optional) | Straight lines, all in one sprite. See [Lines](#lines) |
-| `<bitmap>` | one or more `<row>`s of `.` and `*`, then `<scale>`, `<color>` and `<flip>` (all optional); `style=` names a [style](#styles) for the scale and colors left out | A picture written as rows of text. See [Bitmaps](#bitmaps) |
-| `<svg>` | `<path>`, then `<x>`, `<y>`, `<width>`, `<height>` (all four or none), `<scale>`, any number of `<hide>`, and `<flip>` (all optional) | A drawing, or a part of one, from an SVG file. See [SVG pictures](#svg-pictures) |
+| `<circle>` | `<radius>`, `<color>` | a filled circle |
+| `<rectangle>` | `<width>`, `<height>`, `<color>` | a filled rectangle |
+| `<text>` | pieces (below), then `<size>`, `<color>`, `<font>`; `style=` | text |
+| `<image>` | `<path>`, `<flip>` | an image file, loaded by the window backend |
+| `<line>`s | each `<from>`, `<to>`, `<color>`, `<thickness>` | a drawing of straight lines ([lines](#lines)) |
+| `<bitmap>` | `<row>`s of characters, `<scale>`, `<color>`s, `<flip>`; `style=` | a picture written as text ([bitmaps](#bitmaps)) |
+| `<svg>` | `<path>`, a part (`<x>`, `<y>`, `<width>`, `<height>`), `<scale>`, `<hide>`s, `<flip>` | a drawing from an SVG file ([SVG pictures](#svg-pictures)) |
+| `<tether from="a" to="b">` | `<thickness>`, `<color>` | a line from the middle of `a` to the middle of `b`, drawn again every frame wherever they are; in play only while both ends are (a fishing line, a missile's trail) |
+
+**Pictures the engine draws.** Lines, bitmaps and SVGs all go one way, once, when the game loads (`buildSpriteParams`, `load/expr.cpp`): the engine reads what the file describes, draws it into its own `Bitmap`, flips it if asked, and keeps it to turn for an object with a `<heading>`. No window backend draws them itself, so every library shows the same pixels; the object's size is known with no window (`name.width` works in tests); and a `pixel` [collision](#how-a-touch-is-found) tests exactly what is drawn. Cells of a group drawing the same picture share it. Text and `<image>` files are the exception: only a backend can measure them.
+
+**Turning.** An object with a `<heading>` shows its picture turned to the heading, to the nearest whole degree, made again only when the heading moves a degree. Lines are drawn again turned, so they stay sharp; a bitmap or SVG has its finished pixels turned, each taking the one pixel under it, so chunky pixels stay chunky. Every heading comes out as the same square, big enough for any angle, which is the object's size.
 
 ### Lines
-
-A sprite of one or more `<line>`s is a drawing. Each `<line>` goes from a point to a point, in pixels from the **top left of the sprite** (so the coordinates are never negative), and may have a `<color>` (default `color.white`) and a `<thickness>` in pixels (a value, at least 1, default 1):
 
 ```xml
 <sprite>
@@ -457,45 +599,33 @@ A sprite of one or more `<line>`s is a drawing. Each `<line>` goes from a point 
 </sprite>
 ```
 
-The lines are drawn once, when the game loads, in the order written (a later one covers an earlier one where they meet), into a bitmap the size of what was drawn: as far right and down as the furthest endpoint plus the thickness, from 0, 0. Endpoints are rounded to whole pixels and a line is drawn with no gaps, stamping a square of its thickness along it. Every pixel nothing was drawn on is transparent. That bitmap is the sprite: the window backends show it as a picture, its size is the object's size (so `name.width` and `name.height` work as for any shape, with no window needed), and a collision of [type pixel](#collisions) looks at the same pixels, so what is drawn is exactly what is tested. A `<random>` in a coordinate is drawn once, so the picture and its size agree.
-
-A sprite of lines cannot be mixed with another shape. One object can be a whole drawing: Lunar Lander's moon is one object of fifteen lines, its lander another, its pad a single thick line.
-
-A shape repeated in rows and columns (Breakout's bricks, the invaders) is a group laid out in [columns and rows](#columns-and-rows).
-
-### Pictures the engine draws
-
-A sprite of `<line>`s, a `<bitmap>` and an `<svg>` are three ways of describing a picture, and all three go the same way, once, when the game loads (`buildSpriteParams` (`load/expr.cpp`)):
-
-1. **Read** what the file describes: line ends and thicknesses, rows of characters, or a part of a drawing.
-2. **Draw** it into the engine's own `Bitmap`, the pixels every window backend uploads and shows and a `pixel` collision tests. No backend draws one itself, so they all show the same picture.
-3. **Flip** it, if a `<bitmap>` or an `<svg>` has `<flip>horizontal</flip>` or `<flip>vertical</flip>`: the pixels are mirrored and the size stays the same.
-4. **Turn** it, for an object with a `<heading>`: the picture is kept, and what is shown is the kept picture turned to the heading, a whole degree at a time, made again only when the heading moves by a degree. A drawing of lines is kept as lines and drawn again at each heading, which keeps its edges sharp; a `<bitmap>` or `<svg>` has its finished pixels turned.
-
-An `<image>` is not drawn by the engine (each backend loads the file), and its `<flip>` is done by the backend.
+- Points are in pixels from the sprite's top left, so never negative. `<thickness>` is at least 1 (1 when left out).
+- The lines are drawn in the order written, with no gaps, into a picture as big as the furthest endpoint plus the thickness; everything not drawn on is clear.
+- Lines cannot be mixed with another shape and have no fill. Lunar Lander's moon is one object of fifteen lines, its pads single thick lines.
 
 ### Bitmaps
-
-A sprite of one `<bitmap>` is a picture written as rows of text, one character to a pixel: a period (`.`) is clear and an asterisk (`*`) is solid, drawn in the sprite's `<color>` (default `color.white`). Every character becomes a block of `<scale>` by `<scale>` real pixels (a value, a whole number of at least 1, default 1), so a few characters make a chunky sprite:
 
 ```xml
 <sprite>
   <bitmap>
     <row>..*...*..</row>
     <row>..*****..</row>
-    <row>.**.*.**.</row>
+    <row>.**w*w**.</row>
     <row>*********</row>
     <scale>5</scale>
-    <color>color.green</color>
+    <color>color.green</color>             <!-- the * pixels -->
+    <color char="w">color.white</color>    <!-- the w pixels -->
   </bitmap>
 </sprite>
 ```
 
-That picture is 45 pixels wide and 20 tall. The rows are measured from the top left, must all be the same length and may hold nothing but `.`, `*` and the characters of the bitmap's other colors: a space or any other character, an empty row, or rows of different lengths stop the load with a message that names the row and the character (`row 3 of a bitmap has 'o' as character 2`). A bitmap is drawn once, when the game loads, into the same kind of bitmap a sprite of [lines](#lines) is, so everything said there holds for it: its size is the object's size (`name.width` and `name.height` work with no window), every window backend shows it as a picture, and a collision of [type pixel](#collisions) tests exactly the solid pixels. The cells of a group that draw the same bitmap share the one picture. After the `<color>` of its `*`s, a bitmap can have more colors, each `<color char="w">color.white</color>`: every `w` is a pixel of that color, so a ghost's body is its color and its eyes white with blue pupils (`<color char="b">color.darkblue</color>`). The character is anything but `.` and `*`, one to a color. The scale and colors can come from a [style](#styles) (`<bitmap style="mario">`), the bitmap's own winning. A sprite that changes a group's (an inner group's, a member's) gives only the colors it changes. On an object with a `<heading>` the picture is drawn once like this and then that finished picture is turned to the heading the object faces, to the nearest whole degree (360 headings, 0 and 360 being the same): each pixel of the turned picture takes the one pixel of the original that lies under it, so chunky pixels stay chunky and nothing is blended. The object keeps the original and the one picture it shows, and draws a new one only when its heading moves to another whole degree. Every heading comes out as the same square, big enough for the picture at any angle (for a bitmap 11 by 8 characters at `<scale>` 5 that is a square of 68), and that square is the object's size, as with [lines](#lines).
+- One character to a pixel: `.` is clear, `*` is drawn in the plain `<color>`, and each `<color char="x">` names one more character and its color (a ghost's body, white eyes and blue pupils).
+- Every character becomes a block of `<scale>` by `<scale>` pixels (a whole number, 1 when left out), so the picture above is 45 by 20.
+- The rows must be as long as one another and hold only `.`, `*` and the named characters; anything else stops the load naming the row and character (`row 3 of a bitmap has 'o' as character 2`).
+- The scale and colors can come from a [style](#styles) (`<bitmap style="mario">`); a sprite changing a group's gives only the colors it changes.
+- `<flip>horizontal</flip>` or `vertical` mirrors the pixels; the size stays.
 
 ### SVG pictures
-
-A sprite of one `<svg>` is a drawing from an SVG file, made into a picture when the game loads, the same way a `<bitmap>` is. `<path>` is the file, found like an `<image>`'s (relative to the folder the program runs from). `<scale>` is how many real pixels one unit of the drawing is (a value above 0, default 1; it need not be a whole number), where a unit is what the drawing's own `width` and `height` are written in:
 
 ```xml
 <sprite>
@@ -508,15 +638,31 @@ A sprite of one `<svg>` is a drawing from an SVG file, made into a picture when 
 </sprite>
 ```
 
-`<x>`, `<y>`, `<width>` and `<height>` (values, in the drawing's units, all four or none) pick a part of the drawing to take, so one sheet of sprites can serve many objects: the part goes to the top left of the picture, and the picture is `<width>` by `<height>` times `<scale>`, rounded up to whole pixels. Leave them all out for the whole drawing. Each `<hide>` is the id of an element of the drawing to leave out (and everything inside it), for a sheet that carries a backdrop or a grid of its own; an id nothing has is ignored.
+- `<path>` is the file, found as an image's is. `<x>`, `<y>`, `<width>` and `<height>` (all four or none) pick a part of the drawing, so one sheet serves many objects. `<scale>` is pixels per unit of the drawing (it need not be whole). Each `<hide>` is the id of an element to leave out.
+- The drawing keeps its own colors, antialiased, so there is no `<color>`; a pixel counts as solid for a `pixel` collision if anything at all is drawn on it.
+- It is drawn by the engine with lunasvg (only `picture/svg.cpp` includes it), so no window backend loads an SVG. A missing file, a part outside the drawing, or a scale of 0 or less stops the load.
 
-The picture keeps the drawing's own colors, antialiased, with soft edges coming out as partly transparent pixels, so there is no `<color>`. Everything after the drawing is the same as for a `<bitmap>`: the picture is made once, its size is the object's size (`name.width` and `name.height` work with no window), every window backend shows it as a picture (the engine draws it itself, with a library used only by `picture/svg.cpp`, so no backend loads an SVG: SFML and raylib could not, SDL2 and OpenGL could), the cells of a group that take the same part share the one picture, it can be a frame of an [animation](#animation), and a collision of [type pixel](#collisions) tests its pixels, a pixel counting as solid if anything at all was drawn on it, so a faint edge counts. A picture cut close round what is drawn also has a close-fitting box for the collisions that are not `pixel`. A missing or unreadable file, a part with no size or entirely outside the drawing, and a scale of 0 or less stop the load with a message that names the object and the file.
+### Text
 
-An `<svg>` on an object with a `<heading>` is turned the way a `<bitmap>` is (the finished picture, a pixel at a time, nothing blended), so the soft edges of the drawing turn into hard stepped ones; drawing the SVG again at each heading would be smoother, and is not done. The drawing is fixed when the game loads: it cannot change size or color while the game runs. What can be drawn is whatever lunasvg draws; the shapes, polygons, strokes, `<use>`, `<defs>`, opacity and rotation of the shipped sprite sheet are what the tests exercise.
+A `<text>` is made of pieces, in any order, then its `<size>`, `<color>` and `<font>` (or a `style=` for those it leaves out):
+
+| Piece | Shows |
+|---|---|
+| `<content>PONG</content>` | the words as written |
+| `<number>paddle1.score</number>` | a number. When the value is one `owner.variable` it is live and redraws when the variable changes; anything else is worked out once |
+| `<letter>entry.first</letter>` | a number as a letter, 0 is A and 25 is Z, round again either way: initials are three variables an `<inc>` and `<dec>` change |
+| `<choose><by>value</by><word>LOVE</word><word>15</word>...</choose>` | one of its words, the first for 0 (a fraction goes down, past either end the end word), live like a number: Tennis says its points in words |
+
+```xml
+<text style="hud"><content>SCORE</content><number>ship.score</number></text>   <!-- SCORE 120 -->
+```
+
+- Pieces are joined with a space, except that letters side by side make one word (`ABC 120`).
+- In a group, a piece naming the group's own variable (`table.score` in the group `table`) shows each member's own.
+- A text whose look changes, or whose width changes (a score gaining a digit), is measured again, so a position worked out from its width keeps it centred.
+- Text is drawn with the font its style or `<font>` names, else `assets/tuffy.ttf`, unsmoothed, so a pixel font stays pixels in a scaled window. If a font file is missing, each backend says so once and draws with the 8 by 8 font built into the program (chunky, monospaced, about `<size>` / 16 blocks tall).
 
 ### Animation
-
-An object normally has one `<sprite>`. One that has several gives each a `name` and follows them with an `<animation>`, which says which are shown, in what order, and for how long:
 
 ```xml
 <object name="crab">
@@ -527,61 +673,39 @@ An object normally has one `<sprite>`. One that has several gives each a `name` 
     <frame sprite="open" />
     <frame sprite="closed" />
   </animation>
-  <position>...</position>
   ...
 </object>
 ```
 
-`<interval>` is how many **seconds** each picture is shown (a value above 0, so `0.25` works), and each `<frame sprite="name" />` picks one of the object's own sprites by its name. There are at least two frames, and the same sprite may come up more than once (`open`, `closed`, `open`, `wide`). The object starts on the first frame and goes round and round. Seconds are turned into frames of the game when the game loads, with the window's `<framerate>` (a second at 60 frames a second is 60 frames, and a window with no framerate has nothing to count seconds in); like the speeds in the game, which are in pixels per frame, the animation counts frames of the game and does not read a clock, so a game that runs slower than its framerate animates slower too.
-
-The frames must all be pictures (a `<bitmap>`, an `<svg>` or `<line>`s, not a circle, rectangle, text or image) of the same size. Every sprite the object has must be shown by its animation. (Several named sprites with no animation are not an error: they are the object's [looks](#looks).) An object with a `<heading>` can be animated too: whichever frame is showing is drawn at the heading the object faces, and the frames must come out as the same square when turned (equal sized bitmaps always do).
-
-Only an object that is shown by the current state and in play (not dead, not hidden) moves on, so a pause or a menu holds the picture where it was, and a `<reset />`, or coming back into play (fired, released, revealed or spawned), puts it back on the first picture, from the start of its time. Every cell of a group has a count of its own, and they all start together, so a block of aliens changes picture as one. A collision of type pixel tests the picture that is showing. In a `<group>`, a member, row, column or cell that gives sprites changes the group's of the same names, and one that gives an `<animation>` has that instead of the group's; the names in an animation are looked up among the sprites it ends up with. Space Invaders is the example: its aliens are one group whose rows change the two named bitmaps, so the block marches, bounces and steps down together while each kind flaps on its own sprites. A picture drawn the same way for many cells (the same rows, scale and color, or the same part of an svg) is drawn once and shared.
-
-**Looks that move.** An `<animation name="walking">` is a [look](#looks) of its own: it is picked by its name the way a sprite is (`<become sprite="walking" />`, a `<poses>` entry, `from=`), and while it is showing its frames go round. An object may have several, and they need not show every sprite: the sprites they leave out are still-picture looks beside them. The looks are the animations in the order written, then the named sprites, and the object starts as the first, so Coily's `egg` (an animation of two frames) is listed before his `snake`. Animations are all named or none: one with no name beside named ones does not load. In a group, a cell's animation of the same name replaces the group's.
-
-```xml
-<object name="coily">
-  <sprite name="round"> ... </sprite>
-  <sprite name="squashed"> ... </sprite>
-  <sprite name="coiled"> ... </sprite>
-  <sprite name="raised"> ... </sprite>
-  <animation name="egg"><interval>0.2</interval><frame sprite="round" /><frame sprite="squashed" /></animation>
-  <animation name="snake"><interval>0.15</interval><frame sprite="coiled" /><frame sprite="raised" /></animation>
-  ...
-</object>
-```
+- `<interval>` is how many **seconds** each picture shows (a value above 0); each `<frame>` picks a sprite by name. There are at least two frames, and a sprite may come up more than once.
+- Frames are pictures (bitmaps, SVGs or lines), all the same size. An unnamed animation must show every sprite the object has.
+- Seconds become frames of the game with the `<framerate>`, so an animation, like everything else, counts frames: a slow machine animates slowly.
+- It moves on only while its object is in play, so a pause holds it; a reset or coming back into play starts it from the first picture. The cells of a group start together, so a block of aliens flaps as one.
+- In a group, a member, row, column or cell giving sprites changes the group's of those names, and the animation is looked up among the sprites it ends up with (Space Invaders' rows of different aliens in one block).
 
 ### Looks
 
-An object with several named sprites and no `<animation>` has **looks**: it starts as the first, and `<become sprite="name" />` shows another from then on (a reset brings back the first). `<become sprite="blue" object="row1" />` changes every object of that name or group at once, and with `from="normal"` only those of them showing `normal`: a power pellet turns the ghosts blue but leaves an eaten one's eyes as they are. A collision rule, about another object or about a screen edge, can carry `sprite="name"`: it runs only while its object shows that look, looked at as the rule comes (a rule before it may have changed it), which makes a look a simple state. Frostbite's rows of ice are groups that start white; a floe's rule
+An object with several named sprites and no unnamed animation has **looks**: it starts as the first, and `<become sprite="name" />` shows another from then on; a reset brings back the first.
 
-```xml
-<collision object="bailey" sprite="white">
-  <become object="row1" sprite="blue" />
-  <inc variable="bailey.score">10</inc>
-  <reveal object="igloo" />
-</collision>
-```
+- `<become sprite="blue" object="ghosts" />` changes every object of that name or group; with `from="normal"` only those showing `normal` (a power pellet turns the ghosts blue but leaves an eaten one's eyes as they are).
+- A collision rule with `sprite="white"` runs only while its object shows that look, so **a look is a simple state the player can see.** Frostbite's floe:
 
-runs once, when Bailey lands on a white row, and turns the whole row blue. A look can also count hits: a brick that takes two hits is a group of two looks, `whole` and `cracked`, with `<collision object="ball" sprite="cracked"><die /></collision>` and then `<collision object="ball" sprite="whole"><become sprite="cracked" /></collision>`. Rules run in the order written and each looks at the look as it is then, so the cracked rule comes first; the other way round, the first hit would crack a brick and the second rule would take it out at once. Looks are pictures of any shape kind (a rectangle in another colour, another bitmap); an object with a `<heading>` cannot have them, and a look cannot be a text showing a `<number>`.
+  ```xml
+  <collision object="bailey" sprite="white">
+    <become object="row1" sprite="blue" />
+    <inc variable="bailey.score">10</inc>
+  </collision>
+  ```
 
-A look is also how one state is told something by the state before it. Space Race, Combat and Freeway each have one `wins` state whose `winner` has a look per player, and the full reset that starts the next game brings back the first look. In Freeway the condition that ends the game picks the look and then pushes the state. Space Race and Combat end when the time is up, so the win screen picks it with conditions of its own, comparing the two scores; the first look, a draw, stays when they are equal:
+- **A look can count hits.** A brick of two looks, `whole` and `cracked`, has `<collision object="ball" sprite="cracked"><die /></collision>` and then `<collision object="ball" sprite="whole"><become sprite="cracked" /></collision>`. The rules for one touch run in order and each sees the look the one before left, so **write the last look first**.
+- **A look tells the next state something.** One `wins` state whose `winner` has a look per player: the condition that ends the game does `<become object="winner" sprite="player2" />` and then pushes it.
+- A look is any shape kind. An object with a `<heading>` has only one, and a look cannot be a text showing a `<number>` or `<letter>`.
 
-```xml
-<condition object="rocket2" variable="score">
-  <above>rocket1.score</above>
-  <become object="winner" sprite="player2" />
-</condition>
-```
+**Looks that move.** A named `<animation name="walking">` is a look of its own, picked by name like a sprite (`<become sprite="walking" />`, a pose, a take). The looks are the named animations in the order written, then the sprites they leave out, and the object starts as the first (Coily's `egg` animation is listed before his `snake`). Animations are all named or none.
 
-A text whose look changes is measured again, so a position worked out from its width (`window.width.center - winner.width / 2`) keeps it centred.
+### Poses, mirror, grip and blinking
 
-### Poses, mirror and grip
-
-Three optional elements, in this order after `<facing>` on an object or a group, give a walking, jumping thing its look and feel without a rule for each.
-
-**`<poses>`** names the look for each way the object is moving, and the engine picks it every frame (before the conditions run):
+Three parts, after `<facing>`, give a walking, jumping thing its look and feel without a rule for each:
 
 ```xml
 <poses>
@@ -591,15 +715,350 @@ Three optional elements, in this order after `<facing>` on an object or a group,
   <rising sprite="rising" />
   <falling sprite="falling" />
 </poses>
+<mirror>left</mirror>
+<grip>0.15</grip>
 ```
 
-`standing` is needed; each of the others is a sprite or a named animation and may be left out: walking falls back to standing, skidding to walking, falling to standing and rising to falling. In the air (a timed jump or hop, or nothing under it while its `<acceleration>` pulls) it is rising for the first half of a timed jump or while going up, then falling; on the ground it is standing when still, skidding when its [grip](#poses-mirror-and-grip) has it sliding the other way to the one its keys ask for, and walking otherwise. An object with poses starts as, and a reset brings back, its standing look, wherever that is in the list. The poses are picked only while the object shows one of them: a `<become>` to any other look (Mario's `dead`) holds that look until a `<become>` puts a pose back.
+- **`<poses>`** names the look for each way of moving, and the engine picks it every frame. `standing` is needed; walking falls back to standing, skidding to walking, falling to standing, rising to falling. In the air it is rising, then falling; on the ground standing when still, skidding when its grip has it sliding against its keys, walking otherwise. Poses are picked only while a pose look is showing, so a `<become>` to another look (Mario's `dead`) holds until a `<become>` puts a pose back.
+- **`<mirror>left</mirror>`** (or `right`) is the way its pictures do not face: going that way they are drawn flipped. The way is the move key held, else a jump's way across, else its velocity; stopping keeps the last. Not with a `<heading>` or a `<hole>`.
+- **`<grip>`** (above 0 up to 1, 1 when left out) is how quickly its speed across follows its keys: each frame it goes that share of the way to what the keys ask, so Mario's `0.15` takes a moment to get going and slides. Up and down too when nothing pulls it. It also slows an object with no keys held, so give it only to something a player steers.
+- **Blinking.** `<set variable="mario.blink">2</set>` makes an object blink for two seconds, counting down by itself while in play. It is a live number, so a rule can leave a blinking player alone (`<condition object="mario" variable="blink"><atmost>0</atmost></condition>`). A reset ends it.
 
-**`<mirror>left</mirror>`** (or `right`) says the way its pictures do not face: going that way they are drawn flipped left to right. Which way it is going is the arrow or move key held, else the way across of a jump in the air, else its velocity; stopping keeps the last way. Hops and jumps turn it too. A mirror is for a thing seen from the side, so it is not allowed with a `<heading>`, and a `<hole>` cannot be cut in it. Mario's pictures face right and he mirrors going left; Coily's face left and he mirrors going right.
+### Light and dark
 
-**`<grip>`** (a value above 0 up to 1, 1 when left out) is how quickly its speed across follows its keys: each frame the speed goes that part of the way to what the held keys ask for, so 1 is at once (as without it) and Mario's `0.15` takes a moment to get going and slides on when he lets go or turns, which is when he skids. Up and down follow it too when nothing pulls the object. An object with a low grip and no keys held slows to a stop the same way, so a grip is for the object a player steers.
+What is `<dark>` is drawn only where there is light. Something in play with a `<light>` lights everything within that many pixels of its middle (any part of a thing's box counts).
 
-**Blinking.** `<set variable="mario.blink">2</set>` makes an object blink for that many seconds: it is drawn every other fifteenth of a second and the number counts down to 0 as the game runs (only while it is in play). It is a live number, so a rule can ask `<condition object="mario" variable="blink"><atmost>0</atmost></condition>` to leave a player who has just lost a life alone, which is how Mario's shellcreepers do. A reset ends it.
+- `<dark>unlit</dark>` is drawn only while some light reaches it; `<dark>unseen</dark>` from the first time one does until it is reset, so a map fills in as it is explored.
+- Darkness changes only what is drawn: a dark thing moves, touches and runs its rules as ever.
+- The light is a live number, so a `<set>` strikes a match and a timer burns it down. Haunted House:
+
+```xml
+<action name="strike"><set variable="player.light">match</set></action>
+...
+<timer><every>0.1</every><set variable="player.light">max(near, player.light - 5)</set></timer>
+```
+
+### Height and shadows
+
+An object with an `<altitude>` is in the air over where it is: its position is the point on the ground under it, which is what it touches, and it is drawn raised by its altitude.
+
+```xml
+<object name="shadow"> ... <shadow object="ball" /></object>      <!-- written first, drawn under -->
+<object name="ball">
+  ...
+  <altitude><start>80</start><fall>0.25</fall><bounce>0.7</bounce></altitude>
+  <collisions>
+    <collision object="player">
+      <condition variable="altitude"><below>reach</below></condition>
+      <set variable="ball.rise">loft</set>
+    </collision>
+  </collisions>
+</object>
+```
+
+- `<start>`, `<rise>` (how fast it goes up), `<fall>` (how much less the rise is each frame) and `<bounce>` (0 to 1, how much of its speed it comes back up with) are each optional, 0 when left out. It never goes below the ground, and comes to rest once a bounce would be less than one frame's fall.
+- `name.altitude` and `name.rise` are live numbers: `<set>` hits a ball up, a rule's `<condition>` lets a high one go past.
+- `<shadow object="ball" />` keeps an object under another, middle to middle, in play while it is.
+
+## Sounds
+
+Sounds are written as notes, the bleeps and tunes of an 8-bit sound chip; nothing is loaded from a sound file. Each `<sound name>` is something a [`<play>`](#look-and-sound) or a state's [`<music>`](#states) starts.
+
+```xml
+<sounds>
+  <sound name="wall" wave="square">
+    <note pitch="A3">0.04</note>
+  </sound>
+  <sound name="gameover" wave="square">
+    <volume>0.4</volume>
+    <note pitch="G4">0.2</note>
+    <note pitch="E4" to="D#4">0.5</note>       <!-- slides down -->
+    <rest>0.1</rest>
+    <note pitch="2000" wave="noise">0.15</note>
+  </sound>
+  <sound name="thrust" wave="noise">
+    <loop />                                   <!-- over and over until silenced -->
+    <note pitch="150">1</note>
+  </sound>
+  <sound name="start">
+    <part wave="square"> <note pitch="C5">0.1</note> ... </part>   <!-- a tune -->
+    <part wave="triangle"> <note pitch="C3">0.2</note> ... </part> <!-- over its bass -->
+  </sound>
+</sounds>
+```
+
+| Part | Meaning |
+|---|---|
+| `wave=` | `square` (default), `triangle`, `sawtooth`, `sine` or `noise` (a new random level every half cycle: a high pitch hisses, a low one rumbles). On a sound, a part or a note; the nearest wins |
+| `<loop />` | first: the sound plays over and over (below) |
+| `<volume>` | a value, 0 (silent) to 1; 0.3 when left out |
+| `<note pitch to wave>seconds</note>` | a tone. `pitch` is a note and octave (`C4` middle C, `A4` 440 Hz, `F#3`, `Bb5`) or hertz (`440`); `to` slides to another pitch evenly in semitones. The length is a value, more than 0 and at most 10 |
+| `<rest>seconds</rest>` | silence |
+| `<part wave>` | a voice of its own: a sound in parts plays them all at once, as long as its longest. Parts add up, so keep the volume down. A sound has parts or loose notes, not both |
+
+- **Loops.** A `<play>` of a looping sound switches it on until a `<silence sound>`, the reset of the game, or, when the `<play>` is on a key (or in the action a key runs), until that key is let go: Asteroids' engine hums while thrust is held. A state change lets go of the held keys, so a pause is quiet.
+- **One voice per sound**, like a chip's channel: playing a sound that is still playing starts it again; different sounds play over each other; a sound asked for twice in one frame plays once.
+- Every sound is made into samples (16 bit, one channel, 44100 a second) by the engine when the window opens, the same for every sound library, with a fade of a couple of milliseconds so notes do not click.
+- An unusable wave, pitch or length, a volume outside 0 to 1, a loop after anything, a sound with no notes, two sounds of one name, and a `<play>`, `<silence>` or `<music>` naming no sound stop the load (`sound 'wall' > <note> 1: pitch="H2" is not a pitch; ...`).
+
+## Commands
+
+A command is a tag in a list: a collision rule, an action, a key's `<input>`, a condition, a timer, or a path's step. A list runs in the order written. Most verbs work in all of them.
+
+### Where a command can go
+
+Commands are sorted by what they need, and each place takes only the groups that mean something there. A command anywhere else is a schema error, and, for a game read without the schema, a load error listing what can go there (`ruleFor` in `load/expr.cpp`, built from the same groups as the schema).
+
+| Group | Commands | Needs |
+|---|---|---|
+| changes | `inc`, `dec`, `set`, `copy`, `rank`, `play`, `silence`, `become`, `reveal`, `follow`, `enter`, `reset`, `spawn`, `despawn object=`, `trigger` | nothing: they name what they change |
+| flow | `push`, `pop`, `turns`, `pass`, `out`, `demo` | the game's running order |
+| self | `die`, `drop`, `move`, `release`, `reverse`, `stop`, `fire`, `despawn` | an object running it |
+| steering | `aim`, `chase`, `hunt`, `wander` | an object to steer |
+| touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride` | another object touched |
+| edge | `stick`, `wrap` | a screen edge |
+| bounce | `bounce` | a screen edge or another object |
+| controls | `accelerate`, `climb`, `go`, `hop`, `jump`, `leap`, `thrust`, `turn`, `track` | a key held or pressed |
+| press | `hold` | a [computer player](#computer-players) |
+
+| Place | Takes |
+|---|---|
+| a `<collision>` with another object | changes, self, steering, touch, bounce |
+| a `<collision edge>` | changes, self, edge, bounce |
+| an object's `<action>` | changes, self, steering, controls |
+| an object's `<timer>`, a path's `<step>` | changes, self, steering |
+| a state's or scene's `<input>`, `<condition>` and `<timer>` | changes, flow |
+| a `<computer>`'s `<condition>` | press |
+
+The schema cannot tell the two kinds of `<collision>` apart (that is in the attributes), so it lets a rule hold either's commands and the loader holds each to its own.
+
+### A press that cannot be done
+
+In an object's `<action>` and in its `<timer>`s and path steps, **a verb that is refused ends the list there**: what is written after it is not done either. Refused are a `<fire>` or `<spawn>` with every copy already out, a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window, a `<leap>` off the ground, and an `<aim>` with `<lined>` that is not lined up. What is written before it has run.
+
+So the verb goes first and its answers after: `<fire object="bullet" /><play sound="shoot" />` sounds only when a shot leaves. Collision rules and a state's commands run every command as before.
+
+An object out of play (hidden or dead) does nothing when its action is pressed or triggered; letting go still lets go.
+
+### Moving
+
+| Command | Does |
+|---|---|
+| `<move direction="up">step</move>` (`down`, `left`, `right`) | in an action, held: while the key is down the object goes `step` pixels a frame that way (see [held keys](#held-keys-and-state-changes)). In a rule: shifts it once (and everything in lockstep with it) |
+| `<hop direction="up">distance</hop>` | in an action, once a press: a step of `distance` pixels, made before collisions, so it is judged where it lands; refused if it would leave the window. Also the diagonals `up-left`, `up-right`, `down-left`, `down-right`, which go `distance` both ways or `<x>` across and `<y>` up or down (Q*bert's `<hop direction="down-right"><x>32</x><y>48</y></hop>`) |
+| `<seconds>` and `<arc>` in a `<hop>` or `<jump>` | `<seconds>`: it takes that long, through the air, touching nothing until it lands; another asked for in the air does nothing. `<arc>` after it (pixels): its [altitude](#height-and-shadows) climbs to that height halfway and back, so it is drawn going up and over |
+| `<jump direction="down">90<seconds>0.35</seconds></jump>` | a timed jump of its content's distance, in a straight line (0.3 seconds when left out); not made if it would land off the screen. Frostbite's jump between rows |
+| `<leap>height</leap>` | a jump up under its own pull: it leaves the ground fast enough to rise about `height` pixels against its `<acceleration>`, and falls until a `<land />`. Only from the ground and not on a ladder; the way across is fixed until it lands. Needs an acceleration down and a `<land />` rule. Donkey Kong |
+| `<land />` | in a rule about another object: coming down onto its top, the object stands on it, its fall stopped, until the next frame's landing. Any other side, or going up, does nothing, so a platform can be jumped up through and walked off at its ends |
+| `<climb direction="up" class="ladder">step</climb>` (or `down`) | held: while the object stands at an object of that class (its middle over it, its feet between that one's top and bottom) it gets on, lined up, and climbs. Nothing pulls it on a ladder; at the top or bottom it steps off |
+| `<accelerate direction="up" burn="fuel">amount</accelerate>` | held: adds `amount` to the velocity every frame (opposite ones cancel). `burn` names one of the object's own variables, taken 1 off each frame; at 0 the thrust does nothing |
+| `<thrust burn="fuel">amount</thrust>` | held: the same along the object's `<heading>` |
+| `<turn direction="left">degrees</turn>` (or `right`) | held: turns the heading that many degrees a frame |
+| `<reverse />` | the velocity turns round, both ways at once (Kaboom's bomber on a timer) |
+| `<stop />` | comes to rest and stays: velocity 0, and no longer pulled by its acceleration or pushed by a held key, until a reset. Since the pull goes too, it is no landing for something that can be knocked up again |
+| `<track />`, `<track path="rail" />` | in an action run by a [pointing control](#pointing-controls): the object goes where it points; with `path=`, its middle goes that far along the path's legs from its `<start>` |
+
+### Steering
+
+| Command | Does |
+|---|---|
+| `<chase object="hero">1.5<near>100</near></chase>` | heads straight for the middle of the nearest one in play of that name or group, at its content's speed, facing that way (a `<heading>` turns too); within `<near>` pixels it stops. It acts once, so a timer repeats it, and how often is how quickly it turns. Evil Otto, Missile Command's missiles |
+| `<aim object="man" />` | turns to the nearest one in play: its next `<fire>`s go straight at where that one's middle was, from the shooter's middle, at the projectile's own speed. Kept until it aims again, is reset, or a key moves it. With `<lined>8</lined>` it aims only along one of eight ways, when the target lies within that many pixels of one, and is refused otherwise (Berserk's robots) |
+| `<follow path="dive" />`, `<follow path="in" object="aliens"><stagger>0.15</stagger></follow>` | flies a [path](#paths): the object itself, or every one of that name or group in play, each `stagger` seconds after the one before. Without `object=` only in an object's own places |
+| `<go direction="left">speed</go>` | a [maze walker](#walking-a-map), on a key: turns that way at the first tile it can, carrying on until then; stops in the middle of a tile at a wall; turns straight round at once |
+| `<hunt object="pacman">2<ahead>4</ahead><with object="blinky" /><retreat object="corner">8</retreat></hunt>` | a maze walker, from now on: at every tile, of the open ways other than back, the one whose next tile is nearest a target, as the arcade's ghosts chase. The target is the nearest one in play of that name; `<ahead>` tiles in front of the way it faces; `<with>`, as far past that point again as the partner is short of it; `<retreat>`, while within that many tiles, the corner object instead. A tie goes up, left, down, right |
+| `<hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>` | a hunt by hops, for an object that walks no maze: of the four hops it could make, the one landing nearest the target and staying in the window. Q*bert's Coily, on a timer |
+| `<wander>1.25</wander>` | a maze walker, from now on: an open way at random at every tile, never back (a frightened ghost) |
+
+### Touching
+
+| Command | Does |
+|---|---|
+| `<bounce />` | the velocity reverses away from the edge touched |
+| `<deflect>45</deflect>` | off another object at an angle set by where it hit: straight out from the middle of the side touched, up to that many degrees toward either end, in proportion. The speed is kept. Pong's ball |
+| `<knock />`, `<knock>0.5</knock>` | the two meet as things with weight do ([knocks](#knocks)); the content, 0 to 1, is how bouncy |
+| `<stick />` | against a screen edge: kept inside it, and only the velocity into that edge stops, so it still slides along it |
+| `<wrap />` | against a screen edge: once wholly off the screen and still going that way, put back in from the opposite edge, a window's width (or height) plus its own size along, so a lane keeps its spacing |
+| `<ride />` | lent the touched object's velocity for that frame, on top of its own: a frog on a log. Worked out again every frame, so stepping off needs nothing |
+| `<carry />` | picks up the object touched and takes it along, held where it was picked up, until a `<drop />`. The carried thing is swept on the way and meets what it reaches (a key opening a gate). One at a time: picking up another puts the first down; either out of play or reset, and it is put down. Adventure's hero |
+| `<drop />` | puts down what the object carries; it is not picked up again until the two stop touching |
+| `<hole>4<rough>0.5</rough></hole>` | cuts a round hole of that radius in the object's own picture where the other struck it; what is cut is not drawn and, with `pixel` collisions, not touched. `<rough>` (0 to 1) leaves a ragged edge. Only for lines or a bitmap with no heading, animation, mirror or second look. A reset mends it. Space Invaders' shields |
+
+### In and out of play
+
+| Command | Does |
+|---|---|
+| `<die />` | takes the object out of play: not drawn, not touching, not moving, until a `<reveal>` or a reset brings it back. It stays in the game (to take a copy away for good, `<despawn />`) |
+| `<reset />` | in an object's place: back as it started, its position, velocity, heading and variables (with their `<random>`s drawn again). In a state's place: **a new game**: every object back, the copies gone, every scene started again, the state stack down to the first state, except what is [kept](#keeps) |
+| `<reset object="name" />` | resets that object, or every member of a group, the same way, **every variable included**, and takes away copies made of it. So never reset the player from someone else's rule: keep score and lives on an object of their own |
+| `<reset scene="room1" />`, `<reset way="out" />` | puts a [scene](#scenes) back as it started, objects and timers; `way=` names the scene the current scene's way leads to. Whether it is current does not change |
+| `<enter scene="room2" />`, `<enter way="east" />` | makes that scene the current one of its state; the scene left stays as it was. `way=` enters where the current scene's way leads |
+| `<reveal object="blocks">count</reveal>` | brings back the first `count` (1 when left out) of that name that are out of play, each where it started |
+| `<release object="debris">count</release>` | in a rule: puts `count` of that name into play centred on the object running it: new copies of a kit piece, or the first out of play of a pool. How a rock breaks |
+| `<fire object="shot" />` | launches the projectile: a new copy of a kit piece (as many in flight as its `<most>`), or the first of a pool out of play. From a shooter that has aimed, along the aim; with a `<facing>`, from the middle of that side, that way (a diagonal when two keys are held); with a `<heading>`, from its nose along the heading; else from its top centre with the shot's own velocity |
+| `<spawn object="ball">` with `<position>`, `<velocity>` | makes a new copy, placed (its top left, or the middle of a `<centered>` half) and going as they say, read as it runs: `<x><centered>self.x + 5</centered></x>`. A half left out is as the file says |
+| `<despawn />`, `<despawn object="bomb" />` | takes the object, or every copy of that name and the object itself, out of the game ([spawn and despawn](#spawn-and-despawn)). Kaboom's bomb hitting the ground takes the whole wave's bombs |
+
+### Numbers
+
+| Command | Does |
+|---|---|
+| `<inc variable="ship.score" />`, `<inc variable="ship.score">self.worth</inc>` | adds 1, or the amount, and redraws any text showing it |
+| `<dec variable="frog.lives" />` | takes 1, or the amount, off; it may go below 0, which `<atmost>0</atmost>` notices |
+| `<set variable="target">value</set>` | puts the value in: an object's variable, or one of its live numbers (`owner.x`, `owner.y`, `owner.velocity.x`, `owner.velocity.y`, `owner.heading` for one with a heading, `owner.altitude`, `owner.rise`, `owner.light`, `owner.blink`). A group's name sets every member |
+| `<copy variable="ship.score" into="best.score" />` | the second takes the number the first holds now |
+| `<rank variable="entry.score" into="table" />` | the entry takes its place in a [table of the best](#a-table-of-the-best) |
+
+The variable named must belong to an object; one no object has stops the load, listing the object's variables.
+
+### Look and sound
+
+| Command | Does |
+|---|---|
+| `<become sprite="blue" />` | the object shows that [look](#looks); timers that follow the look start over. `object=` changes every object of that name or group (out of play too); `from="normal"` only those showing `normal`; `style="angry"` puts on that style's colors, a [palette swap](#palette-swap) |
+| `<play sound="zap" />` | asks for a [sound](#sounds), played once the frame's work is done. In an action or input it plays on the press; a loop plays while the key is held |
+| `<silence sound="thrust" />` | stops that sound if it plays |
+
+### Flow
+
+| Command | Does |
+|---|---|
+| `<push state="paused" />` | puts that state over the current one |
+| `<pop />` | back to the state below; with only the first state left it does nothing |
+| `<pop state="result" />` | this state goes and that one takes its place, so moving on does not grow the stack |
+| `<trigger object="ship" action="fire" />` | runs one of an object's actions, as one press of its key (a `<move>` in it stays on). `object=` naming a group runs it on each member, each one's refused verbs stopping only its own run. In an object's own rules, actions and timers `object=` may be left out (itself): one death written once as an action and triggered by each rule that kills. Actions that trigger one another in a circle stop the load |
+| `<turns>`, `<pass />`, `<out />` | players [taking turns](#taking-turns) |
+| `<demo />` | plays the game's recorded `<demo>`, the [attract mode](#attract-mode) |
+| `<hold button="l" />` | a computer player holds that key while its condition holds |
+
+### Mistakes the loader catches
+
+A game that would play wrong stops loading, with a message that says where and, for a likely typo, what was meant (`(did you mean 'paused'?)`). Names are checked once everything is built, so a name used before the thing it names is fine:
+
+- an unknown command, or one missing an attribute it needs (`object 'ball' > <collisions> > <collision>: unknown command <explode>`);
+- a state, object, action, projectile, sound, look, scene or way that does not exist;
+- a key the engine does not have (`there is no key named 'spcae' (did you mean 'space'?)`);
+- a color that is not a `color.` name;
+- a command in a place where it does nothing (a `<move>` in an `<input>`, which needs a `<trigger>` of an action), listing what can go there;
+- an `<inc>` or `<dec>` of a variable no object has.
+
+### Colors
+
+`color.black`, `color.white`, `color.red`, `color.green`, `color.blue`, `color.yellow`, `color.magenta`, `color.cyan`, and the muted `color.grey`, `color.darkgrey`, `color.lightgrey`, `color.brown`, `color.orange`, `color.purple`, `color.darkblue`, `color.darkgreen`, `color.forestgreen` (`picture/color.cpp`).
+
+## Collisions
+
+`<collisions>` says how an object touches, then its rules:
+
+```xml
+<collisions>
+  <type>pixel</type>                      <!-- optional: box (default) or pixel -->
+  <solid char="*" />                      <!-- optional, pixel only: which bitmap characters touch -->
+  <collision edge="vertical"><bounce /></collision>
+  <collision class="bricks"><deflect>30</deflect></collision>
+  <collision object="paddle" side="bottom"> ... </collision>
+</collisions>
+```
+
+In order: `<enabled>` (`false` turns it off), `<lockstep>`, `<type>`, `<solid>`s, a `<hitbox>`, then the `<collision>` rules. Only objects in play with collisions on take part.
+
+### Rules
+
+- **Against a screen edge:** `edge="left"`, `right`, `top`, `bottom`, or `vertical` (top and bottom), `horizontal` (left and right), `all`. Several rules for one edge all run, in order. Edges are checked by position, before the frame's move.
+- **Against another object:** `class="..."` (a kind) and/or `object="..."` (one object, a group, a copy's description), both meaning AND; a `<collision>` with neither is about anything. An edge rule with `class=` or `object=` stops the load.
+- **Every matching rule runs**, in the order written, and each sees the object as the rule before left it (a changed look, a stopped speed).
+- **What a rule can do** is what its place takes ([where commands go](#where-a-command-can-go)). A `<trigger>` with `object=` left out runs an action of the object itself.
+
+### Rule filters
+
+A rule about another object can be narrowed; most filters work on edge rules too.
+
+| Filter | Runs only |
+|---|---|
+| `side="top"` (`bottom`, `left`, `right`, `horizontal`, `vertical`) | when touched on that side of its own object: a ball falling onto a block is touched on its bottom; Mario's head bumping a floor is his top |
+| `sprite="cracked"` (edge rules too) | while its object shows that [look](#looks) |
+| `unless="logs"` (edge rules too) | when the object is not, at that moment, also touching something in play of that class. Frogger's river: `<collision class="water" unless="logs">`. On an edge: `<collision edge="bottom" unless="paddle">` |
+| `through="floor"` | for a touch felt through something of that class ([knocks](#knocks)); a rule without it, only for a touch itself |
+| `<slower>N</slower>`, `<faster>N</faster>` (first inside the rule) | while the object's speed is under N, or N or more, as the touch happens, taken once before any rule runs: a landing and a crash on one pad. Not on edge rules |
+| `<condition>`s, `<all>`, `<any>` (after those) | while every one holds, written as in a [condition](#conditions). One with no `class=` or `object=` is about the object itself, and `self` in it is that object (each member, on a group). Not on edge rules yet |
+
+### How a touch is found
+
+- **Swept.** Each object moves along its path for the frame, and the detector finds the moment two of them first touch (boxes as boxes, circles as circles, a circle against a box with rounded corners), so a small fast object cannot pass through a thin one. The earliest touch in the whole frame is handled first: everything moves to that moment, the pair's rules run, and the rest of the frame plays with the velocities they left. Each pair reacts at most once a frame.
+- **Who is looked at.** The pairs are those a rule answers for, worked out once at load. A pair is skipped unless one of the two is moving (a velocity, riding something, or just hopped or landed), and an object in the middle of a jump is in no pair. Something a rule brings into play touches nothing until the next frame.
+- **What a touch is.** Worked out once, before either side's rules (`contactOf`, `play/geometry.h`): the edge of each that was touched, the point where they meet, the way straight apart, where along each one's side, how deep, and how far through the frame. Each side's rules see it their way, as `side=`, `touch.*` and `<knock>` read it.
+- **`<type>pixel</type>`.** The pair is first swept as boxes, then walked half a pixel at a time from the moment the boxes touch until a drawn pixel of one lies on a drawn pixel of the other. A pixel object is a picture the engine drew (lines, a bitmap, an SVG); a circle or rectangle is solid as itself; text and images cannot be `pixel`. The edge reported is the one the motion came in through.
+- **`<solid char="*" />`**, after `<type>pixel</type>`: only those characters of the object's bitmap touch; the others are drawn but touch nothing. Q*bert's cubes touch by their tops.
+- **`<hitbox>`**: the shape that touches other objects instead of the picture, a `<rectangle>` or `<circle>`, then a `<position>` of its top left from the picture's. Q*bert touches with his feet alone. The window's edges, `<land />`, `<stick />` and a carry still use the picture. Not with `pixel`.
+
+```xml
+<hitbox>
+  <rectangle><width>12</width><height>6</height></rectangle>
+  <position><x>6</x><y>18</y></position>
+</hitbox>
+```
+
+### Lockstep
+
+`<lockstep>true</lockstep>` in a group's `<collisions>` makes the members of each innermost group one block: they never touch each other, a `<move>` in a rule moves them all, and one hitting the left or right edge with `<bounce />` turns the whole block. Each cell is still swept on its own, so a bullet meets only the cells still alive. This is the invaders' march.
+
+### Knocks
+
+`<knock />`, in a rule about another object, makes the two meet as things with weight do:
+
+- Along the way straight apart they share out what they carry by their `<mass>`es; across it each keeps its own, so a ball hit off its middle goes off at an angle.
+- The content, 0 to 1 (1 when left out), is how bouncy: 1 is pool balls, 0 sends them on together. Nothing happens unless they are closing, so a second `<knock />` for the same touch does nothing.
+- **No `<mass>` is as heavy as can be:** never moved by a knock, and its own knock sends a thing off at up to twice its speed (Trick Shot's cue tip).
+- **Through a thing with no mass.** A knock on something with no mass goes through it to whatever with a mass rests against its far side, as from something as heavy as can be; that thing then runs its own rules about the knocker that say `through="class"` of what it came through. Mario's head hitting a floor tile from below is a `<knock>0</knock>` that reaches the shellcreeper standing on it, whose `<collision object="mario" through="floor">` flips it. A knock goes through one thing, not a pile.
+- A row of balls passes a knock on by itself, each pair meeting in turn within the frame.
+
+## Input
+
+**Keys are bound in states, never in objects.** An object names what it can do; a state binds a key to that name:
+
+```xml
+<object name="paddle1">
+  ...
+  <actions>
+    <action name="up"><move direction="up">step</move></action>
+  </actions>
+</object>
+...
+<state name="playing">
+  <inputs>
+    <input button="w up"><trigger object="paddle1" action="up" /></input>
+  </inputs>
+</state>
+```
+
+So remapping a key is one attribute in one state, a key can do different things in different states, and one action name can mean different things on different objects.
+
+- `button=` can name several keys separated by spaces (`"a left pad1.left"`) for the same commands.
+- **Key names** are lowercase: `a`-`z`, `num0`-`num9`, `numpad0`-`numpad9`, `f1`-`f15`, `space`, `enter`, `escape`, `backspace`, `tab`, `left`, `right`, `up`, `down`, `home`, `end`, `pageup`, `pagedown`, `insert`, `delete`, `pause`, `lshift`, `rshift`, `lcontrol`, `rcontrol`, `lalt`, `ralt`, and a few more in `engine/keys.cpp`.
+- **The mouse and pads** are keys too: `mouse.left`, `mouse.right`, `mouse.middle`, and for two pads `pad1.a`, `.b`, `.x`, `.y`, `.lb`, `.rb`, `.back`, `.start`, `.up`, `.down`, `.left`, `.right` (and `pad2.`), named for an Xbox pad. A pad's directions are its d-pad or its left stick pushed past halfway.
+- **Key sets.** Bindings several states share can be a named `<keys>` set at the top of `<states>`, taken with `<inputs keys="walk">` (several names, each over the one before); the state's own `<input>`s go over the set's, key by key. No shipped game uses one now.
+
+### Pointing controls
+
+`<input axis="mouse.x">` (or `mouse.y`, `pad1.x`, `pad1.y`, `pad2.x`, `pad2.y`) runs its `<trigger>` whenever that control moves, and a `<track />` in the action it triggers puts the object where it points: its middle at the mouse, or as far across the window as the stick is pushed, kept inside the window. That is the Atari's paddle controller. It runs only when the control moves, so the keys can move the same object while the mouse rests. Kaboom's bucket and Breakout's paddle:
+
+```xml
+<action name="steer"><track /></action>
+...
+<input axis="mouse.x"><trigger object="bucket" action="steer" /></input>
+```
+
+An axis input runs only `<trigger>`s and goes in a state's own `<inputs>`, not a key set. Every window library reads the mouse and pads; Qt (`xgegui`'s own window) reads the mouse only.
+
+### Held keys and state changes
+
+- **A held `<move>`** records its direction's step while the key is down. On every key change the velocity along that key's axis is worked out from the two directions of the axis, so holding Down and tapping Up cancels out, and two keys on the two axes make a diagonal. A key on one axis leaves the other alone: walking does not stop a fall.
+- **`<accelerate>`, `<thrust>` and `<turn>`** are held the same way, but add to the velocity or heading each frame instead of setting it, so what was gained stays when the key is let go. `<drag>` then gives thrust a top speed.
+- **One-shot verbs** (`<hop>`, `<jump>`, `<leap>`, `<fire>`, a state change) run only on a real press. Two hops asked for in one frame keep the later.
+- **Facing.** An object with a `<facing>` faces the way of the last key pressed; while keys of both axes are held it faces the diagonal between them, and a `<fire>` leaves along it (Berserk's man shoots eight ways).
+- **The current state decides what a held key means.** When the state changes, keys still down stop driving what the old state bound them to and start driving what the new one binds them to. Hold Left in Breakout and pause: the paddle stops; unpause with Left still down and it moves again, with no new press. Only held bindings resume this way, so holding Space through the title does not pause the game. Letting go of a key always stops what it drives, unless another key still down drives the same action.
+
+## Timers and paths
 
 ### Timers
 
@@ -609,20 +1068,29 @@ Three optional elements, in this order after `<facing>` on an object or a group,
     <every><random><min>0.3</min><max>1.4</max></random></every>
     <reverse />
   </timer>
-  <timer>
-    <every>drop1</every>
-    <fire object="bombs1" />
+  <timer name="fuse">
+    <after>3</after>
+    <despawn />
   </timer>
 </timers>
 ```
 
-A `<timer>` (with an optional `name=`, by which a [scene](#scenes) copied with `from=` puts another in its place) goes off after a number of seconds, `<every>` time (again and again) or once `<after>` that long, and runs the commands after it. An object's timers (in its `<timers>`, after `<variables>`; a group's are every member's) count while it is shown and in play; a state's (after its `<conditions>`) count while it is the current state, so a pause stops them and they carry on afterwards. A reset starts them over, and so does an object's coming back into play (fired, released, revealed or spawned), so a shot or a burst that goes out on a timer has its whole time each time it comes in. A push does not, so a state that pops itself after a while (Space Invaders' `blasted`) has a timer `<every>` that long, which, counting only while the state is current, starts each visit at nought, where an `<after>` would go off on the first visit only. The interval is worked out again every time the timer starts over, after its commands have run, so `<random>` waits a different time each round (Kaboom's bomber changes direction whenever he likes) and an expression can follow a variable the commands change. Seconds are turned into frames of the game with the window's `<framerate>`; a timer never waits less than one frame, and `<after>0</after>` goes off on the first frame it counts. Conditions are the last thing in a frame, so a scene a condition puts back (`<reset scene>`) is drawn once before its timers count: what it must do before it is seen goes in that condition too (Galaxian's new fleet sets off on its paths there, not on the scene's timer alone).
+A `<timer>` goes off `<every>` so many seconds, again and again, or once `<after>` that long, and runs the commands after it.
 
-An object's timer with `sprite="blue"` follows that [look](#looks): it counts only while the object shows it, and starts over whenever a `<become>` gives the object that look, even the look it already shows. So looks and timers make modes. Pac-Man's ghosts have a `blue` timer `<after>0</after>` that turns them round and sets them wandering, and another `<after>fright</after>` that makes them `normal` again; a second pellet gives the blue ghosts `blue` again, and their fright starts over; each ghost's `normal` timer `<after>0</after>` sets its hunt going again, whenever it becomes normal. A state's or a scene's timer has no look to follow.
+- **Whose clock.** An object's timers (a group's are every member's) count while it is in play; a state's while it is the current state; a scene's while it is the current scene. So a pause stops them and they carry on afterwards.
+- **Starting over.** A reset starts a timer over, and so does the object coming back into play (fired, released, revealed or spawned), so a shot that dies on a timer has its whole time each time. A push does not: a state that pops itself after a while (Space Invaders' `blasted`) uses `<every>`, since an `<after>` there fires on its first visit only.
+- **The interval is worked out again each round**, after the commands have run, so a `<random>` waits a new time each time (Kaboom's bomber turns whenever he likes) and an expression can follow a variable the commands change.
+- Seconds become frames with the window's `<framerate>`; a timer never waits less than one frame, and `<after>0</after>` goes off on the first frame it counts.
+- A visible clock is a timer that `<inc>`s or `<dec>`s a variable a text shows, or a named timer's time left (below).
+- Conditions are the last thing in a frame, so a scene a condition puts back is drawn once before its timers count: what must happen before it is seen goes in that condition too.
 
-On an object, a timer can `<fire>` (from that object: enemies firing back), `<reverse />`, `<move>`, `<die />`, `<stop />`, `<release>` and do a bare `<reset />` (the object back where it started); anywhere, it can `<push>`, `<pop />`, `<reset object>`, `<trigger>`, `<inc>`, `<dec>`, `<play>`, `<silence>`, `<become>` and `<reveal>`, and in a state a bare `<reset />` resets the whole game. A clock the player can see is a timer that `<inc>`s a variable a text shows; Frostbite's cold is a state timer taking a degree a second off the thermometer.
+**Look timers.** An object's timer with `sprite="blue"` counts only while the object shows that [look](#looks), and starts over whenever a `<become>` gives it that look, even the look it shows already. Looks and timers make modes: Pac-Man's ghosts have a `blue` timer `<after>fright</after>` that makes them `normal` again, and a second pellet starts the fright over.
 
-**Time left.** An object's timer with a `name=` is also a number of the object's, read as `owner.name`: the seconds it has left, in whole seconds rounded up (so a 3-second `<after>` shows 3, 2, 1, then 0 once it has gone off). It starts at its whole time, keeps its value while the timer is not counting (paused, or not in the look it follows), and a reset of the object gives it its whole time again; an `<every>` shows 0 for the frame it goes off and its new time from the next. Anything that reads a variable reads it: a text's `<number>energy.level</number>`, a condition's `variable="level"`, a command's value, a `<condition>`. It cannot be set (a `<set>` on it is undone the next frame it counts), and the object cannot also have a `<variable>` of that name, or a timer named like where it is (`x`, `heading`, ...). Megamania's energy is the timer `level` on the object `energy`, `<after>full</after>`: going off costs a blaster, the bar and the bonus read `energy.level`. A state's or a scene's timer has no owner to hold the number; a clock everyone sees goes on an object of the state with no sprite, whose timers count while that state is the current one, as the state's own do.
+#### Time left
+
+An object's timer with a `name=` is also a number of the object's: `energy.level` is the seconds the timer `level` on `energy` has left, rounded up to whole seconds (3, 2, 1, then 0 once it has gone off). Anything that reads a variable reads it: a text's `<number>energy.level</number>`, a condition, a command's value. It keeps its value while the timer is not counting, a reset gives it its whole time again, and a `<set>` on it is undone the next frame it counts. The object cannot also have a variable of that name. A state's or a scene's timer has no object to hold the number, so a clock everyone sees is a timer on an object of that state with no picture. Megamania's energy bar reads `energy.level`.
+
+A `name=` on a state's or scene's timer is for [`from=`](#scenes), which replaces a copied timer of the same name.
 
 ### Paths
 
@@ -631,225 +1099,37 @@ On an object, a timer can `<fire>` (from that object: enemies firing back), `<re
   <path name="dive">
     <speed>3</speed>
     <step><x>-24</x><y>-24</y><play sound="dive" /></step>
-    <step><x>80</x><y>120</y><fire object="bombs" /></step>
+    <step><x>80</x><y>120</y><fire object="bomb" /></step>
     <step><x>-56</x><y>568</y></step>
     <home />
   </path>
 </paths>
 ```
 
-A `<path>` is a way through the window, written once in the game's `<paths>` (after `<sounds>`, before `<objects>`) and flown by any object that `<follow>`s it. It has a `<speed>` (pixels a frame, above 0), an optional `<start>` (an `<x>` and a `<y>`: the object is put there when it sets off; without one it sets off from where it is), then its legs, flown one after the other: a `<step>` moves the object by its `<x>` across and `<y>` down from wherever that step began, in a straight line at the path's speed, and runs the commands after its `<x>` and `<y>` as it sets off (the follower's own, as on one of its timers: `<fire>`, `<play>`, `<inc>`); `<home />` flies it back to where it started the game, its `<position>`, from wherever it has got to. At the end of the path the object comes to rest. Every number is worked out once, when the game loads, and any variable can be used.
+A `<path>` is a route written once in the game's `<paths>` and flown by any object that `<follow>`s it.
 
-`<follow path="dive" />` (in an object's collision rule, action or timer) sets that object off; `<follow path="in" object="aliens"><stagger>0.15</stagger></follow>` (anywhere, and the only form in a state) sets off every object of that name or group that is in play, in the order written, each `<stagger>` seconds after the one before (0 if left out), waiting at the path's start until its turn: a line of aliens flying in one behind another. An object already on a path finishes it first, so a timer that keeps asking does nothing until it is done. A reset, a `<die />`, a `<stop />` and a `<reveal>` end a path. A follower is moved by its velocity like anything else (the path sets the velocity each frame), so it collides on the way, and a `<wrap />` carries it round without changing what is left of the step: Galaxian's dive adds up to the window's height plus the alien's down, which is exactly what wrapping at the bottom takes off again, so a diver that misses comes back in from the top and ends in its own place.
+- It has a `<speed>` (pixels a frame), an optional `<start>` (an `<x>` and `<y>` it is put at when it sets off; else it sets off from where it is), then its legs, flown in turn.
+- A `<step>` moves the object by its `<x>` across and `<y>` down from where the step began, in a straight line, and runs the commands after them as it sets off (the follower's own, as on its timer).
+- `<home />` flies it back to its `<position>` in the file, from wherever it has got to: a formation is just the objects' places. At the end of the path it comes to rest.
+- A path sets the velocity each frame, so the follower moves, wraps and collides as anything does. A `<wrap />` on the way leaves what is left of the step alone: Galaxian's dive adds up to the window's height plus the alien's, so a diver that misses comes back in from the top to its own place.
+- An object already on a path finishes it first; a reset, `<die />`, `<stop />` or `<reveal>` ends it. Every number on a path is fixed at load.
 
-### Commands
+## States and scenes
 
-Commands are tags, sorted in the schema into groups by what they need, and each place that runs commands takes only its groups, so a command where it would mean nothing is a schema error (and, for a game read without the schema, a load error naming what can go there):
+### States
 
-| Group | Commands | Needs |
-|---|---|---|
-| changes | `<inc>`, `<dec>`, `<set>`, `<copy>`, `<rank>`, `<play>`, `<silence>`, `<become>`, `<reveal>`, `<follow>`, `<enter>`, `<reset>`, `<spawn>`, `<despawn>`, `<trigger>` | nothing: they name what they change |
-| flow | `<push>`, `<pop>`, `<turns>`, `<pass />`, `<out />`, `<demo />` | the game's running order |
-| self | `<die />`, `<drop />`, `<move>`, `<release>`, `<reverse />`, `<stop />`, `<fire>` (and `<despawn />` with no object=) | an object running it |
-| steering | `<aim>`, `<chase>`, `<hunt>`, `<wander>` | an object to steer |
-| touch | `<carry />`, `<deflect>`, `<hole>`, `<knock>`, `<land />`, `<ride />` | another object touched |
-| edge | `<stick />`, `<wrap />` | a screen edge |
-| bounce | `<bounce />` | a screen edge or another object |
-| controls | `<accelerate>`, `<climb>`, `<go>`, `<hop>`, `<jump>`, `<leap>`, `<thrust>`, `<turn>`, `<track />` | a key held or pressed |
-| press | `<hold>` | a computer player |
+A state is a mode of the game: a title, play, a pause, a game over. The first in the file is where the game starts. `name` is required, and `from` copies an earlier state (below). Children, in this order:
 
-| Place | Groups |
+| Element | What it does |
 |---|---|
-| a `<collision>` with another object | changes, self, steering, touch, bounce |
-| a `<collision edge>` | changes, self, edge, bounce |
-| an object's `<action>` | changes, self, steering, controls |
-| an object's `<timer>`, a path's `<step>` | changes, self, steering |
-| a state's `<input>`, `<condition>` and `<timer>` (and a scene's) | changes, flow |
-| a `<computer>`'s `<condition>` | press |
-
-The schema cannot tell the two kinds of `<collision>` apart (which it is, is in its attributes), so it lets a rule hold either's commands and the loader holds each to its own. Any list of commands (inside a `<collision>`, an `<action>`, an `<input>`, a `<condition>` or a `<timer>`) is run in the order written, for example `<inc variable="paddle2.score" />` then `<reset />`.
-
-**A press that cannot be done does nothing more.** In an object's `<action>` (on the press) and its `<timer>`s and path steps, a verb that can be refused ends the list where it is refused, so what is written after it (a `<play>`, a `<become>`, a score) is not done either: a `<fire>` with every one of its projectiles already in flight, a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window, a `<leap>` off the ground. What is written before it has run. So the verb goes first and its answers after it: `<fire object="bullet" /><play sound="shoot" />` sounds only when a shot leaves, and Q*bert pressed in the air keeps his look and is quiet. How many shots can be in flight is how many projectiles there are: a `<group>` of three is three. Collision rules and a state's commands run every command as before.
-
-| Command | Where it is meaningful | Effect |
-|---|---|---|
-| `<bounce />` | collision | Reverses velocity away from the touched edge |
-| `<knock />` or `<knock>bounce</knock>` | collision (another object) | The two meet as things with weight do: see [knocks](#knocks). The content, 0 up to 1 (1 when left out), is how bouncy the meeting is |
-| `<hole>r<rough>0.5</rough></hole>` | collision (another object) | Cuts a round hole of that radius in the object's own picture where the other struck it (the solid pixel nearest the other's middle): what is cut away is not drawn and, with a `<type>pixel</type>` collision, not touched, so shot after shot up one line goes deeper until one goes through. `<rough>` (0 to 1, 0 when left out) is how much of the radius each pixel at the edge may keep, at random, for a ragged hole. Only for a picture that stays as it is: a sprite of `<line>`s or a `<bitmap>`, with no `<heading>`, `<animation>` or second `<sprite>`. A reset puts the picture back whole. Space Invaders' shields |
-| `<deflect>angle</deflect>` | collision (another object) | A bounce off the other object at an angle set by where it hit: the object's middle level with the middle of the touched side leaves straight out, level with either end of that side (or past it) leaves at `angle` degrees towards that end, and in between in proportion. The speed is kept. The content is a value from 0 up to, not including, 90. Pong's ball has `<deflect>45</deflect>`, so a hit on the top of a paddle goes back up at up to 45 degrees ([collisions](designs/20-collisions.md)) |
-| `<stick />` | collision | Clamps the object inside the screen edge it touched and stops only the velocity heading into that edge; the other axis keeps going, so an object pressed against the bottom wall still slides left or right. Re-applied after the frame's move, so a stuck object never ends a frame outside the screen |
-| `<wrap />` | collision (screen edge) | Once the object has gone completely off the screen through that edge and is still heading that way, puts it back in from the opposite edge, one window width (or height) plus its own size along, so anything spaced along a lane keeps its spacing. While any of it is still in view nothing happens |
-| `<ride />` | collision (another object) | Lends the object the touched object's velocity for that frame, on top of its own: a frog on a log rides along with it. Worked out again every frame from whatever is still being touched, so an object that steps off is at rest |
-| `<carry />` | collision (another object) | The object picks up the one it touched and takes it wherever it goes, held where it was when picked up, until a `<drop />`. The carried thing is lent the carrier's motion, so it is swept and meets what is on its way (a key reaching a gate), then put exactly where it is held. One thing at a time: picking up another puts the first down where it is, and taking one that another object carries takes it from that one. The carrier or the carried thing out of play (dead, not shown), or either reset, and it is put down. Adventure's hero: `<collision class="item"><carry /></collision>` |
-| `<inc>`, `<dec>`, `<copy>`, `<reset object>`, `<reset scene>`, `<enter>`, `<die />` in an `<action>` | object `<action>` | As anywhere else; in an action they run on the press, so an action can be what several collision rules do (a death) |
-| `<track />` or `<track path="name" />` | object `<action>` triggered by an `<input axis>` | The object goes where the control points ([Input](#input)); with `path=`, its middle goes that far along the [path](#paths), from its `<start>` (all the way left, or up) to the end of its last leg, measured along the legs (a paddle on an arc, a gun on a rail). The path needs a `<start>` |
-| `<drop />` | object `<action>` (on the press), collision, object timer | Puts down what the object carries, where it is. It is not picked up again until the two have stopped touching, so the carrier can walk off it |
-| `<die />` | collision | Disables the object's collisions and hides it; it stops moving and being drawn until something brings it back (`<reveal>`, `<reset />`). It stays in the game: to take a copy away for good, `<despawn />` |
-| `<reset />` | collision (screen edge or another object) | Puts the object back as it started: its starting position and velocity (the velocity is left alone while a held key is moving it), with any `<random>` in its start, or in its `<variables>`, drawn again. Pong's ball serves anew after every point |
-| `<reset />` | state input or condition | Full game reset: every object's position, velocity, variables, visibility and collisions go back to how they started (a bullet in flight is put away, a dead alien is back), and the state stack collapses to the first state; every [scene](#scenes) starts again, and each state's first scene is current |
-| `<reset object="name" />` | anywhere: collision, state input, condition, timer | Resets that one object (or every member or cell of a group, for its name) the same way; copies of it made while the game ran are taken away. From a collision it acts on another object |
-| `<reset scene="name" />` | anywhere: collision, state input, condition, timer | Puts every object of that [scene](#scenes) back as it started (with its `<random>`s drawn again), and its timers too; what was carried off from it comes back. Whether it is current does not change. `<reset way="out" />` resets the scene the current scene's way `out` leads to: Berserk's exits put the next room back as it started, so it has its robots, just before entering it |
-| `<enter scene="name" />` | anywhere: collision, state input, condition, timer | Makes that scene the current one of its state: the scene left stops where it is, and is found as it was when entered again. What one of the state's own objects carries goes with it. The name is a scene's, plain inside its state (`room2`) or as a path (`playing.room2`); a scene that does not exist stops the load. `<enter way="east" />` instead enters where the current scene's [way](#scenes) `east` leads, so one kit piece leads somewhere different in every scene; one of `scene=` and `way=` is given |
-| `<inc variable="owner.variable" />` or `<inc variable="owner.variable">amount</inc>` | anywhere: collision, condition, state input, timer | Adds 1, or the amount (a value, so an expression works), to that variable and refreshes any text bound to it |
-| `<dec variable="owner.variable" />` or `<dec variable="owner.variable">amount</dec>` | anywhere: collision, condition, state input, timer | Takes 1, or the amount, off that variable and refreshes any text bound to it. The variable may go below zero; a condition with `<atmost>` is what notices it has run out |
-| `<rank variable="owner.variable" into="group" />` | anywhere `<copy>` can go | The object `variable=` names takes its place in a table of the best, the group's members in order, by that variable ([`<keeps>`](#keeps)) |
-| `<set variable="target">value</set>` | anywhere: collision, condition, state input, timer, action | The value, read as it runs, goes into the target: an object's variable (`owner.variable`, and any text bound to it shows it), or where an object is or how it goes, `owner.x`, `owner.y` (its top left), `owner.velocity.x`, `owner.velocity.y` or `owner.heading` (only for an object with a `<heading>`). A group's name sets every member. Fishing Derby speeds its shark up with `<set variable="shark.velocity.x">shark.velocity.x * 1.1</set>` |
-| `<hold button="key" />` | a [computer](#computer-players)'s condition only | Holds that key down while the condition holds |
-| `<spawn object="name">` with `<position>` and `<velocity>` (each, and each half, optional) | anywhere: collision, condition, state input, timer, action | Makes a new copy of that object (of a group, of its members in turn), named for it with a number ([spawn and despawn](#spawn-and-despawn)), put where the position says (its top left, or for a half that is `<centered>value</centered>` its middle; `<centered />` the middle of the window) and going as the velocity says; a half left out is as the file says. The values are read as it runs, so they can say where the object spawning it is: `<x><centered>self.x + 5</centered></x>`. With its `<most>` already out, nothing, and the rest of an action, timer or path step is not done |
-| `<despawn />` or `<despawn object="name" />` | anywhere (in a state's input, condition or timer it needs `object=`) | Takes the object out of the game: a copy is gone for good when the frame ends (its name free again), one the file wrote stays out until a reset brings it back. For a name, every copy of it and the object itself; for a group, all its members and their copies. Kaboom's bomb hitting the ground runs `<despawn object="bomb" />`: every bomb of the wave is gone, the explosion |
-| `<copy variable="owner.variable" into="owner.variable" />` | anywhere: collision, condition, state input, timer | The variable `into` names takes the number `variable` holds as the command runs, and any text bound to it shows it: a best score following the score (see [`<keeps>`](#keeps)). Both are an object's variable, checked when the game loads |
-| `<move direction="up">step</move>` (also `down`, `left`, `right`) | collision, or an object `<action>` | In a collision: shifts the object (or everything in lockstep with it) once. In an object action: sets a held-key velocity (see [Input](#input)). The content is a value |
-| `<hop direction="up">distance</hop>` (also `down`, `left`, `right`, and the diagonals `up-left`, `up-right`, `down-left`, `down-right`) | object `<action>` | A one-shot jump of `distance` pixels for each press of the key (see [Input](#input)). The content is a value. A diagonal goes `distance` both ways, or instead `<x>` across and `<y>` up or down, each a value: Q*bert's `<hop direction="down-right"><x>32</x><y>48</y></hop>`. It faces up or down after a diagonal. With `<seconds>` after the step, it takes that long, through the air as a `<jump>` does: it touches nothing until it lands, and a hop asked for in the air does nothing. An `<arc>` after the `<seconds>` (a value, pixels) lifts it on the way: its [altitude](#height-and-shadows) climbs to the arc's height halfway and comes back down at the landing, so it is drawn going up and over (what it touches is still the ground under it). Q*bert's hop |
-| `<hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>` | object `<timer>`, `<action>`, collision (another object), path step | A hunt by hops, for an object that walks no maze: one hop, of the four it could make (the diagonals with an `<x>` and a `<y>`, or up, down, left and right by one distance, its content), the one that lands nearest the middle of the nearest in play of that name or group, among those that stay in the window. A tie goes up before down, then left before right. Nothing when it is in the air or there is nothing to hunt. A timer makes it a hunter at its own pace: Q*bert's Coily |
-| `<jump direction="down">90<seconds>0.35</seconds></jump>` (also `up`, `left`, `right`) | object `<action>` | A jump that takes time: once for each press, the object travels its distance (its content) that way over `<seconds>` (0.3 if left out), both values, in a straight line, or with an `<arc>` after them up and over as a timed hop is. While it is in the air it touches no other object (it cannot be hit, ride or drown until it lands, and it passes over what is in between), and a second jump waits for the landing; the frame it lands it meets what it landed on. A jump that would land off the screen is not made. Frostbite's jump between rows of ice |
-| `<land />` | collision (another object) | Coming down onto the other object's top (touching its top edge, not going up), the object stands on it: it is put on the top, its fall stops, and it is on the ground until the next frame's landing is worked out, which a `<leap>` needs. A leap ends, and the keys held then decide the way across. Touching any other side, or going up, does nothing, so a platform can be walked past at its ends and jumped up through from below. With a falling `<acceleration>` an object stands on whatever it has this rule for, walks off an open end and falls to the next. Donkey Kong's girders, for Jumpman and the barrels |
-| `<leap>height</leap>` | object `<action>` | A jump up under the object's own pull, for each press: it leaves the ground at the speed that rises about `height` pixels (a value) against its `<acceleration>`, and falls back until a `<land />`. Only from the ground and not on a ladder; a press in the air does nothing. The way across is the one it had at the take-off: a key pressed or let go in the air does not steer it until it lands. The object needs an `<acceleration>` with a `<y>` above 0 and a `<collision>` with `<land />`, or the game does not load. Donkey Kong's jump |
-| `<climb direction="up" class="ladder">step</climb>` (or `down`) | object `<action>` | Held like a `<move>`: while the object stands at an object of that class (its middle over it, its feet between that object's top and bottom) and is on the ground, it gets on, lined up with its middle, and goes `step` pixels a frame (a value) that way. On it, nothing pulls it, it does not `<land />`, a key left or right does not take it off, and with no key held it stays put. Reaching the top or the bottom it gets off, standing there. A ladder runs from the top of one platform to the top of the next. The class must be one some object has |
-| `<reverse />` | anywhere an object is acting: collision, timer | The object's velocity turns round, both ways at once. Kaboom's bomber changing direction on a timer |
-| `<become sprite="name" />` or `<become sprite="name" object="other" />` | anywhere (in a state's input, condition or timer it needs `object=`) | The object, or every object of that name or group, shows its [look](#looks) of that name, and the timers that follow that look start over. With `style="name"` (beside `sprite=` or instead of it) it puts on that [style](#styles)'s colors, a palette swap. With `from="look"`, only those showing that look change; on the object itself (`object=` left out) it changes only if it shows that look |
-| `<reveal object="name">count</reveal>` | anywhere | Brings back the first `count` (default 1) out-of-play objects of that name or group (hidden at the start, or taken out by `<die />`), each where it started and at its own starting velocity. Where `<release>` puts them in the middle of the object running it, `<reveal>` puts them where they belong: Frostbite's igloo built a block at a time, a door that appears, a fish that swims back |
-| `<accelerate direction="up" burn="fuel">amount</accelerate>` (also `down`, `left`, `right`) | object `<action>` | A thruster: while the key is held, the object's velocity changes by `amount` (a value) every frame in that direction, where `<move>` would set the velocity itself. The optional `burn` names one of the object's own `<variable>`s; 1 is taken off it every frame the thrust is on (and a text bound to it follows), and while it is 0 or below the thrust does nothing. See [Input](#input) |
-| `<stop />` | collision (screen edge or another object) | The object comes to rest where it is and stays there: its velocity goes to 0, and it is no longer pulled by its `<acceleration>` or pushed by a held `<accelerate>` or `<move>`, until a reset gives the acceleration back. A landing |
-| `<turn direction="left">degrees</turn>` (or `right`) | object `<action>` | While the key is held, the object's heading changes by that many degrees every frame (left is counterclockwise). Needs a `<heading>` on the object |
-| `<thrust burn="fuel">amount</thrust>` | object `<action>` | Like `<accelerate>`, but along the way the object faces instead of along an axis; `burn` works the same. Needs a `<heading>` on the object |
-| `<release object="name">count</release>` | collision (screen edge or another object) | Puts `count` (default 1) of that name or group in play, centered on the object running the rule, at their own starting velocity: new copies of one that does not [exist](#spawn-and-despawn) (as many as its `<most>` allows; a group's members in turn), or else the first that are out of play. This is how a rock breaks into smaller ones |
-| `<turns><player state="name" /> ...</turns>`, `<pass />`, `<out />` | state input, condition or state timer | Players [taking turns](#taking-turns): start them, pass to the next, and put this one out |
-| `<demo />` | state input, condition or state timer | The game's recorded `<demo>` plays, a new game played by itself, until a key is pressed: the [attract mode](#attract-mode) |
-| `<push state="name" />` / `<pop />` | state input or condition | Push a state / pop back. The state named must be one of the game's. `<pop />` with only the first state left does nothing |
-| `<pop state="name" />` | state input or condition | This state goes and that one takes its place, so moving on (Air-Sea Battle's time up to its result) does not grow the stack; moving between places of one state is `<enter scene>` |
-| `<trigger object="name" action="up" />` | anywhere but an action: state input, condition, timer, collision (screen edge or another object), path step | Runs one of that object's named `<action>`s. The object and the action must exist; `object=` naming a group runs the action on each member that has it, so each one's refused verbs stop only its own run (Mario Bros.' POW is `<trigger object="creepers" action="powed" />`, whose `<leap>` first turns over only those standing on a floor). In an object's own collision rule, action or timer, `object=` left out is that object: one death written once as an action `lose` and run by each rule that kills (`<collision class="robot"><trigger action="lose" /></collision>`), as Berserk, Demon Attack, Frogger, Galaxian, Mega Mania and Pitfall do. Outside them it is needed (a load error). Run so, an action is one press of its key: a `<move>` in it stays on as if held. An object out of play (hidden, or dead) does nothing when its action is pressed or triggered, and letting go still lets go: the Asteroids ship does not fire while it is gone, nor Yars' Revenge's cannon before a bite brings it in |
-| `<play sound="name" />` | anywhere: collision (screen edge or another object), object `<action>`, state input or condition | Plays one of the game's [sounds](#sounds). In an action or an input it plays on the press, not on the release; a sound that loops plays while the key is held. The game only asks for the sound; the engine plays everything asked for once the frame's keys, collisions and conditions have run |
-| `<silence sound="name" />` | anywhere `<play>` can go | Stops one of the game's sounds if it is playing: above all one that [loops](#sounds), which otherwise plays until something silences it |
-| `<follow path="name" />` or `<follow path="name" object="name"><stagger>seconds</stagger></follow>` | without `object=`: an object's collision rule, action or timer; with it, anywhere | The object, or every object of that name or group in play (each `stagger` seconds after the one before), flies that [path](#paths) |
-| `<chase object="name">1.5<near>100</near></chase>` | an object's timer, or a collision with another object | The object heads straight for the middle of the nearest one in play of that name or group, at its content's pixels a frame (a value), facing that way (and a `<heading>` turns to it, so a drawing of a streak points the way it flies); within `<near>` pixels of it (left out: 0) it stops instead. It acts once: a timer that repeats it keeps it on the trail, and how often is how quickly it turns. With none in play it carries on as it was. Berserk's Evil Otto |
-| `<aim object="name" />` | an object's timer, or a collision with another object | The object turns to the nearest one in play of that name or group: its next `<fire>`s go straight at where that one's middle was, at any angle, from the shooter's middle, at the projectile's own speed, and its `<facing>` turns to the nearest of the four ways (a `<heading>` turns exactly). Kept until it aims again, is reset, or a key moves, hops or jumps it. With `<lined>8</lined>` (a value) it aims only along one of the eight ways, straight across, up or down or on a true diagonal, when the target lies within that many pixels of one, and the shot goes exactly along it; otherwise it is refused, so in a timer the `<fire>` after it does not happen. Berserk's robots aim, lined, then fire |
-| `<go direction="left">speed</go>` | object action | A [maze walker](#maps) turns that way at the first tile it can and keeps going, `speed` pixels a frame, until a wall stops it; back the way it came, at once. On the press |
-| `<hunt object="name">2<ahead>4</ahead><with object="partner" /><retreat object="corner">8</retreat></hunt>` | an object's timer, a path's step, or a collision with another object | A [maze walker](#maps) chooses, at every tile from now on, the open way (never back) whose next tile is nearest its target, as the arcade's ghosts do |
-| `<wander>1</wander>` | an object's timer, a path's step, or a collision with another object | A [maze walker](#maps) takes an open way at random at every tile, never back |
-| `<fire object="projectile" />` | object action, or an object's timer | Launches the named projectile object; from a shooter that has aimed, along the aim (see `<aim>`); from a shooter with a `<facing>`, from the middle of the side it faces, moving that way at the projectile's own speed; otherwise from the shooter's top-center (the middle of the projectile over the middle of the shooter's top edge), moving with the projectile's own `<velocity>`. A projectile that does not [exist](#spawn-and-despawn) is copied: each shot is a new one, as many in flight as its `<most>`, and it `<despawn />`s on a hit or at `edge="all"`. Otherwise the projectile is an object out of play (`<active>false</active>`), launched again each time and put away by `<die />`; a `<group>` of them is as many in flight, the first out of play launched. A shooter with a `<heading>` fires from its nose, along the heading, at the speed of the projectile's `<velocity>`; with none, one projectile name can only be in flight once |
-
-A command the engine does not know, or one missing an attribute it needs, stops the game loading with a message that says where (`object 'ball' > <collisions> > <collision>: unknown command <explode>`). So does a command that names something the game does not have: a state (`<push state="pasued" />`), an object or one of its actions (`<trigger>`), a projectile (`<fire>`), an object to reset (`<reset object="...">`), a sound (`<play>`, `<silence>`), an object to `<reveal>`, or a look to `<become>` that the object has not got. These are checked once every object and state has been built, so a name used before the thing it names appears in the file is fine. When the name is a likely typo of one the game has, the message says which (`(did you mean 'paused'?)`).
-
-The schema accepts some mistakes the engine could only ignore, so the loader refuses them too, each with a message saying what to write instead:
-- a key the engine does not have (`<input button="spcae">`: "there is no key named 'spcae' (did you mean 'space'?). The keys are: ...");
-- a color that is not one of the `color.` names, in a sprite, a `<line>` or the window's `<background>`;
-- a command in a place where it does nothing (a `<move>` in an `<input>`, which needs a `<trigger>` of an `<action>`; a `<push>` in a `<collision>`; a `<stick />` against another object), listing what can go there;
-- an `<inc>` or `<dec>` of a variable no object has (`<inc variable="score">` with `score` among the game's fixed `<variables>`, or `o.lifes` where `o` has `lives`), listing the object's variables.
-
-**Colors:** `color.black`, `color.white`, `color.red`, `color.green`, `color.blue`, `color.yellow`, `color.magenta`, `color.cyan`, and the muted `color.grey`, `color.darkgrey`, `color.lightgrey`, `color.brown`, `color.orange`, `color.purple`, `color.darkblue`, `color.darkgreen`, `color.forestgreen`. Any other name is fully transparent.
-
-### Spawn and despawn
-
-A piece of the [kit](#the-kit-and-from) that is only ever spawned is a description, not a thing in the game: it is never drawn, moved, collided with, counted by a condition or touched by a rule, and its `<position>` may be left out. `<spawn object="shot">`, `<fire object="shot" />` and `<release object="shot">` each make a new copy of it, which is in the game from then on like any object the file wrote: it moves, collides, counts its own `<timers>`, holds its own `<variables>`, and its `<random>`s are drawn for it. A copy is named for what it copies with the first number no copy has now (`shot.1`, `shot.2`, and `shot.1` again once that one is gone), so a rule, condition or tether can name one (`<tether from="base" to="abm.1">` draws while there is an `abm.1`). The name of the description itself means every copy: `<collision object="shot">`, `<remaining>` of `class` or `object`, `<despawn object="shot" />`. Inside the description's own rules, `self` and its own name are the copy.
-
-A group piece can be a description too: spawning the group makes copies of its members in turn, so Asteroids' medium rocks come out in their three shapes one after another, and a member with a `name` is spawned by that name (Atlantis' `leftshell`, `middleshell`, `rightshell`, which share the shell's picture and rules). `<most>` caps how many copies of each are out at once; at the cap a spawn, fire or release makes none, and, as for any refused press, the rest of the action or timer is not done.
-
-`<despawn />` takes an object out: a copy is removed when the frame ends, one the file wrote stays out until a reset brings it back. A copy made during a frame joins the game when that frame is over (one made by a key, between frames, as the next one starts), so it is first moved the frame after it is made. A full reset takes away every copy; `<reset object>` and `<reset scene>` take away the copies of what they reset. A copy belongs where its description does, which is beside what spawns it: a scene's copies are away with the scene.
-
-Any object can be spawned, not only descriptions: `<spawn object="ball">` makes a second ball, a copy of the one in play.
-
-### `<keeps>`
-
-A full `<reset />` (a new game) puts every object back as it started. The objects `<keeps>` names are passed over: they keep what they hold, their variables, place and looks, from one game to the next, until the program is closed. Each `<keep object="..." />` names an object or a group (every member of it); one that names nothing stops the load. `<reset object="...">` still resets a kept object by name.
-
-Galaxian keeps its best score this way. `best` is an object of the game's own, shown by the title and by play, and a condition of play copies the score into it whenever the score is above it:
-
-```xml
-<objects>
-  <object name="best">
-    <sprite><text><number>best.score</number> ... </text></sprite>
-    ...
-    <variables><variable name="score">0</variable></variables>
-  </object>
-</objects>
-<keeps>
-  <keep object="best" />
-</keeps>
-...
-<condition object="ship" variable="score">
-  <above>best.score</above>
-  <copy variable="ship.score" into="best.score" />
-</condition>
-```
-
-**Kept on disk.** `xgecli`, `xgegui` and a generated program write what a game keeps (each kept object's variables and look) to `saves/<game>.xml` in the games folder whenever a new game starts and when the program closes, and read it when the game is loaded (`Engine::keepIn`), so a best score or a table lasts from one run to the next. A game that keeps nothing writes nothing; the tests write nothing unless they ask. Delete the file to start again.
-
-**A table of the best.** A group whose members are the places, the best first, and `<rank variable="entry.score" into="table" />`: the entry (an object with a `score` and whatever else a place holds, its initials) takes the first place whose `score` is below its own, all its variables going into that place, and the places from there move down, the last one falling off; a tie goes below. Whether a score makes the table is a condition, `<above>table.5.score</above>`. Galaxian keeps its best five: a game over above the fifth asks for initials, one state a letter (W and S, or Up and Down, change it, Space goes on), then ranks the entry and starts a new game:
-
-```xml
-<group name="table">
-  <sprite><text><letter>table.first</letter><letter>table.second</letter><letter>table.third</letter><number>table.score</number> ... </text></sprite>
-  <variables> first, second, third, score: 0 </variables>
-  <member><position><y>tabletop</y></position></member>
-  ...
-</group>
-...
-<input button="space d right">
-  <rank variable="entry.score" into="table" />
-  <reset />
-</input>
-```
-
-### Taking turns
-
-Two players (or more) take turns the way the arcade machines did: each plays a game of their own, and the machine swaps them. `<turns>` starts it, with a `<player>` for each player:
-
-```xml
-<input button="num2">
-  <push state="playing" />
-  <turns>
-    <player state="player1" />
-    <player state="player2" />
-  </turns>
-</input>
-```
-
-Each player's game starts as the game is when `<turns>` runs: every object but the ones the game [keeps](#keeps) (a best score, a table, shared by everyone), every state's and scene's timers, and the current scenes. The state current then (`playing`) is the one the turns are played in. Player 1 plays first. A `<player>`'s `state=` (optional) is pushed whenever that player's turn begins, its timers started over: a screen saying whose turn it is, over their game drawn still, that pops itself after a while.
-
-- **`<pass />`**: the turn goes to the next player still in. This player's game is put away as it is, except that what the keys held were doing stops (a ship moving left comes back standing still; the key, if still down, is picked up by the next state that binds it), the next one's comes back as they left it, the states above the one the turns are played in are taken off, and their `state=` is pushed. With one player, or no one else still in, nothing happens. Galaxian passes whenever a ship is lost.
-- **`<out />`**: this player is out of the game, and the turn passes the same way. When another player is still in, nothing after `<out />` in its list runs; when no one is, the turns are over and what follows runs: `<out /><reset />` is "the next player, or a new game". With no turns it does nothing, so the same file plays one player too.
-
-`<turns>`, `<pass />` and `<out />` go where a state's commands go (an `<input>`, a `<condition>`, a state's `<timer>`), so a swap never happens in the middle of a frame's moves; a collision counts what happened in a variable and a condition passes. A full `<reset />` ends the turns.
-
-### Attract mode
-
-Left alone on the title, an arcade machine plays itself. A game's `<demo>`, after its `<states>`, is a game recorded as it was played: the seed its random numbers came from, how many frames it ran, and each key pressed and released, on the frame it happened:
-
-```xml
-<demo>
-  <seed>20261016</seed>
-  <frames>1200</frames>
-  <press button="space">30</press>
-  <release button="space">34</release>
-  <press button="left">200</press>
-  ...
-</demo>
-```
-
-`<demo />`, where a state's commands go, plays it: a new game, its random numbers drawn from the seed, its keys pressed on their frames, so it plays out exactly as it was recorded. A key pressed at the window ends it (and does nothing else), as does the recording running out; then a new game starts, what the game [keeps](#keeps) as it was before the demo (a demo's score is never the best). Galaxian's title runs `<demo />` on a timer after ten seconds:
-
-```xml
-<timers>
-  <timer><after>10</after><demo /></timer>
-</timers>
-```
-
-`xgecli <game> --record` makes one: it plays the game from a new seed and, when the window is closed, writes the `<demo>` into the game file, in place of the one there (`withDemo`, in `load/xml.h`, keeping the file's line endings). A `<demo />` in a game with no `<demo>` stops the load. Galaxian's was written by hand; one recorded replaces it.
-
-### `<state>`
-
-A state is a mode of the program: a menu, the game being played, a pause screen, a game-over screen. Attributes: `name`, and `from` (below). Children, in this order:
-
-| Element | Required | What it does |
-|---|---|---|
-| `<objects>` | no | The state's own objects and groups, written as the game's are. They are in play (drawn, moving, colliding, counting their timers) whenever the state is the current one, with no `<show>`, in every scene of it |
-| `<scenes>` | no | The places the state is played in, one current at a time: see [Scenes](#scenes) |
-| `<shows>` | no | A list of `<show object="name" />`: objects of the game (or of another state) drawn and updated while the state is current, as if they were its own. `<show set="name" />` shows a shared [show set](#show-sets). `<show state="name" />` draws that state's objects, and those of its current scene, **still** underneath: not moving, not colliding, their timers not counting, so a pause or a game over is drawn over the frozen game |
-| `<music>` | no | `<music sound="name" />`: one of the game's [sounds](#sounds) that is the state's own. One that loops plays while this is the current state (stopping when another goes over it, a pause, and starting again from its beginning when it is current again); one that plays once plays as the state begins (pushed, or switched to with `<pop state>`), not when a state over it is taken off |
-| `<inputs>` | yes, unless `from=` | A list of `<input button="key">`, each holding the commands that key runs, e.g. `<push state="playing" />` or `<trigger object="paddle1" action="up" />`. `keys="name"` takes a shared [key set](#input) first; the state's own `<input>`s go over it |
-| `<conditions>` | no | A list of `<condition>`, checked every frame. `<condition set="name" />` checks a shared set there. See [Conditions](#conditions) |
-| `<computer>` | no | A player the game plays itself: a list of `<condition>`s whose commands are `<hold>`s. See [computer players](#computer-players) |
-| `<timers>` | no | Timers that count while this is the current state. See [Timers](#timers) |
+| `<objects>` | the state's own objects, in play whenever it is the current state, in every scene of it |
+| `<scenes>` | the places it is played in, one current at a time ([scenes](#scenes)) |
+| `<shows>` | `<show object="best" />`: an object of the game's (or another state's) drawn and run as if the state's own. `<show set="end" />`: a shared [show set](#shared-sets). `<show state="playing" />`: that state's objects drawn **still** underneath (not moving, not touching, their timers stopped), so a pause or a game over is drawn over the frozen game |
+| `<music sound>` | a sound of the state's own: one that loops plays while it is the current state (stopping under a pause, starting again from its beginning after); one that does not plays once as the state begins |
+| `<inputs>` | the keys and what each runs. Needed unless the state is `from=` another |
+| `<conditions>` | tests checked every frame ([conditions](#conditions)) |
+| `<computer>` | a player the game plays itself ([computer players](#computer-players)) |
+| `<timers>` | timers that count while it is the current state |
 
 ```xml
 <state name="paused">
@@ -865,7 +1145,9 @@ A state is a mode of the program: a menu, the game being played, a pause screen,
 </state>
 ```
 
-**A state from another.** `<state name="gameover" from="youwin">` is a copy of an earlier state, with what it says itself over it: the copied objects (named by the new state, `gameover.message`), its `<shows>` and still states, its keys, conditions, timers and music. In its `<objects>`, an `<object>` or `<group>` named like one the copy has changes it by the [one rule](#the-kit-and-from) a take follows (whole `<sprite>`s by name, either half of the `<position>` or `<velocity>`, `<variables>` by name, and so on); any other is its own, or a piece of the kit taken, after the copied ones. Its own `<input>`s replace the copied ones of the same key and add the rest; its conditions and timers replace the copied ones of the same `name`, and come after the rest; its `<music>`, if it has one, replaces the copied. A from= that names no state before it, or a state with scenes (a copy of those is not built yet), stops the load. A copy of a copy works. The end screens of 17 games are one state and a copy changing its message:
+**The stack.** `<push state="paused" />` puts a state over the current one and `<pop />` goes back; the first state is never popped. `<pop state="result" />` puts another in the current one's place. A `<reset />` from a state's commands is a new game, and the stack collapses to the first state.
+
+**A state from another.** `<state name="gameover" from="youwin">` is a copy of an earlier state with what it writes over it. Its objects are named by the new state (`gameover.message`), and one named like a copied object changes it by the [one change rule](#the-kit-and-from). Its `<input>`s replace the copied ones of the same key; its conditions and timers replace those of the same `name=`, after the rest; its music replaces the copied. A state with scenes cannot be copied yet. The end screens of 17 games are one state and a copy changing its message:
 
 ```xml
 <state name="gameover" from="youwin">
@@ -877,11 +1159,11 @@ A state is a mode of the program: a menu, the game being played, a pause screen,
 </state>
 ```
 
-What is drawn is drawn in two layers: first what is shown still (`<show state>`), then what is in play, each in the order the objects are written, a later one over an earlier (`drawFrame` in `window/window.h`, which a generated game calls too). A state's own objects come after its scenes' objects, so they are drawn over them.
+**Drawing order.** First what is shown still (`<show state>`), then what is in play, each in the order written in the file, a later one over an earlier. A state's own objects come after its scenes', so they are drawn over them (`drawFrame`, `window/window.h`).
 
 ### Scenes
 
-A state that is played in several places (Berserk's rooms, Pitfall's jungle screens, Kaboom's waves, Adventure's castles, halls and field) holds them as `<scenes>`: one place at a time is its **current scene**, and only its objects are in play, alongside the state's own.
+A state played in several places (Berserk's rooms, Pitfall's screens, Kaboom's waves, Adventure's castles) holds them as `<scenes>`: one is the **current scene**, and only its objects are in play, beside the state's own.
 
 ```xml
 <state name="playing">
@@ -891,14 +1173,14 @@ A state that is played in several places (Berserk's rooms, Pitfall's jungle scre
   <scenes>
     <scene name="room1">
       <ways>
-        <way name="out" scene="room2" />                <!-- where this room's way out leads -->
+        <way name="out" scene="room2" />                <!-- where this room's exit leads -->
       </ways>
       <variables>
-        <variable name="pace">2</variable>                <!-- read inside as pace -->
+        <variable name="pace">2</variable>              <!-- read inside as pace -->
       </variables>
       <objects>
-        <object name="topwall" />                       <!-- the kit's, taken as it is -->
-        <group name="robots">                           <!-- the kit's, taken and changed -->
+        <object name="topwall" />                       <!-- the kit's, as it is -->
+        <group name="robots">                           <!-- the kit's, changed -->
           <velocity><x>pace</x></velocity>
         </group>
         <object name="exit"> ... </object>               <!-- this scene's own -->
@@ -906,93 +1188,150 @@ A state that is played in several places (Berserk's rooms, Pitfall's jungle scre
       <conditions> ... </conditions>                    <!-- checked while it is current -->
       <timers> ... </timers>
     </scene>
-    <scene name="room2" from="room1">                   <!-- all of room1, but its pace -->
-      <variables>
-        <variable name="pace">3</variable>
-      </variables>
+    <scene name="room2" from="room1">                   <!-- all of room1, but its pace and way -->
+      <ways><way name="out" scene="room1" /></ways>
+      <variables><variable name="pace">3</variable></variables>
     </scene>
   </scenes>
   ...
 </state>
 ```
 
-- **Pieces** for the scenes are in the game's [`<kit>`](#the-kit-and-from). A scene takes one in its own `<objects>` by its name or by `from=`: empty, as it is; with parts inside, changed by the one rule. Anything else a scene's `<objects>` holds is its own, written in full.
-- **Each scene gets its own copies.** Two scenes that take the robots each have robots of their own, which move, die and are counted on their own.
-- **`from="room1"`** makes a scene start as a copy of an earlier one: its objects (what that scene took and owned), its `<variables>`, its `<ways>`, its `<conditions>` and its `<timers>`. It can then change those objects by the same rule, take more pieces, and add to the rest: what it writes is added, and a variable, way, condition or timer **of the same name** as a copied one takes that one's place, where it was (order matters for conditions: the first that holds runs). A condition or timer is named with `name=` (`<condition name="quota" ...>`, `<timer name="launch">`); unnamed ones are only ever added, and two of one name in one list stop the load. A copied condition or timer is read in the new scene: its plain names are that scene's variables and objects, and its ways that scene's ways. So Kaboom's, Megamania's and Atlantis's later waves say only their numbers, their pictures and where their way `next` leads, and the last wave writes a condition of the same name that wins; Atlantis's last wave also puts its own `launch` timer in place of the copied one. A copied condition or timer cannot be taken away, only replaced.
-- **A scene's `<variables>`** are its own numbers, read by the objects it holds (a robot's speed in room2 is room2's `pace`).
-- **`<conditions>` and `<timers>`** in a scene are checked and counted only while it is current, after the state's own.
-- **What a condition counts.** A condition with `class=`, or with `object=` naming what every scene has (`robots`, which is `playing.robots`), looks at the state's own objects, the current scene's and the game's: a wave is cleared when its own enemies are gone, whatever is left in the others. Named by its path (`room2.robots`, `playing.room2.robots.3`), it is that scene's, counted wherever the game is, so a condition can ask whether another room still has robots.
-- **Moving between scenes** is the command [`<enter scene="room2" />`](#commands), run wherever the move happens: an exit's collision rule, a condition on the score, a timer. What an object of the state carries goes with it into the new scene.
-- **Ways** let a piece of the kit lead somewhere different in each scene that takes it. A scene's optional `<ways>` (first, before its `<variables>`) name where each of its ways leads: `<way name="east" scene="screen2" />`. A command then says the way instead of the scene: `<enter way="east" />` enters the scene the *current* scene's `east` leads to, and `<reset way="east" />` puts that scene back as it started. So Pitfall's side strips are written once, in the kit, and each screen says only where its ways go; Berserk's exits are part of each room's map, and every one leads by the way `out`. A way's scene is one of the same state's, by name or path; a command inside a scene that names a way the scene does not have, a way no scene has, two ways of one name in a scene, and a way to a scene that does not exist all stop the load. A way the current scene lacks at run time (a state-level rule, say) does nothing, with a warning.
-- **A scene left stays as it was** (positions, variables, what was dropped there) until it is entered again. `<reset scene="room1" />` puts it back as it started. A game's `<reset />` starts every scene again and makes each state's first scene current.
+- **Each scene has its own copies.** Two scenes that take the robots each have robots of their own, which move, die and are counted on their own.
+- **Moving between scenes** is a command written where the move happens: `<enter scene="room2" />` in an exit's rule, a condition on the score, a timer. What an object of the state carries goes along.
+- **A scene left stays as it was** until it is entered again; `<reset scene="room1" />` puts it back as it started; a new game starts every scene again with each state's first scene current.
+- **Ways** let one kit piece lead somewhere different in each scene: a scene's `<ways>` name where each way leads, and `<enter way="east" />` or `<reset way="east" />` looks the way up in the *current* scene as it runs. Pitfall's side strips are written once in the kit; each screen says where its ways go.
+- **A scene's `<variables>`** are its own numbers, read by its objects (a robot's speed in room 2 is room 2's `pace`).
+- **Its `<conditions>` and `<timers>`** count only while it is current, after the state's own.
+- **`from="room1"`** starts a scene as a copy of an earlier one: its objects, variables, ways, conditions and timers. What it writes is added, and a variable, way, condition or timer **of the same name** takes that one's place where it was (`<condition name="quota">`, `<timer name="launch">`). Unnamed ones are only added. A copied condition or timer is read in the new scene, so its plain names are that scene's. Kaboom's, Megamania's and Atlantis's later waves say only their numbers, pictures and where `next` leads.
+- **What a condition counts.** A `class=`, or a name every scene shares (`robots`), counts what is in play: the state's own objects, the current scene's and the game's, so a wave is cleared when its own enemies are gone. A path (`room2.robots`) counts that scene's, wherever the game is.
 
-### Names
+### Shared sets
 
-A state's own objects are named by their path: `playing.hero`; a scene's by the state, the scene and the name, `playing.room1.robots`, and a member as before, `playing.room1.robots.3`. A scene's variable is `playing.room1.pace`. A name written in the file is looked for from the inside out, from where it is written: the scene's own, then its state's, then the game's, and last as the end of exactly one path (`room1.robots`, or `hero` for `playing.hero` anywhere). So the rules inside a scene say `robots` and mean their own, and a label at the game level can show `room2.tally.hits`.
+At the top of `<states>`, before the first state, named sets hold what several states share:
 
-Each object of a scene also answers to `state.name` (`playing.robots`): the robots of every scene of the state. A state-level rule that says `robots` means them all, whichever scene is current. Where a short name could still mean two things (a `rock` in two states), the shortest path wins, and two as short stop the load (`'rock' could be playing.rock, practice.rock; write the path of the one meant`). A name given twice where both can be seen (a scene's object named like one of its state's, or a state's or a scene's named like one of the game's) stops the load too, as do two scenes of one name, the mistakes with [ways](#scenes) above, and a `from=` naming no scene before it.
+- `<keys name>`: inputs, taken with `<inputs keys="name">` ([input](#input)).
+- `<shows name>`: shows, taken with `<show set="name" />` among a state's own shows, one set a `<show>`. Air-Sea Battle's two end screens take TIME UP and "press space" from one `end` set.
+- `<conditions name>`: conditions, taken with `<condition set="name" />`, checked right there in order as if written in its place.
 
-### Show sets
+A set can take a set written before it.
 
-Objects several states show are written once, as a named `<shows>` set at the top of `<states>` (with the `<keys>` and [`<conditions>`](#conditions) sets, before the first `<state>`), holding `<show>`s like a state's. A state takes a set with `<show set="name" />` among its own `<show>`s, one set to a `<show>`, and adds whatever else it shows. A set can take a set written before it. Now that states own their objects, a set is for objects of the game that several states show: Air-Sea Battle's two end screens (time up, then the result) each draw the battle still and take TIME UP and "spacebar to play again" from one `end` set:
+### Conditions
 
 ```xml
-<states>
-  <shows name="end">
-    <show object="timeup" />
-    <show object="again" />
-  </shows>
-  <state name="result">
-    <objects> ... </objects>                  <!-- its own words -->
-    <shows>
-      <show state="battle" />
-      <show set="end" />
-    </shows>
-    ...
-  </state>
+<condition object="frog" variable="lives">
+  <atmost>0</atmost>
+  <push state="gameover" />
+</condition>
 ```
 
-A `<show>` names an `object`, a `set` or (in a state's own `<shows>`) a `state`, one of them; a set named before it is written, or two sets with one name, are turned away when the game loads.
+A condition is checked every frame while its state (or scene) is current. It holds when an object matching `class=` and/or `object=` passes its test, and then runs its commands. **The first condition that holds runs, and no more are checked that frame**, so order matters. An optional `name=` lets a scene's `from=` replace it.
 
-What a state shows is drawn in the order the objects are written in the file, a later one over an earlier, whatever order its `<show>`s are in.
+| Test | Holds when the variable (or a total) is |
+|---|---|
+| `<atleast>N</atleast>` | N or more |
+| `<atmost>N</atmost>` | N or less (a count going down: lives) |
+| `<above>N</above>`, `<below>N</below>`, `<equal>N</equal>` | more than, less than, the same as N |
+| `<remaining>N</remaining>` | no more than N of the matched objects are still in play (`class="aliens"` with `0`: all shot) |
 
-The first state in the file is the starting state. States form a **stack**: `<push state="name" />` pushes a state, and `<pop />` pops back to the previous one. The starting state is never popped: a `<pop />` with only it left does nothing. `<pop state="name" />` puts that state in place of the current one (the starting state too), for a game that moves from one screen to the next (Air-Sea Battle's clock running out puts its result screen in its place); places inside one mode are [scenes](#scenes).
+- **What is tested.** `variable="score"` is an object's variable, or, with none of that name, one of its live numbers (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`), so a condition can compare where things are.
+- **The number is a value, read as the game runs** when it names something that changes, so a test can follow another object: Air-Sea Battle's winner.
 
-### Light and dark
+  ```xml
+  <condition object="gun1" variable="score">
+    <above>gun2.score</above>
+    <become object="result.outcome" sprite="yellow" />
+    <pop state="result" />
+  </condition>
+  ```
 
-What is `<dark>` is drawn only where there is light. Something in play with a `<light>` lights everything within that many pixels of its middle (any part of a thing's box counts); a `<dark>unlit</dark>` object is drawn only while some light reaches it, and a `<dark>unseen</dark>` one from the first time a light does until it is reset, so a map fills in as it is explored. Darkness changes only what is drawn: a dark thing moves, touches and runs its rules as ever. The light is a number like any other, `name.light`, so `<set variable="player.light">` can strike a match and a timer can burn it down. Haunted House's eyes light a little round them, a match much further:
+- **`total=`** tests one number over everything matched and in play: `count` (no variable), or `sum`, `highest`, `lowest` of the variable. `<remaining>N</remaining>` is `total="count"` with `<atmost>N</atmost>`.
+- **`distance="hero"`** tests how far each matched object is from the nearest of that name in play, middle to middle, instead of a variable.
+- **`<all>` and `<any>`** of tests: every one, or at least one. Inside them a `<condition>` is a test alone (its own `class=`, `object=`, `variable=`, `total=` or `distance=`, then one test tag), with no commands; they nest. Adventure's dragon wakes once, when the hero comes near:
+
+  ```xml
+  <condition>
+    <all>
+      <condition object="dragon" distance="hero"><below>160</below></condition>
+      <condition object="dragon" variable="awake"><equal>0</equal></condition>
+    </all>
+    <inc variable="dragon.awake" />
+    <become object="dragon" sprite="awake" />
+  </condition>
+  ```
+
+- A condition that changes what it reads can count and start over: Frostbite's turns the four blue rows white and takes 4 off the count.
+- A filter that matches nothing is a warning at load, since "none left" would hold at once. An object or variable the game does not have, a total of a variable none of its objects has, and an `<all>` with `class=` stop the load.
+- A state's condition has no `self`, so it names the object it compares with; a rule's condition has `self`.
+
+### Keeps
+
+A new game (a full `<reset />`) puts every object back as it started. The objects in `<keeps>` are passed over: they keep their variables, place and looks from one game to the next.
 
 ```xml
-<action name="strike">
-  <set variable="player.light">match</set>
-  <inc variable="player.matches" />
-</action>
+<keeps>
+  <keep object="best" />
+</keeps>
 ...
-<timer><every>0.1</every><set variable="player.light">max(near, player.light - 5)</set></timer>
+<condition object="ship" variable="score">
+  <above>best.score</above>
+  <copy variable="ship.score" into="best.score" />
+</condition>
 ```
 
-### Height and shadows
+**Kept on disk.** `xgecli`, `xgegui` and a generated program write what a game keeps (each kept object's variables and look) to `saves/<game>.xml` in the games folder when a new game starts and when the program closes, and read it when the game loads (`Engine::keepIn`). A game that keeps nothing writes nothing; tests write nothing unless they ask. Delete the file to start again.
 
-An object with an `<altitude>` is in the air over where it is: its position is the point on the ground under it, which is what it touches, and it is drawn raised by its altitude. Every frame its rise goes down by its fall and its altitude goes up by its rise; it cannot go below the ground, and when it comes down it goes back up with its `<bounce>`'s share of how fast it came down (none, once that is less than one frame's fall, so it comes to rest). `name.altitude` and `name.rise` are numbers like any other: `<set variable="ball.rise">loft</set>` hits a ball up, and a rule's `<condition variable="altitude"><below>reach</below></condition>` lets one that is too high go past. A `<shadow object="ball" />` object is kept under the ball on the ground, and in play while it is; written before the ball, it is drawn under it. Tennis:
+#### A table of the best
+
+A group whose members are the places, the best first, and `<rank variable="entry.score" into="table" />`: the entry takes the first place whose `score` is below its own, all its variables going into it, and the places below move down, the last falling off; a tie goes below. Whether a score makes the table is a condition, `<above>table.5.score</above>`. Galaxian keeps a top five, asking for initials one letter a state:
 
 ```xml
-<object name="shadow"> ... <shadow object="ball" /></object>
-<object name="ball">
+<group name="table">
+  <sprite><text><letter>table.first</letter><letter>table.second</letter><letter>table.third</letter><number>table.score</number></text></sprite>
   ...
-  <altitude><start>80</start><fall>0.25</fall><bounce>0.7</bounce></altitude>
-  <collisions>
-    <collision object="player">
-      <condition variable="altitude"><below>reach</below></condition>
-      <set variable="ball.velocity.y">0 - hit</set>
-      <set variable="ball.rise">loft</set>
-    </collision>
-  </collisions>
-</object>
+</group>
+...
+<input button="space"><rank variable="entry.score" into="table" /><reset /></input>
 ```
+
+### Taking turns
+
+Players take turns as the arcade machines did: each plays a game of their own, and the machine swaps them.
+
+```xml
+<input button="num2">
+  <push state="playing" />
+  <turns>
+    <player state="player1" />
+    <player state="player2" />
+  </turns>
+</input>
+```
+
+- Each player's game starts as the game is when `<turns>` runs: every object but the kept ones, every timer, the current scenes. The state current then is the one turns are played in. A `<player>`'s `state=` (optional) is pushed whenever that player's turn begins: a screen saying whose turn it is.
+- **`<pass />`**: the turn goes to the next player still in. This player's game is put away as it is (what held keys were doing stops), the next one's comes back as they left it, and states above the playing one are taken off.
+- **`<out />`**: this player is out, and the turn passes. When no one is left, what follows `<out />` in its list runs, so `<out /><reset />` is "the next player, or a new game". With no turns it does nothing, so the same file plays one player too.
+- They go where a state's commands go, so a swap never happens mid-frame. A full `<reset />` ends the turns.
+
+### Attract mode
+
+A game's `<demo>`, after `<states>`, is a game recorded as it was played: the seed of its random numbers, how many frames it ran, and each key pressed and released on its frame.
+
+```xml
+<demo>
+  <seed>20261016</seed>
+  <frames>1200</frames>
+  <press button="space">30</press>
+  <release button="space">34</release>
+  ...
+</demo>
+```
+
+`<demo />`, where a state's commands go, plays it: a new game from the seed, its keys pressed on their frames, so it plays out exactly as recorded. A key pressed at the window, or the recording running out, ends it; a new game starts with what is kept as it was before (a demo's score is never the best). Galaxian's title runs `<demo />` on a timer after ten seconds. `xgecli <game> --record` writes one into the game file, in place of the old, keeping the file's line endings (`withDemo`, `load/xml.h`).
 
 ### Computer players
 
-A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would. It is a list of `<condition>`s, written as a state's are, whose commands are `<hold button="key" />`s; every frame **every** condition is tested (not only the first that holds), the keys of those that hold are held down and the rest let go. The engine presses and lets go of them as it does a person's keys (a [demo](#attract-mode) the same way) and does not record them. A condition can compare where things are (`variable="x"`, `<below>ball.x</below>`), so following a ball is two lines. Tennis's far end is the computer's, on J and L, the keys a second player would use:
+A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would: a list of conditions whose commands are `<hold button>`s. **Every** condition is tested every frame (not only the first that holds); the keys of those that hold are held down and the rest let go. Tennis's far end, on the keys a second player would use:
 
 ```xml
 <computer>
@@ -1001,298 +1340,142 @@ A state's `<computer>` is a player the game plays itself, pressing the state's k
 </computer>
 ```
 
-A `<hold>` anywhere else, a key there is not, or any other command in a `<computer>` stops the load.
-
-## Input
-
-An `<input button="w"><trigger object="paddle1" action="up" /></input>` names a key and the commands it runs. Objects never mention keys, and states never mention what an action does, so remapping a key means editing one attribute in one state. `button` can name several keys separated by spaces, `<input button="a left">`, for the same commands.
-
-**Key sets.** Bindings several states share are written once, as a named `<keys>` set at the top of `<states>` (before the first `<state>`), holding `<input>`s like a state's. A state takes one or more with `<inputs keys="walk">` (several names separated by spaces, each over the one before), and its own `<input>`s go over the set's, key by key, so a state can use the set and still give a key a job of its own:
-
-```xml
-<states>
-  <keys name="walk">
-    <input button="a left"><trigger object="hero" action="left" /></input>
-    <input button="d right"><trigger object="hero" action="right" /></input>
-    <input button="p escape"><push state="paused" /></input>
-  </keys>
-  <state name="playing"> ... <inputs keys="walk" /> ... </state>
-  <state name="practice"> ... <inputs keys="walk" /> ... </state>
-```
-
-No shipped game uses one now: each game's keys are bound by its one playing state.
-
-The shipped games share one convention: Space starts, pauses and unpauses, and plays again after a game over (in games where Space fires, such as Space Invaders, Astrosmash and Depth Charge, pausing is P or Escape, and Space still unpauses); player one plays on W, A, S and D (the arrow keys are a second way in the one-player games, and player two's keys in the two-player ones). Most games also pause on P, and many on Escape.
-
-Key names are lowercase: `a`-`z`, `num0`-`num9`, `numpad0`-`numpad9`, `f1`-`f15`, `space`, `enter`, `escape`, `backspace`, `tab`, `left`, `right`, `up`, `down`, `home`, `end`, `pageup`, `pagedown`, `insert`, `delete`, `pause`, `lshift`, `rshift`, `lcontrol`, `rcontrol`, `lalt`, `ralt`, and a few more listed in `xge/lib/engine/keys.cpp`.
-
-**The mouse and gamepads.** Their buttons are keys too, bound the same way: `mouse.left`, `mouse.right`, `mouse.middle`, and for two pads `pad1.a`, `pad1.b`, `pad1.x`, `pad1.y`, `pad1.lb`, `pad1.rb`, `pad1.back`, `pad1.start`, `pad1.up`, `pad1.down`, `pad1.left`, `pad1.right` (and `pad2.` the same), named for an Xbox pad. A pad's directions are its d-pad, or its left stick pushed past halfway. Kaboom, Breakout and Pac-Man bind `pad1.start` beside Space and the pad's directions beside the keys (`<input button="a left pad1.left">`).
-
-**Controls that point.** `<input axis="mouse.x">` (or `mouse.y`, `pad1.x`, `pad1.y`, `pad2.x`, `pad2.y`) runs its `<trigger>` whenever that control moves, and a `<track />` in the action it triggers puts the object where the control points: its middle at the mouse, or as far across the window as the stick is pushed, kept whole inside the window, along the axis's own direction (`.x` across, `.y` up and down). That is the Atari's paddle controller. It runs only when the control moves, so the keys can still move the same object while the mouse rests, and the mouse off the window moves nothing. An axis input runs only `<trigger>`s, and goes in a state's own `<inputs>`, not in a `<keys>` set. Kaboom's bucket and Breakout's paddle follow the mouse:
-
-```xml
-<action name="steer"><track /></action>
-...
-<input axis="mouse.x"><trigger object="bucket" action="steer" /></input>
-```
-
-The window reports the mouse and the pads each frame (`Window::controls`), and `Engine::handleControls` turns what changed into presses, releases and tracking. Every window library reads both, but Qt (`xgegui`'s own) reads the mouse only, while the view has the keyboard.
-
-While a key bound to a `<move>` in an object action is held, that direction's step is recorded. On every key change the velocity along that key's axis is recomputed from the two directions of the axis, so holding Down and tapping Up cancels out and releasing Up resumes Down. Left/right and up/down are independent axes, so two keys can make a diagonal, and a key on one axis leaves the other alone: walking does not stop a fall. An object with a `<facing>` faces the way of the last key pressed; while keys of both axes are held it faces the diagonal between them, and a `<fire>` leaves along it (Berserk's man and Yar shoot in eight directions). Let one of the two go and it faces the way still held; let both go and it keeps the last. During a `<leap>` the way across is left as it was until the landing.
-
-The current state decides what a held key means. When the state changes, keys that are still down stop driving whatever the old state bound them to, and start driving what the new state binds them to. In Breakout, holding Left in `playing` and pressing Space stops the paddle, because `paused` binds only Space; unpausing while Left is still down moves it again with no re-press, and a Left first pressed during the pause starts moving it on unpause. Letting go of a key always stops what it was driving, unless another key still down drives the same action (an action bound to both W and Up keeps going while either is held). Only continuous bindings (an action's `<move>`) resume this way; state changes and one-shot commands such as `<fire>` run only when the key is actually pressed, so holding Space through the main menu does not pause the game. Alternatives that were considered are in [designs/08](designs/08-input.md#held-keys-across-state-changes).
-
-**Accelerate.** `<accelerate direction="up">amount</accelerate>` in an object `<action>` is held like a `<move>`, and is resumed the same way after a state change, but it adds to the velocity instead of setting it: each frame the key is down, every direction held contributes its `amount` (so opposite thrusters cancel, and two directions make a diagonal push), on top of the object's own `<acceleration>`, before the frame's move. What was gained stays: let go of the key and the object drifts on at the speed it reached. `<thrust>` is the same along the object's `<heading>` (one per action, so a forward and a back held together add up, and `<turn>` is worked out first, so a thrust is along the heading it has just turned to), and `<turn>` changes the heading by a fixed amount a frame while held; an object's `<drag>` then takes a fraction of the speed away each frame, so thrust has a top speed. With `burn="variable"` each thruster that is on takes 1 off that variable of the object's every frame, and does nothing once it is gone.
-
-**Hop.** `<hop direction="up">distance</hop>` (and `down`, `left`, `right`) in an object `<action>` is a one-shot jump, not a held move. With `<seconds>` (`<hop direction="up">40<seconds>0.25</seconds></hop>`) it is a jump that takes that long, exactly as a `<jump>` is: through the air, touching nothing until it lands, refused if it would land outside the window, and another hop or jump asked for in the air does nothing; the rest of this paragraph is about a hop that takes no time. Pressing the key queues a hop of `distance` pixels; the next frame's move makes it before collisions are worked out, so the object is judged where it lands, and it is refused (the object stays where it is) if it would leave the window. Holding the key does nothing more and releasing it does nothing, and a state change never repeats it: only continuous bindings are resumed, so a key held through a pause has to be pressed again to hop. Two hops asked for in one frame keep the later one, so a hop is always one step in one direction.
-
-## Collisions
-
-Each object has `<collision>` rules. A rule's content is a list of command tags, run in order. There are two kinds:
-
-- **Screen edge:** `<collision edge="left">`, `"right"`, `"top"`, `"bottom"`, plus the groupings `"vertical"` (top and bottom), `"horizontal"` (left and right) and `"all"`. Several rules that touch the same edge all run, in the order written. An edge is no object, so an edge rule with `class=` or `object=` stops the game loading; it can carry `sprite=` and `unless=` (below).
-- **Object against object:** name what the rule applies to with `class="..."` (a kind of other object, matched against that object's `class` attribute) and/or `object="..."` (one named object), for example `<collision class="bricks"><die /></collision>`. A `<collision>` with no selector at all applies to anything. A `<collision>` with `edge` is always a screen-edge rule.
-
-Detection (pure geometry, `CollisionDetector`) is kept apart from response (`CommandExecutor`). Object-against-object collisions are **swept**: each object moves along its own path for the frame, and the detector finds the moment two of them first touch (rectangles as boxes, two circles as circles, a circle against the other object's box with rounded corners), so a small or fast object cannot jump over a thin one between frames. The earliest touch in the whole frame is handled first: everything moves up to that moment, the pair's rules run, and the rest of the frame is played with whatever velocities they left, so a bounce spends the remaining part of the frame heading away. Each pair reacts at most once per frame, and the pairs are those of what is in play when the frame begins: something a rule brings into play (a `<release>`d burst) touches nothing until the next frame. An object that no reaction changed ends the frame exactly one whole step on, however many reactions the others had (its place is worked out from where it began, not by adding up the pieces). Only the pairs a rule answers for are ever looked at (found once, when the game loads, since an object's name, class, groups and rules never change), and a pair whose boxes are too far apart to meet over what is left of the frame is not swept again until a reaction moves, turns or resizes one of the two, so a frame with many things moving costs little more than one with few. A turned picture or a changed text has its new size at once (`Window::prepare`, called from `Engine::step`), not after the next draw, so the frame's edges and touches see it. The detector reports which edge of the other object was touched, and each side of the pair then sees the edge from its own point of view. Screen edges are still checked by position, before the move.
-
-**What a touch is.** When two objects are found touching, the touch is worked out once, before either side's rules run (`contactOf` in `play/geometry.h`, called by the frame): the edge of each that was touched, the point on the screen where they meet, the way straight apart (out of a flat side, or along the line through the point at a circle or a corner), where along each one's touched side the point is (0 at its left or top end, 1 at its right or bottom end), how far into each other they are, and how far through the frame it happened. Each side's rules see it from their own side (`Touch`). `side=` and `<knock>` read it today.
-
-**Type.** `<type>` in `<collisions>` says how the object's shape is tested: `box` (the default: a rectangle as a rectangle, a circle as a circle, everything else as its bounding box) or `pixel`. A pair in which either object is `pixel` is first swept as boxes, exactly as above, and then looked at more closely: from the moment the boxes touch, the pair is walked along its path half a pixel at a time until some pixel drawn by one lies on a pixel drawn by the other, and that moment (found to a fraction of a pixel) is the hit. If the pixels never meet, there is no hit, however long the boxes overlapped. Pixels are asked about at their centres, at the positions the objects really are at. A `pixel` object is its sprite's bitmap (a sprite of [lines](#lines), a `<bitmap>` or an `<svg>`); an object of any other type in the pair counts as solid all over its shape. A circle or a rectangle can be `pixel` too, which is solid as itself; text and images cannot (a load error), since what they look like is only known to a window backend. Each object says its own type, so a game with a pixel lander and pixel terrain gives both `<type>pixel</type>`. The same test decides `unless=` (is it touching something of that class right now).
-
-**Solid characters.** After `<type>pixel</type>`, one or more `<solid char="*" />` say which characters of the object's `<bitmap>` touch: a pixel of any other character is drawn but touches nothing. Q*bert's cubes are one bitmap of three inks, a top and two sides, and `<solid char="*" />` makes the top all that touches, so whatever stands on a cube touches that cube and not the side of the one behind it. The character is `*` or one of the bitmap's `<color char>`s; one that is neither, a `<solid>` without `<type>pixel</type>`, and an object with a sprite (a look, a frame) that is not a `<bitmap>` stop the load. It goes with the picture: flipped, turned to a heading, cut by a `<hole>`.
-
-**Hitbox.** A `<hitbox>` (after `<solid>`, before the rules) is the shape the object touches other objects with, instead of its picture: a `<rectangle>` (`<width>`, `<height>`) or a `<circle>` (`<radius>`), then a `<position>` of its top left measured from the picture's (0, 0 when left out; it may lie outside the picture). Q*bert touches with his feet alone:
-
-```xml
-<collisions>
-  <hitbox>
-    <rectangle><width>12</width><height>6</height></rectangle>
-    <position><x>6</x><y>18</y></position>
-  </hitbox>
-  ...
-</collisions>
-```
-
-Every touch with another object (the sweep, `unless=`, what a touch is) uses it, and the other object of a `pixel` pair counts it solid all over. The window's edges are still met by the picture, and so are the verbs that place one thing against another (`<land />`, `<stick />`, a carry). A hitbox is its own shape, not pixels, so it cannot go with `<type>pixel</type>` (a load error), and it must be bigger than nothing.
-
-The edge reported for a pixel hit is the one the motion came in through (the side of the other object that the two were moving toward each other across), or the boxes' edge when they were already touching; a pixel touch knows where pixels met, not which way a surface faces, so `<bounce />` on a pixel hit reflects along the axis of the relative motion.
-
-Rules that apply:
-
-- Only objects that are **shown** in the current state and have `enabled="true"` take part.
-- **What a rule can do** is what its place takes ([Commands](#commands)): against a screen edge the changes, self, edge and bounce groups; against another object the changes, self, steering, touch and bounce groups. A `<trigger>` with `object=` left out runs an action of the object itself.
-- **`side`.** A rule about another object can carry `side="top"` (or `bottom`, `left`, `right`, `horizontal` for left or right, `vertical` for top or bottom): it runs only when the object is touched on that side of its own. A ball falling onto a block is touched on its bottom; Mario's head bumping a floor from below is his top. On a pixel hit the side is the one the motion came in through (above).
-- **Conditions on a rule.** After `<slower>`/`<faster>`, a rule about another object can hold `<condition>`s, `<all>`s and `<any>`s, written as in a [condition](#conditions): the rule runs only while every one holds, looked at as the rule comes up. A `<condition>` with no `class=` or `object=` is about the object running the rule, and `self` in it (`object="self"`, `variable="self.worth"`) is that object too, as in its commands; written on a group, that is each member for itself (Astrosmash's rocks split only when the one shot is worth 10): `<collision class="marker"><condition variable="halfway"><atleast>1</atleast></condition><inc variable="car.laps" /></collision>` counts a lap only once the car has passed the halfway marker. A check on a screen-edge rule is not built yet (a load error); a state's `<condition>` can test the same variable.
-- **`sprite`.** A rule, about another object or a screen edge, can carry `sprite="name"`: it runs only while its own object shows that [look](#looks). `<stick />` and `<wrap />` are about a screen edge and do nothing in a rule about another object, and `<ride />`, `<carry />`, `<deflect>` and `<knock>` are about another object.
-- **`<slower>` and `<faster>`.** A rule about another object may begin with `<slower>N</slower>` and/or `<faster>N</faster>` (values), before its commands: it only runs while the object's own speed (the length of its velocity, with what it rides) is **under** N (`slower`) or **N or more** (`faster`) at the moment of the touch. The speed is taken once, before any of the object's rules for this touch run, so a rule that `<stop />`s it does not change which rules after it are run. Two rules about the pad with the same number, one `slower` and one `faster`, are a landing and a crash: exactly N counts as fast. A screen-edge rule has no speed filter (a load error).
-- **`through`.** A rule about another object with `through="floor"` runs only for a touch felt through something of that class, a [knock](#knocks) through a floor; one without it, only for a touch itself.
-- **`unless`.** A rule, about another object or a screen edge, can carry `unless="class"`: it is passed over while the object is, at that same moment, touching something in play of that class. Frogger's river is `<collision class="water" unless="logs"><trigger action="drown" /></collision>`: water costs the frog a life, unless it is also on a log. It looks at where things are right now, so it does not matter which of the two touches was handled first. On an edge, `<collision edge="bottom" unless="paddle"><die /></collision>` loses a ball at the bottom only when no paddle is under it.
-- A pair is skipped unless at least one of the two is moving, and unless one of them has a rule that answers to the other (its `class`/`object`, or a rule with no selector). An object counts as moving if its velocity is not zero, if it is riding something, or if it has just hopped or is jumping, so an object that lands somewhere by hopping or jumping is judged there even though nothing else in the pair moves. An object in the middle of a `<jump>` is in no pair at all.
-- `<lockstep>true</lockstep>` puts all members or cells of a `<group>` in lockstep: they share a lockstep number. Cells in lockstep never collide with each other, `<move>` in a collision moves all of them, and one hitting the left or right screen edge with `<bounce />` moves the whole block (this is how the invaders march). Being in lockstep changes none of the geometry: every cell is swept on its own, so a bullet only ever meets the cells that are still alive, and there is no bounding box around the block.
-- Every cell of a group in columns and rows is its own object, named after the group with its column and row counted from 1: a group called `aliens` has `aliens.1.1`, `aliens.2.1`, ... `aliens.11.5`. The group's name still works where the whole set is meant: `<show object="aliens"/>`, a rule or condition `object="aliens"`, `<reset object="aliens" />`; a cell can be named on its own (`object="aliens.3.2"`). A listed group's members are named by number (`logrow3.2`); see [`<group>`](#group).
-
-### Knocks
-
-`<knock />`, in a rule about another object, makes the two meet as things with weight do. Along the way straight apart (see what a touch is, above) they share out what they carry by their `<mass>`es; across it each keeps its own, so a ball hit off its middle goes off at an angle and the one that hit it goes off the other way. The content, 0 up to 1 and 1 when left out, is how bouncy it is: 1 is pool balls (two of the same mass straight on, and the first stops dead while the second goes on at its speed), 0 sends them on together. Nothing happens unless they are coming together, so when both have a `<knock />` for the other, the second one to run finds them already parting and does nothing. Two that had gone into each other are put apart along the touch, the lighter moved further.
-
-An object with no `<mass>` is as heavy as can be: it is not moved by a knock, and its own knock sends a thing with a mass off at up to twice its speed (`trickshot.xml`'s cue tip). A knock on a thing with no mass goes **through** it: whatever with a mass rests against its far side (within a pixel of it, and overlapping it along it) is knocked instead, as though by something as heavy as can be, and then runs its own rules about the knocker as touched on its side facing the thing knocked. In `mariobros.xml` Mario's head hitting a floor tile from below is a `<knock>0</knock>` that goes through the tile to the shellcreeper standing on it, which is knocked up and turns over in its rule `<collision object="mario" through="floor">`. A touch felt through something runs only the rules that say `through="class"` of what it came through, and a rule without `through=` runs only for a touch itself: so Mario jumping straight into a shellcreeper hanging off a ledge is touching it himself (deadly, or a kick if it is on its back), not bumping it over. A knock goes through one thing, not on through a pile; a row of balls touching one another passes a knock on by itself, each pair meeting in turn within the frame.
-
-## Conditions
-
-```xml
-<condition class="paddle" variable="score">
-  <atleast>15</atleast>
-  <push state="gameover" />
-</condition>
-```
-
-Checked once per frame while the state is current. An optional `name=` lets a [scene](#scenes) copied with `from=` put another in its place. It fires when any object matching `class` and/or `object` (both optional, combined with AND) has a variable named `variable` (or, with no variable of that name, one of the numbers every object has as the game runs: `x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`) that has reached the `<atleast>` value (greater than or equal). The first match runs its commands and stops checking for that frame. The threshold is an ordinary value, so it is not limited to 0-255 and can be an expression.
-
-The other forms:
-
-```xml
-<condition class="aliens">
-  <remaining>0</remaining>
-  <push state="gameover" />
-</condition>
-```
-
-`<remaining>` counts objects instead of reading a variable. It fires when no more than that many of the matching objects are still in play, that is still visible (`<die />` hides an object). `0` means they are all gone, which is how Space Invaders is won: `class="aliens"` covers every cell of the group, and `object="aliens.3.2"` would watch a single one. `<atmost>` reads a variable from above: `<condition object="frog" variable="lives"><atmost>0</atmost>...</condition>` fires when the variable has fallen to that value or below, which is how a lives counter that goes down with `<dec>` ends the game (Frogger). `<above>`, `<below>` and `<equal>` are more than, less than and the same as. A condition uses exactly one of `<atleast>`, `<atmost>`, `<above>`, `<below>`, `<equal>` or `<remaining>` (the schema enforces this), or an `<all>` or `<any>` (below).
-
-**Comparing with what changes.** A test's number is a value like any other, and when it names something that changes as the game runs (an object's variable, where something is: `gun2.score`, `ship.x + 10`) it is worked out again each time the condition is tested, so a condition follows it. A number that names nothing that changes is worked out once, at load. In a collision rule's `<condition>`, `self` is the object running the rule (`<atleast>self.worth</atleast>`); a state's condition has no `self`, so it names the object. Air-Sea Battle says who won this way:
-
-```xml
-<condition object="gun1" variable="score">
-  <above>gun2.score</above>
-  <become object="result.outcome" sprite="yellow" />
-  <pop state="result" />
-</condition>
-<condition object="gun2" variable="score">
-  <above>gun1.score</above>
-  <become object="result.outcome" sprite="white" />
-  <pop state="result" />
-</condition>
-<condition object="gun1" variable="score">
-  <equal>gun2.score</equal>
-  <become object="result.outcome" sprite="draw" />
-  <pop state="result" />
-</condition>
-```
-
-A test with `variable=` has no number as well; an object or variable the game does not have stops it loading, saying which (with a suggestion for a likely typo), and `<remaining>` takes only a number. If the filter matches no object at all, the game warns when it loads, since the condition would fire at once. Ending the game with a `gameover` state and starting over with a bare `<reset />` on that screen works as in Pong; `<reset />` also brings the dead aliens back.
-
-**Totals.** `total=` tests one number made from every object the condition matches that is in play (visible), instead of each object's own: `total="count"` how many there are (no `variable=`), `total="sum"` their `variable=` added up, `total="highest"` and `total="lowest"` the largest and smallest of it. Any of the five tests can follow, against a number or another variable (which then needs `object=`, since a total is no object's). `<remaining>N</remaining>` is the same as `total="count"` with `<atmost>N</atmost>`.
-
-```xml
-<condition class="player" variable="score" total="sum">
-  <atleast>100</atleast>          <!-- the players' scores together -->
-  ...
-</condition>
-<condition class="bullet" total="count">
-  <atleast>3</atleast>            <!-- three bullets in flight -->
-  ...
-</condition>
-```
-
-**Distance.** `distance="name"` tests how far each object the condition matches is from the nearest one in play of that name or group (from middle to middle, in pixels, as `<chase>` measures), instead of a variable; it holds when any one of them passes. Both have to be in play.
-
-**All and any.** A condition can hold several tests: `<all>` holds when every one of its `<condition>`s does, `<any>` when at least one does. A `<condition>` is written as a condition's test is (`class=`, `object=`, `variable=`, `total=`, `distance=`, then one test tag), with no commands; the commands follow the `<all>` or `<any>`, and the condition has no attributes of its own but `name=`. An `<all>` or `<any>` can hold more of them, for "this and (that or the other)". Adventure's dragon wakes when the hero comes near, once:
-
-```xml
-<condition>
-  <all>
-    <condition object="dragon" distance="hero"><below>160</below></condition>
-    <condition object="dragon" variable="awake"><equal>0</equal></condition>
-  </all>
-  <inc variable="dragon.awake" />
-  <become object="dragon" sprite="awake" />
-  <play sound="roar" />
-</condition>
-```
-
-A total that is not one of the four, `total="count"` or `distance=` with a `variable=`, a total of a variable none of its objects has, a `distance=` naming nothing, an `<all>` or `<any>` with no checks, or a condition with `<all>` that also says `class=` or `object=` stops the load, saying where.
-
-Besides changing the state, a condition can `<inc>` and `<dec>` a variable, `<become>`, `<reveal>`, `<play>`, `<silence>` and `<trigger>`. A condition that changes the variable it reads can count and start over: Frostbite's `<condition object="bailey" variable="blue"><atleast>4</atleast>` turns the four rows of ice white again and takes 4 off the count.
-
-**Condition sets.** Conditions several states check are written once, as a named `<conditions>` set at the top of `<states>` (with the `<keys>` and `<shows>` sets, before the first `<state>`), holding `<condition>`s like a state's. A state takes a set with `<condition set="name" />` among its own conditions, and the set's conditions are checked right there, in order, as if written in its place; since the first condition that holds is the only one run in a frame, where the `<condition set>` stands matters. A set can take a set written before it. A `<condition set>` has nothing else, no test, no filter and no commands. No shipped game uses one now (the conditions several places shared are the playing state's, checked in every scene of it); two modes that end the same way would:
-
-```xml
-<states>
-  <conditions name="ending">
-    <condition object="status" variable="lives">
-      <atmost>0</atmost>
-      <push state="gameover" />
-    </condition>
-  </conditions>
-  <state name="playing">
-    ...
-    <conditions>
-      <condition set="ending" />
-    </conditions>
-  </state>
-```
+A `<hold>` anywhere else, or any other command in a `<computer>`, stops the load.
 
 ## What happens when a game runs
 
-1. **Parse and validate.** The XML backend loads the file. If the file names a schema, it is validated: Xerces does full XSD validation ("strong"); the other three backends use a small built-in validator for the subset of XSD this project uses ("weak", `load/xsd`). `printGame()` reports which one ran.
-2. **Evaluate.** exprtk evaluates every value once (an expression text, or a value tag such as `<random>`, which is drawn here). Each expression text is compiled once and kept, so one worked out again while the game runs (a timer starting over, a `<set>`) is only read again, and only the names some text reads are given to exprtk. Objects (a group's members and cells among them), their variables, states and sounds are built. Nothing here needs a window or a sound device.
-3. **Open the window and the sound.** `Engine` creates the window backend and the audio backend (if the sound library will not start, it prints a warning and the game plays silently), makes every sound into samples and hands them to the audio backend, measures each object's real size for drawing and collisions, finishes the position of any text or image that uses `objectName.width` or `objectName.height`, then pushes the first state. The program prints the game twice, once before this step (sizes and size-dependent positions shown as unknown) and once after.
-4. **Loop.** An object is *shown* (in play) when it is visible and is the current state's own, or its current scene's, or one the state `<show>`s. Each frame: read key changes and run the current state's bindings for them; count the frame towards the next picture of every shown object that has an [animation](#animation); count the frame on every [timer](#timers) of a shown object, of the current state and of its current scene, and run the ones that go off; set the velocity of every shown object on a [path](#paths) for its part of the path (starting its next leg, and running that leg's commands, when one is done); change every shown object's velocity by its acceleration and held thrust; run the screen-edge rules; make any queued hops; lend what is carried its carrier's motion; move every shown object by its velocity, and by what it is being carried at, running the object-against-object rules at each touch on the way (per frame, not scaled by time); put each carried thing where it is held; check conditions (the state's, then its current scene's); take away the copies despawned and add the ones spawned; play the sounds the frame asked for, and start or stop its loops; clear; draw what a `<show state>` shows still, then the shown objects, each but those that are not `<drawn>`; present.
+### Loading
+
+1. **Parse and validate** (`load/xml`). The XML backend reads the file. If it names a schema it is validated: Xerces does full XSD validation ("strong"); the other three use a small built-in validator for the part of XSD the schema uses ("weak", `load/xsd`).
+2. **Work out the kit and every `from=`** on the XML (`load/merge`), so everything after sees whole objects.
+3. **Read** the tags into a `GameData` (`game/data.h`: raw objects, states, sounds, paths), a group as one raw object per member. A generated program starts here, with its `GameData` compiled in.
+4. **Lay out states and scenes** (`layOutScenes`, `game/scenes.cpp`): every owned object becomes an ordinary object named by its path, and every name the file uses is written out in full.
+5. **Evaluate** (`load/expr`). exprtk works out every value once (`<random>` drawn here); objects, states and sounds are built and every name a command uses is checked. Nothing here needs a window or a sound device.
+6. **Open the window and the sound** (`Engine`). Every sound is made into samples, each object's real size is measured, positions waiting on a text's size are finished, and the first state is pushed. If the sound will not start the game plays silently, with a warning.
+
+### Each frame
+
+`Engine::step` reads the keys (or the demo's, or the computer's) and runs the current state's bindings, then `Game::updateObjects` plays one frame (`playOneFrame`, `play/frame.cpp`), in this order:
+
+1. animations and blinking count a frame;
+2. timers count, and those that go off run;
+3. paths set their followers' velocities; maze walkers choose their way;
+4. climbing, grip, acceleration and held thrust, pulls and seeking, altitudes;
+5. screen-edge rules for what is moving;
+6. **the move**: queued hops are made, carried things are lent their carrier's motion, and everything moves, the touches found on the way running their rules ([how a touch is found](#how-a-touch-is-found));
+7. sticks hold, carried things are put where they are held, tethers and shadows follow, light and dark are worked out, poses are picked;
+8. conditions: the state's, then its current scene's;
+9. copies made join the game and despawned ones go.
+
+Then the sounds asked for play, loops start or stop, and the frame is drawn: what a `<show state>` shows still, then what is in play, each but the objects not `<drawn>`.
+
+An object is **in play** when it is not out of play (`<active>false</active>`, dead, despawned) and belongs to the current state, its current scene or the game, or is one the state `<show>`s. Movement is in pixels per frame and timers count frames, with no time step.
 
 ## Backends
 
 | Job | Interface | Implementations |
 |---|---|---|
 | Read XML | `XmlDocument` / `XmlNode` (`xml/document.h`) | Xerces (default), TinyXML2, PugiXML, RapidXML |
-| Window, drawing, keyboard | `Window` (`window/window.h`) | SFML3 (default), Raylib, SDL2, OpenGL (GLFW) |
-| Sound | `Audio` (`audio/audio.h`) | SFML3 (default), Raylib, SDL2, None (silent) |
+| Window, drawing, keys, mouse and pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL (GLFW); and `xgegui`'s Qt renderer |
+| Sound | `Audio` (`audio/audio.h`) | SFML 3 (default), raylib, SDL2, none (silent) |
 
-A program is built with some of these, not all: SFML 3 and Xerces alone by default, every one with `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON`, each other one with its own `XGE_WITH_<NAME>` (see the [readme](../readme.md#backends)). The enums always name all of them, so a name on the command line or in a settings file still means something; what is missing is only the library. Each factory says what it has: `WindowFactory::available(backend)`, `availableBackends()`, `defaultBackend()` (SFML 3, Xerces, SFML 3's sound, or the first built when those are left out) and `name(backend)`, and the same on `XmlDocumentFactory` and `AudioFactory` (`None` is always built). `create()` for a backend that is not built throws, saying which are. A backend's source files are only compiled when it is built, and its `XGE_WITH_<NAME>` definition is what the factory looks at.
+- `Game` and `Engine` see only the interfaces; one factory per kind (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) is the only place that knows every implementation.
+- **A build has some of these, not all:** SFML 3 and Xerces by default, all with `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON`, each other with its own `-DXGE_WITH_<NAME>=ON`. A backend's sources compile only behind its `XGE_WITH_<NAME>`. The enums always name every one; each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`), and `create()` for one not built throws, saying which are.
+- **Pictures** the engine draws itself (lines, bitmaps, SVGs with lunasvg), so every window backend only shows a bitmap. Only text and image files are each backend's own.
+- **Sound** is made by the engine (`synthesize()`, `audio/sound.h`), so a sound is the same whichever library plays it. `Game` never makes a noise: `<play>` asks (`Game::requestSound`), and `Engine` hands the frame's sounds to its `Audio`, so a game runs and is tested with no sound device. The sound library is chosen apart from the window, and any goes with any. `Engine::replaceAudio()` swaps it in a running game; `Engine::silence()` stops what plays.
+- **Windows.** `Engine::replaceWindow()` swaps the window of a running game (the old destroyed first, since raylib and GLFW allow one). A front end that pauses but keeps its window calls `Engine::pump()` so it can be moved and closed. SDL is shared by the SDL2 window and sound, each starting only its own part.
 
-One more library is used by the engine itself and is not a backend: lunasvg draws the SVG files an `<svg>` sprite names, into the same kind of bitmap a `<bitmap>` makes, so no window backend knows about SVG ([pictures](designs/30-pictures.md)). Only `picture/svg.cpp` includes it.
+See [backends](designs/50-backends.md) and, for `xgegui`'s one or two windows, [gui](designs/53-gui.md).
 
-`Game` and `Engine` only ever see the interfaces. Each interface has a factory that is the single place that knows every implementation (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`).
+## Building
 
-The sound library is chosen apart from the window library, and any goes with any (OpenGL, which has no sound of its own, included). `Game` never makes a noise: `<play>` only asks for a sound (`Game::requestSound`), or switches on one that loops (`Game::loopingSounds`), and `Engine` hands what a frame asked for to its `Audio`, starting the loops that came on (`Audio::loop`) and stopping those that went off or were silenced (`Audio::stop`), so a game runs and is tested with no sound device. The engine makes every sound's samples itself (`synthesize()`, `audio/sound.h`), so a sound is the same whichever library plays it; a backend only hands the samples to its library: an `sf::SoundBuffer` and `sf::Sound` (SFML 3), a `Sound` made with `LoadSoundFromWave` (raylib, which opens its sound device apart from its window; a loop is a `Music` stream read from the samples written as a WAV file in memory, handed more of each frame by `Audio::update`), or a small mixer of its own in an SDL audio callback (SDL2, which has no mixer without SDL_mixer). The SDL2 window and the SDL2 sound each start and stop only their own part of SDL, so either can go first. `Engine::replaceAudio()` swaps the sound library of a running game, which is how the Options dialog changes it, and `Engine::silence()` stops what is playing, which `xgegui` does when the game is paused. `NullAudio` plays nothing: the tests use it, and so does `-a none`. Build-time dependency selection is in `scripts/cmake/` (see the `FORCE_LOCAL_*` options in `options.cmake`).
+```
+cmake -B build                      # SFML 3 and Xerces
+cmake --build build --parallel
+output/Debug/xgecli frogger
+cmake -B build -DBUILD_TESTING=ON   # every backend, and the tests
+output/Debug/xgetest                # Catch2 filters work: "[kaboom]"
+cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
+```
 
-Every window backend opens a window of its own, which is what `xgecli` uses. `xgegui` shows the game in one of two layouts ([cli](designs/52-cli.md)): in one window, drawn by a renderer of its own that draws with Qt (`QtWindow`, the default), or in two, where the main window holds only the controls and the tree and the game is in a window of its own, opened by the chosen library (SFML3, SDL2, raylib or OpenGL) or by the Qt renderer. `Engine::replaceWindow()` swaps the window of a running game for another without touching the game, which is how the Options dialog changes the video library. A front end that has paused the game but keeps its window calls `Engine::pump()` so the window can still be moved and closed, and `Engine::isWindowOpen()` tells it when the user closed it.
-
-Nothing in `xgegui` uses OpenGL through Qt, so a library's OpenGL context is the only one on the thread. (The game view was a `QOpenGLWidget` once, and the two kinds of context, which Qt tracks by its own record, drew into each other; see [cli](designs/52-cli.md).)
-
-## Building: library and programs
-
-The engine (everything in `xge/lib/`) is a library, the `xgelib` CMake target. Two programs use it: `xgecli` (`xge/cli/`) and `xgegui` (`xge/gui/`, the Qt application, built only when Qt 6 is found), and so do the tests (`xgetest`, in `xge/tests/`). The engine's files are in a folder for each part of it, a header beside its source, and are included by that path (`"game/game.h"`): `game/` (the game's data and its running: `game`, `data`, `object`, `states`, `scenes`, `types`, `command`, `random`), `play/` (a frame and the verbs: `frame`, `verbs`, `maze`, `executor`, `collision`, `geometry`), `load/` (reading a file: `xml`, `expr`, `xsd`, `spelling`), `xml/`, `window/` and `audio/` (each backend kind's interface and one file per library, plus `audio/sound`, the synthesizer), `picture/` (`bitmap`, `svg`, `font`, `color`) and `engine/` (the loop: `engine`, `backends`, `folder`, `keys`). The programs keep `source/` and `include/`; the games and everything they are made of are in `games/` (`descriptions/`, `assets/`, `generators/`), and the schema is `games/xgedef.xsd`, beside the games. `xgedata` is the target that copies `games/` next to the programs, in the same folders, schema included; a game names its schema as `../xgedef.xsd`, which is right in the repository and in the output alike, and the engine looks for it by its file name in the folders above the game when it is not there (`findSchema`, `engine/folder.h`). `--generate` copies the engine's files from `xge/lib/` in the repository the program was built from. Programs, games and assets go in `output/<config>` at the top of the repository (`output/Debug`, `output/Release`), and the DLLs (`.so` files on Linux) and Qt's plug-ins in `output/<config>/libraries`, set up in `scripts/cmake/output.cmake` (on Windows the programs find them through a manifest, see [backends](designs/50-backends.md)); the build directory keeps only the compiler's and linker's own files. `output/` is ignored by git. The library knows nothing about the command line, so a different front end only needs its own `main()`.
-
-The library is static by default: each program has the engine's code copied into it, so `xgecli` is one self-contained file. `-DXGE_BUILD_SHARED=ON` builds it as a shared library instead (`libxgelib.so`, or `xgelib.dll` on Windows), which each program loads when it starts; a shared build needs the library file to be found next to the program or on the system's library path. On Windows the DLL exports every class in the headers (`WINDOWS_EXPORT_ALL_SYMBOLS`) rather than each being marked by hand. The third-party libraries are `PUBLIC` dependencies of the library, because the engine's own headers include theirs. See [backends](designs/50-backends.md).
+- **Targets.** `xgelib` is the engine (everything in `xge/lib/`), a static library by default (`-DXGE_BUILD_SHARED=ON` for a shared one). `xgecli` (`xge/cli/`) and `xgegui` (`xge/gui/`, only when Qt 6 is found) are the programs; `xgetest` and `xgetest-generated` the tests; `xgedata` copies `games/` beside the programs.
+- **Output.** Everything to run lands in `output/<Config>/` (ignored by git): the programs, a copy of `games/` with the schema, and the DLLs (or `.so` files) and Qt plug-ins in `libraries/`, found through a manifest on Windows and a relative run path elsewhere. The folder can be copied anywhere.
+- **Dependencies** are found through vcpkg or the system, or fetched and built when missing (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are found only, never fetched. CMake modules are in `scripts/cmake/` ([build-and-layout](designs/51-build-and-layout.md)).
+- **Warnings** stay at zero under a strict set on GCC, Clang and MSVC (`xge_warnings()`, `platform.cmake`).
+- **Folders.** The engine is a folder per part, a header beside its source, included by that path (`"game/game.h"`). The games and all they are made of are in `games/` (`descriptions/`, `assets/`, `generators/`, and the schema `xgedef.xsd`, which every game names as `../xgedef.xsd`). The programs make `games/` the working directory, and so does `xgetest`. `--generate` copies the engine's files from `xge/lib/` of the repository it was built from.
 
 ## Source map
 
-| File | Responsibility |
-|---|---|
-| `xge/cli/source/main.cpp`, `xge/cli/source/cli.cpp` | xgecli, the command line program: read the options, find the game file, build `Game` and `Engine` with the chosen backends. The only code outside the engine library |
-| `xge/cli/source/generate.cpp`, `games/generators/windows-cpp/` | `--generate`: load the game as the engine does, run the target's stylesheets on it with libxslt, and copy in the module, engine files and assets they list ([Generating a program](#generating-a-program)) |
-| `xge/gui/source/*.cpp` | xgegui, the Qt application ([cli](designs/52-cli.md)): `main_window` (the window, the File and View menus, the question about two windows), `game_session` (a loaded game and its engine, run from a timer; play, pause, step, reset, and changing the libraries), `game_stage` (where the Qt renderer's picture is: the left pane, or a window of its own), `game_view` (the widget a picture is shown in), `key_queue` (the keyboard, read by Qt), `qt_window` (the `Window` that draws with QPainter), `options_dialog` and `session_options` (the video library, XML parser and sound library choice), `app_settings` (`xgegui.ini`, next to the program), `inspector` (the controls and the tree of game data) |
-| `load/merge.cpp` | The [kit and from=](#the-kit-and-from) worked out on the XML before it is read: pieces, takes, the change rule, members and inner groups changed, and the pieces spawned put in beside their spawners (`layOut`, `addWaiting`), as `merge.xsl` does for a generated program |
-| `load/xml.cpp` | Walk the parsed XML tags into a `GameData` (`game/data.h`: raw window/variable/object/state data, `RawValue`, `RawCommand`, `RawSprite`), `readGame()`; a `<group>` is read here as one raw object per member. `Game(GameData)` works one out, so `game/game.cpp` reads no XML |
-| `load/expr.cpp` | exprtk symbol table and evaluation of raw values (expressions, `<random>`, `<formula>`) into `Object`s and `State`s |
-| `game/command.cpp` | Turn raw command tags into typed `Command`s; the table of arithmetic operations (`operationShape`) and a value printed as text (`valueText`) |
-| `game/scenes.cpp` | `layOutScenes`, run first by `Game`'s constructor on data read from a file or written by a generated program alike: makes each state's and scene's objects (already laid out by `load/merge` or `merge.xsl`), takes in a state `from=` another its keys, conditions and timers, names them by their path, adds the scenes' variables, and writes every name the game uses out in full, looked for from the inside out |
-| `game/game.cpp` | The interpreter: objects, state stack, current scenes (`enterScene`, `resetScene`, what runs and what is drawn still), conditions, resets, paths (`follow`, `applyPaths`), and the answers to `FrameRules` (what the file says happens at an edge, on a touch, which rules hold), which it carries out through `CommandExecutor`. It does none of the frame's work itself |
-| `play/frame.cpp` | `playOneFrame`: the order every frame runs in (animations, timers, paths, climbing, pull and thrust, pulls and seeking, altitudes, the window edges, the move with its sweep, sticks, tethers, shadows, light and dark, conditions) and the moving, asking a `FrameRules` (`play/frame.h`) what the game says at each moment. The engine's `Game` answers from the file; a game written as code could answer in code (tried and set aside, [generator](designs/40-generator.md#prototype-the-game-as-decisions-on-the-engines-modules)) |
-| `play/maze.cpp` | Walking a [map](#maps)'s tiles (`walkMazes`, run by `playOneFrame` after the paths): the lane, the turn in the middle of a tile, the walls, and what `<go>`, `<hunt>` and `<wander>` choose |
-| `play/verbs.cpp` | What a verb does to an `Object` once something has decided it happens (`bounce`, `deflect`, `knock`, `cutHole`, `stick`, `wrap`, `ride`, `die`, `stop`, `restart`, `holdMove`), and making an object (`makeObject`, `startAt`); `CommandExecutor` and generated games both call them |
-| `game/random.cpp` | The one random number source (`seedRandom`, `randomBetween`, `fixRandomSeed`), drawn from by a `<random>` and by generated games alike |
-| `play/geometry.cpp` | The arithmetic of touching and of the verbs, on boxes and velocities with no `Object` in it: box, circle and swept tests, the pixel walk, the sweep of two things and the loop that plays a frame from touch to touch (`sweepThings`, `playFrame`, templates in `play/geometry.h`), the window's edges, and what bounce, deflect, knock, stick, wrap, land, climb, chase, aim, fire and a path's step do, and everything about a touch (`contactOf`). A generated program compiles it unchanged |
-| `play/collision.cpp` | `play/geometry.cpp`'s tests for `Object`s: their shapes, and the pixel pass for type `pixel` |
-| `picture/font.cpp` | Which font file a text is drawn with (`textFontFile`), and the 8x8 font stored in the program (`rasterizeText`), which draws text into a bitmap when a backend cannot load its font file |
-| `picture/bitmap.cpp` | Draws a sprite's `<line>`s (`rasterizeLines`) or `<bitmap>` rows (`rasterizeRows`) into an RGBA bitmap, the pixels both the window backends and pixel collisions use, and flips (`flipBitmap`) and turns (`turnBitmap`, `rasterizeTurned`) them |
-| `picture/svg.cpp` | Draws a part of an SVG file (`rasterizeSvg`) into an RGBA bitmap, with lunasvg; the only file that includes it |
-| `play/executor.cpp` | Carries out a typed command: picks the verb and its target, then calls `play/verbs.cpp` (or `play/geometry.cpp`) for what it does |
-| `audio/sound.cpp` | Pitch names, wave names, and `synthesize()`: a sound's notes made into 16-bit samples, the same for every audio backend |
-| `audio/audio.cpp`, `audio_*.cpp` | `AudioFactory` and the sound backends (SFML 3, raylib, SDL2; `NullAudio` is in `audio/audio.h`) |
-| `engine/engine.cpp` | Frame loop (`loop()`, or `step()` and `render()` for a front end that owns the event loop), key handling (`HeldKeys`, `engine/keys.h`), drawing (`drawFrame`, `window/window.h`), and playing the sounds each frame asks for |
-| `engine/backends.cpp` | Engine's constructor that picks the window and sound libraries by name, through the factories; apart so a program built for one library leaves the factories out |
-| `game/object.h`, `game/states.h`, `picture/color.cpp`, `engine/keys.cpp` | Data model, named colors, key names |
-| `window_*.cpp`, `xml_*.cpp`, `load/xsd.cpp` | Backends and the weak validator |
-| `xge/tests/` | Catch2 tests (opt-in with `BUILD_TESTING`): poses, mirror, grip and blinking (`test_poses`), Q*bert's arc, mirror and hops (`test_qbert`), collision geometry and swept collision, command parsing, conditions, input resolution, `stick()`, collision rules, lockstep bounce, size expressions, engine key handling, object variables, the new verbs (`dec`, `hop`, `wrap`, `ride`, `unless`, `atmost`, colors), the tag format, its rejections and the names commands use (`test_xml_format`), arithmetic as tags (`test_formulas`: text and a formula agreeing, each operation, chains, nesting, every rejection with its message, a divisor of 0 at load and while running, both schema checkers, and Pong's and Breakout's titles), groups (`test_group`: expansion, overrides, names, lockstep, columns and rows with what a row, column or cell changes, gaps, picks, clashes, errors, both schema checkers), lines, pixel collisions, acceleration, thrust and the speed filters (`test_lines_and_pixels`), bitmaps, animations and Space Invaders as written with them, with both schema checkers (`test_bitmap_sprites`; `invaders_fixture.h` keeps a copy of the first, plain Space Invaders for the tests that are about a block of cells and not about that game), the built-in font, the command line and the data folder search, sound (`test_sound`: pitch names, the synthesizer, `<sounds>` and its rejections, Pong asking for its sounds, the eight games that were silent each having theirs and playing each, `Engine` and a recording `Audio`), the one path of drawn pictures and `<flip>` (`test_pictures`), timers, facing, jumps, `<reverse />`, looks, `<reveal>`, conditions that count, key sets, `<chase>` and `<aim>`, `<copy>` and `<keeps>`, a `<text>` of pieces with `<letter>`s, a group's text showing each member's own, and `<rank>` (`test_gameplay_verbs`), `Engine::pump()` and `isWindowOpen()` (`test_engine_input`), the mouse and gamepads (`test_controls`: their buttons as keys, a stick as directions, `<input axis>` and `<track />` on Kaboom's bucket, and the mistakes), Breakout (`test_breakout`: the top row cracking at one hit and going at the next, and whole again after a restart; the sounds its ball asks for off a wall, the paddle and the bricks), and Frogger, Space Race, Kaboom, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids (`test_asteroids`: headings, turning, thrust and drag, shots and rocks made as copies, `release`, wrapping, losing ships, the next wave, the saucer, hyperspace and extra ships) played frame by frame, the kit (`test_kit`: pieces taken by name and by `from=`, the change rule, a piece from= a piece, a member taken alone, a fired piece beside its spawner reading its scene's variables, and the load errors), spawn and despawn (`test_spawn`: a piece of the kit, its copies' names and own rules and values, `<despawn />`, `<most>` and a refused spawn, `<fire>` and `<release>` making copies, other rules and conditions seeing copies, a group spawned in turn, a reset taking copies away, and the load errors), Demon Attack (`test_demonattack`: the three waves, a demon splitting in two, a big one taking two hits, bombs on the cannon, the shot following the cannon, a spare cannon for a wave cleared, three cannons and game over), Berserk (`test_berserk`: the man's four looks and shots, the rooms' maps, robots standing, then coming for the man and destroyed by a wall, the first room's never firing and the others' firing at the man, the exits and coming in at the side opposite with that doorway shut, a room put back as it started when entered again, and the room bonus, Otto chasing him, extra men, pausing and game over), paths and Galaxian (`test_galaxian`: steps, home, a start, a stagger, a step's commands, what ends a path, the mistakes, the fleet flying in, a dive that wraps and comes home, a new fleet, the best score kept, initials for the table of the best and the table ranked, what is kept written to a file and read back, two players taking turns with a game each, and the attract mode: the title playing its demo, a key ending it, and a game recorded playing back the same frame for frame), Frostbite (`test_frostbite`: jumps, rows turning blue, the igloo, the cold, drowning, the geese and the fish), Donkey Kong (`test_donkeykong`: standing on girders, walking off an open end, a leap's height and fixed arc, ladders up and down, a barrel's way down to the oil drum, a barrel jumped and one not, saving Pauline), and the five Atari games: Pitfall! (`test_pitfall`: screen to screen and round, a log knocking Harry back and a leap over it, the tar pit leapt and fallen into, the crocodiles and their jaws, crossing the pond, the ladder, the treasures, the clock), Missile Command (`test_missilecommand`: missiles chasing cities and turning when one goes, a counter-missile bursting at the sight, a burst taking a missile, a city lost, the waves), Combat (`test_combat`: driving, backing and turning along the heading, a shell from the gun, a hit, a wall), Air-Sea Battle (`test_airseabattle`: the lanes going round, a gun swung and fired at an angle, a plane shot down for the right player and coming back, the clock, the winner's look on the one result screen) Megamania (`test_megamania`: a wave wrapping, bombs, a shot, the energy, its bar and the bonus for what is left, the steered shot, the cookies bouncing, the eight waves won) and Atlantis (`test_atlantis`: the launch timer, a ship dropping a lane, the lowest lane wrapping and raying the city, each post's angle, a hit, the copied and replaced launch and quota, the waves won, the city lost), Pac-Man (`test_pacman`: the map's pieces on their tiles, Pac-Man going, turning at the first gap, stopping at a wall and turning back, the tunnel, Blinky hunting him without stepping on a wall, the ghosts leaving the house, a pellet turning the ghosts blue and its timers, a ghost eaten and its eyes going home, game over and a win, what a `<map>`, a walker and a look's timer turn away, a bitmap's `<color char>`, and both schema checkers), Adventure (`test_adventure`: picking up and carrying, one thing at a time, putting down and walking off, the key opening the gate on its way, the sword and the dragon, the two rooms walked between, the chalice carried home from the field, the pause drawing the room still), Pong (`test_pong`: each state's own objects, the pause and the game over drawn over the game still), and states and scenes (`test_scenes`: a state's own objects, each scene's copies and `<enter>`, names from the inside out, scene variables, scoped class conditions, `<reset scene>`, ways (`<enter way>`, `<reset way>`, and their mistakes), `from=` copying ways, conditions and timers with named ones replaced, counting another scene by path, what is carried going along, `<drawn>`, `<show state>`, and every mistake the loader turns away). Then values read when used, `<set>`, `<spawn>` and tethers (`test_live`), pulls, seeking, `<track path>`, diagonal hops, hops that take time, hunting by hops and Q*bert (`test_steering`), solid characters and hitboxes (`test_hitbox`), a press that cannot be done (`test_refused`), where each command goes, with both schema checkers and the loader (`test_places`), holes and Space Invaders' shields (`test_holes`), altitudes, shadows and Tennis (`test_altitude`), light and dark and Haunted House (`test_dark`: a match lighting further and burning down, the stairs between the four floors, the key carried upstairs opening a locked door, an urn piece staying on the map once seen, a creature costing a life and blowing out the match, the win at the door), and computer players (`test_computer`); `played.h` is what those share. Each game's tests also check what its states own and that its pause draws the game still |
+| Part | Files | What |
+|---|---|---|
+| reading | `load/xml.cpp` | the tags into a `GameData`, `readGame()`; checks of shape |
+| | `load/merge.cpp` | the [kit and from=](#the-kit-and-from) on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
+| | `load/expr.cpp` | exprtk (only this file includes it), values, `<formula>`, building `Object`s and `State`s, the load-time checks (`ruleFor`), pictures (`buildSpriteParams`) |
+| | `load/xsd.cpp`, `load/spelling.cpp` | the weak validator; "did you mean" (`didYouMean`, `listOf`) |
+| the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, and the answers to `FrameRules` (what the file says happens at an edge or a touch), carried out through `CommandExecutor` |
+| | `game/scenes.cpp` | `layOutScenes`: owned objects named by path, states `from=` others, names written in full |
+| | `game/command.cpp` | raw command tags into typed `Command`s; the table of arithmetic operations (`operationShape`) |
+| | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random number source |
+| the frame | `play/frame.cpp` | `playOneFrame`: the order of a frame and the moving |
+| | `play/geometry.cpp`, `play/collision.cpp` | the arithmetic of touching (box, circle, swept, the pixel walk, `contactOf`) and of the verbs; the same for `Object`s |
+| | `play/verbs.cpp`, `play/executor.cpp` | what a verb does to an object; picking the verb and its target |
+| | `play/maze.cpp` | walking a map's tiles |
+| pictures | `picture/bitmap.cpp`, `picture/svg.cpp`, `picture/font.cpp`, `picture/color.cpp` | lines and bitmap rows into pixels, flips and turns; SVG with lunasvg; font files and the built-in 8x8 font; color names |
+| loop and libraries | `engine/engine.cpp`, `engine/backends.cpp`, `engine/keys.cpp`, `engine/folder.cpp` | the loop (`loop()`, or `step()` and `render()`), keys and controls, sounds a frame asked for; choosing libraries by name; key names; the games folder and `findSchema` |
+| | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, one file per library; `audio/sound.cpp` is the synthesizer |
+| programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
+| | `xge/gui/source/` | `main_window`, `game_session` (a game and its engine on a timer), `game_stage`, `game_view`, `qt_window` (the Qt renderer), `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector` (the tree), `theme` |
+| generator | `games/generators/windows-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |
+| tests | `xge/tests/` | one `test_<topic>.cpp` per area: each verb and part of the format (`test_xml_format`, `test_places`, `test_formulas`, `test_kit`, `test_spawn`, `test_scenes`, ...), the backends and the command line, and each game played frame by frame (`test_<game>`). `played.h` is what game tests share, `invaders_fixture.h` a frozen first Space Invaders, `scratch.h` a scratch name per run. `xgetest "[.speed]"` prints every game's load and frame times |
 
 ## Known limitations
 
-- Object-object collision knows only the four edges of the other object (and, for a pixel hit, the side the motion came in through); there are no verbs beyond the table above (the jumps are a step (`hop`), a straight line (`<jump>`) and a fixed arc with no air control (`<leap>`); no shooting patterns or AI strategies beyond `<chase>` and `<aim>`).
-- A maze walker finds its way only as the arcade's ghosts do, by the next tile nearest a target: there is no search of the maze, so a target behind a wall can leave it going round. Pac-Man's ghosts scatter once each time they are themselves again, not on the arcade's schedule of waves, and leave the house on timers, not on how many dots have been eaten. A map's tiles are one character each, and a map cannot be taken from a scene's kit and changed.
-- A path is straight steps, not curves: a loop is a few steps round it, and the steps are flown at one speed, with no easing. A path cannot aim (a dive weaves the same way whatever the ship does) and its numbers are fixed when the game loads. Home is the object's place in the game file; a formation that moves (Galaxian's sways from side to side) would need home to move with it. A follower that is stopped or pushed on the way (a `<stick />`) still counts the step as flown.
-- Enemies fire on timers from wherever they are: an invader behind others fires through them (in the arcade game only the bottom one of a column fires). `<chase>` goes straight at its target and `<aim>` straight at where it is, through walls and with no lead; a Berserk robot heads for the man every second or two, whatever wall is in the way, and is destroyed by it. Firing makes a copy of the projectile, up to its `<most>`, or takes one of hidden ones; with all of them in flight a timer that goes off does nothing.
-- A condition's number follows what it names as the game runs ([comparing with what changes](#conditions)), but a class condition cannot compare each object it tests with that object's own other variable: there is no `self` in a state's condition, so it names one object. To set one variable to another's number as it is now, `<copy>` it. A timer's `<every>` and `<after>`, and the ends of a `<random>` in them, are worked out again each round and can; a count that has to start again is kept in a variable of its own object, which `<reset object>` of that object puts back (Berserk's score since the last extra man; its count of the robots destroyed in a room is put back by the rule for going through an exit).
-- Timers count frames, like everything else, so a machine that cannot keep up slows the clock with the game. There is no way to show how long a timer has left, other than a timer that counts a variable down.
-- A look is a whole picture; there is no way to recolour one. An object with a `<heading>` or an `<animation>` has no looks, and looks do not combine with an animation (an animated object that changes look).
-- Players taking turns see only their own game: the other player's score is in their game, put away, so a screen cannot show both scores at once, and the table only hears of a score through the condition of the player whose game is current.
-- A demo records the keys, not the mouse, a pad's stick or a paddle, and plays the same only from the start of a game: random numbers drawn when the file loads (a game-level `<random>` variable) are not drawn again from its seed, so a game that uses them at the start can play out differently. A demo recorded with a game that has since changed plays the old keys into the new game.
-- The table of the best has no place numbers (1. 2. 3.) unless each member's text is written with its own, and its numbers do not line up in columns in a proportional font. A saved file holds numbers and looks, not where a kept object is.
-- `<facing>` is one of four directions; a picture does not turn with it (use `<heading>` for that).
-- Music is a chip's: parts of one wave each, no volume envelope beyond the click-free fade (a note does not decay like a plucked string), no stereo, no tempo of its own (a length can use a variable, `beat / 2`). A state's music that loops starts again from its beginning whenever the state is current again (after a pause), and cannot be silenced while the state is current. A sound is made when the window opens, so its notes cannot change with a variable while the game runs. It starts on the frame it is asked for, so it is as late as the sound library's buffer (a few hundredths of a second).
-- An object that is not visible is not moved and does not collide, whatever its velocity; that is how a bullet waits, unseen and still, to be fired. One that should run unseen (an exit, a trigger zone) is `<drawn>false</drawn>` instead.
-- A state drawn still under another (`<show state>`) is frozen whole: nothing of it animates or counts its timers, so a [demo](#attract-mode) is played as a game of its own, not behind an attract screen. An object shown by `<show object>` in two states runs in both.
-- Going to a scene is always a command written where the move happens (an exit's rule, a condition), naming the scene or one of the current scene's ways; nothing says which way the hero came in beyond where the state's own objects are. A value cannot yet be handed from one state to another other than by reading it by path (`playing.score`).
-- An object's own `<variable>` named `width` or `height` shadows its measured size (`objectName.width` then reads the variable). A non-colliding spelling is under consideration; see [designs/02](designs/04-values-and-names.md).
-- A text or image placed with `objectName.width` / `objectName.height` is re-placed only when the size of an object it names changes, so it is not re-centered after it has moved on its own, and other expressions (velocity, variables) see those sizes as 0 for unmeasured text and images.
-- Text is drawn with the font file its [style](#styles) or `<font>` names, else `assets/tuffy.ttf`, found relative to the directory the program runs from (the games folder, which the programs move into). Pictures of a font are drawn unsmoothed, so a pixel font stays pixels when a game is drawn bigger. If a font file cannot be found, each backend prints `error: failed to load font: assets/tuffy.ttf - drawing text with the built-in 8x8 font instead` once for that file, and draws every text with the font stored in the program: 8 by 8 pixel glyphs for printable ASCII (anything else is a `?`), scaled to about `<size>` / 16 in blocks tall (so a letter is 8 times that tall) and half as wide, so it is chunky and monospaced and its width differs from the real font's ([pictures](designs/30-pictures.md)).
-- Movement is in pixels per frame with no time step. Acceleration is constant per object (`<acceleration>`, `<accelerate>`); an object can face a heading and be pushed along it (`<heading>`, `<turn>`, `<thrust>`), and `<drag>` is the only thing that slows an object by itself apart from a rule or an opposing thrust.
-- A `pixel` collision is only as exact as half a pixel of motion: a pair is looked at every half pixel along the longer way it moves in a frame, and two one-pixel lines can cross at a slant without sharing a pixel at all, so lines meant to be tested should be at least 2 pixels thick. It knows nothing about which way a surface faces, so there is no bounce off a slope. Text and images cannot be `pixel` yet (their pixels are only known to a window backend), so a fighting game with image sprites will need the backends to hand their pixels back. The bitmap of a sprite of lines is kept for every object that has one, four bytes a pixel, so one big drawing costs what its bounding box does (Lunar Lander's 800 by 182 moon is about 580 KB).
-- A sprite of lines is measured from 0, 0 and fixed when the game loads: it cannot be moved or scaled, and it turns only on an object with a `<heading>`, in whole degrees (one picture at a time, always the same square size). Lines are straight, one color each, and have no fill.
-- A `<bitmap>` is fixed when the game loads too; its colors are its `<color>`s, one to a character. A turning object keeps the original and the one picture it shows, so the memory it costs is about double, and a turn is done again only when the heading moves by a whole degree. The sprite pictures are separate bitmaps, so a game with many large animated sprites keeps them all in memory: four bytes a pixel for each frame, once per object (the cells of a grid share theirs).
-- An `<svg>` is drawn once, when the game loads, at one scale: to show one at two sizes, make two sprites. A pixel collision counts any partly transparent edge pixel as solid. An animated object cannot have looks, so an animated alien cannot change picture on a hit; an explosion would be a pool released where it died. The banking, hit-flash, charged-bolt, explosion and saucer pictures on the Space Invaders 2 sheet are not used yet (see [pictures](designs/30-pictures.md)).
-- An animation has one interval for all its frames, and counts frames of the game, not time (see [Animation](#animation)). There is no way yet to show a picture that depends on something other than time (a variable, the direction of travel, a hit), to run an animation once and stop, or to start it from a collision.
-- Each cell of a group is its own object with its own count of frames. The cells stay in step because they start together (at load, and again at every reset) and only count while shown.
-- A `<random>` is drawn when the game loads and again only when its object comes back into play: a reset (of it, of its [scene](#scenes), or of the game), a `<reveal>`, a `<release>` or a `<fire>` (see [Values](#values)). A `<random>` in a game-level or scene variable is drawn once, and entering a state or a scene draws nothing. There is no command that draws again without putting the object back in play; a new copy (`<spawn>`, `<fire>`, `<release>`) draws its own. A `<timer>`'s own interval is drawn again every round.
-- A hop is a jump, not a slide: the object is simply one step away, with no animation between and nothing touched on the way (a step is meant to be one lane). The arcing jump is `<leap>`.
-- `ride()` lends velocity one frame at a time and only while touching. It is not attached: an object riding something that meets a screen edge is handled by that edge's rule like any other (Frogger's frog loses a life), and nothing pushes it into a wall.
-- A pair in which nothing moves is not looked at (see the collision rules above), so a rule against something that stands still runs only when the object moves, rides something, hops or lands from a jump.
-- `unless` names a class, not a single object.
-- `wrap()` assumes what it wraps is spaced with its own size in mind (a lane of things that are `size` wide repeats every window width plus `size`), and the members of a lane (a `<group>`) are placed by hand, one `<x>` each, or evenly spaced as one row of `<columns>` with a `<padding>`: a group's cells are spaced by sizes and gaps, not spread across a width.
-- Only the object-against-object test is swept. A screen edge is still checked by position before the move, so an object that moves more than a whole window's width in one frame is not caught by it; rotation is not modeled. A shape that is not a rectangle or circle (text, image) is treated as its bounding box, unless it is a sprite of lines tested by `pixel`.
-- Expressions inside a value are not checked by the schema (they are text); a typo in one is found when the game loads (the load stops with a message naming where), not by validation. Structure, tag names, attributes and command verbs are checked by the schema; the names a command uses are checked by the engine when it loads.
-- The weak validator (`load/xsd`) covers only the XSD subset this project uses; Xerces is the full check. It follows a named type that contains itself (a `<formula>`'s operands), but not a group that does.
-- `<formula>` has four operations and no more: no `min`, `max`, `negate`, `abs`, `clamp`, `sign` or `pick` (the exprtk text has them). An operand is a name, a number, a `<random>` or another operation, so a sum needed in two places is written twice or kept in a variable. Only Pong and Breakout use it; every other game writes its arithmetic as text. A `<random>`'s `<min>` and `<max>` are each a number or an expression text, not a `<formula>`.
-- A `<divide>` by something not known while the game loads (another object's variable, an unmeasured text's size) works out to 0 at load, and only a position or a timer's interval is worked out again afterwards, so an object `<variable>` made from such a division keeps the 0.
-- The window's `width`, `height` and `framerate` are plain numbers, not values, and are read once, before the window opens. The size cannot be changed while a game runs, in `xgegui` either.
-- `--generate windows-cpp` covers every game; a generated program is the engine with the game built in, so it shares the engine's limitations and has none of its own. It always carries exprtk and lunasvg, as the engine does, even for a game with no `<svg>`.
+**Movement and collisions**
+
+- Movement is in pixels per frame and timers count frames, so a machine that cannot keep up slows the game. Acceleration is constant per object; `<drag>` and `<grip>` are what slow a thing by itself.
+- Only touches between objects are swept. A screen edge is checked by position before the move, so something faster than a window's width a frame can miss it.
+- A pair where nothing moves is not looked at, so a rule against something standing still runs only when the object moves, rides, hops or lands.
+- A rule reports which side was touched and where along it, but no surface faces a way: there is no bounce off a slope, and a pixel hit reflects along the motion.
+- A `pixel` collision is exact to half a pixel of motion; lines meant to touch should be at least 2 pixels thick. Text and images cannot be `pixel`.
+- `unless=` names a class, not one object. A rule on a screen edge cannot have a `<condition>` yet (a state's condition can test the same thing).
+- `<ride />` lends velocity a frame at a time while touching; it is not attached, so a rider meeting an edge is handled by that edge's rule.
+- `wrap()` assumes a lane is spaced with its objects' size in mind (a lane of `size`-wide things repeats every window width plus `size`).
+
+**Jumping, steering and paths**
+
+- The jumps are an instant step (`<hop>`), a timed straight line with an optional drawn arc (a timed `<hop>` or `<jump>`), and a fixed arc under a pull (`<leap>`). There is no air control.
+- `<chase>` goes straight at its target and `<aim>` straight at where it is, through walls and with no lead.
+- A maze walker steers as the arcade's ghosts do, by the next tile nearest a target: there is no search, so a target behind a wall can leave it going round. Pac-Man's ghosts scatter once each time they are themselves again and leave the house on timers, not on the arcade's schedule.
+- A path is straight legs at one speed, with numbers fixed at load; home is the object's place in the file, so a formation cannot sway. A path cannot aim.
+- Enemies fire on timers from wherever they are: an invader behind others fires through them.
+- `<facing>` is one of four ways (diagonals come only from two held keys), and never turns the picture.
+
+**Pictures and sound**
+
+- Pictures drawn by the engine are fixed at load (an SVG at one scale; to show two sizes, make two sprites); they can be turned by a heading, swapped for another look, recoloured by a palette swap, flipped by a mirror and holed.
+- An animation has one interval for all its frames, cannot run once and stop, and cannot be started by a collision. An object with a `<heading>` has one look, and cannot take a palette swap.
+- Turning keeps the original and the one picture shown: about twice the memory. A big drawing costs its bounding box, four bytes a pixel (Lunar Lander's moon is about 580 KB).
+- Text is drawn with a font file, unsmoothed; the built-in 8x8 font is only a fallback, and its widths differ from the real font's.
+- An object's own variable named `width` or `height` shadows its size.
+- Music is a chip's: parts of one wave each, no volume envelope, no stereo, no tempo of its own (a length can use a variable). A state's looping music restarts after a pause and cannot be silenced while the state is current. A sound is made when the window opens, so its notes cannot follow a variable.
+
+**Values**
+
+- Values not in a command or a condition's test are fixed at load. A class condition cannot compare each object with that object's own other variable (a state's condition has no `self`).
+- `<formula>` has four operations: no `min`, `max`, `abs`, `clamp` (the text form has them through exprtk). A `<random>`'s ends cannot be a formula. Only Pong and Breakout use formulas.
+- A `<divide>` by something not known while loading gives 0, and only a position or a timer's interval is worked out again later.
+- Expressions are text to the schema, so a typo in one is found when the game loads, not by validation. The weak validator covers only the XSD the schema uses.
+- The window's size and framerate are plain numbers, read once; the size cannot change while a game runs.
+
+**States, turns, demos**
+
+- A `<random>` is drawn again only when its object comes back into play; entering a scene draws nothing, and a game-level `<random>` is drawn once.
+- A state shown still is frozen whole, so a demo plays as a game of its own, not behind an attract screen. An object shown by `<show object>` in two states runs in both.
+- A state with scenes cannot be copied with `from=`, and a copied condition or timer can be replaced but not taken away.
+- Players taking turns see only their own game, so a screen cannot show both scores at once.
+- A demo records the keys, not the mouse or a stick, and game-level `<random>`s are not drawn from its seed; a demo recorded with an older version of a game plays the old keys into the new one.
+- A table of the best has no place numbers unless each member's text has its own, and its numbers do not line up in a proportional font. A saved file holds numbers and looks, not where a kept object is.
+
+**Generating**
+
+- A generated program is the engine with the game built in, so it shares the engine's limits and has none of its own. It always carries exprtk and lunasvg, even for a game with no `<svg>`.

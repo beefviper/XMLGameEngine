@@ -16,11 +16,11 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [values-and-names](04-values-and-names.md) | `<random>`, values read when used (`<set>`, `<spawn>`, live numbers), evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
 | [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, groups inside a group | Built |
-| [states-and-conditions](07-states-and-conditions.md) | State stack, `<shows>` and `<conditions>` sets, tests, `<all>`/`<any>`, `total=`, `distance=`, states `from=`, keeps, turns, attract mode | Built; per-state behavior Open |
-| [input](08-input.md) | Actions, held keys, key sets across states | Built |
+| [states-and-conditions](07-states-and-conditions.md) | State stack, `<pop state>`, `<shows>` and `<conditions>` sets, live tests, `<all>`/`<any>`, `total=`, `distance=`, states `from=`, keeps, a table of the best, turns, attract mode | Built; object-level conditions Open |
+| [input](08-input.md) | Actions, a refused press, key sets, held keys across states, mouse and pads | Built |
 | [timers](09-timers.md) | Timers, look timers, time left, commands in every context | Built; event queue Open |
-| [pools-and-enemies](10-pools-and-enemies.md) | Spawn and despawn (`<most>`), the older pools, enemies firing back, key sets | Built |
-| [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories (checked 2026-10-23) | Reference |
+| [pools-and-enemies](10-pools-and-enemies.md) | Spawn and despawn (`<most>`), what replaced pools, enemies firing back | Built |
+| [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories (checked 2026-10-28) | Reference |
 | [scenes](12-scenes.md) | Scenes inside a state; states and scenes own objects, `<enter>`, dotted paths, `<drawn>`, `<show state>` | Built |
 | [kit](13-kit.md) | The game's `<kit>` of pieces, `from=` and the one change rule, lifetime by placement, spawned pieces beside their spawner | Built |
 
@@ -28,7 +28,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 
 | File | Topic | Status |
 |---|---|---|
-| [collisions](20-collisions.md) | Detection, dispatch, swept and pixel collision, speed filters, `<deflect>`, `side=`, checks and `<trigger>` in rules | Built |
+| [collisions](20-collisions.md) | Detection, dispatch, swept and pixel collision, fewer checks, speed filters, `<deflect>`, `side=`, conditions and `<trigger>` in rules, contacts, knocks and `through=`, hitboxes | Built |
 | [collisions-open](21-collisions-open.md) | Weaknesses, response alternatives, escalation, reference Pong | Open / Idea |
 | [motion](22-motion.md) | Verb principle, gravity, thrust, headings, hop (diagonals too), jump, facing, pull, seek, altitude and shadows | Built |
 | [platforming](23-platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump; `arc` and `grip` | Built; air control Idea |
@@ -38,9 +38,9 @@ Each file is one topic, so scan this table and open only the one you need. The b
 
 | File | Topic | Status |
 |---|---|---|
-| [pictures](30-pictures.md) | One `Bitmap` path for lines, bitmaps, SVG parts, flip, turning; tethers, holes, light and dark | Built; decals Idea |
+| [pictures](30-pictures.md) | One `Bitmap` path for lines, bitmaps, SVG parts, flip, turning; inks, bitmap styles and palette swap; tethers, holes, light and dark | Built; decals Idea |
 | [animation-and-looks](31-animation-and-looks.md) | Animation, named looks, looks that move, `poses`, `mirror`, blinking | Built |
-| [text](32-text.md) | Text and the built-in font, `<styles>`, `<centered>`, words (`<choose>`) | Built |
+| [text](32-text.md) | Text, font files and the built-in font, `<styles>`, `<centered>`, words (`<choose>`) | Built |
 | [sound](33-sound.md) | Notes made into samples; `<sounds>`, `<play>`, loops, music in `<part>`s | Built |
 
 ## Code generation
@@ -58,7 +58,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [cli](52-cli.md), [gui](53-gui.md) | `xgecli` options; `xgegui` (Qt renderer, tree, Options, windows) | Built |
 | [games-classic](54-games-classic.md) | What each early game tested and forced | Built |
 | [games-written-by-ai](55-games-written-by-ai.md) | Berserk, Demon Attack, Frostbite from the schema alone, then rewritten | Built |
-| [games-atari](56-games-atari.md) | Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania, Adventure, Atlantis and later ones (Tennis, Haunted House, ...) | Built |
+| [games-atari](56-games-atari.md) | The 2600 list and after: a section per game, from Pitfall! to Mario Bros. and Q*bert | Built |
 | [ideas](57-ideas.md) | Scrolling, capability profiles, state export, game ideas | Idea |
 | [open-work](58-open-work.md) | Backlog and known untested areas | Open |
 

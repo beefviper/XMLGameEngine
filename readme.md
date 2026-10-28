@@ -72,7 +72,7 @@ A collision rule reads like a sentence: this ball, when it touches the top or bo
 ### Grammar
 
 - **Attributes name or pick; everything else is content.** `name`, `class`, `object`, `edge`, `button`, `state`, `sound` are attributes. A size, a color, a position or a flag is element content: `<radius>10</radius>`.
-- **Behavior is a list of verbs, run in the order written.** Lists sit in five places: a collision rule, an object's action, a key, a condition and a timer. Most verbs work in all of them.
+- **Behavior is a list of verbs, run in the order written.** Lists sit in a collision rule, an object's action, a key, a condition, a timer and a path step; the schema sorts the verbs into groups and says which groups each place takes, so a verb can only be written where it does something.
 - **A value is a number written one of three ways:** arithmetic as text (`window.width.center - ball.radius`, worked out by exprtk), a `<random>` with a `<min>` and a `<max>`, or the same arithmetic as tags (a nested `<formula>` of `add`, `subtract`, `multiply`, `divide`), which leaves nothing in a string for a tool to parse.
 - **Names are dotted.** `ball.radius` is the ball's variable, `paddle1.x` where it is, `aliens.3.2` a cell of a group, `playing.room2.robots` an object in a scene. `window.right`, `window.width.center` and the `color.` names are built in, and `self.` and `touch.` mean the object running a rule and the touch it answers.
 - **Keys are bound in states, never in objects.** An object has named actions (`up`, `fire`), and a state binds keys to them, so changing a key is one edit.
@@ -86,10 +86,12 @@ A collision rule reads like a sentence: this ball, when it touches the top or bo
   <variables>   numbers the whole game uses
   <sounds>      notes, rests and parts of chip music           (optional)
   <paths>       routes that objects fly                        (optional)
-  <styles>      named text sizes and colors                    (optional)
+  <styles>      named sizes, colors and fonts for text and bitmaps (optional)
+  <kit>         pieces written once, taken or spawned later    (optional)
   <objects>     what every state shares                        (optional)
   <keeps>       objects kept from one game to the next         (optional)
   <states>      title, playing, paused, game over ...
+  <demo>        a recorded game for the attract mode           (optional)
 </game>
 ```
 
@@ -126,7 +128,7 @@ Something many objects or states share is written once under a name, higher up, 
 
 **Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `grip` (how fast the speed follows the keys, so it slides), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `active` (false: starts out of play), `drawn` (in play but never drawn), and `most` (how many copies a `spawn` may have made of it at once).
 
-**Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>` and `<condition>`s.
+**Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>`, `through=` (only a knock felt through that class, as Mario Bros.' floors pass a bump on) and `<condition>`s.
 
 **Verbs**
 
@@ -146,7 +148,7 @@ Something many objects or states share is written once under a name, higher up, 
 <condition class="aliens"><remaining>0</remaining><push state="youwin" /></condition>
 ```
 
-The tests are `atleast`, `atmost`, `above`, `below`, `equal` (against a number or another variable) and `remaining`. `total=` counts a group or takes its sum, highest or lowest, `distance=` measures to an object, and `<all>`/`<any>` of `<condition>`s join tests.
+The tests are `atleast`, `atmost`, `above`, `below`, `equal` (against a number, which can name another variable and is read as the game runs) and `remaining`. `total=` counts a group or takes its sum, highest or lowest, `distance=` measures to an object, and `<all>`/`<any>` of `<condition>`s join tests.
 
 **Input.** `<input button="space">` binds a key, a mouse button (`mouse.left`) or a gamepad button (`pad1.a`); `<input axis="mouse.x">` binds a control that points.
 

@@ -4,10 +4,10 @@
 
 ## What we looked for
 
-A game made of several places, one screen each: Berserk's four rooms, Pitfall's jungle screens (four of the 255), Kaboom's waves (eight since 2026-10-19), Adventure's castles and rooms (five are built, `adventure.xml`). Today every one of them is a `<state>`, and the states do two jobs:
+A game made of several places, one screen each: Berserk's four rooms, Pitfall's jungle screens (four of the 255), Kaboom's waves (eight since 2026-10-19), Adventure's castles and rooms. Before scenes, every one of them was a `<state>`, and the states did two jobs:
 
 - **Modes** of the program: an attract screen, an options menu, the main game, pause, game over. A stack of these is what a state machine is for, and `<push>` and `<pop>` say it well ([states-and-conditions](07-states-and-conditions.md)).
-- **Places**: room1 to room4, screen1 to screen4, wave1 to wave3. They are states only because there is nowhere else to put a place.
+- **Places**: room1 to room4, screen1 to screen4, wave1 to wave3. They were states only because there was nowhere else to put a place.
 
 What the second job cost, read from the games on `working` at 771ae06, before the games were rewritten on scenes:
 
@@ -62,13 +62,13 @@ The name: `room` fits Berserk and Adventure, `screen` Pitfall, `wave` Kaboom. **
 
 ### Names: dotted paths
 
-An owned object is named by its path: `room1.walls`, `playing.room1.walls`, and a member as today, `playing.room1.robots.3`. A variable is still the last part (`playing.room1.tally.kills`, and `paddle1.score` as now). A plain name is looked for from the inside out: the scene's own, then its state's, then the game's, so the rules inside a scene say `robots` and mean their own.
+An owned object is named by its path: `room1.walls`, `playing.room1.walls`, and a member as before, `playing.room1.robots.3`. A variable is still the last part (`playing.room1.tally.kills`, and `paddle1.score` as now). A plain name is looked for from the inside out: the scene's own, then its state's, then the game's, so the rules inside a scene say `robots` and mean their own.
 
 For a path to read only one way, a name may not be given twice where both can be seen (a scene called `logs` in a state with an object called `logs`); the loader refuses it, naming both. Group member numbers are already dotted (`aliens.3.2`), so this extends the existing spelling rather than adding one.
 
 ### Being in play, split
 
-Being shown is today what makes an object drawn, moving, timing and colliding at once ([readme](../readme.md#known-limitations), "an object that is not visible is not moved and does not collide"; [states-and-conditions](07-states-and-conditions.md), per-state behavior). Scenes need these apart:
+Before scenes, being shown was what made an object drawn, moving, timing and colliding at once. Scenes needed these apart, and they are now:
 
 - **Running** (moves, animates, counts its timers, collides): an object of the current state, or of its current scene.
 - **Drawn**: running, or under a state that draws what is below it, still (pause over the game, the attract screen over a demo).
@@ -97,7 +97,7 @@ Kept, since every game depends on them. With states and scenes owning objects, t
 
 ## Open
 
-- **Drawing again on entry**: whether entering a scene fresh should draw its `<random>`s again (today only `<reset scene>` does), and whether a command should draw again without moving the object back.
+- **Drawing again on entry**: whether entering a scene fresh should draw its `<random>`s again (only `<reset scene>` does), and whether a command should draw again without moving the object back.
 - **Grid-map level data** ([ideas](57-ideas.md)) would sit inside a scene; with ways, a map of screens is each screen's `<ways>`, which is enough for four screens and may not be for Pitfall's 255.
 - **Who entered, and from which side**, beyond what the state's own objects already carry.
 - **Taking a copied condition or timer away**: not built, since no game needs it yet. (Changing a piece's named timer in a take is built, [kit](13-kit.md).)

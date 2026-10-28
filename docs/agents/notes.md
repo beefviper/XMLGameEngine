@@ -2,36 +2,99 @@
 
 Gotchas that are easy to get wrong. How the engine works is [../readme.md](../readme.md); why, and the backlog, is [../designs/00-designs.md](../designs/00-designs.md). Rules and layout: [../../AGENTS.md](../../AGENTS.md).
 
-## State
+## Contents
+
+- [State of the repository](#state-of-the-repository)
+- [Engine](#engine): [values](#values-and-variables), [objects and scenes](#objects-states-and-scenes), [frames and touches](#frames-timers-and-touches), [spawning](#spawning), [looks](#looks-and-poses), [caches](#things-kept-between-frames), [loading](#loading-and-checks)
+- [Tests](#tests)
+- [Backends and build](#backends-and-build)
+- [Generator](#generator-xgecli---generate-windows-cpp)
+- [xgegui](#xgegui)
+- [Privacy](#privacy)
+
+## State of the repository
 
 - 33 games in `games/descriptions/`, one test file per area in `xge/tests/`. Newer work lands on `working` ahead of `master`: check `git branch -r` and `git log` first.
-- The author builds on Windows (Visual Studio, vcpkg). Agents usually build on Linux, often without Qt or window and sound backends, and cannot watch or listen.
-- Windows headers define macros that a Linux build never sees: `near` and `far` (empty), `min`/`max`, `small`, `interface`, `ERROR`. Never name a variable or function one of them (a test's `Coins near(...)` broke MSVC).
+- The author builds on Windows (Visual Studio, vcpkg). Agents usually build on Linux, often without Qt, and cannot watch or listen.
+- Windows headers define macros a Linux build never sees: `near` and `far` (empty), `min`/`max`, `small`, `interface`, `ERROR`. Never name a variable or function one of them (a test's `Coins near(...)` broke MSVC; `-Dnear= -Dfar=` on a syntax-only compile catches it).
 
 ## Engine
 
-- Numbers are evaluated **once at load**, except a timer's `<every>`/`<after>` and positions using a measured text or image size. A condition's number and an `<inc>`/`<dec>` amount cannot follow a variable; a condition can compare with one instead (`<above>gun2.score</above>`, read every frame). `<random>` is drawn at load and again each time its object comes back into play (a reset, `<reset scene>`, `<reveal>`, `<release>`, `<fire>`); entering a scene does not ([values-and-names](../designs/04-values-and-names.md)).
-- `<reset object="x" />` resets **every variable** of x. A rule's bare `<reset />` resets only its own object. Never put `<reset object="player" />` in someone else's rule; keep score, lives and clock on an object no state shows (Pitfall's `status`).
-- Variables are `float`; there is no handle system or `Value` variant. `collisionData.others` is the object-against-object rule list (once `basic`).
-- Every engine-drawn picture (`<line>`, `<bitmap>`, `<svg>`) is `ShapeKind::Line`, built in `buildSpriteParams` (`load/expr.cpp`). Add new kinds there; never rotate or draw in a backend ([pictures](../designs/30-pictures.md)).
-- The `<kit>` and every `from=` are worked out on the XML before anything is read (`load/merge.cpp`: `layOut`, `addWaiting`), and the same in `merge.xsl` for a generated program; change one and change the other to match, step for step, since `xgetest-generated` compares the order of objects too. A spawned piece lands beside its spawner, so its copies are named by that list (`playing.wave1.bomb.1`), and a test counting them by `groupName` must match the path's end.
-- States and scenes own objects: `layOutScenes` (`game/scenes.cpp`) runs first in `Game`'s constructor and flattens them into `data.objects` named by path (`playing.room1.robots.3`), with `ownerState`/`ownerScene`, and rewrites every name the file uses to the full one (inside out; `playing.rock` is an alias for every scene's rock; shortest path wins). `isShown` = visible and `runsIn` the top state; `isStill` = drawn under a `<show state>`; `isAway` = its scene is not current. `Game::tryGetObject` falls back to the end of one path, so tests can say `getObject("ball")`, but `carrying` and owners hold full names. `window.width` is not a symbol (`window.right`).
-- Timers count frames (`Game::framesFor`); object timers run only while `isShown`; state timers live in `Game::stateTimers`, scene timers in `Game::sceneTimers`. A push does not start a state's timers over, so a state that pops itself after a while uses `<every>`, not `<after>` (which fires once a game; Space Invaders' `blasted`). Anything that changes a variable goes through `Game::refreshBoundTexts`.
-- An object mid-`<jump>` (`isAirborne()`) is in no collision pair and ignored by `unless=`. `Object::grounded` is set by `CommandExecutor::land` and cleared in `Game::applyHops`; a resting object stays touching its platform only because its pull moves it every frame, so `<stop />` ends that ([platforming](../designs/23-platforming.md)).
-- `<become object="group">` changes members out of play too, and `<reveal>`/`<spawn>` keep the look; `<stop />` takes the pull away for good (until a reset), so it is no landing for something that can be knocked up again (Mario Bros.' shellcreepers hung under the floor above). Two rules that turn a look back and forth on one touch need a `<condition>` on something set later (a look timer `<after>0</after>`), since "last look first" cannot order a cycle.
-- Edge rules: `sprite=`/`unless=` are an `EdgeGuard`; `class=` or `object=` on an edge rule is a load error.
-- Touches in one moment run in file order and a pair where neither moves is skipped: a `<land />` or `<stop />` that runs first can hide a hazard met at the same moment (Pitfall's jaws come before the crocodiles). A variable named like an exprtk function (`floor`, `min`) stops the load.
-- `Game` never touches audio: `<play>` queues a name and `Engine::step()` plays it. Tests that build a `Game` without an `Engine` must call `setCurrentState(0)` and `measureShapeSize`, or nothing is shown and every size is 0.
-- Frogger is groups of lanes addressed as `logrow3.2`, `pads.1`; Space Race's debris is one group of cells, `debris.4.5` (column, row). `xge/tests/invaders_fixture.h` is a frozen copy of the first Space Invaders.
-- Things kept rather than worked out each time, each resting on something never changing while a game runs: `FrameRules::partners` and `mazeGrid` (an object's name, class, groups, rules, map tile), `Game::tryGetObject`'s answers and `matching` (names, classes, groups), `game_expr::compiled` (a text's compiled expression; symbols bound by reference, into `std::map`s whose references stay put). `Game::isShown` keeps each object's answer until `stageChanged()`: anything new in `Game` that changes the state stack, a scene or an object's `ownerScene`/`ownerState` calls it (a test writing those directly is covered by the call at the start of `updateObjects`). `xgetest "[.speed]"` prints every game's load and frame times (fixed seed) to compare builds.
-- Spawn and despawn ([pools-and-enemies](../designs/10-pools-and-enemies.md)): copies (`Object::copyOf`, named `x.N`) wait in `Game::spawned` and join, and despawned copies are erased, in `settleSpawns()` at the start and end of `updateObjects`; it calls `rosterChanged()`, which drops every cache above. A command run between frames (a test's `executeInput`, a key) leaves its copies waiting: call `game.settleSpawns()` before looking for them. A test must not hold a reference to a copy across frames that may erase another copy before it, or across its own despawn; look it up by name (`tryGetObject("shot.1")`, null once gone). A copy's `groupName` is what it copies (`playing.bomb`). `objects.reserve` at load keeps references to loaded objects good; new state that points into `objects` must be rebuilt in `rosterChanged()`.
-- Looks that move (named `<animation>`s) come **before** the still sprites in an object's look list (`lookWithAnimations`, `game/object.cpp`), so look 0 is the first animation; an object with `<poses>` starts and resets to `firstLook` (standing) instead. `takePoses` (`play/frame.cpp`) picks a pose only while the current look is a pose look: a `<become>` to anything else sticks. `<grip>` below 1 also brakes an object with no keys held (it eases toward a speed of 0), so never give one to a thing that moves by `<velocity>` alone. A timed hop's `<arc>` is drawn through `altitude`; the position stays on the ground line, so tests compare positions, not drawn spots. `owner.blink` is a live number part (index in `liveNumberParts`): add a new part there, in `numberOf`, `setNumber` and the live-link switch together.
-- A named object timer adds a variable of that name to its RawObject in `game_expr::init` and `Game::showTimeLeft` writes it each frame it counts. A bare `<reset />` in an object's timer only moves the object back (`restart` in `play/verbs.cpp`), it does not restart timers or variables: use `<reset object="name" />` for that.
-- Before touching `CollisionDetector::circleRectangle`, add a test to `test_collision_geometry.cpp`. `test_xml_format.cpp` pins what both validators must reject; `load/xsd` covers only the XSD subset the schema uses.
+### Values and variables
+
+- Most numbers are worked out **once at load**. Read again while running: a timer's `<every>`/`<after>`, positions that use a measured text or image size, a command's numbers that name a variable or live number (`CmdLive`, remade by `Game::makeNow`), and a condition's test number (`Condition::live`).
+- `<random>` is drawn at load and again each time its object comes back into play (a reset, `<reset scene>`, `<reveal>`, `<release>`, `<fire>`, a spawn); entering a scene does not ([values-and-names](../designs/04-values-and-names.md)).
+- Variables are `float`; there is no handle system or `Value` variant. Anything that changes a variable goes through `Game::refreshBoundTexts`.
+- A variable named like an exprtk function (`floor`, `min`) stops the load. `window.width` is not a symbol (`window.right`).
+- `owner.blink` and the other live numbers are parts by index in `liveNumberParts` (`game/object.cpp`): add a new part there, in `numberOf`, `setNumber` and the live-link switch together.
 - Arithmetic: a new operation is a row in `operationShape` (`game/command.cpp`), a case in `evaluateOperation` (`load/expr.cpp`) and the schema types. A divisor of 0 is a load error before `finishLoading()` and a warning after; each `Answer` has a `late` flag for values not final while loading. Keep both.
-- Load checks: `ruleFor` in `load/expr.cpp` mirrors the dispatchers in `play/executor.cpp`; a new verb needs a line in both. Use `didYouMean` and `listOf` (`load/spelling.cpp`) in any name error.
-- The schema checks shape, not meaning; the loader checks names once everything is built.
-- Text falls back to the built-in 8x8 font when `assets/tuffy.ttf` is missing; programs make the games folder (`games/`, holding `descriptions/` and `assets/`) the working directory (`engine/folder.cpp`), and so does `xgetest` (ctest starts it there; `test_main.cpp` moves in otherwise). A test names a game `descriptions/<game>.xml` and finds the schema with `findSchema("descriptions/pong.xml", "../xgedef.xsd")`. ctest runs from `output/<config>/games` and a plain run from the repository's `games/`, so check a new schema test both ways (`ctest -R` in `build/`). A scratch file or folder a test writes is named with `scratchName()` (`xge/tests/scratch.h`), which puts a number drawn once per run into the name, so `ctest -j` (every case its own run) never has two cases writing one file.
+- exprtk is included by `load/expr.cpp` alone: `game_expr` keeps its table, parser and compiled texts behind a pointer (`game_expr::Exprtk`), so files that include `game/game.h` do not compile it. Keep it out of headers; it is the slowest thing in the build.
+
+### Objects, states and scenes
+
+- The `<kit>` and every `from=` are worked out on the XML before anything is read (`load/merge.cpp`: `layOut`, `addWaiting`), and the same in `merge.xsl` for a generated program. Change one and change the other, step for step, since `xgetest-generated` compares the order of objects too.
+- States and scenes own objects: `layOutScenes` (`game/scenes.cpp`) runs first in `Game`'s constructor and flattens them into `data.objects` named by path (`playing.room1.robots.3`), with `ownerState`/`ownerScene`, and rewrites every name the file uses to the full one (inside out; `playing.rock` is an alias for every scene's rock; shortest path wins).
+- `isShown` = visible and `runsIn` the top state; `isStill` = drawn under a `<show state>`; `isAway` = its scene is not current.
+- `Game::tryGetObject` falls back to the end of one path, so tests can say `getObject("ball")`, but `carrying` and owners hold full names.
+- `<reset object="x" />` resets **every variable** of x; a rule's bare `<reset />` resets only its own object. Never put `<reset object="player" />` in someone else's rule; keep score, lives and clock on an object no state shows (Pitfall's `status`).
+- A bare `<reset />` in an object's timer only moves the object back (`restart` in `play/verbs.cpp`); it does not restart timers or variables. Use `<reset object="name" />` for that.
+- `collisionData.others` is the object-against-object rule list (once `basic`).
+- Frogger is groups of lanes addressed as `logrow3.2`, `pads.1`; Space Race's debris is one group of cells, `debris.4.5` (column, row).
+
+### Frames, timers and touches
+
+- Timers count frames (`Game::framesFor`); object timers run only while `isShown`; state timers live in `Game::stateTimers`, scene timers in `Game::sceneTimers`. A push does not start a state's timers over, so a state that pops itself after a while uses `<every>`, not `<after>` (which fires once a game; Space Invaders' `blasted`).
+- A named object timer adds a variable of that name to its RawObject in `game_expr::init`, and `Game::showTimeLeft` writes it each frame it counts.
+- Galaxian: `Game::applyPaths` runs after timers, before acceleration, and a path ignores pushes on the way. Anything ending a path clears `Object::followPath`. Its dive relies on `<wrap />` taking exactly the window's height plus the object's.
+- An object mid-`<jump>` (`isAirborne()`) is in no collision pair and ignored by `unless=`. `Object::grounded` is set by `CommandExecutor::land` and cleared in `applyHops` (`play/frame.cpp`); a resting object stays touching its platform only because its pull moves it every frame, so `<stop />` ends that ([platforming](../designs/23-platforming.md)).
+- Touches in one moment run in file order, and a pair where neither moves is skipped: a `<land />` or `<stop />` that runs first can hide a hazard met at the same moment (Pitfall's jaws come before the crocodiles).
+- An object's rules for one touch run in order and see a look changed by an earlier rule, so write look-chain rules last look first. Two rules that turn a look back and forth on one touch need a `<condition>` on something set later (a look timer `<after>0</after>`), since "last look first" cannot order a cycle.
+- Edge rules: `sprite=`/`unless=` are an `EdgeGuard`; `class=` or `object=` on an edge rule is a load error.
+- `Game` never touches audio: `<play>` queues a name and `Engine::step()` plays it.
+
+### Spawning
+
+- Copies (`Object::copyOf`, named `x.N`) wait in `Game::spawned` and join, and despawned copies are erased, in `settleSpawns()` at the start and end of `updateObjects`; it calls `rosterChanged()`, which drops every cache below ([pools-and-enemies](../designs/10-pools-and-enemies.md)).
+- A spawned piece lands beside its spawner, so its copies are named by that list (`playing.wave1.bomb.1`); a copy's `groupName` is what it copies (`playing.bomb`), and a test counting them by `groupName` must match the path's end.
+- `objects.reserve` at load keeps references to loaded objects good; new state that points into `objects` must be rebuilt in `rosterChanged()`.
+
+### Looks and poses
+
+- Every engine-drawn picture (`<line>`, `<bitmap>`, `<svg>`) is `ShapeKind::Line`, built in `buildSpriteParams` (`load/expr.cpp`). Add new kinds there; never rotate or draw in a backend ([pictures](../designs/30-pictures.md)).
+- Looks that move (named `<animation>`s) come **before** the still sprites in an object's look list (`lookWithAnimations`, `game/object.cpp`), so look 0 is the first animation; an object with `<poses>` starts and resets to `firstLook` (standing) instead.
+- `takePoses` (`play/frame.cpp`) picks a pose only while the current look is a pose look: a `<become>` to anything else sticks.
+- `<become object="group">` changes members out of play too, and `<reveal>`/`<spawn>` keep the look.
+- `<stop />` takes the pull away for good (until a reset), so it is no landing for something that can be knocked up again (Mario Bros.' shellcreepers hung under the floor above).
+- `<grip>` below 1 also brakes an object with no keys held (it eases toward a speed of 0), so never give one to a thing that moves by `<velocity>` alone.
+- A timed hop's `<arc>` is drawn through `altitude`; the position stays on the ground line, so tests compare positions, not drawn spots.
+
+### Things kept between frames
+
+Each rests on something that never changes while a game runs:
+
+- `FrameRules::partners` and `mazeGrid` (an object's name, class, groups, rules, map tile).
+- `Game::tryGetObject`'s answers and `matching` (names, classes, groups).
+- `game_expr::compiled` (a text's compiled expression; symbols bound by reference, into `std::map`s whose references stay put).
+- `Game::isShown` keeps each object's answer until `stageChanged()`: anything new in `Game` that changes the state stack, a scene or an object's `ownerScene`/`ownerState` calls it (a test writing those directly is covered by the call at the start of `updateObjects`).
+
+`xgetest "[.speed]"` prints every game's load and frame times (fixed seed) to compare builds.
+
+### Loading and checks
+
+- The schema checks shape and where commands go; the loader checks names once everything is built.
+- `ruleFor` in `load/expr.cpp` mirrors the dispatchers in `play/executor.cpp` and the schema's command groups; a new verb needs a line in all three. Use `didYouMean` and `listOf` (`load/spelling.cpp`) in any name error.
+- Text falls back to the built-in 8x8 font when its font file is missing.
+
+## Tests
+
+- Tests that build a `Game` without an `Engine` must call `setCurrentState(0)` and `measureShapeSize`, or nothing is shown and every size is 0.
+- A command run between frames (a test's `executeInput`, a key) leaves its copies waiting: call `game.settleSpawns()` before looking for them. Never hold a reference to a copy across frames that may erase another copy before it, or across its own despawn; look it up by name (`tryGetObject("shot.1")`, null once gone).
+- Programs make the games folder (`games/`, holding `descriptions/` and `assets/`) the working directory (`engine/folder.cpp`), and so does `xgetest` (ctest starts it there; `test_main.cpp` moves in otherwise). A test names a game `descriptions/<game>.xml` and finds the schema with `findSchema("descriptions/pong.xml", "../xgedef.xsd")`.
+- ctest runs from `output/<config>/games` and a plain run from the repository's `games/`, so check a new schema test both ways (`ctest -R` in `build/`).
+- A scratch file or folder a test writes is named with `scratchName()` (`xge/tests/scratch.h`), so `ctest -j` (every case its own run) never has two cases writing one file.
+- Before touching `CollisionDetector::circleRectangle`, add a test to `test_collision_geometry.cpp`. `test_xml_format.cpp` pins what both validators must reject; `load/xsd` covers only the XSD subset the schema uses.
+- `xge/tests/invaders_fixture.h` is a frozen copy of the first Space Invaders.
+- MSVC flags what GCC misses in tests too: C4702 (unreachable code) and C4459 (a local hiding a file-level name).
 
 ## Backends and build
 
@@ -39,20 +102,19 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 - raylib has no event queue: `RaylibWindow::pollEvents()` must not call `PollInputEvents()`; Escape is not its exit key; with `SUPPORT_CUSTOM_FRAME_CONTROL` `display()` swaps, polls and waits itself. A texture drawn into a render texture must live until `EndTextureMode()`.
 - SDL is shared by `SDL2Window` and `SDL2Audio`: each starts only its subsystem, the last out calls `SDL_Quit()`.
 - Backend `.cpp` files compile only behind `XGE_WITH_<NAME>`; factories expose `available()`, `availableBackends()`, `defaultBackend()`, `name()`. Build with no options as well as with tests when touching factories, `cli.cpp` or `session_options.cpp`.
-- Windows headers define `near`, `far` and `small`: never use them as names (MSVC fails far from the cause; `-Dnear= -Dfar=` on a syntax-only compile catches it).
-- SFML and raylib both static from source fail to link on Linux (duplicate `stbi_*`, miniaudio; `-DBUILD_SHARED_LIBS=ON` builds the fetched libraries shared and links); a CMake target named `m` collides with plutovg's `-lm` ([build-and-layout](../designs/51-build-and-layout.md)).
+- SFML and raylib both static from source fail to link on Linux (duplicate `stbi_*`, miniaudio); `-DBUILD_SHARED_LIBS=ON` builds the fetched libraries shared and links. A CMake target named `m` collides with plutovg's `-lm` ([build-and-layout](../designs/51-build-and-layout.md)).
 - `-Wdouble-promotion` is GCC only on purpose.
 
 ## Generator (`xgecli --generate windows-cpp`)
 
 Reasons and details: [generator](../designs/40-generator.md).
 
-- A generated program is the engine with the game built in: `games/generators/windows-cpp/data.xsl` writes the `GameData` the engine would read from the file as C++, and xgecli copies the files `engine.xml` lists from `xge/lib/` unchanged. `data.xsl` (run on what `merge.xsl` makes of the file) is a second reader of it: a new tag, or a new field in a `Raw*` struct, `GameData` or `WindowDesc`, needs the same in `data.xsl` (and the describer in `test_generated_games.cpp`), and maybe a helper in `modules/game_parts.h`. The data test there compares every field with `readGame`'s for every game.
+- A generated program is the engine with the game built in: `games/generators/windows-cpp/data.xsl` writes the `GameData` the engine would read from the file as C++, and xgecli copies the files `engine.xml` lists from `xge/lib/` unchanged.
+- `data.xsl` (run on what `merge.xsl` makes of the file) is a second reader: a new tag, or a new field in a `Raw*` struct, `GameData` or `WindowDesc`, needs the same in `data.xsl` (and the describer in `test_generated_games.cpp`), and maybe a helper in `modules/game_parts.h`. The data test compares every field with `readGame`'s for every game.
 - Keep generated functions short in statements that make big temporaries: a Debug build (MSVC, GCC -O0) gives every statement its own stack slots, and a long run of `RawObject`s in one function overflowed a 1 MB stack (Breakout's bricks); put such a line in a helper (`addCell`, `addMember` in `game_parts.h`). Check with a Debug build under `ulimit -s 1024`.
 - XSLT comments cannot hold `--` (so no `--generate` in them); libxml2 refuses the stylesheet.
 - `engine.xml` lists the engine files a generated program compiles (copied from the repository's `xge/lib/`, `XGE_ENGINE_FOLDER`), and `data_generators` in `assets.cmake` every stylesheet; `test_generate.cpp` checks every copied file's includes are copied too. A new engine source a generated program needs goes in both; one that reads XML or chooses among libraries must stay out (keep `game/game.cpp`, `engine/engine.cpp` free of `load/xml.h`, `xml/document.h` and the factories).
-- Building `xgetest-generated` (never part of an ordinary build) generates every game (`tests.cmake`, into `build/generated/`) and compiles the data in; check it with `cmake --build build --target xgetest-generated` after a generator or `Raw*` change; the function name rule there must match `gameFunctionName` and `camel` in `text.xsl`.
-- Galaxian: `Game::applyPaths` runs after timers, before acceleration, and a path ignores pushes on the way. Anything ending a path clears `Object::followPath`. Its dive relies on `<wrap />` taking exactly window height plus the object's height.
+- Building `xgetest-generated` (never part of an ordinary build) generates every game (`tests.cmake`, into `build/generated/`) and compiles the data in; check it with `cmake --build build --target xgetest-generated` after a generator or `Raw*` change. The function name rule there must match `gameFunctionName` and `camel` in `text.xsl`.
 
 ## xgegui
 
@@ -61,9 +123,6 @@ Reasons and details: [generator](../designs/40-generator.md).
 - Do not style `QSpinBox` borders (arrows vanish).
 - Qt's `key()` is one code for both Shifts (and Controls, Alts, Metas): the side comes from `nativeScanCode()`/`nativeVirtualKey()` (`key_queue.cpp`). A game binding `rshift` works in every window library only because of that.
 
-## Tools and privacy
+## Privacy
 
-`scan_export.py` (Claude chat export) and `scan_chatgpt_export.py` (ChatGPT export) rank and dump conversations by keyword. The first design write-ups were mined from the author's exports; the JSON stays in the author's folder.
-
-This repository is public. Nothing personal from a chat export goes in it: no health, identity, contact or business details, no conversation titles, and no names beyond the `beefviper` handle in the code headers.
-- exprtk is included by `load/expr.cpp` alone: `game_expr` keeps its table, parser and compiled texts behind a pointer (`game_expr::Exprtk`), so the files that include `game/game.h` do not compile it. Keep it out of headers; it is the slowest thing in the build.
+This repository is public. Nothing personal from a chat export goes in it: no health, identity, contact or business details, no conversation titles, and no names beyond the `beefviper` handle in the code headers. The first design write-ups were mined from the author's chat exports; those stay in the author's own folder.

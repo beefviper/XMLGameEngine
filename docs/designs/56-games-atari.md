@@ -1,39 +1,135 @@
-# Games as tests: five Atari 2600 games
+# Games as tests: the Atari 2600 list and after
 
-**Status:** Built, with no engine change.
+**Status:** Built. The first five needed no new verb; the later ones were each written to try one.
 
-## Five Atari 2600 games
+## How the list started
 
-The author listed about thirty non-scrolling Atari 2600 games (2026-10-07) and asked for five that could be written with the engine as it is. Already built from the list: Kaboom!, Asteroids, Space Invaders, Demon Attack, Frogger, Freeway, Frostbite, Berzerk, Super Breakout (as Breakout). The five were picked for variety and because no new verb was needed; none was added.
+The author listed about thirty non-scrolling Atari 2600 games (2026-10-07) and asked for five that could be written with the engine as it was. Already built from the list: Kaboom!, Asteroids, Space Invaders, Demon Attack, Frogger, Freeway, Frostbite, Berzerk, Super Breakout (as Breakout). The five (Pitfall!, Missile Command, Combat, Air-Sea Battle, Megamania) were picked for variety and because no new verb was needed. The games after them were each written for a word the engine had just gained.
 
-| Game | What it uses | Left out |
+| Game | Written for | Left out |
 |---|---|---|
-| Pitfall! | screens as the `<scenes>` of the playing state, built from a kit of pieces (path, logs, tar, pond and crocodiles, fire, scorpion, treasure; each screen's treasure worth its scene variable `worth`), entered through an unseen strip down each side (`<enter>`, and Harry's rule for that side `<move>`s him to the other); Harry, the jungle and the HUD the state's own; `<leap>`, `<land />`, `<climb>`; a rolling log knocks Harry back the way it rolls (a collision `<move>`) with a thud and 50 points each time, so only a leap gets past it (before 2026-10-16 it took 5 points a frame and he ran straight through, which read as nothing happening); a never-drawn `status` object holding score, lives, clock and treasures found (a `<remaining>` condition sees only the current screen), so `<reset object="harry" />` costs nothing; crocodiles with two looks, shut and open, each with a timer turning it to the other, open ones biting (until 2026-10-19 the jaws were a hidden pool the pond `<reveal>`ed); redrawn 2026-10-19 in several inks (a canopy of leaf tiles, Harry, logs, tar, a flickering fire, the treasures), the ladder as `<line>`s, the 2600's death tune, a kept best score | vines, quicksand, the tunnel's walls and its three-screens-a-step, the 255 screens |
-| Missile Command | the base `<aim>`s at the sight on a timer and `<fire>`s along the aim, each counter-missile trailing a `<tether>` back to the base (in play while the shot is); meeting the sight it `<release>`s a burst, a pool whose `<animation>` swells and shrinks, tested by pixel, that `<die />`s on a timer starting over each release; missiles are one-line streaks in a group with a `<heading>`, `<chase>`ing the nearest city and pointing the way they go; a missile done with is `<reset />` above the sky with new `<random>`s and counted; the waves are scenes, each `from=` the one before with its speed, total, colour and `way` (rewritten 2026-10-19) | limited counter-missiles, bonus for cities left, splitting missiles, bombers, smart bombs |
-| Combat | `<heading>`, `<turn>`, `<thrust>` (a negative one backs up) and `<drag>` for the tanks; a shell fired from the nose; pixel tanks `<bounce />` off box walls; two players. Rewritten 2026-10-19: one group of tanks with an inner group per player (`<heading>` allowed on groups for it), shells that `<knock>` the tank hit back, the engine a looping sound, and 2:16 of play, the most hits winning | guided and bouncing shells, the plane games, invisible tanks, the spin when hit |
-| Air-Sea Battle | guns with a `<heading>`, so a shell flies at any angle; lanes of planes as `<group>`s that `<wrap />`, starting off the side they fly in from, so a `<reveal>`ed plane comes back from there; a state timer as the clock. Rewritten 2026-10-19: the planes one group with a group per lane (the wrap and the two players' scoring rules said once), the guns one group pointing one of three ways by `<set variable="self.heading">`, each player's gun a group inside it with its fire action, the shells one group with a group per player, 2:16 of play and a drone as the battle's `<music>` | the planes falling as they are hit, the other games on the cartridge (the winner screen came with conditions comparing two variables, 2026-10-14) |
-| Megamania | waves as `<group>`s that `<wrap />` (and `<bounce />` up and down for the cookies), each member dropping bombs from a `<facing>down</facing>` on a `<random>` timer; energy as a variable of its own object, run down by a state timer and filled by `<reset object="energy" />` (since 2026-10-24 a named timer of that object, `energy.level` its time left). Rewritten 2026-10-19: all eight waves (a `from=` chain, each wave its picture, rows, points and velocity), the shot steered by a laser timer setting `laser.x` every frame, the energy drawn as a bar (a black cover slid over a green strip by a state timer, since a size is fixed at load), the energy left scored ×10 on a clear | the waves coming round faster after the eighth, a blaster per 10,000 points |
-| Adventure (one room 2026-10-14; five rooms 2026-10-19) | the hero `<carry />`s what he walks into (one rule for class `item`), Space `<drop />`s it; five rooms as scenes from one kit (walls a member at a time, two castles and two dragons as members of a group, four unseen ways out: east, west, in through an arch, out of a hall); castles are pixel bitmaps; each portcullis dies on its own key; Yorgle and Grundle sleep until near, `<chase>` at their room's `dragonspeed`, die on the sword; the chalice carried into the gold castle's hall wins | the other rooms and the labyrinth, the white castle, Rhindle, the bat, the bridge, the magnet, the hidden dot; a slain dragon left lying (it vanishes); Yorgle afraid of the gold key; a scene can only replace a whole sprite, so a room's walls in another colour are written out again |
-| Trick Shot (2026-10-16) | written for `<knock>` and `<mass>`: six balls racked against the white one, ball against ball `<knock />`, the cloth a `<drag>` (now allowed on a group), the cushions the window's edges `<bounce />`, six pockets; the cue tip has no mass, so its knock sends the white ball off at up to twice its speed, and it passes over the other balls. Rewritten 2026-10-19: brown cushions and black pockets in the corners and the long sides, the white ball and the rack inner groups of one group of balls, each with its own pocket rule | aiming and striking with a cue (the tip is steered into the ball instead), spin, the trick shots themselves |
-| Mario Bros. (2026-10-16) | written for a knock through a floor: Mario and the floors have no mass, so his head against a floor tile from below is a `<knock>0</knock>` that goes through the tile to the shellcreeper standing on it, which pops up and turns over in its rule `side="bottom"`; floors as tiles in groups inside a group, so a bump reaches only its tile; side= tells a kick from a death; a flipped one left too long, or one walking into a bottom pipe, is `<reset />` to its start at the top; everything `<wrap />`s. Rewritten 2026-10-19 nearer the arcade: brick floors as one bitmap, pipes, bitmap Mario and shellcreepers, the arcade's start tune, a kept best score, and the POW block, whose looks count its bumps left and whose rule turns over the whole group (`<become object="creepers" from="walking">`); its rules are written last look first, since the rules for one touch run in order and a look changed by one is seen by the next. Fixed 2026-10-20 to play as the arcade does: the shellcreepers start out of play (`<active>false</active>`) and the state's `<after>` timers `<reveal>` them one by one inside the top pipes, drawn before the pipes so they walk out of them; they fall floor by floor and, on the ground deep in a bottom pipe (a rule on the ground with `<condition variable="x">`s), are `<reset />` into their top pipe. `<stop />` had ended their pull, so one bumped while on its back flew up and hung under the floor above: now a bump `<set>`s a small hop, a look timer `<after>0</after>` keeps the way it went (`sgn(self.velocity.x)`) and stands it still, and a second bump or the 8-second timer gets it up that way (faster, from the timer). The two bump rules are a cycle of looks, which "last look first" cannot order, so the get-up rule also checks `down`, set by that look timer after the touch's rules have run. A `<become>` on a group reaches members out of play too, so a timer `<after>0</after>` makes one let out walking whatever a POW did while it waited. Mario comes back after a hit pale and safe for two seconds (a look and a variable the deadly rules check), where before he could lose every life on one shellcreeper standing at his start. Redrawn 2026-10-23 at the arcade's own size, 256 by 224 with `<scale>3</scale>`, so the 12 by 16 Mario and 16 by 10 shellcreepers are in proportion to the floors: Mario's `<poses>` (stand, a three-step walk, skid, rising, falling) with `<mirror>left</mirror>`, a `<grip>` of 0.15 so he gets going and slides as the arcade's Mario does (the arcade has no run button), walking and flipped shellcreepers as named animations; after a hit he blinks (`mario.blink`) instead of turning pale. Changed 2026-10-28: a flip is a hop that keeps its sideways way, so one bumped near a floor's end flies off and comes down a floor lower, and it stops sliding only once down; the POW triggers an action on the whole group (`<trigger object="creepers" action="powed" />`) that starts with a `<leap>`, so one in the air is spared; two walking into each other `<bounce />` apart; one that gets up by itself turns red, a palette swap (`<become style="angry">`); its bump rules are `through="floor"`, so Mario jumping into one himself (one hanging off a ledge) is a touch, deadly or a kick, not a flip; the banner is 36 so the title fits the 256 wide screen; Mario has a pull of his own (`float`, 0.13 against the shellcreepers' 0.3), so his jump is as high but takes about a second, as the arcade's floaty one does | sidesteppers and fighter flies, coins, fireballs, the second player, a third color (blue) for a shellcreeper that gets up twice |
-| Q*bert (2026-10-17) | written for diagonal hops: four keys each a `<hop>` on a diagonal with its own `<x>` and `<y>`; the pyramid a `<map>` on tiles half a cube across (redrawn 2026-10-18), each cube one bitmap of three inks (top and two sides) with pixel collisions so only its faces touch, a cube's rule for its unlit look turning it lit and scoring once; the void around it unseen tiles that cost a life; Q*bert a look per diagonal, set by each hop; the red ball hops down by its own random timers ; 2026-10-18: hops take time (`<seconds>`), the cubes touch only on their tops (`<solid char>`), Q*bert and Coily touch by their feet (`<hitbox>`), and Coily hatches at the bottom and hunts Q*bert by hops; 2026-10-19, nearer the arcade: 28 cubes in seven rows, won by counting cubes lit (`player.cubes`) rather than score, the two discs as map pieces whose looks say whether they are used (rules written last look first, so a landing changes a look once; a `<condition>` on `coily.snake` scores 500 when Coily follows him off), his curse as a look of text with a timer, and the sounds | Slick and Sam, Ugg and Wrongway, the green ball, more rounds and cubes that need two landings, the disc's ride up (it puts him on top at once). Redrawn 2026-10-23 at 256 by 240 with `<scale>3</scale>`: every hop has an `<arc>` (up and over instead of a straight slide), Q*bert two pictures (front and back) mirrored by the way he hops, Coily's egg and snake named animations, the discs spinning |
-| Yars' Revenge (2026-10-17, rewritten 2026-10-19) | written for `<seek>`: the destroyer missile turns toward Yar a few degrees a frame; the neutral zone an `unless="zone"` on Yar's rule about it, drawn as a column of bands each an `<animation>` of two bitmaps of colors. Rewritten: the shield a `<map>` in the cartridge's shape with the Qotile as its one `Q`, cells and Qotile going up and down at the same speed and turning on the same timer; a bite or a touch of the Qotile `<reveal>`s the Zorlon cannon, whose timer keeps it level with Yar and whose action fires the blast and puts it away (an object out of play does not act on a key, so Space without it fires only Yar's energy missile); the Swirl `<spawn>`ed at the Qotile, waiting a second, then a `<chase>` at where Yar is; Yar an animated bitmap that wraps top to bottom; 1000 for the Qotile, 6000 for a Swirl shot in flight | the ghost of Yar, the ion zone's colors, Yar bouncing off the shield, the cannon hitting Yar, levels getting harder |
-| Tennis (2026-10-17) | written for `<altitude>`, `<shadow>` and `<computer>`: the ball falls and bounces over the court with its shadow under it; each racket's rule on it has a `<condition>` of its altitude and `<set>`s it back up and away, angled by where it was hit; the far racket is the computer's on J and L; the points said with `<choose>`. Rewritten 2026-10-19: the two players one group drawn as a person with a racket, deuce and advantage by `<all>`/`<any>` conditions, a six-game set | serving by the players, the net stopping a low ball, perspective |
-| Haunted House (2026-10-17, rewritten 2026-10-19, 358 to 559 lines) | written for `<light>` and `<dark>`; the eyes light a little, a match (`<set variable="player.light">`, burnt down by a timer) far, every match counted; four floors as `<scenes>`, each a `<map>` with walls of its own colour, stairs as ways `up` and `down` (each floor's stairs a few tiles from where the next floor's lead back, so the eyes do not arrive on them); the master key carried (`<carry />`) opens the locked doors, a door's rule checking that the key is by the eyes (`<condition distance>`); kit creatures each floor places: the tarantula `<hunt>`s and the bat `<wander>`s along the halls (`<maze>`), the ghost `<chase>`s through the walls, one that reaches the eyes costs a life, blows the match out and goes back to its start; the wind on the top two floors; the win is all three pieces and the eyes back at the front door | the scepter that keeps the creatures off, the urn carried as one thing (here the pieces are counted as found), bats stealing what is carried, the floors' rooms as the 2600 draws them, the nine game variations |
-| Space Invaders shields (2026-10-17) | `<hole>`: four bitmap shields with pixel collisions, each shot or bomb cutting a ragged hole | the aliens eating the shields as they come down |
-| Fishing Derby (2026-10-17, rewritten 2026-10-19) | written for values read when used: the lines `<tether>`s from the rod tips to the hooks; you on the left pier, a `<computer>` on the right (it goes down for a cod, reels in while the shark is more than 200 pixels off); six rows, sunfish 2 pounds, perch 4, cod 6, each row its fish's `worth`; a free hook `<carry />`s the fish it touches, and since the hooks are written before the fish, the hook's rule runs first at a touch: a hook's `line` goes 0 → 1 (bite) → 2 (claimed by the fish's own rule, which marks itself `by` that hook), so a hook on its way up takes no second fish; a fish at the surface adds `self.worth` to its fisherman, `<reset object>`s the hook, sets the shark a tenth faster and resets itself; the shark turns at random and eats a fish on a line; first to 99 | reeling by itself with the fire button to reel faster (a `<move>` key sets the hook's velocity on every key change, so a rise given at the bite is lost when a key is let go; the hook rises only while up is held), the fish's wriggle, the shark's dive, the hook kept out of the sky |
-| Atlantis (2026-10-15) | written to use named timers and conditions: three waves as `<scenes>`, the second `from=` the first and the third `from=` the second with its own `launch` timer and `quota` condition in place of the copied ones; the ships a kit pool of four lanes (groups inside a group), revealed at the top by the wave's timer, each lane's right edge `<die />`ing and `<reveal>`ing one in the lane below, the lowest `<wrap />`ping and firing death rays (`<facing>down</facing>`); three posts with fixed `<heading>`s firing along them. Tightened 2026-10-19 (650 to 520 lines): one-line sounds, texts, shapes and pools; each wave's Gorgons a shape of their own (orange gunships, red bandits) rather than a recolour, and a line of surf on the sea | the bandit bomber, rebuilding the city, the posts being destroyed, a ship leaving the screen before it drops a lane (it vanishes at the edge, since `<wrap />` is the only edge rule that waits until it is off) |
+| [Pitfall!](#pitfall) | scenes from a kit, leaps, ladders | vines, quicksand, the tunnel, the 255 screens |
+| [Missile Command](#missile-command) | aiming, tethers, waves as scenes | limited counter-missiles, city bonus, splitting missiles, bombers, smart bombs |
+| [Combat](#combat) | headings, thrust, knocks | guided and bouncing shells, the plane games, invisible tanks |
+| [Air-Sea Battle](#air-sea-battle) | shells at an angle, wrapping lanes | planes falling as they are hit, the other games on the cartridge |
+| [Megamania](#megamania) | waves by from=, an energy timer | faster waves after the eighth, a blaster per 10,000 |
+| [Atlantis](#atlantis) | named timers and conditions | the bandit bomber, rebuilding the city |
+| [Adventure](#adventure) | carrying, rooms as scenes | most of the kingdom, Rhindle, the bat, the magnet |
+| [Trick Shot](#trick-shot) | `<knock>` and `<mass>` | a cue to aim, spin |
+| [Mario Bros.](#mario-bros) | a knock through a floor | sidesteppers, fighter flies, coins, fireballs, a second player |
+| [Q*bert](#qbert) | diagonal hops, a map pyramid | Slick and Sam, Ugg and Wrongway, more rounds |
+| [Yars' Revenge](#yars-revenge) | `<seek>` | the ghost of Yar, harder levels |
+| [Tennis](#tennis) | altitude, shadows, a computer player | serving, the net stopping a low ball |
+| [Haunted House](#haunted-house) | light and dark | the scepter, the urn as one thing, the nine variations |
+| [Fishing Derby](#fishing-derby) | values read when used, tethers | reeling by itself, the shark's dive |
+| Space Invaders shields | `<hole>`: four bitmap shields, each shot or bomb cutting a ragged hole | the aliens eating the shields |
 
-Found on the way:
-- **A rule can stop the touch that would have come next.** Two rules on Harry meet at the same moment when the jaws appear over the crocodile he stands on: `<land />` on the crocodile and the hazard of the jaws. Touches at the same moment are handled in the order of the objects in the file, and `<land />` stops him, and a pair where neither moves is not looked at again that frame, so the jaws were never met. The jaws are written before the crocodiles.
+## The games
+
+### Pitfall!
+
+- Screens are the `<scenes>` of the playing state, built from a kit of pieces (path, logs, tar, pond and crocodiles, fire, scorpion, treasure; each screen's treasure worth its scene variable `worth`). Each is entered through an unseen strip down each side (`<enter>`, and Harry's rule for that side `<move>`s him to the other).
+- Harry, the jungle and the HUD are the state's own; `<leap>`, `<land />`, `<climb>`.
+- A rolling log knocks Harry back the way it rolls (a collision `<move>`) with a thud and 50 points, so only a leap gets past it.
+- A never-drawn `status` object holds score, lives, clock and treasures found (a `<remaining>` condition sees only the current screen), so `<reset object="harry" />` costs nothing.
+- Crocodiles have two looks, shut and open, each with a timer turning it to the other; open ones bite.
+- Redrawn 2026-10-19 in several inks, the ladder as `<line>`s, the 2600's death tune, a kept best score.
+
+### Missile Command
+
+- The base `<aim>`s at the sight on a timer and `<fire>`s along the aim; each counter-missile trails a `<tether>` back to the base.
+- Meeting the sight it `<release>`s a burst whose `<animation>` swells and shrinks, tested by pixel, that `<die />`s on a timer.
+- Missiles are one-line streaks with a `<heading>`, `<chase>`ing the nearest city; one done with is `<reset />` above the sky with new `<random>`s and counted.
+- The waves are scenes, each `from=` the one before with its speed, total, colour and `way`.
+
+### Combat
+
+- `<heading>`, `<turn>`, `<thrust>` (a negative one backs up) and `<drag>` for the tanks; a shell fired from the nose; pixel tanks `<bounce />` off box walls; two players.
+- One group of tanks with an inner group per player; shells `<knock>` the tank hit back; the engine is a looping sound; 2:16 of play, the most hits winning.
+
+### Air-Sea Battle
+
+- Guns with a `<heading>`, so a shell flies at any angle, pointed one of three ways by `<set variable="self.heading">`.
+- Lanes of planes are groups that `<wrap />`, starting off the side they fly in from, so a `<reveal>`ed plane comes back from there.
+- A state timer is the clock (2:16), a drone is the battle's `<music>`, and the winner screen comes from conditions comparing the two scores.
+
+### Megamania
+
+- Eight waves as a `from=` chain, each its picture, rows, points and velocity; groups that `<wrap />` (and `<bounce />` for the cookies), each member dropping bombs on a `<random>` timer.
+- Energy is a named timer on its own object (`energy.level` its time left), drawn as a bar; the energy left is scored ×10 on a clear.
+- The shot is steered by a laser timer setting `laser.x` every frame.
+
+### Atlantis
+
+- Three waves as `<scenes>`, each `from=` the one before, the third with its own `launch` timer and `quota` condition in place of the copied ones.
+- The ships are a kit group of four lanes, revealed at the top by the wave's timer; each lane's right edge `<die />`s one and `<reveal>`s one in the lane below; the lowest `<wrap />`s and fires death rays.
+- Three posts with fixed `<heading>`s fire along them.
+- Left out also: a ship leaving the screen before it drops a lane (it vanishes at the edge, since `<wrap />` is the only edge rule that waits until it is off).
+
+### Adventure
+
+- The hero `<carry />`s what he walks into (one rule for class `item`); Space `<drop />`s it.
+- Five rooms as scenes from one kit, with four unseen ways out; castles are pixel bitmaps; each portcullis dies on its own key.
+- Yorgle and Grundle sleep until near (an `<all>` of a distance and an `awake` flag), `<chase>` at their room's `dragonspeed`, and die on the sword. The chalice carried into the gold castle's hall wins.
+- A slain dragon vanishes rather than lying there; a scene can only replace a whole sprite, so a room's walls in another colour are written out again.
+
+### Trick Shot
+
+- Six balls racked against the white one, ball against ball `<knock />`, the cloth a `<drag>`, the cushions the window's edges, six pockets.
+- The cue tip has no mass, so its knock sends the white ball off at up to twice its speed, and it passes over the other balls.
+
+### Mario Bros.
+
+- **The knock through a floor:** Mario and the floors have no mass, so his head against a floor tile from below is a `<knock>0</knock>` that goes through the tile to the shellcreeper standing on it, whose rule `side="bottom" through="floor"` flips it. Floors are tiles in groups inside a group, so a bump reaches only its tile. Through-only rules mean Mario jumping into a creeper hanging off a ledge is a touch (deadly or a kick), not a flip.
+- **Coming in:** the shellcreepers start out of play and state `<after>` timers `<reveal>` them inside the top pipes; on the ground deep in a bottom pipe they are `<reset />` into their top pipe.
+- **A flip** is a hop that keeps its sideways way, so one bumped near a floor's end comes down a floor lower; it stops sliding once down. A second bump or the 8-second timer gets it up; one that gets up by itself turns red, a palette swap (`<become style="angry">`). Two walking into each other `<bounce />` apart.
+- **The POW block's** looks count its bumps left; it triggers an action on the whole group that starts with a `<leap>`, so one in the air is spared. Its rules are written last look first.
+- **Drawn** at the arcade's 256 by 224 with `<scale>3</scale>` and Press Start 2P: Mario's `<poses>` with `<mirror>`, a `<grip>` of 0.15 so he gets going and slides, a pull of his own so his jump is floaty; after a hit he blinks (`mario.blink`) and is safe for two seconds.
+- Open: a third colour (blue) for a shellcreeper that gets up twice.
+
+### Q*bert
+
+- Four keys each a diagonal `<hop>` with its own `<x>` and `<y>`, taking `<seconds>` with an `<arc>`.
+- The pyramid is a `<map>`: 28 cubes in seven rows, each one bitmap of three inks, touching only on their tops (`<solid char>`); a cube's rule for its unlit look lights it and scores once. The void around it is unseen tiles that cost a life.
+- Q*bert and Coily touch by their feet (`<hitbox>`); Coily hatches at the bottom and `<hunt>`s Q*bert by hops. The discs are map pieces whose looks say whether they are used.
+- Won by counting cubes lit (`player.cubes`); drawn at 256 by 240 with `<scale>3</scale>`.
+
+### Yars' Revenge
+
+- The destroyer missile `<seek>`s Yar a few degrees a frame; the neutral zone is an `unless="zone"` on Yar's rule about the missile, drawn as animated bands.
+- The shield is a `<map>` in the cartridge's shape with the Qotile as its one `Q`. A bite or a touch of the Qotile `<reveal>`s the Zorlon cannon, whose action fires the blast (an object out of play does not act on a key).
+- The Swirl is `<spawn>`ed at the Qotile, waits a second, then `<chase>`s where Yar is.
+
+### Tennis
+
+- The ball falls and bounces with its `<shadow>` under it; each racket's rule on it has a `<condition>` of its `altitude` and `<set>`s it back up and away, angled by where it was hit.
+- The far racket is a `<computer>` on J and L; points are said with `<choose>`; deuce and advantage by `<all>`/`<any>` conditions; a six-game set.
+
+### Haunted House
+
+- The eyes light a little, a match far (`<set variable="player.light">`, burnt down by a timer), every match counted.
+- Four floors as `<scenes>`, each a `<map>`, stairs as ways `up` and `down`. The master key carried opens the locked doors, a door's rule checking the key is near (`<condition distance>`).
+- Kit creatures each floor places: the tarantula `<hunt>`s and the bat `<wander>`s along the halls (`<maze>`), the ghost `<chase>`s through walls. The win is all three pieces and the eyes back at the front door.
+
+### Fishing Derby
+
+- The lines are `<tether>`s from the rod tips to the hooks; you on the left pier, a `<computer>` on the right.
+- A free hook `<carry />`s the fish it touches. The hooks are written before the fish, so the hook's rule runs first: its `line` goes 0 → 1 (bite) → 2 (claimed by the fish's own rule), so a hook on its way up takes no second fish.
+- A fish at the surface adds `self.worth` to its fisherman; the shark eats a fish on a line; first to 99.
+- Left out also: a `<move>` key sets the hook's velocity on every key change, so the hook rises only while up is held.
+
+## Found on the way
+
+- **A rule can stop the touch that would have come next.** When the jaws open over the crocodile Harry stands on, `<land />` on the crocodile and the jaws' hazard meet at the same moment. Touches at one moment run in file order, `<land />` stops him, and a pair where neither moves is not looked at again that frame, so the jaws were never met. The jaws are written before the crocodiles.
 - **A variable cannot be named like an exprtk function** (`floor`); see the [readme](../readme.md#variables).
 - **The tar pit is 6 pixels tall**, sitting 1 pixel into the path: a taller one was still touched by a leap that had only just left the ground beside it.
 
-Near misses from the list, each short of something the engine does not have yet (none were started; verbs are another thread's to add):
-- **Seaquest**: `<facing>` follows the last move, up and down too, so the sub's torpedo would leave upwards after rising; it needs a fire that keeps to left and right (a facing that only some moves change).
-- **Adventure**: five rooms are built (`adventure.xml`) with `<carry />` and `<drop />` ([collisions](20-collisions.md)) and [scenes](12-scenes.md): two keys, two castles, two dragons, the chalice carried home wins. Still missing: the bat that steals what you carry, the third dragon, the rest of the kingdom.
+## Near misses from the list
+
+Each was short of something the engine did not have (none started):
+
+- **Seaquest**: `<facing>` follows the last move, up and down too, so the sub's torpedo would leave upwards after rising; it needs a fire that keeps to left and right.
 - **Dodge 'Em**: cars turning at the corners of a track (a path could drive the computer's car; the player's needs turns at given places).
-- **Q*bert**: diagonal hops on a pyramid; `<hop>` has four directions.
-- **Warlords**: shields that slide round the corner of a castle, and computer players.
-- **Ms. Pac-Man**: walls that stop a walker without killing it, and ghosts that steer through a maze (`<chase>` goes straight). **Keystone Kapers** scrolls sideways through the store. **Starmaster** is a first-person view.
-- Could be written the same way but not picked, being close to one that was (Atlantis was written later, 2026-10-15, for named timers and conditions): Solar Storm (Megamania with a paddle), Dragonfire and Montezuma's Revenge (Pitfall's screens, jumps and ladders, with keys and doors), Boxing (`<aim>` a punch).
+- **Warlords**: shields that slide round the corner of a castle.
+- **Ms. Pac-Man**: could now be written on Pac-Man's maze verbs. **Keystone Kapers** scrolls sideways. **Starmaster** is a first-person view.
+- Close to one that was written: Solar Storm (Megamania with a paddle), Dragonfire and Montezuma's Revenge (Pitfall's screens, jumps and ladders, with keys and doors), Boxing (`<aim>` a punch).

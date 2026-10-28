@@ -1,6 +1,6 @@
 # Motion
 
-**Status:** Built: constant velocity, acceleration, thrust, headings, hop, straight timed jump, riding, wrapping.
+**Status:** Built: constant velocity, acceleration, thrust, headings, hops, timed jumps with an arc, pulls and seeking, riding, wrapping.
 
 ## Principle
 
@@ -40,16 +40,16 @@
 
 - **Heading** is degrees clockwise from straight up (0 up, 90 right); direction is (sin h, -cos h). No `<heading>` leaves an object unchanged. `<turn>` and `<thrust>` are held like `<move>` and `<accelerate>` and are a load error without a heading. `<drag>` (0 up to, not including, 1) is the fraction of speed lost per frame after thrust, so thrust has a top speed.
 - **Pictures are turned by the engine, once per whole-degree change, not by backends** (details in [pictures](30-pictures.md)). Rejected: rotating in each backend (four backends to change, and the pixel test would still need the turned picture; filtering would make drawn and tested pixels differ per library).
-- **Pools, not spawning.** See [timers](09-timers.md). `<release object>N</release>` puts pool members in the middle of the object running the rule (a rock breaking); `<reveal>` puts them back where they started.
-- `<inc>`/`<dec>` take an amount (scoring first repeated `<inc />`); a hidden object does not count toward `remaining`; a collision `<reset />` restores the heading; `<stop />` clears turn and thrust.
-- Not done: shots that wrap and expire, a safe wait before the ship returns, a saucer, more than one wave.
+- **Broken rocks are spawned.** `<release object>N</release>` makes N copies of a kit piece in the middle of the object running the rule (a rock breaking), and a broken one `<despawn>`s ([pools-and-enemies](10-pools-and-enemies.md#spawn-and-despawn-2026-10-23)); `<reveal>` puts objects waiting out of play back where they started.
+- `<inc>`/`<dec>` take an amount (scoring first repeated `<inc />`); an object out of play does not count toward `remaining`; a collision `<reset />` restores the heading; `<stop />` clears turn and thrust.
+- Since the 2026-10-19 rewrite Asteroids has waves and a saucer that aims. Not done: the small and large saucer told apart, a safe wait before the ship returns.
 
 
 ## Steps, jumps and facing
 
 - **`<hop>`**: one instant step per key press, judged where it lands. Not repeated while held, not resumed after a pause.
-- **`<jump>`**: a straight timed move (a distance, its content, over `<seconds>`) that touches nothing in the air and meets what it lands on; refused if it would land off screen. No arc, no air control. Exactly Frostbite's "land on the ice or in the water".
-- **`<facing>`** (up/down/left/right, follows the last move, hop or jump, never turns the picture): `<fire>` leaves the middle of that side at the projectile's own speed. An object with no facing fires from its top as before. Chosen over a heading in 90 degree steps, which would turn the picture.
+- **`<jump>`**: a straight timed move (a distance, its content, over `<seconds>`) that touches nothing in the air and meets what it lands on; refused if it would land off screen. An `<arc>` (with `<seconds>`) lifts it on the way, for hops too; no air control. Exactly Frostbite's "land on the ice or in the water".
+- **`<facing>`** (up/down/left/right, follows the last move, hop or jump, the diagonal while keys of both axes are held, never turns the picture): `<fire>` leaves the middle of that side at the projectile's own speed. An object with no facing fires from its top as before. Chosen over a heading in 90 degree steps, which would turn the picture.
 
 
 ## Pulls, seeking and diagonal hops (2026-10-17)
@@ -59,7 +59,7 @@
 - `<seek>` turns the way the object goes, keeping its speed, by at most so many degrees a frame (`turnedToward` in play/geometry), so a missile overshoots and comes round; its heading follows. Still, nothing turns.
 - **Diagonal hops are direction words**, `up-left` and the rest, which pick (an attribute), with the step either one distance both ways or `<x>` and `<y>` (Q*bert's cubes are wider than they are tall). `Direction` stays four ways: a hop keeps the whole step and faces the up or down of it. Moves need nothing new: two keys held already go diagonally.
 - **`<track path>`** puts the middle along a `<path>`'s legs by distance, from its `<start>`; the axis still says how far, 0 to 1. Kept on the input side ([input](08-input.md)) rather than a new kind of path.
-- Open: keys moving along a track (a held key stepping the fraction), a pull's range and fall-off, seeking with a turning heading but no velocity (a turret: `<aim>` does that once), facing in eight ways.
+- Open: keys moving along a track (a held key stepping the fraction), a pull's range and fall-off, seeking with a turning heading but no velocity (a turret: `<aim>` does that once).
 
 
 ## Hops that take time, and hunting by hops (2026-10-18)
@@ -67,7 +67,7 @@
 - Need: Q*bert's hops are seen in the air, not one instant step, and Coily hops down the pyramid after Q*bert.
 - **`<seconds>` in `<hop>`, chosen** (the author said `<time>`; `<seconds>` matches `<jump>`): the hop then flies as a jump does, sharing its code (`startFlight`): touches nothing in the air, a second press waits for the landing, refused off screen. Without it a hop is the instant step it was.
 - **`<hunt object>` with a `<hop>` inside, chosen:** each time it runs, takes the one of the four hops (diagonal when the hop has `<x>`/`<y>`, else straight) whose landing is nearest the target, ties going up, then left. A verb run by a timer, so the hunter keeps its own pace; no maze needed. Looked at: a new verb `<pursue>` (it is still hunting, only by hops), and `<chase>` with steps (chase is a velocity).
-- Open: an arc for a hop, a look that follows the hunt's direction (Coily's picture does not turn). A key pressed mid-hop no longer changes the look or plays the sound ([input](08-input.md#a-press-that-cannot-be-done-2026-10-18)).
+- Open: a look that follows the hunt's direction (Coily's picture does not turn). A key pressed mid-hop no longer changes the look or plays the sound ([input](08-input.md#a-press-that-cannot-be-done-2026-10-18)).
 
 ## Motion models (idea: names)
 

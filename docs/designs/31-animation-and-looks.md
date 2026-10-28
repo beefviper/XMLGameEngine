@@ -6,11 +6,11 @@
 
 - Need: arcade creatures flap between two poses; nothing changed a picture over time.
 - An object with several `<sprite name="...">`s and an `<animation>`: `<interval>` seconds (a value above 0) and `<frame sprite="name" />` elements that refer to sprites by name (so a sprite can be reused in the sequence). At least two frames; every sprite must be shown; frames must be pictures of one size. (Several named sprites with *no* animation are looks, below.)
-- **Seconds in the file, frames in the engine:** turned into frames with `<framerate>` at load (a window with no framerate is an error); a slow machine animates slowly with everything else. One count per object, advanced by `Game::updateObjects` for objects that are shown and in play; a pause or menu holds the picture; a reset restores frame one. The cells of a group animate together because they start together and share the pictures.
+- **Seconds in the file, frames in the engine:** turned into frames with `<framerate>` at load (60 when left out); a slow machine animates slowly with everything else. One count per object, advanced first thing in a frame (`playOneFrame` in `play/frame.cpp`) for objects that are shown and in play; a pause or menu holds the picture; a reset restores frame one. The cells of a group animate together because they start together and share the pictures.
 - Groups: a member's own sprites replace the group's; an animation (its own, else the group's) is looked up in the sprites the member ends up with. This is what gives Space Invaders three alien kinds in one lockstep group.
 - Frames of a turned object each keep their own `Turnable`; equal-sized bitmaps turn to equal squares.
 - Rejected: a global animation clock (flips everything on one tick regardless of state; a per-object count is simpler with pause and reset, at the cost of a group's cells being in step only because they start together).
-- Not done: an interval per frame, an animation that runs once or starts on a collision, pictures driven by a variable or hit, a color per pixel, an image-to-rows tool.
+- Not done: an interval per frame, an animation that runs once or starts on a collision, pictures driven by a variable or hit, an image-to-rows tool. (A color per pixel came as bitmap inks, [pictures](30-pictures.md).)
 
 
 ## Looks
@@ -38,4 +38,3 @@
 - **`<mirror>left</mirror>`** names the way the pictures do not face; going that way they are drawn flipped. The way is the keys held, else a jump's way across, else velocity; stopping keeps it. Flipped bitmaps are made once at load and shared, like turned ones. Not allowed with a `<heading>` (that turns the picture instead) or a `<hole>` (holes are cut in one picture).
 - **Blinking** is a live number part, `owner.blink` (seconds left), not a verb: setting it starts it, a rule can test it (Mario's shellcreepers leave a blinking Mario alone), and it counts down by itself. A `<blink>` verb would have needed a variable beside it for the rules anyway.
 - Open: an `airborne`/`climbing` pose for ladders, a turning pose, poses read by a group's cells from a shared list only (a cell cannot have its own).
-

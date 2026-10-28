@@ -36,5 +36,4 @@
 
 ## Open
 
-- Where the vocabulary boundary sits: scrolling as camera, world or verb; gravity as a world setting or a per-object force (built per object, [motion](22-motion.md)).
-- Generating covers all twenty-three games ([generator](40-generator.md)).
+- Where the vocabulary boundary sits: scrolling as camera, world or verb (planned for version 2); gravity as a world setting or a per-object force (built per object, [motion](22-motion.md)).

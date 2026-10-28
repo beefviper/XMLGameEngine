@@ -4,11 +4,11 @@
 
 ## Known weaknesses
 
-- Only the four edges of a rectangle are reported; no penetration depth or contact normal (`bounce` flips one component).
-- No broad phase: a double loop over shown objects. A game with thousands would want a spatial grid, or sorted swept boxes (wrap each path in a box, keep sorted along an axis, stop at the first that cannot overlap).
+- A touch has a normal and a depth ([collisions](20-collisions.md#contacts-and-knocks-2026-10-16)), but `bounce` still flips one component along the touched edge, so nothing bounces off a slope.
+- No spatial broad phase: pairs are pruned by the rules once per game and far ones sleep ([collisions](20-collisions.md#fewer-checks-2026-10-20)). A game with thousands of moving objects would want a grid, or sorted swept boxes.
 - A pair where nothing moves is not looked at, so a rule against something standing still runs only when the object moves, rides something or hops. A `watch` flag on a rule that must be checked every frame is one way out.
 - Only the first hit of a pair per frame is handled.
-- Hidden objects do not move or collide; there is no invisible trigger zone or off-screen enemy still moving. Visibility and "in play" would have to become separate flags.
+- Objects out of play (`<active>false</active>`) do not move or collide. An invisible trigger zone is `<drawn>false</drawn>`: in play but unseen.
 - Other directions looked at: smaller time steps than the frame (the swept test avoids them), deferred handling (detect, then resolve, then update sprites), the world bounds as invisible collidable objects so a rule reads "touching the left bound", separate attributes for "what was hit" and "what to do".
 
 
@@ -29,5 +29,5 @@
 ## Reference Pong (C++ prototype)
 
 - A single-file SFML 3 Pong kept as the yardstick: named tunables at the top (they became `<variables>`), generic per-object helpers instead of per-object functions, one test point for optional output (text with no font).
-- Techniques that fed the engine: swept collision against a moving frame of reference (slab method), sweeping *both* objects, clamping back inside after a wall bounce (otherwise it re-triggers and jitters), a frame-time cap, variable bounce by contact point (now `<deflect>`). Not yet in the engine: speed-up per hit with a cap, paddle motion adding to the angle, push-out along a contact normal.
+- Techniques that fed the engine: swept collision against a moving frame of reference (slab method), sweeping *both* objects, clamping back inside after a wall bounce (otherwise it re-triggers and jitters), a frame-time cap, variable bounce by contact point (now `<deflect>`). Not yet in the engine: speed-up per hit with a cap, paddle motion adding to the angle, push-out along the contact normal.
 - A hand-tuned nudge (shifting a score glyph a few pixels) is the polish a declarative text vocabulary would need a per-glyph offset for.
