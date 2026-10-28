@@ -62,9 +62,6 @@
     <width>256</width>
     <height>224</height>
     <scale>3</scale>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="pull">0.3</variable>
@@ -235,9 +232,7 @@
               <color>color.blue</color>
             </bitmap>
           </sprite>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
+          <collisions />
           <group name="ground">
             <columns>16</columns>
             <sprite>
@@ -347,7 +342,6 @@
           </sprite>
           <position><x>window.width.center - 8</x><y>low</y></position>
           <collisions>
-            <enabled>true</enabled>
             <!-- last look first, so one bump changes it only once -->
             <collision object="mario" side="bottom" sprite="one">
               <become object="creepers" sprite="flipped" from="walking" />
@@ -459,7 +453,6 @@
           <mirror>left</mirror>
           <active>false</active>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal">
               <wrap />
             </collision>
@@ -799,7 +792,6 @@
           <mirror>left</mirror>
           <grip>0.15</grip>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal">
               <wrap />
             </collision>

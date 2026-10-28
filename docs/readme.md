@@ -88,7 +88,7 @@ The engine works out the kit and every `from=` on the XML before it reads the ob
 The rule the whole format follows: **an attribute names or picks something; everything else is the content of an element.**
 
 - Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`, and for sounds `sound`, `wave`, `pitch` and `to`. `<inc variable="paddle1.score" />`, `<collision edge="left">`, `<input button="space">`.
-- Everything else, a size, a color, a position, a flag, is written between tags. `<radius>10</radius>`, `<fullscreen>false</fullscreen>`.
+- Everything else, a size, a color, a position, a flag, is written between tags. `<radius>10</radius>`, `<fullscreen>true</fullscreen>`.
 - What something *does* is a list of command tags, run in the order written. There are no `;`-separated strings.
 
 ### Values
@@ -167,9 +167,9 @@ Which operations may sit where is checked by the schema (both validators), and w
 |---|---|
 | `<width>`, `<height>` | Size in pixels. Plain whole numbers: the expressions in the rest of the file are worked out against the window's size, so these cannot be expressions themselves |
 | `<scale>` | Optional, a whole number 1 or more (1 when left out): each of the game's pixels is drawn as a square this many window pixels across. The game is written and played at `<width>` by `<height>`; only the window is bigger. Mario Bros. is 256 by 224 at `<scale>3</scale>`, the size of the arcade screen with its sprites in proportion. Every backend draws it so, and the mouse is read back in the game's own pixels |
-| `<background>` | A color name, e.g. `color.black` |
-| `<fullscreen>` | `true` or `false` |
-| `<framerate>` | Frames per second (0-255) |
+| `<background>` | Optional, a color name (`color.black` when left out) |
+| `<fullscreen>` | Optional, `true` or `false` (`false` when left out) |
+| `<framerate>` | Optional, frames per second, up to 255 (60 when left out). It is how often the whole engine runs, keys and timers included, so a slow game such as Snake keeps 60 and moves on a timer (`<every>0.5</every>`) rather than lowering it |
 
 ### `<variables>`
 
@@ -274,7 +274,7 @@ Children, in this order:
 | `<active>` | no | `false`: the object starts out of play (not drawn, no collisions, not counted by a condition's `remaining`) until a `<release>`, a `<reveal>` or a `<fire>` brings it in. Objects, and groups (after `<velocity>`) |
 | `<drawn>` | no | `false`: the object is in play (moves, collides, counts its timers) but is never drawn: an exit, a trigger zone. An object that only holds variables has no `<sprite>` instead. Objects and groups (after `<active>`); a [scene](#scenes) can change it on a piece it takes |
 | `<most>` | no | How many copies a [`<spawn>`](#spawn-and-despawn), `<fire>` or `<release>` may have made of it at once (a whole number, 1 or more); at that many one makes none. Left out, no limit. Objects and groups (after `<drawn>`) |
-| `<collisions>` | no | Left out, the object touches nothing (as `<enabled>false</enabled>`). Otherwise `<enabled>` (`true`/`false`), an optional `<lockstep>` (`true`), an optional `<type>` (`box`, the default, or `pixel`), any `<solid char>`s and a `<hitbox>` (what touches: [solid characters](#collisions), [hitbox](#collisions)), then zero or more `<collision>` rules. See [Collisions](#collisions) |
+| `<collisions>` | no | Left out, the object touches nothing (as `<enabled>false</enabled>`). Written, it is on: `<collisions />` alone is an object others touch. Then an optional `<enabled>` (`false` turns it off; `true`, the default, need not be written), an optional `<lockstep>` (`true`), an optional `<type>` (`box`, the default, or `pixel`), any `<solid char>`s and a `<hitbox>` (what touches: [solid characters](#collisions), [hitbox](#collisions)), then zero or more `<collision>` rules. See [Collisions](#collisions) |
 | `<actions>` | no | Named actions the object can perform, each `<action name="up"><move direction="up">step</move></action>`: the commands are what it does. States bind keys to these names |
 | `<variables>` | no | Variables owned by this object, each `<variable name="score">0</variable>`. Other expressions refer to them as `objectName.variableName`, e.g. `paddle1.score`. A sprite can use them for its size (Pong's ball is a square of side `ball.size`), except one that draws a `<random>` |
 | `<timers>` | no | Things the object does on its own, every so many seconds or once after a while: see [Timers](#timers). Objects and groups |
@@ -303,7 +303,6 @@ A `<member>` says only what is its own: its `<sprite>`s and `<animation>`, a `<p
     <x>-1</x>
   </velocity>
   <collisions>
-    <enabled>true</enabled>
     <collision edge="horizontal">
       <wrap />
     </collision>
@@ -326,7 +325,6 @@ A group can hold `<group>`s instead of members or cells, and they take from it t
 <group name="lanes">
   <rows>1</rows>
   <collisions>
-    <enabled>true</enabled>
     <collision edge="horizontal"><wrap /></collision>
   </collisions>
   <group name="river" class="logs">
@@ -350,7 +348,7 @@ A group can hold `<group>`s instead of members or cells, and they take from it t
 </group>
 ```
 
-- **What replaces, what adds.** One thing (a half of the `<position>`, `<velocity>` or `<padding>`, `<columns>`, `<rows>`, the `<animation>`, `<acceleration>`, `<facing>`, `<active>`, the `class`) is replaced by the inner group's. A `<sprite>` changes the outer's of its name, as a member's does, so `logrow4` above gives only its longer rows. A list adds: the inner group's collision rules run after the outer's, and its `<actions>`, `<variables>` and `<timers>` join the outer's (an action or variable of the same name replaces it). An inner `<collisions>` says its own `<enabled>`, and `<lockstep>` and `<type>` when it changes them.
+- **What replaces, what adds.** One thing (a half of the `<position>`, `<velocity>` or `<padding>`, `<columns>`, `<rows>`, the `<animation>`, `<acceleration>`, `<facing>`, `<active>`, the `class`) is replaced by the inner group's. A `<sprite>` changes the outer's of its name, as a member's does, so `logrow4` above gives only its longer rows. A list adds: the inner group's collision rules run after the outer's, and its `<actions>`, `<variables>` and `<timers>` join the outer's (an action or variable of the same name replaces it). An inner `<collisions>` is on unless it says `<enabled>false</enabled>`, and says `<lockstep>` and `<type>` when it changes them.
 - **Names.** The members are named after their own group (`logrow4.2.1`, or `top.3.1` for a cell), and every group's name means all the members inside it: `<show object="lanes" />` shows all ten lanes, `object="river"` in a rule is every log. A group with `<lockstep>` makes a block of the members of each innermost group, which moves and turns as one: Space Invaders' march.
 - A group that holds groups has no `<member>`s, `<row>`s, `<column>`s or `<cell>`s of its own (a load error otherwise). Groups nest as deep as is wanted.
 
@@ -1061,7 +1059,6 @@ Detection (pure geometry, `CollisionDetector`) is kept apart from response (`Com
 
 ```xml
 <collisions>
-  <enabled>true</enabled>
   <hitbox>
     <rectangle><width>12</width><height>6</height></rectangle>
     <position><x>6</x><y>18</y></position>

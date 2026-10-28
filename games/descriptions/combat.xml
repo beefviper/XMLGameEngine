@@ -39,8 +39,6 @@
     <width>640</width>
     <height>480</height>
     <background>color.darkgreen</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -105,7 +103,7 @@
         <!-- the field: a bar in the middle, the same either side, and a beam across each end -->
         <group name="walls" class="wall">
           <sprite><rectangle><width>20</width><height>100</height><color>color.orange</color></rectangle></sprite>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
           <member><sprite><rectangle><height>140</height></rectangle></sprite><position><x>310</x><y>170</y></position></member>
           <member><position><x>150</x><y>60</y></position></member>
           <member><position><x>150</x><y>320</y></position></member>
@@ -135,7 +133,6 @@
           <drag>0.15</drag>
           <mass>1</mass>
           <collisions>
-            <enabled>true</enabled>
             <type>pixel</type>
             <collision edge="all"><stick /></collision>
             <collision class="wall">

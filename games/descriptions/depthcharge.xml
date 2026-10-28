@@ -34,9 +34,6 @@
   <window name="Depth Charge">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="surface">100</variable>
@@ -98,7 +95,6 @@
       <velocity><y>2</y></velocity>
       <most>6</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="bottom"><despawn /></collision>
         <collision class="sub"><despawn /></collision>
       </collisions>
@@ -119,7 +115,6 @@
       <velocity><y>-1.2</y></velocity>
       <most>6</most>
       <collisions>
-        <enabled>true</enabled>
         <collision object="ship"><despawn /></collision>
         <collision object="waterline"><despawn /></collision>
       </collisions>
@@ -195,7 +190,7 @@
         <object name="waterline">
           <sprite><rectangle><width>window.right</width><height>2</height><color>color.cyan</color></rectangle></sprite>
           <position><x>0</x><y>surface</y></position>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
         </object>
         <object name="status">
           <variables>
@@ -219,7 +214,6 @@
             </bitmap>
           </sprite>
           <collisions>
-            <enabled>true</enabled>
             <type>pixel</type>
             <collision edge="horizontal"><wrap /></collision>
             <collision class="charge">
@@ -283,7 +277,6 @@
           </sprite>
           <position><x><centered /></x><y>surface - 20</y></position>
           <collisions>
-            <enabled>true</enabled>
             <type>pixel</type>
             <collision edge="horizontal"><stick /></collision>
             <collision class="mine">

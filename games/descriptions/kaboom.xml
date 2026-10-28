@@ -49,8 +49,6 @@
     <width>800</width>
     <height>600</height>
     <background>color.forestgreen</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="step">9</variable>
@@ -126,7 +124,6 @@
       <velocity><x>pace</x></velocity>
       <facing>down</facing>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="horizontal"><bounce /></collision>
       </collisions>
       <timers>
@@ -178,7 +175,6 @@
       <velocity><y>fall</y></velocity>
       <most>10</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="bottom">
           <dec variable="bucket.buckets" />
           <become object="bucket" from="two" sprite="one" />
@@ -274,7 +270,6 @@
           </sprite>
           <position><x><centered /></x><y>420</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><stick /></collision>
           </collisions>
           <actions>

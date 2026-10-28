@@ -39,8 +39,6 @@
     <width>640</width>
     <height>480</height>
     <background>color.darkblue</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -83,7 +81,6 @@
       <velocity><y>-shellspeed</y></velocity>
       <most>2</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision class="plane"><despawn /></collision>
       </collisions>
@@ -150,7 +147,6 @@
         <!-- four lanes of planes going round and round the sky: they start off the side they fly in from, and one shot down comes back from there -->
         <group name="planes" class="plane">
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><wrap /></collision>
             <collision object="shell1">
               <inc variable="gun1.score" />

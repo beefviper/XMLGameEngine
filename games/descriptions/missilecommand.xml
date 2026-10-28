@@ -43,9 +43,6 @@
   <window name="Missile Command">
     <width>640</width>
     <height>480</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -96,7 +93,6 @@
       <velocity><y>speed</y></velocity>
       <heading>180</heading>
       <collisions>
-        <enabled>true</enabled>
         <type>pixel</type>
         <collision class="city"><inc variable="status.spent" /><reset /></collision>
         <collision class="burst">
@@ -119,7 +115,6 @@
       <velocity><y>-abmspeed</y></velocity>
       <most>3</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision object="sight">
           <release object="burst" />
@@ -187,7 +182,6 @@
       </animation>
       <most>3</most>
       <collisions>
-        <enabled>true</enabled>
         <type>pixel</type>
       </collisions>
       <timers>
@@ -247,7 +241,6 @@
           </sprite>
           <position><y>ground - 14</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision class="missile"><play sound="city" /><die /></collision>
           </collisions>
           <member><position><x>50</x></position></member>
@@ -300,7 +293,6 @@
           </sprite>
           <position><x><centered /></x><y><centered /></y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="all"><stick /></collision>
           </collisions>
           <actions>

@@ -31,9 +31,6 @@
   <window name="Breakout">
     <width>640</width>
     <height>720</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="brick">38</variable>
@@ -139,7 +136,6 @@
           <sprite><rectangle><width>brick</width><height>line - gap</height></rectangle></sprite>
           <position><x>(window.right - 14 * brick - 13 * gap) / 2</x></position>
           <collisions>
-            <enabled>true</enabled>
             <collision object="ball">
               <inc variable="status.score">self.worth</inc>
               <die />
@@ -148,25 +144,25 @@
           <group name="red">
             <sprite><rectangle><color>color.red</color></rectangle></sprite>
             <position><y>top</y></position>
-            <collisions><enabled>true</enabled><collision object="ball"><play sound="red" /></collision></collisions>
+            <collisions><collision object="ball"><play sound="red" /></collision></collisions>
             <variables><variable name="worth">7</variable></variables>
           </group>
           <group name="orange">
             <sprite><rectangle><color>color.orange</color></rectangle></sprite>
             <position><y>top + 2 * line</y></position>
-            <collisions><enabled>true</enabled><collision object="ball"><play sound="orange" /></collision></collisions>
+            <collisions><collision object="ball"><play sound="orange" /></collision></collisions>
             <variables><variable name="worth">5</variable></variables>
           </group>
           <group name="green">
             <sprite><rectangle><color>color.green</color></rectangle></sprite>
             <position><y>top + 4 * line</y></position>
-            <collisions><enabled>true</enabled><collision object="ball"><play sound="green" /></collision></collisions>
+            <collisions><collision object="ball"><play sound="green" /></collision></collisions>
             <variables><variable name="worth">3</variable></variables>
           </group>
           <group name="yellow">
             <sprite><rectangle><color>color.yellow</color></rectangle></sprite>
             <position><y>top + 6 * line</y></position>
-            <collisions><enabled>true</enabled><collision object="ball"><play sound="yellow" /></collision></collisions>
+            <collisions><collision object="ball"><play sound="yellow" /></collision></collisions>
             <variables><variable name="worth">1</variable></variables>
           </group>
         </group>
@@ -175,7 +171,6 @@
           <sprite name="half"><rectangle><width>paddle / 2</width><height>12</height><color>color.cyan</color></rectangle></sprite>
           <position><x><centered /></x><y>window.bottom - 60</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><stick /></collision>
           </collisions>
           <actions>
@@ -190,7 +185,6 @@
           <position><x><centered /></x><y><centered /></y></position>
           <velocity><x><random><min>-3</min><max>3</max></random></x><y>4</y></velocity>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal">
               <bounce />
               <play sound="wall" />

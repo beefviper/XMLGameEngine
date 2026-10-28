@@ -37,9 +37,6 @@
   <window name="Astrosmash">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="step">7</variable>
@@ -93,7 +90,6 @@
       <velocity><x><random><min>-2.5</min><max>2.5</max></random></x><y>2.5</y></velocity>
       <most>8</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="horizontal"><bounce /></collision>
         <collision object="ground">
           <set variable="ship.score">max(0, ship.score - 10)</set>
@@ -138,7 +134,7 @@
         <object name="ground" class="ground">
           <sprite><rectangle><width>window.right</width><height>ground</height><color>color.darkgrey</color></rectangle></sprite>
           <position><x>0</x><y>window.bottom - ground</y></position>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
         </object>
         <!-- the falling rocks: four big and four small, falling at a slant from
              above the screen, each starting over at the top when shot or landed -->
@@ -148,7 +144,6 @@
           <position><y><random><min>-600</min><max>-40</max></random></y></position>
           <velocity><x><random><min>-slant</min><max>slant</max></random></x><y><random><min>1</min><max>2.5</max></random></y></velocity>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><bounce /></collision>
             <collision object="ground">
               <set variable="ship.score">max(0, ship.score - self.worth / 2)</set>
@@ -235,7 +230,6 @@
           <position><x>200</x><y><random><min>-2400</min><max>-900</max></random></y></position>
           <velocity><x>0</x><y><random><min>1.5</min><max>2.5</max></random></y></velocity>
           <collisions>
-            <enabled>true</enabled>
             <collision object="ground"><trigger object="ship" action="lose" /></collision>
             <collision object="shot">
               <inc variable="ship.score">40</inc>
@@ -271,7 +265,6 @@
           </sprite>
           <position><x><centered /></x><y>window.bottom - ground - ship.height</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><stick /></collision>
             <collision class="rocks"><trigger action="lose" /></collision>
             <collision class="spinner"><trigger action="lose" /></collision>

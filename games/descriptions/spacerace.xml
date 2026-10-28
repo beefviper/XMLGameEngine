@@ -31,9 +31,6 @@
   <window name="Space Race">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="step">2.5</variable>
@@ -97,7 +94,6 @@
           <sprite><rectangle><width>8</width><height>4</height></rectangle></sprite>
           <position><x>0</x><y>50</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><wrap /></collision>
           </collisions>
           <row number="1 5 9"><velocity><x>1.5</x></velocity></row>
@@ -119,7 +115,6 @@
             </bitmap>
           </sprite>
           <collisions>
-            <enabled>true</enabled>
             <type>pixel</type>
             <collision edge="bottom"><stick /></collision>
             <collision edge="top">

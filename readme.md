@@ -12,8 +12,6 @@ This is all of `pong_min.xml`, two paddles and a ball:
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
   <window name="Pong">
     <width>1280</width> <height>720</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen> <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">30</variable>
@@ -33,7 +31,6 @@ This is all of `pong_min.xml`, two paddles and a ball:
             <y>ball.speed * sin(ball.angle * pi / 180)</y>
           </velocity>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="vertical"><bounce /></collision>
             <collision edge="horizontal"><reset /></collision>
             <collision><deflect>45</deflect></collision>
@@ -47,7 +44,6 @@ This is all of `pong_min.xml`, two paddles and a ball:
         <group name="paddles">
           <sprite><rectangle><width>width</width><height>height</height></rectangle></sprite>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="vertical"><stick /></collision>
           </collisions>
           <actions>

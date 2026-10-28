@@ -61,9 +61,6 @@
   <window name="Pitfall!">
     <width>640</width>
     <height>480</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -130,9 +127,7 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>surface</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
+      <collisions />
     </object>
     <group name="banks" class="ground">
       <sprite>
@@ -143,9 +138,7 @@
         </rectangle>
       </sprite>
       <position><y>surface</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
+      <collisions />
       <member><position><x>0</x></position></member>
       <member>
         <sprite>
@@ -167,9 +160,7 @@
         </rectangle>
       </sprite>
       <position><y>surface</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
+      <collisions />
       <member><position><x>0</x></position></member>
       <member><position><x>326</x></position></member>
     </group>
@@ -207,7 +198,6 @@
       <position><y>surface - 21</y></position>
       <velocity><x>-roll</x></velocity>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="horizontal">
           <wrap />
         </collision>
@@ -229,9 +219,7 @@
         </bitmap>
       </sprite>
       <position><x>300</x><y>surface - 1</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
+      <collisions />
     </object>
 
     <!-- the pond, and three crocodiles to cross it on: shut, a head to
@@ -245,9 +233,7 @@
         </rectangle>
       </sprite>
       <position><x>220</x><y>surface + 4</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
+      <collisions />
     </object>
     <group name="crocs" class="croc">
       <sprite name="shut">
@@ -277,7 +263,6 @@
       </sprite>
       <position><y>surface - 2</y></position>
       <collisions>
-        <enabled>true</enabled>
         <collision object="harry" sprite="open">
           <trigger object="harry" action="lose" />
         </collision>
@@ -340,9 +325,7 @@
         <frame sprite="low" />
       </animation>
       <position><x>170</x><y>surface - fire.height</y></position>
-      <collisions>
-        <enabled>true</enabled>
-      </collisions>
+      <collisions />
     </object>
 
     <!-- a scorpion pacing the tunnel -->
@@ -362,7 +345,6 @@
       <position><x>200</x><y>tunnel - 12</y></position>
       <velocity><x>crawl</x></velocity>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="horizontal">
           <bounce />
         </collision>
@@ -390,7 +372,6 @@
       </sprite>
       <position><x>580</x><y>surface - treasure.height</y></position>
       <collisions>
-        <enabled>true</enabled>
         <collision object="harry">
           <inc variable="status.score">worth</inc>
           <inc variable="status.found" />
@@ -410,7 +391,6 @@
       <position><x>window.right - 4</x><y>0</y></position>
       <drawn>false</drawn>
       <collisions>
-        <enabled>true</enabled>
         <collision object="harry">
           <enter way="east" />
         </collision>
@@ -427,7 +407,6 @@
       <position><x>0</x><y>0</y></position>
       <drawn>false</drawn>
       <collisions>
-        <enabled>true</enabled>
         <collision object="harry">
           <enter way="west" />
         </collision>
@@ -587,9 +566,7 @@
             </rectangle>
           </sprite>
           <position><x>0</x><y>tunnel</y></position>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
+          <collisions />
         </object>
 
         <!-- Pitfall Harry -->
@@ -623,7 +600,6 @@
           <position><x>24</x><y>surface - harry.height</y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
-            <enabled>true</enabled>
             <!-- through a side of a screen: in at the other side of the next -->
             <collision class="eastside">
               <move direction="left">window.right - 2 * harry.width</move>

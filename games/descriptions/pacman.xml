@@ -59,9 +59,6 @@
   <window name="Pac-Man">
     <width>448</width>
     <height>576</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="tile">16</variable>
@@ -513,7 +510,6 @@
                 </rectangle>
               </sprite>
               <collisions>
-                <enabled>true</enabled>
                 <collision object="pacman">
                   <inc variable="status.score">10</inc>
                   <play sound="chomp" />
@@ -555,7 +551,6 @@
                 <frame sprite="dim" />
               </animation>
               <collisions>
-                <enabled>true</enabled>
                 <collision object="pacman">
                   <inc variable="status.score">50</inc>
                   <set variable="status.worth">200</set>
@@ -572,9 +567,7 @@
           <object name="pen" char="h">
             <sprite><rectangle><width>4</width><height>4</height><color>color.black</color></rectangle></sprite>
             <drawn>false</drawn>
-            <collisions>
-              <enabled>true</enabled>
-            </collisions>
+            <collisions />
           </object>
           <!-- the cherry: none until enough dots are eaten, then for a while -->
           <object name="fruit" char="f">
@@ -600,7 +593,6 @@
               </bitmap>
             </sprite>
             <collisions>
-              <enabled>true</enabled>
               <collision object="pacman" sprite="cherry">
                 <inc variable="status.score">100</inc>
                 <play sound="fruit" />
@@ -687,7 +679,6 @@
               <wall class="door" />
             </maze>
             <collisions>
-              <enabled>true</enabled>
               <!-- touches with his middle, as the arcade's tiles do -->
               <hitbox>
                 <rectangle><width>13</width><height>13</height></rectangle>
@@ -786,7 +777,6 @@
               <wall class="door" sprite="blue" />
             </maze>
             <collisions>
-              <enabled>true</enabled>
               <hitbox>
                 <rectangle><width>12</width><height>12</height></rectangle>
                 <position><x>8</x><y>8</y></position>

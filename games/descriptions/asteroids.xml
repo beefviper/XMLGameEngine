@@ -38,9 +38,6 @@
   <window name="Asteroids">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="turnrate">4</variable>
@@ -117,7 +114,6 @@
       <velocity><y>-shotspeed</y></velocity>
       <most>4</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision class="hazard"><despawn /></collision>
       </collisions>
@@ -126,7 +122,6 @@
     <group name="rock" class="hazard">
       <position><x>0</x><y>0</y></position>
       <collisions>
-        <enabled>true</enabled>
         <type>pixel</type>
         <collision edge="all"><wrap /></collision>
       </collisions>
@@ -146,7 +141,6 @@
       </sprite>
       <velocity><x><random><min>-1.6</min><max>1.6</max></random></x></velocity>
       <collisions>
-        <enabled>true</enabled>
         <collision class="breaker">
           <despawn />
           <inc variable="ship.score">50</inc>
@@ -196,7 +190,6 @@
       </sprite>
       <velocity><x><random><min>-2.6</min><max>2.6</max></random></x></velocity>
       <collisions>
-        <enabled>true</enabled>
         <collision class="breaker">
           <despawn />
           <inc variable="ship.score">100</inc>
@@ -233,7 +226,6 @@
       <velocity><y>5</y></velocity>
       <most>2</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision class="breaker"><despawn /></collision>
       </collisions>
@@ -285,7 +277,6 @@
           <heading>0</heading>
           <drag>drag</drag>
           <collisions>
-            <enabled>true</enabled>
             <type>pixel</type>
             <collision edge="all"><wrap /></collision>
             <collision class="hazard">
@@ -334,7 +325,6 @@
               <line><from><x>50</x><y>21</y></from><to><x>60</x><y>33</y></to><thickness>2</thickness></line>
             </sprite>
             <collisions>
-              <enabled>true</enabled>
               <collision class="breaker">
                 <die />
                 <inc variable="ship.score">20</inc>
@@ -401,7 +391,6 @@
           <velocity><x>2</x></velocity>
           <active>false</active>
           <collisions>
-            <enabled>true</enabled>
             <type>pixel</type>
             <collision edge="vertical"><wrap /></collision>
             <collision edge="right"><die /></collision>

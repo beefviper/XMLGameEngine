@@ -49,9 +49,6 @@
   <window name="Galaxian">
     <width>560</width>
     <height>640</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="pixel">3</variable>
@@ -182,7 +179,6 @@
       <velocity><y>6</y></velocity>
       <most>6</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision object="ship"><despawn /></collision>
       </collisions>
@@ -215,7 +211,6 @@
         <animation><interval>0.4</interval><frame sprite="on" /><frame sprite="on" /><frame sprite="off" /></animation>
         <velocity><y>0.5</y></velocity>
         <collisions>
-          <enabled>true</enabled>
           <collision edge="bottom"><wrap /></collision>
         </collisions>
         <group name="redstars" char="r"><sprite name="on"><bitmap><color>color.red</color></bitmap></sprite></group>
@@ -382,7 +377,6 @@
           </sprite>
           <position><x><centered /></x><y>window.bottom - ship.height - margin * 3</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><stick /></collision>
             <collision class="alien"><trigger action="lose" /></collision>
             <collision class="bomb"><trigger action="lose" /></collision>
@@ -421,7 +415,6 @@
           <objects>
             <group name="aliens" class="alien">
               <collisions>
-                <enabled>true</enabled>
                 <collision edge="bottom"><wrap /></collision>
                 <collision object="shot">
                   <die />

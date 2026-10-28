@@ -36,9 +36,6 @@
   <window name="Freeway">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="cell">50</variable>
@@ -115,7 +112,7 @@
         <object name="verge" class="farside">
           <sprite><rectangle><width>window.right</width><height>cell</height><color>color.grey</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
         </object>
         <object name="road">
           <sprite><rectangle><width>window.right</width><height>10 * cell</height><color>color.darkgrey</color></rectangle></sprite>
@@ -157,7 +154,6 @@
             </bitmap>
           </sprite>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><wrap /></collision>
           </collisions>
           <group name="lane1">
@@ -251,7 +247,6 @@
           </sprite>
           <position><y>11 * cell + inset</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision class="traffic">
               <move direction="down">cell</move>
               <play sound="hit" />

@@ -35,8 +35,6 @@
     <width>800</width>
     <height>600</height>
     <background>color.darkgreen</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="ball">12</variable>
@@ -99,7 +97,7 @@
       <objects>
         <group name="cushions" class="cushion">
           <sprite><rectangle><width>window.right</width><height>rail</height><color>color.brown</color></rectangle></sprite>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
           <member><position><x>0</x><y>0</y></position></member>
           <member><position><x>0</x><y>window.bottom - rail</y></position></member>
           <member><sprite><rectangle><width>rail</width><height>window.bottom</height></rectangle></sprite><position><x>0</x><y>0</y></position></member>
@@ -108,7 +106,7 @@
         <!-- the six pockets: the corners and the middle of the long sides -->
         <group name="pockets" class="pocket">
           <sprite><circle><radius>pocket</radius><color>color.black</color></circle></sprite>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
           <member><position><x>rail - pocket</x><y>rail - pocket</y></position></member>
           <member><position><x><centered /></x><y>rail - pocket</y></position></member>
           <member><position><x>window.right - rail - pocket</x><y>rail - pocket</y></position></member>
@@ -135,7 +133,6 @@
           <drag>cloth</drag>
           <mass>1</mass>
           <collisions>
-            <enabled>true</enabled>
             <collision class="cushion">
               <bounce />
               <play sound="cushion" />
@@ -147,7 +144,6 @@
           </collisions>
           <group name="white">
             <collisions>
-              <enabled>true</enabled>
               <collision class="pocket">
                 <dec variable="player.score" />
                 <play sound="scratch" />
@@ -160,7 +156,6 @@
           <group name="rack">
             <sprite><circle><color>color.red</color></circle></sprite>
             <collisions>
-              <enabled>true</enabled>
               <collision class="pocket">
                 <inc variable="player.score" />
                 <play sound="drop" />
@@ -180,7 +175,6 @@
           <sprite><circle><radius>tip</radius><color>color.lightgrey</color></circle></sprite>
           <position><x>150</x><y>293</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="all"><stick /></collision>
             <collision object="cueball">
               <knock />

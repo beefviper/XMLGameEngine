@@ -41,9 +41,6 @@
   <window name="Yars' Revenge">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="fly">3</variable>
@@ -125,7 +122,6 @@
       </animation>
       <most>1</most>
       <collisions>
-        <enabled>true</enabled>
         <type>pixel</type>
         <collision edge="all"><despawn /></collision>
         <collision object="blast">
@@ -201,7 +197,7 @@
             <frame sprite="b" />
           </animation>
           <position><x>300</x><y>0</y></position>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
           <row number="even">
             <animation>
               <interval>0.05</interval>
@@ -243,7 +239,6 @@
             <sprite><rectangle><width>11</width><height>13</height><color>color.orange</color></rectangle></sprite>
             <velocity><x>0</x><y>sway</y></velocity>
             <collisions>
-              <enabled>true</enabled>
               <collision object="yar">
                 <inc variable="player.score">69</inc>
                 <play sound="nibble" />
@@ -272,7 +267,6 @@
             </sprite>
             <velocity><x>0</x><y>sway</y></velocity>
             <collisions>
-              <enabled>true</enabled>
               <collision object="blast">
                 <inc variable="player.score">1000</inc>
                 <play sound="boom" />
@@ -328,7 +322,6 @@
           <position><x>60</x><y>288</y></position>
           <facing>right</facing>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><stick /></collision>
             <collision edge="vertical"><wrap /></collision>
             <collision object="qotile"><reveal object="cannon" /></collision>
@@ -375,7 +368,7 @@
           <position><x>700</x><y>296</y></position>
           <velocity><x>-1.6</x><y>0</y></velocity>
           <seek object="yar">2</seek>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
         </object>
         <!-- the Zorlon cannon at the left edge, level with Yar while it is there -->
         <object name="cannon">

@@ -1350,7 +1350,9 @@ namespace xge
 			const std::string collisionsHere = where + " > <collisions>";
 			RawCollisionData collisionData = std::move(base);
 
-			collisionData.enabled = readBool(*requireChild(collisions, "enabled", collisionsHere), collisionsHere);
+			// A <collisions> is on unless it says <enabled>false</enabled>.
+			const auto enabled = findChild(&collisions, "enabled");
+			collisionData.enabled = enabled ? readBool(*enabled, collisionsHere) : true;
 			if (auto lockstep = findChild(&collisions, "lockstep"))
 			{
 				collisionData.lockstep = readBool(*lockstep, collisionsHere);
@@ -2820,9 +2822,13 @@ namespace xge
 			windowDesc.scale = std::stoi(readText(*scale));
 			if (windowDesc.scale < 1) { fail(windowHere, "<scale> is a whole number, 1 or more"); }
 		}
-		windowDesc.background = readText(*requireChild(*window, "background", windowHere));
-		windowDesc.fullscreen = readBool(*requireChild(*window, "fullscreen", windowHere), windowHere) ? "true" : "false";
-		windowDesc.framerate = std::stoi(readText(*requireChild(*window, "framerate", windowHere)));
+		// Left out: black, a window, 60 frames a second.
+		const auto background = findChild(window.get(), "background");
+		const auto fullscreen = findChild(window.get(), "fullscreen");
+		const auto framerate = findChild(window.get(), "framerate");
+		windowDesc.background = background ? readText(*background) : "color.black";
+		windowDesc.fullscreen = fullscreen && readBool(*fullscreen, windowHere) ? "true" : "false";
+		windowDesc.framerate = framerate ? std::stoi(readText(*framerate)) : 60;
 
 		// load variables
 		readVariables(variablesNode.get(), "<variables>", rawVariables);

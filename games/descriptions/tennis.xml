@@ -43,8 +43,6 @@
     <width>800</width>
     <height>600</height>
     <background>color.forestgreen</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="step">3</variable>
@@ -123,7 +121,6 @@
             </bitmap>
           </sprite>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="all"><stick /></collision>
           </collisions>
           <actions>
@@ -159,7 +156,6 @@
             <bounce>0.7</bounce>
           </altitude>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><bounce /></collision>
             <collision edge="top">
               <inc variable="player.points" />

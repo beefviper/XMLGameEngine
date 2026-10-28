@@ -53,9 +53,6 @@
   <window name="Adventure">
     <width>640</width>
     <height>480</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="step">3</variable>
@@ -116,7 +113,7 @@
     <!-- the walls a room can have, taken a member at a time -->
     <group name="walls" class="wall">
       <sprite><rectangle><width>window.right</width><height>wall</height><color>color.yellow</color></rectangle></sprite>
-      <collisions><enabled>true</enabled></collisions>
+      <collisions />
       <member name="top"><position><x>0</x><y>0</y></position></member>
       <member name="bottom"><position><x>0</x><y>window.bottom - wall</y></position></member>
       <member name="west">
@@ -168,7 +165,6 @@
       </sprite>
       <position><x>window.width.center - 128</x><y>40</y></position>
       <collisions>
-        <enabled>true</enabled>
         <type>pixel</type>
       </collisions>
       <member name="gold" />
@@ -210,7 +206,6 @@
         </bitmap>
       </sprite>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><stick /></collision>
         <collision class="wall"><stop /></collision>
         <collision object="sword">
@@ -245,7 +240,6 @@
       <position><x>window.right - 4</x><y>0</y></position>
       <drawn>false</drawn>
       <collisions>
-        <enabled>true</enabled>
         <collision object="hero"><enter way="east" /></collision>
       </collisions>
     </object>
@@ -254,7 +248,6 @@
       <position><x>0</x><y>0</y></position>
       <drawn>false</drawn>
       <collisions>
-        <enabled>true</enabled>
         <collision object="hero"><enter way="west" /></collision>
       </collisions>
     </object>
@@ -264,7 +257,6 @@
       <position><x>window.width.center - 32</x><y>136</y></position>
       <drawn>false</drawn>
       <collisions>
-        <enabled>true</enabled>
         <collision object="hero"><enter way="in" /></collision>
       </collisions>
     </object>
@@ -274,7 +266,6 @@
       <position><x>(window.right - gap) / 2</x><y>window.bottom - 6</y></position>
       <drawn>false</drawn>
       <collisions>
-        <enabled>true</enabled>
         <collision object="hero"><enter way="out" /></collision>
       </collisions>
     </object>
@@ -322,7 +313,6 @@
           <sprite><rectangle><width>10</width><height>10</height><color>color.orange</color></rectangle></sprite>
           <position><x>window.width.center - 5</x><y>400</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="all"><stick /></collision>
             <collision class="wall"><stop /></collision>
             <collision class="item"><carry /><play sound="pickup" /></collision>
@@ -373,7 +363,6 @@
               </sprite>
               <position><x>window.width.center - 32</x><y>136</y></position>
               <collisions>
-                <enabled>true</enabled>
                 <collision object="goldkey"><die /><play sound="open" /></collision>
               </collisions>
             </object>
@@ -388,7 +377,7 @@
                 </bitmap>
               </sprite>
               <position><x>100</x><y>380</y></position>
-              <collisions><enabled>true</enabled></collisions>
+              <collisions />
             </object>
           </objects>
         </scene>
@@ -410,7 +399,6 @@
               <position><x>wall</x><y>wall</y></position>
               <drawn>false</drawn>
               <collisions>
-                <enabled>true</enabled>
                 <collision object="chalice"><inc variable="status.won" /></collision>
               </collisions>
             </object>
@@ -425,7 +413,7 @@
                 </bitmap>
               </sprite>
               <position><x>300</x><y>200</y></position>
-              <collisions><enabled>true</enabled></collisions>
+              <collisions />
             </object>
           </objects>
         </scene>
@@ -455,7 +443,7 @@
                 </bitmap>
               </sprite>
               <position><x>480</x><y>300</y></position>
-              <collisions><enabled>true</enabled></collisions>
+              <collisions />
             </object>
             <object name="yorgle" />
           </objects>
@@ -495,7 +483,6 @@
               </sprite>
               <position><x>window.width.center - 32</x><y>136</y></position>
               <collisions>
-                <enabled>true</enabled>
                 <collision object="blackkey"><die /><play sound="open" /></collision>
               </collisions>
             </object>
@@ -551,7 +538,7 @@
                 <frame sprite="dim" />
               </animation>
               <position><x>300</x><y>120</y></position>
-              <collisions><enabled>true</enabled></collisions>
+              <collisions />
             </object>
             <object name="grundle" />
           </objects>

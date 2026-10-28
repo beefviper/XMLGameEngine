@@ -740,10 +740,16 @@
     <xsl:param name="to" />
     <xsl:param name="indent" />
     <xsl:variable name="data" select="concat($to, '.rawCollisionData')" />
+    <!-- a <collisions> is on unless it says <enabled>false</enabled> -->
     <xsl:variable name="enabled">
-      <xsl:call-template name="is-true">
-        <xsl:with-param name="node" select="$node/enabled" />
-      </xsl:call-template>
+      <xsl:choose>
+        <xsl:when test="$node and not($node/enabled)">true</xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="is-true">
+            <xsl:with-param name="node" select="$node/enabled" />
+          </xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
     </xsl:variable>
     <xsl:variable name="lockstep">
       <xsl:call-template name="is-true">
@@ -2598,17 +2604,28 @@
       <xsl:text>;&#10;&#9;game.window.scale = </xsl:text>
       <xsl:value-of select="normalize-space($game/window/scale)" />
     </xsl:if>
+    <!-- background, fullscreen and framerate default to black, a window and 60 -->
     <xsl:text>;&#10;&#9;game.window.background = </xsl:text>
-    <xsl:call-template name="text">
-      <xsl:with-param name="node" select="$game/window/background" />
-    </xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="$game/window/background">
+        <xsl:call-template name="text">
+          <xsl:with-param name="node" select="$game/window/background" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>"color.black"</xsl:otherwise>
+    </xsl:choose>
     <xsl:text>;&#10;&#9;game.window.fullscreen = "</xsl:text>
     <xsl:choose>
       <xsl:when test="normalize-space($game/window/fullscreen) = 'true' or normalize-space($game/window/fullscreen) = '1'">true</xsl:when>
       <xsl:otherwise>false</xsl:otherwise>
     </xsl:choose>
     <xsl:text>";&#10;&#9;game.window.framerate = </xsl:text>
-    <xsl:value-of select="normalize-space($game/window/framerate)" />
+    <xsl:choose>
+      <xsl:when test="$game/window/framerate">
+        <xsl:value-of select="normalize-space($game/window/framerate)" />
+      </xsl:when>
+      <xsl:otherwise>60</xsl:otherwise>
+    </xsl:choose>
     <xsl:text>;&#10;</xsl:text>
     <!-- a variable declared twice keeps the later value, in the earlier place -->
     <xsl:variable name="variables" select="$game/variables/variable[not(@name = preceding-sibling::variable/@name)]" />

@@ -41,9 +41,6 @@
   <window name="Demon Attack">
     <width>640</width>
     <height>480</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -85,7 +82,6 @@
       <velocity><y>4</y></velocity>
       <most>8</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision object="player"><despawn /></collision>
       </collisions>
@@ -108,7 +104,6 @@
       <velocity><x><random><min>-sway</min><max>sway</max></random></x><y>dive</y></velocity>
       <most>8</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="horizontal"><bounce /></collision>
         <collision edge="bottom"><despawn /></collision>
         <collision object="laser">
@@ -181,7 +176,6 @@
           </sprite>
           <position><x><centered /></x><y>window.bottom - ground - player.height</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><stick /></collision>
             <collision class="bomb"><trigger action="lose" /></collision>
             <collision class="demon"><trigger action="lose" /></collision>
@@ -270,7 +264,6 @@
               <velocity><x>speed</x></velocity>
               <facing>down</facing>
               <collisions>
-                <enabled>true</enabled>
                 <collision edge="horizontal"><bounce /></collision>
                 <collision object="laser">
                   <inc variable="player.score">30</inc>
@@ -343,7 +336,6 @@
               <velocity><x>speed</x></velocity>
               <facing>down</facing>
               <collisions>
-                <enabled>true</enabled>
                 <collision edge="horizontal"><bounce /></collision>
                 <collision object="laser">
                   <inc variable="player.score">50</inc>
@@ -414,7 +406,6 @@
               <velocity><x>speed</x></velocity>
               <facing>down</facing>
               <collisions>
-                <enabled>true</enabled>
                 <collision edge="horizontal"><bounce /></collision>
                 <!-- the hurt look first: a hit on a whole one only turns it -->
                 <collision object="laser" sprite="hurt">

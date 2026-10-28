@@ -43,9 +43,6 @@
   <window name="Frogger">
     <width>624</width>
     <height>672</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="cell">48</variable>
@@ -135,7 +132,7 @@
         <object name="water" class="water">
           <sprite><rectangle><width>window.right</width><height>5 * cell</height><color>color.darkblue</color></rectangle></sprite>
           <position><x>0</x><y>2 * cell</y></position>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
         </object>
         <object name="bank">
           <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
@@ -150,7 +147,7 @@
         <object name="hedge" class="hazard">
           <sprite><rectangle><width>window.right</width><height>cell</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>0</x><y>1 * cell</y></position>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
         </object>
         <group name="pads" class="pads">
           <columns>5</columns>
@@ -174,7 +171,6 @@
           </sprite>
           <position><x>2 * cell + 4</x><y>1 * cell + 4</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision object="frog" sprite="home"><trigger object="frog" action="lose" /></collision>
             <collision object="frog" sprite="empty">
               <become sprite="home" />
@@ -187,7 +183,6 @@
         <group name="lanes">
           <rows>1</rows>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><wrap /></collision>
           </collisions>
 
@@ -263,7 +258,6 @@
               <position><x>60</x><y>3 * cell + 8</y></position>
               <velocity><x>-1.6</x></velocity>
               <collisions>
-                <enabled>true</enabled>
                 <collision object="frog" sprite="under"><trigger object="frog" action="drown" /></collision>
               </collisions>
               <timers>
@@ -383,7 +377,6 @@
           </sprite>
           <position><x>6 * cell + 4</x><y>13 * cell + 8</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision class="hazard" unless="pads"><trigger action="lose" /></collision>
             <collision class="water" unless="logs"><trigger action="drown" /></collision>
             <collision class="logs"><ride /></collision>

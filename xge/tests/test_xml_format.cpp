@@ -208,6 +208,32 @@ TEST_CASE("a window's <scale> shows it that many times larger; with none it is 1
 	CHECK_THROWS_WITH(Loaded(zero, "xge_test_scale_zero.xml"), ContainsSubstring("<scale>"));
 }
 
+TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' enabled, may be left out", "[xml_format][window]")
+{
+	ObjectXml on;
+	on.name = "on";
+	on.collisions = "";
+	ObjectXml none;
+	none.name = "none";
+	std::string bare = gameXml("", objectXml({}) + objectXml(on) + objectXml(none));
+	for (const std::string tag : { "<background>color.black</background>", "<fullscreen>false</fullscreen>", "<framerate>60</framerate>" })
+	{
+		bare.erase(bare.find(tag), tag.size());
+	}
+	// An object with no <collisions> at all touches nothing.
+	bare.replace(bare.find("</objects>"), 0, "<object name=\"plain\"><sprite><circle><radius>5</radius></circle></sprite><position><x>0</x><y>0</y></position></object>");
+
+	Loaded loaded(bare, "xge_test_defaults.xml");
+	const WindowDesc& window = loaded.game.getWindowDesc();
+	CHECK(window.background == "color.black");
+	CHECK(window.fullscreen == "false");
+	CHECK(window.framerate == 60);
+
+	CHECK(loaded.game.getObject("on").collisionData.enabled);
+	CHECK_FALSE(loaded.game.getObject("none").collisionData.enabled);
+	CHECK_FALSE(loaded.game.getObject("plain").collisionData.enabled);
+}
+
 TEST_CASE("a variable can use the ones declared before it", "[xml_format]")
 {
 	Loaded loaded(gameXml("<variable name=\"a\">10</variable><variable name=\"b\">a * 2</variable>", objectXml({})));
@@ -824,7 +850,7 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "an unknown tag where a value goes", "<x>margin</x>", "<x><bogus /></x>", "unexpected element <bogus>" },
 		{ "a rectangle with no width", "<width>ball.size</width>", "", "expected <width>" },
 		{ "text in an element that holds elements", "<object name=\"title\">", "<object name=\"title\">oops", "unexpected text \"oops\"" },
-		{ "a flag that is not true or false", "<fullscreen>false</fullscreen>", "<fullscreen>maybe</fullscreen>", "\"maybe\" is not a valid" },
+		{ "a flag that is not true or false", "<height>720</height>", "<height>720</height><fullscreen>maybe</fullscreen>", "\"maybe\" is not a valid" },
 		{ "a command missing its attribute", "<push state=\"playing\" />", "<push />", "missing required attribute 'state'" },
 		{ "a command that does not exist", "<bounce />", "<explode />", "explode" },
 		{ "a window width that is not a number", "<width>1280</width>", "<width>huge</width>", "not a valid" },

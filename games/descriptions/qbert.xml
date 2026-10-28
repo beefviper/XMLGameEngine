@@ -54,9 +54,6 @@
     <width>256</width>
     <height>240</height>
     <scale>3</scale>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="across">16</variable>
@@ -284,7 +281,6 @@
                 </bitmap>
               </sprite>
             <collisions>
-              <enabled>true</enabled>
               <type>pixel</type>
               <solid char="*" />
               <collision object="qbert" sprite="unlit">
@@ -306,9 +302,7 @@
               </rectangle>
             </sprite>
             <drawn>false</drawn>
-            <collisions>
-              <enabled>true</enabled>
-            </collisions>
+            <collisions />
           </group>
           <!-- a disc floats where Q*bert's feet land, in a box as tall as the
                void's, spinning until it is used; used, it is void too. Its
@@ -433,7 +427,6 @@
               <frame sprite="spinc" />
             </animation>
             <collisions>
-              <enabled>true</enabled>
               <collision object="qbert" sprite="used">
                 <play sound="fall" />
                 <trigger object="qbert" action="lose" />
@@ -504,7 +497,6 @@
           <position><x>120</x><y>38</y></position>
           <mirror>left</mirror>
           <collisions>
-            <enabled>true</enabled>
             <hitbox>
               <rectangle><width>8</width><height>4</height></rectangle>
               <position><x>4</x><y>12</y></position>
@@ -584,7 +576,6 @@
           </sprite>
           <position><x>140</x><y>70</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision class="void">
               <reset />
             </collision>
@@ -759,7 +750,6 @@
           <position><x>104</x><y>54</y></position>
           <mirror>right</mirror>
           <collisions>
-            <enabled>true</enabled>
             <hitbox>
               <rectangle><width>8</width><height>4</height></rectangle>
               <position><x>4</x><y>20</y></position>

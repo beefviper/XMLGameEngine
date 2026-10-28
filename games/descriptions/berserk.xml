@@ -60,9 +60,6 @@
   <window name="Berserk">
     <width>568</width>
     <height>440</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
 
   <variables>
@@ -145,7 +142,6 @@
       </animation>
       <position><x>0</x><y>0</y></position>
       <collisions>
-        <enabled>true</enabled>
         <collision class="wall"><trigger action="destroyed" /></collision>
         <collision class="robot"><trigger action="destroyed" /></collision>
         <collision class="exit"><reverse /></collision>
@@ -220,7 +216,6 @@
       <velocity><y>3</y></velocity>
       <most>4</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision class="wall"><despawn /></collision>
         <collision object="player"><despawn /></collision>
@@ -292,7 +287,6 @@
           <position><x>21</x><y>233</y></position>
           <facing>right</facing>
           <collisions>
-            <enabled>true</enabled>
             <!-- the walls are electrified, and so is everything else that touches him -->
             <collision class="wall"><trigger action="lose" /></collision>
             <collision class="robotshot"><trigger action="lose" /></collision>
@@ -364,7 +358,6 @@
           <velocity><x>-1.2</x><y>0.9</y></velocity>
           <active>false</active>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="all"><bounce /></collision>
             <collision object="player"><die /></collision>
           </collisions>
@@ -417,7 +410,7 @@
               <row>+-+-+x+-+-+</row>
               <group name="walls" class="wall">
                 <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
                 <group name="post" char="+" />
                 <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
                 <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
@@ -426,7 +419,6 @@
                 <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
                 <drawn>false</drawn>
                 <collisions>
-                  <enabled>true</enabled>
                   <collision object="player">
                     <reset way="out" />
                     <enter way="out" />
@@ -469,7 +461,7 @@
               <row>+-+-+x+-+-+</row>
               <group name="walls" class="wall">
                 <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
                 <group name="post" char="+" />
                 <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
                 <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
@@ -478,7 +470,6 @@
                 <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
                 <drawn>false</drawn>
                 <collisions>
-                  <enabled>true</enabled>
                   <collision object="player">
                     <reset way="out" />
                     <enter way="out" />
@@ -522,7 +513,7 @@
               <row>+-+-+x+-+-+</row>
               <group name="walls" class="wall">
                 <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
                 <group name="post" char="+" />
                 <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
                 <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
@@ -531,7 +522,6 @@
                 <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
                 <drawn>false</drawn>
                 <collisions>
-                  <enabled>true</enabled>
                   <collision object="player">
                     <reset way="out" />
                     <enter way="out" />
@@ -576,7 +566,7 @@
               <row>+-+-+x+-+-+</row>
               <group name="walls" class="wall">
                 <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
                 <group name="post" char="+" />
                 <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
                 <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
@@ -585,7 +575,6 @@
                 <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
                 <drawn>false</drawn>
                 <collisions>
-                  <enabled>true</enabled>
                   <collision object="player">
                     <reset way="out" />
                     <enter way="out" />

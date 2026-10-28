@@ -43,9 +43,6 @@
   <window name="Atlantis">
     <width>640</width>
     <height>480</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -93,7 +90,6 @@
       <velocity><x>speed</x></velocity>
       <active>false</active>
       <collisions>
-        <enabled>true</enabled>
         <collision class="shell">
           <inc variable="status.score">points</inc>
           <inc variable="tally.downed" />
@@ -104,7 +100,6 @@
       <group name="lane1">
         <position><y>top</y></position>
         <collisions>
-          <enabled>true</enabled>
           <collision edge="right">
             <die />
             <reveal object="lane2" />
@@ -115,7 +110,6 @@
       <group name="lane2">
         <position><y>top + lane</y></position>
         <collisions>
-          <enabled>true</enabled>
           <collision edge="right">
             <die />
             <reveal object="lane3" />
@@ -126,7 +120,6 @@
       <group name="lane3">
         <position><y>top + lane * 2</y></position>
         <collisions>
-          <enabled>true</enabled>
           <collision edge="right">
             <die />
             <reveal object="lane4" />
@@ -139,7 +132,6 @@
         <position><y>top + lane * 3</y></position>
         <facing>down</facing>
         <collisions>
-          <enabled>true</enabled>
           <collision edge="right"><wrap /></collision>
         </collisions>
         <timers>
@@ -163,7 +155,6 @@
       <velocity><y>-shellspeed</y></velocity>
       <most>2</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision class="gorgon"><despawn /></collision>
       </collisions>
@@ -175,7 +166,6 @@
       <velocity><y>rayspeed</y></velocity>
       <most>4</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision class="building"><despawn /></collision>
         <collision class="ground"><despawn /></collision>
@@ -237,7 +227,6 @@
         <!-- the city: domes and towers between the posts -->
         <group name="city" class="building">
           <collisions>
-            <enabled>true</enabled>
             <collision class="ray">
               <play sound="lost" />
               <die />

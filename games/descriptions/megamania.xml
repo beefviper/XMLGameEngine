@@ -50,9 +50,6 @@
   <window name="Megamania">
     <width>640</width>
     <height>480</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -98,7 +95,6 @@
       <velocity><x>2</x></velocity>
       <facing>down</facing>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="horizontal"><wrap /></collision>
         <collision edge="vertical"><bounce /></collision>
         <collision object="laser">
@@ -125,7 +121,6 @@
       <velocity><y>4</y></velocity>
       <most>6</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision object="player"><despawn /></collision>
       </collisions>
@@ -182,7 +177,6 @@
           </sprite>
           <position><x><centered /></x><y>window.bottom - player.height - 40</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="horizontal"><stick /></collision>
             <collision class="bomb"><trigger action="lose" /></collision>
             <collision class="enemy"><trigger action="lose" /></collision>

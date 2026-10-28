@@ -12,9 +12,6 @@
   <window name="Pong">
     <width>1280</width>
     <height>720</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">30</variable>
@@ -36,7 +33,6 @@
             <y>ball.speed * sin(ball.angle * pi / 180)</y>
           </velocity>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="vertical"><bounce /></collision>
             <collision edge="horizontal"><reset /></collision>
             <collision><deflect>45</deflect></collision>
@@ -50,7 +46,6 @@
         <group name="paddles">
           <sprite><rectangle><width>width</width><height>height</height></rectangle></sprite>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="vertical"><stick /></collision>
           </collisions>
           <actions>

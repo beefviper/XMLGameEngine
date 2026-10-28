@@ -49,9 +49,6 @@
   <window name="Haunted House">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="tile">40</variable>
@@ -108,7 +105,6 @@
       <dark>unlit</dark>
       <maze map="house"><wall class="wall" /></maze>
       <collisions>
-        <enabled>true</enabled>
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
@@ -128,7 +124,6 @@
       <dark>unlit</dark>
       <maze map="house"><wall class="wall" /></maze>
       <collisions>
-        <enabled>true</enabled>
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
@@ -146,7 +141,6 @@
       <position><x>0</x><y>0</y></position>
       <dark>unlit</dark>
       <collisions>
-        <enabled>true</enabled>
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
@@ -162,7 +156,6 @@
       <position><x>0</x><y>0</y></position>
       <dark>unseen</dark>
       <collisions>
-        <enabled>true</enabled>
         <collision object="player">
           <check object="key" distance="player"><below>tile</below></check>
           <die />
@@ -193,7 +186,6 @@
       <position><x>0</x><y>0</y></position>
       <dark>unseen</dark>
       <collisions>
-        <enabled>true</enabled>
         <collision object="player"><die /></collision>
       </collisions>
       <member name="piece1" />
@@ -236,7 +228,6 @@
           <position><x>tile + 11</x><y>tile * 12 + 15</y></position>
           <light>near</light>
           <collisions>
-            <enabled>true</enabled>
             <collision class="wall"><stop /></collision>
             <collision class="door"><stop /></collision>
             <collision class="key"><carry /></collision>
@@ -326,12 +317,12 @@
               <group name="walls" char="#" class="wall">
                 <sprite><rectangle><width>tile</width><height>tile</height><color>color.purple</color></rectangle></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
               <group name="stairs" char="^" class="up">
                 <sprite><bitmap><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
               <!-- the door to the outside, where the urn must come -->
               <object name="entrance" char="E">
@@ -347,7 +338,7 @@
                   </bitmap>
                 </sprite>
                 <dark>unseen</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </object>
             </map>
             <object name="spider"><position><x>tile * 15 + 8</x><y>tile * 11 + 12</y></position></object>
@@ -381,17 +372,17 @@
               <group name="walls" char="#" class="wall">
                 <sprite><rectangle><width>tile</width><height>tile</height><color>color.blue</color></rectangle></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
               <group name="upstairs" char="^" class="up">
                 <sprite><bitmap><row>*...</row><row>**..</row><row>***.</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
               <group name="downstairs" char="v" class="down">
                 <sprite><bitmap><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
             </map>
             <object name="door"><position><x>tile * 12 + 15</x><y>tile * 6</y></position></object>
@@ -428,17 +419,17 @@
               <group name="walls" char="#" class="wall">
                 <sprite><rectangle><width>tile</width><height>tile</height><color>color.forestgreen</color></rectangle></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
               <group name="upstairs" char="^" class="up">
                 <sprite><bitmap><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
               <group name="downstairs" char="v" class="down">
                 <sprite><bitmap><row>****</row><row>***.</row><row>**..</row><row>*...</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
             </map>
             <object name="door"><position><x>tile * 8 + 15</x><y>tile * 6</y></position></object>
@@ -475,12 +466,12 @@
               <group name="walls" char="#" class="wall">
                 <sprite><rectangle><width>tile</width><height>tile</height><color>color.red</color></rectangle></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
               <group name="downstairs" char="v" class="down">
                 <sprite><bitmap><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
                 <dark>unlit</dark>
-                <collisions><enabled>true</enabled></collisions>
+                <collisions />
               </group>
             </map>
             <object name="door">

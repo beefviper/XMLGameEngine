@@ -38,9 +38,6 @@
   <window name="Lunar Lander">
     <width>800</width>
     <height>600</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="gravity">0.01</variable>
@@ -147,11 +144,11 @@
             <line><from><x>760</x><y>60</y></from><to><x>798</x><y>110</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
           </sprite>
           <position><x>0</x><y>380</y></position>
-          <collisions><enabled>true</enabled><type>pixel</type></collisions>
+          <collisions><type>pixel</type></collisions>
         </object>
         <!-- the pads, flat and lit, in the terrain's gaps -->
         <group name="pads" class="ground">
-          <collisions><enabled>true</enabled><type>pixel</type></collisions>
+          <collisions><type>pixel</type></collisions>
           <member name="pad5">
             <sprite><line><from><x>0</x><y>0</y></from><to><x>34</x><y>0</y></to><color>color.green</color><thickness>3</thickness></line></sprite>
             <position><x>129</x><y>469</y></position>
@@ -194,7 +191,6 @@
           <acceleration><x>0</x><y>gravity</y></acceleration>
           <heading>0</heading>
           <collisions>
-            <enabled>true</enabled>
             <type>pixel</type>
             <collision edge="horizontal"><stick /></collision>
             <collision edge="top"><stick /></collision>

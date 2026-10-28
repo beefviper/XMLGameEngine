@@ -1309,7 +1309,8 @@
   <!-- Whether collisions are on, whether the object moves in lockstep with the others of its group, how its shape is tested, then the rules. -->
   <xs:complexType name="collisionsType">
     <xs:sequence>
-      <xs:element name="enabled" type="xs:boolean" />
+      <!-- enabled: left out, true; a <collisions> is written to be touched -->
+      <xs:element name="enabled" type="xs:boolean" minOccurs="0" />
       <xs:element name="lockstep" type="xs:boolean" minOccurs="0" />
       <xs:element name="type" type="collisionShapeType" minOccurs="0" />
       <xs:element name="solid" minOccurs="0" maxOccurs="unbounded">
@@ -1703,9 +1704,10 @@
               <xs:element name="height" type="xs:unsignedShort" />
               <!-- scale: each of the game's pixels drawn as a square this many window pixels across -->
               <xs:element name="scale" type="xs:positiveInteger" minOccurs="0" />
-              <xs:element name="background" type="xs:string" />
-              <xs:element name="fullscreen" type="xs:boolean" />
-              <xs:element name="framerate" type="xs:unsignedByte" />
+              <!-- left out: color.black, false and 60 -->
+              <xs:element name="background" type="xs:string" minOccurs="0" />
+              <xs:element name="fullscreen" type="xs:boolean" minOccurs="0" />
+              <xs:element name="framerate" type="xs:unsignedByte" minOccurs="0" />
             </xs:sequence>
             <xs:attribute name="name" type="xs:string" use="required" />
           </xs:complexType>

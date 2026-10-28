@@ -45,9 +45,6 @@
   <window name="Donkey Kong">
     <width>800</width>
     <height>700</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="piece">16</variable>
@@ -180,7 +177,6 @@
       <acceleration><x>0</x><y>pull</y></acceleration>
       <most>8</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="horizontal">
           <bounce />
         </collision>
@@ -296,9 +292,7 @@
               <color>color.red</color>
             </bitmap>
           </sprite>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
+          <collisions />
           <group name="floor">
             <columns>50</columns>
             <position><x>0</x><y>660</y></position>
@@ -377,9 +371,7 @@
             </bitmap>
           </sprite>
           <position><x>4</x><y>660 - oil.height</y></position>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
+          <collisions />
         </object>
         <object name="kong">
           <sprite>
@@ -412,9 +404,7 @@
           </sprite>
           <position><x>20</x><y>160 - kong.height</y></position>
           <facing>right</facing>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
+          <collisions />
           <variables>
             <variable name="wait">2.8</variable>
           </variables>
@@ -451,9 +441,7 @@
             </bitmap>
           </sprite>
           <position><x>300</x><y>80 - pauline.height</y></position>
-          <collisions>
-            <enabled>true</enabled>
-          </collisions>
+          <collisions />
         </object>
         <!-- the hammer, on the third girder -->
         <object name="hammer">
@@ -476,7 +464,6 @@
           </sprite>
           <position><x>100</x><y>360 - 40 - hammer.height</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision object="man">
               <die />
             </collision>
@@ -537,7 +524,6 @@
           <position><x>100</x><y>660 - man.height</y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
-            <enabled>true</enabled>
             <!-- his body, without the arms -->
             <hitbox>
               <rectangle><width>14</width><height>32</height></rectangle>

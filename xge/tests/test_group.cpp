@@ -844,7 +844,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group
 		{ "a member with something it cannot hold", "descriptions/combat.xml", "<member><position>", "<member><speed /><position>", "speed" },
 		{ "a position that is not an x and a y", "descriptions/spacerace.xml", "<y>50</y>", "<z>50</z>", "z" },
 		{ "a group with no name", "descriptions/combat.xml", "<group name=\"yellow\">", "<group>", "missing required attribute 'name'" },
-		{ "a lockstep flag that is not true or false", "descriptions/spacerace.xml", "<enabled>true</enabled>", "<enabled>true</enabled><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
+		{ "a lockstep flag that is not true or false", "descriptions/spacerace.xml", "<collisions>", "<collisions><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
 		{ "a member in a group of cells", "descriptions/spacerace.xml", "<row number=\"1 5 9\">", "<member /><row number=\"1 5 9\">", "row" },
 		{ "a member beside a group inside a group", "descriptions/combat.xml", "<group name=\"yellow\">", "<member /><group name=\"yellow\">", "group" },
 		{ "a member's tether that leaves out an end", "descriptions/fishingderby.xml", "<member name=\"rod1\"><position><x>206</x></position></member>",

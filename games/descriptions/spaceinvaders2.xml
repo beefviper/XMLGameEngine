@@ -34,9 +34,6 @@
   <window name="Space Invaders 2">
     <width>1024</width>
     <height>768</height>
-    <background>color.black</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="margin">80</variable>
@@ -92,7 +89,6 @@
       <velocity><y>5</y></velocity>
       <most>3</most>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="all"><despawn /></collision>
         <collision object="player"><despawn /></collision>
         <collision class="shield"><despawn /></collision>
@@ -159,7 +155,6 @@
       </sprite>
       <position><x><centered /></x><y>window.bottom - player.height * 2</y></position>
       <collisions>
-        <enabled>true</enabled>
         <collision edge="horizontal"><stick /></collision>
         <collision class="bomb">
           <dec variable="player.lives" />
@@ -265,7 +260,6 @@
           </sprite>
           <position><x>111</x><y>shieldtop</y></position>
           <collisions>
-            <enabled>true</enabled>
             <type>pixel</type>
             <collision object="bullet"><hole>10<rough>0.6</rough></hole></collision>
             <collision class="bomb"><hole>8<rough>0.6</rough></hole></collision>
@@ -306,7 +300,6 @@
           <velocity><x>2.5</x></velocity>
           <active>false</active>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="right"><die /></collision>
             <collision object="bullet">
               <inc variable="player.score">50 * ceil(self.worth)</inc>
@@ -355,7 +348,6 @@
           <velocity><x>2</x></velocity>
           <facing>down</facing>
           <collisions>
-            <enabled>true</enabled>
             <lockstep>true</lockstep>
             <collision edge="horizontal">
               <bounce />

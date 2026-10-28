@@ -43,8 +43,6 @@
     <width>800</width>
     <height>600</height>
     <background>color.blue</background>
-    <fullscreen>false</fullscreen>
-    <framerate>60</framerate>
   </window>
   <variables>
     <variable name="surface">170</variable>
@@ -128,7 +126,7 @@
         <object name="surface">
           <sprite><rectangle><width>window.right</width><height>4</height><color>color.lightgrey</color></rectangle></sprite>
           <position><x>0</x><y>surface - 4</y></position>
-          <collisions><enabled>true</enabled></collisions>
+          <collisions />
         </object>
         <group name="piers">
           <sprite><rectangle><width>150</width><height>14</height><color>color.brown</color></rectangle></sprite>
@@ -194,7 +192,6 @@
           </sprite>
           <position><y>surface + 40</y></position>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="all"><stick /></collision>
             <collision class="fish">
               <check variable="line"><equal>0</equal></check>
@@ -240,7 +237,6 @@
           <position><x>window.width.center - 40</x><y>surface + 25</y></position>
           <velocity><x>2</x></velocity>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="left"><bounce /><become sprite="right" /></collision>
             <collision edge="right"><bounce /><become sprite="left" /></collision>
           </collisions>
@@ -275,7 +271,6 @@
             </bitmap>
           </sprite>
           <collisions>
-            <enabled>true</enabled>
             <collision edge="left"><bounce /><become sprite="right" /></collision>
             <collision edge="right"><bounce /><become sprite="left" /></collision>
             <!-- a bite: claimed for the hook that took it -->
