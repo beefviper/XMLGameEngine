@@ -70,6 +70,9 @@
   </window>
   <variables>
     <variable name="pull">0.3</variable>
+    <!-- Mario's own pull: the arcade's slow, floaty jump, about a second
+         up and down, as high as with the shellcreepers' pull -->
+    <variable name="float">0.13</variable>
     <variable name="walk">1.25</variable>
     <variable name="crawl">0.5</variable>
     <variable name="hop">2.5</variable>
@@ -757,7 +760,7 @@
             <frame sprite="stepb" />
           </animation>
           <position><x><centered /></x><y>ground - mario.height</y></position>
-          <acceleration><x>0</x><y>pull</y></acceleration>
+          <acceleration><x>0</x><y>float</y></acceleration>
           <facing>right</facing>
           <poses>
             <standing sprite="stand" />
