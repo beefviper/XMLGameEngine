@@ -12,8 +12,9 @@
   in its outer wall. The robots come for him, and blunder into the walls and
   into one another as they do, which destroys them as surely as his shots.
   Every robot is 50 points, and a room with none left is worth 10 more for
-  each. An extra man for every 2000 points. Four rooms, and then the first
-  again, with the robots quicker and quicker to fire and Otto to arrive. The
+  each. An extra man for every 2000 points. Four rooms, two by two, and off
+  one side is the room on the other, with the robots quicker and quicker to
+  fire and Otto to arrive the more rooms he has been through. The
   first room's yellow robots do not fire at all.
 
   W A S D or the arrow keys walk, Space fires the way he last walked. P or
@@ -28,10 +29,14 @@
     between two, on tiles half a cell across, so the file shows the room as
     it looks. The kit's map "maze" says what each character is, and each
     room takes it and gives only its <row>s. n, s, w and e are the gaps of
-    the outer wall, the exits, never drawn, each a class of its side. Each
-    room's <ways> name the room its way "out" leads to; walking into an exit
-    puts that room back as it started (<reset way="out" />), with its
-    robots, and <enter>s it. The man's own rule for each side's exit counts
+    the outer wall, the exits, never drawn, each a class of its side and a
+    way of its own. The four rooms are a square of two by two that goes
+    round: room 1 is top left, 2 top right, 3 bottom left, 4 bottom right,
+    so going west or east from room 1 is room 2, north or south room 3.
+    (The arcade's rooms are a far bigger grid, each maze worked out from
+    where its room is.) Each room's <ways> name the room each side leads
+    to; walking into an exit puts that room back as it started (<reset
+    way="west" />), with its robots, and <enter>s it. The man's own rule for each side's exit counts
     the room in player.depth, puts him in at the side opposite, as the
     arcade does, and shuts that doorway behind him: the state's group
     "doors" has one just inside each gap, out of play until revealed, and
@@ -245,18 +250,20 @@
       <group name="exits">
         <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
         <drawn>false</drawn>
-        <collisions>
-          <collision object="player">
-            <reset way="out" />
-            <enter way="out" />
-          </collision>
-        </collisions>
-        <group name="north" char="n" class="northexit" />
-        <group name="south" char="s" class="southexit" />
+        <group name="north" char="n" class="northexit">
+          <collisions><collision object="player"><reset way="north" /><enter way="north" /></collision></collisions>
+        </group>
+        <group name="south" char="s" class="southexit">
+          <collisions><collision object="player"><reset way="south" /><enter way="south" /></collision></collisions>
+        </group>
         <group name="sides">
           <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
-          <group name="west" char="w" class="westexit" />
-          <group name="east" char="e" class="eastexit" />
+          <group name="west" char="w" class="westexit">
+            <collisions><collision object="player"><reset way="west" /><enter way="west" /></collision></collisions>
+          </group>
+          <group name="east" char="e" class="eastexit">
+            <collisions><collision object="player"><reset way="east" /><enter way="east" /></collision></collisions>
+          </group>
         </group>
       </group>
     </map>
@@ -467,7 +474,10 @@
         <!-- ======================================================== room 1 -->
         <scene name="room1">
           <ways>
-            <way name="out" scene="room2" />
+            <way name="north" scene="room3" />
+            <way name="south" scene="room3" />
+            <way name="west" scene="room2" />
+            <way name="east" scene="room2" />
           </ways>
           <objects>
             <map name="maze">
@@ -497,7 +507,10 @@
         <!-- ======================================================== room 2 -->
         <scene name="room2">
           <ways>
-            <way name="out" scene="room3" />
+            <way name="north" scene="room4" />
+            <way name="south" scene="room4" />
+            <way name="west" scene="room1" />
+            <way name="east" scene="room1" />
           </ways>
           <objects>
             <map name="maze">
@@ -528,7 +541,10 @@
         <!-- ======================================================== room 3 -->
         <scene name="room3">
           <ways>
-            <way name="out" scene="room4" />
+            <way name="north" scene="room1" />
+            <way name="south" scene="room1" />
+            <way name="west" scene="room4" />
+            <way name="east" scene="room4" />
           </ways>
           <objects>
             <map name="maze">
@@ -560,7 +576,10 @@
         <!-- ======================================================== room 4 -->
         <scene name="room4">
           <ways>
-            <way name="out" scene="room1" />
+            <way name="north" scene="room2" />
+            <way name="south" scene="room2" />
+            <way name="west" scene="room3" />
+            <way name="east" scene="room3" />
           </ways>
           <objects>
             <map name="maze">

@@ -200,6 +200,15 @@ namespace
 		void leaveByTheTop() { placeMan(2, 0); man().position.y = mazeTop + 10.0f; walk(KeyCode::W, 6); }
 		void leaveByTheBottom() { placeMan(2, 2); man().position.y = roomBottom - 34.0f; walk(KeyCode::S, 6); }
 
+		// The rooms are two by two, going round: 1 and 2 on top, 3 and 4
+		// below. On round all four, 1, 2, 4, 3 and 1 again: west from the
+		// top left and the bottom right, north from the other two.
+		void leaveForTheNext()
+		{
+			if (room() == 1 || room() == 4) { leaveByTheLeft(); }
+			else { leaveByTheTop(); }
+		}
+
 		// Walks into the top wall of the second cell of the first row.
 		void touchTheWall() { placeMan(1, 0); man().position.y = mazeTop + 9.0f; walk(KeyCode::W, 2); }
 
@@ -393,13 +402,13 @@ TEST_CASE("the man is safe at the start of every room, and can walk out of each"
 	Play play;
 	play.begin();
 
-	for (int room = 1; room <= 4; ++room)
+	for (int room : { 1, 2, 4, 3 })
 	{
 		REQUIRE(play.room() == room);
 		play.frames(120);
 		CHECK(play.lives() == 3.0f);
 		play.killRobots(room);
-		play.leaveByTheLeft();
+		play.leaveForTheNext();
 	}
 	CHECK(play.room() == 1);
 	CHECK(play.lives() == 3.0f);
@@ -548,20 +557,22 @@ TEST_CASE("walking through a gap leaves the room: the next room, the man in at t
 	CHECK(shut("eastdoor"));
 	CHECK_FALSE(shut("westdoor"));
 
-	// Out by the top, in at the bottom; the doorway before opens again.
+	// Out by the top, in at the bottom of the room below; the doorway before
+	// opens again.
 	play.leaveByTheTop();
-	CHECK(play.room() == 3);
+	CHECK(play.room() == 4);
 	CHECK(play.man().position.x == Approx(277));
 	CHECK(play.man().position.y > 380.0f);
 	CHECK(shut("southdoor"));
 	CHECK_FALSE(shut("eastdoor"));
 
+	// East of the bottom right is the bottom left, round the side.
 	play.leaveByTheRight();
-	CHECK(play.room() == 4);
+	CHECK(play.room() == 3);
 	CHECK(play.man().position.x < 40.0f);
 	CHECK(shut("westdoor"));
 
-	// After room four comes room one.
+	// South of the bottom left is the top left, round the bottom.
 	play.leaveByTheBottom();
 	CHECK(play.room() == 1);
 	CHECK(play.man().position.y < 100.0f);
@@ -616,9 +627,9 @@ TEST_CASE("a room left keeps where it was, and is put back as it started when th
 	CHECK(robot.position.x == Approx(left.x));
 	CHECK(robot.position.y == Approx(left.y));
 
-	// Round the four rooms, the way out of room four puts room one back: the
+	// Round the four rooms, the way out of room three puts room one back: the
 	// robot is at its start again, and stands there a while.
-	for (int room = 2; room <= 4; ++room) { play.leaveByTheLeft(); }
+	for (int step = 0; step < 3; ++step) { play.leaveForTheNext(); }
 	REQUIRE(play.room() == 1);
 	CHECK(robot.position.x == Approx(started.x).margin(4));
 	CHECK(robot.position.y == Approx(started.y).margin(4));
@@ -673,7 +684,7 @@ TEST_CASE("coming round again, the rooms have their robots back", "[berserk]")
 	play.killRobots(1);
 	REQUIRE(play.robotsLeft(1) == 0);
 
-	for (int room = 1; room <= 4; ++room) { play.leaveByTheLeft(); }
+	for (int step = 0; step < 4; ++step) { play.leaveForTheNext(); }
 	REQUIRE(play.room() == 1);
 	CHECK(play.robotsLeft(1) == 3);
 }
