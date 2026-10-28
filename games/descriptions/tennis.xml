@@ -23,7 +23,7 @@
     Its position is where it is over the court, so what it touches is what
     is under it, and it is drawn raised by its altitude. The shadow is an
     object of its own kept under it (<shadow object="ball" />).
-  * Each racket's rule on the ball has a <check> of the ball's altitude, so
+  * Each racket's rule on the ball has a <condition> of the ball's altitude, so
     a ball over a player's head goes past. A hit sends it back up (rise) and
     toward the other end, more to one side the further from the middle of
     the racket it was hit (values read as the rule runs).
@@ -169,14 +169,14 @@
             </collision>
             <!-- hit back when it is low enough to reach: up, and away, angled by where on the racket -->
             <collision object="player">
-              <check variable="altitude"><below>reach</below></check>
+              <condition variable="altitude"><below>reach</below></condition>
               <set variable="ball.velocity.y">0 - hit</set>
               <set variable="ball.velocity.x">(ball.x - player.x - 9) * spin</set>
               <set variable="ball.rise">loft</set>
               <play sound="hit" />
             </collision>
             <collision object="cpu">
-              <check variable="altitude"><below>reach</below></check>
+              <condition variable="altitude"><below>reach</below></condition>
               <set variable="ball.velocity.y">hit</set>
               <set variable="ball.velocity.x">(ball.x - cpu.x - 9) * spin</set>
               <set variable="ball.rise">loft</set>
@@ -228,18 +228,18 @@
         <!-- four all is deuce again: forty all -->
         <condition>
           <all>
-            <check object="player" variable="points"><atleast>4</atleast></check>
-            <check object="cpu" variable="points"><atleast>4</atleast></check>
+            <condition object="player" variable="points"><atleast>4</atleast></condition>
+            <condition object="cpu" variable="points"><atleast>4</atleast></condition>
           </all>
           <set variable="players.points">3</set>
         </condition>
         <!-- four points against thirty or less, or five (after advantage), take the game -->
         <condition>
           <any>
-            <check object="player" variable="points"><atleast>5</atleast></check>
+            <condition object="player" variable="points"><atleast>5</atleast></condition>
             <all>
-              <check object="player" variable="points"><atleast>4</atleast></check>
-              <check object="cpu" variable="points"><atmost>2</atmost></check>
+              <condition object="player" variable="points"><atleast>4</atleast></condition>
+              <condition object="cpu" variable="points"><atmost>2</atmost></condition>
             </all>
           </any>
           <inc variable="player.games" />
@@ -247,10 +247,10 @@
         </condition>
         <condition>
           <any>
-            <check object="cpu" variable="points"><atleast>5</atleast></check>
+            <condition object="cpu" variable="points"><atleast>5</atleast></condition>
             <all>
-              <check object="cpu" variable="points"><atleast>4</atleast></check>
-              <check object="player" variable="points"><atmost>2</atmost></check>
+              <condition object="cpu" variable="points"><atleast>4</atleast></condition>
+              <condition object="player" variable="points"><atmost>2</atmost></condition>
             </all>
           </any>
           <inc variable="cpu.games" />

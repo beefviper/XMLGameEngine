@@ -70,9 +70,9 @@ namespace xge
 		// right, vertical for top or bottom). Empty means any side.
 		std::string side;
 
-		// <check>s, <all>s and <any>s after <slower>/<faster>: the rule only
+		// <condition>s, <all>s and <any>s after <slower>/<faster>: the rule only
 		// runs while every one holds. Gathered as an <all> (join All); join
-		// None means there are none. A <check> with no class= or object= is
+		// None means there are none. A <condition> with no class= or object= is
 		// about the object running the rule (see nameSelf).
 		RawCondition check;
 
@@ -1031,7 +1031,7 @@ namespace xge
 
 	// What an object's own rules, timers and actions leave to mean itself,
 	// made its name (final, so after layOutScenes): a <trigger> with no
-	// object=, a collision rule's <check> with no class= or object=, and
+	// object=, a collision rule's <condition> with no class= or object=, and
 	// self. at the start of a name in a command's value or variable=
 	// (self.x, self.score).
 	void nameSelf(std::vector<RawObject>& objects);

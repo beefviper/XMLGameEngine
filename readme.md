@@ -126,7 +126,7 @@ Something many objects or states share is written once under a name, higher up, 
 
 **Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `grip` (how fast the speed follows the keys, so it slides), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `active` (false: starts out of play), `drawn` (in play but never drawn), and `most` (how many copies a `spawn` may have made of it at once).
 
-**Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>` and `<check>`s.
+**Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>` and `<condition>`s.
 
 **Verbs**
 
@@ -146,7 +146,7 @@ Something many objects or states share is written once under a name, higher up, 
 <condition class="aliens"><remaining>0</remaining><push state="youwin" /></condition>
 ```
 
-The tests are `atleast`, `atmost`, `above`, `below`, `equal` (against a number or another variable) and `remaining`. `total=` counts a group or takes its sum, highest or lowest, `distance=` measures to an object, and `<all>`/`<any>` of `<check>`s join tests.
+The tests are `atleast`, `atmost`, `above`, `below`, `equal` (against a number or another variable) and `remaining`. `total=` counts a group or takes its sum, highest or lowest, `distance=` measures to an object, and `<all>`/`<any>` of `<condition>`s join tests.
 
 **Input.** `<input button="space">` binds a key, a mouse button (`mouse.left`) or a gamepad button (`pad1.a`); `<input axis="mouse.x">` binds a control that points.
 

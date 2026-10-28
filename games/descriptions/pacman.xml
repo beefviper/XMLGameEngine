@@ -984,16 +984,16 @@
         <!-- the cherry, after 70 dots and after 170 -->
         <condition>
           <all>
-            <check class="food" total="count"><atmost>174</atmost></check>
-            <check object="status" variable="fruits"><equal>0</equal></check>
+            <condition class="food" total="count"><atmost>174</atmost></condition>
+            <condition object="status" variable="fruits"><equal>0</equal></condition>
           </all>
           <inc variable="status.fruits" />
           <become object="fruit" sprite="cherry" />
         </condition>
         <condition>
           <all>
-            <check class="food" total="count"><atmost>74</atmost></check>
-            <check object="status" variable="fruits"><equal>1</equal></check>
+            <condition class="food" total="count"><atmost>74</atmost></condition>
+            <condition object="status" variable="fruits"><equal>1</equal></condition>
           </all>
           <inc variable="status.fruits" />
           <become object="fruit" sprite="cherry" />
@@ -1001,8 +1001,8 @@
         <!-- a life at 10,000 points -->
         <condition>
           <all>
-            <check object="status" variable="score"><atleast>10000</atleast></check>
-            <check object="status" variable="bonus"><equal>0</equal></check>
+            <condition object="status" variable="score"><atleast>10000</atleast></condition>
+            <condition object="status" variable="bonus"><equal>0</equal></condition>
           </all>
           <inc variable="status.bonus" />
           <inc variable="status.lives" />

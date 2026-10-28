@@ -35,7 +35,7 @@
     laid out in columns (<columns>), so the girder's length is its count.
     The ladders are drawings of <line>s, rails and rungs.
   * The hammer is a look: touching the hammer gives Jumpman the look
-    "hammer" and sets man.hammer, which a barrel's rule <check>s; a timer of
+    "hammer" and sets man.hammer, which a barrel's rule <condition>s; a timer of
     that look takes it away again, with the hammer's tune.
   * Paused, won and game over draw the girders still underneath
     (<show state="playing" />), the barrels stopped where they were.
@@ -191,7 +191,7 @@
         </collision>
         <!-- swung at with the hammer -->
         <collision object="man">
-          <check object="man" variable="hammer"><atleast>1</atleast></check>
+          <condition object="man" variable="hammer"><atleast>1</atleast></condition>
           <inc variable="man.score">300</inc>
           <play sound="smash" />
           <despawn />
@@ -536,7 +536,7 @@
               <land />
             </collision>
             <collision class="barrel">
-              <check variable="hammer"><equal>0</equal></check>
+              <condition variable="hammer"><equal>0</equal></condition>
               <trigger action="lose" />
             </collision>
             <collision object="hammer">

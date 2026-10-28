@@ -31,7 +31,7 @@ namespace xge
 	// What is tested can also be a total over the matching objects in play
 	// (total="count", "sum", "highest", "lowest") or, per matching object,
 	// how far it is from the nearest of another (distance="name"). And a
-	// condition can be <all> or <any> of several <check>s (each a test of
+	// condition can be <all> or <any> of several <condition>s (each a test of
 	// its own, with no commands), which can hold <all>s and <any>s in turn:
 	// then `join` says which, the checks are `parts`, and the condition's own
 	// test is not used.
@@ -50,7 +50,7 @@ namespace xge
 		std::string otherObject;  // the test tag's object=, or empty
 		std::string otherVariable; // the test tag's variable=, or empty
 		Join join{ Join::None };
-		std::vector<RawCondition> parts; // <all> or <any>: its <check>s, <all>s and <any>s
+		std::vector<RawCondition> parts; // <all> or <any>: its <condition>s, <all>s and <any>s
 		std::vector<RawCommand> commands;
 		std::string name; // name="...": a scene from= this one's can put another in its place
 	};

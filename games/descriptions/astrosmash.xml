@@ -20,7 +20,7 @@
     their own picture and worth (self.worth, read as the rule runs). Their
     fall speeds, slants and starting heights are <random>, drawn again each
     time one is reset to the top.
-  * A big rock (worth 10, a <check> in the rocks' rule about the shot)
+  * A big rock (worth 10, a <condition> in the rocks' rule about the shot)
     <release>s two chips where it is hit, small rocks that do not exist
     until then.
   * A hit on the base resets every rock and spinner (<reset object>): the
@@ -152,7 +152,7 @@
             </collision>
             <!-- a big rock breaks where the shot hits it -->
             <collision object="shot">
-              <check variable="worth"><equal>10</equal></check>
+              <condition variable="worth"><equal>10</equal></condition>
               <release object="chip">2</release>
             </collision>
             <collision object="shot">

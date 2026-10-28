@@ -19,7 +19,7 @@
     its worth and its own pitch, higher the further back, as the arcade's.
   * The ball <deflect>s off the paddle and <bounce>s off a brick. It counts
     its hits, and the fourth and the twelfth make it faster, and so does the
-    first brick it reaches in the back four rows (a <check> of its own y).
+    first brick it reaches in the back four rows (a <condition> of its own y).
   * The paddle has two looks: once the ball has broken through to the top
     wall, it is half as wide (<become>).
   * A ball lost costs one of three; the next is served from the middle.
@@ -206,16 +206,16 @@
             </collision>
             <collision object="player">
               <any>
-                <check variable="hits"><equal>4</equal></check>
-                <check variable="hits"><equal>12</equal></check>
+                <condition variable="hits"><equal>4</equal></condition>
+                <condition variable="hits"><equal>12</equal></condition>
               </any>
               <trigger action="faster" />
             </collision>
             <collision class="brick"><bounce /></collision>
             <collision class="brick">
               <all>
-                <check variable="y"><below>top + 4 * line</below></check>
-                <check variable="deep"><equal>0</equal></check>
+                <condition variable="y"><below>top + 4 * line</below></condition>
+                <condition variable="deep"><equal>0</equal></condition>
               </all>
               <inc variable="ball.deep" />
               <trigger action="faster" />
@@ -242,8 +242,8 @@
       <conditions>
         <condition>
           <all>
-            <check object="wall"><remaining>0</remaining></check>
-            <check object="status" variable="walls"><atleast>1</atleast></check>
+            <condition object="wall"><remaining>0</remaining></condition>
+            <condition object="status" variable="walls"><atleast>1</atleast></condition>
           </all>
           <push state="youwin" />
         </condition>

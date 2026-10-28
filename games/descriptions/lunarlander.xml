@@ -21,7 +21,7 @@
     way it points, burning a unit of fuel a frame.
   * The terrain and the pads are both class "ground". A landing is one rule
     about the pads: slower than the safe speed and nearly upright (an <any>
-    of two <check>s of the heading); every other touch of the ground is a
+    of two <condition>s of the heading); every other touch of the ground is a
     wreck. Each pad's own rule says what it is worth.
   * The next lander is the same one put back, <reset object="lander" />,
     which starts its variables over too, so its fuel is copied out and back
@@ -200,14 +200,14 @@
             <collision object="pads">
               <slower>safespeed</slower>
               <any>
-                <check variable="heading"><atmost>upright</atmost></check>
-                <check variable="heading"><atleast>360 - upright</atleast></check>
+                <condition variable="heading"><atmost>upright</atmost></condition>
+                <condition variable="heading"><atleast>360 - upright</atleast></condition>
               </any>
               <set variable="lander.landed">1</set>
               <stop />
             </collision>
             <collision class="ground">
-              <check variable="landed"><equal>0</equal></check>
+              <condition variable="landed"><equal>0</equal></condition>
               <set variable="lander.crashed">1</set>
               <release object="debris">4</release>
               <die />

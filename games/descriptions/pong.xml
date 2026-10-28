@@ -134,8 +134,8 @@
             </collision>
             <collision class="paddle">
               <any>
-                <check variable="hits"><equal>4</equal></check>
-                <check variable="hits"><equal>12</equal></check>
+                <condition variable="hits"><equal>4</equal></condition>
+                <condition variable="hits"><equal>12</equal></condition>
               </any>
               <set variable="ball.velocity.x">ball.velocity.x * 1.3</set>
               <set variable="ball.velocity.y">ball.velocity.y * 1.3</set>

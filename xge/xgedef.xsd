@@ -1094,10 +1094,10 @@
     <xs:sequence>
       <xs:element name="slower" type="valueType" minOccurs="0" />
       <xs:element name="faster" type="valueType" minOccurs="0" />
-      <!-- checks that must all hold for the rule to run; a <check> with no
-           class= or object= is about the object itself -->
+      <!-- conditions (tests alone, no commands) that must all hold for the
+           rule to run; one with no class= or object= is about the object itself -->
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="check" type="checkType" />
+        <xs:element name="condition" type="testType" />
         <xs:element name="all" type="joinType" />
         <xs:element name="any" type="joinType" />
       </xs:choice>
@@ -1133,7 +1133,7 @@
   </xs:complexType>
 
   <!--
-    One test of a condition or a check: atleast / atmost / above / below /
+    One test of a condition: atleast / atmost / above / below /
     equal compare what is tested (the variable named by variable= of every
     object that matches class and/or object; a total= over them; or each
     one's distance= to the nearest of another) with a number or another
@@ -1159,8 +1159,8 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- One test with what it tests, inside an <all>, an <any> or a <collision>. -->
-  <xs:complexType name="checkType">
+  <!-- A <condition> inside an <all>, an <any> or a <collision>: one test with what it tests, and no commands. -->
+  <xs:complexType name="testType">
     <xs:group ref="conditionTest" />
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
@@ -1171,17 +1171,17 @@
     <xs:attribute name="distance" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <!-- all: every check holds; any: one of them does. Each check a test of its own. -->
+  <!-- all: every condition holds; any: one of them does. Each a test of its own. -->
   <xs:complexType name="joinType">
     <xs:choice maxOccurs="unbounded">
-      <xs:element name="check" type="checkType" />
+      <xs:element name="condition" type="testType" />
       <xs:element name="all" type="joinType" />
       <xs:element name="any" type="joinType" />
     </xs:choice>
   </xs:complexType>
 
   <!--
-    Checked every frame. One test (or an <all> or <any> of checks), then the
+    Checked every frame. One test (or an <all> or <any> of conditions), then the
     commands to run when it holds. Or, with set="name" and nothing else, a
     named <conditions> set's conditions in its place.
   -->

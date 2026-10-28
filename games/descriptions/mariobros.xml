@@ -463,8 +463,8 @@
                  its pipe at the top -->
             <collision object="ground">
               <any>
-                <check variable="x"><atmost>2</atmost></check>
-                <check variable="x"><atleast>window.right - 18</atleast></check>
+                <condition variable="x"><atmost>2</atmost></condition>
+                <condition variable="x"><atleast>window.right - 18</atleast></condition>
               </any>
               <reset />
             </collision>
@@ -476,7 +476,7 @@
               <play sound="flip" />
             </collision>
             <collision object="mario" side="bottom" sprite="flipped">
-              <check variable="down"><atleast>1</atleast></check>
+              <condition variable="down"><atleast>1</atleast></condition>
               <trigger action="getup" />
               <set variable="self.velocity.y">0 - hop</set>
             </collision>
@@ -489,11 +489,11 @@
               <trigger action="kicked" />
             </collision>
             <collision object="mario" side="horizontal" sprite="walking">
-              <check object="mario" variable="blink"><atmost>0</atmost></check>
+              <condition object="mario" variable="blink"><atmost>0</atmost></condition>
               <trigger object="mario" action="lose" />
             </collision>
             <collision object="mario" side="top" sprite="walking">
-              <check object="mario" variable="blink"><atmost>0</atmost></check>
+              <condition object="mario" variable="blink"><atmost>0</atmost></condition>
               <trigger object="mario" action="lose" />
             </collision>
           </collisions>

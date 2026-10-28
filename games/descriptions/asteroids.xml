@@ -443,9 +443,9 @@
         <!-- a wave cleared: the next one comes in from the edges -->
         <condition>
           <all>
-            <check object="rocks"><remaining>0</remaining></check>
-            <check object="mediumrocks"><remaining>0</remaining></check>
-            <check object="smallrocks"><remaining>0</remaining></check>
+            <condition object="rocks"><remaining>0</remaining></condition>
+            <condition object="mediumrocks"><remaining>0</remaining></condition>
+            <condition object="smallrocks"><remaining>0</remaining></condition>
           </all>
           <reset object="rocks" />
         </condition>

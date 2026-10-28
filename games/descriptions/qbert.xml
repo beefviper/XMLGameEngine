@@ -433,7 +433,7 @@
               </collision>
               <!-- Coily, chasing him, leaps after him -->
               <collision object="qbert" sprite="ready">
-                <check object="coily" variable="snake"><equal>1</equal></check>
+                <condition object="coily" variable="snake"><equal>1</equal></condition>
                 <inc variable="player.score">500</inc>
                 <reset object="coily" />
               </collision>

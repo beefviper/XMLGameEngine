@@ -450,8 +450,8 @@
           <conditions>
             <condition>
               <all>
-                <check object="yorgle" distance="hero"><below>160</below></check>
-                <check object="yorgle" variable="awake"><equal>0</equal></check>
+                <condition object="yorgle" distance="hero"><below>160</below></condition>
+                <condition object="yorgle" variable="awake"><equal>0</equal></condition>
               </all>
               <inc variable="yorgle.awake" />
               <become object="yorgle" sprite="awake" />
@@ -545,8 +545,8 @@
           <conditions>
             <condition>
               <all>
-                <check object="grundle" distance="hero"><below>200</below></check>
-                <check object="grundle" variable="awake"><equal>0</equal></check>
+                <condition object="grundle" distance="hero"><below>200</below></condition>
+                <condition object="grundle" variable="awake"><equal>0</equal></condition>
               </all>
               <inc variable="grundle.awake" />
               <become object="grundle" sprite="awake" />

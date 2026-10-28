@@ -42,7 +42,7 @@
     are <dark>unseen</dark>: once a light has found one it stays on the
     map, as a fog of war.
   * The win is a condition of all three pieces found and the eyes back at
-    the door they came in by (<check distance=>).
+    the door they came in by (<condition distance=>).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../xge/xgedef.xsd">
@@ -157,7 +157,7 @@
       <dark>unseen</dark>
       <collisions>
         <collision object="player">
-          <check object="key" distance="player"><below>tile</below></check>
+          <condition object="key" distance="player"><below>tile</below></condition>
           <die />
           <play sound="unlock" />
         </collision>
@@ -498,8 +498,8 @@
         <!-- the whole urn, carried out of the door it came in by -->
         <condition>
           <all>
-            <check object="player" variable="urns"><atleast>3</atleast></check>
-            <check object="player" distance="entrance"><below>tile * 1.5</below></check>
+            <condition object="player" variable="urns"><atleast>3</atleast></condition>
+            <condition object="player" distance="entrance"><below>tile * 1.5</below></condition>
           </all>
           <push state="won" />
         </condition>

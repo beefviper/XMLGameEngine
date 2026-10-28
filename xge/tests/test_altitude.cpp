@@ -5,7 +5,7 @@
 //
 // Catch2 tests for <altitude>: a thing in the air over where it is, rising,
 // falling and bouncing, drawn raised by how high it is, with a <shadow>
-// under it; a rule's <check> of how high it is; then a rally of
+// under it; a rule's <condition> of how high it is; then a rally of
 // games/descriptions/tennis.xml.
 
 #include "played.h"
@@ -96,7 +96,7 @@ TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on
 TEST_CASE("a rule can check how high it is: what flies over goes past", "[altitude]")
 {
 	const Scratch file(box("ball", 100, 100, "<velocity><x>4</x><y>0</y></velocity><altitude><start>30</start></altitude>"
-		"<collisions><enabled>true</enabled><collision object=\"wall\"><check variable=\"altitude\"><below>10</below></check><bounce /></collision></collisions>")
+		"<collisions><enabled>true</enabled><collision object=\"wall\"><condition variable=\"altitude\"><below>10</below></condition><bounce /></collision></collisions>")
 		+ box("wall", 160, 100, "<collisions><enabled>true</enabled></collisions>"), "<set variable=\"ball.altitude\">0</set><reset object=\"wall\" />");
 	Played play(file.path);
 

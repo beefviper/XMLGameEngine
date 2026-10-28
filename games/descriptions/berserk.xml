@@ -626,8 +626,8 @@
         <!-- no robot left in the room: ten more for each destroyed -->
         <condition>
           <all>
-            <check class="robot"><remaining>0</remaining></check>
-            <check object="player" variable="kills"><atleast>1</atleast></check>
+            <condition class="robot"><remaining>0</remaining></condition>
+            <condition object="player" variable="kills"><atleast>1</atleast></condition>
           </all>
           <inc variable="player.score">10 * player.kills</inc>
           <inc variable="player.lifepoints">10 * player.kills</inc>

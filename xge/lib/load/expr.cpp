@@ -1091,7 +1091,7 @@ namespace xge
 				&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name || object.inGroup(rawCondition.filterObject));
 		};
 
-		// What a condition or a <check> tests, made ready (with its <all> or
+		// What a <condition> tests, made ready (with its <all> or
 		// <any>'s checks, each made the same way).
 		std::function<Condition(const RawCondition&, const std::string&, const std::string&)> makeTest;
 		makeTest = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner)
@@ -1101,7 +1101,7 @@ namespace xge
 			for (std::size_t i = 0; i < rawCondition.parts.size(); ++i)
 			{
 				const RawCondition& part = rawCondition.parts[i];
-				const char* kind = part.join == RawCondition::Join::All ? "<all>" : part.join == RawCondition::Join::Any ? "<any>" : "<check>";
+				const char* kind = part.join == RawCondition::Join::All ? "<all>" : part.join == RawCondition::Join::Any ? "<any>" : "<condition>";
 				condition.parts.push_back(makeTest(part, where + " > " + kind + " " + std::to_string(i + 1), owner));
 			}
 			if (condition.join != RawCondition::Join::None)

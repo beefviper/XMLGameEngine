@@ -818,7 +818,7 @@
       </xsl:if>
     </xsl:for-each>
     <xsl:for-each select="$node/collision">
-      <xsl:variable name="commands" select="*[not(self::slower or self::faster or self::check or self::all or self::any)]" />
+      <xsl:variable name="commands" select="*[not(self::slower or self::faster or self::condition or self::all or self::any)]" />
       <xsl:choose>
         <xsl:when test="@edge != ''">
           <xsl:value-of select="concat($indent, 'edge(', $data, ', &quot;', @edge, '&quot;, ')" />
@@ -875,10 +875,10 @@
             <xsl:text>;&#10;</xsl:text>
           </xsl:if>
           <!-- its checks, gathered as an <all> (readCollisions) -->
-          <xsl:if test="check | all | any">
+          <xsl:if test="condition | all | any">
             <xsl:call-template name="condition-join">
               <xsl:with-param name="join" select="." />
-              <xsl:with-param name="parts" select="check | all | any" />
+              <xsl:with-param name="parts" select="condition | all | any" />
               <xsl:with-param name="var" select="'rule.check'" />
               <xsl:with-param name="inner" select="$inner" />
               <xsl:with-param name="depth" select="0" />
@@ -2038,7 +2038,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- What a <condition> or a <check> ($node) tests (readCheck), set on the
+  <!-- What a <condition> ($node) tests (readCheck), set on the
        RawCondition $var: its filters and what it measures, then its test,
        or the checks of its <all> or <any>, each in a RawCondition of its
        own named by its depth (no name shadows another). -->
@@ -2114,7 +2114,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- An <all> or <any> ($join): which, then each of its <check>s, <all>s
+  <!-- An <all> or <any> ($join): which, then each of its <condition>s, <all>s
        and <any>s pushed onto $var's parts. A <collision> ($join) gives its
        checks as $parts, and they are an <all>. -->
   <xsl:template name="condition-join">
@@ -2128,7 +2128,7 @@
     <xsl:for-each select="$parts">
       <xsl:value-of select="concat($inner, $var, '.parts.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; ', $part, ')&#10;', $inner, '{&#10;')" />
       <xsl:choose>
-        <xsl:when test="self::check">
+        <xsl:when test="self::condition">
           <xsl:call-template name="condition-test">
             <xsl:with-param name="node" select="." />
             <xsl:with-param name="var" select="$part" />

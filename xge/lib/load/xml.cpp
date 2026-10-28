@@ -1337,7 +1337,7 @@ namespace xge
 			}
 		}
 
-		// What a <check>, an <all> or an <any> tests (below, with <condition>s).
+		// What a <condition>, an <all> or an <any> tests (below, with <condition>s).
 		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, RawCondition& raw);
 		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw);
 
@@ -1443,13 +1443,13 @@ namespace xge
 
 				// Then the checks that must all hold for it to run.
 				RawCondition check;
-				while (firstCommand && (firstCommand->getName() == "check" || firstCommand->getName() == "all" || firstCommand->getName() == "any"))
+				while (firstCommand && (firstCommand->getName() == "condition" || firstCommand->getName() == "all" || firstCommand->getName() == "any"))
 				{
 					const std::string name = firstCommand->getName();
 					RawCondition part;
-					if (name == "check")
+					if (name == "condition")
 					{
-						if (readCheck(*firstCommand, ruleHere + " > <check>", part)) { fail(ruleHere + " > <check>", "has its one test and nothing after it; the commands go after the checks"); }
+						if (readCheck(*firstCommand, ruleHere + " > <condition>", part)) { fail(ruleHere + " > <condition>", "has its one test and nothing after it; the commands go after the checks"); }
 					}
 					else
 					{
@@ -1461,7 +1461,7 @@ namespace xge
 				}
 				if (check.join != RawCondition::Join::None && !edge.empty())
 				{
-					fail(ruleHere, "a <check> on a rule about a screen edge is not built yet; a <condition> of the state can test the same variable");
+					fail(ruleHere, "a <condition> on a rule about a screen edge is not built yet; one in the state's <conditions> can test the same variable");
 				}
 				const std::string side = collision->getAttribute("side");
 				if (!side.empty())
@@ -2417,7 +2417,7 @@ namespace xge
 
 		using ConditionSets = std::map<std::string, std::vector<RawCondition>>;
 
-		// An <all> or an <any>, into `raw`: which, and its <check>s, <all>s
+		// An <all> or an <any>, into `raw`: which, and its <condition>s, <all>s
 		// and <any>s in order.
 		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw)
 		{
@@ -2426,9 +2426,9 @@ namespace xge
 			{
 				const std::string partName = part->getName();
 				RawCondition check;
-				if (partName == "check")
+				if (partName == "condition")
 				{
-					const std::string checkHere = here + " > <check>";
+					const std::string checkHere = here + " > <condition>";
 					if (readCheck(*part, checkHere, check)) { fail(checkHere, "has its one test and nothing after it; the commands go at the end of the <condition>"); }
 				}
 				else if (partName == "all" || partName == "any")
@@ -2437,16 +2437,16 @@ namespace xge
 				}
 				else
 				{
-					fail(here, "unknown <" + partName + ">; expected <check>s, <all>s and <any>s");
+					fail(here, "unknown <" + partName + ">; expected <condition>s, <all>s and <any>s");
 				}
 				raw.parts.push_back(std::move(check));
 			}
-			if (raw.parts.empty()) { fail(here, "has no <check>"); }
+			if (raw.parts.empty()) { fail(here, "has no <condition>"); }
 		}
 
-		// What a <condition> or a <check> tests, into `raw`: its filters and
+		// What a <condition> tests, into `raw`: its filters and
 		// what it measures (attributes), then its test tag, or an <all> or
-		// <any> of <check>s. Gives back what follows (a condition's commands).
+		// <any> of <condition>s. Gives back what follows (a condition's commands).
 		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, RawCondition& raw)
 		{
 			raw.filterClass = node.getAttribute("class");
@@ -2465,7 +2465,7 @@ namespace xge
 			{
 				if (!raw.filterClass.empty() || !raw.filterObject.empty() || !raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty())
 				{
-					fail(here, "<" + testName + "> says what is tested in each of its <check>s, so the condition has no class=, object=, variable=, total= or distance=");
+					fail(here, "<" + testName + "> says what is tested in each of its <condition>s, so the condition has no class=, object=, variable=, total= or distance=");
 				}
 				readJoin(*test, here + " > <" + testName + ">", raw);
 				return test->getNextSibling();

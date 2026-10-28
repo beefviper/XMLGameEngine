@@ -194,7 +194,7 @@
           <collisions>
             <collision edge="all"><stick /></collision>
             <collision class="fish">
-              <check variable="line"><equal>0</equal></check>
+              <condition variable="line"><equal>0</equal></condition>
               <carry />
               <set variable="self.line">1</set>
               <play sound="bite" />
@@ -275,38 +275,38 @@
             <collision edge="right"><bounce /><become sprite="left" /></collision>
             <!-- a bite: claimed for the hook that took it -->
             <collision object="hook1">
-              <check object="hook1" variable="line"><equal>1</equal></check>
+              <condition object="hook1" variable="line"><equal>1</equal></condition>
               <set variable="hook1.line">2</set>
               <set variable="self.by">1</set>
               <stop />
             </collision>
             <collision object="hook2">
-              <check object="hook2" variable="line"><equal>1</equal></check>
+              <condition object="hook2" variable="line"><equal>1</equal></condition>
               <set variable="hook2.line">2</set>
               <set variable="self.by">2</set>
               <stop />
             </collision>
             <!-- landed, for whoever it is on -->
             <collision object="surface">
-              <check variable="by"><equal>1</equal></check>
+              <condition variable="by"><equal>1</equal></condition>
               <inc variable="left.score">self.worth</inc>
               <reset object="hook1" />
               <trigger action="landed" />
             </collision>
             <collision object="surface">
-              <check variable="by"><equal>2</equal></check>
+              <condition variable="by"><equal>2</equal></condition>
               <inc variable="right.score">self.worth</inc>
               <reset object="hook2" />
               <trigger action="landed" />
             </collision>
             <!-- the shark takes a fish on a line, and leaves the rest -->
             <collision object="shark">
-              <check variable="by"><equal>1</equal></check>
+              <condition variable="by"><equal>1</equal></condition>
               <reset object="hook1" />
               <trigger action="eaten" />
             </collision>
             <collision object="shark">
-              <check variable="by"><equal>2</equal></check>
+              <condition variable="by"><equal>2</equal></condition>
               <reset object="hook2" />
               <trigger action="eaten" />
             </collision>
@@ -378,29 +378,29 @@
       <computer>
         <condition>
           <all>
-            <check object="hook2" variable="line"><equal>0</equal></check>
-            <check object="hook2" variable="y"><below object="cod.2" variable="y" /></check>
+            <condition object="hook2" variable="line"><equal>0</equal></condition>
+            <condition object="hook2" variable="y"><below object="cod.2" variable="y" /></condition>
           </all>
           <hold button="k" />
         </condition>
         <condition>
           <all>
-            <check object="hook2" variable="line"><equal>0</equal></check>
-            <check object="hook2" variable="x"><below object="cod.2" variable="x" /></check>
+            <condition object="hook2" variable="line"><equal>0</equal></condition>
+            <condition object="hook2" variable="x"><below object="cod.2" variable="x" /></condition>
           </all>
           <hold button="l" />
         </condition>
         <condition>
           <all>
-            <check object="hook2" variable="line"><equal>0</equal></check>
-            <check object="hook2" variable="x"><above object="cod.2" variable="x" /></check>
+            <condition object="hook2" variable="line"><equal>0</equal></condition>
+            <condition object="hook2" variable="x"><above object="cod.2" variable="x" /></condition>
           </all>
           <hold button="j" />
         </condition>
         <condition>
           <all>
-            <check object="hook2" variable="line"><atleast>1</atleast></check>
-            <check object="hook2" distance="shark"><above>200</above></check>
+            <condition object="hook2" variable="line"><atleast>1</atleast></condition>
+            <condition object="hook2" distance="shark"><above>200</above></condition>
           </all>
           <hold button="i" />
         </condition>

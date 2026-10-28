@@ -9,7 +9,7 @@
 // and a <collision> with no selector at all is the rule that matches anything.
 //
 // Rules can also <trigger> an action (of the object itself when object= is
-// left out), hold <check>s that must all hold, and name the side= touched.
+// left out), hold <condition>s that must all hold, and name the side= touched.
 //
 // Regression covered: Space Invaders' bullet used an unfiltered collision
 // rule, so it died the moment it overlapped the ship that fired it.
@@ -162,9 +162,9 @@ TEST_CASE("a collision can <trigger> an action of the object itself, left to mea
 	CHECK(falling.after(18) < 10.0f);
 }
 
-TEST_CASE("a collision rule with a <check> runs only while the check holds", "[collision_rules]")
+TEST_CASE("a collision rule with a <condition> runs only while the check holds", "[collision_rules]")
 {
-	const std::string rule = "<collision class=\"block\"><check variable=\"armed\"><atleast>1</atleast></check><trigger action=\"hit\" /></collision>";
+	const std::string rule = "<collision class=\"block\"><condition variable=\"armed\"><atleast>1</atleast></condition><trigger action=\"hit\" /></collision>";
 	SECTION("its own variable holds: the rule runs")
 	{
 		Falling falling(rule, "1");
@@ -232,7 +232,7 @@ TEST_CASE("a rule written on a group of groups, with a check about itself, looks
 	};
 	const played::Scratch file(
 		"<group name=\"rocks\" class=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<collisions><enabled>true</enabled><collision object=\"shot\"><check variable=\"" + variable + "\"><equal>10</equal></check>"
+		"<collisions><enabled>true</enabled><collision object=\"shot\"><condition variable=\"" + variable + "\"><equal>10</equal></condition>"
 		"<inc variable=\"tally.splits\" /><die /></collision></collisions>"
 		"<group name=\"big\">" + inGroup(big, "10") + "</group>"
 		"<group name=\"small\">" + inGroup(small, "20") + "</group>"
