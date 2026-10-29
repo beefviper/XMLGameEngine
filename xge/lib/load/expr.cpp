@@ -1032,17 +1032,11 @@ namespace xge
 			object.collisionData.hitboxOffset = { valueOr0(rawCollisions.hitboxX), valueOr0(rawCollisions.hitboxY) };
 		}
 
-		object.collisionData.top = processCommands(rawObject.rawCollisionData.top, where);
-		object.collisionData.bottom = processCommands(rawObject.rawCollisionData.bottom, where);
-		object.collisionData.left = processCommands(rawObject.rawCollisionData.left, where);
-		object.collisionData.right = processCommands(rawObject.rawCollisionData.right, where);
-		object.collisionData.topGuards = rawObject.rawCollisionData.topGuards;
-		object.collisionData.bottomGuards = rawObject.rawCollisionData.bottomGuards;
-		object.collisionData.leftGuards = rawObject.rawCollisionData.leftGuards;
-		object.collisionData.rightGuards = rawObject.rawCollisionData.rightGuards;
-		for (const auto* edgeGuards : { &object.collisionData.topGuards, &object.collisionData.bottomGuards, &object.collisionData.leftGuards, &object.collisionData.rightGuards })
+		for (std::size_t edge = 0; edge < object.collisionData.edges.size(); ++edge)
 		{
-			for (const EdgeGuard& edgeGuard : *edgeGuards)
+			const EdgeRules<RawCommand>& raw = rawObject.rawCollisionData.edges[edge];
+			object.collisionData.edges[edge] = { processCommands(raw.commands, where), raw.guards };
+			for (const EdgeGuard& edgeGuard : raw.guards)
 			{
 				if (!edgeGuard.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == edgeGuard.sprite; }))
 				{

@@ -867,7 +867,7 @@
       <xsl:variable name="commands" select="*[not(self::slower or self::faster or self::condition or self::all or self::any)]" />
       <xsl:choose>
         <xsl:when test="@edge != ''">
-          <xsl:value-of select="concat($indent, 'edge(', $data, ', &quot;', @edge, '&quot;, ')" />
+          <xsl:value-of select="concat($indent, 'addEdgeRule(', $data, ', &quot;', @edge, '&quot;, ')" />
           <xsl:call-template name="commands">
             <xsl:with-param name="nodes" select="$commands" />
             <xsl:with-param name="indent" select="$indent" />

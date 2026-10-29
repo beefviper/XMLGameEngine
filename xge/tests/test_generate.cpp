@@ -116,7 +116,7 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	CHECK(data.find("\t// <object name=\"ball\">\n\tRawObject playingBallObject()\n\t{\n\t\tRawObject object;\n\t\tobject.name = \"ball\";") != std::string::npos);
 	CHECK(data.find("\t\tobject.sprite = sprite(\"rectangle\", \"\", [](RawSprite& look)") != std::string::npos);
 	CHECK(data.find("\t\tobject.rawCollisionData.enabled = true;") != std::string::npos);
-	CHECK(data.find("edge(object.rawCollisionData, \"vertical\", { verb(\"bounce\") });") != std::string::npos);
+	CHECK(data.find("addEdgeRule(object.rawCollisionData, \"vertical\", { verb(\"bounce\") });") != std::string::npos);
 	CHECK(data.find("\tgame.objects = objects();") != std::string::npos);
 	CHECK(data.find("\t\tstate.objects = playingObjects();") != std::string::npos);
 	CHECK(data.find("std::vector<RawSound> sounds()") == std::string::npos);

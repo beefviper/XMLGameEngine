@@ -284,7 +284,7 @@ TEST_CASE("commands run in the order they are written", "[xml_format][commands]"
 	o.extra = "<variables><variable name=\"score\">0</variable></variables>";
 	Loaded loaded(gameXml("", objectXml(o)));
 
-	const auto& left = loaded.game.getObject("o").collisionData.left;
+	const auto& left = loaded.game.getObject("o").collisionData.edges[edgeIndex(Edge::Left)].commands;
 	REQUIRE(left.size() == 3);
 	CHECK(as<CmdIncrement>(left[0]).target.written() == "o.score");
 	as<CmdReset>(left[1]);
@@ -301,12 +301,12 @@ TEST_CASE("an edge rule reaches the edges it names, and several rules on one edg
 	Loaded loaded(gameXml("", objectXml(o)));
 
 	const auto& data = loaded.game.getObject("o").collisionData;
-	CHECK(data.top.size() == 2);    // all, vertical
-	CHECK(data.bottom.size() == 2); // all, vertical
-	CHECK(data.left.size() == 2);   // all, left
-	CHECK(data.right.size() == 1);  // all
-	as<CmdBounce>(data.left[0]);
-	as<CmdDie>(data.left[1]);
+	CHECK(data.edges[edgeIndex(Edge::Top)].commands.size() == 2);    // all, vertical
+	CHECK(data.edges[edgeIndex(Edge::Bottom)].commands.size() == 2); // all, vertical
+	CHECK(data.edges[edgeIndex(Edge::Left)].commands.size() == 2);   // all, left
+	CHECK(data.edges[edgeIndex(Edge::Right)].commands.size() == 1);  // all
+	as<CmdBounce>(data.edges[edgeIndex(Edge::Left)].commands[0]);
+	as<CmdDie>(data.edges[edgeIndex(Edge::Left)].commands[1]);
 	CHECK(data.others.empty());
 }
 
@@ -334,8 +334,8 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 	as<CmdReverse>(others[2].commands.at(0));
 
 	const auto& data = loaded.game.getObject("o").collisionData;
-	CHECK(data.top.empty());
-	CHECK(data.left.empty());
+	CHECK(data.edges[edgeIndex(Edge::Top)].commands.empty());
+	CHECK(data.edges[edgeIndex(Edge::Left)].commands.empty());
 }
 
 TEST_CASE("move and hop take a direction and a value", "[xml_format][commands]")

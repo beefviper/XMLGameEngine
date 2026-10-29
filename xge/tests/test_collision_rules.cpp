@@ -55,7 +55,7 @@ TEST_CASE("a collision naming only a class is an object rule for that class", "[
 	CHECK(bullet.collisionData.others[1].filterClass == "shield");
 
 	// ...and it did not also turn into a screen-edge rule.
-	CHECK(bullet.collisionData.left.size() == 1); // only the edge="all" <die />
+	CHECK(bullet.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1); // only the edge="all" <die />
 }
 
 TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules]")

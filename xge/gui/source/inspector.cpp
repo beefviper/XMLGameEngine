@@ -484,10 +484,10 @@ namespace xge
 			[object](double value) { object().collisionData.enabled = value != 0; });
 		addInfo(collision, tr("type"), first.collisionData.type == CollisionType::Pixel ? tr("pixel") : tr("box"));
 		addInfo(collision, tr("rules about other objects"), QString::number(first.collisionData.others.size()));
-		addInfo(collision, tr("top"), commandsText(first.collisionData.top));
-		addInfo(collision, tr("bottom"), commandsText(first.collisionData.bottom));
-		addInfo(collision, tr("left"), commandsText(first.collisionData.left));
-		addInfo(collision, tr("right"), commandsText(first.collisionData.right));
+		addInfo(collision, tr("top"), commandsText(first.collisionData.edges[edgeIndex(Edge::Top)].commands));
+		addInfo(collision, tr("bottom"), commandsText(first.collisionData.edges[edgeIndex(Edge::Bottom)].commands));
+		addInfo(collision, tr("left"), commandsText(first.collisionData.edges[edgeIndex(Edge::Left)].commands));
+		addInfo(collision, tr("right"), commandsText(first.collisionData.edges[edgeIndex(Edge::Right)].commands));
 
 		if (!first.variable.empty())
 		{

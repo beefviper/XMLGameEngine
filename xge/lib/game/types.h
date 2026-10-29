@@ -35,6 +35,12 @@ namespace xge
 	// Which side of a screen or of another object's bounding box was touched.
 	enum class Edge { Top, Bottom, Left, Right };
 
+	// As a game file names it (edge="top").
+	constexpr const char* edgeName(Edge edge) noexcept
+	{
+		return edge == Edge::Top ? "top" : edge == Edge::Bottom ? "bottom" : edge == Edge::Left ? "left" : "right";
+	}
+
 	// The edge you'd see the same contact from, standing on the other object:
 	// if you hit something's Left edge, you were hit on your own Right.
 	constexpr Edge opposite(Edge edge) noexcept

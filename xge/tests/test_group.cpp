@@ -138,8 +138,8 @@ TEST_CASE("a group is read as one object for each member", "[group]")
 		CHECK(object.objClass == "logs");
 		CHECK(object.groupName == "lane");
 		CHECK(object.collisionData.enabled);
-		CHECK(object.collisionData.left.size() == 1);
-		CHECK(object.collisionData.right.size() == 1);
+		CHECK(object.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
+		CHECK(object.collisionData.edges[edgeIndex(Edge::Right)].commands.size() == 1);
 		CHECK(object.variable.at("weight") == 3.0f);
 	}
 }
@@ -599,14 +599,14 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(measureShapeSize(slow.picture).x == 30.0f);
 	CHECK(slow.picture.color == "color.red");
 	CHECK(slow.collisionData.enabled);
-	CHECK(slow.collisionData.left.size() == 1);
+	CHECK(slow.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
 	CHECK(slow.collisionData.others.empty());
 	CHECK(slow.variable.at("weight") == 3.0f);
 
 	// The inner group's rules and variables add to the outer's, its class replaces it.
 	const Object& fast = game.getObject("fast.1");
 	CHECK(fast.objClass == "hazard");
-	CHECK(fast.collisionData.left.size() == 1);
+	CHECK(fast.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
 	CHECK(fast.collisionData.others.size() == 1);
 	CHECK(fast.variable.at("weight") == 5.0f);
 	CHECK(fast.velocity.x == -3.0f);

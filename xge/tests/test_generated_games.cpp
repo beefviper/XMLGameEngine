@@ -266,14 +266,11 @@ namespace
 			value(at + ".collisions.hitbox.radius", c.hitboxRadius);
 			value(at + ".collisions.hitbox.x", c.hitboxX);
 			value(at + ".collisions.hitbox.y", c.hitboxY);
-			commands(at + ".top", c.top);
-			commands(at + ".bottom", c.bottom);
-			commands(at + ".left", c.left);
-			commands(at + ".right", c.right);
-			guards(at + ".topGuards", c.topGuards);
-			guards(at + ".bottomGuards", c.bottomGuards);
-			guards(at + ".leftGuards", c.leftGuards);
-			guards(at + ".rightGuards", c.rightGuards);
+			for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+			{
+				commands(at + "." + edgeName(edge), c.edges[edgeIndex(edge)].commands);
+				guards(at + "." + edgeName(edge) + "Guards", c.edges[edgeIndex(edge)].guards);
+			}
 			for (std::size_t i = 0; i < c.others.size(); ++i)
 			{
 				const RawCollisionRule& r = c.others[i];

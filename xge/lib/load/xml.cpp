@@ -1381,24 +1381,6 @@ namespace xge
 			return facing;
 		}
 
-		void appendCommands(std::vector<RawCommand>& existing, const std::vector<RawCommand>& more)
-		{
-			existing.insert(existing.end(), more.begin(), more.end());
-		}
-
-		// An edge rule's commands appended to one edge's list, noting where
-		// they are: the rule ends at a refused verb, may hold to a look
-		// (sprite=) and may be passed over while touching a class (unless=).
-		void appendEdgeRule(std::vector<RawCommand>& existing, std::vector<EdgeGuard>& guards,
-			const std::vector<RawCommand>& more, const std::string& sprite, const std::string& unlessClass)
-		{
-			if (!more.empty())
-			{
-				guards.push_back(EdgeGuard{ existing.size(), more.size(), sprite, unlessClass });
-			}
-			appendCommands(existing, more);
-		}
-
 		// A value and its name, such as <variable name="score">0</variable>.
 		void readVariables(const XmlNode* variablesNode, const std::string& where,
 			std::vector<std::pair<std::string, RawValue>>& out)
@@ -1560,14 +1542,6 @@ namespace xge
 				// neither means anything at all.
 				if (!edge.empty())
 				{
-					const bool all = edge == "all";
-					const bool horizontal = edge == "horizontal";
-					const bool vertical = edge == "vertical";
-
-					if (!all && !horizontal && !vertical && edge != "top" && edge != "bottom" && edge != "left" && edge != "right")
-					{
-						fail(ruleHere, "edge=\"" + edge + "\"; expected left, right, top, bottom, horizontal, vertical or all");
-					}
 
 					// Appends rather than overwrites, so more than one <collision
 					// edge="..."> touching the same edge (e.g. an "all" rule plus a
@@ -1583,10 +1557,10 @@ namespace xge
 
 					const std::string sprite = collision->getAttribute("sprite");
 					const std::string unlessClass = collision->getAttribute("unless");
-					if (all || vertical || edge == "top") { appendEdgeRule(collisionData.top, collisionData.topGuards, commands, sprite, unlessClass); }
-					if (all || vertical || edge == "bottom") { appendEdgeRule(collisionData.bottom, collisionData.bottomGuards, commands, sprite, unlessClass); }
-					if (all || horizontal || edge == "left") { appendEdgeRule(collisionData.left, collisionData.leftGuards, commands, sprite, unlessClass); }
-					if (all || horizontal || edge == "right") { appendEdgeRule(collisionData.right, collisionData.rightGuards, commands, sprite, unlessClass); }
+					if (!addEdgeRule(collisionData, edge, commands, sprite, unlessClass))
+					{
+						fail(ruleHere, "edge=\"" + edge + "\"; expected left, right, top, bottom, horizontal, vertical or all");
+					}
 				}
 				else
 				{

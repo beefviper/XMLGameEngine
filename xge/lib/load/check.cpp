@@ -638,9 +638,9 @@ namespace xge
 			for (const Timer& timer : object.timers) { visit(timer.commands, &object); }
 			for (const auto& [name, commands] : object.action) { visit(commands, &object); }
 			for (const auto& rule : object.collisionData.others) { visit(rule.commands, &object); }
-			for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+			for (const auto& edgeRules : object.collisionData.edges)
 			{
-				visit(*edge, &object);
+				visit(edgeRules.commands, &object);
 			}
 		}
 
@@ -880,9 +880,9 @@ namespace xge
 					}
 				}
 			}
-			for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+			for (const auto& edgeRules : object.collisionData.edges)
 			{
-				checkWalks(*edge, where + " > <collision edge>");
+				checkWalks(edgeRules.commands, where + " > <collision edge>");
 			}
 
 			for (const auto& timer : object.timers)
@@ -892,9 +892,9 @@ namespace xge
 			}
 			for (const auto& [name, commands] : object.action) { checkOwnLooks(commands, &object, where); }
 			for (const auto& rule : object.collisionData.others) { checkOwnLooks(rule.commands, &object, where); }
-			for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+			for (const auto& edgeRules : object.collisionData.edges)
 			{
-				checkOwnLooks(*edge, &object, where);
+				checkOwnLooks(edgeRules.commands, &object, where);
 			}
 			for (const auto& [name, commands] : object.action)
 			{
@@ -945,10 +945,10 @@ namespace xge
 				checkAll(rule.commands, where);
 				checkPlace(rule.commands, Place::Touch, where + " > <collision>");
 			}
-			for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+			for (const auto& edgeRules : object.collisionData.edges)
 			{
-				checkAll(*edge, where);
-				checkPlace(*edge, Place::Edge, where + " > <collision edge>");
+				checkAll(edgeRules.commands, where);
+				checkPlace(edgeRules.commands, Place::Edge, where + " > <collision edge>");
 			}
 		}
 		return wanted;

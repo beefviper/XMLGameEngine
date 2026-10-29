@@ -103,6 +103,22 @@ namespace xge
 		std::string unlessClass;
 	};
 
+	// One screen edge's rules: their commands in file order, and where each
+	// rule is among them (guards). `Command` is a RawCommand as written, or
+	// the Command it is made into.
+	template <typename CommandType>
+	struct EdgeRules
+	{
+		std::vector<CommandType> commands;
+		std::vector<EdgeGuard> guards;
+	};
+
+	// The four screen edges' rules, by Edge (edges[edgeIndex(Edge::Left)]).
+	template <typename CommandType>
+	using EdgesRules = std::array<EdgeRules<CommandType>, 4>;
+
+	constexpr std::size_t edgeIndex(Edge edge) noexcept { return static_cast<std::size_t>(edge); }
+
 	struct RawCollisionData
 	{
 		bool enabled{ false };
@@ -124,15 +140,8 @@ namespace xge
 		RawValue hitboxX;
 		RawValue hitboxY;
 
-		std::vector<RawCommand> top;
-		std::vector<RawCommand> bottom;
-		std::vector<RawCommand> left;
-		std::vector<RawCommand> right;
-		// Where each rule's commands are among them (see EdgeGuard).
-		std::vector<EdgeGuard> topGuards;
-		std::vector<EdgeGuard> bottomGuards;
-		std::vector<EdgeGuard> leftGuards;
-		std::vector<EdgeGuard> rightGuards;
+		// Each screen edge's <collision edge="..."> rules (addEdgeRule).
+		EdgesRules<RawCommand> edges;
 		// Rules about another object: a <collision> with a class= and/or
 		// object= selector, or with no selector at all (matches anything), as
 		// against the window's edges above.
@@ -173,15 +182,8 @@ namespace xge
 		Vector2f hitboxSize{};
 		bool hitboxRound{ false };
 
-		std::vector<Command> top;
-		std::vector<Command> bottom;
-		std::vector<Command> left;
-		std::vector<Command> right;
-		// Where each rule's commands are among them (see EdgeGuard).
-		std::vector<EdgeGuard> topGuards;
-		std::vector<EdgeGuard> bottomGuards;
-		std::vector<EdgeGuard> leftGuards;
-		std::vector<EdgeGuard> rightGuards;
+		// Each screen edge's rules (see RawCollisionData::edges).
+		EdgesRules<Command> edges;
 		// Rules about another object (see RawCollisionData::others).
 		std::vector<CollisionRule> others;
 
@@ -1076,6 +1078,14 @@ namespace xge
 		RawValue tileWidth;
 		RawValue tileHeight;
 	};
+
+	// <collision edge="...">: its commands added to each screen edge it names
+	// (top, bottom, left, right; vertical is top and bottom, horizontal left
+	// and right, all every one), noting where the rule is among them: it may
+	// hold only to a look (sprite=) and be passed over while touching a class
+	// (unless=). False for an edge= that names none of those.
+	bool addEdgeRule(RawCollisionData& collisions, const std::string& edges, const std::vector<RawCommand>& commands,
+		const std::string& sprite = {}, const std::string& unlessClass = {});
 
 	// The tiles of a map that show this character, row by row and each row
 	// left to right: column, then row, counting from 0.

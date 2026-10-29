@@ -1742,39 +1742,6 @@ namespace xge
 
 	namespace
 	{
-		// A reference, unlike a pointer, can't be null - which is what keeps
-		// this out of the same "what if the switch fell through" trap as the
-		// raw-pointer version this replaced (VS flagged that one, C6011,
-		// even though Edge's four enumerators are all handled below).
-		const std::vector<Command>& collisionCommandsFor(const Object& object, Edge edge)
-		{
-			switch (edge)
-			{
-			case Edge::Left:   return object.collisionData.left;
-			case Edge::Right:  return object.collisionData.right;
-			case Edge::Top:    return object.collisionData.top;
-			case Edge::Bottom: return object.collisionData.bottom;
-			}
-
-			// Unreachable: Edge only ever has the four values above.
-			return object.collisionData.top;
-		}
-
-		// The edge's rules with sprite= (see EdgeGuard).
-		const std::vector<EdgeGuard>& collisionGuardsFor(const Object& object, Edge edge)
-		{
-			switch (edge)
-			{
-			case Edge::Left:   return object.collisionData.leftGuards;
-			case Edge::Right:  return object.collisionData.rightGuards;
-			case Edge::Top:    return object.collisionData.topGuards;
-			case Edge::Bottom: return object.collisionData.bottomGuards;
-			}
-
-			// Unreachable: Edge only ever has the four values above.
-			return object.collisionData.topGuards;
-		}
-
 		// Shared by a collision rule's class/object filter and a state
 		// condition's: empty filterClass/filterObject match anything; either or
 		// both narrow it to a specific class and/or one specific named object.
@@ -1806,8 +1773,8 @@ namespace xge
 	void Game::atEdge(Object& object, Edge edge)
 	{
 		CommandExecutor executor(*this);
-		const std::vector<Command>& commands = collisionCommandsFor(object, edge);
-		const std::vector<EdgeGuard>& guards = collisionGuardsFor(object, edge);
+		const std::vector<Command>& commands = object.collisionData.edges[edgeIndex(edge)].commands;
+		const std::vector<EdgeGuard>& guards = object.collisionData.edges[edgeIndex(edge)].guards;
 		for (std::size_t i = 0; i < commands.size();)
 		{
 			// a rule with sprite= or unless= is looked at as it comes, after
@@ -1838,8 +1805,8 @@ namespace xge
 	// before the move.
 	bool Game::sticksAt(const Object& object, Edge edge)
 	{
-		const auto& commands = collisionCommandsFor(object, edge);
-		const auto& guards = collisionGuardsFor(object, edge);
+		const auto& commands = object.collisionData.edges[edgeIndex(edge)].commands;
+		const auto& guards = object.collisionData.edges[edgeIndex(edge)].guards;
 		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
 			const bool passedOver = std::any_of(guards.begin(), guards.end(), [&](const EdgeGuard& guard)

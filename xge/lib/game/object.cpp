@@ -126,6 +126,28 @@ namespace xge
 		visualDirty = true;
 	}
 
+	bool addEdgeRule(RawCollisionData& collisions, const std::string& edges, const std::vector<RawCommand>& commands,
+		const std::string& sprite, const std::string& unlessClass)
+	{
+		const bool all = edges == "all";
+		const bool vertical = all || edges == "vertical";
+		const bool horizontal = all || edges == "horizontal";
+		bool any = false;
+		for (const auto& [edge, named] : { std::pair{ Edge::Top, vertical || edges == "top" }, std::pair{ Edge::Bottom, vertical || edges == "bottom" },
+			std::pair{ Edge::Left, horizontal || edges == "left" }, std::pair{ Edge::Right, horizontal || edges == "right" } })
+		{
+			if (!named) { continue; }
+			any = true;
+			EdgeRules<RawCommand>& rules = collisions.edges[edgeIndex(edge)];
+			if (!commands.empty())
+			{
+				rules.guards.push_back(EdgeGuard{ rules.commands.size(), commands.size(), sprite, unlessClass });
+			}
+			rules.commands.insert(rules.commands.end(), commands.begin(), commands.end());
+		}
+		return any;
+	}
+
 	std::vector<std::pair<std::size_t, std::size_t>> tilesOf(const RawMap& map, char character)
 	{
 		std::vector<std::pair<std::size_t, std::size_t>> tiles;
@@ -411,7 +433,7 @@ namespace xge
 			};
 
 			RawCollisionData& collisions = object.rawCollisionData;
-			for (auto* edge : { &collisions.top, &collisions.bottom, &collisions.left, &collisions.right }) { commands(*edge); }
+			for (auto& edge : collisions.edges) { commands(edge.commands); }
 			for (RawCollisionRule& rule : collisions.others)
 			{
 				commands(rule.commands);
@@ -471,7 +493,7 @@ namespace xge
 		for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
 
 		RawCollisionData& collisions = object.rawCollisionData;
-		for (auto* edge : { &collisions.top, &collisions.bottom, &collisions.left, &collisions.right }) { commands(*edge); }
+		for (auto& edge : collisions.edges) { commands(edge.commands); }
 		for (RawCollisionRule& rule : collisions.others)
 		{
 			commands(rule.commands);
@@ -631,10 +653,11 @@ namespace xge
 			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false")
 			<< (f.rawCollisionData.type == CollisionType::Pixel ? ", type=pixel" : "");
 
-		if (!f.rawCollisionData.top.empty()) { o << ", top=" << f.rawCollisionData.top; }
-		if (!f.rawCollisionData.bottom.empty()) { o << ", bottom=" << f.rawCollisionData.bottom; }
-		if (!f.rawCollisionData.left.empty()) { o << ", left=" << f.rawCollisionData.left; }
-		if (!f.rawCollisionData.right.empty()) { o << ", right=" << f.rawCollisionData.right; }
+		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		{
+			const auto& rules = f.rawCollisionData.edges[edgeIndex(edge)].commands;
+			if (!rules.empty()) { o << ", " << edgeName(edge) << "=" << rules; }
+		}
 
 		for (auto& rawRule : f.rawCollisionData.others)
 		{
@@ -745,10 +768,10 @@ namespace xge
 			o << ", lockstep=" << f.collisionData.lockstep;
 		}
 
-		printCollisionData(f.collisionData.top, "top");
-		printCollisionData(f.collisionData.bottom, "bottom");
-		printCollisionData(f.collisionData.left, "left");
-		printCollisionData(f.collisionData.right, "right");
+		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		{
+			printCollisionData(f.collisionData.edges[edgeIndex(edge)].commands, edgeName(edge));
+		}
 
 		for (auto& rule : f.collisionData.others)
 		{

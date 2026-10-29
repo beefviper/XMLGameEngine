@@ -201,29 +201,6 @@ namespace xge::parts
 		return timer;
 	}
 
-	// A <collision edge="...">: its commands added to each screen edge it
-	// names, noting where they are: the rule ends at a refused verb, may hold
-	// only to a look (sprite=) and may be passed over while touching a class
-	// (unless=).
-	inline void edge(RawCollisionData& collisions, const std::string& which, const std::vector<RawCommand>& commands,
-		const std::string& look = {}, const std::string& unlessClass = {})
-	{
-		const auto add = [&](std::vector<RawCommand>& list, std::vector<EdgeGuard>& guards)
-		{
-			if (!commands.empty())
-			{
-				guards.push_back(EdgeGuard{ list.size(), commands.size(), look, unlessClass });
-			}
-			list.insert(list.end(), commands.begin(), commands.end());
-		};
-
-		const bool all = which == "all";
-		if (all || which == "vertical" || which == "top") { add(collisions.top, collisions.topGuards); }
-		if (all || which == "vertical" || which == "bottom") { add(collisions.bottom, collisions.bottomGuards); }
-		if (all || which == "horizontal" || which == "left") { add(collisions.left, collisions.leftGuards); }
-		if (all || which == "horizontal" || which == "right") { add(collisions.right, collisions.rightGuards); }
-	}
-
 	// <sprite name="..."> and its shape, what that says filled in by `fill`.
 	template <typename Fill>
 	RawSprite sprite(std::string kind, std::string name, Fill fill)
