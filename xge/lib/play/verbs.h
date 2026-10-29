@@ -32,6 +32,32 @@ namespace xge
 	// one, what its sprite implies.
 	Vector2f sizeOf(const Object& object);
 
+	// The middle of what an object measures.
+	inline Vector2f middleOf(const Object& object) { return object.position + sizeOf(object) * 0.5f; }
+
+	// The object of that name or group whose middle is nearest `from`'s,
+	// leaving `from` out, among those `inPlay` takes; null if there is none.
+	// What <chase>, <aim>, <hunt>, <pull>, <seek> and distance= look for.
+	template <typename InPlay>
+	const Object* nearestInPlay(const std::vector<Object>& objects, const Object& from, const std::string& name, InPlay inPlay)
+	{
+		const Vector2f here = middleOf(from);
+		const Object* nearest = nullptr;
+		float nearestApart = 0.0f;
+		for (const Object& other : objects)
+		{
+			if (&other == &from || !other.named(name) || !inPlay(other)) { continue; }
+			const Vector2f apart = middleOf(other) - here;
+			const float distance = apart.x * apart.x + apart.y * apart.y;
+			if (!nearest || distance < nearestApart)
+			{
+				nearest = &other;
+				nearestApart = distance;
+			}
+		}
+		return nearest;
+	}
+
 	// How far an object moves in one frame: its own velocity, plus the
 	// velocity of whatever it is riding (see Object::riding).
 	inline Vector2f motionOf(const Object& object) noexcept

@@ -173,8 +173,6 @@ namespace xge
 		// that held keys need re-evaluating without comparing state names.
 		unsigned long stateChangeCount(void) const noexcept;
 
-		void setObjectParam(const std::string& name, const std::string& param, const float& value);
-
 		// Every sound the game file describes (<sounds>), worked out; what an
 		// Audio backend loads (see audio/audio.h, Engine).
 		const std::vector<SoundDesc>& getSounds(void) const noexcept;

@@ -516,7 +516,7 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 		ObjectXml o;
 		o.collisions = "<enabled>true</enabled><collision edge=\"left\"><inc variable=\"score\" /></collision>";
 		CHECK_THAT(errorOf(gameXml("<variable name=\"score\">0</variable>", objectXml(o))),
-			ContainsSubstring("<inc variable=\"score\" />: there is no object named 'score'") && ContainsSubstring("the game's own <variables> are fixed numbers"));
+			ContainsSubstring("<inc variable=\"score\" />: 'score' is no variable; name one as owner.variable") && ContainsSubstring("the game's own <variables> are fixed numbers"));
 
 		ObjectXml owned;
 		owned.collisions = "<enabled>true</enabled><collision edge=\"left\"><dec variable=\"o.lifes\" /></collision>";

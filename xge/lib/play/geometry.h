@@ -19,7 +19,7 @@ namespace xge
 	// Where things are, whether they touch, and where a touch or a verb sends
 	// them, on plain numbers: a box is a top left and a size, and a velocity is
 	// how far a thing goes in a frame. Nothing here knows about Object, a game
-	// file or a window library, so the engine (CollisionDetector,
+	// file or a window library, so the engine (play/collision,
 	// CommandExecutor, Game) and a program xgecli generates (whose physics.h
 	// hands these SFML's shapes) work a game out with the same code.
 

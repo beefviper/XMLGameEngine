@@ -72,7 +72,7 @@ namespace xge
 
 			const auto made = std::find_if(objects.begin(), objects.end(), [&](const Object& object)
 				{
-					return object.name == name || object.inGroup(name);
+					return object.named(name);
 				});
 			if (made != objects.end()) { return &*made; }
 
@@ -289,15 +289,14 @@ namespace xge
 		// stop the game in the middle of play (and used to read past the end of
 		// the list of states).
 		// The variable a command names: owner.variable, the variable after the
-		// last dot (the owner may be a path), or, where `ownNumber`, a text
-		// object of that whole name counting its own <number> (<inc>, <dec>).
-		void checkVariable(const std::string& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where, bool ownNumber)
+		// last dot (the owner may be a path).
+		void checkVariable(const std::string& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
 		{
-			const bool whole = ownNumber && std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == target; });
-			const auto dot = whole ? std::string::npos : target.rfind('.');
-			if (dot == std::string::npos && !ownNumber)
+			const auto dot = target.rfind('.');
+			if (dot == std::string::npos)
 			{
-				throw std::runtime_error(where + ": " + tag + ": '" + target + "' is no variable; name one as owner.variable (player.score)");
+				throw std::runtime_error(where + ": " + tag + ": '" + target + "' is no variable; name one as owner.variable (player.score)"
+					+ ". A variable that changes belongs to an object; the game's own <variables> are fixed numbers");
 			}
 			const std::string ownerName = target.substr(0, dot);
 			const Object* owner = findObject(objects, ownerName);
@@ -306,16 +305,13 @@ namespace xge
 				throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects))
 					+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
 			}
-			if (dot != std::string::npos)
+			const std::string variableName = target.substr(dot + 1);
+			if (!owner->variable.count(variableName))
 			{
-				const std::string variableName = target.substr(dot + 1);
-				if (!owner->variable.count(variableName))
-				{
-					std::vector<std::string> names;
-					for (const auto& entry : owner->variable) { names.push_back(entry.first); }
-					throw std::runtime_error(where + ": " + tag + ": '" + ownerName + "' has no variable named '" + variableName + "'" + didYouMean(variableName, names)
-						+ (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
-				}
+				std::vector<std::string> names;
+				for (const auto& entry : owner->variable) { names.push_back(entry.first); }
+				throw std::runtime_error(where + ": " + tag + ": '" + ownerName + "' has no variable named '" + variableName + "'" + didYouMean(variableName, names)
+					+ (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
 			}
 		}
 
@@ -407,8 +403,7 @@ namespace xge
 					bool any = false;
 					for (const Object& object : objects)
 					{
-						const bool named = object.name == become->target
-							|| object.inGroup(become->target);
+						const bool named = object.named(become->target);
 						if (!named) { continue; }
 						any = true;
 						if (!become->style.empty()) { wantPalette(wanted, styles, object, become->style, where); }
@@ -555,11 +550,10 @@ namespace xge
 			else if (std::holds_alternative<CmdIncrement>(shapeOf(command)) || std::holds_alternative<CmdDecrement>(shapeOf(command)))
 			{
 				// A variable belongs to an object: paddle1.score is paddle1's
-				// <variable name="score">. A bare name is a text object counting
-				// its own <number>.
+				// <variable name="score">.
 				const bool inc = std::holds_alternative<CmdIncrement>(shapeOf(command));
 				const std::string& target = inc ? std::get<CmdIncrement>(shapeOf(command)).target : std::get<CmdDecrement>(shapeOf(command)).target;
-				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + target + "\" />", objects, where, true);
+				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + target + "\" />", objects, where);
 			}
 			else if (const auto* set = std::get_if<CmdSet>(&shapeOf(command)))
 			{
@@ -570,7 +564,7 @@ namespace xge
 				const Object* holder = part.empty() ? nullptr : findObject(objects, set->target.substr(0, set->target.size() - part.size() - 1));
 				if (part.empty() || (holder && holder->variable.count(part)))
 				{
-					checkVariable(set->target, tag, objects, where, false);
+					checkVariable(set->target, tag, objects, where);
 				}
 				else
 				{
@@ -609,15 +603,15 @@ namespace xge
 				// Both are owner.variable: a copy reads one object's variable
 				// and writes another's.
 				const std::string tag = "<copy variable=\"" + copy->from + "\" into=\"" + copy->into + "\" />";
-				checkVariable(copy->from, tag, objects, where, false);
-				checkVariable(copy->into, tag, objects, where, false);
+				checkVariable(copy->from, tag, objects, where);
+				checkVariable(copy->into, tag, objects, where);
 			}
 			else if (const auto* rank = std::get_if<CmdRank>(&shapeOf(command)))
 			{
 				// The entry's variable, and a group whose every member has one
 				// of that name to be ordered by.
 				const std::string tag = "<rank variable=\"" + rank->entry + "\" into=\"" + rank->table + "\" />";
-				checkVariable(rank->entry, tag, objects, where, false);
+				checkVariable(rank->entry, tag, objects, where);
 				const std::string variableName = rank->entry.substr(rank->entry.rfind('.') + 1);
 				bool any = false;
 				for (const Object& object : objects)
@@ -658,7 +652,7 @@ namespace xge
 					}
 					for (const Object& object : objects)
 					{
-						if (object.name == follow->target || object.inGroup(follow->target)) { followers[follow->path].insert(object.name); }
+						if (object.named(follow->target)) { followers[follow->path].insert(object.name); }
 					}
 				}
 			};
@@ -1196,7 +1190,7 @@ namespace xge
 		const auto matches = [&](const RawCondition& rawCondition, const Object& object)
 		{
 			return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
-				&& (rawCondition.filterObject.empty() || rawCondition.filterObject == object.name || object.inGroup(rawCondition.filterObject));
+				&& (rawCondition.filterObject.empty() || object.named(rawCondition.filterObject));
 		};
 
 		// What a <condition> tests, made ready (with its <all> or

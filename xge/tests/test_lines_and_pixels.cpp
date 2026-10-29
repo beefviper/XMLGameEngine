@@ -268,11 +268,11 @@ TEST_CASE("two one-pixel lines can cross without touching a pixel, two-pixel lin
 	// between each other's pixels when they are one pixel wide.
 	const Object thin1 = lineObject("a", { segment(0, 0, 5, 5) }, 0, 0);
 	const Object thin2 = lineObject("b", { segment(0, 5, 5, 0) }, 0, 0);
-	CHECK_FALSE(CollisionDetector::pixelsOverlap(thin1, thin2));
+	CHECK_FALSE(pixelsOverlap(thin1, thin2));
 
 	const Object thick1 = lineObject("a", { segment(0, 0, 5, 5, 2) }, 0, 0);
 	const Object thick2 = lineObject("b", { segment(0, 5, 5, 0, 2) }, 0, 0);
-	CHECK(CollisionDetector::pixelsOverlap(thick1, thick2));
+	CHECK(pixelsOverlap(thick1, thick2));
 }
 
 // ------------------------------------------------------ pixel collisions
@@ -285,16 +285,16 @@ TEST_CASE("boxes that overlap are not a hit when the pixels do not, for a pixel 
 	const Object inCorner = rectangleObject("dot", 3, 3, 106, 101); // in the box, in the empty part
 	const Object onStroke = rectangleObject("dot", 3, 3, 98, 104);  // across the vertical stroke
 
-	REQUIRE(CollisionDetector::usesPixels(shape, inCorner));
-	CHECK_FALSE(CollisionDetector::overlap(shape, inCorner));
-	CHECK_FALSE(CollisionDetector::overlap(inCorner, shape));
-	CHECK(CollisionDetector::overlap(shape, onStroke));
-	CHECK(CollisionDetector::overlap(onStroke, shape));
+	REQUIRE(usesPixels(shape, inCorner));
+	CHECK_FALSE(objectsOverlap(shape, inCorner));
+	CHECK_FALSE(objectsOverlap(inCorner, shape));
+	CHECK(objectsOverlap(shape, onStroke));
+	CHECK(objectsOverlap(onStroke, shape));
 
 	// The same shape as a plain box is hit by both: the box test is the default.
 	const Object asBox = lineObject("ell", ell, 100, 100, CollisionType::Box);
-	REQUIRE_FALSE(CollisionDetector::usesPixels(asBox, inCorner));
-	CHECK(CollisionDetector::overlap(asBox, inCorner));
+	REQUIRE_FALSE(usesPixels(asBox, inCorner));
+	CHECK(objectsOverlap(asBox, inCorner));
 }
 
 TEST_CASE("a circle is solid as a circle against a pixel object", "[pixel]")
@@ -305,9 +305,9 @@ TEST_CASE("a circle is solid as a circle against a pixel object", "[pixel]")
 	const Object above = circleObject("ball", 5, 110, 100);
 	const Object pastTheEnd = circleObject("ball", 5, 130, 100); // its box reaches the end of the line, the circle itself does not
 
-	CHECK(CollisionDetector::overlap(ground, touching));
-	CHECK_FALSE(CollisionDetector::overlap(ground, above));
-	CHECK_FALSE(CollisionDetector::overlap(ground, pastTheEnd));
+	CHECK(objectsOverlap(ground, touching));
+	CHECK_FALSE(objectsOverlap(ground, above));
+	CHECK_FALSE(objectsOverlap(ground, pastTheEnd));
 }
 
 TEST_CASE("a fast mover is stopped where pixels meet, not where the boxes do", "[pixel]")
@@ -317,7 +317,7 @@ TEST_CASE("a fast mover is stopped where pixels meet, not where the boxes do", "
 	const Object post = lineObject("post", { segment(0, 0, 0, 9) }, 10, 0);
 	const Object ground = lineObject("ground", { segment(0, 40, 99, 40, 2) }, 0, 50); // the line is at y 90 and 91
 
-	const auto hit = CollisionDetector::sweep(post, { 0, 100 }, ground, { 0, 0 });
+	const auto hit = sweepObjects(post, { 0, 100 }, ground, { 0, 0 });
 
 	REQUIRE(hit);
 	// The post's last pixel row meets the line's first just past y 80.
@@ -327,7 +327,7 @@ TEST_CASE("a fast mover is stopped where pixels meet, not where the boxes do", "
 	// As plain boxes they would have met where the ground's box begins, at y 40.
 	const Object postBox = lineObject("post", { segment(0, 0, 0, 9) }, 10, 0, CollisionType::Box);
 	const Object groundBox = lineObject("ground", { segment(0, 40, 99, 40, 2) }, 0, 50, CollisionType::Box);
-	const auto boxHit = CollisionDetector::sweep(postBox, { 0, 100 }, groundBox, { 0, 0 });
+	const auto boxHit = sweepObjects(postBox, { 0, 100 }, groundBox, { 0, 0 });
 	REQUIRE(boxHit);
 	CHECK_THAT(boxHit->time * 100.0f, WithinAbs(40.0f, 0.001f));
 }
@@ -337,8 +337,8 @@ TEST_CASE("a mover already inside the box finds the pixel touch later in the ste
 	const Object post = lineObject("post", { segment(0, 0, 0, 9) }, 10, 60);
 	const Object ground = lineObject("ground", { segment(0, 40, 99, 40, 2) }, 0, 50);
 
-	REQUIRE_FALSE(CollisionDetector::overlap(post, ground)); // boxes overlap, pixels do not
-	const auto hit = CollisionDetector::sweep(post, { 0, 30 }, ground, { 0, 0 });
+	REQUIRE_FALSE(objectsOverlap(post, ground)); // boxes overlap, pixels do not
+	const auto hit = sweepObjects(post, { 0, 30 }, ground, { 0, 0 });
 
 	REQUIRE(hit);
 	CHECK_THAT(60.0f + hit->time * 30.0f, WithinAbs(80.5f, 0.6f));
@@ -350,15 +350,15 @@ TEST_CASE("a mover that passes the pixels by is not a hit, and one already touch
 
 	// Across the whole step the post never reaches the line: it stops short.
 	const Object shortPost = lineObject("post", { segment(0, 0, 0, 9) }, 10, 0);
-	CHECK_FALSE(CollisionDetector::sweep(shortPost, { 0, 75 }, ground, { 0, 0 }));
+	CHECK_FALSE(sweepObjects(shortPost, { 0, 75 }, ground, { 0, 0 }));
 
 	// Nowhere near the box at all.
 	const Object farAway = lineObject("post", { segment(0, 0, 0, 9) }, 300, 0);
-	CHECK_FALSE(CollisionDetector::sweep(farAway, { 0, 100 }, ground, { 0, 0 }));
+	CHECK_FALSE(sweepObjects(farAway, { 0, 100 }, ground, { 0, 0 }));
 
 	// Already on the line.
 	const Object resting = lineObject("post", { segment(0, 0, 0, 9) }, 10, 85);
-	const auto hit = CollisionDetector::sweep(resting, { 0, 1 }, ground, { 0, 0 });
+	const auto hit = sweepObjects(resting, { 0, 1 }, ground, { 0, 0 });
 	REQUIRE(hit);
 	CHECK(hit->time == 0.0f);
 }
@@ -368,7 +368,7 @@ TEST_CASE("a plain box mover is solid all over against a pixel object's pixels",
 	const Object ground = lineObject("ground", { segment(0, 40, 99, 40, 2) }, 0, 50);
 	const Object crate = rectangleObject("crate", 10, 10, 20, 0);
 
-	const auto hit = CollisionDetector::sweep(crate, { 0, 100 }, ground, { 0, 0 });
+	const auto hit = sweepObjects(crate, { 0, 100 }, ground, { 0, 0 });
 
 	REQUIRE(hit);
 	CHECK_THAT(hit->time * 100.0f, WithinAbs(80.5f, 0.6f)); // its bottom edge meets the line
@@ -376,7 +376,7 @@ TEST_CASE("a plain box mover is solid all over against a pixel object's pixels",
 
 	// Moving sideways into the side of the ground's box: the line's first pixel is at x 0.
 	const Object slider = rectangleObject("crate", 10, 10, -50, 82);
-	const auto side = CollisionDetector::sweep(slider, { 100, 0 }, ground, { 0, 0 });
+	const auto side = sweepObjects(slider, { 100, 0 }, ground, { 0, 0 });
 	REQUIRE(side);
 	CHECK(side->edgeOfSecond == Edge::Left);
 }

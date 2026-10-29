@@ -590,7 +590,7 @@ namespace xge
 				if (inScene && std::any_of(all.begin(), all.end(), [&](const RawObject& other)
 					{
 						return other.ownerScene.empty() && other.ownerState == object.ownerState
-							&& (other.name == object.ownerState + "." + local || other.inGroup(object.ownerState + "." + local));
+							&& other.named(object.ownerState + "." + local);
 					}))
 				{
 					throw std::runtime_error("scene '" + owner + "': its '" + local + "' and state '" + object.ownerState + "''s '" + local + "' would both be '" + local + "' inside it; give one another name");

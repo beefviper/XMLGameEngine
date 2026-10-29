@@ -390,15 +390,6 @@ namespace xge
 		xge::restart(object);
 	}
 
-	namespace
-	{
-		bool isNamed(const Object& object, const std::string& name)
-		{
-			return object.name == name || object.inGroup(name);
-		}
-
-	}
-
 	// Puts `count` of the objects called `target` that are out of play back in,
 	// each centred on `from` and at its own starting velocity. A pool of them is
 	// a <group>: the first ones found that are not in play are the ones used, and
@@ -424,7 +415,7 @@ namespace xge
 		for (auto& candidate : game.getCurrentObjects())
 		{
 			if (released >= count) { break; }
-			if (candidate.isVisible || !candidate.exists || &candidate == &from || !isNamed(candidate, target) || game.isAway(candidate)) { continue; }
+			if (candidate.isVisible || !candidate.exists || &candidate == &from || !candidate.named(target) || game.isAway(candidate)) { continue; }
 
 			// Back in play is a new start: a <random> in it is drawn again,
 			// and its timers and animation start over.
@@ -766,14 +757,6 @@ namespace xge
 		}
 	}
 
-	namespace
-	{
-		Vector2f middleOf(const Object& object)
-		{
-			return object.position + sizeOf(object) * 0.5f;
-		}
-	}
-
 	// Heads for the nearest of `chase.target` in play: straight at its middle
 	// at `chase.speed`, or, within `chase.stopWithin` of it, stops. It faces the
 	// way it goes, and a heading turns to it. With none in play it carries on
@@ -887,7 +870,7 @@ namespace xge
 		{
 			for (auto& candidate : game.getCurrentObjects())
 			{
-				if (isNamed(candidate, projectileName) && candidate.exists && !candidate.collisionData.enabled && !game.isAway(candidate))
+				if (candidate.named(projectileName) && candidate.exists && !candidate.collisionData.enabled && !game.isAway(candidate))
 				{
 					projectile = &candidate;
 					break;

@@ -71,7 +71,7 @@ namespace xge
 				{
 					if (&other == &climber || !rules.inPlay(other)) { continue; }
 					if (!rule.filterClass.empty() && other.objClass != rule.filterClass) { continue; }
-					if (!rule.filterObject.empty() && other.name != rule.filterObject && !other.inGroup(rule.filterObject)) { continue; }
+					if (!rule.filterObject.empty() && !other.named(rule.filterObject)) { continue; }
 					const bool under = climber.position.x < other.position.x + other.size.x && other.position.x < climber.position.x + climber.size.x;
 					if (under && std::abs(other.position.y - feet) <= 2.0f)
 					{
@@ -426,47 +426,32 @@ namespace xge
 			}
 		}
 
-		// The nearest of that name or group in play to `from`, leaving it out.
-		const Object* nearestInPlay(const std::vector<Object>& objects, FrameRules& rules, const Object& from, const std::string& name)
-		{
-			const Vector2f middle = from.position + sizeOf(from) * 0.5f;
-			const Object* best = nullptr;
-			float bestApart = 0.0f;
-			for (const auto& other : objects)
-			{
-				if (&other == &from || (other.name != name && !other.inGroup(name)) || !rules.inPlay(other)) { continue; }
-				const Vector2f apart = other.position + sizeOf(other) * 0.5f - middle;
-				const float distance = apart.x * apart.x + apart.y * apart.y;
-				if (!best || distance < bestApart) { best = &other; bestApart = distance; }
-			}
-			return best;
-		}
-
 		// <pull>: toward the middle of the nearest of each, that much speed a
 		// frame. <seek>: the way it goes turned toward the nearest of its
 		// target, and its heading with it.
 		void pullAndSeek(std::vector<Object>& objects, FrameRules& rules)
 		{
+			const auto inPlay = [&](const Object& other) { return rules.inPlay(other); };
 			for (auto& object : objects)
 			{
 				if ((object.pulls.empty() && object.seekTarget.empty()) || !rules.inPlay(object)) { continue; }
 
-				const Vector2f middle = object.position + sizeOf(object) * 0.5f;
+				const Vector2f middle = middleOf(object);
 				for (const auto& [name, strength] : object.pulls)
 				{
-					const Object* toward = nearestInPlay(objects, rules, object, name);
+					const Object* toward = nearestInPlay(objects, object, name, inPlay);
 					if (!toward) { continue; }
-					if (const auto way = wayTo(middle, toward->position + sizeOf(*toward) * 0.5f))
+					if (const auto way = wayTo(middle, middleOf(*toward)))
 					{
 						object.velocity = object.velocity + *way * strength;
 					}
 				}
 
 				if (object.seekTarget.empty()) { continue; }
-				const Object* target = nearestInPlay(objects, rules, object, object.seekTarget);
+				const Object* target = nearestInPlay(objects, object, object.seekTarget, inPlay);
 				if (!target) { continue; }
 				const Vector2f before = object.velocity;
-				object.velocity = turnedToward(object.velocity, target->position + sizeOf(*target) * 0.5f - middle, object.seekRate);
+				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, object.seekRate);
 				if (object.hasHeading && (object.velocity.x != before.x || object.velocity.y != before.y))
 				{
 					object.heading = headingOf(object.velocity);
@@ -679,7 +664,7 @@ namespace xge
 			{
 				if (!fresh[i])
 				{
-					reach[i] = CollisionDetector::reach(all[i], move);
+					reach[i] = reachOver(all[i], move);
 					fresh[i] = 1;
 				}
 				return reach[i];
@@ -704,7 +689,7 @@ namespace xge
 				{
 					return { std::nullopt, true };
 				}
-				return { CollisionDetector::sweep(a, moveA, b, moveB), false };
+				return { sweepObjects(a, moveA, b, moveB), false };
 			};
 
 			// A reaction that moved, turned, showed or hid anything starts that
@@ -720,7 +705,7 @@ namespace xge
 			playFrame(pairs, all.size(), sweep, advanceTo, [&](const Pair& pair, Edge edgeOfSecond, float at, std::vector<std::size_t>& changed)
 				{
 					// What the touch was, found once, before anything answers it.
-					const Contact contact = CollisionDetector::contact(*pair.first, *pair.second, edgeOfSecond, at);
+					const Contact contact = contactBetween(*pair.first, *pair.second, edgeOfSecond, at);
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
@@ -867,7 +852,7 @@ namespace xge
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{
-					if (CollisionDetector::touchesScreenEdge(object, window, edge))
+					if (touchesScreenEdge(object, window, edge))
 					{
 						rules.atEdge(object, edge);
 					}
@@ -888,7 +873,7 @@ namespace xge
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{
-					if (CollisionDetector::touchesScreenEdge(object, window, edge) && rules.sticksAt(object, edge))
+					if (touchesScreenEdge(object, window, edge) && rules.sticksAt(object, edge))
 					{
 						stick(object, window, edge);
 					}

@@ -36,8 +36,6 @@ namespace xge
 
 		Vector2f unit(Direction way) noexcept { return stepToward(way, 1.0f); }
 
-		Vector2f middleOf(const Object& object) { return object.position + sizeOf(object) * 0.5f; }
-
 		float distanceSquared(const Vector2f& a, const Vector2f& b) noexcept
 		{
 			const Vector2f apart = a - b;
@@ -47,26 +45,6 @@ namespace xge
 		// A map's tiles, and the objects on each (by index), as this frame
 		// finds them.
 		using Grid = MazeGrid;
-
-		// The nearest in play of that name or group, other than `from`.
-		const Object* nearest(const std::vector<Object>& objects, const Object& from, const std::string& name, FrameRules& rules)
-		{
-			if (name.empty()) { return nullptr; }
-			const Vector2f here = middleOf(from);
-			const Object* found = nullptr;
-			float best = 0.0f;
-			for (const Object& other : objects)
-			{
-				if (&other == &from || !(other.name == name || other.inGroup(name)) || !rules.inPlay(other)) { continue; }
-				const float distance = distanceSquared(middleOf(other), here);
-				if (!found || distance < best)
-				{
-					found = &other;
-					best = distance;
-				}
-			}
-			return found;
-		}
 
 		// One walker's frame.
 		class Walker
@@ -172,6 +150,12 @@ namespace xge
 			const Grid& grid;
 			FrameRules& rules;
 
+			// The nearest in play of that name or group, other than the walker.
+			const Object* nearest(const std::string& name) const
+			{
+				return nearestInPlay(objects, walker, name, [this](const Object& other) { return rules.inPlay(other); });
+			}
+
 			// Its speed this frame: what it was told, times the share of a
 			// <slow> for the tile it is on.
 			float speed{};
@@ -227,19 +211,19 @@ namespace xge
 			std::optional<Vector2f> target() const
 			{
 				const CmdHunt& hunt = walker.walk.hunt;
-				const Object* quarry = nearest(objects, walker, hunt.target, rules);
+				const Object* quarry = nearest(hunt.target);
 				if (!quarry) { return std::nullopt; }
 
 				const Vector2f there = middleOf(*quarry);
 				if (!hunt.retreatTo.empty() && distanceSquared(middleOf(walker), there) < hunt.retreatWithin * grid.tile.x * hunt.retreatWithin * grid.tile.x)
 				{
-					if (const Object* corner = nearest(objects, walker, hunt.retreatTo, rules)) { return middleOf(*corner); }
+					if (const Object* corner = nearest(hunt.retreatTo)) { return middleOf(*corner); }
 				}
 
 				Vector2f point = there + unit(quarry->facing) * (hunt.ahead * grid.tile.x);
 				if (!hunt.partner.empty())
 				{
-					if (const Object* partner = nearest(objects, walker, hunt.partner, rules))
+					if (const Object* partner = nearest(hunt.partner))
 					{
 						point = point * 2.0f - middleOf(*partner);
 					}

@@ -123,9 +123,8 @@ namespace xge
 		float step{};
 	};
 
-	// <inc variable="objectName" /> - add 1 to (or, for <inc variable="...">5</inc>, add the amount to) a text object's own displayed number, OR
-	// <inc variable="ownerName.variableName" /> - increment that object's named <variable>
-	// and refresh every text object whose display is bound to it (see
+	// <inc variable="ownerName.variableName" /> - add 1 (or, for <inc variable="...">5</inc>,
+	// the amount) to that object's named <variable> and refresh every text object whose display is bound to it (see
 	// Game::incrementText and Object::textPieces).
 	struct CmdIncrement
 	{
@@ -180,7 +179,7 @@ namespace xge
 	struct CmdOut {};
 
 	// <dec variable="ownerName.variableName" /> - the opposite of <inc />: takes 1 off that
-	// object's named <variable> (or off a text object's own number) and
+	// object's named <variable> and
 	// refreshes every text bound to it.
 	struct CmdDecrement
 	{

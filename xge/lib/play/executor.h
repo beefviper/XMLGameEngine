@@ -16,17 +16,15 @@ namespace xge
 {
 	class Game;
 
-	// Response: given a Command that CollisionDetector (or a state's <input>)
-	// says applies, do the thing. This is the one place collision/action
-	// responses are implemented now, instead of three separate hand-rolled
-	// interpreters.
+	// Response: given a Command that a touch (or a state's <input>) says
+	// applies, do the thing.
 	class CommandExecutor
 	{
 	public:
 		explicit CommandExecutor(Game& gameToRun) noexcept : game(gameToRun) {}
 
 		// object.collisionData.{top,bottom,left,right}, driven by
-		// CollisionDetector::touchesScreenEdge. Each of these returns false
+		// touchesScreenEdge. Each of these returns false
 		// when the verb is refused (a <spawn> or <fire> with every copy out,
 		// an <aim> not lined up, a hop that cannot be made), which ends the
 		// rule, key or condition there, as it ends an action.
@@ -35,9 +33,8 @@ namespace xge
 		// object.collisionData.others, driven by Game::reactTo. `other` is
 		// the object being touched. `touch` must already be self-relative to
 		// `object` (touch.edge the edge of *this* object that was touched,
-		// touch.normal the way out of `other` towards it) - see the comment
-		// on CollisionDetector for why that's not simply the detector's raw
-		// result.
+		// touch.normal the way out of `other` towards it) - see play/collision.h for why that's not simply the raw
+		// result of a check there.
 		bool executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch);
 
 		// The same with only the edge known: a touch straight across it.

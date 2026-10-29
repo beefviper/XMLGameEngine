@@ -48,23 +48,13 @@ namespace xge
 		}
 	}
 
-	bool CollisionDetector::touchesScreenEdge(const Object& object, const WindowDesc& windowDesc, Edge edge)
+	bool touchesScreenEdge(const Object& object, const WindowDesc& windowDesc, Edge edge)
 	{
 		// The window's edges are met by the picture, hitbox or not.
 		return pastWindowEdge({ object.position, object.size }, { windowDesc.width, windowDesc.height }, edge);
 	}
 
-	std::optional<Edge> CollisionDetector::rectangleRectangle(const Object& a, const Object& b)
-	{
-		return boxesOverlap(boxOf(a), boxOf(b));
-	}
-
-	std::optional<Edge> CollisionDetector::circleRectangle(const Object& circle, const Object& rect)
-	{
-		return circleOverlapsBox(boxOf(circle), boxOf(rect));
-	}
-
-	std::optional<Edge> CollisionDetector::overlap(const Object& a, const Object& b)
+	std::optional<Edge> objectsOverlap(const Object& a, const Object& b)
 	{
 		const std::optional<Edge> edge = shapesOverlap(boxOf(a), isRound(a), boxOf(b), isRound(b));
 
@@ -77,28 +67,28 @@ namespace xge
 		return edge;
 	}
 
-	bool CollisionDetector::usesPixels(const Object& a, const Object& b) noexcept
+	bool usesPixels(const Object& a, const Object& b) noexcept
 	{
 		return a.collisionData.type == CollisionType::Pixel || b.collisionData.type == CollisionType::Pixel;
 	}
 
-	bool CollisionDetector::pixelsOverlap(const Object& a, const Object& b)
+	bool pixelsOverlap(const Object& a, const Object& b)
 	{
 		return pixelsOverlapAt(a, b);
 	}
 
-	Contact CollisionDetector::contact(const Object& a, const Object& b, Edge edgeOfB, float time)
+	Contact contactBetween(const Object& a, const Object& b, Edge edgeOfB, float time)
 	{
 		return contactOf(boxOf(a), isRound(a), boxOf(b), isRound(b), edgeOfB, time);
 	}
 
-	std::optional<CollisionDetector::SweepHit> CollisionDetector::sweep(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)
+	std::optional<SweepHit> sweepObjects(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)
 	{
 		return sweepThings(boxOf(a), isRound(a), [&](const Vector2f& local) { return solidAt(a, local); }, moveA,
 			boxOf(b), isRound(b), [&](const Vector2f& local) { return solidAt(b, local); }, moveB, usesPixels(a, b));
 	}
 
-	Box CollisionDetector::reach(const Object& object, const Vector2f& move) noexcept
+	Box reachOver(const Object& object, const Vector2f& move) noexcept
 	{
 		return sweptBox(boxOf(object), move);
 	}

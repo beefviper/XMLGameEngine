@@ -87,7 +87,7 @@ namespace xge
 
 	// How an object's shape is tested against others: as its bounding box
 	// (Box, the default; a circle as a circle) or by the pixels actually drawn
-	// (Pixel) - see CollisionDetector.
+	// (Pixel) - see play/collision.h.
 	enum class CollisionType { Box, Pixel };
 
 	// A <collision edge="...">, as its commands in an edge's list: `count` of
@@ -469,6 +469,9 @@ namespace xge
 			return !group.empty() && (groupName == group || std::find(outerGroups.begin(), outerGroups.end(), group) != outerGroups.end());
 		}
 
+		// Whether `name` names it: its own name, or a group it is in.
+		bool named(const std::string& wanted) const { return name == wanted || inGroup(wanted); }
+
 		// Where it goes in its group's <columns> and <rows>, when it is a cell.
 		RawCell cell;
 
@@ -548,6 +551,9 @@ namespace xge
 		{
 			return !group.empty() && (groupName == group || std::find(outerGroups.begin(), outerGroups.end(), group) != outerGroups.end());
 		}
+
+		// Whether `name` names it: its own name, or a group it is in.
+		bool named(const std::string& wanted) const { return name == wanted || inGroup(wanted); }
 		std::string objClass;
 		bool isVisible{ true };
 
@@ -958,7 +964,7 @@ namespace xge
 		// Circle/rectangle sizes are implied by spriteParams alone; text/
 		// image need the backend's own font/image loading to know their real
 		// pixel size, so every backend writes this back the same way
-		// regardless - collision/physics code (CollisionDetector,
+		// regardless - collision/physics code (play/collision,
 		// CommandExecutor) only ever reads this field, never a backend type.
 		Vector2f size{};
 

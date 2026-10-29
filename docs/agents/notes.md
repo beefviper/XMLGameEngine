@@ -92,7 +92,7 @@ Each rests on something that never changes while a game runs:
 - Programs make the games folder (`games/`, holding `descriptions/` and `assets/`) the working directory (`engine/folder.cpp`), and so does `xgetest` (ctest starts it there; `test_main.cpp` moves in otherwise). A test names a game `descriptions/<game>.xml` and finds the schema with `findSchema("descriptions/pong.xml", "../xgedef.xsd")`.
 - ctest runs from `output/<config>/games` and a plain run from the repository's `games/`, so check a new schema test both ways (`ctest -R` in `build/`).
 - A scratch file or folder a test writes is named with `scratchName()` (`xge/tests/scratch.h`), so `ctest -j` (every case its own run) never has two cases writing one file.
-- Before touching `CollisionDetector::circleRectangle`, add a test to `test_collision_geometry.cpp`. `test_xml_format.cpp` pins what both validators must reject; `load/xsd` covers only the XSD subset the schema uses.
+- Before touching `circleOverlapsBox` (`play/geometry.cpp`), add a test to `test_collision_geometry.cpp`. `test_xml_format.cpp` pins what both validators must reject; `load/xsd` covers only the XSD subset the schema uses.
 - `xge/tests/invaders_fixture.h` is a frozen copy of the first Space Invaders.
 - MSVC flags what GCC misses in tests too: C4702 (unreachable code) and C4459 (a local hiding a file-level name).
 

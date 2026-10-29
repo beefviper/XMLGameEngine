@@ -149,7 +149,7 @@ namespace xge
 		bool all = true;
 		for (std::size_t i = 0; i < loadedCount && i < objects.size(); ++i)
 		{
-			if (objects[i].name != name && !objects[i].inGroup(name)) { continue; }
+			if (!objects[i].named(name)) { continue; }
 			any = true;
 			all = all && !objects[i].existsOriginal;
 		}
@@ -164,7 +164,7 @@ namespace xge
 		std::vector<std::size_t> from;
 		for (std::size_t i = 0; i < loadedCount && i < objects.size(); ++i)
 		{
-			if (objects[i].name == target || objects[i].inGroup(target)) { from.push_back(i); }
+			if (objects[i].named(target)) { from.push_back(i); }
 		}
 		if (from.empty())
 		{
@@ -270,11 +270,11 @@ namespace xge
 		const std::string name = fullName(target);
 		for (auto& object : objects)
 		{
-			if (object.exists && (object.name == name || object.inGroup(name))) { despawn(object); }
+			if (object.exists && (object.named(name))) { despawn(object); }
 		}
 		for (auto& object : spawned)
 		{
-			if (object.exists && (object.name == name || object.inGroup(name))) { despawn(object); }
+			if (object.exists && (object.named(name))) { despawn(object); }
 		}
 	}
 
@@ -413,25 +413,7 @@ namespace xge
 
 	const Object* Game::nearestInPlay(const Object& from, const std::string& name)
 	{
-		const auto middleOf = [](const Object& object) { return object.position + object.size * 0.5f; };
-		const Vector2f here = middleOf(from);
-
-		const Object* nearest = nullptr;
-		float nearestDistance = 0.0f;
-		for (const auto& other : objects)
-		{
-			const bool named = other.name == name || other.inGroup(name);
-			if (&other == &from || !named || !other.isVisible || !isShown(other)) { continue; }
-
-			const Vector2f apart = middleOf(other) - here;
-			const float distance = std::hypot(apart.x, apart.y);
-			if (!nearest || distance < nearestDistance)
-			{
-				nearest = &other;
-				nearestDistance = distance;
-			}
-		}
-		return nearest;
+		return xge::nearestInPlay(objects, from, name, [this](const Object& other) { return isShown(other); });
 	}
 
 	bool Game::isShown(const Object& object) noexcept
@@ -464,7 +446,7 @@ namespace xge
 			if (current != currentScenes.end() && current->second == object.ownerScene) { return true; }
 		}
 
-		return std::any_of(state.show.begin(), state.show.end(), [&](const std::string& shown) { return shown == object.name || object.inGroup(shown); });
+		return std::any_of(state.show.begin(), state.show.end(), [&](const std::string& shown) { return object.named(shown); });
 	}
 
 	bool Game::isStill(const Object& object) noexcept
@@ -543,7 +525,7 @@ namespace xge
 
 	std::string Game::fullName(const std::string& name) const
 	{
-		const auto calls = [&](const Object& object, const std::string& wanted) { return object.name == wanted || object.inGroup(wanted); };
+		const auto calls = [&](const Object& object, const std::string& wanted) { return object.named(wanted); };
 		if (std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return calls(object, name); })) { return name; }
 
 		const std::string end = "." + name;
@@ -767,15 +749,6 @@ namespace xge
 	const std::vector<State>& Game::getStates(void) const noexcept
 	{
 		return states;
-	}
-
-	void Game::setObjectParam(const std::string& name, const std::string& param, const float& value)
-	{
-		auto result = std::find_if(std::begin(objects), std::end(objects), [&](Object& obj) { return obj.name == name; });
-		if (result != std::end(objects) && param == "velocity")
-		{
-			result->velocity.y = value;
-		}
 	}
 
 	void Game::incrementText(const std::string& target, float amount)
@@ -1080,7 +1053,7 @@ namespace xge
 			bool found = false;
 			for (auto& object : objects)
 			{
-				if (object.name == name || object.inGroup(name))
+				if (object.named(name))
 				{
 					object.kept = true;
 					found = true;
@@ -1097,34 +1070,16 @@ namespace xge
 
 	void Game::changeVariable(const std::string& target, float delta, const char* verb)
 	{
-		// A text object counts its own number; anything else is
 		// owner.variable, the variable after the last dot (the owner may be a
-		// path: playing.room1.tally.kills).
-		const bool whole = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == target; });
-		const auto dot = whole ? std::string::npos : target.rfind('.');
-
+		// path: playing.room1.tally.kills); every text bound to it shows the
+		// new number (Object::textPieces).
+		const auto dot = target.rfind('.');
 		if (dot == std::string::npos)
 		{
-			// Older pattern (e.g. <inc variable="score1" /> for a text object that just
-			// displays its own counter, with nothing else deriving its number):
-			// the named object displays and owns its own number - change its
-			// displayed value directly.
-			Object* object = tryGetObject(target);
-			if (!object)
-			{
-				std::cout << "warning: <" << verb << " variable=\"" << target << "\" />: no such object\n";
-				return;
-			}
-			const float newValue = std::stof(object->spriteParams.at(1)) + delta;
-			object->spriteParams.at(1) = formatDisplayNumber(newValue);
-			object->visualDirty = true;
+			std::cout << "warning: <" << verb << " variable=\"" << target << "\" />: no such variable\n";
 			return;
 		}
 
-		// Usual pattern (e.g. <inc variable="paddle1.score" />): change another object's
-		// own named <variable>, then refresh every text object whose displayed
-		// number is bound to it (Object::textPieces, set from a <text> sprite
-		// whose <number> is paddle1.score - see parseVariableReference).
 		const std::string ownerName = target.substr(0, dot);
 		const std::string variableName = target.substr(dot + 1);
 
@@ -1421,7 +1376,7 @@ namespace xge
 		// own name (aliens.3.2) just that one.
 		for (auto& candidate : objects)
 		{
-			if (candidate.name == name || candidate.inGroup(name))
+			if (candidate.named(name))
 			{
 				// A copy did not exist when the game started.
 				if (candidate.isCopy()) { despawn(candidate); continue; }
@@ -1436,7 +1391,7 @@ namespace xge
 		for (auto& carrier : objects)
 		{
 			const Object* carried = carrier.carrying.empty() ? nullptr : tryGetObject(carrier.carrying);
-			if (carried && (carried->name == name || carried->inGroup(name)))
+			if (carried && (carried->named(name)))
 			{
 				carrier.carrying.clear();
 			}
@@ -1459,7 +1414,7 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			if ((object.name == target || object.inGroup(target)) && (from.empty() || object.lookName() == from))
+			if ((object.named(target)) && (from.empty() || object.lookName() == from))
 			{
 				if (!sprite.empty()) { showLookNamed(object, sprite); }
 				if (!style.empty()) { wearPaletteNamed(object, style); }
@@ -1473,7 +1428,7 @@ namespace xge
 		{
 			if (count <= 0) { break; }
 
-			const bool named = object.name == target || object.inGroup(target);
+			const bool named = object.named(target);
 			if (!named || object.isVisible || !object.exists || isAway(object)) { continue; }
 
 			// Back in play is a new start: a <random> in it is drawn again,
@@ -1520,7 +1475,7 @@ namespace xge
 		std::vector<Object*> going;
 		for (auto& object : objects)
 		{
-			const bool named = object.name == target || object.inGroup(target);
+			const bool named = object.named(target);
 			if (!named || !object.isVisible || object.isFollowing() || isAway(object) || &object == from) { continue; }
 			going.push_back(&object);
 		}
@@ -1551,7 +1506,7 @@ namespace xge
 		const std::string name = fullName(target);
 		for (auto& object : objects)
 		{
-			if (object.name != name && !object.inGroup(name)) { continue; }
+			if (!object.named(name)) { continue; }
 			object.shifted += by;
 			if (!object.isFollowing()) { object.position += by; }
 		}
@@ -1863,7 +1818,7 @@ namespace xge
 		bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Object& candidate)
 		{
 			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
-			if (!filterObject.empty() && filterObject != candidate.name && !candidate.inGroup(filterObject)) { return false; }
+			if (!filterObject.empty() && !candidate.named(filterObject)) { return false; }
 			return true;
 		}
 
@@ -1873,7 +1828,7 @@ namespace xge
 		bool namedByPath(const Object& object, const std::string& name)
 		{
 			const std::string& owner = object.ownerScene.empty() ? object.ownerState : object.ownerScene;
-			return !name.empty() && !owner.empty() && (name == object.name || object.inGroup(name))
+			return !name.empty() && !owner.empty() && object.named(name)
 				&& name.compare(0, owner.size() + 1, owner + ".") == 0;
 		}
 
@@ -1968,7 +1923,7 @@ namespace xge
 					&& !other.isAirborne()
 					&& other.objClass == objClass
 					&& isShown(other) && other.collisionData.enabled
-					&& CollisionDetector::overlap(object, other).has_value();
+					&& objectsOverlap(object, other).has_value();
 			});
 	}
 
@@ -2099,7 +2054,7 @@ namespace xge
 		bool found = false;
 		for (Object& object : objects)
 		{
-			if (object.name != owner && !object.inGroup(owner)) { continue; }
+			if (!object.named(owner)) { continue; }
 			found = true;
 			if (part == "x") { object.position.x = value; }
 			else if (part == "y") { object.position.y = value; }
