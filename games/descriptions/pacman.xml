@@ -342,14 +342,52 @@
             <timer sprite="scatter">
               <after>mode.scatterfor</after>
               <inc variable="mode.waves" />
-              <set variable="mode.chasefor">20 + 100000 * (mode.waves &gt;= 4)</set>
+              <!-- 20 seconds, and for ever from the fourth wave: the clamp is 0 before it and 1 from it -->
+              <set variable="mode.chasefor">
+                <formula>
+                  <add>
+                    <augend>20</augend>
+                    <addend>
+                      <multiply>
+                        <multiplicand>100000</multiplicand>
+                        <multiplier>
+                          <clamp>
+                            <of><subtract><minuend>mode.waves</minuend><subtrahend>3</subtrahend></subtract></of>
+                            <atleast>0</atleast>
+                            <atmost>1</atmost>
+                          </clamp>
+                        </multiplier>
+                      </multiply>
+                    </addend>
+                  </add>
+                </formula>
+              </set>
               <become sprite="chase" />
               <trigger object="ghosts" action="turn" from="normal" />
               <trigger action="chase" />
             </timer>
             <timer sprite="chase">
               <after>mode.chasefor</after>
-              <set variable="mode.scatterfor">7 - 2 * (mode.waves &gt;= 2)</set>
+              <!-- 7 seconds, and 5 from the second wave: the clamp is 0 before it and 1 from it -->
+              <set variable="mode.scatterfor">
+                <formula>
+                  <subtract>
+                    <minuend>7</minuend>
+                    <subtrahend>
+                      <multiply>
+                        <multiplicand>2</multiplicand>
+                        <multiplier>
+                          <clamp>
+                            <of><subtract><minuend>mode.waves</minuend><subtrahend>1</subtrahend></subtract></of>
+                            <atleast>0</atleast>
+                            <atmost>1</atmost>
+                          </clamp>
+                        </multiplier>
+                      </multiply>
+                    </subtrahend>
+                  </subtract>
+                </formula>
+              </set>
               <become sprite="scatter" />
               <trigger object="ghosts" action="turn" from="normal" />
               <trigger action="scatter" />
@@ -1016,8 +1054,22 @@
           <set variable="status.released">1</set>
           <reset object="mode" />
           <set variable="status.fruits">0</set>
-          <set variable="status.pace">min(2.125, status.pace + 0.0625)</set>
-          <set variable="status.fright">max(1, status.fright - 1)</set>
+          <set variable="status.pace">
+            <formula>
+              <smallest>
+                <of>2.125</of>
+                <of><add><augend>status.pace</augend><addend>0.0625</addend></add></of>
+              </smallest>
+            </formula>
+          </set>
+          <set variable="status.fright">
+            <formula>
+              <largest>
+                <of>1</of>
+                <of><subtract><minuend>status.fright</minuend><subtrahend>1</subtrahend></subtract></of>
+              </largest>
+            </formula>
+          </set>
           <push state="caught" />
         </condition>
         <!-- Inky comes out after thirty dots, Clyde after sixty more -->

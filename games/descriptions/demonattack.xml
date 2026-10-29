@@ -289,7 +289,14 @@
               <play sound="wave" />
               <despawn object="bomb" />
               <reset object="laser" />
-              <set variable="player.lives">min(6, player.lives + 1)</set>
+              <set variable="player.lives">
+                <formula>
+                  <smallest>
+                    <of>6</of>
+                    <of><add><augend>player.lives</augend><addend>1</addend></add></of>
+                  </smallest>
+                </formula>
+              </set>
               <enter scene="wave2" />
             </condition>
           </conditions>
@@ -362,7 +369,14 @@
               <play sound="wave" />
               <despawn object="bomb" />
               <reset object="laser" />
-              <set variable="player.lives">min(6, player.lives + 1)</set>
+              <set variable="player.lives">
+                <formula>
+                  <smallest>
+                    <of>6</of>
+                    <of><add><augend>player.lives</augend><addend>1</addend></add></of>
+                  </smallest>
+                </formula>
+              </set>
               <enter scene="wave3" />
             </condition>
           </conditions>

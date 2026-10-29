@@ -578,7 +578,13 @@
              once down lies still (the rule for a floor) -->
         <timer sprite="flipped">
           <after>0</after>
-          <set variable="self.way">sgn(self.velocity.x)</set>
+          <set variable="self.way">
+            <formula>
+              <sign>
+                <of>self.velocity.x</of>
+              </sign>
+            </formula>
+          </set>
           <set variable="self.down">1</set>
         </timer>
         <!-- left there, it gets up by itself, faster and red (blue the
@@ -724,7 +730,15 @@
         </collision>
         <collision class="brother" through="floor" sprite="walking">
           <become sprite="mad" />
-          <set variable="self.velocity.x">sgn(self.velocity.x) * self.speed * 2</set>
+          <set variable="self.velocity.x">
+            <formula>
+              <multiply>
+                <multiplicand><sign><of>self.velocity.x</of></sign></multiplicand>
+                <multiplier>self.speed</multiplier>
+                <multiplier>2</multiplier>
+              </multiply>
+            </formula>
+          </set>
           <set variable="self.velocity.y">0 - hop</set>
           <play sound="mad" />
         </collision>

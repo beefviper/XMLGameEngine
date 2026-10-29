@@ -92,13 +92,27 @@
       <collisions>
         <collision edge="horizontal"><bounce /></collision>
         <collision object="ground">
-          <set variable="ship.score">max(0, ship.score - 10)</set>
+          <set variable="ship.score">
+            <formula>
+              <largest>
+                <of>0</of>
+                <of><subtract><minuend>ship.score</minuend><subtrahend>10</subtrahend></subtract></of>
+              </largest>
+            </formula>
+          </set>
           <despawn />
           <play sound="thud" />
         </collision>
         <collision object="shot">
           <inc variable="ship.score">20</inc>
-          <set variable="ship.peak">max(ship.peak, ship.score)</set>
+          <set variable="ship.peak">
+            <formula>
+              <largest>
+                <of>ship.peak</of>
+                <of>ship.score</of>
+              </largest>
+            </formula>
+          </set>
           <despawn />
           <play sound="pop" />
         </collision>
@@ -146,7 +160,19 @@
           <collisions>
             <collision edge="horizontal"><bounce /></collision>
             <collision object="ground">
-              <set variable="ship.score">max(0, ship.score - self.worth / 2)</set>
+              <set variable="ship.score">
+                <formula>
+                  <largest>
+                    <of>0</of>
+                    <of>
+                      <subtract>
+                        <minuend>ship.score</minuend>
+                        <subtrahend><divide><dividend>self.worth</dividend><divisor>2</divisor></divide></subtrahend>
+                      </subtract>
+                    </of>
+                  </largest>
+                </formula>
+              </set>
               <reset />
               <play sound="thud" />
             </collision>
@@ -157,7 +183,14 @@
             </collision>
             <collision object="shot">
               <inc variable="ship.score">self.worth</inc>
-              <set variable="ship.peak">max(ship.peak, ship.score)</set>
+              <set variable="ship.peak">
+                <formula>
+                  <largest>
+                    <of>ship.peak</of>
+                    <of>ship.score</of>
+                  </largest>
+                </formula>
+              </set>
               <reset />
               <play sound="pop" />
             </collision>
@@ -233,7 +266,14 @@
             <collision object="ground"><trigger object="ship" action="lose" /></collision>
             <collision object="shot">
               <inc variable="ship.score">40</inc>
-              <set variable="ship.peak">max(ship.peak, ship.score)</set>
+              <set variable="ship.peak">
+                <formula>
+                  <largest>
+                    <of>ship.peak</of>
+                    <of>ship.score</of>
+                  </largest>
+                </formula>
+              </set>
               <reset />
               <play sound="pop" />
             </collision>

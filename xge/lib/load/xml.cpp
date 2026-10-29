@@ -208,7 +208,7 @@ namespace xge
 			if (tag->getName() == "random") { return readRandom(*tag, here); }
 
 			const OperationShape* shape = operationShape(tag->getName());
-			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected a name, a number, <random>, <add>, <subtract>, <multiply>, <divide>, <smallest>, <largest>, <absolute> or <clamp>"); }
+			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected a name, a number, <random>, " + operationTags()); }
 
 			RawValue value;
 			value.kind = RawValue::Kind::Formula;
@@ -267,7 +267,7 @@ namespace xge
 			if (tag->getNextSibling()) { fail(here, "holds more than one operation; a formula is one, with the others inside it"); }
 
 			const OperationShape* shape = tag->getName() == "random" ? nullptr : operationShape(tag->getName());
-			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected <add>, <subtract>, <multiply>, <divide>, <smallest>, <largest>, <absolute> or <clamp>"); }
+			if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected " + operationTags()); }
 
 			RawValue value;
 			value.kind = RawValue::Kind::Formula;

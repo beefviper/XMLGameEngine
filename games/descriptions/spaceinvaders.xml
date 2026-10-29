@@ -264,7 +264,14 @@
           <collisions>
             <collision edge="right"><die /></collision>
             <collision object="bullet">
-              <inc variable="player.score">50 * ceil(self.worth)</inc>
+              <inc variable="player.score">
+                <formula>
+                  <multiply>
+                    <multiplicand>50</multiplicand>
+                    <multiplier><ceiling><of>self.worth</of></ceiling></multiplier>
+                  </multiply>
+                </formula>
+              </inc>
               <release object="blast" />
               <play sound="alienhit" />
               <die />

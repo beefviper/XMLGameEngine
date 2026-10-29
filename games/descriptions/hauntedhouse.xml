@@ -282,7 +282,14 @@
           <timers>
             <timer>
               <every>0.1</every>
-              <set variable="player.light">max(near, player.light - 5)</set>
+              <set variable="player.light">
+                <formula>
+                  <largest>
+                    <of>near</of>
+                    <of><subtract><minuend>player.light</minuend><subtrahend>5</subtrahend></subtract></of>
+                  </largest>
+                </formula>
+              </set>
             </timer>
           </timers>
         </object>

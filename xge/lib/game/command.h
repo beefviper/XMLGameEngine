@@ -748,6 +748,9 @@ namespace xge
 	// The shape of an arithmetic tag, or null when the tag is not one.
 	const OperationShape* operationShape(const std::string& tag);
 
+	// Every operation tag a <formula> takes, for a mistake: "<add>, ... or <clamp>".
+	std::string operationTags();
+
 	// A value as one line of text, the way a game is printed: an expression as
 	// written, an operation tree in infix with its brackets.
 	std::string valueText(const RawValue& value);
@@ -954,8 +957,8 @@ namespace xge
 	// path), returns {owner, variable}, split at the last dot. Returns nullopt
 	// for anything else - a number, a sum, a name with no owner. Used to tell a <number> in a text sprite that should stay live
 	// (bound to that variable) from one that is just worked out once; it is a
-	// plain scan of the text rather than an exprtk lookup, since once
-	// exprtk has evaluated the expression only the resolved value is left.
+	// plain scan of the text, since once the text is worked out only the
+	// number is left.
 	std::optional<std::pair<std::string, std::string>> parseVariableReference(const std::string& expression);
 
 	// Formats a live numeric value for on-screen display: whole numbers print

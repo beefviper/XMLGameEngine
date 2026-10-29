@@ -94,8 +94,9 @@
          </formula>
        A value tag, so it goes anywhere an expression or <random> does.
        Operations, one per arithmetic word: add, subtract, multiply, divide;
-       and smallest and largest of two or more <of>, absolute of one <of>,
-       and clamp, an <of> kept from <atleast> up to <atmost>. -->
+       smallest and largest of two or more <of>; absolute, sign (-1, 0 or 1),
+       ceiling (the next whole number up), sine and cosine (of degrees) of
+       one <of>; and clamp, an <of> kept from <atleast> up to <atmost>. -->
 
   <xs:complexType name="formulaType">
     <xs:choice>
@@ -105,7 +106,11 @@
       <xs:element name="divide" type="divideType" />
       <xs:element name="smallest" type="extremeType" />
       <xs:element name="largest" type="extremeType" />
-      <xs:element name="absolute" type="absoluteType" />
+      <xs:element name="absolute" type="oneOperandType" />
+      <xs:element name="sign" type="oneOperandType" />
+      <xs:element name="ceiling" type="oneOperandType" />
+      <xs:element name="sine" type="oneOperandType" />
+      <xs:element name="cosine" type="oneOperandType" />
       <xs:element name="clamp" type="clampType" />
     </xs:choice>
   </xs:complexType>
@@ -120,7 +125,11 @@
       <xs:element name="divide" type="divideType" />
       <xs:element name="smallest" type="extremeType" />
       <xs:element name="largest" type="extremeType" />
-      <xs:element name="absolute" type="absoluteType" />
+      <xs:element name="absolute" type="oneOperandType" />
+      <xs:element name="sign" type="oneOperandType" />
+      <xs:element name="ceiling" type="oneOperandType" />
+      <xs:element name="sine" type="oneOperandType" />
+      <xs:element name="cosine" type="oneOperandType" />
       <xs:element name="clamp" type="clampType" />
     </xs:choice>
   </xs:complexType>
@@ -131,7 +140,7 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="absoluteType">
+  <xs:complexType name="oneOperandType">
     <xs:sequence>
       <xs:element name="of" type="operandType" />
     </xs:sequence>

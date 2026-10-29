@@ -11,6 +11,7 @@
 #include <cctype>
 #include <cmath>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 
 namespace xge
@@ -563,9 +564,9 @@ namespace xge
 		return o;
 	}
 
-	const OperationShape* operationShape(const std::string& tag)
+	namespace
 	{
-		static const OperationShape shapes[] = {
+		const OperationShape kOperationShapes[] = {
 			{ "add", "augend", "addend", '+' },
 			{ "subtract", "minuend", "subtrahend", '-' },
 			{ "multiply", "multiplicand", "multiplier", '*' },
@@ -573,17 +574,36 @@ namespace xge
 			{ "smallest", "of", "of", 0, "min" },
 			{ "largest", "of", "of", 0, "max" },
 			{ "absolute", "of", "of", 0, "abs", 1, 1 },
+			{ "sign", "of", "of", 0, "sign", 1, 1 },
+			{ "ceiling", "of", "of", 0, "ceiling", 1, 1 },
+			{ "sine", "of", "of", 0, "sine", 1, 1 },
+			{ "cosine", "of", "of", 0, "cosine", 1, 1 },
 			{ "clamp", "of", "atleast", 0, "clamp", 3, 3, "atmost" },
 			// A <random> with a <formula> end (RawValue::operations).
 			{ "random", "min", "max", 0, "random", 2, 2 },
 		};
+	}
 
-		for (const OperationShape& shape : shapes)
+	const OperationShape* operationShape(const std::string& tag)
+	{
+		for (const OperationShape& shape : kOperationShapes)
 		{
 			if (tag == shape.tag) { return &shape; }
 		}
 
 		return nullptr;
+	}
+
+	std::string operationTags()
+	{
+		std::string text;
+		const std::size_t count = std::size(kOperationShapes) - 1; // not random
+		for (std::size_t i = 0; i < count; ++i)
+		{
+			if (i > 0) { text += i + 1 == count ? " or " : ", "; }
+			text += std::string("<") + kOperationShapes[i].tag + ">";
+		}
+		return text;
 	}
 
 	namespace

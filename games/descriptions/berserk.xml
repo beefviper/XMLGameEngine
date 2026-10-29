@@ -191,7 +191,36 @@
       <group name="armed">
         <timers>
           <timer>
-            <every><random><min>max(0.8, 3 - player.depth * 0.25)</min><max>max(2, 7 - player.depth * 0.5)</max></random></every>
+            <every>
+              <random>
+                <min>
+                  <formula>
+                    <largest>
+                      <of>0.8</of>
+                      <of>
+                        <subtract>
+                          <minuend>3</minuend>
+                          <subtrahend><multiply><multiplicand>player.depth</multiplicand><multiplier>0.25</multiplier></multiply></subtrahend>
+                        </subtract>
+                      </of>
+                    </largest>
+                  </formula>
+                </min>
+                <max>
+                  <formula>
+                    <largest>
+                      <of>2</of>
+                      <of>
+                        <subtract>
+                          <minuend>7</minuend>
+                          <subtrahend><multiply><multiplicand>player.depth</multiplicand><multiplier>0.5</multiplier></multiply></subtrahend>
+                        </subtract>
+                      </of>
+                    </largest>
+                  </formula>
+                </max>
+              </random>
+            </every>
             <aim object="player"><lined>8</lined></aim>
             <fire object="robotshot" />
             <play sound="robotshoot" />
@@ -504,7 +533,14 @@
           <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
           <timers>
             <timer>
-              <every>max(6, 14 - player.depth)</every>
+              <every>
+                <formula>
+                  <largest>
+                    <of>6</of>
+                    <of><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></of>
+                  </largest>
+                </formula>
+              </every>
               <reveal object="otto" />
               <play sound="otto" />
             </timer>
@@ -538,7 +574,14 @@
           <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
           <timers>
             <timer>
-              <every>max(6, 14 - player.depth)</every>
+              <every>
+                <formula>
+                  <largest>
+                    <of>6</of>
+                    <of><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></of>
+                  </largest>
+                </formula>
+              </every>
               <reveal object="otto" />
               <play sound="otto" />
             </timer>
@@ -573,7 +616,14 @@
           <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
           <timers>
             <timer>
-              <every>max(6, 14 - player.depth)</every>
+              <every>
+                <formula>
+                  <largest>
+                    <of>6</of>
+                    <of><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></of>
+                  </largest>
+                </formula>
+              </every>
               <reveal object="otto" />
               <play sound="otto" />
             </timer>
@@ -609,7 +659,14 @@
           <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
           <timers>
             <timer>
-              <every>max(6, 14 - player.depth)</every>
+              <every>
+                <formula>
+                  <largest>
+                    <of>6</of>
+                    <of><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></of>
+                  </largest>
+                </formula>
+              </every>
               <reveal object="otto" />
               <play sound="otto" />
             </timer>

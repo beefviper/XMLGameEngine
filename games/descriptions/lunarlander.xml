@@ -283,7 +283,14 @@
         <condition object="lander" variable="crashed">
           <atleast>1</atleast>
           <set variable="lander.crashed">0</set>
-          <set variable="lander.fuel">max(0, lander.fuel - wreckcost)</set>
+          <set variable="lander.fuel">
+            <formula>
+              <largest>
+                <of>0</of>
+                <of><subtract><minuend>lander.fuel</minuend><subtrahend>wreckcost</subtrahend></subtract></of>
+              </largest>
+            </formula>
+          </set>
           <silence sound="thrust" />
           <play sound="crash" />
           <reveal object="wrecked" />

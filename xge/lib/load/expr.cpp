@@ -48,7 +48,7 @@ namespace xge
 
 		checkColor(windowDesc.background, "<window> > <background>");
 
-		// add constants to symbol table (pi, for an angle in a value, among them)
+		// the window's edges and middles, then the game's variables, as names a text reads
 		calc.constant("window.top", 0);
 		calc.constant("window.bottom", windowDesc.height);
 		calc.constant("window.left", 0);
@@ -1243,6 +1243,27 @@ namespace xge
 			return answer;
 		}
 
+		if (operation.op == "sign")
+		{
+			answer.value = answer.value > 0.0f ? 1.0f : answer.value < 0.0f ? -1.0f : 0.0f;
+			return answer;
+		}
+
+		if (operation.op == "ceiling")
+		{
+			answer.value = std::ceil(answer.value);
+			return answer;
+		}
+
+		// Of an angle in degrees, like every angle in a game.
+		if (operation.op == "sine" || operation.op == "cosine")
+		{
+			constexpr float kRadiansPerDegree = 3.14159265358979323846f / 180.0f;
+			const float radians = answer.value * kRadiansPerDegree;
+			answer.value = operation.op == "sine" ? std::sin(radians) : std::cos(radians);
+			return answer;
+		}
+
 		if (operation.op == "clamp")
 		{
 			const Answer low = operandAnswer(operation.operands[1]);
@@ -1338,43 +1359,7 @@ namespace xge
 		auto found = namesInText.find(text);
 		if (found == namesInText.end())
 		{
-			// Read by hand rather than by exprtk::collect_variables, which
-			// builds a whole parser each time: every word that is not a
-			// number (paddle1.score, sin), without case, as exprtk sees it.
-			// A function's or keyword's name among them names nothing a game
-			// can (a variable may not be named like one).
-			std::vector<std::string> names;
-			const auto letter = [](char c) { return std::isalpha(static_cast<unsigned char>(c)) != 0 || c == '_'; };
-			const auto digit = [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; };
-			for (std::size_t at = 0; at < text.size();)
-			{
-				if (letter(text[at]))
-				{
-					std::string name;
-					while (at < text.size() && (letter(text[at]) || digit(text[at]) || text[at] == '.'))
-					{
-						name += static_cast<char>(std::tolower(static_cast<unsigned char>(text[at])));
-						++at;
-					}
-					if (std::find(names.begin(), names.end(), name) == names.end()) { names.push_back(std::move(name)); }
-				}
-				else if (digit(text[at]) || text[at] == '.')
-				{
-					// A number, its exponent too (2e-3).
-					while (at < text.size() && (digit(text[at]) || text[at] == '.')) { ++at; }
-					if (at + 1 < text.size() && (text[at] == 'e' || text[at] == 'E')
-						&& (digit(text[at + 1]) || ((text[at + 1] == '+' || text[at + 1] == '-') && at + 2 < text.size() && digit(text[at + 2]))))
-					{
-						at += 2;
-						while (at < text.size() && digit(text[at])) { ++at; }
-					}
-				}
-				else
-				{
-					++at;
-				}
-			}
-			found = namesInText.emplace(text, std::move(names)).first;
+			found = namesInText.emplace(text, Calc::namesIn(text)).first;
 		}
 		return found->second;
 	}

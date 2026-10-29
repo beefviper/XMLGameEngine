@@ -5,8 +5,8 @@
 //
 // Catch2 tests for arithmetic written as tags instead of as text: a <formula>,
 // one operation whose operands are themselves numbers, operations included. It
-// is a value tag, like <random>, so the text form (exprtk) still works beside
-// it, and both must give the same number. Then what each mistake says, the
+// is a value tag, like <random>, so the text form (load/calc: + - * / and
+// brackets) still works beside it, and both must give the same number. Then what each mistake says, the
 // printed form, a divisor of 0 (a load error, and a warning instead once the
 // game is running), both schema checkers against the same good and bad files,
 // and the two shipped games written with it (Pong's and Breakout's titles),
@@ -204,6 +204,31 @@ TEST_CASE("smallest, largest, absolute and clamp", "[formulas]")
 	CHECK_THROWS_WITH(Loaded(gameXml("<formula><clamp><of>1</of><atmost>2</atmost><atleast>0</atleast></clamp></formula>")), ContainsSubstring("<atmost> where <atleast> belongs"));
 }
 
+TEST_CASE("sign, ceiling, sine and cosine, the last two of degrees", "[formulas]")
+{
+	CHECK(xOf("<formula><sign><of>-7.5</of></sign></formula>") == -1.0f);
+	CHECK(xOf("<formula><sign><of>0</of></sign></formula>") == 0.0f);
+	CHECK(xOf("<formula><sign><of>w</of></sign></formula>", kVariables) == 1.0f);
+	CHECK(xOf("<formula><ceiling><of>2.25</of></ceiling></formula>") == 3.0f);
+	CHECK(xOf("<formula><ceiling><of>-2.25</of></ceiling></formula>") == -2.0f);
+	CHECK(xOf("<formula><ceiling><of>4</of></ceiling></formula>") == 4.0f);
+	CHECK(std::fabs(xOf("<formula><sine><of>30</of></sine></formula>") - 0.5f) < 1e-6f);
+	CHECK(std::fabs(xOf("<formula><cosine><of>60</of></cosine></formula>") - 0.5f) < 1e-6f);
+	CHECK(std::fabs(xOf("<formula><sine><of>-90</of></sine></formula>") + 1.0f) < 1e-6f);
+	CHECK(xOf("<formula><cosine><of>0</of></cosine></formula>") == 1.0f);
+
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><sine><of>1</of><of>2</of></sine></formula>")), ContainsSubstring("after all it holds: it holds one <of>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><tangent><of>1</of></tangent></formula>")),
+		ContainsSubstring("expected <add>, <subtract>, <multiply>, <divide>, <smallest>, <largest>, <absolute>, <sign>, <ceiling>, <sine>, <cosine> or <clamp>"));
+}
+
+TEST_CASE("a value's text has no functions: they are formula tags", "[formulas][errors]")
+{
+	CHECK_THROWS_WITH(Loaded(gameXml("max(1, 2)")), ContainsSubstring("'max(' is a function, and a value's text has none; write it as a <formula>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("2 * pi")), ContainsSubstring("'pi' names nothing"));
+	CHECK_THROWS_WITH(Loaded(gameXml("w >= 2", "0", kVariables)), ContainsSubstring("'>' where an operator or the end was expected"));
+}
+
 TEST_CASE("a <random>'s ends can be formulas", "[formulas]")
 {
 	CHECK(xOf("<random><min><formula><multiply><multiplicand>w</multiplicand><multiplier>2</multiplier></multiply></formula></min><max>200</max></random>", kVariables) == 200.0f);
@@ -308,7 +333,9 @@ namespace
 	{
 		std::ifstream in(path);
 		REQUIRE(in.good());
-		std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		std::ostringstream read;
+		read << in.rdbuf();
+		std::string text = read.str();
 		text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
 		return text;
 	}
@@ -539,7 +566,7 @@ TEST_CASE("only a divisor matters: 0 as a dividend, or in other operations, is f
 	CHECK(xOf("<formula><subtract><minuend>4</minuend><subtrahend>0</subtrahend></subtract></formula>") == 4.0f);
 }
 
-TEST_CASE("the exprtk text is left alone: it divides by 0 as it always did", "[formulas][zero]")
+TEST_CASE("a text is left alone: it divides by 0 as it always did", "[formulas][zero]")
 {
 	// Not an error, as before; the tags are where the engine looks.
 	Loaded loaded(gameXml("1 / zero", "0", "<variable name=\"zero\">0</variable>"));

@@ -109,8 +109,23 @@
           <sprite><rectangle><width>ball.size</width><height>ball.size</height></rectangle></sprite>
           <position><x><centered /></x><y><centered /></y></position>
           <velocity>
-            <x>sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)</x>
-            <y>ball.speed * sin(ball.angle * pi / 180)</y>
+            <x>
+              <formula>
+                <multiply>
+                  <multiplicand><sign><of>ball.side</of></sign></multiplicand>
+                  <multiplier>ball.speed</multiplier>
+                  <multiplier><cosine><of>ball.angle</of></cosine></multiplier>
+                </multiply>
+              </formula>
+            </x>
+            <y>
+              <formula>
+                <multiply>
+                  <multiplicand>ball.speed</multiplicand>
+                  <multiplier><sine><of>ball.angle</of></sine></multiplier>
+                </multiply>
+              </formula>
+            </y>
           </velocity>
           <collisions>
             <collision edge="vertical">
