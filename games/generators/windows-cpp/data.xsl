@@ -1584,7 +1584,7 @@
 
     <!-- the parts that change something, a function each -->
     <xsl:for-each select="member | row | column | cell">
-      <xsl:if test="*">
+      <xsl:if test="*[not(self::number or self::odd or self::even)]">
         <xsl:variable name="part">
           <xsl:call-template name="part-name" />
         </xsl:variable>
@@ -1857,28 +1857,11 @@
     </xsl:call-template>
   </xsl:template>
 
-  <!-- Whether a <row number="..."> or <column number="..."> picks $n:
-       "yes" if one of its words is $n, or odd or even and $n is. -->
+  <!-- Whether the <row> or <column> here picks $n: "yes" if its number=
+       or one of its <number>s is $n, or it says <odd /> or <even /> and $n is. -->
   <xsl:template name="picks">
-    <xsl:param name="words" />
     <xsl:param name="n" />
-    <xsl:if test="$words != ''">
-      <xsl:variable name="word">
-        <xsl:choose>
-          <xsl:when test="contains($words, ' ')"><xsl:value-of select="substring-before($words, ' ')" /></xsl:when>
-          <xsl:otherwise><xsl:value-of select="$words" /></xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
-      <xsl:choose>
-        <xsl:when test="($word = 'odd' and $n mod 2 = 1) or ($word = 'even' and $n mod 2 = 0) or number($word) = $n">yes</xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="picks">
-            <xsl:with-param name="words" select="substring-after($words, ' ')" />
-            <xsl:with-param name="n" select="$n" />
-          </xsl:call-template>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:if>
+    <xsl:if test="number(@number) = $n or number[number(normalize-space(.)) = $n] or (odd and $n mod 2 = 1) or (even and $n mod 2 = 0)">yes</xsl:if>
   </xsl:template>
 
   <!-- The parts of $group that change the cell at $column, $row, "a, b, ":
@@ -1892,11 +1875,10 @@
     <xsl:for-each select="$group/row | $group/column[not($rowsOnly)]">
       <xsl:variable name="picked">
         <xsl:call-template name="picks">
-          <xsl:with-param name="words" select="normalize-space(@number)" />
           <xsl:with-param name="n" select="$row * boolean(self::row) + $column * boolean(self::column)" />
         </xsl:call-template>
       </xsl:variable>
-      <xsl:if test="$picked = 'yes' and *">
+      <xsl:if test="$picked = 'yes' and *[not(self::number or self::odd or self::even)]">
         <xsl:call-template name="part-name" />
         <xsl:text>, </xsl:text>
       </xsl:if>
@@ -1989,21 +1971,37 @@
        States
        =================================================================== -->
 
-  <!-- The keys of an <input button="w up">, each given its commands:
-       to["w"] = to["up"] = { ... }; at $indent. -->
+  <!-- The keys of an <input> (button="w", or <button>w</button>
+       <button>up</button>), each given its commands: to["w"] = to["up"] =
+       { ... }; at $indent. -->
   <xsl:template name="input">
     <xsl:param name="to" />
     <xsl:param name="indent" />
+    <xsl:variable name="buttons">
+      <xsl:call-template name="names-given">
+        <xsl:with-param name="word" select="'button'" />
+      </xsl:call-template>
+    </xsl:variable>
     <xsl:value-of select="$indent" />
     <xsl:call-template name="buttons">
-      <xsl:with-param name="words" select="normalize-space(@button)" />
+      <xsl:with-param name="words" select="normalize-space($buttons)" />
       <xsl:with-param name="to" select="$to" />
     </xsl:call-template>
     <xsl:call-template name="commands">
-      <xsl:with-param name="nodes" select="*" />
+      <xsl:with-param name="nodes" select="*[not(self::button)]" />
       <xsl:with-param name="indent" select="$indent" />
     </xsl:call-template>
     <xsl:text>;&#10;</xsl:text>
+  </xsl:template>
+
+  <!-- The names the node here gives as $word: its attribute of that name
+       and its elements of that name, between spaces (as load/xml namesGiven). -->
+  <xsl:template name="names-given">
+    <xsl:param name="word" />
+    <xsl:value-of select="normalize-space(@*[local-name() = $word])" />
+    <xsl:for-each select="*[local-name() = $word]">
+      <xsl:value-of select="concat(' ', normalize-space(.))" />
+    </xsl:for-each>
   </xsl:template>
 
   <xsl:template name="buttons">
@@ -2388,11 +2386,18 @@
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>
+    <xsl:variable name="sets">
+      <xsl:for-each select="inputs">
+        <xsl:call-template name="names-given">
+          <xsl:with-param name="word" select="'keys'" />
+        </xsl:call-template>
+      </xsl:for-each>
+    </xsl:variable>
     <xsl:call-template name="use-keys">
-      <xsl:with-param name="words" select="normalize-space(inputs/@keys)" />
+      <xsl:with-param name="words" select="normalize-space($sets)" />
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
-    <xsl:for-each select="inputs/input[@button]">
+    <xsl:for-each select="inputs/input[@button or button]">
       <xsl:call-template name="input">
         <xsl:with-param name="to" select="'state.input'" />
         <xsl:with-param name="indent" select="$in" />

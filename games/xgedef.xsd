@@ -1242,15 +1242,17 @@
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- What pressing a key does in a state: button is one key, or several
-       separated by spaces ("a left"); or, with axis= (mouse.x, mouse.y,
-       pad1.x, ...) instead, the <trigger> run as that control moves. One of
-       the two, which the engine checks. -->
+  <!-- What pressing a key does in a state: button= is one key, and several
+       are a <button> each, before the commands (<button>a</button>
+       <button>left</button>); or, with axis= (mouse.x, mouse.y, pad1.x, ...)
+       instead, the <trigger> run as that control moves. One of the two,
+       which the engine checks. -->
   <xs:complexType name="inputType">
     <xs:sequence>
+      <xs:element name="button" type="xs:NMTOKEN" minOccurs="0" maxOccurs="unbounded" />
       <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
-    <xs:attribute name="button" type="xs:string" use="optional" />
+    <xs:attribute name="button" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="axis" type="xs:string" use="optional" />
   </xs:complexType>
 
@@ -1587,16 +1589,6 @@
   </xs:complexType>
 
   <!--
-    Which rows or columns: numbers counting from 1, one or several (2, or
-    2 4 6), or odd or even.
-  -->
-  <xs:simpleType name="pickType">
-    <xs:restriction base="xs:string">
-      <xs:pattern value="\s*(odd|even|[1-9][0-9]*)(\s+(odd|even|[1-9][0-9]*))*\s*" />
-    </xs:restriction>
-  </xs:simpleType>
-
-  <!--
     What the rows (or columns) it picks change. Its padding is the gap before
     it: a row's <y> the gap above it and its <x> the gaps between its cells, a
     column's <x> the gap to its left. The first row and column have no gap
@@ -1604,13 +1596,19 @@
   -->
   <xs:complexType name="lineOfCellsType">
     <xs:sequence>
+      <!-- which it picks: number="2", or a <number> each, or <odd /> or <even /> -->
+      <xs:choice minOccurs="0">
+        <xs:element name="number" type="xs:positiveInteger" maxOccurs="unbounded" />
+        <xs:element name="odd" type="emptyType" />
+        <xs:element name="even" type="emptyType" />
+      </xs:choice>
       <xs:element name="sprite" type="spriteChangeType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="padding" type="partialVector2Type" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="number" type="pickType" use="required" />
+    <xs:attribute name="number" type="xs:positiveInteger" use="optional" />
   </xs:complexType>
 
   <!-- What one cell changes, and a name of its own. -->
@@ -1976,9 +1974,11 @@
                     <xs:element name="inputs" minOccurs="0">
                       <xs:complexType>
                         <xs:sequence>
+                          <!-- the <keys> sets it takes: keys="name", or a <keys> each -->
+                          <xs:element name="keys" type="xs:NMTOKEN" minOccurs="0" maxOccurs="unbounded" />
                           <xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
                         </xs:sequence>
-                        <xs:attribute name="keys" type="xs:string" use="optional" />
+                        <xs:attribute name="keys" type="xs:NMTOKEN" use="optional" />
                       </xs:complexType>
                     </xs:element>
                     <xs:element name="conditions" type="conditionsType" minOccurs="0" />

@@ -452,10 +452,10 @@
         </scene>
       </scenes>
       <inputs>
-        <input button="a left"><trigger object="player" action="left" /></input>
-        <input button="d right"><trigger object="player" action="right" /></input>
+        <input><button>a</button><button>left</button><trigger object="player" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="player" action="right" /></input>
         <input button="space"><trigger object="player" action="fire" /></input>
-        <input button="p escape"><push state="paused" /></input>
+        <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- out of cannons -->
@@ -477,7 +477,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <state name="youwin">

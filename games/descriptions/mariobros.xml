@@ -1525,11 +1525,11 @@
       <inputs>
         <input button="a"><trigger object="mario" action="left" /></input>
         <input button="d"><trigger object="mario" action="right" /></input>
-        <input button="w space"><trigger object="mario" action="jump" /></input>
+        <input><button>w</button><button>space</button><trigger object="mario" action="jump" /></input>
         <input button="left"><trigger object="luigi" action="left" /></input>
         <input button="right"><trigger object="luigi" action="right" /></input>
         <input button="up"><trigger object="luigi" action="jump" /></input>
-        <input button="p escape"><push state="paused" /></input>
+        <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition>
@@ -1589,7 +1589,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <state name="youwin">

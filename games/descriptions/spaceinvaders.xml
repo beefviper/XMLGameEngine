@@ -339,7 +339,7 @@
               <fire object="bomb" />
             </timer>
           </timers>
-          <row number="2 3">
+          <row><number>2</number><number>3</number>
             <sprite name="a">
               <bitmap>
                 <row>..*.....*..</row>
@@ -368,7 +368,7 @@
             </sprite>
             <variables><variable name="worth">20</variable></variables>
           </row>
-          <row number="4 5">
+          <row><number>4</number><number>5</number>
             <sprite name="a">
               <bitmap>
                 <row>...*****...</row>
@@ -417,10 +417,10 @@
       </shows>
       <music sound="march" />
       <inputs>
-        <input button="a left"><trigger object="player" action="left" /></input>
-        <input button="d right"><trigger object="player" action="right" /></input>
+        <input><button>a</button><button>left</button><trigger object="player" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="player" action="right" /></input>
         <input button="space"><trigger object="player" action="gun" /></input>
-        <input button="p escape"><push state="paused" /></input>
+        <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition class="aliens">
@@ -470,7 +470,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <!-- the cannon hit: everything holds still for a second, then the bombs are gone -->

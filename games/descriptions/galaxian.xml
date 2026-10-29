@@ -596,10 +596,10 @@
       </shows>
       <music sound="swarm" />
       <inputs>
-        <input button="a left"><trigger object="ship" action="left" /></input>
-        <input button="d right"><trigger object="ship" action="right" /></input>
+        <input><button>a</button><button>left</button><trigger object="ship" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="ship" action="right" /></input>
         <input button="space"><trigger object="ship" action="gun" /></input>
-        <input button="p escape"><push state="paused" /></input>
+        <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="ship" variable="lives">
@@ -630,7 +630,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <state name="gameover">
@@ -700,9 +700,9 @@
         <show set="initials" />
       </shows>
       <inputs>
-        <input button="w up"><inc variable="entry.first" /></input>
-        <input button="s down"><dec variable="entry.first" /></input>
-        <input button="space d right"><pop state="initial2" /></input>
+        <input><button>w</button><button>up</button><inc variable="entry.first" /></input>
+        <input><button>s</button><button>down</button><dec variable="entry.first" /></input>
+        <input><button>space</button><button>d</button><button>right</button><pop state="initial2" /></input>
       </inputs>
     </state>
     <state name="initial2" from="initial1">
@@ -710,9 +710,9 @@
         <object name="cursor"><position><x>letters + letterstep</x></position></object>
       </objects>
       <inputs>
-        <input button="w up"><inc variable="entry.second" /></input>
-        <input button="s down"><dec variable="entry.second" /></input>
-        <input button="space d right"><pop state="initial3" /></input>
+        <input><button>w</button><button>up</button><inc variable="entry.second" /></input>
+        <input><button>s</button><button>down</button><dec variable="entry.second" /></input>
+        <input><button>space</button><button>d</button><button>right</button><pop state="initial3" /></input>
       </inputs>
     </state>
     <state name="initial3" from="initial1">
@@ -720,10 +720,10 @@
         <object name="cursor"><position><x>letters + letterstep * 2</x></position></object>
       </objects>
       <inputs>
-        <input button="w up"><inc variable="entry.third" /></input>
-        <input button="s down"><dec variable="entry.third" /></input>
+        <input><button>w</button><button>up</button><inc variable="entry.third" /></input>
+        <input><button>s</button><button>down</button><dec variable="entry.third" /></input>
         <!-- the entry into its place in the table, and a new game -->
-        <input button="space d right">
+        <input><button>space</button><button>d</button><button>right</button>
           <rank variable="entry.score" into="table" />
           <out />
           <reset />

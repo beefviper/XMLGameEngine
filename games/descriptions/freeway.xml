@@ -295,7 +295,7 @@
         <input button="s"><trigger object="chicken1" action="down" /></input>
         <input button="up"><trigger object="chicken2" action="up" /></input>
         <input button="down"><trigger object="chicken2" action="down" /></input>
-        <input button="space p escape"><push state="paused" /></input>
+        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="clock" variable="seconds">
@@ -322,7 +322,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <!-- time up: a draw, unless one chicken crossed more often -->

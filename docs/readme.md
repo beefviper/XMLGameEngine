@@ -189,7 +189,7 @@ A game with no `xsi:noNamespaceSchemaLocation` is not validated. The schema chec
 - A verb with one number has it as its content; anything more follows as named tags: `<jump direction="up">rowgap<seconds>leap</seconds></jump>`.
 - What something *does* is a list of command tags, run in the order written. There are no `;`-separated strings.
 
-A few attributes still pack several words into one string (`button="a left"`, `keys="a b"`, `number="2 4 6"`, `pitch="F#4"`); they are known exceptions, open in [file-format](designs/02-file-format.md).
+An attribute holds one name: several are an element each (`<button>a</button><button>left</button>`, `<keys>`, a row's `<number>`). A note's `pitch="F#4"` is one name, a standard one, like a colour's.
 
 ### Values
 
@@ -446,8 +446,8 @@ Instead of listing members, a group can lay out a block: `<columns>` and `<rows>
   <sprite><rectangle><width>brick</width><height>12</height><color>color.red</color></rectangle></sprite>
   <position><x>margin</x><y>top</y></position>
   <collisions> ... </collisions>
-  <row number="3 4"><sprite><rectangle><color>color.orange</color></rectangle></sprite></row>
-  <row number="5 6"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>
+  <row><number>3</number><number>4</number><sprite><rectangle><color>color.orange</color></rectangle></sprite></row>
+  <row number="5"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>
   <cell row="1" column="7" name="boss"> ... </cell>
 </group>
 ```
@@ -458,7 +458,7 @@ Instead of listing members, a group can lay out a block: `<columns>` and `<rows>
 
 | Tag | Picks | Can change |
 |---|---|---|
-| `<row number="...">` | rows: `2`, several (`2 4 6`), `odd` or `even` | sprites, animation, velocity, padding (`<y>` the gap above it, `<x>` between its cells), variables |
+| `<row number="2">` | one row by `number=`; several by a `<number>` each, first (`<row><number>2</number><number>4</number>`); every other by `<odd />` or `<even />` | sprites, animation, velocity, padding (`<y>` the gap above it, `<x>` between its cells), variables |
 | `<column number="...">` | columns, the same way | the same; its padding's `<x>` is the gap to its left |
 | `<cell row="..." column="..." name="...">` | one cell, and may name it | sprites, animation, velocity, variables |
 
@@ -1040,17 +1040,17 @@ A rule about another object can be narrowed; most filters work on edge rules too
 ...
 <state name="playing">
   <inputs>
-    <input button="w up"><trigger object="paddle1" action="up" /></input>
+    <input><button>w</button><button>up</button><trigger object="paddle1" action="up" /></input>
   </inputs>
 </state>
 ```
 
 So remapping a key is one attribute in one state, a key can do different things in different states, and one action name can mean different things on different objects.
 
-- `button=` can name several keys separated by spaces (`"a left pad1.left"`) for the same commands.
+- One key is `button="w"`; several keys for the same commands are a `<button>` each, before the commands (`<button>a</button><button>left</button><button>pad1.left</button>`).
 - **Key names** are lowercase: `a`-`z`, `num0`-`num9`, `numpad0`-`numpad9`, `f1`-`f15`, `space`, `enter`, `escape`, `backspace`, `tab`, `left`, `right`, `up`, `down`, `home`, `end`, `pageup`, `pagedown`, `insert`, `delete`, `pause`, `lshift`, `rshift`, `lcontrol`, `rcontrol`, `lalt`, `ralt`, and a few more in `engine/keys.cpp`.
 - **The mouse and pads** are keys too: `mouse.left`, `mouse.right`, `mouse.middle`, and for two pads `pad1.a`, `.b`, `.x`, `.y`, `.lb`, `.rb`, `.back`, `.start`, `.up`, `.down`, `.left`, `.right` (and `pad2.`), named for an Xbox pad. A pad's directions are its d-pad or its left stick pushed past halfway.
-- **Key sets.** Bindings several states share can be a named `<keys>` set at the top of `<states>`, taken with `<inputs keys="walk">` (several names, each over the one before); the state's own `<input>`s go over the set's, key by key. No shipped game uses one now.
+- **Key sets.** Bindings several states share can be a named `<keys>` set at the top of `<states>`, taken with `<inputs keys="walk">` (several by a `<keys>walk</keys>` each, first in `<inputs>`, each over the one before); the state's own `<input>`s go over the set's, key by key. No shipped game uses one now.
 
 ### Pointing controls
 

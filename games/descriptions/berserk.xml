@@ -674,12 +674,12 @@
         </scene>
       </scenes>
       <inputs>
-        <input button="up w"><trigger object="player" action="up" /></input>
-        <input button="down s"><trigger object="player" action="down" /></input>
-        <input button="left a"><trigger object="player" action="left" /></input>
-        <input button="right d"><trigger object="player" action="right" /></input>
+        <input><button>up</button><button>w</button><trigger object="player" action="up" /></input>
+        <input><button>down</button><button>s</button><trigger object="player" action="down" /></input>
+        <input><button>left</button><button>a</button><trigger object="player" action="left" /></input>
+        <input><button>right</button><button>d</button><trigger object="player" action="right" /></input>
         <input button="space"><trigger object="player" action="gun" /></input>
-        <input button="p escape"><push state="paused" /></input>
+        <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- out of lives -->
@@ -726,7 +726,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
 

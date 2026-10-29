@@ -251,12 +251,16 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 		const std::string text = fileText(in);
 
 		INFO(entry.path().string());
-		CHECK(text.find("button=\"enter\"") == std::string::npos);
-		CHECK(text.find("button=\"q\"") == std::string::npos);
-		CHECK(text.find("button=\"z\"") == std::string::npos);
+		// A key is button="name", or <button>name</button> among several.
+		const auto names = [&](const std::string& key)
+		{
+			return text.find("button=\"" + key + "\"") != std::string::npos || text.find("<button>" + key + "</button>") != std::string::npos;
+		};
+		CHECK_FALSE(names("enter"));
+		CHECK_FALSE(names("q"));
+		CHECK_FALSE(names("z"));
 		const bool oneScreen = text.find("<state ") == text.rfind("<state ");
-		// Space alone, or with the pad's Start beside it ("space pad1.start").
-		CHECK((oneScreen || text.find("button=\"space\"") != std::string::npos || text.find("button=\"space pad1.start\"") != std::string::npos));
+		CHECK((oneScreen || names("space")));
 		++checked;
 	}
 	CHECK(checked >= 10);

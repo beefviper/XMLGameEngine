@@ -220,7 +220,7 @@
         </object>
       </objects>
       <inputs>
-        <input button="space pad1.start">
+        <input><button>space</button><button>pad1.start</button>
           <push state="playing" />
           <play sound="wave" />
         </input>
@@ -398,12 +398,12 @@
         </scene>
       </scenes>
       <inputs>
-        <input button="a left pad1.left"><trigger object="bucket" action="left" /></input>
-        <input button="d right pad1.right"><trigger object="bucket" action="right" /></input>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="bucket" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="bucket" action="right" /></input>
         <!-- the mouse, or a pad's stick, is the Atari's paddle -->
         <input axis="mouse.x"><trigger object="bucket" action="steer" /></input>
         <input axis="pad1.x"><trigger object="bucket" action="steer" /></input>
-        <input button="space p pad1.start"><push state="paused" /></input>
+        <input><button>space</button><button>p</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="bucket" variable="buckets">
@@ -425,7 +425,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p pad1.start"><pop /></input>
+        <input><button>space</button><button>p</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="youwin">
@@ -443,7 +443,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space pad1.start"><reset /></input>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
       </inputs>
     </state>
     <state name="gameover" from="youwin">

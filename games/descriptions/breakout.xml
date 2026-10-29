@@ -108,7 +108,7 @@
         </object>
       </objects>
       <inputs>
-        <input button="space pad1.start"><push state="playing" /></input>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -234,10 +234,10 @@
         </object>
       </objects>
       <inputs>
-        <input button="a left pad1.left"><trigger object="player" action="left" /></input>
-        <input button="d right pad1.right"><trigger object="player" action="right" /></input>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="player" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="player" action="right" /></input>
         <input axis="mouse.x"><trigger object="player" action="steer" /></input>
-        <input button="space p pad1.start"><push state="paused" /></input>
+        <input><button>space</button><button>p</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition>
@@ -271,7 +271,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p pad1.start"><pop /></input>
+        <input><button>space</button><button>p</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="youwin">
@@ -286,7 +286,7 @@
         <show object="again" />
       </shows>
       <inputs>
-        <input button="space pad1.start"><reset /></input>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
       </inputs>
     </state>
     <state name="gameover" from="youwin">

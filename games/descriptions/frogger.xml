@@ -444,11 +444,11 @@
         </object>
       </objects>
       <inputs>
-        <input button="w up"><trigger object="frog" action="up" /></input>
-        <input button="s down"><trigger object="frog" action="down" /></input>
-        <input button="a left"><trigger object="frog" action="left" /></input>
-        <input button="d right"><trigger object="frog" action="right" /></input>
-        <input button="space p escape"><push state="paused" /></input>
+        <input><button>w</button><button>up</button><trigger object="frog" action="up" /></input>
+        <input><button>s</button><button>down</button><trigger object="frog" action="down" /></input>
+        <input><button>a</button><button>left</button><trigger object="frog" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="frog" action="right" /></input>
+        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="frog" variable="lives">
@@ -484,7 +484,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <state name="gameover">

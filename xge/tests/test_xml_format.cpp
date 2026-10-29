@@ -866,6 +866,7 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
 		{ "a condition with no test (only a set=\"...\" condition has none)", "<atleast>11</atleast>", "", "unexpected element <push>" },
 		{ "a <random> with no max", "<random><min>-30</min><max>30</max></random>", "<random><min>-30</min></random>", "max" },
+		{ "several keys in one button=", "<input button=\"w\">", "<input button=\"w up\">", "not a valid" },
 	};
 
 	for (const Mistake& mistake : mistakes)
@@ -879,6 +880,30 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 			CHECK_FALSE(verdict.strongAccepts);
 		}
 	}
+}
+
+TEST_CASE("an input names one key by button=, or several by a <button> each", "[xml_format][inputs]")
+{
+	const auto withInput = [](const std::string& input)
+	{
+		ObjectXml o;
+		std::string xml = gameXml("", objectXml(o));
+		const std::string written = "<input button=\"space\"><pop /></input>";
+		xml.replace(xml.find(written), written.size(), input);
+		return xml;
+	};
+
+	Loaded several(withInput("<input><button>space</button><button>p</button><pop /></input>"));
+	const auto& input = several.game.getStates().front().input;
+	CHECK(input.count(KeyCode::Space) == 1);
+	CHECK(input.count(KeyCode::P) == 1);
+
+	REQUIRE_THROWS_WITH(Loaded(withInput("<input button=\"space p\"><pop /></input>")),
+		ContainsSubstring("button=\"space p\" names several; write each as a <button> of its own"));
+	REQUIRE_THROWS_WITH(Loaded(withInput("<input button=\"space\"><button>p</button><pop /></input>")),
+		ContainsSubstring("has button=\"space\" and a <button>; use one or the other"));
+	REQUIRE_THROWS_WITH(Loaded(withInput("<input><pop /></input>")),
+		ContainsSubstring("names a button"));
 }
 
 TEST_CASE("a command that names a state, object or action the game does not have stops the load", "[xml_format][commands]")

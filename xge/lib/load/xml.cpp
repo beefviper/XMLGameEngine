@@ -1803,35 +1803,39 @@ namespace xge
 			return std::stoi(text);
 		}
 
-		// Which rows or columns a <row number="..."> or <column number="...">
-		// picks: numbers counting from 1 (number="2", number="2 4"), or every
-		// odd or even one.
+		// Which rows or columns a <row> or <column> picks, counting from 1:
+		// one by number="2", several by a <number> each, every odd or even
+		// one by <odd /> or <even />.
 		std::vector<bool> readPick(const XmlNode& node, int count, const std::string& where)
 		{
-			const std::string text = requireAttribute(node, "number", where);
 			std::vector<bool> picked(static_cast<std::size_t>(count) + 1, false);
-
-			std::istringstream words(text);
-			std::string word;
-			bool any = false;
-			while (words >> word)
+			const auto pick = [&](const std::string& text)
 			{
+				if (text.empty() || text.size() > 4 || !std::all_of(text.begin(), text.end(), [](unsigned char c) { return std::isdigit(c) != 0; })
+					|| std::stoi(text) < 1 || std::stoi(text) > count)
+				{
+					fail(where, "\"" + text + "\" is not one of 1 to " + std::to_string(count)
+						+ (text.find_first_of(" \t") == std::string::npos ? "" : "; write several as a <number> each"));
+				}
+				picked[static_cast<std::size_t>(std::stoi(text))] = true;
+			};
+
+			const std::string attribute = node.getAttribute("number");
+			bool any = !attribute.empty();
+			if (any) { pick(attribute); }
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag != "number" && tag != "odd" && tag != "even") { continue; }
+				if (!attribute.empty()) { fail(where, "has number=\"" + attribute + "\" and a <" + tag + ">; use one or the other"); }
 				any = true;
-				if (word == "odd" || word == "even")
-				{
-					for (int i = word == "odd" ? 1 : 2; i <= count; i += 2) { picked[static_cast<std::size_t>(i)] = true; }
-				}
-				else if (!word.empty() && word.size() <= 4 && std::all_of(word.begin(), word.end(), [](unsigned char c) { return std::isdigit(c) != 0; })
-					&& std::stoi(word) >= 1 && std::stoi(word) <= count)
-				{
-					picked[static_cast<std::size_t>(std::stoi(word))] = true;
-				}
+				if (tag == "number") { pick(readText(*child)); }
 				else
 				{
-					fail(where, "number=\"" + text + "\": \"" + word + "\" is not one of 1 to " + std::to_string(count) + ", odd or even");
+					for (int i = tag == "odd" ? 1 : 2; i <= count; i += 2) { picked[static_cast<std::size_t>(i)] = true; }
 				}
 			}
-			if (!any) { fail(where, "number=\"\" picks nothing; give numbers from 1 to " + std::to_string(count) + ", odd or even"); }
+			if (!any) { fail(where, "picks nothing; give number=\"...\", a <number> for each, <odd /> or <even />"); }
 
 			return picked;
 		}
@@ -2178,9 +2182,10 @@ namespace xge
 
 				if (tag == "row" || tag == "column")
 				{
-					const std::string here = where + " > <" + tag + " number=\"" + child->getAttribute("number") + "\">";
+					const std::string number = child->getAttribute("number");
+					const std::string here = where + " > <" + tag + (number.empty() ? std::string() : " number=\"" + number + "\"") + ">";
 					std::vector<bool> picked = readPick(*child, tag == "row" ? rows : columns, here);
-					GroupPart line = readGroupPart(std::move(child), here, { "sprite", "animation", "velocity", "padding", "variables" },
+					GroupPart line = readGroupPart(std::move(child), here, { "number", "odd", "even", "sprite", "animation", "velocity", "padding", "variables" },
 						"a <" + tag + "> can give <sprite>s, an <animation>, a <velocity>, a <padding> and <variables>");
 					if (tag == "row") { line.rows = std::move(picked); }
 					else
@@ -2422,19 +2427,51 @@ namespace xge
 			std::map<std::string, std::vector<RawCommand>> axes;
 		};
 
-		// The <input>s under a node (a state's <inputs>, or a <keys> set): a key,
-		// or several keys separated by spaces (button="a left"), or a control
-		// that points (axis="mouse.x"), and the commands each one runs. One
-		// given twice keeps the later binding.
+		// The names a node gives one way or the other: one by an attribute
+		// (button="space"), several by an element each, written first
+		// (<button>space</button><button>p</button>). `rest` is left at the
+		// first child that is not one of them.
+		std::vector<std::string> namesGiven(const XmlNode& node, const std::string& word, const std::string& where, std::unique_ptr<XmlNode>* rest = nullptr)
+		{
+			std::vector<std::string> names;
+			const std::string attribute = node.getAttribute(word);
+			if (!attribute.empty())
+			{
+				if (attribute.find_first_of(" \t\n") != std::string::npos)
+				{
+					fail(where, word + "=\"" + attribute + "\" names several; write each as a <" + word + "> of its own");
+				}
+				names.push_back(attribute);
+			}
+
+			std::unique_ptr<XmlNode> child = node.getFirstChild();
+			for (; child != nullptr && child->getName() == word; child = child->getNextSibling())
+			{
+				if (!attribute.empty()) { fail(where, "has " + word + "=\"" + attribute + "\" and a <" + word + ">; use one or the other"); }
+				const std::string name = readText(*child);
+				if (name.empty()) { fail(where, "has an empty <" + word + ">"); }
+				names.push_back(name);
+			}
+			if (rest) { *rest = std::move(child); }
+			return names;
+		}
+
+		// The <input>s under a node (a state's <inputs>, or a <keys> set): a key
+		// (button="a"), or several, a <button> each, or a control that points
+		// (axis="mouse.x"), and the commands each one runs. One given twice
+		// keeps the later binding.
 		void readInputs(const XmlNode& node, const std::string& where, KeyBindings& out)
 		{
 			for (std::unique_ptr<XmlNode> input = node.getFirstChild(); input != nullptr; input = input->getNextSibling())
 			{
-				const std::string buttons = input->getAttribute("button");
+				if (input->getName() == "keys") { continue; } // a state's <inputs> names its sets first
+				if (input->getName() != "input") { fail(where, "has <" + input->getName() + ">, which is not an <input>"); }
+				std::unique_ptr<XmlNode> commandsStart;
+				const std::vector<std::string> buttons = namesGiven(*input, "button", where + " > <input>", &commandsStart);
 				const std::string axis = input->getAttribute("axis");
 				if (buttons.empty() == axis.empty())
 				{
-					fail(where, "an <input> names a button=\"...\" or an axis=\"...\", one of the two");
+					fail(where, "an <input> names a button (button=\"...\", or a <button> each) or an axis=\"...\", one of the two");
 				}
 				if (!axis.empty())
 				{
@@ -2442,13 +2479,10 @@ namespace xge
 					continue;
 				}
 
-				const std::vector<RawCommand> commands = readCommands(input->getFirstChild(), where + " > <input button=\"" + buttons + "\">");
-
-				std::istringstream words(buttons);
-				for (std::string button; words >> button;)
-				{
-					out.buttons[button] = commands;
-				}
+				std::string written;
+				for (const std::string& button : buttons) { written += (written.empty() ? "" : " ") + button; }
+				const std::vector<RawCommand> commands = readCommands(std::move(commandsStart), where + " > <input " + written + ">");
+				for (const std::string& button : buttons) { out.buttons[button] = commands; }
 			}
 		}
 
@@ -2777,14 +2811,14 @@ namespace xge
 				rawState.music = requireAttribute(*music, "sound", where + " > <music>");
 			}
 
-			// <inputs>: the named <keys> sets it uses (keys="player menu"), in
-			// order, each over the one before, then its own <input>s over those: a
-			// state can use a set and still give one of its keys a job of its own.
+			// <inputs>: the named <keys> sets it uses (keys="player", or a <keys>
+			// each), in order, each over the one before, then its own <input>s
+			// over those: a state can use a set and still give one of its keys a
+			// job of its own.
 			std::unique_ptr<XmlNode> inputs = rawState.from.empty() ? requireChild(state, "inputs", where) : findChild(&state, "inputs");
 			if (inputs)
 			{
-				std::istringstream setNames(inputs->getAttribute("keys"));
-				for (std::string setName; setNames >> setName;)
+				for (const std::string& setName : namesGiven(*inputs, "keys", where + " > <inputs>"))
 				{
 					const auto set = keySets.find(setName);
 					if (set == keySets.end()) { fail(where + " > <inputs>", "keys=\"" + setName + "\" names no <keys> set"); }

@@ -254,10 +254,10 @@
         </object>
       </objects>
       <inputs>
-        <input button="up w"><trigger object="lander" action="thrust" /></input>
-        <input button="left a"><trigger object="lander" action="left" /></input>
-        <input button="right d"><trigger object="lander" action="right" /></input>
-        <input button="space p escape"><push state="paused" /></input>
+        <input><button>up</button><button>w</button><trigger object="lander" action="thrust" /></input>
+        <input><button>left</button><button>a</button><trigger object="lander" action="left" /></input>
+        <input><button>right</button><button>d</button><trigger object="lander" action="right" /></input>
+        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- the last lander down with no fuel left -->
@@ -313,7 +313,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <!-- down on a pad: the lander stays still while the points are shown, then the next one comes -->
@@ -332,7 +332,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><push state="paused" /></input>
+        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><every>2.5</every><inc variable="lander.ready" /><pop /></timer>

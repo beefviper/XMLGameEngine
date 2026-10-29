@@ -459,6 +459,9 @@
     <xsl:variable name="keys">
       <xsl:for-each select="($nodes | $nodes//*)[self::inputs]">
         <xsl:value-of select="concat(' ', normalize-space(@keys), ' ')" />
+        <xsl:for-each select="keys">
+          <xsl:value-of select="concat(' ', normalize-space(.), ' ')" />
+        </xsl:for-each>
       </xsl:for-each>
     </xsl:variable>
     <xsl:variable name="more"

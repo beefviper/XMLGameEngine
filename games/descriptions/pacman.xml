@@ -293,7 +293,7 @@
         <show object="highlabel" />
       </shows>
       <inputs>
-        <input button="space pad1.start">
+        <input><button>space</button><button>pad1.start</button>
           <push state="playing" />
           <push state="ready" />
         </input>
@@ -1004,19 +1004,19 @@
       </shows>
       <music sound="siren" />
       <inputs>
-        <input button="a left pad1.left">
+        <input><button>a</button><button>left</button><button>pad1.left</button>
           <trigger object="pacman" action="left" />
         </input>
-        <input button="d right pad1.right">
+        <input><button>d</button><button>right</button><button>pad1.right</button>
           <trigger object="pacman" action="right" />
         </input>
-        <input button="w up pad1.up">
+        <input><button>w</button><button>up</button><button>pad1.up</button>
           <trigger object="pacman" action="up" />
         </input>
-        <input button="s down pad1.down">
+        <input><button>s</button><button>down</button><button>pad1.down</button>
           <trigger object="pacman" action="down" />
         </input>
-        <input button="space p escape pad1.start">
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button>
           <push state="paused" />
         </input>
       </inputs>
@@ -1129,7 +1129,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="p escape">
+        <input><button>p</button><button>escape</button>
           <push state="paused" />
         </input>
       </inputs>
@@ -1167,7 +1167,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape pad1.start">
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button>
           <pop />
         </input>
       </inputs>
@@ -1197,7 +1197,7 @@
       </shows>
       <music sound="lose" />
       <inputs>
-        <input button="space pad1.start">
+        <input><button>space</button><button>pad1.start</button>
           <reset />
         </input>
       </inputs>

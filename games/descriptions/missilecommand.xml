@@ -373,12 +373,12 @@
         </scene>
       </scenes>
       <inputs>
-        <input button="w up"><trigger object="sight" action="up" /></input>
-        <input button="s down"><trigger object="sight" action="down" /></input>
-        <input button="a left"><trigger object="sight" action="left" /></input>
-        <input button="d right"><trigger object="sight" action="right" /></input>
+        <input><button>w</button><button>up</button><trigger object="sight" action="up" /></input>
+        <input><button>s</button><button>down</button><trigger object="sight" action="down" /></input>
+        <input><button>a</button><button>left</button><trigger object="sight" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="sight" action="right" /></input>
         <input button="space"><trigger object="base" action="launch" /></input>
-        <input button="p escape"><push state="paused" /></input>
+        <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- every city gone -->
@@ -401,7 +401,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
 

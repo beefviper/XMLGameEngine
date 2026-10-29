@@ -309,10 +309,10 @@
       </objects>
       <music sound="sonar" />
       <inputs>
-        <input button="a left"><trigger object="ship" action="left" /></input>
-        <input button="d right"><trigger object="ship" action="right" /></input>
+        <input><button>a</button><button>left</button><trigger object="ship" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="ship" action="right" /></input>
         <input button="space"><trigger object="ship" action="drop" /></input>
-        <input button="p escape"><push state="paused" /></input>
+        <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="status" variable="time">
@@ -343,7 +343,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <state name="gameover">

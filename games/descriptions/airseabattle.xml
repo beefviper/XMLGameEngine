@@ -305,7 +305,7 @@
         <input button="down"><trigger object="gun2" action="up" /></input>
         <input button="right"><trigger object="gun2" action="right" /></input>
         <input button="up"><trigger object="gun2" action="fire" /></input>
-        <input button="space p escape"><push state="paused" /></input>
+        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="status" variable="time">
@@ -336,7 +336,7 @@
         <show state="battle" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <!-- Time up: the scores are compared, and the state that says who won takes this one's place. -->

@@ -528,6 +528,12 @@ namespace xge
 		if (type_ == "unsignedShort") { return isIntegerInRange(value, 0, 65535); }
 		if (type_ == "positiveInteger") { return isIntegerInRange(value, 1, INT64_MAX); }
 		if (type_ == "nonNegativeInteger") { return isIntegerInRange(value, 0, INT64_MAX); }
+		// One name, nothing between: letters, digits and . - _ : (a key, a set).
+		if (type_ == "NMTOKEN")
+		{
+			return !value.empty() && std::all_of(value.begin(), value.end(), [](unsigned char c)
+				{ return std::isalnum(c) != 0 || c == '.' || c == '-' || c == '_' || c == ':' || c >= 0x80; });
+		}
 
 		// xs:string, and anything else this validator doesn't specifically
 		// know about - see the class comment in load/xsd.h for why that's

@@ -55,7 +55,7 @@ The rule, reached by removing a small scripting language that had grown inside a
 
 ### Lists and parts still packed into attribute strings
 
-**Status:** Open (noted 2026-10-13). Beef: several values in one string break the rule above, even though each value is only a name; the schema sees one string and the reader splits it.
+**Status:** Built 2026-10-29 (noted 2026-10-13). Beef: several values in one string break the rule above, even though each value is only a name; the schema sees one string and the reader splits it.
 
 - `<input button="space p escape">`: several keys in one attribute (56 inputs in the games repeat another's commands and could use it, which is why it came up).
 - `<inputs keys="player menu">`: several `<keys>` sets.
@@ -63,4 +63,5 @@ The rule, reached by removing a small scripting language that had grown inside a
 - `pitch="F#4"` and `to=`: a letter, a sharp or flat and an octave in one word, or a number of hertz ([sound](33-sound.md)).
 - The XSD can check these only with a pattern; XSLT has to split them (the windows-cpp generator walks the words one by one).
 - Beef (2026-10-16): leave these, and the arithmetic still written as text, as they are for now; we will probably change both at some point.
-- Possible forms, none chosen: one element per value (`<input><button>space</button><button>p</button>...`), an attribute per part for notes (`<note letter="F" sharp="true" octave="4">`, or `<note><pitch>...</pitch>`), or keep a single name per attribute and repeat the element. Shared `<shows>` sets (2026-10-13) avoid the problem: a state takes one set per `<show set="..."/>`.
+- Possible forms: one element per value (`<input><button>space</button><button>p</button>...`), an attribute per part for notes (`<note letter="F" sharp="true" octave="4">`, or `<note><pitch>...</pitch>`), or keep a single name per attribute and repeat the element. Shared `<shows>` sets (2026-10-13) avoid the problem: a state takes one set per `<show set="..."/>`.
+- **Chosen (2026-10-29, Beef picked it):** an attribute holds one name (`xs:NMTOKEN`, so the schema refuses a space); several are an element each, written first: `<button>` in an `<input>`, `<keys>` in `<inputs>`, `<number>` in a `<row>` or `<column>`, and `<odd />`/`<even />` for those picks. `<button>`, not `<key>`, since it also names a pad's buttons. One element read both ways is `namesGiven` in `load/xml.cpp` (`names-given` in `data.xsl`). Rejected: `<key value="s" />`, a string slot in a wrapper; repeating the input per key (about 100 more inputs, the commands written again). A note's `pitch="F#4"` stays: it is one standard name, like a colour's.

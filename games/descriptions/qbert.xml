@@ -783,11 +783,11 @@
         <show object="best" />
       </shows>
       <inputs>
-        <input button="w up"><trigger object="qbert" action="upright" /></input>
-        <input button="d right"><trigger object="qbert" action="downright" /></input>
-        <input button="s down"><trigger object="qbert" action="downleft" /></input>
-        <input button="a left"><trigger object="qbert" action="upleft" /></input>
-        <input button="space p escape"><push state="paused" /></input>
+        <input><button>w</button><button>up</button><trigger object="qbert" action="upright" /></input>
+        <input><button>d</button><button>right</button><trigger object="qbert" action="downright" /></input>
+        <input><button>s</button><button>down</button><trigger object="qbert" action="downleft" /></input>
+        <input><button>a</button><button>left</button><trigger object="qbert" action="upleft" /></input>
+        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="player" variable="cubes">
@@ -821,7 +821,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <state name="won">

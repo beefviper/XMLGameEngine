@@ -442,8 +442,8 @@ TEST_CASE("the padding of a row or column is the gap before it", "[group][cells]
 TEST_CASE("a row or column picks by number, several numbers, odd or even", "[group][cells]")
 {
 	Loaded loaded{ gameXml(wallWith(
-		"<row number=\"odd\"><sprite><rectangle><color>color.blue</color></rectangle></sprite></row>"
-		"<row number=\"2 4\"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>", "5"),
+		"<row><odd /><sprite><rectangle><color>color.blue</color></rectangle></sprite></row>"
+		"<row><number>2</number><number>4</number><sprite><rectangle><color>color.green</color></rectangle></sprite></row>", "5"),
 		kShowWall) };
 	Game& game = loaded.game;
 
@@ -509,7 +509,7 @@ TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where
 	SECTION("two rows that change the same variable in one cell")
 	{
 		REQUIRE_THROWS_WITH(refused(wallWith(
-			"<row number=\"odd\"><variables><variable name=\"points\">2</variable></variables></row>"
+			"<row><odd /><variables><variable name=\"points\">2</variable></variables></row>"
 			"<row number=\"1\"><variables><variable name=\"points\">3</variable></variables></row>")),
 			ContainsSubstring("<variable name=\"points\">"));
 	}
@@ -855,11 +855,11 @@ TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group
 		{ "a position that is not an x and a y", "descriptions/spacerace.xml", "<y>50</y>", "<z>50</z>", "z" },
 		{ "a group with no name", "descriptions/combat.xml", "<group name=\"yellow\">", "<group>", "missing required attribute 'name'" },
 		{ "a lockstep flag that is not true or false", "descriptions/spacerace.xml", "<collisions>", "<collisions><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
-		{ "a member in a group of cells", "descriptions/spacerace.xml", "<row number=\"1 5 9\">", "<member /><row number=\"1 5 9\">", "row" },
+		{ "a member in a group of cells", "descriptions/spacerace.xml", "<row><number>1</number><number>5</number><number>9</number>", "<member /><row><number>1</number><number>5</number><number>9</number>", "row" },
 		{ "a member beside a group inside a group", "descriptions/combat.xml", "<group name=\"yellow\">", "<member /><group name=\"yellow\">", "group" },
 		{ "a member's tether that leaves out an end", "descriptions/fishingderby.xml", "<member name=\"rod1\"><position><x>206</x></position></member>",
 			"<member name=\"rod1\"><sprite><tether from=\"rod1\" /></sprite><position><x>206</x></position></member>", "missing required attribute 'to'" },
-		{ "a cell with no column", "descriptions/spacerace.xml", "<row number=\"1 5 9\">", "<cell row=\"1\" /><row number=\"1 5 9\">", "missing required attribute 'column'" },
+		{ "a cell with no column", "descriptions/spacerace.xml", "<row><number>1</number><number>5</number><number>9</number>", "<cell row=\"1\" /><row><number>1</number><number>5</number><number>9</number>", "missing required attribute 'column'" },
 	};
 
 	for (const Mistake& mistake : mistakes)

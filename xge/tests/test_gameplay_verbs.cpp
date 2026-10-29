@@ -383,7 +383,7 @@ TEST_CASE("<reverse /> turns an object round, and a collision can reset another 
 TEST_CASE("a <keys> set is shared by states, one <input> can name several keys, and a state's own binding wins", "[keys]")
 {
 	const std::string keys = "<keys name=\"move\">"
-		"<input button=\"a left\"><trigger object=\"man\" action=\"left\" /></input>"
+		"<input><button>a</button><button>left</button><trigger object=\"man\" action=\"left\" /></input>"
 		"<input button=\"space\"><push state=\"paused\" /></input>"
 		"</keys>";
 	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">2</move></action></actions>";
@@ -408,6 +408,27 @@ TEST_CASE("a <keys> set is shared by states, one <input> can name several keys, 
 	// The special state keeps the set's Left, and A is its own.
 	CHECK(std::holds_alternative<CmdTriggerAction>(special.input.at(KeyCode::Left).at(0)));
 	CHECK(std::holds_alternative<CmdPushState>(special.input.at(KeyCode::A).at(0)));
+}
+
+TEST_CASE("a state takes several <keys> sets, a <keys> each, each over the one before", "[keys]")
+{
+	const std::string keys = "<keys name=\"move\"><input button=\"a\"><trigger object=\"man\" action=\"left\" /></input></keys>"
+		"<keys name=\"menu\"><input button=\"space\"><push state=\"paused\" /></input><input button=\"a\"><push state=\"paused\" /></input></keys>";
+	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">2</move></action></actions>";
+
+	Loaded loaded(gameXml(
+		box("man", 100, 100, 20, 20, "<enabled>false</enabled>", {}, actions),
+		state("playing", { "man" }, "<keys>move</keys><keys>menu</keys>")
+		+ state("paused", { "man" })
+		, keys), XmlBackend::TinyXml2);
+
+	const State& playing = loaded.game.getStates().at(0);
+	CHECK(std::holds_alternative<CmdPushState>(playing.input.at(KeyCode::Space).at(0)));
+	CHECK(std::holds_alternative<CmdPushState>(playing.input.at(KeyCode::A).at(0))); // menu, written second, wins
+
+	// Both in one keys= is a list in a string: the schema turns it away.
+	CHECK_THROWS(Loaded(gameXml(box("man", 100, 100, 20, 20, "<enabled>false</enabled>", {}, actions),
+		state("playing", { "man" }, {}, {}, " keys=\"move menu\"") + state("paused", { "man" }), keys)));
 }
 
 TEST_CASE("a <shows> set is shared by states, can take an earlier set, and a state adds its own objects", "[shows]")

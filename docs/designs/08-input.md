@@ -6,7 +6,7 @@
 
 - An **object** names what it can do: `<action name="up"><move direction="up">step</move></action>`. A **state** binds a key to a name: `<input button="w"><trigger object="paddle1" action="up" /></input>`. The **key** is only a label.
 - Consequences: remapping is one attribute in one state; the same key can do different things in different states; changing what `up` does is one edit on the object; the same action name can mean different things on different objects (polymorphism with no class hierarchy).
-- Built on top: one `button` can name several keys (`"a left"`), and named key sets ([below](#key-sets)).
+- Built on top: one input can name several keys, a `<button>` each (`<button>a</button><button>left</button>`), and named key sets ([below](#key-sets)).
 - Held `<move>`s record each direction's step; velocity is recomputed from all four on every key change (replacing an earlier last-key-wins), so Down plus tapping Up cancels, and two keys make a diagonal.
 - One-shot verbs (`<hop>`, `<jump>`, `<fire>`) belong to the press.
 
@@ -22,8 +22,8 @@
 ### Key sets
 
 - Need (2026-10-03): every play state of a game with waves or rooms copied the same bindings.
-- **Chosen:** a named `<keys name="...">` set at the top of `<states>` holds `<input>`s; `<inputs keys="a b">` takes one or more (each over the one before) and the state's own `<input>`s go over them, key by key. Chosen over copying bindings.
-- `keys="a b"` packs names in a string, logged as open in [file-format](02-file-format.md#lists-and-parts-still-packed-into-attribute-strings).
+- **Chosen:** a named `<keys name="...">` set at the top of `<states>` holds `<input>`s; `<inputs keys="a">` takes one, a `<keys>` each takes several (each over the one before) and the state's own `<input>`s go over them, key by key. Chosen over copying bindings.
+- Several sets were `keys="a b"`, names packed in a string, until 2026-10-29 ([file-format](02-file-format.md#lists-and-parts-still-packed-into-attribute-strings)).
 
 ### Held keys across state changes
 

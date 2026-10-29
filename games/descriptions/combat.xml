@@ -207,13 +207,13 @@
         <input button="s"><trigger object="tank1" action="back" /></input>
         <input button="a"><trigger object="tank1" action="left" /></input>
         <input button="d"><trigger object="tank1" action="right" /></input>
-        <input button="f lshift"><trigger object="tank1" action="fire" /></input>
+        <input><button>f</button><button>lshift</button><trigger object="tank1" action="fire" /></input>
         <input button="up"><trigger object="tank2" action="forward" /></input>
         <input button="down"><trigger object="tank2" action="back" /></input>
         <input button="left"><trigger object="tank2" action="left" /></input>
         <input button="right"><trigger object="tank2" action="right" /></input>
-        <input button="rshift rcontrol"><trigger object="tank2" action="fire" /></input>
-        <input button="space p escape"><push state="paused" /></input>
+        <input><button>rshift</button><button>rcontrol</button><trigger object="tank2" action="fire" /></input>
+        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><after>136</after><push state="wins" /></timer>
@@ -230,7 +230,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space p escape"><pop /></input>
+        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
     <state name="wins">
