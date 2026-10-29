@@ -8,6 +8,7 @@
 #include "picture/bitmap.h"
 #include "picture/color.h"
 #include "game/command.h"
+#include "load/calc.h"
 #include "game/object.h"
 #include "game/random.h"
 #include "audio/sound.h"
@@ -27,20 +28,14 @@ namespace xge
 {
 	// Works out what load/xml read: every RawValue to a number, every RawSprite
 	// to the Picture the window backends draw, every RawCommand to a
-	// typed Command. The arithmetic in a value's text is exprtk's job; the tags
-	// (<random>) and everything that used to be a function call in the game
-	// file (shapes, commands) are handled here and in game/command.cpp, not by
-	// exprtk.
+	// typed Command. The arithmetic in a value's text is load/calc's job; the
+	// tags (<random>, <formula>) are handled here and in game/command.cpp.
 	class game_expr
 	{
 	public:
-		// exprtk's table, parser and compiled texts live in expr.cpp alone
-		// (Exprtk): exprtk is a very large header, and every file that
-		// includes game/game.h would otherwise compile it again.
-		game_expr();
-		~game_expr();
-		game_expr(game_expr&&) noexcept;
-		game_expr& operator=(game_expr&&) noexcept;
+		game_expr() = default;
+		game_expr(game_expr&&) noexcept = default;
+		game_expr& operator=(game_expr&&) noexcept = default;
 		game_expr(const game_expr&) = delete;
 		game_expr& operator=(const game_expr&) = delete;
 
@@ -114,20 +109,18 @@ namespace xge
 		bool commandValues{ false };
 		std::set<std::string> warnedDivisions;
 
-		// The symbol table, the parser, and every text compiled so far
+		// The names a text may read, and every text compiled so far
 		// (evaluateExpression); with the names each text reads (namesIn):
-		// exprtk's parser is costly to build and run, and the same texts are
-		// worked out again and again.
-		struct Exprtk;
-		std::unique_ptr<Exprtk> math;
+		// the same texts are worked out again and again.
+		Calc calc;
+		std::unordered_map<std::string, Calc::Program> compiled;
 		mutable std::unordered_map<std::string, std::vector<std::string>> namesInText;
 		const std::vector<std::string>& namesIn(const std::string& text) const;
 
 		// A number a text may read by name (an object's variable, size or live
-		// number), bound into symbolTable only once a text reads it: a big
-		// game has thousands, and most are never read. Names are as exprtk
-		// sees them, without case; the first bound under a name keeps it, as
-		// exprtk's own table would.
+		// number), bound into calc only once a text reads it: a big game has
+		// thousands, and most are never read. Names are without case; the
+		// first bound under a name keeps it.
 		void bind(const std::string& name, float& value);
 		std::unordered_map<std::string, float*> unbound;
 

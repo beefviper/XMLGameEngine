@@ -5,6 +5,7 @@
 
 #include "load/expr.h"
 
+#include "load/calc.h"
 #include "load/check.h"
 
 #include "picture/color.h"
@@ -23,35 +24,8 @@
 #include <set>
 #include <stdexcept>
 
-// exprtk is a third-party header. MSVC reports C4702 (unreachable code) from
-// inside it during code generation, which /external:W0 does not cover, so the
-// warning is turned off just around the include. Other compilers do not
-// understand this pragma, hence the _MSC_VER test.
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4702)
-#endif
-
-#include <exprtk.hpp>
-
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-
 namespace xge
 {
-	struct game_expr::Exprtk
-	{
-		exprtk::symbol_table<float> symbolTable;
-		exprtk::parser<float> parser;
-		std::unordered_map<std::string, exprtk::expression<float>> compiled;
-	};
-
-	game_expr::game_expr() : math(std::make_unique<Exprtk>()) {}
-	game_expr::~game_expr() = default;
-	game_expr::game_expr(game_expr&&) noexcept = default;
-	game_expr& game_expr::operator=(game_expr&&) noexcept = default;
-
 	namespace
 	{
 		// Whether a text sprite has a <number> or a <letter> among its pieces.
@@ -75,13 +49,12 @@ namespace xge
 		checkColor(windowDesc.background, "<window> > <background>");
 
 		// add constants to symbol table (pi, for an angle in a value, among them)
-		math->symbolTable.add_constants();
-		math->symbolTable.add_constant("window.top", 0);
-		math->symbolTable.add_constant("window.bottom", windowDesc.height);
-		math->symbolTable.add_constant("window.left", 0);
-		math->symbolTable.add_constant("window.right", windowDesc.width);
-		math->symbolTable.add_constant("window.width.center", windowDesc.width / 2);
-		math->symbolTable.add_constant("window.height.center", windowDesc.height / 2);
+		calc.constant("window.top", 0);
+		calc.constant("window.bottom", windowDesc.height);
+		calc.constant("window.left", 0);
+		calc.constant("window.right", windowDesc.width);
+		calc.constant("window.width.center", windowDesc.width / 2);
+		calc.constant("window.height.center", windowDesc.height / 2);
 
 		// add variables from XML file to symbol table, in the order the file
 		// declares them so that one can use the ones before it
@@ -89,7 +62,7 @@ namespace xge
 		{
 			const float value = evaluate(rawValue, "variable '" + name + "'");
 			variables[name] = value;
-			math->symbolTable.add_constant(name, value);
+			calc.constant(name, value);
 		}
 
 		// An object's named timer is a number of the object's (bomb.fuse), its
@@ -1313,27 +1286,28 @@ namespace xge
 		// (a timer starting over, a command made again each time it runs)
 		// only reads the compiled one again. The symbols it reads are bound
 		// by reference, so it always sees the numbers as they are now.
-		auto found = math->compiled.find(text);
-		if (found == math->compiled.end())
+		auto found = compiled.find(text);
+		if (found == compiled.end())
 		{
-			// Only the names it reads go into the symbol table, the first
-			// time any text reads them (see bind).
+			// Only the names it reads go into calc, the first time any text
+			// reads them (see bind).
 			for (const std::string& name : namesIn(text))
 			{
 				if (const auto waiting = unbound.find(name); waiting != unbound.end())
 				{
-					math->symbolTable.add_variable(name, *waiting->second);
+					calc.variable(name, *waiting->second);
 					unbound.erase(waiting);
 				}
 			}
 
-			exprtk::expression<float> made;
-			made.register_symbol_table(math->symbolTable);
-			if (!math->parser.compile(text, made))
+			try
 			{
-				throw std::runtime_error(where + ": cannot read \"" + text + "\": " + math->parser.error().c_str());
+				found = compiled.emplace(text, calc.compile(text)).first;
 			}
-			found = math->compiled.emplace(text, made).first;
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(where + ": cannot read \"" + text + "\": " + error.what());
+			}
 		}
 
 		// Where things are has no meaning until the game runs.
@@ -1349,7 +1323,7 @@ namespace xge
 			}
 			loadCheckedTexts.insert(text);
 		}
-		return found->second.value();
+		return Calc::run(found->second);
 	}
 
 	void game_expr::bind(const std::string& name, float& value)
