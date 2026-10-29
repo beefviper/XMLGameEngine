@@ -602,3 +602,60 @@ TEST_CASE("with the hammer a fireball is smashed for 500", "[donkeykong]")
 	CHECK(play.variable("score") == 500);
 	CHECK(play.variable("lives") == 3);
 }
+
+TEST_CASE("a barrel that meets Jumpman on a ladder costs a life, coming down it or rolling past its foot", "[donkeykong]")
+{
+	// A climb moves him by his velocity, so a touch is found as for any
+	// move: before, climbing set his place with no velocity, and a barrel
+	// on the same ladder, also climbing, was never even looked at.
+	{
+		DonkeyKong play;
+		play.start();
+
+		// Halfway up the first ladder (x 510 to 530).
+		play.standAt(504.0f, "floor");
+		play.engine.handleKeyPressed(KeyCode::W);
+		play.frames(15);
+		play.engine.handleKeyReleased(KeyCode::W);
+		REQUIRE(play.man().climbing);
+
+		// A barrel at the top of it, unlucky, so it comes down.
+		Object& barrel = play.barrelAt(520.0f - 12.0f, "first", 1.0f);
+		play.game.setVariable(barrel.name, "luck", 0.0f);
+		play.frames(60);
+		CHECK(play.variable("lives") == 2);
+	}
+	{
+		DonkeyKong play;
+		play.start();
+
+		// Just up the ladder, a barrel rolling along the floor under him.
+		play.standAt(504.0f, "floor");
+		play.engine.handleKeyPressed(KeyCode::W);
+		play.frames(3);
+		play.engine.handleKeyReleased(KeyCode::W);
+		REQUIRE(play.man().climbing);
+		play.barrelAt(600.0f, "floor", -2.5f);
+		play.frames(60);
+		CHECK(play.variable("lives") == 2);
+	}
+}
+
+TEST_CASE("a barrel going down a ladder passes the girders on the way and rolls on only at the foot", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	play.standAt(100.0f, "floor");
+
+	Object& barrel = play.barrelAt(520.0f - 12.0f, "first", 1.0f);
+	play.game.setVariable(barrel.name, "luck", 0.0f);
+	play.frames(20);
+	CHECK(barrel.climbing);
+	CHECK(barrel.lookName() == "down");
+	CHECK(barrel.velocity.x == 0.0f);
+
+	for (int frame = 0; frame < 120 && barrel.velocity.x == 0.0f; ++frame) { play.frames(1); }
+	CHECK_FALSE(barrel.climbing);
+	CHECK(barrel.velocity.x < 0.0f);
+	CHECK(barrel.position.y + barrel.size.y == Approx(play.top("floor", barrel.position.x + barrel.size.x / 2.0f)).margin(1.0f));
+}

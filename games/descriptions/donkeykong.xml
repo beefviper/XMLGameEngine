@@ -223,9 +223,11 @@
           <condition variable="luck"><below>0.3</below></condition>
           <trigger action="descend" />
         </collision>
-        <!-- off the foot of it, standing still: it rolls on the other way -->
+        <!-- landed off the foot of it: it rolls on the other way (going
+             down the ladder it passes through girders, still moving down) -->
         <collision class="girder" sprite="down">
           <condition variable="velocity.x"><equal>0</equal></condition>
+          <condition variable="velocity.y"><equal>0</equal></condition>
           <set variable="self.velocity.x">self.way</set>
           <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
           <become sprite="rolling" />
@@ -326,8 +328,10 @@
           <condition variable="luck"><below>0.5</below></condition>
           <trigger action="rise" />
         </collision>
+        <!-- landed at the top of it, it burns on along the girder -->
         <collision class="girder" sprite="climbing">
           <condition variable="velocity.x"><equal>0</equal></condition>
+          <condition variable="velocity.y"><equal>0</equal></condition>
           <set variable="self.velocity.x">self.way</set>
           <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
           <become sprite="burning" />

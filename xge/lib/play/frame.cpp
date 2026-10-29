@@ -46,7 +46,8 @@ namespace xge
 		// asked to go up or down it, and can, gets on it, lined up with its
 		// middle. On it, it goes the step held each frame (none held: it stays
 		// put), its feet kept between the two ends, with no pull and no
-		// landing, and its own velocity at 0 so no key walks it off. Reaching
+		// landing. The step is its velocity (none across, so no key walks it
+		// off), so it touches what it passes as anything moving does. Reaching
 		// either end it gets off, standing there, and the keys held take it on
 		// as before; a climb a rule or timer started lets go there. A ladder
 		// is also pieces stacked one on another, as wide and lined up: the
@@ -97,13 +98,12 @@ namespace xge
 
 				const float step = object.activeClimb[1] - object.activeClimb[0];
 				const bool wasClimbing = object.climbing;
-				if (!climbLadder(object.position, object.size, step, object.climbing, object.grounded, whole))
+				if (!climbLadder(object.position, object.velocity, object.size, step, object.climbing, object.grounded, whole))
 				{
 					continue;
 				}
 
 				if (!wasClimbing) { object.leaping = false; }
-				object.velocity = {};
 				if (wasClimbing && !object.climbing && object.climbOnce)
 				{
 					object.activeClimb = {};
