@@ -46,6 +46,8 @@
   <file>lib/game/scenes.cpp</file>
   <file>lib/load/expr.h</file>
   <file>lib/load/expr.cpp</file>
+  <file>lib/load/check.h</file>
+  <file>lib/load/check.cpp</file>
   <file>lib/play/collision.h</file>
   <file>lib/play/collision.cpp</file>
   <file>lib/play/executor.h</file>

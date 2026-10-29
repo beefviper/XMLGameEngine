@@ -30,7 +30,7 @@ Chosen 2026-10-27 (the author's idea).
 | state input, condition, timer | changes, flow |
 | computer player's condition | press |
 
-- The loader's table is built from the same groups (`ruleFor` in `load/expr.cpp`), so both say the same.
+- The loader's table is built from the same groups (`ruleFor` in `load/check.cpp`), so both say the same.
 - Sorting by what the engine did found gaps, filled rather than written into the groups: an action now stops, reverses, releases, ranks, steers and runs another action (a circle of `<trigger>`s is a load error), and a collision rule fires.
 - **Open:** the two kinds of `<collision>` are told apart by attributes, which XSD 1.0 cannot; splitting them into two tags would let the schema check it too.
 

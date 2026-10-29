@@ -76,7 +76,7 @@ namespace xge
 
 		// Who runs a command, and where: what every verb looks at to know
 		// what to do. The places a verb may be written are the loader's
-		// (ruleFor in load/expr.cpp); this runs whatever got there.
+		// (ruleFor in load/check.cpp); this runs whatever got there.
 		struct Doer
 		{
 			// The object the command is about (a rule's, a timer's, an

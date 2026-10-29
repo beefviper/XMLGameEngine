@@ -82,7 +82,7 @@ Each rests on something that never changes while a game runs:
 ### Loading and checks
 
 - The schema checks shape and where commands go; the loader checks names once everything is built.
-- A verb is done in one place, `CommandExecutor::run` (`play/executor.cpp`), told by a `Doer` who runs it (an object or none, what it touched or which screen edge, key down or let go, in an action or not). `ruleFor` in `load/expr.cpp` and the schema's command groups say where it may be written; a new verb needs a line in all three. Use `didYouMean` and `listOf` (`load/spelling.cpp`) in any name error.
+- A verb is done in one place, `CommandExecutor::run` (`play/executor.cpp`), told by a `Doer` who runs it (an object or none, what it touched or which screen edge, key down or let go, in an action or not). `ruleFor` in `load/check.cpp` and the schema's command groups say where it may be written; a new verb needs a line in all three. Use `didYouMean` and `listOf` (`load/spelling.cpp`) in any name error.
 - Text falls back to the built-in 8x8 font when its font file is missing.
 
 ## Tests

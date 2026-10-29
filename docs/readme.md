@@ -815,7 +815,7 @@ A command is a tag in a list: a collision rule, an action, a key's `<input>`, a 
 
 ### Where a command can go
 
-Commands are sorted by what they need, and each place takes only the groups that mean something there. A command anywhere else is a schema error, and, for a game read without the schema, a load error listing what can go there (`ruleFor` in `load/expr.cpp`, built from the same groups as the schema).
+Commands are sorted by what they need, and each place takes only the groups that mean something there. A command anywhere else is a schema error, and, for a game read without the schema, a load error listing what can go there (`ruleFor` in `load/check.cpp`, built from the same groups as the schema).
 
 | Group | Commands | Needs |
 |---|---|---|
@@ -1420,7 +1420,8 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 |---|---|---|
 | reading | `load/xml.cpp` | the tags into a `GameData`, `readGame()`; checks of shape |
 | | `load/merge.cpp` | the [kit and from=](#the-kit-and-from) on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
-| | `load/expr.cpp` | exprtk (only this file includes it), values, `<formula>`, building `Object`s and `State`s, the load-time checks (`ruleFor`), pictures (`buildPicture`) |
+| | `load/expr.cpp` | exprtk (only this file includes it), values, `<formula>`, building `Object`s and `State`s, pictures (`buildPicture`) |
+| | `load/check.cpp` | the load-time checks of every name a command uses, and where each command may go (`ruleFor`) |
 | | `load/xsd.cpp`, `load/spelling.cpp` | the weak validator; "did you mean" (`didYouMean`, `listOf`) |
 | the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, and the answers to `FrameRules` (what the file says happens at an edge or a touch), carried out through `CommandExecutor` |
 | | `game/scenes.cpp` | `layOutScenes`: owned objects named by path, states `from=` others, names written in full |
