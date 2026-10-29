@@ -111,7 +111,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `depthcharge` | A/D, Space drops | charges off both sides, submarines in four lanes laying mines, 90 seconds |
 | `astrosmash` | A/D, Space fires | falling rocks that split, spinners, a spare base each 1,000 |
 | `lunarlander` | Left/Right turn, Up thrusts | land upright and slowly on pads worth 2X, 3X, 5X until the fuel is gone; [`<line>`](#lines) pictures, `pixel` collisions |
-| `asteroids` | Left/Right turn, Up thrusts, Space fires, Down hyperspace | rocks that break, waves, shots that wrap and run out, a ship that comes back when the middle is clear, a big saucer that shoots anywhere and a small one that aims (likelier as the score climbs), the heartbeat as music, the best score kept |
+| `asteroids` | Left/Right turn, Up thrusts, Space fires, Down hyperspace | rocks that break, waves, shots that wrap and run out, a ship that comes back when the middle is clear, a big saucer that shoots anywhere and a small one that aims (likelier as the score climbs), rocks that break the saucers, the ship's flame, the heartbeat as music, the best score kept |
 | `berserk` | W A S D walk and face, Space fires | four rooms as [maps](#maps), robots that patrol, line up and fire, Evil Otto, the exit shut behind you |
 | `demonattack` | A/D, Space fires | three waves of demons that fire back and split |
 | `frostbite` | W/S jump between rows, A/D walk | build the igloo by landing on white ice; three nights |
@@ -706,7 +706,7 @@ An object with several named sprites and no unnamed animation has **looks**: it 
 
 - **A look can count hits.** A brick of two looks, `whole` and `cracked`, has `<collision object="ball" sprite="cracked"><die /></collision>` and then `<collision object="ball" sprite="whole"><become sprite="cracked" /></collision>`. The rules for one touch run in order and each sees the look the one before left, so **write the last look first**.
 - **A look tells the next state something.** One `wins` state whose `winner` has a look per player: the condition that ends the game does `<become object="winner" sprite="player2" />` and then pushes it.
-- A look is any shape kind. An object with a `<heading>` has only one, and a look cannot be a text showing a `<number>` or `<letter>`.
+- A look is any shape kind, and cannot be a text showing a `<number>` or `<letter>`. With a `<heading>` every look (each frame of a moving one too) is kept to turn, so the look showing is drawn at the heading: Asteroids' ship has `coasting` and a flickering `burning`.
 
 **Looks that move.** A named `<animation name="walking">` is a look of its own, picked by name like a sprite (`<become sprite="walking" />`, a pose, a take). The looks are the named animations in the order written, then the sprites they leave out, and the object starts as the first (Coily's `egg` animation is listed before his `snake`). Animations are all named or none.
 
@@ -721,12 +721,13 @@ Three parts, after `<facing>`, give a walking, jumping thing its look and feel w
   <skidding sprite="skid" />
   <rising sprite="rising" />
   <falling sprite="falling" />
+  <thrusting sprite="burning" />
 </poses>
 <mirror>left</mirror>
 <grip>0.15</grip>
 ```
 
-- **`<poses>`** names the look for each way of moving, and the engine picks it every frame. `standing` is needed; walking falls back to standing, skidding to walking, falling to standing, rising to falling. In the air it is rising, then falling; on the ground standing when still, skidding when its grip has it sliding against its keys, walking otherwise. Poses are picked only while a pose look is showing, so a `<become>` to another look (Mario's `dead`) holds until a `<become>` puts a pose back.
+- **`<poses>`** names the look for each way of moving, and the engine picks it every frame. `standing` is needed; walking falls back to standing, skidding to walking, falling to standing, rising to falling, thrusting to standing. While a `<thrust>` is held it is thrusting; in the air it is rising, then falling; on the ground standing when still, skidding when its grip has it sliding against its keys, walking otherwise. Poses are picked only while a pose look is showing, so a `<become>` to another look (Mario's `dead`) holds until a `<become>` puts a pose back.
 - **`<mirror>left</mirror>`** (or `right`) is the way its pictures do not face: going that way they are drawn flipped. The way is the move key held, else a jump's way across, else its velocity; stopping keeps the last. Not with a `<heading>` or a `<hole>`.
 - **`<grip>`** (above 0 up to 1, 1 when left out) is how quickly its speed across follows its keys: each frame it goes that share of the way to what the keys ask, so Mario's `0.15` takes a moment to get going and slides. Up and down too when nothing pulls it. It also slows an object with no keys held, so give it only to something a player steers.
 - **Blinking.** `<set variable="mario.blink">2</set>` makes an object blink for two seconds, counting down by itself while in play. It is a live number, so a rule can leave a blinking player alone (`<condition object="mario" variable="blink"><atmost>0</atmost></condition>`). A reset ends it.
@@ -1462,7 +1463,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 **Pictures and sound**
 
 - Pictures drawn by the engine are fixed at load (an SVG at one scale; to show two sizes, make two sprites); they can be turned by a heading, swapped for another look, recoloured by a palette swap, flipped by a mirror and holed.
-- An animation has one interval for all its frames, cannot run once and stop, and cannot be started by a collision. An object with a `<heading>` has one look, and cannot take a palette swap.
+- An animation has one interval for all its frames, cannot run once and stop, and cannot be started by a collision. An object with a `<heading>` cannot take a palette swap.
 - Turning keeps the original and the one picture shown: about twice the memory. A big drawing costs its bounding box, four bytes a pixel (Lunar Lander's moon is about 580 KB).
 - Text is drawn with a font file, unsmoothed; the built-in 8x8 font is only a fallback, and its widths differ from the real font's.
 - An object's own variable named `width` or `height` shadows its size.

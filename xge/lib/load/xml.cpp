@@ -1347,9 +1347,9 @@ namespace xge
 				for (std::unique_ptr<XmlNode> pose = poses->getFirstChild(); pose != nullptr; pose = pose->getNextSibling())
 				{
 					const std::string tag = pose->getName();
-					if (tag != "standing" && tag != "walking" && tag != "skidding" && tag != "rising" && tag != "falling")
+					if (tag != "standing" && tag != "walking" && tag != "skidding" && tag != "rising" && tag != "falling" && tag != "thrusting")
 					{
-						fail(here, "unknown <" + tag + ">; expected <standing>, then any of <walking>, <skidding>, <rising> and <falling>");
+						fail(here, "unknown <" + tag + ">; expected <standing>, then any of <walking>, <skidding>, <rising>, <falling> and <thrusting>");
 					}
 					if (object.poses.count(tag)) { fail(here, "has two <" + tag + ">s"); }
 					object.poses[tag] = requireAttribute(*pose, "sprite", here + " > <" + tag + ">");

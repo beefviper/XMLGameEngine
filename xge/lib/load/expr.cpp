@@ -1599,18 +1599,20 @@ namespace xge
 		}
 		else if (!rawObject.looks.empty())
 		{
-			if (rawObject.hasHeading) { throw std::runtime_error(where + ": an object with a <heading> cannot have several looks"); }
-
 			for (const RawSprite& rawLook : rawObject.looks)
 			{
 				Object::Look look;
 				look.name = rawLook.name;
-				look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap);
+				std::shared_ptr<const Turnable> turned;
+				look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap,
+					rawObject.hasHeading ? &turned : nullptr);
+				if (turned) { look.turnables = { turned }; }
 				if (!rawLook.frames.empty())
 				{
 					// A look that moves: its pictures, all one size, and how long each shows.
 					const std::string here = where + " > <animation name=\"" + rawLook.name + "\">";
-					look.frames = buildAnimationBitmaps(rawLook.frames, here);
+					look.turnables.clear();
+					look.frames = buildAnimationBitmaps(rawLook.frames, here, rawObject.hasHeading ? &look.turnables : nullptr);
 					look.frameTicks = animationFramesOf(rawLook.interval, windowDesc, here);
 				}
 				look.shapeKind = shapeKindFromTag(look.spriteParams.empty() ? std::string{} : look.spriteParams.at(0));
@@ -1626,6 +1628,7 @@ namespace xge
 			looks.front().spriteParams = tempSpriteParams;
 			looks.front().bitmap = first.bitmap;
 			if (!looks.front().frames.empty()) { looks.front().frames.front() = first.bitmap; }
+			if (first.turned && looks.front().frames.empty()) { looks.front().turnables = { first.turned }; }
 		}
 
 
@@ -1851,6 +1854,7 @@ namespace xge
 			object.poseLooks[static_cast<std::size_t>(Object::Pose::Skidding)] = lookOf("skidding").value_or(walking);
 			object.poseLooks[static_cast<std::size_t>(Object::Pose::Falling)] = falling;
 			object.poseLooks[static_cast<std::size_t>(Object::Pose::Rising)] = lookOf("rising").value_or(falling);
+			object.poseLooks[static_cast<std::size_t>(Object::Pose::Thrusting)] = lookOf("thrusting").value_or(standing);
 			object.hasPoses = true;
 			object.firstLook = standing;
 			if (standing != 0) { object.showLook(standing); }

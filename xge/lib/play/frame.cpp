@@ -184,8 +184,15 @@ namespace xge
 		// way, or nothing under it while something pulls it) rising or
 		// falling; on the ground standing, walking, or, with a <grip> below 1,
 		// skidding while it slides another way to the one its keys ask for.
+		// Thrusting, before any of those, while a held <thrust> or
+		// <accelerate> is on.
 		Object::Pose poseOf(const Object& object)
 		{
+			if (!object.activeThrustAheadBy.empty()
+				|| std::any_of(object.activeThrust.begin(), object.activeThrust.end(), [](float amount) { return amount != 0.0f; }))
+			{
+				return Object::Pose::Thrusting;
+			}
 			if (object.isAirborne())
 			{
 				return object.jumpFramesLeft * 2 > object.jumpFrames ? Object::Pose::Rising : Object::Pose::Falling;

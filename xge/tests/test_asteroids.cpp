@@ -336,7 +336,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 		CHECK(descriptions == 3 + 3 + 3); // three shapes of each smaller rock, and the three shots
 		CHECK(turns == 2);
 		CHECK(thrusts == 1);
-		CHECK(releases == 4 + 3); // every big rock and medium shape hands out smaller ones
+		CHECK(releases == (4 + 3) * 2); // every big rock and medium shape hands out smaller ones, hit by a shot or a saucer
 	}
 }
 
@@ -411,6 +411,42 @@ TEST_CASE("turning does not move the ship or change its size", "[asteroids][head
 	CHECK(field.ship().position == where);
 	CHECK(field.ship().size == size);
 	CHECK(field.ship().velocity == Vector2f{});
+}
+
+TEST_CASE("held thrust shows the flickering flame, turned with the ship; letting go puts it out", "[asteroids][heading]")
+{
+	Field field;
+	field.clearTheMiddle();
+	Object& ship = field.ship();
+	const Vector2f size = ship.size;
+	CHECK(ship.lookName() == "coasting");
+	const auto coasting = ship.bitmap;
+
+	// Turned a quarter, then thrust: the flame shows at that heading, and
+	// flickers with the plain ship every three frames.
+	field.key("right", true);
+	field.frames(22);
+	field.key("right", false);
+	const auto turned = ship.bitmap;
+	field.key("thrust", true);
+	field.frames(1);
+	CHECK(ship.lookName() == "burning");
+	CHECK(ship.bitmap != turned);
+	CHECK(ship.bitmap->rgba == ship.turnables[0]->at(88.0f).rgba);
+	CHECK(ship.size == size);
+	bool flickered = false;
+	for (int i = 0; i < 6; ++i)
+	{
+		field.frames(1);
+		if (ship.bitmap->rgba == turned->rgba) { flickered = true; }
+	}
+	CHECK(flickered);
+
+	field.key("thrust", false);
+	field.frames(1);
+	CHECK(ship.lookName() == "coasting");
+	CHECK(ship.bitmap->rgba == turned->rgba);
+	CHECK(ship.bitmap->rgba != coasting->rgba);
 }
 
 // ------------------------------------------------------------ thrust and drag
@@ -1069,6 +1105,31 @@ TEST_CASE("a shot that hits the big saucer is 200 points", "[asteroids][saucer]"
 
 	CHECK_FALSE(saucer.isVisible);
 	CHECK(field.score() == 200.0f);
+}
+
+TEST_CASE("a rock that meets a saucer breaks it, and breaks itself for no points", "[asteroids][saucer]")
+{
+	for (const std::string which : { "saucer", "smallsaucer" })
+	{
+		Field field;
+		field.clearTheMiddle();
+		field.ship().position = { 60, 60 };
+		Object& saucer = field.named(which);
+		saucer.isVisible = true;
+		saucer.collisionData.enabled = true;
+		saucer.position = { 380, 300 };
+		saucer.velocity = {};
+		Object& rock = *field.group("bigrocks").front();
+		rock.position = { saucer.position.x - 20, saucer.position.y - 20 };
+		rock.velocity = { 1, 1 };
+		const std::size_t medium = field.group("mediumrocks").size();
+		field.frames(30);
+
+		CHECK_FALSE(saucer.isVisible);
+		CHECK_FALSE(rock.isVisible);
+		CHECK(field.group("mediumrocks").size() == medium + 2);
+		CHECK(field.score() == 0.0f);
+	}
 }
 
 TEST_CASE("the small saucer aims at the ship and is a thousand points; the higher the score, the likelier it comes", "[asteroids][saucer]")

@@ -761,6 +761,9 @@ namespace xge
 			std::shared_ptr<const Bitmap> bitmap;
 			std::vector<std::shared_ptr<const Bitmap>> frames;
 			int frameTicks{};
+			// For an object with a <heading>: the look's pictures (one, or
+			// one a frame) kept to be turned to it (see `turnables`).
+			std::vector<std::shared_ptr<const Turnable>> turnables;
 		};
 		std::vector<Look> looks;
 		std::size_t look{ 0 };
@@ -800,8 +803,8 @@ namespace xge
 		// filled in (a pose left out takes another's, see load/expr), when
 		// hasPoses. The pose is picked each frame from how it moves, while it
 		// shows one of these looks (playOneFrame).
-		enum class Pose { Standing, Walking, Skidding, Rising, Falling };
-		std::array<std::size_t, 5> poseLooks{};
+		enum class Pose { Standing, Walking, Skidding, Rising, Falling, Thrusting };
+		std::array<std::size_t, 6> poseLooks{};
 		bool hasPoses{ false };
 
 		// <mirror>: going `mirrorWay` (left or right) its pictures are drawn

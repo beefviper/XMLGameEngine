@@ -525,6 +525,7 @@
       <xs:element name="skidding" type="poseType" minOccurs="0" />
       <xs:element name="rising" type="poseType" minOccurs="0" />
       <xs:element name="falling" type="poseType" minOccurs="0" />
+      <xs:element name="thrusting" type="poseType" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
   <xs:simpleType name="mirrorType">

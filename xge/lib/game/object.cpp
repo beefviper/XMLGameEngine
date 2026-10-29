@@ -64,6 +64,13 @@ namespace xge
 		animationFrames = looks[index].frameTicks;
 		animationTick = 0;
 		animationIndex = 0;
+		// Turned to the way it faces: its own pictures to turn from now on.
+		if (!looks[index].turnables.empty())
+		{
+			turnables = looks[index].turnables;
+			turnedDegrees = -1;
+			showHeading();
+		}
 		visualDirty = true;
 	}
 

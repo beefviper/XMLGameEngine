@@ -34,11 +34,14 @@
     150 of it (distance= with total="lowest": the nearest one).
   * A saucer falls due on a timer of the playing state, with a luck drawn;
     a condition sends the small one when the luck is below the score over
-    40000, else the big one, and only when neither is out.
+    40000, else the big one, and only when neither is out. The two are
+    members of one kit group, "ufos", so a rock size names them both in
+    one rule (it breaks, no points), and they name each rock size to die.
   * The heartbeat is the playing state's <music>; the saucer warbles on a
     timer of its own, so a pause is quiet.
   * The best score is <keeps>, shown on the title and in play.
-  Not in it: the ship's flame, and the rocks hitting the saucer.
+  * The ship's flame flickers while thrust is held: a look of two pictures
+    its <poses> pick while thrusting, turned with it like the others.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -158,6 +161,11 @@
           <release object="smallrocks">2</release>
           <play sound="bangmedium" />
         </collision>
+        <collision object="ufos">
+          <despawn />
+          <release object="smallrocks">2</release>
+          <play sound="bangmedium" />
+        </collision>
       </collisions>
       <member name="mediumA">
         <velocity><y><random><min>0.6</min><max>1.6</max></random></y></velocity>
@@ -206,6 +214,10 @@
           <inc variable="ship.score">100</inc>
           <play sound="bangsmall" />
         </collision>
+        <collision object="ufos">
+          <despawn />
+          <play sound="bangsmall" />
+        </collision>
       </collisions>
       <member name="smallA">
         <velocity><y><random><min>1</min><max>2.6</max></random></y></velocity>
@@ -252,37 +264,57 @@
         <y><random><min>-5</min><max>5</max></random></y>
       </velocity>
     </object>
-    <!-- the big saucer: crosses now and then, wandering up and down and shooting anywhere; the small one is from= it -->
-    <object name="saucer" class="hazard">
-      <sprite>
-        <line><from><x>10</x><y>1</y></from><to><x>18</x><y>1</y></to></line>
-        <line><from><x>10</x><y>1</y></from><to><x>8</x><y>5</y></to></line>
-        <line><from><x>18</x><y>1</y></from><to><x>20</x><y>5</y></to></line>
-        <line><from><x>1</x><y>9</y></from><to><x>8</x><y>5</y></to><thickness>2</thickness></line>
-        <line><from><x>8</x><y>5</y></from><to><x>20</x><y>5</y></to><thickness>2</thickness></line>
-        <line><from><x>20</x><y>5</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-        <line><from><x>1</x><y>9</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-        <line><from><x>1</x><y>9</y></from><to><x>8</x><y>13</y></to><thickness>2</thickness></line>
-        <line><from><x>8</x><y>13</y></from><to><x>20</x><y>13</y></to><thickness>2</thickness></line>
-        <line><from><x>20</x><y>13</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-      </sprite>
+    <!-- the two saucers: they cross now and then, wandering up and down and shooting; a rock that meets one breaks it -->
+    <group name="ufos" class="hazard">
       <position><x>-30</x><y><random><min>80</min><max>window.bottom - 80</max></random></y></position>
-      <velocity><x>2</x></velocity>
       <active>false</active>
       <collisions>
         <type>pixel</type>
         <collision edge="vertical"><wrap /></collision>
         <collision edge="right"><die /></collision>
+        <collision object="rocks"><die /></collision>
+        <collision object="mediumrocks"><die /></collision>
+        <collision object="smallrocks"><die /></collision>
       </collisions>
       <timers>
-        <timer name="hum"><every>0.25</every><play sound="saucer" /></timer>
-        <timer name="shoot"><every>1</every><fire object="wildshot" /></timer>
         <timer>
           <every>1.5</every>
           <set variable="self.velocity.y"><random><min>-1.5</min><max>1.5</max></random></set>
         </timer>
       </timers>
-    </object>
+      <!-- the big one; it shoots anywhere (its timers are where play takes it) -->
+      <member name="saucer">
+        <sprite>
+          <line><from><x>10</x><y>1</y></from><to><x>18</x><y>1</y></to></line>
+          <line><from><x>10</x><y>1</y></from><to><x>8</x><y>5</y></to></line>
+          <line><from><x>18</x><y>1</y></from><to><x>20</x><y>5</y></to></line>
+          <line><from><x>1</x><y>9</y></from><to><x>8</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>8</x><y>5</y></from><to><x>20</x><y>5</y></to><thickness>2</thickness></line>
+          <line><from><x>20</x><y>5</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>1</x><y>9</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+          <line><from><x>1</x><y>9</y></from><to><x>8</x><y>13</y></to><thickness>2</thickness></line>
+          <line><from><x>8</x><y>13</y></from><to><x>20</x><y>13</y></to><thickness>2</thickness></line>
+          <line><from><x>20</x><y>13</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+        </sprite>
+        <velocity><x>2</x></velocity>
+      </member>
+      <!-- the small one: half the size, quicker, and it aims -->
+      <member name="smallsaucer">
+        <sprite>
+          <line><from><x>5</x><y>1</y></from><to><x>9</x><y>1</y></to></line>
+          <line><from><x>5</x><y>1</y></from><to><x>4</x><y>3</y></to></line>
+          <line><from><x>9</x><y>1</y></from><to><x>10</x><y>3</y></to></line>
+          <line><from><x>1</x><y>5</y></from><to><x>4</x><y>3</y></to></line>
+          <line><from><x>4</x><y>3</y></from><to><x>10</x><y>3</y></to></line>
+          <line><from><x>10</x><y>3</y></from><to><x>13</x><y>5</y></to></line>
+          <line><from><x>1</x><y>5</y></from><to><x>13</x><y>5</y></to></line>
+          <line><from><x>1</x><y>5</y></from><to><x>4</x><y>7</y></to></line>
+          <line><from><x>4</x><y>7</y></from><to><x>10</x><y>7</y></to></line>
+          <line><from><x>10</x><y>7</y></from><to><x>13</x><y>5</y></to></line>
+        </sprite>
+        <velocity><x>2.5</x></velocity>
+      </member>
+    </group>
   </kit>
   <objects>
     <object name="best">
@@ -321,14 +353,31 @@
       <objects>
         <!-- The ship: an arrowhead of three lines, drawn again at its heading. -->
         <object name="ship" class="breaker">
-          <sprite>
+          <sprite name="coasting">
             <line><from><x>12</x><y>0</y></from><to><x>23</x><y>28</y></to><thickness>2</thickness></line>
             <line><from><x>12</x><y>0</y></from><to><x>1</x><y>28</y></to><thickness>2</thickness></line>
             <line><from><x>4</x><y>22</y></from><to><x>20</x><y>22</y></to><thickness>2</thickness></line>
           </sprite>
+          <!-- the flame out of the back, inside the same box so the ship turns about the same middle -->
+          <sprite name="flame">
+            <line><from><x>12</x><y>0</y></from><to><x>23</x><y>28</y></to><thickness>2</thickness></line>
+            <line><from><x>12</x><y>0</y></from><to><x>1</x><y>28</y></to><thickness>2</thickness></line>
+            <line><from><x>4</x><y>22</y></from><to><x>20</x><y>22</y></to><thickness>2</thickness></line>
+            <line><from><x>8</x><y>23</y></from><to><x>12</x><y>28</y></to></line>
+            <line><from><x>16</x><y>23</y></from><to><x>12</x><y>28</y></to></line>
+          </sprite>
+          <animation name="burning">
+            <interval>0.05</interval>
+            <frame sprite="flame" />
+            <frame sprite="coasting" />
+          </animation>
           <position><x><centered /></x><y><centered /></y></position>
           <heading>0</heading>
           <drag>drag</drag>
+          <poses>
+            <standing sprite="coasting" />
+            <thrusting sprite="burning" />
+          </poses>
           <collisions>
             <type>pixel</type>
             <collision edge="all"><wrap /></collision>
@@ -385,6 +434,11 @@
                 <release object="mediumrocks">2</release>
                 <play sound="bangbig" />
               </collision>
+              <collision object="ufos">
+                <die />
+                <release object="mediumrocks">2</release>
+                <play sound="bangbig" />
+              </collision>
             </collisions>
             <member>
               <position><x><random><min>0</min><max>window.right</max></random></x></position>
@@ -435,22 +489,12 @@
               <play sound="bangbig" />
             </collision>
           </collisions>
+          <timers>
+            <timer name="hum"><every>0.25</every><play sound="saucer" /></timer>
+            <timer name="shoot"><every>1</every><fire object="wildshot" /></timer>
+          </timers>
         </object>
-        <!-- The small saucer: half the size, quicker, and it aims. -->
-        <object name="smallsaucer" from="saucer">
-          <sprite>
-            <line><from><x>5</x><y>1</y></from><to><x>9</x><y>1</y></to></line>
-            <line><from><x>5</x><y>1</y></from><to><x>4</x><y>3</y></to></line>
-            <line><from><x>9</x><y>1</y></from><to><x>10</x><y>3</y></to></line>
-            <line><from><x>1</x><y>5</y></from><to><x>4</x><y>3</y></to></line>
-            <line><from><x>4</x><y>3</y></from><to><x>10</x><y>3</y></to></line>
-            <line><from><x>10</x><y>3</y></from><to><x>13</x><y>5</y></to></line>
-            <line><from><x>1</x><y>5</y></from><to><x>13</x><y>5</y></to></line>
-            <line><from><x>1</x><y>5</y></from><to><x>4</x><y>7</y></to></line>
-            <line><from><x>4</x><y>7</y></from><to><x>10</x><y>7</y></to></line>
-            <line><from><x>10</x><y>7</y></from><to><x>13</x><y>5</y></to></line>
-          </sprite>
-          <velocity><x>2.5</x></velocity>
+        <object name="smallsaucer">
           <collisions>
             <collision class="breaker">
               <die />
