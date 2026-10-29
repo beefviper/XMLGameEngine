@@ -228,9 +228,11 @@ namespace xge
 			operation.op = shape.tag;
 
 			// What it holds, in words, for a mistake: "a <minuend>, then one
-			// or more <subtrahend>", "one <of>", "an <of>, an <atleast> and an <atmost>".
+			// or more <subtrahend>", "one <of>", "two <of>", "an <of>, an <atleast> and an <atmost>".
 			std::string wanted;
 			if (shape.most == 1) { wanted = std::string("one <") + shape.first + ">"; }
+			else if (shape.most == 2 && std::string(shape.first) == shape.rest) { wanted = std::string("two <") + shape.first + ">"; }
+			else if (shape.most == 2) { wanted = std::string("a <") + shape.first + "> and a <" + shape.rest + ">, in that order"; }
 			else if (shape.last) { wanted = std::string("an <") + shape.first + ">, an <" + shape.rest + "> and an <" + shape.last + ">, in that order"; }
 			else if (std::string(shape.first) == shape.rest) { wanted = std::string("two or more <") + shape.first + ">"; }
 			else { wanted = std::string("a <") + shape.first + ">, then one or more <" + shape.rest + ">"; }

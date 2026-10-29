@@ -219,7 +219,59 @@ TEST_CASE("sign, ceiling, sine and cosine, the last two of degrees", "[formulas]
 
 	CHECK_THROWS_WITH(Loaded(gameXml("<formula><sine><of>1</of><of>2</of></sine></formula>")), ContainsSubstring("after all it holds: it holds one <of>"));
 	CHECK_THROWS_WITH(Loaded(gameXml("<formula><tangent><of>1</of></tangent></formula>")),
-		ContainsSubstring("expected <add>, <subtract>, <multiply>, <divide>, <smallest>, <largest>, <absolute>, <sign>, <ceiling>, <sine>, <cosine> or <clamp>"));
+		ContainsSubstring("expected <add>, <subtract>, <multiply>, <divide>, <remainder>, <smallest>, <largest>, <absolute>, <negate>, <sign>, <floor>, <ceiling>, <round>, <sine>, <cosine>, <clamp>, <above>, <below>, <atleast>, <atmost> or <equal>"));
+}
+
+TEST_CASE("negate, floor, round and remainder", "[formulas]")
+{
+	CHECK(xOf("<formula><negate><of>w</of></negate></formula>", kVariables) == -100.0f);
+	CHECK(xOf("<formula><floor><of>2.75</of></floor></formula>") == 2.0f);
+	CHECK(xOf("<formula><floor><of>-2.25</of></floor></formula>") == -3.0f);
+	CHECK(xOf("<formula><round><of>2.5</of></round></formula>") == 3.0f);
+	CHECK(xOf("<formula><round><of>2.49</of></round></formula>") == 2.0f);
+
+	// What is left, from 0 up to the divisor, so a count wraps: -1 of 4 leaves 3.
+	CHECK(xOf("<formula><remainder><dividend>10</dividend><divisor>4</divisor></remainder></formula>") == 2.0f);
+	CHECK(xOf("<formula><remainder><dividend>-1</dividend><divisor>4</divisor></remainder></formula>") == 3.0f);
+	CHECK(xOf("<formula><remainder><dividend>7.5</dividend><divisor>2</divisor></remainder></formula>") == 1.5f);
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><remainder><dividend>1</dividend><divisor>0</divisor></remainder></formula>")), ContainsSubstring("<remainder>: the divisor is 0"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><remainder><dividend>1</dividend><divisor>2</divisor><divisor>3</divisor></remainder></formula>")),
+		ContainsSubstring("it holds a <dividend> and a <divisor>, in that order"));
+}
+
+TEST_CASE("a comparison is 1 when it holds and 0 when not", "[formulas]")
+{
+	struct Case
+	{
+		const char* tag;
+		float lower;  // 3 against 4
+		float same;   // 4 against 4
+		float higher; // 5 against 4
+	};
+
+	const Case cases[] = {
+		{ "above", 0.0f, 0.0f, 1.0f },
+		{ "below", 1.0f, 0.0f, 0.0f },
+		{ "atleast", 0.0f, 1.0f, 1.0f },
+		{ "atmost", 1.0f, 1.0f, 0.0f },
+		{ "equal", 0.0f, 1.0f, 0.0f },
+	};
+
+	for (const Case& c : cases)
+	{
+		DYNAMIC_SECTION(c.tag)
+		{
+			const std::string tag = c.tag;
+			const auto compare = [&](const std::string& first) { return xOf("<formula><" + tag + "><of>" + first + "</of><of>4</of></" + tag + "></formula>"); };
+			CHECK(compare("3") == c.lower);
+			CHECK(compare("4") == c.same);
+			CHECK(compare("5") == c.higher);
+		}
+	}
+
+	// Inside a clamp, <atleast> is still the clamp's lower end; inside that, an operation.
+	CHECK(xOf("<formula><clamp><of>w</of><atleast><atleast><of>w</of><of>50</of></atleast></atleast><atmost>50</atmost></clamp></formula>", kVariables) == 50.0f);
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><above><of>1</of></above></formula>")), ContainsSubstring("needs two <of>"));
 }
 
 TEST_CASE("a value's text has no functions: they are formula tags", "[formulas][errors]")

@@ -240,13 +240,16 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 | `<subtract>` | `<minuend>` | `<subtrahend>` | first - second |
 | `<multiply>` | `<multiplicand>` | `<multiplier>` | first * second |
 | `<divide>` | `<dividend>` | `<divisor>` | first / second |
+| `<remainder>` | `<dividend>` | `<divisor>` (one) | what is left over, from 0 up to the divisor, so a count wraps (-1 of 4 leaves 3) |
 | `<smallest>` | `<of>` | `<of>` | the smallest of two or more |
 | `<largest>` | `<of>` | `<of>` | the largest of two or more |
 | `<absolute>` | `<of>` | | the one `<of>` without its sign |
+| `<negate>` | `<of>` | | the `<of>` with its sign turned over |
 | `<sign>` | `<of>` | | -1, 0 or 1, as the `<of>` is below, at or above 0 |
-| `<ceiling>` | `<of>` | | the `<of>` rounded up to a whole number |
+| `<floor>`, `<ceiling>`, `<round>` | `<of>` | | the `<of>` to a whole number: down, up, or the nearest (a half goes up, away from 0) |
 | `<sine>`, `<cosine>` | `<of>` | | of the `<of>` as an angle in degrees, like every angle in a game |
 | `<clamp>` | `<of>` | `<atleast>`, then `<atmost>` | the `<of>`, kept from `<atleast>` up to `<atmost>` |
+| `<above>`, `<below>`, `<atleast>`, `<atmost>`, `<equal>` | `<of>` | `<of>` (one) | a comparison, the same words as a [condition's tests](#conditions): 1 when the first is so against the second, 0 when not. Pac-Man chases for ever from the fourth wave: 20 + 100000 × `<atleast><of>mode.waves</of><of>4</of></atleast>` |
 
 ```xml
 <x>
@@ -1476,7 +1479,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 **Values**
 
 - Values not in a command or a condition's test are fixed at load. A class condition cannot compare each object with that object's own other variable (a state's condition has no `self`).
-- `<formula>` has no `negate`, `floor`, `round` or `tangent`: an operation is added when a game needs it (a row in `operationShape`, a case in `evaluateOperation`, the schema).
+- `<formula>` has no `tangent`, square root or power, and no "if": a comparison is a 1 or a 0 to multiply by. An operation is a row in `operationShape`, a case in `evaluateOperation` and the schema.
 - A `<divide>` by something not known while loading gives 0, and only a position or a timer's interval is worked out again later.
 - Expressions are text to the schema, so a typo in one is found when the game loads, not by validation. The weak validator covers only the XSD the schema uses.
 - The window's size and framerate are plain numbers, read once; the size cannot change while a game runs.

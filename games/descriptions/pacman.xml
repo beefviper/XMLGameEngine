@@ -342,7 +342,7 @@
             <timer sprite="scatter">
               <after>mode.scatterfor</after>
               <inc variable="mode.waves" />
-              <!-- 20 seconds, and for ever from the fourth wave: the clamp is 0 before it and 1 from it -->
+              <!-- 20 seconds, and for ever from the fourth wave -->
               <set variable="mode.chasefor">
                 <formula>
                   <add>
@@ -350,13 +350,7 @@
                     <addend>
                       <multiply>
                         <multiplicand>100000</multiplicand>
-                        <multiplier>
-                          <clamp>
-                            <of><subtract><minuend>mode.waves</minuend><subtrahend>3</subtrahend></subtract></of>
-                            <atleast>0</atleast>
-                            <atmost>1</atmost>
-                          </clamp>
-                        </multiplier>
+                        <multiplier><atleast><of>mode.waves</of><of>4</of></atleast></multiplier>
                       </multiply>
                     </addend>
                   </add>
@@ -368,7 +362,7 @@
             </timer>
             <timer sprite="chase">
               <after>mode.chasefor</after>
-              <!-- 7 seconds, and 5 from the second wave: the clamp is 0 before it and 1 from it -->
+              <!-- 7 seconds, and 5 from the second wave -->
               <set variable="mode.scatterfor">
                 <formula>
                   <subtract>
@@ -376,13 +370,7 @@
                     <subtrahend>
                       <multiply>
                         <multiplicand>2</multiplicand>
-                        <multiplier>
-                          <clamp>
-                            <of><subtract><minuend>mode.waves</minuend><subtrahend>1</subtrahend></subtract></of>
-                            <atleast>0</atleast>
-                            <atmost>1</atmost>
-                          </clamp>
-                        </multiplier>
+                        <multiplier><atleast><of>mode.waves</of><of>2</of></atleast></multiplier>
                       </multiply>
                     </subtrahend>
                   </subtract>

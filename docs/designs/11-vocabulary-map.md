@@ -57,7 +57,7 @@ Time words: `every` and `after` (timers), `interval` (an animation's pictures), 
 **Values**
 
 - Text expressions of numbers, names, `+ - * /` and brackets, worked out by the engine (`load/calc`); one value tag that draws a number, `<random>` (`<min>`, `<max>`); and arithmetic as tags, `<formula>` (one operation, operands as nested elements).
-- `<formula>` uses four arithmetic words, each with operands named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`); and more whose operands are `<of>`: `smallest`, `largest` (two or more), `absolute`, `sign`, `ceiling`, `sine` and `cosine` (one; angles in degrees) and `clamp` (an `<of>`, then `<atleast>` and `<atmost>`). An operand is a name or a number, never an expression. A `<random>`'s ends may be formulas.
+- `<formula>` uses four arithmetic words, each with operands named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`); `remainder` (`dividend`, one `divisor`); and more whose operands are `<of>`: `smallest`, `largest` (two or more), `absolute`, `negate`, `sign`, `floor`, `ceiling`, `round`, `sine` and `cosine` (one; angles in degrees), the comparisons `above`, `below`, `atleast`, `atmost`, `equal` (two; 1 or 0, the condition words) and `clamp` (an `<of>`, then `<atleast>` and `<atmost>`). An operand is a name or a number, never an expression. A `<random>`'s ends may be formulas.
 - A command's values are read when it runs, so they can name live numbers; every other value is worked out once at load ([values-and-names](04-values-and-names.md)).
 - The text form has no functions and no comparisons: anything past `+ - * /` is a tag (Berserk keeps a wait above a floor with `<largest>`).
 
@@ -94,7 +94,7 @@ Time, sound, music, conditions over many objects, maze walking and making object
 
 ## The shape this suggests
 
-Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which has a small vocabulary of its own (`random` and twelve arithmetic words) beside plain `+ - * /` text. Each further word (`negate`, `pick`) is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
+Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which has a small vocabulary of its own (`random` and twenty arithmetic words) beside plain `+ - * /` text. Each further word (`negate`, `pick`) is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
 
 A word is added only when a real game cannot be described without it, and a verb that means "behave like one particular game" shows that its parameters were not found ([motion](22-motion.md)).
 

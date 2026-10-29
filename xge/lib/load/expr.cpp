@@ -1237,29 +1237,20 @@ namespace xge
 
 		Answer answer = operandAnswer(operation.operands.front());
 
-		if (operation.op == "absolute")
-		{
-			answer.value = std::fabs(answer.value);
-			return answer;
-		}
-
-		if (operation.op == "sign")
-		{
-			answer.value = answer.value > 0.0f ? 1.0f : answer.value < 0.0f ? -1.0f : 0.0f;
-			return answer;
-		}
-
-		if (operation.op == "ceiling")
-		{
-			answer.value = std::ceil(answer.value);
-			return answer;
-		}
+		// One operand: the answer is worked out from it alone.
+		const float x = answer.value;
+		if (operation.op == "absolute") { answer.value = std::fabs(x); return answer; }
+		if (operation.op == "negate") { answer.value = -x; return answer; }
+		if (operation.op == "sign") { answer.value = x > 0.0f ? 1.0f : x < 0.0f ? -1.0f : 0.0f; return answer; }
+		if (operation.op == "floor") { answer.value = std::floor(x); return answer; }
+		if (operation.op == "ceiling") { answer.value = std::ceil(x); return answer; }
+		if (operation.op == "round") { answer.value = std::round(x); return answer; }
 
 		// Of an angle in degrees, like every angle in a game.
 		if (operation.op == "sine" || operation.op == "cosine")
 		{
 			constexpr float kRadiansPerDegree = 3.14159265358979323846f / 180.0f;
-			const float radians = answer.value * kRadiansPerDegree;
+			const float radians = x * kRadiansPerDegree;
 			answer.value = operation.op == "sine" ? std::sin(radians) : std::cos(radians);
 			return answer;
 		}
@@ -1278,7 +1269,7 @@ namespace xge
 			const Answer operand = operandAnswer(operation.operands[i]);
 			answer.late = answer.late || operand.late;
 
-			if (operation.op == "divide" && operand.value == 0.0f)
+			if ((operation.op == "divide" || operation.op == "remainder") && operand.value == 0.0f)
 			{
 				if (loading && !operand.late) { throw std::runtime_error(here + ": the divisor is 0"); }
 
@@ -1295,7 +1286,15 @@ namespace xge
 			else if (operation.op == "add") { answer.value += operand.value; }
 			else if (operation.op == "subtract") { answer.value -= operand.value; }
 			else if (operation.op == "multiply") { answer.value *= operand.value; }
-			else { answer.value /= operand.value; }
+			else if (operation.op == "divide") { answer.value /= operand.value; }
+			// What is left over, from 0 up to the divisor (-1 of 4 leaves 3), so it wraps.
+			else if (operation.op == "remainder") { answer.value -= operand.value * std::floor(answer.value / operand.value); }
+			// A comparison: 1 when it holds, 0 when not.
+			else if (operation.op == "above") { answer.value = answer.value > operand.value ? 1.0f : 0.0f; }
+			else if (operation.op == "below") { answer.value = answer.value < operand.value ? 1.0f : 0.0f; }
+			else if (operation.op == "atleast") { answer.value = answer.value >= operand.value ? 1.0f : 0.0f; }
+			else if (operation.op == "atmost") { answer.value = answer.value <= operand.value ? 1.0f : 0.0f; }
+			else { answer.value = answer.value == operand.value ? 1.0f : 0.0f; } // equal
 		}
 
 		return answer;

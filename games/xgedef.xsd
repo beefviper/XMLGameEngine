@@ -94,24 +94,38 @@
          </formula>
        A value tag, so it goes anywhere an expression or <random> does.
        Operations, one per arithmetic word: add, subtract, multiply, divide;
-       smallest and largest of two or more <of>; absolute, sign (-1, 0 or 1),
-       ceiling (the next whole number up), sine and cosine (of degrees) of
-       one <of>; and clamp, an <of> kept from <atleast> up to <atmost>. -->
+       remainder (a <dividend> and a <divisor>: what is left, from 0 up to
+       the divisor); smallest and largest of two or more <of>; absolute,
+       negate, sign (-1, 0 or 1), floor, ceiling, round, sine and cosine (of
+       degrees) of one <of>; clamp, an <of> kept from <atleast> up to
+       <atmost>; and the comparisons above, below, atleast, atmost and equal
+       of two <of>, 1 when the first is so against the second and 0 when not. -->
 
+  <!-- (The operations are listed twice, here and in operandType: the weak
+       validator, load/xsd, does not follow a group that contains itself.) -->
   <xs:complexType name="formulaType">
     <xs:choice>
       <xs:element name="add" type="addType" />
       <xs:element name="subtract" type="subtractType" />
       <xs:element name="multiply" type="multiplyType" />
       <xs:element name="divide" type="divideType" />
+      <xs:element name="remainder" type="remainderType" />
       <xs:element name="smallest" type="extremeType" />
       <xs:element name="largest" type="extremeType" />
       <xs:element name="absolute" type="oneOperandType" />
+      <xs:element name="negate" type="oneOperandType" />
       <xs:element name="sign" type="oneOperandType" />
+      <xs:element name="floor" type="oneOperandType" />
       <xs:element name="ceiling" type="oneOperandType" />
+      <xs:element name="round" type="oneOperandType" />
       <xs:element name="sine" type="oneOperandType" />
       <xs:element name="cosine" type="oneOperandType" />
       <xs:element name="clamp" type="clampType" />
+      <xs:element name="above" type="twoOperandType" />
+      <xs:element name="below" type="twoOperandType" />
+      <xs:element name="atleast" type="twoOperandType" />
+      <xs:element name="atmost" type="twoOperandType" />
+      <xs:element name="equal" type="twoOperandType" />
     </xs:choice>
   </xs:complexType>
 
@@ -123,14 +137,23 @@
       <xs:element name="subtract" type="subtractType" />
       <xs:element name="multiply" type="multiplyType" />
       <xs:element name="divide" type="divideType" />
+      <xs:element name="remainder" type="remainderType" />
       <xs:element name="smallest" type="extremeType" />
       <xs:element name="largest" type="extremeType" />
       <xs:element name="absolute" type="oneOperandType" />
+      <xs:element name="negate" type="oneOperandType" />
       <xs:element name="sign" type="oneOperandType" />
+      <xs:element name="floor" type="oneOperandType" />
       <xs:element name="ceiling" type="oneOperandType" />
+      <xs:element name="round" type="oneOperandType" />
       <xs:element name="sine" type="oneOperandType" />
       <xs:element name="cosine" type="oneOperandType" />
       <xs:element name="clamp" type="clampType" />
+      <xs:element name="above" type="twoOperandType" />
+      <xs:element name="below" type="twoOperandType" />
+      <xs:element name="atleast" type="twoOperandType" />
+      <xs:element name="atmost" type="twoOperandType" />
+      <xs:element name="equal" type="twoOperandType" />
     </xs:choice>
   </xs:complexType>
 
@@ -143,6 +166,19 @@
   <xs:complexType name="oneOperandType">
     <xs:sequence>
       <xs:element name="of" type="operandType" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="twoOperandType">
+    <xs:sequence>
+      <xs:element name="of" type="operandType" minOccurs="2" maxOccurs="2" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="remainderType">
+    <xs:sequence>
+      <xs:element name="dividend" type="operandType" />
+      <xs:element name="divisor" type="operandType" />
     </xs:sequence>
   </xs:complexType>
 
