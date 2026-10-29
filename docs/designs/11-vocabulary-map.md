@@ -48,7 +48,7 @@ Each verb belongs to one of nine command groups, and each place (a collision, an
 
 **Pronouns: names that can be pointed at**
 
-- Dotted references (`ball.radius`, `paddle1.score`), built-in names (`window.right`, `window.width.center`), generated names (`aliens.3.2`, `dots.17`), scene paths (`playing.room2.robots`), live numbers (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`), a named timer's time left (`energy.level`), `self.` (the object running a rule) and `touch.` (the touch a rule answers), colors (`color.red`) and key names (`space`, `mouse.left`, `pad1.a`).
+- Dotted references (`ball.radius`, `paddle1.score`), built-in names (`window.right`, `window.width.center`), generated names (`aliens.3.2`, `maze.dots.17`), scene paths (`playing.room2.robots`), live numbers (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`), a named timer's time left (`energy.level`), `self.` (the object running a rule) and `touch.` (the touch a rule answers), colors (`color.red`) and key names (`space`, `mouse.left`, `pad1.a`).
 
 **Adverbs: how, how much, how long**
 

@@ -168,7 +168,7 @@ TEST_CASE("a map of the kit is taken by a map, which gives its rows and changes 
 		Played play(file.path);
 
 		CHECK(play.count("walls") == 3);
-		const Object& first = play.get("walls.1");
+		const Object& first = play.get("maze.walls.1");
 		CHECK(first.position.x == Approx(100));
 		CHECK(first.position.y == Approx(50));
 		CHECK(first.objClass == "wall");
@@ -183,11 +183,25 @@ TEST_CASE("a map of the kit is taken by a map, which gives its rows and changes 
 
 		// its own y and its own walls' color, the piece's x, tile and class
 		CHECK(play.count("walls") == 1);
-		const Object& other = play.get("walls.1");
+		const Object& other = play.get("other.walls.1");
 		CHECK(other.position.x == Approx(110));
 		CHECK(other.position.y == Approx(200));
 		CHECK(other.objClass == "wall");
 		CHECK(other.spriteParams.back() == "color.red");
+	}
+	SECTION("by two maps in one list, each one's pieces named under it")
+	{
+		const Scratch file("<map name=\"left\" from=\"maze\"><row>##</row></map>"
+			"<map name=\"right\" from=\"maze\"><position><y>200</y></position><row>.#</row></map>", "<pop />", {}, maze);
+		Played play(file.path);
+
+		// Both maps' walls are walls; each map's are numbered under its name.
+		CHECK(play.count("walls") == 3);
+		CHECK(play.get("left.walls.2").position.x == Approx(110));
+		CHECK(play.get("right.walls.1").position.x == Approx(110));
+		CHECK(play.get("right.walls.1").position.y == Approx(200));
+		CHECK(play.get("right.walls.1").inGroup("playing.right"));
+		CHECK_FALSE(play.get("right.walls.1").inGroup("playing.left"));
 	}
 }
 

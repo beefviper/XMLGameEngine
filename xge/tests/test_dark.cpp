@@ -195,11 +195,11 @@ TEST_CASE("hauntedhouse.xml: the stairs lead up and down the four floors, each w
 {
 	House play;
 	play.stillCreatures();
-	const std::string groundWall = play.get("playing.floor1.walls.1").spriteParams.back();
+	const std::string groundWall = play.get("playing.floor1.house.walls.1").spriteParams.back();
 
 	play.climb(18);
 	REQUIRE(play.floor() == "playing.floor2");
-	CHECK(play.get("playing.floor2.walls.1").spriteParams.back() != groundWall);
+	CHECK(play.get("playing.floor2.house.walls.1").spriteParams.back() != groundWall);
 	// Up the stairs the eyes are where they were, which on this floor is no stairs.
 	play.frames(30);
 	CHECK(play.floor() == "playing.floor2");

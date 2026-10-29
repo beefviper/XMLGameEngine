@@ -269,7 +269,7 @@ Names are dotted, and every dot means "inside":
 | Name | Is |
 |---|---|
 | `ball.radius` | the ball's variable `radius` |
-| `logrow3.2`, `aliens.3.2`, `dots.17` | a [group](#groups)'s member, a cell (column 3, row 2), a [map](#maps)'s piece |
+| `logrow3.2`, `aliens.3.2`, `maze.dots.17` | a [group](#groups)'s member, a cell (column 3, row 2), a [map](#maps)'s piece |
 | `playing.hero` | the state `playing`'s own object |
 | `playing.room2.robots.3` | a member of a scene's group |
 | `playing.room2.pace` | a scene's variable |
@@ -483,7 +483,7 @@ A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one chara
 ```
 
 - `<tile>` is a tile's size and `<position>` the map's top left; the rows must all be as wide.
-- **A group** picking a character with `char="x"` has a member in the middle of every tile of it, numbered in reading order (`dots.1`, `dots.2`). It has no position, layout or members of its own, but everything else a group has, inner groups included: Pac-Man's walls are one group of class `wall` whose bitmap each piece changes.
+- **A group** picking a character with `char="x"` has a member in the middle of every tile of it, named under the map and numbered in reading order (`maze.dots.1`, `maze.dots.2`), so two maps in one list each number their own: `left.walls.1` and `right.walls.1` are both `walls`, and the map's name picks one map's. It has no position, layout or members of its own, but everything else a group has, inner groups included: Pac-Man's walls are one group of class `wall` whose bitmap each piece changes.
 - **An object** picks a character found on exactly one tile, where it starts.
 - A character nothing picks is an empty tile; two pieces may not pick one character. Rows are trimmed like any text, so an empty tile at either end is a character nobody picks (Pac-Man's `,`), not a space.
 - The map's name means everything on it (`<reset object="maze" />`).

@@ -261,21 +261,21 @@ TEST_CASE("berserk.xml loads the man, four rooms of robots, exits, an Otto and a
 	// four exits that are never drawn.
 	for (int room = 1; room <= 4; ++room)
 	{
-		Object& corner = play.object(Play::inRoom(room, "post.1"));
+		Object& corner = play.object(Play::inRoom(room, "maze.post.1"));
 		CHECK(corner.position.x == 0.0f);
 		CHECK(corner.position.y == mazeTop);
 		CHECK(corner.size.x == 8.0f);
-		Object& last = play.object(Play::inRoom(room, "post.24"));
+		Object& last = play.object(Play::inRoom(room, "maze.post.24"));
 		CHECK(last.position.x == roomRight - 8.0f);
 		CHECK(last.position.y == roomBottom - 8.0f);
-		CHECK(play.object(Play::inRoom(room, "across.1")).size.x == cellWidth - 8.0f);
-		CHECK(play.object(Play::inRoom(room, "down.1")).size.y == cellHeight - 8.0f);
-		CHECK(play.object(Play::inRoom(room, "down.1")).isDrawn);
+		CHECK(play.object(Play::inRoom(room, "maze.across.1")).size.x == cellWidth - 8.0f);
+		CHECK(play.object(Play::inRoom(room, "maze.down.1")).size.y == cellHeight - 8.0f);
+		CHECK(play.object(Play::inRoom(room, "maze.down.1")).isDrawn);
 		CHECK(play.robotsLeft(room) == room + 2);
 		for (const char* side : { "north", "south", "west", "east" })
 		{
 			CHECK(play.alive(std::string(side) + "exit", Play::inRoom(room, "")) == 1);
-			CHECK_FALSE(play.object(Play::inRoom(room, std::string(side) + ".1")).isDrawn);
+			CHECK_FALSE(play.object(Play::inRoom(room, "maze." + std::string(side) + ".1")).isDrawn);
 		}
 	}
 	CHECK(count(play, "playing.robotshot.") == 0); // made when a robot fires
@@ -633,8 +633,8 @@ TEST_CASE("only the room the man is in plays: the others' robots are away and st
 	CHECK(play.game.isAway(left));
 	CHECK_FALSE(play.game.isShown(left));
 	CHECK(play.game.isShown(play.object(Play::robot(2, 1))));
-	CHECK_FALSE(play.game.isShown(play.object(Play::inRoom(1, "post.1"))));
-	CHECK(play.game.isShown(play.object(Play::inRoom(2, "post.1"))));
+	CHECK_FALSE(play.game.isShown(play.object(Play::inRoom(1, "maze.post.1"))));
+	CHECK(play.game.isShown(play.object(Play::inRoom(2, "maze.post.1"))));
 
 	const Vector2f robotBefore = left.position;
 	play.frames(60);
@@ -832,7 +832,7 @@ TEST_CASE("no men left is game over, over the room standing still, and Space pla
 	play.touchTheWall();
 	play.frames(2);
 	CHECK(play.state() == "gameover");
-	CHECK(play.game.isStill(play.object(Play::inRoom(2, "post.1"))));
+	CHECK(play.game.isStill(play.object(Play::inRoom(2, "maze.post.1"))));
 	CHECK(play.game.isShown(play.object("gameover")));
 	CHECK(play.game.isStill(play.object("score")));
 
@@ -860,8 +860,8 @@ TEST_CASE("P pauses over the room standing still, and Space or P carries on", "[
 	// The room, the man and the score are drawn still under PAUSED.
 	CHECK(play.game.isStill(play.object(robot)));
 	CHECK(play.game.isStill(play.man()));
-	CHECK(play.game.isStill(play.object(Play::inRoom(1, "post.1"))));
-	CHECK_FALSE(play.game.isStill(play.object(Play::inRoom(2, "post.1"))));
+	CHECK(play.game.isStill(play.object(Play::inRoom(1, "maze.post.1"))));
+	CHECK_FALSE(play.game.isStill(play.object(Play::inRoom(2, "maze.post.1"))));
 	CHECK(play.game.isShown(play.object("paused")));
 	CHECK(play.game.isStill(play.object("score")));
 

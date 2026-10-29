@@ -394,14 +394,15 @@ namespace xge::parts
 	}
 
 	// A <map>'s groups and objects: a member of the group on each tile of its
-	// character, named by its number in reading order, and an object on the
+	// character, named under the map by its number in reading order
+	// (maze.dots.17), and an object on the
 	// one tile of its own (the engine has checked that there is one).
 	inline void addMapMembers(std::vector<RawObject>& all, const Member& group, const RawMap& map, const std::string& character, const std::string& name)
 	{
 		int count = 0;
 		for (const auto& [column, row] : tilesOf(map, character.front()))
 		{
-			RawObject member = finish(made(group, name + "." + std::to_string(++count), {}));
+			RawObject member = finish(made(group, map.name + "." + name + "." + std::to_string(++count), {}));
 			placeOnMap(member, map, column, row);
 			all.push_back(std::move(member));
 		}

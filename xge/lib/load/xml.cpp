@@ -2138,8 +2138,9 @@ namespace xge
 				return rawObject;
 			};
 
-			// On a map: a member for each tile of its character, named by its
-			// number in the order the rows are read (dots.17).
+			// On a map: a member for each tile of its character, named under
+			// the map by its number in the order the rows are read
+			// (maze.dots.17), so two maps in one list each have their own.
 			if (own.map)
 			{
 				const MapLayout& map = *own.map;
@@ -2148,7 +2149,7 @@ namespace xge
 				for (const auto& [column, row] : tilesOf(map, character))
 				{
 					++count;
-					const std::string memberName = name + "." + std::to_string(count);
+					const std::string memberName = map.name + "." + name + "." + std::to_string(count);
 					const std::string here = "object '" + memberName + "' (a member of " + where + ")";
 					RawObject member = make(memberName, here, {});
 					placeOnMap(member, map, column, row);

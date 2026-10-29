@@ -71,7 +71,7 @@ namespace
 
 		Object& pacman() { return game.getObject("playing.pacman"); }
 		float status(const char* variable) { return game.getObject("playing.status").variable[variable]; }
-		Object& ghost(const std::string& name) { return game.getObject("playing." + name + ".1"); }
+		Object& ghost(const std::string& name) { return game.getObject("playing.maze." + name + ".1"); }
 		std::string state() { return game.getCurrentState().name; }
 
 		void frames(int count)
@@ -185,11 +185,11 @@ TEST_CASE("pacman: the map puts every piece on its tile", "[pacman][map]")
 	CHECK(maze.count("playing.pellets") == 4);
 	CHECK(maze.count("playing.food") == 244);
 	CHECK(maze.count("playing.walls") == 480);
-	CHECK(middleOf(maze.game.getObject("playing.pellets.1")).x == Approx(tile(1, 3).x));
-	CHECK(middleOf(maze.game.getObject("playing.pellets.1")).y == Approx(tile(1, 3).y));
-	CHECK(middleOf(maze.game.getObject("playing.door.1")).x == Approx(tile(13, 12).x));
-	CHECK(maze.game.getObject("playing.door.1").inGroup("playing.walls"));
-	CHECK(maze.game.getObject("playing.door.1").objClass == "door");
+	CHECK(middleOf(maze.game.getObject("playing.maze.pellets.1")).x == Approx(tile(1, 3).x));
+	CHECK(middleOf(maze.game.getObject("playing.maze.pellets.1")).y == Approx(tile(1, 3).y));
+	CHECK(middleOf(maze.game.getObject("playing.maze.door.1")).x == Approx(tile(13, 12).x));
+	CHECK(maze.game.getObject("playing.maze.door.1").inGroup("playing.walls"));
+	CHECK(maze.game.getObject("playing.maze.door.1").objClass == "door");
 
 	// The ghosts: Blinky above the door, the others in the house.
 	CHECK(middleOf(maze.ghost("blinky")).x == Approx(tile(14, 11).x));
@@ -199,7 +199,7 @@ TEST_CASE("pacman: the map puts every piece on its tile", "[pacman][map]")
 	CHECK(maze.ghost("blinky").lookName() == "normal");
 
 	// A wall piece gives only its rows: its scale and colour are the walls'.
-	const Object& corner = maze.game.getObject("playing.topleft.1");
+	const Object& corner = maze.game.getObject("playing.maze.topleft.1");
 	CHECK(corner.size.x == Approx(kTile));
 	CHECK(corner.size.y == Approx(kTile));
 }
@@ -459,7 +459,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 
 	maze.frames(10);
 	CHECK(blinky.walk.mode == Walk::Mode::Hunt);
-	Object& pellet = maze.game.getObject("playing.pellets.3");
+	Object& pellet = maze.game.getObject("playing.maze.pellets.3");
 	maze.touch(pellet);
 	CHECK_FALSE(pellet.isVisible);
 	CHECK(blinky.lookName() == "blue");
@@ -474,7 +474,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	maze.frames(300);
 	CHECK(blinky.lookName() == "blue");
 	showLookNamed(clyde, "eyes");
-	maze.touch(maze.game.getObject("playing.pellets.4"));
+	maze.touch(maze.game.getObject("playing.maze.pellets.4"));
 	CHECK(clyde.lookName() == "eyes");
 	maze.frames(200);
 	CHECK(blinky.lookName() == "blue");
@@ -515,7 +515,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 TEST_CASE("pacman: each ghost eaten on one pellet is worth twice the one before", "[pacman][looks]")
 {
 	Maze maze;
-	maze.touch(maze.game.getObject("playing.pellets.1"));
+	maze.touch(maze.game.getObject("playing.maze.pellets.1"));
 	maze.frames(1);
 	const float before = maze.status("score");
 	maze.touch(maze.ghost("pinky"));
@@ -525,7 +525,7 @@ TEST_CASE("pacman: each ghost eaten on one pellet is worth twice the one before"
 	CHECK(maze.status("worth") == 1600.0f);
 
 	// The next pellet starts again at 200.
-	maze.touch(maze.game.getObject("playing.pellets.2"));
+	maze.touch(maze.game.getObject("playing.maze.pellets.2"));
 	CHECK(maze.status("worth") == 200.0f);
 }
 
