@@ -1575,11 +1575,11 @@ namespace xge
 				continue;
 			}
 
-			const Path& path = paths.at(object.followPath);
+			Path& path = paths.at(object.followPath);
 			bool moving = false;
 			while (object.isFollowing() && object.followLeg < path.steps.size())
 			{
-				const PathStep& leg = path.steps[object.followLeg];
+				PathStep& leg = path.steps[object.followLeg];
 				if (!object.followLegStarted)
 				{
 					object.followLegStarted = true;
@@ -1587,8 +1587,20 @@ namespace xge
 					if (leg.liveX) { object.followLeft.x = stepHalf(*leg.liveX, object); }
 					if (leg.liveY) { object.followLeft.y = stepHalf(*leg.liveY, object); }
 
-					// A copy: a command may reset the object, which ends the path.
-					const std::vector<Command> commands = leg.commands;
+					// A copy: a command may reset the object, which ends the
+					// path. Its own commands too, made for it when the game
+					// loaded, or, a copy made since, now, once.
+					std::vector<Command> commands = leg.commands;
+					if (leg.ownRaw)
+					{
+						auto own = leg.ownBy.find(object.name);
+						if (own == leg.ownBy.end())
+						{
+							own = leg.ownBy.emplace(object.name, expr.pathCommandsFor(leg, object.name,
+								"path '" + path.name + "' > <step>, flown by '" + object.name + "'")).first;
+						}
+						commands.insert(commands.begin(), own->second.begin(), own->second.end());
+					}
 					for (const auto& command : commands)
 					{
 						if (!executor.executeTimer(command, &object)) { break; }

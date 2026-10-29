@@ -330,39 +330,56 @@ namespace xge
 		return out;
 	}
 
+	namespace
+	{
+		// self. at the start of a name in a value, made `name`; whether any was.
+		bool nameSelfInValue(RawValue& each, const std::string& name)
+		{
+			bool changed = false;
+			for (std::string* text : { &each.text, &each.min, &each.max })
+			{
+				std::string renamed = renameStart(*text, "self", name);
+				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+			}
+			if (each.operations)
+			{
+				auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
+				for (RawOperation& operation : *operations)
+				{
+					for (RawOperand& operand : operation.operands) { changed = nameSelfInValue(operand.value, name) || changed; }
+				}
+				each.operations = std::move(operations);
+			}
+			return changed;
+		}
+	}
+
+	bool nameSelfIn(std::vector<RawCommand>& list, const std::string& name)
+	{
+		bool changed = false;
+		for (RawCommand& command : list)
+		{
+			if (command.verb == "trigger" && command.object.empty()) { command.object = name; changed = true; }
+			for (std::string* text : { &command.variable, &command.into })
+			{
+				std::string renamed = renameStart(*text, "self", name);
+				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+			}
+			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
+				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY })
+			{
+				changed = nameSelfInValue(*each, name) || changed;
+			}
+		}
+		return changed;
+	}
+
 	void nameSelf(std::vector<RawObject>& objects)
 	{
 		for (RawObject& object : objects)
 		{
-			const std::function<void(RawValue&)> value = [&](RawValue& each)
-			{
-				each.text = renameStart(each.text, "self", object.name);
-				each.min = renameStart(each.min, "self", object.name);
-				each.max = renameStart(each.max, "self", object.name);
-				if (each.operations)
-				{
-					auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
-					for (RawOperation& operation : *operations)
-					{
-						for (RawOperand& operand : operation.operands) { value(operand.value); }
-					}
-					each.operations = std::move(operations);
-				}
-			};
-			const auto commands = [&](std::vector<RawCommand>& list)
-			{
-				for (RawCommand& command : list)
-				{
-					if (command.verb == "trigger" && command.object.empty()) { command.object = object.name; }
-					command.variable = renameStart(command.variable, "self", object.name);
-					command.into = renameStart(command.into, "self", object.name);
-					for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-						&command.positionX, &command.positionY, &command.velocityX, &command.velocityY })
-					{
-						value(*each);
-					}
-				}
-			};
+			const std::function<void(RawValue&)> value = [&](RawValue& each) { nameSelfInValue(each, object.name); };
+			const auto commands = [&](std::vector<RawCommand>& list) { nameSelfIn(list, object.name); };
 			const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
 			{
 				for (RawCondition& part : condition.parts) { check(part); }

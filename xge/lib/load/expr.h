@@ -136,6 +136,10 @@ namespace xge
 		// expression does not compile (std::runtime_error).
 		float evaluate(const RawValue& value, const std::string& where);
 
+		// A path step's commands about its flier (PathStep::ownRaw), made for
+		// the object `follower`: self is its name.
+		std::vector<Command> pathCommandsFor(const PathStep& step, const std::string& follower, const std::string& where);
+
 		// A number worked out, and whether it may still change: `late` is true
 		// when it was made from something that has no final value while the game
 		// is loading (another object's variable, which reads 0 until that object

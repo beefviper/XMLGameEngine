@@ -9,6 +9,7 @@
 #include "game/types.h"
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <optional>
@@ -862,6 +863,13 @@ namespace xge
 		// self is the follower) is worked out as the step sets off.
 		std::shared_ptr<const RawValue> liveX;
 		std::shared_ptr<const RawValue> liveY;
+		// Commands that say something of the follower (self.pays, a
+		// <trigger> with no object=) are its own: made for each object that
+		// can fly the path when the game loads (`ownBy`, by its name), and
+		// for a copy made while it runs the first time it flies it, from
+		// `ownRaw` with self made that one's name. `commands` are the rest.
+		std::shared_ptr<const std::vector<RawCommand>> ownRaw;
+		std::map<std::string, std::vector<Command>> ownBy;
 	};
 
 	// A path: a way through the window that objects <follow>, written once

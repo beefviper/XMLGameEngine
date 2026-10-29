@@ -637,6 +637,83 @@ namespace xge
 		}
 
 		// Hands back the palettes the <become style>s ask for.
+		// Which objects can fly each path: those a <follow> anywhere sends
+		// (itself, in an object's own commands, or every one of the name or
+		// group it names), and those of a path whose step sends its flier on
+		// along another.
+		std::map<std::string, std::set<std::string>> followersOf(const std::vector<State>& states, const std::vector<Object>& objects,
+			const std::map<std::string, Path>& paths)
+		{
+			std::map<std::string, std::set<std::string>> followers;
+			const auto visit = [&](const std::vector<Command>& commands, const Object* self)
+			{
+				for (const Command& command : commands)
+				{
+					const auto* follow = std::get_if<CmdFollow>(&shapeOf(command));
+					if (!follow) { continue; }
+					if (follow->target.empty())
+					{
+						if (self) { followers[follow->path].insert(self->name); }
+						continue;
+					}
+					for (const Object& object : objects)
+					{
+						if (object.name == follow->target || object.inGroup(follow->target)) { followers[follow->path].insert(object.name); }
+					}
+				}
+			};
+
+			for (const State& state : states)
+			{
+				for (const auto& [key, commands] : state.input) { visit(commands, nullptr); }
+				for (const auto& [axis, commands] : state.axes) { visit(commands, nullptr); }
+				for (const auto* conditions : { &state.conditions, &state.computer })
+				{
+					for (const Condition& condition : *conditions) { visit(condition.commands, nullptr); }
+				}
+				for (const Timer& timer : state.timers) { visit(timer.commands, nullptr); }
+				for (const Scene& scene : state.scenes)
+				{
+					for (const Condition& condition : scene.conditions) { visit(condition.commands, nullptr); }
+					for (const Timer& timer : scene.timers) { visit(timer.commands, nullptr); }
+				}
+			}
+			for (const Object& object : objects)
+			{
+				for (const Timer& timer : object.timers) { visit(timer.commands, &object); }
+				for (const auto& [name, commands] : object.action) { visit(commands, &object); }
+				for (const auto& rule : object.collisionData.others) { visit(rule.commands, &object); }
+				for (const auto* edge : { &object.collisionData.top, &object.collisionData.bottom, &object.collisionData.left, &object.collisionData.right })
+				{
+					visit(*edge, &object);
+				}
+			}
+
+			// A step that sends its flier on along another path: that path's
+			// fliers are this one's too, until nothing more is added.
+			for (bool grew = true; grew;)
+			{
+				grew = false;
+				for (const auto& [name, path] : paths)
+				{
+					for (const PathStep& step : path.steps)
+					{
+						for (const Command& command : step.commands)
+						{
+							const auto* follow = std::get_if<CmdFollow>(&shapeOf(command));
+							if (!follow || !follow->target.empty() || follow->path == name || !followers.count(name)) { continue; }
+							const std::set<std::string> from = followers[name];
+							std::set<std::string>& to = followers[follow->path];
+							const std::size_t before = to.size();
+							to.insert(from.begin(), from.end());
+							grew = grew || to.size() != before;
+						}
+					}
+				}
+			}
+			return followers;
+		}
+
 		WantedPalettes checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
 			const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles)
 		{
@@ -711,6 +788,12 @@ namespace xge
 				{
 					checkAll(step.commands, "path '" + name + "' > <step>");
 					checkPlace(step.commands, Place::PathStep, "path '" + name + "' > <step>");
+					for (const auto& [follower, own] : step.ownBy)
+					{
+						const std::string here = "path '" + name + "' > <step>, flown by '" + follower + "'";
+						checkAll(own, here);
+						checkPlace(own, Place::PathStep, here);
+					}
 					for (const auto& command : step.commands)
 					{
 						const auto* become = std::get_if<CmdBecome>(&shapeOf(command));
@@ -1363,11 +1446,38 @@ namespace xge
 					};
 					half(rawStep.x, step.by.x, step.liveX);
 					half(rawStep.y, step.by.y, step.liveY);
-					step.commands = processCommands(rawStep.commands, where + " > <step>");
+
+					// Commands about the follower are made for each follower
+					// (below); the rest once.
+					std::vector<RawCommand> probe = rawStep.commands;
+					if (nameSelfIn(probe, "follower"))
+					{
+						step.ownRaw = std::make_shared<const std::vector<RawCommand>>(rawStep.commands);
+					}
+					else
+					{
+						step.commands = processCommands(rawStep.commands, where + " > <step>");
+					}
 				}
 				path.steps.push_back(std::move(step));
 			}
 			paths[path.name] = std::move(path);
+		}
+
+		// A step's commands about the follower, made for each object that
+		// can fly that path.
+		for (auto& [name, followers] : followersOf(states, objects, paths))
+		{
+			if (!paths.count(name)) { continue; } // named no path: checkReferences says so
+			Path& path = paths.at(name);
+			for (PathStep& step : path.steps)
+			{
+				if (!step.ownRaw) { continue; }
+				for (const std::string& follower : followers)
+				{
+					step.ownBy[follower] = pathCommandsFor(step, follower, "path '" + name + "' > <step>, flown by '" + follower + "'");
+				}
+			}
 		}
 
 		makePalettes(rawObjects, objects, checkReferences(states, objects, sounds, paths, styles));
@@ -2296,6 +2406,14 @@ namespace xge
 		}
 
 		return timers;
+	}
+
+	std::vector<Command> game_expr::pathCommandsFor(const PathStep& step, const std::string& follower, const std::string& where)
+	{
+		if (!step.ownRaw) { return {}; }
+		std::vector<RawCommand> own = *step.ownRaw;
+		nameSelfIn(own, follower);
+		return processCommands(own, where);
 	}
 
 	std::vector<Command> game_expr::processCommands(const std::vector<RawCommand>& raw, const std::string& where)

@@ -1102,6 +1102,11 @@ namespace xge
 	// (self.x, self.score).
 	void nameSelf(std::vector<RawObject>& objects);
 
+	// The same for one list of commands, run by the object `name` (a path's
+	// step, run by whichever object flies it). The answer is whether the
+	// list said anything of itself, so changed.
+	bool nameSelfIn(std::vector<RawCommand>& list, const std::string& name);
+
 	// A copy of an object, named `to` where it was `from`: what its own
 	// rules, timers, actions and values said of `from` (by its name, or by
 	// self., which nameSelf made its name) they now say of `to`. What a

@@ -37,7 +37,8 @@
   * A diver is sent by its own dive action, which a timer of the fleet's
     triggers; the flagships' dive action also sends the two escorts nearest
     (<follow object="escorts"><nearest>2</nearest></follow>). What a diver
-    pays (self.pays) is its diving worth until the wrap.
+    pays (self.pays) is its diving worth from the dive's first step (so an
+    escort taken along pays it too) until the wrap.
   * The sway is a <shift> of the whole fleet a pixel at a time, turning every
     two seconds: the aliens and the places they fly home to move together.
   * The fleet is the playing state's one scene: when it is shot down a
@@ -166,7 +167,8 @@
     -->
     <path name="dive">
       <speed>divespeed</speed>
-      <step><x>-24</x><y>-24</y><play sound="dive" /></step>
+      <!-- whoever dives, alone or taken along by a flagship, is worth more until it wraps -->
+      <step><x>-24</x><y>-24</y><play sound="dive" /><set variable="self.pays">self.diving</set></step>
       <step><x>-24</x><y>40</y></step>
       <step><x>(ship.x - self.x) / 2</x><y>160</y><fire object="bomb" /></step>
       <step><x>ship.x - self.x</x><y>160</y><fire object="bomb" /></step>
@@ -438,7 +440,6 @@
               <actions>
                 <action name="dive">
                   <follow path="dive" />
-                  <set variable="self.pays">self.diving</set>
                 </action>
               </actions>
               <timers>
@@ -471,7 +472,6 @@
                 <actions>
                   <action name="dive">
                     <follow path="dive" />
-                    <set variable="self.pays">self.diving</set>
                     <follow path="dive" object="escorts"><nearest>2</nearest></follow>
                   </action>
                 </actions>

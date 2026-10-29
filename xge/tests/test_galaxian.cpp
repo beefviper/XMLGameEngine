@@ -327,6 +327,25 @@ TEST_CASE("a path step that names something live is worked out as it starts, wit
 	CHECK(isHome(a));
 }
 
+TEST_CASE("a step's commands can name the one flying it as self, whoever sent it", "[paths]")
+{
+	const std::string paths = "<paths><path name=\"count\"><speed>1</speed>"
+		"<step><x>3</x><y>0</y><inc variable=\"self.n\">self.x</inc></step></path></paths>";
+	const std::string group = "<group name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
+		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
+		"<variables><variable name=\"n\">0</variable></variables>"
+		"<member><position><x>100</x></position></member><member><position><x>120</x></position></member></group>";
+	Loaded loaded(paths, box("a", 0, 0, "<timers><timer><after>0.1</after><follow path=\"count\" object=\"b\" /></timer></timers>") + group);
+	loaded.frames(2);
+	CHECK(loaded.game.getObject("b.1").variable["n"] == 100.0f);
+	CHECK(loaded.game.getObject("b.2").variable["n"] == 120.0f);
+
+	// One that cannot be sent along it says nothing of it; one that can and
+	// has no such variable stops the load, naming it.
+	CHECK_THROWS_WITH(Loaded(paths, box("a", 0, 0, "<timers><timer><after>0.1</after><follow path=\"count\" /></timer></timers>") + group),
+		ContainsSubstring("flown by 'a'"));
+}
+
 TEST_CASE("mistakes with paths are turned away when the game loads, saying where", "[paths][errors]")
 {
 	const auto fails = [](const std::string& paths, const std::string& objects, const std::string& stateExtra, const std::string& expected)
@@ -498,11 +517,21 @@ TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pa
 	CHECK(play.object("escorts.1.1").isFollowing());
 	CHECK_FALSE(play.object("escorts.6.1").isFollowing());
 
-	// In the formation an escort pays 50; diving, 100.
+	// In the formation an escort pays 50; diving, even taken along, 100,
+	// from the dive's first step until it wraps.
 	Object& escort = play.object("escorts.1.1");
-	CHECK(escort.variable["pays"] == 50.0f);
-	CHECK(escort.variable["diving"] == 100.0f);
-	CHECK(play.object("flagships.1.1").variable["diving"] == 150.0f);
+	CHECK(play.object("escorts.6.1").variable["pays"] == 50.0f);
+	play.frames(1);
+	CHECK(escort.variable["pays"] == 100.0f);
+	Object& shot = play.object("shot");
+	shot.isVisible = true;
+	shot.collisionData.enabled = true;
+	// Put on it (the purples are just below, in the way of one fired).
+	shot.position = { escort.position.x + escort.size.x / 2.0f, escort.position.y + escort.size.y / 2.0f };
+	shot.velocity = {};
+	const float before = play.object("ship").variable["score"];
+	play.frames(2);
+	CHECK(play.object("ship").variable["score"] - before == 100.0f);
 }
 
 TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in", "[galaxian]")
