@@ -24,7 +24,7 @@ namespace xge
 	public:
 		explicit CommandExecutor(Game& gameToRun) noexcept : game(gameToRun) {}
 
-		// object.collisionData.{top,bottom,left,right}, driven by
+		// object.collisionData.edges, driven by
 		// touchesScreenEdge. Each of these returns false
 		// when the verb is refused (a <spawn> or <fire> with every copy out,
 		// an <aim> not lined up, a hop that cannot be made), which ends the
