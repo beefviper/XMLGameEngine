@@ -1132,10 +1132,24 @@ namespace xge
 	// <spawn> makes a copy from.
 	void renameOwn(RawObject& object, const std::string& from, const std::string& to);
 
-	// The numbers every object has while the game runs, read and set as
-	// owner.part (ball.x, ship.velocity.y): its top left, its velocity, its
-	// heading, its altitude and rise, and its light. A variable of the
-	// object's own of that name wins.
+	// One of the numbers every object has while the game runs, read and set
+	// as owner.part (ball.x, ship.velocity.y): its top left, its velocity,
+	// its heading, its altitude and rise, its light and its blink. A
+	// variable of the object's own of that name wins. The one list that
+	// numberOf, <set> (Game::setNumber) and the expressions' live numbers
+	// (Game::refreshLive) all go by: a new part is a row in liveParts.
+	struct LivePart
+	{
+		const char* name;
+		float& (*of)(Object& object);
+		bool notBelowZero;   // <set> keeps it at 0 or above
+	};
+	const std::vector<LivePart>& liveParts();
+
+	// The part of that name (velocity.x), or null.
+	const LivePart* livePartNamed(const std::string& part);
+
+	// The names of liveParts, in its order.
 	const std::vector<std::string>& liveNumberParts();
 
 	// The part of liveNumberParts() `name` ends with (after a dot), or ""

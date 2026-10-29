@@ -1918,21 +1918,10 @@ namespace xge
 			}
 		}
 
+		const std::vector<LivePart>& parts = liveParts();
 		for (const LiveLink& link : liveLinks)
 		{
-			const Object& object = objects[link.object];
-			switch (link.part)
-			{
-			case 0: *link.number = object.position.x; break;
-			case 1: *link.number = object.position.y; break;
-			case 2: *link.number = object.velocity.x; break;
-			case 3: *link.number = object.velocity.y; break;
-			case 4: *link.number = object.heading; break;
-			case 5: *link.number = object.altitude; break;
-			case 6: *link.number = object.rise; break;
-			case 7: *link.number = object.light; break;
-			default: *link.number = object.blink; break;
-			}
+			*link.number = parts[link.part].of(objects[link.object]);
 		}
 	}
 
@@ -1972,8 +1961,8 @@ namespace xge
 			return setVariable(target.owner, target.variable, value);
 		}
 		const std::string& owner = target.owner;
-		const std::string& part = target.variable;
-		if (liveNumberPart(target.written()).empty())
+		const LivePart* part = livePartNamed(target.variable);
+		if (!part)
 		{
 			std::cout << "warning: <set variable=\"" << target.written() << "\">: no such variable\n";
 			return false;
@@ -1984,19 +1973,10 @@ namespace xge
 		{
 			if (!object.named(owner)) { continue; }
 			found = true;
-			if (part == "x") { object.position.x = value; }
-			else if (part == "y") { object.position.y = value; }
-			else if (part == "velocity.x") { object.velocity.x = value; }
-			else if (part == "velocity.y") { object.velocity.y = value; }
-			else if (part == "altitude") { object.altitude = std::max(0.0f, value); }
-			else if (part == "rise") { object.rise = value; }
-			else if (part == "light") { object.light = std::max(0.0f, value); }
-			else if (part == "blink") { object.blink = std::max(0.0f, value); }
-			else if (object.hasHeading)
-			{
-				object.heading = value;
-				object.showHeading();
-			}
+			const bool heading = std::string(part->name) == "heading";
+			if (heading && !object.hasHeading) { continue; }
+			part->of(object) = part->notBelowZero ? std::max(0.0f, value) : value;
+			if (heading) { object.showHeading(); }
 		}
 		if (!found)
 		{

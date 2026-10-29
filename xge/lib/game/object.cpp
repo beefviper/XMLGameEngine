@@ -302,36 +302,63 @@ namespace xge
 		object.looks = std::move(looks);
 	}
 
+	const std::vector<LivePart>& liveParts()
+	{
+		static const std::vector<LivePart> parts{
+			{ "x", [](Object& o) -> float& { return o.position.x; }, false },
+			{ "y", [](Object& o) -> float& { return o.position.y; }, false },
+			{ "velocity.x", [](Object& o) -> float& { return o.velocity.x; }, false },
+			{ "velocity.y", [](Object& o) -> float& { return o.velocity.y; }, false },
+			{ "heading", [](Object& o) -> float& { return o.heading; }, false },
+			{ "altitude", [](Object& o) -> float& { return o.altitude; }, true },
+			{ "rise", [](Object& o) -> float& { return o.rise; }, false },
+			{ "light", [](Object& o) -> float& { return o.light; }, true },
+			{ "blink", [](Object& o) -> float& { return o.blink; }, true },
+		};
+		return parts;
+	}
+
+	const LivePart* livePartNamed(const std::string& part)
+	{
+		for (const LivePart& each : liveParts())
+		{
+			if (part == each.name) { return &each; }
+		}
+		return nullptr;
+	}
+
 	const std::vector<std::string>& liveNumberParts()
 	{
-		static const std::vector<std::string> parts{ "x", "y", "velocity.x", "velocity.y", "heading", "altitude", "rise", "light", "blink" };
-		return parts;
+		static const std::vector<std::string> names = []
+		{
+			std::vector<std::string> all;
+			for (const LivePart& part : liveParts()) { all.push_back(part.name); }
+			return all;
+		}();
+		return names;
 	}
 
 	std::string liveNumberPart(const std::string& name)
 	{
-		// The longest first: ball.velocity.x is velocity.x, not x.
-		for (const char* part : { "velocity.x", "velocity.y", "heading", "altitude", "rise", "light", "blink", "x", "y" })
+		// The longest that fits: ball.velocity.x is velocity.x, not x.
+		std::string longest;
+		for (const LivePart& part : liveParts())
 		{
-			const std::string tail = std::string(".") + part;
-			if (name.size() > tail.size() && name.compare(name.size() - tail.size(), tail.size(), tail) == 0) { return part; }
+			const std::string tail = std::string(".") + part.name;
+			if (name.size() > tail.size() && name.compare(name.size() - tail.size(), tail.size(), tail) == 0 && tail.size() > longest.size() + 1)
+			{
+				longest = part.name;
+			}
 		}
-		return {};
+		return longest;
 	}
 
 	std::optional<float> numberOf(const Object& object, const std::string& name)
 	{
 		if (const auto own = object.variable.find(name); own != object.variable.end()) { return own->second; }
-		if (name == "x") { return object.position.x; }
-		if (name == "y") { return object.position.y; }
-		if (name == "velocity.x") { return object.velocity.x; }
-		if (name == "velocity.y") { return object.velocity.y; }
-		if (name == "heading" && object.hasHeading) { return object.heading; }
-		if (name == "altitude") { return object.altitude; }
-		if (name == "rise") { return object.rise; }
-		if (name == "light") { return object.light; }
-		if (name == "blink") { return object.blink; }
-		return std::nullopt;
+		const LivePart* part = livePartNamed(name);
+		if (!part || (name == "heading" && !object.hasHeading)) { return std::nullopt; }
+		return part->of(const_cast<Object&>(object)); // only read
 	}
 
 	const std::vector<std::string>& touchNumberNames()
