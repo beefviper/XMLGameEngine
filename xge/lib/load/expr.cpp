@@ -1191,6 +1191,7 @@ namespace xge
 
 			// A total of a variable: some object it can count has it.
 			if ((condition.total == Total::Sum || condition.total == Total::Highest || condition.total == Total::Lowest)
+				&& condition.distanceTo.empty()
 				&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matches(rawCondition, object) && numberOf(object, condition.variableName); }))
 			{
 				throw std::runtime_error(where + ": total=\"" + rawCondition.total + "\" of variable=\"" + condition.variableName + "\", and no object it looks at has a variable of that name");

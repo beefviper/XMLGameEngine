@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <limits>
+#include <optional>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -2232,6 +2233,18 @@ namespace xge
 			return static_cast<float>(stillIn) <= (condition.live ? against : *condition.remaining);
 		}
 
+		// What is tested of one object: how far it is from the nearest of
+		// the other (both in play), or its variable.
+		const auto measure = [&](const Object& object) -> std::optional<float>
+		{
+			if (condition.distanceTo.empty()) { return numberOf(object, condition.variableName); }
+			if (!object.isVisible || !isShown(object)) { return std::nullopt; }
+			const Object* nearest = nearestInPlay(object, condition.distanceTo);
+			if (!nearest) { return std::nullopt; }
+			const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
+			return std::hypot(apart.x, apart.y);
+		};
+
 		// A total over everything that matches and is in play.
 		if (condition.total != Total::None)
 		{
@@ -2246,7 +2259,7 @@ namespace xge
 					++counted;
 					continue;
 				}
-				const std::optional<float> number = numberOf(object, condition.variableName);
+				const std::optional<float> number = measure(object);
 				if (!number) { continue; }
 				const float value = *number;
 				if (condition.total == Total::Sum) { total += value; }
@@ -2274,28 +2287,8 @@ namespace xge
 				continue;
 			}
 
-			// How far it is from the nearest of the other (both in play), or
-			// its variable.
-			float tested = 0.0f;
-			if (!condition.distanceTo.empty())
-			{
-				if (!object.isVisible || !isShown(object)) { continue; }
-				const Object* nearest = nearestInPlay(object, condition.distanceTo);
-				if (!nearest) { continue; }
-				const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
-				tested = std::hypot(apart.x, apart.y);
-			}
-			else
-			{
-				const std::optional<float> number = numberOf(object, condition.variableName);
-				if (!number)
-				{
-					continue;
-				}
-				tested = *number;
-			}
-
-			if (passes(condition.compare, tested, against))
+			const std::optional<float> tested = measure(object);
+			if (tested && passes(condition.compare, *tested, against))
 			{
 				return true;
 			}

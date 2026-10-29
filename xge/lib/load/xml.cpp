@@ -2581,7 +2581,7 @@ namespace xge
 			{
 				fail(here, "total=\"" + raw.total + "\" is not a total; expected count, sum, highest or lowest");
 			}
-			if (!raw.total.empty() && !raw.distance.empty()) { fail(here, "has total= and distance=; it tests one thing"); }
+			if (raw.total == "count" && !raw.distance.empty()) { fail(here, "total=\"count\" counts the objects in play, so it measures no distance="); }
 			if (remaining && (!raw.total.empty() || !raw.distance.empty())) { fail(here, "<remaining> counts what is in play, so it takes no total= or distance="); }
 			if (!raw.distance.empty() && !raw.variableName.empty()) { fail(here, "distance=\"" + raw.distance + "\" measures how far, so it reads no variable="); }
 			if (raw.total == "count" && !raw.variableName.empty()) { fail(here, "total=\"count\" counts the objects in play, so it reads no variable="); }

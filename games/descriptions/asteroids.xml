@@ -7,8 +7,9 @@
   Asteroids, after the 1979 arcade game: a ship that turns, thrusts the way
   it faces, drifts on and wraps round the screen, shooting rocks that break
   into smaller ones. Clear the rocks and a new wave comes; now and then a
-  flying saucer crosses and shoots at the ship. Every 10000 points is
-  another ship. Three ships.
+  flying saucer crosses: the big one shoots anywhere, the small one at the
+  ship, and the higher the score the likelier the small one. Every 10000
+  points is another ship. Three ships.
 
   A and D or Left and Right turn, W or Up thrusts, Space fires, S or Down
   jumps into hyperspace, P or Escape pauses.
@@ -24,14 +25,20 @@
     breaks: it <release>s two, spawned where it was,
     the shapes in turn, each going its own way (a <random> velocity drawn
     as it is made, never slower than its shape's least up or down), and a broken one <despawn>s.
+  * Shots wrap round the edges like everything else and run out after a
+    second (a timer of their own that <despawn>s them).
   * The ship and its shots are both class "breaker", so each size has one
-    rule for being broken, by either. A ship that is hit goes out of play,
-    and a timer of the playing state brings it back at the middle.
+    rule for being broken, by either. A ship that is hit goes out of play
+    and brings in "centre", a pictureless mark at the middle; two seconds
+    on, it is ready, and the ship comes back there once no hazard is within
+    150 of it (distance= with total="lowest": the nearest one).
+  * A saucer falls due on a timer of the playing state, with a luck drawn;
+    a condition sends the small one when the luck is below the score over
+    40000, else the big one, and only when neither is out.
   * The heartbeat is the playing state's <music>; the saucer warbles on a
     timer of its own, so a pause is quiet.
   * The best score is <keeps>, shown on the title and in play.
-  Not in it: the small and large saucer told apart (there is one, and it
-  aims), the ship's flame, and the rocks hitting the saucer.
+  Not in it: the ship's flame, and the rocks hitting the saucer.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -45,6 +52,7 @@
     <variable name="drag">0.02</variable>
     <variable name="shotspeed">8</variable>
     <variable name="margin">20</variable>
+    <variable name="shotlife">1</variable>
   </variables>
   <sounds>
     <!-- the heartbeat, two low thumps over and over -->
@@ -108,15 +116,18 @@
     <style name="hud"><size>30</size></style>
   </styles>
   <kit>
-    <!-- four shots in the air at most -->
+    <!-- four shots in the air at most, wrapping, each gone after a second -->
     <object name="shot" class="breaker">
       <sprite><rectangle><width>3</width><height>3</height></rectangle></sprite>
       <velocity><y>-shotspeed</y></velocity>
       <most>4</most>
       <collisions>
-        <collision edge="all"><despawn /></collision>
+        <collision edge="all"><wrap /></collision>
         <collision class="hazard"><despawn /></collision>
       </collisions>
+      <timers>
+        <timer><after>shotlife</after><despawn /></timer>
+      </timers>
     </object>
     <!-- what every rock is: a hazard, hit by its outline, wrapping round the edges -->
     <group name="rock" class="hazard">
@@ -221,14 +232,56 @@
         <velocity><y><random><min>1</min><max>2.6</max></random></y></velocity>
       </member>
     </group>
+    <!-- the small saucer's shot, aimed at the ship -->
     <object name="saucershot" class="hazard">
       <sprite><rectangle><width>3</width><height>3</height></rectangle></sprite>
       <velocity><y>5</y></velocity>
       <most>2</most>
       <collisions>
-        <collision edge="all"><despawn /></collision>
+        <collision edge="all"><wrap /></collision>
         <collision class="breaker"><despawn /></collision>
       </collisions>
+      <timers>
+        <timer><after>shotlife</after><despawn /></timer>
+      </timers>
+    </object>
+    <!-- the big saucer's shot, off any way at all -->
+    <object name="wildshot" from="saucershot">
+      <velocity>
+        <x><random><min>-5</min><max>5</max></random></x>
+        <y><random><min>-5</min><max>5</max></random></y>
+      </velocity>
+    </object>
+    <!-- the big saucer: crosses now and then, wandering up and down and shooting anywhere; the small one is from= it -->
+    <object name="saucer" class="hazard">
+      <sprite>
+        <line><from><x>10</x><y>1</y></from><to><x>18</x><y>1</y></to></line>
+        <line><from><x>10</x><y>1</y></from><to><x>8</x><y>5</y></to></line>
+        <line><from><x>18</x><y>1</y></from><to><x>20</x><y>5</y></to></line>
+        <line><from><x>1</x><y>9</y></from><to><x>8</x><y>5</y></to><thickness>2</thickness></line>
+        <line><from><x>8</x><y>5</y></from><to><x>20</x><y>5</y></to><thickness>2</thickness></line>
+        <line><from><x>20</x><y>5</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+        <line><from><x>1</x><y>9</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+        <line><from><x>1</x><y>9</y></from><to><x>8</x><y>13</y></to><thickness>2</thickness></line>
+        <line><from><x>8</x><y>13</y></from><to><x>20</x><y>13</y></to><thickness>2</thickness></line>
+        <line><from><x>20</x><y>13</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+      </sprite>
+      <position><x>-30</x><y><random><min>80</min><max>window.bottom - 80</max></random></y></position>
+      <velocity><x>2</x></velocity>
+      <active>false</active>
+      <collisions>
+        <type>pixel</type>
+        <collision edge="vertical"><wrap /></collision>
+        <collision edge="right"><die /></collision>
+      </collisions>
+      <timers>
+        <timer name="hum"><every>0.25</every><play sound="saucer" /></timer>
+        <timer name="shoot"><every>1</every><fire object="wildshot" /></timer>
+        <timer>
+          <every>1.5</every>
+          <set variable="self.velocity.y"><random><min>-1.5</min><max>1.5</max></random></set>
+        </timer>
+      </timers>
     </object>
   </kit>
   <objects>
@@ -280,6 +333,7 @@
             <type>pixel</type>
             <collision edge="all"><wrap /></collision>
             <collision class="hazard">
+              <reveal object="centre" />
               <dec variable="ship.lives" />
               <play sound="boom" />
               <reset />
@@ -373,45 +427,61 @@
             </member>
           </group>
         </group>
-        <!-- The saucer crosses now and then, wandering up and down and shooting at the ship. -->
-        <object name="saucer" class="hazard">
-          <sprite>
-            <line><from><x>10</x><y>1</y></from><to><x>18</x><y>1</y></to></line>
-            <line><from><x>10</x><y>1</y></from><to><x>8</x><y>5</y></to></line>
-            <line><from><x>18</x><y>1</y></from><to><x>20</x><y>5</y></to></line>
-            <line><from><x>1</x><y>9</y></from><to><x>8</x><y>5</y></to><thickness>2</thickness></line>
-            <line><from><x>8</x><y>5</y></from><to><x>20</x><y>5</y></to><thickness>2</thickness></line>
-            <line><from><x>20</x><y>5</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-            <line><from><x>1</x><y>9</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-            <line><from><x>1</x><y>9</y></from><to><x>8</x><y>13</y></to><thickness>2</thickness></line>
-            <line><from><x>8</x><y>13</y></from><to><x>20</x><y>13</y></to><thickness>2</thickness></line>
-            <line><from><x>20</x><y>13</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-          </sprite>
-          <position><x>-30</x><y><random><min>80</min><max>window.bottom - 80</max></random></y></position>
-          <velocity><x>2</x></velocity>
-          <active>false</active>
+        <object name="saucer">
           <collisions>
-            <type>pixel</type>
-            <collision edge="vertical"><wrap /></collision>
-            <collision edge="right"><die /></collision>
             <collision class="breaker">
               <die />
-              <inc variable="ship.score">1000</inc>
+              <inc variable="ship.score">200</inc>
               <play sound="bangbig" />
             </collision>
           </collisions>
+        </object>
+        <!-- The small saucer: half the size, quicker, and it aims. -->
+        <object name="smallsaucer" from="saucer">
+          <sprite>
+            <line><from><x>5</x><y>1</y></from><to><x>9</x><y>1</y></to></line>
+            <line><from><x>5</x><y>1</y></from><to><x>4</x><y>3</y></to></line>
+            <line><from><x>9</x><y>1</y></from><to><x>10</x><y>3</y></to></line>
+            <line><from><x>1</x><y>5</y></from><to><x>4</x><y>3</y></to></line>
+            <line><from><x>4</x><y>3</y></from><to><x>10</x><y>3</y></to></line>
+            <line><from><x>10</x><y>3</y></from><to><x>13</x><y>5</y></to></line>
+            <line><from><x>1</x><y>5</y></from><to><x>13</x><y>5</y></to></line>
+            <line><from><x>1</x><y>5</y></from><to><x>4</x><y>7</y></to></line>
+            <line><from><x>4</x><y>7</y></from><to><x>10</x><y>7</y></to></line>
+            <line><from><x>10</x><y>7</y></from><to><x>13</x><y>5</y></to></line>
+          </sprite>
+          <velocity><x>2.5</x></velocity>
+          <collisions>
+            <collision class="breaker">
+              <die />
+              <inc variable="ship.score">1000</inc>
+              <play sound="bangsmall" />
+            </collision>
+          </collisions>
           <timers>
-            <timer><every>0.25</every><play sound="saucer" /></timer>
-            <timer>
+            <timer name="hum"><every>0.18</every><play sound="saucer" /></timer>
+            <timer name="shoot">
               <every>1</every>
               <aim object="ship" />
               <fire object="saucershot" />
             </timer>
-            <timer>
-              <every>1.5</every>
-              <set variable="saucer.velocity.y"><random><min>-1.5</min><max>1.5</max></random></set>
-            </timer>
           </timers>
+        </object>
+        <!-- Where a ship that was hit comes back: in play while it waits, ready two seconds on. -->
+        <object name="centre">
+          <position><x>window.width.center</x><y>window.height.center</y></position>
+          <active>false</active>
+          <variables><variable name="ready">0</variable></variables>
+          <timers>
+            <timer><after>2</after><set variable="centre.ready">1</set></timer>
+          </timers>
+        </object>
+        <!-- When a saucer is due, and the luck that picks which. -->
+        <object name="saucers">
+          <variables>
+            <variable name="due">0</variable>
+            <variable name="luck">0</variable>
+          </variables>
         </object>
         <object name="score">
           <sprite><text style="hud"><number>ship.score</number></text></sprite>
@@ -449,6 +519,38 @@
           </all>
           <reset object="rocks" />
         </condition>
+        <!-- the middle clear: the ship comes back -->
+        <condition>
+          <all>
+            <condition object="centre" variable="ready"><equal>1</equal></condition>
+            <any>
+              <condition class="hazard"><remaining>0</remaining></condition>
+              <condition class="hazard" distance="centre" total="lowest"><above>150</above></condition>
+            </any>
+          </all>
+          <reveal object="ship" />
+          <reset object="centre" />
+        </condition>
+        <!-- a saucer due and none out: the small one by luck, likelier as the score climbs -->
+        <condition>
+          <all>
+            <condition object="saucers" variable="due"><equal>1</equal></condition>
+            <condition object="saucer"><remaining>0</remaining></condition>
+            <condition object="smallsaucer"><remaining>0</remaining></condition>
+            <condition object="saucers" variable="luck"><below>ship.score / 40000</below></condition>
+          </all>
+          <reveal object="smallsaucer" />
+          <set variable="saucers.due">0</set>
+        </condition>
+        <condition>
+          <all>
+            <condition object="saucers" variable="due"><equal>1</equal></condition>
+            <condition object="saucer"><remaining>0</remaining></condition>
+            <condition object="smallsaucer"><remaining>0</remaining></condition>
+          </all>
+          <reveal object="saucer" />
+          <set variable="saucers.due">0</set>
+        </condition>
         <condition object="ship" variable="score">
           <atleast>ship.next</atleast>
           <inc variable="ship.lives" />
@@ -461,9 +563,11 @@
         </condition>
       </conditions>
       <timers>
-        <!-- a ship that was hit comes back at the middle -->
-        <timer><every>2</every><reveal object="ship" /></timer>
-        <timer><every><random><min>12</min><max>24</max></random></every><reveal object="saucer" /></timer>
+        <timer>
+          <every><random><min>12</min><max>24</max></random></every>
+          <set variable="saucers.luck"><random><min>0</min><max>1</max></random></set>
+          <set variable="saucers.due">1</set>
+        </timer>
       </timers>
     </state>
     <state name="paused">

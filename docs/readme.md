@@ -111,7 +111,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `depthcharge` | A/D, Space drops | charges off both sides, submarines in four lanes laying mines, 90 seconds |
 | `astrosmash` | A/D, Space fires | falling rocks that split, spinners, a spare base each 1,000 |
 | `lunarlander` | Left/Right turn, Up thrusts | land upright and slowly on pads worth 2X, 3X, 5X until the fuel is gone; [`<line>`](#lines) pictures, `pixel` collisions |
-| `asteroids` | Left/Right turn, Up thrusts, Space fires, Down hyperspace | rocks that break, waves, a saucer, the heartbeat as music, the best score kept |
+| `asteroids` | Left/Right turn, Up thrusts, Space fires, Down hyperspace | rocks that break, waves, shots that wrap and run out, a ship that comes back when the middle is clear, a big saucer that shoots anywhere and a small one that aims (likelier as the score climbs), the heartbeat as music, the best score kept |
 | `berserk` | W A S D walk and face, Space fires | four rooms as [maps](#maps), robots that patrol, line up and fire, Evil Otto, the exit shut behind you |
 | `demonattack` | A/D, Space fires | three waves of demons that fire back and split |
 | `frostbite` | W/S jump between rows, A/D walk | build the igloo by landing on white ice; three nights |
@@ -1255,7 +1255,7 @@ A condition is checked every frame while its state (or scene) is current. It hol
   ```
 
 - **`total=`** tests one number over everything matched and in play: `count` (no variable), or `sum`, `highest`, `lowest` of the variable. `<remaining>N</remaining>` is `total="count"` with `<atmost>N</atmost>`.
-- **`distance="hero"`** tests how far each matched object is from the nearest of that name in play, middle to middle, instead of a variable.
+- **`distance="hero"`** tests how far each matched object is from the nearest of that name in play, middle to middle, instead of a variable. With `total="lowest"` (or `highest`, `sum`) it tests one number over them all: `class="hazard" distance="centre" total="lowest"` with `<above>150</above>` is "nothing within 150 of the middle" (Asteroids' ship waits for it; with nothing matched in play it does not hold, so add an `<any>` with `<remaining>0</remaining>`).
 - **`<all>` and `<any>`** of tests: every one, or at least one. Inside them a `<condition>` is a test alone (its own `class=`, `object=`, `variable=`, `total=` or `distance=`, then one test tag), with no commands; they nest. Adventure's dragon wakes once, when the hero comes near:
 
   ```xml

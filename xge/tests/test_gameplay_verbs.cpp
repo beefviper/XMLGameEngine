@@ -1190,6 +1190,17 @@ TEST_CASE("a condition can test how far each object it matches is from the neare
 	CHECK_FALSE(closing.fires());
 	closing.object("ball").position.x = 150.0f;
 	CHECK(closing.fires());
+
+	// With a total: the nearest or farthest of them all, so "none within
+	// 60" is the lowest above 60 (Asteroids' ship waiting for a clear middle).
+	CHECK(Coins("class=\"coin\" distance=\"ball\" total=\"lowest\"><equal>50</equal>").fires());
+	CHECK(Coins("class=\"coin\" distance=\"ball\" total=\"highest\"><equal>150</equal>").fires());
+	Coins clear("class=\"coin\" distance=\"ball\" total=\"lowest\"><above>60</above>");
+	CHECK_FALSE(clear.fires());
+	clear.object("coin1").isVisible = false;
+	CHECK_FALSE(clear.fires());
+	clear.object("coin2").isVisible = false;
+	CHECK(clear.fires());
 }
 
 TEST_CASE("<all> holds when every check does, <any> when one does, and they nest", "[conditions][join]")
@@ -1235,7 +1246,7 @@ TEST_CASE("mistakes in totals, distances, <all> and <any> stop the load, saying 
 	fails("class=\"coin\" total=\"sum\" variable=\"w\"><atleast>1</atleast>", "no object it looks at has a variable of that name");
 	fails("object=\"ball\" distance=\"coins\"><below>5</below>", "distance=\"coins\" names no object or group");
 	fails("object=\"ball\" distance=\"coin1\" variable=\"v\"><below>5</below>", "reads no variable=");
-	fails("object=\"ball\" distance=\"coin1\" total=\"count\"><below>5</below>", "has total= and distance=");
+	fails("object=\"ball\" distance=\"coin1\" total=\"count\"><below>5</below>", "measures no distance=");
 	fails("class=\"coin\" total=\"count\"><remaining>1</remaining>", "<remaining> counts what is in play");
 	fails("object=\"ball\"><all><condition object=\"ball\" variable=\"n\"><below>5</below></condition></all>", "so the condition has no class=");
 	fails("><all></all>", "<all>: has no <condition>");

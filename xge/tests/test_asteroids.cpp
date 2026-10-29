@@ -333,7 +333,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 			}
 		}
 
-		CHECK(descriptions == 3 + 3 + 2); // three shapes of each smaller rock, and the two shots
+		CHECK(descriptions == 3 + 3 + 3); // three shapes of each smaller rock, and the three shots
 		CHECK(turns == 2);
 		CHECK(thrusts == 1);
 		CHECK(releases == 4 + 3); // every big rock and medium shape hands out smaller ones
@@ -650,7 +650,7 @@ TEST_CASE("only four shots can be in the air; a fifth does nothing until one is 
 	CHECK(field.inPlay("shot") == 1);
 }
 
-TEST_CASE("a shot that has left the screen is gone from the game", "[asteroids][fire]")
+TEST_CASE("a shot wraps round the screen, and a second on it is gone from the game", "[asteroids][fire]")
 {
 	Field field;
 	field.clearTheMiddle();
@@ -659,10 +659,44 @@ TEST_CASE("a shot that has left the screen is gone from the game", "[asteroids][
 	field.key("fire", true);
 	field.key("fire", false);
 	CHECK(field.game.getCurrentObjects().size() == before + 1);
-	field.frames(80);
 
+	// Up from the middle at 8 a frame, it is off the top in about 36 frames
+	// and back in at the bottom.
+	field.frames(45);
+	REQUIRE(field.group("shot").size() == 1);
+	CHECK(field.group("shot")[0]->position.y > 300.0f);
+
+	field.frames(16);
 	CHECK(field.group("shot").empty());
 	CHECK(field.game.getCurrentObjects().size() == before);
+}
+
+TEST_CASE("a hit ship waits for the middle to be clear before it comes back", "[asteroids][ship]")
+{
+	Field field;
+	field.clearTheMiddle();
+	field.ship().position = { 100, 100 };
+	field.ship().velocity = { 1.0f, 0.5f };
+	Object& rock = *field.group("bigrocks")[0];
+	rock.position = { 105, 105 };
+	rock.velocity = {};
+	field.frames(2);
+	REQUIRE_FALSE(field.ship().isVisible);
+
+	// A rock parked by the middle keeps it away, however long.
+	field.clearTheMiddle();
+	Object& other = *field.group("bigrocks")[1];
+	other.isVisible = true;
+	other.collisionData.enabled = true;
+	other.position = { 400.0f - other.size.x / 2.0f + 60.0f, 300.0f - other.size.y / 2.0f };
+	field.frames(300);
+	CHECK_FALSE(field.ship().isVisible);
+
+	// Moved off, the ship is back the next frame.
+	other.position = { 740, 540 };
+	field.frames(2);
+	CHECK(field.ship().isVisible);
+	CHECK(field.ship().position == field.ship().positionOriginal);
 }
 
 // ------------------------------------------------------------ breaking rocks
@@ -869,8 +903,8 @@ TEST_CASE("three ships and then it is game over; space plays again from the star
 
 	for (int hit = 0; hit < 3; ++hit)
 	{
-		field.frames(121); // back after the last hit
 		field.clearTheMiddle();
+		field.frames(121); // back after the last hit, the middle clear
 		Object& rock = *field.group("bigrocks")[static_cast<std::size_t>(hit)];
 		field.ship().position = { 100, 100 }; // it starts again in the middle after each hit
 		field.ship().velocity = { 1.0f, 0.5f }; // contact is found as things move into each other
@@ -995,7 +1029,7 @@ TEST_CASE("playing again puts everything back: rocks, shots, score and ships", "
 
 // ------------------------------------------------------------ the saucer, hyperspace, extra ships
 
-TEST_CASE("the saucer comes in from the left now and then, and shoots at the ship", "[asteroids][saucer]")
+TEST_CASE("the big saucer comes in from the left now and then, and shoots", "[asteroids][saucer]")
 {
 	Field field;
 	field.clearTheMiddle();
@@ -1009,20 +1043,17 @@ TEST_CASE("the saucer comes in from the left now and then, and shoots at the shi
 	CHECK(saucer.position.x < 0.0f);
 	CHECK(saucer.velocity.x > 0.0f);
 
-	// A second on, it has aimed and fired a shot at the ship.
+	// A second on, it has fired a shot, off any way.
 	field.frames(61);
 	int flying = 0;
-	for (Object* shot : field.group("saucershot"))
+	for (Object* shot : field.group("wildshot"))
 	{
-		if (!shot->isVisible) { continue; }
-		++flying;
-		const Vector2f toShip = field.centre(field.ship()) - field.centre(*shot);
-		CHECK(shot->velocity.x * toShip.x + shot->velocity.y * toShip.y > 0.0f);
+		if (shot->isVisible) { ++flying; }
 	}
 	CHECK(flying >= 1);
 }
 
-TEST_CASE("a shot that hits the saucer is a thousand points", "[asteroids][saucer]")
+TEST_CASE("a shot that hits the big saucer is 200 points", "[asteroids][saucer]")
 {
 	Field field;
 	field.clearTheMiddle();
@@ -1037,7 +1068,57 @@ TEST_CASE("a shot that hits the saucer is a thousand points", "[asteroids][sauce
 	field.frames(40);
 
 	CHECK_FALSE(saucer.isVisible);
-	CHECK(field.score() == 1000.0f);
+	CHECK(field.score() == 200.0f);
+}
+
+TEST_CASE("the small saucer aims at the ship and is a thousand points; the higher the score, the likelier it comes", "[asteroids][saucer]")
+{
+	Field field;
+	field.clearTheMiddle();
+	Object& saucer = field.named("saucer");
+	Object& small = field.named("smallsaucer");
+
+	// At no score it is always the big one.
+	field.game.setVariable("playing.saucers", "luck", 0.1f);
+	field.game.setVariable("playing.saucers", "due", 1.0f);
+	field.frames(1);
+	CHECK(saucer.isVisible);
+	CHECK_FALSE(small.isVisible);
+	CHECK(field.named("saucers").variable["due"] == 0.0f);
+
+	// At 8000 a luck below a fifth sends the small one, once the big is gone.
+	saucer.isVisible = false;
+	field.game.setVariable("playing.ship", "score", 8000.0f);
+	field.game.setVariable("playing.saucers", "luck", 0.1f);
+	field.game.setVariable("playing.saucers", "due", 1.0f);
+	field.frames(1);
+	CHECK(small.isVisible);
+	CHECK_FALSE(saucer.isVisible);
+	CHECK(small.size.x < saucer.size.x);
+
+	// It aims: a second on, its shot is going toward the ship.
+	field.frames(61);
+	int flying = 0;
+	for (Object* shot : field.group("saucershot"))
+	{
+		if (!shot->isVisible) { continue; }
+		++flying;
+		const Vector2f toShip = field.centre(field.ship()) - field.centre(*shot);
+		CHECK(shot->velocity.x * toShip.x + shot->velocity.y * toShip.y > 0.0f);
+	}
+	CHECK(flying >= 1);
+
+	small.position = { field.centre(field.ship()).x - small.size.x / 2, 200 };
+	small.velocity = {};
+	field.ship().position = { field.ship().position.x, 480 };
+	field.ship().velocity = {};
+	field.ship().heading = 0.0f;
+	for (Object* shot : field.group("saucershot")) { shot->position = { 10, 10 }; shot->velocity = {}; }
+	field.key("fire", true);
+	field.key("fire", false);
+	field.frames(40);
+	CHECK_FALSE(small.isVisible);
+	CHECK(field.score() == 9000.0f);
 }
 
 TEST_CASE("hyperspace puts the ship somewhere else at random, inside the window", "[asteroids][ship]")

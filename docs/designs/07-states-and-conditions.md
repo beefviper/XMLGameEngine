@@ -73,7 +73,7 @@ Built 2026-10-16: the three things conditions could not say.
 
 - **And, or:** a condition holds `<all>` or `<any>`, each a list of `<condition>`s, each a test written exactly as a condition's but with no commands; they nest. One test per inner condition, because the tests of a real "and" are about different things (the hero near the dragon, and the dragon still asleep). Set aside: `and=`/`or=` attributes chaining named conditions, several test tags meaning "and" (no "or"), `<not>` (each test already has its opposite).
 - **Totals:** `total="count|sum|highest|lowest"` turns what is tested into one number over everything matched and in play, so "at least three bullets in flight" needs nothing new. An attribute, because it picks what is measured. `<remaining>` stays, as every shipped game says it that way.
-- **Distance:** `distance="name"` measures each matched object to the nearest in play of that name or group (middle to middle, as `<chase>`), so "near" is a `<below>`.
+- **Distance:** `distance="name"` measures each matched object to the nearest in play of that name or group (middle to middle, as `<chase>`), so "near" is a `<below>`. Since 2026-10-29 it takes `total="lowest"`, `highest` or `sum` too (not `count`), so "nothing near" is the lowest `<above>`: Asteroids' respawn.
 - Example: Adventure's dragon sleeps until the hero is within 160 pixels and wakes once, an `<all>` of a distance and its own `awake` flag (needed because a condition fires every frame it holds).
 - **One word, `<condition>`** (2026-10-28, Beef's call): the test inside `<all>`, `<any>` and a collision rule was a `<check>`. The schema now gives `<condition>` two shapes by where it stands, so a reader learns one word for one idea.
 

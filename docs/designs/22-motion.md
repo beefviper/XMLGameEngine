@@ -42,7 +42,7 @@
 - **Pictures are turned by the engine, once per whole-degree change, not by backends** (details in [pictures](30-pictures.md)). Rejected: rotating in each backend (four backends to change, and the pixel test would still need the turned picture; filtering would make drawn and tested pixels differ per library).
 - **Broken rocks are spawned.** `<release object>N</release>` makes N copies of a kit piece in the middle of the object running the rule (a rock breaking), and a broken one `<despawn>`s ([pools-and-enemies](10-pools-and-enemies.md#spawn-and-despawn-2026-10-23)); `<reveal>` puts objects waiting out of play back where they started.
 - `<inc>`/`<dec>` take an amount (scoring first repeated `<inc />`); an object out of play does not count toward `remaining`; a collision `<reset />` restores the heading; `<stop />` clears turn and thrust.
-- Since the 2026-10-19 rewrite Asteroids has waves and a saucer that aims. Not done: the small and large saucer told apart, a safe wait before the ship returns.
+- Since the 2026-10-19 rewrite Asteroids has waves; since 2026-10-29 shots that wrap and run out, two saucers and a respawn that waits for a clear middle ([games](54-games-classic.md#asteroids)).
 
 
 ## Steps, jumps and facing

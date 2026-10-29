@@ -43,7 +43,7 @@ Each verb belongs to one of nine command groups, and each place (a collision, an
 
 - Targets: `edge`, `class`, `object`, `variable`, `into`, `direction`, `button`, `axis`, `keys`, `sound`, `state`, `scene`, `way`, `path`, `from`.
 - Filters on a collision rule: `side`, `unless`, `sprite` (only in that look), `slower`, `faster`, `through`, and `condition`s.
-- Tests in a condition: `atleast`, `atmost`, `above`, `below`, `equal` (each a number, read live when it names a variable), `remaining`; over many objects `total=` (`count`, `sum`, `highest`, `lowest`); `distance=` to a name or group; `all` and `any` to join them.
+- Tests in a condition: `atleast`, `atmost`, `above`, `below`, `equal` (each a number, read live when it names a variable), `remaining`; over many objects `total=` (`count`, `sum`, `highest`, `lowest`); `distance=` to a name or group (with a total too); `all` and `any` to join them.
 - Steering details: `ahead`, `with`, `retreat` (`hunt`), `near` (`chase`), `lined` (`aim`), `stagger`, `nearest` (`follow`), `rough` (`hole`).
 
 **Pronouns: names that can be pointed at**
