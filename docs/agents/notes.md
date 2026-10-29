@@ -25,10 +25,10 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 - Most numbers are worked out **once at load**. Read again while running: a timer's `<every>`/`<after>`, positions that use a measured text or image size, a command's numbers that name a variable or live number (`CmdLive`, remade by `Game::makeNow`), and a condition's test number (`Condition::live`).
 - `<random>` is drawn at load and again each time its object comes back into play (a reset, `<reset scene>`, `<reveal>`, `<release>`, `<fire>`, a spawn); entering a scene does not ([values-and-names](../designs/04-values-and-names.md)).
 - Variables are `float`; there is no handle system or `Value` variant. A command names a variable as a `VariableName` (owner and variable, taken apart once when the command is made), and anything that changes one goes through `Game::setVariable` (which calls `refreshBoundTexts`, so the texts and the expressions see it).
-- A variable named like an exprtk function (`floor`, `min`) stops the load. `window.width` is not a symbol (`window.right`).
+- A value's text is only numbers, names, `+ - * /`, a sign and brackets (`load/calc`); a function call (`max(...)`) or a comparison stops the load: write a `<formula>`. `window.width` is not a symbol (`window.right`).
 - `owner.blink` and the other live numbers are rows of `liveParts` (`game/object.cpp`): a name, where it is on an object, whether `<set>` keeps it at 0 or above. `numberOf`, `Game::setNumber` and the expressions' live numbers all go by it, so a new part is one row.
 - Arithmetic: a new operation is a row in `operationShape` (`game/command.cpp`), a case in `evaluateOperation` (`load/expr.cpp`) and the schema types. A divisor of 0 is a load error before `finishLoading()` and a warning after; each `Answer` has a `late` flag for values not final while loading. Keep both.
-- exprtk is included by `load/expr.cpp` alone: `game_expr` keeps its table, parser and compiled texts behind a pointer (`game_expr::Exprtk`), so files that include `game/game.h` do not compile it. Keep it out of headers; it is the slowest thing in the build.
+- A text is compiled once (`game_expr::compiled`) into steps that read each name's number where it lives; a name is bound into `calc` only when a text first reads it (`bind`, `unbound`), since a big game has thousands. Keep the arithmetic in `load/calc` and the formula tags in `evaluateOperation`; there is no second expression system.
 
 ### Objects, states and scenes
 

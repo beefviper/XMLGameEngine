@@ -95,9 +95,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/output")
 
 include(FetchContent)
 
-# What the engine is built with: SFML 3 for the window and sound, exprtk for
-# the expressions in the game, lunasvg for any &lt;svg&gt; picture. Each as
-# installed (vcpkg install sfml exprtk lunasvg), or else fetched and built here.
+# What the engine is built with: SFML 3 for the window and sound, lunasvg for
+# any &lt;svg&gt; picture. Each as installed (vcpkg install sfml lunasvg), or
+# else fetched and built here.
 find_package(SFML 3 COMPONENTS Graphics Audio QUIET)
 if (NOT SFML_FOUND)
 	message(STATUS "SFML 3 not found, using FetchContent to download and build it.")
@@ -105,16 +105,6 @@ if (NOT SFML_FOUND)
 	set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
 	FetchContent_Declare(SFML GIT_REPOSITORY https://github.com/SFML/SFML.git GIT_TAG 3.1.0 EXCLUDE_FROM_ALL SYSTEM)
 	FetchContent_MakeAvailable(SFML)
-endif()
-
-find_path(EXPRTK_INCLUDE_DIR exprtk.hpp)
-if (EXPRTK_INCLUDE_DIR)
-	add_library(exprtk INTERFACE)
-	target_include_directories(exprtk SYSTEM INTERFACE "${EXPRTK_INCLUDE_DIR}")
-else()
-	message(STATUS "exprtk not found, using FetchContent to download it.")
-	FetchContent_Declare(exprtk GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git GIT_TAG 0.0.3-cmake EXCLUDE_FROM_ALL SYSTEM)
-	FetchContent_MakeAvailable(exprtk)
 endif()
 
 find_package(lunasvg QUIET)
@@ -139,11 +129,11 @@ add_executable(</xsl:text>
     <xsl:for-each select="$engine">
       <xsl:value-of select="concat('&#9;engine/', substring-after(., '/'), '&#10;')" />
     </xsl:for-each>
-    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio exprtk lunasvg::lunasvg)&#10;')" />
+    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg)&#10;')" />
     <xsl:text>
 # The warnings the engine is built with (xge_warnings in its
-# scripts/cmake/platform.cmake), for its code and the game's alike; /bigobj
-# because exprtk makes more sections than MSVC allows an object file without it.
+# scripts/cmake/platform.cmake), for its code and the game's alike, /bigobj
+# included.
 target_compile_options(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> PRIVATE
@@ -212,12 +202,12 @@ Only reading XML and choosing among window and sound libraries are left out.
 | `engine/` | the engine's own files, as they are in its `xge/lib/` |
 | `assets/` | the fonts and pictures it opens (a font with its licence), copied beside the program when it is built |
 | `LICENSE` | the engine's licence (MIT), which goes with its code |
-| `CMakeLists.txt` | the build; it uses installed SFML 3, exprtk and lunasvg, or downloads and builds them |
+| `CMakeLists.txt` | the build; it uses installed SFML 3 and lunasvg, or downloads and builds them |
 | `.gitignore` | leaves out `build/` and `output/` |
 
 ## Build and play
 
-On Windows with Visual Studio and vcpkg (`vcpkg install sfml exprtk lunasvg`), from this folder:
+On Windows with Visual Studio and vcpkg (`vcpkg install sfml lunasvg`), from this folder:
 
 ```
 cmake -B build -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake

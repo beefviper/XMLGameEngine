@@ -124,14 +124,10 @@ macro(xge_dependency name)
 endmacro()
 
 # Only the libraries of the backends that are built (options.cmake) are found
-# or fetched: the engine itself needs exprtk and lunasvg, and nothing else.
+# or fetched: the engine itself needs lunasvg, and nothing else.
 xge_dependency(XercesC WHEN XGE_WITH_XERCES
 	PACKAGE XercesC
 	REPO https://github.com/apache/xerces-c.git TAG v3.3.0)
-
-xge_dependency(exprtk
-	HEADER exprtk.hpp
-	REPO https://github.com/ArashPartow/exprtk.git TAG 0.0.3-cmake)
 
 # SFML's network module is not asked for: nothing in the engine uses it, and it
 # is the part that needs a TLS library and libssh2 built beside it.
@@ -190,8 +186,8 @@ xge_dependency(PugiXML WHEN XGE_WITH_PUGIXML
 	PACKAGE pugixml
 	REPO https://github.com/zeux/pugixml.git TAG v1.16)
 
-# RapidXML has no official CMake package to find, so its header is looked for the
-# way exprtk's is, and it is pinned by commit rather than a tag: upstream (the
+# RapidXML has no official CMake package to find, so its header is looked for
+# with find_path (HEADER), and it is pinned by commit rather than a tag: upstream (the
 # discord/rapidxml mirror of the last released 1.13, the version this project's
 # own xml/rapidxml.cpp is written against) has never cut a tagged release. It is
 # header-only with no CMakeLists.txt of its own, so unlike this project's other
@@ -279,9 +275,8 @@ endif()
 
 # RapidXML (see above) has no upstream CMakeLists.txt, so nothing above
 # already defined a rapidxml::rapidxml target the way FetchContent_MakeAvailable
-# did for every other fetched library - synthesize the same kind of plain
-# INTERFACE target exprtk's own upstream CMakeLists.txt defines for itself
-# (add_library(exprtk INTERFACE ...) + an ALIAS), pointed at whichever
+# did for every other fetched library - synthesize a plain INTERFACE target
+# (add_library(rapidxml INTERFACE ...) + an ALIAS), pointed at whichever
 # include dir was found above - a system install (RAPIDXML_PACKAGE_FOUND)
 # or the FetchContent source dir (rapidxml_SOURCE_DIR).
 if (XGE_WITH_RAPIDXML AND NOT TARGET rapidxml::rapidxml)

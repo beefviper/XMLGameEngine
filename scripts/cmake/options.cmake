@@ -11,7 +11,6 @@ macro(force_local_option name display_name)
 endmacro()
 
 force_local_option(XERCESC "XercesC")
-force_local_option(EXPRTK "exprtk")
 force_local_option(SFML "SFML")
 force_local_option(RAYLIB "raylib")
 force_local_option(GLFW "GLFW")

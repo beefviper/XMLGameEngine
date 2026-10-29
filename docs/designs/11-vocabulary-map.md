@@ -56,10 +56,10 @@ Time words: `every` and `after` (timers), `interval` (an animation's pictures), 
 
 **Values**
 
-- Text expressions evaluated by exprtk; one value tag that draws a number, `<random>` (`<min>`, `<max>`); and arithmetic as tags, `<formula>` (one operation, operands as nested elements).
-- `<formula>` uses four arithmetic words, each with operands named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`); and four more whose operands are `<of>`: `smallest`, `largest` (two or more), `absolute` (one) and `clamp` (an `<of>`, then `<atleast>` and `<atmost>`). An operand is a name or a number, never an expression. A `<random>`'s ends may be formulas.
+- Text expressions of numbers, names, `+ - * /` and brackets, worked out by the engine (`load/calc`); one value tag that draws a number, `<random>` (`<min>`, `<max>`); and arithmetic as tags, `<formula>` (one operation, operands as nested elements).
+- `<formula>` uses four arithmetic words, each with operands named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`); and more whose operands are `<of>`: `smallest`, `largest` (two or more), `absolute`, `sign`, `ceiling`, `sine` and `cosine` (one; angles in degrees) and `clamp` (an `<of>`, then `<atleast>` and `<atmost>`). An operand is a name or a number, never an expression. A `<random>`'s ends may be formulas.
 - A command's values are read when it runs, so they can name live numbers; every other value is worked out once at load ([values-and-names](04-values-and-names.md)).
-- exprtk's own functions work in the text form (Berserk uses `max` to keep a wait above a floor), but the format does not depend on them, and the tags have no `min`, `max` or the like.
+- The text form has no functions and no comparisons: anything past `+ - * /` is a tag (Berserk keeps a wait above a floor with `<largest>`).
 
 A note on pictures: an `<image>` is a file loaded by the window backend; an `<svg>` is drawn by the engine itself (`picture/svg.cpp`). Lines, bitmaps and SVGs share one bitmap path and can be `pixel` collision shapes; an `<image>` cannot ([pictures](30-pictures.md)).
 
@@ -94,9 +94,9 @@ Time, sound, music, conditions over many objects, maze walking and making object
 
 ## The shape this suggests
 
-Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which has a small vocabulary of its own (`random` and eight arithmetic words) beside exprtk text. Each further word (`negate`, `pick`) is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
+Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which has a small vocabulary of its own (`random` and twelve arithmetic words) beside plain `+ - * /` text. Each further word (`negate`, `pick`) is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
 
-A word is added only when a real game cannot be described without it, and a verb that means "behave like one particular game" shows that its parameters were not found ([motion](22-motion.md)). Of the gaps above, `min` and `max` are the likeliest to pass that test next (Berserk already reaches for `max` in text).
+A word is added only when a real game cannot be described without it, and a verb that means "behave like one particular game" shows that its parameters were not found ([motion](22-motion.md)).
 
 ## Keeping this current
 

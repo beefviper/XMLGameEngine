@@ -5,7 +5,7 @@
 //
 // Catch2 tests for makeCommands()/operator<<(Command) against the actual
 // production game/command.cpp (not a reimplementation) - they don't touch SFML or
-// exprtk, so nothing here needs a real Object/Game. A RawCommand is what
+// load/expr, so nothing here needs a real Object/Game. A RawCommand is what
 // load/xml reads a command tag (<bounce />, <inc variable="..." />) into.
 
 #include "game/command.h"

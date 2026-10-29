@@ -26,8 +26,7 @@ endif()
 # virtuals, missing virtual destructors, narrowing, uninitialised members and so
 # on: the usual set from the C++ Best Practices project); headers named with <>
 # are external, with no warnings from them (and no code analysis), and /bigobj
-# because the files that include load/expr.h, whose exprtk use generates enough
-# object sections to hit MSVC's C1128 without it.
+# so a big file (the largest test files) never hits MSVC's C1128 section limit.
 # GCC and Clang: the "all" and "extra" sets, pedantic, shadowing (a parameter or
 # local named like a member), every implicit conversion that can lose a value or
 # a sign, C-style casts, missing virtual destructors, fall-through and a few

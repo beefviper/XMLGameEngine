@@ -148,7 +148,7 @@ xgecli pong --generate windows-cpp -o out/pong         # or into the folder name
 |---|---|---|
 | `source/<game>.cpp` | `merge.xsl`, then `data.xsl` | the game as the engine's own data, the `GameData` (`game/data.h`) `readGame` makes of the file, a line of C++ for each tag. The [kit and every `from=`](#the-kit-and-from) are worked out first, as the engine works them out. One function returns the game (`pongMinGame()`) |
 | `source/game_parts.h` | copied from `modules/` | the small functions those lines call |
-| `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | makes the `Game`, an `SFMLWindow` and an `SFMLAudio` (silent with no sound device) and runs `Engine::loop`; the build finds or fetches SFML 3, exprtk and lunasvg |
+| `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | makes the `Game`, an `SFMLWindow` and an `SFMLAudio` (silent with no sound device) and runs `Engine::loop`; the build finds or fetches SFML 3 and lunasvg |
 | `engine/` | listed in `engine.xml` | the engine's own files, copied unchanged from `xge/lib/` of the repository `xgecli` was built from. Left out: reading XML, the other libraries and the factories that choose among them |
 | `assets/`, `LICENSE` | `xgecli` | the font if it shows text (and a font's licence beside it), the pictures it names, the repository's licence |
 
@@ -197,7 +197,7 @@ Wherever an element holds a number (a position, a speed, a size, a variable, a t
 
 | Form | Example | Notes |
 |---|---|---|
-| arithmetic as text | `window.width.center - title.width / 2` | worked out by exprtk; the everyday form |
+| arithmetic as text | `window.width.center - title.width / 2` | numbers, names, `+ - * /`, a sign in front and brackets, worked out by the engine's own `load/calc`; nothing more (no functions, no comparisons) |
 | `<random>` | `<random><min>-7</min><max>7</max></random>` | a number from min to max (either order; each end an expression or a `<formula>`) |
 | `<formula>` | see [below](#arithmetic-as-tags) | the same arithmetic as tags, nothing left in a string for a tool to parse |
 
@@ -223,9 +223,8 @@ A `<random>` is drawn at load and again whenever its object comes back into play
 | `object.x`, `.y`, `.velocity.x`, `.velocity.y`, `.heading`, `.altitude`, `.rise`, `.light`, `.blink` | **live numbers**: where it is (its top left), how it goes, its [height](#height-and-shadows), its [light](#light-and-dark), its [blinking](#poses-mirror-grip-and-blinking). Only a command's or a test's value can read them |
 | `self.` before any of these | in an object's own rules, actions and timers, the object running it (`self.worth`) |
 | `touch.x`, `touch.y`, `touch.along`, `touch.depth`, `touch.normal.x`, `touch.normal.y` | in a rule about another object: the point of the touch, where along the object's own side (0 to 1), how far they went into each other, the way out of the other toward it |
-| `pi`, and exprtk's functions | `min`, `max`, `abs`, `sqrt`, `sin`, `cos`, `sgn`, `ceil`, ... (Berserk keeps a wait above a floor with `max(6, 14 - player.depth)`) |
 
-An object's own `<variable>` named like a size or a live number (`width`, `x`) wins over it. A variable named like an exprtk function (`floor`, `min`) stops the load (`Expected a '(' at start of function call to 'floor'`), which is why Pitfall's tunnel floor is `tunnel`.
+An object's own `<variable>` named like a size or a live number (`width`, `x`) wins over it. Anything past `+ - * /` (the smallest of two, a sign, a sine) is a [formula tag](#arithmetic-as-tags); a text that calls a function (`max(6, 14 - player.depth)`) stops the load and says so.
 
 #### Values read when used
 
@@ -233,7 +232,7 @@ A command whose numbers name something that changes (an object's variable, a liv
 
 #### Arithmetic as tags
 
-A `<formula>` is one operation whose operands are elements, each a name, a number, a `<random>` or another operation. Precedence is the nesting, so there is nothing to parse; text and formula give the same number and sit side by side in one game. Pong's and Breakout's titles are placed with them.
+A `<formula>` is one operation whose operands are elements, each a name, a number, a `<random>` or another operation. Precedence is the nesting, so there is nothing to parse; text and formula give the same number and sit side by side in one game. Plain sums stay text; whatever text cannot say is a formula (Berserk's `<largest>` keeps a wait above a floor, Pong serves with `<sign>`, `<sine>` and `<cosine>`).
 
 | Operation | First operand | Second operand(s) | Means |
 |---|---|---|---|
@@ -244,6 +243,9 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 | `<smallest>` | `<of>` | `<of>` | the smallest of two or more |
 | `<largest>` | `<of>` | `<of>` | the largest of two or more |
 | `<absolute>` | `<of>` | | the one `<of>` without its sign |
+| `<sign>` | `<of>` | | -1, 0 or 1, as the `<of>` is below, at or above 0 |
+| `<ceiling>` | `<of>` | | the `<of>` rounded up to a whole number |
+| `<sine>`, `<cosine>` | `<of>` | | of the `<of>` as an angle in degrees, like every angle in a game |
 | `<clamp>` | `<of>` | `<atleast>`, then `<atmost>` | the `<of>`, kept from `<atleast>` up to `<atmost>` |
 
 ```xml
@@ -278,7 +280,7 @@ Names are dotted, and every dot means "inside":
 - A name written in the file is looked for **from the inside out**, from where it is written: the scene's own, then its state's, then the game's, and last as the end of exactly one path. So the rules inside a scene say `robots` and mean their own, and `hero` means `playing.hero` anywhere.
 - A scene's object also answers to `state.name` (`playing.robots`): the robots of every scene of the state, so a state-level rule saying `robots` means whichever room's it meets. Where a short name could mean two things, the shortest path wins; two as short stop the load (`'rock' could be playing.rock, practice.rock; write the path of the one meant`).
 - A name given twice where both can be seen (a scene's object named like its state's, a state's like the game's), and two scenes of one name, stop the load.
-- A reference is split at its **last** dot into owner and variable, and exprtk sees every name as one plain symbol.
+- A reference is split at its **last** dot into owner and variable, and the arithmetic sees every name as one plain symbol.
 - `class="..."` puts an object in a kind that rules and conditions can match, like a CSS class; one object can be named alone, a class names all of its kind.
 
 ## Window, variables and styles
@@ -1360,7 +1362,7 @@ A `<hold>` anywhere else, or any other command in a `<computer>`, stops the load
 2. **Work out the kit and every `from=`** on the XML (`load/merge`), so everything after sees whole objects.
 3. **Read** the tags into a `GameData` (`game/data.h`: raw objects, states, sounds, paths), a group as one raw object per member. A generated program starts here, with its `GameData` compiled in.
 4. **Lay out states and scenes** (`layOutScenes`, `game/scenes.cpp`): every owned object becomes an ordinary object named by its path, and every name the file uses is written out in full.
-5. **Evaluate** (`load/expr`). exprtk works out every value once (`<random>` drawn here); objects, states and sounds are built and every name a command uses is checked. Nothing here needs a window or a sound device.
+5. **Evaluate** (`load/expr`, with `load/calc` for the arithmetic in text). Every value is worked out once (`<random>` drawn here); objects, states and sounds are built and every name a command uses is checked. Nothing here needs a window or a sound device.
 6. **Open the window and the sound** (`Engine`). Every sound is made into samples, each object's real size is measured, positions waiting on a text's size are finished, and the first state is pushed. If the sound will not start the game plays silently, with a warning.
 
 ### Each frame
@@ -1420,7 +1422,8 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 |---|---|---|
 | reading | `load/xml.cpp` | the tags into a `GameData`, `readGame()`; checks of shape |
 | | `load/merge.cpp` | the [kit and from=](#the-kit-and-from) on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
-| | `load/expr.cpp` | exprtk (only this file includes it), values, `<formula>`, building `Object`s and `State`s, pictures (`buildPicture`) |
+| | `load/expr.cpp` | values, `<formula>`, building `Object`s and `State`s, pictures (`buildPicture`) |
+| | `load/calc.cpp` | the arithmetic in a value's text: numbers, names, `+ - * /`, a sign and brackets, compiled once into steps that read each name where it lives |
 | | `load/check.cpp` | the load-time checks of every name a command uses, and where each command may go (`ruleFor`) |
 | | `load/xsd.cpp`, `load/spelling.cpp` | the weak validator; "did you mean" (`didYouMean`, `listOf`) |
 | the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, and the answers to `FrameRules` (what the file says happens at an edge or a touch), carried out through `CommandExecutor` |
@@ -1473,7 +1476,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 **Values**
 
 - Values not in a command or a condition's test are fixed at load. A class condition cannot compare each object with that object's own other variable (a state's condition has no `self`).
-- `<formula>` has no `negate`, `floor` or `sign` (the text form has them through exprtk). Only Pong and Breakout use formulas.
+- `<formula>` has no `negate`, `floor`, `round` or `tangent`: an operation is added when a game needs it (a row in `operationShape`, a case in `evaluateOperation`, the schema).
 - A `<divide>` by something not known while loading gives 0, and only a position or a timer's interval is worked out again later.
 - Expressions are text to the schema, so a typo in one is found when the game loads, not by validation. The weak validator covers only the XSD the schema uses.
 - The window's size and framerate are plain numbers, read once; the size cannot change while a game runs.
@@ -1489,4 +1492,4 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 
 **Generating**
 
-- A generated program is the engine with the game built in, so it shares the engine's limits and has none of its own. It always carries exprtk and lunasvg, even for a game with no `<svg>`.
+- A generated program is the engine with the game built in, so it shares the engine's limits and has none of its own. It always carries lunasvg, even for a game with no `<svg>`.

@@ -58,6 +58,7 @@ add_executable(xgetest
 	"xge/tests/test_deflect.cpp"
 	"xge/tests/test_xml_format.cpp"
 	"xge/tests/test_formulas.cpp"
+	"xge/tests/test_calc.cpp"
 	"xge/tests/test_backends.cpp"
 	"xge/tests/test_group.cpp"
 	"xge/tests/test_pong.cpp"
@@ -122,9 +123,7 @@ target_include_directories(xgetest PRIVATE xge/cli/include)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
-# The same warnings as the library (platform.cmake), /bigobj included:
-# several test files include load/expr.h, whose exprtk use generates enough
-# object sections to hit MSVC's C1128 without it.
+# The same warnings as the library (platform.cmake), /bigobj included.
 xge_warnings(xgetest)
 
 target_link_libraries(xgetest PRIVATE xgelib Catch2::Catch2WithMain)

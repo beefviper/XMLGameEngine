@@ -73,7 +73,7 @@ A collision rule reads like a sentence: this ball, when it touches the top or bo
 
 - **Attributes name or pick; everything else is content.** `name`, `class`, `object`, `edge`, `button`, `state`, `sound` are attributes. A size, a color, a position or a flag is element content: `<radius>10</radius>`.
 - **Behavior is a list of verbs, run in the order written.** Lists sit in a collision rule, an object's action, a key, a condition, a timer and a path step; the schema sorts the verbs into groups and says which groups each place takes, so a verb can only be written where it does something.
-- **A value is a number written one of three ways:** arithmetic as text (`window.width.center - ball.radius`, worked out by exprtk), a `<random>` with a `<min>` and a `<max>`, or the same arithmetic as tags (a nested `<formula>` of `add`, `subtract`, `multiply`, `divide`), which leaves nothing in a string for a tool to parse.
+- **A value is a number written one of three ways:** plain arithmetic as text (`window.width.center - ball.radius`: names, numbers, `+ - * /` and brackets, nothing more), a `<random>` with a `<min>` and a `<max>`, or arithmetic as tags (a nested `<formula>` of `add`, `subtract`, `multiply`, `divide`, `smallest`, `largest`, `sign`, `sine` and the like), which leaves nothing in a string for a tool to parse. The engine works out the text itself; there is no expression library.
 - **Names are dotted.** `ball.radius` is the ball's variable, `paddle1.x` where it is, `aliens.3.2` a cell of a group, `playing.room2.robots` an object in a scene. `window.right`, `window.width.center` and the `color.` names are built in, and `self.` and `touch.` mean the object running a rule and the touch it answers.
 - **Keys are bound in states, never in objects.** An object has named actions (`up`, `fire`), and a state binds keys to them, so changing a key is one edit.
 - **Mistakes stop the load** with a message that says where: an unknown verb, a misspelled key (`did you mean 'space'?`), a state, sound or look that does not exist, or a verb in a place where it does nothing.
@@ -194,7 +194,6 @@ The build makes `xgelib` (the engine), `xgecli` (command line) and `xgegui` (a Q
 | Library | For |
 |---|---|
 | [Xerces-C](https://github.com/apache/xerces-c) | parsing and full XSD validation |
-| [exprtk](https://github.com/ArashPartow/exprtk) | arithmetic in values |
 | [SFML 3](https://github.com/SFML/SFML) | window, keys and sound |
 | [lunasvg](https://github.com/sammycage/lunasvg) | drawing SVG sprites |
 | Qt 6 Widgets | `xgegui` (found, never fetched) |

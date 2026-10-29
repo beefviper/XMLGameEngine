@@ -4,9 +4,8 @@
 # date: Feb 6, 2026
 
 # xgelib is the engine library. The third-party libraries below are
-# PUBLIC because the engine's own headers include theirs (load/expr.h
-# includes exprtk, xml/xerces.h includes Xerces, window/sfml.h includes SFML,
-# and so on), so anything that includes the engine's headers needs them too.
+# PUBLIC because the engine's own headers include theirs (xml/xerces.h
+# includes Xerces, window/sfml.h includes SFML, and so on), so anything that includes the engine's headers needs them too.
 target_compile_features(xgelib PUBLIC cxx_std_20)
 
 target_include_directories(xgelib PUBLIC xge/lib)
@@ -87,12 +86,6 @@ endif()
 if (XGE_WITH_RAPIDXML)
 	xge_backend(RAPIDXML)
 	target_link_libraries(xgelib PUBLIC rapidxml::rapidxml)
-endif()
-
-if (EXPRTK_PACKAGE_FOUND)
-	target_include_directories(xgelib SYSTEM PUBLIC ${EXPRTK_INCLUDE_DIRS})
-else()
-	target_link_libraries(xgelib PUBLIC exprtk)
 endif()
 
 # libxslt for xgecli's --generate (xge/cli/source/generate.cpp), and for the tests

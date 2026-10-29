@@ -126,7 +126,7 @@ The author listed about thirty non-scrolling Atari 2600 games (2026-10-07) and a
 ## Found on the way
 
 - **A rule can stop the touch that would have come next.** When the jaws open over the crocodile Harry stands on, `<land />` on the crocodile and the jaws' hazard meet at the same moment. Touches at one moment run in file order, `<land />` stops him, and a pair where neither moves is not looked at again that frame, so the jaws were never met. The jaws are written before the crocodiles.
-- **A variable cannot be named like an exprtk function** (`floor`); see the [readme](../readme.md#variables).
+- **A variable could not be named like an exprtk function** (`floor`), so Pitfall's tunnel floor is `tunnel`; since the engine's own arithmetic (2026-10-29) any name is free.
 - **The tar pit is 6 pixels tall**, sitting 1 pixel into the path: a taller one was still touched by a leap that had only just left the ground beside it.
 
 ## Near misses from the list

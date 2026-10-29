@@ -391,7 +391,7 @@ namespace xge
 		std::array<float*, 6> touchNumbers{};
 		std::set<std::string> liveWarned;
 
-		// The copy of an object's variables expressions read (exprtk's), made
+		// The copy of an object's variables that texts read (load/calc), made
 		// what the object holds: after a reset puts them back.
 		void holdVariablesForExpressions(const Object& object);
 

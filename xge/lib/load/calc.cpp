@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
-#include <cmath>
+#include <cstddef>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -18,35 +18,8 @@ namespace xge
 {
 	namespace
 	{
-		constexpr float kPi = 3.14159265358979323846f;
-
 		// How deep a text's working may go: numbers waiting for an operator.
 		constexpr std::size_t kDeepest = 64;
-
-		struct Function
-		{
-			const char* name;
-			std::size_t fewest;
-			std::size_t most; // 0: any number from fewest
-		};
-
-		const std::array<Function, 11> kFunctions{ {
-			{ "abs", 1, 1 }, { "ceil", 1, 1 }, { "floor", 1, 1 }, { "round", 1, 1 }, { "sgn", 1, 1 }, { "sqrt", 1, 1 },
-			{ "sin", 1, 1 }, { "cos", 1, 1 }, { "tan", 1, 1 }, { "min", 2, 0 }, { "max", 2, 0 },
-		} };
-
-		const Function* functionNamed(const std::string& name, std::size_t* index = nullptr)
-		{
-			for (std::size_t i = 0; i < kFunctions.size(); ++i)
-			{
-				if (name == kFunctions[i].name)
-				{
-					if (index) { *index = i; }
-					return &kFunctions[i];
-				}
-			}
-			return nullptr;
-		}
 
 		std::string lowered(std::string text)
 		{
@@ -57,10 +30,34 @@ namespace xge
 		bool isLetter(char c) { return std::isalpha(static_cast<unsigned char>(c)) != 0 || c == '_'; }
 		bool isDigit(char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; }
 
+		// The name that starts at `at` (a letter), lowercased; `at` moves past it.
+		std::string readName(const std::string& text, std::size_t& at)
+		{
+			std::string word;
+			while (at < text.size() && (isLetter(text[at]) || isDigit(text[at]) || text[at] == '.'))
+			{
+				word += text[at];
+				++at;
+			}
+			return lowered(word);
+		}
+
+		// The number that starts at `at` (a digit or a dot), its exponent too
+		// (2e-3); `at` moves past it. False when there is no number there.
+		bool readNumber(const std::string& text, std::size_t& at, float& value)
+		{
+			const char* begin = text.c_str() + at;
+			char* end = nullptr;
+			value = std::strtof(begin, &end);
+			if (end == begin) { return false; }
+			at += static_cast<std::size_t>(end - begin);
+			return true;
+		}
+
 		// Reads a text into steps: an expression is terms added and taken
 		// away, a term is factors multiplied and divided, a factor a number,
-		// a name, a function of expressions, a bracketed expression, or one
-		// of those with a minus or plus in front.
+		// a name, a bracketed expression, or one of those with a minus or
+		// plus in front.
 		class Reader
 		{
 		public:
@@ -70,7 +67,7 @@ namespace xge
 			{
 				skipSpace();
 				if (at == text.size()) { fail("there is nothing to work out"); }
-				comparison();
+				expression();
 				skipSpace();
 				if (at < text.size()) { fail(std::string("'") + text[at] + "' where an operator or the end was expected"); }
 				return std::move(program);
@@ -118,24 +115,6 @@ namespace xge
 				emit(step, 2, 1);
 			}
 
-			// An expression, or two compared: 1 when it holds, 0 when not.
-			void comparison()
-			{
-				expression();
-				skipSpace();
-				using Kind = Calc::Step::Kind;
-				const auto ahead = [&](const char* op) { return text.compare(at, std::char_traits<char>::length(op), op) == 0; };
-				for (const auto& [op, kind] : { std::pair{ "<=", Kind::AtMost }, std::pair{ ">=", Kind::AtLeast }, std::pair{ "==", Kind::Same },
-					std::pair{ "!=", Kind::NotSame }, std::pair{ "<", Kind::Less }, std::pair{ ">", Kind::More } })
-				{
-					if (!ahead(op)) { continue; }
-					at += std::char_traits<char>::length(op);
-					expression();
-					binary(kind);
-					return;
-				}
-			}
-
 			void expression()
 			{
 				term();
@@ -175,7 +154,7 @@ namespace xge
 				}
 				if (take('('))
 				{
-					comparison();
+					expression();
 					if (!take(')')) { fail("a '(' that is never closed"); }
 					return;
 				}
@@ -189,56 +168,23 @@ namespace xge
 
 			void number()
 			{
-				const char* begin = text.c_str() + at;
-				char* end = nullptr;
-				const float value = std::strtof(begin, &end);
-				if (end == begin) { fail("a number that cannot be read"); }
-				at += static_cast<std::size_t>(end - begin);
+				Calc::Step step;
+				step.kind = Calc::Step::Kind::Number;
+				if (!readNumber(text, at, step.number)) { fail("a number that cannot be read"); }
 				if (at < text.size() && (isLetter(text[at]) || text[at] == '.'))
 				{
 					fail("a number with letters after it; write the * (2 * x, not 2x)");
 				}
-				Calc::Step step;
-				step.kind = Calc::Step::Kind::Number;
-				step.number = value;
 				emit(step, 0, 1);
 			}
 
 			void name()
 			{
-				std::string word;
-				while (at < text.size() && (isLetter(text[at]) || isDigit(text[at]) || text[at] == '.'))
+				const std::string word = readName(text, at);
+				skipSpace();
+				if (at < text.size() && text[at] == '(')
 				{
-					word += text[at];
-					++at;
-				}
-				word = lowered(word);
-
-				std::size_t index = 0;
-				if (const Function* function = functionNamed(word, &index))
-				{
-					if (!take('(')) { fail(word + " is a function; give it its numbers in brackets: " + word + "(...)"); }
-					std::size_t count = 0;
-					if (!take(')'))
-					{
-						do
-						{
-							comparison();
-							++count;
-						} while (take(','));
-						if (!take(')')) { fail(word + "( that is never closed"); }
-					}
-					if (count < function->fewest || (function->most > 0 && count > function->most))
-					{
-						fail(word + " takes " + (function->most == 1 ? std::string("one number") : "two numbers or more")
-							+ ", not " + std::to_string(count));
-					}
-					Calc::Step step;
-					step.kind = Calc::Step::Kind::Call;
-					step.function = index;
-					step.count = count;
-					emit(step, count, 1);
-					return;
+					fail("'" + word + "(' is a function, and a value's text has none; write it as a <formula> (<smallest>, <largest>, <sign>, ...)");
 				}
 
 				const auto found = known.find(word);
@@ -249,30 +195,6 @@ namespace xge
 				emit(step, 0, 1);
 			}
 		};
-
-		float call(std::size_t function, const float* first, std::size_t count)
-		{
-			const float x = first[0];
-			switch (function)
-			{
-			case 0: return std::fabs(x);
-			case 1: return std::ceil(x);
-			case 2: return std::floor(x);
-			case 3: return std::round(x);
-			case 4: return x > 0.0f ? 1.0f : x < 0.0f ? -1.0f : 0.0f;
-			case 5: return std::sqrt(x);
-			case 6: return std::sin(x);
-			case 7: return std::cos(x);
-			case 8: return std::tan(x);
-			case 9: return *std::min_element(first, first + count);
-			default: return *std::max_element(first, first + count);
-			}
-		}
-	}
-
-	Calc::Calc()
-	{
-		constant("pi", kPi);
 	}
 
 	void Calc::constant(const std::string& name, float value)
@@ -293,10 +215,23 @@ namespace xge
 		return names.count(lowered(name)) != 0;
 	}
 
-	bool Calc::isOwnName(const std::string& name)
+	std::vector<std::string> Calc::namesIn(const std::string& text)
 	{
-		const std::string word = lowered(name);
-		return word == "pi" || functionNamed(word) != nullptr;
+		std::vector<std::string> found;
+		for (std::size_t at = 0; at < text.size();)
+		{
+			float number = 0.0f;
+			if (isLetter(text[at]))
+			{
+				std::string word = readName(text, at);
+				if (std::find(found.begin(), found.end(), word) == found.end()) { found.push_back(std::move(word)); }
+			}
+			else if (!((isDigit(text[at]) || text[at] == '.') && readNumber(text, at, number)))
+			{
+				++at;
+			}
+		}
+		return found;
 	}
 
 	Calc::Program Calc::compile(const std::string& text) const
@@ -319,17 +254,6 @@ namespace xge
 			case Step::Kind::Subtract: --top; stack[top - 1] -= stack[top]; break;
 			case Step::Kind::Multiply: --top; stack[top - 1] *= stack[top]; break;
 			case Step::Kind::Divide:   --top; stack[top - 1] /= stack[top]; break;
-			case Step::Kind::Less:     --top; stack[top - 1] = stack[top - 1] < stack[top] ? 1.0f : 0.0f; break;
-			case Step::Kind::AtMost:   --top; stack[top - 1] = stack[top - 1] <= stack[top] ? 1.0f : 0.0f; break;
-			case Step::Kind::More:     --top; stack[top - 1] = stack[top - 1] > stack[top] ? 1.0f : 0.0f; break;
-			case Step::Kind::AtLeast:  --top; stack[top - 1] = stack[top - 1] >= stack[top] ? 1.0f : 0.0f; break;
-			case Step::Kind::Same:     --top; stack[top - 1] = stack[top - 1] == stack[top] ? 1.0f : 0.0f; break;
-			case Step::Kind::NotSame:  --top; stack[top - 1] = stack[top - 1] != stack[top] ? 1.0f : 0.0f; break;
-			case Step::Kind::Call:
-				top -= step.count;
-				stack[top] = call(step.function, &stack[top], step.count);
-				++top;
-				break;
 			}
 		}
 		return top == 0 ? 0.0f : stack[top - 1];
