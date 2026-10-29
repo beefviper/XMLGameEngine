@@ -171,6 +171,7 @@ namespace xge
 				[](const CmdBecome&) { return std::string("<become>"); },
 				[](const CmdReveal&) { return std::string("<reveal>"); },
 				[](const CmdFollow&) { return std::string("<follow>"); },
+				[](const CmdShift&) { return std::string("<shift>"); },
 				[](const CmdEnterScene&) { return std::string("<enter>"); },
 				[](const CmdResetScene&) { return std::string("<reset scene>"); },
 				[](const CmdSet&) { return std::string("<set>"); },
@@ -203,7 +204,7 @@ namespace xge
 
 		const PlaceRule& ruleFor(Place place)
 		{
-			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<enter>",
+			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
 				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<despawn object>", "<trigger>" };
 			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
 			static const std::vector<std::string> self{ "<die />", "<drop />", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />" };
@@ -463,6 +464,13 @@ namespace xge
 				if (!findObject(objects, reveal->target))
 				{
 					throw std::runtime_error(where + ": <reveal> names '" + reveal->target + "', and there is no object of that name" + didYouMean(reveal->target, objectNames(objects)));
+				}
+			}
+			else if (const auto* shift = std::get_if<CmdShift>(&shapeOf(command)))
+			{
+				if (!findObject(objects, shift->target))
+				{
+					throw std::runtime_error(where + ": <shift> names '" + shift->target + "', and there is no object of that name" + didYouMean(shift->target, objectNames(objects)));
 				}
 			}
 			else if (std::holds_alternative<CmdPlay>(shapeOf(command)) || std::holds_alternative<CmdSilence>(shapeOf(command)))
@@ -1334,7 +1342,26 @@ namespace xge
 				step.home = rawStep.home;
 				if (!rawStep.home)
 				{
-					step.by = { evaluate(rawStep.x, where + " > <step>"), evaluate(rawStep.y, where + " > <step>") };
+					// A half that names something that changes, or the
+					// follower (self), is worked out as the step sets off.
+					const auto half = [&](const RawValue& value, float& into, std::shared_ptr<const RawValue>& live)
+					{
+						const std::vector<const std::string*> texts = value.expressions();
+						const bool own = std::any_of(texts.begin(), texts.end(),
+							[](const std::string* text) { return text->find("self.") != std::string::npos; });
+						if (own || namesLive(value))
+						{
+							live = std::make_shared<const RawValue>(value);
+							if (own) { return; }
+							commandValues = true;
+							evaluate(value, where + " > <step>");
+							commandValues = false;
+							return;
+						}
+						into = evaluate(value, where + " > <step>");
+					};
+					half(rawStep.x, step.by.x, step.liveX);
+					half(rawStep.y, step.by.y, step.liveY);
 					step.commands = processCommands(rawStep.commands, where + " > <step>");
 				}
 				path.steps.push_back(std::move(step));
@@ -2284,7 +2311,8 @@ namespace xge
 				// (CmdLive); <set> and <spawn> always are, since what they
 				// put somewhere is the point of them.
 				const bool live = each.verb == "set" || each.verb == "spawn"
-					|| namesLive(each.amount) || namesLive(each.seconds) || namesLive(each.distance) || namesLive(each.ahead);
+					|| namesLive(each.amount) || namesLive(each.seconds) || namesLive(each.distance) || namesLive(each.ahead)
+					|| (each.verb == "shift" && (namesLive(each.positionX) || namesLive(each.positionY)));
 				if (live)
 				{
 					auto loaded = std::make_shared<LoadedCommand>();

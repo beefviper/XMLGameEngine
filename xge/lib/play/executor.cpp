@@ -52,6 +52,7 @@ namespace xge
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
 			[&](const CmdBecome& b) { become(&object, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
+			[&](const CmdShift& m) { game.shift(m.target, m.by); },
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
@@ -110,6 +111,7 @@ namespace xge
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
 			[&](const CmdBecome& b) { become(&object, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
+			[&](const CmdShift& m) { game.shift(m.target, m.by); },
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
@@ -154,6 +156,7 @@ namespace xge
 			[&](const CmdDemo&) { if (keyPressed) { game.requestDemo(); } },
 			[&](const CmdBecome& b) { if (keyPressed) { become(nullptr, b); } },
 			[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
+			[&](const CmdShift& m) { if (keyPressed) { game.shift(m.target, m.by); } },
 			[&](const CmdFollow& f) { if (keyPressed) { follow(nullptr, f); } },
 			[&](const CmdEnterScene& e) { if (keyPressed) { game.enter(e); } },
 			[&](const CmdResetScene& r) { if (keyPressed) { game.reset(r); } },
@@ -215,6 +218,7 @@ namespace xge
 			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
 			[&](const CmdBecome& b) { become(owner, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
+			[&](const CmdShift& m) { game.shift(m.target, m.by); },
 			[&](const CmdFollow& f) { follow(owner, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
@@ -259,7 +263,7 @@ namespace xge
 	{
 		if (!command.target.empty())
 		{
-			game.follow(command.target, command.path, command.stagger);
+			game.follow(command.target, command.path, command.stagger, command.nearest, self);
 		}
 		else if (self)
 		{
@@ -645,6 +649,7 @@ namespace xge
 				[&](const CmdReset&) { if (keyPressed) { restart(object); } },
 				[&](const CmdBecome& b) { if (keyPressed) { become(&object, b); } },
 				[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
+				[&](const CmdShift& m) { if (keyPressed) { game.shift(m.target, m.by); } },
 				[&](const CmdFollow& f) { if (keyPressed) { follow(&object, f); } },
 				// Thrust is held like a move: on while the key is down.
 				[&](const CmdAccelerate& a) { applyActionThrust(object, a.direction, keyPressed ? a.amount : 0.0f, a.burn); },

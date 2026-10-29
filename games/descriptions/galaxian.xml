@@ -7,10 +7,12 @@
   Galaxian, after Namco's 1979 arcade game. Over a field of drifting stars a
   fleet of 46 flies in and settles into formation: two yellow flagships, six
   red escorts, eight purples and three rows of blues. One at a time they
-  break away and dive at the ship, weaving and dropping bombs, then loop
-  round from the top back into their places. Blues score 30, purples 40,
-  escorts 50, flagships 60. Shoot them all and the next fleet flies in; lose
-  three ships and it is over.
+  break away and dive at the ship, swinging toward it and dropping bombs,
+  then loop round from the top back into their places; a flagship takes the
+  two escorts nearest it along. The formation sways from side to side.
+  Blues score 30 in formation and 60 diving, purples 40 and 80, escorts 50
+  and 100, flagships 60 and 150. Shoot them all and the next fleet flies in;
+  lose three ships and it is over.
 
   A and D or the arrows move, Space fires and starts, P or Escape pauses, 2
   on the title for two players.
@@ -28,9 +30,16 @@
     blues share one, as a line of twenty), the aliens of a row <stagger>ed
     one behind another, waiting off screen at the path's start for their
     turn; <home /> flies each to its <position>.
-    The dive's steps add up to no movement across and to the window's
-    height plus the alien's down, which is what the <wrap /> takes off, so
-    a diver that misses comes back in from the top to its own place.
+    The dive's steps add up to the window's height plus the alien's down,
+    which is what the <wrap /> takes off, so a diver that misses comes back
+    in from the top to its own place. Two of its steps aim: their <x> is
+    ship.x - self.x, worked out as the step sets off (self is the diver).
+  * A diver is sent by its own dive action, which a timer of the fleet's
+    triggers; the flagships' dive action also sends the two escorts nearest
+    (<follow object="escorts"><nearest>2</nearest></follow>). What a diver
+    pays (self.pays) is its diving worth until the wrap.
+  * The sway is a <shift> of the whole fleet a pixel at a time, turning every
+    two seconds: the aliens and the places they fly home to move together.
   * The fleet is the playing state's one scene: when it is shot down a
     condition <reset scene>s it and sends the next in at once, so it is
     never drawn sitting in its places first.
@@ -148,21 +157,20 @@
       <home />
     </path>
     <!--
-      The dive: a peel off up and to the left, then down, weaving side to
-      side and dropping a bomb on the way, then straight down off the bottom
-      of the screen. The steps add up to 0 across and to window.bottom +
-      alienheight down, which is what the <wrap /> at the bottom takes off
-      again, so the last <home /> only tidies up.
+      The dive: a peel off up and to the left, then down at the ship, aimed
+      twice (half the way across to it, then the rest from wherever it is
+      by then), dropping a bomb each time, then straight down off the bottom
+      of the screen. The steps add up to window.bottom + alienheight down,
+      which is what the <wrap /> at the bottom takes off again, and the last
+      <home /> flies it back across to its place.
     -->
     <path name="dive">
       <speed>divespeed</speed>
       <step><x>-24</x><y>-24</y><play sound="dive" /></step>
       <step><x>-24</x><y>40</y></step>
-      <step><x>80</x><y>120</y><fire object="bomb" /></step>
-      <step><x>-80</x><y>120</y></step>
-      <step><x>80</x><y>120</y><fire object="bomb" /></step>
-      <step><x>-32</x><y>120</y></step>
-      <step><x>0</x><y>window.bottom + alienheight - 496</y></step>
+      <step><x>(ship.x - self.x) / 2</x><y>160</y><fire object="bomb" /></step>
+      <step><x>ship.x - self.x</x><y>160</y><fire object="bomb" /></step>
+      <step><x>0</x><y>window.bottom + alienheight - 336</y></step>
       <home />
     </path>
   </paths>
@@ -415,18 +423,28 @@
           <objects>
             <group name="aliens" class="alien">
               <collisions>
-                <collision edge="bottom"><wrap /></collision>
+                <!-- back in at the top, on its way home -->
+                <collision edge="bottom">
+                  <wrap />
+                  <set variable="self.pays">self.worth</set>
+                </collision>
                 <collision object="shot">
                   <die />
-                  <inc variable="ship.score">self.worth</inc>
+                  <inc variable="ship.score">self.pays</inc>
                   <play sound="hit" />
                 </collision>
                 <collision object="ship"><die /></collision>
               </collisions>
+              <actions>
+                <action name="dive">
+                  <follow path="dive" />
+                  <set variable="self.pays">self.diving</set>
+                </action>
+              </actions>
               <timers>
                 <timer>
                   <every><random><min>15</min><max>90</max></random></every>
-                  <follow path="dive" />
+                  <trigger action="dive" />
                 </timer>
               </timers>
               <group name="flagships">
@@ -449,7 +467,15 @@
                   </bitmap>
                 </sprite>
                 <position><x>left + gap * 3</x><y>70</y></position>
-                <variables><variable name="worth">60</variable></variables>
+                <!-- a flagship dives with the two escorts nearest it -->
+                <actions>
+                  <action name="dive">
+                    <follow path="dive" />
+                    <set variable="self.pays">self.diving</set>
+                    <follow path="dive" object="escorts"><nearest>2</nearest></follow>
+                  </action>
+                </actions>
+                <variables><variable name="worth">60</variable><variable name="diving">150</variable><variable name="pays">60</variable></variables>
               </group>
               <group name="escorts">
                 <columns>6</columns>
@@ -471,7 +497,7 @@
                   </bitmap>
                 </sprite>
                 <position><x>left + gap * 2</x><y>100</y></position>
-                <variables><variable name="worth">50</variable></variables>
+                <variables><variable name="worth">50</variable><variable name="diving">100</variable><variable name="pays">50</variable></variables>
               </group>
               <group name="purples">
                 <columns>8</columns>
@@ -493,7 +519,7 @@
                   </bitmap>
                 </sprite>
                 <position><x>left + gap</x><y>130</y></position>
-                <variables><variable name="worth">40</variable></variables>
+                <variables><variable name="worth">40</variable><variable name="diving">80</variable><variable name="pays">40</variable></variables>
               </group>
               <!-- three rows of blues, ten each -->
               <group name="blues">
@@ -515,7 +541,7 @@
                     <color char="y">color.yellow</color>
                   </bitmap>
                 </sprite>
-                <variables><variable name="worth">30</variable></variables>
+                <variables><variable name="worth">30</variable><variable name="diving">60</variable><variable name="pays">30</variable></variables>
                 <!-- the top and bottom rows fly in from the left as one line of twenty -->
                 <group name="leftblues">
                   <group name="blues1"><position><x>left</x><y>160</y></position></group>
@@ -524,6 +550,15 @@
                 <group name="blues2"><position><x>left</x><y>190</y></position></group>
               </group>
             </group>
+            <!-- the sway: the fleet a pixel to one side every twentieth of a
+                 second, turning every two seconds -->
+            <object name="sway">
+              <variables><variable name="way">1</variable></variables>
+              <timers>
+                <timer><every>0.05</every><shift object="aliens"><x>sway.way</x></shift></timer>
+                <timer><every>2</every><set variable="sway.way">0 - sway.way</set></timer>
+              </timers>
+            </object>
           </objects>
           <conditions>
             <!-- the whole fleet shot down: the next one flies in -->

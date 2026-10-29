@@ -169,7 +169,7 @@ There are 33 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Pac-Man | `map`, `maze`, and the ghosts' `go`, `hunt` and `wander` |
 | Mario Bros. | `poses`, `mirror`, `grip` and the window's `scale` |
 | Q\*bert | hops with an `arc`, `hunt` by hops, `solid` characters and a `hitbox` |
-| Galaxian | `path`s and `follow`, `turns` for two players, a `demo`, a top-five with `rank` |
+| Galaxian | `path`s and `follow` (aimed steps, `nearest` escorts), `shift` for the sway, `turns` for two players, a `demo`, a top-five with `rank` |
 | Trick Shot | `knock` by `mass`, slowed by `drag` |
 | Tennis | `altitude` and `shadow`, a `computer` player |
 | Haunted House | `light` and `dark` |

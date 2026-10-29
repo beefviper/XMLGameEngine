@@ -592,6 +592,9 @@ namespace xge
 
 		Vector2f position;
 		Vector2f positionOriginal;
+		// How far <shift> has moved the place it goes home to (a path's
+		// <home />) since it was last put back.
+		Vector2f shifted;
 		Vector2f velocity;
 		Vector2f velocityOriginal;
 

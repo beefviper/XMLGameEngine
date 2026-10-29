@@ -115,7 +115,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `berserk` | W A S D walk and face, Space fires | four rooms as [maps](#maps), robots that patrol, line up and fire, Evil Otto, the exit shut behind you |
 | `demonattack` | A/D, Space fires | three waves of demons that fire back and split |
 | `frostbite` | W/S jump between rows, A/D walk | build the igloo by landing on white ice; three nights |
-| `galaxian` | A/D, Space fires; 2 on the title for two players | the fleet flies in on [paths](#paths) and dives, a top five with initials, [turns](#taking-turns), an [attract mode](#attract-mode) |
+| `galaxian` | A/D, Space fires; 2 on the title for two players | the fleet flies in on [paths](#paths), sways, and dives at the ship (a flagship with its two nearest escorts), worth more diving; a top five with initials, [turns](#taking-turns), an [attract mode](#attract-mode) |
 | `donkeykong` | A/D walk, W/S climb, Space jumps | sloping girders, ladders, barrels that sometimes take a ladder, fireballs from the oil drum, three times to Pauline |
 | `pitfall` | A/D run, Space jumps, W/S climb | four jungle screens built from a [kit](#the-kit-and-from), logs, tar, crocodiles, treasure |
 | `missilecommand` | W A S D move the sight, Space launches | counter-missiles trailing a [`<tether>`](#sprites), fireballs, three waves |
@@ -818,7 +818,7 @@ Commands are sorted by what they need, and each place takes only the groups that
 
 | Group | Commands | Needs |
 |---|---|---|
-| changes | `inc`, `dec`, `set`, `copy`, `rank`, `play`, `silence`, `become`, `reveal`, `follow`, `enter`, `reset`, `spawn`, `despawn object=`, `trigger` | nothing: they name what they change |
+| changes | `inc`, `dec`, `set`, `copy`, `rank`, `play`, `silence`, `become`, `reveal`, `follow`, `shift`, `enter`, `reset`, `spawn`, `despawn object=`, `trigger` | nothing: they name what they change |
 | flow | `push`, `pop`, `turns`, `pass`, `out`, `demo` | the game's running order |
 | self | `die`, `drop`, `move`, `release`, `reverse`, `stop`, `fire`, `despawn` | an object running it |
 | steering | `aim`, `chase`, `hunt`, `wander` | an object to steer |
@@ -871,7 +871,8 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 |---|---|
 | `<chase object="hero">1.5<near>100</near></chase>` | heads straight for the middle of the nearest one in play of that name or group, at its content's speed, facing that way (a `<heading>` turns too); within `<near>` pixels it stops. It acts once, so a timer repeats it, and how often is how quickly it turns. Evil Otto, Missile Command's missiles |
 | `<aim object="man" />` | turns to the nearest one in play: its next `<fire>`s go straight at where that one's middle was, from the shooter's middle, at the projectile's own speed. Kept until it aims again, is reset, or a key moves it. With `<lined>8</lined>` it aims only along one of eight ways, when the target lies within that many pixels of one, and is refused otherwise (Berserk's robots) |
-| `<follow path="dive" />`, `<follow path="in" object="aliens"><stagger>0.15</stagger></follow>` | flies a [path](#paths): the object itself, or every one of that name or group in play, each `stagger` seconds after the one before. Without `object=` only in an object's own places |
+| `<follow path="dive" />`, `<follow path="in" object="aliens"><stagger>0.15</stagger></follow>` | flies a [path](#paths): the object itself, or every one of that name or group in play, each `stagger` seconds after the one before. `<nearest>2</nearest>` sends only the two nearest the one doing it (a flagship's escorts). Without `object=` only in an object's own places |
+| `<shift object="aliens"><x>sway.way</x></shift>` | moves those objects, and the places they go [home](#paths) to, by `<x>` across and `<y>` down (either may be left out); one on a path only has its place moved. A reset puts them back. Galaxian's formation sways with it |
 | `<go direction="left">speed</go>` | a [maze walker](#walking-a-map), on a key: turns that way at the first tile it can, carrying on until then; stops in the middle of a tile at a wall; turns straight round at once |
 | `<hunt object="pacman">2<ahead>4</ahead><with object="blinky" /><retreat object="corner">8</retreat></hunt>` | a maze walker, from now on: at every tile, of the open ways other than back, the one whose next tile is nearest a target, as the arcade's ghosts chase. The target is the nearest one in play of that name; `<ahead>` tiles in front of the way it faces; `<with>`, as far past that point again as the partner is short of it; `<retreat>`, while within that many tiles, the corner object instead. A tie goes up, left, down, right |
 | `<hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>` | a hunt by hops, for an object that walks no maze: of the four hops it could make, the one landing nearest the target and staying in the window. Q*bert's Coily, on a timer |
@@ -1117,9 +1118,10 @@ A `<path>` is a route written once in the game's `<paths>` and flown by any obje
 
 - It has a `<speed>` (pixels a frame), an optional `<start>` (an `<x>` and `<y>` it is put at when it sets off; else it sets off from where it is), then its legs, flown in turn.
 - A `<step>` moves the object by its `<x>` across and `<y>` down from where the step began, in a straight line, and runs the commands after them as it sets off (the follower's own, as on its timer).
-- `<home />` flies it back to its `<position>` in the file, from wherever it has got to: a formation is just the objects' places. At the end of the path it comes to rest.
+- `<home />` flies it back to its `<position>` in the file, moved by any [`<shift>`](#commands) since, from wherever it has got to: a formation is just the objects' places, and a swaying one is shifted. Within a frame of its place it is put there. At the end of the path it comes to rest.
 - A path sets the velocity each frame, so the follower moves, wraps and collides as anything does. A `<wrap />` on the way leaves what is left of the step alone: Galaxian's dive adds up to the window's height plus the alien's, so a diver that misses comes back in from the top to its own place.
-- An object already on a path finishes it first; a reset, `<die />`, `<stop />` or `<reveal>` ends it. Every number on a path is fixed at load.
+- A step's `<x>` or `<y>` that names something live, or `self`, is worked out as the step starts, with `self` the follower: Galaxian's dive turns toward the ship with `<x>ship.x - self.x</x>`, and then flies that straight line whatever the ship does. Every other number on a path is fixed at load.
+- An object already on a path finishes it first; a reset, `<die />`, `<stop />` or `<reveal>` ends it.
 
 ## States and scenes
 

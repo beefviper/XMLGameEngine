@@ -336,6 +336,20 @@
             <xsl:with-param name="name" select="'command.seconds'" />
             <xsl:with-param name="node" select="$node/stagger" />
           </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.amount'" />
+            <xsl:with-param name="node" select="$node/nearest" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:when test="$verb = 'shift'">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.positionX'" />
+            <xsl:with-param name="node" select="$node/x" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.positionY'" />
+            <xsl:with-param name="node" select="$node/y" />
+          </xsl:call-template>
         </xsl:when>
       </xsl:choose>
     </xsl:variable>

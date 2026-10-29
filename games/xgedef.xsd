@@ -888,6 +888,17 @@
       </xs:element>
       <xs:element name="reveal" type="releaseType" />
       <xs:element name="follow" type="followType" />
+      <!-- <shift object="aliens"><x>2</x></shift>: those objects, and the
+           places they go home to, moved by x across and y down -->
+      <xs:element name="shift">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="x" type="valueType" minOccurs="0" />
+            <xs:element name="y" type="valueType" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="object" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
       <!-- <enter scene="room2" />: that scene becomes its state's current one;
            <enter way="east" />: the scene the current scene's way leads to. -->
       <xs:element name="enter">
@@ -1104,11 +1115,13 @@
   <!--
     follow: the object sets off along one of the game's <paths>. With object=
     every object of that name or group does, each <stagger> seconds after the
-    one before (0 if left out).
+    one before (0 if left out); with <nearest>N</nearest>, only the N of them
+    nearest the object running it.
   -->
   <xs:complexType name="followType">
     <xs:sequence>
       <xs:element name="stagger" type="valueType" minOccurs="0" />
+      <xs:element name="nearest" type="valueType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="path" type="xs:string" use="required" />
     <xs:attribute name="object" type="xs:string" use="optional" />

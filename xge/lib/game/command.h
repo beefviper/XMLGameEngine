@@ -493,6 +493,20 @@ namespace xge
 		std::string path;
 		std::string target; // empty: the object running the command
 		float stagger{};
+		// With target: only this many of them, the nearest the object
+		// running it that are not on a path already (0: all).
+		int nearest{ 0 };
+	};
+
+	// <shift object="aliens"><x>2</x></shift> - moves every object of that
+	// name or group by x across and y down, and the place each goes home to
+	// (a path's <home />) with it. One on a path keeps on its path, and comes
+	// home to the shifted place: Galaxian's formation sways. A reset puts
+	// the place back. See Game::shift.
+	struct CmdShift
+	{
+		std::string target;
+		Vector2f by;
 	};
 
 	// <enter scene="room2" /> - that scene (its path, playing.room2) becomes
@@ -584,7 +598,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdDespawn, CmdHold, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdDespawn, CmdHold, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -755,7 +769,7 @@ namespace xge
 		std::string retreat;   // hunt: <retreat object="...">
 		std::string button;    // hold
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
+		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
@@ -765,6 +779,7 @@ namespace xge
 		// left out; a position half may be <centered>.
 		// hop: a diagonal one's <x> across and <y> up or down (positionX and
 		// positionY), each empty text when it gives one distance instead.
+		// shift: its <x> and <y>, each empty text when left out (0).
 		RawValue positionX;
 		RawValue positionY;
 		RawValue velocityX;
@@ -843,6 +858,10 @@ namespace xge
 		bool home{ false };
 		Vector2f by;
 		std::vector<Command> commands;
+		// A half that names something that changes (ship.x - self.x, where
+		// self is the follower) is worked out as the step sets off.
+		std::shared_ptr<const RawValue> liveX;
+		std::shared_ptr<const RawValue> liveY;
 	};
 
 	// A path: a way through the window that objects <follow>, written once
@@ -851,9 +870,10 @@ namespace xge
 	// pixels a frame: a step moves the object by `by` from wherever the step
 	// began, and runs its commands (an object's own, as on a timer: firing,
 	// a sound) as it sets off; home takes it back to where it started the
-	// game (its <position>), however far it has come. With a start, the
-	// object is first put there; without, it sets off from where it is. The
-	// numbers are worked out once, when the game loads. A follower is moved
+	// game (its <position>, moved by any <shift>), however far it has come.
+	// With a start, the object is first put there; without, it sets off from
+	// where it is. The numbers are worked out once, when the game loads,
+	// except a step's that name something that changes (PathStep::liveX). A follower is moved
 	// by its velocity like anything else, so it collides, and a <wrap /> on
 	// the way carries it round without changing what is left of the step.
 	struct Path

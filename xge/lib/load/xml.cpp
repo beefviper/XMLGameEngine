@@ -1001,7 +1001,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
-				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "enter" || name == "set" || name == "spawn" || name == "despawn";
+				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "despawn";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1202,9 +1202,22 @@ namespace xge
 				const std::string here = where + " > <follow>";
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
-					if (child->getName() != "stagger") { fail(here, "unknown <" + child->getName() + ">; expected <stagger>"); }
+					if (child->getName() != "stagger" && child->getName() != "nearest") { fail(here, "unknown <" + child->getName() + ">; expected <stagger> and <nearest>"); }
 				}
 				if (auto stagger = findChild(&node, "stagger")) { command.seconds = readValue(*stagger, here); }
+				if (auto nearest = findChild(&node, "nearest"))
+				{
+					if (node.getAttribute("object").empty()) { fail(here, "<nearest> picks among the objects object= names; this <follow> names none"); }
+					command.amount = readValue(*nearest, here);
+				}
+			}
+			if (verb == "shift")
+			{
+				requireAttribute(node, "object", where);
+				const PartialVector2 by = readPartialVector2(node, where);
+				if (!by.x && !by.y) { fail(where, "<shift> moves by an <x> across, a <y> down, or both; it has neither"); }
+				if (by.x) { command.positionX = *by.x; }
+				if (by.y) { command.positionY = *by.y; }
 			}
 			if (verb == "release")
 			{

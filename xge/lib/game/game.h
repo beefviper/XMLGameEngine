@@ -125,6 +125,9 @@ namespace xge
 		// A value worked out now, from where everything is and how it is
 		// going (see game_expr::liveNumbers), and every variable as it is.
 		float evaluateNow(const RawValue& value, const std::string& where);
+		// A path step's half that names something that changes, worked out
+		// for the follower as the step sets off (self is the follower).
+		float stepHalf(const RawValue& value, const Object& follower);
 
 		// A command that reads something that changes (CmdLive), made again
 		// from what is so now. A value that cannot be worked out (a division
@@ -367,7 +370,10 @@ namespace xge
 		// <follow path="..." object="name"><stagger>s</stagger></follow>: every
 		// object of that name or group that is in play sets off, each `stagger`
 		// seconds after the one before, in the order written.
-		void follow(const std::string& target, const std::string& path, float stagger);
+		void follow(const std::string& target, const std::string& path, float stagger, int nearest = 0, const Object* from = nullptr);
+		// <shift>: every object of that name or group, and the place it goes
+		// home to, moved by `by`; one on a path only has its place moved.
+		void shift(const std::string& target, Vector2f by);
 
 		// Every path the game file describes (<paths>), worked out.
 		const std::map<std::string, Path>& getPaths(void) const noexcept;

@@ -1381,6 +1381,7 @@ namespace xge
 			object.leaping = false;
 			object.climbing = false;
 			object.climbOnce = false;
+			object.shifted = {};
 			object.activeClimb = {};
 			object.hasAim = false;
 			object.facing = object.facingOriginal;
@@ -1512,17 +1513,46 @@ namespace xge
 		}
 	}
 
-	void Game::follow(const std::string& target, const std::string& path, float stagger)
+	void Game::follow(const std::string& target, const std::string& path, float stagger, int nearest, const Object* from)
 	{
 		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
-		int setOff = 0;
+		std::vector<Object*> going;
 		for (auto& object : objects)
 		{
 			const bool named = object.name == target || object.inGroup(target);
-			if (!named || !object.isVisible || object.isFollowing() || isAway(object)) { continue; }
+			if (!named || !object.isVisible || object.isFollowing() || isAway(object) || &object == from) { continue; }
+			going.push_back(&object);
+		}
 
-			follow(object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(framerate))));
+		// Only the nearest so many to the one sending them, nearest first.
+		if (nearest > 0 && from)
+		{
+			const Vector2f middle = from->position + from->size * 0.5f;
+			const auto apart = [&](const Object* object)
+			{
+				const Vector2f d = object->position + object->size * 0.5f - middle;
+				return d.x * d.x + d.y * d.y;
+			};
+			std::stable_sort(going.begin(), going.end(), [&](const Object* a, const Object* b) { return apart(a) < apart(b); });
+			if (going.size() > static_cast<std::size_t>(nearest)) { going.resize(static_cast<std::size_t>(nearest)); }
+		}
+
+		int setOff = 0;
+		for (Object* object : going)
+		{
+			follow(*object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(framerate))));
 			++setOff;
+		}
+	}
+
+	void Game::shift(const std::string& target, Vector2f by)
+	{
+		const std::string name = fullName(target);
+		for (auto& object : objects)
+		{
+			if (object.name != name && !object.inGroup(name)) { continue; }
+			object.shifted += by;
+			if (!object.isFollowing()) { object.position += by; }
 		}
 	}
 
@@ -1553,6 +1583,8 @@ namespace xge
 				{
 					object.followLegStarted = true;
 					object.followLeft = leg.by;
+					if (leg.liveX) { object.followLeft.x = stepHalf(*leg.liveX, object); }
+					if (leg.liveY) { object.followLeft.y = stepHalf(*leg.liveY, object); }
 
 					// A copy: a command may reset the object, which ends the path.
 					const std::vector<Command> commands = leg.commands;
@@ -1565,8 +1597,19 @@ namespace xge
 
 				// What is left of this leg: the rest of a step, or the way home
 				// from wherever it has got to.
-				const Vector2f left = leg.home ? object.positionOriginal - object.position : object.followLeft;
+				const Vector2f left = leg.home ? object.positionOriginal + object.shifted - object.position : object.followLeft;
 				const std::optional<Vector2f> step = pathStep(left, path.speed);
+
+				// Within a frame of home, it is put there: a place a <shift>
+				// keeps moving would otherwise stay a step ahead of it.
+				if (leg.home && step && left.x * left.x + left.y * left.y <= path.speed * path.speed)
+				{
+					object.position += left;
+					object.velocity = {};
+					++object.followLeg;
+					object.followLegStarted = false;
+					continue;
+				}
 				if (!step)
 				{
 					++object.followLeg;
@@ -1993,6 +2036,13 @@ namespace xge
 			default: *link.number = object.blink; break;
 			}
 		}
+	}
+
+	float Game::stepHalf(const RawValue& value, const Object& follower)
+	{
+		RawValue own = value;
+		own.text = renameStart(own.text, "self", follower.name);
+		return evaluateNow(own, "object '" + follower.name + "' > <follow> > <step>");
 	}
 
 	float Game::evaluateNow(const RawValue& value, const std::string& where)

@@ -101,8 +101,8 @@ namespace
 
 	bool isHome(const Object& object)
 	{
-		return std::abs(object.position.x - object.positionOriginal.x) < 0.01f
-			&& std::abs(object.position.y - object.positionOriginal.y) < 0.01f;
+		return std::abs(object.position.x - object.positionOriginal.x - object.shifted.x) < 0.01f
+			&& std::abs(object.position.y - object.positionOriginal.y - object.shifted.y) < 0.01f;
 	}
 
 	// A file in the temporary folder, removed afterwards.
@@ -269,6 +269,64 @@ TEST_CASE("a <follow> in a timer sends its own object, and in a state needs obje
 	CHECK_FALSE(fromState.game.getObject("a").isFollowing());
 }
 
+TEST_CASE("<nearest> in a <follow> sends only that many, the nearest to the one doing it", "[paths]")
+{
+	const std::string group = "<group name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
+		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
+		"<member><position><x>100</x></position></member><member><position><x>120</x></position></member><member><position><x>140</x></position></member></group>";
+	Loaded loaded(kSquare, box("a", 135, 0,
+		"<timers><timer><after>0.1</after><follow path=\"square\" object=\"b\"><nearest>2</nearest></follow></timer></timers>") + group);
+	loaded.frames(1);
+	CHECK_FALSE(loaded.game.getObject("b.1").isFollowing());
+	CHECK(loaded.game.getObject("b.2").isFollowing());
+	CHECK(loaded.game.getObject("b.3").isFollowing());
+	CHECK_FALSE(loaded.game.getObject("a").isFollowing());
+}
+
+TEST_CASE("<shift> moves objects and the places they go home to; one on a path only has its place moved", "[paths]")
+{
+	Loaded loaded(kSquare, box("a", 50, 50) + box("b", 0, 0,
+		"<timers><timer><every>0.1</every><shift object=\"a\"><x>1</x></shift></timer></timers>"));
+	Object& a = loaded.game.getObject("a");
+	loaded.frames(3);
+	CHECK(a.position.x == Approx(53.0f));
+	CHECK(isHome(a));
+
+	// Sent round the square, it is not pushed along by the shift, but
+	// comes home to where the shift has taken its place meanwhile.
+	loaded.game.follow(a, "square");
+	loaded.frames(5);
+	CHECK(a.position.x == Approx(63.0f));
+	CHECK(a.shifted.x == Approx(8.0f));
+	loaded.frames(40);
+	CHECK_FALSE(a.isFollowing());
+	CHECK(isHome(a));
+
+	// A reset puts it back where the file says.
+	loaded.game.resetObject("a");
+	CHECK(a.position.x == Approx(50.0f));
+	CHECK(a.shifted.x == Approx(0.0f));
+}
+
+TEST_CASE("a path step that names something live is worked out as it starts, with self the one following", "[paths]")
+{
+	const std::string paths = "<paths><path name=\"aim\"><speed>2</speed>"
+		"<step><x>b.x - self.x</x><y>0</y></step><home /></path></paths>";
+	Loaded loaded(paths, box("a", 50, 50) + box("b", 10, 0));
+	Object& a = loaded.game.getObject("a");
+	Object& b = loaded.game.getObject("b");
+	b.position.x = 30.0f;
+	loaded.game.follow(a, "aim");
+	loaded.frames(1);
+
+	// Moving b once the step has started changes nothing.
+	b.position.x = 0.0f;
+	loaded.frames(9);
+	CHECK(a.position.x == Approx(30.0f));
+	loaded.frames(20);
+	CHECK(isHome(a));
+}
+
 TEST_CASE("mistakes with paths are turned away when the game loads, saying where", "[paths][errors]")
 {
 	const auto fails = [](const std::string& paths, const std::string& objects, const std::string& stateExtra, const std::string& expected)
@@ -287,6 +345,11 @@ TEST_CASE("mistakes with paths are turned away when the game loads, saying where
 	fails("<paths><path name=\"p\"><speed>1</speed><home /></path><path name=\"p\"><speed>1</speed><home /></path></paths>", both, "",
 		"already a path of that name");
 	fails("<paths><path name=\"p\"><speed>1</speed><wait /></path></paths>", both, "", "unknown <wait>");
+	fails(kSquare, both, "<timers><timer><after>1</after><shift object=\"a\" /></timer></timers>", "<shift>");
+	fails(kSquare, both, "<timers><timer><after>1</after><shift object=\"c\"><x>1</x></shift></timer></timers>", "'c'");
+	fails(kSquare, box("a", 0, 0, "<timers><timer><after>1</after><follow path=\"square\"><nearest>1</nearest></follow></timer></timers>") + box("b", 0, 0), "",
+		"<nearest>");
+	fails(kSquare, both, "<timers><timer><after>1</after><follow path=\"square\" object=\"b\"><nearest>0</nearest></follow></timer></timers>", "<nearest>");
 }
 
 // ---------------------------------------------------------------- Galaxian
@@ -300,16 +363,20 @@ TEST_CASE("galaxian.xml loads 46 aliens in six rows, a ship and six paths", "[ga
 	CHECK(play.game.getPaths().size() == 6);
 	CHECK(play.object("ship").variable["lives"] == 3.0f);
 
-	// The dive adds up to nothing across, and to the window's height and an
-	// alien's down, which is what wrapping at the bottom takes off again.
+	// The dive swings out 48 to the left, then turns toward the ship in two
+	// steps worked out as they start; down it adds up to the window's height
+	// and an alien's, which is what wrapping at the bottom takes off again.
 	float across = 0.0f;
 	float down = 0.0f;
+	int aimed = 0;
 	for (const auto& step : play.game.getPaths().at("dive").steps)
 	{
-		across += step.by.x;
+		if (step.liveX) { ++aimed; }
+		else { across += step.by.x; }
 		down += step.by.y;
 	}
-	CHECK(across == Approx(0.0f));
+	CHECK(across == Approx(-48.0f));
+	CHECK(aimed == 2);
 	CHECK(down == Approx(640.0f + play.object("blues1.1.1").size.y));
 }
 
@@ -351,10 +418,17 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 	play.tap(KeyCode::Space);
 	play.frames(400);
 
+	// The ship, far to the right, is out of play so nothing hits it; the
+	// dive still steers at it.
+	Object& ship = play.object("ship");
+	ship.position.x = 700.0f;
+	ship.isVisible = false;
+
 	Object& diver = play.object("escorts.1.1");
 	REQUIRE(isHome(diver));
 	play.game.follow(diver, "dive");
 
+	float closest = 1000.0f;
 	float lowest = diver.position.y;
 	float leftmost = diver.position.x;
 	float rightmost = diver.position.x;
@@ -366,6 +440,7 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 		play.frames(1);
 		++frames;
 		lowest = std::max(lowest, diver.position.y);
+		if (diver.position.y > 400.0f && diver.position.y < ship.position.y) { closest = std::min(closest, std::abs(diver.position.x - ship.position.x)); }
 		leftmost = std::min(leftmost, diver.position.x);
 		rightmost = std::max(rightmost, diver.position.x);
 		if (diver.position.y < 0.0f) { cameFromTop = true; }
@@ -381,7 +456,53 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 	CHECK(lowest > 600.0f);
 	CHECK(cameFromTop);
 	CHECK(rightmost - leftmost > 60.0f);
+	CHECK(closest < 1.0f);
 	CHECK(bombs > 0);
+}
+
+TEST_CASE("the formation sways from side to side, and a diver comes home to where its place has gone", "[galaxian]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.tap(KeyCode::Space);
+	play.frames(400);
+
+	Object& alien = play.object("blues1.1.1");
+	const float before = alien.position.x;
+	float leftmost = before;
+	float rightmost = before;
+	for (int frame = 0; frame < 300; ++frame)
+	{
+		play.frames(1);
+		leftmost = std::min(leftmost, alien.position.x);
+		rightmost = std::max(rightmost, alien.position.x);
+	}
+	CHECK(rightmost - leftmost > 20.0f);
+	CHECK(rightmost - leftmost < 60.0f);
+	CHECK(play.count([](const Object& object) { return object.isFollowing() || isHome(object); }) == play.count([](const Object& object) { return object.isVisible; }));
+}
+
+TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pays more", "[galaxian]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.tap(KeyCode::Space);
+	play.frames(400);
+
+	Object& flagship = play.object("flagships.1.1");
+	play.game.follow("playing.fleet.escorts", "dive", 0.0f, 2, &flagship);
+	int following = 0;
+	for (auto& object : play.game.getCurrentObjects())
+	{
+		if (object.isFollowing() && object.name.rfind("playing.fleet.escorts.", 0) == 0) { ++following; }
+	}
+	CHECK(following == 2);
+	CHECK(play.object("escorts.1.1").isFollowing());
+	CHECK_FALSE(play.object("escorts.6.1").isFollowing());
+
+	// In the formation an escort pays 50; diving, 100.
+	Object& escort = play.object("escorts.1.1");
+	CHECK(escort.variable["pays"] == 50.0f);
+	CHECK(escort.variable["diving"] == 100.0f);
+	CHECK(play.object("flagships.1.1").variable["diving"] == 150.0f);
 }
 
 TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in", "[galaxian]")
