@@ -864,7 +864,7 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 		// From a key: the number as it is now, shown by what is bound to it.
 		CommandExecutor executor(game);
 		game.getObject("player").variable["score"] = 3;
-		executor.executeInput(Command{ CmdCopy{ "player.score", "best.score" } }, true);
+		executor.executeInput(Command{ CmdCopy{ { "player", "score" }, { "best", "score" } } }, true);
 		CHECK(loaded.variable("best", "score") == 3);
 		CHECK(game.getObject("shown").picture.text == "3");
 
@@ -927,8 +927,8 @@ TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following i
 		CHECK(shown.picture.text == "SCORE 120 HZB 240");
 		CHECK(shown.showsVariable("p", "a"));
 
-		loaded.game.incrementText("p.a");
-		loaded.game.incrementText("p.score", 5.0f);
+		loaded.game.addTo({ "p", "a" });
+		loaded.game.addTo({ "p", "score" }, 5.0f);
 		CHECK(shown.picture.text == "SCORE 125 IZB 240");
 	}
 }
@@ -945,13 +945,13 @@ TEST_CASE("a <choose> piece shows one of its words, picked by a number as it is 
 		Loaded loaded(gameXml(owner + label, state("s", { "p", "label" })), backend);
 		Object& shown = loaded.game.getObject("label");
 		CHECK(shown.picture.text == "THE DRAGON IS ASLEEP");
-		loaded.game.incrementText("p.mood");
+		loaded.game.addTo({ "p", "mood" });
 		CHECK(shown.picture.text == "THE DRAGON IS HUNGRY");
 
 		// Past either end, the word at that end; between two, the lower.
-		loaded.game.incrementText("p.mood", 7.5f);
+		loaded.game.addTo({ "p", "mood" }, 7.5f);
 		CHECK(shown.picture.text == "THE DRAGON IS VERY ANGRY");
-		loaded.game.incrementText("p.mood", -9.5f);
+		loaded.game.addTo({ "p", "mood" }, -9.5f);
 		CHECK(shown.picture.text == "THE DRAGON IS ASLEEP");
 	}
 
@@ -966,8 +966,8 @@ TEST_CASE("a group's text naming the group's variables shows each member's own",
 		"<position><x>0</x></position><variables><variable name=\"l\">0</variable><variable name=\"n\">0</variable></variables>"
 		"<member><position><y>0</y></position></member><member><position><y>30</y></position></member></group>";
 	Loaded loaded(gameXml(group, state("s", { "rows" })));
-	loaded.game.incrementText("rows.2.n", 9.0f);
-	loaded.game.incrementText("rows.2.l");
+	loaded.game.addTo({ "rows.2", "n" }, 9.0f);
+	loaded.game.addTo({ "rows.2", "l" });
 	CHECK(loaded.game.getObject("rows.1").picture.text == "A 0");
 	CHECK(loaded.game.getObject("rows.2").picture.text == "B 9");
 }
@@ -987,7 +987,7 @@ TEST_CASE("<rank> puts an entry into its place in a table, the rest moving down"
 	{
 		game.setVariable("entry", "score", score);
 		game.setVariable("entry", "tag", tag);
-		game.rank("entry.score", "table");
+		game.rank({ "entry", "score" }, "table");
 	};
 	const auto column = [&](const char* name)
 	{

@@ -290,22 +290,21 @@ namespace xge
 		// the list of states).
 		// The variable a command names: owner.variable, the variable after the
 		// last dot (the owner may be a path).
-		void checkVariable(const std::string& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
+		void checkVariable(const VariableName& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
 		{
-			const auto dot = target.rfind('.');
-			if (dot == std::string::npos)
+			if (target.variable.empty())
 			{
-				throw std::runtime_error(where + ": " + tag + ": '" + target + "' is no variable; name one as owner.variable (player.score)"
+				throw std::runtime_error(where + ": " + tag + ": '" + target.owner + "' is no variable; name one as owner.variable (player.score)"
 					+ ". A variable that changes belongs to an object; the game's own <variables> are fixed numbers");
 			}
-			const std::string ownerName = target.substr(0, dot);
+			const std::string& ownerName = target.owner;
 			const Object* owner = findObject(objects, ownerName);
 			if (!owner)
 			{
 				throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects))
 					+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
 			}
-			const std::string variableName = target.substr(dot + 1);
+			const std::string& variableName = target.variable;
 			if (!owner->variable.count(variableName))
 			{
 				std::vector<std::string> names;
@@ -552,23 +551,24 @@ namespace xge
 				// A variable belongs to an object: paddle1.score is paddle1's
 				// <variable name="score">.
 				const bool inc = std::holds_alternative<CmdIncrement>(shapeOf(command));
-				const std::string& target = inc ? std::get<CmdIncrement>(shapeOf(command)).target : std::get<CmdDecrement>(shapeOf(command)).target;
-				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + target + "\" />", objects, where);
+				const VariableName& target = inc ? std::get<CmdIncrement>(shapeOf(command)).target : std::get<CmdDecrement>(shapeOf(command)).target;
+				const std::string written = target.variable.empty() ? target.owner : target.written();
+				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + written + "\" />", objects, where);
 			}
 			else if (const auto* set = std::get_if<CmdSet>(&shapeOf(command)))
 			{
 				// A variable of an object's, or one of the numbers every
 				// object has (where it is, how it is going, its heading).
-				const std::string tag = "<set variable=\"" + set->target + "\">";
-				const std::string part = liveNumberPart(set->target);
-				const Object* holder = part.empty() ? nullptr : findObject(objects, set->target.substr(0, set->target.size() - part.size() - 1));
+				const std::string tag = "<set variable=\"" + (set->target.variable.empty() ? set->target.owner : set->target.written()) + "\">";
+				const std::string part = liveNumberPart(set->target.written());
+				const Object* holder = part.empty() ? nullptr : findObject(objects, set->target.owner);
 				if (part.empty() || (holder && holder->variable.count(part)))
 				{
 					checkVariable(set->target, tag, objects, where);
 				}
 				else
 				{
-					const std::string owner = set->target.substr(0, set->target.size() - part.size() - 1);
+					const std::string& owner = set->target.owner;
 					const Object* found = findObject(objects, owner);
 					if (!found)
 					{
@@ -602,7 +602,7 @@ namespace xge
 			{
 				// Both are owner.variable: a copy reads one object's variable
 				// and writes another's.
-				const std::string tag = "<copy variable=\"" + copy->from + "\" into=\"" + copy->into + "\" />";
+				const std::string tag = "<copy variable=\"" + copy->from.written() + "\" into=\"" + copy->into.written() + "\" />";
 				checkVariable(copy->from, tag, objects, where);
 				checkVariable(copy->into, tag, objects, where);
 			}
@@ -610,9 +610,9 @@ namespace xge
 			{
 				// The entry's variable, and a group whose every member has one
 				// of that name to be ordered by.
-				const std::string tag = "<rank variable=\"" + rank->entry + "\" into=\"" + rank->table + "\" />";
+				const std::string tag = "<rank variable=\"" + rank->entry.written() + "\" into=\"" + rank->table + "\" />";
 				checkVariable(rank->entry, tag, objects, where);
-				const std::string variableName = rank->entry.substr(rank->entry.rfind('.') + 1);
+				const std::string& variableName = rank->entry.variable;
 				bool any = false;
 				for (const Object& object : objects)
 				{

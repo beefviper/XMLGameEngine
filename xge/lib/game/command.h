@@ -143,12 +143,28 @@ namespace xge
 		float step{};
 	};
 
+	// A variable a command names, owner.variable, taken apart once when the
+	// command is made: the owner (an object, a path to one, or for <set> a
+	// group) and the variable after the last dot. For <set>, `variable`
+	// may be one of the numbers every object has (velocity.x, heading).
+	struct VariableName
+	{
+		std::string owner;
+		std::string variable;
+
+		// The name as written (player.score) taken apart at its last dot.
+		static VariableName of(const std::string& written);
+
+		// As written.
+		std::string written() const { return owner + "." + variable; }
+	};
+
 	// <inc variable="ownerName.variableName" /> - add 1 (or, for <inc variable="...">5</inc>,
 	// the amount) to that object's named <variable> and refresh every text object whose display is bound to it (see
-	// Game::incrementText and Object::textPieces).
+	// Game::addTo and Object::textPieces).
 	struct CmdIncrement
 	{
-		std::string target;
+		VariableName target;
 		float amount{ 1.0f };
 	};
 
@@ -158,8 +174,8 @@ namespace xge
 	// a condition copies the score into the best whenever it is above it.
 	struct CmdCopy
 	{
-		std::string from;
-		std::string into;
+		VariableName from;
+		VariableName into;
 	};
 
 	// <rank variable="entry.score" into="table" /> - the entry goes into a
@@ -170,7 +186,7 @@ namespace xge
 	// off. Below them all, nothing happens. See Game::rank.
 	struct CmdRank
 	{
-		std::string entry;     // owner.variable: the entry and what orders it
+		VariableName entry;    // the entry and what orders it
 		std::string table;     // the group
 	};
 
@@ -203,7 +219,7 @@ namespace xge
 	// refreshes every text bound to it.
 	struct CmdDecrement
 	{
-		std::string target;
+		VariableName target;
 		float amount{ 1.0f };
 	};
 
@@ -558,7 +574,7 @@ namespace xge
 	// owner.heading. See Game::setNumber.
 	struct CmdSet
 	{
-		std::string target;
+		VariableName target;
 		float value{};
 	};
 

@@ -56,11 +56,10 @@ namespace xge
 		virtual void followPaths() {}
 
 		// A thruster burns one unit of the object's `variable`; false
-		// (and nothing burnt) when there is none left. `verb` names the tag,
-		// for a warning.
-		virtual bool burn(Object& object, const std::string& variable, const char* verb)
+		// (and nothing burnt) when there is none left.
+		virtual bool burn(Object& object, const std::string& variable)
 		{
-			(void)object; (void)variable; (void)verb;
+			(void)object; (void)variable;
 			return true;
 		}
 

@@ -416,11 +416,11 @@ TEST_CASE("dec takes a life off the bound text as well as the variable", "[frogg
 
 	// The frog is the playing state's own, so its full name is the one a
 	// <dec variable="frog.lives" /> in the game is loaded as.
-	table.game.decrementText("playing.frog.lives");
+	table.game.addTo({ "playing.frog", "lives" }, -1.0f);
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.game.getObject("lives").picture.text == "LIVES 2");
 
-	table.game.incrementText("playing.frog.lives");
+	table.game.addTo({ "playing.frog", "lives" });
 	CHECK(table.lives() == 3.0f);
 	CHECK(table.game.getObject("lives").picture.text == "LIVES 3");
 }

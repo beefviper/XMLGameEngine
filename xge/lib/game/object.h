@@ -1020,7 +1020,7 @@ namespace xge
 		// True until the active Window backend has built (or rebuilt) this
 		// object's own visual - set again whenever something changes what
 		// should be on screen for it (e.g. a bound text display's number
-		// changing - see Game::incrementText/resetObject/resetAll) so the
+		// changing - see Game::setVariable/resetObject/resetAll) so the
 		// backend knows to rebuild from its picture before its next draw()
 		// instead of showing a stale image. Game/Engine never draw anything
 		// themselves; they only ever flip this flag.

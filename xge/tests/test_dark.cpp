@@ -291,7 +291,7 @@ TEST_CASE("hauntedhouse.xml: the whole urn brought back to the door wins, and no
 {
 	House play;
 	play.stillCreatures();
-	play.game.incrementText("player.urns", 3.0f);
+	play.game.addTo({ "player", "urns" }, 3.0f);
 	play.place(10, 10);
 	play.frames(2);
 	CHECK(play.state() == "playing");
@@ -302,7 +302,7 @@ TEST_CASE("hauntedhouse.xml: the whole urn brought back to the door wins, and no
 	CHECK(play.state() == "mainmenu");
 
 	House again;
-	again.game.incrementText("player.lives", -9.0f);
+	again.game.addTo({ "player", "lives" }, -9.0f);
 	again.frames(2);
 	CHECK(again.state() == "lost");
 }

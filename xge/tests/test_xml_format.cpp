@@ -286,7 +286,7 @@ TEST_CASE("commands run in the order they are written", "[xml_format][commands]"
 
 	const auto& left = loaded.game.getObject("o").collisionData.left;
 	REQUIRE(left.size() == 3);
-	CHECK(as<CmdIncrement>(left[0]).target == "o.score");
+	CHECK(as<CmdIncrement>(left[0]).target.written() == "o.score");
 	as<CmdReset>(left[1]);
 	as<CmdDie>(left[2]);
 }

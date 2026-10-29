@@ -140,7 +140,7 @@ namespace xge
 		// owner.velocity.x, owner.velocity.y, owner.heading), on an object or
 		// on every member of a group. A variable of the object's own of that
 		// name wins. Returns false, with a warning, for no such thing.
-		bool setNumber(const std::string& target, float value);
+		bool setNumber(const VariableName& target, float value);
 
 		// The buttons the current state's <computer> holds down this frame:
 		// those its conditions that hold name in their <hold>s.
@@ -220,20 +220,16 @@ namespace xge
 		// keeps its spacing.
 		void updateLockstepObjects(const Object& object) noexcept;
 
-		// Thin forwarders so CommandExecutor (which only sees Game through a few
-		// public entry points) can reach the xml subsystem without it being
-		// made public wholesale.
-		void incrementText(const std::string& objectName, float amount = 1.0f);
-
-		// <dec variable="owner.variable" />: takes 1 (or the amount) off, the same way, and refreshes the
-		// same bound texts. A variable may go below zero; a <condition> with
+		// <inc variable="owner.variable" /> (and <dec />, a negative amount):
+		// adds the amount to that variable, and every text bound to it shows
+		// the new number. A variable may go below zero; a <condition> with
 		// atmost= is what notices it has run out.
-		void decrementText(const std::string& objectName, float amount = 1.0f);
+		void addTo(const VariableName& target, float amount = 1.0f);
 
 		// <copy variable="player.score" into="best.score" />: the second
 		// variable takes the number the first holds now, and every text bound
 		// to it shows it.
-		void copyVariable(const std::string& from, const std::string& into);
+		void copyVariable(const VariableName& from, const VariableName& into);
 
 		// What the game <keeps>, written out and read back, so that it lasts
 		// from one run of the program to the next (Engine::keepIn): each kept
@@ -290,7 +286,7 @@ namespace xge
 		// <rank variable="entry.score" into="table" />: the entry takes its
 		// place among the members of the group (the best first), by that
 		// variable, the ones below it moving down a place (see CmdRank).
-		void rank(const std::string& entry, const std::string& table);
+		void rank(const VariableName& entry, const std::string& table);
 
 		// <reset object="objectName" /> from a state's <input>/<condition> (see
 		// CmdResetObject): restores that object's position, velocity, and every
@@ -375,9 +371,8 @@ namespace xge
 		const std::map<std::string, Path>& getPaths(void) const noexcept;
 
 	private:
-		// The one implementation behind incrementText and decrementText;
-		// `verb` is only for the warning printed when the target is not found.
-		void changeVariable(const std::string& target, float delta, const char* verb);
+		// The variable of that name, or null when its owner or it is not there.
+		float* variableOf(const VariableName& name) noexcept;
 
 		// Marks the objects (and every member of the groups) of these names
 		// as kept (Object::kept); a name that is no object stops the load.
@@ -472,7 +467,7 @@ namespace xge
 		bool inPlay(const Object& object) override { return isShown(object); }
 		void timers() override { updateTimers(); }
 		void followPaths() override { applyPaths(); }
-		bool burn(Object& object, const std::string& variable, const char* verb) override;
+		bool burn(Object& object, const std::string& variable) override;
 		void atEdge(Object& object, Edge edge) override;
 		bool sticksAt(const Object& object, Edge edge) override;
 		bool canCollide(const Object& a, const Object& b) override;

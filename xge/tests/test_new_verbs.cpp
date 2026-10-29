@@ -54,7 +54,7 @@ TEST_CASE("<dec variable=\"owner.variable\" /> makes a CmdDecrement", "[new_verb
 
 	REQUIRE(commands.size() == 2);
 	REQUIRE(std::holds_alternative<CmdDecrement>(commands[0]));
-	CHECK(std::get<CmdDecrement>(commands[0]).target == "frog.lives");
+	CHECK(std::get<CmdDecrement>(commands[0]).target.written() == "frog.lives");
 	CHECK(std::holds_alternative<CmdReset>(commands[1]));
 }
 
@@ -93,7 +93,7 @@ TEST_CASE("<wrap /> and <ride /> are collision verbs", "[new_verbs][command_pars
 TEST_CASE("the new commands print the way they are written", "[new_verbs][command_parsing]")
 {
 	std::ostringstream out;
-	out << Command{ CmdDecrement{ "frog.lives" } } << ' '
+	out << Command{ CmdDecrement{ { "frog", "lives" } } } << ' '
 		<< Command{ CmdHop{ Direction::Left, 48.0f } } << ' '
 		<< Command{ CmdWrap{} } << ' '
 		<< Command{ CmdRide{} };
@@ -156,8 +156,8 @@ TEST_CASE("a rule about another object can reset, move, count and ride", "[new_v
 	CHECK(pair.frog.position.x == pair.frog.positionOriginal.x);
 	CHECK(pair.frog.position.y == pair.frog.positionOriginal.y);
 
-	pair.executor.executeObjectCollision(Command{ CmdIncrement{ "frog.score" } }, pair.frog, pair.hedge, Edge::Top);
-	pair.executor.executeObjectCollision(Command{ CmdDecrement{ "frog.lives" } }, pair.frog, pair.hedge, Edge::Top);
+	pair.executor.executeObjectCollision(Command{ CmdIncrement{ { "frog", "score" } } }, pair.frog, pair.hedge, Edge::Top);
+	pair.executor.executeObjectCollision(Command{ CmdDecrement{ { "frog", "lives" } } }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.variable["score"] == 1.0f);
 	CHECK(pair.frog.variable["lives"] == 2.0f);
 
@@ -211,19 +211,19 @@ TEST_CASE("an <inc> or <dec> amount is added to or taken off the variable", "[ne
 {
 	Pair pair;
 
-	pair.executor.executeObjectCollision(Command{ CmdIncrement{ "frog.score", 5.0f } }, pair.frog, pair.hedge, Edge::Top);
-	pair.executor.executeObjectCollision(Command{ CmdIncrement{ "frog.score", 2.5f } }, pair.frog, pair.hedge, Edge::Top);
+	pair.executor.executeObjectCollision(Command{ CmdIncrement{ { "frog", "score" }, 5.0f } }, pair.frog, pair.hedge, Edge::Top);
+	pair.executor.executeObjectCollision(Command{ CmdIncrement{ { "frog", "score" }, 2.5f } }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.variable["score"] == 7.5f);
 
-	pair.executor.executeObjectCollision(Command{ CmdDecrement{ "frog.lives", 2.0f } }, pair.frog, pair.hedge, Edge::Top);
+	pair.executor.executeObjectCollision(Command{ CmdDecrement{ { "frog", "lives" }, 2.0f } }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.variable["lives"] == 1.0f);
 }
 
 TEST_CASE("an amount shows in how <inc> and <dec> print, and a plain one does not", "[new_verbs][command_parsing]")
 {
 	std::ostringstream out;
-	out << Command{ CmdIncrement{ "frog.score" } } << ' ' << Command{ CmdIncrement{ "frog.score", 10.0f } } << ' '
-		<< Command{ CmdDecrement{ "frog.lives", 2.0f } };
+	out << Command{ CmdIncrement{ { "frog", "score" } } } << ' ' << Command{ CmdIncrement{ { "frog", "score" }, 10.0f } } << ' '
+		<< Command{ CmdDecrement{ { "frog", "lives" }, 2.0f } };
 
 	CHECK(out.str() == "inc(frog.score) inc(frog.score, 10) dec(frog.lives, 2)");
 }

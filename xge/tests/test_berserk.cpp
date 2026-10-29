@@ -540,7 +540,7 @@ TEST_CASE("robots fire more often, and Otto comes sooner, the deeper the man has
 	const auto firstShot = [](float depth)
 	{
 		Play play;
-		play.game.incrementText("player.depth", depth);
+		play.game.addTo({ "player", "depth" }, depth);
 		play.begin(false);
 		play.leaveByTheLeft();
 		int frame = 0;
@@ -557,7 +557,7 @@ TEST_CASE("robots fire more often, and Otto comes sooner, the deeper the man has
 	const auto ottoAt = [](float depth)
 	{
 		Play play;
-		play.game.incrementText("player.depth", depth);
+		play.game.addTo({ "player", "depth" }, depth);
 		play.begin();
 		int frame = 0;
 		while (!play.object("otto").isVisible && frame < 2000)
@@ -676,7 +676,7 @@ TEST_CASE("a room with no robot left pays ten more for each destroyed in it, and
 	play.begin();
 
 	// Two of room one's three gone is only fifty each.
-	play.game.incrementText("player.kills", 2.0f);
+	play.game.addTo({ "player", "kills" }, 2.0f);
 	play.frames(2);
 	CHECK(play.score() == 0.0f);
 
@@ -687,7 +687,7 @@ TEST_CASE("a room with no robot left pays ten more for each destroyed in it, and
 
 	// All four of room two gone.
 	play.killRobots(2);
-	play.game.incrementText("player.kills", 4.0f);
+	play.game.addTo({ "player", "kills" }, 4.0f);
 	play.frames(2);
 	CHECK(play.score() == 40.0f);
 	CHECK(play.variable("kills") == 0.0f);

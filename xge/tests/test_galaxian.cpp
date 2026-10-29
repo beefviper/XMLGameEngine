@@ -747,8 +747,8 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	ship.position.x = 40.0f;
 
 	// A ship lost: player 2's turn, with a game of their own from the start.
-	play.game.decrementText("ship.lives");
-	play.game.incrementText("ship.lost");
+	play.game.addTo({ "ship", "lives" }, -1.0f);
+	play.game.addTo({ "ship", "lost" });
 	play.frames(1);
 	REQUIRE(play.state() == "player2");
 	CHECK(play.game.currentPlayer() == 2);
@@ -760,8 +760,8 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	ship.variable["score"] = 30.0f;
 
 	// Player 2 loses one: player 1's game comes back as they left it.
-	play.game.decrementText("ship.lives");
-	play.game.incrementText("ship.lost");
+	play.game.addTo({ "ship", "lives" }, -1.0f);
+	play.game.addTo({ "ship", "lost" });
 	play.frames(1);
 	REQUIRE(play.state() == "player1");
 	CHECK(ship.variable.at("score") == 120.0f);
@@ -784,7 +784,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	REQUIRE(play.state() == "player2");
 	CHECK(ship.variable.at("score") == 30.0f);
 	play.tap(KeyCode::Space);
-	play.game.incrementText("ship.lost");
+	play.game.addTo({ "ship", "lost" });
 	play.frames(1);
 	CHECK(play.state() == "playing"); // no one to pass to
 	CHECK(play.game.currentPlayer() == 2);
@@ -804,7 +804,7 @@ TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run",
 	play.tap(KeyCode::Space);
 	Object& ship = play.object("ship");
 	ship.variable["score"] = 10.0f;
-	play.game.incrementText("ship.lost");
+	play.game.addTo({ "ship", "lost" });
 	play.frames(1);
 	CHECK(play.state() == "playing");
 	CHECK(ship.variable.at("score") == 10.0f);
@@ -945,8 +945,8 @@ TEST_CASE("a key held when the turn passes does not keep moving that player's sh
 	play.engine.handleKeyPressed(KeyCode::Left);
 	play.frames(5);
 	REQUIRE(ship.velocity.x != 0.0f);
-	play.game.decrementText("ship.lives");
-	play.game.incrementText("ship.lost");
+	play.game.addTo({ "ship", "lives" }, -1.0f);
+	play.game.addTo({ "ship", "lost" });
 	play.frames(1);
 	REQUIRE(play.state() == "player2");
 	play.engine.handleKeyReleased(KeyCode::Left);
@@ -955,8 +955,8 @@ TEST_CASE("a key held when the turn passes does not keep moving that player's sh
 	CHECK(ship.velocity.x == 0.0f);
 
 	// Player 2 dies standing still: player 1's ship comes back still.
-	play.game.decrementText("ship.lives");
-	play.game.incrementText("ship.lost");
+	play.game.addTo({ "ship", "lives" }, -1.0f);
+	play.game.addTo({ "ship", "lost" });
 	play.frames(1);
 	REQUIRE(play.state() == "player1");
 	play.tap(KeyCode::Space);

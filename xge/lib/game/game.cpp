@@ -751,38 +751,35 @@ namespace xge
 		return states;
 	}
 
-	void Game::incrementText(const std::string& target, float amount)
+	void Game::addTo(const VariableName& target, float amount)
 	{
-		changeVariable(target, amount, "inc");
+		if (float* value = variableOf(target))
+		{
+			setVariable(target.owner, target.variable, *value + amount);
+		}
+		else
+		{
+			std::cout << "warning: no variable " << target.written() << " to change\n";
+		}
 	}
 
-	void Game::decrementText(const std::string& target, float amount)
+	void Game::copyVariable(const VariableName& from, const VariableName& into)
 	{
-		changeVariable(target, -amount, "dec");
-	}
-
-	void Game::copyVariable(const std::string& from, const std::string& into)
-	{
-		// Both are owner.variable, the variable after the last dot.
-		const auto find = [&](const std::string& target) -> std::pair<Object*, float*>
+		const float* value = variableOf(from);
+		if (!value || !variableOf(into))
 		{
-			const auto dot = target.rfind('.');
-			Object* owner = dot == std::string::npos ? nullptr : tryGetObject(target.substr(0, dot));
-			if (!owner) { return { nullptr, nullptr }; }
-			auto variable = owner->variable.find(target.substr(dot + 1));
-			return { owner, variable == owner->variable.end() ? nullptr : &variable->second };
-		};
-
-		const auto [source, value] = find(from);
-		const auto [owner, variable] = find(into);
-		if (!value || !variable)
-		{
-			std::cout << "warning: <copy variable=\"" << from << "\" into=\"" << into << "\" />: no such variable\n";
+			std::cout << "warning: <copy variable=\"" << from.written() << "\" into=\"" << into.written() << "\" />: no such variable\n";
 			return;
 		}
+		setVariable(into.owner, into.variable, *value);
+	}
 
-		*variable = *value;
-		refreshBoundTexts(owner->name, into.substr(into.rfind('.') + 1), *variable);
+	float* Game::variableOf(const VariableName& name) noexcept
+	{
+		Object* owner = tryGetObject(name.owner);
+		if (!owner) { return nullptr; }
+		const auto found = owner->variable.find(name.variable);
+		return found == owner->variable.end() ? nullptr : &found->second;
 	}
 
 	void Game::checkDemo(void) const
@@ -994,14 +991,13 @@ namespace xge
 		refreshAllBoundTexts();
 	}
 
-	void Game::rank(const std::string& entry, const std::string& table)
+	void Game::rank(const VariableName& entry, const std::string& table)
 	{
-		const auto dot = entry.rfind('.');
-		Object* from = dot == std::string::npos ? nullptr : tryGetObject(entry.substr(0, dot));
-		const std::string by = dot == std::string::npos ? std::string{} : entry.substr(dot + 1);
+		Object* from = tryGetObject(entry.owner);
+		const std::string& by = entry.variable;
 		if (!from || !from->variable.count(by))
 		{
-			std::cout << "warning: <rank variable=\"" << entry << "\" into=\"" << table << "\" />: no such variable\n";
+			std::cout << "warning: <rank variable=\"" << entry.written() << "\" into=\"" << table << "\" />: no such variable\n";
 			return;
 		}
 
@@ -1066,39 +1062,6 @@ namespace xge
 				throw std::runtime_error("<keeps> > <keep object=\"" + given + "\" />: names no object of the game" + didYouMean(given, known));
 			}
 		}
-	}
-
-	void Game::changeVariable(const std::string& target, float delta, const char* verb)
-	{
-		// owner.variable, the variable after the last dot (the owner may be a
-		// path: playing.room1.tally.kills); every text bound to it shows the
-		// new number (Object::textPieces).
-		const auto dot = target.rfind('.');
-		if (dot == std::string::npos)
-		{
-			std::cout << "warning: <" << verb << " variable=\"" << target << "\" />: no such variable\n";
-			return;
-		}
-
-		const std::string ownerName = target.substr(0, dot);
-		const std::string variableName = target.substr(dot + 1);
-
-		Object* owner = tryGetObject(ownerName);
-		if (!owner)
-		{
-			std::cout << "warning: <" << verb << " variable=\"" << target << "\" />: no object named '" << ownerName << "'\n";
-			return;
-		}
-
-		auto variableIt = owner->variable.find(variableName);
-		if (variableIt == owner->variable.end())
-		{
-			std::cout << "warning: <" << verb << " variable=\"" << target << "\" />: '" << ownerName << "' has no variable named '" << variableName << "'\n";
-			return;
-		}
-
-		variableIt->second += delta;
-		refreshBoundTexts(owner->name, variableName, variableIt->second);
 	}
 
 	int Game::framesFor(float seconds) const noexcept
@@ -1398,7 +1361,7 @@ namespace xge
 		}
 
 		// Refresh every text display bound to one of this object's variables
-		// (same notify pattern as incrementText above), so e.g. a HUD showing
+		// (same notify pattern as setVariable), so e.g. a HUD showing
 		// paddle1.score visibly drops back to 0 immediately, not just internally.
 		const std::string owner = object->name;
 		for (auto& other : objects)
@@ -1635,7 +1598,7 @@ namespace xge
 
 		// Refresh every text display bound to another object's variable, now
 		// that all of them are back to their starting values (same notify
-		// pattern as resetObject/incrementText above, just over every bound
+		// pattern as resetObject/setVariable, just over every bound
 		// display instead of one object's worth).
 		refreshAllBoundTexts();
 
@@ -1904,11 +1867,11 @@ namespace xge
 
 	// A thruster burns one unit of the object's own `variable`, if it has any
 	// left.
-	bool Game::burn(Object& object, const std::string& variable, const char* verb)
+	bool Game::burn(Object& object, const std::string& variable)
 	{
 		const auto fuel = object.variable.find(variable);
 		if (fuel == object.variable.end() || fuel->second <= 0.0f) { return false; }
-		changeVariable(object.name + "." + variable, -1.0f, verb);
+		setVariable(object.name, variable, fuel->second - 1.0f);
 		return true;
 	}
 
@@ -2035,19 +1998,17 @@ namespace xge
 		}
 	}
 
-	bool Game::setNumber(const std::string& target, float value)
+	bool Game::setNumber(const VariableName& target, float value)
 	{
-		const std::string part = liveNumberPart(target);
-		const std::string owner = part.empty() ? target.substr(0, target.rfind('.')) : target.substr(0, target.size() - part.size() - 1);
-		const std::string name = part.empty() ? target.substr(target.rfind('.') + 1) : part;
-
-		if (const Object* holder = tryGetObject(owner); holder && holder->variable.count(name))
+		if (variableOf(target))
 		{
-			return setVariable(owner, name, value);
+			return setVariable(target.owner, target.variable, value);
 		}
-		if (part.empty())
+		const std::string& owner = target.owner;
+		const std::string& part = target.variable;
+		if (liveNumberPart(target.written()).empty())
 		{
-			std::cout << "warning: <set variable=\"" << target << "\">: no such variable\n";
+			std::cout << "warning: <set variable=\"" << target.written() << "\">: no such variable\n";
 			return false;
 		}
 
@@ -2072,7 +2033,7 @@ namespace xge
 		}
 		if (!found)
 		{
-			std::cout << "warning: <set variable=\"" << target << "\">: no object named '" << owner << "'\n";
+			std::cout << "warning: <set variable=\"" << target.written() << "\">: no object named '" << owner << "'\n";
 		}
 		return found;
 	}

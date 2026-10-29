@@ -265,9 +265,9 @@ namespace xge
 				Vector2f change = object.acceleration;
 
 				// A thruster with no fuel does nothing.
-				const auto burnFuel = [&](const std::string& burn, const char* verb)
+				const auto burnFuel = [&](const std::string& burn)
 				{
-					return burn.empty() || rules.burn(object, burn, verb);
+					return burn.empty() || rules.burn(object, burn);
 				};
 
 				for (std::size_t i = 0; i < object.activeThrust.size(); ++i)
@@ -275,7 +275,7 @@ namespace xge
 					const float amount = object.activeThrust[i];
 					if (amount == 0.0f) { continue; }
 
-					if (!burnFuel(object.activeThrustBurn[i], "accelerate")) { continue; }
+					if (!burnFuel(object.activeThrustBurn[i])) { continue; }
 
 					switch (static_cast<Direction>(i))
 					{
@@ -301,7 +301,7 @@ namespace xge
 
 					for (const auto& [action, thrust] : object.activeThrustAheadBy)
 					{
-						if (burnFuel(thrust.second, "thrust"))
+						if (burnFuel(thrust.second))
 						{
 							change += ahead(object.heading) * thrust.first;
 						}

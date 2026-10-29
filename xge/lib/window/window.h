@@ -72,7 +72,7 @@ namespace xge
 
 		// Draws one object. Non-const: an object whose visualDirty flag is
 		// set (e.g. a bound text display's number just changed - see
-		// Game::incrementText/resetObject/resetAll) gets its cached visual
+		// Game::setVariable/resetObject/resetAll) gets its cached visual
 		// rebuilt here, on demand, and its size/visualDirty brought back up
 		// to date - the same one-time-build-then-cache pattern as init()
 		// above, just for a single object instead of all of them at once.

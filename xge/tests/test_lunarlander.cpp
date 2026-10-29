@@ -382,7 +382,7 @@ TEST_CASE("a pilot who brakes with the engine brings it down from a drop, and ha
 TEST_CASE("the last lander down with no fuel ends the game, and Space starts it over", "[lunarlander]")
 {
 	Moon moon;
-	moon.game.incrementText("lander.fuel", -850.0f);
+	moon.game.addTo({ "lander", "fuel" }, -850.0f);
 	moon.lander().position = { 85, 300 };
 	moon.lander().velocity = { 0, 0.3f };
 

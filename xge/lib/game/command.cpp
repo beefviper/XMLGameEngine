@@ -4,6 +4,7 @@
 // date: Sept 27, 2026
 
 #include "game/command.h"
+#include "game/object.h"
 #include "play/geometry.h"
 
 #include <algorithm>
@@ -25,6 +26,13 @@ namespace xge
 
 			throw std::runtime_error("<" + verb + "> has direction=\"" + name + "\"; expected up, down, left or right");
 		}
+	}
+
+	VariableName VariableName::of(const std::string& written)
+	{
+		const auto dot = written.rfind('.');
+		if (dot == std::string::npos) { return { written, {} }; }
+		return { written.substr(0, dot), written.substr(dot + 1) };
 	}
 
 	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate)
@@ -245,10 +253,10 @@ namespace xge
 			return none ? 1.0f : evaluate(command.amount);
 		};
 
-		if (verb == "inc") { return CmdIncrement{ raw.variable, amountOf(raw) }; }
-		if (verb == "dec") { return CmdDecrement{ raw.variable, amountOf(raw) }; }
-		if (verb == "copy") { return CmdCopy{ raw.variable, raw.into }; }
-		if (verb == "rank") { return CmdRank{ raw.variable, raw.into }; }
+		if (verb == "inc") { return CmdIncrement{ VariableName::of(raw.variable), amountOf(raw) }; }
+		if (verb == "dec") { return CmdDecrement{ VariableName::of(raw.variable), amountOf(raw) }; }
+		if (verb == "copy") { return CmdCopy{ VariableName::of(raw.variable), VariableName::of(raw.into) }; }
+		if (verb == "rank") { return CmdRank{ VariableName::of(raw.variable), raw.into }; }
 		if (verb == "turns")
 		{
 			if (raw.players.empty()) { throw std::runtime_error("<turns> has no <player>; it needs one for each player"); }
@@ -289,7 +297,15 @@ namespace xge
 			return CmdShift{ raw.object, { half(raw.positionX), half(raw.positionY) } };
 		}
 
-		if (verb == "set") { return CmdSet{ raw.variable, evaluate(raw.amount) }; }
+		if (verb == "set")
+		{
+			// One of the numbers every object has (ship.velocity.x) is
+			// split before its part, not at its last dot.
+			const std::string part = liveNumberPart(raw.variable);
+			VariableName target = part.empty() ? VariableName::of(raw.variable)
+				: VariableName{ raw.variable.substr(0, raw.variable.size() - part.size() - 1), part };
+			return CmdSet{ std::move(target), evaluate(raw.amount) };
+		}
 		if (verb == "despawn") { return CmdDespawn{ raw.object }; }
 
 		if (verb == "spawn")
@@ -497,10 +513,10 @@ namespace xge
 			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "left" : "right") << "(" << t.rate << ")"; },
 			[&](const CmdThrust& t) { o << "thrust(" << t.amount << (t.burn.empty() ? "" : ", burn " + t.burn) << ")"; },
 			[&](const CmdRelease& r) { o << "release(" << r.target << ", " << r.count << ")"; },
-			[&](const CmdIncrement& c) { o << "inc(" << c.target << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
-			[&](const CmdDecrement& c) { o << "dec(" << c.target << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
-			[&](const CmdCopy& c) { o << "copy(" << c.from << ", " << c.into << ")"; },
-			[&](const CmdRank& c) { o << "rank(" << c.entry << ", " << c.table << ")"; },
+			[&](const CmdIncrement& c) { o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
+			[&](const CmdDecrement& c) { o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
+			[&](const CmdCopy& c) { o << "copy(" << c.from.written() << ", " << c.into.written() << ")"; },
+			[&](const CmdRank& c) { o << "rank(" << c.entry.written() << ", " << c.table << ")"; },
 			[&](const CmdTurns& c)
 			{
 				o << "turns(";
@@ -523,7 +539,7 @@ namespace xge
 			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
 			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
 			[&](const CmdResetScene& r) { o << "reset(" << (r.way.empty() ? "scene " + r.scene : "way " + r.way) << ")"; },
-			[&](const CmdSet& s) { o << "set(" << s.target << ", " << s.value << ")"; },
+			[&](const CmdSet& s) { o << "set(" << s.target.written() << ", " << s.value << ")"; },
 			[&](const CmdSpawn& s)
 			{
 				const auto half = [&](const std::optional<float>& value, bool centered)

@@ -159,7 +159,7 @@ namespace xge
 		if (object.visualDirty || !visual.sprite)
 		{
 			// A rebuild after init() (e.g. a bound text display's number just
-			// changed - see Game::incrementText/resetObject/resetAll) only
+			// changed - see Game::setVariable/resetObject/resetAll) only
 			// redraws: object.position is already final.
 			buildShapeOnly(object, visual);
 			finalizeVisual(object, visual);
@@ -175,7 +175,7 @@ namespace xge
 		// just on rebuild: Object::position changes constantly from plain
 		// movement (velocity integration, paddle input) with visualDirty
 		// never set for that (visualDirty is only for text-content rebuilds -
-		// see Game::incrementText/resetObject/resetAll), so without this the
+		// see Game::setVariable/resetObject/resetAll), so without this the
 		// sprite you actually see would stay frozen at wherever it was last
 		// rebuilt while the real Object::position (and therefore collisions/
 		// scoring) kept moving underneath it.
