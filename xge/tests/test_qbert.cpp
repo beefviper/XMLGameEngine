@@ -212,7 +212,9 @@ TEST_CASE("qbert.xml: a disc carries Q*bert back to the top once, and Coily chas
 	CHECK(play.get("player").variable.at("lives") == Approx(3));
 	CHECK(play.get("discs.1").lookName() == "used");
 	CHECK(play.get("discs.2").lookName() == "ready");
-	CHECK(play.get("player").variable.at("score") - before == Approx(500));
+	// 500 for Coily, and 25 for the top cube he is set down on: put there,
+	// he has moved, so he lands on it as from a hop.
+	CHECK(play.get("player").variable.at("score") - before == Approx(525));
 	CHECK(coily.variable.at("snake") == Approx(0));
 
 	// The disc is gone: the same hop again falls.

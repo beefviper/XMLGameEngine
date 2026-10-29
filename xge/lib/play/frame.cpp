@@ -20,12 +20,15 @@ namespace xge
 {
 	namespace
 	{
-		// Whether it is in motion at all this frame: moving, riding something,
-		// or having just made a hop.
+		// Whether it has moved, so its touches are looked for: it is going
+		// somewhere this frame (a velocity, or riding something), or it is
+		// not where the last frame left it (anything that put it somewhere:
+		// a hop, a <set>, a teleport, a spawn). Two that have not moved
+		// cannot have come to touch, and are not looked at.
 		bool isMoving(const Object& object) noexcept
 		{
 			const Vector2f motion = motionOf(object);
-			return motion.x != 0 || motion.y != 0 || object.hopped;
+			return motion.x != 0 || motion.y != 0 || object.position != object.settledAt;
 		}
 
 		// Whether a and b can touch at all, whatever their rules: both have
@@ -278,19 +281,15 @@ namespace xge
 		// Makes the hops queued by hop.*() actions. A hop is a jump, not a
 		// slide: the object is simply somewhere else, one step away, before
 		// this frame's collisions are worked out, so it is judged by where it
-		// lands and not by what it would have brushed past on the way. A hop
-		// that would take it out of the window is refused. Whether or not it
-		// went, an object that asked to hop counts as moving for the rest of
-		// the frame, so the collisions at its new spot run even when nothing
-		// else there is moving.
+		// lands and not by what it would have brushed past on the way (being
+		// somewhere new, it counts as having moved). A hop that would take it
+		// out of the window is refused.
 		void applyHops(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules)
 		{
 			const Vector2f windowSize{ window.width, window.height };
 
 			for (auto& object : objects)
 			{
-				object.hopped = false;
-
 				// Whatever last frame's collisions said, this frame's start
 				// over: what it rides, and whether it stands on something.
 				object.riding = {};
@@ -306,7 +305,6 @@ namespace xge
 						if (insideWindow({ target, object.size }, windowSize)) { object.position = target; }
 					}
 					--object.jumpFramesLeft;
-					object.hopped = true;
 
 					// An arc: drawn up off its way and back down, highest
 					// halfway, on the ground again as it lands.
@@ -331,7 +329,6 @@ namespace xge
 				{
 					object.position = target;
 				}
-				object.hopped = true;
 			}
 		}
 
@@ -710,11 +707,6 @@ namespace xge
 						playing[i] = nowPlaying;
 					}
 				});
-
-			for (auto& object : all)
-			{
-				object.hopped = false;
-			}
 		}
 	}
 
@@ -800,6 +792,13 @@ namespace xge
 		const float second = 1.0f / static_cast<float>(window.framerate > 0 ? window.framerate : 60);
 		for (auto& object : objects)
 		{
+			// Just loaded or reset: where it is now is its place, not a move.
+			if (!object.settled)
+			{
+				object.settled = true;
+				object.settledAt = object.position;
+			}
+
 			if (object.animationBitmaps.size() > 1 && rules.inPlay(object)) { object.advanceAnimation(); }
 			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - second); }
 		}
@@ -866,6 +865,14 @@ namespace xge
 		lightAndDark(objects, rules);
 
 		takePoses(objects, rules);
+
+		// Where everything ended up, to tell next frame what has moved. A
+		// condition that puts something elsewhere has moved it.
+		for (auto& object : objects)
+		{
+			object.settled = true;
+			object.settledAt = object.position;
+		}
 
 		rules.conditions();
 	}

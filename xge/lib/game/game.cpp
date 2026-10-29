@@ -1373,7 +1373,7 @@ namespace xge
 			object.carrying.clear();
 			object.dropped.clear();
 			object.hopPending = {};
-			object.hopped = false;
+			object.settled = false;
 			object.jumpStep = {};
 			object.jumpFramesLeft = 0;
 			object.jumpFrames = 0;

@@ -182,7 +182,6 @@ TEST_CASE("a hop and a ride are only for the frame they were asked for", "[new_v
 	pair.game.updateObjects();
 	CHECK(pair.frog.position.y == 630.0f - 48.0f);
 	CHECK(pair.frog.hopPending.y == 0.0f);
-	CHECK_FALSE(pair.frog.hopped);
 }
 
 // ------------------------------------------------------------ inc and dec with an amount

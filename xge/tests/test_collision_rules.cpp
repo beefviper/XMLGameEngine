@@ -252,3 +252,47 @@ TEST_CASE("a rule written on a group of groups, with a check about itself, looks
 	play.frames(10);
 	CHECK(play.get("tally").variable.at("splits") == 1.0f);
 }
+
+TEST_CASE("an object put somewhere has moved: it touches what it is put on, with no velocity", "[collision_rules][moved]")
+{
+	const std::filesystem::path path = std::filesystem::temp_directory_path() / scratchName("xge_moved_scratch.xml");
+	{
+		std::ofstream out(path);
+		out << "<game><window name=\"moved\"><width>200</width><height>100</height><background>color.black</background>"
+			"<fullscreen>false</fullscreen><framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+			"<objects>"
+			"<object name=\"a\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
+			"<position><x>10</x><y>10</y></position><variables><variable name=\"hits\">0</variable></variables>"
+			"<collisions><collision object=\"b\"><inc variable=\"self.hits\" /></collision></collisions></object>"
+			"<object name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
+			"<position><x>100</x><y>50</y></position><collisions><enabled>true</enabled></collisions></object>"
+						"</objects><states><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
+			"<inputs></inputs></state></states></game>";
+	}
+	Game game(path.string());
+	game.setCurrentState(0);
+	for (auto& object : game.getCurrentObjects()) { object.size = { 4.0f, 4.0f }; }
+	Object& a = game.getObject("a");
+
+	// Standing still apart: nothing.
+	game.updateObjects();
+	CHECK(a.variable["hits"] == 0.0f);
+
+	// Put on b, as a teleport would: a touch, though neither has a velocity.
+	a.position = { 101.0f, 51.0f };
+	game.updateObjects();
+	CHECK(a.variable["hits"] == 1.0f);
+
+	// Left there, nothing has moved since: not touched again.
+	game.updateObjects();
+	CHECK(a.variable["hits"] == 1.0f);
+
+	// b put on a: b has moved, so the pair is looked at.
+	game.getObject("b").position = { 200.0f, 0.0f };
+	game.updateObjects();
+	game.getObject("b").position = { 100.0f, 50.0f };
+	game.updateObjects();
+	CHECK(a.variable["hits"] == 2.0f);
+
+	std::filesystem::remove(path);
+}

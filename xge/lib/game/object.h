@@ -924,12 +924,19 @@ namespace xge
 		// it counts for movement and for edge checks like velocity does, but
 		// is not the object's own, so an object that steps off is at rest.
 		// `hopPending` is a jump queued by a hop.*() action, made at the start
-		// of the next frame's move (playOneFrame); `hopped` is true for
-		// the rest of that frame, so an object that has just landed somewhere
-		// still counts as moving for the collisions it is now part of.
+		// of the next frame's move (playOneFrame).
 		Vector2f riding{};
 		Vector2f hopPending{};
-		bool hopped{ false };
+
+		// Where it was when the last frame's moves and touches were done
+		// (`settled`: there was a last frame since it was loaded or reset).
+		// An object somewhere else now has moved, whatever moved it (a hop,
+		// a <set> of its x, a shift, a teleport, being spawned there), and
+		// its touches are looked for where it is, as for one with a
+		// velocity. Being loaded or reset puts it in its place; that is not
+		// a move.
+		Vector2f settledAt{};
+		bool settled{ false };
 
 		// What it carries (<carry />): the name of one other object, which
 		// goes where it goes, held where it was when it was picked up

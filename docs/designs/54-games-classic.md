@@ -53,7 +53,7 @@
 
 - 800 by 600, 50-pixel cells, twelve rows: far side, ten lanes (five driving left on top, five right below, faster towards the middle, two of them trucks), near side. Two chickens are one `<group>` with two members; each scores in its own `self.score`. Two key sets (W/S and Up/Down). A 2:16 round: the global `seconds` read by a `clock` object, a state timer counts it down, at zero `wins` is pushed with its `draw` look; that state's own conditions (`<above object variable>`) pick the winner's look.
 - The traffic is one group of all ten lanes, which gives the `<wrap />` and the car bitmap; a lane says its row, speed and colour, truck lanes their wider bitmap, and lays its cars out as `<columns>` evenly round the loop.
-- The far side is an object (`class="farside"`) the chicken has a rule for; a hop into that row is judged where it lands, so it scores at once. A car hits a chicken that hops into it because a hopped object counts as moving; two stationary objects are never checked. A hit is `<move direction="down">cell</move>` in the chicken's rule: knocked back one lane, as on the cartridge.
+- The far side is an object (`class="farside"`) the chicken has a rule for; a hop into that row is judged where it lands, so it scores at once. A car hits a chicken that hops into it because a hopped object has moved; two stationary objects are never checked. A hit is `<move direction="down">cell</move>` in the chicken's rule: knocked back one lane, as on the cartridge.
 - Rejected: lives (kept different from Frogger); sending a hit chicken to the start (far too costly near the far side).
 
 
