@@ -569,7 +569,8 @@ namespace xge
 				auto drawn = std::make_shared<const Bitmap>(rasterizeLines({ line }));
 				tether.position = corner;
 				tether.size = { static_cast<float>(drawn->width), static_cast<float>(drawn->height) };
-				tether.spriteParams = { "line", std::to_string(drawn->width), std::to_string(drawn->height) };
+				tether.picture.kind = ShapeKind::Line;
+				tether.picture.size = tether.size;
 				tether.bitmap = std::move(drawn);
 				tether.visualDirty = true;
 			}

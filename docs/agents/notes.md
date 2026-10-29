@@ -60,7 +60,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 ### Looks and poses
 
-- Every engine-drawn picture (`<line>`, `<bitmap>`, `<svg>`) is `ShapeKind::Line`, built in `buildSpriteParams` (`load/expr.cpp`). Add new kinds there; never rotate or draw in a backend ([pictures](../designs/30-pictures.md)).
+- Every engine-drawn picture (`<line>`, `<bitmap>`, `<svg>`) is `ShapeKind::Line`, built in `buildPicture` (`load/expr.cpp`). Add new kinds there; never rotate or draw in a backend ([pictures](../designs/30-pictures.md)).
 - Looks that move (named `<animation>`s) come **before** the still sprites in an object's look list (`lookWithAnimations`, `game/object.cpp`), so look 0 is the first animation; an object with `<poses>` starts and resets to `firstLook` (standing) instead.
 - `takePoses` (`play/frame.cpp`) picks a pose only while the current look is a pose look: a `<become>` to anything else sticks.
 - `<become object="group">` changes members out of play too, and `<reveal>`/`<spawn>` keep the look.

@@ -31,10 +31,30 @@ namespace xge
 	template <typename... Ts>
 	overload(Ts...) -> overload<Ts...>;
 
-	// What kind of sprite an Object was built from. Set once in load/expr::init()
-	// from the object's spriteParams tag, so collision code no longer has to
-	// re-derive it by searching the object's raw XML src string.
+	// What kind of picture an Object shows.
 	enum class ShapeKind { Unknown, Circle, Rectangle, Text, Image, Line };
+
+	// What an object (or one of its looks) shows, as the window draws it,
+	// worked out once at load (load/expr's buildPicture). Every picture
+	// the engine draws itself (<line>s, a <bitmap>, an <svg>, a tether) is
+	// a Line: its pixels are the object's bitmap, and `size` is the
+	// bitmap's. A window library draws the rest: a circle, a rectangle, a
+	// text in a font, an image file.
+	struct Picture
+	{
+		ShapeKind kind{ ShapeKind::Unknown };
+		Vector2f size{};             // a rectangle's, or a Line's drawing's
+		float radius{};              // a circle's
+		std::string color;           // a circle's, rectangle's or text's color. name
+		std::string text;            // a text's words as shown now
+		int textSize{};              // a text's size in pixels
+		std::string font;            // a text's font file; empty: the standard one (textFontFile)
+		std::string file;            // an image's
+		bool flipHorizontal{ false }; // an image's, drawn mirrored
+		bool flipVertical{ false };
+
+		friend bool operator==(const Picture&, const Picture&) = default;
+	};
 
 	// --- Command: what a command tag in the XML becomes once it is loaded.
 	// makeCommand() (game/command.cpp) is the one place that turns a RawCommand
@@ -903,30 +923,15 @@ namespace xge
 	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate);
 	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate);
 
-	// Maps a spriteParams tag ("circle", "rectangle", "text", "image", "line") to a
-	// ShapeKind. Returns ShapeKind::Unknown for anything else (including an
-	// empty tag).
-	ShapeKind shapeKindFromTag(const std::string& tag) noexcept;
-
-	// The object's own footprint, straight from its spriteParams - no Window
-	// backend required. Circle/rectangle sizes are fully implied by the
-	// numeric params already sitting in spriteParams (radius, or width and
-	// height), so this is exact for Rectangle and a very close approximation
-	// for Circle (matches a rendered circle's bounding box to within
-	// sub-pixel rounding). Text/image footprints genuinely depend on a real
-	// font/image load - there's no way to know them without a backend - so
-	// those (and ShapeKind::Unknown) come back {0,0}. Used by
+	// The picture's own footprint - no Window backend required: exact for
+	// a rectangle and a Line, a circle's bounding box for a circle. Text
+	// and image footprints depend on a real font or image load, so those
+	// (and ShapeKind::Unknown) come back {0,0}. Used by
 	// load/expr::init() to lay out a group's cells entirely within Game's
 	// own construction, before any Window exists (see window/window.h's Window::
 	// init(), which now only measures the *real* rendered Object::size for
 	// drawing/collision, not position).
-	Vector2f measureShapeSize(const std::vector<std::string>& spriteParams, ShapeKind shapeKind) noexcept;
-
-	// A <circle> or a <rectangle> sprite as the window backends draw it and
-	// measureShapeSize measures it: the tag, the size, and the color's name.
-	// The engine makes one from the file; a generated game calls these.
-	std::vector<std::string> circleSprite(float radius, const std::string& color);
-	std::vector<std::string> rectangleSprite(float width, float height, const std::string& color);
+	Vector2f measureShapeSize(const Picture& picture) noexcept;
 
 	// If `expression` is nothing but an "owner.variable" reference (for
 	// example paddle1.score, or playing.room1.tally.kills, whose owner is a
@@ -943,6 +948,7 @@ namespace xge
 	std::string formatDisplayNumber(float value);
 
 	std::ostream& operator<<(std::ostream& o, const Command& command);
+	std::ostream& operator<<(std::ostream& o, const Picture& picture);
 
 	// How a value and a command tag read in printGame()'s output.
 	std::ostream& operator<<(std::ostream& o, const RawValue& value);

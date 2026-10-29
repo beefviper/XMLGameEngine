@@ -1112,7 +1112,7 @@ namespace xge
 		// a text showing a variable, whose number may have changed by then) is
 		// kept as it came out, so that a <random> in it gives the size used here
 		// and the size drawn the same number.
-		std::map<std::string, std::vector<std::string>> firstPassSpriteParams;
+		std::map<std::string, Picture> firstPassPictures;
 		std::map<std::string, std::shared_ptr<const Bitmap>> firstPassBitmaps;
 		std::map<std::string, std::shared_ptr<const Turnable>> firstPassTurned;
 		std::map<std::string, std::vector<std::shared_ptr<const Bitmap>>> firstPassAnimation;
@@ -1124,12 +1124,11 @@ namespace xge
 				continue; // measured already
 			}
 
-			const std::vector<std::string> params = buildSpriteParams(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name],
+			const Picture picture = buildPicture(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name],
 				rawObject.hasHeading ? &firstPassTurned[rawObject.name] : nullptr, &rawObject);
-			const ShapeKind kind = shapeKindFromTag(params.empty() ? std::string{} : params.at(0));
-			objectShapeKinds[rawObject.name] = kind;
-			objectSizes[rawObject.name] = measureShapeSize(params, kind);
-			firstPassSpriteParams[rawObject.name] = params;
+			objectShapeKinds[rawObject.name] = picture.kind;
+			objectSizes[rawObject.name] = measureShapeSize(picture);
+			firstPassPictures[rawObject.name] = picture;
 
 			if (rawObject.hasAnimation)
 			{
@@ -1145,7 +1144,7 @@ namespace xge
 
 
 		// Where each cell of a group laid out in <columns> and <rows> goes.
-		const std::map<std::string, Vector2f> cellOffsets = layOutCells(rawObjects, firstPassSpriteParams);
+		const std::map<std::string, Vector2f> cellOffsets = layOutCells(rawObjects, firstPassPictures);
 
 		// Objects in lockstep share a number: every member of a <group> moves
 		// as one block with the others of its group. A plain object that asks
@@ -1172,7 +1171,7 @@ namespace xge
 			}
 
 			FirstPass first;
-			first.params = firstPassSpriteParams.at(rawObject.name);
+			first.picture = firstPassPictures.at(rawObject.name);
 			first.bitmap = firstPassBitmaps[rawObject.name];
 			first.turned = firstPassTurned[rawObject.name];
 			first.animation = firstPassAnimation[rawObject.name];
@@ -1544,14 +1543,14 @@ namespace xge
 					for (std::size_t i = 0; i < palette.looks.size(); ++i)
 					{
 						const RawSprite look = restyled(raw->looks[i]);
-						buildSpriteParams(look, here, &palette.looks[i].bitmap);
+						buildPicture(look, here, &palette.looks[i].bitmap);
 						if (!look.frames.empty()) { palette.looks[i].frames = buildAnimationBitmaps(look.frames, here); }
 					}
 					palette.bitmap = palette.looks.front().bitmap;
 				}
 				else
 				{
-					buildSpriteParams(restyled(raw->sprite), here, &palette.bitmap);
+					buildPicture(restyled(raw->sprite), here, &palette.bitmap);
 					if (!object.animationBitmaps.empty())
 					{
 						std::vector<RawSprite> frames;
@@ -1571,10 +1570,9 @@ namespace xge
 
 		// Only a text showing a number needs working out again here, for the
 		// value it has by now (see above).
-		std::vector<std::string> tempSpriteParams = (rawObject.sprite.kind == "text" && showsNumbers(rawObject.sprite))
-			? buildSpriteParams(rawObject.sprite, where, nullptr, nullptr, &rawObject)
-			: first.params;
-		const ShapeKind rawObjectShapeKind = shapeKindFromTag(tempSpriteParams.empty() ? std::string{} : tempSpriteParams.at(0));
+		const Picture picture = (rawObject.sprite.kind == "text" && showsNumbers(rawObject.sprite))
+			? buildPicture(rawObject.sprite, where, nullptr, nullptr, &rawObject)
+			: first.picture;
 
 		// A position that uses the size of a text or image (its own, or
 		// another object's) can only be finished once a backend has measured
@@ -1598,7 +1596,7 @@ namespace xge
 				Object::Look look;
 				look.name = rawLook.name;
 				std::shared_ptr<const Turnable> turned;
-				look.spriteParams = buildSpriteParams(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap,
+				look.picture = buildPicture(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap,
 					rawObject.hasHeading ? &turned : nullptr);
 				if (turned) { look.turnables = { turned }; }
 				if (!rawLook.frames.empty())
@@ -1609,8 +1607,7 @@ namespace xge
 					look.frames = buildAnimationBitmaps(rawLook.frames, here, rawObject.hasHeading ? &look.turnables : nullptr);
 					look.frameTicks = animationFramesOf(rawLook.interval, windowDesc, here);
 				}
-				look.shapeKind = shapeKindFromTag(look.spriteParams.empty() ? std::string{} : look.spriteParams.at(0));
-				if (look.shapeKind == ShapeKind::Text && showsNumbers(rawLook))
+				if (look.picture.kind == ShapeKind::Text && showsNumbers(rawLook))
 				{
 					throw std::runtime_error(where + ": a look cannot be a text showing a <number> or a <letter>");
 				}
@@ -1619,7 +1616,7 @@ namespace xge
 
 			// The first look is the sprite the object starts with; it must be
 			// the very same picture.
-			looks.front().spriteParams = tempSpriteParams;
+			looks.front().picture = picture;
 			looks.front().bitmap = first.bitmap;
 			if (!looks.front().frames.empty()) { looks.front().frames.front() = first.bitmap; }
 			if (first.turned && looks.front().frames.empty()) { looks.front().turnables = { first.turned }; }
@@ -1628,8 +1625,7 @@ namespace xge
 
 		Object object{};
 
-		object.spriteParams = tempSpriteParams;
-		object.shapeKind = rawObjectShapeKind;
+		object.picture = picture;
 		object.bitmap = first.bitmap;
 		if (first.turned) { object.turnables = { first.turned }; }
 
@@ -1641,7 +1637,7 @@ namespace xge
 			object.bitmap = object.animationBitmaps.front();
 		}
 
-		if (object.shapeKind == ShapeKind::Text && showsNumbers(rawObject.sprite))
+		if (object.picture.kind == ShapeKind::Text && showsNumbers(rawObject.sprite))
 		{
 			std::vector<TextPiece> pieces = textPieces(rawObject.sprite, where, &rawObject);
 			if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
@@ -1918,7 +1914,7 @@ namespace xge
 		// is solid all over, but what a text or an image looks like
 		// is only known once a window backend has drawn it.
 		if (object.collisionData.type == CollisionType::Pixel
-			&& (object.shapeKind == ShapeKind::Text || object.shapeKind == ShapeKind::Image))
+			&& (object.picture.kind == ShapeKind::Text || object.picture.kind == ShapeKind::Image))
 		{
 			throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
 		}
@@ -2048,7 +2044,7 @@ namespace xge
 
 		// Its pictures are the ones `from` was made with, not drawn again.
 		FirstPass first;
-		first.params = from.looks.empty() ? from.spriteParams : from.looks.front().spriteParams;
+		first.picture = from.looks.empty() ? from.picture : from.looks.front().picture;
 		first.bitmap = from.looks.empty() ? from.bitmap : from.looks.front().bitmap;
 		if (from.animationBitmaps.empty())
 		{
@@ -2493,12 +2489,13 @@ namespace xge
 		return pieces;
 	}
 
-	std::vector<std::string> game_expr::buildSpriteParams(const RawSprite& sprite, const std::string& where,
+	Picture game_expr::buildPicture(const RawSprite& sprite, const std::string& where,
 		std::shared_ptr<const Bitmap>* bitmap, std::shared_ptr<const Turnable>* turnable, const RawObject* self)
 	{
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		checkColor(color, where);
-		std::vector<std::string> params;
+		Picture picture;
+		picture.color = color;
 
 		// Lines, rows of text and SVG drawings are all pictures the engine draws
 		// itself, and all go the same way, here, once, when the game loads:
@@ -2509,7 +2506,7 @@ namespace xge
 		//      steps done once for all the sprites that are the same picture;
 		//   4. for an object with a <heading>, keep it (a Turnable) to be turned
 		//      to whatever heading it faces, and start it at heading 0.
-		// The params carry only the picture's size. The one difference is in the
+		// The Picture carries only the drawing's size. The one difference is in the
 		// turning: lines are kept as lines and drawn again at each heading, which
 		// keeps their edges sharp, where a finished picture's pixels are turned.
 		if (sprite.kind == "line" || sprite.kind == "bitmap" || sprite.kind == "svg")
@@ -2518,9 +2515,9 @@ namespace xge
 			std::shared_ptr<const Bitmap> drawn;
 
 			// 3. Flipped.
-			const auto flipped = [&](Bitmap picture)
+			const auto flipped = [&](Bitmap unflipped)
 			{
-				return sprite.flip.empty() ? picture : flipBitmap(picture, sprite.flip == "horizontal", sprite.flip == "vertical");
+				return sprite.flip.empty() ? unflipped : flipBitmap(unflipped, sprite.flip == "horizontal", sprite.flip == "vertical");
 			};
 
 			try
@@ -2606,29 +2603,37 @@ namespace xge
 				throw std::runtime_error(where + ": " + error.what());
 			}
 
-			params = { "line", std::to_string(drawn->width), std::to_string(drawn->height) };
+			picture.kind = ShapeKind::Line;
+			picture.size = { static_cast<float>(drawn->width), static_cast<float>(drawn->height) };
 			if (bitmap) { *bitmap = std::move(drawn); }
 		}
 		else if (sprite.kind == "circle")
 		{
-			params = circleSprite(evaluate(sprite.radius, where), color);
+			picture.kind = ShapeKind::Circle;
+			picture.radius = evaluate(sprite.radius, where);
 		}
 		else if (sprite.kind == "rectangle")
 		{
-			const float rectangleWidth = evaluate(sprite.width, where);
-			params = rectangleSprite(rectangleWidth, evaluate(sprite.height, where), color);
+			picture.kind = ShapeKind::Rectangle;
+			picture.size.x = evaluate(sprite.width, where);
+			picture.size.y = evaluate(sprite.height, where);
 		}
 		else if (sprite.kind == "text")
 		{
 			// Its pieces: fixed labels, numbers shown as the whole numbers they
 			// are, with no decimal point, the way someone typing the label
 			// would, and letters.
-			params = { "text", joinText(textPieces(sprite, where, self)), std::to_string(evaluate(sprite.size, where)), color };
-			if (!sprite.font.empty()) { params.push_back(sprite.font); }
+			picture.kind = ShapeKind::Text;
+			picture.text = joinText(textPieces(sprite, where, self));
+			picture.textSize = static_cast<int>(evaluate(sprite.size, where));
+			picture.font = sprite.font;
 		}
 		else if (sprite.kind == "image")
 		{
-			params = { "image", sprite.path, sprite.flip.empty() ? "color.white" : "flip." + sprite.flip };
+			picture.kind = ShapeKind::Image;
+			picture.file = sprite.path;
+			picture.flipHorizontal = sprite.flip == "horizontal";
+			picture.flipVertical = sprite.flip == "vertical";
 		}
 		else if (sprite.kind == "tether")
 		{
@@ -2638,7 +2643,8 @@ namespace xge
 			clear->width = 1;
 			clear->height = 1;
 			clear->rgba.assign(4, 0);
-			params = { "line", "1", "1" };
+			picture.kind = ShapeKind::Line;
+			picture.size = { 1.0f, 1.0f };
 			if (bitmap) { *bitmap = std::move(clear); }
 		}
 		else
@@ -2646,7 +2652,7 @@ namespace xge
 			throw std::runtime_error(where + ": unknown shape '" + sprite.kind + "'");
 		}
 
-		return params;
+		return picture;
 	}
 
 	std::vector<std::shared_ptr<const Bitmap>> game_expr::buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
@@ -2667,7 +2673,7 @@ namespace xge
 
 			std::shared_ptr<const Bitmap> picture;
 			std::shared_ptr<const Turnable> turnable;
-			buildSpriteParams(frame, here, &picture, turnables ? &turnable : nullptr);
+			buildPicture(frame, here, &picture, turnables ? &turnable : nullptr);
 
 			if (i > 0)
 			{
@@ -2739,7 +2745,7 @@ namespace xge
 	}
 
 	std::map<std::string, Vector2f> game_expr::layOutCells(const std::vector<RawObject>& rawObjects,
-		const std::map<std::string, std::vector<std::string>>& spriteParams)
+		const std::map<std::string, Picture>& pictures)
 	{
 		// Each group's cells by row, in the order they were read: a row's
 		// columns left to right.
@@ -2759,8 +2765,7 @@ namespace xge
 			const std::string where = "object '" + rawObject.name + "' (on map '" + rawObject.cell.map + "')";
 			const Vector2f tile{ evaluate(rawObject.cell.tileWidth, where + " > <tile> > <width>"), evaluate(rawObject.cell.tileHeight, where + " > <tile> > <height>") };
 			if (!(tile.x > 0.0f) || !(tile.y > 0.0f)) { throw std::runtime_error(where + ": a <tile> is " + formatDisplayNumber(tile.x) + " by " + formatDisplayNumber(tile.y) + "; both have to be above 0"); }
-			const std::vector<std::string>& params = spriteParams.at(rawObject.name);
-			const Vector2f own = measureShapeSize(params, shapeKindFromTag(params.empty() ? std::string{} : params.at(0)));
+			const Vector2f own = measureShapeSize(pictures.at(rawObject.name));
 			offsets[rawObject.name] = { static_cast<float>(rawObject.cell.mapColumn - 1) * tile.x + (tile.x - own.x) / 2.0f,
 				static_cast<float>(rawObject.cell.mapRow - 1) * tile.y + (tile.y - own.y) / 2.0f };
 		}
@@ -2777,9 +2782,9 @@ namespace xge
 				// The slot is the row's sprite, so a cell with a sprite of its
 				// own of another size sits in the middle of the place its row
 				// gives it.
-				const std::vector<std::string> slotParams = buildSpriteParams(first.cell.slot, where);
-				const ShapeKind slotKind = shapeKindFromTag(slotParams.empty() ? std::string{} : slotParams.at(0));
-				const Vector2f slot = measureShapeSize(slotParams, slotKind);
+				const Picture slotPicture = buildPicture(first.cell.slot, where);
+				const ShapeKind slotKind = slotPicture.kind;
+				const Vector2f slot = measureShapeSize(slotPicture);
 				if (slotKind == ShapeKind::Text || slotKind == ShapeKind::Image)
 				{
 					std::cout << "warning: group '" << group << "': row " << row << " is "
@@ -2796,8 +2801,7 @@ namespace xge
 					const std::string here = "object '" + cell->name + "'";
 					if (cell->cell.column > 1) { left += slot.x + evaluate(cell->cell.gapBefore, here); }
 
-					const std::vector<std::string>& params = spriteParams.at(cell->name);
-					const Vector2f own = measureShapeSize(params, shapeKindFromTag(params.empty() ? std::string{} : params.at(0)));
+					const Vector2f own = measureShapeSize(pictures.at(cell->name));
 					// A <slope>: each column that much lower than the one before.
 					const float drop = cell->cell.drop.text.empty() && cell->cell.drop.kind == RawValue::Kind::Expression ? 0.0f
 						: evaluate(cell->cell.drop, here + " > <slope>") * static_cast<float>(cell->cell.column - 1);

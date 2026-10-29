@@ -88,7 +88,7 @@ TEST_CASE("a take changes its piece: sprites by name, whole; variables one by on
 	CHECK(gold.looks[0].name == "whole");
 	CHECK(gold.looks[1].name == "cracked");
 	CHECK(gold.looks[2].name == "shining");
-	CHECK(gold.looks[1].spriteParams != gold.looks[0].spriteParams);
+	CHECK(gold.looks[1].picture != gold.looks[0].picture);
 	CHECK(gold.variable.at("hits") == Approx(0));
 	CHECK(gold.variable.at("worth") == Approx(50));
 	CHECK(gold.variable.at("shine") == Approx(1));
@@ -172,7 +172,7 @@ TEST_CASE("a map of the kit is taken by a map, which gives its rows and changes 
 		CHECK(first.position.x == Approx(100));
 		CHECK(first.position.y == Approx(50));
 		CHECK(first.objClass == "wall");
-		CHECK(first.spriteParams.back() == "color.blue");
+		CHECK(first.picture.color == "color.blue");
 	}
 	SECTION("by from=, changing its place and its walls")
 	{
@@ -187,7 +187,7 @@ TEST_CASE("a map of the kit is taken by a map, which gives its rows and changes 
 		CHECK(other.position.x == Approx(110));
 		CHECK(other.position.y == Approx(200));
 		CHECK(other.objClass == "wall");
-		CHECK(other.spriteParams.back() == "color.red");
+		CHECK(other.picture.color == "color.red");
 	}
 	SECTION("by two maps in one list, each one's pieces named under it")
 	{

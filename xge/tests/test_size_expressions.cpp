@@ -58,7 +58,7 @@ namespace
 		{
 			for (auto& object : objects)
 			{
-				if (object.shapeKind == ShapeKind::Text) { measure(object, 100.0f, 40.0f); }
+				if (object.picture.kind == ShapeKind::Text) { measure(object, 100.0f, 40.0f); }
 			}
 		}
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }

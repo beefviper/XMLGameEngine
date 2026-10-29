@@ -4,7 +4,7 @@
 
 ## The one decision behind all of it
 
-**The engine draws every picture it can, once, at load, into its own `Bitmap`; backends only show that bitmap.** One path in `buildSpriteParams` (`load/expr.cpp`): read, draw, flip (bitmap, svg), keep a `Turnable` for objects with a heading. Consequences:
+**The engine draws every picture it can, once, at load, into its own `Bitmap`; backends only show that bitmap.** One path in `buildPicture` (`load/expr.cpp`): read, draw, flip (bitmap, svg), keep a `Turnable` for objects with a heading. What an object shows is a typed `Picture` (`game/command.h`: kind, size or radius, color name, text and its size and font, image file and flip), never a list of strings a backend parses (the old `spriteParams`, gone 2026-10-29). Consequences:
 
 - no window backend, the Qt renderer or the collision detector changes when a picture kind is added, and every library shows identical pixels;
 - the object's size is known without a window (`name.width` works in tests);

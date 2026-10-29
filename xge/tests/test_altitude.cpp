@@ -75,7 +75,7 @@ TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on
 	auto window = std::make_unique<SeeingWindow>();
 	SeeingWindow& seen = *window;
 	Engine engine(game, std::move(window));
-	for (auto& object : game.getCurrentObjects()) { object.size = measureShapeSize(object.spriteParams, object.shapeKind); }
+	for (auto& object : game.getCurrentObjects()) { object.size = measureShapeSize(object.picture); }
 
 	engine.step();
 	engine.render();
@@ -160,7 +160,7 @@ TEST_CASE("tennis.xml: a ball let past is a point, said in words, and four take 
 	Played play("descriptions/tennis.xml");
 	play.tap(KeyCode::Space);
 	Object& player = play.get("player");
-	CHECK(play.get("playerscore").spriteParams.at(1) == "YOU 0 LOVE");
+	CHECK(play.get("playerscore").picture.text == "YOU 0 LOVE");
 
 	for (int point = 1; point <= 4; ++point)
 	{
@@ -169,9 +169,9 @@ TEST_CASE("tennis.xml: a ball let past is a point, said in words, and four take 
 		{
 			play.frames(1);
 		}
-		if (point == 2) { CHECK(play.get("cpuscore").spriteParams.at(1) == "CPU 0 30"); }
+		if (point == 2) { CHECK(play.get("cpuscore").picture.text == "CPU 0 30"); }
 	}
 	CHECK(play.get("cpu").variable.at("games") == Approx(1));
 	CHECK(play.get("cpu").variable.at("points") == Approx(0));
-	CHECK(play.get("cpuscore").spriteParams.at(1) == "CPU 1 LOVE");
+	CHECK(play.get("cpuscore").picture.text == "CPU 1 LOVE");
 }

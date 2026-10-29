@@ -41,7 +41,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+			object.size = measureShapeSize(object.picture);
 		}
 	}
 
@@ -418,11 +418,11 @@ TEST_CASE("dec takes a life off the bound text as well as the variable", "[frogg
 	// <dec variable="frog.lives" /> in the game is loaded as.
 	table.game.decrementText("playing.frog.lives");
 	CHECK(table.lives() == 2.0f);
-	CHECK(table.game.getObject("lives").spriteParams.at(1) == "LIVES 2");
+	CHECK(table.game.getObject("lives").picture.text == "LIVES 2");
 
 	table.game.incrementText("playing.frog.lives");
 	CHECK(table.lives() == 3.0f);
-	CHECK(table.game.getObject("lives").spriteParams.at(1) == "LIVES 3");
+	CHECK(table.game.getObject("lives").picture.text == "LIVES 3");
 }
 
 TEST_CASE("cars, trucks and logs loop round the screen without losing their spacing", "[frogger][wrap]")

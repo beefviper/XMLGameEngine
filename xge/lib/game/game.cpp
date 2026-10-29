@@ -79,7 +79,7 @@ namespace xge
 		// own name.width / name.height variables.
 		for (const auto& object : objects)
 		{
-			if (object.sizeKnown && game_expr::sizeNeedsBackend(object.shapeKind))
+			if (object.sizeKnown && game_expr::sizeNeedsBackend(object.picture.kind))
 			{
 				expr.setObjectSize(object.name, object.size);
 			}
@@ -1665,7 +1665,7 @@ namespace xge
 
 	void Game::relabel(Object& object)
 	{
-		if (object.shapeKind != ShapeKind::Text || object.spriteParams.size() < 2)
+		if (object.picture.kind != ShapeKind::Text)
 		{
 			return;
 		}
@@ -1689,9 +1689,9 @@ namespace xge
 		}
 
 		const std::string text = joinText(object.textPieces);
-		if (object.spriteParams.at(1) != text)
+		if (object.picture.text != text)
 		{
-			object.spriteParams.at(1) = text;
+			object.picture.text = text;
 			object.visualDirty = true;
 		}
 	}

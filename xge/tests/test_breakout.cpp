@@ -30,7 +30,7 @@ namespace
 		game.setCurrentState("playing");
 		for (Object& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+			object.size = measureShapeSize(object.picture);
 		}
 	}
 

@@ -345,49 +345,34 @@ namespace xge
 		return commands;
 	}
 
-	ShapeKind shapeKindFromTag(const std::string& tag) noexcept
+	Vector2f measureShapeSize(const Picture& picture) noexcept
 	{
-		if (tag == "circle")    { return ShapeKind::Circle; }
-		if (tag == "rectangle") { return ShapeKind::Rectangle; }
-		if (tag == "text")      { return ShapeKind::Text; }
-		if (tag == "image")     { return ShapeKind::Image; }
-		if (tag == "line")      { return ShapeKind::Line; }
-		return ShapeKind::Unknown;
-	}
-
-	std::vector<std::string> circleSprite(float radius, const std::string& color)
-	{
-		return { "circle", std::to_string(radius), std::to_string(0), color };
-	}
-
-	std::vector<std::string> rectangleSprite(float width, float height, const std::string& color)
-	{
-		return { "rectangle", std::to_string(width), std::to_string(height), color };
-	}
-
-	Vector2f measureShapeSize(const std::vector<std::string>& spriteParams, ShapeKind shapeKind) noexcept
-	{
-		// spriteParams is always well-formed here - it was built moments
-		// earlier from the object's <circle> or <rectangle> sprite (see
-		// load/expr.cpp), never handed in from outside, so the indices
-		// below are guaranteed present whenever shapeKind says they should
-		// be - same assumption SFMLWindow::buildCircle/buildRectangle (and
-		// their Raylib/SDL2 equivalents) already make.
-		switch (shapeKind)
+		switch (picture.kind)
 		{
 		case ShapeKind::Circle:
-		{
-			const float radius = std::stof(spriteParams.at(1));
-			return { radius * 2.0f, radius * 2.0f };
-		}
+			return { picture.radius * 2.0f, picture.radius * 2.0f };
 		case ShapeKind::Rectangle:
-		case ShapeKind::Line: // {"line", width, height}: the drawing's size, known when it was drawn
-			return { std::stof(spriteParams.at(1)), std::stof(spriteParams.at(2)) };
+		case ShapeKind::Line:
+			return picture.size;
 		case ShapeKind::Text:
 		case ShapeKind::Image:
 		case ShapeKind::Unknown:
 		default:
 			return {};
+		}
+	}
+
+	std::ostream& operator<<(std::ostream& o, const Picture& picture)
+	{
+		switch (picture.kind)
+		{
+		case ShapeKind::Circle:    return o << "circle(" << picture.radius << ", " << picture.color << ")";
+		case ShapeKind::Rectangle: return o << "rectangle(" << picture.size.x << "x" << picture.size.y << ", " << picture.color << ")";
+		case ShapeKind::Text:      return o << "text(\"" << picture.text << "\", " << picture.textSize << ", " << picture.color << (picture.font.empty() ? "" : ", " + picture.font) << ")";
+		case ShapeKind::Image:     return o << "image(" << picture.file << (picture.flipHorizontal ? ", flip.horizontal" : picture.flipVertical ? ", flip.vertical" : "") << ")";
+		case ShapeKind::Line:      return o << "drawing(" << picture.size.x << "x" << picture.size.y << ")";
+		case ShapeKind::Unknown:
+		default:                   return o << "nothing";
 		}
 	}
 

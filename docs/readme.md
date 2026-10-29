@@ -593,7 +593,7 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 | `<svg>` | `<path>`, a part (`<x>`, `<y>`, `<width>`, `<height>`), `<scale>`, `<hide>`s, `<flip>` | a drawing from an SVG file ([SVG pictures](#svg-pictures)) |
 | `<tether from="a" to="b">` | `<thickness>`, `<color>` | a line from the middle of `a` to the middle of `b`, drawn again every frame wherever they are; in play only while both ends are (a fishing line, a missile's trail) |
 
-**Pictures the engine draws.** Lines, bitmaps and SVGs all go one way, once, when the game loads (`buildSpriteParams`, `load/expr.cpp`): the engine reads what the file describes, draws it into its own `Bitmap`, flips it if asked, and keeps it to turn for an object with a `<heading>`. No window backend draws them itself, so every library shows the same pixels; the object's size is known with no window (`name.width` works in tests); and a `pixel` [collision](#how-a-touch-is-found) tests exactly what is drawn. Cells of a group drawing the same picture share it. Text and `<image>` files are the exception: only a backend can measure them.
+**Pictures the engine draws.** Lines, bitmaps and SVGs all go one way, once, when the game loads (`buildPicture`, `load/expr.cpp`): the engine reads what the file describes, draws it into its own `Bitmap`, flips it if asked, and keeps it to turn for an object with a `<heading>`. No window backend draws them itself, so every library shows the same pixels; the object's size is known with no window (`name.width` works in tests); and a `pixel` [collision](#how-a-touch-is-found) tests exactly what is drawn. Cells of a group drawing the same picture share it. Text and `<image>` files are the exception: only a backend can measure them.
 
 **Turning.** An object with a `<heading>` shows its picture turned to the heading, to the nearest whole degree, made again only when the heading moves a degree. Lines are drawn again turned, so they stay sharp; a bitmap or SVG has its finished pixels turned, each taking the one pixel under it, so chunky pixels stay chunky. Every heading comes out as the same square, big enough for any angle, which is the object's size.
 
@@ -1420,7 +1420,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 |---|---|---|
 | reading | `load/xml.cpp` | the tags into a `GameData`, `readGame()`; checks of shape |
 | | `load/merge.cpp` | the [kit and from=](#the-kit-and-from) on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
-| | `load/expr.cpp` | exprtk (only this file includes it), values, `<formula>`, building `Object`s and `State`s, the load-time checks (`ruleFor`), pictures (`buildSpriteParams`) |
+| | `load/expr.cpp` | exprtk (only this file includes it), values, `<formula>`, building `Object`s and `State`s, the load-time checks (`ruleFor`), pictures (`buildPicture`) |
 | | `load/xsd.cpp`, `load/spelling.cpp` | the weak validator; "did you mean" (`didYouMean`, `listOf`) |
 | the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, and the answers to `FrameRules` (what the file says happens at an edge or a touch), carried out through `CommandExecutor` |
 | | `game/scenes.cpp` | `layOutScenes`: owned objects named by path, states `from=` others, names written in full |

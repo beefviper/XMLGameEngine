@@ -186,7 +186,7 @@ TEST_CASE("a value tag works anywhere a value does", "[xml_format][random]")
 	o.extra = "<variables><variable name=\"score\"><random><min>4</min><max>4</max></random></variable></variables>";
 	Loaded loaded(gameXml("<variable name=\"g\"><random><min>9</min><max>9</max></random></variable>", objectXml(o)));
 
-	CHECK(loaded.game.getObject("o").spriteParams.at(1) == "30.000000");
+	CHECK(loaded.game.getObject("o").picture.size.x == 30.0f);
 	CHECK(loaded.game.getObject("o").variable.at("score") == 4.0f);
 	CHECK(loaded.game.getVariable("g") == 9.0f);
 }
@@ -561,12 +561,18 @@ TEST_CASE("sprites: each shape's parts", "[xml_format][sprite]")
 	Loaded loaded(gameXml("", objects));
 	Game& game = loaded.game;
 
-	CHECK(game.getObject("circle").spriteParams == std::vector<std::string>{ "circle", "4.000000", "0", "color.red" });
-	CHECK(game.getObject("rectangle").spriteParams == std::vector<std::string>{ "rectangle", "30.000000", "6.000000", "color.white" }); // no <color>: white
-	CHECK(game.getObject("label").spriteParams == std::vector<std::string>{ "text", "HELLO", "32.000000", "color.blue" });
-	CHECK(game.getObject("image").spriteParams == std::vector<std::string>{ "image", "assets/paddle.jpg", "flip.horizontal" });
-	CHECK(game.getObject("circle").shapeKind == ShapeKind::Circle);
-	CHECK(game.getObject("image").shapeKind == ShapeKind::Image);
+	CHECK(game.getObject("circle").picture.kind == ShapeKind::Circle);
+	CHECK(game.getObject("circle").picture.radius == 4.0f);
+	CHECK(game.getObject("circle").picture.color == "color.red");
+	CHECK(game.getObject("rectangle").picture.size == Vector2f{ 30.0f, 6.0f });
+	CHECK(game.getObject("rectangle").picture.color == "color.white"); // no <color>: white
+	CHECK(game.getObject("label").picture.text == "HELLO");
+	CHECK(game.getObject("label").picture.textSize == 32);
+	CHECK(game.getObject("label").picture.color == "color.blue");
+	CHECK(game.getObject("image").picture.file == "assets/paddle.jpg");
+	CHECK(game.getObject("image").picture.flipHorizontal);
+	CHECK(game.getObject("circle").picture.kind == ShapeKind::Circle);
+	CHECK(game.getObject("image").picture.kind == ShapeKind::Image);
 }
 
 TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", "[xml_format][sprite]")
@@ -587,13 +593,13 @@ TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", 
 	Game& game = loaded.game;
 
 	CHECK(game.getObject("bound").showsVariable("paddle", "score"));
-	CHECK(game.getObject("bound").spriteParams.at(1) == "3");
+	CHECK(game.getObject("bound").picture.text == "3");
 
 	CHECK(game.getObject("sum").textPieces.empty());
-	CHECK(game.getObject("sum").spriteParams.at(1) == "4");
+	CHECK(game.getObject("sum").picture.text == "4");
 
 	CHECK(game.getObject("label").textPieces.empty());
-	CHECK(game.getObject("label").spriteParams.at(1) == "paddle.score"); // a label is text, not a lookup
+	CHECK(game.getObject("label").picture.text == "paddle.score"); // a label is text, not a lookup
 }
 
 TEST_CASE("a shape with a part missing says which", "[xml_format][errors]")

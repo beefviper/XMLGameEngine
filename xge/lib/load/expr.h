@@ -26,7 +26,7 @@
 namespace xge
 {
 	// Works out what load/xml read: every RawValue to a number, every RawSprite
-	// to the spriteParams the window backends draw from, every RawCommand to a
+	// to the Picture the window backends draw, every RawCommand to a
 	// typed Command. The arithmetic in a value's text is exprtk's job; the tags
 	// (<random>) and everything that used to be a function call in the game
 	// file (shapes, commands) are handled here and in game/command.cpp, not by
@@ -56,11 +56,11 @@ namespace xge
 
 		// What an object's sprite was drawn as before it was built (init's
 		// first pass, or the object a copy is spawned from): its sprite's
-		// params, the picture, what turns, an animation's pictures, and,
+		// Picture, the bitmap, what turns, an animation's pictures, and,
 		// when given, its looks ready made.
 		struct FirstPass
 		{
-			std::vector<std::string> params;
+			Picture picture;
 			std::shared_ptr<const Bitmap> bitmap;
 			std::shared_ptr<const Turnable> turned;
 			std::vector<std::shared_ptr<const Bitmap>> animation;
@@ -169,23 +169,19 @@ namespace xge
 		bool isLate(const std::string& name) const;
 		float evaluateExpression(const std::string& text, const std::string& where);
 
-		// The spriteParams for a sprite, in the shape the window backends read:
-		// {"circle", radius, "0", color}, {"rectangle", width, height, color},
-		// {"text", label, size, color} (then the font file, when not the
-		// default), {"image", path, flip-or-color}, and for
-		// a drawing of lines, {"line", width, height} - the size of the
-		// picture - and the picture itself is handed back through `bitmap` when
-		// that is given (see Object::bitmap). A bitmap (a picture in rows of
-		// text) is drawn the same way and has the same params.
+		// The Picture for a sprite, as the window backends draw it. For a
+		// drawing of lines, a <bitmap> (rows of text) or an <svg>, a Line the
+		// size of the drawing, and the drawing itself is handed back through
+		// `bitmap` when that is given (see Object::bitmap).
 		//
 		// `turnable`, when given, is for an object that has a <heading>: what a
 		// drawing of lines or a <bitmap> is to be turned from is handed back
 		// through it (see Turnable), `bitmap` is the drawing at heading 0, and
-		// the size in the params is the square it turns in.
+		// the picture's size is the square it turns in.
 		//
 		// A text's pieces that name a variable of `self`'s group (scores.score
 		// in a member of the group scores) mean `self`'s own.
-		std::vector<std::string> buildSpriteParams(const RawSprite& sprite, const std::string& where,
+		Picture buildPicture(const RawSprite& sprite, const std::string& where,
 			std::shared_ptr<const Bitmap>* bitmap = nullptr,
 			std::shared_ptr<const Turnable>* turnable = nullptr,
 			const RawObject* self = nullptr);
@@ -196,11 +192,11 @@ namespace xge
 		std::vector<TextPiece> textPieces(const RawSprite& sprite, const std::string& where, const RawObject* self);
 
 		// Where each cell of a group laid out in <columns> and <rows> goes,
-		// from the group's position, by its name (see RawCell). `spriteParams`
+		// from the group's position, by its name (see RawCell). `pictures`
 		// is every object's sprite as it is drawn, for the size of a cell whose
 		// sprite is not its row's.
 		std::map<std::string, Vector2f> layOutCells(const std::vector<RawObject>& rawObjects,
-			const std::map<std::string, std::vector<std::string>>& spriteParams);
+			const std::map<std::string, Picture>& pictures);
 
 		// A picture drawn from rows of text or an svg, by everything it is
 		// drawn from (`key`): drawn by `draw` the first time it is asked for,

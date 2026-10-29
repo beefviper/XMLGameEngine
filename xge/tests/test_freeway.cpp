@@ -34,7 +34,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+			object.size = measureShapeSize(object.picture);
 		}
 	}
 
@@ -226,8 +226,8 @@ TEST_CASE("crossing scores a point and sends the chicken back to the start", "[f
 	CHECK(table.score(1) == 1.0f);
 	CHECK(table.score(2) == 0.0f);
 	CHECK(table.atStart(1));
-	CHECK(table.game.getObject("score1").spriteParams.at(1) == "1");
-	CHECK(table.game.getObject("score2").spriteParams.at(1) == "0");
+	CHECK(table.game.getObject("score1").picture.text == "1");
+	CHECK(table.game.getObject("score2").picture.text == "0");
 	CHECK(table.game.getCurrentState().name == "playing");
 }
 
@@ -324,8 +324,8 @@ TEST_CASE("space starts a new game from the end screen, with both scores and the
 	CHECK(table.game.getCurrentState().name == "mainmenu");
 	CHECK(table.score(1) == 0.0f);
 	CHECK(table.score(2) == 0.0f);
-	CHECK(table.game.getObject("score1").spriteParams.at(1) == "0");
-	CHECK(table.game.getObject("score2").spriteParams.at(1) == "0");
+	CHECK(table.game.getObject("score1").picture.text == "0");
+	CHECK(table.game.getObject("score2").picture.text == "0");
 	CHECK(table.game.getObject("clock").variable["seconds"] == 136.0f);
 	CHECK(table.game.getObject("wins.winner").lookName() == "draw");
 }

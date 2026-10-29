@@ -107,7 +107,7 @@ namespace xge
 
 	void QtWindow::build(Object& object, QImage& visual)
 	{
-		switch (object.shapeKind)
+		switch (object.picture.kind)
 		{
 		case ShapeKind::Circle:    visual = buildCircle(object); break;
 		case ShapeKind::Rectangle: visual = buildRectangle(object); break;
@@ -125,26 +125,26 @@ namespace xge
 
 	QImage QtWindow::buildCircle(const Object& object)
 	{
-		const double radius = std::stod(object.spriteParams.at(1));
+		const double radius = object.picture.radius;
 		const int side = static_cast<int>(std::ceil(radius * 2));
 
 		QImage image = emptyImage(side, side);
 		QPainter painter(&image);
 		painter.setRenderHint(QPainter::Antialiasing);
 		painter.setPen(Qt::NoPen);
-		painter.setBrush(toQColor(object.spriteParams.at(3)));
+		painter.setBrush(toQColor(object.picture.color));
 		painter.drawEllipse(QRectF(0, 0, radius * 2, radius * 2));
 		return image;
 	}
 
 	QImage QtWindow::buildRectangle(const Object& object)
 	{
-		const double width = std::stod(object.spriteParams.at(1));
-		const double height = std::stod(object.spriteParams.at(2));
+		const double width = object.picture.size.x;
+		const double height = object.picture.size.y;
 
 		QImage image = emptyImage(static_cast<int>(std::ceil(width)), static_cast<int>(std::ceil(height)));
 		QPainter painter(&image);
-		painter.fillRect(QRectF(0, 0, width, height), toQColor(object.spriteParams.at(3)));
+		painter.fillRect(QRectF(0, 0, width, height), toQColor(object.picture.color));
 		return image;
 	}
 
@@ -171,14 +171,14 @@ namespace xge
 
 	QImage QtWindow::buildText(const Object& object)
 	{
-		const QString& fontFamily = loadFont(textFontFile(object.spriteParams));
+		const QString& fontFamily = loadFont(textFontFile(object.picture.font));
 
-		const std::string& content = object.spriteParams.at(1);
-		const int size = std::stoi(object.spriteParams.at(2));
+		const std::string& content = object.picture.text;
+		const int size = object.picture.textSize;
 
 		if (fontFamily.isEmpty())
 		{
-			return fromBitmap(rasterizeText(content, size, colorFromName(object.spriteParams.at(3))));
+			return fromBitmap(rasterizeText(content, size, colorFromName(object.picture.color)));
 		}
 
 		QFont font(fontFamily);
@@ -192,7 +192,7 @@ namespace xge
 		QPainter painter(&image);
 		painter.setRenderHint(QPainter::TextAntialiasing);
 		painter.setFont(font);
-		painter.setPen(toQColor(object.spriteParams.at(3)));
+		painter.setPen(toQColor(object.picture.color));
 
 		// The text is drawn from its baseline; shift it so its tight bounds
 		// start at the top left of the picture.
@@ -202,7 +202,7 @@ namespace xge
 
 	QImage QtWindow::buildImage(const Object& object)
 	{
-		const std::string& imageFile = object.spriteParams.at(1);
+		const std::string& imageFile = object.picture.file;
 
 		QImage image(QString::fromStdString(imageFile));
 		if (image.isNull())
@@ -214,22 +214,23 @@ namespace xge
 		image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
 		// QImage::mirrored() was renamed flipped() in Qt 6.9 and now warns.
-		const std::string& flip = object.spriteParams.at(2);
+		const bool horizontal = object.picture.flipHorizontal;
+		const bool vertical = object.picture.flipVertical;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
-		if (flip == "flip.horizontal")
+		if (horizontal)
 		{
 			image = image.flipped(Qt::Horizontal);
 		}
-		else if (flip == "flip.vertical")
+		else if (vertical)
 		{
 			image = image.flipped(Qt::Vertical);
 		}
 #else
-		if (flip == "flip.horizontal")
+		if (horizontal)
 		{
 			image = image.mirrored(true, false);
 		}
-		else if (flip == "flip.vertical")
+		else if (vertical)
 		{
 			image = image.mirrored(false, true);
 		}

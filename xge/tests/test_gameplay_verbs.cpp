@@ -99,7 +99,7 @@ namespace
 			game.setCurrentState(0);
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+				object.size = measureShapeSize(object.picture);
 			}
 		}
 
@@ -522,12 +522,12 @@ TEST_CASE("an object with several named sprites can <become> each of them, and a
 
 	Object& lamp1 = loaded.game.getObject("lamp");
 	CHECK(lamp1.lookName() == "off");
-	CHECK(lamp1.spriteParams.at(3) == "color.grey");
+	CHECK(lamp1.picture.color == "color.grey");
 
 	// The ball runs into it: the rule runs while it is off, and turns it on.
 	loaded.frames(40);
 	CHECK(lamp1.lookName() == "on");
-	CHECK(lamp1.spriteParams.at(3) == "color.yellow");
+	CHECK(lamp1.picture.color == "color.yellow");
 	CHECK(loaded.variable("lamp", "lit") == 1); // once: the rule is for an unlit lamp
 
 	// A key in a state can name it; a reset brings back the first look.
@@ -866,7 +866,7 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 		game.getObject("player").variable["score"] = 3;
 		executor.executeInput(Command{ CmdCopy{ "player.score", "best.score" } }, true);
 		CHECK(loaded.variable("best", "score") == 3);
-		CHECK(game.getObject("shown").spriteParams.at(1) == "3");
+		CHECK(game.getObject("shown").picture.text == "3");
 
 		// A full reset passes the kept ones over and puts the rest back.
 		game.getObject("lamps.2").isVisible = false;
@@ -874,14 +874,14 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 		game.resetAll();
 		CHECK(loaded.variable("player", "score") == 0);
 		CHECK(loaded.variable("best", "score") == 3);
-		CHECK(game.getObject("shown").spriteParams.at(1) == "3");
+		CHECK(game.getObject("shown").picture.text == "3");
 		CHECK(game.getObject("best").position.x == 99);
 		CHECK_FALSE(game.getObject("lamps.2").isVisible);
 
 		// <reset object> still resets one by name.
 		game.resetObject("best");
 		CHECK(loaded.variable("best", "score") == 0);
-		CHECK(game.getObject("shown").spriteParams.at(1) == "0");
+		CHECK(game.getObject("shown").picture.text == "0");
 	}
 }
 
@@ -924,12 +924,12 @@ TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following i
 		Object& shown = loaded.game.getObject("label");
 		// A space between pieces, but letters side by side are one word; a
 		// letter goes round (-1 is Z, 27 is B); a sum is worked out once.
-		CHECK(shown.spriteParams.at(1) == "SCORE 120 HZB 240");
+		CHECK(shown.picture.text == "SCORE 120 HZB 240");
 		CHECK(shown.showsVariable("p", "a"));
 
 		loaded.game.incrementText("p.a");
 		loaded.game.incrementText("p.score", 5.0f);
-		CHECK(shown.spriteParams.at(1) == "SCORE 125 IZB 240");
+		CHECK(shown.picture.text == "SCORE 125 IZB 240");
 	}
 }
 
@@ -944,15 +944,15 @@ TEST_CASE("a <choose> piece shows one of its words, picked by a number as it is 
 	{
 		Loaded loaded(gameXml(owner + label, state("s", { "p", "label" })), backend);
 		Object& shown = loaded.game.getObject("label");
-		CHECK(shown.spriteParams.at(1) == "THE DRAGON IS ASLEEP");
+		CHECK(shown.picture.text == "THE DRAGON IS ASLEEP");
 		loaded.game.incrementText("p.mood");
-		CHECK(shown.spriteParams.at(1) == "THE DRAGON IS HUNGRY");
+		CHECK(shown.picture.text == "THE DRAGON IS HUNGRY");
 
 		// Past either end, the word at that end; between two, the lower.
 		loaded.game.incrementText("p.mood", 7.5f);
-		CHECK(shown.spriteParams.at(1) == "THE DRAGON IS VERY ANGRY");
+		CHECK(shown.picture.text == "THE DRAGON IS VERY ANGRY");
 		loaded.game.incrementText("p.mood", -9.5f);
-		CHECK(shown.spriteParams.at(1) == "THE DRAGON IS ASLEEP");
+		CHECK(shown.picture.text == "THE DRAGON IS ASLEEP");
 	}
 
 	const std::string empty = "<object name=\"label\"><sprite><text><choose><by>p.mood</by></choose><size>20</size></text></sprite>"
@@ -968,8 +968,8 @@ TEST_CASE("a group's text naming the group's variables shows each member's own",
 	Loaded loaded(gameXml(group, state("s", { "rows" })));
 	loaded.game.incrementText("rows.2.n", 9.0f);
 	loaded.game.incrementText("rows.2.l");
-	CHECK(loaded.game.getObject("rows.1").spriteParams.at(1) == "A 0");
-	CHECK(loaded.game.getObject("rows.2").spriteParams.at(1) == "B 9");
+	CHECK(loaded.game.getObject("rows.1").picture.text == "A 0");
+	CHECK(loaded.game.getObject("rows.2").picture.text == "B 9");
 }
 
 TEST_CASE("<rank> puts an entry into its place in a table, the rest moving down", "[scores][rank]")

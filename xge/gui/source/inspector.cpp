@@ -26,6 +26,7 @@
 #include <utility>
 #include <sstream>
 #include <string>
+#include <type_traits>
 
 namespace xge
 {
@@ -39,11 +40,6 @@ namespace xge
 		QString text(const std::string& value)
 		{
 			return QString::fromStdString(value);
-		}
-
-		QString numberText(double value)
-		{
-			return QString::number(value, 'g', 9);
 		}
 
 		std::string shapeName(ShapeKind kind)
@@ -453,7 +449,7 @@ namespace xge
 		auto object = [this, i]() -> Object& { return game().getCurrentObjects()[i]; };
 		const Object& first = object();
 
-		QString summary = text(shapeName(first.shapeKind));
+		QString summary = text(shapeName(first.picture.kind));
 		if (!first.objClass.empty())
 		{
 			summary += "  [" + text(first.objClass) + "]";
@@ -528,23 +524,18 @@ namespace xge
 	{
 		auto object = [this, i]() -> Object& { return game().getCurrentObjects()[i]; };
 		const Object& first = object();
-		const auto& params = first.spriteParams;
+		auto* sprite = addNode(parent, tr("sprite"), text(shapeName(first.picture.kind)));
 
-		auto* sprite = addNode(parent, tr("sprite"), text(shapeName(first.shapeKind)));
-
-		// A sprite parameter that is a number, and one that is text; either
-		// way the object's picture is built again from them (visualDirty).
-		auto addParamNumber = [&](const QString& name, std::size_t at, bool whole)
+		// A part of the picture that is a number, and one that is text
+		// (`part` gives it); either way the object's picture is built again
+		// (visualDirty).
+		auto addParamNumber = [&](const QString& name, auto part, bool whole)
 		{
-			if (at >= params.size())
+			using Number = std::remove_reference_t<decltype(part(std::declval<Picture&>()))>;
+			auto get = [object, part]() { return static_cast<double>(part(object().picture)); };
+			auto set = [object, part](double v)
 			{
-				return;
-			}
-
-			auto get = [object, at]() { return std::stod(object().spriteParams.at(at)); };
-			auto set = [object, at](double v)
-			{
-				object().spriteParams.at(at) = numberText(v).toStdString();
+				part(object().picture) = static_cast<Number>(v);
 				object().visualDirty = true;
 			};
 
@@ -558,41 +549,37 @@ namespace xge
 			}
 		};
 
-		auto addParamText = [&](const QString& name, std::size_t at)
+		auto addParamText = [&](const QString& name, std::string Picture::* part)
 		{
-			if (at >= params.size())
-			{
-				return;
-			}
-
 			addText(sprite, name,
-				[object, at]() { return text(object().spriteParams.at(at)); },
-				[object, at](const QString& value)
+				[object, part]() { return text(object().picture.*part); },
+				[object, part](const QString& value)
 				{
-					object().spriteParams.at(at) = value.toStdString();
+					object().picture.*part = value.toStdString();
 					object().visualDirty = true;
 				});
 		};
 
-		switch (first.shapeKind)
+		switch (first.picture.kind)
 		{
 		case ShapeKind::Circle:
-			addParamNumber(tr("radius"), 1, false);
-			addParamText(tr("color"), 3);
+			addParamNumber(tr("radius"), [](Picture& picture) -> float& { return picture.radius; }, false);
+			addParamText(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Rectangle:
-			addParamNumber(tr("width"), 1, false);
-			addParamNumber(tr("height"), 2, false);
-			addParamText(tr("color"), 3);
+			addParamNumber(tr("width"), [](Picture& picture) -> float& { return picture.size.x; }, false);
+			addParamNumber(tr("height"), [](Picture& picture) -> float& { return picture.size.y; }, false);
+			addParamText(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Text:
-			addParamText(tr("content"), 1);
-			addParamNumber(tr("size"), 2, true);
-			addParamText(tr("color"), 3);
+			addParamText(tr("content"), &Picture::text);
+			addParamNumber(tr("size"), [](Picture& picture) -> int& { return picture.textSize; }, true);
+			addParamText(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Image:
-			if (params.size() > 1) { addInfo(sprite, tr("file"), text(params[1])); }
-			if (params.size() > 2) { addInfo(sprite, tr("flip"), text(params[2])); }
+			addInfo(sprite, tr("file"), text(first.picture.file));
+			if (first.picture.flipHorizontal) { addInfo(sprite, tr("flip"), tr("horizontal")); }
+			if (first.picture.flipVertical) { addInfo(sprite, tr("flip"), tr("vertical")); }
 			break;
 		case ShapeKind::Line:
 			addInfo(sprite, tr("drawn from"), tr("pixels"));

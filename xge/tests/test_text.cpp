@@ -75,13 +75,12 @@ TEST_CASE("a text takes the size and color it leaves out from its style", "[text
 		"<object name=\"note\"><sprite><text style=\"plain\"><content>hi</content></text></sprite><position><x>0</x><y>0</y></position></object>",
 		kStyles, backend);
 
-	const std::vector<std::string>& heading = game.getObject("heading").spriteParams;
-	REQUIRE(heading.size() == 4);
-	CHECK(std::stof(heading[2]) == Approx(90));   // the style's size, a game variable
-	CHECK(heading[3] == "color.red");
-	CHECK(std::stof(game.getObject("smaller").spriteParams[2]) == Approx(30)); // its own size wins
-	CHECK(game.getObject("smaller").spriteParams[3] == "color.red");
-	CHECK(game.getObject("note").spriteParams[3] == "color.white");           // a style with no color: white
+	const Picture& heading = game.getObject("heading").picture;
+	CHECK(heading.textSize == 90);   // the style's size, a game variable
+	CHECK(heading.color == "color.red");
+	CHECK(game.getObject("smaller").picture.textSize == 30); // its own size wins
+	CHECK(game.getObject("smaller").picture.color == "color.red");
+	CHECK(game.getObject("note").picture.color == "color.white");           // a style with no color: white
 }
 
 TEST_CASE("a style that is not there, or a text with no size at all, stops the load", "[text]")
@@ -151,10 +150,10 @@ TEST_CASE("a text's font file is its own <font>, its style's, or the standard on
 		"<object name=\"standard\"><sprite><text style=\"plain\"><content>HI</content></text></sprite><position><x>0</x><y>0</y></position></object>",
 		styles, backend);
 
-	CHECK(textFontFile(game.getObject("styled").spriteParams) == "assets/pressstart2p.ttf");
-	CHECK(textFontFile(game.getObject("own").spriteParams) == "assets/other.ttf");
-	CHECK(game.getObject("standard").spriteParams.size() == 4);
-	CHECK(textFontFile(game.getObject("standard").spriteParams) == "assets/tuffy.ttf");
+	CHECK(textFontFile(game.getObject("styled").picture.font) == "assets/pressstart2p.ttf");
+	CHECK(textFontFile(game.getObject("own").picture.font) == "assets/other.ttf");
+	CHECK(game.getObject("standard").picture.font.empty());
+	CHECK(textFontFile(game.getObject("standard").picture.font) == "assets/tuffy.ttf");
 }
 
 TEST_CASE("<become style> puts another style's colors on an object's bitmaps, and a reset the first", "[text]")

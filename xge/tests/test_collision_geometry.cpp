@@ -23,7 +23,7 @@ namespace
 	Object shape(ShapeKind kind, float x, float y, float width, float height)
 	{
 		Object object;
-		object.shapeKind = kind;
+		object.picture.kind = kind;
 		object.position = { x, y };
 		object.size = { width, height };
 		return object;

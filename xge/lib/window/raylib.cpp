@@ -351,7 +351,7 @@ namespace xge
 
 	void RaylibWindow::buildShapeOnly(Object& object, CachedVisual& visual)
 	{
-		switch (object.shapeKind)
+		switch (object.picture.kind)
 		{
 		case ShapeKind::Circle:    buildCircle(object, visual); break;
 		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
@@ -364,39 +364,39 @@ namespace xge
 
 	void RaylibWindow::buildCircle(Object& object, CachedVisual& visual)
 	{
-		const float radius = std::stof(object.spriteParams.at(1));
+		const float radius = object.picture.radius;
 		const int diameter = static_cast<int>(std::ceil(radius * 2.0f));
 
 		reloadTexture(visual, diameter, diameter);
 
 		BeginTextureMode(visual.renderTexture);
 		ClearBackground(kTransparent);
-		DrawCircle(static_cast<int>(radius), static_cast<int>(radius), radius, toRaylibColor(colorFromName(object.spriteParams.at(3))));
+		DrawCircle(static_cast<int>(radius), static_cast<int>(radius), radius, toRaylibColor(colorFromName(object.picture.color)));
 		EndTextureMode();
 	}
 
 	void RaylibWindow::buildRectangle(Object& object, CachedVisual& visual)
 	{
-		const int width = static_cast<int>(std::ceil(std::stof(object.spriteParams.at(1))));
-		const int height = static_cast<int>(std::ceil(std::stof(object.spriteParams.at(2))));
+		const int width = static_cast<int>(std::ceil(object.picture.size.x));
+		const int height = static_cast<int>(std::ceil(object.picture.size.y));
 
 		reloadTexture(visual, width, height);
 
 		BeginTextureMode(visual.renderTexture);
 		ClearBackground(kTransparent);
-		DrawRectangle(0, 0, width, height, toRaylibColor(colorFromName(object.spriteParams.at(3))));
+		DrawRectangle(0, 0, width, height, toRaylibColor(colorFromName(object.picture.color)));
 		EndTextureMode();
 	}
 
 	void RaylibWindow::buildText(Object& object, CachedVisual& visual)
 	{
-		const Font* font = getFont(textFontFile(object.spriteParams));
-		const std::string& text = object.spriteParams.at(1);
-		const float fontSize = std::stof(object.spriteParams.at(2));
+		const Font* font = getFont(textFontFile(object.picture.font));
+		const std::string& text = object.picture.text;
+		const float fontSize = static_cast<float>(object.picture.textSize);
 
 		if (!font)
 		{
-			buildBitmap(object, visual, rasterizeText(text, static_cast<int>(std::lround(fontSize)), colorFromName(object.spriteParams.at(3))));
+			buildBitmap(object, visual, rasterizeText(text, static_cast<int>(std::lround(fontSize)), colorFromName(object.picture.color)));
 			return;
 		}
 
@@ -409,13 +409,13 @@ namespace xge
 
 		BeginTextureMode(visual.renderTexture);
 		ClearBackground(kTransparent);
-		DrawTextEx(f, text.c_str(), ::Vector2{ 0.0f, 0.0f }, fontSize, 1.0f, toRaylibColor(colorFromName(object.spriteParams.at(3))));
+		DrawTextEx(f, text.c_str(), ::Vector2{ 0.0f, 0.0f }, fontSize, 1.0f, toRaylibColor(colorFromName(object.picture.color)));
 		EndTextureMode();
 	}
 
 	void RaylibWindow::buildImage(Object& object, CachedVisual& visual)
 	{
-		const std::string& imageFile = object.spriteParams.at(1);
+		const std::string& imageFile = object.picture.file;
 
 		Image image = LoadImage(imageFile.c_str());
 		if (image.data == nullptr)
@@ -423,11 +423,11 @@ namespace xge
 			throw std::runtime_error("raylib could not load the image " + imageFile);
 		}
 
-		if (object.spriteParams.size() > 2 && object.spriteParams.at(2) == "flip.horizontal")
+		if (object.picture.flipHorizontal)
 		{
 			ImageFlipHorizontal(&image);
 		}
-		else if (object.spriteParams.size() > 2 && object.spriteParams.at(2) == "flip.vertical")
+		else if (object.picture.flipVertical)
 		{
 			ImageFlipVertical(&image);
 		}

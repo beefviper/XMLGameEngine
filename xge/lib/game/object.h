@@ -753,7 +753,7 @@ namespace xge
 		bool isFollowing() const noexcept { return !followPath.empty(); }
 
 		// The looks <become> switches between: each named sprite as the window
-		// backends draw it (spriteParams, and the picture for a bitmap or a
+		// backends draw it (its Picture, and the bitmap for a bitmap or a
 		// drawing of lines), shared by every object made from the definition.
 		// `look` is the one showing; a reset shows the first again. An object
 		// with one sprite, or one unnamed animation, has none. A look that
@@ -762,8 +762,7 @@ namespace xge
 		struct Look
 		{
 			std::string name;
-			std::vector<std::string> spriteParams;
-			ShapeKind shapeKind{ ShapeKind::Unknown };
+			Picture picture;
 			std::shared_ptr<const Bitmap> bitmap;
 			std::vector<std::shared_ptr<const Bitmap>> frames;
 			int frameTicks{};
@@ -827,7 +826,7 @@ namespace xge
 		std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flips;
 
 		// The picture to show for `picture`: flipped while mirrored.
-		std::shared_ptr<const Bitmap> facingPicture(const std::shared_ptr<const Bitmap>& picture) const;
+		std::shared_ptr<const Bitmap> facingPicture(const std::shared_ptr<const Bitmap>& shown) const;
 
 		// Flips its picture, if it now goes the other way to the one it
 		// is drawn for (see goingLeft).
@@ -961,7 +960,7 @@ namespace xge
 		// The object's own measured bounding box (width/height) - {0,0} until
 		// whichever Window backend is running has actually built this
 		// object's visual and measured it (see Window::init() in window/window.h).
-		// Circle/rectangle sizes are implied by spriteParams alone; text/
+		// Circle/rectangle sizes are implied by the picture alone; text/
 		// image need the backend's own font/image loading to know their real
 		// pixel size, so every backend writes this back the same way
 		// regardless - collision/physics code (play/collision,
@@ -1004,8 +1003,9 @@ namespace xge
 		bool startDrawsRandom{ false };
 
 		CollisionData collisionData;
-		std::vector<std::string> spriteParams;
-		ShapeKind shapeKind{ ShapeKind::Unknown };
+
+		// What it shows now (one of its looks, or its one sprite).
+		Picture picture;
 
 		// What a sprite of <line>s was drawn as, worked out when the game
 		// loads (load/expr). The window backends draw it as a picture and a
@@ -1021,7 +1021,7 @@ namespace xge
 		// object's own visual - set again whenever something changes what
 		// should be on screen for it (e.g. a bound text display's number
 		// changing - see Game::incrementText/resetObject/resetAll) so the
-		// backend knows to rebuild from spriteParams before its next draw()
+		// backend knows to rebuild from its picture before its next draw()
 		// instead of showing a stale image. Game/Engine never draw anything
 		// themselves; they only ever flip this flag.
 		bool visualDirty{ true };

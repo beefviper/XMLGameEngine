@@ -16,17 +16,8 @@ namespace xge
 {
 	// What a verb does to an object, once something has decided it should
 	// happen: no game file, no rules and no looking anything up, only the
-	// object (and what it touched) changed. The engine's CommandExecutor
-	// calls these when a game file's rule says so; a generated game calls
-	// them straight from its own rules. The arithmetic is play/geometry.h's.
-
-	// An object called `name` showing `sprite` (circleSprite, ...), in play
-	// from the start, its collisions on or off (<enabled>). Where it starts
-	// and how fast it goes are startAt's.
-	Object makeObject(std::string name, std::vector<std::string> sprite, bool collides);
-
-	// Where the object starts and how fast it goes, now and after a reset.
-	void startAt(Object& object, Vector2f position, Vector2f velocity);
+	// object (and what it touched) changed. CommandExecutor calls these
+	// when a game file's rule says so. The arithmetic is play/geometry.h's.
 
 	// What an object measures: what the window measured, or, before there is
 	// one, what its sprite implies.

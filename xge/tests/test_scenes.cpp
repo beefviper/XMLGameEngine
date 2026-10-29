@@ -85,7 +85,7 @@ namespace
 			game.setCurrentState(0);
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+				object.size = measureShapeSize(object.picture);
 			}
 		}
 
@@ -660,11 +660,11 @@ TEST_CASE("a state from= an earlier one is a copy of it with its own parts over 
 		"<inputs><input button=\"escape\"><pop /></input></inputs></state>"), backend);
 
 	Object& over = loaded.game.getObject("gameover.message");
-	CHECK(over.spriteParams.at(3) == "color.red");
+	CHECK(over.picture.color == "color.red");
 	CHECK(over.position.x == Approx(100));          // copied
 	CHECK(loaded.has("gameover.skull"));            // its own
 	Object& end = loaded.game.getObject("theend.message");
-	CHECK(end.spriteParams.at(3) == "color.red");   // a copy of a copy
+	CHECK(end.picture.color == "color.red");   // a copy of a copy
 	CHECK(end.position.y == Approx(80));
 	CHECK(loaded.has("theend.skull"));
 

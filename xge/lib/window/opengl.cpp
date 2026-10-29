@@ -522,7 +522,7 @@ namespace xge
 		visual.flipHorizontal = false;
 		visual.flipVertical = false;
 
-		switch (object.shapeKind)
+		switch (object.picture.kind)
 		{
 		case ShapeKind::Circle:    buildCircle(object, visual); break;
 		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
@@ -537,12 +537,12 @@ namespace xge
 
 	void OpenGLWindow::buildCircle(Object& object, CachedVisual& visual)
 	{
-		const float radiusF = std::stof(object.spriteParams.at(1));
+		const float radiusF = object.picture.radius;
 		const int radius = static_cast<int>(radiusF);
 		const int diameter = static_cast<int>(std::ceil(radiusF * 2.0f));
 
 		Bitmap bitmap = filledBitmap(diameter, diameter);
-		const Color c = colorFromName(object.spriteParams.at(3));
+		const Color c = colorFromName(object.picture.color);
 
 		for (int y = -radius; y <= radius; ++y)
 		{
@@ -560,11 +560,11 @@ namespace xge
 
 	void OpenGLWindow::buildRectangle(Object& object, CachedVisual& visual)
 	{
-		const int w = static_cast<int>(std::ceil(std::stof(object.spriteParams.at(1))));
-		const int h = static_cast<int>(std::ceil(std::stof(object.spriteParams.at(2))));
+		const int w = static_cast<int>(std::ceil(object.picture.size.x));
+		const int h = static_cast<int>(std::ceil(object.picture.size.y));
 
 		Bitmap bitmap = filledBitmap(w, h);
-		const Color c = colorFromName(object.spriteParams.at(3));
+		const Color c = colorFromName(object.picture.color);
 
 		for (int y = 0; y < bitmap.height; ++y)
 		{
@@ -579,11 +579,11 @@ namespace xge
 
 	void OpenGLWindow::buildText(Object& object, CachedVisual& visual)
 	{
-		const std::string& text = object.spriteParams.at(1);
-		const int requestedSize = std::stoi(object.spriteParams.at(2));
-		const Color c = colorFromName(object.spriteParams.at(3));
+		const std::string& text = object.picture.text;
+		const int requestedSize = object.picture.textSize;
+		const Color c = colorFromName(object.picture.color);
 
-		TTF_Font* font = getFont(textFontFile(object.spriteParams), requestedSize);
+		TTF_Font* font = getFont(textFontFile(object.picture.font), requestedSize);
 		if (!font)
 		{
 			upload(visual, rasterizeText(text, requestedSize, c));
@@ -610,7 +610,7 @@ namespace xge
 
 	void OpenGLWindow::buildImage(Object& object, CachedVisual& visual)
 	{
-		const std::string& imageFile = object.spriteParams.at(1);
+		const std::string& imageFile = object.picture.file;
 		ensureImages();
 		SDL_Surface* surface = IMG_Load(imageFile.c_str());
 		if (!surface)
@@ -621,11 +621,11 @@ namespace xge
 		upload(visual, bitmapFromSurface(surface));
 		SDL_FreeSurface(surface);
 
-		if (object.spriteParams.size() > 2 && object.spriteParams.at(2) == "flip.horizontal")
+		if (object.picture.flipHorizontal)
 		{
 			visual.flipHorizontal = true;
 		}
-		else if (object.spriteParams.size() > 2 && object.spriteParams.at(2) == "flip.vertical")
+		else if (object.picture.flipVertical)
 		{
 			visual.flipVertical = true;
 		}

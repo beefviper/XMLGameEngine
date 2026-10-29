@@ -15,31 +15,10 @@
 
 namespace xge
 {
-	Object makeObject(std::string name, std::vector<std::string> sprite, bool collides)
-	{
-		Object object{};
-		object.name = std::move(name);
-		object.shapeKind = shapeKindFromTag(sprite.empty() ? std::string{} : sprite.front());
-		object.spriteParams = std::move(sprite);
-		object.isVisible = true;
-		object.isVisibleOriginal = true;
-		object.collisionData.enabled = collides;
-		object.collisionEnabledOriginal = collides;
-		return object;
-	}
-
-	void startAt(Object& object, Vector2f position, Vector2f velocity)
-	{
-		object.position = position;
-		object.positionOriginal = position;
-		object.velocity = velocity;
-		object.velocityOriginal = velocity;
-	}
-
 	Vector2f sizeOf(const Object& object)
 	{
 		if (object.size.x != 0.0f || object.size.y != 0.0f) { return object.size; }
-		return measureShapeSize(object.spriteParams, object.shapeKind);
+		return measureShapeSize(object.picture);
 	}
 
 	void cutHole(Object& object, const Object& other, float radius, float rough)

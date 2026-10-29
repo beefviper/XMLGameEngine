@@ -104,7 +104,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+			object.size = measureShapeSize(object.picture);
 		}
 	}
 
@@ -235,15 +235,15 @@ TEST_CASE("a bitmap sprite is drawn when the game loads and has the size of its 
 		"<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.shapeKind == ShapeKind::Line);
+	REQUIRE(thing.picture.kind == ShapeKind::Line);
 	REQUIRE(thing.bitmap);
 
 	// 3 characters by 2 rows, each 3 pixels (the variable `pixel`).
 	CHECK(thing.bitmap->width == 9);
 	CHECK(thing.bitmap->height == 6);
-	CHECK(thing.spriteParams == std::vector<std::string>{ "line", "9", "6" });
+	CHECK(thing.picture.size == Vector2f{ 9.0f, 6.0f });
 
-	const Vector2f size = measureShapeSize(thing.spriteParams, thing.shapeKind);
+	const Vector2f size = measureShapeSize(thing.picture);
 	CHECK(size.x == 9.0f);
 	CHECK(size.y == 6.0f);
 
@@ -945,8 +945,8 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 
 	// The bullet is a thin tall rectangle.
 	const Object& bullet = game.getObject("bullet");
-	CHECK(bullet.shapeKind == ShapeKind::Rectangle);
-	const Vector2f size = measureShapeSize(bullet.spriteParams, bullet.shapeKind);
+	CHECK(bullet.picture.kind == ShapeKind::Rectangle);
+	const Vector2f size = measureShapeSize(bullet.picture);
 	CHECK(size.x == 4.0f);
 	CHECK(size.y == 24.0f);
 }
@@ -1166,7 +1166,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	Game game{ "descriptions/spaceinvaders.xml" };
 	for (auto& object : game.getCurrentObjects())
 	{
-		object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+		object.size = measureShapeSize(object.picture);
 	}
 	game.setCurrentState(0);
 	game.pushState("playing");

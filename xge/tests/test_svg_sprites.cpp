@@ -160,7 +160,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+			object.size = measureShapeSize(object.picture);
 		}
 	}
 
@@ -341,15 +341,15 @@ TEST_CASE("an svg sprite is drawn when the game loads and has the size of its pi
 		"<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.shapeKind == ShapeKind::Line);
+	REQUIRE(thing.picture.kind == ShapeKind::Line);
 	REQUIRE(thing.bitmap);
 
 	// 4 units at 3 pixels each (the variable `pixel`).
 	CHECK(thing.bitmap->width == 12);
 	CHECK(thing.bitmap->height == 12);
-	CHECK(thing.spriteParams == std::vector<std::string>{ "line", "12", "12" });
+	CHECK(thing.picture.size == Vector2f{ 12.0f, 12.0f });
 
-	const Vector2f size = measureShapeSize(thing.spriteParams, thing.shapeKind);
+	const Vector2f size = measureShapeSize(thing.picture);
 	CHECK(size.x == 12.0f);
 	CHECK(size.y == 12.0f);
 

@@ -21,7 +21,7 @@
 - **Edge rules too.** An edge's rules are kept as one flat list of commands per edge (an `edge="all"` rule is copied into four), so a `sprite=` edge rule is noted beside its edge's list as where its commands start and how many there are (`EdgeGuard`), and the look is checked when the run reaches them. A list of rules per edge was the other way; it would have changed every reader of the lists (the checks at load, the inspector, the tests) for one attribute. Before this the engine read `sprite=` on an edge rule and dropped it, so the rule ran whatever the object showed.
 - Chosen over class changes (`<become class>`: rules already filter by class, but the change would not be visible and colour would need its own command) and per-object state variables. **The look is the state: what the player sees is what the rule tests.**
 - **`<become ... from="look">`** changes only the objects showing that look: a pellet turns every hunting ghost blue but leaves eyes going home as eyes. Without it, the pellet would need a rule per look.
-- A look is a spriteParams plus a bitmap swapped in and marked dirty, so no backend changed. With a heading each look keeps its pictures to turn (since 2026-10-29, for Asteroids' flame); a look cannot be a bound number text. Recoloring is a palette, apart from the look (see [pictures](30-pictures.md)).
+- A look is a `Picture` plus a bitmap swapped in and marked dirty, so no backend changed. With a heading each look keeps its pictures to turn (since 2026-10-29, for Asteroids' flame); a look cannot be a bound number text. Recoloring is a palette, apart from the look (see [pictures](30-pictures.md)).
 
 ## Looks that move (2026-10-23)
 

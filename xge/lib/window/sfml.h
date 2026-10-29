@@ -21,7 +21,7 @@ namespace xge
 	// names an SFML type - see window/window.h.
 	//
 	// Absorbs what used to be the standalone game_sfml class: building each
-	// object's visual from its spriteParams (circle/rectangle/text/image) is
+	// object's visual from its picture (circle/rectangle/text/image) is
 	// backend work, not Game's, so it lives here now as SFMLWindow's own
 	// per-object cache instead of being baked into Object itself.
 	class SFMLWindow : public Window
@@ -63,7 +63,7 @@ namespace xge
 		static KeyCode sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept;
 		const sf::Font* getFont(const std::string& file);
 
-		// Resizes/draws visual.renderTexture from object.spriteParams alone -
+		// Resizes/draws visual.renderTexture from object.picture alone -
 		// no position math, no sprite (re)creation. Shared by init() and
 		// draw()'s on-demand rebuild path.
 		void buildShapeOnly(Object& object, CachedVisual& visual);

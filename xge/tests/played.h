@@ -45,7 +45,7 @@ namespace played
 		{
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = xge::measureShapeSize(object.spriteParams, object.shapeKind);
+				object.size = xge::measureShapeSize(object.picture);
 			}
 		}
 

@@ -48,7 +48,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+			object.size = measureShapeSize(object.picture);
 		}
 	}
 
@@ -281,7 +281,7 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	Field field;
 	const Object& ship = field.ship();
 
-	CHECK(ship.shapeKind == ShapeKind::Line);
+	CHECK(ship.picture.kind == ShapeKind::Line);
 	CHECK(ship.collisionData.type == CollisionType::Pixel);
 	CHECK(ship.hasHeading);
 	CHECK(ship.heading == 0.0f);

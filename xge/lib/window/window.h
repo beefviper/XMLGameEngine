@@ -45,12 +45,12 @@ namespace xge
 
 		// Called once, right after the window is created (see Engine's
 		// constructor): builds and measures every object's initial visual
-		// from its spriteParams. Object::position (including a group's
+		// from its picture. Object::position (including a group's
 		// cells) is already final by this point - Game finalizes all of
 		// that itself, with no Window needed (see load/expr.cpp and
 		// measureShapeSize in game/command.cpp) - so this only ever populates
 		// Object::size with each object's real rendered footprint (exact,
-		// unlike measureShapeSize's spriteParams-only approximation) and
+		// unlike measureShapeSize's picture-only approximation) and
 		// clears Object::visualDirty, for every object it touches.
 		virtual void init(std::vector<Object>& objects) = 0;
 

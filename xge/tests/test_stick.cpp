@@ -30,7 +30,7 @@ namespace
 	{
 		game.setCurrentState("playing");
 		Object& player = game.getObject("player");
-		player.size = measureShapeSize(player.spriteParams, player.shapeKind);
+		player.size = measureShapeSize(player.picture);
 		player.position.y = kBottomBound - 20.0f;
 		return player;
 	}

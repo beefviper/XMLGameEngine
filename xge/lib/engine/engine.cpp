@@ -190,7 +190,7 @@ namespace xge
 		// again for the new size, measured now rather than at the next draw.
 		for (auto& object : game.getCurrentObjects())
 		{
-			if (object.visualDirty && game_expr::sizeNeedsBackend(object.shapeKind))
+			if (object.visualDirty && game_expr::sizeNeedsBackend(object.picture.kind))
 			{
 				window->prepare(object);
 			}

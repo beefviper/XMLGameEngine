@@ -14,9 +14,9 @@
 namespace xge
 {
 	// The font file a text is drawn with: the one its <font> (or its
-	// style's) names, the fifth of its spriteParams, else assets/tuffy.ttf.
-	// Relative to the games folder, the working directory.
-	const std::string& textFontFile(const std::vector<std::string>& spriteParams);
+	// style's) names (Picture::font), else assets/tuffy.ttf. Relative to
+	// the games folder, the working directory.
+	const std::string& textFontFile(const std::string& font);
 
 	// The font the engine carries inside itself, for when a game's own font
 	// file cannot be found (see the window backends): an 8 by 8 pixel glyph

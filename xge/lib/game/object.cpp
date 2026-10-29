@@ -57,8 +57,7 @@ namespace xge
 		}
 
 		look = index;
-		spriteParams = looks[index].spriteParams;
-		shapeKind = looks[index].shapeKind;
+		picture = looks[index].picture;
 		bitmap = facingPicture(looks[index].bitmap);
 		animationBitmaps = looks[index].frames;
 		animationFrames = looks[index].frameTicks;
@@ -104,11 +103,11 @@ namespace xge
 		visualDirty = true;
 	}
 
-	std::shared_ptr<const Bitmap> Object::facingPicture(const std::shared_ptr<const Bitmap>& picture) const
+	std::shared_ptr<const Bitmap> Object::facingPicture(const std::shared_ptr<const Bitmap>& shown) const
 	{
-		if (!mirrored || !flips || !picture) { return picture; }
-		const auto found = flips->find(picture.get());
-		return found == flips->end() ? picture : found->second;
+		if (!mirrored || !flips || !shown) { return shown; }
+		const auto found = flips->find(shown.get());
+		return found == flips->end() ? shown : found->second;
 	}
 
 	void Object::faceMirror()
@@ -663,12 +662,7 @@ namespace xge
 	}
 
 	std::ostream& operator<<(std::ostream& o, const Object& f) {
-		o << "Object: " << "name=" << f.name << ", sprite=";
-		for (std::size_t i = 0; i < f.spriteParams.size(); ++i)
-		{
-			o << (i ? "," : "") << f.spriteParams[i];
-		}
-		o << '\n';
+		o << "Object: " << "name=" << f.name << ", sprite=" << f.picture << '\n';
 
 		if (f.positionResolved)
 		{

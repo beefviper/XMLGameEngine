@@ -47,7 +47,7 @@ TEST_CASE("what is <dark> is drawn only while a <light> reaches some part of it,
 	auto window = std::make_unique<SeeingWindow>();
 	SeeingWindow& seen = *window;
 	Engine engine(game, std::move(window));
-	for (auto& object : game.getCurrentObjects()) { object.size = measureShapeSize(object.spriteParams, object.shapeKind); }
+	for (auto& object : game.getCurrentObjects()) { object.size = measureShapeSize(object.picture); }
 
 	const auto frame = [&]
 	{
@@ -195,11 +195,11 @@ TEST_CASE("hauntedhouse.xml: the stairs lead up and down the four floors, each w
 {
 	House play;
 	play.stillCreatures();
-	const std::string groundWall = play.get("playing.floor1.house.walls.1").spriteParams.back();
+	const std::string groundWall = play.get("playing.floor1.house.walls.1").picture.color;
 
 	play.climb(18);
 	REQUIRE(play.floor() == "playing.floor2");
-	CHECK(play.get("playing.floor2.house.walls.1").spriteParams.back() != groundWall);
+	CHECK(play.get("playing.floor2.house.walls.1").picture.color != groundWall);
 	// Up the stairs the eyes are where they were, which on this floor is no stairs.
 	play.frames(30);
 	CHECK(play.floor() == "playing.floor2");

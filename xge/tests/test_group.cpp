@@ -181,7 +181,7 @@ TEST_CASE("a member takes what it leaves out from its group", "[group]")
 	CHECK(second.position.y == 100.0f);
 	CHECK(first.velocity.x == -2.0f);
 	CHECK(first.velocity.y == 0.0f);
-	CHECK(first.spriteParams == second.spriteParams);
+	CHECK(first.picture == second.picture);
 
 	// The member that says more wins: its own row, its own x for the speed
 	// (the group's 0 for y), and its own shape.
@@ -189,7 +189,7 @@ TEST_CASE("a member takes what it leaves out from its group", "[group]")
 	CHECK(odd.position.y == 150.0f);
 	CHECK(odd.velocity.x == 1.0f);
 	CHECK(odd.velocity.y == 0.0f);
-	CHECK(odd.spriteParams != first.spriteParams);
+	CHECK(odd.picture != first.picture);
 
 	// And where they started is where a reset puts them back.
 	CHECK(odd.positionOriginal.y == 150.0f);
@@ -361,7 +361,7 @@ namespace
 
 	const std::string kShowWall = "<show object=\"wall\" />";
 
-	std::string colorOf(const Object& object) { return object.spriteParams.at(3); }
+	std::string colorOf(const Object& object) { return object.picture.color; }
 }
 
 TEST_CASE("a group in columns and rows is a cell for each place, named for its column and row", "[group][cells]")
@@ -402,7 +402,7 @@ TEST_CASE("a row, a column or a cell changes only what it gives", "[group][cells
 
 	// The row: green, worth more, the size of the group's bricks.
 	CHECK(colorOf(game.getObject("wall.1.2")) == "color.green");
-	CHECK(game.getObject("wall.1.2").spriteParams.at(1) == "20.000000");
+	CHECK(game.getObject("wall.1.2").picture.size.x == 20.0f);
 	CHECK(game.getObject("wall.1.2").variable.at("points") == 5.0f);
 	CHECK(colorOf(game.getObject("wall.1.1")) == "color.red");
 	CHECK(game.getObject("wall.1.1").variable.at("points") == 1.0f);
@@ -461,8 +461,13 @@ TEST_CASE("a member's sprite of the same shape as its group's gives only what ch
 		"<member name=\"round\"><sprite><circle><radius>4</radius></circle></sprite></member>"), "<show object=\"lane\" />") };
 	Game& game = loaded.game;
 
-	CHECK(game.getObject("short").spriteParams == std::vector<std::string>{ "rectangle", "10.000000", "20.000000", "color.brown" });
-	CHECK(game.getObject("round").spriteParams == std::vector<std::string>{ "circle", "4.000000", "0", "color.white" });
+	CHECK(game.getObject("short").picture.kind == ShapeKind::Rectangle);
+	CHECK(game.getObject("short").picture.size.x == 10.0f);
+	CHECK(game.getObject("short").picture.size.y == 20.0f);
+	CHECK(game.getObject("short").picture.color == "color.brown");
+	CHECK(game.getObject("round").picture.kind == ShapeKind::Circle);
+	CHECK(game.getObject("round").picture.radius == 4.0f);
+	CHECK(game.getObject("round").picture.color == "color.white");
 }
 
 TEST_CASE("a member's tether names its two ends again and keeps the rest; a member's text can choose", "[group]")
@@ -482,7 +487,10 @@ TEST_CASE("a member's tether names its two ends again and keeps the rest; a memb
 	CHECK(two.tetherThickness == 3);
 	CHECK(two.tetherColor.r == 255);
 	CHECK(two.tetherColor.g == 0);
-	CHECK(game.getObject("sign").spriteParams == std::vector<std::string>{ "text", "right", "10.000000", "color.white" });
+	CHECK(game.getObject("sign").picture.kind == ShapeKind::Text);
+	CHECK(game.getObject("sign").picture.text == "right");
+	CHECK(game.getObject("sign").picture.textSize == 10);
+	CHECK(game.getObject("sign").picture.color == "color.white");
 }
 
 TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where", "[group][cells][errors]")
@@ -588,8 +596,8 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(slow.position.x == 200.0f);
 	CHECK(slow.position.y == 20.0f);
 	CHECK(slow.velocity.x == 1.0f);
-	CHECK(measureShapeSize(slow.spriteParams, slow.shapeKind).x == 30.0f);
-	CHECK(std::find(slow.spriteParams.begin(), slow.spriteParams.end(), "color.red") != slow.spriteParams.end());
+	CHECK(measureShapeSize(slow.picture).x == 30.0f);
+	CHECK(slow.picture.color == "color.red");
 	CHECK(slow.collisionData.enabled);
 	CHECK(slow.collisionData.left.size() == 1);
 	CHECK(slow.collisionData.others.empty());

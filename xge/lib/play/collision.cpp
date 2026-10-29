@@ -25,7 +25,7 @@ namespace xge
 		bool isRound(const Object& object)
 		{
 			if (object.collisionData.hasHitbox) { return object.collisionData.hitboxRound; }
-			return object.shapeKind == ShapeKind::Circle;
+			return object.picture.kind == ShapeKind::Circle;
 		}
 
 		// Whether the point `local` (from the top left of boxOf) is touched

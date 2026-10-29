@@ -60,7 +60,7 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.shapeKind = ShapeKind::Line;
+		object.picture.kind = ShapeKind::Line;
 		object.bitmap = std::make_shared<const Bitmap>(rasterizeLines(lines));
 		object.size = { static_cast<float>(object.bitmap->width), static_cast<float>(object.bitmap->height) };
 		object.position = { x, y };
@@ -73,7 +73,7 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.shapeKind = ShapeKind::Rectangle;
+		object.picture.kind = ShapeKind::Rectangle;
 		object.size = { width, height };
 		object.position = { x, y };
 		object.collisionData.enabled = true;
@@ -84,7 +84,7 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.shapeKind = ShapeKind::Circle;
+		object.picture.kind = ShapeKind::Circle;
 		object.size = { radius * 2, radius * 2 };
 		object.position = { x, y };
 		object.collisionData.enabled = true;
@@ -144,7 +144,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.spriteParams, object.shapeKind);
+			object.size = measureShapeSize(object.picture);
 		}
 	}
 
@@ -388,17 +388,17 @@ TEST_CASE("a sprite of lines is drawn when the game loads and has the size of it
 	Loaded loaded{ gameXml(kHut, "<show object=\"hut\" />") };
 	const Object& hut = loaded.game.getObject("hut");
 
-	REQUIRE(hut.shapeKind == ShapeKind::Line);
+	REQUIRE(hut.picture.kind == ShapeKind::Line);
 	REQUIRE(hut.bitmap);
 
 	// From x 0 to 20 and y 0 to 10, the second pair two pixels thick: 22 by 12.
 	CHECK(hut.bitmap->width == 22);
 	CHECK(hut.bitmap->height == 12);
-	CHECK(hut.spriteParams == std::vector<std::string>{ "line", "22", "12" });
+	CHECK(hut.picture.size == Vector2f{ 22.0f, 12.0f });
 	CHECK(hut.collisionData.type == CollisionType::Pixel);
 
 	// Known without a window, like a circle's or a rectangle's.
-	const Vector2f size = measureShapeSize(hut.spriteParams, hut.shapeKind);
+	const Vector2f size = measureShapeSize(hut.picture);
 	CHECK(size.x == 22.0f);
 	CHECK(size.y == 12.0f);
 
@@ -431,7 +431,7 @@ TEST_CASE("a random coordinate is drawn once, so the picture and its size agree"
 	{
 		Loaded loaded{ gameXml(objectWith(sprite), "<show object=\"thing\" />") };
 		const Object& thing = loaded.game.getObject("thing");
-		const Vector2f size = measureShapeSize(thing.spriteParams, thing.shapeKind);
+		const Vector2f size = measureShapeSize(thing.picture);
 
 		CHECK(size.x == static_cast<float>(thing.bitmap->width));
 		CHECK(size.x >= 11.0f);

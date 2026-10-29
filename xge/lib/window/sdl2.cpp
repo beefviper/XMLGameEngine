@@ -413,7 +413,7 @@ namespace xge
 
 	void SDL2Window::buildShapeOnly(Object& object, CachedVisual& visual)
 	{
-		switch (object.shapeKind)
+		switch (object.picture.kind)
 		{
 		case ShapeKind::Circle:    buildCircle(object, visual); break;
 		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
@@ -426,7 +426,7 @@ namespace xge
 
 	void SDL2Window::buildCircle(Object& object, CachedVisual& visual)
 	{
-		const float radiusF = std::stof(object.spriteParams.at(1));
+		const float radiusF = object.picture.radius;
 		const int radius = static_cast<int>(radiusF);
 		const int diameter = static_cast<int>(std::ceil(radiusF * 2.0f));
 
@@ -437,7 +437,7 @@ namespace xge
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 		SDL_RenderClear(renderer);
 
-		const Color c = colorFromName(object.spriteParams.at(3));
+		const Color c = colorFromName(object.picture.color);
 		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
 
 		for (int y = -radius; y <= radius; ++y)
@@ -456,8 +456,8 @@ namespace xge
 
 	void SDL2Window::buildRectangle(Object& object, CachedVisual& visual)
 	{
-		const int width = static_cast<int>(std::ceil(std::stof(object.spriteParams.at(1))));
-		const int height = static_cast<int>(std::ceil(std::stof(object.spriteParams.at(2))));
+		const int width = static_cast<int>(std::ceil(object.picture.size.x));
+		const int height = static_cast<int>(std::ceil(object.picture.size.y));
 
 		reloadTargetTexture(visual, width, height);
 		visual.flip = SDL_FLIP_NONE;
@@ -466,7 +466,7 @@ namespace xge
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 		SDL_RenderClear(renderer);
 
-		const Color c = colorFromName(object.spriteParams.at(3));
+		const Color c = colorFromName(object.picture.color);
 		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
 		const SDL_Rect rect{ 0, 0, width, height };
 		SDL_RenderFillRect(renderer, &rect);
@@ -483,18 +483,18 @@ namespace xge
 		}
 		visual.flip = SDL_FLIP_NONE;
 
-		const int requestedSize = std::stoi(object.spriteParams.at(2));
-		TTF_Font* font = getFont(textFontFile(object.spriteParams), requestedSize);
+		const int requestedSize = object.picture.textSize;
+		TTF_Font* font = getFont(textFontFile(object.picture.font), requestedSize);
 		if (!font)
 		{
-			buildBitmap(object, visual, rasterizeText(object.spriteParams.at(1), requestedSize, colorFromName(object.spriteParams.at(3))));
+			buildBitmap(object, visual, rasterizeText(object.picture.text, requestedSize, colorFromName(object.picture.color)));
 			return;
 		}
 
-		const Color c = colorFromName(object.spriteParams.at(3));
+		const Color c = colorFromName(object.picture.color);
 		const SDL_Color sdlColor{ c.r, c.g, c.b, c.a };
 
-		SDL_Surface* surface = TTF_RenderUTF8_Blended(font, object.spriteParams.at(1).c_str(), sdlColor);
+		SDL_Surface* surface = TTF_RenderUTF8_Blended(font, object.picture.text.c_str(), sdlColor);
 		if (!surface)
 		{
 			std::cout << "error: SDL2_ttf: failed to render text: " << TTF_GetError() << std::endl;
@@ -513,7 +513,7 @@ namespace xge
 			visual.texture = nullptr;
 		}
 
-		const std::string& imageFile = object.spriteParams.at(1);
+		const std::string& imageFile = object.picture.file;
 		ensureImages();
 		SDL_Surface* surface = IMG_Load(imageFile.c_str());
 		if (!surface)
@@ -525,11 +525,11 @@ namespace xge
 		SDL_FreeSurface(surface);
 
 		visual.flip = SDL_FLIP_NONE;
-		if (object.spriteParams.size() > 2 && object.spriteParams.at(2) == "flip.horizontal")
+		if (object.picture.flipHorizontal)
 		{
 			visual.flip = SDL_FLIP_HORIZONTAL;
 		}
-		else if (object.spriteParams.size() > 2 && object.spriteParams.at(2) == "flip.vertical")
+		else if (object.picture.flipVertical)
 		{
 			visual.flip = SDL_FLIP_VERTICAL;
 		}

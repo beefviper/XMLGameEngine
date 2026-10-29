@@ -13,10 +13,10 @@
 
 namespace xge
 {
-	const std::string& textFontFile(const std::vector<std::string>& spriteParams)
+	const std::string& textFontFile(const std::string& font)
 	{
 		static const std::string standard{ "assets/tuffy.ttf" };
-		return spriteParams.size() > 4 && !spriteParams[4].empty() ? spriteParams[4] : standard;
+		return font.empty() ? standard : font;
 	}
 
 	namespace
