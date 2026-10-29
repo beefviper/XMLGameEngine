@@ -7,7 +7,7 @@
 - The prototype had one function that detected an edge hit *and* executed the action, parsing action tokens by hand. Split into three:
   1. **Detection**: pure geometry, no side effects (`play/collision.h`, free functions over `play/geometry.h`).
   2. **Dispatch**: what the XML declared for that event (`Game`, typed `Command`s from `makeCommand()` in `game/command.cpp`).
-  3. **Execution**: do it (`CommandExecutor`, one `std::visit` per context).
+  3. **Execution**: do it (`CommandExecutor::run`, one `std::visit` for every place a command runs, told by a `Doer` what it has: an object, what it touched or which screen edge, a key down or let go, an action).
 - Declaratively: the XML does not spell out "if the ball touches the edge"; it says the ball *has* a collision with the vertical edge and the response is `<bounce />`. The conditional lives in detection.
 - Rules: `<collision edge="...">` (left/right/top/bottom/vertical/horizontal/all) or against another object by `class` and/or `object` (no selector = anything). Command lists run in order.
 

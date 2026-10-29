@@ -10,6 +10,7 @@
 #include "game/object.h"
 #include "play/geometry.h"
 
+#include <optional>
 #include <string>
 
 namespace xge
@@ -73,6 +74,34 @@ namespace xge
 	private:
 		Game& game;
 
+		// Who runs a command, and where: what every verb looks at to know
+		// what to do. The places a verb may be written are the loader's
+		// (ruleFor in load/expr.cpp); this runs whatever got there.
+		struct Doer
+		{
+			// The object the command is about (a rule's, a timer's, an
+			// action's); none for a state's list, where a bare <reset /> is
+			// the whole game.
+			Object* self{ nullptr };
+			// What it touched, for a rule about another object.
+			Object* other{ nullptr };
+			const Touch* touch{ nullptr };
+			// The window edge, for a screen-edge rule.
+			std::optional<Edge> screenEdge;
+			// False for a key let go: only what is held stops (actsOnLettingGo).
+			bool pressed{ true };
+			// Run by a rule, a timer or a condition, not by a key.
+			bool byRule{ true };
+			// In an object's action of this name: a <move> is held, and the
+			// controls (<hop>, <jump>, <climb>, <thrust>...) work.
+			const std::string* action{ nullptr };
+		};
+
+		// Every verb, done as `doer` says. False when the verb is refused,
+		// which ends the list it is in.
+		bool run(const Command& command, const Doer& doer);
+
+
 		// The command as it runs: itself, or one made as it runs (CmdLive)
 		// made again into `made` (see Game::makeNow).
 		const Command& now(const Command& command, Command& made);
@@ -135,18 +164,16 @@ namespace xge
 
 		// Runs an action's commands in order. On the press, a verb that can
 		// be refused (<fire> with nothing left to fire, a <hop>, <jump>,
-		// <leap> or hunt by hops that cannot be made) and is refused ends
-		// the action there: what it would have done after (a sound, a look)
-		// is not done.
-		// With `from`, only those showing that look run it.
-		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, const std::string& from = {});
+		// <leap> or hunt by hops that cannot be made, an <aim> not lined up)
+		// and is refused ends the action there: what it would have done
+		// after (a sound, a look) is not done.
+		// With `from`, only those showing that look run it. `byRule`: run by
+		// a rule, a timer or a condition rather than a key, so a <climb> in
+		// it takes the object along one ladder and then lets go.
+		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, bool byRule, const std::string& from = {});
 		// One object's action of that name, as triggerObjectAction runs it
 		// for that object or for each member of a group.
-		void runAction(Object& object, const std::string& actionName, bool keyPressed);
-		// The same from a rule, a timer or a condition rather than a key: a
-		// <climb> in it takes the object along one ladder and then lets go.
-		void triggerByRule(const CmdTriggerAction& trigger);
-		bool byRule{ false };
+		void runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule);
 
 		// False when every one of the projectiles is in flight.
 		bool spawnProjectile(Object& shooter, const std::string& projectileName);

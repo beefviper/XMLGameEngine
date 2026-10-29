@@ -182,9 +182,9 @@ namespace xge
 		}
 
 		// Where a list of commands runs, and what each place does something
-		// with. These mirror the dispatchers in play/executor.cpp (a command
-		// one of them leaves to its catch-all does nothing there); change one
-		// and change the other.
+		// with. CommandExecutor::run (play/executor.cpp) does each verb as
+		// its Doer says, and does nothing with one that has no object, touch
+		// or action it needs; this is what keeps such a verb out of a place.
 		enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep, Computer };
 
 		struct PlaceRule

@@ -30,42 +30,10 @@ namespace xge
 
 	bool CommandExecutor::executeScreenEdgeCollision(const Command& command, Object& object, Edge edge)
 	{
-		Command made;
-		bool done = true;
-		std::visit(overload{
-			[&](const CmdBounce&) { bounceScreenEdge(object, edge); },
-			[&](const CmdStick&) { xge::stick(object, game.getWindowDesc(), edge); },
-			[&](const CmdReset&) { restart(object); },
-			[&](const CmdDie&) { xge::die(object); },
-			[&](const CmdStop&) { xge::stop(object); },
-			[&](const CmdWrap&) { xge::wrap(object, game.getWindowDesc(), edge); },
-			[&](const CmdDrop&) { xge::drop(object); },
-			[&](const CmdRelease& r) { release(object, r.target, r.count); },
-			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
-			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
-			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
-			[&](const CmdCopy& c) { game.copyVariable(c.from, c.into); },
-			[&](const CmdRank& c) { game.rank(c.entry, c.table); },
-			[&](const CmdPlay& p) { game.requestSound(p.sound); },
-			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
-			[&](const CmdReverse&) { reverse(object); },
-			[&](const CmdResetObject& r) { game.resetObject(r.target); },
-			[&](const CmdBecome& b) { become(&object, b); },
-			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
-			[&](const CmdShift& m) { game.shift(m.target, m.by); },
-			[&](const CmdFollow& f) { follow(&object, f); },
-			[&](const CmdEnterScene& e) { game.enter(e); },
-			[&](const CmdResetScene& r) { game.reset(r); },
-			[&](const CmdTriggerAction& a) { triggerByRule(a); },
-			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
-			[&](const CmdSpawn& c) { done = spawn(c); },
-			[&](const CmdDespawn& d) { despawn(&object, d); },
-			[&](const CmdFire& f) { done = spawnProjectile(object, f.projectileName); },
-			[&](const auto&) { /* the loader lets only a rule's commands
-			                      (load/expr ruleFor) into a collisionData list;
-			                      the rest are about another object or a key. */ }
-		}, now(command, made));
-		return done;
+		Doer doer;
+		doer.self = &object;
+		doer.screenEdge = edge;
+		return run(command, doer);
 	}
 
 	bool CommandExecutor::executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge)
@@ -79,96 +47,24 @@ namespace xge
 
 	bool CommandExecutor::executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch)
 	{
-		const Edge edge = touch.edge;
-		Command made;
-		bool done = true;
-		std::visit(overload{
-			[&](const CmdBounce&) { xge::bounce(object, edge); },
-			[&](const CmdDeflect& d) { xge::deflect(object, other, edge, d.maxAngle); },
-			[&](const CmdKnock& k) { knock(object, other, touch, k.bounce); },
-			[&](const CmdHole& h) { cutHole(object, other, h.radius, h.rough); },
-			[&](const CmdDie&) { xge::die(object); },
-			[&](const CmdStop&) { xge::stop(object); },
-			[&](const CmdReset&) { restart(object); },
-			[&](const CmdRelease& r) { release(object, r.target, r.count); },
-			[&](const CmdMove& m) { moveByStep(object, m.direction, m.step); },
-			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
-			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
-			[&](const CmdCopy& c) { game.copyVariable(c.from, c.into); },
-			[&](const CmdRank& c) { game.rank(c.entry, c.table); },
-			[&](const CmdRide&) { xge::ride(object, other); },
-			[&](const CmdCarry&) { carry(object, other); },
-			[&](const CmdDrop&) { xge::drop(object); },
-			[&](const CmdLand&) { land(object, other, edge); },
-			[&](const CmdChase& c) { chase(object, c); },
-			[&](const CmdAim& a) { done = aim(object, a); },
-			[&](const CmdHunt& h) { startHunt(object, h); },
-			[&](const CmdHuntHop& h) { done = huntByHop(object, h); },
-			[&](const CmdWander& w) { startWander(object, w); },
-			[&](const CmdPlay& p) { game.requestSound(p.sound); },
-			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
-			[&](const CmdReverse&) { reverse(object); },
-			[&](const CmdResetObject& r) { game.resetObject(r.target); },
-			[&](const CmdBecome& b) { become(&object, b); },
-			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
-			[&](const CmdShift& m) { game.shift(m.target, m.by); },
-			[&](const CmdFollow& f) { follow(&object, f); },
-			[&](const CmdEnterScene& e) { game.enter(e); },
-			[&](const CmdResetScene& r) { game.reset(r); },
-			[&](const CmdTriggerAction& a) { triggerByRule(a); },
-			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
-			[&](const CmdSpawn& c) { done = spawn(c); },
-			[&](const CmdDespawn& d) { despawn(&object, d); },
-			[&](const CmdFire& f) { done = spawnProjectile(object, f.projectileName); },
-			[&](const auto&) { /* stick/wrap are about a screen edge, and the rest
-			                      only make sense on a state's input or an object's
-			                      own action; ignore. */ }
-		}, now(command, made));
-		return done;
+		Doer doer;
+		doer.self = &object;
+		doer.other = &other;
+		doer.touch = &touch;
+		return run(command, doer);
 	}
 
 	bool CommandExecutor::executeInput(const Command& command, bool keyPressed)
 	{
-		Command made;
-		bool done = true;
-		std::visit(overload{
-			[&](const CmdPushState& s) { if (keyPressed) { game.pushState(s.name); } },
-			[&](const CmdPopState& s) { if (keyPressed) { game.popState(s.name); } },
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed, a.from); },
-			[&](const CmdResetObject& r) { if (keyPressed) { game.resetObject(r.target); } },
-			// Bare reset() means something different here than it does inside a
-			// collision (executeScreenEdgeCollision resets just the colliding
-			// object's own position): with no "colliding object" to be implicit
-			// about, it's the full-game reset - see Game::resetAll.
-			[&](const CmdReset&) { if (keyPressed) { game.resetAll(); } },
-			// A sound that loops plays for as long as its key is held.
-			[&](const CmdPlay& p) { playHeld(p.sound, keyPressed); },
-			[&](const CmdSilence& s) { if (keyPressed) { game.silenceSound(s.sound); } },
-			// What a <condition> (or a key) can also do to the game's objects:
-			// change a variable, a look, or bring something back into play.
-			[&](const CmdIncrement& i) { if (keyPressed) { game.incrementText(i.target, i.amount); } },
-			[&](const CmdDecrement& d) { if (keyPressed) { game.decrementText(d.target, d.amount); } },
-			[&](const CmdCopy& c) { if (keyPressed) { game.copyVariable(c.from, c.into); } },
-			[&](const CmdRank& c) { if (keyPressed) { game.rank(c.entry, c.table); } },
-			[&](const CmdTurns& t) { if (keyPressed) { game.startTurns(t.players); } },
-			[&](const CmdPass&) { if (keyPressed) { game.passTurn(false); } },
-			[&](const CmdOut&) { if (keyPressed) { game.passTurn(true); } },
-			[&](const CmdDemo&) { if (keyPressed) { game.requestDemo(); } },
-			[&](const CmdBecome& b) { if (keyPressed) { become(nullptr, b); } },
-			[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
-			[&](const CmdShift& m) { if (keyPressed) { game.shift(m.target, m.by); } },
-			[&](const CmdFollow& f) { if (keyPressed) { follow(nullptr, f); } },
-			[&](const CmdEnterScene& e) { if (keyPressed) { game.enter(e); } },
-			[&](const CmdResetScene& r) { if (keyPressed) { game.reset(r); } },
-			[&](const CmdSet& c) { if (keyPressed) { game.setNumber(c.target, c.value); } },
-			[&](const CmdSpawn& c) { if (keyPressed) { done = spawn(c); } },
-			[&](const CmdDespawn& d) { if (keyPressed) { despawn(nullptr, d); } },
-			[&](const auto&) { /* bounce/stick/die/move/inc/fire never appear
-			                      directly on a state's <input>; only reachable
-			                      via CmdTriggerAction into an object's own
-			                      action list. */ }
-		}, keyPressed ? now(command, made) : shapeOf(command));
-		return done;
+		Doer doer;
+		doer.pressed = keyPressed;
+		doer.byRule = false;
+		return run(command, doer);
+	}
+
+	bool CommandExecutor::executeCondition(const Command& command)
+	{
+		return run(command, Doer{});
 	}
 
 	void CommandExecutor::executeAxis(const Command& command, Axis axis, float fraction)
@@ -199,50 +95,117 @@ namespace xge
 
 	bool CommandExecutor::executeTimer(const Command& command, Object* owner)
 	{
+		Doer doer;
+		doer.self = owner;
+		return run(command, doer);
+	}
+
+	namespace
+	{
+		// What a let-go key still does: a held verb stops (a move, a climb,
+		// a thrust, a turn, a sound that loops), and an action it runs is
+		// let go too. Anything else belongs to the press alone.
+		bool actsOnLettingGo(const Command& command) noexcept
+		{
+			return std::holds_alternative<CmdMove>(command) || std::holds_alternative<CmdClimb>(command)
+				|| std::holds_alternative<CmdAccelerate>(command) || std::holds_alternative<CmdTurn>(command)
+				|| std::holds_alternative<CmdThrust>(command) || std::holds_alternative<CmdPlay>(command)
+				|| std::holds_alternative<CmdTriggerAction>(command);
+		}
+	}
+
+	bool CommandExecutor::run(const Command& command, const Doer& doer)
+	{
+		if (!doer.pressed && !actsOnLettingGo(shapeOf(command))) { return true; }
+
+		Object* const self = doer.self;
+		const bool pressed = doer.pressed;
 		Command made;
 		bool done = true;
 		std::visit(overload{
-			[&](const CmdPushState& s) { game.pushState(s.name); },
-			[&](const CmdPopState& s) { game.popState(s.name); },
-			[&](const CmdResetObject& r) { game.resetObject(r.target); },
-			[&](const CmdTriggerAction& a) { triggerByRule(a); },
+			// About the object running it; a state's lists have none.
+			[&](const CmdReset&) { if (self) { restart(*self); } else { game.resetAll(); } },
+			[&](const CmdDie&) { if (self) { xge::die(*self); } },
+			[&](const CmdStop&) { if (self) { xge::stop(*self); } },
+			[&](const CmdDrop&) { if (self) { xge::drop(*self); } },
+			[&](const CmdReverse&) { if (self) { reverse(*self); } },
+			[&](const CmdRelease& r) { if (self) { release(*self, r.target, r.count); } },
+			[&](const CmdFire& f) { if (self) { done = spawnProjectile(*self, f.projectileName); } },
+			[&](const CmdChase& c) { if (self) { chase(*self, c); } },
+			[&](const CmdAim& a) { if (self) { done = aim(*self, a); } },
+			[&](const CmdHunt& h) { if (self) { startHunt(*self, h); } },
+			[&](const CmdHuntHop& h) { if (self) { done = huntByHop(*self, h); } },
+			[&](const CmdWander& w) { if (self) { startWander(*self, w); } },
+			// In an action a move is held, like a key; anywhere else it is
+			// one step, the whole block in lockstep with it.
+			[&](const CmdMove& m)
+			{
+				if (!self) { return; }
+				if (doer.action) { holdMove(*self, m.direction, m.step, pressed); }
+				else { moveByStep(*self, m.direction, m.step); }
+			},
+			// A bounce off what it touched, or off the screen's edge.
+			[&](const CmdBounce&)
+			{
+				if (self && doer.touch) { xge::bounce(*self, doer.touch->edge); }
+				else if (self && doer.screenEdge) { bounceScreenEdge(*self, *doer.screenEdge); }
+			},
+			// The screen edge's own.
+			[&](const CmdStick&) { if (self && doer.screenEdge) { xge::stick(*self, game.getWindowDesc(), *doer.screenEdge); } },
+			[&](const CmdWrap&) { if (self && doer.screenEdge) { xge::wrap(*self, game.getWindowDesc(), *doer.screenEdge); } },
+			// What it touched.
+			[&](const CmdDeflect& d) { if (self && doer.touch) { xge::deflect(*self, *doer.other, doer.touch->edge, d.maxAngle); } },
+			[&](const CmdKnock& k) { if (self && doer.touch) { knock(*self, *doer.other, *doer.touch, k.bounce); } },
+			[&](const CmdHole& h) { if (self && doer.touch) { cutHole(*self, *doer.other, h.radius, h.rough); } },
+			[&](const CmdRide&) { if (self && doer.touch) { xge::ride(*self, *doer.other); } },
+			[&](const CmdCarry&) { if (self && doer.touch) { carry(*self, *doer.other); } },
+			[&](const CmdLand&) { if (self && doer.touch) { land(*self, *doer.other, doer.touch->edge); } },
+			// The controls an action holds: a press, or on while it is down.
+			[&](const CmdHop& h) { if (self && doer.action) { done = hop(*self, h); } },
+			[&](const CmdJump& j) { if (self && doer.action) { done = startJump(*self, j); } },
+			[&](const CmdGo& g) { if (self && doer.action) { startGo(*self, g); } },
+			[&](const CmdLeap& l) { if (self && doer.action) { done = leap(*self, l.height); } },
+			[&](const CmdClimb& c)
+			{
+				if (!self || !doer.action) { return; }
+				self->activeClimb[c.direction == Direction::Up ? 0 : 1] = pressed ? c.step : 0.0f;
+				self->climbClass = c.ladderClass;
+				self->climbOnce = pressed && doer.byRule;
+			},
+			[&](const CmdAccelerate& a) { if (self && doer.action) { applyActionThrust(*self, a.direction, pressed ? a.amount : 0.0f, a.burn); } },
+			[&](const CmdTurn& t) { if (self && doer.action) { applyActionTurn(*self, t.direction, pressed ? t.rate : 0.0f); } },
+			[&](const CmdThrust& t) { if (self && doer.action) { applyActionThrustAhead(*self, *doer.action, pressed ? t.amount : 0.0f, t.burn); } },
+			// The game's own: a state's list, and the rest.
+			[&](const CmdPushState& c) { game.pushState(c.name); },
+			[&](const CmdPopState& c) { game.popState(c.name); },
+			[&](const CmdTurns& t) { if (!self) { game.startTurns(t.players); } },
+			[&](const CmdPass&) { if (!self) { game.passTurn(false); } },
+			[&](const CmdOut&) { if (!self) { game.passTurn(true); } },
+			[&](const CmdDemo&) { if (!self) { game.requestDemo(); } },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdCopy& c) { game.copyVariable(c.from, c.into); },
 			[&](const CmdRank& c) { game.rank(c.entry, c.table); },
-			[&](const CmdTurns& t) { if (!owner) { game.startTurns(t.players); } },
-			[&](const CmdPass&) { if (!owner) { game.passTurn(false); } },
-			[&](const CmdOut&) { if (!owner) { game.passTurn(true); } },
-			[&](const CmdDemo&) { if (!owner) { game.requestDemo(); } },
-			[&](const CmdPlay& p) { game.requestSound(p.sound); },
-			[&](const CmdSilence& s) { game.silenceSound(s.sound); },
-			[&](const CmdBecome& b) { become(owner, b); },
+			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
+			[&](const CmdPlay& p) { playHeld(p.sound, pressed); },
+			[&](const CmdSilence& c) { game.silenceSound(c.sound); },
+			[&](const CmdResetObject& r) { game.resetObject(r.target); },
+			[&](const CmdBecome& b) { become(self, b); },
 			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
 			[&](const CmdShift& m) { game.shift(m.target, m.by); },
-			[&](const CmdFollow& f) { follow(owner, f); },
+			[&](const CmdFollow& f) { follow(self, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
-			// On an object, a bare reset puts that object back; in a state, it is
-			// the whole game, as on a key.
-			[&](const CmdReset&) { if (owner) { restart(*owner); } else { game.resetAll(); } },
-			[&](const CmdFire& f) { if (owner) { done = spawnProjectile(*owner, f.projectileName); } },
-			[&](const CmdReverse&) { if (owner) { reverse(*owner); } },
-			[&](const CmdDie&) { if (owner) { xge::die(*owner); } },
-			[&](const CmdStop&) { if (owner) { xge::stop(*owner); } },
-			[&](const CmdDrop&) { if (owner) { xge::drop(*owner); } },
-			[&](const CmdMove& m) { if (owner) { moveByStep(*owner, m.direction, m.step); } },
-			[&](const CmdRelease& r) { if (owner) { release(*owner, r.target, r.count); } },
-			[&](const CmdChase& c) { if (owner) { chase(*owner, c); } },
-			[&](const CmdAim& a) { if (owner) { done = aim(*owner, a); } },
-			[&](const CmdHunt& h) { if (owner) { startHunt(*owner, h); } },
-			[&](const CmdHuntHop& h) { if (owner) { done = huntByHop(*owner, h); } },
-			[&](const CmdWander& w) { if (owner) { startWander(*owner, w); } },
-			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { done = spawn(c); },
-			[&](const CmdDespawn& d) { despawn(owner, d); },
-			[&](const auto&) { /* the rest are about a key held, an edge or another
-			                      object touched, none of which a timer has */ }
-		}, now(command, made));
+			[&](const CmdDespawn& d) { despawn(self, d); },
+			// Another action, of this object or another, as part of this.
+			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); },
+			// <track /> runs on a pointing control (executeAxis), <hold> in a
+			// <computer>, and a CmdLive is made into its command first.
+			[&](const CmdTrack&) {},
+			[&](const CmdHold&) {},
+			[&](const CmdLive&) {},
+		}, pressed ? now(command, made) : shapeOf(command));
 		return done;
 	}
 
@@ -274,23 +237,6 @@ namespace xge
 	void CommandExecutor::reverse(Object& object)
 	{
 		object.velocity = object.velocity * -1.0f;
-	}
-
-	bool CommandExecutor::executeCondition(const Command& command)
-	{
-		const bool was = byRule;
-		byRule = true;
-		const bool done = executeInput(command, true);
-		byRule = was;
-		return done;
-	}
-
-	void CommandExecutor::triggerByRule(const CmdTriggerAction& trigger)
-	{
-		const bool was = byRule;
-		byRule = true;
-		triggerObjectAction(trigger.object, trigger.action, true, trigger.from);
-		byRule = was;
 	}
 
 	// Taken from whatever had it: one thing is carried by one object at a time.
@@ -579,13 +525,13 @@ namespace xge
 		object.hopPending = step;
 	}
 
-	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, const std::string& from)
+	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, bool byRule, const std::string& from)
 	{
 		const auto showing = [&](const Object& object) { return from.empty() || object.lookName() == from; };
 		Object& first = game.getObject(objectName);
 		if (first.name == objectName || !first.inGroup(objectName))
 		{
-			if (showing(first)) { runAction(first, actionName, keyPressed); }
+			if (showing(first)) { runAction(first, actionName, keyPressed, byRule); }
 			return;
 		}
 
@@ -595,13 +541,12 @@ namespace xge
 		const std::size_t count = objects.size();
 		for (std::size_t i = 0; i < count; ++i)
 		{
-			if (objects[i].inGroup(objectName) && showing(objects[i])) { runAction(objects[i], actionName, keyPressed); }
+			if (objects[i].inGroup(objectName) && showing(objects[i])) { runAction(objects[i], actionName, keyPressed, byRule); }
 		}
 	}
 
-	void CommandExecutor::runAction(Object& object, const std::string& actionName, bool keyPressed)
+	void CommandExecutor::runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule)
 	{
-
 		// An object out of play does not act on a key: a ship that is not
 		// there does not fire, and a cannon not yet brought in does nothing.
 		// Letting go still goes through, so nothing stays held.
@@ -610,78 +555,15 @@ namespace xge
 			return;
 		}
 
+		Doer doer;
+		doer.self = &object;
+		doer.pressed = keyPressed;
+		doer.byRule = byRule;
+		doer.action = &actionName;
 		for (const auto& written : object.action[actionName])
 		{
-			Command made;
-			bool done = true;
-			std::visit(overload{
-				[&](const CmdMove& m)
-				{
-					holdMove(object, m.direction, m.step, keyPressed);
-				},
-				// A hop belongs to the press alone: letting go of the key does
-				// nothing, and it is not among what executeHeldInput resumes.
-				[&](const CmdHop& h) { if (keyPressed) { done = hop(object, h); } },
-				[&](const CmdHuntHop& h) { if (keyPressed) { done = huntByHop(object, h); } },
-				// So does a jump, and one in the air waits for the landing.
-				[&](const CmdJump& j) { if (keyPressed) { done = startJump(object, j); } },
-				// A <go> is the press alone too: the walker keeps going that way.
-				[&](const CmdGo& g) { if (keyPressed) { startGo(object, g); } },
-				[&](const CmdLeap& l) { if (keyPressed) { done = leap(object, l.height); } },
-				// A climb is held like a move; playOneFrame makes it.
-				[&](const CmdClimb& c)
-				{
-					object.activeClimb[c.direction == Direction::Up ? 0 : 1] = keyPressed ? c.step : 0.0f;
-					object.climbClass = c.ladderClass;
-					object.climbOnce = keyPressed && byRule;
-				},
-				// And a bare reset (the object back where it started), a change of
-				// look and a reveal.
-				[&](const CmdReset&) { if (keyPressed) { restart(object); } },
-				[&](const CmdBecome& b) { if (keyPressed) { become(&object, b); } },
-				[&](const CmdReveal& r) { if (keyPressed) { game.reveal(r.target, r.count); } },
-				[&](const CmdShift& m) { if (keyPressed) { game.shift(m.target, m.by); } },
-				[&](const CmdFollow& f) { if (keyPressed) { follow(&object, f); } },
-				// Thrust is held like a move: on while the key is down.
-				[&](const CmdAccelerate& a) { applyActionThrust(object, a.direction, keyPressed ? a.amount : 0.0f, a.burn); },
-				// So are a turn and a thrust along the heading.
-				[&](const CmdTurn& t) { applyActionTurn(object, t.direction, keyPressed ? t.rate : 0.0f); },
-				[&](const CmdThrust& t) { applyActionThrustAhead(object, actionName, keyPressed ? t.amount : 0.0f, t.burn); },
-				[&](const CmdFire& f) { if (keyPressed) { done = spawnProjectile(object, f.projectileName); } },
-				[&](const CmdDrop&) { if (keyPressed) { xge::drop(object); } },
-				// A sound belongs to the press, like a hop: letting go is silent.
-				// One that loops is held like a move: on while the key is down.
-				[&](const CmdPlay& p) { playHeld(p.sound, keyPressed); },
-				[&](const CmdSilence& s) { if (keyPressed) { game.silenceSound(s.sound); } },
-				// What a rule or a timer does through an action (one death for
-				// several rules): change a variable, put things back, move on.
-				[&](const CmdIncrement& i) { if (keyPressed) { game.incrementText(i.target, i.amount); } },
-				[&](const CmdDecrement& d) { if (keyPressed) { game.decrementText(d.target, d.amount); } },
-				[&](const CmdCopy& c) { if (keyPressed) { game.copyVariable(c.from, c.into); } },
-				[&](const CmdResetObject& r) { if (keyPressed) { game.resetObject(r.target); } },
-				[&](const CmdResetScene& r) { if (keyPressed) { game.reset(r); } },
-				[&](const CmdEnterScene& e) { if (keyPressed) { game.enter(e); } },
-				[&](const CmdDie&) { if (keyPressed) { xge::die(object); } },
-				[&](const CmdSet& c) { if (keyPressed) { game.setNumber(c.target, c.value); } },
-				[&](const CmdSpawn& c) { if (keyPressed) { done = spawn(c); } },
-				[&](const CmdDespawn& d) { if (keyPressed) { despawn(&object, d); } },
-				[&](const CmdRank& c) { if (keyPressed) { game.rank(c.entry, c.table); } },
-				[&](const CmdRelease& r) { if (keyPressed) { release(object, r.target, r.count); } },
-				[&](const CmdReverse&) { if (keyPressed) { reverse(object); } },
-				[&](const CmdStop&) { if (keyPressed) { xge::stop(object); } },
-				// Steering, as from a timer: the press sets it going.
-				[&](const CmdChase& c) { if (keyPressed) { chase(object, c); } },
-				[&](const CmdAim& a) { if (keyPressed) { aim(object, a); } },
-				[&](const CmdHunt& h) { if (keyPressed) { startHunt(object, h); } },
-				[&](const CmdWander& w) { if (keyPressed) { startWander(object, w); } },
-				// Another action, of this object or another, run as part of this
-				// one; the loader turns away an action that runs itself again.
-				[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, keyPressed, a.from); },
-				[&](const auto&) { /* ruleFor in load/expr lists what an action holds */ }
-			}, keyPressed ? now(written, made) : shapeOf(written));
-
 			// Refused: what comes after it answers a press that did nothing.
-			if (!done) { return; }
+			if (!run(written, doer)) { return; }
 		}
 	}
 

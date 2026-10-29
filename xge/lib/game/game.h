@@ -300,12 +300,10 @@ namespace xge
 		// re-fire.
 		void resetObject(const std::string& name);
 
-		// Bare <reset /> from a state's <input>/<condition> (see CmdReset,
-		// handled this way only in CommandExecutor::executeInput). Objects
-		// the game <keeps> are passed over.
-		//
-		// handled this way only in CommandExecutor::executeInput - a collision's
-		// own bare <reset /> still just resets that one object's position).
+		// Bare <reset /> in a state's list (an <input>, a <condition>, a
+		// state's <timer>; an object's own bare <reset /> only puts that
+		// object back, see CommandExecutor::run). Objects the game <keeps>
+		// are passed over.
 		// Resets every object back to how the game loaded (position, velocity,
 		// every <variable>), refreshes every bound text display, and collapses
 		// the whole state stack back down to the very first state - the same
