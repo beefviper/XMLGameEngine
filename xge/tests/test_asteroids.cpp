@@ -112,8 +112,17 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i)
+			{
+				game.updateObjects();
+				if (saucersKeptOut) { hideSaucers(); }
+			}
 		}
+
+		// Whether a saucer that comes in is sent straight out again, for a
+		// test longer than the 12 to 24 seconds between saucers, whose rocks
+		// a saucer would break.
+		bool saucersKeptOut{ false };
 
 		// Stops every rock in play, so that only what a test does moves anything.
 		void freezeRocks()
@@ -125,14 +134,19 @@ namespace
 		}
 
 		// Moves every rock in play out of the way, to the far corner, and the
-		// saucer and its shots out of play.
+		// saucers and their shots out of play.
 		void clearTheMiddle()
 		{
 			for (const char* name : { "bigrocks", "mediumrocks", "smallrocks" })
 			{
 				for (Object* rock : group(name)) { rock->position = { 740, 540 }; rock->velocity = {}; }
 			}
-			for (const char* name : { "saucer", "saucershot" })
+			hideSaucers();
+		}
+
+		void hideSaucers()
+		{
+			for (const char* name : { "saucer", "smallsaucer", "saucershot", "wildshot" })
 			{
 				for (auto& object : game.getCurrentObjects())
 				{
@@ -837,6 +851,7 @@ TEST_CASE("a medium rock breaks into two small ones, and a small one into none",
 TEST_CASE("every rock of a wave can be broken down to nothing, and the next wave comes", "[asteroids][release]")
 {
 	Field field;
+	field.saucersKeptOut = true;
 
 	// Break everything in play, one rock at a time, until nothing is left.
 	int broken = 0;

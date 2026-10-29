@@ -488,11 +488,13 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	maze.executor.executeInput(Command{ CmdBecome{ "blue", "playing.ghosts", "normal", {} } }, true);
 	maze.frames(1);
 	const float before = maze.status("score");
+	const int dots = maze.count("playing.dots");
+	const int pellets = maze.count("playing.pellets");
 	maze.touch(blinky);
-	// (Where the ghost wandered to, Pac-Man may eat a dot on the way.)
-	const float scored = maze.status("score") - before;
-	CHECK(scored >= 200.0f);
-	CHECK(scored < 250.0f);
+	// Where the ghost wandered to, Pac-Man may eat a dot or a pellet on the
+	// way: the ghost is 200 on top of what those are worth.
+	const float eaten = 10.0f * float(dots - maze.count("playing.dots")) + 50.0f * float(pellets - maze.count("playing.pellets"));
+	CHECK(maze.status("score") - before == 200.0f + eaten);
 	CHECK(maze.status("worth") == 400.0f);
 	CHECK(blinky.lookName() == "eyes");
 	CHECK(maze.status("lives") == 3.0f);
