@@ -165,7 +165,7 @@ There are 33 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Pong | `deflect`: the angle off a paddle depends on where the ball hits it |
 | Space Invaders | groups of columns and rows in `lockstep`, `hole` for the shields |
 | Frogger | `ride` a log, `unless=` (the water drowns you unless you are on a log) |
-| Donkey Kong | `leap`, `land` and `climb` for girders and ladders |
+| Donkey Kong | `leap`, `land` and `climb` for girders and ladders, and a group's `slope` |
 | Pac-Man | `map`, `maze`, and the ghosts' `go`, `hunt` and `wander` |
 | Mario Bros. | `poses`, `mirror`, `grip` and the window's `scale` |
 | Q\*bert | hops with an `arc`, `hunt` by hops, `solid` characters and a `hitbox` |

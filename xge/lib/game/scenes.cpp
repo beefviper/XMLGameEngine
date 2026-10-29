@@ -381,6 +381,7 @@ namespace xge
 				sprite(object.cell.slot, context);
 				value(object.cell.gapBefore, context);
 				value(object.cell.gapAbove, context);
+				value(object.cell.drop, context);
 				value(object.cell.tileWidth, context);
 				value(object.cell.tileHeight, context);
 				object.maze.map = names_.object(object.maze.map, context);

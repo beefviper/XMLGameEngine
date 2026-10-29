@@ -116,7 +116,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `demonattack` | A/D, Space fires | three waves of demons that fire back and split |
 | `frostbite` | W/S jump between rows, A/D walk | build the igloo by landing on white ice; three nights |
 | `galaxian` | A/D, Space fires; 2 on the title for two players | the fleet flies in on [paths](#paths) and dives, a top five with initials, [turns](#taking-turns), an [attract mode](#attract-mode) |
-| `donkeykong` | A/D walk, W/S climb, Space jumps | girders, ladders and barrels, three times to Pauline |
+| `donkeykong` | A/D walk, W/S climb, Space jumps | sloping girders, ladders, barrels that sometimes take a ladder, fireballs from the oil drum, three times to Pauline |
 | `pitfall` | A/D run, Space jumps, W/S climb | four jungle screens built from a [kit](#the-kit-and-from), logs, tar, crocodiles, treasure |
 | `missilecommand` | W A S D move the sight, Space launches | counter-missiles trailing a [`<tether>`](#sprites), fireballs, three waves |
 | `combat` | W/S drive, A/D turn, F or Left Shift fires; Up/Down, Left/Right, Right Shift or Right Control | two tanks among walls, a hit knocks the tank back |
@@ -448,6 +448,7 @@ Instead of listing members, a group can lay out a block: `<columns>` and `<rows>
 ```
 
 - Each cell is an ordinary object named after the group, its column and its row (`bricks.5.3`), made the top row first, left to right.
+- `<slope>N</slope>` after the padding puts each column N pixels lower than the one before it (higher when N is below 0). Donkey Kong's girders are rows of truss pieces each half a pixel lower than the last, sloping down to their open ends as the arcade's do.
 - Three tags change what the cells they pick have, from the general to the particular:
 
 | Tag | Picks | Can change |
@@ -856,7 +857,7 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 | `<jump direction="down">90<seconds>0.35</seconds></jump>` | a timed jump of its content's distance, in a straight line (0.3 seconds when left out); not made if it would land off the screen. Frostbite's jump between rows |
 | `<leap>height</leap>` | a jump up under its own pull: it leaves the ground fast enough to rise about `height` pixels against its `<acceleration>`, and falls until a `<land />`. Only from the ground and not on a ladder; the way across is fixed until it lands. Needs an acceleration down and a `<land />` rule. Donkey Kong |
 | `<land />` | in a rule about another object: coming down onto its top, the object stands on it, its fall stopped, until the next frame's landing. Any other side, or going up, does nothing, so a platform can be jumped up through and walked off at its ends |
-| `<climb direction="up" class="ladder">step</climb>` (or `down`) | held: while the object stands at an object of that class (its middle over it, its feet between that one's top and bottom) it gets on, lined up, and climbs. Nothing pulls it on a ladder; at the top or bottom it steps off |
+| `<climb direction="up" class="ladder">step</climb>` (or `down`) | held: while the object stands at an object of that class (its middle over it, its feet between that one's top and bottom) it gets on, lined up, and climbs. Nothing pulls it on a ladder; at the top or bottom it steps off. Pieces of the class stacked one on another, as wide and lined up, are one ladder (Donkey Kong's are columns of rungs). Run by a rule, a timer or a condition rather than a key, it takes the object along the next ladder it is at and then lets go: a barrel goes down one ladder, not every ladder after |
 | `<accelerate direction="up" burn="fuel">amount</accelerate>` | held: adds `amount` to the velocity every frame (opposite ones cancel). `burn` names one of the object's own variables, taken 1 off each frame; at 0 the thrust does nothing |
 | `<thrust burn="fuel">amount</thrust>` | held: the same along the object's `<heading>` |
 | `<turn direction="left">degrees</turn>` (or `right`) | held: turns the heading that many degrees a frame |

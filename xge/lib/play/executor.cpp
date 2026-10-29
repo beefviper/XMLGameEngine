@@ -55,7 +55,7 @@ namespace xge
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true, a.from); },
+			[&](const CmdTriggerAction& a) { triggerByRule(a); },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { done = spawn(c); },
 			[&](const CmdDespawn& d) { despawn(&object, d); },
@@ -113,7 +113,7 @@ namespace xge
 			[&](const CmdFollow& f) { follow(&object, f); },
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true, a.from); },
+			[&](const CmdTriggerAction& a) { triggerByRule(a); },
 			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
 			[&](const CmdSpawn& c) { done = spawn(c); },
 			[&](const CmdDespawn& d) { despawn(&object, d); },
@@ -202,7 +202,7 @@ namespace xge
 			[&](const CmdPushState& s) { game.pushState(s.name); },
 			[&](const CmdPopState& s) { game.popState(s.name); },
 			[&](const CmdResetObject& r) { game.resetObject(r.target); },
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, true, a.from); },
+			[&](const CmdTriggerAction& a) { triggerByRule(a); },
 			[&](const CmdIncrement& i) { game.incrementText(i.target, i.amount); },
 			[&](const CmdDecrement& d) { game.decrementText(d.target, d.amount); },
 			[&](const CmdCopy& c) { game.copyVariable(c.from, c.into); },
@@ -274,7 +274,19 @@ namespace xge
 
 	bool CommandExecutor::executeCondition(const Command& command)
 	{
-		return executeInput(command, true);
+		const bool was = byRule;
+		byRule = true;
+		const bool done = executeInput(command, true);
+		byRule = was;
+		return done;
+	}
+
+	void CommandExecutor::triggerByRule(const CmdTriggerAction& trigger)
+	{
+		const bool was = byRule;
+		byRule = true;
+		triggerObjectAction(trigger.object, trigger.action, true, trigger.from);
+		byRule = was;
 	}
 
 	// Taken from whatever had it: one thing is carried by one object at a time.
@@ -626,6 +638,7 @@ namespace xge
 				{
 					object.activeClimb[c.direction == Direction::Up ? 0 : 1] = keyPressed ? c.step : 0.0f;
 					object.climbClass = c.ladderClass;
+					object.climbOnce = keyPressed && byRule;
 				},
 				// And a bare reset (the object back where it started), a change of
 				// look and a reveal.

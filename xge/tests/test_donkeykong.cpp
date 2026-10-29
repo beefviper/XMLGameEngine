@@ -5,9 +5,11 @@
 //
 // Catch2 tests for games/descriptions/donkeykong.xml, played through a real xge::Engine
 // with no window and the keys a player would press: Jumpman standing on the
-// girders (<land />), leaping (<leap>) and climbing (<climb>), the barrels
-// Kong throws rolling down to the oil drum, a barrel costing a life, the
-// hammer smashing them, the bonus counting down, and saving Pauline.
+// girders (<land />), which slope (<slope>), leaping (<leap>) and climbing
+// (<climb>) ladders of rungs, the barrels Kong throws rolling down to the oil
+// drum and now and then down a ladder, the fireballs the oil lets out, a
+// barrel costing a life and one jumped scoring, the hammer smashing them, the
+// bonus counting down, and saving Pauline.
 //
 // Window::init() normally measures each object's size once a backend exists;
 // the helper gives every shape the size its sprite implies instead.
@@ -29,10 +31,7 @@ using Catch::Approx;
 
 namespace
 {
-	constexpr float kFloor = 660.0f;
-	constexpr float kFirst = 560.0f; // the girder above the floor
-	constexpr float kThird = 360.0f; // the hammer's
-	constexpr float kPerch = 80.0f;  // Pauline's
+	constexpr float kPerch = 85.0f;  // Pauline's, flat
 
 	class FakeWindow : public Window
 	{
@@ -104,12 +103,41 @@ namespace
 			return game.getObject(name);
 		}
 
-		// Puts Jumpman standing on a girder, `x` from the left.
-		void standAt(float x, float girderTop)
+		// The top of a girder (floor, first, ... top, perch) at `x` across:
+		// the top of its piece there, since each is a little lower or higher
+		// than the one before.
+		float top(const std::string& girder, float x)
 		{
-			man().position = { x, girderTop - man().size.y };
+			for (const auto& object : game.getCurrentObjects())
+			{
+				if (object.groupName == "playing." + girder && x >= object.position.x && x < object.position.x + object.size.x)
+				{
+					return object.position.y;
+				}
+			}
+			FAIL("no piece of " << girder << " at " << x);
+			return 0.0f;
+		}
+
+		float middle() { return man().position.x + man().size.x / 2.0f; }
+		float topUnderMan(const std::string& girder) { return top(girder, middle()); }
+
+		// Puts Jumpman standing on a girder, `x` from the left.
+		void standAt(float x, const std::string& girder)
+		{
+			const float at = top(girder, x + man().size.x / 2.0f);
+			man().position = { x, at - man().size.y };
 			man().velocity = { 0.0f, 0.0f };
 			frames(2);
+		}
+
+		// A barrel on a girder at `x`, rolling at `speed`.
+		Object& barrelAt(float x, const std::string& girder, float speed)
+		{
+			Object& one = barrel();
+			one.position = { x, top(girder, x + one.size.x / 2.0f) - one.size.y };
+			one.velocity = { speed, 0.0f };
+			return one;
 		}
 	};
 }
@@ -121,7 +149,7 @@ TEST_CASE("donkeykong.xml loads, and Jumpman stands on the floor", "[donkeykong]
 	play.start();
 
 	play.frames(60);
-	CHECK(play.feet() == Approx(kFloor));
+	CHECK(play.feet() == Approx(play.topUnderMan("floor")).margin(1.0f));
 	CHECK(play.man().grounded);
 	CHECK(play.man().velocity.y == Approx(0.0f));
 	CHECK(play.variable("lives") == 3);
@@ -131,18 +159,18 @@ TEST_CASE("Jumpman walks along a girder without sinking, and falls off its open 
 {
 	DonkeyKong play;
 	play.start();
-	play.standAt(600.0f, kFirst);
+	play.standAt(600.0f, "first");
 
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(20);
 	CHECK(play.man().position.x == Approx(650.0f).margin(1.0f));
-	CHECK(play.feet() == Approx(kFirst));
+	CHECK(play.feet() == Approx(play.topUnderMan("first")).margin(1.0f));
 
 	// The girder ends at 720: past it he drops to the floor, still walking.
 	play.frames(60);
 	play.engine.handleKeyReleased(KeyCode::D);
 	play.frames(60);
-	CHECK(play.feet() == Approx(kFloor));
+	CHECK(play.feet() == Approx(play.topUnderMan("floor")).margin(1.0f));
 	CHECK(play.man().grounded);
 }
 
@@ -150,8 +178,9 @@ TEST_CASE("a leap rises about its height and lands, and only from the ground", "
 {
 	DonkeyKong play;
 	play.start();
-	play.standAt(300.0f, kFloor);
+	play.standAt(300.0f, "floor");
 
+	const float floor = play.feet();
 	play.tap(KeyCode::Space);
 	float highest = play.feet();
 	int airborne = 0;
@@ -159,14 +188,14 @@ TEST_CASE("a leap rises about its height and lands, and only from the ground", "
 	{
 		play.frames(1);
 		highest = std::min(highest, play.feet());
-		if (play.feet() < kFloor) { ++airborne; }
+		if (play.feet() < floor - 0.5f) { ++airborne; }
 		// A second press in the air does nothing.
 		if (i == 5) { play.tap(KeyCode::Space); }
 	}
-	CHECK(kFloor - highest == Approx(44.0f).margin(4.0f));
+	CHECK(floor - highest == Approx(44.0f).margin(4.0f));
 	CHECK(airborne > 20);
 	CHECK(airborne < 35);
-	CHECK(play.feet() == Approx(kFloor));
+	CHECK(play.feet() == Approx(floor).margin(1.0f));
 	CHECK_FALSE(play.man().leaping);
 }
 
@@ -174,7 +203,7 @@ TEST_CASE("the way across a leap is fixed at the take-off", "[donkeykong]")
 {
 	DonkeyKong play;
 	play.start();
-	play.standAt(300.0f, kFloor);
+	play.standAt(300.0f, "floor");
 
 	// Walking right, he leaps and lets go: he keeps going right in the air...
 	play.engine.handleKeyPressed(KeyCode::D);
@@ -192,7 +221,7 @@ TEST_CASE("the way across a leap is fixed at the take-off", "[donkeykong]")
 	play.frames(5);
 	CHECK(play.man().position.x > turned);
 	play.frames(40);
-	CHECK(play.feet() == Approx(kFloor));
+	CHECK(play.feet() == Approx(play.topUnderMan("floor")).margin(1.0f));
 	const float landed = play.man().position.x;
 	play.frames(10);
 	CHECK(play.man().position.x == Approx(landed - 25.0f).margin(0.5f));
@@ -205,26 +234,29 @@ TEST_CASE("a ladder takes him up to the next girder and back down, and nothing e
 	play.start();
 
 	// Away from any ladder, up does nothing.
-	play.standAt(300.0f, kFloor);
+	play.standAt(300.0f, "floor");
+	const float floor = play.feet();
 	play.engine.handleKeyPressed(KeyCode::W);
 	play.frames(30);
-	CHECK(play.feet() == Approx(kFloor));
+	CHECK(play.feet() == Approx(floor));
 	play.engine.handleKeyReleased(KeyCode::W);
 
-	// At the first ladder (x 560 to 580), up climbs it, his middle lined up
-	// with its middle.
-	const float onLadder = 570.0f - play.man().size.x / 2.0f;
-	play.standAt(552.0f, kFloor);
+	// At the first ladder (x 510 to 530, eleven rungs), up climbs it, his
+	// middle lined up with its middle.
+	const float onLadder = 520.0f - play.man().size.x / 2.0f;
+	play.standAt(504.0f, "floor");
+	const float foot = play.feet();
+	REQUIRE(foot == Approx(652.0f));
 	play.engine.handleKeyPressed(KeyCode::W);
 	play.frames(10);
 	CHECK(play.man().climbing);
 	CHECK(play.man().position.x == Approx(onLadder));
-	CHECK(play.feet() == Approx(kFloor - 20.0f));
+	CHECK(play.feet() == Approx(foot - 20.0f));
 
-	// Let go halfway: he stays there, held by nothing.
+	// Let go partway: he stays there, held by nothing.
 	play.engine.handleKeyReleased(KeyCode::W);
 	play.frames(30);
-	CHECK(play.feet() == Approx(kFloor - 20.0f));
+	CHECK(play.feet() == Approx(foot - 20.0f));
 
 	// Walking does not take him off it.
 	play.engine.handleKeyPressed(KeyCode::A);
@@ -238,7 +270,7 @@ TEST_CASE("a ladder takes him up to the next girder and back down, and nothing e
 	CHECK_FALSE(play.man().climbing);
 	play.engine.handleKeyReleased(KeyCode::W);
 	play.frames(10);
-	CHECK(play.feet() == Approx(kFirst));
+	CHECK(play.feet() == Approx(564.0f).margin(0.5f));
 	CHECK(play.man().grounded);
 
 	// And down again, through the girder he stood on.
@@ -246,7 +278,7 @@ TEST_CASE("a ladder takes him up to the next girder and back down, and nothing e
 	play.frames(80);
 	play.engine.handleKeyReleased(KeyCode::S);
 	play.frames(10);
-	CHECK(play.feet() == Approx(kFloor));
+	CHECK(play.feet() == Approx(foot).margin(0.5f));
 	CHECK(play.man().grounded);
 }
 
@@ -255,7 +287,7 @@ TEST_CASE("Kong's barrel rolls down every girder to the oil drum", "[donkeykong]
 	DonkeyKong play;
 	play.start();
 	// Jumpman out of the way, on Pauline's girder clear of her.
-	play.standAt(420.0f, kPerch);
+	play.standAt(420.0f, "perch");
 	play.kong().timers.at(0).framesLeft = 1;
 	play.frames(2);
 	REQUIRE(play.barrelsInPlay() >= 1);
@@ -275,7 +307,7 @@ TEST_CASE("Kong's barrel rolls down every girder to the oil drum", "[donkeykong]
 		if (barrel->velocity.x < 0.0f) { wentLeft = true; }
 	}
 	CHECK(play.game.tryGetObject("barrel.1") == nullptr);
-	CHECK(lowest == Approx(kFloor).margin(1.0f));
+	CHECK(lowest == Approx(660.0f).margin(1.0f));
 	CHECK(wentLeft);
 	CHECK(lastX < 40.0f); // at the oil drum
 	CHECK(play.variable("lives") == 3);
@@ -285,22 +317,21 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; le
 {
 	DonkeyKong play;
 	play.start();
-	play.standAt(300.0f, kFloor);
+	play.standAt(300.0f, "floor");
 
 	// A barrel rolling left along the floor, towards him.
-	Object& barrel = play.barrel();
-	barrel.position = { 450.0f, kFloor - barrel.size.y };
-	barrel.velocity = { -2.5f, 0.0f };
+	Object& barrel = play.barrelAt(450.0f, "floor", -2.5f);
 
-	// Leap as it comes close: it passes under him.
+	// Leap as it comes close: it passes under him, and that is 100 when he lands.
 	while (barrel.position.x > play.man().position.x + play.man().size.x + 20.0f) { play.frames(1); }
 	play.tap(KeyCode::Space);
 	play.frames(60);
 	CHECK(play.variable("lives") == 3);
 	CHECK(barrel.position.x < 300.0f);
+	CHECK(play.variable("score") == 100);
 
 	// The next one he stands still for.
-	barrel.position = { 450.0f, kFloor - barrel.size.y };
+	barrel.position = { 450.0f, play.top("floor", 460.0f) - barrel.size.y };
 	barrel.velocity = { -2.5f, 0.0f };
 	play.frames(80);
 	CHECK(play.variable("lives") == 2);
@@ -316,7 +347,7 @@ TEST_CASE("saving Pauline scores the bonus, starts the climb again with Kong qui
 	for (int save = 1; save <= 3; ++save)
 	{
 		play.kong().variable["wait"] = 1000.0f + static_cast<float>(save);
-		play.standAt(340.0f, kPerch);
+		play.standAt(340.0f, "perch");
 		play.engine.handleKeyPressed(KeyCode::A);
 		for (int i = 0; i < 30 && play.variable("rescues") < static_cast<float>(save); ++i) { play.frames(1); }
 		play.engine.handleKeyReleased(KeyCode::A);
@@ -343,7 +374,7 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 {
 	DonkeyKong play;
 	play.start();
-	play.standAt(420.0f, kPerch);
+	play.standAt(420.0f, "perch");
 	play.kong().timers.at(0).framesLeft = 1;
 	play.frames(10);
 	REQUIRE(play.barrelsInPlay() >= 1);
@@ -394,16 +425,14 @@ TEST_CASE("with the hammer a barrel is smashed for points, and the hammer wears 
 	play.start();
 	Object& hammer = play.game.getObject("hammer");
 	// It hangs above the girder: he leaps to take it.
-	play.standAt(hammer.position.x, kThird);
+	play.standAt(hammer.position.x, "third");
 	play.tap(KeyCode::Space);
 	play.frames(40);
 	REQUIRE(play.variable("hammer") == 1);
 	CHECK_FALSE(hammer.isVisible);
 	CHECK(play.man().lookName() == "hammer");
 
-	Object& barrel = play.barrel();
-	barrel.position = { play.man().position.x + 60.0f, kThird - barrel.size.y };
-	barrel.velocity = { -2.5f, 0.0f };
+	Object& barrel = play.barrelAt(play.man().position.x + 60.0f, "third", -2.5f);
 	play.frames(40);
 	CHECK_FALSE(barrel.isVisible);
 	CHECK(play.variable("score") == 300);
@@ -425,4 +454,151 @@ TEST_CASE("the bonus counts down, and running out costs a life", "[donkeykong]")
 	play.frames(2 * 60 + 5);
 	CHECK(play.variable("lives") == 2);
 	CHECK(play.variable("bonus") == Approx(5000.0f).margin(100.0f));
+}
+
+TEST_CASE("the girders slope half a pixel a piece, down to their open ends", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	CHECK(play.game.getObject("first.1.1").position.y == Approx(548.0f));
+	CHECK(play.game.getObject("first.2.1").position.y == Approx(548.5f));
+	CHECK(play.game.getObject("first.45.1").position.y == Approx(570.0f));
+	CHECK(play.game.getObject("second.1.1").position.y == Approx(470.0f));
+	CHECK(play.game.getObject("second.44.1").position.y == Approx(448.5f));
+	CHECK(play.game.getObject("perch.13.1").position.y == Approx(85.0f));
+
+	// Walking up the second girder he climbs with it, a step at a time.
+	play.standAt(200.0f, "second");
+	const float low = play.feet();
+	play.engine.handleKeyPressed(KeyCode::D);
+	play.frames(64);
+	play.engine.handleKeyReleased(KeyCode::D);
+	play.frames(2);
+	CHECK(play.man().grounded);
+	CHECK(play.feet() == Approx(play.topUnderMan("second")).margin(1.0f));
+	CHECK(play.feet() < low - 4.0f);
+}
+
+TEST_CASE("a broken ladder takes him partway, and back down to the girder", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	play.standAt(254.0f, "floor");
+	const float foot = play.feet();
+	play.engine.handleKeyPressed(KeyCode::W);
+	play.frames(5);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(play.man().climbing);
+	CHECK(play.feet() == Approx(foot - 10.0f));
+
+	// Its two rungs end well short of the girder above: off the top, he
+	// drops back.
+	play.engine.handleKeyPressed(KeyCode::W);
+	play.frames(4);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK_FALSE(play.man().climbing);
+	play.frames(30);
+	CHECK(play.feet() == Approx(foot).margin(0.5f));
+	CHECK(play.man().grounded);
+}
+
+TEST_CASE("an unlucky barrel goes down a ladder and rolls on the other way; a lucky one rolls past", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	play.standAt(420.0f, "perch");
+
+	// On Kong's girder, rolling right towards the ladder at 568.
+	Object& unlucky = play.barrelAt(500.0f, "top", 2.5f);
+	unlucky.variable["luck"] = 0.0f;
+	bool climbed = false;
+	for (int i = 0; i < 120 && !climbed; ++i)
+	{
+		play.frames(1);
+		climbed = unlucky.climbing;
+	}
+	REQUIRE(climbed);
+	CHECK(unlucky.lookName() == "down");
+	CHECK(unlucky.position.x + unlucky.size.x / 2.0f == Approx(568.0f));
+	for (int i = 0; i < 120 && unlucky.climbing; ++i) { play.frames(1); }
+	play.frames(5);
+	CHECK(unlucky.lookName() == "rolling");
+	CHECK(unlucky.velocity.x == Approx(-2.5f));
+	CHECK(unlucky.position.y + unlucky.size.y == Approx(play.top("fourth", unlucky.position.x + unlucky.size.x / 2.0f)).margin(1.0f));
+	CHECK(unlucky.activeClimb[1] == 0.0f);
+
+	// One with luck stays on its girder past the same ladder.
+	Object& lucky = play.barrelAt(500.0f, "top", 2.5f);
+	lucky.variable["luck"] = 0.9f;
+	bool anyClimb = false;
+	for (int i = 0; i < 50; ++i)
+	{
+		play.frames(1);
+		anyClimb = anyClimb || lucky.climbing;
+	}
+	CHECK_FALSE(anyClimb);
+	CHECK(lucky.position.x > 580.0f);
+	CHECK(lucky.lookName() == "rolling");
+}
+
+TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and climbs ladders", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	play.standAt(420.0f, "perch");
+	Object& barrel = play.barrelAt(60.0f, "floor", -2.5f);
+	barrel.variable["luck"] = 0.9f;
+	const std::string barrelName = barrel.name;
+	play.frames(30);
+	CHECK_FALSE(play.game.tryGetObject(barrelName));
+	REQUIRE(play.game.tryGetObject("fireball.1"));
+	Object& fire = play.game.getObject("fireball.1");
+	CHECK(fire.position.x < 60.0f);
+
+	// One sent at Jumpman on the floor.
+	play.standAt(300.0f, "floor");
+	fire.variable["luck"] = 0.9f;
+	fire.position = { 276.0f, play.feet() - fire.size.y };
+	fire.velocity = { 1.0f, 0.0f };
+	play.frames(30);
+	CHECK(play.variable("lives") == 2);
+	CHECK_FALSE(play.game.tryGetObject("fireball.1"));
+
+	// One at the foot of a ladder, with no luck, climbs it to the girder above.
+	play.standAt(420.0f, "perch");
+	const std::string climberName = play.game.spawn("fireball")->name;
+	play.game.settleSpawns();
+	Object& climber = play.game.getObject(climberName);
+	climber.variable["luck"] = 0.0f;
+	climber.position = { 480.0f, play.top("floor", 490.0f) - climber.size.y };
+	climber.velocity = { 1.0f, 0.0f };
+	bool climbed = false;
+	for (int i = 0; i < 300 && !(climbed && !climber.climbing); ++i)
+	{
+		play.frames(1);
+		climbed = climbed || climber.climbing;
+	}
+	CHECK(climbed);
+	play.frames(10);
+	CHECK(climber.position.y + climber.size.y == Approx(play.top("first", climber.position.x + climber.size.x / 2.0f)).margin(1.0f));
+	CHECK(climber.lookName() == "burning");
+	CHECK(climber.velocity.x == Approx(1.0f));
+}
+
+TEST_CASE("with the hammer a fireball is smashed for 500", "[donkeykong]")
+{
+	DonkeyKong play;
+	play.start();
+	play.standAt(300.0f, "floor");
+	play.game.setVariable("man", "hammer", 1.0f);
+	const std::string fireName = play.game.spawn("fireball")->name;
+	play.game.settleSpawns();
+	Object& fire = play.game.getObject(fireName);
+	fire.variable["luck"] = 0.9f;
+	fire.position = { 276.0f, play.feet() - fire.size.y };
+	fire.velocity = { 1.0f, 0.0f };
+	play.frames(30);
+	CHECK_FALSE(fire.isVisible);
+	CHECK(play.variable("score") == 500);
+	CHECK(play.variable("lives") == 3);
 }

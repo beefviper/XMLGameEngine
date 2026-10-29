@@ -200,6 +200,35 @@ namespace xge
 		copy.isVisible = true;
 
 		Object made = expr.spawnObject(copy, original, windowDesc);
+
+		// Its rules' tests, made at load for the object it is copied from,
+		// about the copy instead.
+		const std::function<void(Condition&)> retarget = [&](Condition& check)
+		{
+			for (Condition& part : check.parts) { retarget(part); }
+			if (check.filterObject == original.name) { check.filterObject = name; }
+			if (check.distanceTo == original.name) { check.distanceTo = name; }
+			if (check.live)
+			{
+				RawValue renamed = *check.live;
+				renamed.text = renameStart(renamed.text, original.name, name);
+				check.live = std::make_shared<const RawValue>(std::move(renamed));
+			}
+			for (Condition::Read& read : check.reads)
+			{
+				if (read.owner != original.name) { continue; }
+				read.owner = name;
+				read.slot = &expr.objectVariables[name + "." + read.variable];
+			}
+		};
+		for (std::size_t i = 0; i < made.collisionData.others.size() && i < original.collisionData.others.size(); ++i)
+		{
+			if (!original.collisionData.others[i].check) { continue; }
+			Condition check = *original.collisionData.others[i].check;
+			retarget(check);
+			made.collisionData.others[i].check = std::move(check);
+		}
+
 		made.copyOf = original.name;
 		made.groupName = copy.groupName;
 		made.outerGroups = copy.outerGroups;
@@ -1351,6 +1380,7 @@ namespace xge
 			object.grounded = false;
 			object.leaping = false;
 			object.climbing = false;
+			object.climbOnce = false;
 			object.activeClimb = {};
 			object.hasAim = false;
 			object.facing = object.facingOriginal;

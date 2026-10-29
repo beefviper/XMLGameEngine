@@ -5,14 +5,16 @@
 
 <!--
   Donkey Kong, after the 1981 arcade game: Kong stands at the top of six
-  girders and throws barrels down at Jumpman, who climbs to the top to save
-  Pauline. The barrels roll along each girder, drop off its open end onto the
-  one below, turn round at the wall, and burn up in the oil drum at the bottom.
-  A barrel that touches Jumpman costs a life, unless he holds the hammer,
-  which smashes it for 300 points. The bonus counts down from 5000 as he
-  climbs: reaching Pauline scores what is left of it and starts the climb
-  again, with Kong throwing faster; let it run out and a life is lost. Save
-  her three times to win. The high score is kept.
+  sloping girders and throws barrels down at Jumpman, who climbs to the top
+  to save Pauline. The barrels roll down each girder and drop off its open
+  end onto the one below, or now and then go down a ladder; at the bottom
+  they burn up in the oil drum, which lets out a fireball. Fireballs wander
+  the girders and climb ladders. A barrel or a fireball that touches Jumpman
+  costs a life, unless he holds the hammer, which smashes a barrel for 300
+  and a fireball for 500. A barrel jumped is 100. The bonus counts down from
+  5000 as he climbs: reaching Pauline scores what is left of it and starts
+  the climb again, with Kong throwing faster; let it run out and a life is
+  lost. Save her three times to win. The high score is kept.
 
   A and D (or the arrows) walk, W and S climb, Space starts and jumps, P or
   Escape pauses.
@@ -27,13 +29,22 @@
     one; on it nothing pulls him and he cannot walk off.
   * Kong <fire>s a barrel from his right side (he has <facing>right) every
     `kong.wait` seconds, a variable that each rescue takes some off.
-  Flat girders where the arcade's slope, and no fireballs and no points for
-  jumping a barrel: see the notes in docs/designs/23-platforming.md.
+  * A barrel at the top of a ladder (a hidden laddertop marker) goes down it
+    if its luck, drawn when it is thrown and again at each wall and ladder,
+    is under 0.3: the <climb> of an action a rule triggers takes it down one
+    ladder and lets go. Off the foot of the ladder it stands still, which its
+    rule for the girder sees, and it rolls on the other way. A fireball
+    climbs up the same way.
+  * Jumping a barrel: a condition sees a barrel near Jumpman while his jump
+    lasts (man.leapt) and marks it (man.over); landing scores it.
 
   How it is written:
   * Each girder is a row of truss pieces, one bitmap, in a group of girders
-    laid out in columns (<columns>), so the girder's length is its count.
-    The ladders are drawings of <line>s, rails and rungs.
+    laid out in columns (<columns>), so the girder's length is its count,
+    and each piece half a pixel lower or higher than the one before
+    (<slope>), so it slopes as the arcade's do.
+  * A ladder is a column of rung pieces (<rows>), climbed as one; a broken
+    ladder is two short ones with a gap.
   * The hammer is a look: touching the hammer gives Jumpman the look
     "hammer" and sets man.hammer, which a barrel's rule <condition>s; a timer of
     that look takes it away again, with the hammer's tune.
@@ -60,6 +71,12 @@
     <sound name="jump" wave="square">
       <volume>0.2</volume>
       <note pitch="C5" to="C6">0.12</note>
+    </sound>
+    <!-- a barrel jumped -->
+    <sound name="points" wave="square">
+      <volume>0.15</volume>
+      <note pitch="E6">0.05</note>
+      <note pitch="A6">0.08</note>
     </sound>
     <sound name="smash" wave="noise">
       <volume>0.3</volume>
@@ -135,7 +152,7 @@
   </styles>
   <kit>
     <!-- a barrel, there once Kong throws it, eight at most,
-         rolling as they go -->
+         rolling as it goes, and seen end on going down a ladder -->
     <object name="barrel" class="barrel">
       <sprite name="flat">
         <bitmap style="wood">
@@ -167,7 +184,22 @@
           <row>...*b*b*...</row>
         </bitmap>
       </sprite>
-      <animation>
+      <sprite name="down">
+        <bitmap style="wood">
+          <row>..*******..</row>
+          <row>.*bbbbbbb*.</row>
+          <row>*b*******b*</row>
+          <row>*b*bbbbb*b*</row>
+          <row>*b*b***b*b*</row>
+          <row>*b*b*b*b*b*</row>
+          <row>*b*b***b*b*</row>
+          <row>*b*bbbbb*b*</row>
+          <row>*b*******b*</row>
+          <row>.*bbbbbbb*.</row>
+          <row>..*******..</row>
+        </bitmap>
+      </sprite>
+      <animation name="rolling">
         <interval>0.15</interval>
         <frame sprite="flat" />
         <frame sprite="end" />
@@ -178,12 +210,29 @@
       <collisions>
         <collision edge="horizontal">
           <bounce />
+          <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
         </collision>
         <collision edge="bottom">
           <despawn />
         </collision>
         <collision class="girder">
           <land />
+        </collision>
+        <!-- at the top of a ladder, the unlucky ones go down -->
+        <collision class="laddertop" sprite="rolling">
+          <condition variable="luck"><below>0.3</below></condition>
+          <trigger action="descend" />
+        </collision>
+        <!-- off the foot of it, standing still: it rolls on the other way -->
+        <collision class="girder" sprite="down">
+          <condition variable="velocity.x"><equal>0</equal></condition>
+          <set variable="self.velocity.x">self.way</set>
+          <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
+          <become sprite="rolling" />
+        </collision>
+        <!-- into the oil drum: it flares up, and lets out a fireball -->
+        <collision object="oil">
+          <spawn object="fireball"><position><x>oil.x + 4</x><y>oil.y - 24</y></position></spawn>
         </collision>
         <collision object="oil">
           <despawn />
@@ -196,6 +245,118 @@
           <despawn />
         </collision>
       </collisions>
+      <actions>
+        <action name="descend">
+          <set variable="self.way">0 - self.velocity.x</set>
+          <become sprite="down" />
+          <climb direction="down" class="ladder">1.5</climb>
+        </action>
+      </actions>
+      <variables>
+        <variable name="luck"><random><min>0</min><max>1</max></random></variable>
+        <variable name="way">0</variable>
+      </variables>
+    </object>
+    <!-- a fireball out of the oil drum, three at most: it wanders the
+         girders, turning now and then, and climbs ladders -->
+    <object name="fireball" class="fireball">
+      <sprite name="a">
+        <bitmap>
+          <row>....*.....</row>
+          <row>...**..*..</row>
+          <row>..***.**..</row>
+          <row>.**o*****.</row>
+          <row>.*oooo***.</row>
+          <row>**owwooo**</row>
+          <row>*owwwwwo**</row>
+          <row>*owkwkwo*.</row>
+          <row>*owwwwwo*.</row>
+          <row>.*ooooo*..</row>
+          <scale>2</scale>
+          <color>color.yellow</color>
+          <color char="o">color.orange</color>
+          <color char="w">color.white</color>
+          <color char="k">color.black</color>
+        </bitmap>
+      </sprite>
+      <sprite name="b">
+        <bitmap>
+          <row>.....*....</row>
+          <row>..*..**...</row>
+          <row>..**.***..</row>
+          <row>.*****o**.</row>
+          <row>.***oooo*.</row>
+          <row>**oowwo***</row>
+          <row>**owwwwwo*</row>
+          <row>.*owkwkwo*</row>
+          <row>.*owwwwwo*</row>
+          <row>..*ooooo*.</row>
+          <scale>2</scale>
+          <color>color.yellow</color>
+          <color char="o">color.orange</color>
+          <color char="w">color.white</color>
+          <color char="k">color.black</color>
+        </bitmap>
+      </sprite>
+      <animation name="burning">
+        <interval>0.12</interval>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <animation name="climbing">
+        <interval>0.12</interval>
+        <frame sprite="b" />
+        <frame sprite="a" />
+      </animation>
+      <velocity><x>1</x></velocity>
+      <acceleration><x>0</x><y>pull</y></acceleration>
+      <most>3</most>
+      <collisions>
+        <collision edge="horizontal">
+          <bounce />
+        </collision>
+        <collision edge="bottom">
+          <despawn />
+        </collision>
+        <collision class="girder">
+          <land />
+        </collision>
+        <!-- walking into a ladder, now and then it climbs -->
+        <collision class="ladder" side="horizontal" sprite="burning">
+          <condition variable="luck"><below>0.5</below></condition>
+          <trigger action="rise" />
+        </collision>
+        <collision class="girder" sprite="climbing">
+          <condition variable="velocity.x"><equal>0</equal></condition>
+          <set variable="self.velocity.x">self.way</set>
+          <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
+          <become sprite="burning" />
+        </collision>
+        <collision object="man">
+          <condition object="man" variable="hammer"><atleast>1</atleast></condition>
+          <inc variable="man.score">500</inc>
+          <play sound="smash" />
+          <despawn />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="rise">
+          <set variable="self.way">self.velocity.x</set>
+          <become sprite="climbing" />
+          <climb direction="up" class="ladder">1</climb>
+        </action>
+      </actions>
+      <variables>
+        <variable name="luck"><random><min>0</min><max>1</max></random></variable>
+        <variable name="way">0</variable>
+      </variables>
+      <timers>
+        <timer sprite="burning">
+          <every><random><min>1.5</min><max>4</max></random></every>
+          <reverse />
+          <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
+        </timer>
+      </timers>
     </object>
   </kit>
   <objects>
@@ -273,11 +434,65 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- six girders from the floor up, each open at one end in turn, and the
-             short one Pauline stands on: rows of red truss -->
+        <!-- the ladders, behind the girders: each a column of rungs from the
+             top of one girder to the top of the next, named for where it
+             goes and how far across; a broken one is two short ones -->
+        <group name="ladders" class="ladder">
+          <columns>1</columns>
+          <sprite>
+            <bitmap>
+              <row>*........*</row>
+              <row>*........*</row>
+              <row>**********</row>
+              <row>*........*</row>
+              <scale>2</scale>
+              <color>color.cyan</color>
+            </bitmap>
+          </sprite>
+          <collisions />
+          <group name="first520"><rows>11</rows><position><x>510</x><y>564</y></position></group>
+          <group name="second216"><rows>11</rows><position><x>206</x><y>466.5</y></position></group>
+          <group name="second472"><rows>13</rows><position><x>462</x><y>458.5</y></position></group>
+          <group name="third184"><rows>14</rows><position><x>174</x><y>355.5</y></position></group>
+          <group name="third568"><rows>11</rows><position><x>558</x><y>367.5</y></position></group>
+          <group name="fourth344"><rows>12</rows><position><x>334</x><y>264.5</y></position></group>
+          <group name="fourth600"><rows>14</rows><position><x>590</x><y>256.5</y></position></group>
+          <group name="top568"><rows>10</rows><position><x>558</x><y>177.5</y></position></group>
+          <group name="perch424"><rows>11</rows><position><x>414</x><y>85</y></position></group>
+          <group name="first264a"><rows>5</rows><position><x>254</x><y>556</y></position></group>
+          <group name="first264b"><rows>2</rows><position><x>254</x><y>640</y></position></group>
+          <group name="third440a"><rows>5</rows><position><x>430</x><y>363.5</y></position></group>
+          <group name="third440b"><rows>2</rows><position><x>430</x><y>443.5</y></position></group>
+          <group name="fourth216a"><rows>5</rows><position><x>206</x><y>268.5</y></position></group>
+          <group name="fourth216b"><rows>2</rows><position><x>206</x><y>340.5</y></position></group>
+          <group name="top312a"><rows>5</rows><position><x>302</x><y>169.5</y></position></group>
+          <group name="top312b"><rows>2</rows><position><x>302</x><y>249.5</y></position></group>
+        </group>
+        <!-- the tops of the ladders a barrel may go down -->
+        <group name="laddertops" class="laddertop">
+          <sprite><rectangle><width>2</width><height>6</height><color>color.black</color></rectangle></sprite>
+          <drawn>false</drawn>
+          <collisions />
+          <member><position><x>519</x><y>558</y></position></member>
+          <member><position><x>215</x><y>460.5</y></position></member>
+          <member><position><x>471</x><y>452.5</y></position></member>
+          <member><position><x>183</x><y>349.5</y></position></member>
+          <member><position><x>567</x><y>361.5</y></position></member>
+          <member><position><x>343</x><y>258.5</y></position></member>
+          <member><position><x>599</x><y>250.5</y></position></member>
+          <member><position><x>567</x><y>171.5</y></position></member>
+          <member><position><x>263</x><y>550</y></position></member>
+          <member><position><x>439</x><y>357.5</y></position></member>
+          <member><position><x>215</x><y>262.5</y></position></member>
+          <member><position><x>311</x><y>163.5</y></position></member>
+        </group>
+        <!-- six girders from the floor up, each open at one end in turn and
+             sloping down to it, and the short one Pauline stands on: rows of
+             red truss -->
         <group name="girders" class="girder">
           <columns>45</columns>
           <rows>1</rows>
+          <slope>0.5</slope>
           <sprite>
             <bitmap>
               <row>********</row>
@@ -293,52 +508,27 @@
           <collisions />
           <group name="floor">
             <columns>50</columns>
+            <slope>-0.25</slope>
             <position><x>0</x><y>660</y></position>
           </group>
-          <group name="first"><position><x>0</x><y>560</y></position></group>
-          <group name="second"><position><x>80</x><y>460</y></position></group>
-          <group name="third"><position><x>0</x><y>360</y></position></group>
-          <group name="fourth"><position><x>80</x><y>260</y></position></group>
+          <group name="first"><position><x>0</x><y>548</y></position></group>
+          <group name="second">
+            <columns>44</columns>
+            <slope>-0.5</slope>
+            <position><x>96</x><y>470</y></position>
+          </group>
+          <group name="third"><position><x>0</x><y>350</y></position></group>
+          <group name="fourth">
+            <columns>44</columns>
+            <slope>-0.5</slope>
+            <position><x>96</x><y>272</y></position>
+          </group>
           <group name="top"><position><x>0</x><y>160</y></position></group>
           <group name="perch">
             <columns>13</columns>
-            <position><x>260</x><y>80</y></position>
+            <slope>0</slope>
+            <position><x>260</x><y>85</y></position>
           </group>
-        </group>
-        <!-- a ladder runs from the top of one girder to the top of the next:
-             two rails and the rungs between -->
-        <group name="ladders" class="ladder">
-          <sprite>
-            <line><from><x>0</x><y>0</y></from><to><x>0</x><y>98</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>18</x><y>0</y></from><to><x>18</x><y>98</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>0</x><y>8</y></from><to><x>18</x><y>8</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>0</x><y>32</y></from><to><x>18</x><y>32</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>0</x><y>56</y></from><to><x>18</x><y>56</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>0</x><y>80</y></from><to><x>18</x><y>80</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.cyan</color><thickness>2</thickness></line>
-          </sprite>
-          <member><position><x>560</x><y>560</y></position></member>
-          <member><position><x>200</x><y>460</y></position></member>
-          <member><position><x>500</x><y>360</y></position></member>
-          <member><position><x>180</x><y>260</y></position></member>
-          <member><position><x>560</x><y>160</y></position></member>
-          <!-- the short one up to Pauline -->
-          <member>
-            <sprite>
-              <line><from><x>0</x><y>0</y></from><to><x>0</x><y>78</y></to><color>color.cyan</color><thickness>2</thickness></line>
-              <line><from><x>18</x><y>0</y></from><to><x>18</x><y>78</y></to><color>color.cyan</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>8</y></from><to><x>18</x><y>8</y></to><color>color.cyan</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.cyan</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>32</y></from><to><x>18</x><y>32</y></to><color>color.cyan</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.cyan</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>56</y></from><to><x>18</x><y>56</y></to><color>color.cyan</color><thickness>2</thickness></line>
-              <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.cyan</color><thickness>2</thickness></line>
-            </sprite>
-            <position><x>420</x><y>80</y></position>
-          </member>
         </group>
         <object name="oil">
           <sprite>
@@ -438,7 +628,7 @@
               <color char="s">color.orange</color>
             </bitmap>
           </sprite>
-          <position><x>300</x><y>80 - pauline.height</y></position>
+          <position><x>300</x><y>85 - pauline.height</y></position>
           <collisions />
         </object>
         <!-- the hammer, on the third girder -->
@@ -457,7 +647,7 @@
               <row>...bb...</row>
             </bitmap>
           </sprite>
-          <position><x>100</x><y>360 - 40 - hammer.height</y></position>
+          <position><x>100</x><y>353 - 40 - hammer.height</y></position>
           <collisions>
             <collision object="man">
               <die />
@@ -516,7 +706,7 @@
               <color char="o">color.orange</color>
             </bitmap>
           </sprite>
-          <position><x>100</x><y>660 - man.height</y></position>
+          <position><x>100</x><y>656 - man.height</y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
             <!-- his body, without the arms -->
@@ -529,8 +719,20 @@
             </collision>
             <collision class="girder">
               <land />
+              <set variable="self.leapt">0</set>
+            </collision>
+            <!-- down from a jump over a barrel -->
+            <collision class="girder">
+              <condition variable="over"><equal>1</equal></condition>
+              <set variable="self.over">0</set>
+              <inc variable="self.score">100</inc>
+              <play sound="points" />
             </collision>
             <collision class="barrel">
+              <condition variable="hammer"><equal>0</equal></condition>
+              <trigger action="lose" />
+            </collision>
+            <collision class="fireball">
               <condition variable="hammer"><equal>0</equal></condition>
               <trigger action="lose" />
             </collision>
@@ -547,6 +749,7 @@
               <set variable="man.bonus">5000</set>
               <reset />
               <despawn object="barrel" />
+              <despawn object="fireball" />
             </collision>
           </collisions>
           <actions>
@@ -564,6 +767,7 @@
             </action>
             <action name="jump">
               <leap>leapheight</leap>
+              <set variable="man.leapt">1</set>
               <play sound="jump" />
             </action>
             <action name="lose">
@@ -572,8 +776,10 @@
               <silence sound="hammertime" />
               <set variable="man.hammer">0</set>
               <set variable="man.bonus">5000</set>
+              <set variable="man.over">0</set>
               <reset />
               <despawn object="barrel" />
+              <despawn object="fireball" />
             </action>
           </actions>
           <variables>
@@ -582,6 +788,9 @@
             <variable name="rescues">0</variable>
             <variable name="hammer">0</variable>
             <variable name="bonus">5000</variable>
+            <!-- in a jump, and a barrel passed under it -->
+            <variable name="leapt">0</variable>
+            <variable name="over">0</variable>
           </variables>
           <timers>
             <timer sprite="hammer">
@@ -646,6 +855,15 @@
         <condition object="man" variable="bonus">
           <atmost>0</atmost>
           <trigger object="man" action="lose" />
+        </condition>
+        <!-- a barrel under him in a jump: scored when he lands -->
+        <condition>
+          <all>
+            <condition object="man" variable="leapt"><equal>1</equal></condition>
+            <condition class="barrel" distance="man"><below>64</below></condition>
+          </all>
+          <set variable="man.leapt">0</set>
+          <set variable="man.over">1</set>
         </condition>
         <condition object="man" variable="score">
           <above>best.score</above>

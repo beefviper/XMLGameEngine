@@ -1573,6 +1573,9 @@
       <xs:element name="columns" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="rows" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="padding" type="partialVector2Type" minOccurs="0" />
+      <!-- each column this much lower than the one before it (higher when
+           below 0): a sloped girder of pieces -->
+      <xs:element name="slope" type="valueType" minOccurs="0" />
     </xs:sequence>
   </xs:group>
 

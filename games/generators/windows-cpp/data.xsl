@@ -1559,6 +1559,13 @@
         <xsl:otherwise>value("0")</xsl:otherwise>
       </xsl:choose>
       <xsl:text>;&#10;</xsl:text>
+      <xsl:if test="ancestor-or-self::group/slope">
+        <xsl:value-of select="concat($in, 'group.object.cell.drop = ')" />
+        <xsl:call-template name="value">
+          <xsl:with-param name="node" select="(ancestor-or-self::group/slope)[last()]" />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+      </xsl:if>
     </xsl:if>
 
     <!-- the parts that change something, a function each -->

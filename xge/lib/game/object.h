@@ -338,6 +338,7 @@ namespace xge
 		RawSprite slot;              // its row's sprite, as the row first shows it
 		RawValue gapBefore;          // the gap before its column, in its row (0 in column 1)
 		RawValue gapAbove;           // the gap above its row (0 in row 1)
+		RawValue drop;               // how much lower each column is than the one before it (<slope>; empty: 0)
 
 		// A place on a <map> (load/xml's readMap), when mapColumn is above 0:
 		// the map's name, the tile's column and row counting from 1, how many
@@ -721,6 +722,8 @@ namespace xge
 		bool climbing{ false };
 		std::array<float, 2> activeClimb{};
 		std::string climbClass;
+		// A climb a rule or timer started, not a key: let go at the end.
+		bool climbOnce{ false };
 
 		// Where an <aim> pointed it: the way its next <fire>s go (a unit
 		// vector), while hasAim. A move, hop or jump by key, or a reset,

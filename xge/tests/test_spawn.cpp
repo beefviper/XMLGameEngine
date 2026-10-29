@@ -7,7 +7,7 @@
 // that does not exist until a <spawn> makes a copy of it, the copies'
 // names and their own rules, <despawn />, <most>, <fire> and <release>
 // making copies, a group spawned in turn, what other rules and conditions
-// see of copies, and resets.
+// see of copies, a copy's rule conditions, and resets.
 
 #include "played.h"
 
@@ -245,4 +245,29 @@ TEST_CASE("a <despawn object> must name an object, and a piece of the kit may le
 	CHECK_NOTHROW(load(box("ship", 0, 0), "<spawn object=\"shot\" />", kShot));
 	CHECK_THROWS_WITH(load(box("ship", 0, 0) + "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite></object>", "<pop />"),
 		ContainsSubstring("missing <position>"));
+}
+
+TEST_CASE("a copy's rule with a condition tests the copy's own values", "[spawn]")
+{
+	const std::string ball = "<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>2</y></velocity>"
+		"<collisions><collision object=\"wall\"><condition variable=\"armed\"><equal>1</equal></condition><despawn /></collision>"
+		"<collision object=\"wall\"><stop /></collision></collisions>"
+		"<variables><variable name=\"armed\">0</variable></variables></object>";
+	const Scratch file(box("wall", 300, 300, "<collisions />"),
+		"<spawn object=\"ball\"><position><x>300</x><y>200</y></position></spawn>", {}, ball);
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.has("ball.2"));
+	play.game.setVariable("playing.ball.1", "armed", 1.0f);
+	play.frames(80);
+
+	// Only the armed one goes; the other stops on the wall.
+	CHECK_FALSE(play.has("ball.1"));
+	REQUIRE(play.has("ball.2"));
+	CHECK(play.get("ball.2").velocity.y == Approx(0.0f));
 }

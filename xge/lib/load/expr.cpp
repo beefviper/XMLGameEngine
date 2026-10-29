@@ -2653,7 +2653,10 @@ namespace xge
 
 					const std::vector<std::string>& params = spriteParams.at(cell->name);
 					const Vector2f own = measureShapeSize(params, shapeKindFromTag(params.empty() ? std::string{} : params.at(0)));
-					offsets[cell->name] = { left + (slot.x - own.x) / 2.0f, top + (slot.y - own.y) / 2.0f };
+					// A <slope>: each column that much lower than the one before.
+					const float drop = cell->cell.drop.text.empty() && cell->cell.drop.kind == RawValue::Kind::Expression ? 0.0f
+						: evaluate(cell->cell.drop, here + " > <slope>") * static_cast<float>(cell->cell.column - 1);
+					offsets[cell->name] = { left + (slot.x - own.x) / 2.0f, top + drop + (slot.y - own.y) / 2.0f };
 				}
 			}
 		}

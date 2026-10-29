@@ -1931,6 +1931,7 @@ namespace xge
 			PartialVector2 position;
 			PartialVector2 velocity;
 			PartialVector2 padding;
+			std::optional<RawValue> slope;
 			int columns = 0;
 			int rows = 0;
 			// Visibility, facing, acceleration, collisions, actions, variables,
@@ -1982,7 +1983,7 @@ namespace xge
 			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
-				if (own.map && (tag == "columns" || tag == "rows" || tag == "padding" || tag == "position" || tag == "member" || tag == "row" || tag == "column" || tag == "cell"))
+				if (own.map && (tag == "columns" || tag == "rows" || tag == "padding" || tag == "slope" || tag == "position" || tag == "member" || tag == "row" || tag == "column" || tag == "cell"))
 				{
 					fail(where, "is on map '" + own.map->name + "', whose rows say where its members are, so it has no <" + tag + ">");
 				}
@@ -1999,6 +2000,7 @@ namespace xge
 					if (given.x) { own.padding.x = given.x; }
 					if (given.y) { own.padding.y = given.y; }
 				}
+				else if (tag == "slope") { own.slope = readValue(*child, where); }
 				else if (tag == "animation") { /* below, all at once */ }
 				else if (tag == "position" || tag == "velocity")
 				{
@@ -2035,7 +2037,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <maze>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <maze>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -2274,6 +2276,7 @@ namespace xge
 						: gapBefore ? *gapBefore->padding.x : padding.x ? *padding.x : RawValue::expression("0");
 					rawObject.cell.gapAbove = row == 1 ? RawValue::expression("0")
 						: gapAbove ? *gapAbove->padding.y : padding.y ? *padding.y : RawValue::expression("0");
+					if (own.slope) { rawObject.cell.drop = *own.slope; }
 
 					out.push_back(std::move(rawObject));
 				}

@@ -48,18 +48,23 @@ namespace xge
 		// put), its feet kept between the two ends, with no pull and no
 		// landing, and its own velocity at 0 so no key walks it off. Reaching
 		// either end it gets off, standing there, and the keys held take it on
-		// as before.
+		// as before; a climb a rule or timer started lets go there. A ladder
+		// is also pieces stacked one on another, as wide and lined up: the
+		// whole stack is one ladder.
 		void applyClimbing(std::vector<Object>& objects, FrameRules& rules)
 		{
 			for (auto& object : objects)
 			{
 				if (object.climbClass.empty() || !rules.inPlay(object)) { continue; }
 
+				const auto isLadder = [&](const Object& other)
+					{
+						return &other != &object && other.objClass == object.climbClass && rules.inPlay(other);
+					};
 				const Box climber{ object.position, object.size };
 				const auto ladder = std::find_if(objects.begin(), objects.end(), [&](const Object& other)
 					{
-						return &other != &object && other.objClass == object.climbClass && rules.inPlay(other)
-							&& atLadder(climber, { other.position, other.size });
+						return isLadder(other) && atLadder(climber, { other.position, other.size });
 					});
 
 				if (ladder == objects.end())
@@ -68,15 +73,42 @@ namespace xge
 					continue;
 				}
 
+				Box whole{ ladder->position, ladder->size };
+				for (bool grew = true; grew;)
+				{
+					grew = false;
+					for (const Object& other : objects)
+					{
+						if (!isLadder(other) || !(other.size.y > 0.0f) || std::abs(other.position.x - whole.position.x) > 0.5f || std::abs(other.size.x - whole.size.x) > 0.5f) { continue; }
+						const Box piece{ other.position, other.size };
+						if (std::abs(piece.top() - whole.bottom()) <= 0.5f)
+						{
+							whole.size.y += piece.size.y;
+							grew = true;
+						}
+						else if (std::abs(piece.bottom() - whole.top()) <= 0.5f)
+						{
+							whole.position.y -= piece.size.y;
+							whole.size.y += piece.size.y;
+							grew = true;
+						}
+					}
+				}
+
 				const float step = object.activeClimb[1] - object.activeClimb[0];
 				const bool wasClimbing = object.climbing;
-				if (!climbLadder(object.position, object.size, step, object.climbing, object.grounded, { ladder->position, ladder->size }))
+				if (!climbLadder(object.position, object.size, step, object.climbing, object.grounded, whole))
 				{
 					continue;
 				}
 
 				if (!wasClimbing) { object.leaping = false; }
 				object.velocity = {};
+				if (wasClimbing && !object.climbing && object.climbOnce)
+				{
+					object.activeClimb = {};
+					object.climbOnce = false;
+				}
 
 				if (!object.climbing)
 				{

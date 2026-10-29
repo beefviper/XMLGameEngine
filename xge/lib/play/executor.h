@@ -146,6 +146,10 @@ namespace xge
 		// One object's action of that name, as triggerObjectAction runs it
 		// for that object or for each member of a group.
 		void runAction(Object& object, const std::string& actionName, bool keyPressed);
+		// The same from a rule, a timer or a condition rather than a key: a
+		// <climb> in it takes the object along one ladder and then lets go.
+		void triggerByRule(const CmdTriggerAction& trigger);
+		bool byRule{ false };
 
 		// False when every one of the projectiles is in flight.
 		bool spawnProjectile(Object& shooter, const std::string& projectileName);
