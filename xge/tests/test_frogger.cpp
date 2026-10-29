@@ -81,7 +81,7 @@ namespace
 
 		bool atStart()
 		{
-			return frog().position.x == frog().positionOriginal.x && frog().position.y == frog().positionOriginal.y;
+			return frog().position.x == frog().start.position.x && frog().position.y == frog().start.position.y;
 		}
 	};
 
@@ -130,7 +130,7 @@ TEST_CASE("frogger.xml loads under every XML backend, checked against the schema
 	{
 		Game game{ readGame("descriptions/frogger.xml", backend) };
 		const Object& frog = game.getObject("frog");
-		CHECK(frog.variableOriginal.at("lives") == 3.0f);
+		CHECK(frog.start.variable.at("lives") == 3.0f);
 
 		// One rule with unless, and the condition with atmost, came through.
 		bool unlessSeen = false;
@@ -361,8 +361,8 @@ TEST_CASE("a turtle that has dived drowns the frog on it", "[frogger][river]")
 	CHECK(table.lives() == 2.0f);
 	// Back at the start (the turtle's rule ran first; the frog's own rule to ride
 	// it still lends it that frame's drift, so x is within a frame's ride).
-	CHECK(table.frog().position.y == table.frog().positionOriginal.y);
-	CHECK(std::abs(table.frog().position.x - table.frog().positionOriginal.x) <= 2.0f);
+	CHECK(table.frog().position.y == table.frog().start.position.y);
+	CHECK(std::abs(table.frog().position.x - table.frog().start.position.x) <= 2.0f);
 }
 
 TEST_CASE("the time runs out a frog", "[frogger][timers]")

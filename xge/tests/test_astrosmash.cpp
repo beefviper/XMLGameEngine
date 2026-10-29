@@ -53,7 +53,7 @@ namespace
 		Object& shot() { return game.getObject("shot"); }
 		float score() { return ship().variable["score"]; }
 		float lives() { return ship().variable["lives"]; }
-		bool inFlight() { return shot().isVisible && shot().collisionData.enabled; }
+		bool inFlight() { return shot().isVisible && shot().collisionsOn; }
 
 		// For tests that play for a while: enough lives that no run of bad luck
 		// ends the game.
@@ -101,9 +101,9 @@ namespace
 		bool atStart(const std::string& name)
 		{
 			const Object& rock = game.getObject(name);
-			return std::abs(rock.position.x - rock.positionOriginal.x) <= std::abs(rock.velocity.x)
-				&& rock.position.y >= rock.positionOriginal.y
-				&& rock.position.y <= rock.positionOriginal.y + rock.velocity.y;
+			return std::abs(rock.position.x - rock.start.position.x) <= std::abs(rock.velocity.x)
+				&& rock.position.y >= rock.start.position.y
+				&& rock.position.y <= rock.start.position.y + rock.velocity.y;
 		}
 
 		// Brings a rock down into the middle of the screen, fires, and puts the

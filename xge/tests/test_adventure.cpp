@@ -358,7 +358,7 @@ TEST_CASE("the chalice carried from the dungeon into the gold castle's hall wins
 	CHECK(play.state() == "title");
 	CHECK(play.hero().carrying.empty());
 	CHECK(play.room() == "playing.castle");
-	CHECK(play.object("chalice").position == play.object("chalice").positionOriginal);
+	CHECK(play.object("chalice").position == play.object("chalice").start.position);
 	CHECK(play.object("chalice").ownerScene == "playing.dungeon");
 }
 

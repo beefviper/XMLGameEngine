@@ -170,7 +170,7 @@ namespace xge
 
 	struct CollisionData
 	{
-		bool enabled{ false };
+		// (Whether they are on is the object's Moment::collisionsOn.)
 		int lockstep{ 0 };
 		CollisionType type{ CollisionType::Box };
 
@@ -532,8 +532,87 @@ namespace xge
 	// between, except that letters side by side make one word (initials).
 	std::string joinText(const std::vector<TextPiece>& pieces);
 
-	struct Object
+	// The numbers and flags of an object that change as it plays and that a
+	// reset puts back: where it is and how it goes, which way it faces, its
+	// light and height, whether it is in play, touches things and exists,
+	// the scene it is in, and its variables. An object is one (its current
+	// values, with no prefix: object.position), and holds two more: `start`,
+	// how it started (worked out from its RawObject, and drawn again when a
+	// <random> start is), and `before`, how it was when the last frame
+	// ended. The RawObject itself, the file's text, is the fourth.
+	struct Moment
 	{
+		Vector2f position;
+		Vector2f velocity;
+
+		// A constant pull on the velocity, added to it every frame (gravity
+		// is an acceleration with only a y) - see playOneFrame. <stop /> takes
+		// it away and a reset brings it back.
+		Vector2f acceleration;
+
+		// Which way the object faces: degrees clockwise from straight up, so
+		// 0 is up, 90 is right, 180 is down; always from 0 up to (not
+		// including) 360. Only an object whose file gives it a <heading>
+		// turns (see Object::hasHeading).
+		float heading{};
+
+		// Which way an object with a <facing> faces, one of the four
+		// directions, without turning its picture (see Object::hasFacing).
+		Direction facing{ Direction::Up };
+
+		// <light>: how far round its middle it lights, while it is in play;
+		// 0 for no light. <altitude>: how high it is off the ground, and how
+		// fast that is going up (see Object::hasAltitude).
+		float light{};
+		float altitude{};
+		float rise{};
+
+		// In play: shown, and touching things when its collisions are on. die()
+		// takes it out of play and stops its collisions.
+		bool isVisible{ true };
+		bool collisionsOn{ false };
+
+		// Whether it is in the game at all. One that does not exist is never
+		// in play, and nothing (a <reveal>, a <fire>) brings it back; it is
+		// a description that a <spawn> makes copies of. <despawn /> takes an
+		// object out of the game; a spawned one is gone for good when the
+		// frame ends, one the file wrote stays, not existing, until a reset.
+		bool exists{ true };
+
+		// The scene it is in (see RawObject::ownerState): an object carried
+		// into another scene (<enter>) belongs to that one from then on.
+		std::string ownerScene;
+
+		// Its <variable>s by name, and its named timers' time left.
+		std::map<std::string, float> variable;
+	};
+
+	struct Object : Moment
+	{
+		// How it started and how the last frame left it (see Moment).
+		Moment start;
+		Moment before;
+
+		// Loaded or reset since the last frame ended: where it is when the
+		// next frame starts is its place, not a move (playOneFrame). One
+		// reset by a rule in the middle of a frame has moved, there and then:
+		// Q*bert set down on the top cube by a disc lands on it.
+		bool placed{ true };
+
+		// Back as it started, every number of the Moment.
+		void backToStart()
+		{
+			static_cast<Moment&>(*this) = start;
+			placed = true;
+		}
+
+		// The frame is over: how it is now is how it was before the next.
+		void remember()
+		{
+			before = *this;
+			placed = false;
+		}
+
 		// What this object is called. Unique: a member of a group is the
 		// group's name and its number (logrow3.2), a cell of a group laid out
 		// in <columns> and <rows> the group's name, its column and its row,
@@ -557,19 +636,9 @@ namespace xge
 		// Whether `name` names it: its own name, or a group it is in.
 		bool named(const std::string& wanted) const { return name == wanted || inGroup(wanted); }
 		std::string objClass;
-		bool isVisible{ true };
 
 		// Whether it is drawn while in play (see RawObject::isDrawn).
 		bool isDrawn{ true };
-
-		// Whether it is in the game at all. One that does not exist is never
-		// in play, and nothing (a <reveal>, a <fire>) brings it back; it is
-		// a description that a <spawn> makes copies of. <despawn /> takes an
-		// object out of the game; a spawned one is gone for good when the
-		// frame ends, one the file wrote stays, not existing, until a reset.
-		// existsOriginal is how it started (<exists>false</exists>).
-		bool exists{ true };
-		bool existsOriginal{ true };
 
 		// A spawned copy: the name of the object it was spawned from, which
 		// is also its group, so whatever names that object names it too
@@ -584,49 +653,23 @@ namespace xge
 		// keeps what it holds (a best score) from one game to the next.
 		bool kept{ false };
 
-		// Who owns it (see RawObject::ownerState). An object carried into
-		// another scene (<enter>) belongs to that one from then on;
-		// ownerSceneOriginal is the scene it started in, where a reset puts it
-		// back.
+		// The state it belongs to (see RawObject::ownerState); its scene is
+		// the Moment's ownerScene.
 		std::string ownerState;
-		std::string ownerScene;
-		std::string ownerSceneOriginal;
 
-		// How the object started (see Game::resetObject), so that a reset brings
-		// back what has since died or been fired: die() hides an object and
-		// stops its collisions, and neither would otherwise ever be undone.
-		bool isVisibleOriginal{ true };
-		bool collisionEnabledOriginal{ false };
-
-		Vector2f position;
-		Vector2f positionOriginal;
 		// How far <shift> has moved the place it goes home to (a path's
 		// <home />) since it was last put back.
 		Vector2f shifted;
-		Vector2f velocity;
-		Vector2f velocityOriginal;
 
-		// A constant pull on the velocity, added to it every frame (gravity is
-		// an acceleration with only a y) - see playOneFrame.
-		// `accelerationOriginal` is how it started: <stop /> takes the
-		// acceleration away and a reset brings it back.
-		Vector2f acceleration;
-		Vector2f accelerationOriginal;
-
-		// Which way the object faces: degrees clockwise from straight up, so 0
-		// is up, 90 is right, 180 is down; always from 0 up to (not including)
-		// 360. Only an object whose file gives it a <heading> turns (a <turn>
-		// in its actions), is pushed along it (a <thrust>) or fires along it
-		// (a <fire>). `headingOriginal` is how it started, which a reset puts
-		// back. A sprite of <line>s or a <bitmap> that has a heading is kept
+		// Whether it has a <heading> (Moment::heading): only then does it turn
+		// (a <turn> in its actions), get pushed along it (a <thrust>) or fire
+		// along it (a <fire>). A sprite of <line>s or a <bitmap> that has a heading is kept
 		// once as it was written (Object::turnables, shared by every object
 		// made from the one definition) and `bitmap` is that turned to the
 		// heading, to the nearest whole degree, so what is shown and what a
 		// pixel collision tests turn with it - see showHeading. That makes two
 		// pictures an object has to hold, the original and the one it shows.
 		bool hasHeading{ false };
-		float heading{};
-		float headingOriginal{};
 		std::vector<std::shared_ptr<const Turnable>> turnables;
 
 		// What `bitmap` was last drawn at: the whole degrees of the heading and
@@ -671,17 +714,14 @@ namespace xge
 		std::array<float, 4> activeTurn{};
 		std::map<std::string, std::pair<float, std::string>> activeThrustAheadBy;
 
-		// Which way an object with a <facing> is facing, one of the four
-		// directions, without turning its picture (a <heading> turns it). It
-		// follows the last <move>, <hop> or <jump> made, and a <fire> leaves the
+		// Whether it has a <facing> (Moment::facing): which way it faces, one
+		// of the four directions, without turning its picture. It follows the last <move>, <hop> or <jump> made, and a <fire> leaves the
 		// middle of that side, moving that way at the projectile's own speed:
 		// a man in a maze shoots the way he last walked, an invader facing
 		// down drops its bombs below it. An object with no <facing> fires from
-		// its top, at the projectile's own velocity, as before. A reset puts
-		// back facingOriginal. See CommandExecutor::spawnProjectile.
+		// its top, at the projectile's own velocity, as before. See
+		// CommandExecutor::spawnProjectile.
 		bool hasFacing{ false };
-		Direction facing{ Direction::Up };
-		Direction facingOriginal{ Direction::Up };
 
 		// Its place on a <map> (see RawCell): the map's name ("" for an object
 		// no map placed), its tile counting from 0, and the map's top left,
@@ -869,11 +909,6 @@ namespace xge
 		std::string seekTarget;
 		float seekRate{};
 
-		// <light>: how far round its middle it lights, while it is in play;
-		// 0 for no light. A reset puts back how it started. See playOneFrame.
-		float light{};
-		float lightOriginal{};
-
 		// <dark>: an object drawn only where there is light. Unlit, only while
 		// some part of it is within a light; unseen, once that has happened,
 		// from then until it is reset (fog of war). `inDark` is whether it is
@@ -888,12 +923,9 @@ namespace xge
 		// what it touches is what is under it); how fast that is going up
 		// (rise, less each frame by fall); and how much of the rise is kept,
 		// turned upward, when it comes down (bounce). It cannot go below
-		// the ground. A reset puts back the altitude and rise it started with.
+		// the ground. Altitude and rise are the Moment's; a reset puts back
+		// those it started with.
 		bool hasAltitude{ false };
-		float altitude{};
-		float altitudeOriginal{};
-		float rise{};
-		float riseOriginal{};
 		float fall{};
 		float altitudeBounce{};
 
@@ -937,16 +969,6 @@ namespace xge
 		// of the next frame's move (playOneFrame).
 		Vector2f riding{};
 		Vector2f hopPending{};
-
-		// Where it was when the last frame's moves and touches were done
-		// (`settled`: there was a last frame since it was loaded or reset).
-		// An object somewhere else now has moved, whatever moved it (a hop,
-		// a <set> of its x, a shift, a teleport, being spawned there), and
-		// its touches are looked for where it is, as for one with a
-		// velocity. Being loaded or reset puts it in its place; that is not
-		// a move.
-		Vector2f settledAt{};
-		bool settled{ false };
 
 		// What it carries (<carry />): the name of one other object, which
 		// goes where it goes, held where it was when it was picked up
@@ -1038,14 +1060,6 @@ namespace xge
 		Color tetherColor{};
 
 		std::map<std::string, std::vector<Command>> action;
-		std::map<std::string, float> variable;
-
-		// Snapshot of each <variable>'s value at construction time (mirrors
-		// positionOriginal/velocityOriginal). Game::resetObject() restores
-		// `variable` from this map so a new game/round can start clean (e.g.
-		// resetting paddle1.score/paddle2.score back to 0), instead of a fresh
-		// game instantly re-tripping a <condition> left over from the last one.
-		std::map<std::string, float> variableOriginal;
 
 		// Set when this is a text object that shows a variable (e.g. a <text>
 		// sprite whose <number> is paddle1.score): every piece of the text,

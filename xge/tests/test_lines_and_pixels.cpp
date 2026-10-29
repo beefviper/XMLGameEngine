@@ -14,6 +14,7 @@
 // a scratch file and loaded by a real xge::Game. None of it needs a window.
 
 #include "scratch.h"
+#include "file_text.h"
 #include "picture/bitmap.h"
 #include "play/collision.h"
 #include "play/executor.h"
@@ -64,7 +65,7 @@ namespace
 		object.bitmap = std::make_shared<const Bitmap>(rasterizeLines(lines));
 		object.size = { static_cast<float>(object.bitmap->width), static_cast<float>(object.bitmap->height) };
 		object.position = { x, y };
-		object.collisionData.enabled = true;
+		object.collisionsOn = true;
 		object.collisionData.type = type;
 		return object;
 	}
@@ -76,7 +77,7 @@ namespace
 		object.picture.kind = ShapeKind::Rectangle;
 		object.size = { width, height };
 		object.position = { x, y };
-		object.collisionData.enabled = true;
+		object.collisionsOn = true;
 		return object;
 	}
 
@@ -87,7 +88,7 @@ namespace
 		object.picture.kind = ShapeKind::Circle;
 		object.size = { radius * 2, radius * 2 };
 		object.position = { x, y };
-		object.collisionData.enabled = true;
+		object.collisionsOn = true;
 		return object;
 	}
 
@@ -781,7 +782,7 @@ namespace
 	{
 		std::ifstream in(path);
 		REQUIRE(in.good());
-		std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		std::string text = fileText(in);
 		text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
 		return text;
 	}

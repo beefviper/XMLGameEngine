@@ -353,7 +353,7 @@ namespace xge
 				Object* made = game.spawn(target);
 				if (!made) { break; }
 				made->position = middle - sizeOf(*made) * 0.5f;
-				made->velocity = made->velocityOriginal;
+				made->velocity = made->start.velocity;
 			}
 			return;
 		}
@@ -368,10 +368,10 @@ namespace xge
 			game.drawStartAgain(candidate);
 			candidate.startOver();
 			candidate.position = middle - sizeOf(candidate) * 0.5f;
-			candidate.velocity = candidate.velocityOriginal;
+			candidate.velocity = candidate.start.velocity;
 			candidate.riding = {};
 			candidate.isVisible = true;
-			candidate.collisionData.enabled = true;
+			candidate.collisionsOn = true;
 			++released;
 		}
 	}
@@ -583,7 +583,7 @@ namespace xge
 		const Vector2f way = touch.normal * -1.0f;
 		for (Object& thing : game.getCurrentObjects())
 		{
-			if (&thing == &object || &thing == &other || !(thing.mass > 0.0f) || !thing.collisionData.enabled || thing.isAirborne() || !game.isShown(thing))
+			if (&thing == &object || &thing == &other || !(thing.mass > 0.0f) || !thing.collisionsOn || thing.isAirborne() || !game.isShown(thing))
 			{
 				continue;
 			}
@@ -752,7 +752,7 @@ namespace xge
 		{
 			for (auto& candidate : game.getCurrentObjects())
 			{
-				if (candidate.named(projectileName) && candidate.exists && !candidate.collisionData.enabled && !game.isAway(candidate))
+				if (candidate.named(projectileName) && candidate.exists && !candidate.collisionsOn && !game.isAway(candidate))
 				{
 					projectile = &candidate;
 					break;
@@ -770,7 +770,7 @@ namespace xge
 
 		const Box from{ shooter.position, sizeOf(shooter) };
 		const Vector2f shotSize = sizeOf(*projectile);
-		const float speed = std::hypot(projectile->velocityOriginal.x, projectile->velocityOriginal.y);
+		const float speed = std::hypot(projectile->start.velocity.x, projectile->start.velocity.y);
 		std::optional<Shot> shot;
 		if (shooter.hasAim)
 		{
@@ -792,13 +792,13 @@ namespace xge
 		{
 			// From the shooter's top-centre: the projectile's own middle over
 			// the shooter's, so a thin shot leaves the middle of the gun.
-			shot = Shot{ shotFromTop(from, shotSize), projectile->velocityOriginal };
+			shot = Shot{ shotFromTop(from, shotSize), projectile->start.velocity };
 		}
 
 		projectile->position = shot->position;
 		projectile->velocity = shot->velocity;
 		projectile->isVisible = true;
-		projectile->collisionData.enabled = true;
+		projectile->collisionsOn = true;
 		return true;
 	}
 

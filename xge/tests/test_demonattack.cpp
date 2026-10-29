@@ -109,7 +109,7 @@ namespace
 	{
 		for (auto& object : play.game.getCurrentObjects())
 		{
-			if (Play::inWave(object, wave)) { object.isVisible = false; object.collisionData.enabled = false; }
+			if (Play::inWave(object, wave)) { object.isVisible = false; object.collisionsOn = false; }
 		}
 		play.frames(2);
 	}
@@ -210,7 +210,7 @@ TEST_CASE("a demon of the second wave splits in two small ones, which score when
 	CHECK(play.object("playing.wave2.half.1").velocity.y > 0.0f);
 
 	// the wave is not over until the small ones are gone too
-	for (const char* name : { "playing.wave2.demons.2", "playing.wave2.demons.3", "playing.wave2.demons.4" }) { play.object(name).isVisible = false; play.object(name).collisionData.enabled = false; }
+	for (const char* name : { "playing.wave2.demons.2", "playing.wave2.demons.3", "playing.wave2.demons.4" }) { play.object(name).isVisible = false; play.object(name).collisionsOn = false; }
 	play.frames(2);
 	CHECK(play.wave() == "playing.wave2");
 

@@ -17,6 +17,7 @@
 // its sprite implies, which is what the backends would measure too.
 
 #include "scratch.h"
+#include "file_text.h"
 #include "picture/bitmap.h"
 #include "play/executor.h"
 #include "engine/folder.h"
@@ -153,7 +154,7 @@ namespace
 					if (object.name == "playing." + std::string(name) || object.inGroup("playing." + std::string(name)))
 					{
 						object.isVisible = false;
-						object.collisionData.enabled = false;
+						object.collisionsOn = false;
 					}
 				}
 			}
@@ -654,7 +655,7 @@ TEST_CASE("a shot leaves the nose along the heading, at the shot's own speed", "
 	REQUIRE(field.inPlay("shot") == 1);
 	Object& shot = *field.group("shot")[0];
 	CHECK(shot.isVisible);
-	CHECK(shot.collisionData.enabled);
+	CHECK(shot.collisionsOn);
 	CHECK_THAT(shot.velocity.x, WithinAbs(0.0f, 1e-4f));
 	CHECK_THAT(shot.velocity.y, WithinAbs(-8.0f, 1e-4f));
 	CHECK(shot.position.y + shot.size.y / 2 < field.centre(field.ship()).y - 10.0f); // out in front
@@ -737,7 +738,7 @@ TEST_CASE("a hit ship waits for the middle to be clear before it comes back", "[
 	field.clearTheMiddle();
 	Object& other = *field.group("bigrocks")[1];
 	other.isVisible = true;
-	other.collisionData.enabled = true;
+	other.collisionsOn = true;
 	other.position = { 400.0f - other.size.x / 2.0f + 60.0f, 300.0f - other.size.y / 2.0f };
 	field.frames(300);
 	CHECK_FALSE(field.ship().isVisible);
@@ -746,7 +747,7 @@ TEST_CASE("a hit ship waits for the middle to be clear before it comes back", "[
 	other.position = { 740, 540 };
 	field.frames(2);
 	CHECK(field.ship().isVisible);
-	CHECK(field.ship().position == field.ship().positionOriginal);
+	CHECK(field.ship().position == field.ship().start.position);
 }
 
 // ------------------------------------------------------------ breaking rocks
@@ -788,9 +789,9 @@ TEST_CASE("a shot breaks a big rock into two medium ones where it was", "[astero
 	for (Object* medium : field.group("mediumrocks"))
 	{
 		if (!medium->isVisible) { continue; }
-		CHECK(medium->collisionData.enabled);
+		CHECK(medium->collisionsOn);
 		CHECK_THAT(field.centre(*medium).x, WithinAbs(from.x, 3.0f * 60.0f)); // moved on since, at its own speed
-		CHECK(medium->velocity == medium->velocityOriginal);
+		CHECK(medium->velocity == medium->start.velocity);
 		CHECK((medium->velocity.x != 0.0f || medium->velocity.y != 0.0f));
 	}
 }
@@ -914,7 +915,7 @@ TEST_CASE("a rock hitting the ship costs a ship and breaks, and the ship comes b
 	field.frames(2);
 
 	CHECK(field.lives() == 2.0f);
-	CHECK(field.ship().position == field.ship().positionOriginal);
+	CHECK(field.ship().position == field.ship().start.position);
 	CHECK(field.ship().velocity == Vector2f{});
 	CHECK(field.ship().heading == 0.0f);
 	CHECK(field.ship().turnedDegrees == 0);
@@ -927,7 +928,7 @@ TEST_CASE("a rock hitting the ship costs a ship and breaks, and the ship comes b
 	field.clearTheMiddle();
 	field.frames(121);
 	CHECK(field.ship().isVisible);
-	CHECK(field.ship().position == field.ship().positionOriginal);
+	CHECK(field.ship().position == field.ship().start.position);
 }
 
 TEST_CASE("the pixels decide: the boxes overlap long before a rock touches the ship", "[asteroids][ship]")
@@ -1111,7 +1112,7 @@ TEST_CASE("a shot that hits the big saucer is 200 points", "[asteroids][saucer]"
 	field.ship().position = { 300, 480 };
 	Object& saucer = field.named("saucer");
 	saucer.isVisible = true;
-	saucer.collisionData.enabled = true;
+	saucer.collisionsOn = true;
 	saucer.position = { field.centre(field.ship()).x - saucer.size.x / 2, 200 };
 	saucer.velocity = {};
 	field.key("fire", true);
@@ -1131,7 +1132,7 @@ TEST_CASE("a rock that meets a saucer breaks it, and breaks itself for no points
 		field.ship().position = { 60, 60 };
 		Object& saucer = field.named(which);
 		saucer.isVisible = true;
-		saucer.collisionData.enabled = true;
+		saucer.collisionsOn = true;
 		saucer.position = { 380, 300 };
 		saucer.velocity = {};
 		Object& rock = *field.group("bigrocks").front();
@@ -1234,7 +1235,7 @@ namespace
 	{
 		std::ifstream in("descriptions/asteroids.xml");
 		REQUIRE(in.good());
-		std::string xml((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		std::string xml = fileText(in);
 		xml.erase(std::remove(xml.begin(), xml.end(), '\r'), xml.end());
 		const auto at = xml.find(from);
 		REQUIRE(at != std::string::npos);
@@ -1301,7 +1302,7 @@ TEST_CASE("a heading, a drag and an active are read from the file", "[asteroids]
 
 	const Object& ship = game.getObject("ship");
 	CHECK(ship.hasHeading);
-	CHECK(ship.headingOriginal == 0.0f);
+	CHECK(ship.start.heading == 0.0f);
 	CHECK(ship.drag == 0.02f);
 	CHECK(ship.turnables.size() == 1);
 

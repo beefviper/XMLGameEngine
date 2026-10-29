@@ -93,8 +93,8 @@ namespace
 
 		bool atStart(int player)
 		{
-			return chicken(player).position.x == chicken(player).positionOriginal.x
-				&& chicken(player).position.y == chicken(player).positionOriginal.y;
+			return chicken(player).position.x == chicken(player).start.position.x
+				&& chicken(player).position.y == chicken(player).start.position.y;
 		}
 	};
 

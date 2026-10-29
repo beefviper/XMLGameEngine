@@ -17,6 +17,7 @@
 // none of it needs a window.
 
 #include "scratch.h"
+#include "file_text.h"
 #include "engine/folder.h"
 #include "game/game.h"
 #include "xml/document.h"
@@ -137,7 +138,7 @@ TEST_CASE("a group is read as one object for each member", "[group]")
 	{
 		CHECK(object.objClass == "logs");
 		CHECK(object.groupName == "lane");
-		CHECK(object.collisionData.enabled);
+		CHECK(object.collisionsOn);
 		CHECK(object.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
 		CHECK(object.collisionData.edges[edgeIndex(Edge::Right)].commands.size() == 1);
 		CHECK(object.variable.at("weight") == 3.0f);
@@ -158,13 +159,13 @@ TEST_CASE("what a game leaves out is nothing: still, and touching nothing", "[gr
 		const Object& object = loaded.game.getObject(name);
 		CHECK(object.velocity.x == 0.0f);
 		CHECK(object.velocity.y == 0.0f);
-		CHECK_FALSE(object.collisionData.enabled);
+		CHECK_FALSE(object.collisionsOn);
 	}
 	CHECK(loaded.game.getObject("lane.2").velocity.x == 2.0f);
 	CHECK(loaded.game.getObject("lane.2").velocity.y == 0.0f);
 	CHECK(loaded.game.getObject("falling").velocity.x == 0.0f);
 	CHECK(loaded.game.getObject("falling").velocity.y == 3.0f);
-	CHECK_FALSE(loaded.game.getObject("falling").collisionData.enabled);
+	CHECK_FALSE(loaded.game.getObject("falling").collisionsOn);
 }
 
 TEST_CASE("a member takes what it leaves out from its group", "[group]")
@@ -192,8 +193,8 @@ TEST_CASE("a member takes what it leaves out from its group", "[group]")
 	CHECK(odd.picture != first.picture);
 
 	// And where they started is where a reset puts them back.
-	CHECK(odd.positionOriginal.y == 150.0f);
-	CHECK(odd.velocityOriginal.x == 1.0f);
+	CHECK(odd.start.position.y == 150.0f);
+	CHECK(odd.start.velocity.x == 1.0f);
 }
 
 TEST_CASE("the group's name means every member", "[group]")
@@ -598,7 +599,7 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(slow.velocity.x == 1.0f);
 	CHECK(measureShapeSize(slow.picture).x == 30.0f);
 	CHECK(slow.picture.color == "color.red");
-	CHECK(slow.collisionData.enabled);
+	CHECK(slow.collisionsOn);
 	CHECK(slow.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
 	CHECK(slow.collisionData.others.empty());
 	CHECK(slow.variable.at("weight") == 3.0f);
@@ -670,8 +671,8 @@ TEST_CASE("groups inside a group can each be laid out in cells from the outer's 
 	CHECK(game.getObject("block.2.2").position.x == 100.0f + 20.0f + 5.0f);
 	CHECK(game.getObject("block.2.2").position.y == 50.0f + 10.0f + 7.0f);
 	CHECK(game.getObject("top.1.1").objClass == "bricks");
-	CHECK_FALSE(game.getObject("top.1.1").collisionData.enabled);
-	CHECK(game.getObject("block.1.1").collisionData.enabled);
+	CHECK_FALSE(game.getObject("top.1.1").collisionsOn);
+	CHECK(game.getObject("block.1.1").collisionsOn);
 
 	// Only the inner group with lockstep moves as one block.
 	CHECK(game.getObject("block.1.1").collisionData.lockstep != 0);
@@ -761,7 +762,7 @@ namespace
 	{
 		std::ifstream in(path);
 		REQUIRE(in.good());
-		std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		std::string text = fileText(in);
 		text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
 		return text;
 	}

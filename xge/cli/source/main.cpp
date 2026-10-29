@@ -15,7 +15,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <iterator>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -146,7 +146,9 @@ int main(int argc, char* argv[])
 			std::string text;
 			{
 				std::ifstream in(filename, std::ios::binary);
-				text.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+				std::ostringstream read;
+				read << in.rdbuf();
+				text = read.str();
 			}
 			const xge::RawDemo demo = engine.recorded();
 			std::ofstream out(filename, std::ios::binary | std::ios::trunc);

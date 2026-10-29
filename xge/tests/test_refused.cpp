@@ -9,6 +9,7 @@
 // collision rule, a key of a state and a condition stop the same way.
 
 #include "played.h"
+#include "file_text.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -29,7 +30,7 @@ TEST_CASE("spaceinvaders.xml: a press of fire while the bullet is in flight make
 	(void)play.game.takeSoundRequests();
 
 	play.tap(KeyCode::Space);
-	CHECK(play.get("bullet").collisionData.enabled);
+	CHECK(play.get("bullet").collisionsOn);
 	CHECK(play.game.takeSoundRequests() == std::vector<std::string>{ "shoot" });
 
 	play.frames(2);
@@ -68,7 +69,7 @@ TEST_CASE("an action runs what comes before a refused verb, and nothing after it
 	// The scratch game has no sounds; put two in before it is loaded.
 	{
 		std::ifstream in(scratch.path);
-		std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		std::string text = fileText(in);
 		const std::string sounds = "<sounds><sound name=\"click\" wave=\"square\"><note pitch=\"C5\">0.05</note></sound>"
 			"<sound name=\"bang\" wave=\"square\"><note pitch=\"C4\">0.05</note></sound></sounds>";
 		text.insert(text.find("<states>"), sounds);

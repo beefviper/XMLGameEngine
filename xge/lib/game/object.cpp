@@ -773,7 +773,7 @@ namespace xge
 			o << "\tsize= ( Unknown, not yet initialized by Engine )\n";
 		}
 
-		o << "\tcollision=" << (f.collisionData.enabled ? "true" : "false")
+		o << "\tcollision=" << (f.collisionsOn ? "true" : "false")
 			<< (f.collisionData.type == CollisionType::Pixel ? ", type=pixel" : "");
 
 

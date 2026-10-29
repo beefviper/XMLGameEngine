@@ -11,6 +11,7 @@
 // test opens a sound device: Engine is given a recording Audio instead.
 
 #include "scratch.h"
+#include "file_text.h"
 #include "engine/engine.h"
 #include "game/game.h"
 #include "load/xml.h"
@@ -498,7 +499,7 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 
 		// A sound nothing plays is a sound that was forgotten.
 		std::ifstream file(path);
-		const std::string text{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
+		const std::string text = fileText(file);
 		for (const std::string& sound : expected)
 		{
 			INFO(sound);

@@ -92,7 +92,7 @@ TEST_CASE("a take changes its piece: sprites by name, whole; variables one by on
 	CHECK(gold.variable.at("hits") == Approx(0));
 	CHECK(gold.variable.at("worth") == Approx(50));
 	CHECK(gold.variable.at("shine") == Approx(1));
-	CHECK(gold.collisionData.enabled);
+	CHECK(gold.collisionsOn);
 	CHECK(gold.collisionData.others.size() == 2); // its rule after the piece's
 }
 

@@ -14,6 +14,7 @@
 // none of it needs a window.
 
 #include "scratch.h"
+#include "file_text.h"
 #include "engine/folder.h"
 #include "game/game.h"
 #include "load/expr.h"
@@ -149,8 +150,8 @@ TEST_CASE("a value is an expression written as text", "[xml_format]")
 	Loaded loaded(gameXml("<variable name=\"step\">2</variable>", objectXml(o)));
 
 	const Object& object = loaded.game.getObject("o");
-	CHECK(object.positionOriginal.x == 406.0f); // 800 wide window
-	CHECK(object.velocityOriginal.x == -2.0f);
+	CHECK(object.start.position.x == 406.0f); // 800 wide window
+	CHECK(object.start.velocity.x == -2.0f);
 }
 
 TEST_CASE("<random> gives a number between its two ends, and a different one each time", "[xml_format][random]")
@@ -170,11 +171,11 @@ TEST_CASE("<random> gives a number between its two ends, and a different one eac
 	for (int i = 0; i < 40; ++i)
 	{
 		const Object& object = loaded.game.getObject("r" + std::to_string(i));
-		CHECK(object.velocityOriginal.x >= -7.0f);
-		CHECK(object.velocityOriginal.x <= 7.0f);
-		CHECK(object.velocityOriginal.y >= 390.0f);
-		CHECK(object.velocityOriginal.y <= 400.0f);
-		seen.insert(object.velocityOriginal.x);
+		CHECK(object.start.velocity.x >= -7.0f);
+		CHECK(object.start.velocity.x <= 7.0f);
+		CHECK(object.start.velocity.y >= 390.0f);
+		CHECK(object.start.velocity.y <= 400.0f);
+		seen.insert(object.start.velocity.x);
 	}
 	CHECK(seen.size() > 1);
 }
@@ -230,9 +231,9 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 	CHECK(window.fullscreen == "false");
 	CHECK(window.framerate == 60);
 
-	CHECK(loaded.game.getObject("on").collisionData.enabled);
-	CHECK_FALSE(loaded.game.getObject("none").collisionData.enabled);
-	CHECK_FALSE(loaded.game.getObject("plain").collisionData.enabled);
+	CHECK(loaded.game.getObject("on").collisionsOn);
+	CHECK_FALSE(loaded.game.getObject("none").collisionsOn);
+	CHECK_FALSE(loaded.game.getObject("plain").collisionsOn);
 }
 
 TEST_CASE("a variable can use the ones declared before it", "[xml_format]")
@@ -785,7 +786,7 @@ namespace
 	{
 		std::ifstream in(path);
 		REQUIRE(in.good());
-		std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		std::string text = fileText(in);
 		text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
 		return text;
 	}

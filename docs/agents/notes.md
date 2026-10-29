@@ -32,6 +32,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 ### Objects, states and scenes
 
+- An object's changing numbers are its `Moment` (`game/object.h`); `start` and `before` are two more. A number a reset should put back goes in `Moment` and nowhere else; a reset (`resetObjectState`) is `backToStart()` plus clearing what is under way. `placed` marks a reset or load between frames, whose place is not a move.
 - The `<kit>` and every `from=` are worked out on the XML before anything is read (`load/merge.cpp`: `layOut`, `addWaiting`), and the same in `merge.xsl` for a generated program. Change one and change the other, step for step, since `xgetest-generated` compares the order of objects too.
 - States and scenes own objects: `layOutScenes` (`game/scenes.cpp`) runs first in `Game`'s constructor and flattens them into `data.objects` named by path (`playing.room1.robots.3`), with `ownerState`/`ownerScene`, and rewrites every name the file uses to the full one (inside out; `playing.rock` is an alias for every scene's rock; shortest path wins).
 - `isShown` = visible and `runsIn` the top state; `isStill` = drawn under a `<show state>`; `isAway` = its scene is not current.

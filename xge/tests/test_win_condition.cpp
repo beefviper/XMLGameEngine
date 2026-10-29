@@ -21,7 +21,7 @@ namespace
 	void kill(Object& object)
 	{
 		object.isVisible = false;
-		object.collisionData.enabled = false;
+		object.collisionsOn = false;
 	}
 
 	int aliensLeft(Game& game)
@@ -92,7 +92,7 @@ TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 	Object& bullet = game.getObject("bullet");
 	bullet.position = { last.position.x + 21.0f, last.position.y + 58.0f };
 	bullet.isVisible = true;
-	bullet.collisionData.enabled = true;
+	bullet.collisionsOn = true;
 
 	game.updateObjects(); // the bullet reaches it and both die...
 	CHECK_FALSE(last.isVisible);

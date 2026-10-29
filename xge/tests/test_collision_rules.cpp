@@ -74,12 +74,12 @@ TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules
 	bullet.position = { player.position.x + 25.0f, player.position.y };
 	bullet.velocity.y = -6.0f;
 	bullet.isVisible = true;
-	bullet.collisionData.enabled = true;
+	bullet.collisionsOn = true;
 
 	for (int frame = 0; frame < 4; ++frame)
 	{
 		game.updateObjects();
-		CHECK(bullet.collisionData.enabled);
+		CHECK(bullet.collisionsOn);
 		CHECK(bullet.isVisible);
 	}
 	CHECK(bullet.position.y < player.position.y - bullet.size.y);
@@ -100,11 +100,11 @@ TEST_CASE("a bullet dies on touching an alien", "[collision_rules]")
 	bullet.position = { alien.position.x + 20.0f, alien.position.y + alien.size.y - 2.0f };
 	bullet.velocity.y = -6.0f;
 	bullet.isVisible = true;
-	bullet.collisionData.enabled = true;
+	bullet.collisionsOn = true;
 
 	game.updateObjects();
 
-	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK_FALSE(bullet.collisionsOn);
 }
 
 namespace

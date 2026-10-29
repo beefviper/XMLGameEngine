@@ -222,7 +222,7 @@ TEST_CASE("owner.blink is seconds of blinking: drawn every other fifteenth of a 
 	{
 		play.frames(1);
 		if (guy.blinkedOut()) { ++hidden; }
-		CHECK(guy.collisionData.enabled);
+		CHECK(guy.collisionsOn);
 	}
 	CHECK(hidden > 20);
 	CHECK(hidden < 40);

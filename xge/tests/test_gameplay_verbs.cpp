@@ -253,7 +253,7 @@ TEST_CASE("a timer on an enemy fires its shots the way it faces", "[timers][faci
 	CHECK_FALSE(bomb.isVisible);
 	loaded.frames(1);
 	REQUIRE(bomb.isVisible);
-	CHECK(bomb.collisionData.enabled);
+	CHECK(bomb.collisionsOn);
 
 	// Below the middle of the enemy, falling at the bomb's own speed.
 	CHECK(bomb.velocity.x == Approx(0));

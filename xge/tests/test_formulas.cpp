@@ -16,6 +16,7 @@
 // none of it needs a window.
 
 #include "scratch.h"
+#include "file_text.h"
 #include "game/command.h"
 #include "engine/folder.h"
 #include "game/game.h"
@@ -385,9 +386,7 @@ namespace
 	{
 		std::ifstream in(path);
 		REQUIRE(in.good());
-		std::ostringstream read;
-		read << in.rdbuf();
-		std::string text = read.str();
+		std::string text = fileText(in);
 		text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
 		return text;
 	}

@@ -57,7 +57,7 @@ namespace
 			out << object.name << " at " << object.position.x << ',' << object.position.y
 				<< " moving " << object.velocity.x << ',' << object.velocity.y
 				<< (object.isVisible ? " shown" : " hidden")
-				<< (object.collisionData.enabled ? " touching" : "")
+				<< (object.collisionsOn ? " touching" : "")
 				<< " look " << object.lookName() << " heading " << object.heading;
 			for (const auto& [name, value] : object.variable)
 			{

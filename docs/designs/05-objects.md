@@ -12,6 +12,13 @@
 - Shapes as reusable named outlines (a few asteroid outlines at several scales) would add a polygon sprite kind; unbuilt.
 
 
+## Start, before and now (2026-10-29)
+
+- Need: a reset was 50 hand-written lines copying about fifteen `xxxOriginal` fields back one by one, the last frame's place was a field of its own (`settledAt`), and a new number that a reset should put back had to be remembered in three places.
+- Looked at: a snapshot of the whole object to copy back (about 200 fields with bitmaps, maps and rule lists, so each object twice over for one function). Beef's idea instead: the few numbers that change in play, kept at each point in time an object has. **Chosen:** `Moment` (`game/object.h`): position, velocity, acceleration, heading, facing, light, altitude, rise, in play, collisions on, exists, scene and variables. An `Object` is a Moment (its current values, no prefix: `object.position`) and holds two more, `start` (as worked out from the file, drawn again when a `<random>` start is) and `before` (as the last frame left it). The fourth layer, the file's text, is the `RawObject` the game keeps. A reset is `backToStart()` plus clearing what was under way (held keys, jumps, rides, timers, the look); the end of a frame is `remember()`. About 100 bytes more per object; copying it each frame allocates nothing.
+- Not in it: what does not change in play (`drag`, `grip`, pulls, mass), and what is under way rather than a value (held moves, a jump, a ride), which the reset clears by hand.
+- Open: rules reading `before` (how fast something went before a bounce), if a game needs it.
+
 ## Storage and identity
 
 - Today: `vector<Object>` by value; a name lookup is cached once found (`foundObjects`), and the cache and every per-index answer are rebuilt when objects join or leave (`rosterChanged`). Copies spawned in a frame wait in a `deque` and join between frames (`settleSpawns`). No handles, no ECS.

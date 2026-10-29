@@ -14,6 +14,7 @@
 // and frames are played with Game::updateObjects(); none of it needs a window.
 
 #include "scratch.h"
+#include "file_text.h"
 #include "picture/bitmap.h"
 #include "play/executor.h"
 #include "engine/folder.h"
@@ -152,7 +153,7 @@ namespace
 	{
 		std::ifstream in(path);
 		REQUIRE(in.good());
-		std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		std::string text = fileText(in);
 		text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
 		return text;
 	}
@@ -1011,7 +1012,7 @@ TEST_CASE("a shot from the ship in the middle kills exactly one alien and is put
 
 	CHECK(invasion.alive() == 54);
 	CHECK_FALSE(game.getObject("bullet").isVisible);
-	CHECK_FALSE(game.getObject("bullet").collisionData.enabled);
+	CHECK_FALSE(game.getObject("bullet").collisionsOn);
 }
 
 TEST_CASE("the aliens still win the game for the player when they are all gone, and a reset brings them back", "[spaceinvaders]")
@@ -1179,7 +1180,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	};
 
 	// The cannon out of the way of the bombs while they are counted.
-	game.getObject("player").collisionData.enabled = false;
+	game.getObject("player").collisionsOn = false;
 	int most = 0;
 	for (int frame = 0; frame < 600; ++frame)
 	{
@@ -1201,7 +1202,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	// Bombs put on the cannon (a stray one may find it first) until the game is
 	// lost. Each hit holds the invasion still for a second ("blasted").
 	Object& player = game.getObject("player");
-	player.collisionData.enabled = true;
+	player.collisionsOn = true;
 	bool blasted = false;
 	for (int frame = 0; frame < 20000 && game.getCurrentState().name != "lost"; ++frame)
 	{
@@ -1241,7 +1242,7 @@ TEST_CASE("each kind of alien scores its own, and the block marches faster as it
 	bullet.position = { crab.position.x + crab.size.x / 2.0f, crab.position.y + crab.size.y + 2.0f };
 	bullet.velocity = { 0.0f, -12.0f };
 	bullet.isVisible = true;
-	bullet.collisionData.enabled = true;
+	bullet.collisionsOn = true;
 	frames(game, 1);
 	CHECK_FALSE(crab.isVisible);
 	CHECK(game.getObject("player").variable.at("score") == 20.0f);
@@ -1268,7 +1269,7 @@ TEST_CASE("the mystery ship crosses the top now and then and scores 50 to 200", 
 	Game& game = invasion.game;
 	const Object& ufo = game.getObject("ufo");
 	REQUIRE_FALSE(ufo.isVisible);
-	game.getObject("player").collisionData.enabled = false; // no bombs on it meanwhile
+	game.getObject("player").collisionsOn = false; // no bombs on it meanwhile
 
 	for (int frame = 0; frame < 60 * 31 && !ufo.isVisible; ++frame) { frames(game, 1); }
 	REQUIRE(ufo.isVisible);
@@ -1281,7 +1282,7 @@ TEST_CASE("the mystery ship crosses the top now and then and scores 50 to 200", 
 	bullet.position = { ufo.position.x + ufo.size.x / 2.0f, ufo.position.y + ufo.size.y + 2.0f };
 	bullet.velocity = { 0.0f, -12.0f };
 	bullet.isVisible = true;
-	bullet.collisionData.enabled = true;
+	bullet.collisionsOn = true;
 	const float score = player.variable.at("score");
 	frames(game, 1);
 	CHECK_FALSE(ufo.isVisible);

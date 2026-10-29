@@ -695,7 +695,7 @@ namespace xge
 		object.isDrawn = rawObject.isDrawn;
 		object.ownerState = rawObject.ownerState;
 		object.ownerScene = rawObject.ownerScene;
-		object.ownerSceneOriginal = rawObject.ownerScene;
+		object.start.ownerScene = rawObject.ownerScene;
 
 		if (rawObject.objClass == "projectile")
 		{
@@ -704,19 +704,19 @@ namespace xge
 
 		object.isVisible = rawObject.isVisible;
 		object.exists = rawObject.exists;
-		object.existsOriginal = rawObject.exists;
+		object.start.exists = rawObject.exists;
 		// One that does not exist is in nothing that looks for what is out
 		// there, as one taken out of play is not.
 		if (!object.exists) { object.isVisible = false; }
 		object.most = rawObject.most;
 
 		// Its variables first, so its position and velocity can use them
-		// (a serve drawn as an angle: ball.speed * cos(ball.angle)).
+		// (a serve drawn as an angle: its speed times the cosine of its angle).
 		for (auto& rawVariable : rawObject.variable)
 		{
 			const float value = evaluate(rawVariable.second, where);
 			object.variable[rawVariable.first] = value;
-			object.variableOriginal[rawVariable.first] = value;
+			object.start.variable[rawVariable.first] = value;
 
 			// Keep the cross-object symbol table entry (registered above,
 			// before any expression compiled) up to date with the real
@@ -728,15 +728,15 @@ namespace xge
 			|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
 			|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
 
-		object.positionOriginal.x = evaluate(rawObject.rawPosition.x, where);
-		object.positionOriginal.y = evaluate(rawObject.rawPosition.y, where);
+		object.start.position.x = evaluate(rawObject.rawPosition.x, where);
+		object.start.position.y = evaluate(rawObject.rawPosition.y, where);
 
 		// A cell is its group's position and its place in the
-		// group; positionOriginal keeps both, so a reset puts each
+		// group; start.position keeps both, so a reset puts each
 		// cell (each brick) back in its own place.
 		object.cellOffset = cellOffset;
-		object.position = object.positionOriginal + object.cellOffset;
-		object.positionOriginal = object.position;
+		object.position = object.start.position + object.cellOffset;
+		object.start.position = object.position;
 
 		object.sizeDependencies = positionSizeDependencies;
 		object.positionUsesSize = !positionSizeDependencies.empty();
@@ -745,14 +745,14 @@ namespace xge
 		object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
 		object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
 
-		object.velocityOriginal = object.velocity;
+		object.start.velocity = object.velocity;
 
 		if (rawObject.hasAcceleration)
 		{
 			object.acceleration.x = evaluate(rawObject.rawAcceleration.x, where);
 			object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
 		}
-		object.accelerationOriginal = object.acceleration;
+		object.start.acceleration = object.acceleration;
 
 		if (rawObject.hasHeading)
 		{
@@ -761,7 +761,7 @@ namespace xge
 			if (degrees < 0.0f) { degrees += 360.0f; }
 			object.heading = degrees;
 		}
-		object.headingOriginal = object.heading;
+		object.start.heading = object.heading;
 
 		if (rawObject.hasDrag)
 		{
@@ -796,7 +796,7 @@ namespace xge
 		{
 			object.light = evaluate(rawObject.rawLight, where + " > <light>");
 			if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
-			object.lightOriginal = object.light;
+			object.start.light = object.light;
 		}
 		if (rawObject.dark == "unlit") { object.dark = Object::Darkness::Unlit; }
 		else if (rawObject.dark == "unseen") { object.dark = Object::Darkness::Unseen; }
@@ -814,8 +814,8 @@ namespace xge
 			if (object.altitude < 0.0f) { throw std::runtime_error(here + ": <start> is " + formatDisplayNumber(object.altitude) + "; it cannot start below the ground"); }
 			if (object.fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(object.fall) + "; expected 0 or more"); }
 			if (!(object.altitudeBounce >= 0.0f && object.altitudeBounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(object.altitudeBounce) + "; expected 0 up to 1"); }
-			object.altitudeOriginal = object.altitude;
-			object.riseOriginal = object.rise;
+			object.start.altitude = object.altitude;
+			object.start.rise = object.rise;
 		}
 		object.shadowOf = rawObject.shadowOf;
 
@@ -843,7 +843,7 @@ namespace xge
 				: rawObject.facing == "right" ? Direction::Right
 				: Direction::Up;
 		}
-		object.facingOriginal = object.facing;
+		object.start.facing = object.facing;
 		object.timers = processTimers(rawObject.timers, where);
 		for (const Timer& timer : object.timers)
 		{
@@ -851,7 +851,7 @@ namespace xge
 			// A named timer's time left (see init): where it starts.
 			const float left = std::ceil(timer.seconds);
 			object.variable[timer.name] = left;
-			object.variableOriginal[timer.name] = left;
+			object.start.variable[timer.name] = left;
 			objectVariables[rawObject.name + "." + timer.name] = left;
 		}
 		object.looks = looks;
@@ -930,7 +930,7 @@ namespace xge
 			object.mapColumns = rawObject.cell.mapColumns;
 			object.mapRows = rawObject.cell.mapRows;
 			object.mapTile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
-			object.mapOrigin = object.positionOriginal - object.cellOffset;
+			object.mapOrigin = object.start.position - object.cellOffset;
 		}
 		object.mazeMap = rawObject.maze.map;
 		object.mazeWalls = rawObject.maze.walls;
@@ -945,9 +945,9 @@ namespace xge
 
 		object.showHeading();
 
-		object.collisionData.enabled = rawObject.rawCollisionData.enabled;
-		object.isVisibleOriginal = object.isVisible;
-		object.collisionEnabledOriginal = object.collisionData.enabled;
+		object.collisionsOn = rawObject.rawCollisionData.enabled;
+		object.start.isVisible = object.isVisible;
+		object.start.collisionsOn = object.collisionsOn;
 		object.collisionData.lockstep = thisLockstep;
 		object.collisionData.type = rawObject.rawCollisionData.type;
 
@@ -1041,12 +1041,13 @@ namespace xge
 			object.collisionData.others.push_back(std::move(rule));
 		}
 
-		//object.action = rawObject.action;
 		for (auto& rawAction : rawObject.action)
 		{
 			object.action[rawAction.first] = processCommands(rawAction.second, where);
 		}
 
+		// How it started is how it was before its first frame.
+		object.before = object.start;
 
 		// object's visual is built later by whichever Window backend is
 		// running, once one exists (see Window::init() in window/window.h) -

@@ -433,7 +433,7 @@ TEST_CASE("mariobros.xml: the shellcreepers come out of the top pipes, fall floo
 	Played play("descriptions/mariobros.xml");
 	play.tap(KeyCode::Space);
 	play.get("mario").isVisible = false;     // out of their way
-	play.get("mario").collisionData.enabled = false;
+	play.get("mario").collisionsOn = false;
 	Object& first = play.get("phase1.shellcreepers.1");
 	Object& second = play.get("phase1.shellcreepers.2");
 

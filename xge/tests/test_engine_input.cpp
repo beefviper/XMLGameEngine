@@ -18,6 +18,7 @@
 // it.
 
 #include "engine/engine.h"
+#include "file_text.h"
 #include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -180,14 +181,14 @@ TEST_CASE("a held fire key does not shoot again when its state returns", "[engin
 	tap(engine, KeyCode::Space); // mainmenu -> playing
 
 	engine.handleKeyPressed(KeyCode::Space); // fire
-	REQUIRE(bullet.collisionData.enabled);
+	REQUIRE(bullet.collisionsOn);
 
 	// Used up: the shot is gone and the key is still down.
-	bullet.collisionData.enabled = false;
+	bullet.collisionsOn = false;
 	tap(engine, KeyCode::P); // pause
 	tap(engine, KeyCode::P); // unpause
 
-	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK_FALSE(bullet.collisionsOn);
 }
 
 TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engine_input]")
@@ -200,10 +201,10 @@ TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engi
 	// the change, it must only start the game.
 	engine.handleKeyPressed(KeyCode::Space);
 	CHECK(game.getCurrentState().name == "playing");
-	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK_FALSE(bullet.collisionsOn);
 
 	engine.handleKeyReleased(KeyCode::Space);
-	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK_FALSE(bullet.collisionsOn);
 }
 
 TEST_CASE("keys read by pump() wait for the next step", "[engine_input]")
@@ -247,7 +248,7 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 		if (entry.path().extension() != ".xml") { continue; }
 
 		std::ifstream in(entry.path());
-		const std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		const std::string text = fileText(in);
 
 		INFO(entry.path().string());
 		CHECK(text.find("button=\"enter\"") == std::string::npos);

@@ -181,7 +181,7 @@ namespace
 			const std::string prefix = inRoom(n, "");
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.objClass == "robot" && object.name.rfind(prefix, 0) == 0) { object.isVisible = false; object.collisionData.enabled = false; }
+				if (object.objClass == "robot" && object.name.rfind(prefix, 0) == 0) { object.isVisible = false; object.collisionsOn = false; }
 			}
 		}
 
@@ -793,7 +793,7 @@ TEST_CASE("Otto comes at once and faster when every robot is gone, goes when the
 	// A shot meeting him is put away and he stays.
 	Object& otto = play.object("otto");
 	otto.isVisible = true;
-	otto.collisionData.enabled = true;
+	otto.collisionsOn = true;
 	otto.velocity = { 0.0f, 0.0f };
 	play.placeMan(0, 1);
 	otto.position = { play.man().position.x + 60.0f, play.man().position.y - 2.0f };

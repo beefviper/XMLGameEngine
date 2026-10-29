@@ -28,7 +28,7 @@ namespace xge
 		bool isMoving(const Object& object) noexcept
 		{
 			const Vector2f motion = motionOf(object);
-			return motion.x != 0 || motion.y != 0 || object.position != object.settledAt;
+			return motion.x != 0 || motion.y != 0 || object.position != object.before.position;
 		}
 
 		// Whether a and b can touch at all, whatever their rules: both have
@@ -38,7 +38,7 @@ namespace xge
 		// game's (FrameRules::canCollide), asked once (FrameRules::partners).
 		bool canTouch(const Object& a, const Object& b) noexcept
 		{
-			if (!a.collisionData.enabled || !b.collisionData.enabled) { return false; }
+			if (!a.collisionsOn || !b.collisionsOn) { return false; }
 			if (a.isAirborne() || b.isAirborne()) { return false; }
 			return a.collisionData.lockstep == 0 || a.collisionData.lockstep != b.collisionData.lockstep;
 		}
@@ -819,11 +819,7 @@ namespace xge
 		for (auto& object : objects)
 		{
 			// Just loaded or reset: where it is now is its place, not a move.
-			if (!object.settled)
-			{
-				object.settled = true;
-				object.settledAt = object.position;
-			}
+			if (object.placed) { object.remember(); }
 
 			if (object.animationBitmaps.size() > 1 && rules.inPlay(object)) { object.advanceAnimation(); }
 			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - second); }
@@ -849,7 +845,7 @@ namespace xge
 		// Screen-edge checks: independent per object, order doesn't matter.
 		for (auto& object : objects)
 		{
-			if (object.collisionData.enabled && isMoving(object) && rules.inPlay(object))
+			if (object.collisionsOn && isMoving(object) && rules.inPlay(object))
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{
@@ -870,7 +866,7 @@ namespace xge
 		// frame poking out past the wall (and stay there once it stopped).
 		for (auto& object : objects)
 		{
-			if (object.collisionData.enabled && rules.inPlay(object))
+			if (object.collisionsOn && rules.inPlay(object))
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{
@@ -892,13 +888,9 @@ namespace xge
 
 		takePoses(objects, rules);
 
-		// Where everything ended up, to tell next frame what has moved. A
+		// How everything ended up, to tell next frame what has moved. A
 		// condition that puts something elsewhere has moved it.
-		for (auto& object : objects)
-		{
-			object.settled = true;
-			object.settledAt = object.position;
-		}
+		for (auto& object : objects) { object.remember(); }
 
 		rules.conditions();
 	}

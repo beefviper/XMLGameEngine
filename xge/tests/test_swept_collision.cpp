@@ -99,14 +99,14 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 	bullet.position = { target.position.x + 21.0f, target.position.y + 70.0f };
 	bullet.velocity = { 0.0f, -90.0f };
 	bullet.isVisible = true;
-	bullet.collisionData.enabled = true;
+	bullet.collisionsOn = true;
 
 	const float bulletStartY = bullet.position.y;
 	game.updateObjects();
 
-	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK_FALSE(bullet.collisionsOn);
 	CHECK_FALSE(bullet.isVisible);
-	CHECK_FALSE(target.collisionData.enabled);
+	CHECK_FALSE(target.collisionsOn);
 	CHECK_FALSE(target.isVisible);
 
 	// Nothing else was affected, and the bullet stopped where it hit rather
@@ -114,7 +114,7 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 	int alive = 0;
 	for (const auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens" && object.collisionData.enabled) { ++alive; }
+		if (object.groupName == "aliens" && object.collisionsOn) { ++alive; }
 	}
 	CHECK(alive == 54);
 	CHECK(bullet.position.y > target.position.y);
@@ -134,14 +134,14 @@ TEST_CASE("the bullet also hits a cell in the middle of the block, not just the 
 	bullet.position = { front.position.x + 21.0f, front.position.y + 300.0f };
 	bullet.velocity = { 0.0f, -400.0f };
 	bullet.isVisible = true;
-	bullet.collisionData.enabled = true;
+	bullet.collisionsOn = true;
 
 	game.updateObjects();
 
 	// The nearest one along the path is the one that dies, not one further up.
-	CHECK_FALSE(front.collisionData.enabled);
-	CHECK(behind.collisionData.enabled);
-	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK_FALSE(front.collisionsOn);
+	CHECK(behind.collisionsOn);
+	CHECK_FALSE(bullet.collisionsOn);
 }
 
 TEST_CASE("the rest of the step is played after a bounce", "[swept_collision]")
@@ -208,7 +208,7 @@ TEST_CASE("a bullet waits unseen and still, flies at its own velocity, and can b
 	// Fired: placed at the ship, visible, moving at its own velocity.
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
 	CHECK(bullet.isVisible);
-	CHECK(bullet.collisionData.enabled);
+	CHECK(bullet.collisionsOn);
 	CHECK(bullet.position.y == player.position.y);
 	const float launched = bullet.position.y;
 	game.updateObjects();
@@ -220,7 +220,7 @@ TEST_CASE("a bullet waits unseen and still, flies at its own velocity, and can b
 		game.updateObjects();
 	}
 	CHECK_FALSE(bullet.isVisible);
-	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK_FALSE(bullet.collisionsOn);
 
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
 	CHECK(bullet.isVisible);
@@ -238,12 +238,12 @@ TEST_CASE("a full reset puts away a bullet in flight and brings back a dead alie
 
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
 	alien.isVisible = false;
-	alien.collisionData.enabled = false;
+	alien.collisionsOn = false;
 
 	game.resetAll();
 
 	CHECK_FALSE(bullet.isVisible);
-	CHECK_FALSE(bullet.collisionData.enabled);
+	CHECK_FALSE(bullet.collisionsOn);
 	CHECK(alien.isVisible);
-	CHECK(alien.collisionData.enabled);
+	CHECK(alien.collisionsOn);
 }

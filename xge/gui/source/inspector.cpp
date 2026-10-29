@@ -478,10 +478,10 @@ namespace xge
 		addFloat(acceleration, "x", [object]() { return static_cast<double>(object().acceleration.x); }, [object](double v) { object().acceleration.x = static_cast<float>(v); }, 0.01, 4);
 		addFloat(acceleration, "y", [object]() { return static_cast<double>(object().acceleration.y); }, [object](double v) { object().acceleration.y = static_cast<float>(v); }, 0.01, 4);
 
-		auto* collision = addNode(node, tr("collision"), first.collisionData.enabled ? tr("on") : tr("off"));
+		auto* collision = addNode(node, tr("collision"), first.collisionsOn ? tr("on") : tr("off"));
 		addBool(collision, tr("enabled"),
-			[object]() { return object().collisionData.enabled ? 1.0 : 0.0; },
-			[object](double value) { object().collisionData.enabled = value != 0; });
+			[object]() { return object().collisionsOn ? 1.0 : 0.0; },
+			[object](double value) { object().collisionsOn = value != 0; });
 		addInfo(collision, tr("type"), first.collisionData.type == CollisionType::Pixel ? tr("pixel") : tr("box"));
 		addInfo(collision, tr("rules about other objects"), QString::number(first.collisionData.others.size()));
 		addInfo(collision, tr("top"), commandsText(first.collisionData.edges[edgeIndex(Edge::Top)].commands));

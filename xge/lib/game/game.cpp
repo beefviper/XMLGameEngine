@@ -120,10 +120,10 @@ namespace xge
 			}
 
 			const std::string where = "object '" + rawObject->name + "'";
-			object.positionOriginal.x = expr.evaluate(rawObject->rawPosition.x, where);
-			object.positionOriginal.y = expr.evaluate(rawObject->rawPosition.y, where);
-			object.positionOriginal = object.positionOriginal + object.cellOffset;
-			object.position = object.positionOriginal;
+			object.start.position.x = expr.evaluate(rawObject->rawPosition.x, where);
+			object.start.position.y = expr.evaluate(rawObject->rawPosition.y, where);
+			object.start.position = object.start.position + object.cellOffset;
+			object.position = object.start.position;
 			object.positionSizesUsed = sizes;
 			object.positionResolved = true;
 		}
@@ -151,7 +151,7 @@ namespace xge
 		{
 			if (!objects[i].named(name)) { continue; }
 			any = true;
-			all = all && !objects[i].existsOriginal;
+			all = all && !objects[i].start.exists;
 		}
 		return descriptions[name] = any && all;
 	}
@@ -235,11 +235,11 @@ namespace xge
 		made.outerGroups = copy.outerGroups;
 		made.ownerState = original.ownerState;
 		made.ownerScene = original.ownerScene;
-		made.ownerSceneOriginal = original.ownerScene;
+		made.start.ownerScene = original.ownerScene;
 		made.exists = true;
-		made.existsOriginal = true;
+		made.start.exists = true;
 		made.isVisible = true;
-		made.isVisibleOriginal = true;
+		made.start.isVisible = true;
 		// Its picture is the one it is copied from, and so its size, until
 		// a window measures it again.
 		made.size = original.size;
@@ -254,7 +254,7 @@ namespace xge
 	{
 		object.exists = false;
 		object.isVisible = false;
-		object.collisionData.enabled = false;
+		object.collisionsOn = false;
 		object.followPath.clear();
 		object.carrying.clear();
 		for (auto& carrier : objects)
@@ -699,7 +699,7 @@ namespace xge
 			if (!value.drawsRandom()) { continue; }
 			const float drawn = expr.evaluate(value, where);
 			object.variable[name] = drawn;
-			object.variableOriginal[name] = drawn;
+			object.start.variable[name] = drawn;
 			refreshBoundTexts(object.name, name, drawn);
 		}
 
@@ -710,10 +710,10 @@ namespace xge
 		// measured yet is worked out when it is.
 		if (object.positionResolved)
 		{
-			object.positionOriginal = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.cellOffset;
+			object.start.position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.cellOffset;
 		}
 
-		object.velocityOriginal = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
+		object.start.velocity = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
 	}
 
 	void Game::popState(const std::string& name)
@@ -1233,20 +1233,14 @@ namespace xge
 	namespace
 	{
 		// Shared by Game::resetObject (one named object) and Game::resetAll
-		// (every object): puts position/velocity/every <variable> back to
-		// their construction-time snapshots (positionOriginal/velocityOriginal/
-		// variableOriginal). Doesn't touch bound text displays - callers do
+		// (every object): every number of its Moment back as it started
+		// (whatever has died or been fired since is back: a bullet in flight
+		// is put away, an alien is back), and nothing it was in the middle
+		// of still going. Doesn't touch bound text displays - callers do
 		// that afterward, once they know which objects actually changed.
-		void resetObjectState(Object& object) noexcept
+		void resetObjectState(Object& object)
 		{
-			object.position = object.positionOriginal;
-			object.velocity = object.velocityOriginal;
-
-			// Whatever has died, or been fired, since the game began is back
-			// as it started (a bullet in flight is put away, an alien is back).
-			object.isVisible = object.isVisibleOriginal;
-			object.collisionData.enabled = object.collisionEnabledOriginal;
-			object.exists = object.existsOriginal;
+			object.backToStart();
 
 			// Also drop any directions CommandExecutor::applyActionVelocity
 			// currently has recorded as held: velocity above is reset to rest,
@@ -1256,13 +1250,11 @@ namespace xge
 			object.activeMoveStep = {};
 
 			// The same goes for thrust still recorded as held, and a <stop />
-			// that took the acceleration away gives it back.
-			object.acceleration = object.accelerationOriginal;
+			// that took the acceleration away is given back above.
 			object.activeThrust = {};
 			object.activeThrustBurn = {};
 
-			// Facing the way it started, and no turn or thrust along it still held.
-			object.heading = object.headingOriginal;
+			// No turn or thrust along its heading still held.
 			object.activeTurn = {};
 			object.activeThrustAheadBy.clear();
 			object.showHeading();
@@ -1270,11 +1262,7 @@ namespace xge
 			// An animation starts again from its first picture, and a
 			// picture with holes in it is whole again.
 			object.restartAnimation();
-			// Its light, altitude and rise as they started, and nothing
-			// of it seen yet.
-			object.light = object.lightOriginal;
-			object.altitude = object.altitudeOriginal;
-			object.rise = object.riseOriginal;
+			// Nothing of it seen yet.
 			object.seen = false;
 			object.inDark = object.dark != Object::Darkness::None;
 
@@ -1291,7 +1279,6 @@ namespace xge
 			object.carrying.clear();
 			object.dropped.clear();
 			object.hopPending = {};
-			object.settled = false;
 			object.jumpStep = {};
 			object.jumpFramesLeft = 0;
 			object.jumpFrames = 0;
@@ -1303,12 +1290,10 @@ namespace xge
 			object.shifted = {};
 			object.activeClimb = {};
 			object.hasAim = false;
-			object.facing = object.facingOriginal;
 			object.followPath.clear();
 			object.walk = {};
-			object.ownerScene = object.ownerSceneOriginal;
 			object.blink = 0.0f;
-			object.goingLeft = object.facingOriginal == Direction::Left;
+			object.goingLeft = object.start.facing == Direction::Left;
 			object.faceMirror();
 			object.wearPalette(0);
 			if (!object.looks.empty()) { object.showLook(object.firstLook); }
@@ -1316,11 +1301,6 @@ namespace xge
 			{
 				timer.framesLeft = -1;
 				timer.done = false;
-			}
-
-			for (auto& [variableName, originalValue] : object.variableOriginal)
-			{
-				object.variable[variableName] = originalValue;
 			}
 		}
 	}
@@ -1398,10 +1378,10 @@ namespace xge
 			// and its timers and animation start over.
 			drawStartAgain(object);
 			object.startOver();
-			object.position = object.positionOriginal;
-			object.velocity = object.velocityOriginal;
+			object.position = object.start.position;
+			object.velocity = object.start.velocity;
 			object.isVisible = true;
-			object.collisionData.enabled = object.collisionEnabledOriginal;
+			object.collisionsOn = object.start.collisionsOn;
 			object.followPath.clear();
 			--count;
 		}
@@ -1528,7 +1508,7 @@ namespace xge
 
 				// What is left of this leg: the rest of a step, or the way home
 				// from wherever it has got to.
-				const Vector2f left = leg.home ? object.positionOriginal + object.shifted - object.position : object.followLeft;
+				const Vector2f left = leg.home ? object.start.position + object.shifted - object.position : object.followLeft;
 				const std::optional<Vector2f> step = pathStep(left, path.speed);
 
 				// Within a frame of home, it is put there: a place a <shift>
@@ -1701,7 +1681,7 @@ namespace xge
 
 		for (auto& object : objects)
 		{
-			if (object.ownerSceneOriginal != scene) { continue; }
+			if (object.start.ownerScene != scene) { continue; }
 			if (object.isCopy()) { despawn(object); continue; }
 			drawStartAgain(object);
 			resetObjectState(object);
@@ -1852,7 +1832,7 @@ namespace xge
 				return &other != &object && &other != &excluding
 					&& !other.isAirborne()
 					&& other.objClass == objClass
-					&& isShown(other) && other.collisionData.enabled
+					&& isShown(other) && other.collisionsOn
 					&& objectsOverlap(object, other).has_value();
 			});
 	}

@@ -202,7 +202,7 @@ namespace xge
 	// (fire() re-launching a bullet, reset()) starts from a known place.
 	void die(Object& object)
 	{
-		object.collisionData.enabled = false;
+		object.collisionsOn = false;
 		object.isVisible = false;
 		object.followPath.clear();
 	}
@@ -228,7 +228,7 @@ namespace xge
 
 	void restart(Object& object)
 	{
-		object.position = object.positionOriginal;
+		object.position = object.start.position;
 		object.climbing = false;
 		object.leaping = false;
 		object.grounded = false;
@@ -236,9 +236,9 @@ namespace xge
 		const bool keyHeld = std::any_of(object.activeMoveStep.begin(), object.activeMoveStep.end(), [](float step) { return step != 0.0f; });
 		if (!keyHeld)
 		{
-			object.velocity = object.velocityOriginal;
+			object.velocity = object.start.velocity;
 		}
-		object.heading = object.headingOriginal;
+		object.heading = object.start.heading;
 		object.showHeading();
 	}
 

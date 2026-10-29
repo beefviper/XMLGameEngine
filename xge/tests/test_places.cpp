@@ -10,6 +10,7 @@
 // command out of its place.
 
 #include "played.h"
+#include "file_text.h"
 #include "engine/folder.h"
 #include "load/xml.h"
 #include "load/xsd.h"
@@ -40,7 +41,7 @@ namespace
 		std::string text;
 		{
 			std::ifstream in(file.path);
-			text.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+			text = fileText(in);
 		}
 		const std::string named = " xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\"";
 		text.erase(text.find(named), named.size());

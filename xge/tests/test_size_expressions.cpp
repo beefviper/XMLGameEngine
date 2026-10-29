@@ -105,7 +105,7 @@ TEST_CASE("a text's position that uses its size is unknown until the text is mea
 	CHECK(title.positionResolved);
 	CHECK(title.position.x == 640.0f - 300.0f); // 1280 wide window
 	CHECK(title.position.y == 120.0f);          // y is "margin * 4"
-	CHECK(title.positionOriginal == title.position);
+	CHECK(title.start.position == title.position);
 	CHECK(printed(title).find("pos.x=340") != std::string::npos);
 }
 

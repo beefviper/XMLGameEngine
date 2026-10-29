@@ -101,8 +101,8 @@ namespace
 
 	bool isHome(const Object& object)
 	{
-		return std::abs(object.position.x - object.positionOriginal.x - object.shifted.x) < 0.01f
-			&& std::abs(object.position.y - object.positionOriginal.y - object.shifted.y) < 0.01f;
+		return std::abs(object.position.x - object.start.position.x - object.shifted.x) < 0.01f
+			&& std::abs(object.position.y - object.start.position.y - object.shifted.y) < 0.01f;
 	}
 
 	// A file in the temporary folder, removed afterwards.
@@ -525,7 +525,7 @@ TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pa
 	CHECK(escort.variable["pays"] == 100.0f);
 	Object& shot = play.object("shot");
 	shot.isVisible = true;
-	shot.collisionData.enabled = true;
+	shot.collisionsOn = true;
 	// Put on it (the purples are just below, in the way of one fired).
 	shot.position = { escort.position.x + escort.size.x / 2.0f, escort.position.y + escort.size.y / 2.0f };
 	shot.velocity = {};

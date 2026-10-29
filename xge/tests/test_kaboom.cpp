@@ -175,7 +175,7 @@ TEST_CASE("the bomber drops a bomb from under himself every so often, and it fal
 
 	// Three more, while the bucket (wherever the bomber's wanderings put the
 	// bombs) catches none of them.
-	table.bucket().collisionData.enabled = false;
+	table.bucket().collisionsOn = false;
 	table.frames(static_cast<int>(0.7f * kFramerate) * 3 + 1);
 	CHECK(table.falling().size() == 4);
 }

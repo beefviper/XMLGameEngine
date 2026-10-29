@@ -180,7 +180,7 @@ TEST_CASE("a jump into the water costs a life, the warmth comes back, and Bailey
 {
 	Frostbite play;
 	play.startStill();
-	const Vector2f home = play.bailey().positionOriginal;
+	const Vector2f home = play.bailey().start.position;
 
 	// Between the first two floes of the top row.
 	play.bailey().position.x = 200;
@@ -289,7 +289,7 @@ TEST_CASE("the cold takes a degree a second; at zero Bailey freezes, loses a lif
 
 	CHECK(play.variable("lives") == 3);
 	CHECK(play.degrees() >= 44);
-	CHECK(play.bailey().position.x == Approx(play.bailey().positionOriginal.x));
+	CHECK(play.bailey().position.x == Approx(play.bailey().start.position.x));
 }
 
 TEST_CASE("a finished igloo opens its door; walking in is a bonus and the next night, and the third wins", "[frostbite]")
@@ -311,7 +311,7 @@ TEST_CASE("a finished igloo opens its door; walking in is a bonus and the next n
 	CHECK(play.variable("score") >= (degrees - 7) * 10);
 	CHECK(play.variable("blocks") == 0);
 	CHECK(play.game.currentScene("playing") == "playing.night2");
-	CHECK(play.bailey().position.x == Approx(play.bailey().positionOriginal.x).margin(4)); // the held key walks on
+	CHECK(play.bailey().position.x == Approx(play.bailey().start.position.x).margin(4)); // the held key walks on
 	CHECK(play.state() == "playing");
 
 	// The ice of the second night drifts faster.
@@ -333,7 +333,7 @@ TEST_CASE("the fish is worth a bonus, and comes back a while later", "[frostbite
 	Frostbite play;
 	play.startStill();
 	Object& fish = play.game.getObject("fish");
-	fish.velocity = fish.velocityOriginal; // swimming: touches are only checked for what moves
+	fish.velocity = fish.start.velocity; // swimming: touches are only checked for what moves
 
 	// Put Bailey on the ice of the third row, on the fish.
 	Object& floe = play.game.getObject("night1.row3.1.1");
@@ -344,7 +344,7 @@ TEST_CASE("the fish is worth a bonus, and comes back a while later", "[frostbite
 	CHECK(play.variable("score") >= 100);
 	CHECK_FALSE(fish.isVisible);
 
-	play.bailey().position = play.bailey().positionOriginal;
+	play.bailey().position = play.bailey().start.position;
 	play.frames(12 * kFramerate);
 	CHECK(fish.isVisible);
 }

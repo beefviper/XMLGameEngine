@@ -114,7 +114,7 @@ namespace xge
 
 	// A bare <reset /> on an object: back where it started, facing and going
 	// the way it started; a held key still decides its velocity. The start
-	// is positionOriginal and velocityOriginal, so a start that draws a
+	// is start.position and start.velocity, so a start that draws a
 	// <random> is drawn again before this.
 	void restart(Object& object);
 
