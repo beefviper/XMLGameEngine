@@ -55,6 +55,33 @@ namespace xge
 		// as before; a climb a rule or timer started lets go there. A ladder
 		// is also pieces stacked one on another, as wide and lined up: the
 		// whole stack is one ladder.
+		// Whether something the climber lands on (a class or object one of
+		// its <land /> rules names) is under it with its top at `feet`, give
+		// or take a couple of pixels (a sloped girder). Under any of it: a
+		// ladder can come up through a hole between two pieces of ground.
+		bool floorAt(const std::vector<Object>& objects, const Object& climber, float feet, FrameRules& rules)
+		{
+			for (const auto& rule : climber.collisionData.others)
+			{
+				if (std::none_of(rule.commands.begin(), rule.commands.end(), [](const Command& command) { return std::holds_alternative<CmdLand>(shapeOf(command)); }))
+				{
+					continue;
+				}
+				for (const Object& other : objects)
+				{
+					if (&other == &climber || !rules.inPlay(other)) { continue; }
+					if (!rule.filterClass.empty() && other.objClass != rule.filterClass) { continue; }
+					if (!rule.filterObject.empty() && other.name != rule.filterObject && !other.inGroup(rule.filterObject)) { continue; }
+					const bool under = climber.position.x < other.position.x + other.size.x && other.position.x < climber.position.x + climber.size.x;
+					if (under && std::abs(other.position.y - feet) <= 2.0f)
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
 		void applyClimbing(std::vector<Object>& objects, FrameRules& rules)
 		{
 			for (auto& object : objects)
@@ -99,9 +126,15 @@ namespace xge
 					}
 				}
 
+				// A player's climb holds at an end with nothing there to
+				// stand on (the top of a broken ladder) rather than stepping
+				// off into the air; one a rule started lets go anyway.
 				const float step = object.activeClimb[1] - object.activeClimb[0];
+				const bool holding = object.climbing && !object.climbOnce && step != 0.0f;
+				const bool holdTop = holding && step < 0.0f && !floorAt(objects, object, whole.top(), rules);
+				const bool holdBottom = holding && step > 0.0f && !floorAt(objects, object, whole.bottom(), rules);
 				const bool wasClimbing = object.climbing;
-				if (!climbLadder(object.position, object.velocity, object.size, step, object.climbing, object.grounded, whole))
+				if (!climbLadder(object.position, object.velocity, object.size, step, object.climbing, object.grounded, whole, holdTop, holdBottom))
 				{
 					continue;
 				}

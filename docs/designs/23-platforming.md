@@ -25,7 +25,9 @@
 - *Jump points*: a condition sees a barrel within 64 pixels of Jumpman while his jump lasts (`man.leapt`, set by the jump action after the `<leap>`, so a refused leap does not set it) and marks `man.over`; his landing rule scores 100. Rejected: a second hitbox above each barrel (an object has one).
 - Found on the way: the conditions of a spawned copy's rules were never made, so its rules ran as if they had none. Copies now take the tests made for the object they copy, about themselves.
 
-**Open.** At the top of a broken ladder Jumpman steps off into the air and drops back (held up, he climbs it again); the arcade holds him there. Barrels choose a ladder by luck alone, not by where Jumpman is. Dying from too long a fall. The other three screens. Other rungs of air control (steer, brake, reverse) and a held, variable-height jump.
+- *Holding at a broken ladder's top* (2026-10-29): a ladder end with nothing to stand on, which is something of a class or object one of the climber's `<land />` rules names with its top there (two pixels either way, for the slopes) under any of the climber, holds a held climb there instead of letting it step off into the air and drop back. Under any of it, not its middle: Pitfall's ladder comes up through a hole between two pieces of path. A climb a rule started still lets go at the end (a fireball on a broken ladder drops back and burns on). Rejected: marking ladders as broken (a word for what the girders already say), a top that holds always (a ladder up to a girder must let him off).
+
+**Open.** Barrels choose a ladder by luck alone, not by where Jumpman is. Dying from too long a fall. The other three screens. Other rungs of air control (steer, brake, reverse) and a held, variable-height jump.
 
 
 ## Arcing jump (idea; the fixed arc is built as `<leap>`)

@@ -5,7 +5,7 @@
 ## Language and engine
 
 - **Chasing and aiming** ([chase-and-paths](24-chase-and-paths.md)): lead a target, chase round walls; Galaxian's divers and bombs could `<aim>`. Only the front invader of a column firing ([pools-and-enemies](10-pools-and-enemies.md)).
-- **Donkey Kong** ([platforming](23-platforming.md)): holding Jumpman at the top of a broken ladder, barrels that choose ladders by where Jumpman is, the other three screens, the rest of the air-control ladder.
+- **Donkey Kong** ([platforming](23-platforming.md)): barrels that choose ladders by where Jumpman is, the other three screens, the rest of the air-control ladder.
 - **Galaxian** ([chase-and-paths](24-chase-and-paths.md)): curved path legs. Its speeds and timings were chosen without seeing it played; so were Berserk's. Tune them first.
 - **Asteroids**: the flame, rocks hitting the saucer. Lunar Lander: hard landings, and the speeds and altitude on the screen.
 - **Sound** ([sound](33-sound.md)): the march of Space Invaders keeping time with the block (it is a fixed loop, the playing state's music); an envelope; how the eight new sets sound is unheard by agents, so tune them by ear. Breakout could use `<deflect>`; Pong could serve at a set speed and random angle and speed up per hit.

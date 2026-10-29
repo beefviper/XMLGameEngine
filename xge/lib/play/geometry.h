@@ -468,10 +468,13 @@ namespace xge
 	// below 0). Off it, it gets on only from the ground and when it can go
 	// that way, lined up with the ladder's middle. On it, it goes the step,
 	// its feet kept between the ladder's ends; at an end, going on, it gets
-	// off. The step is its velocity, straight up or down, so it moves, and
-	// touches what it passes, as anything does. The answer is whether it was
-	// on the ladder this frame (`climbing` says whether it still is).
-	bool climbLadder(Vector2f& position, Vector2f& velocity, const Vector2f& size, float step, bool& climbing, bool grounded, const Box& ladder) noexcept;
+	// off, unless it holds at that end (`holdTop`, `holdBottom`: nothing to
+	// stand on there), stopped. The step is its velocity,
+	// straight up or down, so it moves, and touches what it passes, as
+	// anything does. The answer is whether it was on the ladder this frame
+	// (`climbing` says whether it still is).
+	bool climbLadder(Vector2f& position, Vector2f& velocity, const Vector2f& size, float step, bool& climbing, bool grounded, const Box& ladder,
+		bool holdTop, bool holdBottom) noexcept;
 
 	// --- Shots (<fire>), at the projectile's own speed.
 

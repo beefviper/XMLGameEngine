@@ -479,7 +479,7 @@ TEST_CASE("the girders slope half a pixel a piece, down to their open ends", "[d
 	CHECK(play.feet() < low - 4.0f);
 }
 
-TEST_CASE("a broken ladder takes him partway, and back down to the girder", "[donkeykong]")
+TEST_CASE("a broken ladder takes him partway and holds him at its top, and back down to the girder", "[donkeykong]")
 {
 	DonkeyKong play;
 	play.start();
@@ -491,13 +491,24 @@ TEST_CASE("a broken ladder takes him partway, and back down to the girder", "[do
 	CHECK(play.man().climbing);
 	CHECK(play.feet() == Approx(foot - 10.0f));
 
-	// Its two rungs end well short of the girder above: off the top, he
-	// drops back.
+	// Its two rungs end well short of the girder above, with nothing to
+	// stand on: held up, he stays at the top of it, as in the arcade.
 	play.engine.handleKeyPressed(KeyCode::W);
-	play.frames(4);
-	play.engine.handleKeyReleased(KeyCode::W);
-	CHECK_FALSE(play.man().climbing);
 	play.frames(30);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(play.man().climbing);
+	const float held = play.feet();
+	CHECK(held == Approx(foot - 16.0f).margin(0.5f));
+	play.frames(30);
+	CHECK(play.man().climbing);
+	CHECK(play.feet() == Approx(held));
+
+	// Down takes him back to the girder, and off.
+	play.engine.handleKeyPressed(KeyCode::S);
+	play.frames(30);
+	play.engine.handleKeyReleased(KeyCode::S);
+	play.frames(5);
+	CHECK_FALSE(play.man().climbing);
 	CHECK(play.feet() == Approx(foot).margin(0.5f));
 	CHECK(play.man().grounded);
 }
