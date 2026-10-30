@@ -1290,12 +1290,17 @@ namespace xge
 			else if (operation.op == "divide") { answer.value /= operand.value; }
 			// What is left over, from 0 up to the divisor (-1 of 4 leaves 3), so it wraps.
 			else if (operation.op == "remainder") { answer.value -= operand.value * std::floor(answer.value / operand.value); }
-			// A comparison: 1 when it holds, 0 when not.
-			else if (operation.op == "above") { answer.value = answer.value > operand.value ? 1.0f : 0.0f; }
-			else if (operation.op == "below") { answer.value = answer.value < operand.value ? 1.0f : 0.0f; }
-			else if (operation.op == "atleast") { answer.value = answer.value >= operand.value ? 1.0f : 0.0f; }
-			else if (operation.op == "atmost") { answer.value = answer.value <= operand.value ? 1.0f : 0.0f; }
-			else { answer.value = answer.value == operand.value ? 1.0f : 0.0f; } // equal
+			// A <compare>, by its test (the second operand's role): 1 when it holds, 0 when not.
+			else
+			{
+				const std::string& test = operation.operands[i].role;
+				const bool holds = test == "above" ? answer.value > operand.value
+					: test == "below" ? answer.value < operand.value
+					: test == "atleast" ? answer.value >= operand.value
+					: test == "atmost" ? answer.value <= operand.value
+					: answer.value == operand.value;
+				answer.value = holds ? 1.0f : 0.0f;
+			}
 		}
 
 		return answer;

@@ -292,8 +292,8 @@
               <set variable="player.lives">
                 <formula>
                   <smallest>
-                    <of>6</of>
-                    <of><add><augend>player.lives</augend><addend>1</addend></add></of>
+                    <value>6</value>
+                    <value><add><augend>player.lives</augend><addend>1</addend></add></value>
                   </smallest>
                 </formula>
               </set>
@@ -372,8 +372,8 @@
               <set variable="player.lives">
                 <formula>
                   <smallest>
-                    <of>6</of>
-                    <of><add><augend>player.lives</augend><addend>1</addend></add></of>
+                    <value>6</value>
+                    <value><add><augend>player.lives</augend><addend>1</addend></add></value>
                   </smallest>
                 </formula>
               </set>

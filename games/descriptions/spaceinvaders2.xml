@@ -306,7 +306,7 @@
                 <formula>
                   <multiply>
                     <multiplicand>50</multiplicand>
-                    <multiplier><ceiling><of>self.worth</of></ceiling></multiplier>
+                    <multiplier><ceiling><value>self.worth</value></ceiling></multiplier>
                   </multiply>
                 </formula>
               </inc>

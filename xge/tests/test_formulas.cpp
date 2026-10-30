@@ -192,44 +192,44 @@ TEST_CASE("operations nest as deep as they are written, and a <random> is an ope
 
 TEST_CASE("smallest, largest, absolute and clamp", "[formulas]")
 {
-	CHECK(xOf("<formula><smallest><of>12</of><of>4</of><of>9</of></smallest></formula>") == 4.0f);
-	CHECK(xOf("<formula><largest><of>12</of><of>4</of><of>w</of></largest></formula>", kVariables) == 100.0f);
-	CHECK(xOf("<formula><absolute><of><subtract><minuend>4</minuend><subtrahend>w</subtrahend></subtract></of></absolute></formula>", kVariables) == 96.0f);
-	CHECK(xOf("<formula><clamp><of>w</of><atleast>10</atleast><atmost>50</atmost></clamp></formula>", kVariables) == 50.0f);
-	CHECK(xOf("<formula><clamp><of>-3</of><atleast>10</atleast><atmost>50</atmost></clamp></formula>") == 10.0f);
-	CHECK(xOf("<formula><clamp><of>xoffset</of><atleast>0</atleast><atmost>50</atmost></clamp></formula>", kVariables) == 7.0f);
+	CHECK(xOf("<formula><smallest><value>12</value><value>4</value><value>9</value></smallest></formula>") == 4.0f);
+	CHECK(xOf("<formula><largest><value>12</value><value>4</value><value>w</value></largest></formula>", kVariables) == 100.0f);
+	CHECK(xOf("<formula><absolute><value><subtract><minuend>4</minuend><subtrahend>w</subtrahend></subtract></value></absolute></formula>", kVariables) == 96.0f);
+	CHECK(xOf("<formula><clamp><value>w</value><atleast>10</atleast><atmost>50</atmost></clamp></formula>", kVariables) == 50.0f);
+	CHECK(xOf("<formula><clamp><value>-3</value><atleast>10</atleast><atmost>50</atmost></clamp></formula>") == 10.0f);
+	CHECK(xOf("<formula><clamp><value>xoffset</value><atleast>0</atleast><atmost>50</atmost></clamp></formula>", kVariables) == 7.0f);
 
 	// Too many operands, too few, or in the wrong order.
-	CHECK_THROWS_WITH(Loaded(gameXml("<formula><absolute><of>1</of><of>2</of></absolute></formula>")), ContainsSubstring("after all it holds: it holds one <of>"));
-	CHECK_THROWS_WITH(Loaded(gameXml("<formula><smallest><of>1</of></smallest></formula>")), ContainsSubstring("needs two or more <of>"));
-	CHECK_THROWS_WITH(Loaded(gameXml("<formula><clamp><of>1</of><atmost>2</atmost><atleast>0</atleast></clamp></formula>")), ContainsSubstring("<atmost> where <atleast> belongs"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><absolute><value>1</value><value>2</value></absolute></formula>")), ContainsSubstring("after all it holds: it holds one <value>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><smallest><value>1</value></smallest></formula>")), ContainsSubstring("needs two or more <value>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><clamp><value>1</value><atmost>2</atmost><atleast>0</atleast></clamp></formula>")), ContainsSubstring("<atmost> where <atleast> belongs"));
 }
 
 TEST_CASE("sign, ceiling, sine and cosine, the last two of degrees", "[formulas]")
 {
-	CHECK(xOf("<formula><sign><of>-7.5</of></sign></formula>") == -1.0f);
-	CHECK(xOf("<formula><sign><of>0</of></sign></formula>") == 0.0f);
-	CHECK(xOf("<formula><sign><of>w</of></sign></formula>", kVariables) == 1.0f);
-	CHECK(xOf("<formula><ceiling><of>2.25</of></ceiling></formula>") == 3.0f);
-	CHECK(xOf("<formula><ceiling><of>-2.25</of></ceiling></formula>") == -2.0f);
-	CHECK(xOf("<formula><ceiling><of>4</of></ceiling></formula>") == 4.0f);
-	CHECK(std::fabs(xOf("<formula><sine><of>30</of></sine></formula>") - 0.5f) < 1e-6f);
-	CHECK(std::fabs(xOf("<formula><cosine><of>60</of></cosine></formula>") - 0.5f) < 1e-6f);
-	CHECK(std::fabs(xOf("<formula><sine><of>-90</of></sine></formula>") + 1.0f) < 1e-6f);
-	CHECK(xOf("<formula><cosine><of>0</of></cosine></formula>") == 1.0f);
+	CHECK(xOf("<formula><sign><value>-7.5</value></sign></formula>") == -1.0f);
+	CHECK(xOf("<formula><sign><value>0</value></sign></formula>") == 0.0f);
+	CHECK(xOf("<formula><sign><value>w</value></sign></formula>", kVariables) == 1.0f);
+	CHECK(xOf("<formula><ceiling><value>2.25</value></ceiling></formula>") == 3.0f);
+	CHECK(xOf("<formula><ceiling><value>-2.25</value></ceiling></formula>") == -2.0f);
+	CHECK(xOf("<formula><ceiling><value>4</value></ceiling></formula>") == 4.0f);
+	CHECK(std::fabs(xOf("<formula><sine><value>30</value></sine></formula>") - 0.5f) < 1e-6f);
+	CHECK(std::fabs(xOf("<formula><cosine><value>60</value></cosine></formula>") - 0.5f) < 1e-6f);
+	CHECK(std::fabs(xOf("<formula><sine><value>-90</value></sine></formula>") + 1.0f) < 1e-6f);
+	CHECK(xOf("<formula><cosine><value>0</value></cosine></formula>") == 1.0f);
 
-	CHECK_THROWS_WITH(Loaded(gameXml("<formula><sine><of>1</of><of>2</of></sine></formula>")), ContainsSubstring("after all it holds: it holds one <of>"));
-	CHECK_THROWS_WITH(Loaded(gameXml("<formula><tangent><of>1</of></tangent></formula>")),
-		ContainsSubstring("expected <add>, <subtract>, <multiply>, <divide>, <remainder>, <smallest>, <largest>, <absolute>, <negate>, <sign>, <floor>, <ceiling>, <round>, <sine>, <cosine>, <clamp>, <above>, <below>, <atleast>, <atmost> or <equal>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><sine><value>1</value><value>2</value></sine></formula>")), ContainsSubstring("after all it holds: it holds one <value>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><tangent><value>1</value></tangent></formula>")),
+		ContainsSubstring("expected <add>, <subtract>, <multiply>, <divide>, <remainder>, <smallest>, <largest>, <absolute>, <negate>, <sign>, <floor>, <ceiling>, <round>, <sine>, <cosine>, <clamp> or <compare>"));
 }
 
 TEST_CASE("negate, floor, round and remainder", "[formulas]")
 {
-	CHECK(xOf("<formula><negate><of>w</of></negate></formula>", kVariables) == -100.0f);
-	CHECK(xOf("<formula><floor><of>2.75</of></floor></formula>") == 2.0f);
-	CHECK(xOf("<formula><floor><of>-2.25</of></floor></formula>") == -3.0f);
-	CHECK(xOf("<formula><round><of>2.5</of></round></formula>") == 3.0f);
-	CHECK(xOf("<formula><round><of>2.49</of></round></formula>") == 2.0f);
+	CHECK(xOf("<formula><negate><value>w</value></negate></formula>", kVariables) == -100.0f);
+	CHECK(xOf("<formula><floor><value>2.75</value></floor></formula>") == 2.0f);
+	CHECK(xOf("<formula><floor><value>-2.25</value></floor></formula>") == -3.0f);
+	CHECK(xOf("<formula><round><value>2.5</value></round></formula>") == 3.0f);
+	CHECK(xOf("<formula><round><value>2.49</value></round></formula>") == 2.0f);
 
 	// What is left, from 0 up to the divisor, so a count wraps: -1 of 4 leaves 3.
 	CHECK(xOf("<formula><remainder><dividend>10</dividend><divisor>4</divisor></remainder></formula>") == 2.0f);
@@ -240,7 +240,7 @@ TEST_CASE("negate, floor, round and remainder", "[formulas]")
 		ContainsSubstring("it holds a <dividend> and a <divisor>, in that order"));
 }
 
-TEST_CASE("a comparison is 1 when it holds and 0 when not", "[formulas]")
+TEST_CASE("a <compare> is 1 when its test holds and 0 when not", "[formulas]")
 {
 	struct Case
 	{
@@ -263,16 +263,19 @@ TEST_CASE("a comparison is 1 when it holds and 0 when not", "[formulas]")
 		DYNAMIC_SECTION(c.tag)
 		{
 			const std::string tag = c.tag;
-			const auto compare = [&](const std::string& first) { return xOf("<formula><" + tag + "><of>" + first + "</of><of>4</of></" + tag + "></formula>"); };
+			const auto compare = [&](const std::string& first) { return xOf("<formula><compare><value>" + first + "</value><" + tag + ">4</" + tag + "></compare></formula>"); };
 			CHECK(compare("3") == c.lower);
 			CHECK(compare("4") == c.same);
 			CHECK(compare("5") == c.higher);
 		}
 	}
 
-	// Inside a clamp, <atleast> is still the clamp's lower end; inside that, an operation.
-	CHECK(xOf("<formula><clamp><of>w</of><atleast><atleast><of>w</of><of>50</of></atleast></atleast><atmost>50</atmost></clamp></formula>", kVariables) == 50.0f);
-	CHECK_THROWS_WITH(Loaded(gameXml("<formula><above><of>1</of></above></formula>")), ContainsSubstring("needs two <of>"));
+	// Either side can be an operation of its own.
+	CHECK(xOf("<formula><compare><value><add><augend>w</augend><addend>1</addend></add></value><above>w</above></compare></formula>", kVariables) == 1.0f);
+
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><compare><value>1</value></compare></formula>")), ContainsSubstring("needs a <value>, then one of <above>, <below>, <atleast>, <atmost> or <equal>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><compare><value>1</value><value>2</value></compare></formula>")), ContainsSubstring("has <value> where its test belongs"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<formula><atleast><value>1</value><value>2</value></atleast></formula>")), ContainsSubstring("which is not an operation"));
 }
 
 TEST_CASE("a value's text has no functions: they are formula tags", "[formulas][errors]")
@@ -285,7 +288,7 @@ TEST_CASE("a value's text has no functions: they are formula tags", "[formulas][
 TEST_CASE("a <random>'s ends can be formulas", "[formulas]")
 {
 	CHECK(xOf("<random><min><formula><multiply><multiplicand>w</multiplicand><multiplier>2</multiplier></multiply></formula></min><max>200</max></random>", kVariables) == 200.0f);
-	CHECK(xOf("<random><min>xoffset</min><max><formula><smallest><of>w</of><of>7</of></smallest></formula></max></random>", kVariables) == 7.0f);
+	CHECK(xOf("<random><min>xoffset</min><max><formula><smallest><value>w</value><value>7</value></smallest></formula></max></random>", kVariables) == 7.0f);
 	CHECK_THROWS_WITH(Loaded(gameXml("<random><min><dice /></min><max>2</max></random>")), ContainsSubstring("an end is a number, an expression or a <formula>"));
 }
 
@@ -343,6 +346,18 @@ TEST_CASE("a value prints as infix with its brackets", "[formulas]")
 	formula.operations = std::make_shared<std::vector<RawOperation>>(1, subtract);
 
 	CHECK(valueText(formula) == "(window.width.center - (title.width / 2))");
+
+	RawOperation compare;
+	compare.op = "compare";
+	RawOperand of = operand("mode.waves");
+	of.role = "value";
+	RawOperand test = operand("4");
+	test.role = "atleast";
+	compare.operands = { of, test };
+	RawValue compared;
+	compared.kind = RawValue::Kind::Formula;
+	compared.operations = std::make_shared<std::vector<RawOperation>>(1, compare);
+	CHECK(valueText(compared) == "(mode.waves >= 4)");
 	CHECK(valueText(RawValue::expression("a + b")) == "a + b");
 }
 
@@ -443,8 +458,8 @@ namespace
 
 TEST_CASE("both schema checkers accept every spelling", "[formulas][schema]")
 {
-	const std::string picked = "<formula><clamp><of><largest><of>1</of><of>2</of><of><absolute><of>-3</of></absolute></of></largest></of>"
-		"<atleast><smallest><of>0</of><of>1</of></smallest></atleast><atmost>9</atmost></clamp></formula>";
+	const std::string picked = "<formula><clamp><value><largest><value>1</value><value>2</value><value><absolute><value>-3</value></absolute></value></largest></value>"
+		"<atleast><smallest><value>0</value><value>1</value></smallest></atleast><atmost>9</atmost></clamp></formula>";
 	const std::string drawn = "<random><min><formula><add><augend>1</augend><addend>2</addend></add></formula></min><max>9</max></random>";
 	for (const std::string& value : { std::string("window.width.center - title.width / 2"), kFormula, picked, drawn })
 	{
@@ -479,8 +494,8 @@ TEST_CASE("both schema checkers turn away the same mistakes in a formula", "[for
 		{ "a formula with no operation", "<formula></formula>", "expected one of <add>, <subtract>, <multiply>, <divide>" },
 		{ "two operations in a formula", "<formula><add><augend>1</augend><addend>1</addend></add><add><augend>1</augend><addend>1</addend></add></formula>", "unexpected element <add>" },
 		{ "a formula with one operand", "<formula><subtract><minuend>1</minuend></subtract></formula>", "expected <subtrahend>" },
-		{ "an absolute of two", "<formula><absolute><of>1</of><of>2</of></absolute></formula>", "unexpected element <of>" },
-		{ "a clamp out of order", "<formula><clamp><of>1</of><atmost>2</atmost><atleast>0</atleast></clamp></formula>", "expected <atleast>" },
+		{ "an absolute of two", "<formula><absolute><value>1</value><value>2</value></absolute></formula>", "unexpected element <value>" },
+		{ "a clamp out of order", "<formula><clamp><value>1</value><atmost>2</atmost><atleast>0</atleast></clamp></formula>", "expected <atleast>" },
 		{ "an unknown tag deep inside", "<formula><add><augend><add><augend>1</augend><addend><dice /></addend></add></augend><addend>1</addend></add></formula>", "unexpected element <dice>" },
 	};
 

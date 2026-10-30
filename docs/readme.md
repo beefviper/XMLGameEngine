@@ -241,15 +241,15 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 | `<multiply>` | `<multiplicand>` | `<multiplier>` | first * second |
 | `<divide>` | `<dividend>` | `<divisor>` | first / second |
 | `<remainder>` | `<dividend>` | `<divisor>` (one) | what is left over, from 0 up to the divisor, so a count wraps (-1 of 4 leaves 3) |
-| `<smallest>` | `<of>` | `<of>` | the smallest of two or more |
-| `<largest>` | `<of>` | `<of>` | the largest of two or more |
-| `<absolute>` | `<of>` | | the one `<of>` without its sign |
-| `<negate>` | `<of>` | | the `<of>` with its sign turned over |
-| `<sign>` | `<of>` | | -1, 0 or 1, as the `<of>` is below, at or above 0 |
-| `<floor>`, `<ceiling>`, `<round>` | `<of>` | | the `<of>` to a whole number: down, up, or the nearest (a half goes up, away from 0) |
-| `<sine>`, `<cosine>` | `<of>` | | of the `<of>` as an angle in degrees, like every angle in a game |
-| `<clamp>` | `<of>` | `<atleast>`, then `<atmost>` | the `<of>`, kept from `<atleast>` up to `<atmost>` |
-| `<above>`, `<below>`, `<atleast>`, `<atmost>`, `<equal>` | `<of>` | `<of>` (one) | a comparison, the same words as a [condition's tests](#conditions): 1 when the first is so against the second, 0 when not. Pac-Man chases for ever from the fourth wave: 20 + 100000 × `<atleast><of>mode.waves</of><of>4</of></atleast>` |
+| `<smallest>` | `<value>` | `<value>` | the smallest of two or more |
+| `<largest>` | `<value>` | `<value>` | the largest of two or more |
+| `<absolute>` | `<value>` | | the one `<value>` without its sign |
+| `<negate>` | `<value>` | | the `<value>` with its sign turned over |
+| `<sign>` | `<value>` | | -1, 0 or 1, as the `<value>` is below, at or above 0 |
+| `<floor>`, `<ceiling>`, `<round>` | `<value>` | | the `<value>` to a whole number: down, up, or the nearest (a half goes up, away from 0) |
+| `<sine>`, `<cosine>` | `<value>` | | of the `<value>` as an angle in degrees, like every angle in a game |
+| `<clamp>` | `<value>` | `<atleast>`, then `<atmost>` | the `<value>`, kept from `<atleast>` up to `<atmost>` |
+| `<compare>` | `<value>` | its test: `<above>`, `<below>`, `<atleast>`, `<atmost>` or `<equal>` (one) | 1 when the `<value>` passes the test, 0 when not; the same words as a [condition's tests](#conditions). Pac-Man chases for ever from the fourth wave: 20 + 100000 × `<compare><value>mode.waves</value><atleast>4</atleast></compare>` |
 
 ```xml
 <x>
@@ -264,7 +264,7 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 
 - An operand is a **name or a number**, never an expression; anything more is an operation of its own.
 - Several second operands chain left to right: `a - b - c` is one `<subtract>` with two `<subtrahend>`s.
-- A `<random>`'s `<min>` or `<max>` can be a `<formula>` in place of its text: `<random><min><formula><smallest><of>w</of><of>7</of></smallest></formula></min><max>20</max></random>`.
+- A `<random>`'s `<min>` or `<max>` can be a `<formula>` in place of its text: `<random><min><formula><smallest><value>w</value><value>7</value></smallest></formula></min><max>20</max></random>`.
 - **Dividing by 0.** A divisor certainly 0 at load (a number, a game variable, or an operation of only those) stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable, a text not yet measured) gives 0 quietly, and a position or interval made from it is worked out again later. While the game runs a divisor of 0 gives 0 and one warning per place. Expression text divides by 0 as it always did.
 
 ### Names

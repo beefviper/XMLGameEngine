@@ -350,7 +350,7 @@
                     <addend>
                       <multiply>
                         <multiplicand>100000</multiplicand>
-                        <multiplier><atleast><of>mode.waves</of><of>4</of></atleast></multiplier>
+                        <multiplier><compare><value>mode.waves</value><atleast>4</atleast></compare></multiplier>
                       </multiply>
                     </addend>
                   </add>
@@ -370,7 +370,7 @@
                     <subtrahend>
                       <multiply>
                         <multiplicand>2</multiplicand>
-                        <multiplier><atleast><of>mode.waves</of><of>2</of></atleast></multiplier>
+                        <multiplier><compare><value>mode.waves</value><atleast>2</atleast></compare></multiplier>
                       </multiply>
                     </subtrahend>
                   </subtract>
@@ -1045,16 +1045,16 @@
           <set variable="status.pace">
             <formula>
               <smallest>
-                <of>2.125</of>
-                <of><add><augend>status.pace</augend><addend>0.0625</addend></add></of>
+                <value>2.125</value>
+                <value><add><augend>status.pace</augend><addend>0.0625</addend></add></value>
               </smallest>
             </formula>
           </set>
           <set variable="status.fright">
             <formula>
               <largest>
-                <of>1</of>
-                <of><subtract><minuend>status.fright</minuend><subtrahend>1</subtrahend></subtract></of>
+                <value>1</value>
+                <value><subtract><minuend>status.fright</minuend><subtrahend>1</subtrahend></subtract></value>
               </largest>
             </formula>
           </set>

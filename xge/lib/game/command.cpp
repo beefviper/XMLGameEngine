@@ -572,23 +572,19 @@ namespace xge
 			{ "multiply", "multiplicand", "multiplier", '*' },
 			{ "divide", "dividend", "divisor", '/' },
 			{ "remainder", "dividend", "divisor", 0, "remainder", 2, 2 },
-			{ "smallest", "of", "of", 0, "min" },
-			{ "largest", "of", "of", 0, "max" },
-			{ "absolute", "of", "of", 0, "abs", 1, 1 },
-			{ "negate", "of", "of", 0, "negate", 1, 1 },
-			{ "sign", "of", "of", 0, "sign", 1, 1 },
-			{ "floor", "of", "of", 0, "floor", 1, 1 },
-			{ "ceiling", "of", "of", 0, "ceiling", 1, 1 },
-			{ "round", "of", "of", 0, "round", 1, 1 },
-			{ "sine", "of", "of", 0, "sine", 1, 1 },
-			{ "cosine", "of", "of", 0, "cosine", 1, 1 },
-			{ "clamp", "of", "atleast", 0, "clamp", 3, 3, "atmost" },
-			// Comparisons, the same words as a condition's tests: 1 or 0.
-			{ "above", "of", "of", 0, "above", 2, 2 },
-			{ "below", "of", "of", 0, "below", 2, 2 },
-			{ "atleast", "of", "of", 0, "atleast", 2, 2 },
-			{ "atmost", "of", "of", 0, "atmost", 2, 2 },
-			{ "equal", "of", "of", 0, "equal", 2, 2 },
+			{ "smallest", "value", "value", 0, "min" },
+			{ "largest", "value", "value", 0, "max" },
+			{ "absolute", "value", "value", 0, "abs", 1, 1 },
+			{ "negate", "value", "value", 0, "negate", 1, 1 },
+			{ "sign", "value", "value", 0, "sign", 1, 1 },
+			{ "floor", "value", "value", 0, "floor", 1, 1 },
+			{ "ceiling", "value", "value", 0, "ceiling", 1, 1 },
+			{ "round", "value", "value", 0, "round", 1, 1 },
+			{ "sine", "value", "value", 0, "sine", 1, 1 },
+			{ "cosine", "value", "value", 0, "cosine", 1, 1 },
+			{ "clamp", "value", "atleast", 0, "clamp", 3, 3, "atmost" },
+			// A <value> and a test of it, the same words as a condition's: 1 or 0.
+			{ "compare", "value", "test", 0, "compare", 2, 2, nullptr, true },
 			// A <random> with a <formula> end (RawValue::operations).
 			{ "random", "min", "max", 0, "random", 2, 2 },
 		};
@@ -602,6 +598,11 @@ namespace xge
 		}
 
 		return nullptr;
+	}
+
+	bool isComparisonWord(const std::string& word)
+	{
+		return word == "above" || word == "below" || word == "atleast" || word == "atmost" || word == "equal";
 	}
 
 	std::string operationTags()
@@ -621,6 +622,12 @@ namespace xge
 		std::string operationText(const RawOperation& operation)
 		{
 			const OperationShape* shape = operationShape(operation.op);
+			if (shape && shape->compares && operation.operands.size() == 2)
+			{
+				const std::string& test = operation.operands[1].role;
+				const char* sign = test == "above" ? ">" : test == "below" ? "<" : test == "atleast" ? ">=" : test == "atmost" ? "<=" : "==";
+				return "(" + valueText(operation.operands[0].value) + " " + sign + " " + valueText(operation.operands[1].value) + ")";
+			}
 			const bool infix = shape && shape->symbol != 0;
 			const std::string between = infix ? " " + std::string(1, shape->symbol) + " " : ", ";
 

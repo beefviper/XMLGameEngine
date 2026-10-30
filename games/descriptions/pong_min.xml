@@ -32,9 +32,9 @@
             <x>
               <formula>
                 <multiply>
-                  <multiplicand><sign><of>ball.side</of></sign></multiplicand>
+                  <multiplicand><sign><value>ball.side</value></sign></multiplicand>
                   <multiplier>ball.speed</multiplier>
-                  <multiplier><cosine><of>ball.angle</of></cosine></multiplier>
+                  <multiplier><cosine><value>ball.angle</value></cosine></multiplier>
                 </multiply>
               </formula>
             </x>
@@ -42,7 +42,7 @@
               <formula>
                 <multiply>
                   <multiplicand>ball.speed</multiplicand>
-                  <multiplier><sine><of>ball.angle</of></sine></multiplier>
+                  <multiplier><sine><value>ball.angle</value></sine></multiplier>
                 </multiply>
               </formula>
             </y>

@@ -581,7 +581,7 @@
           <set variable="self.way">
             <formula>
               <sign>
-                <of>self.velocity.x</of>
+                <value>self.velocity.x</value>
               </sign>
             </formula>
           </set>
@@ -733,7 +733,7 @@
           <set variable="self.velocity.x">
             <formula>
               <multiply>
-                <multiplicand><sign><of>self.velocity.x</of></sign></multiplicand>
+                <multiplicand><sign><value>self.velocity.x</value></sign></multiplicand>
                 <multiplier>self.speed</multiplier>
                 <multiplier>2</multiplier>
               </multiply>

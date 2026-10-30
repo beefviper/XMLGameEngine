@@ -736,6 +736,10 @@ namespace xge
 		std::size_t most{ 0 };
 		const char* last{ nullptr };
 
+		// <compare>: its second operand is named for the test, one of
+		// comparisonWords (<value>a</value><atleast>b</atleast>), not `rest`.
+		bool compares{ false };
+
 		// The role the operand at `index` plays.
 		const char* roleAt(std::size_t index) const noexcept
 		{
@@ -750,6 +754,10 @@ namespace xge
 
 	// Every operation tag a <formula> takes, for a mistake: "<add>, ... or <clamp>".
 	std::string operationTags();
+
+	// The tests of a <compare>, the same words as a condition's: above,
+	// below, atleast, atmost, equal.
+	bool isComparisonWord(const std::string& word);
 
 	// A value as one line of text, the way a game is printed: an expression as
 	// written, an operation tree in infix with its brackets.

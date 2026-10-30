@@ -196,26 +196,26 @@
                 <min>
                   <formula>
                     <largest>
-                      <of>0.8</of>
-                      <of>
+                      <value>0.8</value>
+                      <value>
                         <subtract>
                           <minuend>3</minuend>
                           <subtrahend><multiply><multiplicand>player.depth</multiplicand><multiplier>0.25</multiplier></multiply></subtrahend>
                         </subtract>
-                      </of>
+                      </value>
                     </largest>
                   </formula>
                 </min>
                 <max>
                   <formula>
                     <largest>
-                      <of>2</of>
-                      <of>
+                      <value>2</value>
+                      <value>
                         <subtract>
                           <minuend>7</minuend>
                           <subtrahend><multiply><multiplicand>player.depth</multiplicand><multiplier>0.5</multiplier></multiply></subtrahend>
                         </subtract>
-                      </of>
+                      </value>
                     </largest>
                   </formula>
                 </max>
@@ -536,8 +536,8 @@
               <every>
                 <formula>
                   <largest>
-                    <of>6</of>
-                    <of><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></of>
+                    <value>6</value>
+                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
                   </largest>
                 </formula>
               </every>
@@ -577,8 +577,8 @@
               <every>
                 <formula>
                   <largest>
-                    <of>6</of>
-                    <of><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></of>
+                    <value>6</value>
+                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
                   </largest>
                 </formula>
               </every>
@@ -619,8 +619,8 @@
               <every>
                 <formula>
                   <largest>
-                    <of>6</of>
-                    <of><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></of>
+                    <value>6</value>
+                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
                   </largest>
                 </formula>
               </every>
@@ -662,8 +662,8 @@
               <every>
                 <formula>
                   <largest>
-                    <of>6</of>
-                    <of><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></of>
+                    <value>6</value>
+                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
                   </largest>
                 </formula>
               </every>

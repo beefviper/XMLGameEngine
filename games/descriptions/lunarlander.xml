@@ -286,8 +286,8 @@
           <set variable="lander.fuel">
             <formula>
               <largest>
-                <of>0</of>
-                <of><subtract><minuend>lander.fuel</minuend><subtrahend>wreckcost</subtrahend></subtract></of>
+                <value>0</value>
+                <value><subtract><minuend>lander.fuel</minuend><subtrahend>wreckcost</subtrahend></subtract></value>
               </largest>
             </formula>
           </set>

@@ -285,8 +285,8 @@
               <set variable="player.light">
                 <formula>
                   <largest>
-                    <of>near</of>
-                    <of><subtract><minuend>player.light</minuend><subtrahend>5</subtrahend></subtract></of>
+                    <value>near</value>
+                    <value><subtract><minuend>player.light</minuend><subtrahend>5</subtrahend></subtract></value>
                   </largest>
                 </formula>
               </set>

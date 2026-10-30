@@ -228,21 +228,28 @@ namespace xge
 			operation.op = shape.tag;
 
 			// What it holds, in words, for a mistake: "a <minuend>, then one
-			// or more <subtrahend>", "one <of>", "two <of>", "an <of>, an <atleast> and an <atmost>".
+			// or more <subtrahend>", "one <value>", "two <value>", "a <value>, an <atleast> and an <atmost>".
 			std::string wanted;
-			if (shape.most == 1) { wanted = std::string("one <") + shape.first + ">"; }
+			if (shape.compares) { wanted = std::string("a <") + shape.first + ">, then one of <above>, <below>, <atleast>, <atmost> or <equal>"; }
+			else if (shape.most == 1) { wanted = std::string("one <") + shape.first + ">"; }
 			else if (shape.most == 2 && std::string(shape.first) == shape.rest) { wanted = std::string("two <") + shape.first + ">"; }
 			else if (shape.most == 2) { wanted = std::string("a <") + shape.first + "> and a <" + shape.rest + ">, in that order"; }
-			else if (shape.last) { wanted = std::string("an <") + shape.first + ">, an <" + shape.rest + "> and an <" + shape.last + ">, in that order"; }
+			else if (shape.last) { wanted = std::string("a <") + shape.first + ">, an <" + shape.rest + "> and an <" + shape.last + ">, in that order"; }
 			else if (std::string(shape.first) == shape.rest) { wanted = std::string("two or more <") + shape.first + ">"; }
 			else { wanted = std::string("a <") + shape.first + ">, then one or more <" + shape.rest + ">"; }
 
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
 			{
-				const char* expected = shape.roleAt(operation.operands.size());
+				std::string expected = shape.roleAt(operation.operands.size());
 				if (shape.most > 0 && operation.operands.size() == shape.most)
 				{
 					fail(here, "has <" + child->getName() + "> after all it holds: it holds " + wanted);
+				}
+				// A <compare>'s test names its second operand.
+				if (shape.compares && operation.operands.size() == 1)
+				{
+					if (!isComparisonWord(child->getName())) { fail(here, "has <" + child->getName() + "> where its test belongs: it holds " + wanted); }
+					expected = child->getName();
 				}
 				if (child->getName() != expected)
 				{
