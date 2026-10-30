@@ -318,7 +318,13 @@ namespace xge::parts
 			if (object.rawPosition.x.kind == RawValue::Kind::Expression && object.rawPosition.x.text.empty()) { object.rawPosition.x = value("0"); }
 			if (object.rawPosition.y.kind == RawValue::Kind::Expression && object.rawPosition.y.text.empty()) { object.rawPosition.y = value("0"); }
 		}
-		if (!member.moving.empty())
+		// A <shape> is drawn by its cells, so it has no looks of its own.
+		if (!object.shapeRows.empty())
+		{
+			object.sprite = nothingSprite();
+			object.isDrawn = false;
+		}
+		else if (!member.moving.empty())
 		{
 			lookWithAnimations(object, member.sprites, member.moving, "object '" + object.name + "'");
 		}
@@ -373,22 +379,39 @@ namespace xge::parts
 	// A <map>'s groups and objects: a member of the group on each tile of its
 	// character, named under the map by its number in reading order
 	// (maze.dots.17), and an object on the
-	// one tile of its own (the engine has checked that there is one).
+	// one tile of its own (the engine has checked that there is one). On a
+	// map of <cells />, a group picking no character, or one on no tile, is
+	// one piece waiting to be spawned (board.blocks), and so is an object.
 	inline void addMapMembers(std::vector<RawObject>& all, const Member& group, const RawMap& map, const std::string& character, const std::string& name)
 	{
+		const char picked = character.empty() ? '\0' : character.front();
+		const auto tiles = picked == '\0' ? std::vector<std::pair<std::size_t, std::size_t>>{} : tilesOf(map, picked);
+		if (map.cells && tiles.empty())
+		{
+			RawObject member = finish(made(group, map.name + "." + name, {}));
+			waitOnMap(member, map, picked);
+			all.push_back(std::move(member));
+			return;
+		}
 		int count = 0;
-		for (const auto& [column, row] : tilesOf(map, character.front()))
+		for (const auto& [column, row] : tiles)
 		{
 			RawObject member = finish(made(group, map.name + "." + name + "." + std::to_string(++count), {}));
-			placeOnMap(member, map, column, row);
+			placeOnMap(member, map, column, row, picked);
 			all.push_back(std::move(member));
 		}
 	}
 
 	inline RawObject onMap(RawObject object, const RawMap& map, const std::string& character)
 	{
-		const auto tiles = tilesOf(map, character.front());
-		placeOnMap(object, map, tiles.front().first, tiles.front().second);
+		const char picked = character.empty() ? '\0' : character.front();
+		const auto tiles = picked == '\0' ? std::vector<std::pair<std::size_t, std::size_t>>{} : tilesOf(map, picked);
+		if (map.cells && tiles.empty())
+		{
+			waitOnMap(object, map, picked);
+			return object;
+		}
+		placeOnMap(object, map, tiles.front().first, tiles.front().second, picked);
 		return object;
 	}
 

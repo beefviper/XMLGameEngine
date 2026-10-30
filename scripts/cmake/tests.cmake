@@ -66,6 +66,7 @@ add_executable(xgetest
 	"xge/tests/test_frogger.cpp"
 	"xge/tests/test_spacerace.cpp"
 	"xge/tests/test_kaboom.cpp"
+	"xge/tests/test_cells.cpp"
 	"xge/tests/test_freeway.cpp"
 	"xge/tests/test_depthcharge.cpp"
 	"xge/tests/test_astrosmash.cpp"

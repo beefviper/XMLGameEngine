@@ -55,6 +55,10 @@ namespace xge
 		// Every object on a path takes this frame's step of it.
 		virtual void followPaths() {}
 
+		// Every held move on a map with <cells /> takes its next step, if
+		// one is due this frame.
+		virtual void cellMoves() {}
+
 		// A thruster burns one unit of the object's `variable`; false
 		// (and nothing burnt) when there is none left.
 		virtual bool burn(Object& object, const std::string& variable)

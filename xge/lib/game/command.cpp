@@ -51,6 +51,10 @@ namespace xge
 		if (verb == "track")  { return CmdTrack{ raw.path }; }
 		if (verb == "land")   { return CmdLand{}; }
 		if (verb == "reverse") { return CmdReverse{}; }
+		if (verb == "settle") { return CmdSettle{}; }
+		if (verb == "clear") { return CmdClear{}; }
+		if (verb == "collapse") { return CmdCollapse{}; }
+		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
 
 		// <reset/> puts the object in the rule (or, in a state's input or
 		// condition, the whole game) back; <reset object="name"/> that one object.
@@ -61,7 +65,19 @@ namespace xge
 			return CmdResetObject{ raw.object };
 		}
 
-		if (verb == "move") { return CmdMove{ directionFromName(raw.direction, verb), evaluate(raw.amount) }; }
+		// Nothing written: none (a hop or a turn on a cell map, one cell or
+		// a quarter).
+		const auto amountOr0 = [&]() { return raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty() ? 0.0f : evaluate(raw.amount); };
+		if (verb == "move")
+		{
+			CmdMove move{ directionFromName(raw.direction, verb), evaluate(raw.amount) };
+			if (!(raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty()))
+			{
+				move.wait = evaluate(raw.seconds);
+				if (move.wait < 0.0f) { throw std::runtime_error("<move> has a <wait> of " + formatDisplayNumber(move.wait) + "; expected 0 or more"); }
+			}
+			return move;
+		}
 		// How long a <hop> takes: no <seconds>, none at all.
 		const auto hopSeconds = [&]()
 		{
@@ -87,7 +103,7 @@ namespace xge
 			const auto dash = name.find('-');
 			if (dash == std::string::npos)
 			{
-				CmdHop hop{ directionFromName(name, verb), evaluate(raw.amount), {}, hopSeconds() };
+				CmdHop hop{ directionFromName(name, verb), amountOr0(), {}, hopSeconds() };
 				hop.arc = arcOf("hop", hop.seconds);
 				hop.step = stepToward(hop.direction, hop.distance);
 				return hop;
@@ -204,7 +220,7 @@ namespace xge
 			{
 				throw std::runtime_error("<turn> has direction=\"" + raw.direction + "\"; expected left or right");
 			}
-			return CmdTurn{ direction, evaluate(raw.amount) };
+			return CmdTurn{ direction, amountOr0() };
 		}
 
 		if (verb == "thrust") { return CmdThrust{ evaluate(raw.amount), raw.burn }; }
@@ -334,6 +350,9 @@ namespace xge
 			half(raw.positionY, spawn.y, &spawn.centerY, "window.height.center");
 			half(raw.velocityX, spawn.velocityX, nullptr, "");
 			half(raw.velocityY, spawn.velocityY, nullptr, "");
+			half(raw.column, spawn.column, nullptr, "");
+			half(raw.row, spawn.row, nullptr, "");
+			spawn.random = raw.random;
 			return spawn;
 		}
 
@@ -437,6 +456,13 @@ namespace xge
 			[&](const CmdDie&) { o << "die"; },
 			[&](const CmdDespawn& d) { o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")"); },
 			[&](const CmdStop&) { o << "stop"; },
+			[&](const CmdSettle&) { o << "settle"; },
+			[&](const CmdClear&) { o << "clear"; },
+			[&](const CmdCollapse&) { o << "collapse"; },
+			[&](const CmdSlide& m)
+			{
+				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
+			},
 			[&](const CmdWrap&) { o << "wrap"; },
 			[&](const CmdRide&) { o << "ride"; },
 			[&](const CmdCarry&) { o << "carry"; },
@@ -453,7 +479,7 @@ namespace xge
 					: (m.direction == Direction::Down) ? "down"
 					: (m.direction == Direction::Left) ? "left"
 					: "right";
-				o << "move." << direction << "(" << m.step << ")";
+				o << "move." << direction << "(" << m.step << (m.wait > 0.0f ? ", wait " + formatDisplayNumber(m.wait) : std::string{}) << ")";
 			},
 			[&](const CmdHop& h)
 			{
@@ -744,6 +770,11 @@ namespace xge
 		else if (command.verb == "move" || command.verb == "accelerate" || command.verb == "turn" || command.verb == "go")
 		{
 			o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+			if (command.verb == "move" && !(command.seconds.kind == RawValue::Kind::Expression && command.seconds.text.empty())) { o << "(wait " << command.seconds << ")"; }
+		}
+		else if (command.verb == "slide")
+		{
+			o << "." << command.direction;
 		}
 		else if (command.verb == "inc" || command.verb == "dec")
 		{
@@ -798,7 +829,8 @@ namespace xge
 		}
 		else if (command.verb == "spawn")
 		{
-			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ")";
+			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY
+				<< (command.random ? ", random" : "") << ", " << command.column << " " << command.row << ")";
 		}
 
 		return o;

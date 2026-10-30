@@ -67,6 +67,13 @@ namespace xge
 		return run(command, Doer{});
 	}
 
+	bool CommandExecutor::executeCheck(const Command& command, const Object::CellMatch& match)
+	{
+		Doer doer;
+		doer.match = &match;
+		return run(command, doer);
+	}
+
 	void CommandExecutor::executeAxis(const Command& command, Axis axis, float fraction)
 	{
 		const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command));
@@ -141,7 +148,8 @@ namespace xge
 			[&](const CmdMove& m)
 			{
 				if (!self) { return; }
-				if (doer.action) { holdMove(*self, m.direction, m.step, pressed); }
+				if (doer.action && self->onCells) { game.holdCellMove(*self, m, pressed); }
+				else if (doer.action) { holdMove(*self, m.direction, m.step, pressed); }
 				else { moveByStep(*self, m.direction, m.step); }
 			},
 			// A bounce off what it touched, or off the screen's edge.
@@ -161,7 +169,7 @@ namespace xge
 			[&](const CmdCarry&) { if (self && doer.touch) { carry(*self, *doer.other); } },
 			[&](const CmdLand&) { if (self && doer.touch) { land(*self, *doer.other, doer.touch->edge); } },
 			// The controls an action holds: a press, or on while it is down.
-			[&](const CmdHop& h) { if (self && doer.action) { done = hop(*self, h); } },
+			[&](const CmdHop& h) { if (self) { done = hop(*self, h); } },
 			[&](const CmdJump& j) { if (self && doer.action) { done = startJump(*self, j); } },
 			[&](const CmdGo& g) { if (self && doer.action) { startGo(*self, g); } },
 			[&](const CmdLeap& l) { if (self && doer.action) { done = leap(*self, l.height); } },
@@ -173,7 +181,13 @@ namespace xge
 				self->climbOnce = pressed && doer.byRule;
 			},
 			[&](const CmdAccelerate& a) { if (self && doer.action) { applyActionThrust(*self, a.direction, pressed ? a.amount : 0.0f, a.burn); } },
-			[&](const CmdTurn& t) { if (self && doer.action) { applyActionTurn(*self, t.direction, pressed ? t.rate : 0.0f); } },
+			[&](const CmdTurn& t)
+			{
+				if (!self || !doer.action) { return; }
+				// A shape on a cell map: a quarter turn on the press.
+				if (self->isShape()) { if (pressed) { done = game.turnCells(*self, t.direction == Direction::Right); } }
+				else { applyActionTurn(*self, t.direction, pressed ? t.rate : 0.0f); }
+			},
 			[&](const CmdThrust& t) { if (self && doer.action) { applyActionThrustAhead(*self, *doer.action, pressed ? t.amount : 0.0f, t.burn); } },
 			// The game's own: a state's list, and the rest.
 			[&](const CmdPushState& c) { game.pushState(c.name); },
@@ -198,6 +212,11 @@ namespace xge
 			[&](const CmdResetScene& r) { game.reset(r); },
 			[&](const CmdSpawn& c) { done = spawn(c); },
 			[&](const CmdDespawn& d) { despawn(self, d); },
+			// A cell map's.
+			[&](const CmdSettle&) { if (self) { game.settle(*self); } },
+			[&](const CmdSlide& m) { if (self && self->onCells) { game.slideCells(*self, m.direction); } },
+			[&](const CmdClear&) { if (doer.match) { game.clearCells(*doer.match); } },
+			[&](const CmdCollapse&) { if (doer.match) { game.collapseCells(*doer.match); } },
 			// Another action, of this object or another, as part of this.
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); },
 			// <track /> runs on a pointing control (executeAxis), <hold> in a
@@ -463,6 +482,25 @@ namespace xge
 
 	bool CommandExecutor::hop(Object& object, const CmdHop& command)
 	{
+		// On a cell map: whole cells (one, with no distance), refused (and
+		// touching) when it cannot go.
+		if (object.onCells)
+		{
+			const auto cells = [](float pixels, float distance)
+			{
+				if (pixels == 0.0f && distance == 0.0f) { return 0; }
+				const int count = std::max(1, static_cast<int>(std::lround(std::fabs(distance > 0.0f ? distance : pixels))));
+				return pixels < 0.0f ? -count : count;
+			};
+			Vector2f way = command.step;
+			if (way.x == 0.0f && way.y == 0.0f) { way = stepToward(command.direction, 1.0f); }
+			const int across = way.x == 0.0f ? 0 : cells(way.x, command.distance);
+			const int down = way.y == 0.0f ? 0 : cells(way.y, command.distance);
+			if (!game.stepCells(object, across, down)) { return false; }
+			object.facing = command.direction;
+			return true;
+		}
+
 		// One in the air waits for the landing.
 		if (object.isAirborne()) { return false; }
 
@@ -807,8 +845,18 @@ namespace xge
 	// starts. False when no more of it may exist.
 	bool CommandExecutor::spawn(const CmdSpawn& command)
 	{
-		Object* made = game.spawn(command.target);
+		Object* made = game.spawn(command.target, command.random);
 		if (!made) { return false; }
+
+		// On a cell map: in a cell, a shape's top left one (counting from 1).
+		if (made->onCells)
+		{
+			const auto cell = [](const std::optional<float>& given, int own) { return given ? static_cast<int>(std::lround(*given)) : own + 1; };
+			if (!game.putOnCells(*made, cell(command.column, made->mapColumn), cell(command.row, made->mapRow))) { return false; }
+			if (command.velocityX) { made->velocity.x = *command.velocityX; }
+			if (command.velocityY) { made->velocity.y = *command.velocityY; }
+			return true;
+		}
 
 		const Vector2f size = sizeOf(*made);
 		if (command.x) { made->position.x = command.centerX ? *command.x - size.x * 0.5f : *command.x; }

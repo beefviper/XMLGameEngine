@@ -302,6 +302,8 @@ namespace xge
 					value(command.positionY, context);
 					value(command.velocityX, context);
 					value(command.velocityY, context);
+					value(command.column, context);
+					value(command.row, context);
 				}
 			}
 
@@ -385,6 +387,8 @@ namespace xge
 				value(object.cell.tileWidth, context);
 				value(object.cell.tileHeight, context);
 				object.maze.map = names_.object(object.maze.map, context);
+				for (auto& [character, piece] : object.shapePieces) { piece = names_.object(piece, context); }
+				for (RawCheck& check : object.cell.checks) { commands(check.commands, context); }
 				for (auto& [name, strength] : object.rawPulls)
 				{
 					name = names_.object(name, context);

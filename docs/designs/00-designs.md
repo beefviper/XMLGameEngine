@@ -15,7 +15,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [arithmetic](03-arithmetic.md) | Math as text, `<formula>` | Built |
 | [values-and-names](04-values-and-names.md) | `<random>`, values read when used (`<set>`, `<spawn>`, live numbers), evaluation order, variables, an object's size, names and classes | Built; `Value` variant Decided; reference points and axes Idea |
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
-| [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, groups inside a group | Built |
+| [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, maps of cells (Tetris), groups inside a group | Built; Columns, Snake, Centipede Decided |
 | [states-and-conditions](07-states-and-conditions.md) | State stack, `<pop state>`, `<shows>` and `<conditions>` sets, live tests, `<all>`/`<any>`, `total=`, `distance=`, states `from=`, keeps, a table of the best, turns, attract mode | Built; object-level conditions Open |
 | [input](08-input.md) | Actions, a refused press, key sets, held keys across states, mouse and pads | Built |
 | [timers](09-timers.md) | Timers, look timers, time left, commands in every context | Built; event queue Open |

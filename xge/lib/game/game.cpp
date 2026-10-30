@@ -7,6 +7,7 @@
 
 #include "play/executor.h"
 #include "play/geometry.h"
+#include "game/random.h"
 #include "game/scenes.h"
 #include "load/spelling.h"
 #include "play/verbs.h"
@@ -156,7 +157,7 @@ namespace xge
 		return descriptions[name] = any && all;
 	}
 
-	Object* Game::spawn(const std::string& target)
+	Object* Game::spawn(const std::string& target, bool random)
 	{
 		// What it is a copy of: the object of that name, or the group's
 		// members in turn; never a copy (only the file's objects are
@@ -169,10 +170,13 @@ namespace xge
 		if (from.empty())
 		{
 			const std::string full = fullName(target);
-			if (full != target) { return spawn(full); }
+			if (full != target) { return spawn(full, random); }
 			return nullptr;
 		}
-		const Object& original = objects[from[spawnTurns[target]++ % from.size()]];
+		// One of them at random, or each in turn.
+		const std::size_t pick = random ? std::min(from.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(from.size()))))
+			: spawnTurns[target]++ % from.size();
+		const Object& original = objects[from[pick]];
 
 		const auto copyOfIt = [&](const Object& each) { return each.copyOf == original.name && each.exists; };
 		if (original.most > 0)
@@ -1803,6 +1807,10 @@ namespace xge
 	// they can touch at all).
 	bool Game::canCollide(const Object& a, const Object& b)
 	{
+		// Pieces of cell maps meet each other by their moves, and a shape
+		// touches nothing but by them.
+		if ((a.onCells && b.onCells) || a.isShape() || b.isShape()) { return false; }
+
 		const auto answers = [](const Object& self, const Object& other)
 		{
 			return std::any_of(self.collisionData.others.begin(), self.collisionData.others.end(),

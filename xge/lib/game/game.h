@@ -326,7 +326,7 @@ namespace xge
 		// one starts): until then it is not in play. The caller puts it where
 		// it goes. Null, and nothing made, when the object has a <most> and
 		// that many copies of it exist, or when no object has that name.
-		Object* spawn(const std::string& target);
+		Object* spawn(const std::string& target, bool random = false);
 
 		// <despawn />: the object is no longer in the game. A copy that was
 		// spawned is gone for good when the frame is over; one the file wrote
@@ -346,6 +346,42 @@ namespace xge
 		// The objects spawned and not yet joined (spawn), for a front end or
 		// a test that wants to see one before the frame is over.
 		const std::deque<Object>& justSpawned(void) const noexcept { return spawned; }
+
+		// --- A map with <cells /> (game/cells.cpp). Its pieces move a cell
+		// at a time; a move that is refused (a cell off the map, or holding
+		// another's piece) touches what refused it: the map's edge, or the
+		// piece in the way.
+
+		// A spawned copy on a cell map, put in that cell (its top left one,
+		// for a shape, whose cells are spawned with it); false, and the
+		// copy taken back, when a cell it needs is off the map or full.
+		bool putOnCells(Object& made, int column, int row);
+
+		// The object (a shape, its cells with it) a whole number of cells
+		// across and down; false, after the touch, when refused.
+		bool stepCells(Object& mover, int across, int down);
+
+		// That way a cell at a time until the next is refused (which
+		// touches), all at once.
+		void slideCells(Object& mover, Direction way);
+
+		// A shape a quarter turn about the middle of its square, trying the
+		// standard kicks when it does not fit where it is; false (and no
+		// touch) when none fits.
+		bool turnCells(Object& shape, bool clockwise);
+
+		// <settle />: a shape's cells are left as loose pieces and the shape
+		// is gone; then its map's checks are asked.
+		void settle(Object& mover);
+
+		// A held <move> on a cell map: one step on the press, then more while
+		// it is held (see CmdMove::wait); let go, it stops.
+		void holdCellMove(Object& object, const CmdMove& move, bool pressed);
+
+		// What a check found, cleared (<clear />), and what is above it
+		// brought down (<collapse />).
+		void clearCells(const Object::CellMatch& match);
+		void collapseCells(const Object::CellMatch& match);
 
 		// Joins the objects spawned to the game's, and takes out the copies
 		// despawned: what updateObjects does before and after a frame. A
@@ -371,6 +407,18 @@ namespace xge
 		const std::map<std::string, Path>& getPaths(void) const noexcept;
 
 	private:
+		// Cell maps (game/cells.cpp): every object of that name, joined or
+		// just spawned; the piece in that cell of the map, leaving out the
+		// pieces of `mover` (null for none); the cells of a mover (a shape's,
+		// or itself); putting one in a cell; its map's checks, asked; and a
+		// held move's next step, each frame (FrameRules::cellMoves).
+		Object* findAnywhere(const std::string& name) noexcept;
+		Object* cellHolder(const std::string& map, int column, int row, const std::vector<Object*>& mover);
+		std::vector<Object*> cellsOf(Object& mover);
+		void putInCell(Object& object, int column, int row);
+		void askChecks(const std::string& map);
+		void cellMoves() override;
+
 		// The variable of that name, or null when its owner or it is not there.
 		float* variableOf(const VariableName& name) noexcept;
 

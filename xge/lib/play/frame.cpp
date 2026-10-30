@@ -829,6 +829,8 @@ namespace xge
 
 		rules.followPaths();
 
+		rules.cellMoves();
+
 		// Who walks a maze chooses its way, now that a path may have let it go.
 		walkMazes(objects, rules);
 
@@ -845,7 +847,8 @@ namespace xge
 		// Screen-edge checks: independent per object, order doesn't matter.
 		for (auto& object : objects)
 		{
-			if (object.collisionsOn && isMoving(object) && rules.inPlay(object))
+			// A piece of a cell map meets its map's edges by its moves.
+			if (object.collisionsOn && !object.onCells && isMoving(object) && rules.inPlay(object))
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{

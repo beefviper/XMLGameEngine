@@ -931,6 +931,35 @@ namespace xge
 			object.mapRows = rawObject.cell.mapRows;
 			object.mapTile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
 			object.mapOrigin = object.start.position - object.cellOffset;
+
+			// On a cell map: the cell it is in, its map's checks, and a
+			// shape's cells, each the object its character picks.
+			object.onCells = rawObject.cell.cells;
+			if (object.onCells)
+			{
+				object.cellColumn = object.start.cellColumn = static_cast<float>(rawObject.cell.mapColumn);
+				object.cellRow = object.start.cellRow = static_cast<float>(rawObject.cell.mapRow);
+				for (const RawCheck& check : rawObject.cell.checks)
+				{
+					object.cellChecks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">") });
+				}
+			}
+			for (std::size_t row = 0; row < rawObject.shapeRows.size(); ++row)
+			{
+				const std::string& cells = rawObject.shapeRows[row];
+				object.shapeSize = std::max({ object.shapeSize, static_cast<int>(cells.size()), static_cast<int>(rawObject.shapeRows.size()) });
+				for (std::size_t column = 0; column < cells.size(); ++column)
+				{
+					const auto piece = rawObject.shapePieces.find(cells[column]);
+					if (piece == rawObject.shapePieces.end()) { continue; }
+					object.shapeCells.push_back({ static_cast<int>(column), static_cast<int>(row), piece->second });
+				}
+			}
+			if (object.isShape() && object.shapeCells.empty())
+			{
+				throw std::runtime_error(where + " > <shape>: none of its characters picks an object of map '" + rawObject.cell.map + "'");
+			}
+			object.shapeStart = object.shapeCells;
 		}
 		object.mazeMap = rawObject.maze.map;
 		object.mazeWalls = rawObject.maze.walls;

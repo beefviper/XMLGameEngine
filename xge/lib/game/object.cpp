@@ -161,19 +161,49 @@ namespace xge
 		return tiles;
 	}
 
-	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row)
+	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row, char character)
 	{
+		object.cell.character = character;
 		object.rawPosition = map.position;
 		object.cell.map = map.name;
 		object.cell.mapColumn = static_cast<int>(column) + 1;
 		object.cell.mapRow = static_cast<int>(row) + 1;
-		object.cell.mapColumns = map.rows.empty() ? 0 : static_cast<int>(map.rows.front().size());
-		object.cell.mapRows = static_cast<int>(map.rows.size());
+		object.cell.mapColumns = map.across();
+		object.cell.mapRows = map.down();
+		object.cell.cells = map.cells;
+		object.cell.checks = map.checks;
 		object.cell.tileWidth = map.tileWidth;
 		object.cell.tileHeight = map.tileHeight;
 		if (std::find(object.outerGroups.begin(), object.outerGroups.end(), map.name) == object.outerGroups.end())
 		{
 			object.outerGroups.insert(object.outerGroups.begin(), map.name);
+		}
+	}
+
+	void waitOnMap(RawObject& object, const RawMap& map, char character)
+	{
+		placeOnMap(object, map, 0, 0, character);
+		object.exists = false;
+	}
+
+	void pickShapePieces(std::vector<RawObject>& objects, std::size_t first)
+	{
+		for (std::size_t i = first; i < objects.size(); ++i)
+		{
+			RawObject& shape = objects[i];
+			for (const std::string& row : shape.shapeRows)
+			{
+				for (const char character : row)
+				{
+					for (std::size_t j = first; j < objects.size(); ++j)
+					{
+						const RawObject& piece = objects[j];
+						if (piece.cell.character != character || piece.cell.map != shape.cell.map) { continue; }
+						shape.shapePieces[character] = !piece.exists || piece.groupName.empty() ? piece.name : piece.groupName;
+						break;
+					}
+				}
+			}
 		}
 	}
 
@@ -314,6 +344,8 @@ namespace xge
 			{ "rise", [](Object& o) -> float& { return o.rise; }, false },
 			{ "light", [](Object& o) -> float& { return o.light; }, true },
 			{ "blink", [](Object& o) -> float& { return o.blink; }, true },
+			{ "column", [](Object& o) -> float& { return o.cellColumn; }, false },
+			{ "row", [](Object& o) -> float& { return o.cellRow; }, false },
 		};
 		return parts;
 	}
@@ -421,7 +453,7 @@ namespace xge
 				if (renamed != *text) { *text = std::move(renamed); changed = true; }
 			}
 			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY })
+				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.column, &command.row })
 			{
 				changed = nameSelfInValue(*each, name) || changed;
 			}
@@ -496,7 +528,7 @@ namespace xge
 				command.variable = renameStart(command.variable, from, to);
 				command.into = renameStart(command.into, from, to);
 				for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY })
+					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.column, &command.row })
 				{
 					value(*each);
 				}

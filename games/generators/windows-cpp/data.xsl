@@ -213,7 +213,21 @@
             </xsl:otherwise>
           </xsl:choose>
         </xsl:when>
-        <xsl:when test="$verb = 'move' or $verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
+        <!-- on a cell map a hop or a turn may say nothing: one cell, a quarter -->
+        <xsl:when test="($verb = 'hop' or $verb = 'turn') and not($node/*) and normalize-space($node) = ''" />
+        <!-- a move's step, then on a cell map how long it waits before it repeats -->
+        <xsl:when test="$verb = 'move'">
+          <xsl:text> command.amount = </xsl:text>
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="$node" />
+          </xsl:call-template>
+          <xsl:text>;</xsl:text>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.seconds'" />
+            <xsl:with-param name="node" select="$node/wait" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:when test="$verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
           <xsl:text> command.amount = </xsl:text>
           <xsl:call-template name="value">
             <xsl:with-param name="node" select="$node" />
@@ -314,6 +328,17 @@
         </xsl:when>
         <!-- where and how fast, each half if given -->
         <xsl:when test="$verb = 'spawn'">
+          <xsl:if test="$node/random">
+            <xsl:text> command.random = true;</xsl:text>
+          </xsl:if>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.column'" />
+            <xsl:with-param name="node" select="$node/column" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.row'" />
+            <xsl:with-param name="node" select="$node/row" />
+          </xsl:call-template>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.positionX'" />
             <xsl:with-param name="node" select="$node/position/x" />
@@ -1250,6 +1275,17 @@
     <xsl:param name="node" />
     <xsl:param name="to" />
     <xsl:param name="indent" />
+    <xsl:if test="$node/shape">
+      <xsl:value-of select="concat($indent, $to, '.shapeRows = {')" />
+      <xsl:for-each select="$node/shape/row">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:text> </xsl:text>
+        <xsl:call-template name="text">
+          <xsl:with-param name="node" select="." />
+        </xsl:call-template>
+      </xsl:for-each>
+      <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
     <xsl:if test="$node/facing">
       <xsl:value-of select="concat($indent, $to, '.facing = ')" />
       <xsl:call-template name="text">
@@ -1691,6 +1727,32 @@
       <xsl:with-param name="node" select="tile/height" />
     </xsl:call-template>
     <xsl:text>;&#10;</xsl:text>
+    <xsl:if test="columns">
+      <xsl:value-of select="concat($in, 'map.columns = ', normalize-space(columns), ';&#10;', $in, 'map.rowCount = ', normalize-space(rows), ';&#10;')" />
+    </xsl:if>
+    <xsl:if test="cells">
+      <xsl:value-of select="concat($in, 'map.cells = true;&#10;')" />
+    </xsl:if>
+    <!-- the questions it asks after something settles, and their commands -->
+    <xsl:for-each select="checks/*">
+      <xsl:value-of select="concat($in, 'map.checks.push_back({ ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="local-name()" />
+      </xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="@class" />
+      </xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="commands">
+        <xsl:with-param name="nodes" select="*" />
+        <xsl:with-param name="indent" select="$in" />
+      </xsl:call-template>
+      <xsl:text> });&#10;</xsl:text>
+    </xsl:for-each>
+    <xsl:if test=".//shape">
+      <xsl:value-of select="concat($in, 'const std::size_t first = all.size();&#10;')" />
+    </xsl:if>
     <xsl:for-each select="group | object">
       <xsl:value-of select="$in" />
       <xsl:choose>
@@ -1709,6 +1771,10 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
+    <!-- each shape's characters: the pieces its cells are -->
+    <xsl:if test=".//shape">
+      <xsl:value-of select="concat($in, 'pickShapePieces(all, first);&#10;')" />
+    </xsl:if>
     <xsl:text>&#9;}&#10;&#10;</xsl:text>
   </xsl:template>
 

@@ -141,7 +141,30 @@ namespace xge
 	{
 		Direction direction{};
 		float step{};
+		// On a cell map: held, it steps one cell at once, waits this many
+		// seconds, then steps `step` cells a second while held (0: no wait).
+		float wait{};
 	};
+
+	// <settle /> - on a cell map: a shape's cells are left where they are as
+	// loose pieces of the map and the shape is gone; then the map's
+	// <checks> are asked. See Game::settle.
+	struct CmdSettle {};
+
+	// <slide direction="down" /> - on a cell map: a cell at a time that way
+	// until the next is refused, all at once; the refusal is a touch.
+	struct CmdSlide
+	{
+		Direction direction{};
+	};
+
+	// <clear /> - in a cell map's check: the pieces it found are taken out
+	// of the game.
+	struct CmdClear {};
+
+	// <collapse /> - in a cell map's check of full rows: every loose piece
+	// above the row comes down one row.
+	struct CmdCollapse {};
 
 	// A variable a command names, owner.variable, taken apart once when the
 	// command is made: the owner (an object, a path to one, or for <set> a
@@ -595,6 +618,12 @@ namespace xge
 		bool centerY{ false };
 		std::optional<float> velocityX;
 		std::optional<float> velocityY;
+		// <random />: one of a group's members at random, not in turn.
+		bool random{ false };
+		// On a cell map: the column and row its top left cell goes in,
+		// counting from 1 (left out: 1).
+		std::optional<float> column;
+		std::optional<float> row;
 	};
 
 	// <despawn /> - the object takes itself out of the game; with object=,
@@ -634,7 +663,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdDespawn, CmdHold, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -831,6 +860,11 @@ namespace xge
 		RawValue positionY;
 		RawValue velocityX;
 		RawValue velocityY;
+		// spawn: <random />, and on a cell map its <column> and <row>, each
+		// empty text when left out. move: its <wait> is `seconds`.
+		bool random{ false };
+		RawValue column;
+		RawValue row;
 	};
 
 	// A <timer> as written: <every> (again and again) or <after> (once), a

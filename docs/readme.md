@@ -95,7 +95,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 ### The shipped games
 
-33 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+34 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
@@ -132,6 +132,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `yarsrevenge` | W A S D fly, Space fires | the shield a moving map, a destroyer missile that [`<seek>`](#parts-of-an-object)s, the neutral zone |
 | `tennis` | W A S D walk | a ball with an [altitude](#height-and-shadows) and a shadow, a computer at the far end, the score in words |
 | `hauntedhouse` | W A S D walk, Space strikes a match | a dark house seen only by [light](#light-and-dark), four floors, three pieces of an urn |
+| `tetris` | A/D move, W/X turn, E/C turn back, S drops faster, Space drops at once; P pauses | seven shapes in a well of [cells](#cells), standard turns and kicks, full rows cleared, faster every ten rows |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
 
@@ -506,6 +507,46 @@ An object with `<maze map="maze">` walks that map's tiles: it keeps to the middl
 - It faces the way it goes and turns its `<heading>` if it has one. `<reverse />` turns it round; `<stop />` or a reset stops it until it is told again; on a path or in a jump, that moves it, and it carries on from the tile it is left on.
 - A tile is found from the walker's middle, so a walker of any size works; it should go less than half a tile a frame.
 
+#### Cells
+
+A map with `<cells />` is a playfield of cells, such as Tetris's well: its pieces move a whole cell at a time, it knows which cell holds what, and it can be asked questions about its rows.
+
+```xml
+<map name="board">
+  <tile><width>cell</width><height>cell</height></tile>
+  <position><x>left</x><y>top</y></position>
+  <columns>10</columns>                  <!-- in place of <row>s: an empty map -->
+  <rows>20</rows>
+  <cells />
+  <group name="blocks" class="block">
+    <group name="cyan" char="i"> ... </group>        <!-- on no tile: waits to be spawned -->
+  </group>
+  <group name="pieces" class="falling">
+    <timers><timer><every>status.gravity</every><hop direction="down" /></timer></timers>
+    <collisions><collision edge="bottom"><settle /></collision></collisions>
+    <group name="t">
+      <shape>
+        <row>.t.</row>
+        <row>ttt</row>
+        <row>...</row>
+      </shape>
+    </group>
+  </group>
+  <checks>
+    <full class="block"><clear /><collapse /><inc variable="status.lines" /></full>
+  </checks>
+</map>
+```
+
+- **Its size** is its `<row>`s, as any map's, or `<columns>` and `<rows>` for one that starts empty (not both).
+- **A piece waiting.** A group or an object on a cell map that picks no character, or one on no tile, is one piece out of play (`board.cyan`), waiting to be [spawned](#spawn-and-despawn) into a cell: `<spawn object="pieces"><random /><column>4</column><row>1</row></spawn>`. Column and row count from 1; left out, they are the spawner's own cell. `<random />` picks one member of a group at random. A spawn into a cell that is taken, or off the map, is refused, so the rest of the action is not done (Tetris's game over).
+- **A `<shape>`** is a piece of several cells, drawn as rows of characters: each character is the piece on the map that picks it (`t` the magenta block), and a `.` (or any character nothing picks) is no cell. A shape has no sprite; its cells, spawned with it, are drawn. Live numbers `column` and `row` are a piece's cell.
+- **Moving.** `<hop direction="down" />` steps a cell (or its content, a whole number of cells); a held `<move direction="left">12<wait>0.2</wait></move>` steps once, waits `<wait>` seconds, then goes `12` cells a second while held; `<slide direction="down" />` goes cell by cell, at once, until a step is refused, and that refused step is a touch as any is (Tetris's hard drop lands that way); `<turn direction="right" />` on a shape is a quarter turn, once a press.
+- **A refused move is a touch.** A step into a taken cell, or off the map, is not made, and runs the rules of both for that touch: `<collision class="block" side="bottom">` for a block under it, `<collision edge="bottom">` for the map's floor. Cell pieces touch one another only this way, never by pixels, and the window's edges do not apply to them.
+- **Turning** is the modern rule (the Super Rotation System): a shape turns about the middle of the square it is drawn in (3x3 for T S Z J L, 4x4 for I; a 2x2 never changes), and a turn that does not fit tries the standard kicks off walls and the floor in order. A square of another size turns in place or not at all.
+- **`<settle />`** ends a shape: it is despawned and its cells stay, loose. Then the map asks its `<checks>`.
+- **`<checks>`.** `<full class="block">` is a row of the map whose every cell holds a piece of that class. Its commands run once for each full row, from the bottom up; in them `<clear />` takes that row's pieces away and `<collapse />` brings every piece above it down a row.
+
 ### The kit and from=
 
 The `<kit>` holds objects, groups and maps written once, called **pieces**. A piece is never in play itself: it comes into play where an `<objects>` takes it, and as copies a [`<spawn>`](#spawn-and-despawn) makes.
@@ -572,7 +613,7 @@ Objects can be made and taken away while the game runs, and **a copy is no diffe
 - `<spawn object="shot">`, `<fire object="shot" />` and `<release object="shot">` each make a new copy, named for what it copies with the first number no copy has now (`shot.1`, `shot.2`, and `shot.1` again once that one is gone).
 - A copy moves, touches, counts its own timers, holds its own variables and draws its own `<random>`s. Inside its own rules, `self` and its own name are the copy.
 - **The description's name means every copy:** `<collision object="shot">`, a condition counting `object="shot"`, `<despawn object="shot" />`. A copy's own name can be written too (`<tether from="base" to="abm.1">` draws while there is an `abm.1`).
-- **A group piece** spawns its members in turn (Asteroids' medium rocks in their three shapes), and a member with a name is spawned by it.
+- **A group piece** spawns its members in turn (Asteroids' medium rocks in their three shapes), or with `<random />` one of them at random, and a member with a name is spawned by it.
 - **`<most>`** caps how many copies of it are out at once; at the cap a spawn makes none, and, as for any [refused press](#a-press-that-cannot-be-done), the rest of the action or timer is not done.
 - **`<despawn />`** takes an object out: a copy is gone when the frame ends (its name free again); one the file wrote stays out until a reset brings it back.
 - A copy made during a frame joins the game when the frame is over, so it is first moved the frame after it is made.
@@ -1374,7 +1415,7 @@ A `<hold>` anywhere else, or any other command in a `<computer>`, stops the load
 
 1. animations and blinking count a frame;
 2. timers count, and those that go off run;
-3. paths set their followers' velocities; maze walkers choose their way;
+3. paths set their followers' velocities; maze walkers choose their way; held moves on [cells](#cells) step;
 4. climbing, grip, acceleration and held thrust, pulls and seeking, altitudes;
 5. screen-edge rules for what is moving;
 6. **the move**: queued hops are made, carried things are lent their carrier's motion, and everything moves, the touches found on the way running their rules ([how a touch is found](#how-a-touch-is-found));
@@ -1437,6 +1478,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 | | `play/geometry.cpp`, `play/collision.cpp` | the arithmetic of touching (box, circle, swept, the pixel walk, `contactOf`) and of the verbs; the same for `Object`s |
 | | `play/verbs.cpp`, `play/executor.cpp` | what a verb does to an object; picking the verb and its target |
 | | `play/maze.cpp` | walking a map's tiles |
+| | `game/cells.cpp` | maps of [cells](#cells): spawning into cells, cell steps and turns (the kick tables), settling, the checks |
 | pictures | `picture/bitmap.cpp`, `picture/svg.cpp`, `picture/font.cpp`, `picture/color.cpp` | lines and bitmap rows into pixels, flips and turns; SVG with lunasvg; font files and the built-in 8x8 font; color names |
 | loop and libraries | `engine/engine.cpp`, `engine/backends.cpp`, `engine/keys.cpp`, `engine/folder.cpp` | the loop (`loop()`, or `step()` and `render()`), keys and controls, sounds a frame asked for; choosing libraries by name; key names; the games folder and `findSchema` |
 | | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, one file per library; `audio/sound.cpp` is the synthesizer |
@@ -1465,6 +1507,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 - A maze walker steers as the arcade's ghosts do, by the next tile nearest a target: there is no search, so a target behind a wall can leave it going round. Pac-Man's ghosts follow the arcade's first-level schedule of scatter and chase on every level, and the four-second idle rule counts thirty dots rather than letting the next ghost out at once.
 - A path is straight legs at one speed, with numbers fixed at load; home is the object's place in the file, so a formation cannot sway. A path cannot aim.
 - Enemies fire on timers from wherever they are: an invader behind others fires through them.
+- On a map of cells, only full rows can be asked about (no lines or groups of alike pieces yet); there is no next-piece box, hold, lock delay or ghost piece, and pieces spawn into the top rows with no hidden rows above. A spawn's `<random />` is a plain pick, not a bag of seven.
 - `<facing>` is one of four ways (diagonals come only from two held keys), and never turns the picture.
 
 **Pictures and sound**

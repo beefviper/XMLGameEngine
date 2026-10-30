@@ -11,7 +11,7 @@ The vocabulary grew one game at a time ([motion](22-motion.md): a word is added 
 **Nouns: things that exist**
 
 - Containers: `game`, `window`, `variables`, `sounds`, `paths`, `styles`, `kit`, `objects`, `keeps`, `states`, `scenes`, `ways`, `timers`, `actions`, `inputs`, `conditions`, `shows`.
-- Things: `object` (or a piece of the `kit`, taken by `from=`), `group` and its `member`s or cells (`columns`, `rows`, `padding`, changed by `row`, `column`, `cell`; `slope`), `map` (`tile`, `row`s of characters, pieces picked by `char=`), `variable`, `state`, `scene`, `way`, `sound`, `path`, `style`, `timer`, `action`, `keep`, `demo`, `computer`, `turns` and its `player`s.
+- Things: `object` (or a piece of the `kit`, taken by `from=`), `group` and its `member`s or cells (`columns`, `rows`, `padding`, changed by `row`, `column`, `cell`; `slope`), `map` (`tile`, `row`s of characters or `columns` and `rows`, pieces picked by `char=`; with `cells` a playfield of cells, its `checks` (`full`), pieces of several cells as a `shape`), `variable`, `state`, `scene`, `way`, `sound`, `path`, `style`, `timer`, `action`, `keep`, `demo`, `computer`, `turns` and its `player`s.
 - Sprite shapes: `circle`, `rectangle`, `text`, `image`, `line`, `bitmap`, `svg`, `tether`. Text pieces: `content`, `number`, `letter`, `choose` (`by`, `word`). Several named `sprite`s on one object are its **looks** (`become`) or the frames of an `animation` (`frame`); a named animation is a look that moves. `poses` (`standing`, `walking`, `skidding`, `rising`, `falling`) picks a look by how the object moves, `mirror` flips it for the other way. The `window` has a `scale`.
 - Sound parts: `note`, `rest`, `part` (one voice of music), `loop`.
 - Path parts: `step`, `start`, `home`, `speed`.
@@ -21,7 +21,8 @@ The vocabulary grew one game at a time ([motion](22-motion.md): a word is added 
 
 | Family | Words |
 |---|---|
-| Moving | `move`, `hop` and `jump` (with `arc`), `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` |
+| Moving | `move` (on cells with `wait`), `hop` and `jump` (with `arc`), `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track`; on cells `slide`, `settle` |
+| Cells | in a check `clear`, `collapse`; a spawn's `random`, `column`, `row` |
 | Steering | `chase`, `aim`, `follow`, `shift`; in a maze `go`, `hunt`, `wander` |
 | Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
 | In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn`, `despawn`; `most` on an object |

@@ -328,6 +328,17 @@ namespace xge
 		std::vector<RawSprite> frames;
 	};
 
+	// One of a cell map's <checks> (see RawCell::cells): what it asks of the
+	// map after something settles, and what it does for each answer. "full"
+	// is a row every cell of which holds a loose piece (of the class, when
+	// it names one).
+	struct RawCheck
+	{
+		std::string kind;
+		std::string objClass;
+		std::vector<RawCommand> commands;
+	};
+
 	// Where a cell of a group laid out in <columns> and <rows> goes. Its slot
 	// is as big as its row's sprite, the slots of a row follow one another
 	// left to right with a gap before each, and the rows follow one another
@@ -354,6 +365,15 @@ namespace xge
 		int mapRows{ 0 };
 		RawValue tileWidth;
 		RawValue tileHeight;
+
+		// On a map with <cells />: its pieces move a cell at a time, a move
+		// that is refused is a touch, and what the map asks after something
+		// settles on it (its <checks>). Every piece of the map carries them.
+		bool cells{ false };
+		std::vector<RawCheck> checks;
+
+		// The character of the map's rows that picked it ('\0' for none).
+		char character{};
 	};
 
 	// One <wall class="wall" sprite="normal" /> of a <maze>: the objects of
@@ -451,6 +471,12 @@ namespace xge
 		RawValue rawGrip;
 		bool hasGrip{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
+		// <shape>: on a cell map, the cells it fills, a <row> of characters
+		// each, top to bottom; and the object of the map each character
+		// picks, by its name. A character nothing picks is an empty cell.
+		// Empty for an object that is no shape.
+		std::vector<std::string> shapeRows;
+		std::map<char, std::string> shapePieces;
 		std::vector<RawTimer> timers;
 		RawCollisionData rawCollisionData;
 		std::map<std::string, std::vector<RawCommand>> action;
@@ -566,6 +592,11 @@ namespace xge
 		float light{};
 		float altitude{};
 		float rise{};
+
+		// On a map with <cells />: the cell it is in, counting from 1 (the
+		// live numbers column and row); 0 for anything else.
+		float cellColumn{};
+		float cellRow{};
 
 		// In play: shown, and touching things when its collisions are on. die()
 		// takes it out of play and stops its collisions.
@@ -734,6 +765,58 @@ namespace xge
 		Vector2f mapTile{};
 		int mapColumns{};
 		int mapRows{};
+
+		// On a map with <cells /> (see RawCell::cells): it moves a cell at a
+		// time, and a move that is refused touches what refused it (see
+		// game/cells.cpp). The Moment's cellColumn and cellRow are the cell
+		// it is in.
+		bool onCells{ false };
+		// The map's <checks>, made ready (each piece of the map has them).
+		struct CellCheck
+		{
+			std::string kind;
+			std::string objClass;
+			std::vector<Command> commands;
+		};
+		std::vector<CellCheck> cellChecks;
+		// What a check found: the map, the row (counting from 1) and the
+		// pieces, which its <clear /> and <collapse /> act on.
+		struct CellMatch
+		{
+			std::string map;
+			int row{};
+			std::vector<std::string> pieces;
+		};
+
+		// A <shape>: the cells it fills, from its top left (column and row
+		// from 0) with the object each is a copy of, and how big the square
+		// it turns in is. While it is in play its cells are copies of those
+		// objects, named in shapeParts, which move and turn with it; the
+		// shape itself is never drawn and touches nothing but by its moves.
+		// quarter counts its quarter turns clockwise (0 to 3), which the
+		// standard kicks of a turn go by.
+		struct ShapeCell
+		{
+			int column{};
+			int row{};
+			std::string piece;
+		};
+		std::vector<ShapeCell> shapeCells;
+		std::vector<ShapeCell> shapeStart;
+		int shapeSize{};
+		int quarter{};
+		std::vector<std::string> shapeParts;
+		bool isShape() const noexcept { return shapeSize > 0; }
+		// A cell of a shape in play: the shape's name (empty once it has
+		// settled, or for a piece that was never in a shape).
+		std::string shapeOwner;
+
+		// A held <move> on a cell map: the way, the frames until its next
+		// step, and the frames between steps (see CmdMove::wait).
+		bool cellHeld{ false };
+		Direction cellHeldWay{ Direction::Up };
+		int cellHeldWait{};
+		int cellHeldEvery{};
 
 		// A maze walker (<maze>): the map it walks (its name, and where it is
 		// among the game's mazes), what stops it, what slows it, and where it
@@ -1091,6 +1174,18 @@ namespace xge
 		RawVector2 position;
 		RawValue tileWidth;
 		RawValue tileHeight;
+
+		// <columns> and <rows>: how many tiles across and down, for a map
+		// written without <row>s (0 for one with them, whose rows say).
+		int columns{ 0 };
+		int rowCount{ 0 };
+
+		// <cells /> and the <checks> (see RawCell::cells).
+		bool cells{ false };
+		std::vector<RawCheck> checks;
+
+		int across() const noexcept { return rows.empty() ? columns : static_cast<int>(rows.front().size()); }
+		int down() const noexcept { return rows.empty() ? rowCount : static_cast<int>(rows.size()); }
 	};
 
 	// <collision edge="...">: its commands added to each screen edge it names
@@ -1109,7 +1204,16 @@ namespace xge
 	// map's <position>, which load/expr's layOutCells moves it on from to
 	// the middle of the tile. The map's name means it too, outermost of
 	// its names.
-	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row);
+	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row, char character = '\0');
+
+	// A piece of a cell map on none of its tiles: put on the map, not in
+	// the game, waiting to be spawned, as a piece of the kit does.
+	void waitOnMap(RawObject& object, const RawMap& map, char character = '\0');
+
+	// Each <shape> among objects[first] on gets the objects its characters
+	// pick: of the same map, the one waiting piece or plain object picked
+	// by that character, or the group whose members are on its tiles.
+	void pickShapePieces(std::vector<RawObject>& objects, std::size_t first);
 
 	// Gives every text and bitmap with a style= what it leaves out of that
 	// style: a text's size and color, a bitmap's scale and colors (each char=

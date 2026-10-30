@@ -685,20 +685,33 @@
     <xs:attribute name="variable" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- spawn: which object or group, where (a half may be <centered>), and how fast. -->
+  <!-- spawn: which object or group (<random />: one of its members at random, not in turn), where (a half may be <centered>; on a map with <cells />, the <column> and <row> of its top left cell), and how fast. -->
   <xs:complexType name="spawnType">
     <xs:sequence>
-      <xs:element name="position" type="partialPositionType" minOccurs="0" />
+      <xs:element name="random" type="emptyType" minOccurs="0" />
+      <xs:choice minOccurs="0">
+        <xs:element name="position" type="partialPositionType" />
+        <xs:sequence>
+          <xs:element name="column" type="valueType" />
+          <xs:element name="row" type="valueType" />
+        </xs:sequence>
+      </xs:choice>
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- move and hop: a direction, and how far. -->
+  <!-- move: a direction, and how far a frame; on a map with <cells />, how many cells a second while held, after one at once and a <wait> of so many seconds. -->
   <xs:complexType name="stepType" mixed="true">
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
+      <xs:element name="wait" type="valueType" minOccurs="0" />
     </xs:sequence>
+    <xs:attribute name="direction" type="directionType" use="required" />
+  </xs:complexType>
+
+  <!-- slide: on a map with <cells />, a cell at a time that way until the next is refused. -->
+  <xs:complexType name="slideType">
     <xs:attribute name="direction" type="directionType" use="required" />
   </xs:complexType>
 
@@ -711,7 +724,7 @@
     <xs:attribute name="burn" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <!-- turn: left or right, and how many degrees a frame while the key is held. -->
+  <!-- turn: left or right, and how many degrees a frame while the key is held; a shape on a map with <cells />, a quarter turn with nothing written. -->
   <xs:complexType name="turnType" mixed="true">
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
@@ -1029,6 +1042,8 @@
     <xs:choice>
       <xs:element name="die" type="emptyType" />
       <xs:element name="drop" type="emptyType" />
+      <!-- hop: a step at once; on a map with <cells />, whole cells (one with nothing written), refused and touching what is in the way -->
+      <xs:element name="hop" type="hopType" />
       <xs:element name="move" type="stepType" />
       <xs:element name="release" type="releaseType" />
       <xs:element name="reverse" type="emptyType" />
@@ -1038,6 +1053,9 @@
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- settle: on a map with <cells />, a shape's cells stay as loose pieces and the shape is gone; then the map's checks -->
+      <xs:element name="settle" type="emptyType" />
+      <xs:element name="slide" type="slideType" />
     </xs:choice>
   </xs:group>
 
@@ -1095,7 +1113,6 @@
       <xs:element name="accelerate" type="thrustType" />
       <xs:element name="climb" type="climbType" />
       <xs:element name="go" type="goType" />
-      <xs:element name="hop" type="hopType" />
       <xs:element name="jump" type="jumpType" />
       <xs:element name="leap" type="valueType" />
       <xs:element name="thrust" type="aheadType" />
@@ -1118,6 +1135,23 @@
           <xs:attribute name="button" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+    </xs:choice>
+  </xs:group>
+
+  <!-- cells: what a check of a map with <cells /> does with what it found -->
+  <xs:group name="cellsCommands">
+    <xs:choice>
+      <!-- clear: what it found leaves the game; collapse: what is above a full row comes down a row -->
+      <xs:element name="clear" type="emptyType" />
+      <xs:element name="collapse" type="emptyType" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- a check of a map with <cells /> -->
+  <xs:group name="checkCommands">
+    <xs:choice>
+      <xs:group ref="changesCommands" />
+      <xs:group ref="cellsCommands" />
     </xs:choice>
   </xs:group>
 
@@ -1514,6 +1548,8 @@
   -->
   <xs:group name="objectParts">
     <xs:sequence>
+      <!-- on a map with <cells />: the cells it fills, a <row> of characters each; each character picks an object of the map by its char= -->
+      <xs:element name="shape" type="shapeType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
@@ -1539,6 +1575,12 @@
       <xs:element name="timers" type="objectTimersType" minOccurs="0" />
     </xs:sequence>
   </xs:group>
+
+  <xs:complexType name="shapeType">
+    <xs:sequence>
+      <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
 
   <xs:complexType name="objectType">
     <xs:sequence>
@@ -1698,13 +1740,15 @@
   -->
   <xs:complexType name="mapObjectType">
     <xs:sequence>
-      <xs:element name="sprite" type="spriteType" maxOccurs="unbounded" />
+      <!-- none for a <shape>, which its cells draw -->
+      <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:group ref="objectParts" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="class" type="xs:string" use="optional" />
-    <xs:attribute name="char" type="mapCharType" use="required" />
+    <!-- on a map with <cells />, left out (or on no tile): it waits to be spawned -->
+    <xs:attribute name="char" type="mapCharType" use="optional" />
   </xs:complexType>
 
   <!--
@@ -1745,14 +1789,35 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="position" type="partialVector2Type" minOccurs="0" />
+      <!-- how many tiles across and down, for a map with no <row>s -->
+      <xs:element name="columns" type="xs:positiveInteger" minOccurs="0" />
+      <xs:element name="rows" type="xs:positiveInteger" minOccurs="0" />
+      <!-- its pieces move a cell at a time, and a move that is refused touches what refused it -->
+      <xs:element name="cells" type="emptyType" minOccurs="0" />
       <xs:element name="row" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="group" type="mapGroupType" />
         <xs:element name="object" type="mapObjectType" />
       </xs:choice>
+      <!-- on a map with <cells />: what it asks after something settles -->
+      <xs:element name="checks" type="checksType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="from" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <!-- A cell map's checks: <full> is a row every cell of which holds a loose piece (of class=, if given); its commands run once for each. -->
+  <xs:complexType name="checksType">
+    <xs:sequence>
+      <xs:element name="full" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group ref="checkCommands" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:attribute name="class" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
 
   <!-- Objects and groups: the game's, a state's or a scene's. -->

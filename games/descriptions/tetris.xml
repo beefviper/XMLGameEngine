@@ -1,0 +1,303 @@
+<!-- tetris.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 30, 2026 -->
+
+<!--
+  Tetris, after Alexey Pajitnov's 1984 game: seven shapes of four cells
+  fall into a well ten cells wide and twenty deep; a row filled from wall
+  to wall goes, and what is above it comes down. Every ten rows the shapes
+  fall faster. The game is over when a new shape has no room to come in.
+
+  A and D or the arrows move the shape (held, it steps once, waits, then
+  slides along); W, Up or X turns it clockwise, E or C the other way; S or
+  Down drops it faster while held, and Space drops it all the way. P or
+  Escape pauses; Space starts and plays again.
+
+  How it is written:
+  * The well is a <map> with no rows of its own: <columns> and <rows> say
+    how big it is, and <cells /> makes its pieces move a cell at a time.
+  * Each colour of block is a group picking a character (i, o, t, ...) that
+    is on no tile, so it waits to be spawned, as a piece of the kit does.
+  * Each shape is drawn in the smallest square it turns in, with those
+    characters, and turns as the modern rules have it (the standard kicks
+    off walls and the floor). Its cells are blocks, spawned with it.
+  * A hop down that is refused is a touch: the shape's rule for touching a
+    block, or the bottom of the well, settles it and brings the next.
+  * The well's <checks> find full rows: each is cleared, everything above
+    comes down a row, and the line counts.
+  * If the next shape cannot come in, the spawn is refused and the rest of
+    the action is not done, so status.over is left at 1: game over.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Tetris">
+    <width>640</width>
+    <height>720</height>
+  </window>
+  <variables>
+    <variable name="cell">32</variable>
+    <variable name="left">40</variable>
+    <variable name="top">40</variable>
+    <variable name="panel">400</variable>
+  </variables>
+  <sounds>
+    <sound name="turn"><note pitch="E5">0.02</note></sound>
+    <sound name="land" wave="triangle"><note pitch="C3">0.06</note></sound>
+    <sound name="row">
+      <note pitch="C5">0.05</note>
+      <note pitch="E5">0.05</note>
+      <note pitch="G5">0.08</note>
+    </sound>
+    <sound name="over" wave="triangle">
+      <note pitch="G4" to="C2">0.8</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>88</size><color>color.cyan</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="label"><size>24</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>40</size></style>
+  </styles>
+  <objects>
+    <object name="again">
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>TETRIS</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+        </object>
+        <object name="move">
+          <sprite><text style="help"><content>a and d or the arrows move, w or x turns, e or c turns back</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+        </object>
+        <object name="drop">
+          <sprite><text style="help"><content>s or down drops faster, spacebar drops at once, p pauses</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 16</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="status">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="lines">0</variable>
+            <variable name="level">1</variable>
+            <variable name="next">10</variable>
+            <variable name="gravity">0.8</variable>
+            <variable name="over">0</variable>
+          </variables>
+        </object>
+        <object name="frame">
+          <sprite><rectangle><width>10 * cell + 8</width><height>20 * cell + 8</height><color>color.darkgrey</color></rectangle></sprite>
+          <position><x>left - 4</x><y>top - 4</y></position>
+        </object>
+        <object name="well">
+          <sprite><rectangle><width>10 * cell</width><height>20 * cell</height><color>color.black</color></rectangle></sprite>
+          <position><x>left</x><y>top</y></position>
+        </object>
+        <object name="scorelabel">
+          <sprite><text style="label"><content>SCORE</content></text></sprite>
+          <position><x>panel</x><y>top</y></position>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><number>status.score</number></text></sprite>
+          <position><x>panel</x><y>top + 30</y></position>
+        </object>
+        <object name="lineslabel">
+          <sprite><text style="label"><content>LINES</content></text></sprite>
+          <position><x>panel</x><y>top + 110</y></position>
+        </object>
+        <object name="lines">
+          <sprite><text style="hud"><number>status.lines</number></text></sprite>
+          <position><x>panel</x><y>top + 140</y></position>
+        </object>
+        <object name="levellabel">
+          <sprite><text style="label"><content>LEVEL</content></text></sprite>
+          <position><x>panel</x><y>top + 220</y></position>
+        </object>
+        <object name="level">
+          <sprite><text style="hud"><number>status.level</number></text></sprite>
+          <position><x>panel</x><y>top + 250</y></position>
+        </object>
+
+        <!-- the well: ten cells across, twenty down -->
+        <map name="board">
+          <tile><width>cell</width><height>cell</height></tile>
+          <position><x>left</x><y>top</y></position>
+          <columns>10</columns>
+          <rows>20</rows>
+          <cells />
+
+          <!-- a block of each colour, picked by its character -->
+          <group name="blocks" class="block">
+            <sprite><rectangle><width>cell - 2</width><height>cell - 2</height></rectangle></sprite>
+            <group name="cyan" char="i"><sprite><rectangle><color>color.cyan</color></rectangle></sprite></group>
+            <group name="yellow" char="o"><sprite><rectangle><color>color.yellow</color></rectangle></sprite></group>
+            <group name="magenta" char="t"><sprite><rectangle><color>color.magenta</color></rectangle></sprite></group>
+            <group name="green" char="s"><sprite><rectangle><color>color.green</color></rectangle></sprite></group>
+            <group name="red" char="z"><sprite><rectangle><color>color.red</color></rectangle></sprite></group>
+            <group name="blue" char="j"><sprite><rectangle><color>color.blue</color></rectangle></sprite></group>
+            <group name="orange" char="l"><sprite><rectangle><color>color.orange</color></rectangle></sprite></group>
+          </group>
+
+          <!-- the seven shapes, each in the square it turns in -->
+          <group name="pieces" class="falling">
+            <collisions>
+              <!-- a fall refused by a block or the floor: it lands -->
+              <collision class="block" side="bottom"><trigger action="land" /></collision>
+              <collision edge="bottom"><trigger action="land" /></collision>
+            </collisions>
+            <actions>
+              <action name="left"><move direction="left">12<wait>0.2</wait></move></action>
+              <action name="right"><move direction="right">12<wait>0.2</wait></move></action>
+              <action name="faster"><move direction="down">20</move></action>
+              <action name="drop"><slide direction="down" /></action>
+              <action name="clockwise"><turn direction="right" /><play sound="turn" /></action>
+              <action name="counter"><turn direction="left" /><play sound="turn" /></action>
+              <action name="land">
+                <settle />
+                <play sound="land" />
+                <set variable="status.over">1</set>
+                <spawn object="pieces"><random /><column>4</column><row>1</row></spawn>
+                <set variable="status.over">0</set>
+              </action>
+            </actions>
+            <timers>
+              <timer><every>status.gravity</every><hop direction="down" /></timer>
+            </timers>
+            <group name="i">
+              <shape>
+                <row>....</row>
+                <row>iiii</row>
+                <row>....</row>
+                <row>....</row>
+              </shape>
+            </group>
+            <group name="o">
+              <shape>
+                <row>oo</row>
+                <row>oo</row>
+              </shape>
+            </group>
+            <group name="t">
+              <shape>
+                <row>.t.</row>
+                <row>ttt</row>
+                <row>...</row>
+              </shape>
+            </group>
+            <group name="s">
+              <shape>
+                <row>.ss</row>
+                <row>ss.</row>
+                <row>...</row>
+              </shape>
+            </group>
+            <group name="z">
+              <shape>
+                <row>zz.</row>
+                <row>.zz</row>
+                <row>...</row>
+              </shape>
+            </group>
+            <group name="j">
+              <shape>
+                <row>j..</row>
+                <row>jjj</row>
+                <row>...</row>
+              </shape>
+            </group>
+            <group name="l">
+              <shape>
+                <row>..l</row>
+                <row>lll</row>
+                <row>...</row>
+              </shape>
+            </group>
+          </group>
+
+          <!-- a full row goes, and what is above comes down -->
+          <checks>
+            <full class="block">
+              <clear />
+              <collapse />
+              <inc variable="status.lines" />
+              <inc variable="status.score">100 * status.level</inc>
+              <play sound="row" />
+            </full>
+          </checks>
+        </map>
+      </objects>
+      <inputs>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="pieces" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="pieces" action="right" /></input>
+        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="pieces" action="faster" /></input>
+        <input><button>w</button><button>up</button><button>x</button><button>pad1.a</button><trigger object="pieces" action="clockwise" /></input>
+        <input><button>e</button><button>c</button><button>pad1.b</button><trigger object="pieces" action="counter" /></input>
+        <input><button>space</button><button>pad1.y</button><trigger object="pieces" action="drop" /></input>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition object="status" variable="over">
+          <equal>1</equal>
+          <play sound="over" />
+          <push state="gameover" />
+        </condition>
+        <!-- every ten rows: the next level, a fifth faster -->
+        <condition object="status" variable="lines">
+          <atleast>status.next</atleast>
+          <inc variable="status.level" />
+          <inc variable="status.next">10</inc>
+          <set variable="status.gravity">status.gravity * 0.8</set>
+        </condition>
+      </conditions>
+      <timers>
+        <timer><after>0</after><spawn object="pieces"><random /><column>4</column><row>1</row></spawn></timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

@@ -39,6 +39,7 @@ include(scripts/cmake/assets.cmake)
 # (scripts/cmake/tests.cmake), so there is one list of files to keep.
 set(ENGINE_SOURCES
 	"xge/lib/game/game.cpp"
+	"xge/lib/game/cells.cpp"
 	"xge/lib/engine/folder.cpp"
 	"xge/lib/engine/engine.cpp"
 	"xge/lib/engine/backends.cpp"

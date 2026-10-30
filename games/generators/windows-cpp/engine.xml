@@ -56,6 +56,7 @@
   <file>lib/play/executor.cpp</file>
   <file>lib/game/game.h</file>
   <file>lib/game/game.cpp</file>
+  <file>lib/game/cells.cpp</file>
   <file>lib/audio/audio.h</file>
   <file>lib/audio/sfml.h</file>
   <file>lib/audio/sfml.cpp</file>

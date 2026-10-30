@@ -141,6 +141,10 @@ namespace xge
 				[](const CmdSet&) { return std::string("<set>"); },
 				[](const CmdSpawn&) { return std::string("<spawn>"); },
 				[](const CmdDespawn& d) { return std::string(d.target.empty() ? "<despawn />" : "<despawn object>"); },
+				[](const CmdSettle&) { return std::string("<settle />"); },
+				[](const CmdSlide&) { return std::string("<slide>"); },
+				[](const CmdClear&) { return std::string("<clear />"); },
+				[](const CmdCollapse&) { return std::string("<collapse />"); },
 				[](const CmdLive& live) { return tagOf(live.loaded->command); },
 			}, command);
 		}
@@ -149,7 +153,7 @@ namespace xge
 		// with. CommandExecutor::run (play/executor.cpp) does each verb as
 		// its Doer says, and does nothing with one that has no object, touch
 		// or action it needs; this is what keeps such a verb out of a place.
-		enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep, Computer };
+		enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep, Computer, Check };
 
 		struct PlaceRule
 		{
@@ -171,13 +175,14 @@ namespace xge
 			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
 				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<despawn object>", "<trigger>" };
 			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
-			static const std::vector<std::string> self{ "<die />", "<drop />", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />" };
+			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>" };
 			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
 			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />" };
 			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
 			static const std::vector<std::string> bounce{ "<bounce />" };
-			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<hop>", "<jump>", "<leap>", "<thrust>", "<turn>", "<track />" };
+			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<thrust>", "<turn>", "<track />" };
 			static const std::vector<std::string> press{ "<hold>" };
+			static const std::vector<std::string> cells{ "<clear />", "<collapse />" };
 
 			static const std::vector<std::string> stateCommands = commandsOf({ &changes, &flow });
 			static const std::vector<std::string> objectTimeCommands = commandsOf({ &changes, &self, &steering });
@@ -191,6 +196,7 @@ namespace xge
 				{ "an <action>", commandsOf({ &changes, &self, &steering, &controls }) },
 				{ "a path's <step>", objectTimeCommands },
 				{ "a <computer>'s <condition>", press },
+				{ "a map's check", commandsOf({ &changes, &cells }) },
 			};
 			return rules[static_cast<std::size_t>(place)];
 		}
@@ -907,6 +913,7 @@ namespace xge
 				// that does not face any way.
 				for (const auto& command : commands)
 				{
+					if (std::holds_alternative<CmdTurn>(shapeOf(command)) && object.isShape()) { continue; }
 					if ((std::holds_alternative<CmdTurn>(shapeOf(command)) || std::holds_alternative<CmdThrust>(shapeOf(command))) && !object.hasHeading)
 					{
 						throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");

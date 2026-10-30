@@ -50,6 +50,9 @@ namespace xge
 		// state), so this is just executeInput as an always-"pressed" input.
 		bool executeCondition(const Command& command);
 
+		// A command of a cell map's check that holds, about what it found.
+		bool executeCheck(const Command& command, const Object::CellMatch& match);
+
 		// A <timer> that has gone off: on an object (owner) or in a state (no
 		// owner). The state commands, inc, dec, play and trigger work in both;
 		// on an object, fire, reverse, move, die, stop, release and a bare reset
@@ -95,6 +98,8 @@ namespace xge
 			// In an object's action of this name: a <move> is held, and the
 			// controls (<hop>, <jump>, <climb>, <thrust>...) work.
 			const std::string* action{ nullptr };
+			// In a cell map's check: what it found.
+			const Object::CellMatch* match{ nullptr };
 		};
 
 		// Every verb, done as `doer` says. False when the verb is refused,
