@@ -1071,6 +1071,8 @@
       <!-- settle: on a map with <cells />, a shape's cells stay as loose pieces and the shape is gone; then the map's checks -->
       <xs:element name="settle" type="emptyType" />
       <xs:element name="slide" type="slideType" />
+      <!-- cycle: on a map with <cells />, a shape's cells each move on to the next cell of its outline, in reading order, the last to the first (Columns' jewels) -->
+      <xs:element name="cycle" type="emptyType" />
     </xs:choice>
   </xs:group>
 
@@ -1159,6 +1161,8 @@
       <!-- clear: what it found leaves the game; collapse: what is above a full row comes down a row -->
       <xs:element name="clear" type="emptyType" />
       <xs:element name="collapse" type="emptyType" />
+      <!-- fall: every loose piece of the map drops down its column onto what is under it -->
+      <xs:element name="fall" type="emptyType" />
     </xs:choice>
   </xs:group>
 
@@ -1821,10 +1825,10 @@
     <xs:attribute name="from" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <!-- A cell map's checks: <full> is a row every cell of which holds a loose piece (of class=, if given); its commands run once for each. -->
+  <!-- A cell map's checks: <full> is a row every cell of which holds a loose piece (of class=, if given); its commands run once for each. <line> is every line of so many alike. -->
   <xs:complexType name="checksType">
-    <xs:sequence>
-      <xs:element name="full" maxOccurs="unbounded">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="full">
         <xs:complexType>
           <xs:sequence>
             <xs:group ref="checkCommands" maxOccurs="unbounded" />
@@ -1832,7 +1836,17 @@
           <xs:attribute name="class" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-    </xs:sequence>
+      <!-- line: <atleast> so many pieces alike (of one group) in a row, across, down or diagonal; every such line at once, asked again after its commands until none -->
+      <xs:element name="line">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="atleast" type="xs:positiveInteger" />
+            <xs:group ref="checkCommands" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:attribute name="class" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
   </xs:complexType>
 
   <!-- Objects and groups: the game's, a state's or a scene's. -->

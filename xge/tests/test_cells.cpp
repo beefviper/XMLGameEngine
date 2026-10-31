@@ -13,6 +13,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
+#include <map>
 #include <set>
 #include <string>
 #include <utility>
@@ -373,4 +374,163 @@ TEST_CASE("Tetris is over when the next shape has no room to come in", "[cells][
 	play.frames(2);
 	CHECK(play.state() == "title");
 	CHECK(loose(play.game).empty());
+}
+
+namespace
+{
+	// A map of gems drawn by its rows (r red, g green, b blue, each a
+	// group of its own), with a <line> check of three alike that clears
+	// them, lets the rest fall and counts each round; its shapes fall a
+	// cell every 100 seconds, and S drops one.
+	std::string gems(const std::vector<std::string>& rows, const std::string& shapes)
+	{
+		std::string map = "<object name=\"tally\"><variables><variable name=\"lines\">0</variable></variables></object>"
+			"<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>100</x><y>100</y></position><cells />";
+		for (const std::string& row : rows) { map += "<row>" + row + "</row>"; }
+		const auto gem = [](const std::string& name, const std::string& character, const std::string& color)
+		{
+			return "<group name=\"" + name + "\" class=\"gem\" char=\"" + character + "\"><sprite><circle><radius>4</radius><color>color." + color + "</color></circle></sprite></group>";
+		};
+		return map + gem("red", "r", "red") + gem("green", "g", "green") + gem("blue", "b", "blue")
+			+ "<group name=\"pieces\" class=\"falling\">"
+			"<collisions><collision class=\"gem\" side=\"bottom\"><settle /></collision><collision edge=\"bottom\"><settle /></collision></collisions>"
+			"<actions><action name=\"drop\"><slide direction=\"down\" /></action><action name=\"cycle\"><cycle /></action></actions>"
+			"<timers><timer><every>100</every><hop direction=\"down\" /></timer></timers>"
+			+ shapes + "</group>"
+			"<checks><line class=\"gem\"><atleast>3</atleast><clear /><fall /><inc variable=\"tally.lines\" /></line></checks></map>";
+	}
+
+	// What Space does: that shape in that cell; S drops it, W cycles it.
+	std::string dropAt(const std::string& shape, int column)
+	{
+		return "<spawn object=\"" + shape + "\"><column>" + std::to_string(column) + "</column><row>1</row></spawn></input>"
+			"<input button=\"w\"><trigger object=\"pieces\" action=\"cycle\" /></input>"
+			"<input button=\"s\"><trigger object=\"pieces\" action=\"drop\" />";
+	}
+
+	// The loose gems: where each is, and its group's name.
+	std::map<std::pair<int, int>, std::string> gemsOf(Game& game)
+	{
+		std::map<std::pair<int, int>, std::string> found;
+		for (const Object& object : game.getCurrentObjects())
+		{
+			if (object.exists && object.onCells && !object.isShape() && object.shapeOwner.empty())
+			{
+				const std::string group = object.groupName.substr(object.groupName.rfind('.') + 1);
+				found[{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) }] = group;
+			}
+		}
+		return found;
+	}
+
+	using Gems = std::map<std::pair<int, int>, std::string>;
+}
+
+TEST_CASE("A line of three alike across is cleared, and what is above it falls", "[cells]")
+{
+	const std::string one = "<group name=\"one\"><shape><row>r</row></shape></group>";
+	played::Scratch file(gems({ "...", "...", "g..", "rr." }, one), dropAt("one", 3));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::S);
+	play.frames(2);
+
+	CHECK(gemsOf(play.game) == Gems{ { { 1, 4 }, "green" } });
+	CHECK(play.get("tally").variable.at("lines") == 1.0f);
+}
+
+TEST_CASE("A line the fall makes is cleared too: a chain", "[cells]")
+{
+	const std::string two = "<group name=\"two\"><shape><row>g</row><row>r</row></shape></group>";
+	played::Scratch file(gems({ "...", "...", "..r", "ggr" }, two), dropAt("two", 3));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::S);
+	play.frames(2);
+
+	// The three reds down column 3 go, the green above them falls to the
+	// bottom, and the greens are a line across.
+	CHECK(gemsOf(play.game).empty());
+	CHECK(play.get("tally").variable.at("lines") == 2.0f);
+}
+
+TEST_CASE("A line of three alike on a slant is cleared", "[cells]")
+{
+	const std::string one = "<group name=\"one\"><shape><row>r</row></shape></group>";
+	played::Scratch file(gems({ "...", ".rg", "rgg" }, one), dropAt("one", 3));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::S);
+	play.frames(2);
+
+	CHECK(gemsOf(play.game) == Gems{ { { 2, 3 }, "green" }, { { 3, 2 }, "green" }, { { 3, 3 }, "green" } });
+	CHECK(play.get("tally").variable.at("lines") == 1.0f);
+}
+
+TEST_CASE("A cycle moves each cell of a shape on one, the last to the first", "[cells]")
+{
+	const std::string three = "<group name=\"three\"><shape><row>r</row><row>g</row><row>b</row></shape></group>";
+	played::Scratch file(gems({ "...", "...", "...", "...", "...", "..." }, three), dropAt("three", 2));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::W);
+	play.frames(1);
+	play.tap(KeyCode::S);
+	play.frames(2);
+
+	CHECK(gemsOf(play.game) == Gems{ { { 2, 4 }, "blue" }, { { 2, 5 }, "red" }, { { 2, 6 }, "green" } });
+}
+
+TEST_CASE("A group of groups picking one character is any of them in a shape", "[cells]")
+{
+	const std::string objects = "<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position>"
+		"<columns>3</columns><rows>9</rows><cells />"
+		"<group name=\"jewels\" class=\"jewel\" char=\"j\"><sprite><circle><radius>4</radius></circle></sprite>"
+		"<group name=\"red\"><sprite><circle><color>color.red</color></circle></sprite></group>"
+		"<group name=\"blue\"><sprite><circle><color>color.blue</color></circle></sprite></group></group>"
+		"<group name=\"pieces\"><group name=\"column\"><shape><row>j</row><row>j</row><row>j</row></shape></group></group></map>";
+	played::Scratch file(objects, "<spawn object=\"pieces\"><column>2</column><row>1</row></spawn>");
+	Played play(file.path);
+
+	// Each colour waits, picked by j.
+	CHECK_FALSE(play.get("field.red").exists);
+	CHECK_FALSE(play.get("field.blue").exists);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	Object* shape = falling(play.game);
+	REQUIRE(shape);
+	REQUIRE(shape->shapeParts.size() == 3);
+	for (const std::string& part : shape->shapeParts)
+	{
+		const std::string of = play.get(part).copyOf;
+		CHECK((of == "playing.field.red" || of == "playing.field.blue"));
+	}
+}
+
+TEST_CASE("Columns plays: a column comes in, cycles, lands and the next comes", "[cells][columns]")
+{
+	Played play("descriptions/columns.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	CHECK(play.state() == "playing");
+
+	Object* column = falling(play.game);
+	REQUIRE(column);
+	REQUIRE(column->shapeParts.size() == 3);
+	const std::string name = column->name;
+	const std::string top = column->shapeParts.front();
+	play.tap(KeyCode::W);
+	play.frames(1);
+	CHECK(falling(play.game)->shapeParts[1] == top);
+
+	// Left to fall, it lands within thirteen rows' time, and the next comes.
+	for (int i = 0; i < 13 * 50 && falling(play.game) && falling(play.game)->name == name; ++i) { play.frames(1); }
+	REQUIRE(falling(play.game));
+	CHECK(falling(play.game)->name != name);
+	CHECK(gemsOf(play.game).size() == 3);
 }

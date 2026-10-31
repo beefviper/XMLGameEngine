@@ -158,7 +158,7 @@ Keys run the current state's bindings, timers count, objects move, collisions ar
 
 ## Games
 
-There are 34 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
+There are 35 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
 
 | Game | Words it needed |
 |---|---|
@@ -175,6 +175,7 @@ There are 34 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Haunted House | `light` and `dark` |
 | Adventure | scenes and ways, `carry` and `drop` |
 | Tetris | a `map` of `cells`, `shape`s that turn by the standard kicks, `settle`, `slide`, `checks` for full rows (`clear`, `collapse`), and `send` for the next shape |
+| Columns | a `line` check of alike jewels, `fall`, `cycle`, and a group of groups picked by one character for random jewels |
 
 The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.
 

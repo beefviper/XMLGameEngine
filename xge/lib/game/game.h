@@ -30,6 +30,8 @@
 
 namespace xge
 {
+	class CommandExecutor;
+
 	// The interpreter: it reads the game file into objects and states, and
 	// answers what the file says should happen (FrameRules), running the
 	// verbs it names through CommandExecutor. It plays no part in how a
@@ -389,6 +391,11 @@ namespace xge
 		// brought down (<collapse />).
 		void clearCells(const Object::CellMatch& match);
 		void collapseCells(const Object::CellMatch& match);
+		// <fall />: every loose piece of the map down its column onto what
+		// is under it.
+		void fallCells(const std::string& map);
+		// <cycle />: a shape's cells each on to the next of its outline.
+		void cycleCells(Object& shape);
 
 		// Joins the objects spawned to the game's, and takes out the copies
 		// despawned: what updateObjects does before and after a frame. A
@@ -427,6 +434,10 @@ namespace xge
 		// any piece of that map has them (false for a map with none).
 		bool moveToMap(Object& object, const std::string& map);
 		void askChecks(const std::string& map);
+		// What a piece is, for a <line> of alike: its group, or for a copy
+		// the group of what it copies.
+		std::string kindOf(const Object& piece) noexcept;
+		void askLines(const Object::CellCheck& check, const std::string& map, int columns, int rows, CommandExecutor& executor);
 		void cellMoves() override;
 
 		// The variable of that name, or null when its owner or it is not there.

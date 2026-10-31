@@ -54,6 +54,8 @@ namespace xge
 		if (verb == "settle") { return CmdSettle{}; }
 		if (verb == "clear") { return CmdClear{}; }
 		if (verb == "collapse") { return CmdCollapse{}; }
+		if (verb == "fall") { return CmdFall{}; }
+		if (verb == "cycle") { return CmdCycle{}; }
 		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
 
 		// <reset/> puts the object in the rule (or, in a state's input or
@@ -467,6 +469,8 @@ namespace xge
 			[&](const CmdSettle&) { o << "settle"; },
 			[&](const CmdClear&) { o << "clear"; },
 			[&](const CmdCollapse&) { o << "collapse"; },
+			[&](const CmdFall&) { o << "fall"; },
+			[&](const CmdCycle&) { o << "cycle"; },
 			[&](const CmdSlide& m)
 			{
 				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");

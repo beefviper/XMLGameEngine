@@ -206,13 +206,31 @@ namespace xge
 			{
 				for (const char character : row)
 				{
+					if (shape.shapePieces.count(character)) { continue; }
+					std::vector<const RawObject*> found;
 					for (std::size_t j = first; j < objects.size(); ++j)
 					{
 						const RawObject& piece = objects[j];
-						if (piece.cell.character != character || piece.cell.map != shape.cell.map) { continue; }
-						shape.shapePieces[character] = !piece.exists || piece.groupName.empty() ? piece.name : piece.groupName;
-						break;
+						if (piece.cell.character == character && piece.cell.map == shape.cell.map) { found.push_back(&piece); }
 					}
+					if (found.empty()) { continue; }
+					const RawObject& piece = *found.front();
+					if (found.size() == 1 || piece.exists)
+					{
+						shape.shapePieces[character] = !piece.exists || piece.groupName.empty() ? piece.name : piece.groupName;
+						continue;
+					}
+					// Several waiting pieces (a group's inner groups, each a
+					// jewel): the innermost group around them all, which a
+					// spawn takes one member of at random.
+					std::vector<std::string> shared = piece.outerGroups;
+					for (const RawObject* other : found)
+					{
+						std::size_t same = 0;
+						while (same < shared.size() && same < other->outerGroups.size() && shared[same] == other->outerGroups[same]) { ++same; }
+						shared.resize(same);
+					}
+					if (!shared.empty()) { shape.shapePieces[character] = shared.back(); }
 				}
 			}
 		}

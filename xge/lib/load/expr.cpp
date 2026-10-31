@@ -942,7 +942,7 @@ namespace xge
 				object.cellRow = object.start.cellRow = static_cast<float>(rawObject.cell.mapRow);
 				for (const RawCheck& check : rawObject.cell.checks)
 				{
-					object.cellChecks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">") });
+					object.cellChecks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count });
 				}
 			}
 			for (std::size_t row = 0; row < rawObject.shapeRows.size(); ++row)

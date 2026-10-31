@@ -50,7 +50,8 @@ set(data_xml
 	"games/descriptions/yarsrevenge.xml"
 	"games/descriptions/tennis.xml"
 	"games/descriptions/hauntedhouse.xml"
-	"games/descriptions/tetris.xml")
+	"games/descriptions/tetris.xml"
+	"games/descriptions/columns.xml")
 
 set(data_assets
 	"games/assets/tuffy.ttf"

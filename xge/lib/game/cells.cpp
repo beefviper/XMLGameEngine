@@ -185,7 +185,7 @@ namespace xge
 		putInCell(made, column, row);
 		for (const Object::ShapeCell& cell : made.shapeCells)
 		{
-			Object* part = spawn(cell.piece);
+			Object* part = spawn(cell.piece, true);
 			if (!part) { continue; }
 			moveToMap(*part, made.mapName);
 			part->shapeOwner = made.name;
@@ -371,6 +371,11 @@ namespace xge
 		CommandExecutor executor(*this);
 		for (const Object::CellCheck& check : checks)
 		{
+			if (check.kind == "line")
+			{
+				askLines(check, map, columns, rows, executor);
+				continue;
+			}
 			// Full rows, from the bottom up; a row brought down by a
 			// <collapse /> is asked about again.
 			for (int row = rows; row >= 1;)
@@ -400,6 +405,132 @@ namespace xge
 					});
 				if (stillFull) { --row; }
 			}
+		}
+	}
+
+	std::string Game::kindOf(const Object& piece) noexcept
+	{
+		// A copy's group is what it copies; that one's group is the kind.
+		if (piece.isCopy())
+		{
+			for (const Object& object : objects)
+			{
+				if (object.name == piece.copyOf) { return object.groupName.empty() ? object.name : object.groupName; }
+			}
+		}
+		return piece.groupName.empty() ? piece.name : piece.groupName;
+	}
+
+	void Game::askLines(const Object::CellCheck& check, const std::string& map, int columns, int rows, CommandExecutor& executor)
+	{
+		// Every line of so many alike at once, then again on what its
+		// commands leave (a fall makes new lines: Columns' chains), until
+		// there is none or nothing is taken away.
+		for (int round = 0; round < columns * rows; ++round)
+		{
+			const auto loose = [&](int column, int row) -> Object*
+			{
+				if (column < 1 || row < 1 || column > columns || row > rows) { return nullptr; }
+				Object* holder = cellHolder(map, column, row, {});
+				if (!holder || !holder->shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { return nullptr; }
+				return holder;
+			};
+			const auto alike = [&](const Object* a, const Object* b) { return a && b && kindOf(*a) == kindOf(*b); };
+
+			std::vector<Object*> found;
+			const int ways[4][2] = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { -1, 1 } };
+			for (int row = 1; row <= rows; ++row)
+			{
+				for (int column = 1; column <= columns; ++column)
+				{
+					Object* start = loose(column, row);
+					if (!start) { continue; }
+					for (const auto& way : ways)
+					{
+						// Only from where a line begins.
+						if (alike(loose(column - way[0], row - way[1]), start)) { continue; }
+						std::vector<Object*> line{ start };
+						while (Object* next = loose(column + way[0] * static_cast<int>(line.size()), row + way[1] * static_cast<int>(line.size())))
+						{
+							if (!alike(next, start)) { break; }
+							line.push_back(next);
+						}
+						if (static_cast<int>(line.size()) < check.count) { continue; }
+						for (Object* piece : line)
+						{
+							if (std::find(found.begin(), found.end(), piece) == found.end()) { found.push_back(piece); }
+						}
+					}
+				}
+			}
+			if (found.empty()) { return; }
+
+			Object::CellMatch match{ map, 0, {} };
+			for (const Object* piece : found) { match.pieces.push_back(piece->name); }
+			for (const Command& command : check.commands)
+			{
+				if (!executor.executeCheck(command, match)) { break; }
+			}
+			const bool taken = std::any_of(match.pieces.begin(), match.pieces.end(), [&](const std::string& name)
+				{
+					const Object* piece = findAnywhere(name);
+					return !piece || !piece->exists;
+				});
+			if (!taken) { return; }
+		}
+	}
+
+	void Game::fallCells(const std::string& map)
+	{
+		const Object* any = nullptr;
+		for (const Object& object : objects)
+		{
+			if (object.onCells && object.mapName == map) { any = &object; break; }
+		}
+		if (!any) { return; }
+		const int columns = any->mapColumns;
+		const int rows = any->mapRows;
+		for (int column = 1; column <= columns; ++column)
+		{
+			// From the bottom up: each loose piece to the lowest free cell
+			// under it; anything else (a shape's cell) stays, and stops it.
+			int lowest = rows;
+			for (int row = rows; row >= 1; --row)
+			{
+				Object* holder = cellHolder(map, column, row, {});
+				if (!holder) { continue; }
+				if (holder->shapeOwner.empty())
+				{
+					if (row != lowest) { putInCell(*holder, column, lowest); }
+					--lowest;
+				}
+				else { lowest = row - 1; }
+			}
+		}
+	}
+
+	void Game::cycleCells(Object& shape)
+	{
+		if (!shape.isShape()) { return; }
+		const std::vector<Object*> cells = cellsOf(shape);
+		const std::size_t count = cells.size();
+		if (count < 2 || count != shape.shapeCells.size()) { return; }
+
+		// The cell at place i goes to place i + 1; the places stay.
+		std::vector<std::string> parts(count);
+		std::vector<std::string> pieces(count);
+		for (std::size_t i = 0; i < count; ++i)
+		{
+			parts[(i + 1) % count] = shape.shapeParts[i];
+			pieces[(i + 1) % count] = shape.shapeCells[i].piece;
+		}
+		const int column = whole(shape.cellColumn);
+		const int row = whole(shape.cellRow);
+		for (std::size_t i = 0; i < count; ++i)
+		{
+			shape.shapeParts[i] = parts[i];
+			shape.shapeCells[i].piece = pieces[i];
+			if (Object* cell = findAnywhere(parts[i])) { putInCell(*cell, column + shape.shapeCells[i].column, row + shape.shapeCells[i].row); }
 		}
 	}
 

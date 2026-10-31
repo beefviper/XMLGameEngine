@@ -1659,8 +1659,9 @@
       </xsl:when>
       <xsl:when test="$onMap">
         <xsl:value-of select="concat($in, 'addMapMembers(all, group, map, ')" />
+        <!-- its own character, or on a map of cells the one a group around it picks for all -->
         <xsl:call-template name="string">
-          <xsl:with-param name="text" select="@char" />
+          <xsl:with-param name="text" select="(ancestor-or-self::group[@char])[last()]/@char" />
         </xsl:call-template>
         <xsl:text>, </xsl:text>
         <xsl:call-template name="string">
@@ -1755,9 +1756,12 @@
       </xsl:call-template>
       <xsl:text>, </xsl:text>
       <xsl:call-template name="commands">
-        <xsl:with-param name="nodes" select="*" />
+        <xsl:with-param name="nodes" select="*[not(self::atleast)]" />
         <xsl:with-param name="indent" select="$in" />
       </xsl:call-template>
+      <xsl:if test="atleast">
+        <xsl:value-of select="concat(', ', normalize-space(atleast))" />
+      </xsl:if>
       <xsl:text> });&#10;</xsl:text>
     </xsl:for-each>
     <xsl:if test=".//shape">

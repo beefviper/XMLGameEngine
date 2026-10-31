@@ -337,6 +337,8 @@ namespace xge
 		std::string kind;
 		std::string objClass;
 		std::vector<RawCommand> commands;
+		// A <line>'s <atleast>: how many alike in a row.
+		int count{ 0 };
 	};
 
 	// Where a cell of a group laid out in <columns> and <rows> goes. Its slot
@@ -782,6 +784,7 @@ namespace xge
 			std::string kind;
 			std::string objClass;
 			std::vector<Command> commands;
+			int count{ 0 };
 		};
 		std::vector<CellCheck> cellChecks;
 		// What a check found: the map, the row (counting from 1) and the

@@ -222,6 +222,8 @@ namespace xge
 			[&](const CmdSlide& m) { if (self && self->onCells) { game.slideCells(*self, m.direction); } },
 			[&](const CmdClear&) { if (doer.match) { game.clearCells(*doer.match); } },
 			[&](const CmdCollapse&) { if (doer.match) { game.collapseCells(*doer.match); } },
+			[&](const CmdFall&) { if (doer.match) { game.fallCells(doer.match->map); } },
+			[&](const CmdCycle&) { if (self) { game.cycleCells(*self); } },
 			// Another action, of this object or another, as part of this.
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); },
 			// <track /> runs on a pointing control (executeAxis), <hold> in a

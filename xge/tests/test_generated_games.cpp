@@ -292,7 +292,7 @@ namespace
 			value(at + ".tileHeight", o.cell.tileHeight);
 			out << at << ".cell " << o.cell.column << " " << o.cell.row << "\n";
 			out << at << ".cells " << o.cell.cells << " [" << o.cell.character << "]\n";
-			for (const RawCheck& check : o.cell.checks) { commands(at + ".check." + check.kind + "." + check.objClass, check.commands); }
+			for (const RawCheck& check : o.cell.checks) { commands(at + ".check." + check.kind + "." + check.objClass + "." + std::to_string(check.count), check.commands); }
 			for (const std::string& row : o.shapeRows) { text(at + ".shape", row); }
 			for (const auto& [character, piece] : o.shapePieces) { out << at << ".shapePiece [" << character << "|" << piece << "]\n"; }
 			sprite(at + ".cell.slot", o.cell.slot);

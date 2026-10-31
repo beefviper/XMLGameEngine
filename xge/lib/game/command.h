@@ -166,6 +166,14 @@ namespace xge
 	// above the row comes down one row.
 	struct CmdCollapse {};
 
+	// <fall /> - in a cell map's check: every loose piece of the map drops
+	// down its column onto what is under it.
+	struct CmdFall {};
+
+	// <cycle /> - a shape's cells each move on to the next cell of its
+	// outline, in reading order, the last to the first.
+	struct CmdCycle {};
+
 	// A variable a command names, owner.variable, taken apart once when the
 	// command is made: the owner (an object, a path to one, or for <set> a
 	// group) and the variable after the last dot. For <set>, `variable`
@@ -676,7 +684,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdLive>;
 
 	struct LoadedCommand
 	{

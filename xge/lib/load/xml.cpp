@@ -1013,7 +1013,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1712,6 +1712,7 @@ namespace xge
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where);
+		int readCount(const XmlNode& node, const std::string& where);
 
 		// A cell map's <checks>: each a question the map asks after
 		// something settles (<full> rows), and its commands.
@@ -1722,14 +1723,21 @@ namespace xge
 			{
 				const std::string tag = child->getName();
 				const std::string here = where + " > <checks> > <" + tag + ">";
-				if (tag != "full") { fail(where + " > <checks>", "unknown <" + tag + ">; expected <full>"); }
+				if (tag != "full" && tag != "line") { fail(where + " > <checks>", "unknown <" + tag + ">; expected <full> or <line>"); }
 				RawCheck check;
 				check.kind = tag;
 				check.objClass = child->getAttribute("class");
 				for (std::unique_ptr<XmlNode> command = child->getFirstChild(); command != nullptr; command = command->getNextSibling())
 				{
+					if (command->getName() == "atleast")
+					{
+						if (tag != "line") { fail(here, "has an <atleast>, which is for a <line>"); }
+						check.count = readCount(*command, here);
+						continue;
+					}
 					check.commands.push_back(readCommand(*command, here));
 				}
+				if (tag == "line" && check.count < 2) { fail(here, "needs <atleast> 2 or more: how many alike make a line"); }
 				checks.push_back(std::move(check));
 			}
 			return checks;
@@ -1779,7 +1787,6 @@ namespace xge
 			}
 		}
 
-		int readCount(const XmlNode& node, const std::string& where);
 
 		// <exists>false</exists>: whether the object is in the game at the start.
 		bool readExists(const XmlNode& object, const std::string& where)
@@ -2042,6 +2049,9 @@ namespace xge
 			// The <map> it is on, if it is: its members are the tiles of the
 			// character it picks.
 			const MapLayout* map = nullptr;
+			// On a map of cells: the character a group around it picks for
+			// all its members (Columns' jewels), each waiting to be spawned.
+			char character = '\0';
 		};
 
 		// A <group> is read as one RawObject per member, which from then on is
@@ -2160,7 +2170,14 @@ namespace xge
 
 			if (inner)
 			{
-				if (!group.getAttribute("char").empty()) { fail(where, "has groups inside it, so it picks no character itself; give the char= to the groups inside"); }
+				if (!group.getAttribute("char").empty())
+				{
+					// On a map of cells, one character for all of them: a shape's
+					// cell of it is any one, at random.
+					if (!own.map || !own.map->cells || own.character != '\0') { fail(where, "has groups inside it, so it picks no character itself; give the char= to the groups inside"); }
+					own.character = readMapCharacter(group, *own.map, where, where);
+					if (!tilesOf(*own.map, own.character).empty()) { fail(where, "has groups inside it and picks '" + std::string(1, own.character) + "', which is on tiles of map '" + own.map->name + "'; a group of groups picks a character only for shapes, waiting"); }
+				}
 				own.object.outerGroups.push_back(name);
 				for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
@@ -2258,9 +2275,10 @@ namespace xge
 				};
 				if (map.cells && group.getAttribute("char").empty())
 				{
-					waiting('\0');
+					waiting(own.character);
 					return;
 				}
+				if (own.character != '\0') { fail(where, "picks a character, and so does a group around it; give it to one of them"); }
 				const char character = readMapCharacter(group, map, where, where);
 				if (map.cells && tilesOf(map, character).empty())
 				{
