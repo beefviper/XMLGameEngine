@@ -86,8 +86,36 @@ namespace xge
 		// faces there (a slope of a <line>, the round of a ball).
 		if (usesPixels(a, b))
 		{
-			pixelContactAt(boxOf(a), [&](const Vector2f& local) { return solidAt(a, local); },
-				boxOf(b), [&](const Vector2f& local) { return solidAt(b, local); }, contact.point, contact.normal);
+			const auto solidA = [&](const Vector2f& local) { return solidAt(a, local); };
+			const auto solidB = [&](const Vector2f& local) { return solidAt(b, local); };
+			pixelContactAt(boxOf(a), solidA, boxOf(b), solidB, contact.point, contact.normal);
+
+			// How deep is how far the first must go along the way apart for
+			// no drawn pixels to meet, not how far their boxes overlap (a
+			// flipper's square is far bigger than its bar).
+			contact.depth = 0.0f;
+			const Box first = boxOf(a);
+			const Box second = boxOf(b);
+			const auto clearAt = [&](float apart)
+			{
+				return !xge::pixelsOverlapAt(Box{ first.position + contact.normal * apart, first.size }, solidA, second, solidB);
+			};
+			for (float apart = 0.0f; apart <= first.size.x + first.size.y; apart += 0.5f)
+			{
+				if (clearAt(apart))
+				{
+					// Narrowed down within the last half pixel.
+					float low = std::max(0.0f, apart - 0.5f);
+					float high = apart;
+					for (int refine = 0; refine < 6 && apart > 0.0f; ++refine)
+					{
+						const float middle = (low + high) / 2;
+						if (clearAt(middle)) { high = middle; } else { low = middle; }
+					}
+					contact.depth = high;
+					break;
+				}
+			}
 		}
 		return contact;
 	}

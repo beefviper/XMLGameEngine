@@ -543,7 +543,12 @@ namespace xge
 		return velocity;
 	}
 
-	std::optional<Knocked> knockedApart(const Vector2f& first, float firstMass, const Vector2f& second, float secondMass, const Vector2f& way, float bounce) noexcept
+	float settleSpeed(const Vector2f& acceleration, const Vector2f& way) noexcept
+	{
+		return 4.0f * std::max(0.0f, acceleration.x * way.x + acceleration.y * way.y);
+	}
+
+	std::optional<Knocked> knockedApart(const Vector2f& first, float firstMass, const Vector2f& second, float secondMass, const Vector2f& way, float bounce, float settle) noexcept
 	{
 		const auto dot = [](const Vector2f& a, const Vector2f& b) { return a.x * b.x + a.y * b.y; };
 		const float firstAlong = dot(first, way);
@@ -552,6 +557,11 @@ namespace xge
 		if (!(closing > 0.0f))
 		{
 			return std::nullopt;
+		}
+
+		if (closing < settle && bounce <= 1.0f)
+		{
+			bounce = 0.0f;
 		}
 
 		float firstAfter = firstAlong;

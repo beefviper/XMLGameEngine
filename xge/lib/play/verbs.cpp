@@ -85,7 +85,10 @@ namespace xge
 		const Vector2f way = touch.normal * -1.0f;
 		const Vector2f objectAt = object.velocityAt(touch.point);
 		const Vector2f otherAt = other.velocityAt(touch.point);
-		const std::optional<Knocked> after = knockedApart(objectAt, object.mass, otherAt, other.mass, way, bounce);
+		// Against one that does not move, the one that does settles on it.
+		const float settle = other.mass <= 0.0f ? settleSpeed(object.acceleration, way)
+			: object.mass <= 0.0f ? settleSpeed(other.acceleration, way * -1.0f) : 0.0f;
+		const std::optional<Knocked> after = knockedApart(objectAt, object.mass, otherAt, other.mass, way, bounce, settle);
 		if (!after)
 		{
 			return false;
@@ -111,7 +114,7 @@ namespace xge
 		// only the object's speed along that way changes. (A surface that
 		// moves and lends its speed is a <knock>.)
 		const Vector2f way = touch.normal * -1.0f;
-		if (const std::optional<Knocked> after = knockedApart(object.velocity, 1.0f, Vector2f{}, 0.0f, way, share))
+		if (const std::optional<Knocked> after = knockedApart(object.velocity, 1.0f, Vector2f{}, 0.0f, way, share, settleSpeed(object.acceleration, way)))
 		{
 			object.velocity = after->first;
 		}

@@ -533,13 +533,24 @@ namespace xge
 	// first towards the second), going at those velocities, with those
 	// masses (0: one that does not move), share out what they carry along
 	// that line as things that bounce `bounce` (0 to 1) do; across it each
-	// keeps its own. None when they are not coming together.
+	// keeps its own. None when they are not coming together. Closing slower
+	// than `settle`, they do not bounce at all (a share up to 1): what lies
+	// on a surface under its own pull settles there instead of hopping (see
+	// settleSpeed).
 	struct Knocked
 	{
 		Vector2f first;
 		Vector2f second;
 	};
-	std::optional<Knocked> knockedApart(const Vector2f& first, float firstMass, const Vector2f& second, float secondMass, const Vector2f& way, float bounce) noexcept;
+	std::optional<Knocked> knockedApart(const Vector2f& first, float firstMass, const Vector2f& second, float secondMass, const Vector2f& way, float bounce, float settle = 0.0f) noexcept;
+
+	// How slowly something pulled by `acceleration` must meet a surface
+	// lying across `way` (from it into the surface) to settle on it rather
+	// than bounce: as fast as four frames of its pull into that surface. A
+	// ball resting on a slope only ever meets it that slowly; one meeting a
+	// surface its pull does not press it into (a walker meeting a wall)
+	// always bounces.
+	float settleSpeed(const Vector2f& acceleration, const Vector2f& way) noexcept;
 
 	// Whether `thing` rests against that side of `base`: up to a pixel
 	// from it, and overlapping it along it (a walker standing on a floor

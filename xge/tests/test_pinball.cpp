@@ -13,6 +13,8 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cmath>
+
 using namespace xge;
 using Catch::Approx;
 using played::Played;
@@ -131,4 +133,36 @@ TEST_CASE("pinball.xml: the third ball down the drain ends the game", "[pinball]
 	CHECK(table.state() == "over");
 	table.tap(KeyCode::Space);
 	CHECK(table.state() == "title");
+}
+
+TEST_CASE("pinball.xml: a ball dropped onto a flipper is never thrown further than it was going", "[pinball]")
+{
+	Table table;
+	table.put(185.0f, 530.0f, 0.0f, 0.0f);
+	for (int i = 0; i < 40; ++i)
+	{
+		const Vector2f was = table.ball().position;
+		const float speed = std::hypot(table.ball().velocity.x, table.ball().velocity.y);
+		table.frames(1);
+		const Vector2f moved = table.ball().position - was;
+		CHECK(std::hypot(moved.x, moved.y) <= speed + 1.0f);
+	}
+}
+
+TEST_CASE("pinball.xml: a ball caught on a raised flipper rolls down to the hinge and settles there", "[pinball]")
+{
+	Table table;
+	table.engine.handleKeyPressed(KeyCode::A);
+	table.frames(6);
+	table.put(185.0f, 500.0f, 0.0f, 0.0f);
+	table.frames(120);
+	const Vector2f settled = table.middle(table.ball());
+	CHECK(settled.x < 155.0f);
+	for (int i = 0; i < 30; ++i)
+	{
+		table.frames(1);
+		const Vector2f now = table.middle(table.ball());
+		CHECK(std::abs(now.x - settled.x) < 1.5f);
+		CHECK(std::abs(now.y - settled.y) < 1.5f);
+	}
 }
