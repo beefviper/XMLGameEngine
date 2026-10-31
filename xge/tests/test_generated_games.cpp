@@ -270,6 +270,18 @@ namespace
 			text(at + ".facing", o.facing);
 			for (const auto& [pose, look] : o.poses) { text(at + ".pose." + pose, look); }
 			for (const auto& [join, look] : o.joins) { text(at + ".join." + join, look); }
+			for (std::size_t i = 0; i < o.moveSets.size(); ++i)
+			{
+				const RawObject::RawMoveSet& set = o.moveSets[i];
+				const std::string here = at + ".moves." + std::to_string(i);
+				text(here + ".sprite", set.sprite);
+				flag(here + ".forced", set.forced);
+				for (const RawObject::RawPieceMove& move : set.moves)
+				{
+					text(here + ".move", std::string(move.jump ? "jump " : "step ") + move.objClass + " " + std::to_string(move.x) + " " + std::to_string(move.y));
+				}
+				text(here + ".promote", set.promote + " " + std::to_string(set.promoteRow));
+			}
 			text(at + ".mirror", o.mirror);
 			flag(at + ".hasGrip", o.hasGrip);
 			value(at + ".grip", o.rawGrip);

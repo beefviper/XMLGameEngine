@@ -375,6 +375,7 @@ namespace xge
 			{ "blink", [](Object& o) -> float& { return o.blink; }, true },
 			{ "column", [](Object& o) -> float& { return o.cellColumn; }, false },
 			{ "row", [](Object& o) -> float& { return o.cellRow; }, false },
+			{ "moves", [](Object& o) -> float& { return o.moveCount; }, true },
 		};
 		return parts;
 	}

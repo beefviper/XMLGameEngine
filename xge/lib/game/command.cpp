@@ -78,6 +78,8 @@ namespace xge
 		if (verb == "grow") { return CmdGrow{}; }
 		if (verb == "split") { return CmdSplit{}; }
 		if (verb == "through") { return CmdThrough{}; }
+		if (verb == "pick") { return CmdPick{ raw.objClass }; }
+		if (verb == "place") { return CmdPlace{}; }
 		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
 
 		// <reset/> puts the object in the rule (or, in a state's input or
@@ -507,6 +509,8 @@ namespace xge
 			[&](const CmdGrow&) { o << "grow"; },
 			[&](const CmdSplit&) { o << "split"; },
 			[&](const CmdThrough&) { o << "through"; },
+			[&](const CmdPick& p) { o << "pick(" << p.objClass << ")"; },
+			[&](const CmdPlace&) { o << "place"; },
 			[&](const CmdSlide& m)
 			{
 				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");

@@ -1360,7 +1360,7 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- What an <object> and a <group> both have: <facing>, <poses>, <joins>, <mirror>, <grip>, <timers>,
+  <!-- What an <object> and a <group> both have: <facing>, <poses>, <moves>, <joins>, <mirror>, <grip>, <timers>,
        <active>, <collisions>, <actions> and <variables>, into $to. -->
   <xsl:template name="shared">
     <xsl:param name="node" />
@@ -1404,6 +1404,31 @@
           <xsl:with-param name="text" select="@sprite" />
         </xsl:call-template>
         <xsl:text> }</xsl:text>
+      </xsl:for-each>
+      <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$node/moves">
+      <xsl:value-of select="concat($indent, $to, '.moveSets = {')" />
+      <xsl:for-each select="$node/moves">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:text> { </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@sprite" />
+        </xsl:call-template>
+        <xsl:value-of select="concat(', ', substring('falsetrue', 1 + 5 * count(forced), 5 - count(forced)), ', {')" />
+        <xsl:for-each select="step | jump">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:value-of select="concat(' { ', substring('falsetrue', 1 + 5 * number(local-name() = 'jump'), 5 - number(local-name() = 'jump')), ', ')" />
+          <xsl:call-template name="string">
+            <xsl:with-param name="text" select="@class" />
+          </xsl:call-template>
+          <xsl:value-of select="concat(', ', normalize-space(x), ', ', normalize-space(y), ' }')" />
+        </xsl:for-each>
+        <xsl:text> }, </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="promote/@sprite" />
+        </xsl:call-template>
+        <xsl:value-of select="concat(', ', substring(concat('0', normalize-space(promote/row)), 1 + number(boolean(promote/row))), ' }')" />
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>

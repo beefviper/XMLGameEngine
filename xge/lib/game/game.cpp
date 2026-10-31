@@ -1268,6 +1268,8 @@ namespace xge
 			object.activeThrustAheadBy.clear();
 			object.swingHeld = false;
 			object.swingDone = 0.0f;
+			object.picked.clear();
+			object.pickChain = false;
 			object.resting = false;
 			object.settledAge = 1000;
 			object.spin = 0.0f;

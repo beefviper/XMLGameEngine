@@ -1,0 +1,442 @@
+<!-- checkers.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 31, 2026 -->
+
+<!--
+  Checkers (draughts), for two players at one keyboard: red and white take
+  turns on an eight by eight board, red first. A man steps one square on
+  a slant towards the other side; a jump over an enemy piece into the
+  empty square beyond takes it. A jump that can be made must be, and a
+  piece that can jump again after a jump must go on. A man reaching the
+  far row is crowned a king, which moves and jumps backwards as well, and
+  its move ends there. A side with no pieces left, or no move to make on
+  its turn, has lost.
+
+  W A S D or the arrows move the cursor; Space picks up the piece under
+  it, and puts it down where the cursor is. Space on another of your own
+  pieces picks that one instead (not in the middle of a run of jumps).
+  P or Escape pauses; Space starts and plays again.
+
+  How it is written:
+  * The board is a <map> of <cells />: r red men, w white men. Each side
+    is a group whose <moves> say how its men go, and a second <moves
+    sprite="king"> how its kings go; <forced /> makes a jump the only
+    move while one can be made, and <promote sprite="king"> crowns.
+  * The cursor is on a map of its own, the same size over the board, so
+    it walks over the pieces without touching them. <pick class="red" />
+    takes up the red piece under it; <place /> makes the move ending
+    where it is. A place that is no move is refused, and so is one that
+    must jump on, so the turn passes (the commands after it) only when
+    the move is over.
+  * The cursor's looks say whose turn it is and whether it holds a piece
+    (red's and white's look the same; the words above the board say whose
+    turn it is). Space triggers the action for the look it shows.
+  * A side is stuck when the live number `moves` of its pieces adds up to
+    nothing on its turn.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Checkers">
+    <width>800</width>
+    <height>600</height>
+  </window>
+  <variables>
+    <variable name="square">60</variable>
+    <variable name="left">160</variable>
+    <variable name="top">80</variable>
+  </variables>
+  <sounds>
+    <sound name="pick"><note pitch="E5">0.03</note></sound>
+    <sound name="move" wave="triangle"><note pitch="C4">0.05</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>80</size><color>color.red</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>32</size></style>
+    <style name="redpiece">
+      <scale>4</scale>
+      <color>color.red</color>
+      <color char="d">color.brown</color>
+      <color char="y">color.yellow</color>
+    </style>
+    <style name="whitepiece">
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="d">color.lightgrey</color>
+      <color char="y">color.yellow</color>
+    </style>
+    <style name="cursor"><scale>6</scale><color>color.yellow</color></style>
+  </styles>
+  <objects>
+    <object name="again">
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>CHECKERS</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 120</centered></y></position>
+        </object>
+        <object name="help1">
+          <sprite><text style="help"><content>two players: red moves first, then white</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+        </object>
+        <object name="help2">
+          <sprite><text style="help"><content>w a s d or the arrows move, spacebar picks up and puts down</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 15</centered></y></position>
+        </object>
+        <object name="help3">
+          <sprite><text style="help"><content>p pauses</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 50</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="whoseturn">
+          <sprite name="red"><text style="hud"><content>red to move</content><color>color.red</color></text></sprite>
+          <sprite name="white"><text style="hud"><content>white to move</content></text></sprite>
+          <position><x><centered /></x><y>24</y></position>
+        </object>
+        <object name="frame">
+          <sprite><rectangle><width>square * 8 + 16</width><height>square * 8 + 16</height><color>color.brown</color></rectangle></sprite>
+          <position><x>left - 8</x><y>top - 8</y></position>
+        </object>
+        <object name="squares">
+          <sprite>
+            <bitmap>
+              <row>l*l*l*l*</row>
+              <row>*l*l*l*l</row>
+              <row>l*l*l*l*</row>
+              <row>*l*l*l*l</row>
+              <row>l*l*l*l*</row>
+              <row>*l*l*l*l</row>
+              <row>l*l*l*l*</row>
+              <row>*l*l*l*l</row>
+              <scale>square</scale>
+              <color>color.darkgreen</color>
+              <color char="l">color.lightgrey</color>
+            </bitmap>
+          </sprite>
+          <position><x>left</x><y>top</y></position>
+        </object>
+
+        <map name="board">
+          <tile><width>square</width><height>square</height></tile>
+          <position><x>left</x><y>top</y></position>
+          <cells />
+          <row>.w.w.w.w</row>
+          <row>w.w.w.w.</row>
+          <row>.w.w.w.w</row>
+          <row>........</row>
+          <row>........</row>
+          <row>r.r.r.r.</row>
+          <row>.r.r.r.r</row>
+          <row>r.r.r.r.</row>
+
+          <!-- red starts at the bottom and goes up the board -->
+          <group name="red" class="red" char="r">
+            <sprite name="man">
+              <bitmap style="redpiece">
+                <row>....*****....</row>
+                <row>..*********..</row>
+                <row>.***********.</row>
+                <row>.***ddddd***.</row>
+                <row>***d*****d***</row>
+                <row>***d*****d***</row>
+                <row>***d*****d***</row>
+                <row>***d*****d***</row>
+                <row>***d*****d***</row>
+                <row>.***ddddd***.</row>
+                <row>.***********.</row>
+                <row>..*********..</row>
+                <row>....*****....</row>
+              </bitmap>
+            </sprite>
+            <sprite name="king">
+              <bitmap style="redpiece">
+                <row>....*****....</row>
+                <row>..*********..</row>
+                <row>.***********.</row>
+                <row>.**y**y**y**.</row>
+                <row>***yy*y*yy***</row>
+                <row>***yyyyyyy***</row>
+                <row>***yyyyyyy***</row>
+                <row>***yyyyyyy***</row>
+                <row>*************</row>
+                <row>.***********.</row>
+                <row>.***********.</row>
+                <row>..*********..</row>
+                <row>....*****....</row>
+              </bitmap>
+            </sprite>
+            <moves>
+              <forced />
+              <step><x>-1</x><y>-1</y></step>
+              <step><x>1</x><y>-1</y></step>
+              <jump class="white"><x>-1</x><y>-1</y></jump>
+              <jump class="white"><x>1</x><y>-1</y></jump>
+              <promote sprite="king"><row>1</row></promote>
+            </moves>
+            <moves sprite="king">
+              <forced />
+              <step><x>-1</x><y>-1</y></step>
+              <step><x>1</x><y>-1</y></step>
+              <step><x>-1</x><y>1</y></step>
+              <step><x>1</x><y>1</y></step>
+              <jump class="white"><x>-1</x><y>-1</y></jump>
+              <jump class="white"><x>1</x><y>-1</y></jump>
+              <jump class="white"><x>-1</x><y>1</y></jump>
+              <jump class="white"><x>1</x><y>1</y></jump>
+            </moves>
+          </group>
+
+          <!-- white starts at the top and goes down -->
+          <group name="white" class="white" char="w">
+            <sprite name="man">
+              <bitmap style="whitepiece">
+                <row>....*****....</row>
+                <row>..*********..</row>
+                <row>.***********.</row>
+                <row>.***ddddd***.</row>
+                <row>***d*****d***</row>
+                <row>***d*****d***</row>
+                <row>***d*****d***</row>
+                <row>***d*****d***</row>
+                <row>***d*****d***</row>
+                <row>.***ddddd***.</row>
+                <row>.***********.</row>
+                <row>..*********..</row>
+                <row>....*****....</row>
+              </bitmap>
+            </sprite>
+            <sprite name="king">
+              <bitmap style="whitepiece">
+                <row>....*****....</row>
+                <row>..*********..</row>
+                <row>.***********.</row>
+                <row>.**y**y**y**.</row>
+                <row>***yy*y*yy***</row>
+                <row>***yyyyyyy***</row>
+                <row>***yyyyyyy***</row>
+                <row>***yyyyyyy***</row>
+                <row>*************</row>
+                <row>.***********.</row>
+                <row>.***********.</row>
+                <row>..*********..</row>
+                <row>....*****....</row>
+              </bitmap>
+            </sprite>
+            <moves>
+              <forced />
+              <step><x>-1</x><y>1</y></step>
+              <step><x>1</x><y>1</y></step>
+              <jump class="red"><x>-1</x><y>1</y></jump>
+              <jump class="red"><x>1</x><y>1</y></jump>
+              <promote sprite="king"><row>8</row></promote>
+            </moves>
+            <moves sprite="king">
+              <forced />
+              <step><x>-1</x><y>-1</y></step>
+              <step><x>1</x><y>-1</y></step>
+              <step><x>-1</x><y>1</y></step>
+              <step><x>1</x><y>1</y></step>
+              <jump class="red"><x>-1</x><y>-1</y></jump>
+              <jump class="red"><x>1</x><y>-1</y></jump>
+              <jump class="red"><x>-1</x><y>1</y></jump>
+              <jump class="red"><x>1</x><y>1</y></jump>
+            </moves>
+          </group>
+        </map>
+
+        <!-- the cursor, on a map of its own over the board -->
+        <map name="pointer">
+          <tile><width>square</width><height>square</height></tile>
+          <position><x>left</x><y>top</y></position>
+          <cells />
+          <row>........</row>
+          <row>........</row>
+          <row>........</row>
+          <row>........</row>
+          <row>........</row>
+          <row>..c.....</row>
+          <row>........</row>
+          <row>........</row>
+
+          <object name="cursor" char="c">
+            <sprite name="redfree">
+              <bitmap style="cursor">
+                <row>**********</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>**********</row>
+              </bitmap>
+            </sprite>
+            <sprite name="redheld">
+              <bitmap style="cursor">
+                <row>**********</row>
+                <row>**********</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**********</row>
+                <row>**********</row>
+              </bitmap>
+            </sprite>
+            <sprite name="whitefree">
+              <bitmap style="cursor">
+                <row>**********</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>**********</row>
+              </bitmap>
+            </sprite>
+            <sprite name="whiteheld">
+              <bitmap style="cursor">
+                <row>**********</row>
+                <row>**********</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**********</row>
+                <row>**********</row>
+              </bitmap>
+            </sprite>
+            <actions>
+              <action name="up"><hop direction="up" /></action>
+              <action name="down"><hop direction="down" /></action>
+              <action name="left"><hop direction="left" /></action>
+              <action name="right"><hop direction="right" /></action>
+
+              <action name="redpick"><pick class="red" /><become sprite="redheld" /><play sound="pick" /></action>
+              <action name="whitepick"><pick class="white" /><become sprite="whiteheld" /><play sound="pick" /></action>
+              <!-- the move made and over: the turn passes -->
+              <action name="redplace">
+                <place />
+                <play sound="move" />
+                <set variable="cursor.turn">2</set>
+                <become sprite="whitefree" />
+                <become object="whoseturn" sprite="white" />
+              </action>
+              <action name="whiteplace">
+                <place />
+                <play sound="move" />
+                <set variable="cursor.turn">1</set>
+                <become sprite="redfree" />
+                <become object="whoseturn" sprite="red" />
+              </action>
+            </actions>
+            <!-- whose turn: 1 red, 2 white -->
+            <variables>
+              <variable name="turn">1</variable>
+            </variables>
+          </object>
+        </map>
+      </objects>
+      <inputs>
+        <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="cursor" action="up" /></input>
+        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="cursor" action="down" /></input>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="cursor" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
+        <!-- one press: put the piece held down, or take one up (another of your own while holding one) -->
+        <input>
+          <button>space</button><button>pad1.a</button>
+          <trigger object="cursor" action="redplace" from="redheld" />
+          <trigger object="cursor" action="whiteplace" from="whiteheld" />
+          <trigger object="cursor" action="redpick" from="redheld" />
+          <trigger object="cursor" action="whitepick" from="whiteheld" />
+          <trigger object="cursor" action="redpick" from="redfree" />
+          <trigger object="cursor" action="whitepick" from="whitefree" />
+        </input>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <!-- a side with no move on its turn (none left, or all blocked) has lost -->
+        <condition>
+          <all>
+            <condition object="cursor" variable="turn"><equal>2</equal></condition>
+            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
+          </all>
+          <become object="over.winner" sprite="red" />
+          <play sound="win" />
+          <push state="over" />
+        </condition>
+        <condition>
+          <all>
+            <condition object="cursor" variable="turn"><equal>1</equal></condition>
+            <condition class="red" variable="moves" total="sum"><equal>0</equal></condition>
+          </all>
+          <become object="over.winner" sprite="white" />
+          <play sound="win" />
+          <push state="over" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="over">
+      <objects>
+        <object name="winner">
+          <sprite name="red"><text style="banner"><content>RED WINS</content><color>color.red</color></text></sprite>
+          <sprite name="white"><text style="banner"><content>WHITE WINS</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

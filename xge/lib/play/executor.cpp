@@ -252,6 +252,8 @@ namespace xge
 			[&](const CmdGrow&) { if (self && !self->chain.empty()) { ++self->chainGrow; } },
 			[&](const CmdSplit&) { if (self) { game.splitChain(*self); } },
 			[&](const CmdThrough&) { if (self && doer.touch) { game.stepThrough(); } },
+			[&](const CmdPick& p) { done = self && game.pickPiece(*self, p.objClass); },
+			[&](const CmdPlace&) { done = self && game.placePiece(*self); },
 			// Another action, of this object or another, as part of this.
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); },
 			// <track /> runs on a pointing control (executeAxis), <hold> in a

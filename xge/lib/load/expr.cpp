@@ -945,6 +945,30 @@ namespace xge
 			object.hasJoins = true;
 		}
 
+		// A board game piece's moves, each set's look found.
+		for (const RawObject::RawMoveSet& rawSet : rawObject.moveSets)
+		{
+			const auto lookNamed = [&](const std::string& name, const std::string& at) -> std::size_t
+			{
+				const auto look = std::find_if(looks.begin(), looks.end(), [&](const Object::Look& each) { return each.name == name; });
+				if (look == looks.end())
+				{
+					std::vector<std::string> names;
+					for (const Object::Look& each : looks) { names.push_back(each.name); }
+					throw std::runtime_error(where + " > " + at + " sprite=\"" + name + "\">: the object has no look of that name"
+						+ (names.empty() ? std::string(" (it has no looks)") : didYouMean(name, names) + ". Its looks are: " + listOf(names)));
+				}
+				return static_cast<std::size_t>(look - looks.begin());
+			};
+			Object::MoveSet set;
+			if (!rawSet.sprite.empty()) { set.look = lookNamed(rawSet.sprite, "<moves"); }
+			set.forced = rawSet.forced;
+			for (const RawObject::RawPieceMove& move : rawSet.moves) { set.moves.push_back({ move.jump, move.objClass, move.x, move.y }); }
+			if (!rawSet.promote.empty()) { set.promoteLook = lookNamed(rawSet.promote, "<moves> > <promote"); }
+			set.promoteRow = rawSet.promoteRow;
+			object.moveSets.push_back(std::move(set));
+		}
+
 		if (!rawObject.mirror.empty())
 		{
 			if (rawObject.hasHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }

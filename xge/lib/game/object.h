@@ -499,6 +499,25 @@ namespace xge
 		// goes each frame, only when hasGrip; otherwise 1, all of it.
 		RawValue rawGrip;
 		bool hasGrip{ false };
+		// <moves>: on a map with <cells />, the moves a piece of a board
+		// game may make when <place>d (see Object::MoveSet); a set with a
+		// sprite= is the one for that look, the one without for the others.
+		struct RawPieceMove
+		{
+			bool jump{ false };
+			std::string objClass;   // a jump's: what it may go over
+			int x{};
+			int y{};
+		};
+		struct RawMoveSet
+		{
+			std::string sprite;
+			bool forced{ false };
+			std::vector<RawPieceMove> moves;
+			std::string promote;    // <promote sprite=>: the look it takes...
+			int promoteRow{};       // ...on reaching this row
+		};
+		std::vector<RawMoveSet> moveSets;
 		RawMaze maze;                // <maze>: the map it walks, if any
 		// <shape>: on a cell map, the cells it fills, a <row> of characters
 		// each, top to bottom; and the object of the map each character
@@ -868,6 +887,38 @@ namespace xge
 		bool awayFromHome() const noexcept { return onCells && mapName != homeMap; }
 		// <chain object>: what its links are (see RawObject::chain).
 		std::string chain;
+
+		// <moves>: what a piece of a board game may do when a picker
+		// <place>s it (game/cells.cpp). A step goes to the empty cell that
+		// many cells across and down; a jump goes over a piece of its class
+		// that far away into the empty cell beyond, and takes it. The set
+		// for the look showing is used, else the one for no look. forced:
+		// while any piece of its class can jump, it may only jump.
+		// promote: reaching promoteRow, it shows that look.
+		struct PieceMove
+		{
+			bool jump{ false };
+			std::string objClass;
+			int x{};
+			int y{};
+		};
+		struct MoveSet
+		{
+			std::optional<std::size_t> look;
+			bool forced{ false };
+			std::vector<PieceMove> moves;
+			std::optional<std::size_t> promoteLook;
+			int promoteRow{};
+		};
+		std::vector<MoveSet> moveSets;
+		// How many moves it can make now: the live number `moves`, counted
+		// before the conditions each frame (a side with none left is stuck).
+		float moveCount{};
+		// A picker (it runs <pick>): the piece it holds ("" for none), and
+		// whether that piece is in the middle of a run of jumps, which it
+		// must finish.
+		std::string picked;
+		bool pickChain{ false };
 		// The map's <checks>, made ready (each piece of the map has them).
 		struct CellCheck
 		{

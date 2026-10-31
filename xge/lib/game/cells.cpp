@@ -900,4 +900,127 @@ namespace xge
 			stepCells(objects[i], whole(step.x), whole(step.y));
 		}
 	}
+
+	const Object::MoveSet* Game::moveSetOf(const Object& piece) const noexcept
+	{
+		const Object::MoveSet* any = nullptr;
+		for (const Object::MoveSet& set : piece.moveSets)
+		{
+			if (set.look && *set.look == piece.look) { return &set; }
+			if (!set.look && !any) { any = &set; }
+		}
+		return any;
+	}
+
+	std::vector<Game::PieceMoveTo> Game::movesOf(Object& piece, bool jumpsOnly)
+	{
+		std::vector<PieceMoveTo> found;
+		const Object::MoveSet* set = moveSetOf(piece);
+		if (!set || !piece.onCells || !piece.exists) { return found; }
+		const int column = whole(piece.cellColumn);
+		const int row = whole(piece.cellRow);
+		const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= piece.mapColumns && r <= piece.mapRows; };
+		for (const Object::PieceMove& move : set->moves)
+		{
+			if (jumpsOnly && !move.jump) { continue; }
+			const int by = move.jump ? 2 : 1;
+			const int toColumn = column + move.x * by;
+			const int toRow = row + move.y * by;
+			if (!onMap(toColumn, toRow) || cellHolder(piece.mapName, toColumn, toRow, { &piece })) { continue; }
+			if (!move.jump)
+			{
+				found.push_back({ toColumn, toRow, nullptr });
+				continue;
+			}
+			Object* over = cellHolder(piece.mapName, column + move.x, row + move.y, { &piece });
+			if (over && over->objClass == move.objClass) { found.push_back({ toColumn, toRow, over }); }
+		}
+		return found;
+	}
+
+	std::vector<Game::PieceMoveTo> Game::legalMoves(Object& piece, bool jumpsOnly)
+	{
+		const Object::MoveSet* set = moveSetOf(piece);
+		if (!set) { return {}; }
+		if (!jumpsOnly && set->forced)
+		{
+			// Any piece of its side that can jump makes jumps the only moves.
+			for (Object& other : objects)
+			{
+				if (other.moveSets.empty() || other.objClass != piece.objClass || other.mapName != piece.mapName || !isShown(other)) { continue; }
+				if (!movesOf(other, true).empty()) { jumpsOnly = true; break; }
+			}
+		}
+		return movesOf(piece, jumpsOnly);
+	}
+
+	void Game::countMoves()
+	{
+		for (Object& piece : objects)
+		{
+			if (piece.moveSets.empty()) { continue; }
+			piece.moveCount = isShown(piece) ? static_cast<float>(movesOf(piece, false).size()) : 0.0f;
+		}
+	}
+
+	bool Game::pickPiece(Object& picker, const std::string& objClass)
+	{
+		if (picker.pickChain || !picker.onCells) { return false; }
+		const int column = whole(picker.cellColumn);
+		const int row = whole(picker.cellRow);
+		for (Object& piece : objects)
+		{
+			if (&piece == &picker || piece.moveSets.empty() || piece.objClass != objClass || !piece.onCells || !isShown(piece)
+				|| whole(piece.cellColumn) != column || whole(piece.cellRow) != row)
+			{
+				continue;
+			}
+			if (legalMoves(piece, false).empty()) { return false; }
+			picker.picked = piece.name;
+			return true;
+		}
+		return false;
+	}
+
+	bool Game::placePiece(Object& picker)
+	{
+		if (picker.picked.empty() || !picker.onCells) { return false; }
+		Object* piece = findAnywhere(picker.picked);
+		if (!piece || !piece->exists || !isShown(*piece))
+		{
+			picker.picked.clear();
+			picker.pickChain = false;
+			return false;
+		}
+		const int column = whole(picker.cellColumn);
+		const int row = whole(picker.cellRow);
+		const std::vector<PieceMoveTo> moves = legalMoves(*piece, picker.pickChain);
+		const auto move = std::find_if(moves.begin(), moves.end(), [&](const PieceMoveTo& each) { return each.column == column && each.row == row; });
+		if (move == moves.end()) { return false; }
+
+		const Object::MoveSet* set = moveSetOf(*piece);
+		const bool jumped = move->taken != nullptr;
+		if (move->taken) { despawn(*move->taken); }
+		putInCell(*piece, column, row);
+
+		// Promoted on reaching its row: that ends its move.
+		bool promoted = false;
+		if (set && set->promoteLook && row == set->promoteRow && piece->look != *set->promoteLook)
+		{
+			piece->showLook(*set->promoteLook);
+			promoted = true;
+		}
+
+		// A jump that can be followed by another must be: the turn goes on.
+		if (jumped && !promoted && !movesOf(*piece, true).empty())
+		{
+			picker.pickChain = true;
+			countMoves();
+			return false;
+		}
+		picker.picked.clear();
+		picker.pickChain = false;
+		countMoves();
+		return true;
+	}
 }

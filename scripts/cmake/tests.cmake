@@ -112,6 +112,7 @@ add_executable(xgetest
 	"xge/tests/test_pinball.cpp"
 	"xge/tests/test_cannonhill.cpp"
 	"xge/tests/test_speedway.cpp"
+	"xge/tests/test_checkers.cpp"
 	"xge/tests/test_live.cpp"
 	"xge/tests/test_steering.cpp"
 	"xge/tests/test_hitbox.cpp"

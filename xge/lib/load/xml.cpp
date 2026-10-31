@@ -1054,7 +1054,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1448,6 +1448,69 @@ namespace xge
 			return path;
 		}
 
+		// A whole number of cells, maybe below 0, from <x> or <y>.
+		int readCells(const XmlNode& node, const char* tag, const std::string& where)
+		{
+			const auto part = findChild(&node, tag);
+			if (!part) { fail(where, std::string("missing <") + tag + ">: how many cells " + (tag[0] == 'x' ? "across" : "down") + ", a whole number"); }
+			const std::string text = readText(*part);
+			const std::size_t digits = text.size() > 0 && text[0] == '-' ? 1 : 0;
+			if (text.size() <= digits || text.size() > digits + 3
+				|| !std::all_of(text.begin() + static_cast<std::ptrdiff_t>(digits), text.end(), [](unsigned char c) { return std::isdigit(c) != 0; }))
+			{
+				fail(where, std::string("<") + tag + "> is \"" + text + "\"; expected a whole number of cells, such as -1");
+			}
+			return std::stoi(text);
+		}
+
+		// <moves>: a board game piece's steps and jumps, a set for each look
+		// that has its own (sprite=) and one for the rest.
+		void readPieceMoves(const XmlNode& node, RawObject& object, const std::string& where)
+		{
+			bool any = false;
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "moves") { continue; }
+				if (!any) { object.moveSets.clear(); any = true; }
+				RawObject::RawMoveSet set;
+				set.sprite = child->getAttribute("sprite");
+				const std::string here = where + " > <moves" + (set.sprite.empty() ? std::string() : " sprite=\"" + set.sprite + "\"") + ">";
+				for (const RawObject::RawMoveSet& other : object.moveSets)
+				{
+					if (other.sprite == set.sprite) { fail(here, set.sprite.empty() ? "a second <moves> for no look; give each look's own a sprite=" : "a second <moves> for that look"); }
+				}
+				for (std::unique_ptr<XmlNode> move = child->getFirstChild(); move != nullptr; move = move->getNextSibling())
+				{
+					const std::string tag = move->getName();
+					if (tag == "forced") { set.forced = true; continue; }
+					if (tag == "promote")
+					{
+						set.promote = requireAttribute(*move, "sprite", here + " > <promote>");
+						const auto row = findChild(move.get(), "row");
+						if (!row) { fail(here + " > <promote>", "missing <row>: the row of the map that promotes it"); }
+						const std::string text = readText(*row);
+						if (text.empty() || text.size() > 3 || !std::all_of(text.begin(), text.end(), [](unsigned char c) { return std::isdigit(c) != 0; }) || std::stoi(text) < 1)
+						{
+							fail(here + " > <promote> > <row>", "is \"" + text + "\"; expected a row, counting from 1");
+						}
+						set.promoteRow = std::stoi(text);
+						continue;
+					}
+					if (tag != "step" && tag != "jump") { fail(here, "unknown <" + tag + ">; expected <forced />, <step>s and <jump>s, then <promote>"); }
+					RawObject::RawPieceMove each;
+					each.jump = tag == "jump";
+					const std::string at = here + " > <" + tag + ">";
+					if (each.jump) { each.objClass = requireAttribute(*move, "class", at); }
+					each.x = readCells(*move, "x", at);
+					each.y = readCells(*move, "y", at);
+					if (each.x == 0 && each.y == 0) { fail(at, "goes nowhere: <x> and <y> are both 0"); }
+					set.moves.push_back(std::move(each));
+				}
+				if (set.moves.empty()) { fail(here, "has no <step> or <jump>"); }
+				object.moveSets.push_back(std::move(set));
+			}
+		}
+
 		// What an object's looks and steps do as it moves, as far as `node`
 		// says: its <poses>, <mirror> and <grip>.
 		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
@@ -1500,6 +1563,7 @@ namespace xge
 				object.hasGrip = true;
 				object.rawGrip = readValue(*grip, where + " > <grip>");
 			}
+			readPieceMoves(node, object, where);
 		}
 
 		std::string readFacing(const XmlNode& node, const std::string& where)
@@ -2262,7 +2326,7 @@ namespace xge
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
-				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins") { /* below, all at once */ }
+				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves") { /* below, all at once */ }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "chain")
 				{
@@ -2277,7 +2341,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 

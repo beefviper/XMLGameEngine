@@ -612,8 +612,48 @@
       <xs:element name="mirror" type="mirrorType" minOccurs="0" />
       <xs:element name="grip" type="valueType" minOccurs="0" />
       <xs:element name="joins" type="joinsType" minOccurs="0" />
+      <xs:element name="moves" type="pieceMovesType" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:group>
+  <!-- moves: on a map with <cells />, a board game piece's moves, made when a picker <place>s it;
+       sprite=: the set for that look (a king's), the one without for the other looks.
+       forced: while any piece of its class can jump, it may only jump.
+       step: to the empty cell that many cells across (x) and down (y).
+       jump: over a piece of that class that far away into the empty cell beyond, taking it;
+       a piece that can jump again after a jump must, before its turn is over.
+       promote: reaching that row, it shows that look (crowned), and its move ends. -->
+  <xs:complexType name="pieceMovesType">
+    <xs:sequence>
+      <xs:element name="forced" type="emptyType" minOccurs="0" />
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="step" type="cellOffsetType" />
+        <xs:element name="jump">
+          <xs:complexType>
+            <xs:complexContent>
+              <xs:extension base="cellOffsetType">
+                <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+              </xs:extension>
+            </xs:complexContent>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+      <xs:element name="promote" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="row" type="xs:positiveInteger" />
+          </xs:sequence>
+          <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+  </xs:complexType>
+  <xs:complexType name="cellOffsetType">
+    <xs:sequence>
+      <xs:element name="x" type="xs:integer" />
+      <xs:element name="y" type="xs:integer" />
+    </xs:sequence>
+  </xs:complexType>
   <!-- joins: on a map with <cells />, the look for where the piece it is joined to lies (the other cells of its shape, falling or settled), and alone; put on while it shows one of them -->
   <xs:complexType name="joinsType">
     <xs:sequence>
@@ -1133,6 +1173,14 @@
       <xs:element name="grow" type="emptyType" />
       <!-- split: a piece of a chain cuts it there: it leaves the chain, and the links behind it are a chain of their own, led by the first of them -->
       <xs:element name="split" type="emptyType" />
+      <!-- pick: a picker on a map of cells over a board takes up the piece of that class in its cell, one with a move to make; refused when there is none, or while the piece held must jump on -->
+      <xs:element name="pick">
+        <xs:complexType>
+          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <!-- place: the piece held makes its move that ends in the picker's cell; refused when none does, and while it can jump on -->
+      <xs:element name="place" type="emptyType" />
     </xs:choice>
   </xs:group>
 

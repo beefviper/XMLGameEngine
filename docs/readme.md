@@ -95,7 +95,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 ### The shipped games
 
-42 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+43 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
@@ -140,6 +140,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `pinball` | A or Left, D or Right flip; Space held then let go shoots; P or Escape pauses | an original table: flippers that [swing about a pivot](#turning-about-a-pivot) and lend the ball their speed where they strike it, a plunger [held and let go](#a-keys-three-moments), bumpers and slingshots that [bounce](#touching) it off faster, three rollover lanes for a bonus |
 | `cannonhill` | W/S or Up/Down aim, Space held then let go fires; P or Escape pauses | an original artillery duel for two at one keyboard: hills drawn as a filled [`<polygon>`](#polygons) that shells blow [craters](#touching) in, each shell [spawned](#spawn-and-despawn) from the barrel's tip with the turn's wind as its `<acceleration>`, turns kept by a phase on a table, a hit told by a blast's `distance=`, three fields as [scenes](#scenes) |
 | `speedway` | player one W A S D, player two the arrows: up goes, down brakes, left and right steer; P or Escape pauses | an original top down race of three laps against each other and two computer cars: cars with a `<heading>`, held `<thrust>` and `<turn>`, and a [`<grip>`](#poses-mirror-grip-and-blinking) that holds them to their heading; grass, sand and oil as map pieces with a [`<surface>`](#surfaces); laps by gate rules in order; the computer's cars on [paths](#paths), facing the way they go |
+| `checkers` | W A S D or the arrows move the cursor, Space picks up and puts down; P or Escape pauses | checkers for two at one keyboard: pieces with [`<moves>`](#board-games), forced jumps and runs of jumps, kings crowned by `<promote>`, a cursor that `<pick>`s and `<place>`s, a stuck side found by the live number `moves` |
 | `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
@@ -562,6 +563,35 @@ A map with `<cells />` is a playfield of cells, such as Tetris's well: its piece
 - **Another map: a next-piece box.** A second map of cells may have nothing on it (`<map name="next">` with its tile, position, `<columns>4</columns><rows>2</rows><cells />`). `<spawn object="pieces" into="next"><random /></spawn>` makes a piece on it (in its first cell unless told), and `<send object="pieces" from="next" into="board"><column>4</column><row>1</row></send>` moves the piece of that name on `next` (a shape with its cells) to that cell of `board` (left out: the cell it is in). A send with no piece to send, or no room for it, is refused. **A piece away from the map it was written on is only shown:** its timers do not count and its actions do not run, so the next shape neither falls nor answers the keys until it is sent home. One press reaches only the pieces that were there when it came, so a shape sent in by another's landing does not drop too.
 - **`<checks>`.** `<full class="block">` is a row of the map whose every cell holds a piece of that class. Its commands run once for each full row, from the bottom up; in them `<clear />` takes that row's pieces away and `<collapse />` brings every piece above it down a row. `<line class="jewel"><atleast>3</atleast>` is every line of that many or more alike (of one group; a copy is of the group of what it copies), across, down or on a slant (`<straight />` after the `<atleast>`: across and down only), all at once; `<alike variable="hue" />` counts pieces as alike by that variable's value instead of their group (a germ and a capsule half of one colour); its commands run once for them all, and it is asked again on what they leave until none is found or nothing was taken. `<fall />` drops every loose piece of the map down its column onto what is under it, so lines the fall makes are found too: a chain. `<fall class="pill" />` drops only the pieces of that class; the others stay where they are and hold up what lands on them (Capsules' germs).
 
+#### Board games
+
+A board game's pieces sit on a map of cells and are moved by a player, a move at a time, by the rules of how each piece may go. Checkers:
+
+```xml
+<group name="red" class="red" char="r">
+  <sprite name="man"> ... </sprite>
+  <sprite name="king"> ... </sprite>
+  <moves>
+    <forced />
+    <step><x>-1</x><y>-1</y></step>
+    <step><x>1</x><y>-1</y></step>
+    <jump class="white"><x>-1</x><y>-1</y></jump>
+    <jump class="white"><x>1</x><y>-1</y></jump>
+    <promote sprite="king"><row>1</row></promote>
+  </moves>
+  <moves sprite="king"> ... all four ways ... </moves>
+</group>
+```
+
+- **`<moves>`** (after `<joins>`) are a piece's moves. A `<step>` goes to the empty cell that many cells across and down (`<y>` grows down the board). A `<jump class="white">` goes over a piece of that class that far away into the empty cell beyond it, which must be empty, and takes the piece jumped (despawned). Offsets are whole numbers of cells.
+- **A set for each look.** `<moves sprite="king">` is used while the piece shows that look; the `<moves>` with no sprite for the others.
+- **`<forced />`** first: while any piece of its class (on its map) can jump, it may only jump.
+- **`<promote sprite="king"><row>1</row></promote>`** last: a piece moved onto that row shows that look, and its move ends there.
+- **A run of jumps.** After a jump, a piece that can jump again must: its move is not over until it cannot.
+- **The picker** is any object on a map of cells, most often a cursor on a map of its own laid over the board (the same tile and place), so that it walks over the pieces without touching them. `<pick class="red" />` in its action takes up the piece of that class in its cell, if that piece has a move it can make (so under `<forced />` only one that can jump); refused otherwise, and while the piece it holds is in the middle of a run of jumps. Picking again takes another instead. `<place />` makes the held piece's move that ends in the picker's cell; refused when none does, and also when the piece has jumped and can jump on, so what is written after it (passing the turn) runs only when the move is over. Both are self verbs.
+- **Live number `moves`**: how many moves a piece can make now, counted each frame before the conditions. A side whose pieces' `moves` add up to nothing (`class="white" variable="moves" total="sum"`) is stuck, or has none left; Checkers ends the game that way on the stuck side's turn.
+- Whose turn it is is the game's own: Checkers keeps it in a variable and in the cursor's looks, and Space triggers the place or pick action for the look it shows.
+
 ### The kit and from=
 
 The `<kit>` holds objects, groups and maps written once, called **pieces**. A piece is never in play itself: it comes into play where an `<objects>` takes it, and as copies a [`<spawn>`](#spawn-and-despawn) makes.
@@ -943,7 +973,7 @@ Commands are sorted by what they need, and each place takes only the groups that
 |---|---|---|
 | changes | `inc`, `dec`, `set`, `copy`, `rank`, `play`, `silence`, `become`, `reveal`, `follow`, `shift`, `enter`, `reset`, `spawn`, `despawn object=`, `trigger` | nothing: they name what they change |
 | flow | `push`, `pop`, `turns`, `pass`, `out`, `demo` | the game's running order |
-| self | `die`, `drop`, `move`, `release`, `reverse`, `stop`, `fire`, `despawn` | an object running it |
+| self | `die`, `drop`, `move`, `release`, `reverse`, `stop`, `fire`, `despawn`, and on cells `settle`, `slide`, `cycle`, `grow`, `split`, `pick`, `place` | an object running it |
 | steering | `aim`, `chase`, `hunt`, `wander` | an object to steer |
 | touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride` | another object touched |
 | edge | `stick`, `wrap` | a screen edge |
@@ -964,7 +994,7 @@ The schema cannot tell the two kinds of `<collision>` apart (that is in the attr
 
 ### A press that cannot be done
 
-In an object's `<action>`, its `<timer>`s and path steps, a collision rule (about an edge or another object), a state's key and a condition, **a verb that is refused ends the list there**: what is written after it is not done either. A collision rule's later rules still run; only the rest of the one rule is dropped. Refused are a `<fire>` or `<spawn>` with every copy already out, a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window, a `<leap>` off the ground, and an `<aim>` with `<lined>` that is not lined up. What is written before it has run.
+In an object's `<action>`, its `<timer>`s and path steps, a collision rule (about an edge or another object), a state's key and a condition, **a verb that is refused ends the list there**: what is written after it is not done either. A collision rule's later rules still run; only the rest of the one rule is dropped. Refused are a `<fire>` or `<spawn>` with every copy already out, a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window, a `<leap>` off the ground, an `<aim>` with `<lined>` that is not lined up, and a [`<pick>` or `<place>`](#board-games) that is no move (or a place that must jump on). What is written before it has run.
 
 So the verb goes first and its answers after: `<fire object="bullet" /><play sound="shoot" />` sounds only when a shot leaves. Collision rules and a state's commands run every command as before.
 
@@ -1393,7 +1423,7 @@ A condition is checked every frame while its state (or scene) is current. It hol
 | `<above>N</above>`, `<below>N</below>`, `<equal>N</equal>` | more than, less than, the same as N |
 | `<remaining>N</remaining>` | no more than N of the matched objects are still in play (`class="aliens"` with `0`: all shot) |
 
-- **What is tested.** `variable="score"` is an object's variable, or, with none of that name, one of its live numbers (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`), so a condition can compare where things are.
+- **What is tested.** `variable="score"` is an object's variable, or, with none of that name, one of its live numbers (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`, and on a cell map `column`, `row` and `moves`), so a condition can compare where things are.
 - **The number is a value, read as the game runs** when it names something that changes, so a test can follow another object: Air-Sea Battle's winner.
 
   ```xml

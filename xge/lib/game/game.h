@@ -414,6 +414,21 @@ namespace xge
 		// <cycle />: a shape's cells each on to the next of its outline.
 		void cycleCells(Object& shape);
 
+		// --- A board game on a map of cells (game/cells.cpp): pieces with
+		// <moves>, taken up and put down by a picker, an object on a map of
+		// cells laid over the board (a cursor).
+
+		// <pick class>: the piece of that class in the picker's cell, with a
+		// move it can make, is the one it holds; false when there is none,
+		// or while the one it holds must jump on.
+		bool pickPiece(Object& picker, const std::string& objClass);
+		// <place />: the piece held makes the move that ends in the picker's
+		// cell, taking what it jumps; false when none does, or when it can
+		// jump on (it stays held, and must).
+		bool placePiece(Object& picker);
+		// Every piece's moveCount (the live number `moves`), counted again.
+		void countMoves();
+
 		// Joins the objects spawned to the game's, and takes out the copies
 		// despawned: what updateObjects does before and after a frame. A
 		// caller that spawns or despawns between frames and wants it seen at
@@ -473,6 +488,19 @@ namespace xge
 		std::string kindOf(const Object& piece) noexcept;
 		void askLines(const Object::CellCheck& check, const std::string& map, int columns, int rows, CommandExecutor& executor);
 		void cellMoves() override;
+		// A board game piece's moves that it can make now: where each ends,
+		// and the piece it jumps (null for a step). Only its jumps when
+		// `jumpsOnly`, or when its set is forced and a piece of its class
+		// can jump.
+		struct PieceMoveTo
+		{
+			int column{};
+			int row{};
+			Object* taken{ nullptr };
+		};
+		const Object::MoveSet* moveSetOf(const Object& piece) const noexcept;
+		std::vector<PieceMoveTo> movesOf(Object& piece, bool jumpsOnly);
+		std::vector<PieceMoveTo> legalMoves(Object& piece, bool jumpsOnly);
 
 		// The variable of that name, or null when its owner or it is not there.
 		float* variableOf(const VariableName& name) noexcept;
@@ -576,7 +604,7 @@ namespace xge
 		bool canCollide(const Object& a, const Object& b) override;
 		bool hasRules(const Object& object) override { return !object.collisionData.others.empty(); }
 		void touched(Object& a, Object& b, const Contact& contact) override;
-		void conditions() override { checkConditions(); }
+		void conditions() override { countMoves(); checkConditions(); }
 
 		// Sets the velocity of every shown object that is on a path for this
 		// frame's part of it (see Path), starting its next leg when one is

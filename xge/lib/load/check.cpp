@@ -152,6 +152,8 @@ namespace xge
 				[](const CmdGrow&) { return std::string("<grow />"); },
 				[](const CmdSplit&) { return std::string("<split />"); },
 				[](const CmdThrough&) { return std::string("<through />"); },
+				[](const CmdPick&) { return std::string("<pick>"); },
+				[](const CmdPlace&) { return std::string("<place />"); },
 				[](const CmdLive& live) { return tagOf(live.loaded->command); },
 			}, command);
 		}
@@ -182,7 +184,7 @@ namespace xge
 			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
 				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<send>", "<despawn object>", "<trigger>" };
 			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
-			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />", "<grow />", "<split />" };
+			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />", "<grow />", "<split />", "<pick>", "<place />" };
 			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
 			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />", "<through />", "<stick />" };
 			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
