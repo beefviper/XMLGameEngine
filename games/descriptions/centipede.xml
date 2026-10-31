@@ -204,7 +204,6 @@
         <object name="wand" class="player">
           <sprite><rectangle><width>12</width><height>12</height><color>color.cyan</color></rectangle></sprite>
           <position><x>14 * cell + 2</x><y>top + 31 * cell + 2</y></position>
-          <facing>up</facing>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
             <collision class="centipede"><set variable="status.hit">1</set></collision>

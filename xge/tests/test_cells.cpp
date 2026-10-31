@@ -714,6 +714,36 @@ TEST_CASE("Centipede plays: the wand's shot wears the mushroom above it away", "
 	CHECK(play.get("playing.status").variable.at("score") == 1.0f);
 }
 
+TEST_CASE("Centipede plays: the shot goes up whichever way the wand last moved, and another follows", "[cells][centipede]")
+{
+	Played play("descriptions/centipede.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	const auto shot = [&]() -> const Object*
+	{
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (object.exists && object.objClass == "shot") { return &object; }
+		}
+		return nullptr;
+	};
+	play.tap(KeyCode::D);
+	play.frames(1);
+	play.tap(KeyCode::A);
+	play.frames(1);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(shot());
+	CHECK(shot()->velocity.x == 0.0f);
+	CHECK(shot()->velocity.y < 0.0f);
+
+	play.frames(60);
+	CHECK_FALSE(shot());
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(shot());
+}
+
 namespace
 {
 	// A worm on a field of cells: every piece of group "worm" can lead
