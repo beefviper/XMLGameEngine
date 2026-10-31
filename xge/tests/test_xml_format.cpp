@@ -484,8 +484,8 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 		CHECK_THAT(errorOf(gameXml("", objectXml(edge))), ContainsSubstring("object 'o' > <collision edge>: <push> does nothing in a screen-edge <collision>"));
 
 		ObjectXml touch;
-		touch.collisions = "<enabled>true</enabled><collision><stick /></collision>";
-		CHECK_THAT(errorOf(gameXml("", objectXml(touch))), ContainsSubstring("<stick /> does nothing in a <collision> with another object"));
+		touch.collisions = "<enabled>true</enabled><collision><wrap /></collision>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(touch))), ContainsSubstring("<wrap /> does nothing in a <collision> with another object"));
 	}
 
 	SECTION("a leap with nothing to pull it down or stand on, a climb of no class")

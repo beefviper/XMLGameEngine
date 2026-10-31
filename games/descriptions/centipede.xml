@@ -163,6 +163,7 @@
           <group name="line" class="line" char="-">
             <sprite><rectangle><width>cell</width><height>cell</height><color>color.black</color></rectangle></sprite>
             <drawn>false</drawn>
+            <collisions />
           </group>
 
           <!-- the centipede: a head and its body, every piece able to lead -->
@@ -222,8 +223,8 @@
           <position><x>14 * cell + 2</x><y>top + 31 * cell + 2</y></position>
           <collisions>
             <collision edge="all"><stick /></collision>
-            <collision class="line"><stop /></collision>
-            <collision class="mushroom"><stop /></collision>
+            <collision class="line"><stick /></collision>
+            <collision class="mushroom"><stick /></collision>
             <collision class="centipede"><set variable="status.hit">1</set></collision>
           </collisions>
           <actions>

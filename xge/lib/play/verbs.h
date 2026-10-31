@@ -81,6 +81,9 @@ namespace xge
 	// <stick />: pushed back inside the window on that edge's axis, losing
 	// only the velocity carrying it into the edge.
 	void stick(Object& object, const WindowDesc& window, Edge edge);
+	// <stick /> in a rule about another object: only the velocity into
+	// the side it was touched on stops, so it slides along what it met.
+	void stickAgainst(Object& object, Edge side);
 
 	// <wrap />: once right off through `edge`, back in from the other side.
 	void wrap(Object& object, const WindowDesc& window, Edge edge);

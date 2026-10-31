@@ -938,7 +938,7 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 | `<bounce />` | the velocity reverses away from the edge touched |
 | `<deflect>45</deflect>` | off another object at an angle set by where it hit: straight out from the middle of the side touched, up to that many degrees toward either end, in proportion. The speed is kept. Pong's ball |
 | `<knock />`, `<knock>0.5</knock>` | the two meet as things with weight do ([knocks](#knocks)); the content, 0 to 1, is how bouncy |
-| `<stick />` | against a screen edge: kept inside it, and only the velocity into that edge stops, so it still slides along it |
+| `<stick />` | against a screen edge: kept inside it, and only the velocity into that edge stops, so it still slides along it. In a rule about another object, only the velocity into the side touched stops, so it slides along what it met (Centipede's wand under the zone's line and against mushrooms) |
 | `<wrap />` | against a screen edge: once wholly off the screen and still going that way, put back in from the opposite edge, a window's width (or height) plus its own size along, so a lane keeps its spacing |
 | `<through />` | in a rule for a refused step on a map with [cells](#cells): the step is made after all, into the cell with what is there, which stays; the two share it until one moves on (Centipede turning down onto a mushroom or another centipede) |
 | `<ride />` | lent the touched object's velocity for that frame, on top of its own: a frog on a log. Worked out again every frame, so stepping off needs nothing |

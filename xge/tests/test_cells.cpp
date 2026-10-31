@@ -714,7 +714,7 @@ TEST_CASE("Centipede plays: the wand's shot wears the mushroom above it away", "
 	CHECK(play.get("playing.status").variable.at("score") == 1.0f);
 }
 
-TEST_CASE("Centipede plays: the wand keeps to its zone, and moves along the top of it", "[cells][centipede]")
+TEST_CASE("Centipede plays: the wand keeps to its zone, and slides along the top of it", "[cells][centipede]")
 {
 	Played play("descriptions/centipede.xml");
 	play.tap(KeyCode::Space);
@@ -722,17 +722,22 @@ TEST_CASE("Centipede plays: the wand keeps to its zone, and moves along the top 
 	Object& wand = play.get("playing.wand");
 	const float zoneTop = play.get("playing.field.line.1").position.y + 16.0f;
 
+	// Over to a column with no mushroom in the zone, then up to the line.
+	play.engine.handleKeyPressed(KeyCode::D);
+	play.frames(20);
+	play.engine.handleKeyReleased(KeyCode::D);
 	play.engine.handleKeyPressed(KeyCode::W);
 	play.frames(60);
-	play.engine.handleKeyReleased(KeyCode::W);
-	CHECK(wand.position.y >= zoneTop - 0.5f);
-	CHECK(wand.position.y < zoneTop + 16.0f);
+	CHECK(std::fabs(wand.position.y - zoneTop) < 0.5f);
 
+	// Still holding up, it slides along the line.
 	const float x = wand.position.x;
-	play.engine.handleKeyPressed(KeyCode::D);
+	play.engine.handleKeyPressed(KeyCode::A);
 	play.frames(5);
-	play.engine.handleKeyReleased(KeyCode::D);
-	CHECK(wand.position.x > x + 10.0f);
+	play.engine.handleKeyReleased(KeyCode::A);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(wand.position.x < x - 10.0f);
+	CHECK(std::fabs(wand.position.y - zoneTop) < 0.5f);
 }
 
 TEST_CASE("Centipede: a head rising meets the zone's line and winds back down a row", "[cells][centipede]")

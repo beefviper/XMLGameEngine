@@ -123,6 +123,13 @@ namespace xge
 		stickInside(object.position, object.velocity, object.size, { window.width, window.height }, edge);
 	}
 
+	void stickAgainst(Object& object, Edge side)
+	{
+		Vector2f& velocity = object.velocity;
+		if ((side == Edge::Top && velocity.y < 0.0f) || (side == Edge::Bottom && velocity.y > 0.0f)) { velocity.y = 0.0f; }
+		if ((side == Edge::Left && velocity.x < 0.0f) || (side == Edge::Right && velocity.x > 0.0f)) { velocity.x = 0.0f; }
+	}
+
 	// Until it has gone completely, nothing happens: an object still partly
 	// in view slides out as normal. It comes back one screen and one object's
 	// width along, so anything spaced along a lane keeps its spacing.

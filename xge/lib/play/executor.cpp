@@ -169,7 +169,11 @@ namespace xge
 				else if (self && doer.screenEdge) { bounceScreenEdge(*self, *doer.screenEdge); }
 			},
 			// The screen edge's own.
-			[&](const CmdStick&) { if (self && doer.screenEdge) { xge::stick(*self, game.getWindowDesc(), *doer.screenEdge); } },
+			[&](const CmdStick&)
+			{
+				if (self && doer.screenEdge) { xge::stick(*self, game.getWindowDesc(), *doer.screenEdge); }
+				else if (self && doer.touch) { stickAgainst(*self, doer.touch->edge); }
+			},
 			[&](const CmdWrap&) { if (self && doer.screenEdge) { xge::wrap(*self, game.getWindowDesc(), *doer.screenEdge); } },
 			// What it touched.
 			[&](const CmdDeflect& d) { if (self && doer.touch) { xge::deflect(*self, *doer.other, doer.touch->edge, d.maxAngle); } },

@@ -183,7 +183,7 @@ namespace xge
 			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
 			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />", "<grow />", "<split />" };
 			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
-			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />", "<through />" };
+			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />", "<through />", "<stick />" };
 			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
 			static const std::vector<std::string> bounce{ "<bounce />" };
 			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<thrust>", "<turn>", "<track />" };

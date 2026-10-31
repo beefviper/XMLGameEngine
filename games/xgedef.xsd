@@ -1117,7 +1117,7 @@
     </xs:choice>
   </xs:group>
 
-  <!-- edge: what needs a screen edge -->
+  <!-- edge: what needs a screen edge (stick also takes a touch: only the velocity into what it met stops) -->
   <xs:group name="edgeCommands">
     <xs:choice>
       <xs:element name="stick" type="emptyType" />
